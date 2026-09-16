@@ -18,14 +18,14 @@ namespace Alterverse.Characters
         private CharacterController controller;
         private Health selfHealth;
         private float qReady;
-        private float wReady;
         private float eReady;
         private float rReady;
+        private float fReady;
 
         public float QRemaining => Mathf.Max(0f, qReady - Time.time);
-        public float WRemaining => Mathf.Max(0f, wReady - Time.time);
         public float ERemaining => Mathf.Max(0f, eReady - Time.time);
         public float RRemaining => Mathf.Max(0f, rReady - Time.time);
+        public float FRemaining => Mathf.Max(0f, fReady - Time.time);
 
         private void Awake()
         {
@@ -37,9 +37,9 @@ namespace Alterverse.Characters
         {
             if (Keyboard.current == null || selfHealth.IsDead) return;
             if (Keyboard.current.qKey.wasPressedThisFrame) ShadowStrike();
-            if (Keyboard.current.wKey.wasPressedThisFrame) SoulRend();
-            if (Keyboard.current.eKey.wasPressedThisFrame) NullStep();
-            if (Keyboard.current.rKey.wasPressedThisFrame) EndOfFuture();
+            if (Keyboard.current.eKey.wasPressedThisFrame) SoulRend();
+            if (Keyboard.current.rKey.wasPressedThisFrame) NullStep();
+            if (Keyboard.current.fKey.wasPressedThisFrame) EndOfFuture();
         }
 
         public bool ShadowStrike()
@@ -49,7 +49,7 @@ namespace Alterverse.Characters
             if (target == null) return false;
 
             qReady = Time.time + shadowStrikeCooldown;
-            Vector3 away = (transform.position - target.transform.position);
+            Vector3 away = transform.position - target.transform.position;
             away.y = 0f;
             if (away.sqrMagnitude < 0.01f) away = -target.transform.forward;
             Vector3 destination = target.transform.position + away.normalized * 1.2f;
@@ -62,8 +62,8 @@ namespace Alterverse.Characters
 
         public bool SoulRend()
         {
-            if (Time.time < wReady) return false;
-            wReady = Time.time + soulRendCooldown;
+            if (Time.time < eReady) return false;
+            eReady = Time.time + soulRendCooldown;
 
             Collider[] hits = Physics.OverlapSphere(transform.position, 2.8f, ~0, QueryTriggerInteraction.Ignore);
             float totalDamage = 0f;
@@ -82,8 +82,8 @@ namespace Alterverse.Characters
 
         public bool NullStep()
         {
-            if (Time.time < eReady) return false;
-            eReady = Time.time + nullStepCooldown;
+            if (Time.time < rReady) return false;
+            rReady = Time.time + nullStepCooldown;
 
             Vector3 destination = transform.position + transform.forward * 4.2f;
             destination.x = Mathf.Clamp(destination.x, -13f, 13f);
@@ -98,11 +98,11 @@ namespace Alterverse.Characters
 
         public bool EndOfFuture()
         {
-            if (Time.time < rReady) return false;
+            if (Time.time < fReady) return false;
             Health target = FindNearestEnemy(7.5f);
             if (target == null) return false;
 
-            rReady = Time.time + endFutureCooldown;
+            fReady = Time.time + endFutureCooldown;
             StartCoroutine(ResolveUltimate(target));
             Debug.Log($"Veyr marked {target.name} with Ende der Zukunft.");
             return true;
