@@ -75,7 +75,7 @@ namespace Alterverse.Prototype
             PrototypeHUD hud = hudObject.AddComponent<PrototypeHUD>();
             hud.Initialize(playerHealth, abilities, enemyHealth);
 
-            Debug.Log("ALTERVERSE combat slice ready. WASD move, SPACE basic attack, Q/W/E/R abilities.");
+            Debug.Log("ALTERVERSE combat slice ready. WASD move, SPACE basic attack, Q/E/R/F abilities.");
         }
 
         private static void BuildArena()
