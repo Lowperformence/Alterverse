@@ -21,12 +21,22 @@ namespace Alterverse.Combat
             Current = maxHealth;
         }
 
+        public void Configure(float newMaxHealth, bool shouldDestroyOnDeath = false)
+        {
+            maxHealth = Mathf.Max(1f, newMaxHealth);
+            destroyOnDeath = shouldDestroyOnDeath;
+            IsDead = false;
+            Current = maxHealth;
+            Changed?.Invoke(Current, maxHealth);
+        }
+
         public void TakeDamage(float amount)
         {
             if (IsDead || amount <= 0f) return;
 
             Current = Mathf.Max(0f, Current - amount);
             Changed?.Invoke(Current, maxHealth);
+            Debug.Log($"{name} took {amount:0.#} damage. HP: {Current:0.#}/{maxHealth:0.#}");
 
             if (Current <= 0f)
             {
