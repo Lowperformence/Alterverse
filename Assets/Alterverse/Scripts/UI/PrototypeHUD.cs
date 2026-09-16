@@ -50,23 +50,23 @@ namespace Alterverse.UI
             float scale = Mathf.Clamp(Screen.height / 900f, 0.8f, 1.4f);
             GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
 
-            GUI.Box(new Rect(18, 18, 390, 170), GUIContent.none);
-            GUI.Label(new Rect(34, 30, 350, 34), "ALTERVERSE // VEYR", titleStyle);
+            GUI.Box(new Rect(18, 18, 410, 170), GUIContent.none);
+            GUI.Label(new Rect(34, 30, 370, 34), "ALTERVERSE // VEYR", titleStyle);
 
             if (playerHealth != null)
             {
-                GUI.Label(new Rect(34, 72, 330, 28), $"HP  {playerHealth.Current:0} / {playerHealth.Max:0}", textStyle);
-                DrawBar(new Rect(34, 102, 330, 18), playerHealth.Normalized);
+                GUI.Label(new Rect(34, 72, 350, 28), $"HP  {playerHealth.Current:0} / {playerHealth.Max:0}", textStyle);
+                DrawBar(new Rect(34, 102, 350, 18), playerHealth.Normalized);
             }
 
             if (abilities != null)
             {
                 string q = Cooldown("Q Schattenstich", abilities.QRemaining);
-                string w = Cooldown("W Seelenriss", abilities.WRemaining);
-                string e = Cooldown("E Nullschritt", abilities.ERemaining);
-                string r = Cooldown("R Ende der Zukunft", abilities.RRemaining);
-                GUI.Label(new Rect(34, 130, 360, 26), q, textStyle);
-                GUI.Label(new Rect(34, 154, 360, 26), $"{w}    {e}    {r}", textStyle);
+                string e = Cooldown("E Seelenriss", abilities.ERemaining);
+                string r = Cooldown("R Nullschritt", abilities.RRemaining);
+                string f = Cooldown("F Ende der Zukunft", abilities.FRemaining);
+                GUI.Label(new Rect(34, 130, 375, 26), q, textStyle);
+                GUI.Label(new Rect(34, 154, 380, 26), $"{e}    {r}    {f}", textStyle);
             }
 
             if (enemyHealth != null && !enemyHealth.IsDead)
@@ -80,10 +80,10 @@ namespace Alterverse.UI
 
             float screenW = Screen.width / scale;
             float screenH = Screen.height / scale;
-            GUI.Box(new Rect(screenW - 330, screenH - 112, 310, 92), GUIContent.none);
-            GUI.Label(new Rect(screenW - 315, screenH - 100, 280, 24), "WASD  Move   SPACE  Attack", textStyle);
-            GUI.Label(new Rect(screenW - 315, screenH - 72, 280, 24), "Q / W / E / R  Abilities", textStyle);
-            GUI.Label(new Rect(screenW - 315, screenH - 44, 280, 24), "Defeat the hunter. Survive.", textStyle);
+            GUI.Box(new Rect(screenW - 350, screenH - 112, 330, 92), GUIContent.none);
+            GUI.Label(new Rect(screenW - 335, screenH - 100, 300, 24), "WASD  Move   SPACE  Attack", textStyle);
+            GUI.Label(new Rect(screenW - 335, screenH - 72, 300, 24), "Q / E / R / F  Abilities", textStyle);
+            GUI.Label(new Rect(screenW - 335, screenH - 44, 300, 24), "Defeat the hunter. Survive.", textStyle);
         }
 
         private static string Cooldown(string label, float remaining)
