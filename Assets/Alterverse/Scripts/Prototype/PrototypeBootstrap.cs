@@ -9,6 +9,13 @@ namespace Alterverse.Prototype
     {
         [SerializeField] private bool buildOnStart = true;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoCreate()
+        {
+            if (Object.FindFirstObjectByType<PrototypeBootstrap>() != null) return;
+            new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();
+        }
+
         private void Start()
         {
             if (buildOnStart) BuildPrototype();
@@ -30,14 +37,20 @@ namespace Alterverse.Prototype
             CharacterController controller = player.AddComponent<CharacterController>();
             controller.height = 2f;
             controller.radius = 0.5f;
-            player.AddComponent<Health>();
+            player.AddComponent<Health>().Configure(100f);
             player.AddComponent<HeroMotor>();
             player.AddComponent<BasicAttack>();
+
+            Renderer playerRenderer = player.GetComponent<Renderer>();
+            if (playerRenderer != null) playerRenderer.material.color = new Color(0.12f, 0.12f, 0.16f);
 
             GameObject dummy = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             dummy.name = "AV_TargetDummy";
             dummy.transform.position = new Vector3(4f, 1f, 2f);
-            dummy.AddComponent<Health>();
+            dummy.AddComponent<Health>().Configure(100f, true);
+
+            Renderer dummyRenderer = dummy.GetComponent<Renderer>();
+            if (dummyRenderer != null) dummyRenderer.material.color = new Color(0.65f, 0.1f, 0.12f);
 
             UnityEngine.Camera cam = UnityEngine.Camera.main;
             if (cam == null)
@@ -52,7 +65,7 @@ namespace Alterverse.Prototype
             mobaCamera.SetTarget(player.transform);
             cam.transform.position = player.transform.position + new Vector3(0f, 12f, -9f);
 
-            Debug.Log("ALTERVERSE prototype ready: WASD to move, SPACE to attack the nearby dummy.");
+            Debug.Log("ALTERVERSE prototype ready: WASD to move, SPACE to attack. Defeat the red dummy in five hits.");
         }
     }
 }
