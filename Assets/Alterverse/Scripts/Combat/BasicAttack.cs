@@ -1,3 +1,4 @@
+using Alterverse.Visuals;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -30,6 +31,8 @@ namespace Alterverse.Combat
             if (selfHealth.IsDead || Time.time < nextAttackTime) return false;
             nextAttackTime = Time.time + cooldown;
 
+            PrototypeVfx.Slash(transform, new Color(0.44f, 0.12f, 0.75f), 1.5f);
+
             Collider[] hits = Physics.OverlapSphere(transform.position, range, targetMask, QueryTriggerInteraction.Ignore);
             Health closest = null;
             float closestSqr = float.MaxValue;
@@ -48,7 +51,14 @@ namespace Alterverse.Combat
             }
 
             if (closest == null) return false;
+
+            Vector3 look = closest.transform.position - transform.position;
+            look.y = 0f;
+            if (look.sqrMagnitude > 0.01f)
+                transform.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
+
             closest.TakeDamage(damage);
+            PrototypeVfx.Burst(closest.transform.position, new Color(0.58f, 0.16f, 0.90f), 0.85f, 6);
             return true;
         }
 
