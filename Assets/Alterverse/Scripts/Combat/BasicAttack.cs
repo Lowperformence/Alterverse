@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 namespace Alterverse.Combat
 {
+    [RequireComponent(typeof(Health))]
     public sealed class BasicAttack : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float range = 2.2f;
@@ -10,7 +11,13 @@ namespace Alterverse.Combat
         [SerializeField, Min(0.05f)] private float cooldown = 0.7f;
         [SerializeField] private LayerMask targetMask = ~0;
 
+        private Health selfHealth;
         private float nextAttackTime;
+
+        private void Awake()
+        {
+            selfHealth = GetComponent<Health>();
+        }
 
         private void Update()
         {
@@ -20,7 +27,7 @@ namespace Alterverse.Combat
 
         public bool TryAttack()
         {
-            if (Time.time < nextAttackTime) return false;
+            if (selfHealth.IsDead || Time.time < nextAttackTime) return false;
             nextAttackTime = Time.time + cooldown;
 
             Collider[] hits = Physics.OverlapSphere(transform.position, range, targetMask, QueryTriggerInteraction.Ignore);
@@ -30,7 +37,7 @@ namespace Alterverse.Combat
             foreach (Collider hit in hits)
             {
                 Health health = hit.GetComponentInParent<Health>();
-                if (health == null || health.gameObject == gameObject || health.IsDead) continue;
+                if (health == null || health == selfHealth || health.IsDead) continue;
 
                 float sqr = (health.transform.position - transform.position).sqrMagnitude;
                 if (sqr < closestSqr)
