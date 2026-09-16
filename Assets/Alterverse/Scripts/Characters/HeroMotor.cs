@@ -11,7 +11,7 @@ namespace Alterverse.Characters
         [SerializeField, Min(0.1f)] private float moveSpeed = 6.5f;
         [SerializeField, Min(0f)] private float rotationSpeed = 18f;
         [SerializeField] private Transform cameraTransform;
-        [SerializeField, Min(1f)] private float arenaHalfSize = 13.5f;
+        [SerializeField, Min(1f)] private float arenaHalfSize = 29f;
 
         private CharacterController controller;
         private Health health;
