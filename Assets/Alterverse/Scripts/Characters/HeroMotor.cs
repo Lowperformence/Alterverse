@@ -6,12 +6,16 @@ namespace Alterverse.Characters
     [RequireComponent(typeof(CharacterController))]
     public sealed class HeroMotor : MonoBehaviour
     {
-        [SerializeField, Min(0.1f)] private float moveSpeed = 6f;
-        [SerializeField, Min(0f)] private float rotationSpeed = 14f;
+        [SerializeField, Min(0.1f)] private float moveSpeed = 6.5f;
+        [SerializeField, Min(0f)] private float rotationSpeed = 18f;
         [SerializeField] private Transform cameraTransform;
+        [SerializeField, Min(1f)] private float arenaHalfSize = 13.5f;
 
         private CharacterController controller;
         private Vector2 moveInput;
+        private bool externalInput;
+
+        public float MoveSpeed => moveSpeed;
 
         private void Awake()
         {
@@ -22,8 +26,9 @@ namespace Alterverse.Characters
 
         private void Update()
         {
-            ReadKeyboardInput();
+            if (!externalInput) ReadKeyboardInput();
             Move(moveInput);
+            externalInput = false;
         }
 
         private void ReadKeyboardInput()
@@ -46,6 +51,7 @@ namespace Alterverse.Characters
         public void SetMoveInput(Vector2 input)
         {
             moveInput = Vector2.ClampMagnitude(input, 1f);
+            externalInput = true;
         }
 
         private void Move(Vector2 input)
@@ -57,8 +63,7 @@ namespace Alterverse.Characters
             forward.Normalize();
             right.Normalize();
 
-            Vector3 direction = forward * input.y + right * input.x;
-            direction = Vector3.ClampMagnitude(direction, 1f);
+            Vector3 direction = Vector3.ClampMagnitude(forward * input.y + right * input.x, 1f);
 
             if (direction.sqrMagnitude > 0.001f)
             {
@@ -67,8 +72,18 @@ namespace Alterverse.Characters
             }
 
             Vector3 velocity = direction * moveSpeed;
-            if (!controller.isGrounded) velocity.y = -2f;
+            if (!controller.isGrounded) velocity.y = -4f;
             controller.Move(velocity * Time.deltaTime);
+
+            Vector3 clamped = transform.position;
+            clamped.x = Mathf.Clamp(clamped.x, -arenaHalfSize, arenaHalfSize);
+            clamped.z = Mathf.Clamp(clamped.z, -arenaHalfSize, arenaHalfSize);
+            if ((clamped - transform.position).sqrMagnitude > 0.0001f)
+            {
+                controller.enabled = false;
+                transform.position = clamped;
+                controller.enabled = true;
+            }
         }
     }
 }
