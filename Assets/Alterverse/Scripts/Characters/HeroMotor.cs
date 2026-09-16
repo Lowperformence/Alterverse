@@ -1,9 +1,11 @@
+using Alterverse.Combat;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Alterverse.Characters
 {
     [RequireComponent(typeof(CharacterController))]
+    [RequireComponent(typeof(Health))]
     public sealed class HeroMotor : MonoBehaviour
     {
         [SerializeField, Min(0.1f)] private float moveSpeed = 6.5f;
@@ -12,6 +14,7 @@ namespace Alterverse.Characters
         [SerializeField, Min(1f)] private float arenaHalfSize = 13.5f;
 
         private CharacterController controller;
+        private Health health;
         private Vector2 moveInput;
         private bool externalInput;
 
@@ -20,12 +23,19 @@ namespace Alterverse.Characters
         private void Awake()
         {
             controller = GetComponent<CharacterController>();
+            health = GetComponent<Health>();
             if (cameraTransform == null && Camera.main != null)
                 cameraTransform = Camera.main.transform;
         }
 
         private void Update()
         {
+            if (health.IsDead)
+            {
+                moveInput = Vector2.zero;
+                return;
+            }
+
             if (!externalInput) ReadKeyboardInput();
             Move(moveInput);
             externalInput = false;
