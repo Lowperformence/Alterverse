@@ -5,8 +5,8 @@ namespace Alterverse.Combat
 {
     public sealed class LaneWaveSpawner : MonoBehaviour
     {
-        [SerializeField] private float firstWaveDelay = 2.5f;
-        [SerializeField] private float waveInterval = 14f;
+        [SerializeField] private float firstWaveDelay = 3f;
+        [SerializeField] private float waveInterval = 22f;
         [SerializeField] private float unitSpacing = 1.1f;
         [SerializeField] private int unitsPerWave = 3;
 
