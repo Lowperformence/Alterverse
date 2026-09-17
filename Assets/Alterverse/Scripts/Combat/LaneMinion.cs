@@ -1,106 +1,11 @@
-using System.Collections.Generic;
 using UnityEngine;
-
 namespace Alterverse.Combat
 {
-    [RequireComponent(typeof(Health))]
-    public sealed class LaneMinion : MonoBehaviour
-    {
-        [SerializeField] private float moveSpeed = 2.6f;
-        [SerializeField] private float detectionRange = 4.2f;
-        [SerializeField] private float attackRange = 1.25f;
-        [SerializeField] private float attackDamage = 7f;
-        [SerializeField] private float attackCooldown = 1.15f;
-
-        private Health health;
-        private int team;
-        private Vector3 destination;
-        private float nextAttackTime;
-
-        public int Team => team;
-
-        private void Awake() => health = GetComponent<Health>();
-
-        public void Initialize(int teamId, Vector3 laneDestination)
-        {
-            team = teamId;
-            destination = laneDestination;
-        }
-
-        private void Update()
-        {
-            if (health == null || health.IsDead) return;
-
-            Health target = FindTarget();
-            if (target != null)
-            {
-                Vector3 delta = target.transform.position - transform.position;
-                delta.y = 0f;
-                if (delta.magnitude <= attackRange)
-                {
-                    Face(delta);
-                    if (Time.time >= nextAttackTime)
-                    {
-                        nextAttackTime = Time.time + attackCooldown;
-                        target.TakeDamage(attackDamage);
-                    }
-                    return;
-                }
-            }
-
-            MoveTowards(target != null ? target.transform.position : destination);
-        }
-
-        private Health FindTarget()
-        {
-            Collider[] hits = Physics.OverlapSphere(transform.position, detectionRange, ~0, QueryTriggerInteraction.Ignore);
-            Health closestMinion = null;
-            Health closestTower = null;
-            float minionSqr = float.MaxValue;
-            float towerSqr = float.MaxValue;
-            HashSet<Health> checkedHealth = new();
-
-            foreach (Collider hit in hits)
-            {
-                Health candidate = hit.GetComponentInParent<Health>();
-                if (candidate == null || candidate == health || candidate.IsDead || !checkedHealth.Add(candidate)) continue;
-
-                LaneMinion otherMinion = candidate.GetComponent<LaneMinion>();
-                if (otherMinion != null)
-                {
-                    if (otherMinion.Team == team) continue;
-                    float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
-                    if (sqr < minionSqr) { minionSqr = sqr; closestMinion = candidate; }
-                    continue;
-                }
-
-                LaneTower tower = candidate.GetComponent<LaneTower>();
-                if (tower != null)
-                {
-                    if (tower.Team == team) continue;
-                    float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
-                    if (sqr < towerSqr) { towerSqr = sqr; closestTower = candidate; }
-                }
-            }
-
-            return closestMinion != null ? closestMinion : closestTower;
-        }
-
-        private void MoveTowards(Vector3 point)
-        {
-            Vector3 direction = point - transform.position;
-            direction.y = 0f;
-            if (direction.sqrMagnitude < 0.04f) return;
-            direction.Normalize();
-            transform.position += direction * moveSpeed * Time.deltaTime;
-            Face(direction);
-        }
-
-        private void Face(Vector3 direction)
-        {
-            direction.y = 0f;
-            if (direction.sqrMagnitude > 0.001f)
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
-        }
-    }
+[RequireComponent(typeof(Health))]public sealed class LaneMinion:MonoBehaviour
+{
+[SerializeField]private float moveSpeed=2.6f,detectionRange=4.2f,attackRange=1.25f,attackDamage=7f,attackCooldown=1.15f;private readonly Collider[] hitBuffer=new Collider[24];private Health health;private int team;private Vector3 destination;private float nextAttackTime;public int Team=>team;private void Awake()=>health=GetComponent<Health>();public void Initialize(int teamId,Vector3 laneDestination){team=teamId;destination=laneDestination;}
+private void Update(){if(health==null||health.IsDead)return;Health target=FindTarget();if(target!=null){Vector3 delta=target.transform.position-transform.position;delta.y=0;if(delta.sqrMagnitude<=attackRange*attackRange){Face(delta);if(Time.time>=nextAttackTime){nextAttackTime=Time.time+attackCooldown;target.TakeDamage(attackDamage,gameObject);}return;}}MoveTowards(target!=null?target.transform.position:destination);}
+private Health FindTarget(){int count=Physics.OverlapSphereNonAlloc(transform.position,detectionRange,hitBuffer,~0,QueryTriggerInteraction.Ignore);Health minion=null,tower=null;float minionSqr=float.MaxValue,towerSqr=float.MaxValue;for(int i=0;i<count;i++){Collider hit=hitBuffer[i];if(hit==null)continue;Health candidate=hit.GetComponentInParent<Health>();if(candidate==null||candidate==health||candidate.IsDead)continue;LaneMinion other=candidate.GetComponent<LaneMinion>();if(other!=null){if(other.Team==team)continue;float sqr=(candidate.transform.position-transform.position).sqrMagnitude;if(sqr<minionSqr){minionSqr=sqr;minion=candidate;}continue;}LaneTower t=candidate.GetComponent<LaneTower>();if(t==null||t.Team==team)continue;float towerDistance=(candidate.transform.position-transform.position).sqrMagnitude;if(towerDistance<towerSqr){towerSqr=towerDistance;tower=candidate;}}return minion!=null?minion:tower;}
+private void MoveTowards(Vector3 point){Vector3 direction=point-transform.position;direction.y=0;if(direction.sqrMagnitude<.04f)return;direction.Normalize();transform.position+=direction*moveSpeed*Time.deltaTime;Face(direction);}private void Face(Vector3 direction){direction.y=0;if(direction.sqrMagnitude>.001f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(direction),10*Time.deltaTime);}
+}
 }
