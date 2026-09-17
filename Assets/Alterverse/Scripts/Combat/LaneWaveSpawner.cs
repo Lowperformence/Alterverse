@@ -62,6 +62,8 @@ namespace Alterverse.Combat
             Renderer renderer = minion.GetComponent<Renderer>();
             if (renderer != null)
                 renderer.material.color = team == 0 ? ZeroColor : LumenColor;
+
+            Object.Destroy(minion, 55f);
         }
     }
 }
