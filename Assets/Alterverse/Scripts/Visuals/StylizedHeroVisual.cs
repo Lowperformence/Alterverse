@@ -1,4 +1,4 @@
-using Alterverse.Characters;using UnityEngine;
+using Alterverse.Characters;using Alterverse.Combat;using UnityEngine;
 namespace Alterverse.Visuals
 {
 public sealed class StylizedHeroVisual:MonoBehaviour
