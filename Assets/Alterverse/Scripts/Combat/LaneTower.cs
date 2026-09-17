@@ -24,7 +24,7 @@ namespace Alterverse.Combat
         {
             if (health == null || health.IsDead || Time.time < nextAttackTime) return;
 
-            Health target = FindTarget();
+            Health target = FindEnemyMinion();
             if (target == null) return;
 
             nextAttackTime = Time.time + attackCooldown;
@@ -32,13 +32,11 @@ namespace Alterverse.Combat
             SpawnShotFlash(target.transform.position);
         }
 
-        private Health FindTarget()
+        private Health FindEnemyMinion()
         {
             Collider[] hits = Physics.OverlapSphere(transform.position, attackRange, ~0, QueryTriggerInteraction.Ignore);
-            Health closestMinion = null;
-            Health closestOther = null;
-            float minionSqr = float.MaxValue;
-            float otherSqr = float.MaxValue;
+            Health closest = null;
+            float closestSqr = float.MaxValue;
             HashSet<Health> checkedHealth = new();
 
             foreach (Collider hit in hits)
@@ -46,23 +44,18 @@ namespace Alterverse.Combat
                 Health candidate = hit.GetComponentInParent<Health>();
                 if (candidate == null || candidate == health || candidate.IsDead || !checkedHealth.Add(candidate)) continue;
 
-                LaneTower otherTower = candidate.GetComponent<LaneTower>();
-                if (otherTower != null && otherTower.team == team) continue;
-
                 LaneMinion minion = candidate.GetComponent<LaneMinion>();
-                if (minion != null)
-                {
-                    if (minion.Team == team) continue;
-                    float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
-                    if (sqr < minionSqr) { minionSqr = sqr; closestMinion = candidate; }
-                    continue;
-                }
+                if (minion == null || minion.Team == team) continue;
 
-                float otherDistance = (candidate.transform.position - transform.position).sqrMagnitude;
-                if (otherDistance < otherSqr) { otherSqr = otherDistance; closestOther = candidate; }
+                float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
+                if (sqr < closestSqr)
+                {
+                    closestSqr = sqr;
+                    closest = candidate;
+                }
             }
 
-            return closestMinion != null ? closestMinion : closestOther;
+            return closest;
         }
 
         private void SpawnShotFlash(Vector3 targetPosition)
