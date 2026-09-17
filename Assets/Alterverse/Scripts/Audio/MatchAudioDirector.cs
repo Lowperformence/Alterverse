@@ -1,0 +1,8 @@
+using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Match;using UnityEngine;
+namespace Alterverse.Audio
+{
+public sealed class MatchAudioDirector:MonoBehaviour
+{
+private DimensionsFront front;private int playerTeam=-1;[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]private static void AutoCreate(){if(FindAnyObjectByType<MatchAudioDirector>()==null)new GameObject("DF_MatchAudio").AddComponent<MatchAudioDirector>();}private void Start(){front=FindAnyObjectByType<DimensionsFront>();HeroRespawn player=FindAnyObjectByType<HeroRespawn>();TeamMember member=player!=null?player.GetComponent<TeamMember>():null;if(member!=null)playerTeam=member.Team;if(front==null)return;front.ControlChanged+=OnFrontChanged;front.OvertimeStarted+=OnOvertime;front.SuddenDeathStarted+=OnSuddenDeath;front.MatchEnded+=OnMatchEnded;}private void OnFrontChanged(float zero,float lumen){DimensionAudio.Play(DimensionSound.FrontShift,.16f,lumen>zero?1.04f:.96f);}private void OnOvertime()=>DimensionAudio.Play(DimensionSound.Overtime,.7f);private void OnSuddenDeath()=>DimensionAudio.Play(DimensionSound.SuddenDeath,.82f);private void OnMatchEnded(int winner)=>DimensionAudio.Play(playerTeam>=0&&winner==playerTeam?DimensionSound.Victory:DimensionSound.Defeat,.82f);private void OnDestroy(){if(front==null)return;front.ControlChanged-=OnFrontChanged;front.OvertimeStarted-=OnOvertime;front.SuddenDeathStarted-=OnSuddenDeath;front.MatchEnded-=OnMatchEnded;}
+}
+}
