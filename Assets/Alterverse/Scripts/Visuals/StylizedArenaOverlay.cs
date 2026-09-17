@@ -1,14 +1,78 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+
 namespace Alterverse.Visuals
 {
-public sealed class StylizedArenaOverlay:MonoBehaviour
-{
-private void Start(){BuildSide(-1,StylizedArtDirection.ZeroEnergy);BuildSide(1,StylizedArtDirection.LumenEnergy);BuildFrontApproaches();BuildObjectiveRing(new Vector3(0,.082f,27),StylizedArtDirection.LumenEnergy);BuildObjectiveRing(new Vector3(0,.082f,-27),StylizedArtDirection.WarmAccent);BuildLaneChevrons();BuildBaseSignatures();}
-private void BuildSide(int side,Color color){for(int lane=-1;lane<=1;lane++){float z=lane*16;for(int i=0;i<5;i++){float x=side*(8+i*6);float offset=i%2==0?0.85f:-0.85f;CreateLine(new Vector3(x,.075f,z+offset),new Vector3(3.4f,.025f,.09f),color,side*(i%2==0?12:-12));}for(int edge=-1;edge<=1;edge++)for(int i=0;i<4;i++){float x=side*(8+i*8);CreateLine(new Vector3(x,.071f,z+edge*2.1f),new Vector3(5.2f,.018f,.045f),color,0);}}for(int i=0;i<6;i++){float z=-27+i*10.8f,x=side*(17+(i%2)*5);CreateLine(new Vector3(x,.078f,z),new Vector3(2.6f,.025f,.08f),color,side*32);}}
-private void BuildFrontApproaches(){for(int lane=-1;lane<=1;lane++){float z=lane*16;for(int side=-1;side<=1;side++){Color c=side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;for(int i=0;i<3;i++){float x=side*(2.2f+i*1.65f);CreateLine(new Vector3(x,.09f,z),new Vector3(1.1f,.028f,.13f),c,side*(i-1)*13);}}}}
-private void BuildLaneChevrons(){for(int lane=-1;lane<=1;lane++){float z=lane*16;for(int side=-1;side<=1;side++){Color c=side<0?StylizedArtDirection.ZeroMid:StylizedArtDirection.LumenMid;for(int i=0;i<3;i++){float x=side*(10+i*8);CreateLine(new Vector3(x,.086f,z-.55f),new Vector3(1.4f,.024f,.08f),c,side*32);CreateLine(new Vector3(x,.086f,z+.55f),new Vector3(1.4f,.024f,.08f),c,side*-32);}}}}
-private void BuildBaseSignatures(){for(int side=-1;side<=1;side++){Color c=side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;float x=side*35.5f;for(int i=0;i<8;i++){float a=i*Mathf.PI*2/8;Vector3 p=new Vector3(x+Mathf.Cos(a)*5.2f,.088f,Mathf.Sin(a)*8.2f);CreateLine(p,new Vector3(1.8f,.028f,.12f),c,-a*Mathf.Rad2Deg+90);}}}
-private void BuildObjectiveRing(Vector3 center,Color color){const int segments=12;float radius=4.15f;for(int i=0;i<segments;i++){float a=i*Mathf.PI*2/segments;Vector3 p=center+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius);CreateLine(p,new Vector3(1.25f,.03f,.12f),color,-a*Mathf.Rad2Deg+90);}for(int side=-1;side<=1;side++)for(int i=0;i<3;i++){float x=side*(5.2f+i*2f);CreateLine(center+new Vector3(x,0,0),new Vector3(1.25f,.025f,.08f),color,0);}}
-private void CreateLine(Vector3 p,Vector3 scale,Color color,float yaw){GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_ComicArenaMark";g.transform.SetParent(transform,false);g.transform.position=p;g.transform.localScale=scale;g.transform.rotation=Quaternion.Euler(0,yaw,0);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();if(r!=null)r.material.color=Color.Lerp(color,StylizedArtDirection.Ink,.35f);}
-}
+    // Quiet, grounded lane surfaces keep combat silhouettes and warning rings readable.
+    public sealed class StylizedArenaOverlay : MonoBehaviour
+    {
+        private readonly List<Material> materials = new List<Material>();
+        private readonly List<Mesh> meshes = new List<Mesh>();
+
+        private void Start()
+        {
+            Material paving = Surface(new Color(.18f, .21f, .28f));
+            Material zeroTrim = Surface(new Color(.38f, .22f, .52f));
+            Material lumenTrim = Surface(new Color(.16f, .48f, .53f));
+            if (paving == null) return;
+            // Each strip is one mesh, rather than hundreds of individually allocated primitives.
+            foreach (float z in new[] { -16f, 16f })
+            {
+                BuildStrip("DF_LanePaving", z, -35f, 35f, 2.0f, .085f, paving);
+                BuildStrip("DF_ZeroLaneBorder", z - 2.15f, -35f, -.5f, .10f, .09f, zeroTrim);
+                BuildStrip("DF_ZeroLaneBorder", z + 2.15f, -35f, -.5f, .10f, .09f, zeroTrim);
+                BuildStrip("DF_LumenLaneBorder", z - 2.15f, .5f, 35f, .10f, .09f, lumenTrim);
+                BuildStrip("DF_LumenLaneBorder", z + 2.15f, .5f, 35f, .10f, .09f, lumenTrim);
+            }
+            // Keep the center open: no fake objective markers and no luminous lines across attacks.
+        }
+
+        private Material Surface(Color color)
+        {
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null) return null;
+            Material material = new Material(shader);
+            material.color = color;
+            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", .18f);
+            if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", .1f);
+            materials.Add(material);
+            return material;
+        }
+
+        private void BuildStrip(string label, float z, float from, float to, float halfWidth, float y, Material material)
+        {
+            if (material == null) return;
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indices = new List<int>();
+            for (float x = from; x < to; x += 3.5f)
+            {
+                float left = x + .045f, right = Mathf.Min(x + 3.5f, to) - .045f;
+                int n = vertices.Count;
+                vertices.Add(new Vector3(left, y, z - halfWidth));
+                vertices.Add(new Vector3(left, y, z + halfWidth));
+                vertices.Add(new Vector3(right, y, z + halfWidth));
+                vertices.Add(new Vector3(right, y, z - halfWidth));
+                indices.Add(n); indices.Add(n + 1); indices.Add(n + 2);
+                indices.Add(n); indices.Add(n + 2); indices.Add(n + 3);
+            }
+            Mesh mesh = new Mesh { name = label };
+            mesh.SetVertices(vertices); mesh.SetTriangles(indices, 0);
+            mesh.RecalculateNormals(); mesh.RecalculateBounds(); meshes.Add(mesh);
+            GameObject surface = new GameObject(label);
+            surface.transform.SetParent(transform, false);
+            surface.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer renderer = surface.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = true;
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Material material in materials) if (material != null) Destroy(material);
+            foreach (Mesh mesh in meshes) if (mesh != null) Destroy(mesh);
+        }
+    }
 }

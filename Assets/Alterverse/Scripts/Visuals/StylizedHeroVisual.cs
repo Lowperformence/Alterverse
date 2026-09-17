@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed class StylizedHeroVisual:MonoBehaviour
 {
-private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,StylizedArtDirection.Ink,.66f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CreateSignature();if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
+private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.16f,.18f,.24f),.52f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CreateSignature();if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CreateSignature(){switch(identity.Hero){case HeroId.Veyr:Energy("NullShard",PrimitiveType.Cube,new Vector3(-.66f,.58f,-.12f),new Vector3(.08f,.52f,.08f),teamEdge,new Vector3(22,0,-28));break;case HeroId.Kaelon:Energy("AnchorCore",PrimitiveType.Sphere,new Vector3(0,.27f,.5f),Vector3.one*.16f,teamEdge);break;case HeroId.Nyra:Energy("SightNode",PrimitiveType.Sphere,new Vector3(.43f,.34f,.72f),Vector3.one*.11f,teamEdge);break;case HeroId.Elyra:Energy("FoldNode",PrimitiveType.Cube,new Vector3(0,1.38f,0),Vector3.one*.16f,teamEdge,new Vector3(35,45,15));break;case HeroId.Mira:Energy("LifeSeed",PrimitiveType.Sphere,new Vector3(0,.38f,-.42f),Vector3.one*.16f,teamEdge);break;case HeroId.Rook:Energy("ReactorScar",PrimitiveType.Cube,new Vector3(.18f,.26f,.42f),new Vector3(.24f,.07f,.04f),teamEdge,new Vector3(0,0,-14));break;}}
 private void Energy(string n,PrimitiveType type,Vector3 p,Vector3 s,Color c,Vector3 r=default){GameObject g=Create(n,type,p,s,c,r);g.AddComponent<HeroEnergyDetail>();}
@@ -13,6 +13,80 @@ private void BuildNyra(){Create("Torso",PrimitiveType.Capsule,new Vector3(0,.04f
 private void BuildElyra(){Create("Torso",PrimitiveType.Capsule,new Vector3(0,.05f,0),new Vector3(.44f,.7f,.4f),dark);Create("ChestGem",PrimitiveType.Sphere,new Vector3(0,.25f,.23f),Vector3.one*.15f,teamEdge);Create("Head",PrimitiveType.Sphere,new Vector3(0,.84f,0),new Vector3(.46f,.5f,.46f),dark);Create("Face",PrimitiveType.Cube,new Vector3(0,.82f,.23f),new Vector3(.28f,.2f,.045f),accent);Create("CrownL",PrimitiveType.Cube,new Vector3(-.2f,1.16f,0),new Vector3(.09f,.38f,.09f),accent,new Vector3(0,0,-20));Create("CrownR",PrimitiveType.Cube,new Vector3(.2f,1.16f,0),new Vector3(.09f,.38f,.09f),teamEdge,new Vector3(0,0,20));Create("OrbitL",PrimitiveType.Sphere,new Vector3(.72f,.5f,.04f),Vector3.one*.24f,accent);Create("OrbitR",PrimitiveType.Sphere,new Vector3(-.68f,.18f,.18f),Vector3.one*.18f,teamEdge);Create("Mantle",PrimitiveType.Cube,new Vector3(0,.4f,-.25f),new Vector3(1.02f,.12f,.42f),accent);}
 private void BuildMira(){Create("Torso",PrimitiveType.Capsule,new Vector3(0,.03f,0),new Vector3(.45f,.7f,.4f),dark);Create("ChestLeaf",PrimitiveType.Cube,new Vector3(0,.23f,.22f),new Vector3(.3f,.36f,.06f),accent,new Vector3(0,0,45));Create("Head",PrimitiveType.Sphere,new Vector3(0,.84f,0),new Vector3(.47f,.5f,.47f),dark);Create("Face",PrimitiveType.Cube,new Vector3(0,.82f,.235f),new Vector3(.3f,.21f,.045f),accent);Create("Crown",PrimitiveType.Sphere,new Vector3(0,1.16f,0),Vector3.one*.19f,teamEdge);Create("HornL",PrimitiveType.Cube,new Vector3(-.18f,1.2f,0),new Vector3(.06f,.32f,.06f),accent,new Vector3(0,0,-28));Create("HornR",PrimitiveType.Cube,new Vector3(.18f,1.2f,0),new Vector3(.06f,.32f,.06f),accent,new Vector3(0,0,28));Create("WingL",PrimitiveType.Cube,new Vector3(-.5f,.35f,-.26f),new Vector3(.78f,.1f,.42f),accent,new Vector3(0,-18,-18));Create("WingR",PrimitiveType.Cube,new Vector3(.5f,.35f,-.26f),new Vector3(.78f,.1f,.42f),accent,new Vector3(0,18,18));Create("Staff",PrimitiveType.Cylinder,new Vector3(.58f,.08f,.18f),new Vector3(.07f,.65f,.07f),dark,new Vector3(0,0,-8));Create("Bloom",PrimitiveType.Sphere,new Vector3(.68f,.73f,.18f),Vector3.one*.22f,accent);}
 private void BuildRook(){Create("Torso",PrimitiveType.Cube,new Vector3(0,.02f,0),new Vector3(.78f,.76f,.64f),dark);Create("ChestPlate",PrimitiveType.Cube,new Vector3(0,.2f,.34f),new Vector3(.62f,.34f,.1f),accent,new Vector3(0,0,-5));Create("Head",PrimitiveType.Sphere,new Vector3(0,.82f,0),new Vector3(.55f,.48f,.55f),dark);Create("Brow",PrimitiveType.Cube,new Vector3(0,.87f,.28f),new Vector3(.44f,.1f,.1f),accent,new Vector3(0,0,-5));Create("Jaw",PrimitiveType.Cube,new Vector3(0,.7f,.28f),new Vector3(.42f,.18f,.14f),dark);Create("Mohawk",PrimitiveType.Cube,new Vector3(0,1.14f,-.02f),new Vector3(.1f,.34f,.42f),teamEdge,new Vector3(-12,0,0));Create("GauntletL",PrimitiveType.Cube,new Vector3(-.64f,-.02f,.22f),new Vector3(.5f,.56f,.66f),dark,new Vector3(0,0,-8));Create("GauntletR",PrimitiveType.Cube,new Vector3(.68f,-.02f,.26f),new Vector3(.66f,.66f,.78f),accent,new Vector3(0,0,8));Create("Knuckle",PrimitiveType.Cube,new Vector3(.72f,-.03f,.7f),new Vector3(.48f,.18f,.16f),teamEdge);Create("BackPlate",PrimitiveType.Cube,new Vector3(0,.24f,-.36f),new Vector3(.9f,.58f,.14f),teamEdge);}
-private GameObject Create(string n,PrimitiveType type,Vector3 pos,Vector3 scale,Color color,Vector3 rotation=default,Transform parent=null){GameObject p=GameObject.CreatePrimitive(type);p.name="DF_"+n;p.transform.SetParent(parent!=null?parent:root,false);p.transform.localPosition=pos;p.transform.localScale=scale;p.transform.localRotation=Quaternion.Euler(rotation);Collider c=p.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=p.GetComponent<Renderer>();if(r!=null)r.material.color=color;return p;}
+// Meshes are generated once per hero and shared by its parts. No primitive colliders.
+private Mesh armorMesh,limbMesh,helmetMesh;
+private readonly System.Collections.Generic.List<Material> ownedMaterials=new System.Collections.Generic.List<Material>();
+private GameObject Create(string n,PrimitiveType type,Vector3 pos,Vector3 scale,Color color,Vector3 rotation=default,Transform parent=null)
+{
+GameObject part=new GameObject("DF_"+n);
+part.transform.SetParent(parent!=null?parent:root,false);
+part.transform.localPosition=pos;part.transform.localScale=scale;part.transform.localRotation=Quaternion.Euler(rotation);
+Mesh mesh;
+if(type==PrimitiveType.Capsule||type==PrimitiveType.Cylinder)
+{
+if(limbMesh==null)limbMesh=BuildProfile("DF_TaperedArmor",new float[]{-1f,-.72f,.55f,1f},new float[]{.28f,.48f,.5f,.32f});
+mesh=limbMesh;
+}
+else if(type==PrimitiveType.Sphere)
+{
+if(helmetMesh==null)helmetMesh=BuildProfile("DF_FacetedHelmet",new float[]{-.5f,-.28f,.27f,.5f},new float[]{.25f,.48f,.46f,.24f});
+mesh=helmetMesh;
+}
+else
+{
+if(armorMesh==null)armorMesh=BuildBeveledArmor();
+mesh=armorMesh;
+}
+part.AddComponent<MeshFilter>().sharedMesh=mesh;
+MeshRenderer renderer=part.AddComponent<MeshRenderer>();
+Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");
+if(shader!=null)
+{
+Material material=new Material(shader);material.color=color;
+if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.28f);
+if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.16f);
+ownedMaterials.Add(material);renderer.sharedMaterial=material;
+}
+return part;
+}
+private static Mesh BuildProfile(string name,float[] heights,float[] radii)
+{
+var vertices=new System.Collections.Generic.List<Vector3>();
+var triangles=new System.Collections.Generic.List<int>();
+const int sides=8;
+for(int ring=0;ring<heights.Length-1;ring++)
+for(int i=0;i<sides;i++)
+{
+float a=(i+.5f)*Mathf.PI*2/sides,b=(i+1.5f)*Mathf.PI*2/sides;
+Vector3 lowA=new Vector3(Mathf.Cos(a)*radii[ring],heights[ring],Mathf.Sin(a)*radii[ring]);
+Vector3 lowB=new Vector3(Mathf.Cos(b)*radii[ring],heights[ring],Mathf.Sin(b)*radii[ring]);
+Vector3 highA=new Vector3(Mathf.Cos(a)*radii[ring+1],heights[ring+1],Mathf.Sin(a)*radii[ring+1]);
+Vector3 highB=new Vector3(Mathf.Cos(b)*radii[ring+1],heights[ring+1],Mathf.Sin(b)*radii[ring+1]);
+AddFace(vertices,triangles,new[]{lowA,highA,highB,lowB});
+}
+for(int cap=0;cap<2;cap++)
+{
+int ring=cap==0?0:heights.Length-1;
+var face=new Vector3[sides];
+for(int i=0;i<sides;i++){float angle=((cap==0?i:sides-1-i)+.5f)*Mathf.PI*2/sides;face[i]=new Vector3(Mathf.Cos(angle)*radii[ring],heights[ring],Mathf.Sin(angle)*radii[ring]);}
+AddFace(vertices,triangles,face);
+}
+Mesh mesh=new Mesh{name=name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
+}
+private static Mesh BuildBeveledArmor()
+{
+// A chamfered plate: an inset top and bottom create readable edge highlights.
+return BuildProfile("DF_ChamferedPlate",new float[]{-.5f,-.37f,.37f,.5f},new float[]{.40f,.54f,.54f,.40f});
+}
+private static void AddFace(System.Collections.Generic.List<Vector3> vertices,System.Collections.Generic.List<int> triangles,Vector3[] points)
+{
+int first=vertices.Count;vertices.AddRange(points);
+for(int i=1;i<points.Length-1;i++){triangles.Add(first);triangles.Add(first+i);triangles.Add(first+i+1);}
+}
+private void OnDestroy()
+{
+if(armorMesh!=null)Destroy(armorMesh);if(limbMesh!=null)Destroy(limbMesh);if(helmetMesh!=null)Destroy(helmetMesh);
+foreach(Material material in ownedMaterials)if(material!=null)Destroy(material);
+}
 }
 }

@@ -1,11 +1,121 @@
-using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;
+using Alterverse.Combat;
+using UnityEngine;
+
 namespace Alterverse.Match
 {
-[RequireComponent(typeof(DimensionPlanet),typeof(Health))]public sealed class PlanetPulseAttack:MonoBehaviour
-{
-[SerializeField]private float interval=5.5f,telegraphDuration=1.15f,radius=5.2f,damage=7f;private float nextPulse,telegraphStart;private bool telegraphing;private Transform ring;private Renderer ringRenderer;private DimensionPlanet planet;
-private void Awake(){planet=GetComponent<DimensionPlanet>();nextPulse=Time.time+2.5f;GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cylinder);g.name="DF_PlanetPulseTelegraph";g.transform.SetParent(transform,false);g.transform.localPosition=new Vector3(0,-.72f,0);g.transform.localScale=new Vector3(.2f,.015f,.2f);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;ring=g.transform;ringRenderer=g.GetComponent<Renderer>();if(ringRenderer!=null)ringRenderer.enabled=false;}
-private void Update(){if(Time.timeScale<=0f||planet==null||!planet.Available)return;if(!telegraphing){if(Time.time>=nextPulse){telegraphing=true;telegraphStart=Time.time;if(ringRenderer!=null)ringRenderer.enabled=true;}return;}float p=Mathf.Clamp01((Time.time-telegraphStart)/telegraphDuration);if(ring!=null)ring.localScale=new Vector3(Mathf.Lerp(.25f,radius/1.65f,p),.015f,Mathf.Lerp(.25f,radius/1.65f,p));if(ringRenderer!=null)ringRenderer.material.color=new Color(1f,.45f,.12f,Mathf.Lerp(.35f,.85f,p));if(p<1)return;Explode();telegraphing=false;nextPulse=Time.time+interval;if(ringRenderer!=null)ringRenderer.enabled=false;}
-private void Explode(){HashSet<Health> hit=new HashSet<Health>();foreach(Health h in FindObjectsByType<Health>()){if(h==null||h.IsDead||h==GetComponent<Health>()||!hit.Add(h))continue;if(h.GetComponent<TeamMember>()==null&&h.GetComponent<LaneMinion>()==null)continue;Vector3 d=h.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=radius*radius)h.TakeDamage(damage,gameObject);}Alterverse.Visuals.PrototypeVfx.Burst(transform.position,new Color(1f,.4f,.1f),radius*.55f,10);}
-}
+    [RequireComponent(typeof(DimensionPlanet), typeof(Health))]
+    public sealed class PlanetPulseAttack : MonoBehaviour
+    {
+        [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 5.2f, damage = 7f;
+        private const int Segments = 64;
+        private DimensionPlanet planet;
+        private Health health;
+        private LineRenderer boundary, charge;
+        private Material ringMaterial;
+        private float nextPulse, telegraphStart, flashUntil;
+        private bool telegraphing;
+        private readonly Color warning = new Color(1f, .48f, .12f);
+
+        private void Awake()
+        {
+            planet = GetComponent<DimensionPlanet>();
+            health = GetComponent<Health>();
+            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
+            if (shader == null) shader = Shader.Find("Sprites/Default");
+            if (shader == null) shader = Shader.Find("Unlit/Color");
+            if (shader != null)
+            {
+                ringMaterial = new Material(shader);
+                ringMaterial.color = warning;
+                boundary = CreateRing("DF_PulseBoundary", .09f);
+                charge = CreateRing("DF_PulseCharge", .14f);
+            }
+            nextPulse = Time.time + 2.5f;
+        }
+
+        private LineRenderer CreateRing(string label, float width)
+        {
+            GameObject ring = new GameObject(label);
+            ring.transform.SetParent(transform, false);
+            LineRenderer line = ring.AddComponent<LineRenderer>();
+            line.sharedMaterial = ringMaterial;
+            line.useWorldSpace = true;
+            line.loop = true;
+            line.positionCount = Segments;
+            line.widthMultiplier = width;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            line.enabled = false;
+            return line;
+        }
+
+        private void DrawRing(LineRenderer line, float worldRadius)
+        {
+            if (line == null) return;
+            Vector3 center = transform.position;
+            center.y = .16f;
+            for (int i = 0; i < Segments; i++)
+            {
+                float angle = i * Mathf.PI * 2f / Segments;
+                line.SetPosition(i, center + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * worldRadius);
+            }
+        }
+
+        private void Update()
+        {
+            if (planet == null || !planet.Available || health == null || health.IsDead)
+            {
+                HideRings();
+                return;
+            }
+            if (Time.timeScale <= 0f) return;
+            if (!telegraphing)
+            {
+                if (Time.time < flashUntil) return;
+                HideRings();
+                if (Time.time < nextPulse) return;
+                telegraphing = true;
+                telegraphStart = Time.time;
+                if (boundary != null) { boundary.enabled = true; boundary.widthMultiplier = .09f; }
+                if (charge != null) charge.enabled = true;
+                if (ringMaterial != null) ringMaterial.color = warning;
+            }
+
+            float progress = Mathf.Clamp01((Time.time - telegraphStart) / Mathf.Max(.1f, telegraphDuration));
+            // The outer boundary always matches the damage radius; the inner ring shows time remaining.
+            DrawRing(boundary, radius);
+            DrawRing(charge, radius * progress);
+            if (progress < 1f) return;
+            Explode();
+            telegraphing = false;
+            flashUntil = Time.time + .18f;
+            nextPulse = Time.time + Mathf.Max(.5f, interval);
+            if (charge != null) charge.enabled = false;
+            if (boundary != null) boundary.widthMultiplier = .24f;
+            if (ringMaterial != null) ringMaterial.color = Color.white;
+        }
+
+        private void Explode()
+        {
+            foreach (Health victim in FindObjectsByType<Health>())
+            {
+                if (victim == null || victim.IsDead || victim == health) continue;
+                if (victim.GetComponent<TeamMember>() == null && victim.GetComponent<LaneMinion>() == null) continue;
+                Vector3 delta = victim.transform.position - transform.position;
+                delta.y = 0;
+                if (delta.sqrMagnitude <= radius * radius) victim.TakeDamage(damage, gameObject);
+            }
+            Alterverse.Visuals.PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
+        }
+
+        private void HideRings()
+        {
+            telegraphing = false;
+            if (boundary != null) boundary.enabled = false;
+            if (charge != null) charge.enabled = false;
+        }
+
+        private void OnDisable() => HideRings();
+        private void OnDestroy() { if (ringMaterial != null) Destroy(ringMaterial); }
+    }
 }
