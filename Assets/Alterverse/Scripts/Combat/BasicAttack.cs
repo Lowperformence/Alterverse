@@ -1,3 +1,4 @@
+using Alterverse.AI;
 using Alterverse.Visuals;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -40,7 +41,7 @@ namespace Alterverse.Combat
             foreach (Collider hit in hits)
             {
                 Health health = hit.GetComponentInParent<Health>();
-                if (health == null || health == selfHealth || health.IsDead) continue;
+                if (health == null || health == selfHealth || health.IsDead || !IsPrototypeEnemy(health)) continue;
 
                 float sqr = (health.transform.position - transform.position).sqrMagnitude;
                 if (sqr < closestSqr)
@@ -60,6 +61,17 @@ namespace Alterverse.Combat
             closest.TakeDamage(damage);
             PrototypeVfx.Burst(closest.transform.position, new Color(0.58f, 0.16f, 0.90f), 0.85f, 6);
             return true;
+        }
+
+        private static bool IsPrototypeEnemy(Health health)
+        {
+            LaneMinion minion = health.GetComponent<LaneMinion>();
+            if (minion != null) return minion.Team == 1;
+
+            LaneTower tower = health.GetComponent<LaneTower>();
+            if (tower != null) return tower.Team == 1;
+
+            return health.GetComponent<PrototypeEnemyBot>() != null;
         }
 
         private void OnDrawGizmosSelected()
