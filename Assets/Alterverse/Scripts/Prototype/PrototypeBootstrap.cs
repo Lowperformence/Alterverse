@@ -2,6 +2,7 @@ using Alterverse.AI;
 using Alterverse.CameraSystem;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Match;
 using Alterverse.UI;
 using Alterverse.Visuals;
 using UnityEngine;
@@ -24,6 +25,8 @@ namespace Alterverse.Prototype
             SpawnHealingZone zeroZone=GameObject.Find("AV_ZeroSpawnZone")?.GetComponent<SpawnHealingZone>();if(zeroZone!=null){zeroZone.InitializeTeam(0);zeroZone.Initialize(ph);}SpawnHealingZone lumenZone=GameObject.Find("AV_LumenSpawnZone")?.GetComponent<SpawnHealingZone>();if(lumenZone!=null){lumenZone.InitializeTeam(1);lumenZone.Initialize(eh);}
             UnityEngine.Camera cam=UnityEngine.Camera.main;if(cam==null){GameObject c=new("Main Camera");c.tag="MainCamera";cam=c.AddComponent<UnityEngine.Camera>();}cam.backgroundColor=new Color(.018f,.015f,.045f);MobaCamera mc=cam.GetComponent<MobaCamera>();if(mc==null)mc=cam.gameObject.AddComponent<MobaCamera>();mc.SetTarget(player.transform);new GameObject("AV_HUD").AddComponent<PrototypeHUD>().Initialize(ph,abilities,eh);
             new GameObject("AV_LaneWaveSpawner").AddComponent<LaneWaveSpawner>();new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
+            new GameObject("AV_DimensionsFront").AddComponent<DimensionsFront>();
+            new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
         }
 
         private static void BuildArena()
