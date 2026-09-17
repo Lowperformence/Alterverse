@@ -1,0 +1,15 @@
+using UnityEngine;
+namespace Alterverse.Visuals
+{
+public sealed class RealityCollisionLandmarks:MonoBehaviour
+{
+private void Start(){BuildFrontRelics();BuildObjectiveHalos();BuildBaseCrowns();}
+private void BuildFrontRelics(){for(int i=-2;i<=2;i++){float z=i*13f;BuildSplitRelic(z,i);}}
+private void BuildSplitRelic(float z,int index){float yaw=index*17f;Create("DF_ZeroRelicHalf",PrimitiveType.Cube,new Vector3(-3.1f,1.8f,z),new Vector3(.65f,3.6f,1.35f),StylizedArtDirection.ZeroDark,new Vector3(12,25+yaw,23));Create("DF_ZeroRelicEdge",PrimitiveType.Cube,new Vector3(-2.45f,2.25f,z+.2f),new Vector3(.12f,2.8f,.95f),StylizedArtDirection.ZeroEnergy,new Vector3(12,25+yaw,23));Create("DF_LumenRelicHalf",PrimitiveType.Cube,new Vector3(3.1f,1.8f,z),new Vector3(.65f,3.6f,1.35f),StylizedArtDirection.LumenDark,new Vector3(-8,-25-yaw,-12));Create("DF_LumenRelicEdge",PrimitiveType.Cube,new Vector3(2.45f,2.25f,z-.2f),new Vector3(.12f,2.8f,.95f),StylizedArtDirection.LumenEnergy,new Vector3(-8,-25-yaw,-12));Create("DF_CollisionBridge",PrimitiveType.Cube,new Vector3(0,3.05f,z),new Vector3(4.8f,.11f,.16f),index%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,new Vector3(0,index*7f,0));}
+private void BuildObjectiveHalos(){BuildHalo(new Vector3(0,.2f,-27),-1);BuildHalo(new Vector3(0,.2f,27),1);}
+private void BuildHalo(Vector3 center,int direction){for(int i=0;i<10;i++){float a=i*36f*Mathf.Deg2Rad;Vector3 p=center+new Vector3(Mathf.Cos(a)*5.2f,.18f+((i%2)*.22f),Mathf.Sin(a)*5.2f);Color c=i%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;Create("DF_ObjectiveFractureHalo",PrimitiveType.Cube,p,new Vector3(.16f,.12f,1.15f),c,new Vector3(0,-i*36f+90f,0));}Create("DF_ObjectiveAxis",PrimitiveType.Cube,center+new Vector3(0,2.6f,0),new Vector3(.18f,5.2f,.18f),direction<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,new Vector3(0,45,0));}
+private void BuildBaseCrowns(){BuildBaseCrown(-35f,true);BuildBaseCrown(35f,false);}
+private void BuildBaseCrown(float x,bool zero){Color dark=zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;Color energy=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;for(int i=0;i<6;i++){float z=(i-2.5f)*1.45f;float h=3.2f+Mathf.Abs(2.5f-i)*.7f;float tilt=zero?(i-2.5f)*9f:0f;Create(zero?"DF_ZeroBaseCrown":"DF_LumenBaseCrown",PrimitiveType.Cube,new Vector3(x,1.1f+h*.25f,z),new Vector3(.45f,h,.45f),dark,new Vector3(0,zero?18f:45f,tilt));Create("DF_BaseCrownSignal",PrimitiveType.Cube,new Vector3(x+(zero?.48f:-.48f),2.1f+h*.25f,z),new Vector3(.09f,h*.52f,.09f),energy,new Vector3(0,zero?18f:45f,tilt));}}
+private void Create(string name,PrimitiveType type,Vector3 position,Vector3 scale,Color color,Vector3 rotation){GameObject g=GameObject.CreatePrimitive(type);g.name=name;g.transform.SetParent(transform,false);g.transform.position=position;g.transform.localScale=scale;g.transform.rotation=Quaternion.Euler(rotation);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();if(r!=null)r.material.color=color;}
+}
+}
