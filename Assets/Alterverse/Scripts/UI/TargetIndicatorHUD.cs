@@ -1,4 +1,4 @@
-using Alterverse.Combat;using Alterverse.Match;using Alterverse.Visuals;using UnityEngine;
+using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Match;using Alterverse.Visuals;using UnityEngine;
 namespace Alterverse.UI
 {
 public sealed class TargetIndicatorHUD:MonoBehaviour
