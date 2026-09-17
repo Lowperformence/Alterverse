@@ -14,25 +14,23 @@ namespace Alterverse.Combat
         [SerializeField] private LayerMask targetMask = ~0;
 
         private Health selfHealth;
+        private TeamMember selfTeam;
         private float nextAttackTime;
 
         private void Awake()
         {
             selfHealth = GetComponent<Health>();
+            selfTeam = GetComponent<TeamMember>();
         }
 
         private void Update()
         {
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame)
-                TryAttack();
+            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) TryAttack();
         }
 
         public bool TryAttack()
         {
             if (selfHealth.IsDead || Time.time < nextAttackTime) return false;
-            nextAttackTime = Time.time + cooldown;
-
-            PrototypeVfx.Slash(transform, new Color(0.44f, 0.12f, 0.75f), 1.5f);
 
             Collider[] hits = Physics.OverlapSphere(transform.position, range, targetMask, QueryTriggerInteraction.Ignore);
             Health closest = null;
@@ -41,42 +39,33 @@ namespace Alterverse.Combat
             foreach (Collider hit in hits)
             {
                 Health health = hit.GetComponentInParent<Health>();
-                if (health == null || health == selfHealth || health.IsDead || !IsPrototypeEnemy(health)) continue;
-
+                if (health == null || health == selfHealth || health.IsDead || !IsEnemy(health)) continue;
                 float sqr = (health.transform.position - transform.position).sqrMagnitude;
-                if (sqr < closestSqr)
-                {
-                    closestSqr = sqr;
-                    closest = health;
-                }
+                if (sqr < closestSqr) { closestSqr = sqr; closest = health; }
             }
 
             if (closest == null) return false;
+            nextAttackTime = Time.time + cooldown;
+            PrototypeVfx.Slash(transform, new Color(0.44f, 0.12f, 0.75f), 1.5f);
 
-            Vector3 look = closest.transform.position - transform.position;
-            look.y = 0f;
-            if (look.sqrMagnitude > 0.01f)
-                transform.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
-
+            Vector3 look = closest.transform.position - transform.position; look.y = 0f;
+            if (look.sqrMagnitude > 0.01f) transform.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
             closest.TakeDamage(damage);
             PrototypeVfx.Burst(closest.transform.position, new Color(0.58f, 0.16f, 0.90f), 0.85f, 6);
             return true;
         }
 
-        private static bool IsPrototypeEnemy(Health health)
+        private bool IsEnemy(Health health)
         {
+            TeamMember member = health.GetComponent<TeamMember>();
+            if (member != null && selfTeam != null) return member.Team != selfTeam.Team;
             LaneMinion minion = health.GetComponent<LaneMinion>();
-            if (minion != null) return minion.Team == 1;
-
+            if (minion != null) return minion.Team != (selfTeam != null ? selfTeam.Team : 0);
             LaneTower tower = health.GetComponent<LaneTower>();
-            if (tower != null) return tower.Team == 1;
-
+            if (tower != null) return tower.Team != (selfTeam != null ? selfTeam.Team : 0);
             return health.GetComponent<PrototypeEnemyBot>() != null;
         }
 
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.DrawWireSphere(transform.position, range);
-        }
+        private void OnDrawGizmosSelected(){Gizmos.DrawWireSphere(transform.position, range);}
     }
 }
