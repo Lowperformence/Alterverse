@@ -6,7 +6,7 @@ namespace Alterverse.Combat
     [RequireComponent(typeof(Health))]
     public sealed class LaneTower : MonoBehaviour
     {
-        [SerializeField] private float attackRange = 6.5f;
+        [SerializeField] private float attackRange = 5.25f;
         [SerializeField] private float attackDamage = 18f;
         [SerializeField] private float attackCooldown = 1.2f;
 
