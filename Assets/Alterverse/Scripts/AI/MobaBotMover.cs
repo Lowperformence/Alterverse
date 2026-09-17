@@ -1,7 +1,8 @@
 using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Match;
 namespace Alterverse.AI
 {
-[RequireComponent(typeof(Health),typeof(MobaBotBrain),typeof(BotLanePlan),typeof(BotTargetSensor))]public sealed class MobaBotMover:MonoBehaviour
+[RequireComponent(typeof(Health),typeof(MobaBotBrain),typeof(BotLanePlan))]
+[RequireComponent(typeof(BotTargetSensor))]public sealed class MobaBotMover:MonoBehaviour
 {
 [SerializeField]private float fallbackMoveSpeed=3.35f,laneStopDistance=.45f,chaseLimit=8.5f,turnSpeed=9f;private const float ArenaHalfWidth=41f,ArenaHalfHeight=35f;private Health health;private MobaBotBrain brain;private BotLanePlan lanePlan;private BotTargetSensor sensor;private HeroCombatProfile profile;private PlanetBuffReceiver planetBuff;private float nextObjectiveScan;private DimensionPlanet objective;
 private float MoveSpeed=>(profile!=null?profile.MoveSpeed:fallbackMoveSpeed)*(planetBuff!=null?planetBuff.MoveSpeedMultiplier:1f);private float CombatStop=>profile!=null?Mathf.Max(1.2f,profile.AttackRange*.82f):1.5f;private void Awake(){health=GetComponent<Health>();brain=GetComponent<MobaBotBrain>();lanePlan=GetComponent<BotLanePlan>();sensor=GetComponent<BotTargetSensor>();profile=GetComponent<HeroCombatProfile>();planetBuff=GetComponent<PlanetBuffReceiver>();}
