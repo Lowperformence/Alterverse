@@ -2,6 +2,6 @@ namespace Alterverse.Shop
 {
 public static class RecallCosmeticCatalog
 {
-public const string ProductId="dimensions_front_recall_reality_shatter";public const string DisplayName="REALITY SHATTER";public const string Category="RECALL EFFECT";public const string TargetPrice="€4.99";public const string Description="Split Zero and Lumen around your hero while returning to base.";
+public const string ProductId="dimensions_front_recall_dualphase_departure";public const string DisplayName="DUALPHASE DEPARTURE";public const string Category="RECALL EFFECT";public const string TargetPrice="€4.99";public const string Description="Zero fractures inward while Lumen geometry folds outward as your hero leaves the Front.";
 }
 }
