@@ -1,7 +1,8 @@
 using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;
 namespace Alterverse.AI
 {
-[RequireComponent(typeof(Health),typeof(BotTargetSensor),typeof(HeroIdentity),typeof(HeroAbilityKit))]public sealed class HeroBotAbilities:MonoBehaviour
+[RequireComponent(typeof(Health),typeof(BotTargetSensor),typeof(HeroIdentity))]
+[RequireComponent(typeof(HeroAbilityKit))]public sealed class HeroBotAbilities:MonoBehaviour
 {
 private Health self;private BotTargetSensor sensor;private HeroIdentity identity;private HeroAbilityKit kit;private HeroCombatProfile profile;private MobaBotBrain brain;private TeamMember team;private float qReady,wReady,eReady,ultReady,nextAllyRefresh;private Health[] allyCache;
 private void Awake(){self=GetComponent<Health>();sensor=GetComponent<BotTargetSensor>();identity=GetComponent<HeroIdentity>();kit=GetComponent<HeroAbilityKit>();profile=GetComponent<HeroCombatProfile>();brain=GetComponent<MobaBotBrain>();team=GetComponent<TeamMember>();}
