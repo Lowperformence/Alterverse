@@ -3,10 +3,6 @@ using Alterverse.Combat;
 
 namespace Alterverse.AI
 {
-    /// <summary>
-    /// Lightweight decision layer for ALTERVERSE bot heroes.
-    /// Kept independent from the current prototype bot so the tested runtime stays unchanged.
-    /// </summary>
     [RequireComponent(typeof(Health))]
     public sealed class MobaBotBrain : MonoBehaviour
     {
@@ -21,6 +17,7 @@ namespace Alterverse.AI
 
         private Health health;
         private BotPersonality personality;
+        private BotTargetSensor targetSensor;
         private BotState state = BotState.Lane;
         private float nextDecisionTime;
 
@@ -34,9 +31,9 @@ namespace Alterverse.AI
         {
             health = GetComponent<Health>();
             personality = GetComponent<BotPersonality>();
+            targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
 
-            // Tiny variation keeps equal profiles from reacting on the same frame.
             aggression = Mathf.Clamp01(aggression + Random.Range(-0.06f, 0.06f));
             caution = Mathf.Clamp01(caution + Random.Range(-0.06f, 0.06f));
             decisionInterval += Random.Range(-0.05f, 0.08f);
@@ -60,6 +57,7 @@ namespace Alterverse.AI
         public void RefreshPersonality()
         {
             personality = GetComponent<BotPersonality>();
+            targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
         }
 
@@ -82,7 +80,7 @@ namespace Alterverse.AI
                 return;
             }
 
-            if (state == BotState.Retreat && hp < 0.80f)
+            if ((state == BotState.Retreat || state == BotState.Recover) && hp < 0.80f)
             {
                 state = BotState.Recover;
                 return;
@@ -94,8 +92,19 @@ namespace Alterverse.AI
                 return;
             }
 
-            // Target evaluation and movement are connected after the current
-            // map/minion/tower build passes its Unity stability test.
+            Health enemy = targetSensor != null ? targetSensor.CurrentTarget : null;
+            if (enemy != null && !enemy.IsDead)
+            {
+                // Aggressive profiles accept fights more readily; cautious bots
+                // need more health before committing.
+                float requiredHealth = Mathf.Lerp(0.72f, 0.42f, aggression);
+                if (hp >= requiredHealth)
+                {
+                    state = BotState.Fight;
+                    return;
+                }
+            }
+
             state = BotState.Lane;
         }
     }
