@@ -16,6 +16,7 @@ namespace Alterverse.Characters
         [SerializeField] private float nullStepCooldown = 7f;
         [SerializeField] private float endFutureCooldown = 14f;
 
+        private const float ArenaHalfSize = 29f;
         private static readonly Color ShadowColor = new(0.42f, 0.10f, 0.72f);
         private static readonly Color SoulColor = new(0.72f, 0.08f, 0.25f);
         private static readonly Color FutureColor = new(0.90f, 0.12f, 0.45f);
@@ -49,7 +50,7 @@ namespace Alterverse.Characters
             Vector3 start = transform.position;
             Vector3 behind = -target.transform.forward; behind.y = 0f;
             if (behind.sqrMagnitude < 0.01f) behind = (transform.position - target.transform.position).normalized;
-            Vector3 destination = target.transform.position + behind.normalized * 1.25f;
+            Vector3 destination = ClampToArena(target.transform.position + behind.normalized * 1.25f);
             PrototypeVfx.ShadowTrail(start, destination, ShadowColor);
             PrototypeVfx.Ring(start, ShadowColor, 1.25f, 0.18f);
             Teleport(destination);
@@ -91,8 +92,7 @@ namespace Alterverse.Characters
             if (Time.time < rReady) return false;
             rReady = Time.time + nullStepCooldown;
             Vector3 start = transform.position;
-            Vector3 destination = transform.position + transform.forward * 4.2f;
-            destination.x = Mathf.Clamp(destination.x, -13f, 13f); destination.z = Mathf.Clamp(destination.z, -13f, 13f);
+            Vector3 destination = ClampToArena(transform.position + transform.forward * 4.2f);
             PrototypeVfx.ShadowTrail(start, destination, ShadowColor);
             PrototypeVfx.Ring(start, ShadowColor, 0.9f, 0.16f);
             Teleport(destination);
@@ -135,6 +135,13 @@ namespace Alterverse.Characters
                 if (sqr < closestSqr) { closestSqr = sqr; closest = health; }
             }
             return closest;
+        }
+
+        private static Vector3 ClampToArena(Vector3 position)
+        {
+            position.x = Mathf.Clamp(position.x, -ArenaHalfSize, ArenaHalfSize);
+            position.z = Mathf.Clamp(position.z, -ArenaHalfSize, ArenaHalfSize);
+            return position;
         }
 
         private bool IsEnemy(Health health) => health != null && health != selfHealth && !health.IsDead;
