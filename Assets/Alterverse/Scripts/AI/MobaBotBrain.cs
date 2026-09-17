@@ -20,6 +20,7 @@ namespace Alterverse.AI
         [SerializeField] private float lowHealthThreshold = 0.30f;
 
         private Health health;
+        private BotPersonality personality;
         private BotState state = BotState.Lane;
         private float nextDecisionTime;
 
@@ -32,10 +33,13 @@ namespace Alterverse.AI
         private void Awake()
         {
             health = GetComponent<Health>();
-            // Small per-bot variation prevents synchronized, robotic decisions.
-            aggression = Mathf.Clamp01(aggression + Random.Range(-0.12f, 0.12f));
-            caution = Mathf.Clamp01(caution + Random.Range(-0.12f, 0.12f));
-            decisionInterval += Random.Range(-0.08f, 0.12f);
+            personality = GetComponent<BotPersonality>();
+            ApplyPersonality();
+
+            // Tiny variation keeps equal profiles from reacting on the same frame.
+            aggression = Mathf.Clamp01(aggression + Random.Range(-0.06f, 0.06f));
+            caution = Mathf.Clamp01(caution + Random.Range(-0.06f, 0.06f));
+            decisionInterval += Random.Range(-0.05f, 0.08f);
         }
 
         private void Update()
@@ -51,6 +55,21 @@ namespace Alterverse.AI
             laneZ = assignedLaneZ;
             aggression = Mathf.Clamp01(personalityAggression);
             caution = Mathf.Clamp01(personalityCaution);
+        }
+
+        public void RefreshPersonality()
+        {
+            personality = GetComponent<BotPersonality>();
+            ApplyPersonality();
+        }
+
+        private void ApplyPersonality()
+        {
+            if (personality == null) return;
+            aggression = personality.Aggression;
+            caution = personality.Caution;
+            decisionInterval = personality.ReactionDelay;
+            lowHealthThreshold = Mathf.Lerp(0.22f, 0.42f, personality.Caution);
         }
 
         private void Decide()
@@ -75,8 +94,8 @@ namespace Alterverse.AI
                 return;
             }
 
-            // Actual target evaluation and movement are deliberately connected later,
-            // after the current map/minion/tower build passes its Unity stability test.
+            // Target evaluation and movement are connected after the current
+            // map/minion/tower build passes its Unity stability test.
             state = BotState.Lane;
         }
     }
