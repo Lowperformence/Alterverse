@@ -16,40 +16,35 @@ namespace Alterverse.Characters
         private CharacterController controller;
         private Vector3 spawnPoint;
         private bool respawning;
+        private bool respawnReady;
         private int deathCount;
+        private float readyAt;
 
         public int DeathCount => deathCount;
-        public float CurrentRespawnDelay => Mathf.Min(maximumRespawnDelay, firstRespawnDelay + Mathf.Max(0, deathCount - 1) * addedDelayPerDeath);
+        public bool IsRespawning => respawning;
+        public bool RespawnReady => respawnReady;
+        public float RemainingSeconds => respawning && !respawnReady ? Mathf.Max(0f,readyAt-Time.time) : 0f;
+        public float CurrentRespawnDelay => Mathf.Min(maximumRespawnDelay,firstRespawnDelay+Mathf.Max(0,deathCount-1)*addedDelayPerDeath);
 
-        private void Awake()
-        {
-            health = GetComponent<Health>();
-            controller = GetComponent<CharacterController>();
-            spawnPoint = transform.position;
-            health.Died += OnDied;
-        }
+        private void Awake(){health=GetComponent<Health>();controller=GetComponent<CharacterController>();spawnPoint=transform.position;health.Died+=OnDied;}
+        private void OnDestroy(){if(health!=null)health.Died-=OnDied;}
+        private void OnDied(){if(respawning)return;deathCount++;StartCoroutine(RespawnCountdown(CurrentRespawnDelay));}
 
-        private void OnDestroy()
+        private IEnumerator RespawnCountdown(float delay)
         {
-            if (health != null) health.Died -= OnDied;
-        }
-
-        private void OnDied()
-        {
-            if (respawning) return;
-            deathCount++;
-            StartCoroutine(RespawnRoutine(CurrentRespawnDelay));
-        }
-
-        private IEnumerator RespawnRoutine(float delay)
-        {
-            respawning = true;
+            respawning=true;respawnReady=false;readyAt=Time.time+delay;
+            if(controller!=null)controller.enabled=false;
             yield return new WaitForSeconds(delay);
-            controller.enabled = false;
-            transform.position = spawnPoint;
-            controller.enabled = true;
+            respawnReady=true;
+        }
+
+        public void ConfirmRespawn()
+        {
+            if(!respawning||!respawnReady)return;
+            transform.position=spawnPoint;
+            if(controller!=null)controller.enabled=true;
             health.RestoreFull();
-            respawning = false;
+            respawnReady=false;respawning=false;
         }
     }
 }
