@@ -1,81 +1,11 @@
-using System.Collections.Generic;
-using UnityEngine;
-
+using Alterverse.Visuals;using UnityEngine;
 namespace Alterverse.Combat
 {
-    [RequireComponent(typeof(Health))]
-    public sealed class LaneTower : MonoBehaviour
-    {
-        [SerializeField] private float attackRange = 5.25f;
-        [SerializeField] private float attackDamage = 18f;
-        [SerializeField] private float attackCooldown = 1.2f;
-
-        private Health health;
-        private int team;
-        private float nextAttackTime;
-
-        public int Team => team;
-
-        private void Awake() => health = GetComponent<Health>();
-
-        public void Initialize(int teamId) => team = teamId;
-
-        private void Update()
-        {
-            if (health == null || health.IsDead || Time.time < nextAttackTime) return;
-
-            Health target = FindEnemyMinion();
-            if (target == null) return;
-
-            nextAttackTime = Time.time + attackCooldown;
-            target.TakeDamage(attackDamage);
-            SpawnShotFlash(target.transform.position);
-        }
-
-        private Health FindEnemyMinion()
-        {
-            Collider[] hits = Physics.OverlapSphere(transform.position, attackRange, ~0, QueryTriggerInteraction.Ignore);
-            Health closest = null;
-            float closestSqr = float.MaxValue;
-            HashSet<Health> checkedHealth = new();
-
-            foreach (Collider hit in hits)
-            {
-                Health candidate = hit.GetComponentInParent<Health>();
-                if (candidate == null || candidate == health || candidate.IsDead || !checkedHealth.Add(candidate)) continue;
-
-                LaneMinion minion = candidate.GetComponent<LaneMinion>();
-                if (minion == null || minion.Team == team) continue;
-
-                float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
-                if (sqr < closestSqr)
-                {
-                    closestSqr = sqr;
-                    closest = candidate;
-                }
-            }
-
-            return closest;
-        }
-
-        private void SpawnShotFlash(Vector3 targetPosition)
-        {
-            Vector3 origin = transform.position + Vector3.up * 1.7f;
-            Vector3 direction = targetPosition - origin;
-            float distance = direction.magnitude;
-            if (distance < 0.01f) return;
-
-            GameObject beam = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            beam.name = "AV_TowerShot";
-            beam.transform.position = origin + direction * 0.5f;
-            beam.transform.rotation = Quaternion.LookRotation(direction);
-            beam.transform.localScale = new Vector3(0.09f, 0.09f, distance);
-            Collider collider = beam.GetComponent<Collider>();
-            if (collider != null) collider.enabled = false;
-            Renderer renderer = beam.GetComponent<Renderer>();
-            if (renderer != null)
-                renderer.material.color = team == 0 ? new Color(0.55f, 0.12f, 0.82f) : new Color(0.08f, 0.72f, 0.78f);
-            Destroy(beam, 0.08f);
-        }
-    }
+[RequireComponent(typeof(Health))]public sealed class LaneTower:MonoBehaviour
+{
+[SerializeField]private float attackRange=5.25f,attackDamage=18f,attackCooldown=1.2f;private readonly Collider[] hitBuffer=new Collider[32];private Health health;private int team;private float nextAttackTime;public int Team=>team;private void Awake()=>health=GetComponent<Health>();public void Initialize(int teamId)=>team=teamId;
+private void Update(){if(health==null||health.IsDead||Time.time<nextAttackTime)return;Health target=FindEnemyMinion();if(target==null)return;nextAttackTime=Time.time+attackCooldown;target.TakeDamage(attackDamage,gameObject);SpawnShot(target.transform.position);}
+private Health FindEnemyMinion(){int count=Physics.OverlapSphereNonAlloc(transform.position,attackRange,hitBuffer,~0,QueryTriggerInteraction.Ignore);Health closest=null;float closestSqr=float.MaxValue;for(int i=0;i<count;i++){Collider hit=hitBuffer[i];if(hit==null)continue;Health candidate=hit.GetComponentInParent<Health>();if(candidate==null||candidate==health||candidate.IsDead)continue;LaneMinion minion=candidate.GetComponent<LaneMinion>();if(minion==null||minion.Team==team)continue;float sqr=(candidate.transform.position-transform.position).sqrMagnitude;if(sqr<closestSqr){closestSqr=sqr;closest=candidate;}}return closest;}
+private void SpawnShot(Vector3 target){Color c=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;Vector3 origin=transform.position+Vector3.up*1.7f,direction=target-origin;float distance=direction.magnitude;if(distance<.01f)return;GameObject beam=GameObject.CreatePrimitive(PrimitiveType.Cube);beam.name="DF_TowerShot";beam.transform.position=origin+direction*.5f;beam.transform.rotation=Quaternion.LookRotation(direction);beam.transform.localScale=new Vector3(.11f,.11f,distance);Collider col=beam.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=beam.GetComponent<Renderer>();if(r!=null)r.material.color=c;PrototypeVfx.Ring(target,c,.65f,.18f);Destroy(beam,.1f);}
+}
 }
