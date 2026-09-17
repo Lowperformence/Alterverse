@@ -22,7 +22,7 @@ namespace Alterverse.Combat
         public void TakeDamage(float amount,GameObject source)
         {
             if(IsDead||amount<=0f)return;
-            if(source!=null){LastDamageSource=source;MatchScoreboard scoreboard=Object.FindAnyObjectByType<MatchScoreboard>();if(scoreboard!=null)scoreboard.RecordDamage(this,source);}
+            if(source!=null){LastDamageSource=source;if(MatchScoreboard.Instance!=null)MatchScoreboard.Instance.RecordDamage(this,source);}
             Current=Mathf.Max(0f,Current-amount);Changed?.Invoke(Current,maxHealth);
             Debug.Log($"{name} took {amount:0.#} damage. HP: {Current:0.#}/{maxHealth:0.#}");
             if(Current<=0f){IsDead=true;Died?.Invoke();DiedWithSource?.Invoke(this,LastDamageSource);if(destroyOnDeath)Destroy(gameObject);}
