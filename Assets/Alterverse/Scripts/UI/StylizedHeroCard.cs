@@ -1,8 +1,12 @@
-using Alterverse.Characters;using Alterverse.Visuals;using UnityEngine;
+using Alterverse.Characters;
+using UnityEngine;
 namespace Alterverse.UI
 {
-public static class StylizedHeroCard
-{
-public static void Draw(Rect area,HeroId hero,Texture2D pixel,float time){if(pixel==null||area.width<=8||area.height<=8)return;Color old=GUI.color,accent=StylizedArtDirection.HeroAccent(hero);float inset=Mathf.Clamp(Mathf.Min(area.width,area.height)*.025f,2f,6f),scale=Mathf.Clamp(area.height/220f,.65f,1.35f);GUI.color=new Color(.01f,.01f,.025f,.82f);GUI.DrawTexture(area,pixel);GUI.color=new Color(accent.r,accent.g,accent.b,.22f);GUI.DrawTexture(new Rect(area.x+inset,area.y+inset,Mathf.Max(0,area.width-inset*2),Mathf.Max(0,area.height-inset*2)),pixel);float cx=area.center.x,bottom=area.yMax-18*scale,bob=Mathf.Sin(time*1.3f)*3*scale;GUI.color=StylizedArtDirection.Ink;GUI.DrawTexture(new Rect(cx-area.width*.17f,area.y+area.height*.35f+bob,area.width*.34f,area.height*.48f),pixel);float head=Mathf.Min(area.width*.21f,area.height*.22f);GUI.DrawTexture(new Rect(cx-head*.5f,area.y+area.height*.17f+bob,head,head),pixel);float shoulder=hero==HeroId.Kaelon||hero==HeroId.Rook?.27f:.20f;GUI.DrawTexture(new Rect(cx-area.width*shoulder,area.y+area.height*.43f+bob,area.width*shoulder*2,area.height*.16f),pixel);GUI.color=accent;float slash=Mathf.Sin(time*2f)*4*scale,slashW=Mathf.Max(2f,4f*scale);GUI.DrawTexture(new Rect(cx+area.width*.17f,area.y+area.height*.25f+slash,slashW,area.height*.55f),pixel);float railInset=Mathf.Min(12f*scale,area.width*.12f);GUI.DrawTexture(new Rect(area.x+railInset,bottom,Mathf.Max(0,area.width-railInset*2),Mathf.Max(2f,3f*scale)),pixel);GUI.color=old;}
-}
+    public static class StylizedHeroCard
+    {
+        public static void Draw(Rect area,HeroId hero,Texture2D pixel,float time)
+        {
+            Alterverse.Visuals.StylizedHeroCard.Draw(area,hero,pixel,time);
+        }
+    }
 }
