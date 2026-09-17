@@ -12,7 +12,7 @@ namespace Alterverse.Match
         private void Start(){front=Object.FindAnyObjectByType<DimensionsFront>();RefreshHeroes();}
         private void Update(){if(Time.unscaledTime<nextRefresh)return;nextRefresh=Time.unscaledTime+refreshInterval;RefreshHeroes();}
         private void RefreshHeroes(){TeamMember[] members=Object.FindObjectsByType<TeamMember>(FindObjectsSortMode.None);foreach(TeamMember member in members){if(member==null)continue;Health health=member.GetComponent<Health>();if(health==null||!tracked.Add(health))continue;health.DiedWithSource+=OnHeroDied;}}
-        private void OnHeroDied(Health victim,GameObject source){if(front==null||victim==null||source==null)return;TeamMember victimTeam=victim.GetComponent<TeamMember>();TeamMember killerTeam=source.GetComponentInParent<TeamMember>();if(victimTeam==null||killerTeam==null||victimTeam.Team==killerTeam.Team)return;front.RegisterHeroKill(killerTeam.Team,victim.transform.position.z);}
+        private void OnHeroDied(Health victim,GameObject source){if(front==null||victim==null||source==null)return;TeamMember victimTeam=victim.GetComponent<TeamMember>();TeamMember killerTeam=source.GetComponentInParent<TeamMember>();if(victimTeam==null||killerTeam==null||victimTeam.Team==killerTeam.Team)return;front.RegisterHeroKill(killerTeam.Team);}
         private void OnDestroy(){foreach(Health health in tracked)if(health!=null)health.DiedWithSource-=OnHeroDied;tracked.Clear();}
     }
 }
