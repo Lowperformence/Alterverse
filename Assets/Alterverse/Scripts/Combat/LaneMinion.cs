@@ -54,8 +54,10 @@ namespace Alterverse.Combat
         private Health FindTarget()
         {
             Collider[] hits = Physics.OverlapSphere(transform.position, detectionRange, ~0, QueryTriggerInteraction.Ignore);
-            Health closest = null;
-            float closestSqr = float.MaxValue;
+            Health closestMinion = null;
+            Health closestTower = null;
+            float minionSqr = float.MaxValue;
+            float towerSqr = float.MaxValue;
             HashSet<Health> checkedHealth = new();
 
             foreach (Collider hit in hits)
@@ -64,16 +66,24 @@ namespace Alterverse.Combat
                 if (candidate == null || candidate == health || candidate.IsDead || !checkedHealth.Add(candidate)) continue;
 
                 LaneMinion otherMinion = candidate.GetComponent<LaneMinion>();
-                if (otherMinion != null && otherMinion.team == team) continue;
-
-                float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
-                if (sqr < closestSqr)
+                if (otherMinion != null)
                 {
-                    closestSqr = sqr;
-                    closest = candidate;
+                    if (otherMinion.Team == team) continue;
+                    float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
+                    if (sqr < minionSqr) { minionSqr = sqr; closestMinion = candidate; }
+                    continue;
+                }
+
+                LaneTower tower = candidate.GetComponent<LaneTower>();
+                if (tower != null)
+                {
+                    if (tower.Team == team) continue;
+                    float sqr = (candidate.transform.position - transform.position).sqrMagnitude;
+                    if (sqr < towerSqr) { towerSqr = sqr; closestTower = candidate; }
                 }
             }
-            return closest;
+
+            return closestMinion != null ? closestMinion : closestTower;
         }
 
         private void MoveTowards(Vector3 point)
