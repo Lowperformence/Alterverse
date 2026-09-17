@@ -13,6 +13,7 @@ namespace Alterverse.AI
         [SerializeField] private float attackCooldown = 1.05f;
         [SerializeField] private float respawnDelay = 3f;
 
+        private const float ArenaHalfSize = 29f;
         private Health health;
         private Health target;
         private Vector3 spawnPoint;
@@ -46,8 +47,10 @@ namespace Alterverse.AI
 
             if (distance > attackRange)
             {
-                Vector3 step = delta.normalized * moveSpeed * Time.deltaTime;
-                transform.position += step;
+                Vector3 nextPosition = transform.position + delta.normalized * moveSpeed * Time.deltaTime;
+                nextPosition.x = Mathf.Clamp(nextPosition.x, -ArenaHalfSize, ArenaHalfSize);
+                nextPosition.z = Mathf.Clamp(nextPosition.z, -ArenaHalfSize, ArenaHalfSize);
+                transform.position = nextPosition;
                 if (delta.sqrMagnitude > 0.01f)
                     transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(delta.normalized), 10f * Time.deltaTime);
             }
