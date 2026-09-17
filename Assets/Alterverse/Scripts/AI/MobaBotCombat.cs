@@ -3,20 +3,21 @@ using Alterverse.Combat;
 
 namespace Alterverse.AI
 {
+    /// <summary>
+    /// Executes close-range PvP attacks. Movement belongs exclusively to MobaBotMover
+    /// so combat and navigation never fight over the bot transform.
+    /// </summary>
     [RequireComponent(typeof(Health), typeof(MobaBotBrain), typeof(BotTargetSensor))]
     public sealed class MobaBotCombat : MonoBehaviour
     {
-        [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float attackRange = 1.65f;
         [SerializeField] private float attackDamage = 9f;
         [SerializeField] private float attackCooldown = 1.05f;
-        [SerializeField] private float chaseLimit = 7.5f;
+        [SerializeField] private float turnSpeed = 10f;
 
-        private const float ArenaHalfSize = 29f;
         private Health health;
         private MobaBotBrain brain;
         private BotTargetSensor sensor;
-        private BotLanePlan lanePlan;
         private float nextAttackTime;
 
         private void Awake()
@@ -24,7 +25,6 @@ namespace Alterverse.AI
             health = GetComponent<Health>();
             brain = GetComponent<MobaBotBrain>();
             sensor = GetComponent<BotTargetSensor>();
-            lanePlan = GetComponent<BotLanePlan>();
         }
 
         private void Update()
@@ -37,39 +37,14 @@ namespace Alterverse.AI
 
             Vector3 delta = target.transform.position - transform.position;
             delta.y = 0f;
-            float distance = delta.magnitude;
+            if (delta.sqrMagnitude > attackRange * attackRange) return;
 
-            if (distance > chaseLimit) return;
-
-            if (distance > attackRange)
-            {
-                MoveTowardTarget(delta);
-                return;
-            }
+            if (delta.sqrMagnitude > 0.01f)
+                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(delta.normalized), turnSpeed * Time.deltaTime);
 
             if (Time.time < nextAttackTime) return;
             nextAttackTime = Time.time + attackCooldown;
             target.TakeDamage(attackDamage);
-        }
-
-        private void MoveTowardTarget(Vector3 delta)
-        {
-            if (delta.sqrMagnitude < 0.001f) return;
-
-            Vector3 direction = delta.normalized;
-            Vector3 next = transform.position + direction * moveSpeed * Time.deltaTime;
-
-            // Do not let a basic chase drag a bot deep past its lane pressure point.
-            if (lanePlan != null)
-            {
-                float maxPressureX = Mathf.Abs(lanePlan.EnemySide.x);
-                next.x = Mathf.Clamp(next.x, -maxPressureX, maxPressureX);
-            }
-
-            next.x = Mathf.Clamp(next.x, -ArenaHalfSize, ArenaHalfSize);
-            next.z = Mathf.Clamp(next.z, -ArenaHalfSize, ArenaHalfSize);
-            transform.position = next;
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), 10f * Time.deltaTime);
         }
     }
 }
