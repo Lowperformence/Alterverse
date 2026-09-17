@@ -33,12 +33,13 @@ namespace Alterverse.Prototype
             CreateGround("AV_DimensionZeroGround",new Vector3(-15,-.12f,0),new Vector3(30,.2f,60),zeroGround);
             CreateGround("AV_LumenGround",new Vector3(15,-.12f,0),new Vector3(30,.2f,60),lumenGround);
 
-            CreateLane("AV_TopLane",12f,lane);
-            CreateLane("AV_MidLane",0f,lane);
-            CreateLane("AV_BotLane",-12f,lane);
+            CreateLane("AV_TopLane",12f,lane);CreateLane("AV_MidLane",0f,lane);CreateLane("AV_BotLane",-12f,lane);
+            CreateJungle(-1);CreateJungle(1);
 
             CreateVisualBlock("AV_ZeroBasePad",new Vector3(-25,.04f,0),new Vector3(7,.05f,18),new Color(.11f,.04f,.17f),Vector3.zero);
             CreateVisualBlock("AV_LumenBasePad",new Vector3(25,.04f,0),new Vector3(7,.05f,18),new Color(.06f,.27f,.30f),Vector3.zero);
+            CreateBaseCore(new Vector3(-25,1.15f,0),new Color(.52f,.08f,.76f),"AV_ZeroRealityCore");
+            CreateBaseCore(new Vector3(25,1.15f,0),new Color(.08f,.72f,.78f),"AV_LumenRealityCore");
 
             for(int i=-12;i<=12;i++)
             {
@@ -50,11 +51,9 @@ namespace Alterverse.Prototype
             for(int z=-24;z<=24;z+=8){CreateObelisk(new Vector3(-26,1.25f,z),new Color(.13f,.035f,.22f),false);CreateObelisk(new Vector3(26,1.25f,z),new Color(.055f,.31f,.35f),true);}
             for(int z=-18;z<=18;z+=9){CreateCrystal(new Vector3(-9,.65f,z),new Color(.42f,.07f,.68f));CreateCrystal(new Vector3(9,.65f,z),new Color(.06f,.62f,.70f));}
 
-            CreateVisualCylinder("AV_RiftOuter",new Vector3(0,.075f,0),new Vector3(3.25f,.035f,3.25f),new Color(.20f,.045f,.29f));
-            CreateVisualCylinder("AV_RiftInner",new Vector3(0,.095f,0),new Vector3(2.35f,.045f,2.35f),new Color(.55f,.065f,.80f));
-            CreateVisualCylinder("AV_RiftEye",new Vector3(0,.115f,0),new Vector3(1.15f,.05f,1.15f),new Color(.08f,.025f,.12f));
-            GameObject core=GameObject.CreatePrimitive(PrimitiveType.Cube);core.name="AV_RiftCore";core.transform.position=new Vector3(0,1.45f,0);core.transform.localScale=Vector3.one*.72f;core.transform.rotation=Quaternion.Euler(25,45,20);DisableCollider(core);SetColor(core,new Color(.72f,.18f,1f));core.AddComponent<RiftCoreVisual>();
-            CreateShard(new Vector3(-1.15f,1.05f,.25f),new Color(.50f,.08f,.78f),.55f);CreateShard(new Vector3(1.05f,.85f,-.35f),new Color(.10f,.58f,.70f),.48f);CreateShard(new Vector3(.35f,1.2f,1.15f),new Color(.62f,.10f,.88f),.38f);
+            CreateObjectiveZone(new Vector3(0,.07f,20),new Color(.16f,.55f,.78f),"AV_NorthObjective");
+            CreateObjectiveZone(new Vector3(0,.07f,-20),new Color(.72f,.16f,.48f),"AV_SouthObjective");
+            CreateRiftCore();
         }
 
         private static void CreateLane(string name,float z,Color color)
@@ -63,6 +62,20 @@ namespace Alterverse.Prototype
             CreateVisualBlock(name+"_ZeroConnector",new Vector3(-22,.04f,z*.52f),new Vector3(12,.045f,1.5f),color,new Vector3(0,z>0?-20f:z<0?20f:0f,0));
             CreateVisualBlock(name+"_LumenConnector",new Vector3(22,.04f,z*.52f),new Vector3(12,.045f,1.5f),color,new Vector3(0,z>0?20f:z<0?-20f:0f,0));
         }
+
+        private static void CreateJungle(int side)
+        {
+            float x=side*13.5f;Color path=side<0?new Color(.10f,.065f,.14f):new Color(.075f,.22f,.23f);Color camp=side<0?new Color(.34f,.08f,.48f):new Color(.08f,.46f,.50f);
+            CreateVisualBlock(side<0?"AV_ZeroJungleNorth":"AV_LumenJungleNorth",new Vector3(x,.025f,6),new Vector3(12,.035f,1.15f),path,new Vector3(0,side*18f,0));
+            CreateVisualBlock(side<0?"AV_ZeroJungleSouth":"AV_LumenJungleSouth",new Vector3(x,.025f,-6),new Vector3(12,.035f,1.15f),path,new Vector3(0,-side*18f,0));
+            CreateCampMarker(new Vector3(x-side*2.2f,.08f,6.8f),camp,side<0?"AV_ZeroCampNorth":"AV_LumenCampNorth");
+            CreateCampMarker(new Vector3(x-side*2.2f,.08f,-6.8f),camp,side<0?"AV_ZeroCampSouth":"AV_LumenCampSouth");
+        }
+
+        private static void CreateCampMarker(Vector3 p,Color color,string name){CreateVisualCylinder(name,p,new Vector3(1.35f,.025f,1.35f),color);CreateShard(p+Vector3.up*.55f,color,.45f);}
+        private static void CreateObjectiveZone(Vector3 p,Color color,string name){CreateVisualCylinder(name,p,new Vector3(2.5f,.025f,2.5f),color);for(int i=0;i<4;i++){float a=i*90f*Mathf.Deg2Rad;CreateShard(p+new Vector3(Mathf.Cos(a)*2f,.55f,Mathf.Sin(a)*2f),color,.4f);}}
+        private static void CreateBaseCore(Vector3 p,Color color,string name){GameObject core=GameObject.CreatePrimitive(PrimitiveType.Cylinder);core.name=name;core.transform.position=p;core.transform.localScale=new Vector3(1.4f,1.15f,1.4f);DisableCollider(core);SetColor(core,color);}
+        private static void CreateRiftCore(){CreateVisualCylinder("AV_RiftOuter",new Vector3(0,.075f,0),new Vector3(3.25f,.035f,3.25f),new Color(.20f,.045f,.29f));CreateVisualCylinder("AV_RiftInner",new Vector3(0,.095f,0),new Vector3(2.35f,.045f,2.35f),new Color(.55f,.065f,.80f));CreateVisualCylinder("AV_RiftEye",new Vector3(0,.115f,0),new Vector3(1.15f,.05f,1.15f),new Color(.08f,.025f,.12f));GameObject core=GameObject.CreatePrimitive(PrimitiveType.Cube);core.name="AV_RiftCore";core.transform.position=new Vector3(0,1.45f,0);core.transform.localScale=Vector3.one*.72f;core.transform.rotation=Quaternion.Euler(25,45,20);DisableCollider(core);SetColor(core,new Color(.72f,.18f,1f));core.AddComponent<RiftCoreVisual>();CreateShard(new Vector3(-1.15f,1.05f,.25f),new Color(.50f,.08f,.78f),.55f);CreateShard(new Vector3(1.05f,.85f,-.35f),new Color(.10f,.58f,.70f),.48f);CreateShard(new Vector3(.35f,1.2f,1.15f),new Color(.62f,.10f,.88f),.38f);}
 
         private static void CreateGround(string name,Vector3 p,Vector3 scale,Color color){GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=name;g.transform.position=p;g.transform.localScale=scale;SetColor(g,color);}
         private static void CreateObelisk(Vector3 p,Color color,bool future){GameObject o=GameObject.CreatePrimitive(future?PrimitiveType.Cube:PrimitiveType.Cylinder);o.name=future?"AV_LumenStructure":"AV_ZeroObelisk";o.transform.position=p;o.transform.localScale=future?new Vector3(.65f,2.3f,.65f):new Vector3(.8f,1.8f,.8f);o.transform.rotation=Quaternion.Euler(0,future?45:0,future?8:0);SetColor(o,color);}
