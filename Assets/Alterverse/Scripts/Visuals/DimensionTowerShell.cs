@@ -1,11 +1,73 @@
+using System.Collections.Generic;
 using UnityEngine;
 namespace Alterverse.Visuals
 {
-public sealed class DimensionTowerShell:MonoBehaviour
-{
-private Transform visualRoot;private Color dark,energy;private bool zero;public void Build(int team){zero=team==0;dark=zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;energy=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;visualRoot=new GameObject("DF_BastionShell").transform;visualRoot.SetParent(transform,false);visualRoot.localScale=Vector3.one*1.24f;if(zero)BuildZero();else BuildLumen();}
-private void BuildZero(){Part("Foundation",PrimitiveType.Cylinder,new Vector3(0,-.72f,0),new Vector3(1.55f,.22f,1.55f),dark,Vector3.zero);Part("BrokenSpine",PrimitiveType.Cube,new Vector3(0,.55f,0),new Vector3(1.05f,3.25f,1.05f),dark,new Vector3(0,17,5));Part("ArmorL",PrimitiveType.Cube,new Vector3(-.82f,.45f,.08f),new Vector3(.42f,2.5f,1.15f),dark,new Vector3(0,-12,-18));Part("ArmorR",PrimitiveType.Cube,new Vector3(.78f,.65f,-.1f),new Vector3(.38f,2.3f,1.05f),dark,new Vector3(0,18,20));Part("FractureBladeL",PrimitiveType.Cube,new Vector3(-.72f,1.55f,.04f),new Vector3(.2f,2.35f,.48f),energy,new Vector3(0,-14,-31),true);Part("FractureBladeR",PrimitiveType.Cube,new Vector3(.66f,1.72f,-.08f),new Vector3(.18f,2.05f,.42f),energy,new Vector3(0,22,34),true);Part("Core",PrimitiveType.Sphere,new Vector3(0,1.48f,0),new Vector3(.7f,.7f,.7f),energy,Vector3.zero,true);Part("Crown",PrimitiveType.Cube,new Vector3(0,2.3f,0),new Vector3(1.35f,.28f,1.35f),dark,new Vector3(0,32,10));}
-private void BuildLumen(){Part("Foundation",PrimitiveType.Cylinder,new Vector3(0,-.72f,0),new Vector3(1.55f,.22f,1.55f),dark,Vector3.zero);Part("PrismSpine",PrimitiveType.Cube,new Vector3(0,.62f,0),new Vector3(1.05f,3.45f,1.05f),dark,new Vector3(0,45,0));for(int i=0;i<4;i++){float a=(i*90+45)*Mathf.Deg2Rad;Part("ArmorRail",PrimitiveType.Cube,new Vector3(Mathf.Cos(a)*.82f,.65f,Mathf.Sin(a)*.82f),new Vector3(.28f,2.55f,.48f),dark,new Vector3(0,-a*Mathf.Rad2Deg,0));Part("LightRail",PrimitiveType.Cube,new Vector3(Mathf.Cos(a)*.92f,1.05f,Mathf.Sin(a)*.92f),new Vector3(.12f,2.55f,.12f),energy,new Vector3(0,45,0),true);}Part("Core",PrimitiveType.Sphere,new Vector3(0,1.55f,0),new Vector3(.72f,.72f,.72f),energy,Vector3.zero,true);Part("HaloLower",PrimitiveType.Cylinder,new Vector3(0,1.75f,0),new Vector3(1.25f,.06f,1.25f),energy,Vector3.zero,true);Part("HaloUpper",PrimitiveType.Cylinder,new Vector3(0,2.45f,0),new Vector3(.95f,.06f,.95f),energy,Vector3.zero,true);}
-private void Part(string n,PrimitiveType type,Vector3 p,Vector3 s,Color c,Vector3 r,bool pulse=false){GameObject g=GameObject.CreatePrimitive(type);g.name="DF_"+n;g.transform.SetParent(visualRoot,false);g.transform.localPosition=p;g.transform.localScale=s;g.transform.localRotation=Quaternion.Euler(r);Collider col=g.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer renderer=g.GetComponent<Renderer>();if(renderer!=null)renderer.material.color=c;if(pulse)g.AddComponent<ArenaLightPulse>();}
-}
+    public sealed class DimensionTowerShell:MonoBehaviour
+    {
+        private Transform visualRoot,head,muzzle;
+        private Renderer core;
+        private readonly List<Material> materials=new List<Material>();
+        private Color energy;
+        private float flashUntil;
+        public Vector3 MuzzlePosition=>muzzle!=null?muzzle.position:transform.position+Vector3.up*1.5f;
+        public void Build(int team)
+        {
+            if(visualRoot!=null)return;
+            Renderer placeholder=GetComponent<Renderer>();if(placeholder!=null)placeholder.enabled=false;
+            visualRoot=new GameObject("DF_BastionShell").transform;visualRoot.SetParent(transform,false);
+            Vector3 scale=transform.lossyScale;
+            visualRoot.localScale=new Vector3(1f/scale.x,1f/scale.y,1f/scale.z);
+            visualRoot.localPosition=new Vector3(0,(.12f-transform.position.y)/scale.y,0);
+            energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Material stone=MaterialFor(new Color(.27f,.30f,.35f));
+            Material armor=MaterialFor(team==0?new Color(.27f,.19f,.35f):new Color(.17f,.31f,.35f));
+            Material trim=MaterialFor(Color.Lerp(energy,Color.gray,.55f));
+            Material glow=MaterialFor(energy);
+            Part("Foot",PrimitiveType.Cylinder,new Vector3(0,.16f,0),new Vector3(2.6f,.16f,2.6f),stone);
+            Part("Plinth",PrimitiveType.Cylinder,new Vector3(0,.44f,0),new Vector3(1.95f,.12f,1.95f),armor);
+            Part("Belt",PrimitiveType.Cylinder,new Vector3(0,.59f,0),new Vector3(1.7f,.035f,1.7f),trim);
+            Part("ReactorHousing",PrimitiveType.Cube,new Vector3(0,1.15f,0),new Vector3(.95f,1.1f,.95f),armor);
+            for(int i=0;i<4;i++)
+            {
+                float a=(i*90+45)*Mathf.Deg2Rad;
+                Part("Buttress",PrimitiveType.Cube,new Vector3(Mathf.Cos(a)*.72f,.96f,Mathf.Sin(a)*.72f),new Vector3(.35f,.95f,.35f),stone);
+            }
+            head=new GameObject("DF_TowerHead").transform;head.SetParent(visualRoot,false);head.localPosition=Vector3.up*1.72f;
+            head.localRotation=Quaternion.Euler(0,team==0?90:-90,0);
+            Part("Turret",PrimitiveType.Cube,new Vector3(0,.25f,0),new Vector3(1.32f,.45f,1.08f),armor,head);
+            core=Part("EnergyCore",PrimitiveType.Sphere,new Vector3(0,.37f,.5f),Vector3.one*.48f,glow,head).GetComponent<Renderer>();
+            Part("BarrelLeft",PrimitiveType.Cube,new Vector3(-.32f,.23f,.77f),new Vector3(.19f,.21f,.85f),stone,head);
+            Part("BarrelRight",PrimitiveType.Cube,new Vector3(.32f,.23f,.77f),new Vector3(.19f,.21f,.85f),stone,head);
+            Part("Crest",PrimitiveType.Cube,new Vector3(0,.6f,-.3f),new Vector3(team==0?.16f:.68f,team==0?.65f:.16f,.25f),trim,head);
+            muzzle=new GameObject("DF_TowerMuzzle").transform;muzzle.SetParent(head,false);muzzle.localPosition=new Vector3(0,.3f,1.2f);
+        }
+        public void AimAt(Vector3 target)
+        {
+            if(head==null)return;Vector3 direction=target-head.position;direction.y=0;
+            if(direction.sqrMagnitude>.001f)head.rotation=Quaternion.LookRotation(direction);
+        }
+        public void Fire(){flashUntil=Time.time+.12f;}
+        private void Update()
+        {
+            if(core==null||Time.timeScale<=0)return;
+            float glow=Time.time<flashUntil?1f:.12f+.08f*Mathf.Sin(Time.time*2f);
+            core.sharedMaterial.color=Color.Lerp(energy,Color.white,glow);
+        }
+        private Material MaterialFor(Color color)
+        {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");
+            if(shader==null)return null;
+            Material material=new Material(shader){color=color};
+            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.25f);
+            materials.Add(material);return material;
+        }
+        private GameObject Part(string name,PrimitiveType type,Vector3 position,Vector3 scale,Material material,Transform parent=null)
+        {
+            GameObject g=GameObject.CreatePrimitive(type);g.name="DF_Tower"+name;g.transform.SetParent(parent!=null?parent:visualRoot,false);
+            g.transform.localPosition=position;g.transform.localScale=scale;
+            Collider collider=g.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            if(material!=null)g.GetComponent<Renderer>().sharedMaterial=material;return g;
+        }
+        private void OnDestroy(){foreach(Material material in materials)if(material!=null)Destroy(material);}
+    }
 }

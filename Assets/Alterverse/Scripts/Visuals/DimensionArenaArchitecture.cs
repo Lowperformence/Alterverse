@@ -1,15 +1,74 @@
+using System.Collections.Generic;
 using UnityEngine;
+
 namespace Alterverse.Visuals
 {
-public sealed class DimensionArenaArchitecture:MonoBehaviour
-{
-private void Start(){BuildZero();BuildLumen();BuildLaneLandmarks();BuildFrontGateway();BuildHorizonCrowns();}
-private void BuildZero(){for(int i=0;i<9;i++){float z=-31+i*7.7f;float x=-39+(i%3)*2.2f;Create("DF_ZeroRuin",PrimitiveType.Cube,new Vector3(x,1.1f,z),new Vector3(1.1f,2.2f+(i%2)*1.1f,1.1f),StylizedArtDirection.ZeroDark,new Vector3(0,18+(i%4)*13,12+(i%3)*9));Create("DF_ZeroShard",PrimitiveType.Cube,new Vector3(x+2.1f,2.1f,z+1.3f),new Vector3(.28f,2.5f,.5f),StylizedArtDirection.ZeroEnergy,new Vector3(0,25+i*7,28));}for(int i=0;i<5;i++){float z=-28+i*14;Create("DF_ZeroArch",PrimitiveType.Cube,new Vector3(-33,.8f,z),new Vector3(.55f,1.6f,4.2f),Color.Lerp(StylizedArtDirection.ZeroMid,StylizedArtDirection.Ink,.4f),new Vector3(0,8*(i%2==0?1:-1),8));}}
-private void BuildLumen(){for(int i=0;i<9;i++){float z=-31+i*7.7f;float x=39-(i%3)*2.2f;Create("DF_LumenSpire",PrimitiveType.Cube,new Vector3(x,1.4f,z),new Vector3(.8f,2.8f+(i%2)*1.2f,.8f),StylizedArtDirection.LumenDark,new Vector3(0,45,0));Create("DF_LumenLight",PrimitiveType.Cube,new Vector3(x-1.4f,2.3f,z),new Vector3(.14f,2.4f,.14f),StylizedArtDirection.LumenEnergy,new Vector3(0,45,0));}for(int i=0;i<5;i++){float z=-28+i*14;Create("DF_LumenGate",PrimitiveType.Cube,new Vector3(33,.65f,z),new Vector3(.42f,1.3f,4.4f),Color.Lerp(StylizedArtDirection.LumenMid,StylizedArtDirection.Ink,.35f),new Vector3(0,0,-6));}}
-private void BuildLaneLandmarks(){for(int lane=-1;lane<=1;lane+=2){float z=lane*16f;Create("DF_ZeroLaneMonolith",PrimitiveType.Cube,new Vector3(-17,1.15f,z+3.4f),new Vector3(.7f,2.3f,.7f),StylizedArtDirection.ZeroMid,new Vector3(0,28,18));Create("DF_LumenLaneBeacon",PrimitiveType.Cube,new Vector3(17,1.15f,z-3.4f),new Vector3(.7f,2.3f,.7f),StylizedArtDirection.LumenMid,new Vector3(0,45,0));Create("DF_ZeroLaneEnergy",PrimitiveType.Cube,new Vector3(-17,2.45f,z+3.4f),new Vector3(.14f,.65f,.14f),StylizedArtDirection.ZeroEnergy,new Vector3(0,28,18));Create("DF_LumenLaneEnergy",PrimitiveType.Cube,new Vector3(17,2.45f,z-3.4f),new Vector3(.14f,.65f,.14f),StylizedArtDirection.LumenEnergy,new Vector3(0,45,0));}}
-private void BuildFrontGateway(){for(int z=-24;z<=24;z+=12){Create("DF_FrontZeroFang",PrimitiveType.Cube,new Vector3(-4.6f,.65f,z),new Vector3(.3f,1.3f,.75f),StylizedArtDirection.ZeroMid,new Vector3(0,0,-28));Create("DF_FrontLumenFang",PrimitiveType.Cube,new Vector3(4.6f,.65f,z),new Vector3(.3f,1.3f,.75f),StylizedArtDirection.LumenMid,new Vector3(0,0,28));}}
-private void BuildRealityScars(){for(int i=0;i<11;i++){float z=-30+i*6f;float bend=Mathf.Sin(i*1.73f)*2.1f;Create("DF_RealityScarZero",PrimitiveType.Cube,new Vector3(-2.2f+bend,.08f,z),new Vector3(3.4f,.06f,.18f),new Color(StylizedArtDirection.ZeroEnergy.r,StylizedArtDirection.ZeroEnergy.g,StylizedArtDirection.ZeroEnergy.b,.85f),new Vector3(0,18+i*11,0));Create("DF_RealityScarLumen",PrimitiveType.Cube,new Vector3(2.2f-bend,.09f,z+1.7f),new Vector3(3.4f,.06f,.18f),new Color(StylizedArtDirection.LumenEnergy.r,StylizedArtDirection.LumenEnergy.g,StylizedArtDirection.LumenEnergy.b,.85f),new Vector3(0,-18-i*9,0));}}
-private void BuildHorizonCrowns(){for(int side=-1;side<=1;side+=2){Color dark=side<0?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;Color energy=side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;float x=side*37f;for(int i=0;i<5;i++){float z=(i-2)*9f;float lean=side*(18+i*4);Create("DF_HorizonCrown",PrimitiveType.Cube,new Vector3(x,3.4f,z),new Vector3(.5f,5.8f-i*.35f,.5f),dark,new Vector3(0,side*14,lean));Create("DF_HorizonPulse",PrimitiveType.Cube,new Vector3(x-side*.55f,5.7f-i*.15f,z),new Vector3(.12f,1.3f,.12f),energy,new Vector3(0,side*14,lean));}}}
-private void Create(string name,PrimitiveType type,Vector3 position,Vector3 scale,Color color,Vector3 rotation){GameObject g=GameObject.CreatePrimitive(type);g.name=name;g.transform.SetParent(transform,false);g.transform.position=position;g.transform.localScale=scale;g.transform.rotation=Quaternion.Euler(rotation);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();if(r!=null)r.material.color=color;}
-}
+    public sealed class DimensionArenaArchitecture : MonoBehaviour
+    {
+        private readonly Dictionary<Color,Material> materials=new Dictionary<Color,Material>();
+        private void Start()
+        {
+            Color stone=new Color(.22f,.24f,.30f);
+            Color zero=new Color(.31f,.22f,.41f),lumen=new Color(.21f,.36f,.39f);
+            // Low terrace edges establish the island boundary without covering the lanes.
+            foreach(int side in new[]{-1,1})
+            {
+                Color faction=side<0?zero:lumen;
+                for(int i=0;i<12;i++)
+                {
+                    float z=-33+i*6f;
+                    Block("DF_TerraceFoot",new Vector3(side*42.8f,-.6f,z),new Vector3(2f,1.4f,5.5f),stone);
+                    Block("DF_TerraceCap",new Vector3(side*42.7f,.18f,z),new Vector3(1.7f,.25f,5.3f),faction);
+                }
+                foreach(float z in new[]{-25f,-9f,9f,25f})
+                {
+                    if(side<0)Ruin(new Vector3(-44.8f,0,z),zero);
+                    else Arch(new Vector3(44.8f,0,z),lumen);
+                }
+            }
+            foreach(int side in new[]{-1,1})
+            for(int i=0;i<12;i++)
+            {
+                float x=-38.5f+i*7f;
+                Block("DF_OuterBorder",new Vector3(x,-.25f,side*37f),new Vector3(6.5f,.6f,1.7f),stone);
+            }
+        }
+
+        private void Ruin(Vector3 p,Color color)
+        {
+            Block("DF_ZeroRockBase",p+Vector3.up*.3f,new Vector3(3.6f,.6f,3.2f),color,new Vector3(0,18,0));
+            Block("DF_ZeroBrokenPillar",p+new Vector3(-.35f,1.4f,0),new Vector3(1.25f,2.3f,1.4f),color,new Vector3(0,24,-13));
+            Block("DF_ZeroCrystal",p+new Vector3(.45f,2.1f,.1f),new Vector3(.23f,2.9f,.38f),new Color(.57f,.31f,.70f),new Vector3(0,35,-19));
+            Block("DF_ZeroFragment",p+new Vector3(.9f,.4f,1),new Vector3(1.4f,.55f,.9f),color,new Vector3(0,-27,12));
+        }
+
+        private void Arch(Vector3 p,Color color)
+        {
+            Block("DF_LumenPlinth",p+Vector3.up*.22f,new Vector3(2.8f,.44f,4.7f),color);
+            foreach(int side in new[]{-1,1})
+            {
+                Block("DF_LumenPillar",p+new Vector3(0,1.25f,side*1.75f),new Vector3(.8f,2.5f,.8f),color);
+                Block("DF_LumenInlay",p+new Vector3(-.43f,1.35f,side*1.75f),new Vector3(.05f,1.65f,.15f),new Color(.35f,.65f,.65f));
+            }
+            Block("DF_LumenLintel",p+Vector3.up*2.65f,new Vector3(.9f,.42f,4.35f),new Color(.36f,.46f,.48f));
+            Block("DF_LumenKeystone",p+Vector3.up*2.98f,new Vector3(1.05f,.32f,.65f),color);
+        }
+
+        private void Block(string label,Vector3 position,Vector3 scale,Color color,Vector3 rotation=default)
+        {
+            GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=label;
+            g.transform.SetParent(transform,false);g.transform.position=position;g.transform.localScale=scale;g.transform.rotation=Quaternion.Euler(rotation);
+            Collider collider=g.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            if(!materials.TryGetValue(color,out Material material))
+            {
+                Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");
+                if(shader==null)return;
+                material=new Material(shader){color=color};
+                if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.16f);
+                materials.Add(color,material);
+            }
+            g.GetComponent<Renderer>().sharedMaterial=material;
+        }
+        private void OnDestroy(){foreach(Material material in materials.Values)if(material!=null)Destroy(material);}
+    }
 }

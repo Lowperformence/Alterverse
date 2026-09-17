@@ -4,75 +4,164 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    // Quiet, grounded lane surfaces keep combat silhouettes and warning rings readable.
+    // One mesh per surface palette entry; all decoration is collider-free.
     public sealed class StylizedArenaOverlay : MonoBehaviour
     {
-        private readonly List<Material> materials = new List<Material>();
+        private sealed class Batch
+        {
+            public readonly List<Vector3> Vertices = new List<Vector3>();
+            public readonly List<int> Triangles = new List<int>();
+            public Material Material;
+        }
+        private readonly List<Batch> batches = new List<Batch>();
         private readonly List<Mesh> meshes = new List<Mesh>();
 
         private void Start()
         {
-            Material paving = Surface(new Color(.18f, .21f, .28f));
-            Material zeroTrim = Surface(new Color(.38f, .22f, .52f));
-            Material lumenTrim = Surface(new Color(.16f, .48f, .53f));
-            if (paving == null) return;
-            // Each strip is one mesh, rather than hundreds of individually allocated primitives.
-            foreach (float z in new[] { -16f, 16f })
+            int soil = Palette(new Color(.13f,.16f,.20f));
+            int stone = Palette(new Color(.25f,.29f,.34f));
+            int lightStone = Palette(new Color(.31f,.35f,.39f));
+            int inset = Palette(new Color(.18f,.21f,.26f));
+            int zero = Palette(new Color(.38f,.27f,.48f));
+            int lumen = Palette(new Color(.18f,.43f,.46f));
+            if (soil < 0) return;
+
+            // Large quiet panels break up the flat floor without competing with heroes.
+            for (int x=-38;x<40;x+=6)
+            for (int z=-32;z<34;z+=6)
             {
-                BuildStrip("DF_LanePaving", z, -35f, 35f, 2.0f, .085f, paving);
-                BuildStrip("DF_ZeroLaneBorder", z - 2.15f, -35f, -.5f, .10f, .09f, zeroTrim);
-                BuildStrip("DF_ZeroLaneBorder", z + 2.15f, -35f, -.5f, .10f, .09f, zeroTrim);
-                BuildStrip("DF_LumenLaneBorder", z - 2.15f, .5f, 35f, .10f, .09f, lumenTrim);
-                BuildStrip("DF_LumenLaneBorder", z + 2.15f, .5f, 35f, .10f, .09f, lumenTrim);
+                if (Mathf.Abs(z-16)<5 || Mathf.Abs(z+16)<5 || (Mathf.Abs(x)<13 && Mathf.Abs(z)<13)) continue;
+                Tile(x,z,5.7f,5.7f,.025f,((x+z)%3==0)?soil:inset,.65f);
             }
-            // Keep the center open: no fake objective markers and no luminous lines across attacks.
+            foreach(float z in new[]{-16f,16f})
+            {
+                Path(new Vector2(-35,z),new Vector2(35,z),4.3f,.082f,stone,lightStone);
+                Ribbon(new Vector2(-35,z-2.35f),new Vector2(-1,z-2.35f),.13f,.09f,zero);
+                Ribbon(new Vector2(-35,z+2.35f),new Vector2(-1,z+2.35f),.13f,.09f,zero);
+                Ribbon(new Vector2(1,z-2.35f),new Vector2(35,z-2.35f),.13f,.09f,lumen);
+                Ribbon(new Vector2(1,z+2.35f),new Vector2(35,z+2.35f),.13f,.09f,lumen);
+                // Four diagonal approaches lead toward the central objective court.
+                Path(new Vector2(-19,z),new Vector2(-7,z*.38f),3.2f,.074f,inset,stone);
+                Path(new Vector2(19,z),new Vector2(7,z*.38f),3.2f,.074f,inset,stone);
+            }
+            Disc(Vector2.zero,11.6f,.10f,32,inset);
+            Ring(Vector2.zero,10.9f,11.5f,.105f,32,stone);
+            Ring(Vector2.zero,7.8f,8f,.108f,32,lightStone);
+            // Split inlay reinforces the two realities, while leaving the animated front legible.
+            for(int i=0;i<16;i++)
+            {
+                float a=i*Mathf.PI*2/16;
+                Vector2 p=new Vector2(Mathf.Cos(a),Mathf.Sin(a))*9.8f;
+                Tile(p.x,p.y,.65f,.65f,.112f,p.x<0?zero:lumen,.15f);
+            }
+            foreach(int side in new[]{-1,1})
+            {
+                int trim=side<0?zero:lumen;
+                Vector2 baseCenter=new Vector2(side*35,0);
+                Disc(baseCenter,6.2f,.10f,24,inset);
+                Ring(baseCenter,5.65f,6.2f,.115f,24,stone);
+                Ring(baseCenter,4.95f,5.10f,.119f,24,trim);
+                foreach(float z in new[]{-16f,16f})
+                {
+                    Vector2 tower=new Vector2(side*25,z);
+                    Disc(tower,2.65f,.11f,12,inset);
+                    Ring(tower,2.35f,2.65f,.12f,12,trim);
+                    Path(new Vector2(side*34,side<0?-4:4),new Vector2(side*29,z),3f,.07f,stone,inset);
+                }
+            }
+            Flush();
         }
 
-        private Material Surface(Color color)
+        private int Palette(Color color)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null) return null;
-            Material material = new Material(shader);
-            material.color = color;
-            if (material.HasProperty("_Smoothness")) material.SetFloat("_Smoothness", .18f);
-            if (material.HasProperty("_Metallic")) material.SetFloat("_Metallic", .1f);
-            materials.Add(material);
-            return material;
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit");
+            if(shader==null)shader=Shader.Find("Standard");
+            if(shader==null)return -1;
+            Material material=new Material(shader){color=color};
+            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.12f);
+            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.05f);
+            batches.Add(new Batch{Material=material});return batches.Count-1;
         }
 
-        private void BuildStrip(string label, float z, float from, float to, float halfWidth, float y, Material material)
+        private void Tile(float x,float z,float w,float h,float y,int palette,float bevel)
         {
-            if (material == null) return;
-            List<Vector3> vertices = new List<Vector3>();
-            List<int> indices = new List<int>();
-            for (float x = from; x < to; x += 3.5f)
+            float a=w*.5f,b=h*.5f,c=Mathf.Min(bevel,Mathf.Min(a,b)*.45f);
+            Polygon(palette,new[]{
+                new Vector3(x-a+c,y,z-b),new Vector3(x+a-c,y,z-b),
+                new Vector3(x+a,y,z-b+c),new Vector3(x+a,y,z+b-c),
+                new Vector3(x+a-c,y,z+b),new Vector3(x-a+c,y,z+b),
+                new Vector3(x-a,y,z+b-c),new Vector3(x-a,y,z-b+c)});
+        }
+
+        private void Path(Vector2 from,Vector2 to,float width,float y,int a,int b)
+        {
+            float length=Vector2.Distance(from,to);int count=Mathf.Max(1,Mathf.CeilToInt(length/3.4f));
+            for(int i=0;i<count;i++)
             {
-                float left = x + .045f, right = Mathf.Min(x + 3.5f, to) - .045f;
-                int n = vertices.Count;
-                vertices.Add(new Vector3(left, y, z - halfWidth));
-                vertices.Add(new Vector3(left, y, z + halfWidth));
-                vertices.Add(new Vector3(right, y, z + halfWidth));
-                vertices.Add(new Vector3(right, y, z - halfWidth));
-                indices.Add(n); indices.Add(n + 1); indices.Add(n + 2);
-                indices.Add(n); indices.Add(n + 2); indices.Add(n + 3);
+                float margin=.025f/count;
+                Vector2 start=Vector2.Lerp(from,to,(float)i/count+margin);
+                Vector2 end=Vector2.Lerp(from,to,(float)(i+1)/count-margin);
+                Ribbon(start,end,width,y,i%4==0?b:a);
             }
-            Mesh mesh = new Mesh { name = label };
-            mesh.SetVertices(vertices); mesh.SetTriangles(indices, 0);
-            mesh.RecalculateNormals(); mesh.RecalculateBounds(); meshes.Add(mesh);
-            GameObject surface = new GameObject(label);
-            surface.transform.SetParent(transform, false);
-            surface.AddComponent<MeshFilter>().sharedMesh = mesh;
-            MeshRenderer renderer = surface.AddComponent<MeshRenderer>();
-            renderer.sharedMaterial = material;
-            renderer.shadowCastingMode = ShadowCastingMode.Off;
-            renderer.receiveShadows = true;
+        }
+
+        private void Ribbon(Vector2 from,Vector2 to,float width,float y,int palette)
+        {
+            Vector2 direction=(to-from).normalized,normal=new Vector2(-direction.y,direction.x)*width*.5f;
+            Polygon(palette,new[]{Point(from-normal,y),Point(from+normal,y),Point(to+normal,y),Point(to-normal,y)});
+        }
+
+        private static Vector3 Point(Vector2 p,float y)=>new Vector3(p.x,y,p.y);
+        private void Disc(Vector2 center,float radius,float y,int count,int palette)
+        {
+            var points=new Vector3[count];
+            for(int i=0;i<count;i++){float a=i*Mathf.PI*2/count;points[i]=Point(center+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*radius,y);}
+            Polygon(palette,points);
+        }
+
+        private void Ring(Vector2 center,float inner,float outer,float y,int count,int palette)
+        {
+            for(int i=0;i<count;i++)
+            {
+                float a=i*Mathf.PI*2/count+.008f,b=(i+1)*Mathf.PI*2/count-.008f;
+                Vector2 da=new Vector2(Mathf.Cos(a),Mathf.Sin(a)),db=new Vector2(Mathf.Cos(b),Mathf.Sin(b));
+                Polygon(palette,new[]{Point(center+da*inner,y),Point(center+db*inner,y),Point(center+db*outer,y),Point(center+da*outer,y)});
+            }
+        }
+
+        private void Polygon(int palette,Vector3[] points)
+        {
+            if(palette<0)return;
+            Batch batch=batches[palette];int first=batch.Vertices.Count;
+            bool reverse=Vector3.Cross(points[1]-points[0],points[2]-points[0]).y<0;
+            batch.Vertices.AddRange(points);
+            for(int i=1;i<points.Length-1;i++)
+            {
+                batch.Triangles.Add(first);
+                batch.Triangles.Add(first+(reverse?i+1:i));
+                batch.Triangles.Add(first+(reverse?i:i+1));
+            }
+        }
+
+        private void Flush()
+        {
+            for(int i=0;i<batches.Count;i++)
+            {
+                Batch batch=batches[i];if(batch.Vertices.Count==0)continue;
+                Mesh mesh=new Mesh{name="DF_ArenaSurface_"+i};
+                mesh.SetVertices(batch.Vertices);mesh.SetTriangles(batch.Triangles,0);
+                mesh.RecalculateNormals();mesh.RecalculateBounds();meshes.Add(mesh);
+                GameObject g=new GameObject(mesh.name);g.transform.SetParent(transform,false);
+                g.AddComponent<MeshFilter>().sharedMesh=mesh;
+                MeshRenderer renderer=g.AddComponent<MeshRenderer>();renderer.sharedMaterial=batch.Material;
+                renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=true;
+            }
         }
 
         private void OnDestroy()
         {
-            foreach (Material material in materials) if (material != null) Destroy(material);
-            foreach (Mesh mesh in meshes) if (mesh != null) Destroy(mesh);
+            foreach(Batch batch in batches)if(batch.Material!=null)Destroy(batch.Material);
+            foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);
         }
     }
 }
