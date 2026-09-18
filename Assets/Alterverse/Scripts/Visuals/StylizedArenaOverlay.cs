@@ -99,15 +99,6 @@ namespace Alterverse.Visuals
                     Tile(x,z-4.05f,5.8f,1.25f,.052f,shoulder,.38f);
                 }
             }
-            // Broad faction territories make the two realities readable at a glance without recoloring combat space.
-            for(int side=-1;side<=1;side+=2)
-            {
-                int territory=side<0?zero:lumen;
-                float cx=side*27f;
-                Tile(cx,0,15.5f,10.5f,.041f,territory,.8f);
-                Tile(cx,27f,18f,5.2f,.039f,territory,.65f);
-                Tile(cx,-27f,18f,5.2f,.039f,territory,.65f);
-            }
             foreach(int side in new[]{-1,1})
             {
                 int trim=side<0?zero:lumen;
