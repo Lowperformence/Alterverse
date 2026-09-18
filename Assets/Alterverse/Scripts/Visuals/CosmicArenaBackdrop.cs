@@ -12,12 +12,14 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> meshes=new List<Mesh>();
         private Transform stars;
         private Material starMaterial;
+        private Transform distantBodies;
 
         private void Start()
         {
             BuildVoidFloor();
             BuildStars();
             BuildDistantPlanets();
+            BuildDistantMoons();
         }
 
         private Material Mat(Color color,bool unlit=true)
@@ -60,15 +62,22 @@ namespace Alterverse.Visuals
 
         private void BuildDistantPlanets()
         {
+            distantBodies=new GameObject("DF_DistantBodies").transform;distantBodies.SetParent(transform,false);
             Planet(new Vector3(-96,-12,66),13f,new Color(.075f,.085f,.12f,1));
             Planet(new Vector3(112,-15,-64),18f,new Color(.055f,.07f,.105f,1));
             Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
         }
 
+        private void BuildDistantMoons()
+        {
+            Planet(new Vector3(-82,-10,83),3.2f,new Color(.13f,.14f,.17f,1));
+            Planet(new Vector3(96,-13,-86),4.1f,new Color(.10f,.115f,.14f,1));
+        }
+
         private void Planet(Vector3 p,float size,Color color)
         {
             Material m=Mat(color,false);if(m==null)return;
-            GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_DistantPlanet";g.transform.SetParent(transform,false);
+            GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_DistantPlanet";g.transform.SetParent(distantBodies!=null?distantBodies:transform,false);
             g.transform.position=p;g.transform.localScale=Vector3.one*size;
             Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
             Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
@@ -77,6 +86,7 @@ namespace Alterverse.Visuals
         private void Update()
         {
             if(stars!=null)stars.Rotate(0,.035f*Time.deltaTime,0,Space.World);
+            if(distantBodies!=null)distantBodies.Rotate(0,.006f*Time.deltaTime,0,Space.World);
             if(starMaterial!=null)
             {
                 float pulse=.82f+Mathf.Sin(Time.time*.23f)*.05f;
