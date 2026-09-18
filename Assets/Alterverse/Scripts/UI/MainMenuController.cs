@@ -25,7 +25,7 @@ namespace Alterverse.UI
         private Page page;
         private bool visible = true, launching, editingName, suspended;
         private int selectedHero, shopAvatarIndex;
-        private bool skinShop=true;
+        private bool skinShop=true,shardShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
         private FrontEndTheme theme;
@@ -78,7 +78,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
-            showcase.Present((HeroId)selectedHero, !launching && (page == Page.Home || page == Page.Play || page == Page.Heroes || (page==Page.Shop&&skinShop)),page==Page.Shop&&skinShop?(bool?)true:null);
+            showcase.Present((HeroId)selectedHero, !launching && (page == Page.Home || page == Page.Play || page == Page.Heroes || (page==Page.Shop&&skinShop&&!shardShop)),page==Page.Shop&&skinShop&&!shardShop?(bool?)true:null);
             if (nameKeyboard != null)
             {
                 profileName = nameKeyboard.text;
@@ -214,14 +214,16 @@ namespace Alterverse.UI
             if (index==selectedHero) return;
             selectedHero=Mathf.Clamp(index,0,5);
             PlayerHeroSelection.Select((HeroId)selectedHero);
-            showcase.Present((HeroId)selectedHero,true,page==Page.Shop&&skinShop?(bool?)true:null);
+            showcase.Present((HeroId)selectedHero,true,page==Page.Shop&&skinShop&&!shardShop?(bool?)true:null);
         }
         private void DrawShop()
         {
             Heading("Cosmetics","Personalize your identity. No combat advantages.");
-            if(theme.Action(new Rect(Left,204,160,52),"SKINS",selected:skinShop)){skinShop=true;shopMessage="";}
-            if(theme.Action(new Rect(Left+172,204,160,52),"AVATARS",selected:!skinShop)){skinShop=false;shopMessage="";}
-            theme.Label(new Rect(Right-264,116,264,42),$"{PlayerWallet.Balance} SHARDS",theme.Heading);
+            if(theme.Action(new Rect(Left,204,160,52),"SKINS",selected:skinShop&&!shardShop)){skinShop=true;shardShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+172,204,160,52),"AVATARS",selected:!skinShop&&!shardShop)){skinShop=false;shardShop=false;shopMessage="";}
+            theme.Label(new Rect(Right-264,116,264,42),$"EARNED {PlayerWallet.Balance}  /  STORE {PaidShardCommerce.Balance}",theme.Small);
+            if(theme.Action(new Rect(Left+344,204,160,52),"SHARDS",selected:shardShop)){shardShop=true;shopMessage="";}
+            if(shardShop){DrawShardShop();return;}
             if(skinShop){DrawSkinShop();return;}
             AvatarShopItem item=AvatarShopCatalog.Items[Mathf.Clamp(shopAvatarIndex,0,AvatarShopCatalog.Items.Length-1)];
             bool owned=AvatarInventory.IsOwned(item.AvatarId), equipped=PlayerProfile.Avatar==item.AvatarId;
@@ -234,21 +236,52 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+32,542,64,60),"<")) { shopAvatarIndex=(shopAvatarIndex-1+AvatarShopCatalog.Items.Length)%AvatarShopCatalog.Items.Length; shopMessage=""; }
             theme.Center(new Rect(Left+102,542,90,60),$"{shopAvatarIndex+1} / {AvatarShopCatalog.Items.Length}");
             if (theme.Action(new Rect(Left+198,542,64,60),">")) { shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length; shopMessage=""; }
-            bool affordable=PlayerWallet.CanAfford(item.Price);
+            bool affordable=PlayerWallet.CanAfford(item.Price)||PaidShardCommerce.Balance>=item.Price;
             string action=equipped?"EQUIPPED":owned?"EQUIP":affordable?"UNLOCK":"NEED MORE SHARDS";
-            if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!equipped&&(owned||affordable)))
+            if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable)))
             {
                 if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
+                else if(!PlayerWallet.CanAfford(item.Price)){BuyPaidCosmetic("avatar_"+item.AvatarId,item.AvatarId);}
                 else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopMessage=result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
             }
             theme.Label(new Rect(Left+32,618,galleryWidth-64,26),shopMessage,theme.Small,true);
             float x=Left+galleryWidth+32, w=ContentWidth-galleryWidth-32;
             theme.Label(new Rect(x,244,w,36),"Earned in battle",theme.Heading);
-            theme.Label(new Rect(x,296,w,100),"Complete matches to earn shards. Unlock avatars here and equip them on your profile.",theme.Body,true);
+            theme.Label(new Rect(x,296,w,100),"Earn shards in matches or buy optional packs. Cosmetics use one wallet per purchase; balances are not combined.",theme.Body,true);
             FrontEndTheme.Fill(new Rect(x,436,w,1),FrontEndTheme.Raised);
             theme.Label(new Rect(x,462,w,40),"Premium cosmetics",theme.Heading);
             theme.Label(new Rect(x,518,w,62),FounderEntitlement.Owned?"First Traveler status active.\nYour owned cosmetics remain available.":"The real-money store is not available yet.",theme.Body,true);
             if(RecallCosmeticEntitlement.Owned) theme.Label(new Rect(x,600,w,48),RecallCosmeticCatalog.DisplayName+" / OWNED",theme.Small,true);
+        }
+        private async void BuyPaidCosmetic(string id,int avatar)
+        {
+            if(cosmeticBusy||PaidShardCommerce.Instance==null)return;cosmeticBusy=true;shopMessage="Confirming purchase…";
+            try
+            {
+                var backend=PaidShardCommerce.Instance;int session=backend.SessionVersion;
+                bool success=await backend.BuyCosmetic(id);
+                if(this==null)return;
+                if(backend==null||backend!=PaidShardCommerce.Instance||session!=backend.SessionVersion)success=false;
+                if(success){if(avatar<0)UniversalSkin.Equip(true);else PlayerProfile.Avatar=avatar;Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.6f);}
+                shopMessage=success?"Purchased and equipped.":"Could not confirm purchase. Reconnect and retry.";
+            }
+            catch(System.Exception){if(this!=null)shopMessage="Purchase interrupted. Reconnect to recover.";}
+            finally{if(this!=null)cosmeticBusy=false;}
+        }
+        private void DrawShardShop()
+        {
+            theme.Label(new Rect(Left,276,ContentWidth,36),"Optional shards. Cosmetics only.",theme.Heading);
+            theme.Label(new Rect(Left,316,ContentWidth,32),$"EARNED: {PlayerWallet.Balance}   /   STORE WALLET: {PaidShardCommerce.Balance}",theme.Small,true);
+            var store=GooglePlayShardStore.Instance;float w=(ContentWidth-48)/4;
+            for(int i=0;i<ShardPacks.All.Length;i++)
+            {
+                var pack=ShardPacks.All[i];float x=Left+i*(w+16);theme.Panel(new Rect(x,368,w,220));
+                theme.Label(new Rect(x+18,384,w-36,28),pack.Name,theme.Small,true);
+                theme.Label(new Rect(x+18,424,w-36,48),pack.Amount+" SHARDS",theme.Heading);
+                if(theme.Action(new Rect(x+18,508,w-36,60),store!=null?store.Price(pack.Id):"Unavailable",true,enabled:store!=null&&store.CanBuy(pack.Id)))store.Buy(pack.Id);
+            }
+            theme.Label(new Rect(Left,608,ContentWidth-190,64),store!=null?store.Status:"Store unavailable.",theme.Body,true);
+            if(theme.Action(new Rect(Right-170,614,170,54),"RECONNECT",enabled:store!=null&&!store.Busy))store.Reconnect();
         }
         private void DrawSkinShop()
         {
@@ -259,16 +292,17 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Left+w-64,614,64,54),">"))ChangeHero((selectedHero+1)%6);
             theme.Label(new Rect(x,282,rw,52),UniversalSkin.Name,theme.Title);
             theme.Label(new Rect(x,346,rw,60),"UNIVERSAL ARMOR FINISH / ALL SIX HEROES",theme.Small,true);
-            theme.Label(new Rect(x,410,rw,90),"Obsidian ceramic. Champagne alloy.\nYour hero's energy and team identity remain distinct.",theme.Body,true);
+            theme.Label(new Rect(x,410,rw,90),"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.",theme.Body,true);
             theme.Label(new Rect(x,510,rw,36),UniversalSkin.Owned?"OWNED":UniversalSkin.Price+" SHARDS",theme.Heading);
-            bool owned=UniversalSkin.Owned,equipped=UniversalSkin.Equipped,affordable=PlayerWallet.CanAfford(UniversalSkin.Price);
+            bool owned=UniversalSkin.Owned,equipped=UniversalSkin.Equipped,affordable=PlayerWallet.CanAfford(UniversalSkin.Price)||PaidShardCommerce.Balance>=UniversalSkin.Price;
             string label=equipped?"USE ORIGINAL":owned?"EQUIP VOIDFALL":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
-            if(theme.Action(new Rect(x,562,rw,64),label,true,enabled:owned||affordable))
+            if(theme.Action(new Rect(x,562,rw,64),label,true,enabled:!cosmeticBusy&&(owned||affordable)))
             {
                 if(owned){UniversalSkin.Equip(!equipped);shopMessage=equipped?"Original finish equipped.":"VOIDFALL equipped for your next match.";}
+                else if(!PlayerWallet.CanAfford(UniversalSkin.Price))BuyPaidCosmetic("voidfall",-1);
                 else shopMessage=UniversalSkin.Purchase()==AvatarPurchaseResult.Purchased?"Purchased and equipped for all six heroes.":"Purchase could not be completed.";
             }
-            theme.Label(new Rect(x,638,rw,48),shopMessage.Length>0?shopMessage:"Preview: VOIDFALL • cosmetic only • earned shards",theme.Small,true);
+            theme.Label(new Rect(x,638,rw,48),shopMessage.Length>0?shopMessage:"Preview: VOIDFALL • cosmetic only",theme.Small,true);
         }
         private string XpLabel() => PlayerExperience.Level>=PlayerExperience.MaxLevel ? "MAX LEVEL" : $"{PlayerExperience.XpIntoLevel} / {PlayerExperience.XpIntoLevel+PlayerExperience.XpToNextLevel} XP";
         private void DrawProfile()
@@ -303,7 +337,7 @@ namespace Alterverse.UI
                 if(theme.Action(avatar,"",selected:PlayerProfile.Avatar==avatarId)) PlayerProfile.Avatar=avatarId;
                 AvatarBadgeRenderer.Draw(new Rect(avatar.x+5,avatar.y+5,42,44),avatarId,Texture2D.whiteTexture,Time.unscaledTime);
             }
-            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;SetPage(Page.Shop);}
+            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;SetPage(Page.Shop);}
             float x=Left+identityWidth+32,w=ContentWidth-identityWidth-32;
             ProfileStats stats=ProfileStatsSummary.Current;
             theme.Label(new Rect(x,230,w,36),"Lifetime record",theme.Heading);

@@ -1,3 +1,5 @@
+> Follow-up: licensed recordings and VOIDFALL wings are now integrated. See Production-Audio.md, Voidfall-Wings.md and GooglePlay-Shards-Setup.md for the current implementation and verification limits. Earlier missing-audio statements below describe the previous checkpoint.
+
 # DIMENSIONS FRONT — completion pass
 
 ## ASTRA OPEN WORK
