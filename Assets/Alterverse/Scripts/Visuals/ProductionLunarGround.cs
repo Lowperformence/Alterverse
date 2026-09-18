@@ -29,6 +29,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildHealingIntegration(-27.5f);
         BuildHealingIntegration(27.5f);
         BuildCraters();
+        BuildFractures();
         BuildRocks();
     }
 
@@ -105,6 +106,19 @@ public sealed class ProductionLunarGround : MonoBehaviour
             // Keep craters away from lanes, spawn/heal corridor and core footprints.
             Ring("DF_LunarCraterRim",p[i],r[i],r[i]+.28f,24,rimMat);
             Disc("DF_LunarCraterShadow",p[i]-Vector3.up*.008f,r[i]*.83f,24,darkRegolith);
+        }
+    }
+
+    void BuildFractures()
+    {
+        Vector2[] starts={new(-37,-8),new(-31,8),new(-22,24),new(-20,-25),new(37,8),new(31,-8),new(22,-24),new(20,25)};
+        for(int i=0;i<starts.Length;i++)
+        {
+            float side=starts[i].x<0?-1f:1f;
+            Vector2 a=starts[i],b=a+new Vector2(-side*(2.2f+(i%3)*.55f),(i%2==0?1.3f:-1.5f));
+            Strip("DF_LunarFracture",a,b,.055f,.076f,darkRegolith);
+            Vector2 mid=Vector2.Lerp(a,b,.55f);
+            Strip("DF_LunarFractureBranch",mid,mid+new Vector2(-side*.85f,i%2==0?-.72f:.72f),.035f,.077f,darkRegolith);
         }
     }
 
