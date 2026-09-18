@@ -28,6 +28,7 @@ namespace Alterverse.Visuals
             BuildArenaUnderside();
             BuildUndersideTapers();
             BuildEdgeFragments();
+            BuildFragmentTrails();
             BuildUndersideFissures();
             BuildRimDropShadows();
             BuildEdgeFalloff();
@@ -153,6 +154,20 @@ namespace Alterverse.Visuals
             }
         }
 
+
+
+        private void BuildFragmentTrails()
+        {
+            Material m=Mat(new Color(.032f,.036f,.048f,1),false);if(m==null)return;
+            Vector3[] anchors={new(-50,-3,29),new(51,-3,-27)};
+            for(int a=0;a<anchors.Length;a++)for(int i=0;i<4;i++)
+            {
+                float side=a==0?-1f:1f;Vector3 p=anchors[a]+new Vector3(side*i*2.6f,-i*.7f,(i%2==0?1f:-1f)*i*.55f);
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_FragmentTrail";g.transform.SetParent(transform,false);g.transform.position=p;
+                float size=.72f-i*.12f;g.transform.localScale=new Vector3(size*1.25f,size*.65f,size);g.transform.rotation=Quaternion.Euler(i*21,33+i*47,11+i*13);
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
 
         private void BuildUndersideFissures()
         {
