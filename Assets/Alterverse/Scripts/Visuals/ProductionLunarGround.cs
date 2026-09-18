@@ -32,6 +32,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildTowerIntegration();
         BuildCraters();
         BuildSecondaryCraterField();
+        BuildImpactEjecta();
         BuildFractures();
         BuildRocks();
         BuildRegolithVariation();
@@ -171,6 +172,18 @@ public sealed class ProductionLunarGround : MonoBehaviour
         // Smaller, low-contrast impacts fill dead regolith zones without cluttering lanes or the objective court.
         Vector3[] c={new(-36,.047f,12),new(-34,.047f,-7),new(-25,.047f,5),new(-15,.047f,31),new(-4,.047f,-31),new(35,.047f,-11),new(33,.047f,8),new(24,.047f,-5),new(15,.047f,-31),new(5,.047f,31)};
         for(int i=0;i<c.Length;i++)IrregularCrater(c[i],.48f+(i%4)*.16f,40+i);
+    }
+
+    void BuildImpactEjecta()
+    {
+        Vector3[] centers={new(-18,.051f,5),new(17,.051f,-6),new(-8,.051f,29),new(9,.051f,-29)};
+        for(int n=0;n<centers.Length;n++)for(int i=0;i<5;i++)
+        {
+            float a=(n*41+i*67)*Mathf.Deg2Rad,r=2.05f+(i%3)*.55f;
+            Vector2 from=new(centers[n].x+Mathf.Cos(a)*r,centers[n].z+Mathf.Sin(a)*r);
+            Vector2 to=from+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*(.55f+(i%2)*.3f);
+            Strip("DF_ImpactEjecta",from,to,.18f+(i%3)*.06f,.053f,i%2==0?rimMat:laneMat);
+        }
     }
 
     void BuildFractures()
