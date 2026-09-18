@@ -1,115 +1,377 @@
-using UnityEngine;using Alterverse.Characters;using Alterverse.Profile;using Alterverse.Visuals;using Alterverse.Shop;using Alterverse.Multiplayer;
+using Alterverse.Characters;
+using Alterverse.Profile;
+using Alterverse.Shop;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
 namespace Alterverse.UI
 {
-public sealed class MainMenuController:MonoBehaviour
-{
-public static bool IsVisible=>instance!=null&&instance.visible;private enum Page{Home,Play,Heroes,Shop,Profile,Settings}private static MainMenuController instance;private Page page;private bool visible=true,launching;private GUIStyle title,subtitle,button,primary,small,panel,heroName,sideLabel,navButton,navActive,footerRight;private Texture2D dimTexture,zeroTexture,lumenTexture,whiteTexture;private int selectedHero,shopAvatarIndex;private float openedAt,launchAt;private float lastMenuInputAt;private int lastSelectedHero=-1;private float heroSelectedAt;private Page lastPage;private float pageChangedAt;private int lastScreenW,lastScreenH;private Rect cachedSafe;private float cachedScale,cachedOffsetX,cachedOffsetY;private string profileName,profileMessage="",shopMessage="";private bool editingName;private readonly string[] roles={"ASSASSIN","TANK","MARKSMAN","MAGE","SUPPORT","BRUISER"};
-[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]private static void AutoCreate(){if(FindAnyObjectByType<MainMenuController>()==null)new GameObject("DF_MainMenu").AddComponent<MainMenuController>();}public static void ShowHome(){if(instance==null){new GameObject("DF_MainMenu").AddComponent<MainMenuController>();return;}instance.gameObject.SetActive(true);instance.page=Page.Home;instance.visible=true;instance.launching=false;instance.editingName=false;instance.profileMessage="";instance.shopMessage="";instance.profileName=PlayerProfile.PlayerName;instance.openedAt=Time.unscaledTime;instance.pageChangedAt=0f;Time.timeScale=0f;}private void Awake(){if(instance!=null&&instance!=this){Destroy(gameObject);return;}instance=this;selectedHero=(int)PlayerHeroSelection.Selected;profileName=PlayerProfile.PlayerName;openedAt=Time.unscaledTime;Time.timeScale=0;dimTexture=MakeTexture(StylizedArtDirection.Ink);zeroTexture=MakeTexture(StylizedArtDirection.ZeroDark);lumenTexture=MakeTexture(StylizedArtDirection.LumenDark);whiteTexture=MakeTexture(Color.white);}private void OnEnable(){if(visible)Time.timeScale=0;}private void OnApplicationFocus(bool focused){if(focused&&visible&&!launching)Time.timeScale=0f;}private void SetPage(Page next){if(page==next||Time.unscaledTime-lastMenuInputAt<.08f)return;lastMenuInputAt=Time.unscaledTime;lastPage=page;page=next;pageChangedAt=Time.unscaledTime;editingName=false;profileMessage="";shopMessage="";GUI.FocusControl(null);}private void Update(){if(launching&&Time.unscaledTime-launchAt>.62f)EnterMatch();if(!visible||launching)return;}
-private static readonly Page[] NavigationPages={Page.Home,Page.Play,Page.Heroes,Page.Shop,Page.Profile,Page.Settings};
-private static readonly string[] NavigationLabels={"HOME","PLAY","HEROES","COSMETICS","PROFILE","SETTINGS"};
-private void NavigateTab(int direction){int index=System.Array.IndexOf(NavigationPages,page);SetPage(NavigationPages[(index+direction+NavigationPages.Length)%NavigationPages.Length]);}
-private Texture2D MakeTexture(Color c){Texture2D t=new Texture2D(1,1);t.name="DF_MenuPixel";t.SetPixel(0,0,c);t.Apply(false,true);return t;}private void OnDestroy(){if(instance==this)instance=null;DestroyTexture(dimTexture);DestroyTexture(zeroTexture);DestroyTexture(lumenTexture);DestroyTexture(whiteTexture);}private static void DestroyTexture(Texture2D t){if(t!=null)Destroy(t);}private const int MenuWidth=960,MenuHeight=720;
-private void OnGUI()
-{
-if(!visible)return;GUI.enabled=!launching;
-Matrix4x4 previousMatrix=GUI.matrix;Color previousColor=GUI.color;bool previousEnabled=GUI.enabled;
-if(lastScreenW!=Screen.width||lastScreenH!=Screen.height||cachedSafe!=Screen.safeArea){lastScreenW=Screen.width;lastScreenH=Screen.height;cachedSafe=Screen.safeArea;cachedScale=Mathf.Min(cachedSafe.width/MenuWidth,cachedSafe.height/MenuHeight);cachedOffsetX=cachedSafe.x+(cachedSafe.width-MenuWidth*cachedScale)*.5f;cachedOffsetY=Screen.height-cachedSafe.yMax+(cachedSafe.height-MenuHeight*cachedScale)*.5f;}float scale=cachedScale,offsetX=cachedOffsetX,offsetY=cachedOffsetY;
-GUI.color=Color.white;GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),dimTexture);
-GUI.matrix=Matrix4x4.TRS(new Vector3(offsetX,offsetY,0),Quaternion.identity,Vector3.one*scale);
-try{EnsureStyles();DrawBackground();if(launching){DrawLaunch();return;}float reveal=pageChangedAt<=0?1f:Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.18f);GUI.color=new Color(1,1,1,.35f+.65f*reveal);switch(page){case Page.Play:DrawPlay();break;case Page.Heroes:DrawHeroes();break;case Page.Shop:DrawShop();break;case Page.Profile:DrawProfile();break;case Page.Settings:DrawSettings();break;default:DrawHome();break;}GUI.color=Color.white;}
-finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEnabled;}
-}
-private void DrawFooterStatus(string left,string right){GUI.color=new Color(1,1,1,.55f);GUI.DrawTexture(new Rect(244,655,472,1),whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(244,662,230,18),left,small);GUI.Label(new Rect(486,662,230,18),right,footerRight);}
-private void DrawSectionHeader(string heading,string kicker){GUI.Label(new Rect(42,52,620,54),heading,title);GUI.Label(new Rect(48,100,500,20),kicker,subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,122,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);}
-private void DrawTopNav(Page current)
-{
-GUI.enabled=true;
-GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);GUI.Label(new Rect(246,8,170,30),"BETA  //  LOCAL",small);
-float width=510f,start=MenuWidth-width-18f,cell=width/NavigationLabels.Length;
-for(int i=0;i<NavigationLabels.Length;i++){bool active=current==NavigationPages[i];Rect tab=new Rect(start+i*cell,6,cell-4,38);GUI.enabled=!active;if(GUI.Button(tab,NavigationLabels[i],active?navActive:navButton))SetPage(NavigationPages[i]);GUI.enabled=true;if(active){GUI.color=new Color(1,1,1,.9f);GUI.DrawTexture(new Rect(tab.x+10,tab.yMax-3,tab.width-20,2),whiteTexture);GUI.color=Color.white;}}GUI.color=new Color(1,1,1,.09f);GUI.DrawTexture(new Rect(24,48,MenuWidth-48,1),whiteTexture);GUI.color=Color.white;
-}
-private string HeroName(int index){return HeroIdentity.NameFor((HeroId)index).ToUpperInvariant();}
-private void DrawBackground(){GUI.DrawTexture(new Rect(0,0,MenuWidth,MenuHeight),dimTexture);float t=Time.unscaledTime-openedAt,pulse=.5f+.5f*Mathf.Sin(t*1.35f),collision=Mathf.Sin(t*.7f)*MenuWidth*.006f;GUI.color=Color.white;GUI.DrawTexture(new Rect(0,0,MenuWidth*.505f+collision,MenuHeight),zeroTexture);GUI.DrawTexture(new Rect(MenuWidth*.495f+collision,0,MenuWidth*.505f,MenuHeight),lumenTexture);float center=MenuWidth*.5f+collision;for(int i=0;i<12;i++){float phase=t*(.55f+i*.025f)+i*1.37f,y=(i+.4f)*MenuHeight/12f+Mathf.Sin(phase*1.7f)*15,x=center+Mathf.Sin(phase)*14;GUI.color=i%2==0?new Color(StylizedArtDirection.ZeroEnergy.r,StylizedArtDirection.ZeroEnergy.g,StylizedArtDirection.ZeroEnergy.b,.25f+.2f*pulse):new Color(StylizedArtDirection.LumenEnergy.r,StylizedArtDirection.LumenEnergy.g,StylizedArtDirection.LumenEnergy.b,.25f+.2f*pulse);GUI.DrawTexture(new Rect(x-2,y-18,4,36),whiteTexture);}GUI.color=Color.white;GUI.DrawTexture(new Rect(center-(3+5*pulse)*.5f,0,3+5*pulse,MenuHeight),whiteTexture);DrawRealityDepth(center,t);DrawComicCuts(center,t);GUI.Label(new Rect(18,MenuHeight*.48f,MenuWidth*.22f,32),"DIMENSION ZERO",sideLabel);GUI.Label(new Rect(MenuWidth*.78f-18,MenuHeight*.48f,MenuWidth*.22f,32),"LUMEN",sideLabel);}
-private void DrawRealityDepth(float center,float t){Color old=GUI.color;for(int i=0;i<6;i++){float y=86+i*108+Mathf.Sin(t*.22f+i)*5f;float zeroW=150+i*19,lumenW=132+(5-i)*17;GUI.color=new Color(StylizedArtDirection.ZeroEnergy.r,StylizedArtDirection.ZeroEnergy.g,StylizedArtDirection.ZeroEnergy.b,.035f);GUI.DrawTexture(new Rect(center-zeroW-42,y,zeroW,1),whiteTexture);GUI.color=new Color(StylizedArtDirection.LumenEnergy.r,StylizedArtDirection.LumenEnergy.g,StylizedArtDirection.LumenEnergy.b,.035f);GUI.DrawTexture(new Rect(center+42,y+34,lumenW,1),whiteTexture);}GUI.color=old;}
-private void DrawComicCuts(float center,float t){for(int i=0;i<5;i++){float y=MenuHeight*(.13f+i*.18f),drift=Mathf.Sin(t*.45f+i)*8;GUI.color=new Color(1,1,1,.07f);GUI.DrawTexture(new Rect(0,y+drift,center*.7f,2),whiteTexture);GUI.DrawTexture(new Rect(center+center*.3f,y-drift,MenuWidth-(center+center*.3f),2),whiteTexture);}GUI.color=Color.white;}
-private void DrawHome()
-{
-DrawTopNav(Page.Home);
-float t=Time.unscaledTime-openedAt;
-GUI.Label(new Rect(42,52,560,54),"DIMENSIONS FRONT",title);GUI.Label(new Rect(48,100,500,20),"TWO REALITIES. ONE FRONT.",subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,122,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-Rect profile=new Rect(690,56,230,52);DimensionUiMotif.DrawSplitPanel(profile,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(704,60,202,20),PlayerProfile.PlayerName.ToUpperInvariant(),subtitle);GUI.Label(new Rect(704,78,202,18),$"LEVEL {PlayerExperience.Level}   •   ◆ {PlayerWallet.Balance}",small);float homeXp=PlayerExperience.LevelProgress;GUI.color=new Color(1,1,1,.12f);GUI.DrawTexture(new Rect(710,100,190,4),whiteTexture);GUI.color=Color.white;GUI.DrawTexture(new Rect(710,88,190*homeXp,4),whiteTexture);
+    public sealed class MainMenuController : MonoBehaviour
+    {
+        private enum Page { Home, Play, Heroes, Shop, Profile, Settings }
+        private static MainMenuController instance;
+        public static bool IsVisible => instance != null && instance.visible;
+        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "COSMETICS", "PROFILE", "SETTINGS" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER" };
+        private static readonly string[] RoleDescriptions = {
+            "Close the distance. Isolate a vulnerable target, strike, then disengage.",
+            "Hold the front. Shield your team and interrupt enemies at close range.",
+            "Keep your distance. Deliver sustained fire while allies protect your position.",
+            "Control the fight. Place powerful area attacks where enemies want to move.",
+            "Keep allies fighting. Heal, shield and slow enemies from the backline.",
+            "Win the long fight. Trade at close range with heavy strikes and sustain." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
+        private Page page;
+        private bool visible = true, launching, editingName, suspended;
+        private int selectedHero, shopAvatarIndex;
+        private float pageChangedAt, launchAt, menuWidth = 1280;
+        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
+        private FrontEndTheme theme;
+        private MenuHeroShowcase showcase;
+        private TouchScreenKeyboard nameKeyboard;
+        private float master, music, sfx;
+        private bool audioDirty;
+        private const float MenuHeight = 720;
+        private float Left => (menuWidth - ContentWidth)*.5f;
+        private float ContentWidth => Mathf.Min(1360,menuWidth-64);
+        private float Right => Left+ContentWidth;
 
-Rect heroStage=new Rect(355,126,565,430);DimensionUiMotif.DrawSplitPanel(heroStage,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(382,146,510,22),"ACTIVE HERO",small);
-float pulse=.5f+.5f*Mathf.Sin(t*1.25f);GUI.color=new Color(1,1,1,.05f+.04f*pulse);GUI.DrawTexture(new Rect(470,184,330,330),whiteTexture);GUI.color=Color.white;
-StylizedHeroCard.Draw(new Rect(520,174,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
-GUI.Label(new Rect(402,468,470,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(402,511,470,26),roles[selectedHero],subtitle);GUI.Label(new Rect(402,538,470,18),"SELECTED FOR NEXT DEPLOYMENT",small);
-if(GUI.Button(new Rect(377,239,54,54),"‹",button))ChangeHero(-1);if(GUI.Button(new Rect(844,239,54,54),"›",button))ChangeHero(1);
-
-Rect nav=new Rect(42,126,282,430);DimensionUiMotif.DrawSplitPanel(nav,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(64,145,238,24),"FRONT COMMAND",subtitle);
-GUI.Label(new Rect(64,178,238,16),"PRIMARY ACTION",small);if(GUI.Button(new Rect(64,200,238,76),"PLAY",primary))SetPage(Page.Play);
-if(GUI.Button(new Rect(64,288,238,48),"HEROES",button))SetPage(Page.Heroes);
-if(GUI.Button(new Rect(64,346,238,48),"COSMETICS",button))SetPage(Page.Shop);
-if(GUI.Button(new Rect(64,404,238,48),"PROFILE",button))SetPage(Page.Profile);
-if(GUI.Button(new Rect(64,462,238,48),"SETTINGS",button))SetPage(Page.Settings);
-
-Rect status=new Rect(42,578,878,96);DimensionUiMotif.DrawSplitPanel(status,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(66,590,190,22),"DIMENSIONS FRONT",small);GUI.Label(new Rect(66,614,190,30),"AI 5v5 READY",subtitle);
-GUI.Label(new Rect(300,590,250,22),"SELECTED",small);GUI.Label(new Rect(300,614,250,30),$"{HeroName(selectedHero)}  •  {roles[selectedHero]}",subtitle);
-GUI.Label(new Rect(594,590,300,22),FounderEntitlement.Owned?"FOUNDER STATUS":"ACCOUNT PROGRESSION",small);
-GUI.Label(new Rect(594,614,300,30),FounderEntitlement.Owned?"◆ FIRST TRAVELER ◆":$"LEVEL {PlayerExperience.Level}  •  EXPERIENCE ONLY",subtitle);
-}
-private void DrawPlay()
-{
-DrawTopNav(Page.Play);
-DrawSectionHeader("ENTER THE FRONT","DEPLOYMENT");
-Rect mode=new Rect(42,142,560,466);DimensionUiMotif.DrawSplitPanel(mode,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(68,164,508,30),"01  //  SELECT MATCH TYPE",subtitle);
-GUI.Label(new Rect(72,210,210,22),"AVAILABLE",small);
-if(GUI.Button(new Rect(72,238,500,102),"AI MATCH   5v5\nFULL TEAM BATTLE • LOCAL",primary))BeginLaunch();
-GUI.Label(new Rect(88,350,468,42),"Two lanes • Reality Bastions • Dimension planets • Reality Core",small);
-GUI.Label(new Rect(72,408,210,22),"NETWORK",small);GUI.enabled=false;GUI.Button(new Rect(72,436,500,82),"MULTIPLAYER   5v5\nCOMING SOON",button);GUI.enabled=true;
-GUI.Label(new Rect(72,530,500,38),"NO PAY-TO-WIN • ACCOUNT LEVEL IS EXPERIENCE ONLY",small);
-Rect loadout=new Rect(626,142,294,466);DimensionUiMotif.DrawSplitPanel(loadout,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(648,164,250,24),"02  //  YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
-GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);GUI.Label(new Rect(646,514,254,18),"READY  •  LOADOUT LOCKED ON START",small);
-if(GUI.Button(new Rect(654,535,238,46),"CHANGE HERO",button))SetPage(Page.Heroes);
-if(GUI.Button(new Rect(42,632,180,46),"HOME",button))SetPage(Page.Home);DrawFooterStatus("AI 5v5  •  READY","FRONT STATUS  //  READY");
-}
-private void DrawHeroes()
-{
-DrawTopNav(Page.Heroes);
-DrawSectionHeader("HEROES","CHOOSE YOUR FIGHTER");
-Rect roster=new Rect(42,142,286,470);DimensionUiMotif.DrawSplitPanel(roster,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(62,162,246,24),"01  //  ROSTER  •  6 HEROES",subtitle);
-for(int i=0;i<6;i++){float y=202+i*61;bool chosen=i==selectedHero;GUI.enabled=!chosen;if(GUI.Button(new Rect(62,y,246,48),$"{HeroName(i)}   •   {roles[i]}",chosen?primary:button))ChangeHero(i-selectedHero);GUI.enabled=true;}
-Rect showcase=new Rect(350,142,570,470);DimensionUiMotif.DrawSplitPanel(showcase,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(374,162,522,24),"02  //  SELECTED HERO",small);StylizedHeroCard.Draw(new Rect(520,190,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
-GUI.Label(new Rect(390,486,490,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(390,530,490,26),roles[selectedHero],subtitle);
-GUI.Label(new Rect(390,561,490,24),Time.unscaledTime-heroSelectedAt<.8f&&lastSelectedHero!=selectedHero?"SELECTION CONFIRMED   •   READY FOR DEPLOYMENT":$"HERO {selectedHero+1} / 6   •   READY FOR DEPLOYMENT",small);DimensionUiMotif.DrawCornerCuts(new Rect(374,158,522,430),whiteTexture,selectedHero%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy);
-if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);if(GUI.Button(new Rect(710,632,210,46),"DEPLOY",primary))SetPage(Page.Play);
-}
-private void DrawShop()
-{
-DrawTopNav(Page.Shop);
-DrawSectionHeader("COSMETICS","CUSTOMIZE YOUR IDENTITY");
-GUI.Label(new Rect(690,52,230,30),$"{AvatarShopCatalog.CurrencyName}   ◆ {PlayerWallet.Balance}",subtitle);GUI.Label(new Rect(690,82,230,18),"EARN IN MATCHES • SPEND ON COSMETICS",small);
-AvatarShopItem item=AvatarShopCatalog.Items[Mathf.Clamp(shopAvatarIndex,0,AvatarShopCatalog.Items.Length-1)];bool owned=AvatarInventory.IsOwned(item.AvatarId),equipped=PlayerProfile.Avatar==item.AvatarId;
-Rect collection=new Rect(42,142,520,466);DimensionUiMotif.DrawSplitPanel(collection,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);GUI.Label(new Rect(64,160,476,26),"AVATAR COLLECTION",subtitle);
-ShopAvatarPreview.Draw(new Rect(92,205,230,230),item,whiteTexture,Time.unscaledTime);GUI.Label(new Rect(338,222,200,38),item.Name,heroName);GUI.Label(new Rect(338,263,200,24),item.Theme,small);GUI.Label(new Rect(338,300,200,30),owned?"OWNED":$"◆ {item.Price}",subtitle);
-GUI.enabled=!equipped&&(owned||PlayerWallet.CanAfford(item.Price));string action=equipped?"EQUIPPED":owned?"EQUIP":"UNLOCK";if(GUI.Button(new Rect(338,350,190,54),action,primary)){if(owned){PlayerProfile.Avatar=item.AvatarId;shopMessage="AVATAR EQUIPPED";}else{AvatarPurchaseResult result=AvatarShopService.TryPurchase(item);shopMessage=result==AvatarPurchaseResult.Purchased?"UNLOCKED AND EQUIPPED":result==AvatarPurchaseResult.InsufficientShards?"NOT ENOUGH SHARDS":result.ToString().ToUpperInvariant();}}GUI.enabled=true;
-if(GUI.Button(new Rect(92,470,54,42),"‹",button))shopAvatarIndex=(shopAvatarIndex-1+AvatarShopCatalog.Items.Length)%AvatarShopCatalog.Items.Length;if(GUI.Button(new Rect(268,470,54,42),"›",button))shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length;GUI.Label(new Rect(150,478,114,24),$"{shopAvatarIndex+1} / {AvatarShopCatalog.Items.Length}",small);
-if(!string.IsNullOrEmpty(shopMessage))GUI.Label(new Rect(72,540,460,30),shopMessage,subtitle);
-Rect premium=new Rect(584,142,336,466);DimensionUiMotif.DrawSplitPanel(premium,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);GUI.Label(new Rect(606,160,292,26),"FEATURED",subtitle);GUI.Label(new Rect(606,206,292,34),RecallCosmeticCatalog.DisplayName,subtitle);GUI.Label(new Rect(606,244,292,22),RecallCosmeticCatalog.Category,small);GUI.Label(new Rect(616,282,272,68),RecallCosmeticCatalog.Description,small);GUI.Label(new Rect(606,360,292,38),RecallCosmeticCatalog.TargetPrice,heroName);GUI.enabled=false;GUI.Button(new Rect(620,414,264,52),RecallCosmeticEntitlement.Owned?"OWNED":"STORE COMING SOON",primary);GUI.enabled=true;GUI.Label(new Rect(606,500,292,24),FounderEntitlement.Owned?"◆ FIRST TRAVELER ◆":"FIRST FRACTURE",subtitle);GUI.Label(new Rect(606,532,292,42),"COSMETIC ONLY\nNO GAMEPLAY ADVANTAGE",small);GUI.Label(new Rect(606,574,292,18),"MISSING SHARDS CAN BE PURCHASED LATER",small);
-if(GUI.Button(new Rect(42,632,180,46),"BACK",button)){shopMessage="";SetPage(Page.Home);}
-}
-private void ChangeHero(int direction){if(Time.unscaledTime-lastMenuInputAt<.08f)return;lastMenuInputAt=Time.unscaledTime;lastSelectedHero=selectedHero;selectedHero=(selectedHero+direction+6)%6;heroSelectedAt=Time.unscaledTime;PlayerHeroSelection.Select((HeroId)selectedHero);}private void DrawProfile(){DrawTopNav(Page.Profile);float w=820,x=70,y=150;DrawSectionHeader("PLAYER PROFILE","ACCOUNT & CAREER");Rect profilePanel=new Rect(x,y,w,390);DimensionUiMotif.DrawSplitPanel(profilePanel,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);GUI.Label(new Rect(x+30,y+18,w-60,26),PlayerProfile.HasFounderFrame?"◆ FIRST FRACTURE PROFILE ◆":"DIMENSIONS FRONT PROFILE",subtitle);GUI.Label(new Rect(x+30,y+48,w-60,24),$"{PlayerProfile.DisplayTitle}  •  LEVEL {PlayerExperience.Level}",small);float xpProgress=PlayerExperience.LevelProgress;GUI.Label(new Rect(x+55,y+72,w-110,16),PlayerExperience.Level>=PlayerExperience.MaxLevel?"MAX EXPERIENCE":$"{PlayerExperience.XpIntoLevel} / {PlayerExperience.XpIntoLevel+PlayerExperience.XpToNextLevel} XP",small);GUI.Box(new Rect(x+55,y+91,w-110,8),"");if(xpProgress>0f)GUI.Box(new Rect(x+55,y+91,(w-110)*xpProgress,8),"");GUI.Label(new Rect(x+30,y+106,w-60,28),"DISPLAY NAME",subtitle);GUI.enabled=editingName;profileName=GUI.TextField(new Rect(x+55,y+140,w-285,42),profileName,PlayerProfile.MaxNameLength);GUI.enabled=true;GUI.Label(new Rect(x+55,y+181,w-285,18),$"{profileName.Length}/{PlayerProfile.MaxNameLength}  •  3–16 CHARACTERS",small);if(!editingName){if(GUI.Button(new Rect(x+w-210,y+140,155,42),"EDIT NAME",button)){editingName=true;profileMessage="";}}else{if(GUI.Button(new Rect(x+w-210,y+140,74,42),"SAVE",primary)){if(PlayerProfile.IsValidName(profileName)){PlayerProfile.PlayerName=profileName;profileName=PlayerProfile.PlayerName;profileMessage="NAME SAVED";editingName=false;}else profileMessage="3–16: LETTERS, NUMBERS, SPACE, _ OR -";}if(GUI.Button(new Rect(x+w-128,y+140,74,42),"CANCEL",button)){profileName=PlayerProfile.PlayerName;profileMessage="";editingName=false;}}GUI.Label(new Rect(x+30,y+181,w-60,22),profileMessage,small);GUI.Label(new Rect(x+30,y+204,w-60,28),"AVATAR",subtitle);int avatarCount=FounderEntitlement.Owned?7:6,totalWidth=avatarCount*52;float ax=x+(w-totalWidth)*.5f;for(int i=0;i<avatarCount;i++){bool chosen=PlayerProfile.Avatar==i;string label=i==6?"◆":(i+1).ToString();GUI.enabled=!chosen;if(GUI.Button(new Rect(ax+i*52,y+238,44,44),label,chosen?primary:button))PlayerProfile.Avatar=i;GUI.enabled=true;}GUI.Label(new Rect(x+30,y+292,w-60,25),FounderEntitlement.Owned?"Founder avatar unlocked • permanent account cosmetic":"Built-in Dimensions Front avatars",small);ProfileStats stats=ProfileStatsSummary.Current;GUI.Label(new Rect(x+30,y+316,w-60,22),$"MATCHES {stats.Matches}   •   WINS {stats.Wins}   •   WIN RATE {stats.WinRate:0}%",small);GUI.Label(new Rect(x+30,y+336,w-60,22),$"KILLS {ProgressionSummary.Kills}   •   ASSISTS {ProgressionSummary.Assists}   •   OBJECTIVES {ProgressionSummary.Objectives}",small);if(GUI.Button(new Rect(42,632,180,46),"BACK",button)){profileName=PlayerProfile.PlayerName;profileMessage="";editingName=false;SetPage(Page.Home);}}
-private void DrawSettings(){DrawTopNav(Page.Settings);float w=820,x=70,y=150;DrawSectionHeader("SETTINGS","SYSTEM & AUDIO");Rect settingsPanel=new Rect(x,y,w,390);DimensionUiMotif.DrawSplitPanel(settingsPanel,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);DrawVolume(x,y+35,w,"MASTER VOLUME",PlayerProfile.MasterVolume,v=>PlayerProfile.MasterVolume=v);DrawVolume(x,y+105,w,"MUSIC",PlayerProfile.MusicVolume,v=>PlayerProfile.MusicVolume=v);DrawVolume(x,y+175,w,"SFX",PlayerProfile.SfxVolume,v=>PlayerProfile.SfxVolume=v);GUI.Label(new Rect(x+30,y+245,w-60,28),"LANGUAGE  •  ENGLISH",subtitle);GUI.Label(new Rect(x+30,y+278,w-60,22),"More languages will be added later.",small);if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);}private void DrawVolume(float x,float y,float w,string name,float value,System.Action<float> set){GUI.Label(new Rect(x+30,y,w-60,24),$"{name}  {Mathf.RoundToInt(value*100)}%",small);float next=GUI.HorizontalSlider(new Rect(x+75,y+31,w-150,22),value,0,1);if(!Mathf.Approximately(next,value))set(next);}
-private void BeginLaunch(){if(launching||Time.unscaledTime-lastMenuInputAt<.08f)return;lastMenuInputAt=Time.unscaledTime;PlayerHeroSelection.Select((HeroId)selectedHero);launching=true;launchAt=Time.unscaledTime;GUI.FocusControl(null);}private void DrawLaunch(){float p=Mathf.Clamp01((Time.unscaledTime-launchAt)/.62f),ease=p*p*(3-2*p),w=Mathf.Lerp(MenuWidth*.02f,MenuWidth*.72f,ease);GUI.color=new Color(1,1,1,.12f+.65f*ease);GUI.DrawTexture(new Rect(MenuWidth*.5f-w*.5f,0,w,MenuHeight),whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(0,MenuHeight*.36f,MenuWidth,70),p>.48f?"ENTER THE FRONT":"REALITY COLLISION",heroName);GUI.Label(new Rect(0,MenuHeight*.46f,MenuWidth,30),HeroName(selectedHero)+"  •  "+roles[selectedHero],subtitle);GUI.Box(new Rect(MenuWidth*.25f,MenuHeight*.54f,MenuWidth*.5f,8),"");GUI.color=new Color(1,1,1,.9f);GUI.DrawTexture(new Rect(MenuWidth*.25f,MenuHeight*.54f,MenuWidth*.5f*ease,8),whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(0,MenuHeight*.57f,MenuWidth,24),Mathf.RoundToInt(ease*100)+"%  //  SYNCHRONIZING REALITY",small);}private void EnterMatch(){launching=false;visible=false;Time.timeScale=1;
-if(GameObject.Find("DF_MatchWorld")!=null){Alterverse.Prototype.PrototypeBootstrap bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();if(bootstrap!=null)bootstrap.StartCoroutine(bootstrap.RestartPrototype());}
-gameObject.SetActive(false);}
-private void EnsureStyles(){if(title!=null)return;GUI.skin.button.margin=new RectOffset(3,3,3,3);GUI.skin.button.padding=new RectOffset(10,10,7,7);title=new GUIStyle(GUI.skin.label){fontSize=Mathf.Clamp(MenuWidth/18,34,66),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};subtitle=new GUIStyle(GUI.skin.label){fontSize=Mathf.Clamp(MenuWidth/48,15,23),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};button=new GUIStyle(GUI.skin.button){fontSize=Mathf.Clamp(MenuWidth/48,15,22),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};button.normal.textColor=new Color(.82f,.86f,.92f);button.hover.textColor=Color.white;button.active.textColor=Color.white;primary=new GUIStyle(button){fontSize=Mathf.Clamp(MenuWidth/38,20,29)};primary.normal.textColor=Color.white;primary.hover.textColor=Color.white;primary.active.textColor=Color.white;primary.wordWrap=true;button.wordWrap=true;navButton=new GUIStyle(button){fontSize=12,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter,wordWrap=false};navActive=new GUIStyle(navButton);navActive.normal.textColor=Color.white;navActive.hover.textColor=Color.white;footerRight=new GUIStyle(small){alignment=TextAnchor.MiddleRight};small=new GUIStyle(GUI.skin.label){fontSize=13,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter,wordWrap=true};panel=new GUIStyle(GUI.skin.box);heroName=new GUIStyle(title){fontSize=Mathf.Clamp(MenuWidth/24,27,46)};sideLabel=new GUIStyle(small){fontSize=12,alignment=TextAnchor.MiddleCenter};title.normal.textColor=Color.white;subtitle.normal.textColor=new Color(.84f,.9f,.96f);small.normal.textColor=new Color(.68f,.74f,.82f);heroName.normal.textColor=Color.white;}
-}
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void AutoCreate()
+        {
+            if (FindAnyObjectByType<MainMenuController>() == null) new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
+        }
+        private void Awake()
+        {
+            if (instance != null && instance != this) { Destroy(gameObject); return; }
+            instance = this;
+            selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,5);
+            profileName = PlayerProfile.PlayerName;
+            master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
+            showcase = gameObject.AddComponent<MenuHeroShowcase>();
+            Time.timeScale = 0;
+        }
+        public static void ShowHome()
+        {
+            if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
+            instance.visible = true; instance.launching = false; instance.page = Page.Home;
+            instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
+            instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
+            instance.gameObject.SetActive(true); Time.timeScale = 0;
+        }
+        private void OnEnable() { if (visible) Time.timeScale = 0; }
+        private void OnApplicationPause(bool paused)
+        {
+            suspended = paused;
+            if (paused) { FlushAudio(); if (launching) { launching = false; page = Page.Play; } }
+            if (visible) Time.timeScale = 0;
+        }
+        private void OnApplicationFocus(bool focused)
+        {
+            if (!focused && launching) { launching = false; page = Page.Play; }
+            if (focused && visible) Time.timeScale = 0;
+        }
+        private void OnDisable() { FlushAudio(); CloseKeyboard(); }
+        private void OnDestroy() { if (instance == this) instance = null; }
+        private void Update()
+        {
+            if (!visible || suspended) return;
+            showcase.Present((HeroId)selectedHero, !launching && (page == Page.Home || page == Page.Play || page == Page.Heroes));
+            if (nameKeyboard != null)
+            {
+                profileName = nameKeyboard.text;
+                if (nameKeyboard.status == TouchScreenKeyboard.Status.Done) { SaveName(); CloseKeyboard(); }
+                else if (nameKeyboard.status == TouchScreenKeyboard.Status.Canceled || nameKeyboard.status == TouchScreenKeyboard.Status.LostFocus)
+                { CancelName(); }
+            }
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                if (editingName) CancelName();
+                else if (launching) launching = false;
+                else SetPage(Page.Home);
+            }
+            if (launching && Time.unscaledTime-launchAt >= .55f) EnterMatch();
+        }
+        private void SetPage(Page next)
+        {
+            if (page == next || launching) return;
+            FlushAudio(); CancelName(); page = next; pageChangedAt = Time.unscaledTime;
+            profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
+        }
+        private void OnGUI()
+        {
+            if (!visible) return;
+            Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
+            try
+            {
+                GUI.color = Color.white; GUI.enabled = !launching;
+                FrontEndTheme.Fill(new Rect(0,0,Screen.width,Screen.height),FrontEndTheme.Background);
+                Rect safe = Screen.safeArea;
+                if (safe.width <= 0 || safe.height <= 0) return;
+                float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1200f);
+                menuWidth = safe.width/scale;
+                float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
+                GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x,y,0),Quaternion.identity,Vector3.one*scale);
+                theme ??= new FrontEndTheme();
+                if (launching) { DrawLaunch(); return; }
+                DrawNavigation();
+                float reveal = Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.16f));
+                GUI.color = new Color(1,1,1,.65f+.35f*reveal);
+                switch (page)
+                {
+                    case Page.Play: DrawPlay(); break;
+                    case Page.Heroes: DrawHeroes(); break;
+                    case Page.Shop: DrawShop(); break;
+                    case Page.Profile: DrawProfile(); break;
+                    case Page.Settings: DrawSettings(); break;
+                    default: DrawHome(); break;
+                }
+            }
+            finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.enabled = oldEnabled; }
+        }
+        private void DrawNavigation()
+        {
+            theme.Label(new Rect(Left,20,300,48),"DIMENSIONS FRONT",theme.Heading);
+            float start = Right-744;
+            for (int i=0;i<NavigationLabels.Length;i++)
+                if (theme.Action(new Rect(start+i*124,20,116,48),NavigationLabels[i],selected:(int)page==i)) SetPage((Page)i);
+            FrontEndTheme.Fill(new Rect(Left,86,ContentWidth,1),FrontEndTheme.Raised);
+        }
+        private void Heading(string title, string description)
+        {
+            theme.Label(new Rect(Left,110,ContentWidth,52),title,theme.Title);
+            theme.Label(new Rect(Left,166,ContentWidth,30),description,theme.Body,true);
+        }
+        private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
+        private void DrawPortrait(Rect rect)
+        {
+            if (showcase != null && showcase.Image != null)
+                GUI.DrawTexture(rect,showcase.Image,ScaleMode.ScaleToFit,false);
+        }
+        private void DrawHome()
+        {
+            float split = Left+ContentWidth*.43f;
+            theme.Label(new Rect(Left,128,460,30),"TWO REALITIES. ONE FRONT.",theme.Small,true);
+            theme.Label(new Rect(Left,170,500,112),"Your reality.\nYour fight.",theme.Title);
+            theme.Label(new Rect(Left,300,440,66),"Choose your hero. Join your team.\nTake the Dimensions Front.",theme.Body,true);
+            AvatarBadgeRenderer.Draw(new Rect(Left,406,64,64),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
+            theme.Label(new Rect(Left+82,404,340,30),PlayerProfile.PlayerName,theme.Heading);
+            theme.Label(new Rect(Left+82,440,340,25),$"LEVEL {PlayerExperience.Level}    /    {PlayerWallet.Balance} SHARDS",theme.Small,true);
+            theme.Progress(new Rect(Left,492,420,5),PlayerExperience.LevelProgress);
+            theme.Label(new Rect(Left,506,420,28),XpLabel(),theme.Small,true);
+            if (theme.Action(new Rect(Left,568,420,72),"PLAY",true)) SetPage(Page.Play);
+            theme.Label(new Rect(Left,652,420,26),"AI MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
+            DrawPortrait(new Rect(split,108,Right-split,444));
+            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),FrontEndTheme.Zero);
+            theme.Label(new Rect(split+48,570,Right-split-170,38),HeroName,theme.Heading);
+            theme.Label(new Rect(split+48,616,Right-split-180,28),Roles[selectedHero],theme.Small,true);
+            if (theme.Action(new Rect(Right-110,580,62,64),">")) SetPage(Page.Heroes);
+        }
+        private void DrawPlay()
+        {
+            Heading("Deployment","Choose your hero. Enter a local team battle.");
+            float w = ContentWidth*.52f;
+            theme.Panel(new Rect(Left,222,w,306));
+            theme.Label(new Rect(Left+28,244,w-56,26),"AVAILABLE NOW",theme.Small,true);
+            theme.Label(new Rect(Left+28,286,w-56,50),"AI MATCH 5v5",theme.Title);
+            theme.Label(new Rect(Left+28,350,w-56,62),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM  /  LOCAL MATCH",theme.Body);
+            theme.Label(new Rect(Left+28,479,w-56,24),"Online multiplayer is not available yet.",theme.Small,true);
+            if (theme.Action(new Rect(Left,554,w,76),"START AI MATCH",true)) BeginLaunch();
+            theme.Label(new Rect(Left,642,w,28),launchMessage.Length>0?launchMessage:"Your selected hero is confirmed when the match starts.",theme.Small,true);
+            float x = Left+w+32, rw = ContentWidth-w-32;
+            DrawPortrait(new Rect(x,198,rw,330));
+            theme.Label(new Rect(x+24,538,rw-48,40),HeroName,theme.Heading);
+            theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);
+            if (theme.Action(new Rect(x+24,620,rw-48,54),"CHANGE HERO")) SetPage(Page.Heroes);
+        }
+        private void DrawHeroes()
+        {
+            Heading("Heroes","Six roles. Choose how you fight.");
+            float rosterWidth = 288;
+            for (int i=0;i<6;i++)
+            {
+                Rect row = new Rect(Left,216+i*74,rosterWidth,64);
+                bool chosen = i==selectedHero;
+                if (theme.Action(row,"",selected:chosen)) ChangeHero(i);
+                theme.Label(new Rect(row.x+18,row.y+8,row.width-32,26),HeroIdentity.NameFor((HeroId)i),theme.Body);
+                theme.Label(new Rect(row.x+18,row.y+35,row.width-32,22),Roles[i],theme.Small,true);
+            }
+            float infoWidth = 300;
+            float portraitX=Left+rosterWidth+16, infoX=Right-infoWidth;
+            DrawPortrait(new Rect(portraitX,212,infoX-portraitX-12,456));
+            theme.Label(new Rect(infoX,232,infoWidth,72),HeroName,theme.Title);
+            theme.Label(new Rect(infoX,320,infoWidth,28),Roles[selectedHero],theme.Heading);
+            FrontEndTheme.Fill(new Rect(infoX,366,48,3),FrontEndTheme.Accent);
+            theme.Label(new Rect(infoX,390,infoWidth,96),RoleDescriptions[selectedHero],theme.Body,true);
+            theme.Label(new Rect(infoX,518,infoWidth,48),Strengths[selectedHero],theme.Small,true);
+            if (theme.Action(new Rect(infoX,602,infoWidth,68),"DEPLOY",true)) SetPage(Page.Play);
+        }
+        private void ChangeHero(int index)
+        {
+            if (index==selectedHero) return;
+            selectedHero=Mathf.Clamp(index,0,5);
+            PlayerHeroSelection.Select((HeroId)selectedHero);
+            showcase.Present((HeroId)selectedHero,true);
+        }
+        private void DrawShop()
+        {
+            Heading("Cosmetics","Personalize your identity. No combat advantages.");
+            theme.Label(new Rect(Right-264,116,264,42),$"{PlayerWallet.Balance} SHARDS",theme.Heading);
+            AvatarShopItem item=AvatarShopCatalog.Items[Mathf.Clamp(shopAvatarIndex,0,AvatarShopCatalog.Items.Length-1)];
+            bool owned=AvatarInventory.IsOwned(item.AvatarId), equipped=PlayerProfile.Avatar==item.AvatarId;
+            float galleryWidth=ContentWidth*.56f;
+            theme.Panel(new Rect(Left,220,galleryWidth,440));
+            ShopAvatarPreview.Draw(new Rect(Left+32,258,230,230),item,Texture2D.whiteTexture,Time.unscaledTime);
+            theme.Label(new Rect(Left+292,264,galleryWidth-320,80),item.Name,theme.Heading);
+            theme.Label(new Rect(Left+292,354,galleryWidth-320,52),item.Theme,theme.Body,true);
+            theme.Label(new Rect(Left+292,428,galleryWidth-320,36),owned?"OWNED":$"{item.Price} SHARDS",theme.Body);
+            if (theme.Action(new Rect(Left+32,542,64,60),"<")) { shopAvatarIndex=(shopAvatarIndex-1+AvatarShopCatalog.Items.Length)%AvatarShopCatalog.Items.Length; shopMessage=""; }
+            theme.Center(new Rect(Left+102,542,90,60),$"{shopAvatarIndex+1} / {AvatarShopCatalog.Items.Length}");
+            if (theme.Action(new Rect(Left+198,542,64,60),">")) { shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length; shopMessage=""; }
+            bool affordable=PlayerWallet.CanAfford(item.Price);
+            string action=equipped?"EQUIPPED":owned?"EQUIP":affordable?"UNLOCK":"NEED MORE SHARDS";
+            if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!equipped&&(owned||affordable)))
+            {
+                if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
+                else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopMessage=result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
+            }
+            theme.Label(new Rect(Left+32,618,galleryWidth-64,26),shopMessage,theme.Small,true);
+            float x=Left+galleryWidth+32, w=ContentWidth-galleryWidth-32;
+            theme.Label(new Rect(x,244,w,36),"Earned in battle",theme.Heading);
+            theme.Label(new Rect(x,296,w,100),"Complete matches to earn shards. Unlock avatars here and equip them on your profile.",theme.Body,true);
+            FrontEndTheme.Fill(new Rect(x,436,w,1),FrontEndTheme.Raised);
+            theme.Label(new Rect(x,462,w,40),"Premium cosmetics",theme.Heading);
+            theme.Label(new Rect(x,518,w,62),FounderEntitlement.Owned?"First Traveler status active.\nYour owned cosmetics remain available.":"The real-money store is not available yet.",theme.Body,true);
+            if(RecallCosmeticEntitlement.Owned) theme.Label(new Rect(x,600,w,48),RecallCosmeticCatalog.DisplayName+" / OWNED",theme.Small,true);
+        }
+        private string XpLabel() => PlayerExperience.Level>=PlayerExperience.MaxLevel ? "MAX LEVEL" : $"{PlayerExperience.XpIntoLevel} / {PlayerExperience.XpIntoLevel+PlayerExperience.XpToNextLevel} XP";
+        private void DrawProfile()
+        {
+            Heading("Profile","Your identity and lifetime progress.");
+            float identityWidth=ContentWidth*.54f;
+            theme.Panel(new Rect(Left,220,identityWidth,450));
+            AvatarBadgeRenderer.Draw(new Rect(Left+24,246,74,74),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
+            theme.Label(new Rect(Left+120,244,identityWidth-148,34),PlayerProfile.PlayerName,theme.Heading);
+            theme.Label(new Rect(Left+120,286,identityWidth-148,26),$"{PlayerProfile.DisplayTitle}  /  LEVEL {PlayerExperience.Level}",theme.Small,true);
+            theme.Progress(new Rect(Left+24,348,identityWidth-48,6),PlayerExperience.LevelProgress);
+            theme.Label(new Rect(Left+24,364,identityWidth-48,28),XpLabel(),theme.Small,true);
+            theme.Label(new Rect(Left+24,412,identityWidth-48,24),"DISPLAY NAME",theme.Small,true);
+            if (editingName && nameKeyboard==null)
+                profileName=GUI.TextField(new Rect(Left+24,446,identityWidth-224,54),profileName,PlayerProfile.MaxNameLength,theme.Field);
+            else theme.Label(new Rect(Left+24,446,identityWidth-224,54),editingName?profileName:PlayerProfile.PlayerName,theme.Body);
+            if (!editingName)
+            {
+                if (theme.Action(new Rect(Left+identityWidth-176,446,152,54),"EDIT NAME")) BeginNameEdit();
+            }
+            else
+            {
+                if (theme.Action(new Rect(Left+identityWidth-176,446,152,54),"SAVE",true)) SaveName();
+                if (theme.Action(new Rect(Left+identityWidth-176,510,152,48),"CANCEL")) CancelName();
+            }
+            theme.Label(new Rect(Left+24,510,identityWidth-224,58),profileMessage.Length>0?profileMessage:"3–16 characters: letters, numbers, spaces, _ or -.",theme.Small,true);
+            int count=FounderEntitlement.Owned?7:6;
+            for(int i=0;i<count;i++)
+            {
+                Rect avatar=new Rect(Left+24+i*60,592,52,54);
+                if(theme.Action(avatar,"",selected:PlayerProfile.Avatar==i)) PlayerProfile.Avatar=i;
+                AvatarBadgeRenderer.Draw(new Rect(avatar.x+5,avatar.y+5,42,44),i,Texture2D.whiteTexture,Time.unscaledTime);
+            }
+            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")) SetPage(Page.Shop);
+            float x=Left+identityWidth+32,w=ContentWidth-identityWidth-32;
+            ProfileStats stats=ProfileStatsSummary.Current;
+            theme.Label(new Rect(x,230,w,36),"Lifetime record",theme.Heading);
+            Stat(x,290,w,"MATCHES",stats.Matches.ToString());
+            Stat(x,346,w,"WINS / WIN RATE",$"{stats.Wins} / {stats.WinRate:0}%");
+            Stat(x,402,w,"KILLS",ProgressionSummary.Kills.ToString());
+            Stat(x,458,w,"ASSISTS",ProgressionSummary.Assists.ToString());
+            Stat(x,514,w,"OBJECTIVES",ProgressionSummary.Objectives.ToString());
+            Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
+            theme.Label(new Rect(x,634,w,32),"Account level grants no combat power.",theme.Small,true);
+        }
+        private void Stat(float x,float y,float w,string label,string value)
+        {
+            theme.Label(new Rect(x,y,w*.57f,40),label,theme.Small,true);
+            theme.Label(new Rect(x+w*.6f,y,w*.4f,40),value,theme.Heading);
+            FrontEndTheme.Fill(new Rect(x,y+47,w,1),FrontEndTheme.Raised);
+        }
+        private void BeginNameEdit()
+        {
+            editingName=true; profileMessage=""; profileName=PlayerProfile.PlayerName;
+            if (TouchScreenKeyboard.isSupported)
+                nameKeyboard=TouchScreenKeyboard.Open(profileName,TouchScreenKeyboardType.Default,false,false,false,false,"Display name",PlayerProfile.MaxNameLength);
+        }
+        private void SaveName()
+        {
+            if (nameKeyboard!=null) profileName=nameKeyboard.text;
+            if (!PlayerProfile.IsValidName(profileName)) { profileMessage="Use 3–16 valid characters."; return; }
+            PlayerProfile.PlayerName=profileName; profileName=PlayerProfile.PlayerName;
+            editingName=false; profileMessage="Name saved."; CloseKeyboard();
+        }
+        private void CancelName() { CloseKeyboard(); editingName=false; profileName=PlayerProfile.PlayerName; }
+        private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
+        private void DrawSettings()
+        {
+            Heading("Settings","Make the sound your own.");
+            float w=ContentWidth*.64f;
+            theme.Panel(new Rect(Left,222,w,438));
+            float previousMaster=master, previousMusic=music, previousSfx=sfx;
+            DrawVolume(new Rect(Left+28,250,w-56,100),"Master volume",ref master);
+            DrawVolume(new Rect(Left+28,380,w-56,100),"Music",ref music);
+            DrawVolume(new Rect(Left+28,510,w-56,100),"Sound effects",ref sfx);
+            if(previousMaster!=master||previousMusic!=music||previousSfx!=sfx)
+                PlayerProfile.SetAudioVolumes(master,music,sfx,false);
+            float x=Left+w+32,rw=ContentWidth-w-32;
+            theme.Label(new Rect(x,248,rw,38),"Language",theme.Heading);
+            theme.Label(new Rect(x,296,rw,30),PlayerProfile.Language,theme.Body,true);
+            theme.Label(new Rect(x,398,rw,38),"Local profile",theme.Heading);
+            theme.Label(new Rect(x,446,rw,96),"Progress and preferences are saved on this device.",theme.Body,true);
+            theme.Label(new Rect(x,588,rw,60),"Hear changes immediately. Saved automatically when you leave.",theme.Small,true);
+        }
+        private void DrawVolume(Rect r,string label,ref float value)
+        {
+            theme.Label(new Rect(r.x,r.y,r.width-100,34),label,theme.Heading);
+            theme.Label(new Rect(r.xMax-90,r.y,90,34),$"{Mathf.RoundToInt(value*100)}%",theme.Body);
+            if (theme.Action(new Rect(r.x,r.y+46,64,54),"−")) { value=Mathf.Clamp01(value-.1f); audioDirty=true; }
+            Rect track=new Rect(r.x+82,r.y+46,r.width-164,54);
+            theme.Progress(new Rect(track.x,track.center.y-3,track.width,6),value);
+            // A 54-unit drag target, independent of the narrow visible track.
+            int id=GUIUtility.GetControlID(FocusType.Passive,track); Event e=Event.current;
+            if (e.type==EventType.MouseDown && track.Contains(e.mousePosition)) { GUIUtility.hotControl=id; value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width); audioDirty=true; e.Use(); }
+            if (GUIUtility.hotControl==id && (e.type==EventType.MouseDrag || e.type==EventType.MouseDown))
+            { value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width); audioDirty=true; e.Use(); }
+            if (GUIUtility.hotControl==id && e.type==EventType.MouseUp)
+            { value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width); audioDirty=true; GUIUtility.hotControl=0; e.Use(); }
+            FrontEndTheme.Fill(new Rect(track.x+track.width*value-7,track.center.y-13,14,26),FrontEndTheme.Text);
+            if (theme.Action(new Rect(r.xMax-64,r.y+46,64,54),"+")) { value=Mathf.Clamp01(value+.1f); audioDirty=true; }
+        }
+        private void FlushAudio()
+        {
+            if (!audioDirty) return;
+            PlayerProfile.SetAudioVolumes(master,music,sfx,true); audioDirty=false;
+        }
+        private void BeginLaunch()
+        {
+            if (launching) return;
+            PlayerHeroSelection.Select((HeroId)selectedHero); FlushAudio();
+            launchMessage=""; launching=true; launchAt=Time.unscaledTime; GUI.FocusControl(null);
+            showcase.Present((HeroId)selectedHero,false);
+        }
+        private void DrawLaunch()
+        {
+            theme.Label(new Rect(Left,230,ContentWidth,60),"Entering the Front",theme.Title);
+            theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
+            theme.Label(new Rect(Left,372,ContentWidth,32),"AI MATCH 5v5  /  ZERO TEAM",theme.Body,true);
+            theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
+            theme.Label(new Rect(Left,480,ContentWidth,30),"Preparing your local match",theme.Small,true);
+        }
+        private void EnterMatch()
+        {
+            var bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
+            if (bootstrap==null) { launching=false; page=Page.Play; launchMessage="Match could not start. Please try again."; Debug.LogError("DIMENSIONS FRONT: match bootstrap unavailable."); return; }
+            launching=false; visible=false; Time.timeScale=1;
+            if (GameObject.Find("DF_MatchWorld")!=null) bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+            gameObject.SetActive(false);
+        }
+    }
 }
