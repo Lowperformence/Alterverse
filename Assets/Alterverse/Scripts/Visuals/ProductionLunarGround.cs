@@ -39,6 +39,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildRegolithVariation();
         BuildLaneDustScars();
         BuildRegolithDriftBands();
+        BuildCraterShadowAccents();
         BuildEdgeCliffs();
         BuildEdgeFragments();
         BuildOuterRimDebris();
@@ -291,6 +292,19 @@ public sealed class ProductionLunarGround : MonoBehaviour
             float side=a[i].x<0?-1f:1f;
             Vector2 b=a[i]+new Vector2(-side*(4.5f+(i%3)*1.2f),(i%2==0?1.1f:-1.25f));
             Strip("DF_RegolithDrift",a[i],b,1.05f+(i%3)*.28f,.048f,i%3==0?darkRegolith:laneMat);
+        }
+    }
+
+    void BuildCraterShadowAccents()
+    {
+        // Offset inner shadows make the top-down crater bowls read with depth without changing gameplay height.
+        Vector3[] c={new(-18,.05f,5),new(-11,.05f,-7),new(17,.05f,-6),new(10,.05f,7),new(-8,.05f,29),new(9,.05f,-29)};
+        float[] r={1.65f,1.1f,1.45f,.9f,2.1f,1.8f};
+        for(int i=0;i<c.Length;i++)
+        {
+            Vector3 q=c[i]+new Vector3(.18f,0,-.16f);
+            Mesh shadow=IrregularDisc(q,r[i]*.57f,18,110+i);meshes.Add(shadow);
+            MeshObject("DF_CraterInnerShadow",shadow,darkRegolith,Vector3.zero).GetComponent<MeshRenderer>().receiveShadows=false;
         }
     }
 
