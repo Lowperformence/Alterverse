@@ -23,6 +23,7 @@ namespace Alterverse.Visuals
             BuildDistantMoons();
             BuildArenaUnderside();
             BuildEdgeFragments();
+            ConfigureCameraBackdrop();
         }
 
         private Material Mat(Color color,bool unlit=true)
@@ -72,6 +73,19 @@ namespace Alterverse.Visuals
         }
 
 
+
+
+        private void ConfigureCameraBackdrop()
+        {
+            Camera[] cameras=FindObjectsByType<Camera>(FindObjectsSortMode.None);
+            Color voidColor=new Color(.004f,.006f,.014f,1);
+            foreach(Camera camera in cameras)
+            {
+                if(camera==null||camera.cameraType!=CameraType.Game)continue;
+                camera.clearFlags=CameraClearFlags.SolidColor;
+                camera.backgroundColor=voidColor;
+            }
+        }
 
         private void BuildEdgeFragments()
         {
