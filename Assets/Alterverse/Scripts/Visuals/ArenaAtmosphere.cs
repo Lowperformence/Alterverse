@@ -26,7 +26,7 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();BuildErosionBands();
 }
 
 
@@ -35,6 +35,19 @@ for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisField
 
 
 
+
+
+private void BuildErosionBands()
+{
+Color dark=Color.Lerp(StylizedArtDirection.ArenaVoid,StylizedArtDirection.ArenaStone,.32f);
+Vector3[] starts={new(-30,0,6),new(-26,0,-6),new(29,0,6),new(25,0,-6)};
+for(int n=0;n<starts.Length;n++)
+for(int i=0;i<4;i++)
+{
+float side=starts[n].x<0?-1f:1f;Vector3 p=starts[n]+new Vector3(side*i*1.15f,.025f,(i%2==0?.32f:-.28f));
+GameObject g=Part("DF_ErosionStone",PrimitiveType.Cube,p,new Vector3(.72f-i*.09f,.055f,.3f+i*.06f),dark);g.transform.rotation=Quaternion.Euler(0,side*(18+i*7),0);
+}
+}
 
 private void BuildDeadTrees()
 {
