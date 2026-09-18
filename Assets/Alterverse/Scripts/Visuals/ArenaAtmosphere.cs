@@ -26,7 +26,7 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();
 }
 
 
@@ -34,6 +34,18 @@ for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisField
 
 
 
+
+
+private void BuildDeadTrees()
+{
+Vector3[] sites={new(-34,0,29),new(-25,0,-29),new(34,0,29),new(25,0,-29)};
+for(int n=0;n<sites.Length;n++)
+{
+bool zero=sites[n].x<0;Color c=Color.Lerp(zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.38f);
+GameObject trunk=Part(zero?"DF_ZeroDeadGrowth":"DF_LumenCrystalTree",PrimitiveType.Cube,sites[n]+Vector3.up*.75f,new Vector3(.22f,1.5f,.22f),c);trunk.transform.rotation=Quaternion.Euler(zero?12:0,n*33,zero?-9:0);
+for(int i=0;i<3;i++){Vector3 p=sites[n]+new Vector3((i-1)*.38f,1.15f+i*.24f,(i%2==0?.16f:-.16f));GameObject branch=Part("DF_RealityBranch",PrimitiveType.Cube,p,new Vector3(.12f,.75f,.12f),Color.Lerp(c,zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.2f));branch.transform.rotation=Quaternion.Euler(zero?35:22,i*67,zero?(i-1)*28:(i-1)*18);}
+}
+}
 
 private void BuildLargeBoulders()
 {
