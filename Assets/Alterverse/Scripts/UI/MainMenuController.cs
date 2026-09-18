@@ -38,7 +38,7 @@ float t=Time.unscaledTime-openedAt;
 GUI.Label(new Rect(42,28,560,62),"DIMENSIONS FRONT",title);
 GUI.Label(new Rect(48,84,500,24),"TWO REALITIES. ONE FRONT.",subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,112,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
 Rect profile=new Rect(690,28,230,72);DimensionUiMotif.DrawSplitPanel(profile,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(704,37,202,23),PlayerProfile.PlayerName.ToUpperInvariant(),subtitle);GUI.Label(new Rect(704,62,202,20),$"LEVEL {PlayerExperience.Level}   •   ◆ {PlayerWallet.Balance}",small);
+GUI.Label(new Rect(704,37,202,23),PlayerProfile.PlayerName.ToUpperInvariant(),subtitle);GUI.Label(new Rect(704,62,202,20),$"LEVEL {PlayerExperience.Level}   •   ◆ {PlayerWallet.Balance}",small);float homeXp=PlayerExperience.LevelProgress;GUI.color=new Color(1,1,1,.12f);GUI.DrawTexture(new Rect(710,88,190,4),whiteTexture);GUI.color=Color.white;GUI.DrawTexture(new Rect(710,88,190*homeXp,4),whiteTexture);
 
 Rect heroStage=new Rect(355,126,565,430);DimensionUiMotif.DrawSplitPanel(heroStage,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
 GUI.Label(new Rect(382,146,510,22),"ACTIVE HERO",small);
