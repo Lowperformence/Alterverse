@@ -29,7 +29,7 @@ namespace Alterverse.AI
         private Vector3 velocity;
         private int rotationSlot;
         public bool IsAvoidingHazard { get; private set; }
-        private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f);
+        private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * HeroCombatStatus.Speed(gameObject);
         private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * .78f) : 1.4f;
 
         private void Awake()
@@ -221,3 +221,4 @@ namespace Alterverse.AI
         }
     }
 }
+

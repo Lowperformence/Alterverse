@@ -111,7 +111,7 @@ namespace Alterverse.EditorChecks
             bot.AddComponent<HeroAbilityKit>().Configure(hero);
             bot.AddComponent<BotTargetSensor>();
             HeroBotAbilities abilities = bot.AddComponent<HeroBotAbilities>();
-            float[] ready = (float[])typeof(HeroBotAbilities).GetField("ready", Private).GetValue(abilities);
+            float[] ready = (float[])typeof(HeroAbilityExecution).GetField("ready", Private).GetValue(abilities.GetComponent<HeroAbilityExecution>());
             Array.Clear(ready, 0, ready.Length);
             return abilities;
         }
@@ -123,13 +123,13 @@ namespace Alterverse.EditorChecks
             Assert((bool)Call(rook, "TryCast", 1, null) && hp.Current > 50, "Rook W must heal without an enemy despite zero cast range.");
             Health enemy = Unit("Check_SkillEnemy", 1, origin + Vector3.right * 2f).GetComponent<Health>();
             Call(rook, "TryCast", 2, enemy);
-            Assert(enemy.Current < 100, "Rook E must damage, not heal.");
+            Assert(rook.GetComponent<HeroAbilityExecution>().Remaining(2) > 0, "Rook E must start its telegraphed area attack.");
             HeroBotAbilities kaelon = Abilities(HeroId.Kaelon, origin + Vector3.forward * 20);
             enemy.transform.position = kaelon.transform.position + Vector3.right * 2;
             enemy.RestoreFull(); Call(kaelon, "TryCast", 2, enemy);
-            Assert(enemy.Current < 100, "Kaelon E must damage, not heal.");
+            Assert(kaelon.GetComponent<HeroAbilityExecution>().Remaining(2) > 0, "Kaelon E must start its telegraphed control field.");
             HeroBotAbilities mira = Abilities(HeroId.Mira, origin + Vector3.forward * 40);
-            Health ally = Unit("Check_Ally", 0, mira.transform.position + Vector3.right * 20).GetComponent<Health>(); ally.TakeDamage(80);
+            Health ally = Unit("Check_Ally", 0, mira.transform.position + Vector3.right * 20).GetComponent<Health>(); ally.gameObject.AddComponent<HeroIdentity>().Configure(HeroId.Nyra); ally.TakeDamage(80);
             Assert(!(bool)Call(mira, "TryCast", 1, null), "Support must not heal across the map or waste cooldown.");
             ally.transform.position = mira.transform.position + Vector3.right;
             Assert((bool)Call(mira, "TryCast", 1, null) && ally.Current > 20, "Support must heal a wounded nearby ally without an enemy.");
@@ -205,3 +205,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

@@ -9,7 +9,7 @@ public sealed class HeroIdentity:MonoBehaviour
 public void Configure(HeroId id){hero=id;role=RoleFor(id);}
 public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",_=>"Brakk Orun"};
 public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,_=>HeroRole.Bruiser};
-public static float BaseHealth(HeroId id)=>id switch{HeroId.Veyr=>140f,HeroId.Kaelon=>205f,HeroId.Nyra=>132f,HeroId.Elyra=>138f,HeroId.Mira=>150f,_=>185f};
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>22f,HeroId.Kaelon=>15f,HeroId.Nyra=>20f,HeroId.Elyra=>17f,HeroId.Mira=>13f,_=>19f};
+public static float BaseHealth(HeroId id)=>id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f,HeroId.Nyra=>180f,HeroId.Elyra=>190f,HeroId.Mira=>230f,_=>300f};
+public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>14f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>12f,_=>24f};
 }
 }

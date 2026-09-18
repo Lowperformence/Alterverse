@@ -3,6 +3,7 @@ namespace Alterverse.Visuals
 {
 public static class PrototypeVfx
 {
+public static void RadialBurst(Vector3 position,Color color,float radius){Shockwave(position,color,radius);}
 public static void Burst(Vector3 position,Color color,float size=1f,int pieces=7){for(int i=0;i<pieces;i++){float angle=360f/pieces*i;Vector3 direction=Quaternion.Euler(0,angle,0)*Vector3.forward;GameObject shard=Create(PrimitiveType.Cube,"DF_VFX_Burst",position+Vector3.up*.8f+direction*.2f,color);shard.transform.rotation=Quaternion.LookRotation(direction,Vector3.up);shard.AddComponent<TransientScaleVfx>().Configure(new Vector3(.10f,.10f,.35f)*size,new Vector3(.02f,.02f,1.65f)*size,.24f,220f);}}
 public static void Ring(Vector3 position,Color color,float radius=1.5f,float duration=.35f){GameObject ring=Create(PrimitiveType.Cylinder,"DF_VFX_Ring",position+Vector3.up*.06f,color);ring.AddComponent<TransientScaleVfx>().Configure(new Vector3(.25f,.025f,.25f),new Vector3(radius,.015f,radius),duration,90f);}
 public static void Slash(Transform source,Color color,float length=1.7f){GameObject slash=Create(PrimitiveType.Cube,"DF_VFX_Slash",source.position+Vector3.up*.75f+source.forward,color);slash.transform.rotation=source.rotation*Quaternion.Euler(0,25,-25);slash.AddComponent<TransientScaleVfx>().Configure(new Vector3(.12f,.7f,length),new Vector3(.025f,.08f,length*1.2f),.18f,320f);}
@@ -18,3 +19,4 @@ private static void Beam(Vector3 from,Vector3 to,Color color,float width,float d
 private static GameObject Create(PrimitiveType type,string name,Vector3 position,Color color){GameObject target=GameObject.CreatePrimitive(type);target.name=name;target.transform.position=position;Collider collider=target.GetComponent<Collider>();if(collider!=null)collider.enabled=false;Renderer renderer=target.GetComponent<Renderer>();if(renderer!=null)renderer.material.color=color;return target;}
 }
 }
+

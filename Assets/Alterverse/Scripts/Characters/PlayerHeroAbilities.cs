@@ -1,36 +1,70 @@
-using Alterverse.Combat;using Alterverse.Match;using Alterverse.Visuals;using UnityEngine;using UnityEngine.InputSystem;
+using Alterverse.Combat;
+using UnityEngine;
+using UnityEngine.InputSystem;
 namespace Alterverse.Characters
 {
-[RequireComponent(typeof(Health),typeof(HeroIdentity),typeof(HeroAbilityKit))]public sealed class PlayerHeroAbilities:MonoBehaviour
-{
-private Health self;private HeroIdentity identity;private HeroAbilityKit kit;private HeroCombatProfile profile;private TeamMember team;private PlanetBuffReceiver planetBuff;private SoftTargeting targeting;private float qReady,wReady,eReady,ultReady;public float QRemaining=>Mathf.Max(0,qReady-Time.time);public float WRemaining=>Mathf.Max(0,wReady-Time.time);public float ERemaining=>Mathf.Max(0,eReady-Time.time);public float UltRemaining=>Mathf.Max(0,ultReady-Time.time);public string QName=>kit!=null?kit.Q.Name:"Q";public string WName=>kit!=null?kit.W.Name:"W";public string EName=>kit!=null?kit.E.Name:"E";public string UltName=>kit!=null?kit.Ultimate.Name:"ULT";private float Cooldown(float value)=>value*(planetBuff!=null?planetBuff.CooldownMultiplier:1f);
-private const float UltimateInitialLock=45f;private void Awake(){Refresh();ultReady=Time.time+UltimateInitialLock;}public void Refresh(){self=GetComponent<Health>();identity=GetComponent<HeroIdentity>();kit=GetComponent<HeroAbilityKit>();profile=GetComponent<HeroCombatProfile>();team=GetComponent<TeamMember>();planetBuff=GetComponent<PlanetBuffReceiver>();targeting=GetComponent<SoftTargeting>()??gameObject.AddComponent<SoftTargeting>();}private void Update(){if(Time.timeScale<=0f)return;if(planetBuff==null)planetBuff=GetComponent<PlanetBuffReceiver>();if(!CanAct||Keyboard.current==null)return;if(Keyboard.current.qKey.wasPressedThisFrame)CastQ();if(Keyboard.current.eKey.wasPressedThisFrame)CastW();if(Keyboard.current.rKey.wasPressedThisFrame)CastE();if(Keyboard.current.fKey.wasPressedThisFrame)CastUltimate();}
-public AbilitySpec SpecFor(int slot)=>slot==0?kit.Q:slot==1?kit.W:slot==2?kit.E:kit.Ultimate;
-public float RemainingFor(int slot)=>slot==0?QRemaining:slot==1?WRemaining:slot==2?ERemaining:UltRemaining;
-public float CooldownFor(int slot)=>Cooldown(SpecFor(slot).Cooldown);
-public float PreviewRange(int slot)
-{
-if(identity.Hero==HeroId.Veyr&&slot==2)return 4.2f;
-if(identity.Hero==HeroId.Nyra&&slot==1)return 3f;
-if(identity.Hero==HeroId.Elyra&&slot==2)return 2f;
-if((identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1)return 0f;
-return SpecFor(slot).Range;
-}
-public string Describe(int slot)
-{
-AbilitySpec spec=SpecFor(slot);HeroId hero=identity.Hero;
-float power=spec.Power*(profile!=null?profile.AbilityPower:1f);
-if(hero==HeroId.Mira&&slot!=0){float healing=spec.Power>0?power:self.Max*.12f;return $"Heals the weakest ally in range for {healing:0} HP (or yourself).";}
-if((hero==HeroId.Kaelon||hero==HeroId.Rook)&&slot==1)return $"Restores {self.Max*(hero==HeroId.Kaelon?.12f:.09f):0} of your HP.";
-if(hero==HeroId.Veyr&&slot==2)return "Dash 4.2m in your movement direction; otherwise forwards.";
-if((hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2))return $"Evade {PreviewRange(slot):0.#}m away from an auto-selected enemy; otherwise forwards.";
-if(hero==HeroId.Veyr&&slot==3)return $"One auto-selected enemy: {power:0} damage, up to 55% more against low health.";
-return $"One auto-selected enemy in range: {power:0} damage.";
-}
-private bool CanAct=>Time.timeScale>0f&&self!=null&&!self.IsDead&&identity!=null&&kit!=null;public bool CastQ()=>TryCast(kit.Q,ref qReady,0);public bool CastW()=>TryCast(kit.W,ref wReady,1);public bool CastE()=>TryCast(kit.E,ref eReady,2);public bool CastUltimate()=>TryCast(kit.Ultimate,ref ultReady,3);
-private bool TryCast(AbilitySpec spec,ref float ready,int slot){if(!CanAct||Time.time<ready)return false;Health target=targeting.Acquire(Mathf.Max(1,spec.Range),transform.forward,true);Color accent=StylizedArtDirection.HeroAccent(identity.Hero);if(identity.Hero==HeroId.Mira&&slot!=0){ready=Time.time+Cooldown(spec.Cooldown);float amount=spec.Power>0?spec.Power*(profile!=null?profile.AbilityPower:1f):self.Max*(slot==3?0.22f:0.12f);Health healed=HealWeakestAlly(amount,spec.Range);Vector3 p=healed!=null?healed.transform.position:transform.position;PrototypeVfx.Bloom(p,accent,slot==3?3f:1.8f);if(slot==3)PrototypeVfx.Guard(p,accent,2.2f);FounderAbilityVfx.CastSignature(identity,slot,transform.position,p);return true;}if((identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1){ready=Time.time+Cooldown(spec.Cooldown);self.Heal(self.Max*(identity.Hero==HeroId.Kaelon?0.12f:0.09f));if(identity.Hero==HeroId.Kaelon)PrototypeVfx.Guard(transform.position,accent,2f);else PrototypeVfx.Shockwave(transform.position,accent,1.7f);FounderAbilityVfx.CastSignature(identity,slot,transform.position,transform.position);return true;}if(identity.Hero==HeroId.Nyra&&slot==1){ready=Time.time+Cooldown(spec.Cooldown);Vector3 from=transform.position;Reposition(target,3);PrototypeVfx.ShadowTrail(from,transform.position,accent);PrototypeVfx.Burst(transform.position,accent,.65f,4);FounderAbilityVfx.CastSignature(identity,slot,from,transform.position);return true;}if(identity.Hero==HeroId.Elyra&&slot==2){ready=Time.time+Cooldown(spec.Cooldown);Vector3 from=transform.position;Reposition(target,2);PrototypeVfx.GravityField(from,accent,1.35f);PrototypeVfx.GravityField(transform.position,accent,1.35f);FounderAbilityVfx.CastSignature(identity,slot,from,transform.position);return true;}if(identity.Hero==HeroId.Veyr&&slot==2){ready=Time.time+Cooldown(spec.Cooldown);Vector3 from=transform.position;RepositionAlongMovement(4.2f);PrototypeVfx.ShadowTrail(from,transform.position,accent);PrototypeVfx.Slash(transform,accent,1.25f);FounderAbilityVfx.CastSignature(identity,slot,from,transform.position);return true;}if(target==null)return false;ready=Time.time+Cooldown(spec.Cooldown);targeting.RegisterOffensiveAction();float damage=spec.Power*(profile!=null?profile.AbilityPower:1f);if(damage<=0)return true;if(identity.Hero==HeroId.Veyr&&slot==3)damage*=1+(1-target.Normalized)*.55f;if(target.GetComponent<LaneMinion>()!=null&&planetBuff!=null)damage*=planetBuff.MinionDamageMultiplier;target.TakeDamage(damage,gameObject);VisualizeHit(target,slot,accent);FounderAbilityVfx.CastSignature(identity,slot,transform.position,target.transform.position);if(identity.Hero==HeroId.Veyr)self.Heal(damage*.12f);if(identity.Hero==HeroId.Rook&&self.Normalized<.45f)self.Heal(damage*.1f);return true;}
-private void VisualizeHit(Health target,int slot,Color accent){Vector3 tp=target.transform.position;switch(identity.Hero){case HeroId.Nyra:PrototypeVfx.ProjectileLine(transform.position,tp,accent,slot==3?0.2f:0.1f);if(slot==3)PrototypeVfx.Ring(tp,accent,2.4f,.38f);break;case HeroId.Elyra:PrototypeVfx.GravityField(tp,accent,slot==3?3f:1.8f);if(slot==3)PrototypeVfx.Burst(tp,accent,1.2f,10);break;case HeroId.Mira:PrototypeVfx.ProjectileLine(transform.position,tp,accent,.09f);PrototypeVfx.Bloom(tp,accent,slot==3?2.8f:1.4f);break;case HeroId.Kaelon:PrototypeVfx.Shockwave(tp,accent,slot==3?2.8f:1.7f);PrototypeVfx.Slash(transform,accent,slot==3?2.2f:1.45f);break;case HeroId.Rook:PrototypeVfx.Shockwave(tp,accent,slot==3?3.1f:2f);PrototypeVfx.Burst(tp,accent,slot==3?1.4f:.9f,slot==3?12:7);break;default:PrototypeVfx.Slash(transform,accent,slot==3?2.6f:1.7f);PrototypeVfx.Burst(tp,accent,slot==3?1.35f:.85f,slot==3?10:6);if(slot==3){PrototypeVfx.Ring(tp,accent,2.2f,.38f);PrototypeVfx.FutureMark(target.transform,accent,.5f);}break;}}
-private Health HealWeakestAlly(float amount,float range){Health[] all=FindObjectsByType<Health>();Health best=self;float lowest=self.Normalized;foreach(Health h in all){if(h==null||h.IsDead)continue;Vector3 distance=h.transform.position-transform.position;distance.y=0;if(distance.sqrMagnitude>range*range)continue;TeamMember tm=h.GetComponent<TeamMember>();if(tm!=null&&team!=null&&tm.Team==team.Team&&h.Normalized<lowest){lowest=h.Normalized;best=h;}}best.Heal(Mathf.Max(1,amount));return best;}
-private void RepositionAlongMovement(float distance){HeroMotor motor=GetComponent<HeroMotor>();Vector3 direction=motor!=null&&motor.HasMoveInput?motor.LastMoveDirection:transform.forward;Teleport(direction,distance);}private void Reposition(Health target,float distance){Vector3 direction=target!=null?transform.position-target.transform.position:transform.forward;if(direction.sqrMagnitude<.01f)direction=transform.forward;Teleport(direction,distance);}private void Teleport(Vector3 direction,float distance){direction.y=0;if(direction.sqrMagnitude<.01f)direction=transform.forward;Vector3 p=transform.position+direction.normalized*distance;p.x=Mathf.Clamp(p.x,-41,41);p.z=Mathf.Clamp(p.z,-35,35);CharacterController cc=GetComponent<CharacterController>();if(cc!=null&&cc.enabled){cc.enabled=false;transform.position=p;cc.enabled=true;}else transform.position=p;}
-}
+    [RequireComponent(typeof(Health), typeof(HeroIdentity), typeof(HeroAbilityKit))]
+    public sealed class PlayerHeroAbilities : MonoBehaviour
+    {
+        private HeroAbilityExecution execution;
+        private HeroAbilityKit kit;
+        private HeroIdentity identity;
+        private SoftTargeting targeting;
+        public float QRemaining => RemainingFor(0);
+        public float WRemaining => RemainingFor(1);
+        public float ERemaining => RemainingFor(2);
+        public float UltRemaining => RemainingFor(3);
+        public string QName => kit.Q.Name;
+        public string WName => kit.W.Name;
+        public string EName => kit.E.Name;
+        public string UltName => kit.Ultimate.Name;
+        private void Awake() => Refresh();
+        public void Refresh()
+        {
+            kit = GetComponent<HeroAbilityKit>(); identity = GetComponent<HeroIdentity>();
+            targeting = GetComponent<SoftTargeting>() ?? gameObject.AddComponent<SoftTargeting>();
+            execution = GetComponent<HeroAbilityExecution>() ?? gameObject.AddComponent<HeroAbilityExecution>();
+        }
+        private void Update()
+        {
+            if (Time.timeScale <= 0 || Keyboard.current == null) return;
+            if (Keyboard.current.qKey.wasPressedThisFrame) CastQ();
+            if (Keyboard.current.eKey.wasPressedThisFrame) CastW();
+            if (Keyboard.current.rKey.wasPressedThisFrame) CastE();
+            if (Keyboard.current.fKey.wasPressedThisFrame) CastUltimate();
+        }
+        public AbilitySpec SpecFor(int slot) => kit.Spec(slot);
+        public float RemainingFor(int slot) => execution != null ? execution.Remaining(slot) : 0;
+        public float CooldownFor(int slot) => execution.Cooldown(slot);
+        public float PreviewRange(int slot) => kit.Spec(slot).Range > 0 ? kit.Spec(slot).Range : kit.Spec(slot).Radius;
+        public string Describe(int slot)
+        {
+            AbilitySpec s = kit.Spec(slot); HeroId h = identity.Hero;
+            if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2)) return $"Move {s.Range:0.#}m. Uses movement direction; otherwise evade/face direction.";
+            if (h == HeroId.Mira && slot == 1) return $"Heal the weakest nearby hero for {s.Power:0} HP.";
+            if (h == HeroId.Mira && slot == 2) return $"Protect a wounded nearby hero with {s.Power:0} shield for 4s.";
+            if (h == HeroId.Mira && slot == 3) return $"After {s.Windup:0.#}s: heal allied heroes in {s.Radius:0.#}m for {s.Power:0} and grant 25 shield.";
+            if (h == HeroId.Kaelon && slot == 1) return $"Gain {s.Power:0} shield for 4s.";
+            if (h == HeroId.Rook && slot == 1) return $"Recover {s.Power:0} HP and gain 20 shield for 3s.";
+            if (h == HeroId.Kaelon && slot == 0) return $"{s.Power:0} damage and a 0.55s stun. Brief stun immunity follows.";
+            if (h == HeroId.Nyra && slot == 3) return $"Four shots, {s.Power:0} total damage. Leaving range or stunning interrupts the volley.";
+            if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after 0.4s, up to 35% more against wounded heroes. Target can leave range.";
+            if (s.Radius > 0) return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." + (h == HeroId.Kaelon ? " Slows enemies; ultimate shields allies." : h == HeroId.Elyra && slot != 0 ? " Slows enemies for 2s." : h == HeroId.Rook && slot == 3 ? " Gain 65 shield for 4s." : "");
+            return $"{s.Power:0} damage to one enemy." + (slot == 1 || slot == 2 || h == HeroId.Mira || h == HeroId.Rook ? " Briefly slows the target." : "");
+        }
+        public bool CastQ() => Cast(0);
+        public bool CastW() => Cast(1);
+        public bool CastE() => Cast(2);
+        public bool CastUltimate() => Cast(3);
+        private bool Cast(int slot)
+        {
+            Health target = targeting.Acquire(Mathf.Max(kit.Spec(slot).Range, 1f), transform.forward, true);
+            HeroMotor motor = GetComponent<HeroMotor>();
+            Vector3 direction = motor != null && motor.HasMoveInput ? motor.LastMoveDirection :
+                target != null && identity.Hero != HeroId.Veyr ? transform.position - target.transform.position : transform.forward;
+            bool success = execution.TryCast(slot, target, direction);
+            if (success) targeting.RegisterOffensiveAction();
+            return success;
+        }
+    }
 }
