@@ -20,7 +20,7 @@ namespace Alterverse.Visuals
         public float GaitPhase=>phase;
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
-        { attackDuration=ultimate?.32f:.18f;attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.55f; }
+        { GetComponent<VoidWingPresentation>()?.Pulse();attackDuration=ultimate?.32f:.18f;attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.55f; }
         private void Start()
         {
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
