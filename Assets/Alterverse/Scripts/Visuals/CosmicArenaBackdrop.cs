@@ -60,9 +60,9 @@ namespace Alterverse.Visuals
 
         private void BuildDistantPlanets()
         {
-            Planet(new Vector3(-82,-7,52),14f,new Color(.10f,.12f,.18f,1));
-            Planet(new Vector3(92,-10,-48),20f,new Color(.07f,.10f,.15f,1));
-            Planet(new Vector3(58,-8,74),7f,new Color(.12f,.13f,.17f,1));
+            Planet(new Vector3(-96,-12,66),13f,new Color(.075f,.085f,.12f,1));
+            Planet(new Vector3(112,-15,-64),18f,new Color(.055f,.07f,.105f,1));
+            Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
         }
 
         private void Planet(Vector3 p,float size,Color color)
