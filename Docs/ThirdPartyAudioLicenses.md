@@ -48,3 +48,7 @@ Processing: bounded duration per cue, mono 32 kHz, 65 Hz high-pass / 10 kHz low-
 | Purchase | forceField_004.ogg | `05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09` |
 | MinionDeath | impactMetal_002.ogg | `0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c` |
 | AbilityImpact | impactMetal_003.ogg | `ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76` |
+
+## Audio comfort follow-up
+
+Nine frequent SFX received additional high-frequency attenuation and softer onsets. Original CC0 provenance is unchanged. Exact processing and validation limits are recorded in Audio-Comfort-Polish.md. The music was not changed in this follow-up.
