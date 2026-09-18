@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<Color,Material> materials=new Dictionary<Color,Material>();
         private void Start()
         {
+            if(FindAnyObjectByType<ProductionLunarGround>()!=null){enabled=false;return;}
             Color stone=StylizedArtDirection.ArenaStone;
             Color zero=StylizedArtDirection.ZeroGround,lumen=StylizedArtDirection.LumenGround;
             // Low terrace edges establish the island boundary without covering the lanes.
