@@ -26,7 +26,7 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();BuildErosionBands();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();BuildErosionBands();BuildCraterFields();
 }
 
 
@@ -36,6 +36,20 @@ for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisField
 
 
 
+
+
+private void BuildCraterFields()
+{
+Vector3[] centers={new(-30,.02f,25),new(-24,.02f,-25),new(29,.02f,25),new(23,.02f,-25)};
+for(int n=0;n<centers.Length;n++)
+{
+for(int i=0;i<3;i++)
+{
+Vector3 p=centers[n]+new Vector3((i-1)*1.65f,0,(i%2==0?.75f:-.65f));
+Crater(p,n*3+i);
+}
+}
+}
 
 private void BuildErosionBands()
 {
