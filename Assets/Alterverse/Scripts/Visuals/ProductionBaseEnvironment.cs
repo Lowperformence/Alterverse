@@ -12,6 +12,6 @@ void Disc(string n,float radius,float y,float half,Material mat){Disc(n,radius,y
 void Ring(string n,float radius,float tube,float y,Material mat){GameObject g=ProductionMeshFactory.MeshObject("DF_"+n,root,ProductionMeshFactory.Ring(radius,tube,36,8),mat);g.transform.localPosition=Vector3.up*y;}
 void Tube(string n,Vector3 a,Vector3 b,float radius,Material mat){ProductionMeshFactory.MeshObject("DF_"+n,root,ProductionMeshFactory.Tube(a,b,radius,8),mat);}
 Material Mat(Color c,float metallic,float smooth,bool emissive=false){Shader sh=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");Material m=new(sh);mats.Add(m);m.color=c;if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",c);if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smooth);if(emissive){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",c*1.45f);}return m;}
-void OnDestroy(){foreach(Material m in mats)if(m!=null)Destroy(m);}
+void OnDestroy(){var owned=new HashSet<Mesh>();if(root!=null)foreach(MeshFilter filter in root.GetComponentsInChildren<MeshFilter>())if(filter.sharedMesh!=null&&owned.Add(filter.sharedMesh))Destroy(filter.sharedMesh);foreach(Material m in mats)if(m!=null)Destroy(m);}
 }
 }
