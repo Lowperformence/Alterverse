@@ -1,4 +1,5 @@
 using Alterverse.Characters;
+using Alterverse.Match;
 using Alterverse.Profile;
 using Alterverse.Shop;
 using UnityEngine;
@@ -49,7 +50,7 @@ namespace Alterverse.UI
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
-            Time.timeScale = 0;
+            MatchClock.Set(PauseReason.Menu,true);
         }
         public static void ShowHome()
         {
@@ -57,19 +58,19 @@ namespace Alterverse.UI
             instance.visible = true; instance.launching = false; instance.page = Page.Home;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
-            instance.gameObject.SetActive(true); Time.timeScale = 0;
+            instance.gameObject.SetActive(true); MatchClock.Set(PauseReason.Menu,true);
         }
-        private void OnEnable() { if (visible) Time.timeScale = 0; }
+        private void OnEnable() { if (visible) MatchClock.Set(PauseReason.Menu,true); }
         private void OnApplicationPause(bool paused)
         {
             suspended = paused;
             if (paused) { FlushAudio(); if (launching) { launching = false; page = Page.Play; } }
-            if (visible) Time.timeScale = 0;
+            if (visible) MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnApplicationFocus(bool focused)
         {
             if (!focused && launching) { launching = false; page = Page.Play; }
-            if (focused && visible) Time.timeScale = 0;
+            if (focused && visible) MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnDisable() { FlushAudio(); CloseKeyboard(); }
         private void OnDestroy() { if (instance == this) instance = null; }
@@ -369,7 +370,7 @@ namespace Alterverse.UI
         {
             var bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
             if (bootstrap==null) { launching=false; page=Page.Play; launchMessage="Match could not start. Please try again."; Debug.LogError("DIMENSIONS FRONT: match bootstrap unavailable."); return; }
-            launching=false; visible=false; Time.timeScale=1;
+            launching=false; visible=false; MatchClock.Set(PauseReason.Result,false); MatchClock.Set(PauseReason.Menu,false);
             if (GameObject.Find("DF_MatchWorld")!=null) bootstrap.StartCoroutine(bootstrap.RestartPrototype());
             gameObject.SetActive(false);
         }

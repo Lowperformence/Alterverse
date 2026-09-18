@@ -7,11 +7,15 @@ public sealed class PrototypeBootstrap:MonoBehaviour
 [SerializeField]private bool buildOnStart=true;[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]private static void AutoCreate(){if(FindAnyObjectByType<PrototypeBootstrap>()==null)new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();}private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yield return null;while(MainMenuController.IsVisible)yield return null;BuildPrototype();}
 public System.Collections.IEnumerator RestartPrototype()
 {
-Time.timeScale=0f;
+MatchClock.Set(PauseReason.Transition,true);
+try
+{
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
-BuildPrototype();Time.timeScale=1f;
+BuildPrototype();
+}
+finally{MatchClock.Set(PauseReason.Transition,false);}
 }
 public void BuildPrototype(){if(GameObject.Find("AV_Player")!=null)return;
 var existing=new System.Collections.Generic.HashSet<GameObject>(gameObject.scene.GetRootGameObjects());

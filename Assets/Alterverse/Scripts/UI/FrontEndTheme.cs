@@ -62,6 +62,7 @@ namespace Alterverse.UI
             if (GUI.enabled && rect.Contains(Event.current.mousePosition) && GUIUtility.hotControl != 0)
                 Fill(rect, new Color(1,1,1,.07f));
             GUI.enabled = previous;
+            if(clicked)Alterverse.Audio.UiSoundRouter.Confirm();
             return clicked;
         }
         public void Progress(Rect rect, float fraction)

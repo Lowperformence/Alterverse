@@ -1,10 +1,43 @@
-using Alterverse.Visuals;using Alterverse.UI;using UnityEngine;
+using Alterverse.UI;
+using UnityEngine;
 namespace Alterverse.Match
 {
-public sealed class DimensionsFrontHUD:MonoBehaviour
-{
-private DimensionsFront front;private GUIStyle label,timer,overtime,team;private Texture2D pixel;private float nextFind,lastScale=-1;private void Awake(){pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();}private void Update(){if(front==null&&Time.unscaledTime>=nextFind){nextFind=Time.unscaledTime+.5f;front=FindAnyObjectByType<DimensionsFront>();}}
-private void OnGUI(){if(front==null||pixel==null)return;float scale=Mathf.Clamp(Screen.height/900f,.72f,1.25f);EnsureStyles(scale);float width=Mathf.Min(520*scale,Screen.width*.62f),x=(Screen.width-width)*.5f,y=18*scale,shellH=69*scale,barY=y+40*scale,barH=14*scale;Rect shell=new Rect(x,y,width,shellH);DimensionUiMotif.DrawSplitPanel(shell,pixel,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);Color lead=front.ZeroControl>=50?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;DimensionUiMotif.DrawCornerCuts(shell,pixel,front.IsOvertime?StylizedArtDirection.WarmAccent:lead);string clock=front.IsSuddenDeath?"SUDDEN DEATH":front.IsOvertime?$"OVERTIME  {Format(front.TimeRemaining)}":Format(front.TimeRemaining);GUI.Label(new Rect(x,y+3*scale,width,30*scale),clock,front.IsOvertime?overtime:timer);float zero=Mathf.Clamp01(front.ZeroControl/100f),lumen=1-zero,margin=10*scale,inner=Mathf.Max(0,width-margin*2);Draw(new Rect(x+margin,barY,inner,barH),new Color(.04f,.04f,.07f,.95f));Draw(new Rect(x+margin,barY,inner*zero,barH),StylizedArtDirection.ZeroEnergy);Draw(new Rect(x+margin+inner*zero,barY,inner*lumen,barH),StylizedArtDirection.LumenEnergy);float pulseRate=front.IsSuddenDeath?10f:front.IsOvertime?7f:4f,split=x+margin+inner*zero,pulse=(2f+Mathf.Sin(Time.unscaledTime*pulseRate)*1.2f)*scale;Draw(new Rect(split-pulse*.5f,barY-5*scale,pulse,barH+10*scale),front.IsOvertime?StylizedArtDirection.WarmAccent:Color.white);GUI.Label(new Rect(x+margin,y+52*scale,width*.42f,18*scale),$"ZERO  {front.ZeroControl:0.0}%",team);GUI.Label(new Rect(x+width*.58f-margin,y+52*scale,width*.42f,18*scale),$"{front.LumenControl:0.0}%  LUMEN",team);}
-private void EnsureStyles(float scale){if(label!=null&&Mathf.Abs(scale-lastScale)<.01f)return;lastScale=scale;label=new GUIStyle(GUI.skin.label){fontSize=Mathf.RoundToInt(12*scale),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};timer=new GUIStyle(label){fontSize=Mathf.RoundToInt(20*scale)};overtime=new GUIStyle(label){fontSize=Mathf.RoundToInt(21*scale)};team=new GUIStyle(label){fontSize=Mathf.RoundToInt(11*scale)};}private void Draw(Rect r,Color c){if(r.width<=0||r.height<=0)return;Color old=GUI.color;GUI.color=c;GUI.DrawTexture(r,pixel);GUI.color=old;}private static string Format(float seconds){int total=Mathf.Max(0,Mathf.CeilToInt(seconds));return $"{total/60:00}:{total%60:00}";}private void OnDestroy(){if(pixel!=null)Destroy(pixel);}
-}
+    public sealed class DimensionsFrontHUD : MonoBehaviour
+    {
+        private static DimensionsFrontHUD owner;
+        private DimensionsFront front;
+        private FrontEndTheme theme;
+        private GUIStyle centered;
+        private float nextFind;
+        private void Awake(){if(owner!=null&&owner!=this){enabled=false;return;}owner=this;}
+        private void OnDestroy(){if(owner==this)owner=null;}
+        private void Update(){if(front==null&&Time.unscaledTime>=nextFind){nextFind=Time.unscaledTime+.5f;front=FindAnyObjectByType<DimensionsFront>();}}
+        private void OnGUI()
+        {
+            if(front==null||front.HasEnded||MainMenuController.IsVisible)return;
+            Rect safe=Screen.safeArea;if(safe.width<=0||safe.height<=0)return;
+            float scale=Mathf.Min(safe.height/720,safe.width/960),width=safe.width/scale;
+            Matrix4x4 previous=GUI.matrix;Color color=GUI.color;
+            try
+            {
+                GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*scale);
+                theme??=new FrontEndTheme();centered??=new GUIStyle(theme.Body){alignment=TextAnchor.MiddleCenter};
+                Rect r=new Rect((width-420)*.5f,16,420,82);theme.Panel(r);
+                int zero=MatchScoreboard.Instance!=null?MatchScoreboard.Instance.KillsForTeam(0):0;
+                int lumen=MatchScoreboard.Instance!=null?MatchScoreboard.Instance.KillsForTeam(1):0;
+                theme.Label(new Rect(r.x+14,r.y+7,110,30),"ZERO  "+zero,theme.Body);
+                theme.Label(new Rect(r.xMax-124,r.y+7,110,30),lumen+"  LUMEN",theme.Body);
+                int seconds=Mathf.CeilToInt(front.TimeRemaining);
+                string clock=front.IsSuddenDeath?"SUDDEN DEATH":$"{seconds/60:00}:{seconds%60:00}";
+                GUI.Label(new Rect(r.x+122,r.y+7,176,30),clock,centered);
+                float progress=Mathf.Clamp01(front.ZeroControl/100);
+                FrontEndTheme.Fill(new Rect(r.x+14,r.y+42,392*progress,6),FrontEndTheme.Zero);
+                FrontEndTheme.Fill(new Rect(r.x+14+392*progress,r.y+42,392*(1-progress),6),FrontEndTheme.Accent);
+                theme.Label(new Rect(r.x+14,r.y+52,110,22),$"{front.ZeroControl:0.#}%",theme.Small,true);
+                theme.Label(new Rect(r.xMax-66,r.y+52,60,22),$"{front.LumenControl:0.#}%",theme.Small,true);
+                theme.Center(new Rect(r.x+90,r.y+52,240,22),front.IsOvertime?"OVERTIME":"DIMENSIONS FRONT");
+            }
+            finally{GUI.matrix=previous;GUI.color=color;}
+        }
+    }
 }
