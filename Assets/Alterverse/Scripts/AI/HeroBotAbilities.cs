@@ -1,14 +1,142 @@
-using UnityEngine;using Alterverse.Characters;using Alterverse.Combat;
+using UnityEngine;
+using Alterverse.Characters;
+using Alterverse.Combat;
+using Alterverse.Match;
+using Alterverse.Visuals;
+
 namespace Alterverse.AI
 {
-[RequireComponent(typeof(Health),typeof(BotTargetSensor),typeof(HeroIdentity))]
-[RequireComponent(typeof(HeroAbilityKit))]public sealed class HeroBotAbilities:MonoBehaviour
-{
-private Health self;private BotTargetSensor sensor;private HeroIdentity identity;private HeroAbilityKit kit;private HeroCombatProfile profile;private MobaBotBrain brain;private TeamMember team;private float qReady,wReady,eReady,ultReady,nextAllyRefresh,nextDecision;private Health[] allyCache;
-private void Awake(){self=GetComponent<Health>();sensor=GetComponent<BotTargetSensor>();identity=GetComponent<HeroIdentity>();kit=GetComponent<HeroAbilityKit>();profile=GetComponent<HeroCombatProfile>();brain=GetComponent<MobaBotBrain>();team=GetComponent<TeamMember>();float stagger=Random.Range(.7f,1.8f);qReady=Time.time+stagger;wReady=Time.time+stagger+.55f;eReady=Time.time+stagger+1.05f;ultReady=Time.time+4.5f+Random.Range(0f,2.5f);nextDecision=Time.time+stagger;}
-private void Update(){if(Time.timeScale<=0f||self==null||self.IsDead||sensor==null||identity==null||kit==null||(brain!=null&&brain.State!=MobaBotBrain.BotState.Fight)||Time.time<nextDecision)return;Health target=sensor.CurrentTarget;if(target==null||target.IsDead)return;nextDecision=Time.time+Random.Range(.28f,.48f);float d=FlatDistance(target.transform.position,transform.position);if(Time.time>=ultReady&&d<=kit.Ultimate.Range&&ShouldUltimate(target)){ultReady=Time.time+kit.Ultimate.Cooldown;Cast(target,kit.Ultimate.Power,true);return;}if(Time.time>=qReady&&d<=kit.Q.Range){qReady=Time.time+kit.Q.Cooldown;Cast(target,kit.Q.Power,false);return;}if(Time.time>=wReady&&d<=kit.W.Range){wReady=Time.time+kit.W.Cooldown;CastUtilityOrDamage(target,kit.W.Power);return;}if(Time.time>=eReady&&d<=kit.E.Range){eReady=Time.time+kit.E.Cooldown;CastUtilityOrDamage(target,kit.E.Power);}}
-private bool ShouldUltimate(Health target)=>target.Normalized<=.42f||self.Normalized<=.28f;private void CastUtilityOrDamage(Health target,float power){bool utilityOnly=false;switch(identity.Hero){case HeroId.Kaelon:self.Heal(self.Max*.10f);utilityOnly=true;break;case HeroId.Mira:HealWeakestAlly(self.Max*.14f);utilityOnly=true;break;case HeroId.Nyra:RepositionAway(target,2.5f);utilityOnly=true;break;case HeroId.Elyra:RepositionAway(target,1.4f);utilityOnly=true;break;case HeroId.Rook:self.Heal(self.Max*.08f);utilityOnly=true;break;}if(!utilityOnly&&power>0)Cast(target,power,false);}
-private void Cast(Health target,float basePower,bool ultimate){if(basePower<=0||target==null||target.IsDead)return;float scale=profile!=null?profile.AbilityPower:1,damage=basePower*scale*.82f;if(identity.Hero==HeroId.Veyr&&ultimate)damage*=1+(1-target.Normalized)*.4f;target.TakeDamage(damage,gameObject);if(identity.Hero==HeroId.Veyr)self.Heal(damage*.12f);if(identity.Hero==HeroId.Rook&&self.Normalized<.45f)self.Heal(damage*.10f);if(identity.Hero==HeroId.Mira)HealWeakestAlly(damage*.35f);}
-private void HealWeakestAlly(float amount){if(team==null)return;if(allyCache==null||Time.time>=nextAllyRefresh){nextAllyRefresh=Time.time+1;allyCache=FindObjectsByType<Health>();}Health best=null;float lowest=1;foreach(Health h in allyCache){if(h==null||h.IsDead)continue;TeamMember tm=h.GetComponent<TeamMember>();if(tm!=null&&tm.Team==team.Team&&h.Normalized<lowest){lowest=h.Normalized;best=h;}}best?.Heal(amount);}private void RepositionAway(Health target,float distance){Vector3 away=transform.position-target.transform.position;away.y=0;if(away.sqrMagnitude<.01f)return;Vector3 p=transform.position+away.normalized*distance;p.x=Mathf.Clamp(p.x,-41,41);p.z=Mathf.Clamp(p.z,-35,35);transform.position=p;}private static float FlatDistance(Vector3 a,Vector3 b){a.y=b.y=0;return Vector3.Distance(a,b);}
-}
+    [RequireComponent(typeof(Health), typeof(BotTargetSensor), typeof(HeroIdentity))]
+    [RequireComponent(typeof(HeroAbilityKit))]
+    public sealed class HeroBotAbilities : MonoBehaviour
+    {
+        private Health self;
+        private BotTargetSensor sensor;
+        private HeroIdentity identity;
+        private HeroAbilityKit kit;
+        private HeroCombatProfile profile;
+        private MobaBotBrain brain;
+        private TeamMember team;
+        private PlanetBuffReceiver buff;
+        private readonly float[] ready = new float[4];
+        private float nextDecision;
+
+        private void Awake()
+        {
+            self = GetComponent<Health>(); sensor = GetComponent<BotTargetSensor>();
+            identity = GetComponent<HeroIdentity>(); kit = GetComponent<HeroAbilityKit>();
+            profile = GetComponent<HeroCombatProfile>(); brain = GetComponent<MobaBotBrain>();
+            team = GetComponent<TeamMember>();
+            float stagger = Random.Range(.7f, 1.8f);
+            for (int slot = 0; slot < 4; slot++) ready[slot] = Time.time + stagger + slot * .55f;
+            ready[3] = Time.time + 5f;
+            nextDecision = Time.time + stagger;
+        }
+        private AbilitySpec Spec(int slot) => slot == 0 ? kit.Q : slot == 1 ? kit.W : slot == 2 ? kit.E : kit.Ultimate;
+
+        private void Update()
+        {
+            if (Time.timeScale <= 0f || self == null || self.IsDead || identity == null || kit == null || Time.time < nextDecision) return;
+            nextDecision = Time.time + Random.Range(.28f, .48f);
+            if (buff == null) buff = GetComponent<PlanetBuffReceiver>();
+            Health target = sensor != null ? sensor.CurrentTarget : null;
+            // Defensive utility is useful while retreating too, and does not require an enemy.
+            if (identity.Hero == HeroId.Mira)
+            {
+                Health ally = FindWoundedAlly(kit.Ultimate.Range);
+                if (ally != null && ally.Normalized < .4f && TryCast(3, target)) return;
+                if (TryCast(1, target) || TryCast(2, target)) return;
+            }
+            else if ((identity.Hero == HeroId.Kaelon || identity.Hero == HeroId.Rook) && self.Normalized < .8f)
+            {
+                if (TryCast(1, target)) return;
+            }
+            if (target == null || target.IsDead) return;
+            float distance = FlatDistance(target.transform.position, transform.position);
+            if (distance < 3.5f)
+            {
+                if (identity.Hero == HeroId.Nyra && TryCast(1, target)) return;
+                if (identity.Hero == HeroId.Elyra && TryCast(2, target)) return;
+            }
+            bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
+            if (identity.Hero == HeroId.Veyr &&
+                ((!fighting && self.Normalized < .5f) || (fighting && distance > 3f && distance < 7f)) && TryCast(2, target)) return;
+            if (!fighting) return;
+            if (identity.Hero != HeroId.Mira && (target.Normalized < .42f || self.Normalized < .28f) && TryCast(3, target)) return;
+            if (TryCast(0, target)) return;
+            if (identity.Hero != HeroId.Kaelon && identity.Hero != HeroId.Rook && identity.Hero != HeroId.Nyra && identity.Hero != HeroId.Mira && TryCast(1, target)) return;
+            if (identity.Hero == HeroId.Kaelon || identity.Hero == HeroId.Nyra || identity.Hero == HeroId.Rook) TryCast(2, target);
+        }
+
+        private bool TryCast(int slot, Health target)
+        {
+            if (Time.time < ready[slot]) return false;
+            AbilitySpec spec = Spec(slot);
+            HeroId hero = identity.Hero;
+            Color accent = StylizedArtDirection.HeroAccent(hero);
+            Vector3 origin = transform.position, end = origin;
+            float scale = profile != null ? profile.AbilityPower : 1f;
+            if (hero == HeroId.Mira && slot != 0)
+            {
+                Health ally = FindWoundedAlly(spec.Range);
+                if (ally == null) return false;
+                ally.Heal(spec.Power > 0 ? spec.Power * scale : self.Max * .12f);
+                end = ally.transform.position;
+                PrototypeVfx.Bloom(end, accent, slot == 3 ? 3f : 1.8f);
+            }
+            else if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
+            {
+                if (self.Normalized >= .8f) return false;
+                self.Heal(self.Max * (hero == HeroId.Kaelon ? .12f : .09f));
+                PrototypeVfx.Guard(origin, accent, 1.8f);
+            }
+            else if ((hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Veyr && slot == 2))
+            {
+                if (target == null || target.IsDead) return false;
+                Vector3 direction = origin - target.transform.position;
+                float distance = hero == HeroId.Nyra ? 3f : hero == HeroId.Elyra ? 2f : 4.2f;
+                if (hero == HeroId.Veyr && brain != null && brain.State == MobaBotBrain.BotState.Fight)
+                {
+                    direction = -direction;
+                    distance = Mathf.Min(distance, Mathf.Max(0f, FlatDistance(origin, target.transform.position) - 1.5f));
+                }
+                direction.y = 0;
+                if (direction.sqrMagnitude < .01f || distance < .1f) return false;
+                end = origin + direction.normalized * distance;
+                end.x = Mathf.Clamp(end.x, -40f, 40f); end.z = Mathf.Clamp(end.z, -33f, 33f);
+                transform.position = end;
+                GetComponent<MobaBotMover>()?.ResetMotion();
+                PrototypeVfx.ShadowTrail(origin, end, accent);
+            }
+            else
+            {
+                if (target == null || target.IsDead || spec.Power <= 0 || FlatDistance(origin, target.transform.position) > spec.Range) return false;
+                float damage = spec.Power * scale;
+                if (hero == HeroId.Veyr && slot == 3) damage *= 1f + (1f - target.Normalized) * .55f;
+                target.TakeDamage(damage, gameObject);
+                if (hero == HeroId.Veyr) self.Heal(damage * .12f);
+                if (hero == HeroId.Rook && self.Normalized < .45f) self.Heal(damage * .1f);
+                end = target.transform.position;
+                PrototypeVfx.ProjectileLine(origin, end, accent, .1f);
+            }
+            ready[slot] = Time.time + spec.Cooldown * (buff != null ? buff.CooldownMultiplier : 1f);
+            FounderAbilityVfx.CastSignature(identity, slot, origin, end);
+            return true;
+        }
+
+        private Health FindWoundedAlly(float range)
+        {
+            Health best = null;
+            float lowest = .9f;
+            foreach (Health candidate in FindObjectsByType<Health>())
+            {
+                if (candidate == null || candidate.IsDead || candidate.Normalized >= lowest) continue;
+                TeamMember member = candidate.GetComponent<TeamMember>();
+                if (member == null || team == null || member.Team != team.Team || FlatDistance(candidate.transform.position, transform.position) > range) continue;
+                lowest = candidate.Normalized; best = candidate;
+            }
+            return best;
+        }
+        private static float FlatDistance(Vector3 a, Vector3 b) { a.y = b.y = 0; return Vector3.Distance(a, b); }
+    }
 }
