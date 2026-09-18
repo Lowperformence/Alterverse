@@ -31,6 +31,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildHealingIntegration(27.5f);
         BuildTowerIntegration();
         BuildCraters();
+        BuildSecondaryCraterField();
         BuildFractures();
         BuildRocks();
         BuildRegolithVariation();
@@ -161,6 +162,13 @@ public sealed class ProductionLunarGround : MonoBehaviour
         Vector3[] v=new Vector3[segments+1];int[] t=new int[segments*3];v[0]=c;
         for(int i=0;i<segments;i++){float a=i*Mathf.PI*2/segments,w=1f+Mathf.Sin(a*5f+seed*.7f)*.06f;v[i+1]=c+new Vector3(Mathf.Cos(a)*radius*w,0,Mathf.Sin(a)*radius*w);int q=i*3;t[q]=0;t[q+1]=i+1;t[q+2]=(i+1)%segments+1;}
         Mesh m=new(){name="DF_IrregularLunarDisc",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+    }
+
+    void BuildSecondaryCraterField()
+    {
+        // Smaller, low-contrast impacts fill dead regolith zones without cluttering lanes or the objective court.
+        Vector3[] c={new(-36,.047f,12),new(-34,.047f,-7),new(-25,.047f,5),new(-15,.047f,31),new(-4,.047f,-31),new(35,.047f,-11),new(33,.047f,8),new(24,.047f,-5),new(15,.047f,-31),new(5,.047f,31)};
+        for(int i=0;i<c.Length;i++)IrregularCrater(c[i],.48f+(i%4)*.16f,40+i);
     }
 
     void BuildFractures()
