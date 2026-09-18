@@ -55,7 +55,7 @@ namespace Alterverse.Visuals
                 Vector2 p=new Vector2(Mathf.Cos(a),Mathf.Sin(a))*9.8f;
                 Tile(p.x,p.y,.65f,.65f,.112f,p.x<0?zero:lumen,.15f);
             }
-            foreach(int side in new[]{-1,1})
+            // Broad faction territories make the two realities readable at a glance without recoloring combat space.\n            for(int side=-1;side<=1;side+=2)\n            {\n                int territory=side<0?zero:lumen;\n                float cx=side*27f;\n                Tile(cx,0,15.5f,10.5f,.041f,territory,.8f);\n                Tile(cx,27f,18f,5.2f,.039f,territory,.65f);\n                Tile(cx,-27f,18f,5.2f,.039f,territory,.65f);\n            }\n            foreach(int side in new[]{-1,1})
             {
                 int trim=side<0?zero:lumen;
                 Vector2 baseCenter=new Vector2(side*35,0);
