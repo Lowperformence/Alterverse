@@ -101,7 +101,7 @@ g.transform.rotation=Quaternion.Euler(zero?22:0,i*60,zero?-24:0);
 
 private void CentralImpactScars()
 {
-Color hot=Color.Lerp(StylizedArtDirection.ObjectiveGold,StylizedArtDirection.Ink,.35f);
+Color hot=Color.Lerp(StylizedArtDirection.ArenaStoneLight,StylizedArtDirection.Ink,.48f);
 for(int i=0;i<7;i++)
 {
 float a=(i*51+11)*Mathf.Deg2Rad;float r=6.2f+(i%3)*1.15f;Vector3 from=new Vector3(Mathf.Cos(a)*r,.055f,Mathf.Sin(a)*r);Vector3 to=from+new Vector3(Mathf.Cos(a)*2.1f,0,Mathf.Sin(a)*2.1f);
@@ -122,7 +122,7 @@ float size=.12f+(i%4)*.055f;GameObject g=Part("DF_Pebble",PrimitiveType.Cube,new
 
 private void ObjectiveScatter(Vector3 center)
 {
-Color c=Color.Lerp(StylizedArtDirection.ObjectiveGold,StylizedArtDirection.ArenaStone,.55f);
+Color c=Color.Lerp(StylizedArtDirection.ArenaStoneLight,StylizedArtDirection.ArenaStone,.58f);
 for(int i=0;i<5;i++){float a=(i*72+18)*Mathf.Deg2Rad;float r=3.7f+(i%2)*.45f;Vector3 p=center+new Vector3(Mathf.Cos(a)*r,.12f,Mathf.Sin(a)*r);GameObject g=Part("DF_ObjectiveFragment",PrimitiveType.Cube,p,new Vector3(.28f,.28f+(i%2)*.18f,.42f),c);g.transform.rotation=Quaternion.Euler(15,i*57,22);}
 }
 
