@@ -7,49 +7,148 @@ namespace Alterverse.Visuals
     public sealed class HeroSkillVfx : MonoBehaviour
     {
         private static Material ink;
-        private float until;
+        const int MaxStrokes=128,ReservedWarnings=32;
+        static readonly System.Collections.Generic.List<HeroSkillVfx> pool=new();
+        private LineRenderer stroke;
+        private float until,began,baseWidth;
+        private Health ownerHealth,shieldHealth;
+        private Transform follow;
+        private Vector3 followPosition;
+        private bool follows,shieldBound;
+        private readonly Vector3[] trackedPoints=new Vector3[48];
+        public static void CancelWarnings(GameObject actor)
+        {foreach(var fx in pool)if(fx!=null&&fx.gameObject.activeSelf&&fx.cancelWithOwner&&fx.owner==actor)fx.gameObject.SetActive(false);}
+
         private GameObject owner;
         private bool cancelWithOwner;
         private void Update()
         {
-            if (Time.time >= until || (cancelWithOwner && (owner == null || owner.GetComponent<Health>()?.IsDead == true))) Destroy(gameObject);
-        }
-        private static void Stroke(Vector3[] points, Color color, float width, float duration, bool loop, GameObject owner = null, bool cancel = false)
-        {
-            if (ink == null)
+            if(Time.time>=until||(cancelWithOwner&&(owner==null||!owner.activeInHierarchy||ownerHealth!=null&&ownerHealth.IsDead))||
+                follows&&follow==null||shieldBound&&(shieldHealth==null||shieldHealth.IsDead||shieldHealth.Shield<=0))
+            {gameObject.SetActive(false);return;}
+            if(follows)
             {
-                Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
-                if (shader == null) shader = Shader.Find("Sprites/Default");
-                if (shader == null) return;
-                ink = new Material(shader) { name = "DF_SharedSkillInk" };
+                Vector3 delta=follow.position-followPosition;followPosition=follow.position;
+                for(int i=0;i<stroke.positionCount;i++){trackedPoints[i]+=delta;stroke.SetPosition(i,trackedPoints[i]);}
             }
-            GameObject obj = new("DF_HeroSkillStroke");
-            Transform world = owner != null ? owner.transform.parent : null;
-            if (world != null) obj.transform.SetParent(world, true);
-            LineRenderer line = obj.AddComponent<LineRenderer>();
-            line.sharedMaterial = ink; line.useWorldSpace = true; line.loop = loop;
-            line.startColor = line.endColor = color; line.widthMultiplier = width;
-            line.positionCount = points.Length; line.SetPositions(points);
-            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; line.receiveShadows = false;
-            HeroSkillVfx lifetime = obj.AddComponent<HeroSkillVfx>();
-            lifetime.until = Time.time + duration; lifetime.owner = owner; lifetime.cancelWithOwner = cancel;
+            float age=Mathf.InverseLerp(began,until,Time.time);
+            stroke.widthMultiplier=baseWidth*(cancelWithOwner?1+age*.7f:1-age*.45f);
+        }
+        private static HeroSkillVfx Stroke(Vector3[] points,Color color,float width,float duration,bool loop,GameObject owner=null,bool cancel=false)
+        {
+            if(ink==null)
+            {
+                Shader shader=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
+                if(shader==null)return null;
+                ink=new Material(shader){name="DF_SharedSkillInk"};
+            }
+            HeroSkillVfx fx=null;
+            for(int i=pool.Count-1;i>=0;i--)if(pool[i]==null)pool.RemoveAt(i);
+            int limit=cancel?MaxStrokes:MaxStrokes-ReservedWarnings;
+            // Separate reserved slots prevent impacts/basic attacks from starving warning outlines.
+            for(int i=0;i<pool.Count&&i<limit;i++)if(!pool[i].gameObject.activeSelf){fx=pool[i];break;}
+            if(fx==null&&pool.Count<limit)
+            {
+                GameObject obj=new("DF_PooledSkillStroke");
+                fx=obj.AddComponent<HeroSkillVfx>();fx.stroke=obj.AddComponent<LineRenderer>();pool.Add(fx);
+                fx.stroke.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;fx.stroke.receiveShadows=false;
+            }
+            if(fx==null)return null;
+            if(owner!=null)fx.transform.SetParent(owner.transform.parent,true);
+            fx.stroke.sharedMaterial=ink;fx.stroke.useWorldSpace=true;fx.stroke.loop=loop;
+            fx.stroke.startColor=fx.stroke.endColor=color;fx.stroke.widthMultiplier=width;
+            fx.stroke.positionCount=points.Length;fx.stroke.SetPositions(points);
+            System.Array.Copy(points,fx.trackedPoints,points.Length);
+            fx.began=Time.time;fx.until=Time.time+Mathf.Max(.05f,duration);fx.baseWidth=width;
+            fx.owner=owner;fx.ownerHealth=owner!=null?owner.GetComponent<Health>():null;fx.cancelWithOwner=cancel;
+            fx.follow=null;fx.follows=false;fx.shieldBound=false;fx.shieldHealth=null;
+            fx.gameObject.SetActive(true);return fx;
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetMaterial() { if (ink != null) Destroy(ink); ink = null; }
-        public static void Area(GameObject actor, Vector3 center, float radius, float duration, bool warning)
+        private static void ResetMaterial() { foreach(var fx in pool)if(fx!=null)Destroy(fx.gameObject);pool.Clear();if (ink != null) Destroy(ink); ink = null; }
+        public static void Area(GameObject actor, Vector3 center, float radius, float duration, bool warning, bool beneficial=false)
         {
             HeroIdentity hero = actor.GetComponent<HeroIdentity>();
-            Color color = warning ? new Color(1f,.62f,.2f) : hero != null ? StylizedArtDirection.HeroAccent(hero.Hero) : Color.white;
+            Color color = warning && !beneficial ? new Color(1f,.48f,.16f) : hero != null ? StylizedArtDirection.HeroAccent(hero.Hero) : Color.white;
             center.y = .22f;
             Vector3[] ring = new Vector3[40];
             for (int i = 0; i < ring.Length; i++)
             { float a = i * Mathf.PI * 2 / ring.Length; ring[i] = center + new Vector3(Mathf.Cos(a), 0, Mathf.Sin(a)) * radius; }
-            Stroke(ring, color, warning ? .07f : .13f, duration, true, actor, warning);
+            Stroke(ring, color, warning ? .14f : .2f, duration, true, actor, warning);
             int corners = hero == null ? 4 : hero.Hero == HeroId.Kaelon ? 6 : hero.Hero == HeroId.Mira ? 12 : hero.Hero == HeroId.Rook ? 8 : 4;
             Vector3[] glyph = new Vector3[corners];
             for (int i = 0; i < corners; i++)
             { float a = i * Mathf.PI * 2 / corners; float r = radius * ((hero != null && hero.Hero == HeroId.Mira && i % 2 == 1) ? .38f : .7f); glyph[i] = center + new Vector3(Mathf.Cos(a), .01f, Mathf.Sin(a)) * r; }
             Stroke(glyph, hero != null ? StylizedArtDirection.HeroAccent(hero.Hero) : color, .055f, duration, true, actor, warning);
+        }
+        static Color Accent(GameObject actor)=>StylizedArtDirection.HeroAccent(actor.GetComponent<HeroIdentity>().Hero);
+        static void Follow(HeroSkillVfx fx,Transform target)
+        {if(fx==null||target==null)return;fx.follow=target;fx.followPosition=target.position;fx.follows=true;}
+        static HeroSkillVfx Ring(GameObject actor,Vector3 center,float radius,float seconds,Color color,int sides=20, bool warning=false)
+        {
+            Vector3[] points=new Vector3[sides];
+            for(int i=0;i<sides;i++){float a=i*Mathf.PI*2/sides;points[i]=center+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*radius;}
+            return Stroke(points,color,.13f,seconds,true,actor,warning);
+        }
+        public static void Cast(GameObject actor,int slot)
+        {
+            HeroId hero=actor.GetComponent<HeroIdentity>().Hero;
+            Ring(actor,actor.transform.position+Vector3.up*.45f,slot==3?.85f:.55f,.22f,Accent(actor),hero==HeroId.Kaelon?6:hero==HeroId.Elyra?3:hero==HeroId.Mira?12:4);
+        }
+        public static void TargetWarning(GameObject actor,Health target,float seconds)
+        {
+            var fx=Ring(actor,target.transform.position+Vector3.up*.28f,.8f,seconds,new Color(1,.48f,.16f),4,true);
+            Follow(fx,target.transform);
+        }
+        public static void Spell(GameObject actor,Vector3 impact,int slot)
+        {
+            HeroId hero=actor.GetComponent<HeroIdentity>().Hero;Color color=Accent(actor);
+            Vector3 start=actor.transform.position+Vector3.up*.65f,end=impact+Vector3.up*.65f;
+            Vector3 forward=end-start;forward.y=0;forward=forward.sqrMagnitude<.01f?actor.transform.forward:forward.normalized;
+            Vector3 side=Vector3.Cross(Vector3.up,forward);
+            if(hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook)
+            {
+                Vector3[] arc=new Vector3[9];float radius=hero==HeroId.Rook?1.05f:.8f;
+                for(int i=0;i<arc.Length;i++){float a=Mathf.Lerp(-1.1f,1.1f,i/8f);arc[i]=end+side*Mathf.Sin(a)*radius+forward*(Mathf.Cos(a)-.6f)*radius;}
+                Stroke(arc,color,slot==3?.28f:.2f,.24f,false,actor);
+                if(hero==HeroId.Veyr)Stroke(new[]{start,end-side*.35f,end+side*.35f},color,.14f,.16f,false,actor);
+            }
+            else
+            {
+                // Existing mechanics resolve instantly: a beam shows the real damage event, without invented flight delay.
+                Stroke(new[]{start,end},color,slot==3?.2f:.14f,.18f,false,actor);
+                Stroke(new[]{end-forward*.65f-side*.26f,end,end-forward*.65f+side*.26f},color,.13f,.22f,false,actor);
+            }
+        }
+        public static void Impact(GameObject actor,Health target,int slot)
+        {
+            Vector3 p=target.transform.position+Vector3.up*.5f;Color c=Accent(actor);
+            Stroke(new[]{p+new Vector3(-.5f,0,-.4f),p,p+new Vector3(.5f,0,.4f)},c,.19f,.22f,false,actor);
+            Stroke(new[]{p+new Vector3(-.4f,0,.5f),p,p+new Vector3(.4f,0,-.5f)},c,.16f,.22f,false,actor);
+            if(slot==3&&target.GetComponent<HeroIdentity>()!=null)Ring(actor,p,.65f,.28f,c,8);
+        }
+        public static void Support(GameObject actor,Health target,bool shield,float duration)
+        {
+            Color c=shield?new Color(.3f,.82f,1):new Color(.35f,1,.65f);
+            Vector3 p=target.transform.position+Vector3.up*.42f;
+            var fx=Ring(actor,p,shield?.8f:.65f,shield?duration:.45f,c,shield?6:16);Follow(fx,target.transform);
+            if(shield&&fx!=null){fx.shieldHealth=target;fx.shieldBound=true;}
+            if(!shield)
+            {
+                Follow(Stroke(new[]{p+Vector3.left*.4f,p+Vector3.right*.4f},c,.18f,.45f,false,actor),target.transform);
+                Follow(Stroke(new[]{p+Vector3.back*.4f,p+Vector3.forward*.4f},c,.18f,.45f,false,actor),target.transform);
+            }
+        }
+        public static void SupportLink(GameObject actor,Health target)
+        {Stroke(new[]{actor.transform.position+Vector3.up*.6f,target.transform.position+Vector3.up*.6f},new Color(.4f,.92f,.75f),.13f,.25f,false,actor);}
+        public static void Debuff(GameObject actor,Health target)
+        {if(target.GetComponent<HeroIdentity>()==null)return;var fx=Ring(actor,target.transform.position+Vector3.up*.25f,.65f,.5f,new Color(.9f,.55f,.24f),4);Follow(fx,target.transform);}
+        public static void PlayerHit(GameObject victim,GameObject source)
+        {
+            if(source==null)return;Vector3 d=source.transform.position-victim.transform.position;d.y=0;
+            if(d.sqrMagnitude<.01f)return;d.Normalize();Vector3 side=Vector3.Cross(Vector3.up,d)*.3f;
+            Vector3 p=victim.transform.position+Vector3.up*.35f+d*.95f;
+            Stroke(new[]{p-side-d*.2f,p,p+side-d*.2f},new Color(1,.62f,.4f),.16f,.18f,false,victim);
         }
         public static void Basic(GameObject actor, Vector3 impact)
         {
@@ -74,6 +173,7 @@ namespace Alterverse.Visuals
         {
             Color color = StylizedArtDirection.HeroAccent(actor.GetComponent<HeroIdentity>().Hero);
             Stroke(new[] { from + Vector3.up*.25f, to + Vector3.up*.25f }, color, .18f, .25f, false, actor);
+            Follow(Ring(actor,from+Vector3.up*.4f,.55f,.22f,color,4),actor.transform);
         }
     }
 }

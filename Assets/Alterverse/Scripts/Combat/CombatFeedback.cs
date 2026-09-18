@@ -38,6 +38,7 @@ namespace Alterverse.Combat
             if(view==null)view=Camera.main;if(view==null)return;
             Vector3 point=transform.position+Vector3.up*1.1f,p=view.WorldToViewportPoint(point);
             if(p.z<=0||p.x<-.05f||p.x>1.05f||p.y<-.05f||p.y>1.05f)return;
+            if(GetComponent<HeroRespawn>()!=null)HeroSkillVfx.PlayerHit(gameObject,source);
             bool shieldOnly=damage<=.01f;
             Color tint=shieldOnly?new Color(.45f,.87f,1f):Color.Lerp(SourceColor(source),Color.white,.65f);
             if(renderers==null||saved==null||flashed==null||saved.Length!=renderers.Length||flashed.Length!=renderers.Length)RefreshVisuals();
