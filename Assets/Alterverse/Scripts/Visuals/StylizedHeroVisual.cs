@@ -191,6 +191,7 @@ private void BindArmor()
 {
 // Gloves and knee armor move with their limbs instead of floating independently.
 Bind("GloveL","ArmL");Bind("GloveR","ArmR");Bind("KneeL","LegL");Bind("KneeR","LegR");
+for(int i=0;i<3;i++)Bind("Knuckle"+i,"GauntletR");
 }
 private void Bind(string childName,string parentName)
 {
@@ -201,7 +202,7 @@ private void CombineStaticPanels()
 {
 var groups=new System.Collections.Generic.Dictionary<Material,System.Collections.Generic.List<CombineInstance>>();
 var remove=new System.Collections.Generic.List<GameObject>();
-var animated=new System.Collections.Generic.HashSet<string>{"DF_LegL","DF_LegR","DF_BootL","DF_BootR","DF_ArmL","DF_ArmR","DF_OrbitL","DF_OrbitR","DF_WingL","DF_WingR","DF_Cape","DF_BladeR"};
+var animated=new System.Collections.Generic.HashSet<string>{"DF_LegL","DF_LegR","DF_BootL","DF_BootR","DF_ArmL","DF_ArmR","DF_GauntletL","DF_GauntletR","DF_OrbitL","DF_OrbitR","DF_WingL","DF_WingR","DF_Cape","DF_BladeR"};
 foreach(Transform part in root)
 {
 if(animated.Contains(part.name))continue;

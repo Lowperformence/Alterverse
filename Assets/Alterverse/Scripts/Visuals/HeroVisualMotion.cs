@@ -1,14 +1,105 @@
-using Alterverse.Characters;using Alterverse.Combat;using UnityEngine;
+using Alterverse.Characters;
+using Alterverse.Combat;
+using UnityEngine;
 namespace Alterverse.Visuals
 {
-public sealed class HeroVisualMotion:MonoBehaviour
-{
-private readonly System.Collections.Generic.Dictionary<Transform,Quaternion> restRotations=new System.Collections.Generic.Dictionary<Transform,Quaternion>();private HeroIdentity identity;private Health health;private Transform visualRoot,legL,legR,bootL,bootR,armL,armR;private Vector3 basePos,lastPos;private float seed,attackUntil,attackWeight;public void PulseAttack(bool ultimate){attackUntil=Time.time+(ultimate?.32f:.18f);attackWeight=ultimate?1f:.55f;}private void Start(){identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();seed=Mathf.Abs(StableSeed(gameObject.name)%97)*.13f;visualRoot=transform.Find("DF_VisualRoot");if(visualRoot!=null){basePos=visualRoot.localPosition;legL=visualRoot.Find("DF_LegL");legR=visualRoot.Find("DF_LegR");bootL=visualRoot.Find("DF_BootL");bootR=visualRoot.Find("DF_BootR");armL=visualRoot.Find("DF_ArmL");armR=visualRoot.Find("DF_ArmR");}lastPos=transform.position;}
-private static int StableSeed(string value){unchecked{int hash=17;if(!string.IsNullOrEmpty(value))for(int i=0;i<value.Length;i++)hash=hash*31+value[i];return hash==int.MinValue?0:Mathf.Abs(hash);}}
-private void LateUpdate(){if(visualRoot==null||health==null)return;if(Time.timeScale<=0f){lastPos=transform.position;return;}float dt=Mathf.Max(Time.deltaTime,.001f),t=Time.time+seed;float speed=Mathf.Min((transform.position-lastPos).magnitude/dt,12f);lastPos=transform.position;if(health.IsDead){visualRoot.localPosition=Vector3.Lerp(visualRoot.localPosition,basePos+Vector3.down*.5f,1-Mathf.Exp(-8*dt));visualRoot.localRotation=Quaternion.Slerp(visualRoot.localRotation,Quaternion.Euler(0,0,72),1-Mathf.Exp(-6*dt));return;}HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;float weight=(hero==HeroId.Kaelon||hero==HeroId.Rook)?.7f:1f;bool moving=speed>.25f;float cadence=moving?8.5f:2.8f;float bob=Mathf.Sin(t*cadence)*(.025f+.022f*Mathf.Clamp01(speed/5))*weight;float lean=Mathf.Sin(t*(moving?cadence*.5f:1.7f))*(hero==HeroId.Rook?1f:1.7f);if(hero==HeroId.Elyra)bob+=.045f*Mathf.Sin(t*1.35f);if(hero==HeroId.Mira)bob+=.02f*Mathf.Sin(t*1.8f);visualRoot.localPosition=Vector3.Lerp(visualRoot.localPosition,basePos+Vector3.up*bob,1-Mathf.Exp(-12*dt));visualRoot.localRotation=Quaternion.Slerp(visualRoot.localRotation,Quaternion.Euler(moving?3.5f:0,0,lean),1-Mathf.Exp(-10*dt));AnimateWalk(t,speed,hero);AnimateSignature(hero,t,speed);if(Time.time<attackUntil){float kick=Mathf.Sin(Mathf.Clamp01((attackUntil-Time.time)/.32f)*Mathf.PI)*attackWeight;visualRoot.localRotation*=Quaternion.Euler(-9*kick,hero==HeroId.Rook?-12*kick:5*kick,0);}}
-private void AnimateWalk(float t,float speed,HeroId hero){float amount=Mathf.Clamp01(speed/2.5f);float stride=Mathf.Sin(t*(7.5f+Mathf.Clamp(speed,0,6)*.35f))*28f*amount;float heavy=(hero==HeroId.Kaelon||hero==HeroId.Rook)?.72f:1f;SetSwing(legL,stride*heavy);SetSwing(legR,-stride*heavy);SetSwing(bootL,stride*.45f*heavy);SetSwing(bootR,-stride*.45f*heavy);SetSwing(armL,-stride*.55f*heavy);SetSwing(armR,stride*.55f*heavy);}
-private void SetSwing(Transform part,float angle){if(part==null)return;if(!restRotations.TryGetValue(part,out Quaternion rest)){rest=part.localRotation;restRotations.Add(part,rest);}part.localRotation=rest*Quaternion.Euler(angle,0,0);}
-private void AnimateSignature(HeroId hero,float t,float speed){Transform orbitL=visualRoot.Find("DF_OrbitL"),orbitR=visualRoot.Find("DF_OrbitR");if(orbitL!=null)orbitL.localPosition=new Vector3(Mathf.Cos(t*1.4f)*.72f,.48f+Mathf.Sin(t*1.4f)*.12f,Mathf.Sin(t*1.4f)*.28f);if(orbitR!=null)orbitR.localPosition=new Vector3(Mathf.Cos(t*1.4f+Mathf.PI)*.68f,.3f+Mathf.Sin(t*1.4f+Mathf.PI)*.12f,Mathf.Sin(t*1.4f+Mathf.PI)*.25f);if(hero==HeroId.Mira){Transform l=visualRoot.Find("DF_WingL"),r=visualRoot.Find("DF_WingR");float flap=Mathf.Sin(t*2.1f)*5;if(l!=null)l.localRotation=Quaternion.Euler(0,-18,-18-flap);if(r!=null)r.localRotation=Quaternion.Euler(0,18,18+flap);}if(hero==HeroId.Nyra){Transform cape=visualRoot.Find("DF_Cape");if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Clamp(speed,0,6)*1.6f,0,8+Mathf.Sin(t*2)*2);}if(hero==HeroId.Veyr&&speed>.25f){Transform a=visualRoot.Find("DF_BladeR");if(a!=null)a.localRotation=Quaternion.Euler(25+Mathf.Sin(t*7)*5,0,-16);}}
+    /// <summary>Distance-driven presentation. Does not write the actor's movement or balance values.</summary>
+    public sealed class HeroVisualMotion : MonoBehaviour
+    {
+        private HeroIdentity identity;
+        private Health health;
+        private HeroLocomotion locomotion;
+        private Transform root,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
+        private Quaternion bootRestL,bootRestR,armRestL,armRestR,bladeRest;
+        private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
+        private float previousHealth,hitUntil;
+        private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean;
+        private bool wasDead;
+        // Stable values can later drive an Animator blend tree without replacing movement logic.
+        public float PlanarSpeed { get; private set; }
+        public float GaitPhase=>phase;
+        public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
+        public void PulseAttack(bool ultimate)
+        { attackDuration=ultimate?.32f:.18f;attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.55f; }
+        private void Start()
+        {
+            identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
+            root=transform.Find("DF_VisualRoot");if(root==null)return;
+            basePosition=root.localPosition;lastPosition=transform.position;
+            legL=root.Find("DF_LegL");legR=root.Find("DF_LegR");bootL=root.Find("DF_BootL");bootR=root.Find("DF_BootR");
+            armL=root.Find("DF_ArmL")??root.Find("DF_GauntletL");armR=root.Find("DF_ArmR")??root.Find("DF_GauntletR");
+            orbitL=root.Find("DF_OrbitL");orbitR=root.Find("DF_OrbitR");wingL=root.Find("DF_WingL");wingR=root.Find("DF_WingR");cape=root.Find("DF_Cape");blade=root.Find("DF_BladeR");
+            if(bootL!=null)bootPositionL=bootL.localPosition;if(bootR!=null)bootPositionR=bootR.localPosition;
+            if(health!=null){previousHealth=health.Current;health.Changed+=OnHealthChanged;}
+            bootRestL=Rest(bootL);bootRestR=Rest(bootR);armRestL=Rest(armL);armRestR=Rest(armR);bladeRest=Rest(blade);
+        }
+        private void OnHealthChanged(float current,float max)
+        {if(current<previousHealth-.01f)hitUntil=Time.time+.12f;previousHealth=current;}
+        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;}
+        private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
+        private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
+        private static void PoseLeg(Transform leg,Transform foot,float side)
+        {
+            if(leg==null||foot==null)return;
+            Vector3 hip=new Vector3(side,-.26f,0),ankle=foot.localPosition+Vector3.up*.08f;
+            Vector3 axis=ankle-hip;
+            leg.localPosition=(hip+ankle)*.5f;
+            leg.localRotation=Quaternion.FromToRotation(Vector3.down,axis);
+            Vector3 scale=leg.localScale;scale.y=axis.magnitude*.5f;leg.localScale=scale;
+        }
+        private void PlantFoot(Transform foot,Vector3 rest,Quaternion rotation,float gait,float stride)
+        {
+            if(foot==null)return;
+            float cycle=Mathf.Repeat(gait/(Mathf.PI*2),1);
+            bool stance=cycle<.5f;
+            float progress=stance?cycle*2:(cycle-.5f)*2;
+            // During stance the foot moves backward at the traveled-distance rate.
+            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.Lerp(-1,1,progress))*stride*.25f;
+            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.12f;
+            foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
+            foot.localRotation=rotation*Quaternion.Euler(stance?0:-Mathf.Sin(progress*Mathf.PI)*12*strideWeight,0,0);
+        }
+        private void LateUpdate()
+        {
+            if(root==null||health==null)return;
+            Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
+            if(Time.timeScale<=0){previousSpeed=0;return;}
+            float dt=Mathf.Max(Time.deltaTime,.0001f);
+            if(health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=0;return;}
+            // Recall/respawn is a relocation, not a sprint across the arena.
+            if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
+            {wasDead=false;phase=0;strideWeight=previousSpeed=lean=0;root.localPosition=basePosition;root.localRotation=Quaternion.identity;delta=Vector3.zero;}
+            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
+            bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
+            float travel=delta.magnitude;
+            PlanarSpeed=travel/dt;
+            float response=1-Mathf.Exp(-24*dt);
+            float desired=Dashing?0:Mathf.Clamp01(PlanarSpeed/.8f);
+            strideWeight=Mathf.Lerp(strideWeight,desired,response);
+            // One complete gait cycle per traveled stride, not one per fixed time interval.
+            float strideLength=heavy?2.35f:hero==HeroId.Veyr?2.5f:2.1f;
+            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
+            float step=Mathf.Sin(phase)*(heavy?25:30)*strideWeight;
+            PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
+            PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
+            PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
+            Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.45f);Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.45f);
+            float acceleration=Mathf.Clamp((PlanarSpeed-previousSpeed)/dt,-30,30);previousSpeed=PlanarSpeed;
+            lean=Mathf.Lerp(lean,Mathf.Clamp(acceleration*.1f,-2.5f,3)+Mathf.Min(PlanarSpeed,8)*.35f,1-Mathf.Exp(-16*dt));
+            float t=Time.time;
+            float idle=Mathf.Sin(t*1.8f)*.012f*(1-strideWeight);
+            float bob=(1-Mathf.Cos(phase*2))*.018f*strideWeight*(heavy?.7f:1);
+            if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
+            root.localPosition=basePosition+Vector3.up*(idle+bob);
+            float kick=Time.time<attackUntil?Mathf.Sin((1-(attackUntil-Time.time)/attackDuration)*Mathf.PI)*attackWeight:0;
+            float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
+            root.localRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,0,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
+            if(orbitL!=null)orbitL.localPosition=new Vector3(-.72f,.46f+Mathf.Sin(t*1.4f)*.08f,.03f);
+            if(orbitR!=null)orbitR.localPosition=new Vector3(.72f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);
+            if(wingL!=null)wingL.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2.1f)*4);
+            if(wingR!=null)wingR.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2.1f)*4);
+            if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Min(PlanarSpeed,8)*1.6f,0,8+Mathf.Sin(t*2)*2);
+            if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
+        }
+    }
 }
-}
-
