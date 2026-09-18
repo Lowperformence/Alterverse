@@ -26,13 +26,28 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
+            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
             {
                 float x=-38.5f+i*7f;
                 Block("DF_OuterBorder",new Vector3(x,-.25f,side*37f),new Vector3(6.5f,.6f,1.7f),stone);
             }
         }
 
+
+
+        private void BuildBaseApproaches(Color zero,Color lumen)
+        {
+            foreach(int side in new[]{-1,1})
+            {
+                Color faction=side<0?zero:lumen,energy=side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+                for(int i=0;i<3;i++)
+                {
+                    float z=(i-1)*4.2f;
+                    Block("DF_BaseStep",new Vector3(side*32.2f,.08f,z),new Vector3(5.2f-i*.55f,.16f,3.2f),Color.Lerp(faction,StylizedArtDirection.ArenaStone,.28f));
+                    Block("DF_BaseInlay",new Vector3(side*(30.1f-i*.35f),.19f,z),new Vector3(.12f,.05f,1.55f),energy);
+                }
+            }
+        }
 
         private void BuildLaneLandmarks(Color zero,Color lumen)
         {
