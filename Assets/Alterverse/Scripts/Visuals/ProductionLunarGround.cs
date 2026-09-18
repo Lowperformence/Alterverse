@@ -32,6 +32,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildCraters();
         BuildFractures();
         BuildRocks();
+        BuildRegolithVariation();
         BuildEdgeCliffs();
     }
 
@@ -155,6 +156,29 @@ public sealed class ProductionLunarGround : MonoBehaviour
             Strip("DF_LunarFracture",a,b,.055f,.076f,darkRegolith);
             Vector2 mid=Vector2.Lerp(a,b,.55f);
             Strip("DF_LunarFractureBranch",mid,mid+new Vector2(-side*.85f,i%2==0?-.72f:.72f),.035f,.077f,darkRegolith);
+        }
+    }
+
+    void BuildRegolithVariation()
+    {
+        Vector3[] centers={new(-30,.047f,11),new(-24,.047f,-10),new(-15,.047f,3),new(-8,.047f,-27),new(29,.047f,-11),new(24,.047f,10),new(15,.047f,-3),new(8,.047f,27),new(-3,.047f,22),new(4,.047f,-22)};
+        for(int i=0;i<centers.Length;i++)
+        {
+            float r=1.6f+(i%4)*.55f;
+            Mesh patch=IrregularDisc(centers[i],r,18,30+i);meshes.Add(patch);
+            MeshObject("DF_RegolithTonePatch",patch,i%3==0?darkRegolith:rimMat,Vector3.zero).GetComponent<MeshRenderer>().receiveShadows=false;
+        }
+        // Small geological fragments are grouped away from the clear gameplay corridors.
+        for(int group=0;group<8;group++)
+        {
+            float side=group<4?-1f:1f;float z=-27f+(group%4)*18f;Vector3 c=new(side*(13f+(group%2)*9f),.065f,z);
+            for(int i=0;i<3;i++)
+            {
+                Mesh shape=i==0?rockMesh:i==1?rockMeshB:rockMeshC;
+                if(shape==null)continue;
+                GameObject g=MeshObject("DF_RegolithFragment",shape,darkRegolith,c+new Vector3((i-1)*.52f,0,(i%2==0?.38f:-.3f)));
+                float sc=.18f+i*.07f;g.transform.localScale=new Vector3(sc,.12f+i*.04f,sc*.8f);g.transform.localRotation=Quaternion.Euler(0,group*39+i*61,0);
+            }
         }
     }
 
