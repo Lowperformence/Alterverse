@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             BuildDistantMoons();
             BuildPlanetRings();
             BuildArenaUnderside();
+            BuildUndersideTapers();
             BuildEdgeFragments();
             BuildUndersideFissures();
             BuildRimDropShadows();
@@ -179,6 +180,19 @@ namespace Alterverse.Visuals
                 g.transform.localScale=new Vector3(scale*1.4f,scale*.7f,scale);g.transform.rotation=Quaternion.Euler(i*17,31+i*49,12+i*9);
                 Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
+
+
+        private void BuildUndersideTapers()
+        {
+            Material m=Mat(new Color(.018f,.022f,.034f,1),false);if(m==null)return;
+            Vector3[] sites={new(-32,-5.8f,-20),new(-30,-6.3f,22),new(-9,-7f,30),new(10,-6.8f,-30),new(31,-6.1f,21),new(33,-5.7f,-20)};
+            for(int i=0;i<sites.Length;i++)
+            {
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_UndersideTaper";g.transform.SetParent(transform,false);g.transform.position=sites[i];
+                g.transform.localScale=new Vector3(3.8f+(i%2),5f+(i%3)*1.2f,3.5f+(i%2)*.8f);g.transform.rotation=Quaternion.Euler(16+i*5,i*41,14-i*3);g.isStatic=true;
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
         }
 
