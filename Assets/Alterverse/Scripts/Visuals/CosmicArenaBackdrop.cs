@@ -13,6 +13,7 @@ namespace Alterverse.Visuals
         private Transform stars;
         private Material starMaterial;
         private Transform distantBodies;
+        private float nextBackdropUpdate;
 
         private void Start()
         {
@@ -85,8 +86,9 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
-            if(stars!=null)stars.Rotate(0,.035f*Time.deltaTime,0,Space.World);
-            if(distantBodies!=null)distantBodies.Rotate(0,.006f*Time.deltaTime,0,Space.World);
+            if(Time.time<nextBackdropUpdate)return;float dt=Mathf.Max(.05f,Time.time-(nextBackdropUpdate-.1f));nextBackdropUpdate=Time.time+.1f;
+            if(stars!=null)stars.Rotate(0,.035f*dt,0,Space.World);
+            if(distantBodies!=null)distantBodies.Rotate(0,.006f*dt,0,Space.World);
             if(starMaterial!=null)
             {
                 float pulse=.82f+Mathf.Sin(Time.time*.23f)*.05f;
