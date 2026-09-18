@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
+            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
             {
                 float x=-38.5f+i*7f;
                 Block("DF_OuterBorder",new Vector3(x,-.25f,side*37f),new Vector3(6.5f,.6f,1.7f),stone);
@@ -34,6 +34,28 @@ namespace Alterverse.Visuals
         }
 
 
+
+
+        private void BuildHorizonSilhouettes(Color zero,Color lumen)
+        {
+            foreach(int side in new[]{-1,1})
+            {
+                Color faction=side<0?zero:lumen;
+                for(int i=0;i<5;i++)
+                {
+                    float z=-29f+i*14.5f;float h=2.8f+(i%3)*1.05f;
+                    if(side<0)
+                    {
+                        Block("DF_ZeroHorizonSpire",new Vector3(-47.2f,h*.5f-.25f,z),new Vector3(.7f,h,.9f),Color.Lerp(faction,StylizedArtDirection.ZeroEnergy,.22f),new Vector3(0,i*19,-12+(i%2)*21));
+                    }
+                    else
+                    {
+                        Block("DF_LumenHorizonMonolith",new Vector3(47.2f,h*.5f-.25f,z),new Vector3(.8f,h,.8f),Color.Lerp(faction,StylizedArtDirection.LumenEnergy,.18f));
+                        Block("DF_LumenHorizonCap",new Vector3(47.2f,h-.18f,z),new Vector3(1.15f,.12f,1.15f),StylizedArtDirection.LumenEnergy,new Vector3(0,45,0));
+                    }
+                }
+            }
+        }
 
         private void BuildBaseApproaches(Color zero,Color lumen)
         {
