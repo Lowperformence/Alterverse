@@ -32,7 +32,11 @@ namespace Alterverse.AI
             // Leave the healing area through the assigned lane before advancing.
             float direction = team == 0 ? 1f : -1f;
             if (transform.position.x * direction < -23f && Mathf.Abs(transform.position.z - laneZ) > 1f)
-                return new Vector3(-28f * direction, transform.position.y, laneZ);
+            {
+                // Route outward before turning into lane: this keeps spawn traffic clear of the core at x +/-36.
+                float laneEntryX = team == 0 ? -29.5f : 29.5f;
+                return new Vector3(laneEntryX, transform.position.y, laneZ);
+            }
 
             if (laneObjective == null || laneObjective.IsDead || Time.time >= nextObjectiveScan)
             {
