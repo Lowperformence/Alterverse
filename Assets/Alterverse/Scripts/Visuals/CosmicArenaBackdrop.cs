@@ -236,9 +236,9 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
-            if(Time.time<nextBackdropUpdate)return;float dt=Mathf.Max(.05f,Time.time-(nextBackdropUpdate-.1f));nextBackdropUpdate=Time.time+.1f;
+            if(Time.time<nextBackdropUpdate)return;nextBackdropUpdate=Time.time+.1f;
             if(stars!=null){float drift=Mathf.Sin(Time.time*.018f)*.35f;stars.rotation=starsStartRotation*Quaternion.Euler(0,drift,0);}
-            if(distantBodies!=null)distantBodies.Rotate(0,.006f*dt,0,Space.World);
+            if(distantBodies!=null)distantBodies.rotation=Quaternion.Euler(0,Mathf.Sin(Time.time*.006f)*.12f,0);
             if(starMaterial!=null)
             {
                 float pulse=.82f+Mathf.Sin(Time.time*.23f)*.05f;
