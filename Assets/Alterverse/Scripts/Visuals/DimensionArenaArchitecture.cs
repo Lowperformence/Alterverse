@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);BuildCollapsedStructures(zero,lumen);
+            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);BuildCollapsedStructures(zero,lumen);BuildBoundaryBreaks();
             foreach(int side in new[]{-1,1})
             for(int i=0;i<12;i++)
             {
@@ -38,6 +38,18 @@ namespace Alterverse.Visuals
 
 
 
+
+
+        private void BuildBoundaryBreaks()
+        {
+            foreach(int side in new[]{-1,1})
+            foreach(float x in new[]{-29f,-8f,12f,31f})
+            {
+                float z=side*36.4f;
+                Block("DF_BrokenBoundarySlab",new Vector3(x,.18f,z-side*.45f),new Vector3(2.3f,.38f,.85f),StylizedArtDirection.ArenaStone,new Vector3(side*7,x*.9f,side*(x%2==0?8:-8)));
+                Block("DF_BoundaryRubble",new Vector3(x+1.15f,.08f,z-side*1.05f),new Vector3(.65f,.18f,.55f),Color.Lerp(StylizedArtDirection.ArenaStone,StylizedArtDirection.Ink,.18f),new Vector3(5,-x,11));
+            }
+        }
 
         private void BuildCollapsedStructures(Color zero,Color lumen)
         {
