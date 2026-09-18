@@ -56,7 +56,7 @@ namespace Alterverse.Combat
             flashing=true;flashUntil=Time.time+.065f;
             CombatImpactPool.Emit(point,tint,(damage+absorbed)/Mathf.Max(1,health.Max*.2f));
             bool heavy=damage>=Mathf.Max(45f,health.Max*.16f);AudioMixState.MarkCombat();
-            if(AudioCuePolicy.Allow(heavy?"heavy-hit":"hit",heavy?AudioCuePriority.Critical:AudioCuePriority.Combat))
+            if((source==null||source.GetComponentInParent<HeroIdentity>()==null)&&AudioCuePolicy.Allow(heavy?"heavy-hit":"hit",heavy?AudioCuePriority.Critical:AudioCuePriority.Combat))
                 DimensionAudio.Play(heavy?DimensionSound.HitHeavy:DimensionSound.HitLight,shieldOnly?.28f:heavy?.72f:.48f,Random.Range(.96f,1.045f));
         }
         private static Color SourceColor(GameObject source)

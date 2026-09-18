@@ -8,7 +8,7 @@ namespace Alterverse.Audio
     {
         static DimensionAudio instance;
         const int VoiceCount=8;
-        AudioClip[] clips;float[] nextCue;int variation;
+        AudioClip[] clips,heroClips;float[] nextCue;int variation;
         readonly int[] importance=new int[VoiceCount],activeCue=new int[VoiceCount];
         readonly AudioSource[] voices=new AudioSource[VoiceCount];readonly float[] gains=new float[VoiceCount];
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -16,7 +16,7 @@ namespace Alterverse.Audio
         void Awake()
         {
             if(instance!=null&&instance!=this){Destroy(gameObject);return;}instance=this;
-            int count=System.Enum.GetValues(typeof(DimensionSound)).Length;clips=new AudioClip[count];nextCue=new float[count];int missing=0;
+            int count=System.Enum.GetValues(typeof(DimensionSound)).Length;clips=new AudioClip[count];nextCue=new float[count+HeroCombatAudio.CueCount];heroClips=HeroCombatAudio.Load();int missing=0;
             for(int i=0;i<count;i++){clips[i]=Resources.Load<AudioClip>("Audio/SFX/"+(DimensionSound)i);if(clips[i]==null)missing++;}
             for(int i=0;i<VoiceCount;i++){voices[i]=gameObject.AddComponent<AudioSource>();voices[i].playOnAwake=false;voices[i].spatialBlend=0;}
             if(missing>0)Debug.LogWarning("DIMENSIONS FRONT: FINAL SFX ASSETS REQUIRED — "+missing+" missing cues. Synthetic prototype tones are disabled.");
@@ -34,8 +34,17 @@ namespace Alterverse.Audio
         public static void Play(DimensionSound sound,float volume=1,float pitch=1)
         {
             if(instance==null)return;int cue=(int)sound;if(cue<0||cue>=instance.clips.Length||instance.clips[cue]==null)return;
+            PlayCue(instance.clips[cue],cue,volume*Gain(sound),pitch,Priority(sound),Cooldown(sound));
+        }
+        public static void PlayHero(int cue,float gain,int priority,float cooldown)
+        {
+            if(instance==null||cue<0||cue>=instance.heroClips.Length||instance.heroClips[cue]==null)return;
+            PlayCue(instance.heroClips[cue],instance.clips.Length+cue,gain,1,priority,cooldown);
+        }
+        static void PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown)
+        {
             if(Time.unscaledTime<instance.nextCue[cue])return;
-            int priority=Priority(sound),budget=Mathf.Clamp(AudioStressBudget.RecommendedVoices,1,VoiceCount),slot=-1,overlap=0;
+            int budget=Mathf.Clamp(AudioStressBudget.RecommendedVoices,1,VoiceCount),slot=-1,overlap=0;
             for(int i=0;i<budget;i++)
             {
                 if(!instance.voices[i].isPlaying){if(slot<0)slot=i;continue;}
@@ -48,13 +57,13 @@ namespace Alterverse.Audio
                     if(instance.importance[i]<=priority&&(slot<0||instance.importance[i]<instance.importance[slot]||
                        instance.importance[i]==instance.importance[slot]&&instance.voices[i].time>instance.voices[slot].time))slot=i;
             if(slot<0)return;
-            instance.nextCue[cue]=Time.unscaledTime+Cooldown(sound);
-            var voice=instance.voices[slot];voice.Stop();voice.clip=instance.clips[cue];
+            instance.nextCue[cue]=Time.unscaledTime+cooldown;
+            var voice=instance.voices[slot];voice.Stop();voice.clip=clip;
             // Deterministic presentation variation does not consume gameplay Random state.
             float variation=priority==0?Mathf.Sin(++instance.variation*2.39996f):0;
             voice.pitch=Mathf.Clamp(pitch*(1+variation*.018f),.8f,1.2f);
             instance.importance[slot]=priority;instance.activeCue[slot]=cue;voice.priority=priority==2?64:priority==1?112:160;
-            instance.gains[slot]=Mathf.Clamp01(volume)*Gain(sound)*(1+variation*.035f);
+            instance.gains[slot]=Mathf.Clamp01(volume)*(1+variation*.035f);
             voice.volume=instance.gains[slot]*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;voice.Play();
         }
         static int Priority(DimensionSound sound)=>sound switch

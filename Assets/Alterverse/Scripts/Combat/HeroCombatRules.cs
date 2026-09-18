@@ -30,12 +30,14 @@ namespace Alterverse.Combat
         { return baseline * (actor.GetComponent<PlanetBuffReceiver>()?.CooldownMultiplier ?? 1f); }
         public static void BasicHit(GameObject actor, Health target, float amount)
         {
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Attack,actor.transform.position,.35f);
+            Alterverse.Audio.HeroCombatAudio.Play(actor,0,false,actor.transform.position);
+            float before=target.Current+target.Shield;
             float dealt = Damage(actor, target, amount);
+            if(target.Current+target.Shield<before)Alterverse.Audio.HeroCombatAudio.Play(actor,0,true,target.transform.position);
             HeroIdentity identity = actor.GetComponent<HeroIdentity>();
             Health hp = actor.GetComponent<Health>();
             if (identity != null && identity.Hero == HeroId.Rook && hp != null && hp.Normalized < .6f && target.GetComponent<HeroIdentity>() != null)
-                hp.Heal(dealt * .12f);
+                hp.Heal(dealt * .12f,false);
             Alterverse.Visuals.HeroSkillVfx.Basic(actor, target.transform.position);
         }
     }

@@ -73,3 +73,9 @@ The 12 cues below were rebuilt from the Kenney CC0 source files named in the mai
 | Shield | 0.28 | 2400 | -25.9 |
 
 Rights: Kenney, https://kenney.nl/assets/sci-fi-sounds, CC0 1.0, commercial adaptations permitted, attribution not required, accessed 2026-09-18. Thruster source is covered by the retained archive license. No subjective listening or Android playback claim is made.
+
+## Individual hero audio bank (53 assets)
+
+Creator of source recordings: Kenney. Source: https://kenney.nl/assets/sci-fi-sounds. License: CC0 1.0 Universal; commercial use and derivatives permitted; attribution not required. Source archive accessed 2026-09-18; original license retained in AudioLicenses/Kenney-SciFi-CC0.txt.
+
+Every new asset's name, hero/action/phase usage, exact source filenames and source SHA256 hashes are enumerated in **Docs/HeroAudioAssets.json**, incorporated as the per-asset provenance manifest. All listed sources have the same creator, URL, license, commercial-use and attribution status above. Rendering recipes are in Tools/build_hero_audio.py. These new recordings replace generic routing for hero attacks; they do not replace the music. Production listening approval is pending; see Hero-Audio-Matrix.md.

@@ -1,4 +1,5 @@
 using System.Collections;
+using Alterverse.Audio;
 using Alterverse.AI;
 using Alterverse.Combat;
 using Alterverse.Visuals;
@@ -58,19 +59,21 @@ namespace Alterverse.Characters
                 end.x = Mathf.Clamp(end.x, -40, 40); end.z = Mathf.Clamp(end.z, -33, 33);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
                 if(!locomotion.BeginDash(end))return false;
+                HeroCombatAudio.Cast(gameObject,slot);
                 mover?.ResetSteering(); HeroSkillVfx.Dash(gameObject, from, locomotion.DashDestination);
             }
             else if (hero == HeroId.Mira && (slot == 1 || slot == 2))
             {
                 Health ally = WoundedAlly(spec.Range, slot == 2); if (ally == null) return false;
-                if (slot == 1) ally.Heal(spec.Power); else ally.AddShield(spec.Power, 4f);
+                HeroCombatAudio.Cast(gameObject,slot);
+                if (slot == 1) ally.Heal(spec.Power,false); else ally.AddShield(spec.Power, 4f,false);
                 HeroSkillVfx.SupportLink(gameObject, ally);
                 HeroSkillVfx.Support(gameObject,ally,slot==2,4f);
             }
             else if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
             {
-                if (hero == HeroId.Kaelon) { if (self.Shield > 5f) return false; self.AddShield(spec.Power, 4f); }
-                else { if (self.Normalized >= .95f) return false; self.Heal(spec.Power); self.AddShield(20, 3); }
+                if (hero == HeroId.Kaelon) { if (self.Shield > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
+                else { if (self.Normalized >= .95f) return false; HeroCombatAudio.Cast(gameObject,slot);self.Heal(spec.Power,false); self.AddShield(20, 3,false); }
                 HeroSkillVfx.Support(gameObject,self,true,hero==HeroId.Kaelon?4f:3f);
                 if(hero==HeroId.Rook)HeroSkillVfx.Support(gameObject,self,false,.45f);
             }
@@ -83,6 +86,7 @@ namespace Alterverse.Characters
                     center = target.transform.position;
                 }
                 if (hero == HeroId.Mira && WoundedAlly(spec.Radius) == null) return false;
+                HeroCombatAudio.Cast(gameObject,slot);
                 HeroSkillVfx.Area(gameObject, center, spec.Radius, spec.Windup, true, hero==HeroId.Mira);
                 if(spec.Range>0)HeroSkillVfx.Spell(gameObject,center,slot);
                 StartCoroutine(ResolveArea(slot, center, life));
@@ -90,13 +94,13 @@ namespace Alterverse.Characters
             else
             {
                 if (!ValidTarget(target, spec.Range)) return false;
+                HeroCombatAudio.Cast(gameObject,slot);
                 if (hero == HeroId.Nyra && slot == 3) StartCoroutine(Volley(target, life));
                 else if (spec.Windup > 0) StartCoroutine(DelayedSingle(slot, target, life));
                 else Hit(slot, target);
             }
             HeroSkillVfx.Cast(gameObject,slot);
             if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.AbilityCast,transform.position,slot==3?.65f:.4f);
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAttack(slot == 3);
             return true;
@@ -119,7 +123,7 @@ namespace Alterverse.Characters
                 if(target.Current+target.Shield<before)
                 {
                     HeroSkillVfx.Impact(gameObject,target,3);
-                    Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.AbilityImpact,target.transform.position,.28f);
+                    HeroCombatAudio.Impact(gameObject,3,target.transform.position);
                 }
                 yield return new WaitForSeconds(.18f);
             }
@@ -139,14 +143,15 @@ namespace Alterverse.Characters
                 TeamMember member = h.GetComponent<TeamMember>();
                 bool ally = own != null && member != null && member.Team == own.Team && h.GetComponent<HeroIdentity>() != null;
                 if (identity.Hero == HeroId.Mira)
-                { if (ally) { h.Heal(spec.Power); h.AddShield(25, 3); HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3); } }
+                { if (ally) { h.Heal(spec.Power,false); h.AddShield(25, 3,false); HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3); } }
                 else
                 {
-                    if (identity.Hero == HeroId.Kaelon && slot == 3 && ally) { h.AddShield(60, 3);HeroSkillVfx.Support(gameObject,h,true,3); }
+                    if (identity.Hero == HeroId.Kaelon && slot == 3 && ally) { h.AddShield(60, 3,false);HeroSkillVfx.Support(gameObject,h,true,3); }
                     if (HeroCombatRules.Enemy(gameObject, h)) Hit(slot, h, false);
                 }
             }
-            if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4);HeroSkillVfx.Support(gameObject,self,true,4); }
+            if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
+            HeroCombatAudio.Impact(gameObject,slot,center);
             HeroSkillVfx.Area(gameObject, center, spec.Radius, .3f, false);
         }
         private void Hit(int slot, Health target, bool visual = true)
@@ -160,7 +165,7 @@ namespace Alterverse.Characters
             if(damaged)
             {
                 HeroSkillVfx.Impact(gameObject,target,slot);
-                Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.AbilityImpact,target.transform.position,.3f);
+                if(visual)HeroCombatAudio.Impact(gameObject,slot,target.transform.position);
             }
             switch (identity.Hero)
             {

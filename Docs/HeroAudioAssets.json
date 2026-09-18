@@ -1,0 +1,1114 @@
+[
+  {
+    "hero": "Veyr",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast.ogg",
+    "character": "cut",
+    "duration": 0.16,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_000.ogg",
+        "sha256": "956c6612a256aa1a67a2327fffe2454f6b1d82e4c1c2be28fd66916335d5b1d6"
+      },
+      {
+        "file": "thrusterFire_000.ogg",
+        "sha256": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact.ogg",
+    "character": "cut",
+    "duration": 0.12,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_000.ogg",
+        "sha256": "956c6612a256aa1a67a2327fffe2454f6b1d82e4c1c2be28fd66916335d5b1d6"
+      },
+      {
+        "file": "impactMetal_002.ogg",
+        "sha256": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+    "character": "double",
+    "duration": 0.27,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      },
+      {
+        "file": "spaceEngineSmall_001.ogg",
+        "sha256": "a87d5d8b2233f7bd803df78927b52c27be251e8d1354c6cc9ea00ce26215e3da"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Impact.ogg",
+    "character": "double",
+    "duration": 0.22,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      },
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+    "character": "tear",
+    "duration": 0.34,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorClose_000.ogg",
+        "sha256": "c9134651ebbd7c016f90393aee495ff8120bd343bb7569b689a7506987ebd6c2"
+      },
+      {
+        "file": "slime_000.ogg",
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "W",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Impact.ogg",
+    "character": "tear",
+    "duration": 0.22,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorClose_000.ogg",
+        "sha256": "c9134651ebbd7c016f90393aee495ff8120bd343bb7569b689a7506987ebd6c2"
+      },
+      {
+        "file": "impactMetal_004.ogg",
+        "sha256": "0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+    "character": "reverse",
+    "duration": 0.29,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "spaceEngineLow_000.ogg",
+        "sha256": "d7deee8d7217ce63aab802ad7365a59cacfd243392dc1bd03b0a9d454aa494df"
+      },
+      {
+        "file": "thrusterFire_002.ogg",
+        "sha256": "5f7731c30196d73777d62eec7cb36a28bf63852e70244057b7625b888e71a3a8"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Cast.ogg",
+    "character": "collapse",
+    "duration": 0.52,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_002.ogg",
+        "sha256": "be2b8ddc62e4a24c91e2e77793de98549ce216faf2f323a917e7d6f34321ff97"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "spaceEngineLarge_000.ogg",
+        "sha256": "885aeda16116b715be5e8fd03d0d77959761015e1ca5823fd3b53d4fd965107f"
+      }
+    ]
+  },
+  {
+    "hero": "Veyr",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Impact.ogg",
+    "character": "collapse",
+    "duration": 0.32,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_002.ogg",
+        "sha256": "be2b8ddc62e4a24c91e2e77793de98549ce216faf2f323a917e7d6f34321ff97"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast.ogg",
+    "character": "weight",
+    "duration": 0.16,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_004.ogg",
+        "sha256": "0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "spaceEngineLow_001.ogg",
+        "sha256": "307dfd8fbfe7e6f2d59dec4de445cf02bd4fff86005803096b8c95e333836a70"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact.ogg",
+    "character": "weight",
+    "duration": 0.12,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "explosionCrunch_000.ogg",
+        "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+      },
+      {
+        "file": "impactMetal_004.ogg",
+        "sha256": "0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+    "character": "slam",
+    "duration": 0.27,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_001.ogg",
+        "sha256": "fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576"
+      },
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Impact.ogg",
+    "character": "slam",
+    "duration": 0.22,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_001.ogg",
+        "sha256": "fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576"
+      },
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/W_Cast.ogg",
+    "character": "swell",
+    "duration": 0.34,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_001.ogg",
+        "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
+      },
+      {
+        "file": "spaceEngineLarge_001.ogg",
+        "sha256": "fcf4aec5587aa29cdb82fd24801ebd37accd57d61eb67683de8c48cb73ba899e"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+    "character": "anchor",
+    "duration": 0.29,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorClose_001.ogg",
+        "sha256": "2153e83ff9880c78f9539aa5dcce80fc9e3b39c6fa0f8dec9325ec6d7ea2c9d5"
+      },
+      {
+        "file": "spaceEngineLow_002.ogg",
+        "sha256": "3b1adf8645a40c35fcad25eee224c82c9836dc443102a9af5586eb22cbedabcc"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "E",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Impact.ogg",
+    "character": "anchor",
+    "duration": 0.22,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorClose_001.ogg",
+        "sha256": "2153e83ff9880c78f9539aa5dcce80fc9e3b39c6fa0f8dec9325ec6d7ea2c9d5"
+      },
+      {
+        "file": "lowFrequency_explosion_000.ogg",
+        "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Cast.ogg",
+    "character": "citadel",
+    "duration": 0.52,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "forceField_003.ogg",
+        "sha256": "15e3fe971ffd3415e5ab641d3a4d043fb31f6712b0956315b524ba29c3889cda"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Kaelon",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Impact.ogg",
+    "character": "citadel",
+    "duration": 0.32,
+    "cutoff_hz": 2200,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_003.ogg",
+        "sha256": "8c7197bb3a1c504690319c3abe0e62a5423ee246dd70caab57963d0b7aa8144f"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast.ogg",
+    "character": "snap",
+    "duration": 0.16,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_002.ogg",
+        "sha256": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c"
+      },
+      {
+        "file": "thrusterFire_001.ogg",
+        "sha256": "924636edc923fe4aab5829b69dc5dc1c5d659dec5739865434dabee752a3bb79"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact.ogg",
+    "character": "snap",
+    "duration": 0.12,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_000.ogg",
+        "sha256": "956c6612a256aa1a67a2327fffe2454f6b1d82e4c1c2be28fd66916335d5b1d6"
+      },
+      {
+        "file": "impactMetal_002.ogg",
+        "sha256": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+    "character": "prism",
+    "duration": 0.27,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      },
+      {
+        "file": "thrusterFire_003.ogg",
+        "sha256": "04f558ca5abf30788e49ed4370289dfd7e38c7f054d2ea35c2a013210374f1e5"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Impact.ogg",
+    "character": "prism",
+    "duration": 0.22,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      },
+      {
+        "file": "thrusterFire_003.ogg",
+        "sha256": "04f558ca5abf30788e49ed4370289dfd7e38c7f054d2ea35c2a013210374f1e5"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/W_Cast.ogg",
+    "character": "shift",
+    "duration": 0.34,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorOpen_000.ogg",
+        "sha256": "5b7e07eccd4413ad9ef3720c2d14f9cc699f4c50111e9b2f48bd60e6f1a164c3"
+      },
+      {
+        "file": "spaceEngineSmall_002.ogg",
+        "sha256": "3d7da67ca2d24ca2abd1e257556d74ff28cf152402968c2035d6f1ea92517f25"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+    "character": "snare",
+    "duration": 0.29,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_000.ogg",
+        "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c"
+      },
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "E",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Impact.ogg",
+    "character": "snare",
+    "duration": 0.22,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      },
+      {
+        "file": "impactMetal_004.ogg",
+        "sha256": "0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast.ogg",
+    "character": "volley",
+    "duration": 0.52,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "spaceEngineSmall_004.ogg",
+        "sha256": "009ef3beadec605ab0e60cd64c73b6ca42590058e8491e72b4bc813ba0e3ab57"
+      },
+      {
+        "file": "thrusterFire_004.ogg",
+        "sha256": "5297afd01c3e91a13d08ec1f673d89997bd17012fa8645a20c94fba240f0f1b2"
+      }
+    ]
+  },
+  {
+    "hero": "Nyra",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact.ogg",
+    "character": "volley",
+    "duration": 0.32,
+    "cutoff_hz": 2900,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_001.ogg",
+        "sha256": "fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576"
+      },
+      {
+        "file": "thrusterFire_004.ogg",
+        "sha256": "5297afd01c3e91a13d08ec1f673d89997bd17012fa8645a20c94fba240f0f1b2"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast.ogg",
+    "character": "pulse",
+    "duration": 0.16,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "slime_001.ogg",
+        "sha256": "822ca475d71e18ef6bba707dbe6bff2bd493d3457b2552f7473d23022c1257ca"
+      },
+      {
+        "file": "spaceEngineSmall_000.ogg",
+        "sha256": "2bec8ff75d81f0c37a6b78bd63beea6c70375e49ee30b0bbe7f38d654d576831"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact.ogg",
+    "character": "pulse",
+    "duration": 0.12,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      },
+      {
+        "file": "slime_001.ogg",
+        "sha256": "822ca475d71e18ef6bba707dbe6bff2bd493d3457b2552f7473d23022c1257ca"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+    "character": "orbit",
+    "duration": 0.27,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_002.ogg",
+        "sha256": "051b0eafc479695af4ca3607d41fd4be41bae7c21f4f9508d004722b09f1bd63"
+      },
+      {
+        "file": "spaceEngineLarge_002.ogg",
+        "sha256": "dc1a5c00a93d24bd5fd1d3cfca70483054e7c025b40d255980309544428084de"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Impact.ogg",
+    "character": "orbit",
+    "duration": 0.22,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_004.ogg",
+        "sha256": "9c3a1c73cadf0de5d5a578b31a264f20b1ac7cb6ec9bbd34a203f58402ea5390"
+      },
+      {
+        "file": "forceField_002.ogg",
+        "sha256": "051b0eafc479695af4ca3607d41fd4be41bae7c21f4f9508d004722b09f1bd63"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+    "character": "invert",
+    "duration": 0.34,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "slime_000.ogg",
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
+      },
+      {
+        "file": "spaceEngineLow_003.ogg",
+        "sha256": "e8f7ce4dbc20b5aeead35b94f1c8927b0baa416edaa5b39f1699703031111488"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "W",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Impact.ogg",
+    "character": "invert",
+    "duration": 0.22,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "impactMetal_002.ogg",
+        "sha256": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c"
+      },
+      {
+        "file": "spaceEngineLow_003.ogg",
+        "sha256": "e8f7ce4dbc20b5aeead35b94f1c8927b0baa416edaa5b39f1699703031111488"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+    "character": "fold",
+    "duration": 0.29,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorOpen_001.ogg",
+        "sha256": "8c204ca94eb722d3af95f29221f4551938ca3c217fda32c14dabe2cf6a9c782b"
+      },
+      {
+        "file": "thrusterFire_000.ogg",
+        "sha256": "0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Cast.ogg",
+    "character": "singularity",
+    "duration": 0.52,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "lowFrequency_explosion_000.ogg",
+        "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "spaceEngineLarge_004.ogg",
+        "sha256": "1021ea050c664d021e4e847d92148fa6781bcf1fe573d94e91b6b18aea1c16ee"
+      }
+    ]
+  },
+  {
+    "hero": "Elyra",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Impact.ogg",
+    "character": "singularity",
+    "duration": 0.32,
+    "cutoff_hz": 2400,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_002.ogg",
+        "sha256": "be2b8ddc62e4a24c91e2e77793de98549ce216faf2f323a917e7d6f34321ff97"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "spaceEngineLarge_004.ogg",
+        "sha256": "1021ea050c664d021e4e847d92148fa6781bcf1fe573d94e91b6b18aea1c16ee"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast.ogg",
+    "character": "seed",
+    "duration": 0.16,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "slime_000.ogg",
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
+      },
+      {
+        "file": "spaceEngineSmall_003.ogg",
+        "sha256": "78f6c1f0a46e3693f56ed6922bd23e5af9a4093aac9b653c1ce9ee7b33081c29"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact.ogg",
+    "character": "seed",
+    "duration": 0.12,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "impactMetal_002.ogg",
+        "sha256": "0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c"
+      },
+      {
+        "file": "slime_000.ogg",
+        "sha256": "480ee82b690136ea9db6966a3c3033356b8274752795c4e37afd6b6defcfacff"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+    "character": "resonate",
+    "duration": 0.27,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_000.ogg",
+        "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c"
+      },
+      {
+        "file": "slime_001.ogg",
+        "sha256": "822ca475d71e18ef6bba707dbe6bff2bd493d3457b2552f7473d23022c1257ca"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Impact.ogg",
+    "character": "resonate",
+    "duration": 0.22,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_000.ogg",
+        "sha256": "c2916f2a062c8ddd1aca2826d134fe90847037db31342726ffb0f9097afe339c"
+      },
+      {
+        "file": "impactMetal_000.ogg",
+        "sha256": "956c6612a256aa1a67a2327fffe2454f6b1d82e4c1c2be28fd66916335d5b1d6"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+    "character": "heal",
+    "duration": 0.34,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_004.ogg",
+        "sha256": "05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09"
+      },
+      {
+        "file": "spaceEngineLow_004.ogg",
+        "sha256": "c489079d9e8d577ceae4b1ea71fbe282ea1bce8b873dfa9166f9c962f7df81d3"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+    "character": "shelter",
+    "duration": 0.29,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "forceField_001.ogg",
+        "sha256": "5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90"
+      },
+      {
+        "file": "spaceEngineSmall_001.ogg",
+        "sha256": "a87d5d8b2233f7bd803df78927b52c27be251e8d1354c6cc9ea00ce26215e3da"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Cast.ogg",
+    "character": "surge",
+    "duration": 0.52,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "forceField_004.ogg",
+        "sha256": "05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09"
+      },
+      {
+        "file": "spaceEngineLarge_003.ogg",
+        "sha256": "c1e6542f9ad0839083072d9b2d4d77208b9ceb60e5f3fd9873047de7f0c57a83"
+      }
+    ]
+  },
+  {
+    "hero": "Mira",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Impact.ogg",
+    "character": "surge",
+    "duration": 0.32,
+    "cutoff_hz": 2600,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "forceField_002.ogg",
+        "sha256": "051b0eafc479695af4ca3607d41fd4be41bae7c21f4f9508d004722b09f1bd63"
+      },
+      {
+        "file": "spaceEngineLarge_003.ogg",
+        "sha256": "c1e6542f9ad0839083072d9b2d4d77208b9ceb60e5f3fd9873047de7f0c57a83"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "Basic",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast.ogg",
+    "character": "crush",
+    "duration": 0.16,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "doorClose_000.ogg",
+        "sha256": "c9134651ebbd7c016f90393aee495ff8120bd343bb7569b689a7506987ebd6c2"
+      },
+      {
+        "file": "impactMetal_001.ogg",
+        "sha256": "4a2b76f20052819c6ace57cc5ba55ec58deffcf74e3ed30694d619c582cc8e8e"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "Basic",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact.ogg",
+    "character": "crush",
+    "duration": 0.12,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -29,
+    "sources": [
+      {
+        "file": "doorClose_000.ogg",
+        "sha256": "c9134651ebbd7c016f90393aee495ff8120bd343bb7569b689a7506987ebd6c2"
+      },
+      {
+        "file": "explosionCrunch_001.ogg",
+        "sha256": "fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "Q",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg",
+    "character": "swing",
+    "duration": 0.27,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_000.ogg",
+        "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "thrusterFire_002.ogg",
+        "sha256": "5f7731c30196d73777d62eec7cb36a28bf63852e70244057b7625b888e71a3a8"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "Q",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Impact.ogg",
+    "character": "swing",
+    "duration": 0.22,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_000.ogg",
+        "sha256": "4b597d658d0ae101f0a030fbeea5fc3a4292ab85f017470a8254a8e7959cbd69"
+      },
+      {
+        "file": "impactMetal_004.ogg",
+        "sha256": "0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "W",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/W_Cast.ogg",
+    "character": "grip",
+    "duration": 0.34,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "doorClose_001.ogg",
+        "sha256": "2153e83ff9880c78f9539aa5dcce80fc9e3b39c6fa0f8dec9325ec6d7ea2c9d5"
+      },
+      {
+        "file": "forceField_003.ogg",
+        "sha256": "15e3fe971ffd3415e5ab641d3a4d043fb31f6712b0956315b524ba29c3889cda"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "E",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+    "character": "storm",
+    "duration": 0.29,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_004.ogg",
+        "sha256": "9c3a1c73cadf0de5d5a578b31a264f20b1ac7cb6ec9bbd34a203f58402ea5390"
+      },
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "E",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Impact.ogg",
+    "character": "storm",
+    "duration": 0.22,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -26,
+    "sources": [
+      {
+        "file": "explosionCrunch_003.ogg",
+        "sha256": "8c7197bb3a1c504690319c3abe0e62a5423ee246dd70caab57963d0b7aa8144f"
+      },
+      {
+        "file": "impactMetal_003.ogg",
+        "sha256": "ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "R",
+    "phase": "Cast",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Cast.ogg",
+    "character": "overdrive",
+    "duration": 0.52,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "lowFrequency_explosion_000.ogg",
+        "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      },
+      {
+        "file": "spaceEngineLarge_001.ogg",
+        "sha256": "fcf4aec5587aa29cdb82fd24801ebd37accd57d61eb67683de8c48cb73ba899e"
+      }
+    ]
+  },
+  {
+    "hero": "Rook",
+    "action": "R",
+    "phase": "Impact",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Impact.ogg",
+    "character": "overdrive",
+    "duration": 0.32,
+    "cutoff_hz": 2100,
+    "rms_target_dbfs": -25,
+    "sources": [
+      {
+        "file": "explosionCrunch_004.ogg",
+        "sha256": "9c3a1c73cadf0de5d5a578b31a264f20b1ac7cb6ec9bbd34a203f58402ea5390"
+      },
+      {
+        "file": "lowFrequency_explosion_000.ogg",
+        "sha256": "3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343"
+      },
+      {
+        "file": "lowFrequency_explosion_001.ogg",
+        "sha256": "cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b"
+      }
+    ]
+  }
+]
