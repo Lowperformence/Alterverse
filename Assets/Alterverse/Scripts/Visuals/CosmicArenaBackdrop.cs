@@ -24,6 +24,7 @@ namespace Alterverse.Visuals
             BuildDistantMoons();
             BuildArenaUnderside();
             BuildEdgeFragments();
+            BuildRimDropShadows();
             ConfigureCameraBackdrop();
         }
 
@@ -90,6 +91,21 @@ namespace Alterverse.Visuals
 
 
 
+
+
+        private void BuildRimDropShadows()
+        {
+            Material m=Mat(new Color(.012f,.015f,.024f,1),true);if(m==null)return;
+            Vector3[] centers={new(-45,-1.25f,0),new(45,-1.25f,0),new(0,-1.25f,38.5f),new(0,-1.25f,-38.5f)};
+            Vector3[] scales={new(8,1,70),new(8,1,70),new(82,1,7),new(82,1,7)};
+            for(int i=0;i<centers.Length;i++)
+            {
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_RimDepth";
+                g.transform.SetParent(transform,false);g.transform.position=centers[i];g.transform.localScale=scales[i];
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
 
         private void ConfigureCameraBackdrop()
         {
