@@ -19,8 +19,8 @@ namespace Alterverse.Visuals
             visualRoot.localScale=new Vector3(1f/scale.x,1f/scale.y,1f/scale.z);
             visualRoot.localPosition=new Vector3(0,(.12f-transform.position.y)/scale.y,0);
             energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Material stone=MaterialFor(new Color(.27f,.30f,.35f));
-            Material armor=MaterialFor(team==0?new Color(.27f,.19f,.35f):new Color(.17f,.31f,.35f));
+            Material stone=MaterialFor(StylizedArtDirection.ArenaStone);
+            Material armor=MaterialFor(team==0?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround);
             Material trim=MaterialFor(Color.Lerp(energy,Color.gray,.55f));
             Material glow=MaterialFor(energy);
             Part("Foot",PrimitiveType.Cylinder,new Vector3(0,.16f,0),new Vector3(2.6f,.16f,2.6f),stone);
