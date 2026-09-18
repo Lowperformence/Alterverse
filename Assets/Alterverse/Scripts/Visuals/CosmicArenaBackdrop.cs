@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             BuildPlanetRings();
             BuildArenaUnderside();
             BuildEdgeFragments();
+            BuildUndersideFissures();
             BuildRimDropShadows();
             BuildEdgeFalloff();
             ConfigureCameraBackdrop();
@@ -132,6 +133,22 @@ namespace Alterverse.Visuals
                 if(camera==null||camera.cameraType!=CameraType.Game)continue;
                 camera.clearFlags=CameraClearFlags.SolidColor;
                 camera.backgroundColor=voidColor;
+            }
+        }
+
+
+        private void BuildUndersideFissures()
+        {
+            Material zero=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,new Color(.02f,.02f,.035f,1),.72f),true);
+            Material lumen=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,new Color(.02f,.025f,.035f,1),.76f),true);
+            if(zero==null||lumen==null)return;
+            for(int side=-1;side<=1;side+=2)
+            for(int i=0;i<4;i++)
+            {
+                float z=-25f+i*16.5f;GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=side<0?"DF_ZeroUndersideFissure":"DF_LumenUndersideFissure";
+                g.transform.SetParent(transform,false);g.transform.position=new Vector3(side*43.2f,-2.15f,z);g.transform.localScale=new Vector3(.08f,.12f,2.2f+(i%2)*.7f);
+                g.transform.rotation=Quaternion.Euler(0,side*(8+i*5),side*(12+i*3));Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=side<0?zero:lumen;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
         }
 
