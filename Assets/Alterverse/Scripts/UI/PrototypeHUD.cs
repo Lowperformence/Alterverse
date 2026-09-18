@@ -1,14 +1,46 @@
 using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Visuals;using UnityEngine;using UnityEngine.InputSystem;using UnityEngine.InputSystem.EnhancedTouch;using ETouch=UnityEngine.InputSystem.EnhancedTouch.Touch;
 namespace Alterverse.UI
 {
+[DefaultExecutionOrder(-200)]
 public sealed class PrototypeHUD:MonoBehaviour
 {
-private Health playerHealth;private BasicAttack basicAttack;private HeroMotor motor;private PlayerHeroAbilities abilities;private HeroIdentity identity;private Health enemyHealth;private GUIStyle titleStyle,textStyle,centerStyle,buttonStyle,abilityStyle,ultStyle;private Texture2D pixel;private int inspectedAbility=-1;private float hintUntil;private string castMessage="";private int armedAbility=-1;private GUIStyle descriptionStyle;private int joystickFinger=-1;private Vector2 joystickCenter,joystickKnob;private const float JoystickRadius=72f;
+private Health playerHealth;private BasicAttack basicAttack;private HeroMotor motor;private PlayerHeroAbilities abilities;private HeroIdentity identity;private Health enemyHealth;private GUIStyle titleStyle,textStyle,centerStyle,buttonStyle,abilityStyle,ultStyle;private Texture2D pixel;private int inspectedAbility=-1;private float hintUntil;private string castMessage="";private int armedAbility=-1;private GUIStyle descriptionStyle;private int joystickFinger=-1;private Vector2 joystickCenter,joystickKnob,joystickOrigin;private const float JoystickRadius=72f;
 public void Initialize(Health player,VeyrAbilities legacyAbilities,Health enemy){playerHealth=player;enemyHealth=enemy;if(player!=null){basicAttack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();}pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();}
 private void OnEnable(){EnhancedTouchSupport.Enable();}private void OnDisable(){armedAbility=-1;if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();if(motor!=null)motor.SetMoveInput(Vector2.zero);joystickFinger=-1;}
 private void EnsureStyles(){titleStyle??=new GUIStyle(GUI.skin.label){fontSize=18,fontStyle=FontStyle.Bold};textStyle??=new GUIStyle(GUI.skin.label){fontSize=13,fontStyle=FontStyle.Bold};centerStyle??=new GUIStyle(GUI.skin.label){fontSize=15,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};buttonStyle??=new GUIStyle(GUI.skin.button){fontSize=14,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};abilityStyle??=new GUIStyle(buttonStyle){fontSize=11,wordWrap=true};ultStyle??=new GUIStyle(buttonStyle){fontSize=11,wordWrap=true};}
 private void Update(){if(Time.timeScale<=0f||playerHealth==null||playerHealth.IsDead){armedAbility=-1;if(motor!=null)motor.SetMoveInput(Vector2.zero);joystickFinger=-1;return;}if(playerHealth!=null){abilities??=playerHealth.GetComponent<PlayerHeroAbilities>();identity??=playerHealth.GetComponent<HeroIdentity>();}HandleTouchJoystick();}
-private float HudScale=>Mathf.Clamp(Screen.height/900f,.72f,1.25f);private void HandleTouchJoystick(){var touches=ETouch.activeTouches;if(motor==null||touches.Count==0){if(joystickFinger>=0&&motor!=null)motor.SetMoveInput(Vector2.zero);joystickFinger=-1;return;}float scale=HudScale;for(int i=0;i<touches.Count;i++){var touch=touches[i];Vector2 screenPos=touch.screenPosition,guiPos=new Vector2(screenPos.x/scale,(Screen.height-screenPos.y)/scale);if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began&&joystickFinger<0&&screenPos.x<Screen.width*.45f){joystickFinger=touch.touchId;joystickCenter=guiPos;joystickKnob=guiPos;}if(touch.touchId!=joystickFinger)continue;if(touch.phase==UnityEngine.InputSystem.TouchPhase.Ended||touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled){joystickFinger=-1;motor.SetMoveInput(Vector2.zero);return;}Vector2 delta=Vector2.ClampMagnitude(guiPos-joystickCenter,JoystickRadius);joystickKnob=joystickCenter+delta;motor.SetMoveInput(new Vector2(delta.x,-delta.y)/JoystickRadius);}}
+private bool inputFocused=true;private Rect inputSafeArea;
+private void ResetJoystick(){joystickFinger=-1;if(motor!=null)motor.SetMoveInput(Vector2.zero);}
+private void OnApplicationFocus(bool focused){inputFocused=focused;if(!focused)ResetJoystick();}
+private void OnApplicationPause(bool paused){inputFocused=!paused;if(paused)ResetJoystick();}
+private float HudScale=>Mathf.Clamp(Screen.height/900f,.72f,1.25f);
+private void HandleTouchJoystick()
+{
+if(motor==null)return;
+Rect safe=Screen.safeArea;
+if(!inputFocused){ResetJoystick();return;}
+if(inputSafeArea!=safe){inputSafeArea=safe;ResetJoystick();}
+var touches=ETouch.activeTouches;bool found=false;float scale=HudScale;
+Rect capture=new Rect(safe.x,safe.y,Mathf.Min(safe.width*.4f,280*scale),Mathf.Min(safe.height*.46f,260*scale));
+for(int i=0;i<touches.Count;i++)
+{
+var touch=touches[i];Vector2 p=touch.screenPosition;
+Vector2 gui=new Vector2(p.x/scale,(Screen.height-p.y)/scale);
+if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began&&joystickFinger<0&&capture.Contains(p))
+{joystickFinger=touch.touchId;joystickOrigin=gui;
+float left=safe.x/scale+JoystickRadius,right=safe.xMax/scale-JoystickRadius;
+float top=(Screen.height-safe.yMax)/scale+JoystickRadius,bottom=(Screen.height-safe.y)/scale-JoystickRadius;
+joystickCenter=new Vector2(Mathf.Clamp(gui.x,left,right),Mathf.Clamp(gui.y,top,bottom));joystickKnob=joystickCenter;}
+if(touch.touchId!=joystickFinger)continue;
+found=true;
+if(touch.phase==UnityEngine.InputSystem.TouchPhase.Ended||touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled){ResetJoystick();return;}
+Vector2 delta=Vector2.ClampMagnitude(gui-joystickOrigin,JoystickRadius);joystickKnob=joystickCenter+delta;
+float magnitude=delta.magnitude/JoystickRadius;
+Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
+motor.SetMoveInput(new Vector2(input.x,-input.y));
+}
+if(!found&&joystickFinger>=0)ResetJoystick();
+}
 private void OnGUI(){if(Time.timeScale<=0f||playerHealth==null)return;EnsureStyles();Matrix4x4 previous=GUI.matrix;try{float scale=HudScale;GUI.matrix=Matrix4x4.Scale(new Vector3(scale,scale,1));float sw=Screen.width/scale,sh=Screen.height/scale;DrawRangePreview();DrawPlayerPanel();DrawCombatButtons(sw,sh);DrawJoystick(sh);DrawAbilityHint(sw,sh);}finally{GUI.matrix=previous;}}
 private void DrawPlayerPanel(){if(playerHealth==null)return;Rect panel=new Rect(18,18,285,76);Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;DimensionUiMotif.DrawSplitPanel(panel,pixel,accent,StylizedArtDirection.LumenEnergy,Time.unscaledTime);DimensionUiMotif.DrawCornerCuts(panel,pixel,accent);GUI.Label(new Rect(32,23,250,25),(identity!=null?identity.DisplayName.ToUpperInvariant():"HERO"),titleStyle);GUI.Label(new Rect(32,48,105,20),$"HP {playerHealth.Current:0} / {playerHealth.Max:0}"+(playerHealth.Shield>0?$" +{playerHealth.Shield:0}":""),textStyle);DrawBar(new Rect(136,51,148,12),playerHealth.Normalized,accent);}
 private void DrawCombatButtons(float sw,float sh){float attackSize=96,attackX=sw-126,attackY=sh-130;Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;DrawActionFrame(new Rect(attackX-6,attackY-6,attackSize+12,attackSize+12),accent,.48f);if(GUI.Button(new Rect(attackX,attackY,attackSize,attackSize),"ATTACK",buttonStyle)&&basicAttack!=null)basicAttack.TryAttack();DrawAbilityButton(new Rect(sw-224,sh-111,76,76),AbilityEffect(0)+"\n[Q]",abilities?.QRemaining??0,()=>ArmAbility(0),false);DrawAbilityButton(new Rect(sw-199,sh-202,72,72),AbilityEffect(1)+"\n[E]",abilities?.WRemaining??0,()=>ArmAbility(1),false);DrawAbilityButton(new Rect(sw-113,sh-224,72,72),AbilityEffect(2)+"\n[R]",abilities?.ERemaining??0,()=>ArmAbility(2),false);DrawAbilityButton(new Rect(sw-300,sh-194,78,78),AbilityEffect(3)+"\n[F]",abilities?.UltRemaining??0,()=>ArmAbility(3),true);}

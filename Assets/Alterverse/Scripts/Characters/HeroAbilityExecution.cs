@@ -9,6 +9,7 @@ namespace Alterverse.Characters
     public sealed class HeroAbilityExecution : MonoBehaviour
     {
         private Health self;
+        private HeroLocomotion locomotion;
         private HeroIdentity identity;
         private HeroAbilityKit kit;
         private readonly float[] ready = new float[4];
@@ -16,11 +17,12 @@ namespace Alterverse.Characters
         private int life;
         private void Awake()
         {
+            locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             self = GetComponent<Health>(); identity = GetComponent<HeroIdentity>(); kit = GetComponent<HeroAbilityKit>();
             ready[3] = Time.time + HeroAbilityKit.UltimateInitialLock;
             self.Died += CancelPending;
         }
-        private void CancelPending() { life++; StopAllCoroutines(); }
+        private void CancelPending() { life++; StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
@@ -55,10 +57,8 @@ namespace Alterverse.Characters
                     end = from + movement.normalized * Mathf.Min(spec.Range, Mathf.Max(0, HeroCombatRules.Distance(from, target.transform.position) - 1.5f));
                 end.x = Mathf.Clamp(end.x, -40, 40); end.z = Mathf.Clamp(end.z, -33, 33);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
-                CharacterController cc = GetComponent<CharacterController>();
-                if (cc != null && cc.enabled) { cc.enabled = false; transform.position = end; cc.enabled = true; }
-                else transform.position = end;
-                mover?.ResetMotion(); HeroSkillVfx.Dash(gameObject, from, end);
+                if(!locomotion.BeginDash(end))return false;
+                mover?.ResetSteering(); HeroSkillVfx.Dash(gameObject, from, locomotion.DashDestination);
             }
             else if (hero == HeroId.Mira && (slot == 1 || slot == 2))
             {
@@ -92,6 +92,7 @@ namespace Alterverse.Characters
                 else if (spec.Windup > 0) StartCoroutine(DelayedSingle(slot, target, life));
                 else Hit(slot, target);
             }
+            if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAttack(slot == 3);
             return true;

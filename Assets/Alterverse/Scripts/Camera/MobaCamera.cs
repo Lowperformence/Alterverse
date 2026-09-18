@@ -12,6 +12,8 @@ namespace Alterverse.CameraSystem
         [SerializeField, Range(30f, 70f)] private float fieldOfView = 46f;
 
         private UnityEngine.Camera gameplayCamera;
+        private Vector3 lastTargetPosition;
+        private Alterverse.Characters.HeroLocomotion locomotion;
 
         private void Awake()
         {
@@ -22,6 +24,7 @@ namespace Alterverse.CameraSystem
         public void SetTarget(Transform newTarget)
         {
             target = newTarget;
+            locomotion=target!=null?target.GetComponent<Alterverse.Characters.HeroLocomotion>():null;
             SnapToTarget();
         }
 
@@ -29,17 +32,22 @@ namespace Alterverse.CameraSystem
         {
             if (target == null) return;
 
+            if((target.position-lastTargetPosition).sqrMagnitude>144f){SnapToTarget();return;}
+            lastTargetPosition=target.position;
             Vector3 desiredPosition = target.position + offset;
-            float blend = 1f - Mathf.Exp(-followSharpness * Time.deltaTime);
+            float blend = 1f - Mathf.Exp(-(locomotion!=null&&locomotion.OwnsMovementFrame?Mathf.Max(24,followSharpness):followSharpness) * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, blend);
-            transform.LookAt(target.position + lookOffset, Vector3.up);
+            // Following position must not steer camera-relative input by changing camera yaw.
+            transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
         }
 
         private void SnapToTarget()
         {
             if (target == null) return;
+            lastTargetPosition=target.position;
             transform.position = target.position + offset;
-            transform.LookAt(target.position + lookOffset, Vector3.up);
+            // Following position must not steer camera-relative input by changing camera yaw.
+            transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
         }
     }
 }

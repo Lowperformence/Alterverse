@@ -6,15 +6,24 @@ using Alterverse.Match;
 
 namespace Alterverse.AI
 {
+    [DefaultExecutionOrder(-25)]
     [RequireComponent(typeof(Health), typeof(MobaBotBrain), typeof(BotLanePlan))]
     [RequireComponent(typeof(BotTargetSensor))]
     public sealed class MobaBotMover : MonoBehaviour
     {
-        [SerializeField] private float fallbackMoveSpeed = 3.35f, laneStopDistance = .35f, chaseLimit = 12f, turnSpeed = 7f;
+        [SerializeField] private float fallbackMoveSpeed = 3.35f, laneStopDistance = .35f, chaseLimit = 12f;
         private const float ArenaHalfWidth = 40f, ArenaHalfHeight = 33f, TowerMargin = .75f;
         private static readonly List<MobaBotMover> ActiveBots = new();
         private static long nextSeparationOrder;
+        private static float nextSharedWorldScan;
+        private static DimensionPlanet[] sharedPlanets=System.Array.Empty<DimensionPlanet>();
+        private static LaneTower[] sharedTowers=System.Array.Empty<LaneTower>();
+        private static PlanetPulseAttack[] sharedPulses=System.Array.Empty<PlanetPulseAttack>();
         private long separationOrder;
+        private HeroLocomotion locomotion;
+        private float blockedTime, detourUntil;
+        private Vector3 detour;
+        private bool arrived;
         private Health health;
         private MobaBotBrain brain;
         private BotLanePlan lanePlan;
@@ -29,29 +38,30 @@ namespace Alterverse.AI
         private Vector3 velocity;
         private int rotationSlot;
         public bool IsAvoidingHazard { get; private set; }
-        private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * HeroCombatStatus.Speed(gameObject);
+        private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
         private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * .78f) : 1.4f;
 
         private void Awake()
         {
             separationOrder = ++nextSeparationOrder;
+            locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             health = GetComponent<Health>(); brain = GetComponent<MobaBotBrain>();
             lanePlan = GetComponent<BotLanePlan>(); sensor = GetComponent<BotTargetSensor>();
-            profile = GetComponent<HeroCombatProfile>(); planetBuff = GetComponent<PlanetBuffReceiver>();
+            profile = GetComponent<HeroCombatProfile>(); planetBuff = GetComponent<PlanetBuffReceiver>()??gameObject.AddComponent<PlanetBuffReceiver>();
             // Stable across sessions; string.GetHashCode does not promise this.
             uint hash = 0;
             foreach (char c in gameObject.name) hash = unchecked(hash * 31u + c);
             rotationSlot = (int)(hash % 5u);
         }
         private void OnEnable() { if (!ActiveBots.Contains(this)) ActiveBots.Add(this); }
-        private void OnDisable() { ActiveBots.Remove(this); ResetMotion(); }
+        private void OnDisable() { ActiveBots.Remove(this); if(ActiveBots.Count==0)nextSharedWorldScan=0; ResetMotion(); }
 
         private void Update()
         {
             IsAvoidingHazard = false;
             if (Time.timeScale <= 0f || health == null || health.IsDead || brain == null || lanePlan == null)
             { velocity = Vector3.zero; return; }
-            if (planetBuff == null) planetBuff = GetComponent<PlanetBuffReceiver>();
+            if (!locomotion.CanMove || locomotion.OwnsMovementFrame) { velocity=Vector3.zero; return; }
             ScanWorld();
             Vector3 destination = lanePlan.GetDestination(brain.State);
             float stopDistance = laneStopDistance;
@@ -67,7 +77,7 @@ namespace Alterverse.AI
 
             if (TryGetPulseEscape(out Vector3 escape))
             {
-                IsAvoidingHazard = true;
+                IsAvoidingHazard = true; detourUntil=0;
                 destination = escape; stopDistance = .1f;
             }
             MoveToward(destination, stopDistance);
@@ -77,9 +87,14 @@ namespace Alterverse.AI
         {
             if (Time.time < nextWorldScan) return;
             nextWorldScan = Time.time + .5f;
-            planets = FindObjectsByType<DimensionPlanet>();
-            pulses = FindObjectsByType<Alterverse.Combat.PlanetPulseAttack>();
-            towers = FindObjectsByType<LaneTower>();
+            if(Time.time>=nextSharedWorldScan)
+            {
+                nextSharedWorldScan=Time.time+.5f;
+                sharedPlanets=FindObjectsByType<DimensionPlanet>();
+                sharedPulses=FindObjectsByType<PlanetPulseAttack>();
+                sharedTowers=FindObjectsByType<LaneTower>();
+            }
+            planets=sharedPlanets;pulses=sharedPulses;towers=sharedTowers;
             objective = null;
             float best = float.MaxValue;
             foreach (DimensionPlanet planet in planets)
@@ -116,8 +131,10 @@ namespace Alterverse.AI
 
         public void ResetMotion()
         {
-            velocity = Vector3.zero; objective = null; nextWorldScan = 0; IsAvoidingHazard = false;
+            ResetSteering(); locomotion?.ResetMotion(); objective = null; nextWorldScan = 0; IsAvoidingHazard = false;
         }
+
+        public void ResetSteering(){velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=0;detour=Vector3.zero;}
 
         public bool CanRepositionTo(Vector3 destination)
         {
@@ -203,21 +220,37 @@ namespace Alterverse.AI
         {
             Vector3 delta = destination - transform.position; delta.y = 0;
             Vector3 advance = Vector3.zero;
-            if (delta.sqrMagnitude <= stopDistance * stopDistance) velocity = Vector3.zero;
+            float distance=delta.magnitude;
+            if(distance<=stopDistance)arrived=true;
+            else if(distance>stopDistance+.22f)arrived=false;
+            if (arrived) velocity = Vector3.zero;
             else
             {
                 if (Vector3.Dot(velocity, delta) < 0f) velocity = Vector3.zero;
-                velocity = Vector3.Lerp(velocity, delta.normalized * MoveSpeed, Mathf.Clamp01(6f * Time.deltaTime));
+                velocity = Vector3.Lerp(velocity, delta.normalized * MoveSpeed, 1f-Mathf.Exp(-18f*Time.deltaTime));
                 advance = Vector3.ClampMagnitude(velocity * Time.deltaTime, Mathf.Max(0f, delta.magnitude - stopDistance));
             }
-            Vector3 step = Vector3.ClampMagnitude(advance + SeparationVelocity() * Time.deltaTime, MoveSpeed * Time.deltaTime);
+            if(Time.time<detourUntil&&!arrived)advance=detour*MoveSpeed*Time.deltaTime;
+            Vector3 separation=SeparationVelocity();
+            if(arrived&&separation.sqrMagnitude<.04f)separation=Vector3.zero;
+            Vector3 step = Vector3.ClampMagnitude(advance + separation * Time.deltaTime, MoveSpeed * Time.deltaTime);
             Vector3 next = GuardAgainstTowers(transform.position + step);
             next.x = Mathf.Clamp(next.x, -ArenaHalfWidth, ArenaHalfWidth);
             next.z = Mathf.Clamp(next.z, -ArenaHalfHeight, ArenaHalfHeight);
-            Vector3 movement = next - transform.position;
-            transform.position = next;
-            if (movement.sqrMagnitude > .00001f)
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(movement.normalized), turnSpeed * Time.deltaTime);
+            Vector3 requested=next-transform.position;
+            Vector3 movement=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
+            if(!arrived&&movement.sqrMagnitude>.00001f)locomotion.FaceMovement(movement);
+            bool blocked=!arrived&&requested.sqrMagnitude>.00001f&&movement.sqrMagnitude<requested.sqrMagnitude*.09f;
+            blockedTime=blocked?blockedTime+Time.deltaTime:0;
+            if(blockedTime>.22f&&Time.time>=detourUntil)
+            {
+                // Commit to one side briefly instead of recomputing alternating directions.
+                Vector3 normal=locomotion.LastCollisionNormal;normal.y=0;
+                Vector3 tangent=normal.sqrMagnitude>.01f?Vector3.Cross(Vector3.up,normal).normalized:Vector3.Cross(Vector3.up,delta.normalized);
+                float along=Vector3.Dot(tangent,delta);
+                if(along<-.01f||(Mathf.Abs(along)<=.01f&&rotationSlot%2==0))tangent=-tangent;
+                detour=tangent;detourUntil=Time.time+.55f;blockedTime=0;
+            }
         }
     }
 }
