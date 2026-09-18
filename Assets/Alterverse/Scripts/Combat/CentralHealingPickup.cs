@@ -1,4 +1,4 @@
-using Alterverse.Characters;using UnityEngine;
+using Alterverse.Characters;using Alterverse.Visuals;using UnityEngine;
 namespace Alterverse.Combat
 {
 public sealed class CentralHealingPickup:MonoBehaviour
