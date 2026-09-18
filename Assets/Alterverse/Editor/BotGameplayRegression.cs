@@ -166,7 +166,7 @@ namespace Alterverse.EditorChecks
             Assert(mover.CanRepositionTo(center + Vector3.left * 2f), "A live minion under fire must permit a push.");
 
             GameObject planetObject = Unit("Check_Pulse", 1, center + Vector3.forward * 30f);
-            PlanetPulseAttack pulse = planetObject.AddComponent<PlanetPulseAttack>();
+            Alterverse.Combat.PlanetPulseAttack pulse = planetObject.AddComponent<Alterverse.Combat.PlanetPulseAttack>();
             Set(pulse, "telegraphing", true);
             Assert(pulse.IsTelegraphing, "A live planet must expose its active warning.");
             Set(mover, "pulses", new[] { pulse }); Set(mover, "towers", Array.Empty<LaneTower>());
