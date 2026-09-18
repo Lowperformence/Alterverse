@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
             BuildVoidFloor();
             BuildStars();
             BuildBrightStars();
+            BuildFarStarLayer();
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildPlanetRings();
@@ -70,6 +71,21 @@ namespace Alterverse.Visuals
             r.sortingOrder=-100;
         }
 
+
+
+        private void BuildFarStarLayer()
+        {
+            Material m=Mat(new Color(.38f,.42f,.5f,1));if(m==null)return;
+            const int count=120;var vertices=new Vector3[count];var indices=new int[count];
+            for(int i=0;i<count;i++)
+            {
+                float a=i*1.6180339f+.35f;float radius=110f+(i*43%105);
+                vertices[i]=new Vector3(Mathf.Cos(a)*radius,-2.72f,Mathf.Sin(a)*radius*.7f);indices[i]=i;
+            }
+            Mesh mesh=new Mesh{name="DF_FarStars"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_FarStars");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-101;
+        }
 
         private void BuildBrightStars()
         {
