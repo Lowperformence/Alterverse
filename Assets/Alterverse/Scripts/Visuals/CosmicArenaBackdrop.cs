@@ -27,6 +27,7 @@ namespace Alterverse.Visuals
             BuildArenaUnderside();
             BuildEdgeFragments();
             BuildRimDropShadows();
+            BuildEdgeFalloff();
             ConfigureCameraBackdrop();
         }
 
@@ -94,6 +95,19 @@ namespace Alterverse.Visuals
 
 
 
+
+
+        private void BuildEdgeFalloff()
+        {
+            Material m=Mat(new Color(.018f,.022f,.032f,1),true);if(m==null)return;
+            Vector3[] p={new(-47,-1.65f,0),new(47,-1.65f,0),new(0,-1.65f,40),new(0,-1.65f,-40)};
+            Vector3[] scale={new(5,1.2f,72),new(5,1.2f,72),new(84,1.2f,4),new(84,1.2f,4)};
+            for(int i=0;i<p.Length;i++)
+            {
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_ArenaEdgeFalloff";g.transform.SetParent(transform,false);g.transform.position=p[i];g.transform.localScale=scale[i];
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
 
         private void BuildRimDropShadows()
         {
