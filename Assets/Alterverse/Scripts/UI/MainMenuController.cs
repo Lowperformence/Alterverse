@@ -48,11 +48,11 @@ if(GUI.Button(new Rect(377,239,54,54),"‹",button))ChangeHero(-1);if(GUI.Button
 
 Rect nav=new Rect(42,126,282,430);DimensionUiMotif.DrawSplitPanel(nav,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
 GUI.Label(new Rect(64,145,238,24),"FRONT COMMAND",subtitle);
-if(GUI.Button(new Rect(64,190,238,76),"PLAY",primary))SetPage(Page.Play);
-if(GUI.Button(new Rect(64,278,238,48),"HEROES",button))SetPage(Page.Heroes);
-if(GUI.Button(new Rect(64,336,238,48),"COSMETICS",button))SetPage(Page.Shop);
-if(GUI.Button(new Rect(64,394,238,48),"PROFILE",button))SetPage(Page.Profile);
-if(GUI.Button(new Rect(64,452,238,48),"SETTINGS",button))SetPage(Page.Settings);
+GUI.Label(new Rect(64,178,238,16),"PRIMARY ACTION",small);if(GUI.Button(new Rect(64,200,238,76),"PLAY",primary))SetPage(Page.Play);
+if(GUI.Button(new Rect(64,288,238,48),"HEROES",button))SetPage(Page.Heroes);
+if(GUI.Button(new Rect(64,346,238,48),"COSMETICS",button))SetPage(Page.Shop);
+if(GUI.Button(new Rect(64,404,238,48),"PROFILE",button))SetPage(Page.Profile);
+if(GUI.Button(new Rect(64,462,238,48),"SETTINGS",button))SetPage(Page.Settings);
 
 Rect status=new Rect(42,578,878,96);DimensionUiMotif.DrawSplitPanel(status,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
 GUI.Label(new Rect(66,590,190,22),"DIMENSIONS FRONT",small);GUI.Label(new Rect(66,614,190,30),"AI 5v5 READY",subtitle);
