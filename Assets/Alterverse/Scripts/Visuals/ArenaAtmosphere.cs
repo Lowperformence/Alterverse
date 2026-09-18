@@ -14,12 +14,27 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();
 }
 
 
 
 
+
+
+private void BuildLaneEdgeClusters()
+{
+foreach(float laneZ in new[]{-16f,16f})
+for(int side=-1;side<=1;side+=2)
+{
+bool zero=side<0;Color rock=Color.Lerp(zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.58f);
+for(int group=0;group<2;group++)
+{
+Vector3 center=new Vector3(side*(10f+group*11f),0,laneZ+(group==0?5.2f:-5.2f));
+RockCluster(center,rock,group+(zero?3:8));Bush(center+new Vector3(side*.9f,0,1.1f),zero,group+12);
+}
+}
+}
 
 private void BuildRealityGardens()
 {
