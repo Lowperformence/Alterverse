@@ -14,11 +14,27 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();
 }
 
 
 
+
+
+private void BuildRealityGardens()
+{
+Vector3[] centers={new(-36,0,23),new(-35,0,-23),new(36,0,23),new(35,0,-23)};
+for(int c=0;c<centers.Length;c++)
+{
+bool zero=centers[c].x<0;Color baseColor=zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround;
+for(int i=0;i<6;i++)
+{
+float a=(i*60+c*17)*Mathf.Deg2Rad;float r=.7f+(i%3)*.45f;Vector3 p=centers[c]+new Vector3(Mathf.Cos(a)*r,.2f,Mathf.Sin(a)*r);
+GameObject g=Part(zero?"DF_ZeroThorn":"DF_LumenReed",PrimitiveType.Cube,p,new Vector3(zero?.13f:.11f,.45f+(i%3)*.2f,zero?.18f:.11f),Color.Lerp(baseColor,zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.3f));
+g.transform.rotation=Quaternion.Euler(zero?22:0,i*60,zero?-24:0);
+}
+}
+}
 
 private void CentralImpactScars()
 {
