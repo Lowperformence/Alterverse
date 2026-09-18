@@ -26,7 +26,9 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
+            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);
+            foreach(int side in new[]{-1,1})
+            for(int i=0;i<12;i++)
             {
                 float x=-38.5f+i*7f;
                 Block("DF_OuterBorder",new Vector3(x,-.25f,side*37f),new Vector3(6.5f,.6f,1.7f),stone);
