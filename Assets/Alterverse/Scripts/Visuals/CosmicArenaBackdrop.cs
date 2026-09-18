@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildPlanetRings();
+            BuildPlanetShadows();
             BuildArenaUnderside();
             BuildUndersideTapers();
             BuildEdgeFragments();
@@ -241,6 +242,19 @@ namespace Alterverse.Visuals
             }
         }
 
+
+
+        private void BuildPlanetShadows()
+        {
+            if(distantBodies==null)return;Material m=Mat(new Color(.008f,.01f,.017f,1),true);if(m==null)return;
+            ShadowDisc(new Vector3(-101,-17,61),10.5f,m);ShadowDisc(new Vector3(105,-21,-70),14f,m);ShadowDisc(new Vector3(70,-15,90),4.6f,m);
+        }
+
+        private void ShadowDisc(Vector3 p,float size,Material m)
+        {
+            GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_PlanetNightSide";g.transform.SetParent(distantBodies,false);g.transform.position=p;g.transform.localScale=Vector3.one*size;
+            Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+        }
 
         private void BuildPlanetRings()
         {
