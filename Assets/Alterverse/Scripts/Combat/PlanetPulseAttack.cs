@@ -14,7 +14,7 @@ namespace Alterverse.Combat
         [SerializeField] private float telegraphDuration = 1.15f;
         private DimensionPlanet planet;
         private Health health;
-        private float nextPulse;
+        private float nextPulse,nextTargetScan;private bool targetNearby;private const int HitBufferSize=48;private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
         private float blastAt = -1f;
         private bool telegraphing;
         private GameObject warningDisc;
@@ -40,7 +40,9 @@ namespace Alterverse.Combat
                 return;
             }
 
-            if (Time.time < nextPulse || !HasTargetInRange()) return;
+            if (Time.time < nextPulse) return;
+            if(Time.time>=nextTargetScan){nextTargetScan=Time.time+.25f;targetNearby=HasTargetInRange();}
+            if(!targetNearby)return;
             BeginTelegraph();
         }
 
@@ -90,14 +92,16 @@ namespace Alterverse.Combat
             telegraphing = false;
             if (warningDisc != null) Destroy(warningDisc);
             PrototypeVfx.RadialBurst(transform.position + Vector3.up * .15f, new Color(1f, .48f, .12f), blastRadius);
-            float sqr = blastRadius * blastRadius;
-            foreach (Health hp in FindObjectsByType<Health>())
+            int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
+            for(int i=0;i<hits;i++)
             {
-                if (hp == null || hp == health || hp.IsDead) continue;
-                if (hp.GetComponent<RealityCore>() != null || hp.GetComponent<LaneTower>() != null || hp.GetComponent<DimensionPlanet>() != null) continue;
-                if (hp.GetComponent<TeamMember>() == null && hp.GetComponent<LaneMinion>() == null) continue;
-                Vector3 d = hp.transform.position - transform.position; d.y = 0;
-                if (d.sqrMagnitude <= sqr) hp.TakeDamage(damage, gameObject);
+                Collider c=hitBuffer[i];if(c==null)continue;
+                Health hp=c.GetComponentInParent<Health>();
+                if(hp==null||hp==health||hp.IsDead)continue;
+                bool duplicate=false;for(int j=0;j<i;j++){Collider prior=hitBuffer[j];if(prior!=null&&prior.GetComponentInParent<Health>()==hp){duplicate=true;break;}}
+                if(duplicate||hp.GetComponent<RealityCore>()!=null||hp.GetComponent<LaneTower>()!=null||hp.GetComponent<DimensionPlanet>()!=null)continue;
+                if(hp.GetComponent<TeamMember>()==null&&hp.GetComponent<LaneMinion>()==null)continue;
+                hp.TakeDamage(damage,gameObject);
             }
             nextPulse = Time.time + cooldown;
         }
