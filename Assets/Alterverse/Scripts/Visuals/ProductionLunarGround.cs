@@ -35,6 +35,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildRocks();
         BuildRegolithVariation();
         BuildEdgeCliffs();
+        BuildEdgeFragments();
     }
 
     void BuildSurface()
@@ -239,6 +240,18 @@ public sealed class ProductionLunarGround : MonoBehaviour
             GameObject g=MeshObject("DF_LunarEdgeFormation",shape,i%4==0?darkRegolith:rimMat,sites[i]);
             g.transform.localScale=new Vector3(2.2f+(i%3)*.45f,1.25f+(i%4)*.28f,1.7f+(i%2)*.5f);
             g.transform.localRotation=Quaternion.Euler(0,i*43f,i%2==0?6f:-5f);
+        }
+    }
+
+    void BuildEdgeFragments()
+    {
+        Vector3[] sites={new(-43,.15f,24),new(-43,.12f,-20),new(43,.14f,19),new(43,.12f,-25),new(-25,.12f,36),new(27,.12f,36),new(-30,.12f,-36),new(23,.12f,-36)};
+        for(int i=0;i<sites.Length;i++)
+        {
+            Mesh shape=i%3==0?rockMesh:i%3==1?rockMeshB:rockMeshC;
+            GameObject g=MeshObject("DF_BrokenMoonEdge",shape,darkRegolith,sites[i]);
+            g.transform.localScale=new Vector3(1.3f+(i%3)*.35f,.8f+(i%2)*.3f,1.1f+(i%4)*.22f);
+            g.transform.localRotation=Quaternion.Euler(i%2==0?11f:-8f,i*57f,i%3==0?8f:-5f);
         }
     }
 
