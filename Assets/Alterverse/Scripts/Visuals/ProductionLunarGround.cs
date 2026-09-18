@@ -34,6 +34,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildFractures();
         BuildRealityTransitionScars();
         BuildRocks();
+        BuildSmallLandmarks();
         BuildEdgeCliffs();
         BuildEdgeFragments();
         BuildGeologicalSlab();

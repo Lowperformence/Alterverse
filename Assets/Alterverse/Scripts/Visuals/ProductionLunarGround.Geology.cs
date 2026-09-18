@@ -5,6 +5,49 @@ namespace Alterverse.Visuals
 {
     public sealed partial class ProductionLunarGround
     {
+        void BuildSmallLandmarks()
+        {
+            // Three authored outer sites, away from lanes (z +/-16), objectives and the central collision.
+            // Static, collider-free fragments join the existing material/spatial batches.
+            Vector2 impact=new(-23,27);
+            for(int i=0;i<7;i++)
+            {
+                float angle=(i*47+18)*Mathf.Deg2Rad,radius=2.1f+(i%3)*.42f;
+                Vector2 p=impact+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;
+                LandmarkRock("DF_AncientImpactEjecta",p,new Vector3(.42f+i%3*.19f,.24f+i%2*.12f,.32f+i%3*.13f),i*53,0,i%2==0?rimMat:darkRegolith);
+            }
+            for(int i=0;i<3;i++)
+            {
+                Vector2 a=impact+new Vector2(-1.2f+i*.9f,-.4f+i*.26f);
+                LandmarkSeam(a,a+new Vector2(.8f,.55f),.12f,darkRegolith);
+            }
+            // A fractured stone held just above an old void seam; no particles or moving object loop.
+            Vector2 fracture=new(-18,-26);
+            LandmarkSeam(fracture+new Vector2(-1.1f,-.5f),fracture+new Vector2(.15f,.1f),.14f,darkRegolith);
+            LandmarkSeam(fracture+new Vector2(.15f,.1f),fracture+new Vector2(1.2f,.45f),.09f,darkRegolith);
+            LandmarkSeam(fracture+new Vector2(-.32f,-.05f),fracture+new Vector2(.24f,.12f),.035f,zeroEnergy);
+            for(int i=0;i<3;i++)LandmarkRock("DF_SuspendedVoidFragment",fracture+new Vector2((i-1)*.63f,(i%2)*.3f),
+                new Vector3(.38f,.3f+i*.07f,.3f),31+i*67,.55f+i*.16f,darkRegolith);
+            // Restrained stabilization splinters in neutral lunar stone; only a short vein emits light.
+            Vector2 lumen=new(23,26);
+            for(int i=0;i<3;i++)LandmarkRock("DF_LumenStabilizationRemnant",lumen+new Vector2((i-1)*.46f,i*.18f),
+                new Vector3(.2f,.48f+i*.16f,.23f),i*41,0,rimMat);
+            LandmarkSeam(lumen+new Vector2(-.7f,-.23f),lumen+new Vector2(.35f,-.08f),.035f,lumenEnergy);
+        }
+        void LandmarkRock(string name,Vector2 site,Vector3 scale,float yaw,float lift,Material material)
+        {
+            Vector3 position=LunarSurfaceField.Surface(site.x,site.y);position.y+=lift;
+            GameObject g=MeshObject(name,rockMeshB,material,position);
+            g.transform.localScale=scale;g.transform.localRotation=Quaternion.Euler(9,yaw,-12);
+        }
+        void LandmarkSeam(Vector2 a,Vector2 b,float width,Material material)
+        {
+            Vector2 direction=(b-a).normalized,normal=new Vector2(-direction.y,direction.x)*width*.5f;
+            Vector2[] samples={a-normal,a+normal,b+normal,b-normal};Vector3[] vertices=new Vector3[4];
+            for(int i=0;i<4;i++)vertices[i]=LunarSurfaceField.Surface(samples[i].x,samples[i].y)+Vector3.up*.018f;
+            Mesh mesh=new(){name="DF_SmallLandmarkSeam",vertices=vertices,triangles=new[]{0,1,2,0,2,3}};
+            mesh.RecalculateNormals();mesh.RecalculateBounds();meshes.Add(mesh);MeshObject("DF_SmallLandmarkSeam",mesh,material,Vector3.zero);
+        }
         void BuildGeologicalSlab()
         {
             if(perimeter==null)return;
