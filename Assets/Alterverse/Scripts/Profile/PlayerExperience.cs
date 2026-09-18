@@ -4,7 +4,7 @@ namespace Alterverse.Profile
 public static class PlayerExperience
 {
 private const string XpKey="DF_AccountXP";public const int MaxLevel=1000;
-public static long TotalXp{get{string raw=PlayerPrefs.GetString(XpKey,"0");return long.TryParse(raw,out long value)?System.Math.Max(0L,value):0L;}}
+public static long TotalXp{get{string raw=PlayerPrefs.GetString(XpKey,"0");if(!long.TryParse(raw,out long value))return 0L;return System.Math.Min(XpForLevel(MaxLevel),System.Math.Max(0L,value));}}
 public static int Level=>LevelForXp(TotalXp);
 public static long XpIntoLevel=>TotalXp-XpForLevel(Level);
 public static long XpToNextLevel=>Level>=MaxLevel?0:XpForLevel(Level+1)-TotalXp;
