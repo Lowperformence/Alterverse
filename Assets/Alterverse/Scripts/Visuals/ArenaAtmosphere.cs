@@ -12,9 +12,16 @@ Color zeroRock=Color.Lerp(StylizedArtDirection.ZeroGround,rock,.55f),lumenRock=C
 Vector3[] rocks={new(-31,0,-8),new(-27,0,8),new(-12,0,-28),new(-7,0,28),new(29,0,-7),new(26,0,8),new(13,0,-28),new(8,0,28)};
 for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left?zeroRock:lumenRock,i);}
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
-for(int i=0;i<craters.Length;i++)Crater(craters[i],i);
+for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
 for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();
+}
+
+
+private void ObjectiveScatter(Vector3 center)
+{
+Color c=Color.Lerp(StylizedArtDirection.ObjectiveGold,StylizedArtDirection.ArenaStone,.55f);
+for(int i=0;i<5;i++){float a=(i*72+18)*Mathf.Deg2Rad;float r=3.7f+(i%2)*.45f;Vector3 p=center+new Vector3(Mathf.Cos(a)*r,.12f,Mathf.Sin(a)*r);GameObject g=Part("DF_ObjectiveFragment",PrimitiveType.Cube,p,new Vector3(.28f,.28f+(i%2)*.18f,.42f),c);g.transform.rotation=Quaternion.Euler(15,i*57,22);}
 }
 
 private void BuildDebrisFields()
