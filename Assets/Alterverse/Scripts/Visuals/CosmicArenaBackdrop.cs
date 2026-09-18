@@ -15,6 +15,7 @@ namespace Alterverse.Visuals
         private Transform distantBodies;
         private float nextBackdropUpdate;
         private Quaternion starsStartRotation;
+        private Material planetRingMaterial;
 
         private void Start()
         {
@@ -228,7 +229,7 @@ namespace Alterverse.Visuals
 
         private void BuildPlanetRings()
         {
-            Material m=Mat(new Color(.12f,.13f,.16f,1),true);if(m==null||distantBodies==null)return;
+            Material m=Mat(new Color(.12f,.13f,.16f,1),true);if(m==null||distantBodies==null)return;planetRingMaterial=m;
             Ring(new Vector3(-96,-12,66),18f,13.8f,m,18f);
             Ring(new Vector3(112,-15,-64),25f,19.5f,m,-12f);
         }
@@ -273,6 +274,7 @@ namespace Alterverse.Visuals
                 float pulse=.82f+Mathf.Sin(Time.time*.23f)*.05f;
                 starMaterial.color=new Color(.78f*pulse,.84f*pulse,.94f*pulse,1);
             }
+            if(planetRingMaterial!=null){float shade=.92f+Mathf.Sin(Time.time*.035f)*.025f;planetRingMaterial.color=new Color(.12f*shade,.13f*shade,.16f*shade,1);}
         }
 
         private void OnDestroy()
