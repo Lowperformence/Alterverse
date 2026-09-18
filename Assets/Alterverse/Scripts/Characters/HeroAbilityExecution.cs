@@ -12,6 +12,7 @@ namespace Alterverse.Characters
         private HeroIdentity identity;
         private HeroAbilityKit kit;
         private readonly float[] ready = new float[4];
+        private const int ScanBufferSize=64;private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];
         private int life;
         private void Awake()
         {
@@ -28,12 +29,14 @@ namespace Alterverse.Characters
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
             Health best = null; float lowest = shield ? .98f : .95f;
-            foreach (Health h in FindObjectsByType<Health>())
+            int hits=Physics.OverlapSphereNonAlloc(transform.position,range,scanBuffer);
+            for(int i=0;i<hits;i++)
             {
-                if (h == null || h.IsDead || !h.isActiveAndEnabled || h.GetComponent<HeroIdentity>() == null || h.Normalized >= lowest) continue;
-                TeamMember member = h.GetComponent<TeamMember>();
-                if (member == null || member.Team != team.Team || HeroCombatRules.Distance(transform.position, h.transform.position) > range || (shield && h.Shield > 5f)) continue;
-                lowest = h.Normalized; best = h;
+                Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
+                if(h==null||h.IsDead||!h.isActiveAndEnabled||h.GetComponent<HeroIdentity>()==null||h.Normalized>=lowest)continue;
+                TeamMember member=h.GetComponent<TeamMember>();
+                if(member==null||member.Team!=team.Team||(shield&&h.Shield>5f))continue;
+                lowest=h.Normalized;best=h;
             }
             return best;
         }
