@@ -11,6 +11,7 @@ namespace Alterverse.Visuals
         private readonly List<Material> materials=new List<Material>();
         private readonly List<Mesh> meshes=new List<Mesh>();
         private Transform stars;
+        private Material starMaterial;
 
         private void Start()
         {
@@ -41,7 +42,7 @@ namespace Alterverse.Visuals
         private void BuildStars()
         {
             Material m=Mat(new Color(.78f,.84f,.94f,1));
-            if(m==null)return;
+            if(m==null)return;starMaterial=m;
             stars=new GameObject("DF_StarField").transform;stars.SetParent(transform,false);
             const int count=180;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
@@ -54,6 +55,7 @@ namespace Alterverse.Visuals
             Mesh mesh=new Mesh{name="DF_Stars"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
             GameObject g=new GameObject("DF_Stars");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
             MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            r.sortingOrder=-100;
         }
 
         private void BuildDistantPlanets()
@@ -75,6 +77,11 @@ namespace Alterverse.Visuals
         private void Update()
         {
             if(stars!=null)stars.Rotate(0,.035f*Time.deltaTime,0,Space.World);
+            if(starMaterial!=null)
+            {
+                float pulse=.82f+Mathf.Sin(Time.time*.23f)*.05f;
+                starMaterial.color=new Color(.78f*pulse,.84f*pulse,.94f*pulse,1);
+            }
         }
 
         private void OnDestroy()
