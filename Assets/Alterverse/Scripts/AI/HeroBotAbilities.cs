@@ -115,6 +115,7 @@ namespace Alterverse.AI
                 if (target == null || target.IsDead || spec.Power <= 0 || FlatDistance(origin, target.transform.position) > spec.Range) return false;
                 float damage = spec.Power * scale;
                 if (hero == HeroId.Veyr && slot == 3) damage *= 1f + (1f - target.Normalized) * .55f;
+                if (target.GetComponent<LaneMinion>() != null && buff != null) damage *= buff.MinionDamageMultiplier;
                 target.TakeDamage(damage, gameObject);
                 if (hero == HeroId.Veyr) self.Heal(damage * .12f);
                 if (hero == HeroId.Rook && self.Normalized < .45f) self.Heal(damage * .1f);
