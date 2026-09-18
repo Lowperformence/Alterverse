@@ -43,7 +43,7 @@ for(int n=0;n<sites.Length;n++)
 {
 bool zero=sites[n].x<0;Color c=Color.Lerp(zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.38f);
 GameObject trunk=Part(zero?"DF_ZeroDeadGrowth":"DF_LumenCrystalTree",PrimitiveType.Cube,sites[n]+Vector3.up*.75f,new Vector3(.22f,1.5f,.22f),c);trunk.transform.rotation=Quaternion.Euler(zero?12:0,n*33,zero?-9:0);
-for(int i=0;i<3;i++){Vector3 p=sites[n]+new Vector3((i-1)*.38f,1.15f+i*.24f,(i%2==0?.16f:-.16f));GameObject branch=Part("DF_RealityBranch",PrimitiveType.Cube,p,new Vector3(.12f,.75f,.12f),Color.Lerp(c,zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.2f));branch.transform.rotation=Quaternion.Euler(zero?35:22,i*67,zero?(i-1)*28:(i-1)*18);}
+for(int i=0;i<3;i++){Vector3 p=sites[n]+new Vector3((i-1)*.38f,1.15f+i*.24f,(i%2==0?.16f:-.16f));GameObject branch=Part("DF_RealityBranch",PrimitiveType.Cube,p,new Vector3(.12f,.75f,.12f),Color.Lerp(c,StylizedArtDirection.ArenaStoneLight,.12f));branch.transform.rotation=Quaternion.Euler(zero?35:22,i*67,zero?(i-1)*28:(i-1)*18);}
 }
 }
 
@@ -80,7 +80,7 @@ bool zero=centers[c].x<0;Color baseColor=zero?StylizedArtDirection.ZeroGround:St
 for(int i=0;i<6;i++)
 {
 float a=(i*60+c*17)*Mathf.Deg2Rad;float r=.7f+(i%3)*.45f;Vector3 p=centers[c]+new Vector3(Mathf.Cos(a)*r,.2f,Mathf.Sin(a)*r);
-GameObject g=Part(zero?"DF_ZeroThorn":"DF_LumenReed",PrimitiveType.Cube,p,new Vector3(zero?.13f:.11f,.45f+(i%3)*.2f,zero?.18f:.11f),Color.Lerp(baseColor,zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.3f));
+GameObject g=Part(zero?"DF_ZeroThorn":"DF_LumenReed",PrimitiveType.Cube,p,new Vector3(zero?.13f:.11f,.45f+(i%3)*.2f,zero?.18f:.11f),Color.Lerp(baseColor,StylizedArtDirection.ArenaStone,.18f));
 g.transform.rotation=Quaternion.Euler(zero?22:0,i*60,zero?-24:0);
 }
 }
@@ -135,8 +135,8 @@ Part("DF_CraterCenter",PrimitiveType.Cylinder,p,new Vector3(.92f,.025f,.92f),Sty
 }
 private void Bush(Vector3 p,bool zero,int seed)
 {
-Color c=zero?new Color(.34f,.16f,.48f):new Color(.08f,.48f,.42f);
-for(int i=0;i<5;i++){float a=(i*72+seed*19)*Mathf.Deg2Rad;GameObject g=Part("DF_RealityGrowth",PrimitiveType.Cube,p+new Vector3(Mathf.Cos(a)*.42f,.35f,Mathf.Sin(a)*.42f),new Vector3(.18f,.72f,.18f),Color.Lerp(c,i%2==0?Color.white:StylizedArtDirection.Ink,.18f));g.transform.rotation=Quaternion.Euler(18,i*72,zero?-28:28);}
+Color c=Color.Lerp(zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.32f);
+for(int i=0;i<5;i++){float a=(i*72+seed*19)*Mathf.Deg2Rad;GameObject g=Part("DF_RealityGrowth",PrimitiveType.Cube,p+new Vector3(Mathf.Cos(a)*.42f,.35f,Mathf.Sin(a)*.42f),new Vector3(.18f,.72f,.18f),Color.Lerp(c,i%2==0?StylizedArtDirection.ArenaStoneLight:StylizedArtDirection.Ink,.12f));g.transform.rotation=Quaternion.Euler(18,i*72,zero?-28:28);}
 }
 private GameObject Part(string name,PrimitiveType type,Vector3 p,Vector3 scale,Color color)
 {
