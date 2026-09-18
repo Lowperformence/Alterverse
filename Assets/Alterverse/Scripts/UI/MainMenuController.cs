@@ -66,14 +66,14 @@ private void DrawPlay()
 DrawTopNav(Page.Play);
 DrawSectionHeader("ENTER THE FRONT","DEPLOYMENT");
 Rect mode=new Rect(42,142,560,466);DimensionUiMotif.DrawSplitPanel(mode,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(68,164,508,30),"SELECT MATCH TYPE",subtitle);
+GUI.Label(new Rect(68,164,508,30),"01  //  SELECT MATCH TYPE",subtitle);
 GUI.Label(new Rect(72,210,210,22),"AVAILABLE",small);
 if(GUI.Button(new Rect(72,238,500,102),"AI MATCH   5v5\nFULL TEAM BATTLE • LOCAL",primary))BeginLaunch();
 GUI.Label(new Rect(88,350,468,42),"Two lanes • Reality Bastions • Dimension planets • Reality Core",small);
 GUI.Label(new Rect(72,408,210,22),"NETWORK",small);GUI.enabled=false;GUI.Button(new Rect(72,436,500,82),"MULTIPLAYER   5v5\nCOMING SOON",button);GUI.enabled=true;
 GUI.Label(new Rect(72,530,500,38),"NO PAY-TO-WIN • ACCOUNT LEVEL IS EXPERIENCE ONLY",small);
 Rect loadout=new Rect(626,142,294,466);DimensionUiMotif.DrawSplitPanel(loadout,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(648,164,250,24),"YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
+GUI.Label(new Rect(648,164,250,24),"02  //  YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
 GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);GUI.Label(new Rect(646,514,254,18),"READY  •  LOADOUT LOCKED ON START",small);
 if(GUI.Button(new Rect(654,535,238,46),"CHANGE HERO",button))SetPage(Page.Heroes);
 if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);
@@ -83,10 +83,10 @@ private void DrawHeroes()
 DrawTopNav(Page.Heroes);
 DrawSectionHeader("HEROES","CHOOSE YOUR FIGHTER");
 Rect roster=new Rect(42,142,286,470);DimensionUiMotif.DrawSplitPanel(roster,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(62,162,246,24),"ROSTER  •  6 HEROES",subtitle);
+GUI.Label(new Rect(62,162,246,24),"01  //  ROSTER  •  6 HEROES",subtitle);
 for(int i=0;i<6;i++){float y=202+i*61;bool chosen=i==selectedHero;GUI.enabled=!chosen;if(GUI.Button(new Rect(62,y,246,48),$"{HeroName(i)}   •   {roles[i]}",chosen?primary:button))ChangeHero(i-selectedHero);GUI.enabled=true;}
 Rect showcase=new Rect(350,142,570,470);DimensionUiMotif.DrawSplitPanel(showcase,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(374,162,522,24),"SELECTED HERO",small);StylizedHeroCard.Draw(new Rect(520,190,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
+GUI.Label(new Rect(374,162,522,24),"02  //  SELECTED HERO",small);StylizedHeroCard.Draw(new Rect(520,190,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
 GUI.Label(new Rect(390,486,490,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(390,530,490,26),roles[selectedHero],subtitle);
 GUI.Label(new Rect(390,561,490,24),Time.unscaledTime-heroSelectedAt<.8f&&lastSelectedHero!=selectedHero?"SELECTION CONFIRMED   •   READY FOR DEPLOYMENT":$"HERO {selectedHero+1} / 6   •   READY FOR DEPLOYMENT",small);DimensionUiMotif.DrawCornerCuts(new Rect(374,158,522,430),whiteTexture,selectedHero%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy);
 if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);if(GUI.Button(new Rect(710,632,210,46),"DEPLOY",primary))SetPage(Page.Play);
