@@ -5,7 +5,7 @@ namespace Alterverse.Visuals
     public static class LunarSurfaceField
     {
         // Existing impact sites retained; two outer landmarks give scale to the broken moon.
-        private static readonly Vector3[] craters={new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),new(-2,1.25f,31),new(3,1.05f,-31),new(-36,.48f,12),new(-34,.64f,-7),new(-25,.8f,5),new(-15,.96f,31),new(-4,.48f,-31),new(35,.64f,-11),new(33,.8f,8),new(24,.96f,-5),new(15,.48f,-31),new(5,.64f,31),new(-23,4.3f,27),new(22,3.8f,-27)};
+        private static readonly Vector3[] craters={new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),new(-2,1.25f,31),new(3,1.05f,-31),new(-36,.48f,12),new(-34,.64f,-7),new(-25,.8f,5),new(-15,.96f,31),new(-4,.48f,-31),new(35,.64f,-11),new(33,.8f,8),new(24,.96f,-5),new(15,.48f,-31),new(5,.64f,31),new(-23,4.3f,27),new(22,3.8f,-27),new(-24,1.25f,-8),new(-22.5f,.55f,-7.2f),new(-16,.85f,7),new(24,1.5f,8),new(25.2f,.6f,7.3f),new(17,1.1f,-7),new(-29,1.8f,26),new(-27.5f,.7f,27),new(-15,1.3f,-27),new(28,1.65f,-26),new(16,1.2f,28),new(17.2f,.55f,27.4f)};
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
         public static float LaneWeight(float x,float z)
         {
