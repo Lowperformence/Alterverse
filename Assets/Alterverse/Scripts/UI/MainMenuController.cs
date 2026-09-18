@@ -21,9 +21,10 @@ finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEn
 }
 private void DrawTopNav(Page current)
 {
+GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);
 string[] labels={"HOME","PLAY","HEROES","COSMETICS","PROFILE","SETTINGS"};Page[] pages={Page.Home,Page.Play,Page.Heroes,Page.Shop,Page.Profile,Page.Settings};
 float width=426f,start=MenuWidth-width-24f,cell=width/labels.Length;
-for(int i=0;i<labels.Length;i++){bool active=current==pages[i];GUI.enabled=!active;if(GUI.Button(new Rect(start+i*cell,8,cell-4,30),labels[i],active?primary:button))SetPage(pages[i]);GUI.enabled=true;}
+for(int i=0;i<labels.Length;i++){bool active=current==pages[i];GUI.enabled=!active;if(GUI.Button(new Rect(start+i*cell,8,cell-4,30),labels[i],active?primary:button))SetPage(pages[i]);GUI.enabled=true;}GUI.color=new Color(1,1,1,.09f);GUI.DrawTexture(new Rect(24,43,MenuWidth-48,1),whiteTexture);GUI.color=Color.white;
 }
 private string HeroName(int index){return HeroIdentity.NameFor((HeroId)index).ToUpperInvariant();}
 private void DrawBackground(){GUI.DrawTexture(new Rect(0,0,MenuWidth,MenuHeight),dimTexture);float t=Time.unscaledTime-openedAt,pulse=.5f+.5f*Mathf.Sin(t*1.35f),collision=Mathf.Sin(t*.7f)*MenuWidth*.006f;GUI.color=Color.white;GUI.DrawTexture(new Rect(0,0,MenuWidth*.505f+collision,MenuHeight),zeroTexture);GUI.DrawTexture(new Rect(MenuWidth*.495f+collision,0,MenuWidth*.505f,MenuHeight),lumenTexture);float center=MenuWidth*.5f+collision;for(int i=0;i<12;i++){float phase=t*(.55f+i*.025f)+i*1.37f,y=(i+.4f)*MenuHeight/12f+Mathf.Sin(phase*1.7f)*15,x=center+Mathf.Sin(phase)*14;GUI.color=i%2==0?new Color(StylizedArtDirection.ZeroEnergy.r,StylizedArtDirection.ZeroEnergy.g,StylizedArtDirection.ZeroEnergy.b,.25f+.2f*pulse):new Color(StylizedArtDirection.LumenEnergy.r,StylizedArtDirection.LumenEnergy.g,StylizedArtDirection.LumenEnergy.b,.25f+.2f*pulse);GUI.DrawTexture(new Rect(x-2,y-18,4,36),whiteTexture);}GUI.color=Color.white;GUI.DrawTexture(new Rect(center-(3+5*pulse)*.5f,0,3+5*pulse,MenuHeight),whiteTexture);DrawComicCuts(center,t);GUI.Label(new Rect(18,MenuHeight*.48f,MenuWidth*.22f,32),"DIMENSION ZERO",sideLabel);GUI.Label(new Rect(MenuWidth*.78f-18,MenuHeight*.48f,MenuWidth*.22f,32),"LUMEN",sideLabel);}
