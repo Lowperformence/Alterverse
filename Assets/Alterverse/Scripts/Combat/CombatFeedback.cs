@@ -8,15 +8,23 @@ namespace Alterverse.Combat
     public sealed class CombatFeedback:MonoBehaviour
     {
         private Health health;
-        private Renderer[] renderers;
-        private MaterialPropertyBlock[] saved;
-        private bool[] flashed;
-        private readonly MaterialPropertyBlock bright=new();
+        [System.NonSerialized] private Renderer[] renderers;
+        [System.NonSerialized] private MaterialPropertyBlock[] saved;
+        [System.NonSerialized] private bool[] flashed;
+        [System.NonSerialized] private MaterialPropertyBlock bright;
         private float flashUntil;
         private bool flashing;
         private Camera view;
         private static readonly int BaseColor=Shader.PropertyToID("_BaseColor"),ColorId=Shader.PropertyToID("_Color");
-        private void Awake(){health=GetComponent<Health>();health.Damaged+=OnDamaged;}
+        private void Awake(){health=GetComponent<Health>();}
+        private void OnEnable()
+        {
+            health=GetComponent<Health>();
+            bright=new MaterialPropertyBlock();
+            RefreshVisuals();
+            health.Damaged-=OnDamaged;
+            health.Damaged+=OnDamaged;
+        }
         private void Start(){RefreshVisuals();view=Camera.main;CombatImpactPool.Warm(transform.root);}
         public void RefreshVisuals()
         {
@@ -32,11 +40,15 @@ namespace Alterverse.Combat
             if(p.z<=0||p.x<-.05f||p.x>1.05f||p.y<-.05f||p.y>1.05f)return;
             bool shieldOnly=damage<=.01f;
             Color tint=shieldOnly?new Color(.45f,.87f,1f):Color.Lerp(SourceColor(source),Color.white,.65f);
-            if(renderers==null)RefreshVisuals();
+            if(renderers==null||saved==null||flashed==null||saved.Length!=renderers.Length||flashed.Length!=renderers.Length)RefreshVisuals();
+            bright??=new MaterialPropertyBlock();
             // Keep the original property blocks across repeated hits, not an already flashed snapshot.
             for(int i=0;i<renderers.Length;i++)
             {
                 Renderer r=renderers[i];if(r==null||!r.enabled)continue;
+                // Native property blocks are not preserved by Unity script reload serialization.
+                // Recreate missing destinations before passing them into the renderer bindings.
+                if(saved[i]==null){saved[i]=new MaterialPropertyBlock();flashed[i]=false;}
                 if(!flashed[i]){r.GetPropertyBlock(saved[i]);flashed[i]=true;}
                 r.GetPropertyBlock(bright);bright.SetColor(BaseColor,tint);bright.SetColor(ColorId,tint);r.SetPropertyBlock(bright);
             }
@@ -51,10 +63,12 @@ namespace Alterverse.Combat
         private void LateUpdate(){if(flashing&&Time.time>=flashUntil)Restore();}
         private void Restore()
         {
-            if(renderers!=null)for(int i=0;i<renderers.Length;i++)if(flashed[i]){if(renderers[i]!=null)renderers[i].SetPropertyBlock(saved[i]);flashed[i]=false;}
+            if(renderers!=null&&saved!=null&&flashed!=null)
+                for(int i=0;i<renderers.Length&&i<saved.Length&&i<flashed.Length;i++)
+                    if(flashed[i]){if(renderers[i]!=null&&saved[i]!=null)renderers[i].SetPropertyBlock(saved[i]);flashed[i]=false;}
             flashing=false;
         }
-        private void OnDisable()=>Restore();
+        private void OnDisable(){if(health!=null)health.Damaged-=OnDamaged;Restore();}
         private void OnDestroy(){Restore();if(health!=null)health.Damaged-=OnDamaged;}
     }
     // Retained for existing transient effects outside hero impact feedback.

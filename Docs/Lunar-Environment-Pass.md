@@ -15,3 +15,6 @@ Ground: 6,205 vertices / 12,096 triangles. Two 512-square RGBA32 mipmapped textu
 Tree-sitter C# syntax and git diff whitespace checks only. Unity compilation, shader inclusion, visual appearance, Android memory/FPS and gameplay-camera review are NOT VERIFIED. These changes are not proof of release quality.
 
 Unity review tools: DIMENSIONS FRONT / Checks / Lunar geometry and corridor bounds; Capture lunar gameplay views (Play mode). The latter saves six camera-derived views under Temp/DimensionsFront-LunarReview. Run both in Unity, inspect both lanes, bases, center and broken rim, then review planet/meteor/siege events and repeated match teardown on device.
+
+## Runtime report follow-up
+User screenshot: repeated ArgumentNullException, parameter dest; stack trace not supplied. Renderer.GetPropertyBlock has a non-null destination binding. CombatFeedback was the only project caller. Its renderer cache could survive Unity script reload while native MaterialPropertyBlock entries did not. Runtime caches are now nonserialized, rebuilt on enable, and incomplete/missing block entries are repaired before renderer calls. Subscriptions balance enable/disable. This fixes an identifiable invalid-destination path; correspondence to the screenshot remains NOT VERIFIED until the full stack trace or Unity reproduction is available.

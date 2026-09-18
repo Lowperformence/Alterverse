@@ -30,6 +30,38 @@ namespace Alterverse.EditorChecks
             }
             Debug.Log("DIMENSIONS FRONT: HUD geometry checks passed. Device touch/readability still require testing.");
         }
+        [MenuItem("DIMENSIONS FRONT/Checks/Hit flash cache recovery (Play mode)")]
+        public static void FlashCacheChecks()
+        {
+            if(!Application.isPlaying){Debug.LogWarning("Enter Play mode for hit-flash checks.");return;}
+            Camera camera=Camera.main;
+            Check(camera!=null,"main camera required");
+            GameObject actor=GameObject.CreatePrimitive(PrimitiveType.Cube);
+            actor.name="DF_FlashCacheRegression";
+            actor.transform.position=camera.transform.position+camera.transform.forward*5-Vector3.up*1.1f;
+            try
+            {
+                Health health=actor.AddComponent<Health>();health.Configure(100);
+                var feedback=actor.AddComponent<Alterverse.Combat.CombatFeedback>();
+                Renderer renderer=actor.GetComponent<Renderer>();
+                var original=new MaterialPropertyBlock();original.SetFloat("_DFRegressionMarker",.37f);renderer.SetPropertyBlock(original);
+                feedback.RefreshVisuals();
+                // Reproduce the missing native-block destination with a surviving renderer cache.
+                var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic;
+                var blocks=(MaterialPropertyBlock[])typeof(Alterverse.Combat.CombatFeedback).GetField("saved",flags).GetValue(feedback);
+                blocks[0]=null;
+                health.TakeDamage(1);health.TakeDamage(1);
+                Check(blocks[0]!=null,"missing destination not rebuilt");
+                feedback.enabled=false;
+                var restored=new MaterialPropertyBlock();renderer.GetPropertyBlock(restored);
+                Check(Mathf.Approximately(restored.GetFloat("_DFRegressionMarker"),.37f),"hit flash lost original renderer state");
+                feedback.enabled=true;health.TakeDamage(1);feedback.enabled=false;
+                renderer.GetPropertyBlock(restored);
+                Check(Mathf.Approximately(restored.GetFloat("_DFRegressionMarker"),.37f),"enable cycle lost renderer state");
+            }
+            finally{actor.SetActive(false);Object.Destroy(actor);}
+            Debug.Log("DIMENSIONS FRONT: missing hit-flash destination and enable-cycle recovery checks passed.");
+        }
         [MenuItem("DIMENSIONS FRONT/Checks/Health registry and shield feedback (Play mode)")]
         public static void HealthChecks()
         {
