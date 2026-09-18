@@ -30,16 +30,16 @@ Processing: bounded duration per cue, mono 32 kHz, 65 Hz high-pass / 10 kHz low-
 | SuddenDeath | lowFrequency_explosion_000.ogg | `3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343` |
 | Victory | forceField_004.ogg | `05609bb296cbc287ae95ac8924c89809d69c89d7bb357cc6a117ec1b1ef65e09` |
 | Defeat | spaceEngineLow_003.ogg | `e8f7ce4dbc20b5aeead35b94f1c8927b0baa416edaa5b39f1699703031111488` |
-| UiConfirm | computerNoise_001.ogg | `29b4842f6d8c0ba2b0cb00bfaff3b852b492bb43197a82e697917aacbe106757` |
-| UiBack | computerNoise_002.ogg | `6ae9bb261c6536d1699972da0cdbf6e0762cf7e9b925adb64a06ff375255cb71` |
-| Attack | laserSmall_002.ogg | `e70139466c3e801358c9041ee17db7ff82c0e9a9cdf44647ad0ea6b9f8458f63` |
-| AbilityCast | forceField_002.ogg | `051b0eafc479695af4ca3607d41fd4be41bae7c21f4f9508d004722b09f1bd63` |
+| UiConfirm | impactMetal_002.ogg | `0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c` |
+| UiBack | impactMetal_003.ogg | `ef29c3943ee701616f65e3d596c13eb3ff6b11ca5b3ac01e7bc923366a5c6f76` |
+| Attack | impactMetal_002.ogg | `0c1bb4db8a4d48b2b8c2e65a175d9056b845f1063837599995d81be1c5957d2c` |
+| AbilityCast | thrusterFire_000.ogg | `0fdc474d93f209debf1fc4ea77765a669dcb7676db31b4d8a0a509685bccf374` |
 | Shield | forceField_001.ogg | `5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90` |
-| Heal | computerNoise_003.ogg | `5b1b73bbe6e6ad1b1d39422f640f1bbee3376e8e18916f9305b04b9d143f5cf3` |
+| Heal | forceField_001.ogg | `5574e69dd04e5f59322c5ddffde5978f077b09170ae5e29cec0bd9901828cd90` |
 | HeroDeath | explosionCrunch_003.ogg | `8c7197bb3a1c504690319c3abe0e62a5423ee246dd70caab57963d0b7aa8144f` |
 | Kill | impactMetal_004.ogg | `0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de` |
-| TowerTarget | computerNoise_002.ogg | `6ae9bb261c6536d1699972da0cdbf6e0762cf7e9b925adb64a06ff375255cb71` |
-| TowerShot | laserLarge_001.ogg | `e678aca631495b7dfef4ac625f0349875ccac81a60f538d530e072241af3e4bd` |
+| TowerTarget | impactMetal_004.ogg | `0032710d1fc88c217946cd54492f275eb4363bb8025a4bc1b7ce08df7b3c60de` |
+| TowerShot | lowFrequency_explosion_000.ogg | `3cb48d86dab63140cfb9aaeea4d4a6846abaca5831d157d8adbec0490da26343` |
 | TowerImpact | explosionCrunch_001.ogg | `fdd04d6f0032d4d57c134ad37f3587d2d00e58c9572715275bd8cf4f43593576` |
 | CoreHit | lowFrequency_explosion_001.ogg | `cdda50600a4928f2f1b8371224d53c171ac799c1cf2c30b11999508985250b3b` |
 | PlanetArrival | spaceEngineLarge_002.ogg | `dc1a5c00a93d24bd5fd1d3cfca70483054e7c025b40d255980309544428084de` |
@@ -52,3 +52,24 @@ Processing: bounded duration per cue, mono 32 kHz, 65 Hz high-pass / 10 kHz low-
 ## Audio comfort follow-up
 
 Nine frequent SFX received additional high-frequency attenuation and softer onsets. Original CC0 provenance is unchanged. Exact processing and validation limits are recorded in Audio-Comfort-Polish.md. The music was not changed in this follow-up.
+
+## Current spell-readability audio revision
+
+The 12 cues below were rebuilt from the Kenney CC0 source files named in the main table, replacing earlier edits. The initial processing description above is historical for these cues. Current processing: mono 32 kHz; 80 Hz high-pass; broad -7 dB cut at 2.6 kHz (Q 0.7); two-pole low-pass; 12 ms onset / 60 ms tail fade; measured PCM RMS gain with -7 dBFS pre-encode peak ceiling; Vorbis quality 3. Short one-shots use measured RMS rather than treating sub-second LUFS readings as reliable. No music change.
+
+| Cue | Duration (s) | Low-pass (Hz) | Final RMS (dBFS) |
+|---|---:|---:|---:|
+| Attack | 0.16 | 2300 | -25.9 |
+| AbilityCast | 0.24 | 2700 | -26.0 |
+| AbilityImpact | 0.19 | 2600 | -25.9 |
+| HitLight | 0.1 | 2200 | -25.9 |
+| HitHeavy | 0.23 | 2800 | -26.1 |
+| TowerShot | 0.26 | 2300 | -26.0 |
+| TowerImpact | 0.24 | 2600 | -26.0 |
+| TowerTarget | 0.27 | 2800 | -23.0 |
+| UiConfirm | 0.1 | 2400 | -28.8 |
+| UiBack | 0.1 | 2200 | -28.8 |
+| Heal | 0.3 | 2600 | -28.9 |
+| Shield | 0.28 | 2400 | -25.9 |
+
+Rights: Kenney, https://kenney.nl/assets/sci-fi-sounds, CC0 1.0, commercial adaptations permitted, attribution not required, accessed 2026-09-18. Thruster source is covered by the retained archive license. No subjective listening or Android playback claim is made.
