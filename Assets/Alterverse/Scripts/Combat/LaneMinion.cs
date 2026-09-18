@@ -24,7 +24,7 @@ if(delta.sqrMagnitude<nearest){nearest=delta.sqrMagnitude;closest=hp;}
 }
 return closest;
 }
-private bool HasEnemyBastion(){foreach(LaneTower tower in FindObjectsByType<LaneTower>()){if(tower!=null&&tower.Team!=team){Health h=tower.GetComponent<Health>();if(h!=null&&!h.IsDead)return true;}}return false;}private RealityCore FindEnemyCore(){foreach(RealityCore core in FindObjectsByType<RealityCore>())if(core!=null&&core.Team!=team)return core;return null;}
+private bool HasEnemyBastion(){foreach(LaneTower tower in FindObjectsByType<LaneTower>()){if(tower==null||tower.Team==team)continue;Health h=tower.GetComponent<Health>();if(h==null||h.IsDead)continue;/* Only the bastion on this minion's lane blocks its route. The other lane must not hold this wave hostage. */if(Mathf.Abs(tower.transform.position.z-transform.position.z)<6f)return true;}return false;}private RealityCore FindEnemyCore(){foreach(RealityCore core in FindObjectsByType<RealityCore>())if(core!=null&&core.Team!=team)return core;return null;}
 private void MoveTowards(Vector3 point){Vector3 direction=point-transform.position;direction.y=0;if(direction.sqrMagnitude<.16f)return;float distance=direction.magnitude;direction.Normalize();transform.position+=direction*Mathf.Min(moveSpeed*Time.deltaTime,distance);Face(direction);}private void Face(Vector3 direction){direction.y=0;if(direction.sqrMagnitude>.001f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(direction),10*Time.deltaTime);}
 }
 }
