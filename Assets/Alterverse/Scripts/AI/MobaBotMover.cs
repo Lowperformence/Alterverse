@@ -25,7 +25,7 @@ namespace Alterverse.AI
         private DimensionPlanet objective;
         private DimensionPlanet[] planets = System.Array.Empty<DimensionPlanet>();
         private LaneTower[] towers = System.Array.Empty<LaneTower>();
-        private PlanetPulseAttack[] pulses = System.Array.Empty<PlanetPulseAttack>();
+        private Alterverse.Combat.PlanetPulseAttack[] pulses = System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
         private Vector3 velocity;
         private int rotationSlot;
         public bool IsAvoidingHazard { get; private set; }
@@ -78,7 +78,7 @@ namespace Alterverse.AI
             if (Time.time < nextWorldScan) return;
             nextWorldScan = Time.time + .5f;
             planets = FindObjectsByType<DimensionPlanet>();
-            pulses = FindObjectsByType<PlanetPulseAttack>();
+            pulses = FindObjectsByType<Alterverse.Combat.PlanetPulseAttack>();
             towers = FindObjectsByType<LaneTower>();
             objective = null;
             float best = float.MaxValue;
@@ -100,7 +100,7 @@ namespace Alterverse.AI
         {
             escape = transform.position;
             float deepest = 0f;
-            foreach (PlanetPulseAttack pulse in pulses)
+            foreach (Alterverse.Combat.PlanetPulseAttack pulse in pulses)
             {
                 if (pulse == null || !pulse.IsTelegraphing) continue;
                 Vector3 away = transform.position - pulse.transform.position; away.y = 0;
