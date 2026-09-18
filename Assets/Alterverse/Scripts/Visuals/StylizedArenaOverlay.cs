@@ -18,12 +18,13 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
-            int soil = Palette(new Color(.13f,.16f,.20f));
-            int stone = Palette(new Color(.25f,.29f,.34f));
-            int lightStone = Palette(new Color(.31f,.35f,.39f));
-            int inset = Palette(new Color(.18f,.21f,.26f));
-            int zero = Palette(new Color(.38f,.27f,.48f));
-            int lumen = Palette(new Color(.18f,.43f,.46f));
+            int soil = Palette(StylizedArtDirection.ArenaVoid);
+            int stone = Palette(StylizedArtDirection.ArenaStone);
+            int lightStone = Palette(StylizedArtDirection.ArenaStoneLight);
+            int inset = Palette(StylizedArtDirection.ArenaCenter);
+            int zero = Palette(StylizedArtDirection.ZeroGround);
+            int lumen = Palette(StylizedArtDirection.LumenGround);
+            int objective = Palette(StylizedArtDirection.ObjectiveGold);
             if (soil < 0) return;
 
             // Large quiet panels break up the flat floor without competing with heroes.
@@ -35,7 +36,7 @@ namespace Alterverse.Visuals
             }
             foreach(float z in new[]{-16f,16f})
             {
-                Path(new Vector2(-35,z),new Vector2(35,z),4.3f,.082f,stone,lightStone);
+                Path(new Vector2(-35,z),new Vector2(35,z),4.3f,.082f,stone,lightStone);Ribbon(new Vector2(-34,z),new Vector2(-3,z),.24f,.096f,zero);Ribbon(new Vector2(3,z),new Vector2(34,z),.24f,.096f,lumen);
                 Ribbon(new Vector2(-35,z-2.35f),new Vector2(-1,z-2.35f),.13f,.09f,zero);
                 Ribbon(new Vector2(-35,z+2.35f),new Vector2(-1,z+2.35f),.13f,.09f,zero);
                 Ribbon(new Vector2(1,z-2.35f),new Vector2(35,z-2.35f),.13f,.09f,lumen);
@@ -46,7 +47,7 @@ namespace Alterverse.Visuals
             }
             Disc(Vector2.zero,11.6f,.10f,32,inset);
             Ring(Vector2.zero,10.9f,11.5f,.105f,32,stone);
-            Ring(Vector2.zero,7.8f,8f,.108f,32,lightStone);
+            Ring(Vector2.zero,7.8f,8f,.108f,32,lightStone);Ring(Vector2.zero,5.55f,5.72f,.113f,32,objective);
             // Split inlay reinforces the two realities, while leaving the animated front legible.
             for(int i=0;i<16;i++)
             {
