@@ -22,8 +22,8 @@ namespace Alterverse.Visuals
             int stone = Palette(StylizedArtDirection.ArenaStone);
             int lightStone = Palette(StylizedArtDirection.ArenaStoneLight);
             int inset = Palette(StylizedArtDirection.ArenaCenter);
-            int zero = Palette(StylizedArtDirection.ZeroGround);
-            int lumen = Palette(StylizedArtDirection.LumenGround);
+            int zero = Palette(Color.Lerp(StylizedArtDirection.ZeroGround,StylizedArtDirection.ArenaStone,.38f));
+            int lumen = Palette(Color.Lerp(StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.38f));
             int objective = Palette(StylizedArtDirection.ObjectiveGold);
             if (soil < 0) return;
 
