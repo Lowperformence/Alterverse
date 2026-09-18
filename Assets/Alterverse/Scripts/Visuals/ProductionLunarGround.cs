@@ -10,7 +10,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
     readonly List<Mesh> meshes=new();
     Transform root;
     Material regolith,darkRegolith,laneMat,rimMat,zeroEnergy,lumenEnergy;
-    Mesh rockMesh;
+    Mesh rockMesh,rockMeshB,rockMeshC;
 
     void Start()
     {
@@ -31,6 +31,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildCraters();
         BuildFractures();
         BuildRocks();
+        BuildEdgeCliffs();
     }
 
     void BuildSurface()
@@ -99,14 +100,35 @@ public sealed class ProductionLunarGround : MonoBehaviour
 
     void BuildCraters()
     {
-        Vector3[] p={new(-18,.05f,5),new(-11,.05f,-7),new(17,.05f,-6),new(10,.05f,7),new(-8,.05f,29),new(9,.05f,-29),new(-34,.05f,27),new(34,.05f,-27)};
-        float[] r={1.65f,1.1f,1.45f,.9f,2.1f,1.8f,1.55f,1.65f};
-        for(int i=0;i<p.Length;i++)
+        Vector3[] p={new(-18,.05f,5),new(-11,.05f,-7),new(17,.05f,-6),new(10,.05f,7),new(-8,.05f,29),new(9,.05f,-29),new(-34,.05f,27),new(34,.05f,-27),new(-2,.05f,31),new(3,.05f,-31)};
+        float[] r={1.65f,1.1f,1.45f,.9f,2.1f,1.8f,1.55f,1.65f,1.25f,1.05f};
+        for(int i=0;i<p.Length;i++)IrregularCrater(p[i],r[i],i);
+    }
+
+    void IrregularCrater(Vector3 center,float radius,int seed)
+    {
+        const int segments=24;
+        Vector3[] outer=new Vector3[segments],inner=new Vector3[segments];
+        for(int i=0;i<segments;i++)
         {
-            // Keep craters away from lanes, spawn/heal corridor and core footprints.
-            Ring("DF_LunarCraterRim",p[i],r[i],r[i]+.28f,24,rimMat);
-            Disc("DF_LunarCraterShadow",p[i]-Vector3.up*.008f,r[i]*.83f,24,darkRegolith);
+            float a=i*Mathf.PI*2/segments;
+            float wobble=1f+Mathf.Sin(a*(3+seed%3)+seed*.71f)*.09f+Mathf.Sin(a*7f+seed)*.035f;
+            Vector3 d=new(Mathf.Cos(a),0,Mathf.Sin(a));
+            outer[i]=center+d*(radius*1.18f*wobble);
+            inner[i]=center+d*(radius*.82f*(1f+Mathf.Sin(a*5f+seed*.4f)*.055f));
         }
+        Vector3[] v=new Vector3[segments*2];int[] t=new int[segments*6];
+        for(int i=0;i<segments;i++){v[i*2]=inner[i]-Vector3.up*.018f;v[i*2+1]=outer[i]+Vector3.up*(.035f+(i%4)*.008f);int j=(i+1)%segments,q=i*6;t[q]=i*2;t[q+1]=j*2;t[q+2]=j*2+1;t[q+3]=i*2;t[q+4]=j*2+1;t[q+5]=i*2+1;}
+        Mesh rim=new(){name="DF_IrregularCraterRim",vertices=v,triangles=t};rim.RecalculateNormals();rim.RecalculateBounds();meshes.Add(rim);MeshObject("DF_LunarCraterRim",rim,rimMat,Vector3.zero);
+        Mesh floor=IrregularDisc(center-Vector3.up*.024f,radius*.82f,segments,seed);meshes.Add(floor);MeshObject("DF_LunarCraterFloor",floor,darkRegolith,Vector3.zero);
+        for(int j=0;j<3;j++){float a=(seed*47+j*113)*Mathf.Deg2Rad;Vector2 from=new(center.x+Mathf.Cos(a)*radius*1.05f,center.z+Mathf.Sin(a)*radius*1.05f);Vector2 to=from+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*(.45f+j*.18f);Strip("DF_CraterRadialCrack",from,to,.028f,.071f,darkRegolith);}
+    }
+
+    Mesh IrregularDisc(Vector3 c,float radius,int segments,int seed)
+    {
+        Vector3[] v=new Vector3[segments+1];int[] t=new int[segments*3];v[0]=c;
+        for(int i=0;i<segments;i++){float a=i*Mathf.PI*2/segments,w=1f+Mathf.Sin(a*5f+seed*.7f)*.06f;v[i+1]=c+new Vector3(Mathf.Cos(a)*radius*w,0,Mathf.Sin(a)*radius*w);int q=i*3;t[q]=0;t[q+1]=i+1;t[q+2]=(i+1)%segments+1;}
+        Mesh m=new(){name="DF_IrregularLunarDisc",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
     }
 
     void BuildFractures()
@@ -124,11 +146,12 @@ public sealed class ProductionLunarGround : MonoBehaviour
 
     void BuildRocks()
     {
-        rockMesh=CreateRockMesh();meshes.Add(rockMesh);
-        Vector3[] sites={new(-39,.13f,30),new(-38,.11f,-29),new(-20,.09f,29),new(-17,.08f,-29),new(39,.13f,30),new(38,.11f,-29),new(20,.09f,29),new(17,.08f,-29),new(-40,.08f,9),new(40,.08f,-9)};
+        rockMesh=CreateRockMesh();rockMeshB=CreateRockMeshB();rockMeshC=CreateRockMeshC();meshes.Add(rockMesh);meshes.Add(rockMeshB);meshes.Add(rockMeshC);
+        Vector3[] sites={new(-39,.13f,30),new(-38,.11f,-29),new(-20,.09f,29),new(-17,.08f,-29),new(39,.13f,30),new(38,.11f,-29),new(20,.09f,29),new(17,.08f,-29),new(-40,.08f,9),new(40,.08f,-9),new(-33,.08f,33),new(32,.08f,-33)};
         for(int i=0;i<sites.Length;i++)
         {
-            GameObject g=MeshObject("DF_LunarRock",rockMesh,i%3==0?darkRegolith:rimMat,sites[i]);
+            Mesh shape=i%3==0?rockMesh:i%3==1?rockMeshB:rockMeshC;
+            GameObject g=MeshObject("DF_LunarRock",shape,i%3==0?darkRegolith:rimMat,sites[i]);
             float s=.55f+(i%4)*.19f;g.transform.localScale=new Vector3(s, .55f+(i%3)*.2f, s*(.8f+(i%2)*.25f));
             g.transform.localRotation=Quaternion.Euler(i*7f,i*47f,i*5f);
         }
@@ -139,6 +162,31 @@ public sealed class ProductionLunarGround : MonoBehaviour
         Vector3[] v={new(-.72f,0,-.48f),new(.55f,0,-.62f),new(.78f,0,.22f),new(.18f,0,.68f),new(-.62f,0,.51f),new(-.22f,.82f,-.12f),new(.31f,.58f,.19f)};
         int[] t={0,1,5,1,6,5,1,2,6,2,3,6,3,4,5,3,5,6,4,0,5,0,4,3,0,3,2,0,2,1};
         Mesh m=new(){name="DF_LowPolyLunarRock",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+    }
+
+    Mesh CreateRockMeshB()
+    {
+        Vector3[] v={new(-.9f,0,-.25f),new(.42f,0,-.72f),new(.86f,0,.1f),new(.48f,0,.64f),new(-.55f,0,.72f),new(-.48f,.52f,-.1f),new(.12f,1.05f,-.18f),new(.4f,.48f,.28f)};
+        int[] t={0,1,5,1,6,5,1,2,6,2,7,6,2,3,7,3,4,7,4,5,7,4,0,5,5,6,7,0,4,3,0,3,2,0,2,1};
+        Mesh m=new(){name="DF_LunarRockTall",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+    }
+    Mesh CreateRockMeshC()
+    {
+        Vector3[] v={new(-.8f,0,-.62f),new(.7f,0,-.48f),new(.92f,0,.42f),new(-.12f,0,.8f),new(-.88f,0,.3f),new(-.34f,.42f,-.28f),new(.42f,.38f,-.16f),new(.08f,.63f,.32f)};
+        int[] t={0,1,5,1,6,5,1,2,6,2,7,6,2,3,7,3,4,7,4,5,7,4,0,5,5,6,7,0,4,3,0,3,2,0,2,1};
+        Mesh m=new(){name="DF_LunarRockBroad",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+    }
+
+    void BuildEdgeCliffs()
+    {
+        Vector3[] sites={new(-41,.02f,34),new(-31,.02f,35),new(-18,.02f,35),new(-5,.02f,35),new(9,.02f,35),new(23,.02f,35),new(37,.02f,34),new(-40,.02f,-34),new(-27,.02f,-35),new(-13,.02f,-35),new(2,.02f,-35),new(17,.02f,-35),new(31,.02f,-35),new(41,.02f,-33)};
+        for(int i=0;i<sites.Length;i++)
+        {
+            Mesh shape=i%3==0?rockMesh:i%3==1?rockMeshB:rockMeshC;
+            GameObject g=MeshObject("DF_LunarEdgeFormation",shape,i%4==0?darkRegolith:rimMat,sites[i]);
+            g.transform.localScale=new Vector3(2.2f+(i%3)*.45f,1.25f+(i%4)*.28f,1.7f+(i%2)*.5f);
+            g.transform.localRotation=Quaternion.Euler(0,i*43f,i%2==0?6f:-5f);
+        }
     }
 
     void Strip(string n,Vector2 a,Vector2 b,float width,float y,Material mat)
