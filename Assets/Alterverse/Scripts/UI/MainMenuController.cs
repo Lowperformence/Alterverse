@@ -73,8 +73,8 @@ GUI.Label(new Rect(88,350,468,42),"Two lanes • Reality Bastions • Dimension 
 GUI.Label(new Rect(72,408,210,22),"NETWORK",small);GUI.enabled=false;GUI.Button(new Rect(72,436,500,82),"MULTIPLAYER   5v5\nCOMING SOON",button);GUI.enabled=true;
 GUI.Label(new Rect(72,530,500,38),"NO PAY-TO-WIN • ACCOUNT LEVEL IS EXPERIENCE ONLY",small);
 Rect loadout=new Rect(626,142,294,466);DimensionUiMotif.DrawSplitPanel(loadout,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
-GUI.Label(new Rect(648,164,250,24),"YOUR DEPLOYMENT",subtitle);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
-GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);
+GUI.Label(new Rect(648,164,250,24),"YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
+GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);GUI.Label(new Rect(646,514,254,18),"READY  •  LOADOUT LOCKED ON START",small);
 if(GUI.Button(new Rect(654,535,238,46),"CHANGE HERO",button))SetPage(Page.Heroes);
 if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);
 }
