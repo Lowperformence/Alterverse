@@ -8,8 +8,8 @@ namespace Alterverse.Visuals
         private readonly Dictionary<Color,Material> materials=new Dictionary<Color,Material>();
         private void Start()
         {
-            Color stone=new Color(.22f,.24f,.30f);
-            Color zero=new Color(.31f,.22f,.41f),lumen=new Color(.21f,.36f,.39f);
+            Color stone=StylizedArtDirection.ArenaStone;
+            Color zero=StylizedArtDirection.ZeroGround,lumen=StylizedArtDirection.LumenGround;
             // Low terrace edges establish the island boundary without covering the lanes.
             foreach(int side in new[]{-1,1})
             {
@@ -38,7 +38,7 @@ namespace Alterverse.Visuals
         {
             Block("DF_ZeroRockBase",p+Vector3.up*.3f,new Vector3(3.6f,.6f,3.2f),color,new Vector3(0,18,0));
             Block("DF_ZeroBrokenPillar",p+new Vector3(-.35f,1.4f,0),new Vector3(1.25f,2.3f,1.4f),color,new Vector3(0,24,-13));
-            Block("DF_ZeroCrystal",p+new Vector3(.45f,2.1f,.1f),new Vector3(.23f,2.9f,.38f),new Color(.57f,.31f,.70f),new Vector3(0,35,-19));
+            Block("DF_ZeroCrystal",p+new Vector3(.45f,2.1f,.1f),new Vector3(.23f,2.9f,.38f),StylizedArtDirection.ZeroEnergy,new Vector3(0,35,-19));
             Block("DF_ZeroFragment",p+new Vector3(.9f,.4f,1),new Vector3(1.4f,.55f,.9f),color,new Vector3(0,-27,12));
         }
 
@@ -48,9 +48,9 @@ namespace Alterverse.Visuals
             foreach(int side in new[]{-1,1})
             {
                 Block("DF_LumenPillar",p+new Vector3(0,1.25f,side*1.75f),new Vector3(.8f,2.5f,.8f),color);
-                Block("DF_LumenInlay",p+new Vector3(-.43f,1.35f,side*1.75f),new Vector3(.05f,1.65f,.15f),new Color(.35f,.65f,.65f));
+                Block("DF_LumenInlay",p+new Vector3(-.43f,1.35f,side*1.75f),new Vector3(.05f,1.65f,.15f),StylizedArtDirection.LumenEnergy);
             }
-            Block("DF_LumenLintel",p+Vector3.up*2.65f,new Vector3(.9f,.42f,4.35f),new Color(.36f,.46f,.48f));
+            Block("DF_LumenLintel",p+Vector3.up*2.65f,new Vector3(.9f,.42f,4.35f),StylizedArtDirection.ArenaStoneLight);
             Block("DF_LumenKeystone",p+Vector3.up*2.98f,new Vector3(1.05f,.32f,.65f),color);
         }
 
