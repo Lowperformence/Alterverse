@@ -7,11 +7,10 @@ public readonly int Shards,Xp;public MatchRewardResult(int shards,int xp){Shards
 }
 public static class MatchRewardService
 {
-public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives)
+public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null)
 {
-int xp=PlayerExperience.GrantMatchXp(won,kills,assists,objectives);
-int shards=MatchShardRewards.Award(won,kills,assists,objectives);
-return new MatchRewardResult(shards,xp);
+var reward=Alterverse.Profile.MatchRewardService.GrantMatchReward(won,kills,assists,objectives,matchId);
+return new MatchRewardResult(reward.Shards,reward.Xp);
 }
 }
 }
