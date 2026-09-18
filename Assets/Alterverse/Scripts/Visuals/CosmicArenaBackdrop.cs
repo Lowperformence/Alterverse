@@ -117,8 +117,8 @@ namespace Alterverse.Visuals
         private void BuildDistantPlanets()
         {
             distantBodies=new GameObject("DF_DistantBodies").transform;distantBodies.SetParent(transform,false);
-            Planet(new Vector3(-96,-12,66),13f,new Color(.075f,.085f,.12f,1));
-            Planet(new Vector3(112,-15,-64),18f,new Color(.055f,.07f,.105f,1));
+            Planet(new Vector3(-70,-17,49),17f,new Color(.08f,.06f,.115f,1));
+            Planet(new Vector3(76,-21,-51),21f,new Color(.055f,.09f,.12f,1));
             Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
         }
 
@@ -161,7 +161,7 @@ namespace Alterverse.Visuals
         private void BuildPlanetShadows()
         {
             if(distantBodies==null)return;Material m=Mat(new Color(.008f,.01f,.017f,1),true);if(m==null)return;
-            ShadowDisc(new Vector3(-101,-17,61),10.5f,m);ShadowDisc(new Vector3(105,-21,-70),14f,m);ShadowDisc(new Vector3(70,-15,90),4.6f,m);
+            ShadowDisc(new Vector3(-75,-22,44),13.5f,m);ShadowDisc(new Vector3(69,-27,-57),16.5f,m);ShadowDisc(new Vector3(70,-15,90),4.6f,m);
         }
 
         private void ShadowDisc(Vector3 p,float size,Material m)
@@ -172,9 +172,9 @@ namespace Alterverse.Visuals
 
         private void BuildPlanetRings()
         {
-            Material m=Mat(new Color(.12f,.13f,.16f,1),true);if(m==null||distantBodies==null)return;planetRingMaterial=m;
-            Ring(new Vector3(-96,-12,66),18f,13.8f,m,18f);
-            Ring(new Vector3(112,-15,-64),25f,19.5f,m,-12f);
+            Material zero=Mat(new Color(.115f,.055f,.17f,1),true),lumen=Mat(new Color(.045f,.135f,.17f,1),true);if(zero==null||lumen==null||distantBodies==null)return;
+            Ring(new Vector3(-70,-17,49),20f,17.8f,zero,18f);
+            Ring(new Vector3(76,-21,-51),27f,22.5f,lumen,-12f);
         }
 
         private void Ring(Vector3 center,float outer,float inner,Material material,float tilt)

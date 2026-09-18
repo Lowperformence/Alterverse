@@ -5,6 +5,28 @@ namespace Alterverse.Visuals
 {
     public sealed partial class ProductionLunarGround
     {
+        void BuildReferenceSilhouettes()
+        {
+            // Large silhouette groups stay at the broken perimeter, never in the combat corridors.
+            Vector2[] sites={new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24)};
+            for(int site=0;site<sites.Length;site++)
+            {
+                bool zero=sites[site].x<0;
+                for(int i=0;i<6;i++)
+                {
+                    Vector2 p=sites[site]+new Vector2((i%3-1)*1.15f,(i/3)*1.45f);
+                    bool spire=i<3;float height=spire?(1.9f+(i%3)*.6f):.35f;
+                    LandmarkRock("DF_PerimeterFractureSpire",p,new Vector3(spire?.8f:.45f,height,spire?.7f:.38f),site*39+i*(zero?47:13),0,i%2==0?darkRegolith:rimMat);
+                }
+                Vector2 a=sites[site]+new Vector2(-1.2f,-.6f),b=sites[site]+new Vector2(.6f,-.1f);
+                LandmarkSeam(a,b,.08f,darkRegolith);
+                LandmarkSeam(Vector2.Lerp(a,b,.35f),Vector2.Lerp(a,b,.65f),.035f,zero?zeroEnergy:lumenEnergy);
+            }
+            // Two small dead crystalline growths. Opaque geometry, neutral stone, no grass cards.
+            foreach(Vector2 site in new[]{new Vector2(-29,28),new Vector2(27,-29)})
+                for(int i=0;i<5;i++)LandmarkRock("DF_DeadLunarGrowth",site+new Vector2(Mathf.Sin(i*2.4f)*.45f,Mathf.Cos(i*2.4f)*.4f),
+                    new Vector3(.08f,.48f+i%3*.16f,.07f),i*71,0,darkRegolith);
+        }
         void BuildDensityClusters()
         {
             // Authored pockets with deliberate negative space: no rocks in lane, core or objective corridors.

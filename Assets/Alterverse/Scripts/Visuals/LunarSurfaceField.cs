@@ -71,7 +71,7 @@ namespace Alterverse.Visuals
                 Sample(-48+spanX*x/(size-1),-42+spanZ*z/(size-1),out float h,out float tone,out float dust);
                 int i=z*size+x;heights[i]=h;
                 // Neutral graphite, not faction-tinted ground. Compacted dust has less blue in its highlights.
-                float value=Mathf.Lerp(.19f,.37f,Mathf.InverseLerp(.29f,.66f,tone));
+                float value=Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.29f,.66f,tone));
                 pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)

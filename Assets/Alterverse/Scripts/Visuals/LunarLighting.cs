@@ -17,10 +17,10 @@ namespace Alterverse.Visuals
             {key=null;foreach(Light light in FindObjectsByType<Light>())if(light.type==LightType.Directional&&light.enabled){key=light;break;}}
             if(key==null){GameObject obj=new("DF_LunarKey");obj.transform.SetParent(transform,false);key=obj.AddComponent<Light>();key.type=LightType.Directional;created=true;}
             rotation=key.transform.rotation;intensity=key.intensity;lightColor=key.color;mask=key.cullingMask;
-            key.transform.rotation=Quaternion.Euler(48,-32,0);key.intensity=1.15f;key.color=new Color(.93f,.96f,1f);
+            key.transform.rotation=Quaternion.Euler(39,-38,0);key.intensity=1.2f;key.color=new Color(.93f,.96f,1f);
             key.cullingMask&=~(1<<31); // Menu showcase has its own isolated studio lights.
             RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=new Color(.27f,.30f,.36f);
-            RenderSettings.ambientEquatorColor=new Color(.12f,.135f,.16f);RenderSettings.ambientGroundColor=new Color(.055f,.065f,.08f);
+            RenderSettings.ambientEquatorColor=new Color(.105f,.12f,.145f);RenderSettings.ambientGroundColor=new Color(.055f,.065f,.08f);
             RenderSettings.reflectionIntensity=.25f;RenderSettings.fog=false;applied=true;
         }
         private void OnDisable()

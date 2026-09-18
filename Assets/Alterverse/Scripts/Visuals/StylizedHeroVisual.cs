@@ -155,8 +155,8 @@ if(voidfall&&!energy&&color!=teamEdge)
 Material material=new Material(shader){name=voidfall?"DF_VoidfallFinish":"DF_HeroPalette",color=finish};
 if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",finish);
 bool fabric=color==cloth;
-if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",fabric?.08f:energy?.55f:voidfall?.56f:.38f);
-if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",fabric?0f:energy?.12f:voidfall?.52f:.3f);
+if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",fabric?.08f:energy?.55f:voidfall?.56f:.44f);
+if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",fabric?0f:energy?.12f:voidfall?.52f:.36f);
 if(energy&&material.HasProperty("_EmissionColor")){material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",color*.3f);}
 palette.Add((color,energy),material);ownedMaterials.Add(material);return material;
 }

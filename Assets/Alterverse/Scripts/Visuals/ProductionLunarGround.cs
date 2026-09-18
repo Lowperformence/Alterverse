@@ -36,6 +36,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildRocks();
         BuildSmallLandmarks();
         BuildDensityClusters();
+        BuildReferenceSilhouettes();
         BuildEdgeCliffs();
         BuildEdgeFragments();
         BuildGeologicalSlab();
@@ -61,7 +62,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         LunarSurfaceField.Bake(out surfaceAlbedo,out surfaceNormals);
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
-        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.65f);regolith.EnableKeyword("_NORMALMAP");
+        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
         MeshObject("DF_LunarRegolith",m,regolith,Vector3.zero);
         var edge=new List<Vector3>((xSeg+zSeg)*2);
         for(int x=0;x<xSeg;x++)edge.Add(v[x]);
