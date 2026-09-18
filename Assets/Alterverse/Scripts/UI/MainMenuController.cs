@@ -24,7 +24,7 @@ private void DrawSectionHeader(string heading,string kicker){GUI.Label(new Rect(
 private void DrawTopNav(Page current)
 {
 GUI.enabled=true;
-GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);GUI.Label(new Rect(246,8,170,30),"LIVE BUILD  •  BETA",small);
+GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);GUI.Label(new Rect(246,8,170,30),"BETA  //  ONLINE",small);
 float width=510f,start=MenuWidth-width-18f,cell=width/NavigationLabels.Length;
 for(int i=0;i<NavigationLabels.Length;i++){bool active=current==NavigationPages[i];Rect tab=new Rect(start+i*cell,6,cell-4,38);GUI.enabled=!active;if(GUI.Button(tab,NavigationLabels[i],active?navActive:navButton))SetPage(NavigationPages[i]);GUI.enabled=true;if(active){GUI.color=new Color(1,1,1,.9f);GUI.DrawTexture(new Rect(tab.x+10,tab.yMax-3,tab.width-20,2),whiteTexture);GUI.color=Color.white;}}GUI.color=new Color(1,1,1,.09f);GUI.DrawTexture(new Rect(24,48,MenuWidth-48,1),whiteTexture);GUI.color=Color.white;
 }
@@ -77,7 +77,7 @@ Rect loadout=new Rect(626,142,294,466);DimensionUiMotif.DrawSplitPanel(loadout,w
 GUI.Label(new Rect(648,164,250,24),"02  //  YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
 GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);GUI.Label(new Rect(646,514,254,18),"READY  •  LOADOUT LOCKED ON START",small);
 if(GUI.Button(new Rect(654,535,238,46),"CHANGE HERO",button))SetPage(Page.Heroes);
-if(GUI.Button(new Rect(42,632,180,46),"HOME",button))SetPage(Page.Home);DrawFooterStatus("AI 5v5  •  READY","DIMENSIONS FRONT  //  BETA");
+if(GUI.Button(new Rect(42,632,180,46),"HOME",button))SetPage(Page.Home);DrawFooterStatus("AI 5v5  •  READY","FRONT STATUS  //  READY");
 }
 private void DrawHeroes()
 {
