@@ -38,6 +38,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildRocks();
         BuildRegolithVariation();
         BuildLaneDustScars();
+        BuildLaneCompressionMarks();
         BuildRegolithDriftBands();
         BuildCraterShadowAccents();
         BuildEdgeCliffs();
@@ -280,6 +281,17 @@ public sealed class ProductionLunarGround : MonoBehaviour
             float x=side*(6.5f+i*5.1f),offset=((i&1)==0?1f:-1f)*(2.55f+(i%3)*.22f);
             Mesh patch=IrregularDisc(new Vector3(x,.052f,z+offset),.72f+(i%2)*.18f,14,70+i+(side>0?10:0)+(z>0?20:0));
             meshes.Add(patch);MeshObject("DF_LaneDustScar",patch,i%3==0?darkRegolith:laneMat,Vector3.zero).GetComponent<MeshRenderer>().receiveShadows=false;
+        }
+    }
+
+    void BuildLaneCompressionMarks()
+    {
+        // Broken parallel compression marks suggest repeated minion/mech traffic while remaining natural regolith.
+        foreach(float z in new[]{-16f,16f})for(int side=-1;side<=1;side+=2)for(int i=0;i<4;i++)
+        {
+            float x=side*(9f+i*5.7f);
+            Strip("DF_LaneCompression",new Vector2(x-1.05f,z-.92f),new Vector2(x+.75f,z-.92f),.045f,.097f,darkRegolith);
+            Strip("DF_LaneCompression",new Vector2(x-.75f,z+.96f),new Vector2(x+1.05f,z+.96f),.035f,.097f,rimMat);
         }
     }
 
