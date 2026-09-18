@@ -27,13 +27,7 @@ namespace Alterverse.Visuals
             int objective = Palette(StylizedArtDirection.ObjectiveGold);
             if (soil < 0) return;
 
-            // Large quiet panels break up the flat floor without competing with heroes.
-            for (int x=-38;x<40;x+=6)
-            for (int z=-32;z<34;z+=6)
-            {
-                if (Mathf.Abs(z-16)<5 || Mathf.Abs(z+16)<5 || (Mathf.Abs(x)<13 && Mathf.Abs(z)<13)) continue;
-                Tile(x,z,5.7f,5.7f,.025f,((x+z)%3==0)?soil:inset,.65f);
-            }
+            // ProductionLunarGround provides the continuous regolith surface. Avoid visible tiled floor panels here.
             foreach(float z in new[]{-16f,16f})
             {
                 Path(new Vector2(-35,z),new Vector2(35,z),4.3f,.082f,stone,lightStone);Ribbon(new Vector2(-34,z),new Vector2(-3,z),.24f,.096f,zero);Ribbon(new Vector2(3,z),new Vector2(34,z),.24f,.096f,lumen);
