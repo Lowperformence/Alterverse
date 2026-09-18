@@ -12,22 +12,25 @@ namespace Alterverse.UI
         private Camera previewCamera;
         private RenderTexture texture;
         private HeroId selected;
-        private bool hasSelection;
+        private bool hasSelection,selectedSkin;
         private float selectedAt;
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
         public Texture Image => texture;
 
-        public void Present(HeroId hero, bool visible)
+        public void Present(HeroId hero, bool visible, bool? skinOverride=null)
         {
             if (!visible) { if (stage != null) stage.SetActive(false); return; }
             if (stage == null) CreateStage();
             stage.SetActive(true);
-            if (hasSelection && selected == hero) return;
+            bool skin=skinOverride??Alterverse.Shop.UniversalSkin.Equipped;
+            if (hasSelection && selected == hero && selectedSkin==skin) return;
+            selectedSkin=skin;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             actor = new GameObject("DF_MenuHero");
             actor.transform.SetParent(stage.transform, false);
             actor.AddComponent<HeroIdentity>().Configure(hero);
+            actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>().Voidfall=skin;
             actor.AddComponent<StylizedHeroVisual>().Build();
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
