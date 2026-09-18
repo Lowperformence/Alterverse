@@ -3,9 +3,9 @@ namespace Alterverse.Combat
 {
 [RequireComponent(typeof(DimensionPlanet),typeof(Health))]public sealed class PlanetMeteorShower:MonoBehaviour
 {
-[SerializeField]private float radius=11f,cooldown=8.5f,telegraph=1.55f,damage=14f;[SerializeField]private int meteors=7;private Health self;private DimensionPlanet planet;private float next;
+[SerializeField]private float radius=11f,cooldown=8.5f,telegraph=1.55f,damage=14f;[SerializeField]private int meteors=7;private Health self;private DimensionPlanet planet;private float next,nextHeroScan;private bool heroNearby;
 private void Awake(){self=GetComponent<Health>();planet=GetComponent<DimensionPlanet>();next=Time.time+3f;}
-private void Update(){if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;if(!HasHero())return;next=Time.time+cooldown;for(int i=0;i<meteors;i++){Vector2 r=Random.insideUnitCircle*radius;Vector3 p=transform.position+new Vector3(r.x,0,r.y);MeteorStrike.Create(p,telegraph,damage,i*.16f,planet);}}
+private void Update(){if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;if(Time.time>=nextHeroScan){nextHeroScan=Time.time+.25f;heroNearby=HasHero();}if(!heroNearby)return;next=Time.time+cooldown;for(int i=0;i<meteors;i++){Vector2 r=Random.insideUnitCircle*radius;Vector3 p=transform.position+new Vector3(r.x,0,r.y);MeteorStrike.Create(p,telegraph,damage,i*.16f,planet);}}
 private bool HasHero(){float sq=radius*radius;foreach(TeamMember m in FindObjectsByType<TeamMember>()){Health h=m!=null?m.GetComponent<Health>():null;if(h==null||h.IsDead)continue;Vector3 d=m.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=sq)return true;}return false;}
 }
 public sealed class MeteorStrike:MonoBehaviour
