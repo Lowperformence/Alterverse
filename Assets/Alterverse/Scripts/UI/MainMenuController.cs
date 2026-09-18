@@ -19,7 +19,7 @@ finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEn
 }
 private void DrawTopNav(Page current)
 {
-navPage=current;
+navPage=current;GUI.enabled=true;
 GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);
 string[] labels={"HOME","PLAY","HEROES","COSMETICS","PROFILE","SETTINGS"};Page[] pages={Page.Home,Page.Play,Page.Heroes,Page.Shop,Page.Profile,Page.Settings};
 float width=510f,start=MenuWidth-width-18f,cell=width/labels.Length;
