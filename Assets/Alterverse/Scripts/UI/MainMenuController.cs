@@ -43,7 +43,7 @@ Rect heroStage=new Rect(355,126,565,430);DimensionUiMotif.DrawSplitPanel(heroSta
 GUI.Label(new Rect(382,146,510,22),"ACTIVE HERO",small);
 float pulse=.5f+.5f*Mathf.Sin(t*1.25f);GUI.color=new Color(1,1,1,.05f+.04f*pulse);GUI.DrawTexture(new Rect(470,184,330,330),whiteTexture);GUI.color=Color.white;
 StylizedHeroCard.Draw(new Rect(520,174,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
-GUI.Label(new Rect(402,468,470,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(402,511,470,26),roles[selectedHero],subtitle);
+GUI.Label(new Rect(402,468,470,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(402,511,470,26),roles[selectedHero],subtitle);GUI.Label(new Rect(402,538,470,18),"SELECTED FOR NEXT DEPLOYMENT",small);
 if(GUI.Button(new Rect(377,239,54,54),"‹",button))ChangeHero(-1);if(GUI.Button(new Rect(844,239,54,54),"›",button))ChangeHero(1);
 
 Rect nav=new Rect(42,126,282,430);DimensionUiMotif.DrawSplitPanel(nav,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
@@ -89,7 +89,7 @@ for(int i=0;i<6;i++){float y=202+i*61;bool chosen=i==selectedHero;GUI.enabled=!c
 Rect showcase=new Rect(350,142,570,470);DimensionUiMotif.DrawSplitPanel(showcase,whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);
 GUI.Label(new Rect(374,162,522,24),"SELECTED HERO",small);StylizedHeroCard.Draw(new Rect(520,190,230,292),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
 GUI.Label(new Rect(390,486,490,46),HeroName(selectedHero),heroName);GUI.Label(new Rect(390,530,490,26),roles[selectedHero],subtitle);
-GUI.Label(new Rect(390,561,490,24),$"HERO {selectedHero+1} / 6   •   READY FOR DEPLOYMENT",small);
+GUI.Label(new Rect(390,561,490,24),$"HERO {selectedHero+1} / 6   •   READY FOR DEPLOYMENT",small);DimensionUiMotif.DrawCornerCuts(new Rect(374,158,522,430),whiteTexture,selectedHero%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy);
 if(GUI.Button(new Rect(42,632,180,46),"BACK",button))SetPage(Page.Home);if(GUI.Button(new Rect(710,632,210,46),"DEPLOY",primary))SetPage(Page.Play);
 }
 private void DrawShop()
