@@ -12,7 +12,7 @@ namespace Alterverse.EditorChecks
         public static void AudioAssets()
         {
             int missing=0;
-            foreach(string name in new[]{"Menu","Match","Pressure","Climax","Victory","Defeat"})
+            foreach(string name in new[]{"Menu","Match"})
                 if(Resources.Load<AudioClip>("Audio/Music/"+name)==null){Debug.LogWarning("FINAL MUSIC ASSET REQUIRED: "+name);missing++;}
             foreach(Alterverse.Audio.DimensionSound sound in System.Enum.GetValues(typeof(Alterverse.Audio.DimensionSound)))
                 if(Resources.Load<AudioClip>("Audio/SFX/"+sound)==null){Debug.LogWarning("FINAL SFX ASSET REQUIRED: "+sound);missing++;}

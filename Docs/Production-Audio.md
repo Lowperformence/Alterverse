@@ -1,27 +1,13 @@
-# DIMENSIONS FRONT — production audio integration
+# DIMENSIONS FRONT — licensed audio integration
 
-FINAL MUSIC ASSET REQUIRED. FINAL SFX ASSETS REQUIRED.
-No final recordings are present in this repository. Synthesized prototype tones have been removed; missing cues remain silent and produce one startup summary warning. This is an asset integration pipeline, not delivered final sound design.
+The repository now contains two CC0 music recordings by yd and 29 edited cues from Kenney Sci-fi Sounds. The imported OGG payload totals approximately 3.4 MB. Exact source filenames, source URLs, licenses, hashes, modifications and intended uses are recorded in [ThirdPartyAudioLicenses.md](ThirdPartyAudioLicenses.md). The original Kenney license is retained in AudioLicenses.
 
-## Music delivery
-Place authored, original licensed clips under Assets/Alterverse/Resources/Audio/Music:
-Menu, Match, Pressure, Climax, Victory, Defeat (WAV/OGG import names without extensions).
-Menu/Match/Pressure/Climax must loop seamlessly; align tempo and tonal center because transitions overlap for 0.9 seconds. Result tracks play once. Missing pressure/climax falls back to Match, not generated tones.
+Music/Menu is Observing the Star; Music/Match is Out There. Pressure and climax reuse Match with intensity changes rather than restarting it or loading duplicate recordings. Victory/defeat fade the music bed and use their SFX cues. This is a two-track integration, not six separately composed scores.
 
-Direction: cosmic electronic, quiet textured percussion and a sparse recurring motif; ZERO broken resonances, LUMEN clean harmonics. No copied musical themes. Menu spacious and contemplative; Match steady restrained momentum; Pressure adds rhythmic tension; Climax resolves the same motif urgently. Avoid loudness jumps, excessive sub-bass on phone speakers, generic synthwave and trailer impacts.
+Long music uses streaming Vorbis, 32 kHz stereo, no preload. Short SFX use mono 32 kHz Vorbis and decompress on load. Two music sources crossfade; eight pooled SFX voices and cue throttles bound overlapping sound. Camera-relative culling limits offscreen effects. Live settings and existing pause/focus controls are retained. Purchase, minion death and ability impact now have dedicated hooks.
 
-Two music sources, equal-power crossfade, combat ducking, live master/music volume, background/game-pause handling. Actual planet arrival and siege events raise pressure; combat, remaining time, control and results select intensity. No fake timer for objective events.
-Use streaming Vorbis for long music, preload disabled where verified safe; review loop seams and loading on Android before release. Final loudness and mix require listening on target speakers/headphones.
-
-## Sound delivery
-Put authored short clips in Resources/Audio/SFX with names matching DimensionSound:
-HitLight, HitHeavy, RecallStart, RecallComplete, RecallCancel, RealityShatter, FrontShift,
-Overtime, SuddenDeath, Victory, Defeat, UiConfirm, UiBack, Attack, AbilityCast, Shield,
-Heal, HeroDeath, Kill, TowerTarget, TowerShot, TowerImpact, CoreHit, PlanetArrival,
-MeteorImpact, SiegeArrival.
-Use short crisp transients, controlled mechanical/body layers, short dimensional tails; no test beeps.
-TowerTarget must be an unmistakable warning. Kill must differ from hit; HeroDeath from minor damage.
-SFX: short mono samples where suitable, compressed-in-memory or decompressed according to measured CPU/memory. No runtime synthesis. Eight pooled voices and per-cue throttles; offscreen positional cues are culled. UI/results remain audible independently of camera framing.
+Licenses permit commercial redistribution without required attribution; credits are retained voluntarily. No synthetic placeholder test tones are included. Some source recordings serve several related events with distinct edits; six fully bespoke hero sound identities remain future sound-design work.
 
 ## Verification boundary
-Not compiled or played in Unity. No final clips supplied, no listening test, no Android audio latency/memory test. Faction/hero-specific recorded variants and frontend/frontline ambient beds remain external sound-design work. Current Attack/AbilityCast slots are shared hooks, not six finished hero sound identities.
+
+All 31 OGGs are decode-checked using FFmpeg. Import settings and cue/resource names are statically checked. Listening, loop seams, subjective mix quality, Unity importer behavior, Android audio latency, memory and performance: **NOT VERIFIED**. Final speaker/headphone audition remains necessary before release; asset presence does not establish final sound quality.

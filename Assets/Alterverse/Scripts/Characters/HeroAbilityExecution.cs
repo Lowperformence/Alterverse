@@ -146,6 +146,7 @@ namespace Alterverse.Characters
             if (identity.Hero == HeroId.Veyr && slot == 3 && target.GetComponent<HeroIdentity>() != null)
                 damage *= 1f + (1f - target.Normalized) * .35f;
             HeroCombatRules.Damage(gameObject, target, damage);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.AbilityImpact,target.transform.position,.35f);
             switch (identity.Hero)
             {
                 case HeroId.Veyr: if (slot == 1) HeroCombatStatus.Apply(target, .8f, 1.2f); break;

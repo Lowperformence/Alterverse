@@ -16,7 +16,8 @@ namespace Alterverse.Audio
         void Awake()
         {
             for(int i=0;i<2;i++){decks[i]=gameObject.AddComponent<AudioSource>();decks[i].playOnAwake=false;decks[i].spatialBlend=0;decks[i].priority=64;}
-            int missing=0;for(int i=0;i<clips.Length;i++){clips[i]=Resources.Load<AudioClip>("Audio/Music/"+Names[i]);if(clips[i]==null)missing++;}
+            int missing=0;for(int i=0;i<2;i++){clips[i]=Resources.Load<AudioClip>("Audio/Music/"+Names[i]);if(clips[i]==null)missing++;}
+            clips[2]=clips[3]=clips[1]; // One coherent licensed match bed; intensity changes mixing, not playback position.
             if(missing>0)Debug.LogWarning("DIMENSIONS FRONT: FINAL MUSIC ASSET REQUIRED — "+missing+" missing production clips. See Docs/Production-Audio.md.");
             LaneWaveSpawner.SiegeWaveSpawned+=Event;DimensionPlanetDirector.PlanetArrived+=Planet;
         }
@@ -38,6 +39,7 @@ namespace Alterverse.Audio
             int target=menu?0:result>=0?result:front==null?0:front.IsOvertime||front.TimeRemaining<90||Mathf.Max(front.ZeroControl,front.LumenControl)>85?3:AudioMixState.CombatActive||Time.unscaledTime<eventUntil?2:1;
             // A missing intensity stem keeps the authored match bed. Missing result fades to silence.
             if(target>1&&target<4&&clips[target]==null)target=1;
+            if(target!=current&&fade>=1&&clips[target]==decks[deck].clip)current=target;
             if(target!=current&&fade>=1)
             {
                 current=target;deck=1-deck;AudioSource next=decks[deck];next.Stop();next.clip=clips[target];next.loop=target<4;next.volume=0;
@@ -46,7 +48,7 @@ namespace Alterverse.Audio
             bool paused=MatchClock.InBackground||(!menu&&MatchClock.Paused&&result<0);
             for(int i=0;i<2;i++){if(paused)decks[i].Pause();else decks[i].UnPause();}
             if(!paused)fade=Mathf.MoveTowards(fade,1,Time.unscaledDeltaTime/.9f);
-            float gain=PlayerProfile.MasterVolume*PlayerProfile.MusicVolume*(AudioMixState.CombatActive?.25f:.38f);
+            float gain=PlayerProfile.MasterVolume*PlayerProfile.MusicVolume*(AudioMixState.CombatActive?.25f:current==3?.45f:current==2?.40f:.34f);
             decks[deck].volume=gain*Mathf.Sin(fade*Mathf.PI*.5f);decks[1-deck].volume=gain*Mathf.Cos(fade*Mathf.PI*.5f);
             if(fade>=1)decks[1-deck].Stop();
         }
