@@ -23,6 +23,7 @@ namespace Alterverse.Visuals
             BuildBrightStars();
             BuildDistantPlanets();
             BuildDistantMoons();
+            BuildPlanetRings();
             BuildArenaUnderside();
             BuildEdgeFragments();
             BuildRimDropShadows();
@@ -146,6 +147,29 @@ namespace Alterverse.Visuals
                 Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
+        }
+
+
+        private void BuildPlanetRings()
+        {
+            Material m=Mat(new Color(.12f,.13f,.16f,1),true);if(m==null||distantBodies==null)return;
+            Ring(new Vector3(-96,-12,66),18f,13.8f,m,18f);
+            Ring(new Vector3(112,-15,-64),25f,19.5f,m,-12f);
+        }
+
+        private void Ring(Vector3 center,float outer,float inner,Material material,float tilt)
+        {
+            const int segments=40;var vertices=new Vector3[segments*2];var triangles=new int[segments*6];
+            for(int i=0;i<segments;i++)
+            {
+                float a=i*Mathf.PI*2f/segments;float ca=Mathf.Cos(a),sa=Mathf.Sin(a);
+                vertices[i*2]=new Vector3(ca*inner,0,sa*inner);
+                vertices[i*2+1]=new Vector3(ca*outer,0,sa*outer);
+                int n=(i+1)%segments,ti=i*6;triangles[ti]=i*2;triangles[ti+1]=n*2;triangles[ti+2]=i*2+1;triangles[ti+3]=i*2+1;triangles[ti+4]=n*2;triangles[ti+5]=n*2+1;
+            }
+            Mesh mesh=new Mesh{name="DF_PlanetRing"};mesh.vertices=vertices;mesh.triangles=triangles;mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_DistantPlanetRing");g.transform.SetParent(distantBodies,false);g.transform.position=center;g.transform.rotation=Quaternion.Euler(tilt,0,8);
+            g.AddComponent<MeshFilter>().sharedMesh=mesh;MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
         }
 
         private void BuildDistantMoons()
