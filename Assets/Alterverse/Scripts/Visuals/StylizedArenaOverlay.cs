@@ -45,6 +45,20 @@ namespace Alterverse.Visuals
                 Path(new Vector2(-19,z),new Vector2(-7,z*.38f),3.2f,.074f,inset,stone);
                 Path(new Vector2(19,z),new Vector2(7,z*.38f),3.2f,.074f,inset,stone);
             }
+            // Fracture seams point toward the contested center and break up broad empty slabs.
+            for(int side=-1;side<=1;side+=2)
+            {
+                int fracture=side<0?zero:lumen;
+                for(int i=0;i<5;i++)
+                {
+                    float z=-24f+i*12f;
+                    Vector2 a=new Vector2(side*38f,z);
+                    Vector2 b=new Vector2(side*(18f+i%2*2f),z+(i%2==0?2.5f:-2.5f));
+                    Ribbon(a,b,.09f,.116f,fracture);
+                    Vector2 mid=Vector2.Lerp(a,b,.58f);
+                    Ribbon(mid,mid+new Vector2(-side*2.4f,i%2==0?2f:-2f),.07f,.117f,fracture);
+                }
+            }
             Disc(Vector2.zero,11.6f,.10f,32,inset);
             Ring(Vector2.zero,10.9f,11.5f,.105f,32,stone);
             Ring(Vector2.zero,7.8f,8f,.108f,32,lightStone);Ring(Vector2.zero,5.55f,5.72f,.113f,32,objective);
