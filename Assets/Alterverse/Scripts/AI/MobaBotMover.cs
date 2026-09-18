@@ -13,6 +13,8 @@ namespace Alterverse.AI
         [SerializeField] private float fallbackMoveSpeed = 3.35f, laneStopDistance = .35f, chaseLimit = 12f, turnSpeed = 7f;
         private const float ArenaHalfWidth = 40f, ArenaHalfHeight = 33f, TowerMargin = .75f;
         private static readonly List<MobaBotMover> ActiveBots = new();
+        private static long nextSeparationOrder;
+        private long separationOrder;
         private Health health;
         private MobaBotBrain brain;
         private BotLanePlan lanePlan;
@@ -32,6 +34,7 @@ namespace Alterverse.AI
 
         private void Awake()
         {
+            separationOrder = ++nextSeparationOrder;
             health = GetComponent<Health>(); brain = GetComponent<MobaBotBrain>();
             lanePlan = GetComponent<BotLanePlan>(); sensor = GetComponent<BotTargetSensor>();
             profile = GetComponent<HeroCombatProfile>(); planetBuff = GetComponent<PlanetBuffReceiver>();
@@ -158,7 +161,7 @@ namespace Alterverse.AI
                 Vector3 away = transform.position - other.transform.position; away.y = 0;
                 float distance = away.magnitude;
                 if (distance >= spacing) continue;
-                if (distance < .001f) away = GetInstanceID() < other.GetInstanceID() ? Vector3.left : Vector3.right;
+                if (distance < .001f) away = separationOrder < other.separationOrder ? Vector3.left : Vector3.right;
                 push += away.normalized * (1f - distance / spacing);
             }
             return Vector3.ClampMagnitude(push, 1f) * 1.5f;
