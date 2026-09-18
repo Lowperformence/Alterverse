@@ -10,6 +10,7 @@ namespace Alterverse.Characters
         private HeroAbilityKit kit;
         private HeroIdentity identity;
         private SoftTargeting targeting;
+        private HeroMotor motor;
         public float QRemaining => RemainingFor(0);
         public float WRemaining => RemainingFor(1);
         public float ERemaining => RemainingFor(2);
@@ -21,7 +22,7 @@ namespace Alterverse.Characters
         private void Awake() => Refresh();
         public void Refresh()
         {
-            kit = GetComponent<HeroAbilityKit>(); identity = GetComponent<HeroIdentity>();
+            kit = GetComponent<HeroAbilityKit>(); identity = GetComponent<HeroIdentity>(); motor=GetComponent<HeroMotor>();
             targeting = GetComponent<SoftTargeting>() ?? gameObject.AddComponent<SoftTargeting>();
             execution = GetComponent<HeroAbilityExecution>() ?? gameObject.AddComponent<HeroAbilityExecution>();
         }
@@ -56,14 +57,19 @@ namespace Alterverse.Characters
         public bool CastW() => Cast(1);
         public bool CastE() => Cast(2);
         public bool CastUltimate() => Cast(3);
+        private Vector3 DirectionFor(Health target) => motor != null && motor.HasMoveInput ? motor.LastMoveDirection :
+            target != null && identity.Hero != HeroId.Veyr ? transform.position-target.transform.position : transform.forward;
+        public Vector3 PreviewDirection(int slot)
+        {
+            // Same auto-target and movement fallback as Cast; this is not manual aim.
+            return DirectionFor(targeting.Acquire(Mathf.Max(kit.Spec(slot).Range,1f),transform.forward,true));
+        }
         private bool Cast(int slot)
         {
             Health target = targeting.Acquire(Mathf.Max(kit.Spec(slot).Range, 1f), transform.forward, true);
-            HeroMotor motor = GetComponent<HeroMotor>();
-            Vector3 direction = motor != null && motor.HasMoveInput ? motor.LastMoveDirection :
-                target != null && identity.Hero != HeroId.Veyr ? transform.position - target.transform.position : transform.forward;
+            Vector3 direction = DirectionFor(target);
             bool success = execution.TryCast(slot, target, direction);
-            if (success) targeting.RegisterOffensiveAction();
+            if (success) { targeting.RegisterOffensiveAction(); Alterverse.Onboarding.OnboardingSessionGuard.Ability(this); }
             return success;
         }
     }

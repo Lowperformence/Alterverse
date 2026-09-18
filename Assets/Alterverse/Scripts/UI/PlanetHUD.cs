@@ -1,9 +1,41 @@
-using Alterverse.Match;using UnityEngine;
+using Alterverse.Match;
+using UnityEngine;
 namespace Alterverse.UI
 {
-public sealed class PlanetHUD:MonoBehaviour
-{
-private PlanetBuffReceiver playerBuff;private GUIStyle notice,buffStyle;private void Update(){if(playerBuff==null){GameObject player=GameObject.Find("AV_Player");if(player!=null)playerBuff=player.GetComponent<PlanetBuffReceiver>();}}
-private void OnGUI(){notice??=new GUIStyle(GUI.skin.label){fontSize=18,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};buffStyle??=new GUIStyle(GUI.skin.box){fontSize=15,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};if(Time.unscaledTime<DimensionPlanetDirector.AnnouncementUntil&&!string.IsNullOrEmpty(DimensionPlanetDirector.Announcement)){float w=Mathf.Min(520,Screen.width*.68f);GUI.Box(new Rect((Screen.width-w)*.5f,98,w,38),GUIContent.none);GUI.Label(new Rect((Screen.width-w)*.5f,98,w,38),DimensionPlanetDirector.Announcement,notice);}if(playerBuff!=null&&playerBuff.ActiveRemaining>0){string effect=playerBuff.FluxActive&&playerBuff.GuardActive?"-18% CD • +8% MOVE • -18% DMG • +45% MINION DMG":playerBuff.FluxActive?"-18% CD • +8% MOVE • +30% MINION DMG":"-18% DMG TAKEN • +15% MINION DMG";GUI.Box(new Rect(18,102,230,50),$"{playerBuff.ActiveLabel}  {Mathf.CeilToInt(playerBuff.ActiveRemaining)}s\n{effect}",buffStyle);}}
-}
+    public sealed class PlanetHUD:MonoBehaviour
+    {
+        private PlanetBuffReceiver playerBuff;
+        private float nextFind;
+        private FrontEndTheme theme;
+        private GUIStyle notice,small;
+        private void Update()
+        {
+            if(playerBuff!=null||Time.unscaledTime<nextFind)return;nextFind=Time.unscaledTime+.5f;
+            var player=FindAnyObjectByType<Alterverse.Characters.HeroRespawn>();if(player!=null)playerBuff=player.GetComponent<PlanetBuffReceiver>();
+        }
+        private void OnGUI()
+        {
+            if(Time.timeScale<=0||MainMenuController.IsVisible)return;
+            theme??=new FrontEndTheme();notice??=new GUIStyle(theme.Small){alignment=TextAnchor.MiddleCenter};small??=new GUIStyle(theme.Small){fontSize=12};
+            CombatHudLayout layout=new CombatHudLayout(Screen.safeArea);Matrix4x4 before=GUI.matrix;
+            try
+            {
+                GUI.matrix=layout.Matrix;
+                if(!SiegeWaveAnnouncement.IsVisible&&Time.unscaledTime<DimensionPlanetDirector.AnnouncementUntil&&!string.IsNullOrEmpty(DimensionPlanetDirector.Announcement))
+                {
+                    Rect r=new Rect((layout.Width-440)*.5f,86,440,52);theme.Panel(r);
+                    theme.Label(new Rect(r.x+12,r.y+4,r.width-24,r.height-8),DimensionPlanetDirector.Announcement,notice);
+                }
+                if(playerBuff!=null&&playerBuff.ActiveRemaining>0)
+                {
+                    Rect r=new Rect(16,126,218,64);theme.Panel(r);
+                    string effect=playerBuff.FluxActive&&playerBuff.GuardActive?"-18% CD · +8% MOVE · -18% DAMAGE TAKEN\n+45% MINION DAMAGE":playerBuff.FluxActive?"-18% CD · +8% MOVE\n+30% MINION DAMAGE":"-18% DAMAGE TAKEN\n+15% MINION DAMAGE";
+                    string name=playerBuff.FluxActive&&playerBuff.GuardActive?"FLUX + GUARD":playerBuff.FluxActive?"FLUX":"GUARD";
+                    theme.Label(new Rect(r.x+10,r.y+4,198,20),$"{name}   {Mathf.CeilToInt(playerBuff.ActiveRemaining)}s",small);
+                    theme.Label(new Rect(r.x+10,r.y+25,198,36),effect,small,true);
+                }
+            }
+            finally{GUI.matrix=before;}
+        }
+    }
 }

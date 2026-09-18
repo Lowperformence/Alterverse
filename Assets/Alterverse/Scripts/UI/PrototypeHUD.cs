@@ -1,117 +1,251 @@
-using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Visuals;using UnityEngine;using UnityEngine.InputSystem;using UnityEngine.InputSystem.EnhancedTouch;using ETouch=UnityEngine.InputSystem.EnhancedTouch.Touch;
+using Alterverse.Characters;
+using Alterverse.Combat;
+using Alterverse.Visuals;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
+using ETouch=UnityEngine.InputSystem.EnhancedTouch.Touch;
 namespace Alterverse.UI
 {
-[DefaultExecutionOrder(-200)]
-public sealed class PrototypeHUD:MonoBehaviour
-{
-private Health playerHealth;private BasicAttack basicAttack;private HeroMotor motor;private PlayerHeroAbilities abilities;private HeroIdentity identity;private Health enemyHealth;private GUIStyle titleStyle,textStyle,centerStyle,buttonStyle,abilityStyle,ultStyle;private Texture2D pixel;private int inspectedAbility=-1;private float hintUntil;private string castMessage="";private int armedAbility=-1;private GUIStyle descriptionStyle;private int joystickFinger=-1;private Vector2 joystickCenter,joystickKnob,joystickOrigin;private const float JoystickRadius=72f;
-public void Initialize(Health player,VeyrAbilities legacyAbilities,Health enemy){playerHealth=player;enemyHealth=enemy;if(player!=null){basicAttack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();}pixel=new Texture2D(1,1);pixel.SetPixel(0,0,Color.white);pixel.Apply();}
-private void OnEnable(){EnhancedTouchSupport.Enable();}private void OnDisable(){armedAbility=-1;if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();if(motor!=null)motor.SetMoveInput(Vector2.zero);joystickFinger=-1;}
-private void EnsureStyles(){titleStyle??=new GUIStyle(GUI.skin.label){fontSize=18,fontStyle=FontStyle.Bold};textStyle??=new GUIStyle(GUI.skin.label){fontSize=13,fontStyle=FontStyle.Bold};centerStyle??=new GUIStyle(GUI.skin.label){fontSize=15,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};buttonStyle??=new GUIStyle(GUI.skin.button){fontSize=14,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};abilityStyle??=new GUIStyle(buttonStyle){fontSize=11,wordWrap=true};ultStyle??=new GUIStyle(buttonStyle){fontSize=11,wordWrap=true};}
-private void Update(){if(Time.timeScale<=0f||playerHealth==null||playerHealth.IsDead){armedAbility=-1;if(motor!=null)motor.SetMoveInput(Vector2.zero);joystickFinger=-1;return;}if(playerHealth!=null){abilities??=playerHealth.GetComponent<PlayerHeroAbilities>();identity??=playerHealth.GetComponent<HeroIdentity>();}HandleTouchJoystick();}
-private bool inputFocused=true;private Rect inputSafeArea;
-private void ResetJoystick(){joystickFinger=-1;if(motor!=null)motor.SetMoveInput(Vector2.zero);}
-private void OnApplicationFocus(bool focused){inputFocused=focused;if(!focused)ResetJoystick();}
-private void OnApplicationPause(bool paused){inputFocused=!paused;if(paused)ResetJoystick();}
-private float HudScale=>Mathf.Clamp(Screen.height/900f,.72f,1.25f);
-private void HandleTouchJoystick()
-{
-if(motor==null)return;
-Rect safe=Screen.safeArea;
-if(!inputFocused){ResetJoystick();return;}
-if(inputSafeArea!=safe){inputSafeArea=safe;ResetJoystick();}
-var touches=ETouch.activeTouches;bool found=false;float scale=HudScale;
-Rect capture=new Rect(safe.x,safe.y,Mathf.Min(safe.width*.4f,280*scale),Mathf.Min(safe.height*.46f,260*scale));
-for(int i=0;i<touches.Count;i++)
-{
-var touch=touches[i];Vector2 p=touch.screenPosition;
-Vector2 gui=new Vector2(p.x/scale,(Screen.height-p.y)/scale);
-if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began&&joystickFinger<0&&capture.Contains(p))
-{joystickFinger=touch.touchId;joystickOrigin=gui;
-float left=safe.x/scale+JoystickRadius,right=safe.xMax/scale-JoystickRadius;
-float top=(Screen.height-safe.yMax)/scale+JoystickRadius,bottom=(Screen.height-safe.y)/scale-JoystickRadius;
-joystickCenter=new Vector2(Mathf.Clamp(gui.x,left,right),Mathf.Clamp(gui.y,top,bottom));joystickKnob=joystickCenter;}
-if(touch.touchId!=joystickFinger)continue;
-found=true;
-if(touch.phase==UnityEngine.InputSystem.TouchPhase.Ended||touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled){ResetJoystick();return;}
-Vector2 delta=Vector2.ClampMagnitude(gui-joystickOrigin,JoystickRadius);joystickKnob=joystickCenter+delta;
-float magnitude=delta.magnitude/JoystickRadius;
-Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
-motor.SetMoveInput(new Vector2(input.x,-input.y));
+    // Keep the component name for existing bootstrap/scene compatibility.
+    [DefaultExecutionOrder(-200)]
+    public sealed class PrototypeHUD:MonoBehaviour
+    {
+        private Health health;
+        private BasicAttack attack;
+        private HeroMotor motor;
+        private PlayerHeroAbilities abilities;
+        private HeroIdentity identity;
+        private Camera view;
+        private FrontEndTheme theme;
+        private GUIStyle centered,small;
+        private readonly string[] names=new string[4],descriptions=new string[4],details=new string[4];
+        private readonly CombatGlyph[] glyphs=new CombatGlyph[4];
+        private string heroName,statusText="",feedback="",healthText="";
+        private readonly string[] cooldownText=new string[4];
+        private float nextReadout;
+        private float feedbackUntil,damageTrail=1,damageHold,previousHp=1;
+        private bool focused=true,suspended,combatInside;
+        private int joystickFinger=-1,combatFinger=-1,pressedSlot=-1,inspectedSlot=-1;
+        private Vector2 joystickCenter,joystickOrigin,joystickKnob;
+        private const float Radius=64;
+        private CombatHudLayout layout;
+        private Rect previousSafe;
+        private Color accent;
+        public void Initialize(Health player,VeyrAbilities legacyAbilities,Health enemy)
+        {
+            health=player;if(player==null)return;
+            attack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();
+            abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();view=Camera.main;
+            heroName=identity!=null?identity.DisplayName.ToUpperInvariant():"HERO";
+            accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):FrontEndTheme.Accent;
+            damageTrail=health.Normalized;CacheAbilities();
+        }
+        private void CacheAbilities()
+        {
+            if(abilities==null)return;
+            for(int i=0;i<4;i++)
+            {
+                AbilitySpec spec=abilities.SpecFor(i);names[i]=spec.Name.ToUpperInvariant();descriptions[i]=abilities.Describe(i);
+                details[i]=$"RANGE {abilities.PreviewRange(i):0.#}m  ·  AUTO TARGET";glyphs[i]=GlyphFor(i);
+            }
+        }
+        private CombatGlyph GlyphFor(int slot)
+        {
+            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
+            if((hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2))return CombatGlyph.Dash;
+            if((hero==HeroId.Mira&&(slot==1||slot==3))||(hero==HeroId.Rook&&slot==1))return CombatGlyph.Heal;
+            if((hero==HeroId.Mira&&slot==2)||(hero==HeroId.Kaelon&&slot==1))return CombatGlyph.Shield;
+            if(hero==HeroId.Kaelon&&slot==0)return CombatGlyph.Stun;
+            if(hero==HeroId.Nyra&&slot==3)return CombatGlyph.Volley;
+            if(abilities.SpecFor(slot).Radius>0)return CombatGlyph.Area;
+            return abilities.SpecFor(slot).Range>4?CombatGlyph.Shot:CombatGlyph.Strike;
+        }
+        private void OnEnable()=>EnhancedTouchSupport.Enable();
+        private void OnDisable(){ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
+        private void OnApplicationFocus(bool value){focused=value;if(!value)ResetInput();}
+        private void OnApplicationPause(bool value){suspended=value;if(value)ResetInput();}
+        private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;combatInside=false;motor?.SetMoveInput(Vector2.zero);}
+        private void Update()
+        {
+            layout=new CombatHudLayout(Screen.safeArea);
+            if(previousSafe!=layout.Safe){previousSafe=layout.Safe;ResetInput();}
+            if(layout.Safe.width<=0||layout.Safe.height<=0||Time.timeScale<=0||health==null||health.IsDead||!focused||suspended){ResetInput();return;}
+            float hp=health.Normalized;
+            if(hp<previousHp)damageHold=Time.unscaledTime+.25f;previousHp=hp;
+            if(hp>damageTrail)damageTrail=hp;
+            if(hp<damageTrail&&Time.unscaledTime>=damageHold)damageTrail=Mathf.MoveTowards(damageTrail,hp,Time.unscaledDeltaTime*.7f);
+            HeroCombatStatus status=health.GetComponent<HeroCombatStatus>();
+            statusText=status!=null&&status.Stunned?"STUNNED":status!=null&&status.MoveMultiplier<.99f?"SLOWED":"";
+            HandleTouches();
+            // A touch gesture exclusively owns touch controls; the mouse path is for editor/desktop testing.
+            if(ETouch.activeTouches.Count==0&&combatFinger<0)HandleMouse();
+            if(Time.unscaledTime>=nextReadout)
+            {
+                nextReadout=Time.unscaledTime+.1f;
+                healthText=$"{health.Current:0} / {health.Max:0}"+(health.Shield>0?$"   +{health.Shield:0} SHIELD":"");
+                for(int i=0;i<4;i++)cooldownText[i]=abilities!=null?$"{abilities.RemainingFor(i):0.0}s":"";
+            }
+        }
+        private void HandleTouches()
+        {
+            bool foundMove=false,foundCombat=false;
+            var touches=ETouch.activeTouches;
+            for(int i=0;i<touches.Count;i++)
+            {
+                var touch=touches[i];Vector2 point=layout.Point(touch.screenPosition);
+                bool ended=touch.phase==UnityEngine.InputSystem.TouchPhase.Ended,canceled=touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled;
+                if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began)
+                {
+                    int slot=layout.Hit(point);
+                    if(slot>=0&&combatFinger<0&&pressedSlot<0){combatFinger=touch.touchId;BeginPress(slot);}
+                    else if(joystickFinger<0&&layout.MoveCapture.Contains(point))
+                    {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));}
+                }
+                if(touch.touchId==joystickFinger)
+                {
+                    foundMove=true;
+                    if(ended||canceled){joystickFinger=-1;motor?.SetMoveInput(Vector2.zero);}
+                    else
+                    {
+                        Vector2 delta=Vector2.ClampMagnitude(point-joystickOrigin,Radius);joystickKnob=joystickCenter+delta;
+                        float magnitude=delta.magnitude/Radius;
+                        Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
+                        motor?.SetMoveInput(new Vector2(input.x,-input.y));
+                    }
+                }
+                if(touch.touchId==combatFinger)
+                {
+                    foundCombat=true;combatInside=layout.ContainsWithMargin(pressedSlot,point);
+                    if(ended||canceled){EndPress(!canceled&&combatInside);combatFinger=-1;}
+                    else if(pressedSlot==4&&combatInside)attack?.TryAttack();
+                }
+            }
+            if(!foundMove&&joystickFinger>=0){joystickFinger=-1;motor?.SetMoveInput(Vector2.zero);}
+            if(!foundCombat&&combatFinger>=0){EndPress(false);combatFinger=-1;}
+        }
+        private void HandleMouse()
+        {
+            Mouse mouse=Mouse.current;if(mouse==null)return;
+            Vector2 point=layout.Point(mouse.position.ReadValue());
+            if(mouse.leftButton.wasPressedThisFrame){int slot=layout.Hit(point);if(slot>=0)BeginPress(slot);}
+            if(pressedSlot<0)return;
+            combatInside=layout.ContainsWithMargin(pressedSlot,point);
+            if(mouse.leftButton.wasReleasedThisFrame)EndPress(combatInside);
+            else if(pressedSlot==4&&combatInside&&mouse.leftButton.isPressed)attack?.TryAttack();
+        }
+        private void BeginPress(int slot)
+        {
+            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;
+            if(slot==4)attack?.TryAttack();
+        }
+        private void EndPress(bool commit)
+        {
+            int slot=pressedSlot;pressedSlot=-1;inspectedSlot=-1;
+            if(!commit||slot<0||slot>3||abilities==null)return;
+            bool success=slot==0?abilities.CastQ():slot==1?abilities.CastW():slot==2?abilities.CastE():abilities.CastUltimate();
+            if(success){feedback=names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
+            else if(!HeroCombatStatus.CanAct(health.gameObject))feedback="STUNNED — CANNOT CAST";
+            else if(abilities.RemainingFor(slot)>0)feedback="ABILITY RECHARGING";
+            else if(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shield)feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
+            else feedback="NO TARGET / PATH BLOCKED";
+            feedbackUntil=Time.unscaledTime+1.5f;nextReadout=0;
+        }
+        private void OnGUI()
+        {
+            if(layout.Safe.width<=0||layout.Safe.height<=0||Time.timeScale<=0||health==null||health.IsDead||!focused||suspended)return;
+            layout=new CombatHudLayout(Screen.safeArea);if(layout.Safe.width<=0||layout.Safe.height<=0)return;
+            theme??=new FrontEndTheme();centered??=new GUIStyle(theme.Body){alignment=TextAnchor.MiddleCenter,fontSize=14};
+            small??=new GUIStyle(centered){fontSize=12};
+            Matrix4x4 matrix=GUI.matrix;Color color=GUI.color;
+            try
+            {
+                GUI.matrix=layout.Matrix;
+                if(Event.current.type!=EventType.Repaint)return;
+                DrawPreview();DrawHealth();DrawActions();DrawJoystick();DrawHint();
+            }
+            finally{GUI.matrix=matrix;GUI.color=color;}
+        }
+        private void DrawHealth()
+        {
+            Rect r=new Rect(16,16,218,76);theme.Panel(r);
+            theme.Label(new Rect(r.x+12,r.y+5,194,24),heroName,centered);
+            Rect bar=new Rect(r.x+12,r.y+34,194,9);FrontEndTheme.Fill(bar,FrontEndTheme.Background);
+            FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*damageTrail,bar.height),new Color(.7f,.75f,.8f));
+            FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*health.Normalized,bar.height),health.Normalized<.3f?new Color(.95f,.43f,.32f):accent);
+            if(health.Shield>0)FrontEndTheme.Fill(new Rect(bar.x,bar.y+11,bar.width*Mathf.Clamp01(health.Shield/health.Max),3),FrontEndTheme.Accent);
+            theme.Label(new Rect(r.x+12,r.y+48,194,22),healthText,small);
+            if(statusText.Length>0)theme.Label(new Rect(r.x,r.yMax+4,r.width,25),statusText,centered);
+        }
+        private void DrawActions()
+        {
+            for(int i=0;i<5;i++)
+            {
+                Rect r=layout.Action(i);bool held=pressedSlot==i&&combatInside;
+                float remaining=i<4&&abilities!=null?abilities.RemainingFor(i):0;
+                Color edge=i==3?new Color(.9f,.73f,.42f):accent;
+                FrontEndTheme.Fill(r,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
+                FrontEndTheme.Fill(new Rect(r.x,r.y,r.width,held?4:2),remaining>0?FrontEndTheme.Muted:edge);
+                CombatGlyph glyph=i<4?glyphs[i]:CombatGlyph.Strike;
+                CombatGlyphs.Draw(glyph,new Vector2(r.center.x,r.y+(i==4?38:28)),i==4?34:26,remaining>0?FrontEndTheme.Muted:FrontEndTheme.Text);
+                if(remaining>0)
+                {
+                    float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
+                    FrontEndTheme.Fill(new Rect(r.x+5,r.yMax-6,(r.width-10)*ratio,3),FrontEndTheme.Muted);
+                    theme.Label(new Rect(r.x+4,r.y+45,r.width-8,28),cooldownText[i],centered);
+                }
+                else theme.Label(new Rect(r.x+4,r.y+(i==4?65:45),r.width-8,30),i==4?"ATTACK":names[i],small);
+                if(i==3)theme.Label(new Rect(r.x,r.y-20,r.width,18),"ULTIMATE",small,true);
+            }
+        }
+        private void DrawJoystick()
+        {
+            Vector2 center=joystickFinger>=0?joystickCenter:new Vector2(104,layout.Height-104);
+            Vector2 knob=joystickFinger>=0?joystickKnob:center;
+            CombatGlyphs.Ring(center,Radius,2,FrontEndTheme.Muted,32);
+            CombatGlyphs.Ring(knob,24,3,joystickFinger>=0?accent:FrontEndTheme.Text,20);
+            if(joystickFinger<0)theme.Label(new Rect(center.x-60,center.y+74,120,20),"MOVE",small,true);
+        }
+        private void DrawHint()
+        {
+            if(inspectedSlot<0)
+            {
+                if(Time.unscaledTime<feedbackUntil)theme.Label(new Rect(layout.Width-410,layout.Height-290,390,28),feedback,centered);
+                return;
+            }
+            Rect r=new Rect(layout.Width-418,layout.Height-386,394,130);theme.Panel(r);
+            theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],centered);
+            theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
+            string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DIRECTION: MOVE / AUTO EVADE · COLLISION MAY SHORTEN":details[inspectedSlot];
+            theme.Label(new Rect(r.x+12,r.y+80,r.width-24,18),detail,small,true);
+            theme.Label(new Rect(r.x+12,r.y+103,r.width-24,20),combatInside?"RELEASE TO CAST · DRAG OUT TO CANCEL":"RELEASE TO CANCEL",small);
+        }
+        private void ProjectLine(Vector3 from,Vector3 to,Color color)
+        {
+            Vector3 a=view.WorldToScreenPoint(from),b=view.WorldToScreenPoint(to);
+            if(a.z>0&&b.z>0)CombatGlyphs.Line(layout.Point(new Vector2(a.x,a.y)),layout.Point(new Vector2(b.x,b.y)),3,color);
+        }
+        private void DrawPreview()
+        {
+            if(inspectedSlot<0||!combatInside||abilities==null)return;
+            if(view==null)view=Camera.main;if(view==null)return;
+            float range=abilities.PreviewRange(inspectedSlot);if(range<=0)return;
+            Vector3 center=health.transform.position;center.y=.18f;
+            Color tint=glyphs[inspectedSlot]==CombatGlyph.Heal?new Color(.45f,.87f,.66f):FrontEndTheme.Accent;
+            if(glyphs[inspectedSlot]==CombatGlyph.Dash)
+            {
+                Vector3 direction=abilities.PreviewDirection(inspectedSlot);direction.y=0;direction.Normalize();
+                Vector3 end=center+direction*range,side=Vector3.Cross(Vector3.up,direction)*.35f;
+                ProjectLine(center,end,tint);ProjectLine(end,end-direction*.6f+side,tint);ProjectLine(end,end-direction*.6f-side,tint);
+                return;
+            }
+            for(int i=0;i<48;i++)
+            {
+                float a=i*Mathf.PI*2/48,b=(i+1)*Mathf.PI*2/48;
+                Vector3 p=view.WorldToScreenPoint(center+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*range);
+                Vector3 q=view.WorldToScreenPoint(center+new Vector3(Mathf.Cos(b),0,Mathf.Sin(b))*range);
+                if(p.z>0&&q.z>0)CombatGlyphs.Line(layout.Point(new Vector2(p.x,p.y)),layout.Point(new Vector2(q.x,q.y)),2,tint);
+            }
+        }
+    }
 }
-if(!found&&joystickFinger>=0)ResetJoystick();
-}
-private void OnGUI(){if(Time.timeScale<=0f||playerHealth==null)return;EnsureStyles();Matrix4x4 previous=GUI.matrix;try{float scale=HudScale;GUI.matrix=Matrix4x4.Scale(new Vector3(scale,scale,1));float sw=Screen.width/scale,sh=Screen.height/scale;DrawRangePreview();DrawPlayerPanel();DrawCombatButtons(sw,sh);DrawJoystick(sh);DrawAbilityHint(sw,sh);}finally{GUI.matrix=previous;}}
-private void DrawPlayerPanel(){if(playerHealth==null)return;Rect panel=new Rect(18,18,285,76);Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;DimensionUiMotif.DrawSplitPanel(panel,pixel,accent,StylizedArtDirection.LumenEnergy,Time.unscaledTime);DimensionUiMotif.DrawCornerCuts(panel,pixel,accent);GUI.Label(new Rect(32,23,250,25),(identity!=null?identity.DisplayName.ToUpperInvariant():"HERO"),titleStyle);GUI.Label(new Rect(32,48,105,20),$"HP {playerHealth.Current:0} / {playerHealth.Max:0}"+(playerHealth.Shield>0?$" +{playerHealth.Shield:0}":""),textStyle);DrawBar(new Rect(136,51,148,12),playerHealth.Normalized,accent);}
-private void DrawCombatButtons(float sw,float sh){float attackSize=96,attackX=sw-126,attackY=sh-130;Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;DrawActionFrame(new Rect(attackX-6,attackY-6,attackSize+12,attackSize+12),accent,.48f);if(GUI.Button(new Rect(attackX,attackY,attackSize,attackSize),"ATTACK",buttonStyle)&&basicAttack!=null)basicAttack.TryAttack();DrawAbilityButton(new Rect(sw-224,sh-111,76,76),AbilityEffect(0)+"\n[Q]",abilities?.QRemaining??0,()=>ArmAbility(0),false);DrawAbilityButton(new Rect(sw-199,sh-202,72,72),AbilityEffect(1)+"\n[E]",abilities?.WRemaining??0,()=>ArmAbility(1),false);DrawAbilityButton(new Rect(sw-113,sh-224,72,72),AbilityEffect(2)+"\n[R]",abilities?.ERemaining??0,()=>ArmAbility(2),false);DrawAbilityButton(new Rect(sw-300,sh-194,78,78),AbilityEffect(3)+"\n[F]",abilities?.UltRemaining??0,()=>ArmAbility(3),true);}
-private static string Short(string value){return string.IsNullOrEmpty(value)?"?":value.ToUpperInvariant();}private void DrawAbilityButton(Rect rect,string label,float cooldown,System.Action action,bool ultimate){Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;bool ready=cooldown<=.05f;float pulse=ultimate&&ready?.55f+.15f*Mathf.Sin(Time.unscaledTime*4f):.32f;DrawActionFrame(new Rect(rect.x-4,rect.y-4,rect.width+8,rect.height+8),ultimate?StylizedArtDirection.WarmAccent:accent,pulse);bool old=GUI.enabled;GUI.enabled=ready;if(GUI.Button(rect,ready?(ultimate?"ULT\n"+label:label):$"{label}\n{cooldown:0.0}",ultimate?ultStyle:abilityStyle))action?.Invoke();GUI.enabled=old;if(!ready){float ratio=Mathf.Clamp01(cooldown/12f);Fill(new Rect(rect.x+4,rect.y+4,rect.width-8,(rect.height-8)*ratio),new Color(.015f,.015f,.025f,.42f));Fill(new Rect(rect.x+5,rect.y+rect.height-7,(rect.width-10)*ratio,3),new Color(1,1,1,.3f));}else Fill(new Rect(rect.x+rect.width*.28f,rect.y+5,rect.width*.44f,2),new Color(accent.r,accent.g,accent.b,.7f));}
-private string AbilityEffect(int slot)
-{
-HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
-if(hero==HeroId.Mira&&slot==1)return "HEAL";
-if(hero==HeroId.Mira&&slot==2)return "SHIELD ALLY";
-if(hero==HeroId.Mira&&slot==3)return "TEAM HEAL";
-if(hero==HeroId.Kaelon&&slot==1)return "SHIELD";
-if(hero==HeroId.Kaelon&&slot==0)return "STUN";
-if(hero==HeroId.Kaelon&&slot==3)return "CITADEL";
-if(hero==HeroId.Rook&&slot==1)return "RECOVER";
-if(hero==HeroId.Veyr&&slot==2)return "DASH";
-if((hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2))return "EVADE";
-if(hero==HeroId.Nyra&&slot==3)return "VOLLEY";
-if(abilities!=null&&abilities.SpecFor(slot).Radius>0)return "AREA HIT";
-return slot==3?"EXECUTE":"STRIKE";
-}
-private void ArmAbility(int slot)
-{
-if(abilities==null||playerHealth==null||playerHealth.IsDead)return;
-armedAbility=slot;inspectedAbility=slot;hintUntil=float.PositiveInfinity;castMessage="PREVIEW";
-}
-private void CastAbility(int slot)
-{
-if(abilities==null)return;inspectedAbility=slot;hintUntil=Time.unscaledTime+3f;
-bool success=slot==0?abilities.CastQ():slot==1?abilities.CastW():slot==2?abilities.CastE():abilities.CastUltimate();
-castMessage=success?"CAST":abilities.RemainingFor(slot)>0?"ON COOLDOWN":"NO TARGET IN RANGE";armedAbility=-1;
-}
-private void DrawAbilityHint(float sw,float sh)
-{
-if(inspectedAbility<0||Time.unscaledTime>hintUntil||abilities==null||playerHealth.IsDead)return;
-AbilitySpec spec=abilities.SpecFor(inspectedAbility);
-float width=Mathf.Min(430,sw-36);Rect area=new Rect(sw-width-18,Mathf.Max(100,sh-432),width,164);
-Fill(area,new Color(.025f,.035f,.055f,.97f));
-descriptionStyle??=new GUIStyle(textStyle){wordWrap=true,fontSize=13};
-GUI.Label(new Rect(area.x+12,area.y+8,area.width-24,22),spec.Name.ToUpperInvariant(),textStyle);
-GUI.Label(new Rect(area.x+12,area.y+33,area.width-24,46),abilities.Describe(inspectedAbility),descriptionStyle);
-GUI.Label(new Rect(area.x+12,area.y+83,area.width-24,22),$"RANGE {abilities.PreviewRange(inspectedAbility):0.#}m  |  COOLDOWN {abilities.CooldownFor(inspectedAbility):0.#}s",textStyle);
-if(armedAbility>=0)
-{
-bool wasEnabled=GUI.enabled;GUI.enabled=!playerHealth.IsDead&&abilities.RemainingFor(armedAbility)<=0;
-if(GUI.Button(new Rect(area.x+12,area.y+116,area.width*.53f,36),"CAST",buttonStyle))CastAbility(armedAbility);
-GUI.enabled=wasEnabled;
-if(GUI.Button(new Rect(area.x+area.width*.59f,area.y+116,area.width*.37f,36),"CANCEL",buttonStyle)){armedAbility=-1;hintUntil=0;}
-}
-else GUI.Label(new Rect(area.x+12,area.y+119,area.width-24,28),castMessage,textStyle);
-}
-private void DrawRangePreview()
-{
-if(armedAbility<0||abilities==null||playerHealth==null||playerHealth.IsDead||Event.current.type!=EventType.Repaint)return;
-Camera cam=Camera.main;if(cam==null)return;float range=abilities.PreviewRange(armedAbility);if(range<=0)return;
-Vector3 center=playerHealth.transform.position;center.y=.18f;
-Color color=AbilityEffect(armedAbility).Contains("HEAL")?new Color(.3f,1f,.5f):new Color(.3f,.85f,1f);
-const int segments=48;
-for(int i=0;i<segments;i++)
-{
-float a=i*Mathf.PI*2/segments,b=(i+1)*Mathf.PI*2/segments;
-Vector3 p=cam.WorldToScreenPoint(center+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*range);
-Vector3 q=cam.WorldToScreenPoint(center+new Vector3(Mathf.Cos(b),0,Mathf.Sin(b))*range);
-if(p.z<=0||q.z<=0)continue;
-Vector2 from=new Vector2(p.x,Screen.height-p.y)/HudScale,to=new Vector2(q.x,Screen.height-q.y)/HudScale;
-Vector2 delta=to-from;Matrix4x4 before=GUI.matrix;
-try{GUIUtility.RotateAroundPivot(Mathf.Atan2(delta.y,delta.x)*Mathf.Rad2Deg,from);Fill(new Rect(from.x,from.y-1,delta.magnitude,2),color);}
-finally{GUI.matrix=before;}
-}
-}
-private void DrawActionFrame(Rect r,Color c,float alpha){Fill(r,new Color(StylizedArtDirection.Ink.r,StylizedArtDirection.Ink.g,StylizedArtDirection.Ink.b,.72f));Fill(new Rect(r.x,r.y,r.width,2),new Color(c.r,c.g,c.b,alpha));Fill(new Rect(r.x,r.y,2,r.height*.32f),new Color(c.r,c.g,c.b,alpha));Fill(new Rect(r.xMax-2,r.yMax-r.height*.32f,2,r.height*.32f),new Color(c.r,c.g,c.b,alpha));Fill(new Rect(r.x+r.width*.68f,r.yMax-2,r.width*.32f,2),new Color(c.r,c.g,c.b,alpha));}
-private void DrawJoystick(float sh){Vector2 center=joystickFinger>=0?joystickCenter:new Vector2(112,sh-112),knob=joystickFinger>=0?joystickKnob:center;Color accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;Rect baseRect=new Rect(center.x-70,center.y-70,140,140);DrawActionFrame(baseRect,accent,.3f);Fill(new Rect(center.x-2,center.y-2,4,4),new Color(1,1,1,.45f));GUI.Box(new Rect(knob.x-29,knob.y-29,58,58),joystickFinger>=0?"":"MOVE",centerStyle);}private void DrawBar(Rect rect,float normalized,Color color){Fill(rect,new Color(.02f,.02f,.03f,.9f));Fill(new Rect(rect.x+2,rect.y+2,(rect.width-4)*Mathf.Clamp01(normalized),rect.height-4),color);if(normalized<.3f)Fill(new Rect(rect.x+2,rect.y+2,(rect.width-4)*Mathf.Clamp01(normalized),2),new Color(1,.35f,.2f,.85f));}private void Fill(Rect r,Color c){if(pixel==null)return;Color old=GUI.color;GUI.color=c;GUI.DrawTexture(r,pixel);GUI.color=old;}private void OnDestroy(){if(pixel!=null)Destroy(pixel);}
-}
-}
-
