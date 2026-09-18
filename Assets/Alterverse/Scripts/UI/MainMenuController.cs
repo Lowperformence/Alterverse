@@ -20,7 +20,7 @@ try{EnsureStyles();DrawBackground();if(launching){DrawLaunch();return;}float rev
 finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEnabled;}
 }
 private void DrawFooterStatus(string left,string right){GUI.color=new Color(1,1,1,.55f);GUI.DrawTexture(new Rect(244,655,472,1),whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(244,662,230,18),left,small);GUI.Label(new Rect(486,662,230,18),right,footerRight);}
-private void DrawSectionHeader(string heading,string kicker){GUI.Label(new Rect(42,52,620,54),heading,title);GUI.Label(new Rect(48,100,500,20),kicker,subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,112,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);}
+private void DrawSectionHeader(string heading,string kicker){GUI.Label(new Rect(42,52,620,54),heading,title);GUI.Label(new Rect(48,100,500,20),kicker,subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,122,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);}
 private void DrawTopNav(Page current)
 {
 GUI.enabled=true;
