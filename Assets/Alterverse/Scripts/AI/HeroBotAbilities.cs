@@ -104,8 +104,10 @@ namespace Alterverse.AI
                 if (direction.sqrMagnitude < .01f || distance < .1f) return false;
                 end = origin + direction.normalized * distance;
                 end.x = Mathf.Clamp(end.x, -40f, 40f); end.z = Mathf.Clamp(end.z, -33f, 33f);
+                MobaBotMover mover = GetComponent<MobaBotMover>();
+                if (mover != null && !mover.CanRepositionTo(end)) return false;
                 transform.position = end;
-                GetComponent<MobaBotMover>()?.ResetMotion();
+                mover?.ResetMotion();
                 PrototypeVfx.ShadowTrail(origin, end, accent);
             }
             else

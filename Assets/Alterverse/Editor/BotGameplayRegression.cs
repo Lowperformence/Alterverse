@@ -5,6 +5,7 @@ using System.Reflection;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Match;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,6 +22,10 @@ namespace Alterverse.EditorChecks
         {
             if (!Application.isPlaying) throw new InvalidOperationException("Enter Play mode before running these checks.");
             float previousScale = Time.timeScale;
+            // Remove existing movers from the separation registry for an isolated synchronous check.
+            var suspended = new List<MobaBotMover>();
+            foreach (MobaBotMover mover in UnityEngine.Object.FindObjectsByType<MobaBotMover>())
+                if (mover.enabled) { suspended.Add(mover); mover.enabled = false; }
             try
             {
                 Time.timeScale = 1f;
@@ -28,6 +33,7 @@ namespace Alterverse.EditorChecks
                 CheckTargetRetention();
                 CheckAbilitySlots();
                 CheckMinionDuel();
+                CheckTowerAndHazardDecisions();
                 Debug.Log("DIMENSIONS FRONT: all bot/minion regression assertions passed.");
             }
             finally
@@ -35,6 +41,7 @@ namespace Alterverse.EditorChecks
                 Time.timeScale = previousScale;
                 foreach (GameObject obj in Created) if (obj != null) UnityEngine.Object.DestroyImmediate(obj);
                 Created.Clear();
+                foreach (MobaBotMover mover in suspended) if (mover != null) mover.enabled = true;
             }
         }
 
@@ -126,6 +133,60 @@ namespace Alterverse.EditorChecks
             Assert(!(bool)Call(mira, "TryCast", 1, null), "Support must not heal across the map or waste cooldown.");
             ally.transform.position = mira.transform.position + Vector3.right;
             Assert((bool)Call(mira, "TryCast", 1, null) && ally.Current > 20, "Support must heal a wounded nearby ally without an enemy.");
+        }
+        private static void CheckTowerAndHazardDecisions()
+        {
+            Vector3 center = new(4000, 1, 4000);
+            GameObject towerObject = Unit("Check_Tower", 1, center);
+            LaneTower tower = towerObject.AddComponent<LaneTower>(); tower.Initialize(1);
+            GameObject hero = Unit("Check_TowerHero", 0, center + Vector3.right);
+            hero.AddComponent<HeroIdentity>().Configure(HeroId.Rook);
+            GameObject wave = Unit("Check_TowerMinion", 0, center + Vector3.right * 3f);
+            wave.AddComponent<LaneMinion>().Initialize(0, center);
+            Health selected = (Health)Call(tower, "FindEnemyTarget");
+            Assert(selected == wave.GetComponent<Health>(), "Tower must prefer a minion over a nearer hero, without depending on colliders.");
+            Set(tower, "currentTarget", selected);
+            Assert(tower.HasMinionCoverFor(0), "Targeted living minion must provide cover.");
+            selected.TakeDamage(100);
+            Assert(!tower.HasMinionCoverFor(0), "Dead minion must stop providing cover immediately.");
+            Assert((Health)Call(tower, "FindEnemyTarget") == hero.GetComponent<Health>(), "Tower must switch to hero when the wave is gone.");
+            hero.transform.position = center + Vector3.right * (tower.AttackRange + .01f);
+            Assert(Call(tower, "FindEnemyTarget") == null, "Tower must obey the exact planar range.");
+
+            BotTargetSensor sensor = hero.AddComponent<BotTargetSensor>();
+            MobaBotBrain brain = hero.AddComponent<MobaBotBrain>(); brain.Initialize(0, 16);
+            hero.AddComponent<BotLanePlan>().Initialize(0, 16);
+            MobaBotMover mover = hero.AddComponent<MobaBotMover>();
+            Set(mover, "towers", new[] { tower }); Set(mover, "nextWorldScan", float.MaxValue);
+            hero.transform.position = center + Vector3.left * 7f;
+            Vector3 guarded = (Vector3)Call(mover, "GuardAgainstTowers", center + Vector3.right * 7f);
+            Assert(guarded == hero.transform.position, "An uncovered movement step must not cross a tower circle.");
+            Assert(!mover.CanRepositionTo(center + Vector3.right * 7f), "A dash must not bypass tower avoidance.");
+            selected.RestoreFull(); Set(tower, "currentTarget", selected);
+            Assert(mover.CanRepositionTo(center + Vector3.left * 2f), "A live minion under fire must permit a push.");
+
+            GameObject planetObject = Unit("Check_Pulse", 1, center + Vector3.forward * 30f);
+            PlanetPulseAttack pulse = planetObject.AddComponent<PlanetPulseAttack>();
+            Set(pulse, "telegraphing", true);
+            Assert(pulse.IsTelegraphing, "A live planet must expose its active warning.");
+            Set(mover, "pulses", new[] { pulse }); Set(mover, "towers", Array.Empty<LaneTower>());
+            hero.transform.position = planetObject.transform.position + Vector3.left * 2f;
+            object[] args = { Vector3.zero };
+            Assert((bool)Call(mover, "TryGetPulseEscape", args), "Bot in a warning circle must request an escape.");
+            Vector3 escape = (Vector3)args[0];
+            Assert(Vector3.Distance(escape, planetObject.transform.position) > pulse.BlastRadius, "Escape point must be outside blast radius.");
+            Assert(!mover.CanRepositionTo(planetObject.transform.position), "Offensive dash must not move deeper into a warned explosion.");
+            Assert(mover.CanRepositionTo(escape), "Escape dash must remain possible.");
+            pulse.enabled = false;
+            Assert(!pulse.IsTelegraphing, "Disabled warnings must not influence bots.");
+
+            GameObject other = Unit("Check_Overlap", 0, hero.transform.position);
+            other.AddComponent<BotTargetSensor>(); other.AddComponent<MobaBotBrain>().Initialize(0, 16);
+            other.AddComponent<BotLanePlan>().Initialize(0, 16);
+            MobaBotMover second = other.AddComponent<MobaBotMover>();
+            Vector3 firstPush = (Vector3)Call(mover, "SeparationVelocity");
+            Vector3 secondPush = (Vector3)Call(second, "SeparationVelocity");
+            Assert(firstPush.sqrMagnitude > 0 && Vector3.Dot(firstPush, secondPush) < 0, "Exact overlaps must separate in opposite directions.");
         }
         private static void CheckMinionDuel()
         {

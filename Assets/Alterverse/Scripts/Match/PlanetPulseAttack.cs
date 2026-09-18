@@ -14,6 +14,8 @@ namespace Alterverse.Match
         private Material ringMaterial;
         private float nextPulse, telegraphStart, flashUntil;
         private bool telegraphing;
+        public bool IsTelegraphing => isActiveAndEnabled && telegraphing && planet != null && planet.Available && health != null && !health.IsDead;
+        public float BlastRadius => radius;
         private readonly Color warning = new Color(1f, .48f, .12f);
 
         private void Awake()
@@ -119,3 +121,4 @@ namespace Alterverse.Match
         private void OnDestroy() { if (ringMaterial != null) Destroy(ringMaterial); }
     }
 }
+
