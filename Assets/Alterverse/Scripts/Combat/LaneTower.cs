@@ -16,7 +16,7 @@ namespace Alterverse.Combat
         public float AttackRange => attackRange;
         public Health CurrentTarget => IsValidTarget(currentTarget) ? currentTarget : null;
         private void Awake() => health = GetComponent<Health>();
-        public void Initialize(int teamId) { team = teamId; currentTarget = null; nextTargetScan = 0; }
+        public void Initialize(int teamId) { Configure(teamId,attackRange,attackDamage,attackCooldown); } public void Configure(int teamId,float range,float damage,float cooldown){team=teamId;attackRange=Mathf.Max(1f,range);attackDamage=Mathf.Max(1f,damage);attackCooldown=Mathf.Max(.2f,cooldown);currentTarget=null;nextTargetScan=0;}
 
         public bool HasMinionCoverFor(int attackingTeam)
         {
