@@ -35,6 +35,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildImpactEjecta();
         BuildFractures();
         BuildRealityTransitionScars();
+        BuildCentralImpactHalo();
         BuildRocks();
         BuildRegolithVariation();
         BuildLaneDustScars();
@@ -235,6 +236,19 @@ public sealed class ProductionLunarGround : MonoBehaviour
             Material faint=side<0?zeroEnergy:lumenEnergy;
             Strip("DF_FadingRealitySeam",a,b,.035f,.089f,faint);
             Strip("DF_NeutralCollisionScar",new Vector2(side*6.4f,z+(i%2==0?.35f:-.35f)),new Vector2(side*2.8f,z),.065f,.087f,darkRegolith);
+        }
+    }
+
+    void BuildCentralImpactHalo()
+    {
+        // Neutral concentric scars frame the Dimensions Front objective without using another bright gameplay color.
+        Ring("DF_CentralImpactHalo",new Vector3(0,.058f,0),9.15f,9.34f,40,darkRegolith);
+        Ring("DF_CentralImpactDust",new Vector3(0,.054f,0),10.35f,10.48f,40,laneMat);
+        for(int i=0;i<8;i++)
+        {
+            float a=(i*45f+18f)*Mathf.Deg2Rad;
+            Vector2 from=new(Mathf.Cos(a)*9.5f,Mathf.Sin(a)*9.5f),to=new(Mathf.Cos(a)*11.15f,Mathf.Sin(a)*11.15f);
+            Strip("DF_CentralRadialScar",from,to,.045f,.061f,i%3==0?rimMat:darkRegolith);
         }
     }
 
