@@ -30,6 +30,7 @@ namespace Alterverse.Visuals
             BuildUndersideTapers();
             BuildEdgeFragments();
             BuildFragmentTrails();
+            BuildCornerBreakups();
             BuildUndersideFissures();
             BuildRimDropShadows();
             BuildEdgeFalloff();
@@ -156,6 +157,20 @@ namespace Alterverse.Visuals
         }
 
 
+
+
+        private void BuildCornerBreakups()
+        {
+            Material m=Mat(new Color(.027f,.031f,.043f,1),false);if(m==null)return;
+            Vector3[] corners={new(-45,-1.8f,-37),new(-45,-1.8f,37),new(45,-1.8f,-37),new(45,-1.8f,37)};
+            for(int c=0;c<corners.Length;c++)for(int i=0;i<3;i++)
+            {
+                float sx=c<2?-1f:1f,sz=c%2==0?-1f:1f;Vector3 p=corners[c]+new Vector3(sx*(i*.9f),-i*.5f,sz*(i*.65f));
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_CornerBreakup";g.transform.SetParent(transform,false);g.transform.position=p;
+                g.transform.localScale=new Vector3(2.2f-i*.35f,1.15f+i*.4f,1.8f-i*.25f);g.transform.rotation=Quaternion.Euler(12+i*14,c*47+i*29,sz*10);g.isStatic=true;
+                Collider col=g.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
 
         private void BuildFragmentTrails()
         {
