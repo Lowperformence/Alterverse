@@ -72,6 +72,7 @@ namespace Alterverse.Combat
             blastAt = Time.time + telegraphDuration;
             warningDisc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             warningDisc.name = "DF_PlanetPulseWarning";
+            GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)warningDisc.transform.SetParent(world.transform,true);
             warningDisc.transform.position = transform.position + Vector3.down * 1.15f;
             warningDisc.transform.localScale = new Vector3(blastRadius * 2f, .025f, blastRadius * 2f);
             Collider c = warningDisc.GetComponent<Collider>(); if (c != null) c.enabled = false;
