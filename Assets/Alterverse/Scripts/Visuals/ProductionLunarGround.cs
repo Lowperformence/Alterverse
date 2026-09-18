@@ -36,6 +36,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildRocks();
         BuildRegolithVariation();
         BuildLaneDustScars();
+        BuildRegolithDriftBands();
         BuildEdgeCliffs();
         BuildEdgeFragments();
     }
@@ -250,6 +251,18 @@ public sealed class ProductionLunarGround : MonoBehaviour
             float x=side*(6.5f+i*5.1f),offset=((i&1)==0?1f:-1f)*(2.55f+(i%3)*.22f);
             Mesh patch=IrregularDisc(new Vector3(x,.052f,z+offset),.72f+(i%2)*.18f,14,70+i+(side>0?10:0)+(z>0?20:0));
             meshes.Add(patch);MeshObject("DF_LaneDustScar",patch,i%3==0?darkRegolith:laneMat,Vector3.zero).GetComponent<MeshRenderer>().receiveShadows=false;
+        }
+    }
+
+    void BuildRegolithDriftBands()
+    {
+        // Broad, broken dust deposits create lunar tonal variation without turning the ground into tiles.
+        Vector2[] a={new(-39,-27),new(-31,25),new(-18,-4),new(-8,25),new(39,27),new(31,-25),new(18,4),new(8,-25)};
+        for(int i=0;i<a.Length;i++)
+        {
+            float side=a[i].x<0?-1f:1f;
+            Vector2 b=a[i]+new Vector2(-side*(4.5f+(i%3)*1.2f),(i%2==0?1.1f:-1.25f));
+            Strip("DF_RegolithDrift",a[i],b,1.05f+(i%3)*.28f,.048f,i%3==0?darkRegolith:laneMat);
         }
     }
 
