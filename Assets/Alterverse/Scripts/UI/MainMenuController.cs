@@ -214,15 +214,15 @@ namespace Alterverse.UI
             if (index==selectedHero) return;
             selectedHero=Mathf.Clamp(index,0,5);
             PlayerHeroSelection.Select((HeroId)selectedHero);
-            showcase.Present((HeroId)selectedHero,true);
+            showcase.Present((HeroId)selectedHero,true,page==Page.Shop&&skinShop?(bool?)true:null);
         }
         private void DrawShop()
         {
             Heading("Cosmetics","Personalize your identity. No combat advantages.");
             if(theme.Action(new Rect(Left,204,160,52),"SKINS",selected:skinShop)){skinShop=true;shopMessage="";}
             if(theme.Action(new Rect(Left+172,204,160,52),"AVATARS",selected:!skinShop)){skinShop=false;shopMessage="";}
-            if(skinShop){DrawSkinShop();return;}
             theme.Label(new Rect(Right-264,116,264,42),$"{PlayerWallet.Balance} SHARDS",theme.Heading);
+            if(skinShop){DrawSkinShop();return;}
             AvatarShopItem item=AvatarShopCatalog.Items[Mathf.Clamp(shopAvatarIndex,0,AvatarShopCatalog.Items.Length-1)];
             bool owned=AvatarInventory.IsOwned(item.AvatarId), equipped=PlayerProfile.Avatar==item.AvatarId;
             float galleryWidth=ContentWidth*.56f;
