@@ -11,6 +11,7 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
+            if(FindAnyObjectByType<CosmicArenaBackdrop>()!=null){enabled=false;return;}
             BuildStarField();
             BuildDistantPlanets();
         }

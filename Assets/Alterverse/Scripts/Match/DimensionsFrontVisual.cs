@@ -1,13 +1,54 @@
-using Alterverse.Visuals;using UnityEngine;
+using Alterverse.Visuals;
+using UnityEngine;
+using UnityEngine.Rendering;
 namespace Alterverse.Match
 {
-public sealed class DimensionsFrontVisual:MonoBehaviour
-{
-[SerializeField]private float arenaHalfWidth=39f,frontLength=68f,smoothing=6f,waveAmplitude=.8f,waveSpeed=1.15f;[SerializeField]private int segmentCount=25;private DimensionsFront front;private Transform[] segments,shards,echoes;private Renderer[] segmentRenderers,shardRenderers,echoRenderers;private MaterialPropertyBlock block;private static readonly int BaseColorId=Shader.PropertyToID("_BaseColor"),ColorId=Shader.PropertyToID("_Color");private float targetX,impactZ,impactStrength,impactTime=-99;
-private void Start(){front=FindAnyObjectByType<DimensionsFront>();block=new MaterialPropertyBlock();BuildFront();if(front!=null){targetX=ControlToX(front.LumenControl);front.ControlChanged+=OnControlChanged;}}
-public void PulseImpact(float worldZ,int scoringTeam){impactZ=Mathf.Clamp(worldZ,-frontLength*.5f,frontLength*.5f);impactStrength=scoringTeam==1?-1:1;impactTime=Time.time;}
-private void BuildFront(){segmentCount=Mathf.Max(9,segmentCount);segments=new Transform[segmentCount];segmentRenderers=new Renderer[segmentCount];shards=new Transform[segmentCount];shardRenderers=new Renderer[segmentCount];echoes=new Transform[segmentCount];echoRenderers=new Renderer[segmentCount];float step=frontLength/(segmentCount-1);for(int i=0;i<segmentCount;i++){float z=-frontLength*.5f+i*step;GameObject tear=CreateTube("DF_RealityTear",new Vector3(0,.13f,z-step*.55f),new Vector3(0,.13f,z+step*.55f),.11f);tear.transform.SetParent(transform,true);segments[i]=tear.transform;segmentRenderers[i]=tear.GetComponent<Renderer>();GameObject echo=CreateTube("DF_FrontEcho",new Vector3(0,.07f,z-step*.42f),new Vector3(0,.07f,z+step*.42f),.19f);echo.transform.SetParent(transform,true);echoes[i]=echo.transform;echoRenderers[i]=echo.GetComponent<Renderer>();GameObject shard=CreateTube("DF_FrontShard",new Vector3(0,.18f,z),new Vector3(0,.72f,z),.07f);shard.transform.SetParent(transform,true);shard.transform.rotation=Quaternion.Euler(18,i*47,25);shards[i]=shard.transform;shardRenderers[i]=shard.GetComponent<Renderer>();}}
-private GameObject CreateTube(string n,Vector3 a,Vector3 b,float radius){Shader sh=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");Material m=new(sh);GameObject g=ProductionMeshFactory.MeshObject(n,transform,ProductionMeshFactory.Tube(a,b,radius,7),m);return g;}
-private void Update(){if(segments==null)return;float t=Time.time,control=front!=null?front.LumenControl:50,impactAge=t-impactTime,impactFade=impactAge>=0&&impactAge<1.8f?1-impactAge/1.8f:0;Color energy=Color.Lerp(StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,control/100);for(int i=0;i<segments.Length;i++){float wave=Mathf.Sin(t*waveSpeed+i*.72f)*waveAmplitude+Mathf.Sin(t*.63f+i*1.37f)*waveAmplitude*.32f,distance=Mathf.Abs(segments[i].position.z-impactZ),localImpact=impactFade*Mathf.Exp(-distance*.16f)*impactStrength*1.8f,desired=targetX+wave+localImpact;Transform s=segments[i];Vector3 p=s.position;p.x=Mathf.Lerp(p.x,desired,1-Mathf.Exp(-smoothing*Time.deltaTime));p.y=.12f+.03f*Mathf.Sin(t*4.5f+i*.8f);s.position=p;float pulse=.82f+Mathf.Sin(t*5+i*.55f)*.18f;s.localScale=new Vector3(.26f+pulse*.18f+Mathf.Abs(localImpact)*.06f,.07f+pulse*.06f,s.localScale.z);SetColor(segmentRenderers[i],Color.Lerp(energy,Color.white,.12f+Mathf.Abs(localImpact)*.16f));Transform echo=echoes[i];Vector3 ep=echo.position;ep.x=p.x+(i%2==0?-.55f:.55f)+Mathf.Sin(t*1.4f+i)*.16f;ep.y=.055f;echo.position=ep;echo.localScale=new Vector3(.62f+.18f*pulse,.025f,echo.localScale.z);SetColor(echoRenderers[i],Color.Lerp(i%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,StylizedArtDirection.Ink,.32f));Transform shard=shards[i];Vector3 sp=shard.position;sp.x=p.x+(i%2==0?1:-1)*(.48f+.18f*Mathf.Sin(t+i));sp.y=.42f+.18f*Mathf.Sin(t*1.8f+i);shard.position=sp;float surge=1+impactFade*Mathf.Exp(-distance*.12f)*.45f;shard.localScale=new Vector3(.18f,.55f*surge,.18f);shard.Rotate(35*Time.deltaTime,70*Time.deltaTime,22*Time.deltaTime,Space.Self);SetColor(shardRenderers[i],i%2==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy);}}
-private void SetColor(Renderer r,Color c){if(r==null)return;block.Clear();block.SetColor(BaseColorId,c);block.SetColor(ColorId,c);r.SetPropertyBlock(block);}private void OnControlChanged(float zero,float lumen){targetX=ControlToX(lumen);}private float ControlToX(float lumen)=>Mathf.Lerp(arenaHalfWidth,-arenaHalfWidth,lumen/100);private void OnDestroy(){if(front!=null)front.ControlChanged-=OnControlChanged;}
-}}
+    public sealed class DimensionsFrontVisual:MonoBehaviour
+    {
+        [SerializeField]private float arenaHalfWidth=39f,frontLength=68f,smoothing=6f,waveAmplitude=.8f,waveSpeed=1.15f;
+        [SerializeField]private int segmentCount=25;
+        private DimensionsFront front;
+        private float targetX,impactZ,impactStrength,impactTime=-99;
+        private Vector3[] center,zero,lumen;
+        private LineRenderer fault,zeroEdge,lumenEdge;
+        private Material material;
+        private void Start()
+        {
+            front=FindAnyObjectByType<DimensionsFront>();segmentCount=Mathf.Max(9,segmentCount);
+            center=new Vector3[segmentCount];zero=new Vector3[segmentCount];lumen=new Vector3[segmentCount];
+            Shader shader=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
+            if(shader==null){enabled=false;return;}material=new Material(shader){name="DF_FrontFractureInk"};
+            fault=Stroke("DF_GeologicalFront",.19f,new Color(.035f,.045f,.065f));
+            zeroEdge=Stroke("DF_ZeroFractureEdge",.038f,Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.gray,.35f));
+            lumenEdge=Stroke("DF_LumenFractureEdge",.038f,Color.Lerp(StylizedArtDirection.LumenEnergy,Color.gray,.35f));
+            if(front!=null){targetX=ControlToX(front.LumenControl);front.ControlChanged+=OnControlChanged;}
+            for(int i=0;i<segmentCount;i++)center[i]=new Vector3(targetX,.14f,-frontLength*.5f+i*frontLength/(segmentCount-1));
+            UpdateLines(1);
+        }
+        private LineRenderer Stroke(string label,float width,Color color)
+        {
+            GameObject obj=new GameObject(label);obj.transform.SetParent(transform,false);
+            LineRenderer line=obj.AddComponent<LineRenderer>();line.sharedMaterial=material;line.useWorldSpace=true;
+            line.positionCount=segmentCount;line.widthMultiplier=width;line.startColor=line.endColor=color;
+            line.shadowCastingMode=ShadowCastingMode.Off;line.receiveShadows=false;line.numCapVertices=0;line.numCornerVertices=0;return line;
+        }
+        public void PulseImpact(float worldZ,int scoringTeam)
+        {impactZ=Mathf.Clamp(worldZ,-frontLength*.5f,frontLength*.5f);impactStrength=scoringTeam==1?-1:1;impactTime=Time.time;}
+        private void Update(){if(fault!=null&&Time.timeScale>0)UpdateLines(1-Mathf.Exp(-smoothing*Time.deltaTime));}
+        private void UpdateLines(float blend)
+        {
+            float age=Time.time-impactTime,fade=age>=0&&age<1.8f?1-age/1.8f:0;
+            for(int i=0;i<center.Length;i++)
+            {
+                float distance=Mathf.Abs(center[i].z-impactZ),impact=fade*Mathf.Exp(-distance*.16f)*impactStrength*1.8f;
+                float fracture=Mathf.Sin(i*2.37f)*waveAmplitude*.28f+Mathf.Sin(Time.time*waveSpeed+i*.72f)*waveAmplitude*.12f;
+                Vector3 p=center[i];p.x=Mathf.Lerp(p.x,targetX+fracture+impact,blend);center[i]=p;
+                zero[i]=p+new Vector3(-.085f,.012f,0);lumen[i]=p+new Vector3(.085f,.012f,0);
+            }
+            fault.SetPositions(center);zeroEdge.SetPositions(zero);lumenEdge.SetPositions(lumen);
+        }
+        private void OnControlChanged(float zeroControl,float lumenControl)=>targetX=ControlToX(lumenControl);
+        private float ControlToX(float value)=>Mathf.Lerp(arenaHalfWidth,-arenaHalfWidth,value/100);
+        private void OnDestroy(){if(front!=null)front.ControlChanged-=OnControlChanged;if(material!=null)Destroy(material);}
+    }
+}

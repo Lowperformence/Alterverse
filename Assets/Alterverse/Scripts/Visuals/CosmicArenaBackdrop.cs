@@ -28,14 +28,7 @@ namespace Alterverse.Visuals
             BuildDistantMoons();
             BuildPlanetRings();
             BuildPlanetShadows();
-            BuildArenaUnderside();
-            BuildUndersideTapers();
             BuildEdgeFragments();
-            BuildFragmentTrails();
-            BuildCornerBreakups();
-            BuildUndersideFissures();
-            BuildRimDropShadows();
-            BuildEdgeFalloff();
             ConfigureCameraBackdrop();
         }
 
@@ -52,7 +45,7 @@ namespace Alterverse.Visuals
         {
             Material m=Mat(new Color(.004f,.006f,.014f,1));
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Quad);g.name="DF_CosmicVoid";
-            g.transform.SetParent(transform,false);g.transform.position=new Vector3(0,-2.8f,0);
+            g.transform.SetParent(transform,false);g.transform.position=new Vector3(0,-48f,0);
             g.transform.rotation=Quaternion.Euler(90,0,0);g.transform.localScale=new Vector3(260,180,1);
             Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
             Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
@@ -134,32 +127,6 @@ namespace Alterverse.Visuals
 
 
 
-        private void BuildEdgeFalloff()
-        {
-            Material m=Mat(new Color(.018f,.022f,.032f,1),true);if(m==null)return;
-            Vector3[] p={new(-47,-1.65f,0),new(47,-1.65f,0),new(0,-1.65f,40),new(0,-1.65f,-40)};
-            Vector3[] scale={new(5,1.2f,72),new(5,1.2f,72),new(84,1.2f,4),new(84,1.2f,4)};
-            for(int i=0;i<p.Length;i++)
-            {
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_ArenaEdgeFalloff";g.transform.SetParent(transform,false);g.transform.position=p[i];g.transform.localScale=scale[i];
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
-        private void BuildRimDropShadows()
-        {
-            Material m=Mat(new Color(.012f,.015f,.024f,1),true);if(m==null)return;
-            Vector3[] centers={new(-45,-1.25f,0),new(45,-1.25f,0),new(0,-1.25f,38.5f),new(0,-1.25f,-38.5f)};
-            Vector3[] scales={new(8,1,70),new(8,1,70),new(82,1,7),new(82,1,7)};
-            for(int i=0;i<centers.Length;i++)
-            {
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_RimDepth";
-                g.transform.SetParent(transform,false);g.transform.position=centers[i];g.transform.localScale=scales[i];
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
-                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
         private void ConfigureCameraBackdrop()
         {
             Camera[] cameras=FindObjectsByType<Camera>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
@@ -175,88 +142,20 @@ namespace Alterverse.Visuals
 
 
 
-        private void BuildCornerBreakups()
-        {
-            Material m=Mat(new Color(.027f,.031f,.043f,1),false);if(m==null)return;
-            Vector3[] corners={new(-45,-1.8f,-37),new(-45,-1.8f,37),new(45,-1.8f,-37),new(45,-1.8f,37)};
-            for(int c=0;c<corners.Length;c++)for(int i=0;i<3;i++)
-            {
-                float sx=c<2?-1f:1f,sz=c%2==0?-1f:1f;Vector3 p=corners[c]+new Vector3(sx*(i*.9f),-i*.5f,sz*(i*.65f));
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_CornerBreakup";g.transform.SetParent(transform,false);g.transform.position=p;
-                g.transform.localScale=new Vector3(2.2f-i*.35f,1.15f+i*.4f,1.8f-i*.25f);g.transform.rotation=Quaternion.Euler(12+i*14,c*47+i*29,sz*10);g.isStatic=true;
-                Collider col=g.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
-        private void BuildFragmentTrails()
-        {
-            Material m=Mat(new Color(.032f,.036f,.048f,1),false);if(m==null)return;
-            Vector3[] anchors={new(-50,-3,29),new(51,-3,-27)};
-            for(int a=0;a<anchors.Length;a++)for(int i=0;i<4;i++)
-            {
-                float side=a==0?-1f:1f;Vector3 p=anchors[a]+new Vector3(side*i*2.6f,-i*.7f,(i%2==0?1f:-1f)*i*.55f);
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_FragmentTrail";g.transform.SetParent(transform,false);g.transform.position=p;
-                float size=.72f-i*.12f;g.transform.localScale=new Vector3(size*1.25f,size*.65f,size);g.transform.rotation=Quaternion.Euler(i*21,33+i*47,11+i*13);
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
-        private void BuildUndersideFissures()
-        {
-            Material zero=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,new Color(.02f,.02f,.035f,1),.72f),true);
-            Material lumen=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,new Color(.02f,.025f,.035f,1),.76f),true);
-            if(zero==null||lumen==null)return;
-            for(int side=-1;side<=1;side+=2)
-            for(int i=0;i<4;i++)
-            {
-                float z=-25f+i*16.5f;GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=side<0?"DF_ZeroUndersideFissure":"DF_LumenUndersideFissure";
-                g.transform.SetParent(transform,false);g.transform.position=new Vector3(side*43.2f,-2.15f,z);g.transform.localScale=new Vector3(.08f,.12f,2.2f+(i%2)*.7f);
-                g.transform.rotation=Quaternion.Euler(0,side*(8+i*5),side*(12+i*3));Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
-                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=side<0?zero:lumen;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
         private void BuildEdgeFragments()
         {
-            Material m=Mat(new Color(.04f,.045f,.06f,1),false);if(m==null)return;
+            Material m=Mat(new Color(.10f,.115f,.135f,1),false);if(m==null)return;
+            Mesh fragment=LunarFragmentGeometry.Create(43);meshes.Add(fragment);
             Vector3[] sites={new(-52,-2.4f,28),new(-48,-3.2f,-35),new(-16,-3.5f,43),new(18,-2.9f,-45),new(50,-3.1f,30),new(53,-2.6f,-25)};
             for(int i=0;i<sites.Length;i++)
             {
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_FloatingEdgeFragment";
-                g.transform.SetParent(transform,false);g.transform.position=sites[i];float scale=.8f+(i%3)*.45f;
+                GameObject g=new GameObject("DF_FloatingMoonFragment");g.AddComponent<MeshFilter>().sharedMesh=fragment;g.AddComponent<MeshRenderer>();
+                g.transform.SetParent(transform,false);g.transform.position=sites[i];float scale=1.7f+(i%3)*.85f;
                 g.transform.localScale=new Vector3(scale*1.4f,scale*.7f,scale);g.transform.rotation=Quaternion.Euler(i*17,31+i*49,12+i*9);
                 Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
         }
-
-
-        private void BuildUndersideTapers()
-        {
-            Material m=Mat(new Color(.018f,.022f,.034f,1),false);if(m==null)return;
-            Vector3[] sites={new(-32,-5.8f,-20),new(-30,-6.3f,22),new(-9,-7f,30),new(10,-6.8f,-30),new(31,-6.1f,21),new(33,-5.7f,-20)};
-            for(int i=0;i<sites.Length;i++)
-            {
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_UndersideTaper";g.transform.SetParent(transform,false);g.transform.position=sites[i];
-                g.transform.localScale=new Vector3(3.8f+(i%2),5f+(i%3)*1.2f,3.5f+(i%2)*.8f);g.transform.rotation=Quaternion.Euler(16+i*5,i*41,14-i*3);g.isStatic=true;
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
-        private void BuildArenaUnderside()
-        {
-            Material m=Mat(new Color(.025f,.03f,.045f,1),false);if(m==null)return;
-            Vector3[] sites={new(-38,-3.5f,-28),new(-20,-4.4f,33),new(4,-5f,-35),new(28,-4.1f,31),new(40,-3.8f,-22)};
-            for(int i=0;i<sites.Length;i++)
-            {
-                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_UndersideRock";
-                g.transform.SetParent(transform,false);g.transform.position=sites[i];g.transform.localScale=new Vector3(7f+(i%3)*2f,4.5f+(i%2)*2f,6f+(i%4));g.isStatic=true;
-                g.transform.rotation=Quaternion.Euler(18+i*7,i*43,11-i*4);
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
-                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-            }
-        }
-
 
 
         private void BuildPlanetShadows()
