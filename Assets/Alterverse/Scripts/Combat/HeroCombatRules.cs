@@ -30,6 +30,7 @@ namespace Alterverse.Combat
         { return baseline * (actor.GetComponent<PlanetBuffReceiver>()?.CooldownMultiplier ?? 1f); }
         public static void BasicHit(GameObject actor, Health target, float amount)
         {
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Attack,actor.transform.position,.35f);
             float dealt = Damage(actor, target, amount);
             HeroIdentity identity = actor.GetComponent<HeroIdentity>();
             Health hp = actor.GetComponent<Health>();

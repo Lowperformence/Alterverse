@@ -44,7 +44,8 @@ namespace Alterverse.Combat
             if (Time.time >= nextTargetScan || (currentTarget != null && CurrentTarget == null))
             {
                 nextTargetScan = Time.time + .2f;
-                currentTarget = FindEnemyTarget();
+                Health previous=currentTarget;currentTarget = FindEnemyTarget();
+                if(currentTarget!=previous&&currentTarget!=null&&currentTarget.GetComponent<HeroRespawn>()!=null)Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.TowerTarget,.8f);
             }
             Health target = CurrentTarget;
             if (target == null) return;
@@ -53,7 +54,9 @@ namespace Alterverse.Combat
             if (Time.time < nextAttackTime) return;
             if (shell != null) shell.Fire();
             nextAttackTime = Time.time + attackCooldown;
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerShot,transform.position,.55f);
             target.TakeDamage(attackDamage, gameObject);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact,target.transform.position,.5f);
             SpawnShot(target.transform.position);
         }
 
@@ -62,7 +65,7 @@ namespace Alterverse.Combat
             Health hero = null, minion = null;
             float heroScore = float.MaxValue, minionScore = float.MaxValue;
             // Scan units, not colliders: armor colliders cannot crowd units out of a fixed buffer.
-            foreach (Health candidate in FindObjectsByType<Health>())
+            foreach (Health candidate in Health.Active)
             {
                 if (!IsValidTarget(candidate)) continue;
                 Vector3 delta = candidate.transform.position - transform.position; delta.y = 0;

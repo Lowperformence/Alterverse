@@ -93,6 +93,7 @@ namespace Alterverse.Characters
                 else Hit(slot, target);
             }
             if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.AbilityCast,transform.position,slot==3?.65f:.4f);
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAttack(slot == 3);
             return true;
