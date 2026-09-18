@@ -1,0 +1,10 @@
+using UnityEngine;
+namespace Alterverse.Visuals
+{
+public static class ProductionMeshFactory
+{
+public static Mesh Ring(float radius,float tube,int radial=28,int sides=8){radial=Mathf.Max(8,radial);sides=Mathf.Max(4,sides);var v=new Vector3[radial*sides];var n=new Vector3[v.Length];var uv=new Vector2[v.Length];var t=new int[radial*sides*6];for(int r=0;r<radial;r++){float a=r*Mathf.PI*2f/radial;Vector3 center=new(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius);Vector3 outward=new(Mathf.Cos(a),0,Mathf.Sin(a));for(int s=0;s<sides;s++){float b=s*Mathf.PI*2f/sides;int i=r*sides+s;Vector3 normal=outward*Mathf.Cos(b)+Vector3.up*Mathf.Sin(b);v[i]=center+normal*tube;n[i]=normal;uv[i]=new Vector2((float)r/radial,(float)s/sides);int rn=((r+1)%radial)*sides;int sn=(s+1)%sides;int q=(r*sides+s)*6;t[q]=i;t[q+1]=rn+s;t[q+2]=rn+sn;t[q+3]=i;t[q+4]=rn+sn;t[q+5]=r*sides+sn;}}Mesh m=new(){name="DF_ProductionRing"};m.vertices=v;m.normals=n;m.uv=uv;m.triangles=t;m.RecalculateBounds();return m;}
+public static Mesh Tube(Vector3 from,Vector3 to,float radius,int sides=8){Vector3 axis=to-from;float len=axis.magnitude;if(len<.001f)return null;Vector3 f=axis/len;Vector3 right=Vector3.Cross(f,Mathf.Abs(Vector3.Dot(f,Vector3.up))>.9f?Vector3.right:Vector3.up).normalized;Vector3 up=Vector3.Cross(right,f).normalized;var v=new Vector3[sides*2];var n=new Vector3[v.Length];var t=new int[sides*6];for(int s=0;s<sides;s++){float a=s*Mathf.PI*2f/sides;Vector3 off=(right*Mathf.Cos(a)+up*Mathf.Sin(a))*radius;v[s]=from+off;v[s+sides]=to+off;n[s]=n[s+sides]=off.normalized;int sn=(s+1)%sides,q=s*6;t[q]=s;t[q+1]=s+sides;t[q+2]=sn+sides;t[q+3]=s;t[q+4]=sn+sides;t[q+5]=sn;}Mesh m=new(){name="DF_ProductionTube"};m.vertices=v;m.normals=n;m.triangles=t;m.RecalculateBounds();return m;}
+public static GameObject MeshObject(string name,Transform parent,Mesh mesh,Material material){GameObject g=new(name);g.transform.SetParent(parent,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;g.AddComponent<MeshRenderer>().sharedMaterial=material;return g;}
+}
+}
