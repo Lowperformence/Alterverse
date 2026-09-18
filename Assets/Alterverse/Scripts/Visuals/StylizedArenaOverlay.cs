@@ -80,6 +80,18 @@ namespace Alterverse.Visuals
                 Vector2 p=new Vector2(Mathf.Cos(a),Mathf.Sin(a))*9.8f;
                 Tile(p.x,p.y,.65f,.65f,.112f,p.x<0?zero:lumen,.15f);
             }
+            // Lane shoulders add terrain depth while keeping the playable center strip visually clean.
+            foreach(float z in new[]{-16f,16f})
+            for(int side=-1;side<=1;side+=2)
+            {
+                int shoulder=side<0?zero:lumen;
+                for(int i=0;i<4;i++)
+                {
+                    float x=side*(7f+i*7.4f);
+                    Tile(x,z+4.05f,5.8f,1.25f,.052f,shoulder,.38f);
+                    Tile(x,z-4.05f,5.8f,1.25f,.052f,shoulder,.38f);
+                }
+            }
             // Broad faction territories make the two realities readable at a glance without recoloring combat space.
             for(int side=-1;side<=1;side+=2)
             {
