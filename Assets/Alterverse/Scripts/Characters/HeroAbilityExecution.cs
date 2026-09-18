@@ -12,7 +12,7 @@ namespace Alterverse.Characters
         private HeroIdentity identity;
         private HeroAbilityKit kit;
         private readonly float[] ready = new float[4];
-        private const int ScanBufferSize=64;private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];
+        private const int ScanBufferSize=64;private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
         private int life;
         private void Awake()
         {
@@ -120,11 +120,11 @@ namespace Alterverse.Characters
             if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject)) yield break;
             TeamMember own = GetComponent<TeamMember>();
             int hits=Physics.OverlapSphereNonAlloc(center,spec.Radius,scanBuffer);
-            var resolved=new System.Collections.Generic.HashSet<Health>();
+            resolvedTargets.Clear();
             for(int i=0;i<hits;i++)
             {
                 Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
-                if(h==null||!resolved.Add(h)||h.IsDead||!h.isActiveAndEnabled)continue;
+                if(h==null||!resolvedTargets.Add(h)||h.IsDead||!h.isActiveAndEnabled)continue;
                 TeamMember member = h.GetComponent<TeamMember>();
                 bool ally = own != null && member != null && member.Team == own.Team && h.GetComponent<HeroIdentity>() != null;
                 if (identity.Hero == HeroId.Mira)
