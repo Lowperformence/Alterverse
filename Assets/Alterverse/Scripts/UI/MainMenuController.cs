@@ -19,6 +19,7 @@ GUI.matrix=Matrix4x4.TRS(new Vector3(offsetX,offsetY,0),Quaternion.identity,Vect
 try{EnsureStyles();DrawBackground();if(launching){DrawLaunch();return;}float reveal=pageChangedAt<=0?1f:Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.18f);GUI.color=new Color(1,1,1,.35f+.65f*reveal);switch(page){case Page.Play:DrawPlay();break;case Page.Heroes:DrawHeroes();break;case Page.Shop:DrawShop();break;case Page.Profile:DrawProfile();break;case Page.Settings:DrawSettings();break;default:DrawHome();break;}GUI.color=Color.white;}
 finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEnabled;}
 }
+private void DrawFooterStatus(string left,string right){GUI.color=new Color(1,1,1,.55f);GUI.DrawTexture(new Rect(244,655,472,1),whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(244,662,230,18),left,small);GUI.Label(new Rect(486,662,230,18),right,small);}
 private void DrawSectionHeader(string heading,string kicker){GUI.Label(new Rect(42,52,620,54),heading,title);GUI.Label(new Rect(48,100,500,20),kicker,subtitle);DimensionUiMotif.DrawHeaderLine(new Rect(42,112,878,2),whiteTexture,StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,Time.unscaledTime);}
 private void DrawTopNav(Page current)
 {
@@ -76,7 +77,7 @@ Rect loadout=new Rect(626,142,294,466);DimensionUiMotif.DrawSplitPanel(loadout,w
 GUI.Label(new Rect(648,164,250,24),"02  //  YOUR DEPLOYMENT",subtitle);GUI.Label(new Rect(648,187,250,18),"ZERO STRIKE TEAM",small);StylizedHeroCard.Draw(new Rect(680,205,186,236),(HeroId)selectedHero,whiteTexture,Time.unscaledTime);
 GUI.Label(new Rect(646,451,254,38),HeroName(selectedHero),heroName);GUI.Label(new Rect(646,489,254,24),roles[selectedHero],subtitle);GUI.Label(new Rect(646,514,254,18),"READY  •  LOADOUT LOCKED ON START",small);
 if(GUI.Button(new Rect(654,535,238,46),"CHANGE HERO",button))SetPage(Page.Heroes);
-if(GUI.Button(new Rect(42,632,180,46),"HOME",button))SetPage(Page.Home);
+if(GUI.Button(new Rect(42,632,180,46),"HOME",button))SetPage(Page.Home);DrawFooterStatus("AI 5v5  •  READY","DIMENSIONS FRONT  //  BETA");
 }
 private void DrawHeroes()
 {
