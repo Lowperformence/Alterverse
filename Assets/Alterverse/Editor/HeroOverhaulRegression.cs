@@ -6,6 +6,7 @@ using System.Reflection;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Visuals;
 using UnityEditor;
 using UnityEngine;
 namespace Alterverse.EditorChecks
@@ -84,6 +85,23 @@ namespace Alterverse.EditorChecks
                 Assert(heal.TryCast(1,null,Vector3.zero),"Support can heal without an enemy.");
                 Assert(Mathf.Abs(ally.Current-(ally.Max-28))<.01f && distant.Current==distant.Max-100,"Healing amount and range are exact.");
                 Assert(heal.TryCast(2,null,Vector3.zero)&&ally.Shield==50,"Support E grants a real shield.");
+                for(int i=0;i<6;i++)
+                {
+                    GameObject visual=Hero((HeroId)i,i%2,new Vector3(3000+i*10,1,3000));
+                    visual.AddComponent<StylizedHeroVisual>().Build();
+                    yield return null; // deferred removal of the source panels after batching
+                    var renderers=visual.GetComponentsInChildren<MeshRenderer>();
+                    var materials=new HashSet<Material>();
+                    Assert(visual.GetComponent<MeshRenderer>()==null,"Hero host must never render a primitive.");
+                    Assert(renderers.Length>0 && renderers.Length<=24,"Hero renderer budget exceeded: "+(HeroId)i);
+                    foreach(var renderer in renderers)
+                    {
+                        materials.Add(renderer.sharedMaterial);
+                        Mesh mesh=renderer.GetComponent<MeshFilter>().sharedMesh;
+                        Assert(mesh!=null && mesh.vertexCount>0 && mesh.triangles.Length>0,"Every visible part has real geometry.");
+                    }
+                    Assert(!materials.Contains(null)&&materials.Count<=6,"Hero material budget exceeded: "+(HeroId)i);
+                }
                 Debug.Log("DIMENSIONS FRONT: hero overhaul regression PASSED.");
             }
             finally
