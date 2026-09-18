@@ -156,7 +156,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<sites.Length;i++)
             {
                 GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_UndersideRock";
-                g.transform.SetParent(transform,false);g.transform.position=sites[i];g.transform.localScale=new Vector3(7f+(i%3)*2f,4.5f+(i%2)*2f,6f+(i%4));
+                g.transform.SetParent(transform,false);g.transform.position=sites[i];g.transform.localScale=new Vector3(7f+(i%3)*2f,4.5f+(i%2)*2f,6f+(i%4));g.isStatic=true;
                 g.transform.rotation=Quaternion.Euler(18+i*7,i*43,11-i*4);
                 Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
@@ -196,7 +196,7 @@ namespace Alterverse.Visuals
         {
             Material m=Mat(color,false);if(m==null)return;
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_DistantPlanet";g.transform.SetParent(distantBodies!=null?distantBodies:transform,false);
-            g.transform.position=p;g.transform.localScale=Vector3.one*size;
+            g.transform.position=p;g.transform.localScale=Vector3.one*size;g.isStatic=true;
             Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
             Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
         }
