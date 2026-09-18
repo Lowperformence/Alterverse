@@ -1,73 +1,11 @@
-using System.Collections.Generic;
-using UnityEngine;
-namespace Alterverse.Visuals
-{
-    public sealed class DimensionTowerShell:MonoBehaviour
-    {
-        private Transform visualRoot,head,muzzle;
-        private Renderer core;
-        private readonly List<Material> materials=new List<Material>();
-        private Color energy;
-        private float flashUntil;
-        public Vector3 MuzzlePosition=>muzzle!=null?muzzle.position:transform.position+Vector3.up*1.5f;
-        public void Build(int team)
-        {
-            if(visualRoot!=null)return;
-            Renderer placeholder=GetComponent<Renderer>();if(placeholder!=null)placeholder.enabled=false;
-            visualRoot=new GameObject("DF_BastionShell").transform;visualRoot.SetParent(transform,false);
-            Vector3 scale=transform.lossyScale;
-            visualRoot.localScale=new Vector3(1f/scale.x,1f/scale.y,1f/scale.z);
-            visualRoot.localPosition=new Vector3(0,(.12f-transform.position.y)/scale.y,0);
-            energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Material stone=MaterialFor(StylizedArtDirection.ArenaStone);
-            Material armor=MaterialFor(team==0?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround);
-            Material trim=MaterialFor(Color.Lerp(energy,Color.gray,.55f));
-            Material glow=MaterialFor(energy);
-            Part("Foot",PrimitiveType.Cylinder,new Vector3(0,.16f,0),new Vector3(2.6f,.16f,2.6f),stone);
-            Part("Plinth",PrimitiveType.Cylinder,new Vector3(0,.44f,0),new Vector3(1.95f,.12f,1.95f),armor);
-            Part("Belt",PrimitiveType.Cylinder,new Vector3(0,.59f,0),new Vector3(1.7f,.035f,1.7f),trim);
-            Part("ReactorHousing",PrimitiveType.Cube,new Vector3(0,1.15f,0),new Vector3(.95f,1.1f,.95f),armor);
-            for(int i=0;i<4;i++)
-            {
-                float a=(i*90+45)*Mathf.Deg2Rad;
-                Part("Buttress",PrimitiveType.Cube,new Vector3(Mathf.Cos(a)*.72f,.96f,Mathf.Sin(a)*.72f),new Vector3(.35f,.95f,.35f),stone);
-            }
-            head=new GameObject("DF_TowerHead").transform;head.SetParent(visualRoot,false);head.localPosition=Vector3.up*1.72f;
-            head.localRotation=Quaternion.Euler(0,team==0?90:-90,0);
-            Part("Turret",PrimitiveType.Cube,new Vector3(0,.25f,0),new Vector3(1.32f,.45f,1.08f),armor,head);
-            core=Part("EnergyCore",PrimitiveType.Sphere,new Vector3(0,.37f,.5f),Vector3.one*.48f,glow,head).GetComponent<Renderer>();
-            Part("BarrelLeft",PrimitiveType.Cube,new Vector3(-.32f,.23f,.77f),new Vector3(.19f,.21f,.85f),stone,head);
-            Part("BarrelRight",PrimitiveType.Cube,new Vector3(.32f,.23f,.77f),new Vector3(.19f,.21f,.85f),stone,head);
-            Part("Crest",PrimitiveType.Cube,new Vector3(0,.6f,-.3f),new Vector3(team==0?.16f:.68f,team==0?.65f:.16f,.25f),trim,head);
-            muzzle=new GameObject("DF_TowerMuzzle").transform;muzzle.SetParent(head,false);muzzle.localPosition=new Vector3(0,.3f,1.2f);
-        }
-        public void AimAt(Vector3 target)
-        {
-            if(head==null)return;Vector3 direction=target-head.position;direction.y=0;
-            if(direction.sqrMagnitude>.001f)head.rotation=Quaternion.LookRotation(direction);
-        }
-        public void Fire(){flashUntil=Time.time+.12f;}
-        private void Update()
-        {
-            if(core==null||Time.timeScale<=0)return;
-            float glow=Time.time<flashUntil?1f:.12f+.08f*Mathf.Sin(Time.time*2f);
-            core.sharedMaterial.color=Color.Lerp(energy,Color.white,glow);
-        }
-        private Material MaterialFor(Color color)
-        {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");
-            if(shader==null)return null;
-            Material material=new Material(shader){color=color};
-            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.25f);
-            materials.Add(material);return material;
-        }
-        private GameObject Part(string name,PrimitiveType type,Vector3 position,Vector3 scale,Material material,Transform parent=null)
-        {
-            GameObject g=GameObject.CreatePrimitive(type);g.name="DF_Tower"+name;g.transform.SetParent(parent!=null?parent:visualRoot,false);
-            g.transform.localPosition=position;g.transform.localScale=scale;
-            Collider collider=g.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
-            if(material!=null)g.GetComponent<Renderer>().sharedMaterial=material;return g;
-        }
-        private void OnDestroy(){foreach(Material material in materials)if(material!=null)Destroy(material);}
-    }
-}
+using System.Collections.Generic;using UnityEngine;
+namespace Alterverse.Visuals{
+public sealed class DimensionTowerShell:MonoBehaviour{
+Transform root,head,muzzle;Renderer core;readonly List<Material> mats=new();Color energy;float flashUntil;
+public Vector3 MuzzlePosition=>muzzle!=null?muzzle.position:transform.position+Vector3.up*1.5f;
+public void Build(int team){if(root!=null)return;Renderer ph=GetComponent<Renderer>();if(ph!=null)ph.enabled=false;root=new GameObject("DF_ProductionBastion").transform;root.SetParent(transform,false);Vector3 s=transform.lossyScale;root.localScale=new Vector3(1/s.x,1/s.y,1/s.z);root.localPosition=new Vector3(0,(.12f-transform.position.y)/s.y,0);energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;Material metal=Mat(Color.Lerp(StylizedArtDirection.ArenaStone,StylizedArtDirection.Ink,.35f),.72f,.32f),armor=Mat(Color.Lerp(team==0?StylizedArtDirection.ZeroMid:StylizedArtDirection.LumenMid,StylizedArtDirection.ArenaStone,.5f),.62f,.4f),glow=Mat(energy,.1f,.65f,true);Disc("Foot",2.25f,.16f,.13f,metal);Disc("ArmorDeck",1.72f,.39f,.10f,armor);Ring("EnergyBelt",1.47f,.055f,.55f,glow);for(int i=0;i<6;i++){float a=(i*60+(team==0?9:0))*Mathf.Deg2Rad;Tube("Support",new Vector3(Mathf.Cos(a)*1.35f,.45f,Mathf.Sin(a)*1.35f),new Vector3(Mathf.Cos(a)*.68f,1.42f,Mathf.Sin(a)*.68f),.085f,i%2==0?armor:metal);}head=new GameObject("DF_BastionHead").transform;head.SetParent(root,false);head.localPosition=Vector3.up*1.55f;head.localRotation=Quaternion.Euler(0,team==0?90:-90,0);GameObject housing=ProductionMeshFactory.MeshObject("DF_TurretHousing",head,ProductionMeshFactory.Disc(.72f,.24f,28),armor);housing.transform.localRotation=Quaternion.Euler(90,0,0);GameObject orb=ProductionMeshFactory.MeshObject("DF_BastionCore",head,ProductionMeshFactory.Ring(.38f,.13f,24,8),glow);orb.transform.localPosition=new Vector3(0,.1f,.42f);orb.transform.localRotation=Quaternion.Euler(90,0,0);core=orb.GetComponent<Renderer>();TubeOn(head,"BarrelL",new Vector3(-.25f,.05f,.48f),new Vector3(-.25f,.05f,1.18f),.075f,metal);TubeOn(head,"BarrelR",new Vector3(.25f,.05f,.48f),new Vector3(.25f,.05f,1.18f),.075f,metal);muzzle=new GameObject("DF_TowerMuzzle").transform;muzzle.SetParent(head,false);muzzle.localPosition=new Vector3(0,.05f,1.22f);}
+public void AimAt(Vector3 target){if(head==null)return;Vector3 d=target-head.position;d.y=0;if(d.sqrMagnitude>.001f)head.rotation=Quaternion.LookRotation(d);}public void Fire(){flashUntil=Time.time+.12f;}
+void Update(){if(core==null||Time.timeScale<=0)return;float p=Time.time<flashUntil?1f:.08f+.05f*Mathf.Sin(Time.time*2f);core.sharedMaterial.SetColor("_EmissionColor",Color.Lerp(energy,Color.white,p)*1.55f);}
+void Disc(string n,float r,float y,float h,Material m){GameObject g=ProductionMeshFactory.MeshObject("DF_Bastion"+n,root,ProductionMeshFactory.Disc(r,h,32),m);g.transform.localPosition=Vector3.up*y;}void Ring(string n,float r,float tube,float y,Material m){GameObject g=ProductionMeshFactory.MeshObject("DF_Bastion"+n,root,ProductionMeshFactory.Ring(r,tube,32,8),m);g.transform.localPosition=Vector3.up*y;}void Tube(string n,Vector3 a,Vector3 b,float r,Material m){ProductionMeshFactory.MeshObject("DF_Bastion"+n,root,ProductionMeshFactory.Tube(a,b,r,8),m);}void TubeOn(Transform p,string n,Vector3 a,Vector3 b,float r,Material m){ProductionMeshFactory.MeshObject("DF_Bastion"+n,p,ProductionMeshFactory.Tube(a,b,r,8),m);}
+Material Mat(Color c,float met,float sm,bool em=false){Shader sh=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");Material m=new(sh);mats.Add(m);m.color=c;if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",c);if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",met);if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",sm);if(em){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",c*1.45f);}return m;}void OnDestroy(){foreach(Material m in mats)if(m!=null)Destroy(m);}
+}}
