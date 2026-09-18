@@ -19,6 +19,7 @@ namespace Alterverse.Visuals
         {
             BuildVoidFloor();
             BuildStars();
+            BuildBrightStars();
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildArenaUnderside();
@@ -62,6 +63,21 @@ namespace Alterverse.Visuals
             GameObject g=new GameObject("DF_Stars");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
             MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             r.sortingOrder=-100;
+        }
+
+
+        private void BuildBrightStars()
+        {
+            Material m=Mat(new Color(.96f,.97f,1f,1));if(m==null)return;
+            const int count=32;var vertices=new Vector3[count];var indices=new int[count];
+            for(int i=0;i<count;i++)
+            {
+                float a=(i*4.236f+.7f);float radius=63f+(i*29%103);
+                vertices[i]=new Vector3(Mathf.Cos(a)*radius,-2.58f,Mathf.Sin(a)*radius*.72f);indices[i]=i;
+            }
+            Mesh mesh=new Mesh{name="DF_BrightStars"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_BrightStars");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-99;
         }
 
         private void BuildDistantPlanets()
