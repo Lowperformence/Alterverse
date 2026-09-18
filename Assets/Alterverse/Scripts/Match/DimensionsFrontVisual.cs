@@ -12,6 +12,7 @@ namespace Alterverse.Match
         private Vector3[] center,zero,lumen;
         private LineRenderer fault,zeroEdge,lumenEdge;
         private Material material;
+        private FrontCollisionPresentation collision;
         private void Start()
         {
             front=FindAnyObjectByType<DimensionsFront>();segmentCount=Mathf.Max(9,segmentCount);
@@ -24,6 +25,7 @@ namespace Alterverse.Match
             if(front!=null){targetX=ControlToX(front.LumenControl);front.ControlChanged+=OnControlChanged;}
             for(int i=0;i<segmentCount;i++)center[i]=new Vector3(targetX,.14f,-frontLength*.5f+i*frontLength/(segmentCount-1));
             UpdateLines(1);
+            collision=gameObject.AddComponent<FrontCollisionPresentation>();collision.Initialize(front);
         }
         private LineRenderer Stroke(string label,float width,Color color)
         {
@@ -34,7 +36,7 @@ namespace Alterverse.Match
         }
         public void PulseImpact(float worldZ,int scoringTeam)
         {impactZ=Mathf.Clamp(worldZ,-frontLength*.5f,frontLength*.5f);impactStrength=scoringTeam==1?-1:1;impactTime=Time.time;}
-        private void Update(){if(fault!=null&&Time.timeScale>0)UpdateLines(1-Mathf.Exp(-smoothing*Time.deltaTime));}
+        private void Update(){if(fault!=null&&Time.timeScale>0)UpdateLines(1-Mathf.Exp(-smoothing*Time.deltaTime));if(collision!=null)collision.Tick(center);}
         private void UpdateLines(float blend)
         {
             float age=Time.time-impactTime,fade=age>=0&&age<1.8f?1-age/1.8f:0;
