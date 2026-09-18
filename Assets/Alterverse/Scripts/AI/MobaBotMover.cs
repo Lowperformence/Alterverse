@@ -140,7 +140,7 @@ namespace Alterverse.AI
                 float t = step.sqrMagnitude > .000001f ? Mathf.Clamp01(-Vector3.Dot(from, step) / step.sqrMagnitude) : 0;
                 if ((from + step * t).sqrMagnitude < safeRadius * safeRadius) return false;
             }
-            foreach (PlanetPulseAttack pulse in pulses)
+            foreach (Alterverse.Combat.PlanetPulseAttack pulse in pulses)
             {
                 if (pulse == null || !pulse.IsTelegraphing) continue;
                 Vector3 from = transform.position - pulse.transform.position; from.y = 0;
