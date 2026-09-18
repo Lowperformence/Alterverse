@@ -3,7 +3,7 @@ Never deploy with an authenticator that simply decodes an unsigned JWT or trusts
 """
 import json
 from urllib.parse import quote
-from ledger import Ledger
+from ledger import Ledger, PACKS, COSMETICS
 
 class CommerceApplication:
     def __init__(self, ledger_path, authenticate, google_session, package_name):
@@ -20,11 +20,17 @@ class CommerceApplication:
             account = self.authenticate(env.get('HTTP_AUTHORIZATION', ''))
             if not account: raise PermissionError('Authentication required')
             data = json.loads(env['wsgi.input'].read(size) or b'{}')
+            if not isinstance(data, dict): raise ValueError('JSON object required')
             path = env.get('PATH_INFO')
             if path == '/wallet': wallet = self.ledger.wallet(account)
-            elif path == '/cosmetics/buy': wallet = self.ledger.buy(account, data['cosmeticId'])
+            elif path == '/cosmetics/buy':
+                sku = data.get('cosmeticId')
+                if not isinstance(sku, str) or sku not in COSMETICS: raise ValueError('Unknown cosmetic')
+                wallet = self.ledger.buy(account, sku)
             elif path == '/google-play/fulfill':
-                product, token = data['productId'], data['purchaseToken']
+                product, token = data.get('productId'), data.get('purchaseToken')
+                if not isinstance(product, str) or product not in PACKS: raise ValueError('Unknown product')
+                if not isinstance(token, str) or not token.strip() or len(token) > 8192: raise ValueError('Invalid purchase token')
                 url = ('https://androidpublisher.googleapis.com/androidpublisher/v3/applications/' + quote(self.package, safe='')
                        + '/purchases/products/' + quote(product, safe='') + '/tokens/' + quote(token, safe=''))
                 response = self.google.get(url, timeout=15)
