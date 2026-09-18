@@ -39,6 +39,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildRegolithDriftBands();
         BuildEdgeCliffs();
         BuildEdgeFragments();
+        BuildOuterRimDebris();
     }
 
     void BuildSurface()
@@ -287,6 +288,18 @@ public sealed class ProductionLunarGround : MonoBehaviour
             GameObject g=MeshObject("DF_BrokenMoonEdge",shape,darkRegolith,sites[i]);
             g.transform.localScale=new Vector3(1.3f+(i%3)*.35f,.8f+(i%2)*.3f,1.1f+(i%4)*.22f);
             g.transform.localRotation=Quaternion.Euler(i%2==0?11f:-8f,i*57f,i%3==0?8f:-5f);
+        }
+    }
+
+    void BuildOuterRimDebris()
+    {
+        // Sparse silhouettes make the playable moon slab feel broken off into open space.
+        Vector3[] p={new(-44,.08f,31),new(-44,.08f,-30),new(-36,.08f,36),new(-14,.08f,36),new(13,.08f,36),new(36,.08f,36),new(-35,.08f,-36),new(-12,.08f,-36),new(15,.08f,-36),new(37,.08f,-36),new(44,.08f,29),new(44,.08f,-31)};
+        for(int i=0;i<p.Length;i++)
+        {
+            Mesh shape=i%3==0?rockMesh:i%3==1?rockMeshB:rockMeshC;
+            GameObject g=MeshObject("DF_OuterMoonDebris",shape,darkRegolith,p[i]);
+            float k=.42f+(i%4)*.13f;g.transform.localScale=new Vector3(k,.28f+(i%3)*.12f,k*.82f);g.transform.localRotation=Quaternion.Euler(i%2==0?14f:-11f,i*67f,i%3==0?17f:-8f);
         }
     }
 
