@@ -14,9 +14,21 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();
 }
 
+
+
+private void BuildMicroScatter()
+{
+Color pebble=Color.Lerp(StylizedArtDirection.ArenaStone,StylizedArtDirection.ArenaVoid,.35f);
+for(int i=0;i<28;i++)
+{
+float x=-37f+(i*17%73);float z=-31f+(i*23%61);
+if(Mathf.Abs(z-16)<3.4f||Mathf.Abs(z+16)<3.4f||new Vector2(x,z).sqrMagnitude<150f)continue;
+float size=.12f+(i%4)*.055f;GameObject g=Part("DF_Pebble",PrimitiveType.Cube,new Vector3(x,.045f,z),new Vector3(size,.07f,size*(1.2f+(i%3)*.25f)),pebble);g.transform.rotation=Quaternion.Euler(i%2*8,i*47,0);
+}
+}
 
 private void ObjectiveScatter(Vector3 center)
 {
