@@ -80,6 +80,13 @@ namespace Alterverse.Visuals
                 Vector2 p=new Vector2(Mathf.Cos(a),Mathf.Sin(a))*9.8f;
                 Tile(p.x,p.y,.65f,.65f,.112f,p.x<0?zero:lumen,.15f);
             }
+            // Broken neutral paving near the center suggests repeated reality collisions without extra bright color.
+            for(int i=0;i<8;i++)
+            {
+                float a=(i*45+22.5f)*Mathf.Deg2Rad;
+                Vector2 p=new Vector2(Mathf.Cos(a),Mathf.Sin(a))*(12.7f+(i%2)*1.15f);
+                Tile(p.x,p.y,1.7f+(i%3)*.35f,.72f,.048f,i%3==0?lightStone:stone,.22f);
+            }
             // Lane shoulders add terrain depth while keeping the playable center strip visually clean.
             foreach(float z in new[]{-16f,16f})
             for(int side=-1;side<=1;side+=2)
