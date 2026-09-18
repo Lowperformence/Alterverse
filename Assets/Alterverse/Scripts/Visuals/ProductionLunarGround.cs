@@ -34,6 +34,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildFractures();
         BuildRocks();
         BuildRegolithVariation();
+        BuildLaneDustScars();
         BuildEdgeCliffs();
         BuildEdgeFragments();
     }
@@ -229,6 +230,19 @@ public sealed class ProductionLunarGround : MonoBehaviour
         Vector3[] v={new(-.8f,0,-.62f),new(.7f,0,-.48f),new(.92f,0,.42f),new(-.12f,0,.8f),new(-.88f,0,.3f),new(-.34f,.42f,-.28f),new(.42f,.38f,-.16f),new(.08f,.63f,.32f)};
         int[] t={0,1,5,1,6,5,1,2,6,2,7,6,2,3,7,3,4,7,4,5,7,4,0,5,5,6,7,0,4,3,0,3,2,0,2,1};
         Mesh m=new(){name="DF_LunarRockBroad",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+    }
+
+    void BuildLaneDustScars()
+    {
+        // Subtle worn regolith shoulders make both combat lanes read as travelled paths, not paved sci-fi slabs.
+        foreach(float z in new[]{-16f,16f})
+        for(int side=-1;side<=1;side+=2)
+        for(int i=0;i<5;i++)
+        {
+            float x=side*(6.5f+i*5.1f),offset=((i&1)==0?1f:-1f)*(2.55f+(i%3)*.22f);
+            Mesh patch=IrregularDisc(new Vector3(x,.052f,z+offset),.72f+(i%2)*.18f,14,70+i+(side>0?10:0)+(z>0?20:0));
+            meshes.Add(patch);MeshObject("DF_LaneDustScar",patch,i%3==0?darkRegolith:laneMat,Vector3.zero).GetComponent<MeshRenderer>().receiveShadows=false;
+        }
     }
 
     void BuildEdgeCliffs()
