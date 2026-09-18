@@ -24,6 +24,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
         BuildSurface();
         BuildLanes();
+        BuildLaneApproaches();
         BuildCoreIntegration(-36f,true);
         BuildCoreIntegration(36f,false);
         BuildHealingIntegration(-27.5f);
@@ -77,6 +78,20 @@ public sealed class ProductionLunarGround : MonoBehaviour
             Strip("DF_ZeroLaneEnergy",new Vector2(-30,z+2.18f),new Vector2(-4,z+2.18f),.055f,.103f,zeroEnergy);
             Strip("DF_LumenLaneEnergy",new Vector2(4,z-2.18f),new Vector2(30,z-2.18f),.055f,.103f,lumenEnergy);
             Strip("DF_LumenLaneEnergy",new Vector2(4,z+2.18f),new Vector2(30,z+2.18f),.055f,.103f,lumenEnergy);
+        }
+    }
+
+    void BuildLaneApproaches()
+    {
+        foreach(float z in new[]{-16f,16f})
+        foreach(int side in new[]{-1,1})
+        {
+            Material energy=side<0?zeroEnergy:lumenEnergy;
+            Vector2 from=new(side*34.5f,z*.48f),to=new(side*29.2f,z);
+            Strip("DF_CompressedLaneApproach",from,to,2.65f,.083f,laneMat);
+            Vector2 d=(to-from).normalized,n=new(-d.y,d.x);
+            Strip("DF_ApproachWear",from+n*.52f,to+n*.52f,.07f,.093f,rimMat);
+            Strip("DF_ApproachEnergy",from-n*1.18f,to-n*1.18f,.045f,.101f,energy);
         }
     }
 
