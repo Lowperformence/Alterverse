@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);BuildCollapsedStructures(zero,lumen);BuildBoundaryBreaks();
+            BuildLaneLandmarks(zero,lumen);BuildHorizonSilhouettes(zero,lumen);BuildCollapsedStructures(zero,lumen);BuildBoundaryBreaks();
             foreach(int side in new[]{-1,1})
             for(int i=0;i<12;i++)
             {
