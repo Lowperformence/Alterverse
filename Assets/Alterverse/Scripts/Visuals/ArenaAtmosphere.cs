@@ -26,7 +26,7 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();BuildErosionBands();BuildCraterFields();BuildGroundCover();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();BuildDeadTrees();BuildErosionBands();BuildCraterFields();BuildGroundCover();BuildTerrainStoryClusters();
 }
 
 
@@ -38,6 +38,19 @@ for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisField
 
 
 
+
+
+private void BuildTerrainStoryClusters()
+{
+Vector3[] scars={new(-15,0,24),new(14,0,-24)};
+for(int n=0;n<scars.Length;n++)
+{
+bool zero=scars[n].x<0;Color stone=Color.Lerp(StylizedArtDirection.ArenaStone,StylizedArtDirection.Ink,.16f);
+RockCluster(scars[n],stone,20+n);
+for(int i=0;i<4;i++){Vector3 p=scars[n]+new Vector3((i-1.5f)*.48f,.07f,-1.05f-(i%2)*.35f);GameObject g=Part("DF_ScatteredRubble",PrimitiveType.Cube,p,new Vector3(.22f+i*.04f,.12f,.3f),stone);g.transform.rotation=Quaternion.Euler(i*9,27+i*41,i*5);}
+Bush(scars[n]+new Vector3(zero?1.15f:-1.15f,0,.8f),zero,25+n);
+}
+}
 
 private void BuildGroundCover()
 {
