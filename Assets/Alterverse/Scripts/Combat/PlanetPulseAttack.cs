@@ -48,20 +48,12 @@ namespace Alterverse.Combat
 
         private bool HasTargetInRange()
         {
-            float sqr = blastRadius * blastRadius;
-            foreach (TeamMember member in FindObjectsByType<TeamMember>())
+            int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
+            for(int i=0;i<hits;i++)
             {
-                Health hp = member != null ? member.GetComponent<Health>() : null;
-                if (hp == null || hp.IsDead) continue;
-                Vector3 d = member.transform.position - transform.position; d.y = 0;
-                if (d.sqrMagnitude <= sqr) return true;
-            }
-            foreach (LaneMinion minion in FindObjectsByType<LaneMinion>())
-            {
-                Health hp = minion != null ? minion.GetComponent<Health>() : null;
-                if (hp == null || hp.IsDead) continue;
-                Vector3 d = minion.transform.position - transform.position; d.y = 0;
-                if (d.sqrMagnitude <= sqr) return true;
+                Collider c=hitBuffer[i];if(c==null)continue;
+                Health hp=c.GetComponentInParent<Health>();if(hp==null||hp.IsDead||hp==health)continue;
+                if(hp.GetComponent<TeamMember>()!=null||hp.GetComponent<LaneMinion>()!=null)return true;
             }
             return false;
         }
