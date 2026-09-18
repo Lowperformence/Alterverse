@@ -18,7 +18,7 @@ namespace Alterverse.AI
         private static float nextSharedWorldScan;
         private static DimensionPlanet[] sharedPlanets=System.Array.Empty<DimensionPlanet>();
         private static LaneTower[] sharedTowers=System.Array.Empty<LaneTower>();
-        private static PlanetPulseAttack[] sharedPulses=System.Array.Empty<PlanetPulseAttack>();
+        private static Alterverse.Combat.PlanetPulseAttack[] sharedPulses=System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
         private long separationOrder;
         private HeroLocomotion locomotion;
         private float blockedTime, detourUntil;
@@ -91,7 +91,7 @@ namespace Alterverse.AI
             {
                 nextSharedWorldScan=Time.time+.5f;
                 sharedPlanets=FindObjectsByType<DimensionPlanet>();
-                sharedPulses=FindObjectsByType<PlanetPulseAttack>();
+                sharedPulses=FindObjectsByType<Alterverse.Combat.PlanetPulseAttack>();
                 sharedTowers=FindObjectsByType<LaneTower>();
             }
             planets=sharedPlanets;pulses=sharedPulses;towers=sharedTowers;
