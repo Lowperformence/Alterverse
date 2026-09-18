@@ -42,6 +42,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildEdgeCliffs();
         BuildEdgeFragments();
         BuildOuterRimDebris();
+        BuildRimShadowShelf();
     }
 
     void BuildSurface()
@@ -326,6 +327,16 @@ public sealed class ProductionLunarGround : MonoBehaviour
             Mesh shape=i%3==0?rockMesh:i%3==1?rockMeshB:rockMeshC;
             GameObject g=MeshObject("DF_OuterMoonDebris",shape,darkRegolith,p[i]);
             float k=.42f+(i%4)*.13f;g.transform.localScale=new Vector3(k,.28f+(i%3)*.12f,k*.82f);g.transform.localRotation=Quaternion.Euler(i%2==0?14f:-11f,i*67f,i%3==0?17f:-8f);
+        }
+    }
+
+    void BuildRimShadowShelf()
+    {
+        // Dark inset bands visually separate the playable lunar slab from space without adding collision.
+        foreach(int side in new[]{-1,1})
+        {
+            Strip("DF_MoonRimShadow",new Vector2(-39,side*35.15f),new Vector2(39,side*35.15f),1.15f,.018f,darkRegolith);
+            Strip("DF_MoonRimHighlight",new Vector2(-38,side*34.45f),new Vector2(38,side*34.45f),.07f,.061f,rimMat);
         }
     }
 
