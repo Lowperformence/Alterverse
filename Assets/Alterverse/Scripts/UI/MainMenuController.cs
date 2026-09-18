@@ -16,7 +16,7 @@ float offsetX=safe.x+(safe.width-MenuWidth*scale)*.5f;
 float offsetY=Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
 GUI.color=Color.white;GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),dimTexture);
 GUI.matrix=Matrix4x4.TRS(new Vector3(offsetX,offsetY,0),Quaternion.identity,Vector3.one*scale);
-try{EnsureStyles();DrawBackground();if(launching){DrawLaunch();return;}switch(page){case Page.Play:DrawPlay();break;case Page.Heroes:DrawHeroes();break;case Page.Shop:DrawShop();break;case Page.Profile:DrawProfile();break;case Page.Settings:DrawSettings();break;default:DrawHome();break;}}
+try{EnsureStyles();DrawBackground();if(launching){DrawLaunch();return;}float reveal=pageChangedAt<=0?1f:Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.18f);GUI.color=new Color(1,1,1,.35f+.65f*reveal);switch(page){case Page.Play:DrawPlay();break;case Page.Heroes:DrawHeroes();break;case Page.Shop:DrawShop();break;case Page.Profile:DrawProfile();break;case Page.Settings:DrawSettings();break;default:DrawHome();break;}GUI.color=Color.white;}
 finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEnabled;}
 }
 private string HeroName(int index){return HeroIdentity.NameFor((HeroId)index).ToUpperInvariant();}
