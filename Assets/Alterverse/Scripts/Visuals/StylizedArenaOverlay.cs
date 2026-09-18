@@ -59,6 +59,17 @@ namespace Alterverse.Visuals
                     Ribbon(mid,mid+new Vector2(-side*2.4f,i%2==0?2f:-2f),.07f,.117f,fracture);
                 }
             }
+            // Small warm objective chevrons guide the eye inward without painting the combat lanes.
+            foreach(float z in new[]{-16f,16f})
+            for(int side=-1;side<=1;side+=2)
+            {
+                for(int i=0;i<3;i++)
+                {
+                    float x=side*(12f-i*2.4f);
+                    Ribbon(new Vector2(x,z+side*.55f),new Vector2(x-side*1.15f,z),.11f,.119f,objective);
+                    Ribbon(new Vector2(x-side*1.15f,z),new Vector2(x,z-side*.55f),.11f,.119f,objective);
+                }
+            }
             Disc(Vector2.zero,11.6f,.10f,32,inset);
             Ring(Vector2.zero,10.9f,11.5f,.105f,32,stone);
             Ring(Vector2.zero,7.8f,8f,.108f,32,lightStone);Ring(Vector2.zero,5.55f,5.72f,.113f,32,objective);
