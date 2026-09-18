@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);
+            BuildLaneLandmarks(zero,lumen);BuildBaseApproaches(zero,lumen);BuildHorizonSilhouettes(zero,lumen);BuildCollapsedStructures(zero,lumen);
             foreach(int side in new[]{-1,1})
             for(int i=0;i<12;i++)
             {
@@ -37,6 +37,19 @@ namespace Alterverse.Visuals
 
 
 
+
+
+        private void BuildCollapsedStructures(Color zero,Color lumen)
+        {
+            Vector3[] sites={new(-18,0,30),new(-17,0,-30),new(18,0,30),new(17,0,-30)};
+            for(int n=0;n<sites.Length;n++)
+            {
+                bool left=sites[n].x<0;Color c=Color.Lerp(left?zero:lumen,StylizedArtDirection.ArenaStone,.55f);
+                Block("DF_CollapsedSlab",sites[n]+new Vector3(0,.18f,0),new Vector3(2.8f,.35f,1.05f),c,new Vector3(0,18+n*23,left?-8:8));
+                Block("DF_CollapsedBeam",sites[n]+new Vector3(.55f,.42f,.45f),new Vector3(.42f,.42f,2.25f),StylizedArtDirection.ArenaStone,new Vector3(left?16:-16,32+n*17,12));
+                Block("DF_BuriedFragment",sites[n]+new Vector3(-.85f,.12f,-.5f),new Vector3(1.05f,.22f,.7f),c,new Vector3(4,-22+n*11,6));
+            }
+        }
 
         private void BuildHorizonSilhouettes(Color zero,Color lumen)
         {
