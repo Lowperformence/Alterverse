@@ -63,10 +63,10 @@ namespace Alterverse.Visuals
                 Ring(baseCenter,4.95f,5.10f,.119f,24,trim);
                 foreach(float z in new[]{-16f,16f})
                 {
-                    Vector2 tower=new Vector2(side*25,z);
+                    Vector2 tower=new Vector2(side*21,z);
                     Disc(tower,2.65f,.11f,12,inset);
                     Ring(tower,2.35f,2.65f,.12f,12,trim);
-                    Path(new Vector2(side*34,side<0?-4:4),new Vector2(side*29,z),3f,.07f,stone,inset);
+                    Path(new Vector2(side*34,side<0?-4:4),new Vector2(side*25,z),3f,.07f,stone,inset);
                 }
             }
             Flush();
