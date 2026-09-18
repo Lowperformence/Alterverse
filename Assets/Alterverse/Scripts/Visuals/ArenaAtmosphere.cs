@@ -26,13 +26,24 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);ObjectiveScatter(new Vector3(0,0,0));ObjectiveScatter(new Vector3(0,0,10));ObjectiveScatter(new Vector3(0,0,-3.2f));CentralImpactScars();
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();BuildMicroScatter();BuildRealityGardens();BuildLaneEdgeClusters();BuildLargeBoulders();
 }
 
 
 
 
 
+
+
+private void BuildLargeBoulders()
+{
+Vector3[] sites={new(-39,0,31),new(-38,0,-30),new(-5,0,33),new(6,0,-33),new(39,0,30),new(38,0,-31)};
+for(int n=0;n<sites.Length;n++)
+{
+bool zero=sites[n].x<0;Color c=Color.Lerp(StylizedArtDirection.ArenaStone,zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,.22f);
+for(int i=0;i<2;i++){Vector3 p=sites[n]+new Vector3(i*.8f,.45f+i*.18f,(i%2==0?-.35f:.35f));GameObject g=Part("DF_Boulder",PrimitiveType.Cube,p,new Vector3(1.25f-i*.18f,.9f+i*.22f,1.05f+i*.15f),c);g.transform.rotation=Quaternion.Euler(18+i*11,n*37+i*53,12-i*19);}
+}
+}
 
 private void BuildLaneEdgeClusters()
 {
