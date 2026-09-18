@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
             BuildStars();
             BuildDistantPlanets();
             BuildDistantMoons();
+            BuildArenaUnderside();
         }
 
         private Material Mat(Color color,bool unlit=true)
@@ -67,6 +68,21 @@ namespace Alterverse.Visuals
             Planet(new Vector3(-96,-12,66),13f,new Color(.075f,.085f,.12f,1));
             Planet(new Vector3(112,-15,-64),18f,new Color(.055f,.07f,.105f,1));
             Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
+        }
+
+
+        private void BuildArenaUnderside()
+        {
+            Material m=Mat(new Color(.025f,.03f,.045f,1),false);if(m==null)return;
+            Vector3[] sites={new(-38,-3.5f,-28),new(-20,-4.4f,33),new(4,-5f,-35),new(28,-4.1f,31),new(40,-3.8f,-22)};
+            for(int i=0;i<sites.Length;i++)
+            {
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_UndersideRock";
+                g.transform.SetParent(transform,false);g.transform.position=sites[i];g.transform.localScale=new Vector3(7f+(i%3)*2f,4.5f+(i%2)*2f,6f+(i%4));
+                g.transform.rotation=Quaternion.Euler(18+i*7,i*43,11-i*4);
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
         }
 
         private void BuildDistantMoons()
