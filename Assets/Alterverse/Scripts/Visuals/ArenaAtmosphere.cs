@@ -14,8 +14,19 @@ for(int i=0;i<rocks.Length;i++){bool left=rocks[i].x<0;RockCluster(rocks[i],left
 Vector3[] craters={new(-18,.03f,5),new(-10,.03f,-7),new(16,.03f,-6),new(9,.03f,7),new(0,.03f,24),new(0,.03f,-24)};
 for(int i=0;i<craters.Length;i++)Crater(craters[i],i);
 Vector3[] growth={new(-32,0,9),new(-30,0,-10),new(-15,0,27),new(-14,0,-27),new(32,0,10),new(30,0,-9),new(16,0,27),new(15,0,-27)};
-for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);
+for(int i=0;i<growth.Length;i++)Bush(growth[i],growth[i].x<0,i);BuildDebrisFields();
 }
+
+private void BuildDebrisFields()
+{
+Vector3[] fields={new(-22,0,28),new(-21,0,-28),new(22,0,28),new(21,0,-28)};
+for(int f=0;f<fields.Length;f++)
+{
+bool zero=fields[f].x<0;Color c=Color.Lerp(zero?StylizedArtDirection.ZeroGround:StylizedArtDirection.LumenGround,StylizedArtDirection.ArenaStone,.62f);
+for(int i=0;i<7;i++){float a=(i*137+f*29)*Mathf.Deg2Rad;float r=.6f+(i%4)*.42f;Vector3 p=fields[f]+new Vector3(Mathf.Cos(a)*r,.08f+(i%2)*.06f,Mathf.Sin(a)*r);GameObject g=Part("DF_Debris",PrimitiveType.Cube,p,new Vector3(.22f+(i%3)*.12f,.12f+(i%2)*.08f,.28f+(i%4)*.08f),c);g.transform.rotation=Quaternion.Euler(i*11,i*43+f*17,i*7);}
+}
+}
+
 private void RockCluster(Vector3 p,Color color,int seed)
 {
 for(int i=0;i<3;i++){GameObject g=Part("DF_ArenaRock",PrimitiveType.Cube,p+new Vector3((i-1)*.55f,.22f+(i%2)*.13f,((seed+i)%3-1)*.38f),new Vector3(.75f+i*.12f,.48f+(i%2)*.22f,.65f),color);g.transform.rotation=Quaternion.Euler(12+i*9,seed*31+i*47,18-i*7);}
