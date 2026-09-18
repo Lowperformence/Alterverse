@@ -3,7 +3,19 @@ namespace Alterverse.Visuals
 {
 public sealed class ArenaAtmosphere:MonoBehaviour
 {
-private Transform[] shards;private Vector3[] origins;private readonly System.Collections.Generic.Dictionary<Color,Material> materials=new();private void Start(){const int count=16;shards=new Transform[count];origins=new Vector3[count];for(int i=0;i<count;i++){int side=i%2==0?-1:1;float z=-31+(i/2)*8.8f;Vector3 p=new Vector3(side*(44+(i%3)*1.2f),1.3f+(i%4)*.45f,z);GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=side<0?"DF_ZeroAmbientShard":"DF_LumenAmbientShard";g.transform.SetParent(transform,false);g.transform.position=p;g.transform.localScale=new Vector3(.12f,.55f+.1f*(i%3),.12f);g.transform.rotation=Quaternion.Euler(18,i*37,24);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();if(r!=null)r.material.color=Color.Lerp(side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,StylizedArtDirection.Ink,.38f);shards[i]=g.transform;origins[i]=p;}BuildTerrainDetails();}
+private Transform[] shards;private Vector3[] origins;private Transform[] wisps;private Vector3[] wispOrigins;private readonly System.Collections.Generic.Dictionary<Color,Material> materials=new();private void Start(){const int count=16;shards=new Transform[count];origins=new Vector3[count];for(int i=0;i<count;i++){int side=i%2==0?-1:1;float z=-31+(i/2)*8.8f;Vector3 p=new Vector3(side*(44+(i%3)*1.2f),1.3f+(i%4)*.45f,z);GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=side<0?"DF_ZeroAmbientShard":"DF_LumenAmbientShard";g.transform.SetParent(transform,false);g.transform.position=p;g.transform.localScale=new Vector3(.12f,.55f+.1f*(i%3),.12f);g.transform.rotation=Quaternion.Euler(18,i*37,24);Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();if(r!=null)r.material.color=Color.Lerp(side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,StylizedArtDirection.Ink,.38f);shards[i]=g.transform;origins[i]=p;}BuildTerrainDetails();BuildEnergyWisps();}
+
+
+private void BuildEnergyWisps()
+{
+wisps=new Transform[8];wispOrigins=new Vector3[8];
+for(int i=0;i<wisps.Length;i++)
+{
+int side=i<4?-1:1;float z=-24f+(i%4)*16f;Vector3 p=new Vector3(side*39f,.65f+(i%2)*.25f,z);
+GameObject g=Part(side<0?"DF_ZeroWisp":"DF_LumenWisp",PrimitiveType.Sphere,p,Vector3.one*.16f,side<0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy);
+wisps[i]=g.transform;wispOrigins[i]=p;
+}
+}
 
 private void BuildTerrainDetails()
 {
@@ -110,7 +122,7 @@ if(!materials.TryGetValue(color,out Material m)){Shader shader=Shader.Find("Univ
 if(m!=null)g.GetComponent<Renderer>().sharedMaterial=m;return g;
 }
 
-private void Update(){if(shards==null)return;float t=Time.time;for(int i=0;i<shards.Length;i++){Transform s=shards[i];if(s==null)continue;Vector3 p=origins[i];p.y+=Mathf.Sin(t*(.7f+(i%3)*.12f)+i)*.35f;s.position=p;s.Rotate(8*Time.deltaTime,18*Time.deltaTime,5*Time.deltaTime,Space.Self);}}
+private void Update(){if(shards==null)return;float t=Time.time;for(int i=0;i<shards.Length;i++){Transform s=shards[i];if(s==null)continue;Vector3 p=origins[i];p.y+=Mathf.Sin(t*(.7f+(i%3)*.12f)+i)*.35f;s.position=p;s.Rotate(8*Time.deltaTime,18*Time.deltaTime,5*Time.deltaTime,Space.Self);}if(wisps!=null)for(int i=0;i<wisps.Length;i++){Transform w=wisps[i];if(w==null)continue;Vector3 p=wispOrigins[i];p.y+=Mathf.Sin(t*.9f+i)*.22f;p.z+=Mathf.Sin(t*.42f+i)*.55f;w.position=p;}}
 private void OnDestroy(){foreach(Material m in materials.Values)if(m!=null)Destroy(m);}
 }
 }
