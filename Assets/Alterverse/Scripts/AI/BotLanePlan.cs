@@ -10,7 +10,7 @@ namespace Alterverse.AI
         private float nextObjectiveScan;
         private Health laneObjective;
 
-        public Vector3 Home => new(team == 0 ? -34f : 34f, transform.position.y, team == 0 ? -4f : 4f);
+        public Vector3 Home => new(team == 0 ? -27.5f : 27.5f, transform.position.y, 0f);
         public Vector3 Staging => new(team == 0 ? 1.5f : -1.5f, transform.position.y, laneZ);
         public Vector3 Pressure => new(team == 0 ? 19f : -19f, transform.position.y, laneZ);
         public Vector3 EnemySide => new(team == 0 ? 29f : -29f, transform.position.y, laneZ);
@@ -29,7 +29,7 @@ namespace Alterverse.AI
             if (state == MobaBotBrain.BotState.Retreat || state == MobaBotBrain.BotState.Recover)
                 return Home;
 
-            // Leave the healing area through the assigned lane before advancing.
+            // Leave the actual healing station through the assigned lane before advancing.
             float direction = team == 0 ? 1f : -1f;
             if (transform.position.x * direction < -23f && Mathf.Abs(transform.position.z - laneZ) > 1f)
                 return new Vector3(-28f * direction, transform.position.y, laneZ);
