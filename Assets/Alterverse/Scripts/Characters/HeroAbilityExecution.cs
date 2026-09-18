@@ -119,9 +119,12 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(spec.Windup);
             if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject)) yield break;
             TeamMember own = GetComponent<TeamMember>();
-            foreach (Health h in FindObjectsByType<Health>())
+            int hits=Physics.OverlapSphereNonAlloc(center,spec.Radius,scanBuffer);
+            var resolved=new System.Collections.Generic.HashSet<Health>();
+            for(int i=0;i<hits;i++)
             {
-                if (h == null || h.IsDead || !h.isActiveAndEnabled || HeroCombatRules.Distance(center, h.transform.position) > spec.Radius) continue;
+                Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
+                if(h==null||!resolved.Add(h)||h.IsDead||!h.isActiveAndEnabled)continue;
                 TeamMember member = h.GetComponent<TeamMember>();
                 bool ally = own != null && member != null && member.Team == own.Team && h.GetComponent<HeroIdentity>() != null;
                 if (identity.Hero == HeroId.Mira)
