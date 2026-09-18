@@ -22,7 +22,7 @@ finally{GUI.matrix=previousMatrix;GUI.color=previousColor;GUI.enabled=previousEn
 private void DrawTopNav(Page current)
 {
 GUI.enabled=true;
-GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);
+GUI.Label(new Rect(24,8,220,30),"DF  //  FRONT COMMAND",sideLabel);GUI.Label(new Rect(246,8,170,30),"LIVE BUILD  •  BETA",small);
 float width=510f,start=MenuWidth-width-18f,cell=width/NavigationLabels.Length;
 for(int i=0;i<NavigationLabels.Length;i++){bool active=current==NavigationPages[i];Rect tab=new Rect(start+i*cell,6,cell-4,38);GUI.enabled=!active;if(GUI.Button(tab,NavigationLabels[i],active?navActive:navButton))SetPage(NavigationPages[i]);GUI.enabled=true;if(active){GUI.color=new Color(1,1,1,.9f);GUI.DrawTexture(new Rect(tab.x+10,tab.yMax-3,tab.width-20,2),whiteTexture);GUI.color=Color.white;}}GUI.color=new Color(1,1,1,.09f);GUI.DrawTexture(new Rect(24,48,MenuWidth-48,1),whiteTexture);GUI.color=Color.white;
 }
