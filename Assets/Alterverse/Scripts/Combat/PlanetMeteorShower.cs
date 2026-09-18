@@ -3,7 +3,7 @@ namespace Alterverse.Combat
 {
 [RequireComponent(typeof(DimensionPlanet),typeof(Health))]public sealed class PlanetMeteorShower:MonoBehaviour
 {
-[SerializeField]private float radius=8f,cooldown=6.5f,telegraph=1.15f,damage=18f;[SerializeField]private int meteors=5;private Health self;private DimensionPlanet planet;private float next;
+[SerializeField]private float radius=11f,cooldown=7.5f,telegraph=1.35f,damage=16f;[SerializeField]private int meteors=6;private Health self;private DimensionPlanet planet;private float next;
 private void Awake(){self=GetComponent<Health>();planet=GetComponent<DimensionPlanet>();next=Time.time+3f;}
 private void Update(){if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;if(!HasHero())return;next=Time.time+cooldown;for(int i=0;i<meteors;i++){Vector2 r=Random.insideUnitCircle*radius;Vector3 p=transform.position+new Vector3(r.x,0,r.y);MeteorStrike.Create(p,telegraph,damage);}}
 private bool HasHero(){float sq=radius*radius;foreach(TeamMember m in FindObjectsByType<TeamMember>()){Health h=m!=null?m.GetComponent<Health>():null;if(h==null||h.IsDead)continue;Vector3 d=m.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=sq)return true;}return false;}
