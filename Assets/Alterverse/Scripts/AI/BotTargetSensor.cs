@@ -61,8 +61,9 @@ namespace Alterverse.AI
             float radius = profile != null ? Mathf.Max(fallbackScanRadius, profile.AttackRange + 4f) : fallbackScanRadius;
             Health best = null;
             float bestScore = float.MaxValue;
-            foreach (Health candidate in FindObjectsByType<Health>())
+            for(int index=0;index<Health.Active.Count;index++)
             {
+                Health candidate=Health.Active[index];
                 if (!IsEnemy(candidate)) continue;
                 Vector3 delta = candidate.transform.position - transform.position;
                 delta.y = 0;
