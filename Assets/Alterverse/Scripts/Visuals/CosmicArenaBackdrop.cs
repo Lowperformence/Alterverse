@@ -23,6 +23,7 @@ namespace Alterverse.Visuals
             BuildStars();
             BuildBrightStars();
             BuildFarStarLayer();
+            BuildStarClusters();
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildPlanetRings();
@@ -77,6 +78,20 @@ namespace Alterverse.Visuals
         }
 
 
+
+
+        private void BuildStarClusters()
+        {
+            Material m=Mat(new Color(.55f,.59f,.68f,1));if(m==null)return;
+            Vector3[] centers={new(-118,-2.6f,42),new(126,-2.6f,18),new(-58,-2.6f,-102)};
+            const int per=9;var vertices=new Vector3[centers.Length*per];var indices=new int[vertices.Length];int k=0;
+            for(int c=0;c<centers.Length;c++)for(int i=0;i<per;i++,k++)
+            {
+                float a=i*2.18f+c*.7f,r=2.2f+(i%4)*1.35f;vertices[k]=centers[c]+new Vector3(Mathf.Cos(a)*r,0,Mathf.Sin(a)*r);indices[k]=k;
+            }
+            Mesh mesh=new Mesh{name="DF_StarClusters"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_StarClusters");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-100;
+        }
 
         private void BuildFarStarLayer()
         {
