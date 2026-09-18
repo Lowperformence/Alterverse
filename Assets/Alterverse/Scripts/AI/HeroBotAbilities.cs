@@ -29,7 +29,7 @@ namespace Alterverse.AI
             team = GetComponent<TeamMember>();
             float stagger = Random.Range(.7f, 1.8f);
             for (int slot = 0; slot < 4; slot++) ready[slot] = Time.time + stagger + slot * .55f;
-            ready[3] = Time.time + 45f;
+            ready[3] = Time.time + 120f;
             nextDecision = Time.time + stagger;
         }
         private AbilitySpec Spec(int slot) => slot == 0 ? kit.Q : slot == 1 ? kit.W : slot == 2 ? kit.E : kit.Ultimate;
