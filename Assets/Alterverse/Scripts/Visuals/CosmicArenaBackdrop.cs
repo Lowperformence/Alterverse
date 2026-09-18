@@ -22,6 +22,7 @@ namespace Alterverse.Visuals
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildArenaUnderside();
+            BuildEdgeFragments();
         }
 
         private Material Mat(Color color,bool unlit=true)
@@ -70,6 +71,21 @@ namespace Alterverse.Visuals
             Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
         }
 
+
+
+        private void BuildEdgeFragments()
+        {
+            Material m=Mat(new Color(.04f,.045f,.06f,1),false);if(m==null)return;
+            Vector3[] sites={new(-52,-2.4f,28),new(-48,-3.2f,-35),new(-16,-3.5f,43),new(18,-2.9f,-45),new(50,-3.1f,30),new(53,-2.6f,-25)};
+            for(int i=0;i<sites.Length;i++)
+            {
+                GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name="DF_FloatingEdgeFragment";
+                g.transform.SetParent(transform,false);g.transform.position=sites[i];float scale=.8f+(i%3)*.45f;
+                g.transform.localScale=new Vector3(scale*1.4f,scale*.7f,scale);g.transform.rotation=Quaternion.Euler(i*17,31+i*49,12+i*9);
+                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            }
+        }
 
         private void BuildArenaUnderside()
         {
