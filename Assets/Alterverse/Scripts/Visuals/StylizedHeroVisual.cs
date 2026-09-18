@@ -114,7 +114,7 @@ Create("Reactor",PrimitiveType.Cube,new Vector3(.15f,.2f,.4f),new Vector3(.23f,.
 // Meshes are generated once per hero and shared by its parts. No primitive colliders.
 private Mesh armorMesh,limbMesh,helmetMesh;
 private readonly System.Collections.Generic.List<Mesh> detailMeshes=new();
-private readonly System.Collections.Generic.Dictionary<Color,Material> palette=new();
+private readonly System.Collections.Generic.Dictionary<(Color, bool),Material> palette=new();
 private readonly System.Collections.Generic.List<Material> ownedMaterials=new System.Collections.Generic.List<Material>();
 private GameObject Create(string n,PrimitiveType type,Vector3 pos,Vector3 scale,Color color,Vector3 rotation=default,Transform parent=null)
 {
@@ -139,29 +139,50 @@ mesh=armorMesh;
 }
 part.AddComponent<MeshFilter>().sharedMesh=mesh;
 MeshRenderer renderer=part.AddComponent<MeshRenderer>();
-renderer.sharedMaterial=MaterialFor(color);
+renderer.sharedMaterial=MaterialFor(color, IsEnergySurface(n));
 return part;
 }
-private Material MaterialFor(Color color)
+private static bool IsEnergySurface(string name) => name=="Eye"||name=="Visor"||name=="Core"||name=="ChestGem"||name=="ChestLeaf"||name=="Reactor"||name=="ShieldLine"||name=="TeamInsignia"||name=="ProjectorL"||name=="ProjectorR"||name=="ChestSlash";
+private Material MaterialFor(Color color, bool energy=false)
 {
-if(palette.TryGetValue(color,out Material cached))return cached;
+if(palette.TryGetValue((color,energy),out Material cached))return cached;
 Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");
 if(shader==null)return null;
 Material material=new Material(shader){name="DF_HeroPalette",color=color};
-if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.36f);
-if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.12f);
-palette.Add(color,material);ownedMaterials.Add(material);return material;
+bool fabric=color==cloth;
+if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",fabric?.08f:energy?.55f:.38f);
+if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",fabric?0f:energy?.12f:.3f);
+if(energy&&material.HasProperty("_EmissionColor")){material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",color*.3f);}
+palette.Add((color,energy),material);ownedMaterials.Add(material);return material;
 }
 private void Panel(string name,Vector2[] outline,float depth,Vector3 position,Color color)
 {
 var vertices=new System.Collections.Generic.List<Vector3>();var triangles=new System.Collections.Generic.List<int>();
-var front=new Vector3[outline.Length];var back=new Vector3[outline.Length];
-for(int i=0;i<outline.Length;i++){front[i]=new Vector3(outline[i].x,outline[i].y,depth*.5f);back[i]=new Vector3(outline[i].x,outline[i].y,-depth*.5f);}
-if(Vector3.Cross(front[1]-front[0],front[2]-front[0]).z<0)System.Array.Reverse(front);
-if(Vector3.Cross(back[1]-back[0],back[2]-back[0]).z>0)System.Array.Reverse(back);
+// Convex armor contours use a narrow bevel, so front planes catch light independently
+// from side walls. The silhouette and animated part names remain unchanged.
+var contour=(Vector2[])outline.Clone();
+if(Vector3.Cross((Vector3)(contour[1]-contour[0]),(Vector3)(contour[2]-contour[0])).z<0)System.Array.Reverse(contour);
+Vector2 center=Vector2.zero;foreach(Vector2 point in contour)center+=point;center/=contour.Length;
+float bevel=Mathf.Min(depth*.22f,.025f);
+var front=new Vector3[contour.Length];var back=new Vector3[contour.Length];
+for(int i=0;i<contour.Length;i++)
+{
+Vector2 inset=Vector2.Lerp(contour[i],center,.09f);
+front[i]=new Vector3(inset.x,inset.y,depth*.5f);
+back[contour.Length-1-i]=new Vector3(inset.x,inset.y,-depth*.5f);
+}
 AddFace(vertices,triangles,front);AddFace(vertices,triangles,back);
-// Walk the front face CCW, with side normals facing away from the contour.
-for(int i=0;i<front.Length;i++){Vector3 a=front[i],b=front[(i+1)%front.Length];AddFace(vertices,triangles,new[]{b,a,new Vector3(a.x,a.y,-depth*.5f),new Vector3(b.x,b.y,-depth*.5f)});}
+for(int i=0;i<contour.Length;i++)
+{
+int next=(i+1)%contour.Length;
+Vector3 a=new Vector3(contour[i].x,contour[i].y,depth*.5f-bevel);
+Vector3 b=new Vector3(contour[next].x,contour[next].y,depth*.5f-bevel);
+Vector3 ba=new Vector3(a.x,a.y,-a.z),bb=new Vector3(b.x,b.y,-b.z);
+Vector3 fa=front[i],fb=front[next];
+AddFace(vertices,triangles,new[]{fa,a,b,fb});
+AddFace(vertices,triangles,new[]{b,a,ba,bb});
+AddFace(vertices,triangles,new[]{bb,ba,new Vector3(fa.x,fa.y,-fa.z),new Vector3(fb.x,fb.y,-fb.z)});
+}
 Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();detailMeshes.Add(mesh);
 GameObject part=new GameObject("DF_"+name);part.transform.SetParent(root,false);part.transform.localPosition=position;
 part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color);
@@ -265,4 +286,5 @@ foreach(Material material in ownedMaterials)if(material!=null)Destroy(material);
 }
 }
 }
+
 

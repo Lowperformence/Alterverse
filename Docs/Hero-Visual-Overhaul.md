@@ -26,3 +26,19 @@ Hero palette remains the same across teams. ZERO/LUMEN use a consistent shoulder
 Twenty authored contour outlines passed convexity checks, allowing the fan triangulation to remain valid. C# syntax and diff checks pass. The Unity regression runner now checks all six models for nonempty geometry, absence of host renderers, at most 24 mesh renderers and at most 6 palette materials after batching.
 
 **Unity compilation, these runtime mesh-budget checks, visual inspection from the actual game camera and Android profiling have not run here.** The numeric budgets are assertions to run, not measured device results. This remains an authored procedural geometry pass, not final production character art or a full skeletal animation set. A camera-distance screenshot comparison is required before claiming a visual quality target was met.
+
+
+## Frontend-linked surface refinement
+
+The production frontend now shows these actual gameplay models in an isolated 3D
+portrait stage. The original six silhouettes, roles and combat baseline are retained.
+Convex contour panels now have narrow front/back bevels instead of uniformly flat
+extrusions. Cloth remains rough, armor has moderate metallic response, and only
+named functional light surfaces receive restrained emission. Energy and ordinary
+surfaces have separate palette keys even when their RGB color is identical.
+
+Numerical checks passed outward normals for all faces of all 22 current contour
+outlines. The emissive palette may add one material/body batch, within the existing
+six-material target; the Play-mode budget assertions still need to run in Unity.
+No claim of final character-art approval or device performance is made from these
+source checks. See Production-Frontend-Pass.md for the concrete acceptance sequence.
