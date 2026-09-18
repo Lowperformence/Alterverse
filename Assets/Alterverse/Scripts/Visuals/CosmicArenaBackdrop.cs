@@ -14,6 +14,7 @@ namespace Alterverse.Visuals
         private Material starMaterial;
         private Transform distantBodies;
         private float nextBackdropUpdate;
+        private Quaternion starsStartRotation;
 
         private void Start()
         {
@@ -51,7 +52,7 @@ namespace Alterverse.Visuals
         {
             Material m=Mat(new Color(.78f,.84f,.94f,1));
             if(m==null)return;starMaterial=m;
-            stars=new GameObject("DF_StarField").transform;stars.SetParent(transform,false);
+            stars=new GameObject("DF_StarField").transform;stars.SetParent(transform,false);starsStartRotation=stars.rotation;
             const int count=220;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
@@ -165,7 +166,7 @@ namespace Alterverse.Visuals
         private void Update()
         {
             if(Time.time<nextBackdropUpdate)return;float dt=Mathf.Max(.05f,Time.time-(nextBackdropUpdate-.1f));nextBackdropUpdate=Time.time+.1f;
-            if(stars!=null)stars.Rotate(0,.035f*dt,0,Space.World);
+            if(stars!=null){float drift=Mathf.Sin(Time.time*.018f)*.35f;stars.rotation=starsStartRotation*Quaternion.Euler(0,drift,0);}
             if(distantBodies!=null)distantBodies.Rotate(0,.006f*dt,0,Space.World);
             if(starMaterial!=null)
             {
