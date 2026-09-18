@@ -26,11 +26,27 @@ namespace Alterverse.Visuals
                     else Arch(new Vector3(44.8f,0,z),lumen);
                 }
             }
-            foreach(int side in new[]{-1,1})
-            for(int i=0;i<12;i++)
+            BuildLaneLandmarks(zero,lumen);\n            foreach(int side in new[]{-1,1})\n            for(int i=0;i<12;i++)
             {
                 float x=-38.5f+i*7f;
                 Block("DF_OuterBorder",new Vector3(x,-.25f,side*37f),new Vector3(6.5f,.6f,1.7f),stone);
+            }
+        }
+
+
+        private void BuildLaneLandmarks(Color zero,Color lumen)
+        {
+            foreach(float z in new[]{-16f,16f})
+            {
+                // ZERO approaches are jagged and broken; LUMEN approaches are ordered and geometric.
+                for(int i=0;i<3;i++)
+                {
+                    float x=-29f+i*7.5f;
+                    Block("DF_ZeroLaneShard",new Vector3(x,.42f,z+(i%2==0?3.7f:-3.7f)),new Vector3(.42f,1.15f+i*.18f,.5f),Color.Lerp(zero,StylizedArtDirection.ZeroEnergy,.3f),new Vector3(12,i*31,-18+i*8));
+                    x=29f-i*7.5f;
+                    Block("DF_LumenLanePylon",new Vector3(x,.48f,z+(i%2==0?-3.7f:3.7f)),new Vector3(.48f,1.25f,.48f),Color.Lerp(lumen,StylizedArtDirection.LumenEnergy,.24f));
+                    Block("DF_LumenLaneCap",new Vector3(x,.98f,z+(i%2==0?-3.7f:3.7f)),new Vector3(.72f,.12f,.72f),StylizedArtDirection.LumenEnergy,new Vector3(0,45,0));
+                }
             }
         }
 
