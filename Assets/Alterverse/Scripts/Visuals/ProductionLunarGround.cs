@@ -34,6 +34,7 @@ public sealed class ProductionLunarGround : MonoBehaviour
         BuildSecondaryCraterField();
         BuildImpactEjecta();
         BuildFractures();
+        BuildRealityTransitionScars();
         BuildRocks();
         BuildRegolithVariation();
         BuildLaneDustScars();
@@ -219,6 +220,18 @@ public sealed class ProductionLunarGround : MonoBehaviour
                 GameObject g=MeshObject("DF_RegolithFragment",shape,darkRegolith,c+new Vector3((i-1)*.52f,0,(i%2==0?.38f:-.3f)));
                 float sc=.18f+i*.07f;g.transform.localScale=new Vector3(sc,.12f+i*.04f,sc*.8f);g.transform.localRotation=Quaternion.Euler(0,group*39+i*61,0);
             }
+        }
+    }
+
+    void BuildRealityTransitionScars()
+    {
+        // Near the contested middle, faction color almost disappears into neutral lunar stone.
+        for(int side=-1;side<=1;side+=2)for(int i=0;i<4;i++)
+        {
+            float z=-24f+i*16f;Vector2 a=new(side*13.5f,z),b=new(side*5.8f,z+(i%2==0?1.1f:-1.1f));
+            Material faint=side<0?zeroEnergy:lumenEnergy;
+            Strip("DF_FadingRealitySeam",a,b,.035f,.089f,faint);
+            Strip("DF_NeutralCollisionScar",new Vector2(side*6.4f,z+(i%2==0?.35f:-.35f)),new Vector2(side*2.8f,z),.065f,.087f,darkRegolith);
         }
     }
 
