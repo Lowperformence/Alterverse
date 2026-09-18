@@ -46,10 +46,10 @@ namespace Alterverse.Visuals
             Material m=Mat(new Color(.78f,.84f,.94f,1));
             if(m==null)return;starMaterial=m;
             stars=new GameObject("DF_StarField").transform;stars.SetParent(transform,false);
-            const int count=180;var vertices=new Vector3[count];var indices=new int[count];
+            const int count=220;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
-                float a=i*2.39996323f;float radius=52f+(i*37%105);
+                float a=i*2.39996323f;float radius=52f+(i*37%125);
                 float x=Mathf.Cos(a)*radius,z=Mathf.Sin(a)*radius*.72f;
                 if(Mathf.Abs(x)<49f&&Mathf.Abs(z)<42f){radius+=55f;x=Mathf.Cos(a)*radius;z=Mathf.Sin(a)*radius*.72f;}
                 vertices[i]=new Vector3(x,-2.65f+(i%5)*.015f,z);indices[i]=i;
