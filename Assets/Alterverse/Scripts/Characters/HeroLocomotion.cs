@@ -23,6 +23,7 @@ namespace Alterverse.Characters
         public float SpeedMultiplier => status.MoveMultiplier;
         public Vector3 Velocity { get; private set; }
         public Vector3 LastCollisionNormal { get; private set; }
+        public Collider LastCollisionCollider { get; private set; }
         private void Awake()
         {
             health = GetComponent<Health>(); controller = GetComponent<CharacterController>();
@@ -33,7 +34,7 @@ namespace Alterverse.Characters
         public void ResetMotion()
         {
             dashRemaining=0; dashFrame=-1; Velocity=Vector3.zero;
-            moveFacing=actionFacing=Vector3.zero; actionUntil=0; LastCollisionNormal=Vector3.zero;
+            moveFacing=actionFacing=Vector3.zero; actionUntil=0; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
         }
         private void OnDisable() => ResetMotion();
         private void OnDestroy() { if(health!=null)health.Died-=ResetMotion; }
@@ -61,7 +62,7 @@ namespace Alterverse.Characters
             Vector3 delta=end-transform.position;delta.y=0;
             if(delta.magnitude<.1f)return false;
             dashDirection=delta.normalized;
-            Sweep(transform.position,dashDirection,delta.magnitude,out float clearDistance,out _);
+            Sweep(transform.position,dashDirection,delta.magnitude,out float clearDistance,out _,out _);
             if(clearDistance<.1f)return false;
             dashRemaining=clearDistance;
             // Fixed readable traversal time; existing ability distance and cooldown remain intact.
@@ -78,9 +79,9 @@ namespace Alterverse.Characters
             dashRemaining-=distance;
             if(Vector3.Dot(actual,dashDirection)<distance-.015f)dashRemaining=0;
         }
-        private void Sweep(Vector3 center,Vector3 direction,float distance,out float allowed,out Vector3 normal)
+        private void Sweep(Vector3 center,Vector3 direction,float distance,out float allowed,out Vector3 normal,out Collider blocker)
         {
-            allowed=distance;normal=Vector3.zero;
+            allowed=distance;normal=Vector3.zero;blocker=null;
             int count=Physics.CapsuleCastNonAlloc(center+Vector3.up*.45f,center-Vector3.up*.45f,.48f,direction,hits,distance+.025f,~0,QueryTriggerInteraction.Ignore);
             if(count==hits.Length){allowed=0;return;}
             for(int i=0;i<count;i++)
@@ -91,12 +92,39 @@ namespace Alterverse.Characters
                 if(controller==null&&(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null))continue;
                 if(Vector3.Dot(direction,hits[i].normal)>=-.001f)continue;
                 float travel=Mathf.Max(0,hits[i].distance-.025f);
-                if(travel<allowed){allowed=travel;normal=hits[i].normal;}
+                if(travel<allowed){allowed=travel;normal=hits[i].normal;blocker=other;}
             }
+        }
+
+        /// <summary>Non-allocating local steering probe used by bots after a real collision.</summary>
+        public bool TryFindClearDirection(Vector3 desired,float probeDistance,int sidePreference,out Vector3 clearDirection)
+        {
+            clearDirection=Vector3.zero;desired.y=0;
+            if(desired.sqrMagnitude<.0001f)return false;
+            desired.Normalize();probeDistance=Mathf.Max(.35f,probeDistance);
+            int preferred=sidePreference>=0?1:-1;
+            if(DirectionClear(desired,probeDistance)){clearDirection=desired;return true;}
+            Vector3 right=Vector3.Cross(Vector3.up,desired).normalized;
+            for(int pass=0;pass<3;pass++)
+            {
+                float angle=pass==0?42f:pass==1?68f:92f;
+                float radians=angle*Mathf.Deg2Rad,cos=Mathf.Cos(radians),sin=Mathf.Sin(radians);
+                Vector3 first=(desired*cos+right*(preferred*sin)).normalized;
+                if(DirectionClear(first,probeDistance)){clearDirection=first;return true;}
+                Vector3 second=(desired*cos-right*(preferred*sin)).normalized;
+                if(DirectionClear(second,probeDistance)){clearDirection=second;return true;}
+            }
+            return false;
+        }
+
+        private bool DirectionClear(Vector3 direction,float distance)
+        {
+            Sweep(transform.position,direction,distance,out float allowed,out _,out _);
+            return allowed>=distance*.72f;
         }
         public Vector3 Move(Vector3 displacement,float halfWidth,float halfHeight,bool slide=true)
         {
-            Vector3 before=transform.position; LastCollisionNormal=Vector3.zero;
+            Vector3 before=transform.position; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
             if(!CanMove){Velocity=Vector3.zero;return Vector3.zero;}
             displacement.y=0;
             Vector3 goal=before+displacement;
@@ -106,14 +134,14 @@ namespace Alterverse.Characters
             for(int pass=0;pass<(slide?2:1)&&remaining.sqrMagnitude>.000001f;pass++)
             {
                 float distance=remaining.magnitude;Vector3 direction=remaining/distance;
-                Sweep(transform.position,direction,distance,out float allowed,out Vector3 normal);
+                Sweep(transform.position,direction,distance,out float allowed,out Vector3 normal,out Collider blocker);
                 Vector3 bounded=transform.position+direction*allowed;
                 bounded.x=Mathf.Clamp(bounded.x,-halfWidth,halfWidth);bounded.z=Mathf.Clamp(bounded.z,-halfHeight,halfHeight);
                 Vector3 step=bounded-transform.position;
                 if(controller!=null){if(!controller.enabled)break;controller.Move(step);}
                 else transform.position+=step;
                 if(normal.sqrMagnitude<.01f)break;
-                LastCollisionNormal=normal;
+                LastCollisionNormal=normal;LastCollisionCollider=blocker;
                 remaining=Vector3.ProjectOnPlane(remaining-step,normal);remaining.y=0;
             }
             if(controller!=null&&controller.enabled)controller.Move(Vector3.down*(2f*Time.deltaTime));
