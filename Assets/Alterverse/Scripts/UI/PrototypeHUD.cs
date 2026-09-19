@@ -53,14 +53,18 @@ namespace Alterverse.UI
         }
         private CombatGlyph GlyphFor(int slot)
         {
-            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
-            if((hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2))return CombatGlyph.Dash;
-            if((hero==HeroId.Mira&&(slot==1||slot==3))||(hero==HeroId.Rook&&slot==1))return CombatGlyph.Heal;
-            if((hero==HeroId.Mira&&slot==2)||(hero==HeroId.Kaelon&&slot==1))return CombatGlyph.Shield;
-            if(hero==HeroId.Kaelon&&slot==0)return CombatGlyph.Stun;
-            if(hero==HeroId.Nyra&&slot==3)return CombatGlyph.Volley;
-            if(abilities.SpecFor(slot).Radius>0)return CombatGlyph.Area;
-            return abilities.SpecFor(slot).Range>4?CombatGlyph.Shot:CombatGlyph.Strike;
+            HeroId h=identity!=null?identity.Hero:HeroId.Veyr;
+            if(h==HeroId.Veyr)return slot==0?CombatGlyph.NullCut:slot==1?CombatGlyph.Rift:slot==2?CombatGlyph.Dash:CombatGlyph.Execute;
+            if(h==HeroId.Kaelon)return slot==0?CombatGlyph.Impact:slot==1?CombatGlyph.Shield:slot==2?CombatGlyph.Gravity:CombatGlyph.Citadel;
+            if(h==HeroId.Nyra)return slot==0?CombatGlyph.PrismShot:slot==1?CombatGlyph.Dash:slot==2?CombatGlyph.Snare:CombatGlyph.Volley;
+            if(h==HeroId.Elyra)return slot==0?CombatGlyph.OrbitFracture:slot==1?CombatGlyph.Invert:slot==2?CombatGlyph.Phase:CombatGlyph.Singularity;
+            if(h==HeroId.Mira)return slot==0?CombatGlyph.Seed:slot==1?CombatGlyph.Heal:slot==2?CombatGlyph.Shelter:CombatGlyph.Wildsurge;
+            return slot==0?CombatGlyph.Swing:slot==1?CombatGlyph.Armor:slot==2?CombatGlyph.Slam:CombatGlyph.Overdrive;
+        }
+        private CombatGlyph BasicGlyph()
+        {
+            HeroId h=identity!=null?identity.Hero:HeroId.Veyr;
+            return h==HeroId.Veyr?CombatGlyph.Blade:h==HeroId.Kaelon?CombatGlyph.Heavy:h==HeroId.Nyra?CombatGlyph.Rifle:h==HeroId.Elyra?CombatGlyph.Orb:h==HeroId.Mira?CombatGlyph.SupportShot:CombatGlyph.Gauntlet;
         }
         private void OnEnable()=>EnhancedTouchSupport.Enable();
         private void OnDisable(){ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
@@ -188,7 +192,7 @@ namespace Alterverse.UI
             if(success){feedback=names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
             else if(!HeroCombatStatus.CanAct(health.gameObject))feedback="STUNNED — CANNOT CAST";
             else if(abilities.RemainingFor(slot)>0)feedback="ABILITY RECHARGING";
-            else if(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shield)feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
+            else if(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shelter||glyphs[slot]==CombatGlyph.Shield||glyphs[slot]==CombatGlyph.Wildsurge)feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
             else feedback="NO TARGET / PATH BLOCKED";
             feedbackUntil=Time.unscaledTime+1.5f;nextReadout=0;
         }
@@ -225,17 +229,21 @@ namespace Alterverse.UI
                 Rect r=layout.Action(i);bool held=pressedSlot==i&&combatInside;
                 float remaining=i<4&&abilities!=null?abilities.RemainingFor(i):0;
                 Color edge=i==3?new Color(.9f,.73f,.42f):accent;
-                FrontEndTheme.Fill(r,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
-                FrontEndTheme.Fill(new Rect(r.x,r.y,r.width,held?4:2),remaining>0?FrontEndTheme.Muted:edge);
-                // Keep the combat buttons clean: the previous generic white glyph strokes read as stray slashes.
-                // Ability identity remains in the label, cooldown state and press feedback until final authored icons are available.
+                Rect face=held?new Rect(r.x+3,r.y+3,r.width-6,r.height-6):r;
+                FrontEndTheme.Fill(face,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
+                Color icon=remaining>0?new Color(.42f,.45f,.5f,.72f):edge;
+                Vector2 center=new Vector2(face.center.x,face.y+face.height*.39f);
+                float radius=Mathf.Min(face.width,face.height)*.34f;
+                CombatGlyphs.Ring(center,radius+5,held?4:2,new Color(icon.r,icon.g,icon.b,held?1f:.72f),24);
+                if(i==3){CombatGlyphs.Ring(center,radius+10,2,new Color(edge.r,edge.g,edge.b,remaining>0?.22f:.58f),24);}
+                CombatGlyphs.Draw(i==4?BasicGlyph():glyphs[i],center,radius*1.45f,icon);
                 if(remaining>0)
                 {
                     float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
-                    FrontEndTheme.Fill(new Rect(r.x+5,r.yMax-6,(r.width-10)*ratio,3),FrontEndTheme.Muted);
-                    theme.Label(new Rect(r.x+4,r.y+45,r.width-8,28),cooldownText[i],centered);
+                    FrontEndTheme.Fill(new Rect(face.x+4,face.y,face.width-8,face.height*ratio),new Color(.015f,.02f,.03f,.42f));
+                    theme.Label(new Rect(r.x+4,r.y+43,r.width-8,28),cooldownText[i],centered);
                 }
-                else theme.Label(new Rect(r.x+4,r.y+(i==4?65:45),r.width-8,30),i==4?"ATTACK":names[i],small);
+                else theme.Label(new Rect(r.x+4,r.y+(i==4?65:61),r.width-8,24),i==4?"ATTACK":names[i],small);
                 if(i==3)theme.Label(new Rect(r.x,r.y-20,r.width,18),"ULTIMATE",small,true);
             }
         }
@@ -273,7 +281,7 @@ namespace Alterverse.UI
             if(view==null)view=Camera.main;if(view==null)return;
             float range=abilities.PreviewRange(inspectedSlot);if(range<=0)return;
             Vector3 center=health.transform.position;center.y=.18f;
-            Color tint=glyphs[inspectedSlot]==CombatGlyph.Heal?new Color(.45f,.87f,.66f):FrontEndTheme.Accent;
+            Color tint=(glyphs[inspectedSlot]==CombatGlyph.Heal||glyphs[inspectedSlot]==CombatGlyph.Shelter||glyphs[inspectedSlot]==CombatGlyph.Wildsurge)?new Color(.45f,.87f,.66f):FrontEndTheme.Accent;
             if(glyphs[inspectedSlot]==CombatGlyph.Dash)
             {
                 Vector3 direction=abilities.PreviewDirection(inspectedSlot);direction.y=0;direction.Normalize();
