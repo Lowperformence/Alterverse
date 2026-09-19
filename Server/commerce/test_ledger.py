@@ -28,6 +28,17 @@ class LedgerTests(unittest.TestCase):
     def test_token_cannot_move_between_accounts(self):
         self.ledger.fulfill('account-a','df_shards_small','token',self.valid)
         with self.assertRaises(ValueError):self.ledger.fulfill('account-b','df_shards_small','token',dict(self.valid,obfuscatedExternalAccountId='account-b'))
+    def test_unified_claim_is_retry_safe_and_acknowledged_once(self):
+        self.ledger.fulfill('account-a','df_shards_small','claim-token',self.valid)
+        first=self.ledger.claim('account-a')
+        second=self.ledger.claim('account-a')
+        self.assertEqual(first['claimAmount'],500)
+        self.assertEqual(first['claimId'],second['claimId'])
+        self.assertEqual(first['balance'],0)
+        self.ledger.acknowledge_claim('account-a',first['claimId'])
+        empty=self.ledger.claim('account-a')
+        self.assertEqual(empty['claimAmount'],0)
+        self.assertEqual(empty['claimId'],'')
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','df_shards_small','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
