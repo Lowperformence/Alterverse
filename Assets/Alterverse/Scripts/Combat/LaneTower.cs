@@ -11,19 +11,42 @@ namespace Alterverse.Combat
         [SerializeField] private float attackRange = 5.25f, attackDamage = 18f, attackCooldown = 1.2f;
         private Health health, currentTarget;
         private int team;
-        private float nextAttackTime, nextTargetScan;
+        private float nextAttackTime, nextTargetScan, nextCoverScan;
+        private int cachedCoverTeam=-1;
+        private bool cachedCover;
         public int Team => team;
         public float AttackRange => attackRange;
         public Health CurrentTarget => IsValidTarget(currentTarget) ? currentTarget : null;
         private void Awake() => health = GetComponent<Health>();
-        public void Initialize(int teamId) { Configure(teamId,attackRange,attackDamage,attackCooldown); } public void Configure(int teamId,float range,float damage,float cooldown){team=teamId;attackRange=Mathf.Max(1f,range);attackDamage=Mathf.Max(1f,damage);attackCooldown=Mathf.Max(.2f,cooldown);currentTarget=null;nextTargetScan=0;}
+        public void Initialize(int teamId) { Configure(teamId,attackRange,attackDamage,attackCooldown); } public void Configure(int teamId,float range,float damage,float cooldown){team=teamId;attackRange=Mathf.Max(1f,range);attackDamage=Mathf.Max(1f,damage);attackCooldown=Mathf.Max(.2f,cooldown);currentTarget=null;nextTargetScan=0;nextCoverScan=0;cachedCoverTeam=-1;cachedCover=false;}
 
         public bool HasMinionCoverFor(int attackingTeam)
         {
             if (health == null || health.IsDead || attackingTeam == team) return false;
+
+            // If the tower is already shooting a lane minion, hero cover is unquestionably active.
             Health target = CurrentTarget;
-            LaneMinion minion = target != null ? target.GetComponent<LaneMinion>() : null;
-            return minion != null && minion.Team == attackingTeam;
+            LaneMinion lockedMinion = target != null ? target.GetComponent<LaneMinion>() : null;
+            if (lockedMinion != null && lockedMinion.Team == attackingTeam) return true;
+
+            // Do not make heroes freeze at the exact tower-radius boundary while their wave is
+            // already entering range. Cache briefly because several bots query this every frame.
+            if (cachedCoverTeam == attackingTeam && Time.time < nextCoverScan) return cachedCover;
+            cachedCoverTeam = attackingTeam;
+            nextCoverScan = Time.time + .12f;
+            cachedCover = false;
+            float coverRadius = Mathf.Max(1f, attackRange - .12f);
+            float coverSqr = coverRadius * coverRadius;
+            for (int i=0;i<Health.Active.Count;i++)
+            {
+                Health candidate=Health.Active[i];
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
+                LaneMinion minion=candidate.GetComponent<LaneMinion>();
+                if(minion==null||minion.Team!=attackingTeam)continue;
+                Vector3 delta=candidate.transform.position-transform.position;delta.y=0;
+                if(delta.sqrMagnitude<=coverSqr){cachedCover=true;break;}
+            }
+            return cachedCover;
         }
 
         private bool IsValidTarget(Health candidate)
