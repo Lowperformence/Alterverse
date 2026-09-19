@@ -24,6 +24,7 @@ namespace Alterverse.Combat
         private const float ArenaHalfHeight=32f;
 
         private int team;
+        private bool marsSkeleton;
         private Health health,target;
         private HeroLocomotion locomotion;
         private float nextAttack,nextScan,blockedTime,detourUntil,shotAt;
@@ -36,6 +37,7 @@ namespace Alterverse.Combat
         public static IReadOnlyList<HotZoneTank> Active=>active;
         public int Team=>team;
         public Health TankHealth=>health;
+        public bool IsMarsSkeleton=>marsSkeleton;
         private Material armorMat,darkMat,energyMat,jointMat;
 
         private static readonly Vector3[] ZeroPatrol=
@@ -62,7 +64,8 @@ namespace Alterverse.Combat
             }
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            go.name=team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank";
+            bool skeleton=ArenaVariantRuntime.IsMars;
+            go.name=skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):(team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
             go.transform.position=spawn;
             go.transform.localScale=new Vector3(1.15f,.9f,1.35f);
             GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)go.transform.SetParent(world.transform,true);
@@ -70,15 +73,15 @@ namespace Alterverse.Combat
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
-            go.AddComponent<HotZoneTank>().Initialize(team,spawn);
+            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton);
             return true;
         }
 
-        private void Initialize(int assignedTeam,Vector3 spawn)
+        private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton)
         {
-            team=assignedTeam;home=spawn;health=GetComponent<Health>();
+            team=assignedTeam;marsSkeleton=skeleton;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
-            BuildVisuals();
+            if(marsSkeleton)BuildSkeletonVisuals();else BuildVisuals();
             SetNextPatrol();
         }
 
@@ -140,7 +143,7 @@ namespace Alterverse.Combat
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f;
+            Vector3 muzzle=marsSkeleton&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             PrototypeVfx.Ring(muzzle,energy,.34f,ShotWindup);
         }
 
@@ -154,12 +157,12 @@ namespace Alterverse.Combat
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
-            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f;
+            Vector3 muzzle=marsSkeleton&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
             PrototypeVfx.Burst(muzzle,energy,.28f,4);
-            if(barrelPivot!=null)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
+            if(barrelPivot!=null&&!marsSkeleton)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
             victim.TakeDamage(Damage,gameObject);
         }
 
@@ -281,6 +284,39 @@ namespace Alterverse.Combat
             }
         }
 
+        private void BuildSkeletonVisuals()
+        {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
+            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color bone=new Color(.29f,.20f,.16f,1),deep=new Color(.10f,.045f,.035f,1);
+            armorMat=MakeMaterial(shader,bone,.08f,.20f,Color.black);darkMat=MakeMaterial(shader,deep,.05f,.12f,Color.black);
+            jointMat=MakeMaterial(shader,new Color(.18f,.10f,.075f,1),.06f,.16f,Color.black);
+            energyMat=MakeMaterial(shader,energy,.10f,.55f,energy*2.3f);
+
+            // Ancient Martian war skeleton: oversized readable bones, rib cage, skull and claws.
+            Part("TitanPelvis",PrimitiveType.Cube,transform,new Vector3(0,.20f,0),new Vector3(1.35f,.48f,.72f),armorMat,Quaternion.Euler(0,0,3));
+            Part("TitanSpine",PrimitiveType.Cylinder,transform,new Vector3(0,1.22f,0),new Vector3(.22f,1.05f,.22f),jointMat,Quaternion.identity);
+            for(int i=0;i<5;i++)
+            {
+                float y=.72f+i*.30f,w=1.32f-i*.10f;
+                Part("TitanRibL",PrimitiveType.Capsule,transform,new Vector3(-w*.43f,y,0),new Vector3(.16f,.62f,.16f),armorMat,Quaternion.Euler(0,0,62));
+                Part("TitanRibR",PrimitiveType.Capsule,transform,new Vector3(w*.43f,y,0),new Vector3(.16f,.62f,.16f),armorMat,Quaternion.Euler(0,0,-62));
+            }
+            Part("TitanShoulderL",PrimitiveType.Sphere,transform,new Vector3(-1.12f,1.72f,0),new Vector3(.52f,.42f,.55f),armorMat,Quaternion.identity);
+            Part("TitanShoulderR",PrimitiveType.Sphere,transform,new Vector3(1.12f,1.72f,0),new Vector3(.52f,.42f,.55f),armorMat,Quaternion.identity);
+            Part("TitanArmL",PrimitiveType.Capsule,transform,new Vector3(-1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,-10));
+            Part("TitanArmR",PrimitiveType.Capsule,transform,new Vector3(1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,10));
+            Part("TitanClawL",PrimitiveType.Sphere,transform,new Vector3(-1.42f,.02f,.12f),new Vector3(.48f,.34f,.62f),jointMat,Quaternion.identity);
+            barrelPivot=Part("TitanClawR",PrimitiveType.Sphere,transform,new Vector3(1.42f,.02f,.12f),new Vector3(.48f,.34f,.62f),energyMat,Quaternion.identity);
+            Part("TitanLegL",PrimitiveType.Capsule,transform,new Vector3(-.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,-4));
+            Part("TitanLegR",PrimitiveType.Capsule,transform,new Vector3(.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,4));
+            Transform skull=Part("TitanSkull",PrimitiveType.Sphere,transform,new Vector3(0,2.22f,.10f),new Vector3(.88f,.70f,.82f),armorMat,Quaternion.identity);
+            Part("TitanJaw",PrimitiveType.Cube,skull,new Vector3(0,-.52f,.42f),new Vector3(.62f,.24f,.42f),jointMat,Quaternion.Euler(-8,0,0));
+            Part("TitanEyeL",PrimitiveType.Sphere,skull,new Vector3(-.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
+            Part("TitanEyeR",PrimitiveType.Sphere,skull,new Vector3(.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
+            Part("TitanChestRift",PrimitiveType.Cube,transform,new Vector3(0,1.25f,.27f),new Vector3(.12f,.82f,.08f),energyMat,Quaternion.Euler(0,0,-18));
+        }
+
         private void BuildTrack(Transform track,float side,Material armor,Material dark,Material joint)
         {
             Part(side<0?"TrackHousingL":"TrackHousingR",PrimitiveType.Cube,track,new Vector3(side*1.04f,-.30f,0),new Vector3(.46f,.52f,2.54f),dark,Quaternion.identity);
@@ -315,6 +351,7 @@ namespace Alterverse.Combat
 
         private void AimTurretAt(Vector3 worldTarget)
         {
+            if(marsSkeleton){if(barrelPivot!=null){Vector3 d=worldTarget-barrelPivot.position;d.y=0;if(d.sqrMagnitude>.01f)barrelPivot.rotation=Quaternion.Slerp(barrelPivot.rotation,Quaternion.LookRotation(d.normalized),1f-Mathf.Exp(-7f*Time.deltaTime));}return;}
             if(turretPivot==null)return;
             Vector3 localTarget=transform.InverseTransformPoint(worldTarget);localTarget.y=turretPivot.localPosition.y;
             Vector3 flat=new(localTarget.x,0,localTarget.z);
@@ -331,6 +368,7 @@ namespace Alterverse.Combat
 
         private void AnimateTracks(float movement)
         {
+            if(marsSkeleton){float stride=Mathf.Sin(Time.time*6f)*Mathf.Clamp01(movement*7f);transform.localPosition+=Vector3.up*(stride*.002f);return;}
             float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
             if(leftTrack!=null)leftTrack.localPosition=new Vector3(0,bob,0);
             if(rightTrack!=null)rightTrack.localPosition=new Vector3(0,-bob,0);
