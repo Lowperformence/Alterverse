@@ -10,7 +10,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     readonly List<Material> materials=new();
     readonly List<Mesh> meshes=new();
     Transform root;
-    Material regolith,darkRegolith,rimMat,zeroEnergy,lumenEnergy;
+    Material regolith,darkRegolith,rimMat,zeroEnergy,lumenEnergy,alienMineral;
     Mesh rockMesh,rockMeshB,rockMeshC;
     Texture2D surfaceAlbedo,surfaceNormals;
     public Texture2D SurfaceAlbedo=>surfaceAlbedo;
@@ -19,12 +19,14 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void Start()
     {
         if(GetComponent<LunarLighting>()==null)gameObject.AddComponent<LunarLighting>();
-        root=new GameObject(ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":"DF_LunarGroundProduction").transform;
+        string rootName=ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetGroundProduction":"DF_LunarGroundProduction";
+        root=new GameObject(rootName).transform;
         root.SetParent(transform,false);
-        bool mars=ArenaVariantRuntime.IsMars;
-        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
-        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
-        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
+        bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet;
+        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
+        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
+        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
+        if(green)alienMineral=Mat(new Color(.35f,.48f,.16f,1),.02f,.18f,true);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
         BuildSurface();
@@ -36,6 +38,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         BuildRocks();
+        if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
         BuildDistributedCraterDebris();
         BuildBattlefieldAccessories();
         BuildSmallLandmarks();
@@ -67,7 +70,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
         regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
-        MeshObject(ArenaVariantRuntime.IsMars?"DF_MarsRegolith":"DF_LunarRegolith",m,regolith,Vector3.zero);
+        string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":"DF_LunarRegolith";
+        MeshObject(surfaceName,m,regolith,Vector3.zero);
         var edge=new List<Vector3>((xSeg+zSeg)*2);
         for(int x=0;x<xSeg;x++)edge.Add(v[x]);
         for(int z=0;z<zSeg;z++)edge.Add(v[z*(xSeg+1)+xSeg]);
@@ -155,6 +159,22 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     Mesh CreateRockMeshB()=>LunarFragmentGeometry.Create(19);
 
     Mesh CreateRockMeshC()=>LunarFragmentGeometry.Create(31);
+
+    void BuildAlienMineralAccents()
+    {
+        if(alienMineral==null||rockMeshB==null)return;
+        Vector3[] sites={
+            new(-37,.12f,27),new(-29,.10f,-30),new(-12,.08f,31),new(14,.08f,-31),
+            new(30,.10f,29),new(38,.12f,-25),new(-40,.10f,-8),new(40,.10f,10)
+        };
+        for(int i=0;i<sites.Length;i++)
+        {
+            GameObject g=MeshObject("DF_XenoMineral",rockMeshB,alienMineral,sites[i]);
+            float s=.28f+(i%3)*.09f;
+            g.transform.localScale=new Vector3(s*.75f,s*1.65f,s*.65f);
+            g.transform.localRotation=Quaternion.Euler(i*9f,i*53f,i%2==0?13f:-9f);
+        }
+    }
 
     void BuildEdgeCliffs()
     {
