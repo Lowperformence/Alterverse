@@ -24,8 +24,8 @@ namespace Alterverse.Combat
         private int team;
         private Health health,target;
         private HeroLocomotion locomotion;
-        private float nextAttack,nextScan;
-        private Vector3 patrolTarget,home;
+        private float nextAttack,nextScan,blockedTime,detourUntil;
+        private Vector3 patrolTarget,home,detourDirection;
         private int patrolIndex;
 
         private static readonly Vector3[] ZeroPatrol=
@@ -123,13 +123,28 @@ namespace Alterverse.Combat
         private void MoveToward(Vector3 destination,float stopDistance)
         {
             Vector3 delta=destination-transform.position;delta.y=0;
-            if(delta.sqrMagnitude<=stopDistance*stopDistance)return;
-            Vector3 step=delta.normalized*MoveSpeed*Time.deltaTime;
-            Vector3 next=transform.position+step;
+            if(delta.sqrMagnitude<=stopDistance*stopDistance){blockedTime=0;return;}
+
+            Vector3 direction=Time.time<detourUntil?detourDirection:delta.normalized;
+            Vector3 requested=direction*MoveSpeed*Time.deltaTime;
+            Vector3 next=transform.position+requested;
             next.x=Mathf.Clamp(next.x,-ArenaHalfWidth,ArenaHalfWidth);
             next.z=Mathf.Clamp(next.z,-ArenaHalfHeight,ArenaHalfHeight);
-            Vector3 moved=locomotion.Move(next-transform.position,ArenaHalfWidth,ArenaHalfHeight);
+            requested=next-transform.position;
+
+            Vector3 moved=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
             if(moved.sqrMagnitude>.00001f)locomotion.FaceMovement(moved);
+
+            bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.08f;
+            blockedTime=blocked?blockedTime+Time.deltaTime:0f;
+            if(blockedTime>.24f&&Time.time>=detourUntil)
+            {
+                Vector3 tangent=Vector3.Cross(Vector3.up,delta.normalized);
+                if((patrolIndex&1)==0)tangent=-tangent;
+                detourDirection=tangent.normalized;
+                detourUntil=Time.time+.70f;
+                blockedTime=0f;
+            }
         }
 
         private void SetNextPatrol()
