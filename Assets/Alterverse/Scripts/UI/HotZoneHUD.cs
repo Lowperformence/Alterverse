@@ -9,6 +9,7 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private GUIStyle centerStyle,rightStyle;
         private string banner="";
+        private Color bannerColor=new(.95f,.58f,.20f);
         private float bannerUntil;
 
         private void OnEnable()
@@ -30,13 +31,14 @@ namespace Alterverse.UI
             zone??=FindAnyObjectByType<HotZoneDirector>();
         }
 
-        private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerUntil=Time.time+4f;}
-        private void OnOpened(){banner="HOT ZONE ACTIVE · HOLD THE CENTER";bannerUntil=Time.time+4f;}
+        private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=new Color(.95f,.72f,.30f);bannerUntil=Time.time+4f;}
+        private void OnOpened(){banner="HOT ZONE ACTIVE · HOLD THE CENTER";bannerColor=Color.white;bannerUntil=Time.time+4f;}
         private void OnResolved(int winner,float zero,float lumen)
         {
             banner=winner==0?"ZERO WINS HOT ZONE · ASSAULT TANK DEPLOYED":
                 winner==1?"LUMEN WINS HOT ZONE · ASSAULT TANK DEPLOYED":
                 "HOT ZONE DRAW · NO TANK DEPLOYED";
+            bannerColor=winner==0?new Color(.72f,.25f,1f):winner==1?new Color(.16f,.88f,1f):new Color(.72f,.74f,.80f);
             bannerUntil=Time.time+5f;
         }
 
@@ -60,7 +62,7 @@ namespace Alterverse.UI
                 {
                     Rect b=new((layout.Width-500)*.5f,86,500,50);
                     theme.Panel(b);
-                    FrontEndTheme.Fill(new Rect(b.x,b.y,b.width,2),new Color(.95f,.58f,.20f));
+                    FrontEndTheme.Fill(new Rect(b.x,b.y,b.width,3),bannerColor);
                     theme.Label(new Rect(b.x+10,b.y+4,b.width-20,b.height-8),banner,centerStyle);
                 }
 
@@ -69,9 +71,12 @@ namespace Alterverse.UI
                     float y=showBanner?144:92;
                     Rect p=new((layout.Width-450)*.5f,y,450,58);
                     theme.Panel(p);
+                    float lead=zone.ZeroControlSeconds-zone.LumenControlSeconds;
                     string state=zone.ZeroInside>0&&zone.LumenInside>0?"CONTESTED":
                         zone.ZeroInside>0?"ZERO CONTROLLING":
-                        zone.LumenInside>0?"LUMEN CONTROLLING":"UNCLAIMED";
+                        zone.LumenInside>0?"LUMEN CONTROLLING":
+                        Mathf.Abs(lead)<.05f?"UNCLAIMED":
+                        lead>0?$"ZERO LEADS +{lead:0.0}s":$"LUMEN LEADS +{-lead:0.0}s";
                     theme.Label(new Rect(p.x+12,p.y+5,p.width-24,20),
                         $"HOT ZONE  {Mathf.CeilToInt(zone.Remaining)}s  ·  {state}",centerStyle);
                     float total=zone.ZeroControlSeconds+zone.LumenControlSeconds;
