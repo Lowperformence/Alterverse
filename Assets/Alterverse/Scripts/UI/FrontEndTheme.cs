@@ -42,6 +42,7 @@ namespace Alterverse.UI
         {
             Fill(rect, Surface);
             Fill(new Rect(rect.x, rect.y, rect.width, 1), new Color(.24f,.29f,.35f));
+            Fill(new Rect(rect.x, rect.yMax-1, rect.width, 1), new Color(.035f,.045f,.065f));
         }
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
         {
@@ -54,6 +55,7 @@ namespace Alterverse.UI
             Color surface = primary ? Accent : selected ? Raised : Surface;
             Fill(rect, enabled ? surface : Surface);
             if (selected) Fill(new Rect(rect.x, rect.y, 3, rect.height), Accent);
+            if (primary) Fill(new Rect(rect.x+1,rect.y+1,rect.width-2,1),new Color(1,1,1,.24f));
             bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
             Color before = GUI.color;
             GUI.color *= !enabled ? Muted : primary ? new Color(.045f,.095f,.11f) : Text;

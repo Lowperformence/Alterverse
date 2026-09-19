@@ -29,6 +29,7 @@ namespace Alterverse.UI
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
         private FrontEndTheme theme;
+        private MenuCosmicBackdrop backdrop;
         private MenuHeroShowcase showcase;
         private TouchScreenKeyboard nameKeyboard;
         private float master, music, sfx;
@@ -74,7 +75,7 @@ namespace Alterverse.UI
             if (focused && visible) MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnDisable() { FlushAudio(); CloseKeyboard(); }
-        private void OnDestroy() { if (instance == this) instance = null; }
+        private void OnDestroy() { backdrop?.Dispose(); if (instance == this) instance = null; }
         private void Update()
         {
             if (!visible || suspended) return;
@@ -107,7 +108,8 @@ namespace Alterverse.UI
             try
             {
                 GUI.color = Color.white; GUI.enabled = !launching;
-                FrontEndTheme.Fill(new Rect(0,0,Screen.width,Screen.height),FrontEndTheme.Background);
+                backdrop ??= new MenuCosmicBackdrop();
+                backdrop.Draw(new Rect(0,0,Screen.width,Screen.height));
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1200f);
@@ -137,7 +139,7 @@ namespace Alterverse.UI
             float start = Right-744;
             for (int i=0;i<NavigationLabels.Length;i++)
                 if (theme.Action(new Rect(start+i*124,20,116,48),NavigationLabels[i],selected:(int)page==i)) SetPage((Page)i);
-            FrontEndTheme.Fill(new Rect(Left,86,ContentWidth,1),FrontEndTheme.Raised);
+            DimensionUiMotif.DrawHeaderLine(new Rect(Left,86,ContentWidth,2),Texture2D.whiteTexture,FrontEndTheme.Zero,FrontEndTheme.Accent,0);
         }
         private void Heading(string title, string description)
         {
@@ -147,8 +149,12 @@ namespace Alterverse.UI
         private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
         private void DrawPortrait(Rect rect)
         {
+            Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
+            FrontEndTheme.Fill(rect,new Color(.025f,.034f,.05f,.62f));
+            DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,accent);
             if (showcase != null && showcase.Image != null)
-                GUI.DrawTexture(rect,showcase.Image,ScaleMode.ScaleToFit,false);
+                GUI.DrawTexture(rect,showcase.Image,ScaleMode.ScaleToFit,true);
+            FrontEndTheme.Fill(new Rect(rect.x+rect.width*.24f,rect.yMax-10,rect.width*.52f,2),new Color(accent.r,accent.g,accent.b,.50f));
         }
         private void DrawHome()
         {
@@ -164,7 +170,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left,568,420,72),"PLAY",true)) SetPage(Page.Play);
             theme.Label(new Rect(Left,652,420,26),"AI MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
             DrawPortrait(new Rect(split,108,Right-split,444));
-            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),FrontEndTheme.Zero);
+            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero));
             theme.Label(new Rect(split+48,570,Right-split-170,38),HeroName,theme.Heading);
             theme.Label(new Rect(split+48,616,Right-split-180,28),Roles[selectedHero],theme.Small,true);
             if (theme.Action(new Rect(Right-110,580,62,64),">")) SetPage(Page.Heroes);
@@ -196,6 +202,7 @@ namespace Alterverse.UI
                 Rect row = new Rect(Left,216+i*74,rosterWidth,64);
                 bool chosen = i==selectedHero;
                 if (theme.Action(row,"",selected:chosen)) ChangeHero(i);
+                FrontEndTheme.Fill(new Rect(row.x+5,row.y+12,3,row.height-24),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)i));
                 theme.Label(new Rect(row.x+18,row.y+8,row.width-32,26),HeroIdentity.NameFor((HeroId)i),theme.Body);
                 theme.Label(new Rect(row.x+18,row.y+35,row.width-32,22),Roles[i],theme.Small,true);
             }
@@ -347,7 +354,7 @@ namespace Alterverse.UI
             Stat(x,458,w,"ASSISTS",ProgressionSummary.Assists.ToString());
             Stat(x,514,w,"OBJECTIVES",ProgressionSummary.Objectives.ToString());
             Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
-            theme.Label(new Rect(x,634,w,32),"Account level grants no combat power.",theme.Small,true);
+            theme.Label(new Rect(x,626,w,48),"LOCAL PROFILE / UNRANKED\nAccount level grants no combat power.",theme.Small,true);
         }
         private void Stat(float x,float y,float w,string label,string value)
         {

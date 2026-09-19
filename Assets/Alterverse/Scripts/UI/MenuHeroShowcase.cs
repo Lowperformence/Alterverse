@@ -54,12 +54,15 @@ namespace Alterverse.UI
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();
             previewCamera.clearFlags = CameraClearFlags.SolidColor;
-            previewCamera.backgroundColor = FrontEndTheme.Background;
-            previewCamera.orthographic = true; previewCamera.orthographicSize = 1.55f;
+            previewCamera.backgroundColor = Color.clear;
+            previewCamera.orthographic = true; previewCamera.orthographicSize = 1.65f;
             previewCamera.nearClipPlane = .1f; previewCamera.farClipPlane = 12;
             previewCamera.allowHDR = false; previewCamera.allowMSAA = false;
             previewCamera.useOcclusionCulling = false; previewCamera.cullingMask = 1 << PreviewLayer;
             previewCamera.targetTexture = texture; previewCamera.depth = -20;
+            var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            data.renderPostProcessing = false; data.renderShadows = false;
+            data.volumeLayerMask = 0;
             cameraObject.transform.localPosition = new Vector3(0,.65f,5);
             cameraObject.transform.LookAt(stage.transform.position + Vector3.up*.08f);
             AddLight("Key",new Vector3(-2,3,3),new Color(.91f,.95f,1),3.5f);
