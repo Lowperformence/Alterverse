@@ -229,6 +229,7 @@ namespace Alterverse.Combat
                 return;
             }
 
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.MeteorImpact,impact,.5f);
             CombatImpactPool.Emit(new Vector3(impact.x,.3f,impact.z),new Color(1f,.63f,.23f),1);
             PrototypeVfx.RadialBurst(impact,new Color(1f,.48f,.12f),ImpactRadius);
             if(target!=null&&!target.IsDead)
