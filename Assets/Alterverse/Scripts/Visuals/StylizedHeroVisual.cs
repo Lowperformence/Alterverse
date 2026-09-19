@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CompleteArmor(legWidth);CreateSignature();BuildCharacterFinish(legWidth);BindArmor();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
+private bool voidfall,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CompleteArmor(legWidth);CreateSignature();BuildCharacterFinish(legWidth);BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -196,6 +196,79 @@ Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetT
 GameObject part=new GameObject("DF_"+name);part.transform.SetParent(root,false);part.transform.localPosition=position;
 part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color);
 }
+private void ApplyWeaponOverdrive()
+{
+Alterverse.Shop.WeaponSkinItem skin=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero);
+Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");if(shader==null)return;
+Color glow=skin.Glow;
+Material weaponMaterial=new Material(shader){name="DF_WeaponOverdrive_"+identity.Hero,color=glow};
+if(weaponMaterial.HasProperty("_BaseColor"))weaponMaterial.SetColor("_BaseColor",glow);
+if(weaponMaterial.HasProperty("_Metallic"))weaponMaterial.SetFloat("_Metallic",.32f);
+if(weaponMaterial.HasProperty("_Smoothness"))weaponMaterial.SetFloat("_Smoothness",.72f);
+if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_EMISSION");weaponMaterial.SetColor("_EmissionColor",glow*3.4f);}
+ownedMaterials.Add(weaponMaterial);
+
+switch(identity.Hero)
+{
+case HeroId.Veyr:
+    ScaleAndGlow("BladeR",1.5f,weaponMaterial);
+    break;
+case HeroId.Kaelon:
+    ScaleAndGlow("HammerGrip",1.5f,weaponMaterial);
+    ScaleAndGlow("AnchorHead",1.5f,weaponMaterial);
+    break;
+case HeroId.Nyra:
+    GroupAndScaleWeapon("DF_WeaponOverdrivePivot",new Vector3(.44f,.13f,.72f),1.5f,weaponMaterial,
+        "Rifle","Stock","Barrel","WeaponRail","Scope","RifleReceiver","RifleMagazine","MuzzleBrake","ScopeLens","BarrelRail-1","BarrelRail1");
+    break;
+case HeroId.Elyra:
+    ScaleAndGlow("OrbitL",1.5f,weaponMaterial);
+    ScaleAndGlow("OrbitR",1.5f,weaponMaterial);
+    break;
+case HeroId.Mira:
+    GroupAndScaleWeapon("DF_WeaponOverdrivePivot",new Vector3(.72f,.05f,.20f),1.5f,weaponMaterial,
+        "Staff","Emitter","EmitterRim","EmitterInset","EmitterLens","StaffGrip");
+    break;
+case HeroId.Rook:
+    ScaleAndGlow("GauntletR",1.5f,weaponMaterial);
+    break;
+}
+}
+
+private void ScaleAndGlow(string visualName,float scale,Material material)
+{
+Transform part=FindVisual(visualName);if(part==null)return;
+part.localScale*=scale;
+ApplyGlow(part,material);
+}
+
+private void GroupAndScaleWeapon(string groupName,Vector3 pivot,float scale,Material material,params string[] names)
+{
+Transform group=new GameObject(groupName).transform;group.SetParent(root,false);group.localPosition=pivot;
+for(int i=0;i<names.Length;i++)
+{
+Transform part=FindVisual(names[i]);if(part==null||part==group)continue;
+part.SetParent(group,true);
+}
+group.localScale=Vector3.one*scale;
+ApplyGlow(group,material);
+}
+
+private Transform FindVisual(string shortName)
+{
+string target="DF_"+shortName;
+Transform[] all=root.GetComponentsInChildren<Transform>(true);
+for(int i=0;i<all.Length;i++)if(all[i]!=null&&all[i].name==target)return all[i];
+return null;
+}
+
+private static void ApplyGlow(Transform parent,Material material)
+{
+if(parent==null||material==null)return;
+MeshRenderer[] renderers=parent.GetComponentsInChildren<MeshRenderer>(true);
+for(int i=0;i<renderers.Length;i++)if(renderers[i]!=null)renderers[i].sharedMaterial=material;
+}
+
 private void BindArmor()
 {
 // Gloves and knee armor move with their limbs instead of floating independently.
