@@ -4,8 +4,32 @@ namespace Alterverse.Visuals
     /// <summary>Deterministic visual geology. No physics, navigation or global random state.</summary>
     public static class LunarSurfaceField
     {
-        // Existing impact sites retained; two outer landmarks give scale to the broken moon.
-        private static readonly Vector3[] craters={new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),new(-2,1.25f,31),new(3,1.05f,-31),new(-36,.48f,12),new(-34,.64f,-7),new(-25,.8f,5),new(-15,.96f,31),new(-4,.48f,-31),new(35,.64f,-11),new(33,.8f,8),new(24,.96f,-5),new(15,.48f,-31),new(5,.64f,31),new(-23,4.3f,27),new(22,3.8f,-27),new(-24,1.25f,-8),new(-22.5f,.55f,-7.2f),new(-16,.85f,7),new(24,1.5f,8),new(25.2f,.6f,7.3f),new(17,1.1f,-7),new(-29,1.8f,26),new(-27.5f,.7f,27),new(-15,1.3f,-27),new(28,1.65f,-26),new(16,1.2f,28),new(17.2f,.55f,27.4f)};
+        // Impact field spans the whole moon slab. Larger landmark craters remain sparse while
+        // small/medium impacts fill the quiet gaps; lane blending below keeps combat paths readable.
+        private static readonly Vector3[] craters={
+            new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),
+            new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),
+            new(-2,1.25f,31),new(3,1.05f,-31),new(-36,.48f,12),new(-34,.64f,-7),
+            new(-25,.8f,5),new(-15,.96f,31),new(-4,.48f,-31),new(35,.64f,-11),
+            new(33,.8f,8),new(24,.96f,-5),new(15,.48f,-31),new(5,.64f,31),
+            new(-23,4.3f,27),new(22,3.8f,-27),new(-24,1.25f,-8),new(-22.5f,.55f,-7.2f),
+            new(-16,.85f,7),new(24,1.5f,8),new(25.2f,.6f,7.3f),new(17,1.1f,-7),
+            new(-29,1.8f,26),new(-27.5f,.7f,27),new(-15,1.3f,-27),new(28,1.65f,-26),
+            new(16,1.2f,28),new(17.2f,.55f,27.4f),
+
+            // Broad map coverage: mostly sub-1.2m craters so the battlefield feels continuously lunar.
+            new(-39,.72f,20),new(-38,.52f,-18),new(-31,.92f,17),new(-30,.58f,-19),
+            new(-27,.66f,12),new(-26,.88f,-15),new(-21,.54f,19),new(-20,.74f,-20),
+            new(-14,.62f,13),new(-13,.82f,-15),new(-8,.56f,18),new(-7,.72f,-20),
+            new(-2,.68f,12),new(-1,.9f,-13),new(5,.58f,19),new(6,.76f,-18),
+            new(11,.64f,12),new(12,.86f,-14),new(18,.56f,19),new(19,.78f,-21),
+            new(26,.68f,13),new(27,.92f,-16),new(32,.58f,18),new(33,.76f,-19),
+            new(38,.7f,22),new(39,.54f,-21),
+
+            // A few central micro impacts keep the objective court geological without obscuring it.
+            new(-9,.46f,2),new(-7,.58f,-3),new(-3,.42f,6),new(2,.5f,-5),
+            new(6,.44f,3),new(8,.6f,-2),new(-1,.38f,9),new(3,.42f,-9)
+        };
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
         public static float LaneWeight(float x,float z)
         {
