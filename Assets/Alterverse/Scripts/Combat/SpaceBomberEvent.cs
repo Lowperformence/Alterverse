@@ -23,6 +23,7 @@ namespace Alterverse.Combat
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
         private Material armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial;
+        private bool materialsReady;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatic()=>owner=null;
@@ -34,6 +35,11 @@ namespace Alterverse.Combat
             front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             rng=new System.Random(unchecked(Environment.TickCount^GetInstanceID()));
             BuildSharedMaterials();
+            if(!materialsReady)
+            {
+                Debug.LogError("DIMENSIONS FRONT: Space Bomber disabled because required shaders are unavailable.");
+                enabled=false;
+            }
         }
 
         private void Update()
@@ -113,6 +119,7 @@ namespace Alterverse.Combat
             energyMaterial=CreateMaterial(lit,"DF_BomberEnergy",new Color(.16f,.88f,1f),.18f,.72f,new Color(.16f,.88f,1f)*3.0f);
             bombMaterial=CreateMaterial(lit,"DF_BombShell",new Color(.14f,.15f,.17f),.72f,.26f,new Color(.95f,.22f,.05f)*.35f);
             warningMaterial=new Material(unlit){name="DF_BombWarning"};
+            materialsReady=armorMaterial!=null&&darkMaterial!=null&&energyMaterial!=null&&bombMaterial!=null&&warningMaterial!=null;
         }
 
         private static Material CreateMaterial(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
@@ -251,7 +258,14 @@ namespace Alterverse.Combat
             Part("TailR",PrimitiveType.Cube,visual,new Vector3(.44f,.40f,-1.28f),new Vector3(.12f,.72f,.66f),armor,Quaternion.Euler(-8,0,12),true);
             Part("BombBayL",PrimitiveType.Cube,visual,new Vector3(-.25f,-.34f,-.05f),new Vector3(.20f,.08f,1.18f),dark,Quaternion.identity,false);
             Part("BombBayR",PrimitiveType.Cube,visual,new Vector3(.25f,-.34f,-.05f),new Vector3(.20f,.08f,1.18f),dark,Quaternion.identity,false);
-            Part("StatusLight",PrimitiveType.Sphere,visual,new Vector3(0,.33f,-.55f),new Vector3(.12f,.08f,.12f),energy,Quaternion.identity,false);
+            Part("ArmorCheekL",PrimitiveType.Cube,visual,new Vector3(-.43f,.08f,.58f),new Vector3(.18f,.18f,.78f),dark,Quaternion.Euler(0,-7f,0),true);
+            Part("ArmorCheekR",PrimitiveType.Cube,visual,new Vector3(.43f,.08f,.58f),new Vector3(.18f,.18f,.78f),dark,Quaternion.Euler(0,7f,0),true);
+            Part("EngineCollarL",PrimitiveType.Cylinder,visual,new Vector3(-.54f,.02f,-1.60f),new Vector3(.34f,.10f,.34f),armor,Quaternion.Euler(90,0,0),true);
+            Part("EngineCollarR",PrimitiveType.Cylinder,visual,new Vector3(.54f,.02f,-1.60f),new Vector3(.34f,.10f,.34f),armor,Quaternion.Euler(90,0,0),true);
+            Part("WingTipL",PrimitiveType.Cube,visual,new Vector3(-1.95f,.01f,-.45f),new Vector3(.24f,.12f,.42f),dark,Quaternion.Euler(0,-24f,-5f),true);
+            Part("WingTipR",PrimitiveType.Cube,visual,new Vector3(1.95f,.01f,-.45f),new Vector3(.24f,.12f,.42f),dark,Quaternion.Euler(0,24f,5f),true);
+            Part("DorsalSensor",PrimitiveType.Cube,visual,new Vector3(0,.50f,-.22f),new Vector3(.18f,.28f,.42f),armor,Quaternion.Euler(-12f,0,0),true);
+            Part("StatusLight",PrimitiveType.Sphere,visual,new Vector3(0,.60f,-.15f),new Vector3(.11f,.08f,.11f),energy,Quaternion.identity,false);
         }
 
         private static Transform Part(string name,PrimitiveType type,Transform parent,Vector3 pos,Vector3 scale,Material material,Quaternion rotation,bool shadows)
