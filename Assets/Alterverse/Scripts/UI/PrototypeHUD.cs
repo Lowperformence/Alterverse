@@ -241,7 +241,6 @@ namespace Alterverse.UI
                 {
                     float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
                     FrontEndTheme.Fill(new Rect(face.x+4,face.y,face.width-8,face.height*ratio),new Color(0,0,0,.32f));
-                {
                     FrontEndTheme.Fill(new Rect(r.x+5,r.yMax-6,(r.width-10)*ratio,3),FrontEndTheme.Muted);
                     theme.Label(new Rect(r.x+4,r.y+45,r.width-8,28),cooldownText[i],centered);
                 }
