@@ -13,11 +13,19 @@ namespace Alterverse.Combat
         private int team;
         private float nextAttackTime, nextTargetScan, nextCoverScan;
         private int cachedCoverTeam=-1;
-        private bool cachedCover;
+        private bool cachedCover, deathHandled;
         public int Team => team;
         public float AttackRange => attackRange;
         public Health CurrentTarget => IsValidTarget(currentTarget) ? currentTarget : null;
-        private void Awake() => health = GetComponent<Health>();
+        private void Awake()
+        {
+            health = GetComponent<Health>();
+            if (health != null) health.Died += OnDied;
+        }
+        private void OnDestroy()
+        {
+            if (health != null) health.Died -= OnDied;
+        }
         public void Initialize(int teamId) { Configure(teamId,attackRange,attackDamage,attackCooldown); } public void Configure(int teamId,float range,float damage,float cooldown){team=teamId;attackRange=Mathf.Max(1f,range);attackDamage=Mathf.Max(1f,damage);attackCooldown=Mathf.Max(.2f,cooldown);currentTarget=null;nextTargetScan=0;nextCoverScan=0;cachedCoverTeam=-1;cachedCover=false;}
 
         public bool HasMinionCoverFor(int attackingTeam)
@@ -47,6 +55,26 @@ namespace Alterverse.Combat
                 if(delta.sqrMagnitude<=coverSqr){cachedCover=true;break;}
             }
             return cachedCover;
+        }
+
+        private void OnDied()
+        {
+            if (deathHandled) return;
+            deathHandled = true;
+            currentTarget = null;
+            cachedCover = false;
+
+            // A tower is always a destructible structure. Health normally destroys it because
+            // bootstrap configures destroyOnDeath=true; this explicit cleanup is a safety net for
+            // scene/prefab towers that were configured differently.
+            foreach (Collider collider in GetComponentsInChildren<Collider>())
+                collider.enabled = false;
+
+            Color color = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
+            PrototypeVfx.RadialBurst(transform.position, color, 2.5f);
+            PrototypeVfx.Burst(transform.position, color, .85f, 8);
+            enabled = false;
+            Destroy(gameObject);
         }
 
         private bool IsValidTarget(Health candidate)
