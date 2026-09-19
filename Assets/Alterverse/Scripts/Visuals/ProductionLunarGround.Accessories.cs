@@ -13,26 +13,44 @@ namespace Alterverse.Visuals
         {
             EnsureAccessoryAssets();
 
-            // ZERO side: damaged, asymmetrical field technology around existing crater pockets.
+            // ZERO side: damaged, asymmetrical field technology distributed through several map bands.
             BuildMaintenanceRobot(new Vector2(-15.2f,29.1f),218f,true,true);
+            BuildMaintenanceRobot(new Vector2(-18.7f,-10.4f),116f,true,false);
             BuildScannerAntenna(new Vector2(-30.2f,-27.4f),28f,true,true);
+            BuildScannerAntenna(new Vector2(-35.5f,10.2f),74f,true,false);
             BuildFieldGenerator(new Vector2(-24.8f,-7.5f),-18f,true,true);
+            BuildFieldGenerator(new Vector2(-11.8f,10.1f),33f,true,false);
 
-            // LUMEN side: cleaner, more ordered equipment, still weathered by the battlefield.
+            // LUMEN side: cleaner, more ordered equipment, mirrored in density rather than exact layout.
             BuildMaintenanceRobot(new Vector2(16.1f,28.1f),152f,false,false);
+            BuildMaintenanceRobot(new Vector2(19.2f,-10.8f),236f,false,true);
             BuildScannerAntenna(new Vector2(29.1f,26.8f),-34f,false,false);
+            BuildScannerAntenna(new Vector2(35.1f,-9.7f),-62f,false,true);
             BuildFieldGenerator(new Vector2(25.4f,7.2f),194f,false,false);
+            BuildFieldGenerator(new Vector2(12.4f,-9.7f),151f,false,false);
 
-            // Neutral wrecks/probes are placed in outer crater fields, never on the two combat lanes.
+            // Neutral wrecks/probes fill outer and midfield crater pockets while staying off the two lane centers.
             BuildRoverWreck(new Vector2(-33.7f,27.0f),32f,true);
+            BuildRoverWreck(new Vector2(-27.4f,-20.8f),118f,true);
             BuildRoverWreck(new Vector2(33.8f,-27.0f),205f,false);
+            BuildRoverWreck(new Vector2(27.8f,20.6f),296f,false);
             BuildDimensionalProbe(new Vector2(-7.9f,29.3f),12f,true);
+            BuildDimensionalProbe(new Vector2(-8.8f,-22.1f),54f,true);
             BuildDimensionalProbe(new Vector2(8.9f,-29.1f),188f,false);
+            BuildDimensionalProbe(new Vector2(9.4f,22.4f),232f,false);
 
-            BuildAccessoryDebris(new Vector2(-33.7f,27f),41);
-            BuildAccessoryDebris(new Vector2(33.8f,-27f),83);
-            BuildAccessoryDebris(new Vector2(-15.2f,29.1f),127);
-            BuildAccessoryDebris(new Vector2(16.1f,28.1f),169);
+            // Small low-profile caches add detail to empty pockets without becoming navigation obstacles.
+            BuildSupplyCache(new Vector2(-31.4f,-9.2f),17f,true);
+            BuildSupplyCache(new Vector2(-20.6f,21.3f),81f,true);
+            BuildSupplyCache(new Vector2(-5.7f,-12.1f),132f,true);
+            BuildSupplyCache(new Vector2(31.2f,9.4f),201f,false);
+            BuildSupplyCache(new Vector2(21.2f,-21.7f),266f,false);
+            BuildSupplyCache(new Vector2(6.3f,12.3f),318f,false);
+
+            foreach(Vector2 site in new[]{
+                new Vector2(-33.7f,27f),new Vector2(33.8f,-27f),new Vector2(-15.2f,29.1f),new Vector2(16.1f,28.1f),
+                new Vector2(-27.4f,-20.8f),new Vector2(27.8f,20.6f),new Vector2(-18.7f,-10.4f),new Vector2(19.2f,-10.8f)})
+                BuildAccessoryDebris(site,Mathf.RoundToInt((site.x+43f)*7f+(site.y+37f)*11f));
         }
 
         void EnsureAccessoryAssets()
@@ -97,6 +115,16 @@ namespace Alterverse.Visuals
                     new Vector3(side*.82f,.22f,axle*.53f),new Vector3(.32f,.18f,.32f));
             Part("DF_RoverWreck_Mast",accessoryCylinder,machineMetal,anchor,facing*Quaternion.Euler(0,0,42),new Vector3(-.42f,1.12f,.08f),new Vector3(.08f,.9f,.08f));
             Part("DF_RoverWreck_Beacon",accessoryCylinder,energy,anchor,facing,new Vector3(-.72f,1.42f,.08f),new Vector3(.13f,.1f,.13f));
+        }
+
+        void BuildSupplyCache(Vector2 site,float yaw,bool zero)
+        {
+            Vector3 anchor=LunarSurfaceField.Surface(site.x,site.y);Quaternion facing=Quaternion.Euler(0,yaw,0);
+            Material energy=zero?zeroEnergy:lumenEnergy;
+            Part("DF_SupplyCache_Base",accessoryBox,machineDark,anchor,facing,new Vector3(0,.14f,0),new Vector3(.92f,.18f,.66f));
+            Part("DF_SupplyCache_CrateA",accessoryBox,machineMetal,anchor,facing,new Vector3(-.34f,.43f,.05f),new Vector3(.46f,.32f,.42f));
+            Part("DF_SupplyCache_CrateB",accessoryBox,machineMetal,anchor,facing*Quaternion.Euler(0,18f,0),new Vector3(.3f,.35f,-.12f),new Vector3(.4f,.25f,.36f));
+            Part("DF_SupplyCache_Beacon",accessoryCylinder,energy,anchor,facing,new Vector3(.58f,.48f,.18f),new Vector3(.1f,.32f,.1f));
         }
 
         void BuildDimensionalProbe(Vector2 site,float yaw,bool zero)
