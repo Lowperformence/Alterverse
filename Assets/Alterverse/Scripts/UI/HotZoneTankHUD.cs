@@ -32,13 +32,14 @@ namespace Alterverse.UI
             {
                 HotZoneTank tank=tanks[i];
                 if(tank==null||tank.TankHealth==null||tank.TankHealth.IsDead||!tank.isActiveAndEnabled)continue;
-                Vector3 screen=cam.WorldToScreenPoint(tank.transform.position+Vector3.up*2.55f);
+                float markerHeight=tank.IsXenoTitan?3.35f:2.55f;
+                Vector3 screen=cam.WorldToScreenPoint(tank.transform.position+Vector3.up*markerHeight);
                 if(screen.z<=0f)continue;
 
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
                 Rect label=new(x,y-20,116,18);
-                string unit=tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):(tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK");
+                string unit=tank.IsXenoTitan?(tank.Team==0?"ZERO XENO TITAN":"LUMEN XENO TITAN"):tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):(tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK");
                 GUI.Label(label,unit,labelStyle);
 
                 Rect back=new(x+8,y,100,8);
