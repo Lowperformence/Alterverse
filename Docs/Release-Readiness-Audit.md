@@ -1,3 +1,5 @@
+> Aktueller Abschlussstand: [GooglePlayReleaseChecklist.md](GooglePlayReleaseChecklist.md). Die nachfolgenden Zahlen und Baselines dokumentieren den früheren Audit.
+
 # DIMENSIONS FRONT — release readiness, 2026-09-18
 
 Status: **NOT A RELEASE CANDIDATE**. Source work is implemented; runtime quality and release gates below remain open. Baseline: `68d9f34120df1aa53a16e706f135b4bdb9fafa7c` on `dev/vertical-slice`.

@@ -40,3 +40,10 @@ Covered: concurrent duplicate callbacks, persistence/restart, pending/cancelled 
 The main Editor shop intentionally reports store unavailable. `DIMENSIONS FRONT > Development > Shard Shop Sandbox` provides an isolated, explicitly labelled simulation of pending/confirmed/cancelled purchases, duplicate callbacks, cosmetic debit and equip. It never changes the real wallet/profile and is excluded from player builds. This is a test harness, not proof of store integration. Native Android SDK calls are excluded in Editor builds; use a Play internal-test device for the real purchase flow. Still required: Unity compile, all four localized prices, cancellation, deferred payment, interrupted verification, relaunch recovery, multiple pending purchases, account changes, refund reconciliation, resume after Play overlay, and purchase-to-equip verification. Do not enable public payments before those gates pass.
 
 References: [Unity purchase lifecycle](https://docs.unity.com/en-us/iap/purchases), [Google billing security](https://developer.android.com/google/play/billing/security).
+
+
+## Abschlussaudit 2026-09-19
+
+Aktuelle Freigabegrenzen und Data-Safety-Befunde: [GooglePlayReleaseChecklist.md](GooglePlayReleaseChecklist.md). Kontowechsel während Store-Connect wird erneut geprüft; fehlerhafte Credential-Provider werden abgefangen und 401/403 sperrt die Session. Alte Founder-/Recall-Entwicklungs-Grants sind Editor-only. Das ersetzt keine echten Login-, Pending-Order-, Accountwechsel- oder Geräteprüfungen. Refund-/Chargeback-Reconciliation fehlt weiterhin.
+
+Der Microsoft-GDK-Dialog aus Purchasing 5.4.3 erscheint für Windows/Xbox-Buildziele; für Android kein GDK installieren und in Unity das Android-Build-Profil aktivieren. Der Projektadapter erzeugt explizit `StoreController("GooglePlay")` ausschließlich in `UNITY_ANDROID && !UNITY_EDITOR`.

@@ -13,14 +13,21 @@ namespace Alterverse.EditorChecks
         public int callbackOrder=>0;
         public void OnPreprocessBuild(BuildReport report)
         {
-            if(report.summary.platform==BuildTarget.Android&&(report.summary.options&BuildOptions.Development)==0)Validate();
+            if(report.summary.platform==BuildTarget.Android&&(report.summary.options&BuildOptions.Development)==0)
+            {
+                const BuildOptions debugOptions=BuildOptions.AllowDebugging|BuildOptions.ConnectWithProfiler|BuildOptions.EnableDeepProfilingSupport;
+                if((report.summary.options&debugOptions)!=0)throw new BuildFailedException("Release bundle must not enable script debugging or profiler connection.");
+                Validate();
+            }
         }
         [MenuItem("DIMENSIONS FRONT/Release/Validate Android release settings")]
         public static void Validate()
         {
             var errors=new List<string>();
+            if(EditorUserBuildSettings.activeBuildTarget!=BuildTarget.Android)errors.Add("Switch the active Build Profile to Android first.");
             string id=PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
             if(string.IsNullOrWhiteSpace(id)||id.Contains("UnityTechnologies")||id.Contains("DefaultCompany"))errors.Add("Replace the template application identifier.");
+            if(id!="com.lowperformence.dimensionsfront")errors.Add("Keep the existing Android application ID com.lowperformence.dimensionsfront stable.");
             if(PlayerSettings.productName!="DIMENSIONS FRONT")errors.Add("Product name must be DIMENSIONS FRONT.");
             if(PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)!=ScriptingImplementation.IL2CPP)errors.Add("Android requires IL2CPP for this release configuration.");
             if((PlayerSettings.Android.targetArchitectures&AndroidArchitecture.ARM64)==0)errors.Add("Enable ARM64.");
@@ -28,7 +35,17 @@ namespace Alterverse.EditorChecks
             if(PlayerSettings.Android.bundleVersionCode<1)errors.Add("Set a positive, unused version code before uploading.");
             if(!EditorUserBuildSettings.buildAppBundle)errors.Add("Enable Android App Bundle (.aab).");
             if(!PlayerSettings.Android.useCustomKeystore||string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName)||string.IsNullOrWhiteSpace(PlayerSettings.Android.keyaliasName))errors.Add("Owner must configure upload signing locally. Never commit passwords or signing keys.");
-            bool scene=false;foreach(var entry in EditorBuildSettings.scenes)if(entry.enabled&&File.Exists(entry.path)){scene=true;break;}
+            if(PlayerSettings.Android.useCustomKeystore&&!string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName))
+            {
+                string keystore=Path.GetFullPath(PlayerSettings.Android.keystoreName);
+                string project=Path.GetFullPath(Path.Combine(Application.dataPath,".."))+Path.DirectorySeparatorChar;
+                if(keystore.StartsWith(project,System.StringComparison.OrdinalIgnoreCase))errors.Add("Keep the upload keystore outside the repository.");
+                if(!File.Exists(keystore))errors.Add("Configured upload keystore does not exist on this machine.");
+            }
+            bool scene=false;foreach(var entry in EditorBuildSettings.scenes)if(entry.enabled)
+            {
+                if(File.Exists(entry.path))scene=true;else errors.Add("Enabled build scene is missing: "+entry.path);
+            }
             if(!scene)errors.Add("No existing enabled scene in Build Settings.");
             if(errors.Count>0)throw new BuildFailedException(string.Join("\n",errors));
             Debug.Log("DIMENSIONS FRONT: static Android settings gate passed. Device, manifest, asset and Play Console checks still required.");
@@ -37,6 +54,10 @@ namespace Alterverse.EditorChecks
         public static void Build()
         {
             EditorUserBuildSettings.buildAppBundle=true;
+            EditorUserBuildSettings.development=false;
+            EditorUserBuildSettings.allowDebugging=false;
+            EditorUserBuildSettings.connectProfiler=false;
+            EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
             Validate();
             var scenes=new List<string>();foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)scenes.Add(scene.path);
             Directory.CreateDirectory("Builds/Android");

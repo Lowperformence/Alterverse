@@ -104,3 +104,12 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Private Android signing material and local credentials must never be versioned.
+*.keystore
+*.jks
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example
