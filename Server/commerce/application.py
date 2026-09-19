@@ -23,6 +23,8 @@ class CommerceApplication:
             if not isinstance(data, dict): raise ValueError('JSON object required')
             path = env.get('PATH_INFO')
             if path == '/wallet': wallet = self.ledger.wallet(account)
+            elif path == '/wallet/claim': wallet = self.ledger.claim(account)
+            elif path == '/wallet/claim/ack': wallet = self.ledger.acknowledge_claim(account, data.get('claimId'))
             elif path == '/cosmetics/buy':
                 sku = data.get('cosmeticId')
                 if not isinstance(sku, str) or sku not in COSMETICS: raise ValueError('Unknown cosmetic')
