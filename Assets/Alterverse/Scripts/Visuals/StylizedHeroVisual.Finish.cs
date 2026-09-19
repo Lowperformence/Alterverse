@@ -132,7 +132,7 @@ namespace Alterverse.Visuals
         private void Detail(string name,Vector3 position,Vector3 scale,Color color,Vector3 rotation=default,string pivot=null,bool energy=false)
         {
             var part=Create(name,PrimitiveType.Cube,position,scale,color,rotation);
-            if(energy)part.GetComponent<MeshRenderer>().sharedMaterial=MaterialFor(color,true);
+            if(energy){HeroMeshLibrary.Paint(part.GetComponent<MeshFilter>().sharedMesh,FinishedColor(color,true),true);part.GetComponent<MeshRenderer>().sharedMaterial=MaterialFor(color,true);}
             if(pivot!=null)Bind(name,pivot);
         }
         private static Mesh BuildCuirass()
@@ -152,19 +152,21 @@ namespace Alterverse.Visuals
         }
         private void CombineMovingPanels()
         {
-            // Preserve named motion pivots. Collapse their attached armor by material, not per plate.
-            foreach(Transform pivot in root)
+            // Batch within each joint, never across a separately animated weapon pivot.
+            Transform[] all=root.GetComponentsInChildren<Transform>(true);
+            foreach(Transform pivot in all)
             {
-                if(pivot.childCount==0)continue;
+                if(pivot==root||!MovingPivot(pivot.name))continue;
                 var groups=new Dictionary<Material,List<CombineInstance>>();
-                var renderers=pivot.GetComponentsInChildren<MeshRenderer>();
-                foreach(var renderer in renderers)
+                foreach(var renderer in pivot.GetComponentsInChildren<MeshRenderer>())
                 {
-                    var filter=renderer.GetComponent<MeshFilter>();
-                    if(filter==null||renderer.sharedMaterial==null)continue;
+                    if(!renderer.enabled)continue;
+                    Transform ancestor=renderer.transform;
+                    while(ancestor!=pivot&&!MovingPivot(ancestor.name))ancestor=ancestor.parent;
+                    if(ancestor!=pivot)continue;
+                    var filter=renderer.GetComponent<MeshFilter>();if(filter==null||renderer.sharedMaterial==null)continue;
                     if(!groups.TryGetValue(renderer.sharedMaterial,out var list))groups.Add(renderer.sharedMaterial,list=new List<CombineInstance>());
-                    list.Add(new CombineInstance{mesh=filter.sharedMesh,transform=pivot.worldToLocalMatrix*filter.transform.localToWorldMatrix});
-                    renderer.enabled=false;
+                    list.Add(new CombineInstance{mesh=filter.sharedMesh,transform=pivot.worldToLocalMatrix*filter.transform.localToWorldMatrix});renderer.enabled=false;Destroy(renderer);Destroy(filter);
                 }
                 foreach(var group in groups)
                 {
@@ -174,5 +176,6 @@ namespace Alterverse.Visuals
                 }
             }
         }
+        private static bool MovingPivot(string n)=>n=="DF_ArmL"||n=="DF_ArmR"||n=="DF_LegL"||n=="DF_LegR"||n=="DF_BootL"||n=="DF_BootR"||n=="DF_WeaponL"||n=="DF_WeaponR"||n=="DF_OrbitL"||n=="DF_OrbitR";
     }
 }

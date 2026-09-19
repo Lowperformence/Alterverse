@@ -33,7 +33,7 @@ namespace Alterverse.Combat
             Alterverse.Audio.HeroCombatAudio.Play(actor,0,false,actor.transform.position);
             float before=target.Current+target.Shield;
             float dealt = Damage(actor, target, amount);
-            if(target.Current+target.Shield<before)Alterverse.Audio.HeroCombatAudio.Play(actor,0,true,target.transform.position);
+            if(target.Current+target.Shield<before){Alterverse.Audio.HeroCombatAudio.Play(actor,0,true,target.transform.position);Alterverse.Visuals.HeroSkillVfx.Impact(actor,target,-1);}
             HeroIdentity identity = actor.GetComponent<HeroIdentity>();
             Health hp = actor.GetComponent<Health>();
             if (identity != null && identity.Hero == HeroId.Rook && hp != null && hp.Normalized < .6f && target.GetComponent<HeroIdentity>() != null)
@@ -42,3 +42,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

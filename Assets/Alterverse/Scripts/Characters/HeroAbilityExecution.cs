@@ -87,8 +87,8 @@ namespace Alterverse.Characters
                 }
                 if (hero == HeroId.Mira && WoundedAlly(spec.Radius) == null) return false;
                 HeroCombatAudio.Cast(gameObject,slot);
-                HeroSkillVfx.Area(gameObject, center, spec.Radius, spec.Windup, true, hero==HeroId.Mira);
-                if(spec.Range>0)HeroSkillVfx.Spell(gameObject,center,slot);
+                HeroSkillVfx.Area(gameObject, center, spec.Radius, spec.Windup, true, hero==HeroId.Mira,slot);
+                if(spec.Range>0)HeroSkillVfx.Spell(gameObject,center,slot,spec.Windup);
                 StartCoroutine(ResolveArea(slot, center, life));
             }
             else
@@ -100,10 +100,9 @@ namespace Alterverse.Characters
                 else Hit(slot, target);
             }
             HeroSkillVfx.Cast(gameObject,slot);
-            if(slot==3)HeroSkillVfx.Ultimate(gameObject,target!=null?target.transform.position:transform.position+transform.forward*Mathf.Max(kit.Ultimate.Range,4f));
             if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
             ready[slot] = Time.time + Cooldown(slot);
-            GetComponent<HeroVisualMotion>()?.PulseAttack(slot == 3);
+            GetComponent<HeroVisualMotion>()?.PulseAbility(slot,spec.Windup);
             return true;
         }
         private bool ValidTarget(Health target, float range) => HeroCombatRules.Enemy(gameObject, target) && HeroCombatRules.Distance(transform.position, target.transform.position) <= range;
@@ -118,6 +117,7 @@ namespace Alterverse.Characters
             for (int i = 0; i < 4; i++)
             {
                 if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || !ValidTarget(target, kit.Ultimate.Range)) yield break;
+                if(i>0)HeroCombatAudio.Cast(gameObject,3);
                 float before=target.Current+target.Shield;
                 HeroCombatRules.Damage(gameObject, target, kit.Ultimate.Power / 4f);
                 HeroSkillVfx.Spell(gameObject,target.transform.position,3);
@@ -153,7 +153,7 @@ namespace Alterverse.Characters
             }
             if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
             HeroCombatAudio.Impact(gameObject,slot,center);
-            HeroSkillVfx.Area(gameObject, center, spec.Radius, .3f, false);
+            HeroSkillVfx.Area(gameObject, center, spec.Radius, .3f, false,identity.Hero==HeroId.Mira,slot);
         }
         private void Hit(int slot, Health target, bool visual = true)
         {
@@ -184,3 +184,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

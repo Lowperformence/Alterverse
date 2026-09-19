@@ -86,8 +86,8 @@ namespace Alterverse.UI
             float facing=selected==HeroId.Nyra?-42: selected==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation = Quaternion.Euler(0,Mathf.Lerp(facing-16,facing,settle)+Mathf.Sin(t*.55f)*4,0);
             actor.transform.localPosition = new Vector3(0,Mathf.Lerp(-.10f,0,settle)+Mathf.Sin(t*1.7f)*.015f,0);
-            if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.72f,.46f+Mathf.Sin(t*1.4f)*.06f,.03f);
-            if(orbitRight!=null) orbitRight.localPosition=new Vector3(.72f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
+            if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.06f,.03f);
+            if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
             if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
             if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
         }
@@ -100,3 +100,4 @@ namespace Alterverse.UI
         }
     }
 }
+
