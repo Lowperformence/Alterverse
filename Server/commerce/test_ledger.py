@@ -39,6 +39,18 @@ class LedgerTests(unittest.TestCase):
         empty=self.ledger.claim('account-a')
         self.assertEqual(empty['claimAmount'],0)
         self.assertEqual(empty['claimId'],'')
+    def test_new_purchase_waits_behind_existing_pending_claim_without_loss(self):
+        self.ledger.fulfill('account-a','df_shards_small','claim-a',self.valid)
+        first=self.ledger.claim('account-a')
+        self.ledger.fulfill('account-a','df_shards_small','claim-b',self.valid)
+        same=self.ledger.claim('account-a')
+        self.assertEqual(first['claimId'],same['claimId'])
+        self.assertEqual(self.ledger.wallet('account-a')['balance'],500)
+        self.ledger.acknowledge_claim('account-a',first['claimId'])
+        second=self.ledger.claim('account-a')
+        self.assertNotEqual(first['claimId'],second['claimId'])
+        self.assertEqual(second['claimAmount'],500)
+        self.assertEqual(second['balance'],0)
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','df_shards_small','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
