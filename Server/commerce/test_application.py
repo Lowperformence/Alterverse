@@ -75,6 +75,20 @@ class ApplicationTests(unittest.TestCase):
                 self.assertEqual(self.request('/google-play/fulfill', raw=raw)['status'], '400 Bad Request')
         self.google.get.assert_not_called()
 
+    def test_verified_shards_claim_into_one_retry_safe_balance(self):
+        self.request('/google-play/fulfill', {'productId': 'df_shards_small', 'purchaseToken': 'claim-token'})
+        first = self.request('/wallet/claim')
+        second = self.request('/wallet/claim')
+        self.assertEqual(first['body']['wallet']['claimAmount'], 500)
+        self.assertEqual(first['body']['wallet']['claimId'], second['body']['wallet']['claimId'])
+        self.assertEqual(first['body']['wallet']['balance'], 0)
+        claim_id = first['body']['wallet']['claimId']
+        ack = self.request('/wallet/claim/ack', {'claimId': claim_id})
+        self.assertEqual(ack['status'], '200 OK')
+        empty = self.request('/wallet/claim')
+        self.assertEqual(empty['body']['wallet']['claimAmount'], 0)
+        self.assertEqual(empty['body']['wallet']['claimId'], '')
+
     def test_cosmetic_purchase_retry_and_wallet_refresh(self):
         self.request('/google-play/fulfill', {'productId': 'df_shards_medium', 'purchaseToken': 'token'})
         first = self.request('/cosmetics/buy', {'cosmeticId': 'voidfall'})
