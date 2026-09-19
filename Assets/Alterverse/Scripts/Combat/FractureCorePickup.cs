@@ -24,6 +24,7 @@ namespace Alterverse.Combat
         static Mesh ringMesh;
 
         Transform visual,innerCore,ringA,ringB,zeroShard,lumenShard;
+        DimensionsFront front;
         Vector3 groundPosition;
         float spawnedAt,nextScan,collectStarted;
         bool claimed;
@@ -59,6 +60,7 @@ namespace Alterverse.Combat
             EnsureSharedVisuals();
             spawnedAt=Time.time;
             nextScan=spawnedAt+PickupDelay;
+            front=FindAnyObjectByType<DimensionsFront>();
 
             visual=new GameObject("DF_FractureCoreVisual").transform;
             visual.SetParent(transform,false);
@@ -133,7 +135,6 @@ namespace Alterverse.Combat
             if(Time.timeScale<=0f)return;
             float age=Time.time-spawnedAt;
 
-            DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&front.HasEnded){Destroy(gameObject);return;}
 
             if(claimed)
@@ -199,7 +200,7 @@ namespace Alterverse.Combat
             health.AddShield(health.Max*ShieldFraction,ShieldDuration,false);
             HeroSkillVfx.Support(health.gameObject,health,true,ShieldDuration);
 
-            DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
+            if(front==null)front=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&!front.HasEnded)front.Push(team,FrontInfluence);
 
             // Clean, visual-only absorption cue; intentionally no repeated beep or looping audio.
