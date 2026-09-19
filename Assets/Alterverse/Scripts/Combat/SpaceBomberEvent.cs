@@ -410,7 +410,7 @@ namespace Alterverse.Combat
 
     public sealed class SpaceBombStrike : MonoBehaviour
     {
-        private const float ImpactRadius=1.8f;
+        private const float ImpactRadius=2.7f;
         private const int HitBufferSize=32;
         private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
 
