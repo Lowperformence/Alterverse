@@ -189,11 +189,29 @@ namespace Alterverse.AI
             ScanWorld();
             foreach (LaneTower tower in towers)
             {
-                if (tower == null || !tower.isActiveAndEnabled || brain == null || tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
+                if (tower == null || !tower.isActiveAndEnabled || brain == null) continue;
                 Health hp = tower.GetComponent<Health>();
                 if (hp == null || hp.IsDead) continue;
+
                 Vector3 from = transform.position - tower.transform.position; from.y = 0;
                 Vector3 to = destination - tower.transform.position; to.y = 0;
+                Vector3 step = to - from;
+
+                // Physical tower bodies are solid for every team. Never let a mobility dash cut
+                // through an allied bastion or through a covered enemy tower.
+                float bodyRadius = TowerBodyClearance(tower);
+                if (from.sqrMagnitude < bodyRadius * bodyRadius)
+                {
+                    if (to.sqrMagnitude <= from.sqrMagnitude) return false;
+                }
+                else
+                {
+                    float bodyT = step.sqrMagnitude > .000001f ? Mathf.Clamp01(-Vector3.Dot(from, step) / step.sqrMagnitude) : 0;
+                    if ((from + step * bodyT).sqrMagnitude < bodyRadius * bodyRadius) return false;
+                }
+
+                if (tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
+
                 float safeRadius = tower.AttackRange + TowerMargin;
                 // Allow an escape from existing danger, never a new dive or a crossing dash.
                 if (from.sqrMagnitude < safeRadius * safeRadius)
@@ -201,7 +219,6 @@ namespace Alterverse.AI
                     if (to.sqrMagnitude <= from.sqrMagnitude) return false;
                     continue;
                 }
-                Vector3 step = to - from;
                 float t = step.sqrMagnitude > .000001f ? Mathf.Clamp01(-Vector3.Dot(from, step) / step.sqrMagnitude) : 0;
                 if ((from + step * t).sqrMagnitude < safeRadius * safeRadius) return false;
             }
@@ -237,9 +254,15 @@ namespace Alterverse.AI
             if (brain == null) return next;
             foreach (LaneTower tower in towers)
             {
-                if (tower == null || !tower.isActiveAndEnabled || tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
+                if (tower == null || !tower.isActiveAndEnabled) continue;
                 Health towerHealth = tower.GetComponent<Health>();
                 if (towerHealth == null || towerHealth.IsDead) continue;
+
+                // Every tower body gets local path skirting, including allied towers. This is the
+                // missing case that caused lane bots to repeatedly collide with their own bastions.
+                next = SkirtTowerBody(tower,next);
+
+                if (tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
                 Vector3 away = transform.position - tower.transform.position; away.y = 0;
                 float safeRadius = tower.AttackRange + TowerMargin;
                 if (away.sqrMagnitude < safeRadius * safeRadius)
@@ -285,6 +308,48 @@ namespace Alterverse.AI
                 }
             }
             return next;
+        }
+
+        private float TowerBodyClearance(LaneTower tower)
+        {
+            Collider body=tower!=null?tower.GetComponent<Collider>():null;
+            float radius=body!=null&&body.enabled&&!body.isTrigger?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):.70f;
+            // HeroLocomotion uses a .48 m sweep radius. Add a small visual margin so steering
+            // starts before the physics cast is already touching the structure.
+            return radius+.62f;
+        }
+
+        private Vector3 SkirtTowerBody(LaneTower tower,Vector3 next)
+        {
+            Vector3 current=transform.position;
+            Vector3 step=next-current;step.y=0;
+            float stepLength=step.magnitude;
+            if(stepLength<.0001f)return next;
+
+            Vector3 towerPos=tower.transform.position;
+            Vector3 from=current-towerPos;from.y=0;
+            Vector3 to=next-towerPos;to.y=0;
+            float clearance=TowerBodyClearance(tower),clearanceSqr=clearance*clearance;
+            Vector3 segment=to-from;
+            float t=segment.sqrMagnitude>.000001f?Mathf.Clamp01(-Vector3.Dot(from,segment)/segment.sqrMagnitude):0f;
+            bool crossing=(from+segment*t).sqrMagnitude<clearanceSqr;
+            bool trapped=from.sqrMagnitude<clearanceSqr;
+            if(!crossing&&!trapped)return next;
+
+            Vector3 radial=from.sqrMagnitude>.001f?from.normalized:(brain.Team==0?Vector3.left:Vector3.right);
+            Vector3 desired=step/stepLength;
+            Vector3 tangent=Vector3.Cross(Vector3.up,radial).normalized;
+            Vector3 opposite=-tangent;
+            float tangentScore=Vector3.Dot(tangent,desired),oppositeScore=Vector3.Dot(opposite,desired);
+            if(oppositeScore>tangentScore+.02f)tangent=opposite;
+            else if(Mathf.Abs(oppositeScore-tangentScore)<=.02f&&((rotationSlot&1)==0))tangent=opposite;
+
+            // Tangential motion gets the largest weight, while a small outward component prevents
+            // the bot from scraping the collider and the desired component keeps lane progress.
+            Vector3 steer=(tangent*.82f+radial*.42f+desired*.24f).normalized;
+            Vector3 skirted=current+steer*stepLength;
+            skirted.y=next.y;
+            return skirted;
         }
 
         private bool TryGetWaveStaging(LaneTower tower,out Vector3 staging)
