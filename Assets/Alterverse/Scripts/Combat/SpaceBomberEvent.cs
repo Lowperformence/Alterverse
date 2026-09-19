@@ -23,6 +23,7 @@ namespace Alterverse.Combat
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
         private Material armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial;
+        private AudioClip jetLoop;
         private bool materialsReady;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -37,6 +38,7 @@ namespace Alterverse.Combat
             // because this value is only used to decorrelate the local visual-event RNG seed.
             rng=new System.Random(unchecked(Environment.TickCount^GetHashCode()));
             BuildSharedMaterials();
+            jetLoop=CreateJetLoop();
             if(!materialsReady)
             {
                 Debug.LogError("DIMENSIONS FRONT: Space Bomber disabled because required shaders are unavailable.");
@@ -73,7 +75,7 @@ namespace Alterverse.Combat
             if(world!=null)root.transform.SetParent(world,true);
             activeFlyover=root.AddComponent<SpaceBomberFlyover>();
             activeFlyover.Initialize(this,start,end,BomberAltitude,BomberSpeed,passIndex,
-                armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial,front,rng);
+                armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial,jetLoop,front,rng);
         }
 
         private void CreateRoute(out Vector3 start,out Vector3 end)
@@ -124,6 +126,58 @@ namespace Alterverse.Combat
             materialsReady=armorMaterial!=null&&darkMaterial!=null&&energyMaterial!=null&&bombMaterial!=null&&warningMaterial!=null;
         }
 
+        private static AudioClip CreateJetLoop()
+        {
+            const int rate=22050;
+            const float duration=2.4f;
+            int length=Mathf.CeilToInt(rate*duration);
+            float[] samples=new float[length];
+            uint noiseState=0xA341316Cu;
+            float lowNoise=0f,midNoise=0f;
+            float phaseLow=0f,phaseMid=0f,phaseHigh=0f;
+
+            for(int i=0;i<length;i++)
+            {
+                float t=i/(float)rate;
+
+                noiseState^=noiseState<<13;noiseState^=noiseState>>17;noiseState^=noiseState<<5;
+                float white=((noiseState&0xFFFF)/32767.5f)-1f;
+
+                // Exhaust body: smoothed turbulent noise gives a broad jet roar instead of a synthetic beep.
+                lowNoise+=.035f*(white-lowNoise);
+                midNoise+=.18f*(white-midNoise);
+                float exhaust=lowNoise*.78f+(midNoise-lowNoise)*.34f+white*.075f;
+
+                // Heavy compressor fundamentals and a restrained turbine edge.
+                float throttle=.94f+.06f*Mathf.Sin(t*Mathf.PI*2f*.42f);
+                phaseLow+=Mathf.PI*2f*(72f+8f*throttle)/rate;
+                phaseMid+=Mathf.PI*2f*(178f+17f*throttle)/rate;
+                phaseHigh+=Mathf.PI*2f*(386f+31f*throttle)/rate;
+                float compressor=Mathf.Sin(phaseLow)*.30f+
+                                 Mathf.Sin(phaseMid)*.15f+
+                                 Mathf.Sin(phaseHigh)*.055f;
+
+                // Slow afterburner pressure modulation keeps the loop aggressive without becoming rhythmic.
+                float pressure=.80f+.20f*Mathf.Sin(t*Mathf.PI*2f*.67f+1.2f);
+                float mixed=(exhaust*.72f+compressor)*(.82f+.18f*pressure);
+                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.48f),-1f,1f);
+            }
+
+            // Crossfade the tail into the head so repeated flyovers have no obvious loop click.
+            int fade=Mathf.Min(Mathf.CeilToInt(rate*.16f),length/4);
+            for(int i=0;i<fade;i++)
+            {
+                float a=i/(float)Mathf.Max(1,fade-1);
+                int tail=length-fade+i;
+                float head=samples[i];
+                samples[tail]=Mathf.Lerp(samples[tail],head,a);
+            }
+
+            AudioClip clip=AudioClip.Create("DF_AggressiveJetLoop",length,1,rate,false);
+            clip.SetData(samples,0);
+            return clip;
+        }
+
         private static Material CreateMaterial(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
         {
             Material m=new(shader){name=name,color=color};
@@ -143,6 +197,7 @@ namespace Alterverse.Combat
             if(energyMaterial!=null)Destroy(energyMaterial);
             if(warningMaterial!=null)Destroy(warningMaterial);
             if(bombMaterial!=null)Destroy(bombMaterial);
+            if(jetLoop!=null)Destroy(jetLoop);
         }
     }
 
@@ -160,12 +215,13 @@ namespace Alterverse.Combat
         private int passIndex;
         private Transform visual,engineGlowL,engineGlowR;
         private Material warningMaterial,bombMaterial,energyMaterial;
+        private AudioSource jetSource;
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
         private bool completed;
 
         public void Initialize(SpaceBomberDirector source,Vector3 routeStart,Vector3 routeEnd,float altitude,float flightSpeed,int pass,
-            Material armor,Material dark,Material energy,Material warning,Material bomb,Alterverse.Match.DimensionsFront matchFront,System.Random random)
+            Material armor,Material dark,Material energy,Material warning,Material bomb,AudioClip jetClip,Alterverse.Match.DimensionsFront matchFront,System.Random random)
         {
             director=source;start=routeStart;end=routeEnd;start.y=end.y=altitude;
             speed=Mathf.Max(2f,flightSpeed);length=Vector3.Distance(start,end);passIndex=pass;
@@ -175,6 +231,7 @@ namespace Alterverse.Combat
             if(direction.sqrMagnitude>.01f)transform.rotation=Quaternion.LookRotation(direction.normalized,Vector3.up);
             nextDrop=FirstDropDistance;
             BuildVisual(armor,dark,energy);
+            BuildJetAudio(jetClip);
             PrototypeVfx.Burst(start+Vector3.down*.35f,new Color(.16f,.88f,1f),.45f,4);
         }
 
@@ -195,6 +252,7 @@ namespace Alterverse.Combat
                 visual.localRotation=Quaternion.Euler(-3.5f,0,bank);
             }
             PulseEngines();
+            UpdateJetAudio(t);
 
             while(nextDrop<=travelled&&nextDrop<length-EndMargin)
             {
@@ -226,10 +284,40 @@ namespace Alterverse.Combat
             if(engineGlowR!=null)engineGlowR.localScale=new Vector3(.18f,.18f,.34f*pulse);
         }
 
+        private void BuildJetAudio(AudioClip clip)
+        {
+            if(clip==null)return;
+            jetSource=gameObject.AddComponent<AudioSource>();
+            jetSource.playOnAwake=false;
+            jetSource.loop=true;
+            jetSource.clip=clip;
+            jetSource.spatialBlend=.62f;
+            jetSource.dopplerLevel=1.15f;
+            jetSource.rolloffMode=AudioRolloffMode.Linear;
+            jetSource.minDistance=7f;
+            jetSource.maxDistance=58f;
+            jetSource.priority=92;
+            jetSource.volume=0f;
+            jetSource.pitch=.97f;
+            jetSource.Play();
+        }
+
+        private void UpdateJetAudio(float routeT)
+        {
+            if(jetSource==null)return;
+            float fadeIn=Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(0f,.075f,routeT));
+            float fadeOut=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.86f,1f,routeT));
+            float envelope=fadeIn*fadeOut;
+            float profile=Alterverse.Profile.PlayerProfile.MasterVolume*Alterverse.Profile.PlayerProfile.SfxVolume;
+            jetSource.volume=.48f*profile*envelope;
+            jetSource.pitch=.97f+Mathf.Sin(Time.time*2.7f+passIndex)*.012f;
+        }
+
         private void Finish()
         {
             if(completed)return;
             completed=true;
+            if(jetSource!=null)jetSource.Stop();
             director?.FlyoverFinished(this);
             Destroy(gameObject);
         }
