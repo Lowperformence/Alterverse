@@ -100,6 +100,7 @@ namespace Alterverse.Characters
                 else Hit(slot, target);
             }
             HeroSkillVfx.Cast(gameObject,slot);
+            if(slot==3)HeroSkillVfx.Ultimate(gameObject,target!=null?target.transform.position:transform.position+transform.forward*Mathf.Max(kit.Ultimate.Range,4f));
             if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAttack(slot == 3);
