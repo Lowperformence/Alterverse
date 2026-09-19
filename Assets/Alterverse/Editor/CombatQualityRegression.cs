@@ -62,6 +62,29 @@ namespace Alterverse.EditorChecks
             finally{actor.SetActive(false);Object.Destroy(actor);}
             Debug.Log("DIMENSIONS FRONT: missing hit-flash destination and enable-cycle recovery checks passed.");
         }
+        [MenuItem("DIMENSIONS FRONT/Checks/Recall cancellation (Play mode)")]
+        public static void RecallChecks()
+        {
+            if(!Application.isPlaying||Time.timeScale<=0){Debug.LogWarning("Start a running match for recall checks.");return;}
+            var actor=new GameObject("DF_RecallRegression");actor.transform.position=new Vector3(0,80,0);
+            try
+            {
+                var health=actor.AddComponent<Health>();health.Configure(100);
+                var recall=actor.AddComponent<Alterverse.Characters.BaseRecall>();
+                recall.BeginRecall();Check(recall.IsRecalling,"recall did not start");
+                health.TakeDamage(5);health.Heal(5,false);
+                Check(!recall.IsRecalling&&health.Current==100,"same-frame healing concealed the interrupt");
+                health.AddShield(40,4,false);recall.BeginRecall();health.TakeDamage(5);
+                Check(!recall.IsRecalling&&health.Current==100,"shield-only hit did not interrupt");
+                recall.BeginRecall();recall.enabled=false;
+                Check(!recall.IsRecalling&&recall.Progress==0,"disabled component retained a channel");
+                recall.BeginRecall();Check(!recall.IsRecalling,"disabled component accepted recall");
+                recall.enabled=true;recall.BeginRecall();Check(recall.IsRecalling,"recall could not restart");
+                actor.SetActive(false);Check(!recall.IsRecalling,"inactive actor retained a channel");
+            }
+            finally{actor.SetActive(false);Object.Destroy(actor);}
+            Debug.Log("DIMENSIONS FRONT: recall hit, shield and disable-cycle checks passed.");
+        }
         [MenuItem("DIMENSIONS FRONT/Checks/Health registry and shield feedback (Play mode)")]
         public static void HealthChecks()
         {
