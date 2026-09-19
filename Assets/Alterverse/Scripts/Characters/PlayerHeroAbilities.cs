@@ -69,7 +69,12 @@ namespace Alterverse.Characters
             Health target = targeting.Acquire(Mathf.Max(kit.Spec(slot).Range, 1f), transform.forward, true);
             Vector3 direction = DirectionFor(target);
             bool success = execution.TryCast(slot, target, direction);
-            if (success) { targeting.RegisterOffensiveAction(); Alterverse.Onboarding.OnboardingSessionGuard.Ability(this); }
+            if (success)
+            {
+                targeting.RegisterOffensiveAction();
+                Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
+                if(slot==3)BattleItemRuntime.TryActivateEquipped(gameObject,target);
+            }
             return success;
         }
     }
