@@ -41,8 +41,7 @@ namespace Alterverse.Combat
         {
             if(!ValidEnemyHero(actor,target))target=NearestEnemyHero(actor,15f);
             if(target==null)return false;
-            BattleItemMeteorStrike.Create(actor,target,40f);
-            return true;
+            return BattleItemMeteorStrike.Create(actor,target,40f);
         }
 
         private static bool ValidEnemyHero(GameObject actor,Health target)
@@ -187,16 +186,17 @@ namespace Alterverse.Combat
         private Vector3 impact;
         private float hitAt,damage;
 
-        public static void Create(GameObject source,Health target,float damage)
+        public static bool Create(GameObject source,Health target,float damage)
         {
-            if(source==null||target==null||target.IsDead)return;
+            if(source==null||target==null||target.IsDead)return false;
             GameObject go=new("DF_BattleItemMeteorStrike");
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)go.transform.SetParent(world,true);
             BattleItemMeteorStrike strike=go.AddComponent<BattleItemMeteorStrike>();
             strike.source=source;strike.target=target;strike.damage=damage;strike.impact=target.transform.position;
             strike.impact.y=LunarSurfaceField.Surface(strike.impact.x,strike.impact.z).y+.10f;
             strike.hitAt=Time.time+Delay;
-            if(!strike.Build(world)){Destroy(go);}
+            if(!strike.Build(world)){Destroy(go);return false;}
+            return true;
         }
 
         private bool Build(Transform world)
