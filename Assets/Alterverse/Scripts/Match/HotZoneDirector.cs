@@ -24,6 +24,7 @@ namespace Alterverse.Match
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
         private Transform pulseRing,innerRing;
+        private Renderer[] markerRenderers=System.Array.Empty<Renderer>();
         private Material neutralMat,zeroMat,lumenMat;
         private DimensionsFront front;
 
@@ -133,6 +134,7 @@ namespace Alterverse.Match
             center.transform.SetParent(zoneRoot.transform,false);center.transform.localPosition=Vector3.up*.045f;center.transform.localScale=new Vector3(2.1f,.018f,2.1f);
             Collider centerCollider=center.GetComponent<Collider>();if(centerCollider!=null)centerCollider.enabled=false;
             Renderer centerRenderer=center.GetComponent<Renderer>();if(centerRenderer!=null){centerRenderer.sharedMaterial=neutralMat;centerRenderer.shadowCastingMode=ShadowCastingMode.Off;centerRenderer.receiveShadows=false;}
+            markerRenderers=new Renderer[8];
             for(int i=0;i<8;i++)
             {
                 float a=i*Mathf.PI*2f/8f;
@@ -141,7 +143,8 @@ namespace Alterverse.Match
                 shard.transform.localPosition=p;shard.transform.localRotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,45);
                 shard.transform.localScale=new Vector3(.10f,.42f,.22f);
                 Collider c=shard.GetComponent<Collider>();if(c!=null)c.enabled=false;
-                Renderer r=shard.GetComponent<Renderer>();if(r!=null){r.sharedMaterial=neutralMat;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;}
+                Renderer r=shard.GetComponent<Renderer>();
+                if(r!=null){r.sharedMaterial=neutralMat;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;markerRenderers[i]=r;}
             }
         }
 
@@ -152,10 +155,8 @@ namespace Alterverse.Match
             Material active=zero?zeroMat:lumen?lumenMat:neutralMat;
             if(pulseRing!=null&&pulseRing.TryGetComponent(out LineRenderer a))a.sharedMaterial=active;
             if(innerRing!=null&&innerRing.TryGetComponent(out LineRenderer b))b.sharedMaterial=active;
-            Renderer[] markers=zoneRoot.GetComponentsInChildren<Renderer>();
-            for(int i=0;i<markers.Length;i++)
-                if(markers[i]!=null&&markers[i].gameObject.name.StartsWith("DF_HotZoneMarker"))
-                    markers[i].sharedMaterial=active;
+            for(int i=0;i<markerRenderers.Length;i++)
+                if(markerRenderers[i]!=null)markerRenderers[i].sharedMaterial=active;
             zoneRoot.transform.Rotate(0,9f*Time.deltaTime,0,Space.World);
             float pulse=1f+Mathf.Sin(Time.time*4.2f)*.028f;
             if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
