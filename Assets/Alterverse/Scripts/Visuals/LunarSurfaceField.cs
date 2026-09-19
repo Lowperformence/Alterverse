@@ -1,4 +1,5 @@
 using UnityEngine;
+using Alterverse.Match;
 namespace Alterverse.Visuals
 {
     /// <summary>Deterministic visual geology. No physics, navigation or global random state.</summary>
@@ -96,7 +97,13 @@ namespace Alterverse.Visuals
                 int i=z*size+x;heights[i]=h;
                 // Neutral graphite, not faction-tinted ground. Compacted dust has less blue in its highlights.
                 float value=Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.29f,.66f,tone));
-                pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
+                if(ArenaVariantRuntime.IsMars)
+                {
+                    // Iron-rich, dusty Mars palette: muted rust rather than saturated comic red.
+                    float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.29f,.66f,tone));
+                    pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f*(1f-dust*.035f),1);
+                }
+                else pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
