@@ -20,14 +20,21 @@ namespace Alterverse.Combat
 
             bool activated=item switch
             {
-                BattleItemType.Heal=>BattleItemPickup.Spawn(item,member.Team,actor.transform.position),
-                BattleItemType.Shield=>BattleItemPickup.Spawn(item,member.Team,actor.transform.position),
-                BattleItemType.Speed=>BattleItemPickup.Spawn(item,member.Team,actor.transform.position),
+                BattleItemType.Heal=>BattleItemPickup.Spawn(item,member.Team,DropPosition(actor)),
+                BattleItemType.Shield=>BattleItemPickup.Spawn(item,member.Team,DropPosition(actor)),
+                BattleItemType.Speed=>BattleItemPickup.Spawn(item,member.Team,DropPosition(actor)),
                 BattleItemType.Meteor=>TryMeteor(actor,focusedTarget),
                 _=>false
             };
 
             return activated&&BattleItemInventory.TryConsumeEquipped(item);
+        }
+
+        private static Vector3 DropPosition(GameObject actor)
+        {
+            Vector3 forward=actor.transform.forward;forward.y=0;
+            if(forward.sqrMagnitude<.01f)forward=Vector3.forward;
+            return actor.transform.position+forward.normalized*1.65f;
         }
 
         private static bool TryMeteor(GameObject actor,Health target)
@@ -77,17 +84,18 @@ namespace Alterverse.Combat
             go.transform.position=ground;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)go.transform.SetParent(world,true);
             BattleItemPickup pickup=go.AddComponent<BattleItemPickup>();
-            pickup.type=item;pickup.team=Mathf.Clamp(ownerTeam,0,1);pickup.spawned=Time.time;pickup.Build();
+            pickup.type=item;pickup.team=Mathf.Clamp(ownerTeam,0,1);pickup.spawned=Time.time;
+            if(!pickup.Build()){Destroy(go);return false;}
             return true;
         }
 
-        private void Build()
+        private bool Build()
         {
             Color color=type==BattleItemType.Heal?new Color(.12f,1f,.34f):
                 type==BattleItemType.Shield?new Color(.18f,.82f,1f):
                 new Color(1f,.72f,.18f);
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(shader==null)return;
+            if(shader==null)return false;
             energyMat=new Material(shader){color=color};darkMat=new Material(shader){color=new Color(.10f,.12f,.16f)};
             if(energyMat.HasProperty("_EmissionColor")){energyMat.EnableKeyword("_EMISSION");energyMat.SetColor("_EmissionColor",color*3f);}
             if(energyMat.HasProperty("_Smoothness"))energyMat.SetFloat("_Smoothness",.62f);
@@ -109,6 +117,7 @@ namespace Alterverse.Combat
             if(type==BattleItemType.Heal){Part("PlusV",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.10f,.34f,.06f),energyMat);Part("PlusH",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.34f,.10f,.06f),energyMat);}
             else if(type==BattleItemType.Shield)Part("ShieldMark",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.32f,.30f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,45);
             else {Part("SpeedMark",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.38f,.08f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,-18);Part("SpeedMark2",PrimitiveType.Cube,visual,new Vector3(-.08f,.13f,.28f),new Vector3(.28f,.07f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,-18);}
+            return true;
         }
 
         private Transform Part(string name,PrimitiveType primitive,Transform parent,Vector3 pos,Vector3 scale,Material mat)
