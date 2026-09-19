@@ -33,6 +33,11 @@ namespace Alterverse.Combat
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetSharedVisuals()
         {
+            if(coreMaterial!=null)Destroy(coreMaterial);
+            if(zeroMaterial!=null)Destroy(zeroMaterial);
+            if(lumenMaterial!=null)Destroy(lumenMaterial);
+            if(metalMaterial!=null)Destroy(metalMaterial);
+            if(ringMesh!=null)Destroy(ringMesh);
             coreMaterial=null;zeroMaterial=null;lumenMaterial=null;metalMaterial=null;ringMesh=null;
         }
 
@@ -45,10 +50,9 @@ namespace Alterverse.Combat
             GameObject world=GameObject.Find("DF_MatchWorld");
             if(world!=null)go.transform.SetParent(world.transform,true);
 
-            // Heroes in the prototype stand about one metre above the floor.
-            // Keep the drop close to the regolith while preserving the visible launch from the body.
+            // Anchor to the authored lunar surface so craters and relief never leave the pickup floating or buried.
             Vector3 ground=deathPosition;
-            ground.y=Mathf.Max(.16f,deathPosition.y-.88f);
+            ground.y=LunarSurfaceField.Surface(deathPosition.x,deathPosition.z).y+.10f;
             go.transform.position=ground;
             FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
             pickup.groundPosition=ground;
