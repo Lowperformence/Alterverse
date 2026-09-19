@@ -9,6 +9,7 @@ namespace Alterverse.AI
         [SerializeField] private float laneZ;
         private float nextObjectiveScan;
         private Health laneObjective;
+        private float towerApproachSpread;
 
         public Vector3 Home => new(team == 0 ? -27.5f : 27.5f, transform.position.y, 0f);
         public Vector3 Staging => new(team == 0 ? 1.5f : -1.5f, transform.position.y, laneZ);
@@ -19,6 +20,8 @@ namespace Alterverse.AI
         {
             team = Mathf.Clamp(assignedTeam, 0, 1);
             laneZ = assignedLaneZ >= 0 ? 16f : -16f;
+            uint hash=0;foreach(char ch in gameObject.name)hash=unchecked(hash*31u+ch);
+            towerApproachSpread=((int)(hash%5u)-2)*.28f;
             ResetRoute();
         }
 
@@ -39,7 +42,26 @@ namespace Alterverse.AI
                 nextObjectiveScan = Time.time + 1f;
                 laneObjective = FindLaneObjective();
             }
-            return laneObjective != null ? laneObjective.transform.position : EnemySide;
+            return laneObjective != null ? ObjectiveApproach(laneObjective) : EnemySide;
+        }
+
+        private Vector3 ObjectiveApproach(Health objective)
+        {
+            Vector3 target=objective.transform.position;
+            LaneTower tower=objective.GetComponent<LaneTower>();
+            if(tower==null)return target;
+
+            // Never route a lane bot into the centre of a solid tower. Approach from the
+            // attacking side and spread the roster slightly across Z so melee heroes do not
+            // stack on one collider point.
+            Collider body=tower.GetComponent<Collider>();
+            float bodyRadius=body!=null&&body.enabled?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):.70f;
+            float direction=team==0?1f:-1f;
+            float standOff=bodyRadius+.72f;
+            target.x-=direction*standOff;
+            target.z+=towerApproachSpread;
+            target.y=transform.position.y;
+            return target;
         }
 
         private Health FindLaneObjective()
