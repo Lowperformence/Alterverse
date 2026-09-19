@@ -24,7 +24,7 @@ namespace Alterverse.UI
         private string heroName,statusText="",feedback="",healthText="";
         private readonly string[] cooldownText=new string[4];
         private float nextReadout;
-        private float feedbackUntil,damageTrail=1,damageHold,previousHp=1;
+        private float feedbackUntil,damageTrail=1,damageHold,previousHp=1,pressPulseUntil;
         private bool focused=true,suspended,combatInside;
         private int joystickFinger=-1,combatFinger=-1,pressedSlot=-1,inspectedSlot=-1;
         private bool mouseJoystick;
@@ -53,14 +53,18 @@ namespace Alterverse.UI
         }
         private CombatGlyph GlyphFor(int slot)
         {
-            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
-            if((hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2))return CombatGlyph.Dash;
-            if((hero==HeroId.Mira&&(slot==1||slot==3))||(hero==HeroId.Rook&&slot==1))return CombatGlyph.Heal;
-            if((hero==HeroId.Mira&&slot==2)||(hero==HeroId.Kaelon&&slot==1))return CombatGlyph.Shield;
-            if(hero==HeroId.Kaelon&&slot==0)return CombatGlyph.Stun;
-            if(hero==HeroId.Nyra&&slot==3)return CombatGlyph.Volley;
-            if(abilities.SpecFor(slot).Radius>0)return CombatGlyph.Area;
-            return abilities.SpecFor(slot).Range>4?CombatGlyph.Shot:CombatGlyph.Strike;
+            HeroId h=identity!=null?identity.Hero:HeroId.Veyr;
+            if(h==HeroId.Veyr)return slot==2?CombatGlyph.Dash:slot==3?CombatGlyph.Rift:slot==1?CombatGlyph.Rift:CombatGlyph.Blade;
+            if(h==HeroId.Kaelon)return slot==0?CombatGlyph.Stun:slot==1?CombatGlyph.Shield:slot==2?CombatGlyph.Area:CombatGlyph.Shield;
+            if(h==HeroId.Nyra)return slot==0?CombatGlyph.Rifle:slot==1?CombatGlyph.Dash:slot==2?CombatGlyph.Stun:CombatGlyph.Volley;
+            if(h==HeroId.Elyra)return slot==0?CombatGlyph.Area:slot==1?CombatGlyph.Rift:slot==2?CombatGlyph.Dash:CombatGlyph.Burst;
+            if(h==HeroId.Mira)return slot==0?CombatGlyph.SupportShot:slot==1?CombatGlyph.Heal:slot==2?CombatGlyph.Shield:CombatGlyph.Heal;
+            return slot==0?CombatGlyph.Gauntlet:slot==1?CombatGlyph.Shield:slot==2?CombatGlyph.Slam:CombatGlyph.Burst;
+        }
+        private CombatGlyph BasicGlyph()
+        {
+            HeroId h=identity!=null?identity.Hero:HeroId.Veyr;
+            return h==HeroId.Veyr?CombatGlyph.Blade:h==HeroId.Kaelon?CombatGlyph.Heavy:h==HeroId.Nyra?CombatGlyph.Rifle:h==HeroId.Elyra?CombatGlyph.Orb:h==HeroId.Mira?CombatGlyph.SupportShot:CombatGlyph.Gauntlet;
         }
         private void OnEnable()=>EnhancedTouchSupport.Enable();
         private void OnDisable(){ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
@@ -177,7 +181,7 @@ namespace Alterverse.UI
         }
         private void BeginPress(int slot)
         {
-            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;
+            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;pressPulseUntil=Time.unscaledTime+.12f;
             if(slot==4)attack?.TryAttack();
         }
         private void EndPress(bool commit)
@@ -225,13 +229,19 @@ namespace Alterverse.UI
                 Rect r=layout.Action(i);bool held=pressedSlot==i&&combatInside;
                 float remaining=i<4&&abilities!=null?abilities.RemainingFor(i):0;
                 Color edge=i==3?new Color(.9f,.73f,.42f):accent;
-                FrontEndTheme.Fill(r,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
-                FrontEndTheme.Fill(new Rect(r.x,r.y,r.width,held?4:2),remaining>0?FrontEndTheme.Muted:edge);
-                // Keep the combat buttons clean: the previous generic white glyph strokes read as stray slashes.
-                // Ability identity remains in the label, cooldown state and press feedback until final authored icons are available.
+                float punch=held&&Time.unscaledTime<pressPulseUntil?3f:held?1.5f:0f;
+                Rect face=new Rect(r.x+punch,r.y+punch,r.width-punch*2,r.height-punch*2);
+                FrontEndTheme.Fill(face,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
+                FrontEndTheme.Fill(new Rect(face.x,face.y,face.width,held?4:2),remaining>0?FrontEndTheme.Muted:edge);
+                CombatGlyph icon=i<4?glyphs[i]:BasicGlyph();
+                Color iconColor=remaining>0?new Color(FrontEndTheme.Text.r,FrontEndTheme.Text.g,FrontEndTheme.Text.b,.42f):FrontEndTheme.Text;
+                if(i==3&&remaining<=0){CombatGlyphs.Ring(face.center,face.width*.38f,2,new Color(edge.r,edge.g,edge.b,.65f),24);CombatGlyphs.Ring(face.center,face.width*.44f,1,new Color(edge.r,edge.g,edge.b,.35f),24);}
+                CombatGlyphs.Draw(icon,face.center-new Vector2(0,8),Mathf.Min(face.width,face.height)*.48f,iconColor);
                 if(remaining>0)
                 {
                     float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
+                    FrontEndTheme.Fill(new Rect(face.x+4,face.y,face.width-8,face.height*ratio),new Color(0,0,0,.32f));
+                {
                     FrontEndTheme.Fill(new Rect(r.x+5,r.yMax-6,(r.width-10)*ratio,3),FrontEndTheme.Muted);
                     theme.Label(new Rect(r.x+4,r.y+45,r.width-8,28),cooldownText[i],centered);
                 }
