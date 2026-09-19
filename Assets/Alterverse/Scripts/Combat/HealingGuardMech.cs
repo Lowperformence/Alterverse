@@ -65,18 +65,18 @@ namespace Alterverse.Combat
             Color joint=Color.Lerp(dark,Color.black,.18f);
 
             // Torso hierarchy: chest -> abdomen -> pelvis. This removes the previous single-block silhouette.
-            CreatePart(root,"DF_GuardChestShell",PrimitiveType.Cube,new Vector3(0,.48f,0),new Vector3(1.78f,.82f,1.02f),armor,Quaternion.Euler(zero?0f:2f,0,zero?-4f:0f));
-            CreatePart(root,"DF_GuardChestPlate",PrimitiveType.Cube,new Vector3(0,.50f,.55f),new Vector3(1.18f,.52f,.16f),dark,Quaternion.identity);
-            CreateEnergyPart(root,"DF_GuardCore",PrimitiveType.Cylinder,new Vector3(0,.48f,.66f),new Vector3(.34f,.12f,.34f),energy,Quaternion.Euler(90,0,0));
-            CreatePart(root,"DF_GuardAbdomen",PrimitiveType.Cube,new Vector3(0,-.08f,.02f),new Vector3(.78f,.38f,.64f),joint,Quaternion.identity);
-            CreatePart(root,"DF_GuardPelvis",PrimitiveType.Cube,new Vector3(0,-.43f,0),new Vector3(1.18f,.34f,.74f),armor,Quaternion.identity);
+            CreatePart(root,"DF_GuardChestShell",PrimitiveType.Cube,new Vector3(0,.78f,0),new Vector3(1.78f,.82f,1.02f),armor,Quaternion.Euler(zero?0f:2f,0,zero?-4f:0f));
+            CreatePart(root,"DF_GuardChestPlate",PrimitiveType.Cube,new Vector3(0,.80f,.55f),new Vector3(1.18f,.52f,.16f),dark,Quaternion.identity);
+            CreateEnergyPart(root,"DF_GuardCore",PrimitiveType.Cylinder,new Vector3(0,.78f,.66f),new Vector3(.34f,.12f,.34f),energy,Quaternion.Euler(90,0,0));
+            CreatePart(root,"DF_GuardAbdomen",PrimitiveType.Cube,new Vector3(0,.34f,.02f),new Vector3(.78f,.34f,.64f),joint,Quaternion.identity);
+            CreatePart(root,"DF_GuardPelvis",PrimitiveType.Cube,new Vector3(0,.05f,0),new Vector3(1.18f,.30f,.74f),armor,Quaternion.identity);
 
             // Head and neck: small sensor head with a clearly readable forward-facing glowing visor.
-            CreatePart(root,"DF_GuardNeck",PrimitiveType.Cylinder,new Vector3(0,1.02f,0),new Vector3(.22f,.20f,.22f),joint,Quaternion.identity);
-            CreatePart(root,"DF_GuardSensorHead",PrimitiveType.Cube,new Vector3(0,1.30f,.02f),new Vector3(.78f,.42f,.58f),armor,Quaternion.Euler(0,zero?-5f:0,0));
-            CreateEnergyPart(root,"DF_GuardVisor",PrimitiveType.Cube,new Vector3(0,1.31f,.34f),new Vector3(.58f,.13f,.09f),energy,Quaternion.identity);
-            CreatePart(root,"DF_GuardHeadCowl",PrimitiveType.Cube,new Vector3(0,1.55f,-.02f),new Vector3(.46f,.16f,.48f),dark,Quaternion.Euler(zero?0:0,0,zero?-8f:0));
-            CreateEnergyPart(root,"DF_GuardSensorEye",PrimitiveType.Sphere,new Vector3(zero?.18f:0f,1.31f,.405f),new Vector3(.10f,.10f,.08f),energy,Quaternion.identity);
+            CreatePart(root,"DF_GuardNeck",PrimitiveType.Cylinder,new Vector3(0,1.25f,0),new Vector3(.22f,.18f,.22f),joint,Quaternion.identity);
+            CreatePart(root,"DF_GuardSensorHead",PrimitiveType.Cube,new Vector3(0,1.50f,.02f),new Vector3(.78f,.42f,.58f),armor,Quaternion.Euler(0,zero?-5f:0,0));
+            CreateEnergyPart(root,"DF_GuardVisor",PrimitiveType.Cube,new Vector3(0,1.51f,.34f),new Vector3(.58f,.13f,.09f),energy,Quaternion.identity);
+            CreatePart(root,"DF_GuardHeadCowl",PrimitiveType.Cube,new Vector3(0,1.75f,-.02f),new Vector3(.46f,.16f,.48f),dark,Quaternion.Euler(zero?0:0,0,zero?-8f:0));
+            CreateEnergyPart(root,"DF_GuardSensorEye",PrimitiveType.Sphere,new Vector3(zero?.18f:0f,1.51f,.405f),new Vector3(.10f,.10f,.08f),energy,Quaternion.identity);
 
             // Shoulders and short heavy arms stay visibly detached from the torso.
             BuildArm(root,-1f,zero,dark,armor,joint,energy);
@@ -87,35 +87,36 @@ namespace Alterverse.Combat
             BuildLeg(root,1f,zero,dark,armor,joint);
 
             // Back module gives the robot a functional defensive profile without reading as another torso block.
-            CreatePart(root,"DF_GuardBackReactor",PrimitiveType.Cube,new Vector3(0,.54f,-.62f),new Vector3(.72f,.62f,.24f),dark,Quaternion.identity);
-            CreateEnergyPart(root,"DF_GuardBackStatus",PrimitiveType.Cube,new Vector3(0,.63f,-.76f),new Vector3(.30f,.20f,.06f),energy,Quaternion.identity);
+            CreatePart(root,"DF_GuardBackReactor",PrimitiveType.Cube,new Vector3(0,.80f,-.62f),new Vector3(.72f,.62f,.24f),dark,Quaternion.identity);
+            CreateEnergyPart(root,"DF_GuardBackStatus",PrimitiveType.Cube,new Vector3(0,.89f,-.76f),new Vector3(.30f,.20f,.06f),energy,Quaternion.identity);
             if(zero)
-                CreatePart(root,"DF_GuardAntenna",PrimitiveType.Cylinder,new Vector3(.28f,1.82f,-.04f),new Vector3(.055f,.42f,.055f),armor,Quaternion.Euler(0,0,-12f));
+                CreatePart(root,"DF_GuardAntenna",PrimitiveType.Cylinder,new Vector3(.28f,2.00f,-.04f),new Vector3(.055f,.42f,.055f),armor,Quaternion.Euler(0,0,-12f));
             else
             {
-                CreatePart(root,"DF_GuardAntennaL",PrimitiveType.Cylinder,new Vector3(-.18f,1.79f,-.04f),new Vector3(.04f,.32f,.04f),armor,Quaternion.Euler(0,0,5f));
-                CreatePart(root,"DF_GuardAntennaR",PrimitiveType.Cylinder,new Vector3(.18f,1.79f,-.04f),new Vector3(.04f,.32f,.04f),armor,Quaternion.Euler(0,0,-5f));
+                CreatePart(root,"DF_GuardAntennaL",PrimitiveType.Cylinder,new Vector3(-.18f,1.96f,-.04f),new Vector3(.04f,.32f,.04f),armor,Quaternion.Euler(0,0,5f));
+                CreatePart(root,"DF_GuardAntennaR",PrimitiveType.Cylinder,new Vector3(.18f,1.96f,-.04f),new Vector3(.04f,.32f,.04f),armor,Quaternion.Euler(0,0,-5f));
             }
         }
 
         private static void BuildArm(Transform root,float side,bool zero,Color dark,Color armor,Color joint,Color energy)
         {
             float asym=zero&&side<0?-8f:zero&&side>0?5f:0f;
-            CreatePart(root,side<0?"DF_GuardShoulderL":"DF_GuardShoulderR",PrimitiveType.Sphere,new Vector3(side*1.02f,.56f,0),new Vector3(.52f,.56f,.62f),joint,Quaternion.identity);
-            CreatePart(root,side<0?"DF_GuardUpperArmL":"DF_GuardUpperArmR",PrimitiveType.Cube,new Vector3(side*1.22f,.16f,.02f),new Vector3(.38f,.72f,.48f),armor,Quaternion.Euler(0,0,side*(10f+asym)));
-            CreatePart(root,side<0?"DF_GuardElbowL":"DF_GuardElbowR",PrimitiveType.Sphere,new Vector3(side*1.32f,-.23f,.06f),new Vector3(.28f,.28f,.28f),joint,Quaternion.identity);
-            CreatePart(root,side<0?"DF_GuardForearmL":"DF_GuardForearmR",PrimitiveType.Cube,new Vector3(side*1.37f,-.48f,.18f),new Vector3(.46f,.54f,.62f),dark,Quaternion.Euler(side*4f,0,side*(4f+asym*.4f)));
-            CreateEnergyPart(root,side<0?"DF_GuardShieldEmitterL":"DF_GuardShieldEmitterR",PrimitiveType.Cylinder,new Vector3(side*1.48f,-.46f,.48f),new Vector3(.22f,.12f,.22f),energy,Quaternion.Euler(90,0,0));
+            CreatePart(root,side<0?"DF_GuardShoulderL":"DF_GuardShoulderR",PrimitiveType.Sphere,new Vector3(side*1.02f,.84f,0),new Vector3(.52f,.56f,.62f),joint,Quaternion.identity);
+            CreatePart(root,side<0?"DF_GuardShoulderArmorL":"DF_GuardShoulderArmorR",PrimitiveType.Cube,new Vector3(side*1.16f,.88f,.02f),new Vector3(.44f,.34f,.70f),armor,Quaternion.Euler(0,0,side*(zero?7f:2f)));
+            CreatePart(root,side<0?"DF_GuardUpperArmL":"DF_GuardUpperArmR",PrimitiveType.Cube,new Vector3(side*1.22f,.47f,.02f),new Vector3(.38f,.72f,.48f),armor,Quaternion.Euler(0,0,side*(10f+asym)));
+            CreatePart(root,side<0?"DF_GuardElbowL":"DF_GuardElbowR",PrimitiveType.Sphere,new Vector3(side*1.32f,.13f,.06f),new Vector3(.28f,.28f,.28f),joint,Quaternion.identity);
+            CreatePart(root,side<0?"DF_GuardForearmL":"DF_GuardForearmR",PrimitiveType.Cube,new Vector3(side*1.37f,-.10f,.18f),new Vector3(.46f,.54f,.62f),dark,Quaternion.Euler(side*4f,0,side*(4f+asym*.4f)));
+            CreateEnergyPart(root,side<0?"DF_GuardShieldEmitterL":"DF_GuardShieldEmitterR",PrimitiveType.Cylinder,new Vector3(side*1.48f,-.08f,.48f),new Vector3(.22f,.12f,.22f),energy,Quaternion.Euler(90,0,0));
         }
 
         private static void BuildLeg(Transform root,float side,bool zero,Color dark,Color armor,Color joint)
         {
             float toe=zero&&side<0?.10f:0f;
-            CreatePart(root,side<0?"DF_GuardHipJointL":"DF_GuardHipJointR",PrimitiveType.Sphere,new Vector3(side*.43f,-.55f,0),new Vector3(.34f,.34f,.34f),joint,Quaternion.identity);
-            CreatePart(root,side<0?"DF_GuardThighL":"DF_GuardThighR",PrimitiveType.Cube,new Vector3(side*.48f,-.90f,.02f),new Vector3(.42f,.66f,.50f),armor,Quaternion.Euler(0,0,side*(zero?3f:1f)));
-            CreatePart(root,side<0?"DF_GuardKneeL":"DF_GuardKneeR",PrimitiveType.Sphere,new Vector3(side*.50f,-1.26f,.09f),new Vector3(.32f,.28f,.32f),joint,Quaternion.identity);
-            CreatePart(root,side<0?"DF_GuardShinL":"DF_GuardShinR",PrimitiveType.Cube,new Vector3(side*.52f,-1.60f,.04f),new Vector3(.46f,.66f,.52f),dark,Quaternion.Euler(0,0,side*(zero?-2f:0f)));
-            CreatePart(root,side<0?"DF_GuardFootL":"DF_GuardFootR",PrimitiveType.Cube,new Vector3(side*.54f,-1.95f,.20f+toe),new Vector3(.58f,.22f,.86f),armor,Quaternion.identity);
+            CreatePart(root,side<0?"DF_GuardHipJointL":"DF_GuardHipJointR",PrimitiveType.Sphere,new Vector3(side*.43f,-.05f,0),new Vector3(.34f,.34f,.34f),joint,Quaternion.identity);
+            CreatePart(root,side<0?"DF_GuardThighL":"DF_GuardThighR",PrimitiveType.Cube,new Vector3(side*.48f,-.25f,.02f),new Vector3(.42f,.40f,.50f),armor,Quaternion.Euler(0,0,side*(zero?3f:1f)));
+            CreatePart(root,side<0?"DF_GuardKneeL":"DF_GuardKneeR",PrimitiveType.Sphere,new Vector3(side*.50f,-.47f,.09f),new Vector3(.32f,.28f,.32f),joint,Quaternion.identity);
+            CreatePart(root,side<0?"DF_GuardShinL":"DF_GuardShinR",PrimitiveType.Cube,new Vector3(side*.52f,-.64f,.04f),new Vector3(.46f,.36f,.52f),dark,Quaternion.Euler(0,0,side*(zero?-2f:0f)));
+            CreatePart(root,side<0?"DF_GuardFootL":"DF_GuardFootR",PrimitiveType.Cube,new Vector3(side*.54f,-.82f,.20f+toe),new Vector3(.58f,.20f,.86f),armor,Quaternion.identity);
         }
 
         private void Initialize(int assignedTeam,Vector3 post,Vector3 plate,Color accent)
