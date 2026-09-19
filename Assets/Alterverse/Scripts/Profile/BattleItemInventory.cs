@@ -82,22 +82,30 @@ namespace Alterverse.Profile
                 return (BattleItemType)Mathf.Clamp(PlayerPrefs.GetInt(ReceiptDropKey,0),0,4);
 
             BattleItemType drop=BattleItemType.None;
-            if(Random.value<VictoryDropChance)
-            {
-                drop=All[Random.Range(0,All.Length)];
-                Grant(drop);
-            }
+            if(Random.value<VictoryDropChance)drop=All[Random.Range(0,All.Length)];
 
-            PlayerPrefs.SetString(ReceiptKey,matchReceipt);
-            PlayerPrefs.SetInt(ReceiptDropKey,(int)drop);
-            PlayerPrefs.Save();
+            if(drop==BattleItemType.None)
+            {
+                ProfileTransaction.Commit(
+                    new ProfileTransaction.Write(ReceiptKey,matchReceipt),
+                    new ProfileTransaction.Write(ReceiptDropKey,0));
+            }
+            else
+            {
+                ProfileTransaction.Commit(
+                    new ProfileTransaction.Write(Key(drop),ProfileTransaction.Add(Count(drop),1)),
+                    new ProfileTransaction.Write(ReceiptKey,matchReceipt),
+                    new ProfileTransaction.Write(ReceiptDropKey,(int)drop));
+            }
             return drop;
         }
 
         public static bool TryBuyShield()
         {
-            if(!PlayerWallet.TrySpend(ShieldShardPrice))return false;
-            Grant(BattleItemType.Shield);
+            if(!PlayerWallet.CanAfford(ShieldShardPrice))return false;
+            ProfileTransaction.Commit(
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-ShieldShardPrice),
+                new ProfileTransaction.Write(Key(BattleItemType.Shield),ProfileTransaction.Add(Count(BattleItemType.Shield),1)));
             return true;
         }
 
