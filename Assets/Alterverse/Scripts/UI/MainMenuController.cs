@@ -246,7 +246,7 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(portraitX,646,portraitWidth,38),"DEPLOY",true))SetPage(Page.Play);
 
             theme.Label(new Rect(attacksX,212,attacksWidth,28),"COMBAT LOADOUT",theme.Heading);
-            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Live gameplay values • damage / range / cooldown / effects",theme.Small,true);
+            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Base gameplay values • damage / range / cooldown / effects",theme.Small,true);
             HeroAttackCard[] attacks=HeroAttackCatalog.For(heroId);
             const float cardHeight=82f,gap=5f;
             for(int i=0;i<attacks.Length;i++)
