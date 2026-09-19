@@ -24,6 +24,9 @@ namespace Alterverse.Combat
         private System.Random rng;
         private Material armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatic()=>owner=null;
+
         private void Awake()
         {
             if(owner!=null&&owner!=this){enabled=false;Destroy(gameObject);return;}
@@ -35,7 +38,6 @@ namespace Alterverse.Combat
 
         private void Update()
         {
-            if(Time.timeScale<=0f)return;
             front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             if(front!=null&&front.HasEnded)
             {
@@ -43,6 +45,7 @@ namespace Alterverse.Combat
                 activeFlyover=null;
                 return;
             }
+            if(Time.timeScale<=0f)return;
 
             elapsed+=Time.deltaTime;
             if(activeFlyover!=null)return;
@@ -105,14 +108,14 @@ namespace Alterverse.Combat
             Shader unlit=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             if(lit==null||unlit==null)return;
 
-            armorMaterial=Material(lit,"DF_BomberArmor",new Color(.20f,.235f,.28f),.66f,.34f,Color.black);
-            darkMaterial=Material(lit,"DF_BomberDark",new Color(.035f,.045f,.065f),.48f,.22f,Color.black);
-            energyMaterial=Material(lit,"DF_BomberEnergy",new Color(.16f,.88f,1f),.18f,.72f,new Color(.16f,.88f,1f)*3.0f);
-            bombMaterial=Material(lit,"DF_BombShell",new Color(.14f,.15f,.17f),.72f,.26f,new Color(.95f,.22f,.05f)*.35f);
+            armorMaterial=CreateMaterial(lit,"DF_BomberArmor",new Color(.20f,.235f,.28f),.66f,.34f,Color.black);
+            darkMaterial=CreateMaterial(lit,"DF_BomberDark",new Color(.035f,.045f,.065f),.48f,.22f,Color.black);
+            energyMaterial=CreateMaterial(lit,"DF_BomberEnergy",new Color(.16f,.88f,1f),.18f,.72f,new Color(.16f,.88f,1f)*3.0f);
+            bombMaterial=CreateMaterial(lit,"DF_BombShell",new Color(.14f,.15f,.17f),.72f,.26f,new Color(.95f,.22f,.05f)*.35f);
             warningMaterial=new Material(unlit){name="DF_BombWarning"};
         }
 
-        private static Material Material(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
+        private static Material CreateMaterial(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
         {
             Material m=new(shader){name=name,color=color};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
@@ -169,9 +172,9 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(completed)return;
-            if(Time.timeScale<=0f)return;
             if(front==null)front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             if(front!=null&&front.HasEnded){Finish();return;}
+            if(Time.timeScale<=0f)return;
 
             travelled=Mathf.Min(length,travelled+speed*Time.deltaTime);
             float t=length>.01f?travelled/length:1f;
@@ -322,9 +325,9 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(resolved)return;
-            if(Time.timeScale<=0f)return;
             if(front==null)front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             if(front!=null&&front.HasEnded){Cleanup();return;}
+            if(Time.timeScale<=0f)return;
 
             float duration=Mathf.Max(.01f,hitAt-spawnAt);
             float t=Mathf.Clamp01((Time.time-spawnAt)/duration);
