@@ -192,7 +192,9 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM / "+Alterverse.AI.BotDifficultySettings.Label(Alterverse.AI.BotDifficultySettings.Selected)+" BOTS",theme.Body);
             theme.Label(new Rect(Left+28,479,w-56,24),"Online multiplayer is not available yet.",theme.Small,true);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
-            theme.Label(new Rect(Left+28,510,w-56,24),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
+            theme.Label(new Rect(Left+28,505,w-56,22),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
+            HeroId deploymentHero=(HeroId)selectedHero;
+            theme.Label(new Rect(Left+28,527,w-56,22),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
             if (theme.Action(new Rect(Left,554,w,76),"START AI MATCH",true)) BeginLaunch();
             theme.Label(new Rect(Left,642,w,28),launchMessage.Length>0?launchMessage:"Your selected hero is confirmed when the match starts.",theme.Small,true);
             float x = Left+w+32, rw = ContentWidth-w-32;
@@ -221,8 +223,11 @@ namespace Alterverse.UI
             theme.Label(new Rect(infoX,320,infoWidth,28),Roles[selectedHero],theme.Heading);
             FrontEndTheme.Fill(new Rect(infoX,366,48,3),FrontEndTheme.Accent);
             theme.Label(new Rect(infoX,390,infoWidth,96),RoleDescriptions[selectedHero],theme.Body,true);
-            theme.Label(new Rect(infoX,518,infoWidth,48),Strengths[selectedHero],theme.Small,true);
-            if (theme.Action(new Rect(infoX,602,infoWidth,68),"DEPLOY",true)) SetPage(Page.Play);
+            theme.Label(new Rect(infoX,518,infoWidth,40),Strengths[selectedHero],theme.Small,true);
+            HeroId heroId=(HeroId)selectedHero;
+            string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:"ORIGINAL WEAPON";
+            theme.Label(new Rect(infoX,562,infoWidth,30),"EQUIPMENT  /  "+weaponStatus,theme.Small,true);
+            if (theme.Action(new Rect(infoX,610,infoWidth,60),"DEPLOY",true)) SetPage(Page.Play);
         }
         private void ChangeHero(int index)
         {
@@ -362,7 +367,7 @@ namespace Alterverse.UI
                     shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
                         result==AvatarPurchaseResult.InsufficientShards?"Not enough earned shards.":"Purchase could not be completed.";
                 }
-                showcase.Present(hero,true,false,WeaponSkinInventory.Equipped(hero)||!owned);
+                showcase.Present(hero,true,false,true);
             }
             theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:
                 $"EARNED SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
