@@ -226,25 +226,36 @@ namespace Alterverse.UI
         {
             for(int i=0;i<5;i++)
             {
-                Rect r=layout.Action(i);bool held=pressedSlot==i&&combatInside;
+                Rect hit=layout.Action(i);bool held=pressedSlot==i&&combatInside;
                 float remaining=i<4&&abilities!=null?abilities.RemainingFor(i):0;
-                Color edge=i==3?new Color(.9f,.73f,.42f):accent;
-                Rect face=held?new Rect(r.x+3,r.y+3,r.width-6,r.height-6):r;
-                FrontEndTheme.Fill(face,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
-                Color icon=remaining>0?new Color(.42f,.45f,.5f,.72f):edge;
-                Vector2 center=new Vector2(face.center.x,face.y+face.height*.39f);
-                float radius=Mathf.Min(face.width,face.height)*.34f;
-                CombatGlyphs.Ring(center,radius+5,held?4:2,new Color(icon.r,icon.g,icon.b,held?1f:.72f),24);
-                if(i==3){CombatGlyphs.Ring(center,radius+10,2,new Color(edge.r,edge.g,edge.b,remaining>0?.22f:.58f),24);}
-                CombatGlyphs.Draw(i==4?BasicGlyph():glyphs[i],center,radius*1.45f,icon);
+                Color heroEdge=accent;
+                Color edge=i==3?Color.Lerp(accent,new Color(1f,.82f,.38f),.45f):heroEdge;
+                float diameter=Mathf.Min(hit.width-8,hit.height-(i==3?20:8));
+                float press=held?.94f:1f;diameter*=press;
+                Vector2 center=new Vector2(hit.center.x,hit.y+diameter*.5f+3);
+                Rect circle=new Rect(center.x-diameter*.5f,center.y-diameter*.5f,diameter,diameter);
+
+                // Visual button is circular; the original generous rectangular hit area remains unchanged.
+                CombatGlyphs.Disc(center,diameter*.5f,new Color(.018f,.026f,.043f,.96f),32);
+                CombatGlyphs.Ring(center,diameter*.5f-2,held?4:3,new Color(edge.r,edge.g,edge.b,remaining>0?.32f:.95f),32);
+                CombatGlyphs.Ring(center,diameter*.5f-7,1,new Color(edge.r,edge.g,edge.b,remaining>0?.12f:.36f),32);
+                if(i==3)
+                {
+                    CombatGlyphs.Ring(center,diameter*.5f+4,2,new Color(edge.r,edge.g,edge.b,remaining>0?.18f:.68f),32);
+                    for(int k=0;k<4;k++){float a=k*Mathf.PI*.5f;Vector2 d=new Vector2(Mathf.Cos(a),Mathf.Sin(a));CombatGlyphs.Line(center+d*(diameter*.5f+1),center+d*(diameter*.5f+7),3,edge);}
+                }
+
+                Color icon=remaining>0?new Color(.36f,.39f,.45f,.68f):Color.Lerp(Color.white,edge,.48f);
+                CombatGlyphs.Draw(i==4?BasicGlyph():glyphs[i],center,diameter*.48f,icon);
+
                 if(remaining>0)
                 {
-                    float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
-                    FrontEndTheme.Fill(new Rect(face.x+4,face.y,face.width-8,face.height*ratio),new Color(.015f,.02f,.03f,.42f));
-                    theme.Label(new Rect(r.x+4,r.y+43,r.width-8,28),cooldownText[i],centered);
+                    // A contained dark veil keeps the icon readable without drawing outside the circular face.
+                    CombatGlyphs.Disc(center,diameter*.5f-9,new Color(.008f,.012f,.02f,.46f),28);
+                    theme.Label(new Rect(circle.x,circle.center.y-14,circle.width,28),cooldownText[i],centered);
                 }
-                else theme.Label(new Rect(r.x+4,r.y+(i==4?65:61),r.width-8,24),i==4?"ATTACK":names[i],small);
-                if(i==3)theme.Label(new Rect(r.x,r.y-20,r.width,18),"ULTIMATE",small,true);
+                if(held)CombatGlyphs.Ring(center,diameter*.5f-5,3,new Color(1,1,1,.72f),28);
+                if(i==3)theme.Label(new Rect(hit.x,hit.y-20,hit.width,18),"ULTIMATE",small,true);
             }
         }
         private void DrawJoystick()
