@@ -21,6 +21,17 @@ namespace Alterverse.UI
             for(int i=0;i<count;i++){float a=i*Mathf.PI*2/count,b=(i+1)*Mathf.PI*2/count;
                 Line(center+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*radius,center+new Vector2(Mathf.Cos(b),Mathf.Sin(b))*radius,width,color);}
         }
+        public static void Disc(Vector2 center,float radius,Color color,int count=32)
+        {
+            // Horizontal scan fill approximates a clean circular face and never leaks outside its radius.
+            int steps=Mathf.Max(12,count);
+            for(int i=-steps;i<=steps;i++)
+            {
+                float y=radius*i/steps;
+                float half=Mathf.Sqrt(Mathf.Max(0,radius*radius-y*y));
+                FrontEndTheme.Fill(new Rect(center.x-half,center.y+y-.75f,half*2,1.5f),color);
+            }
+        }
         private static void Cross(Vector2 c,float s,float w,Color col){Line(c+Vector2.left*s,c+Vector2.right*s,w,col);Line(c+Vector2.up*s,c+Vector2.down*s,w,col);}
         private static void Arrow(Vector2 c,float s,Color col){Line(c+new Vector2(-s,0),c+new Vector2(s*.65f,0),4,col);Line(c+new Vector2(s*.2f,-s*.45f),c+new Vector2(s*.7f,0),4,col);Line(c+new Vector2(s*.2f,s*.45f),c+new Vector2(s*.7f,0),4,col);}
         private static void ShieldShape(Vector2 c,float s,Color col)
