@@ -15,11 +15,21 @@ namespace Alterverse.Audio
         static void Create(){if(FindAnyObjectByType<ProductionMusicDirector>()==null)new GameObject("DF_ProductionMusic").AddComponent<ProductionMusicDirector>();}
         void Awake()
         {
-            for(int i=0;i<2;i++){decks[i]=gameObject.AddComponent<AudioSource>();decks[i].playOnAwake=false;decks[i].spatialBlend=0;decks[i].priority=64;}
+            EnsureDecks();
             int missing=0;for(int i=0;i<2;i++){clips[i]=Resources.Load<AudioClip>("Audio/Music/"+Names[i]);if(clips[i]==null)missing++;}
             clips[2]=clips[3]=clips[1]; // One coherent licensed match bed; intensity changes mixing, not playback position.
             if(missing>0)Debug.LogWarning("DIMENSIONS FRONT: FINAL MUSIC ASSET REQUIRED — "+missing+" missing production clips. See Docs/Production-Audio.md.");
             LaneWaveSpawner.SiegeWaveSpawned+=Event;DimensionPlanetDirector.PlanetArrived+=Planet;
+        }
+        void EnsureDecks()
+        {
+            if(decks[0]!=null&&decks[1]!=null)return;
+            AudioSource[] existing=GetComponents<AudioSource>();
+            for(int i=0;i<2;i++)
+            {
+                if(decks[i]==null)decks[i]=i<existing.Length?existing[i]:gameObject.AddComponent<AudioSource>();
+                decks[i].playOnAwake=false;decks[i].spatialBlend=0;decks[i].priority=64;
+            }
         }
         void Event()=>eventUntil=Time.unscaledTime+12;
         void Planet(Vector3 position)=>Event();
@@ -30,6 +40,7 @@ namespace Alterverse.Audio
         }
         void Update()
         {
+            if(decks[0]==null||decks[1]==null)EnsureDecks();
             if(front==null&&Time.unscaledTime>=nextResolve)
             {
                 nextResolve=Time.unscaledTime+.5f;front=FindAnyObjectByType<DimensionsFront>();
