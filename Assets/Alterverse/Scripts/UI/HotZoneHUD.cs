@@ -74,12 +74,15 @@ namespace Alterverse.UI
                         zone.LumenInside>0?"LUMEN CONTROLLING":"UNCLAIMED";
                     theme.Label(new Rect(p.x+12,p.y+5,p.width-24,20),
                         $"HOT ZONE  {Mathf.CeilToInt(zone.Remaining)}s  ·  {state}",centerStyle);
-                    float total=Mathf.Max(.01f,zone.ZeroControlSeconds+zone.LumenControlSeconds);
-                    float zeroShare=zone.ZeroControlSeconds/total;
+                    float total=zone.ZeroControlSeconds+zone.LumenControlSeconds;
                     Rect bar=new(p.x+24,p.y+34,p.width-48,8);
                     FrontEndTheme.Fill(bar,FrontEndTheme.Raised);
-                    FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*zeroShare,bar.height),FrontEndTheme.Zero);
-                    FrontEndTheme.Fill(new Rect(bar.x+bar.width*zeroShare,bar.y,bar.width*(1-zeroShare),bar.height),FrontEndTheme.Accent);
+                    if(total>.01f)
+                    {
+                        float zeroShare=zone.ZeroControlSeconds/total;
+                        FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*zeroShare,bar.height),FrontEndTheme.Zero);
+                        FrontEndTheme.Fill(new Rect(bar.x+bar.width*zeroShare,bar.y,bar.width*(1-zeroShare),bar.height),FrontEndTheme.Accent);
+                    }
                     theme.Label(new Rect(p.x+18,p.y+43,p.width*.45f,14),$"ZERO {zone.ZeroControlSeconds:0.0}s",theme.Small,true);
                     theme.Label(new Rect(p.x+p.width*.55f-18,p.y+43,p.width*.45f,14),$"LUMEN {zone.LumenControlSeconds:0.0}s",rightStyle,true);
                 }
