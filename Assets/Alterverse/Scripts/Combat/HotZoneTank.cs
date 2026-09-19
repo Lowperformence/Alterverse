@@ -15,7 +15,7 @@ namespace Alterverse.Combat
         private const float AttackRange=5.8f;
         private const float AttackCooldown=1.2f;
         private const float MoveSpeed=2.25f;
-        private const float AcquireRadius=17f;
+        private const float AcquireRadius=14f;
         private const float ChaseLeash=14f;
         private const float ScanInterval=.18f;
         private const float ArenaHalfWidth=39f;
@@ -118,12 +118,12 @@ namespace Alterverse.Combat
         {
             if(target==null||target.IsDead)return;
             nextAttack=Time.time+AttackCooldown;
-            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.15f)):transform.position+transform.forward*1.4f+Vector3.up*.95f;
+            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f;
             Vector3 hit=target.transform.position+Vector3.up*.55f;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
             PrototypeVfx.Burst(muzzle,energy,.28f,4);
-            if(barrelPivot!=null)barrelPivot.localPosition=new Vector3(0,0,.10f);
+            if(barrelPivot!=null)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
             target.TakeDamage(Damage,gameObject);
         }
 
@@ -217,6 +217,19 @@ namespace Alterverse.Combat
             Part("Core",PrimitiveType.Sphere,transform,new Vector3(0,.37f,-1.45f),new Vector3(.30f,.30f,.20f),energyMat,Quaternion.identity);
             Part("ExhaustL",PrimitiveType.Cylinder,transform,new Vector3(-.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
             Part("ExhaustR",PrimitiveType.Cylinder,transform,new Vector3(.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
+
+            // Small readable hardware details add scale without adding gameplay colliders.
+            Part("HeadlightL",PrimitiveType.Cube,transform,new Vector3(-.58f,.24f,1.34f),new Vector3(.18f,.12f,.08f),energyMat,Quaternion.Euler(-8,0,0));
+            Part("HeadlightR",PrimitiveType.Cube,transform,new Vector3(.58f,.24f,1.34f),new Vector3(.18f,.12f,.08f),energyMat,Quaternion.Euler(-8,0,0));
+            Part("TowHookL",PrimitiveType.Cylinder,transform,new Vector3(-.46f,-.18f,1.34f),new Vector3(.08f,.12f,.08f),jointMat,Quaternion.Euler(90,0,0));
+            Part("TowHookR",PrimitiveType.Cylinder,transform,new Vector3(.46f,-.18f,1.34f),new Vector3(.08f,.12f,.08f),jointMat,Quaternion.Euler(90,0,0));
+            Part("AntennaMast",PrimitiveType.Cylinder,turretPivot,new Vector3(.42f,.78f,-.24f),new Vector3(.035f,.38f,.035f),jointMat,Quaternion.Euler(0,0,-4));
+            Part("AntennaTip",PrimitiveType.Sphere,turretPivot,new Vector3(.44f,1.17f,-.24f),new Vector3(.075f,.075f,.075f),energyMat,Quaternion.identity);
+            for(int i=-1;i<=1;i++)
+            {
+                float x=i*.42f;
+                Part("DeckBolt",PrimitiveType.Cylinder,transform,new Vector3(x,.50f,.46f),new Vector3(.055f,.025f,.055f),jointMat,Quaternion.identity);
+            }
 
             if(team==0)
             {
