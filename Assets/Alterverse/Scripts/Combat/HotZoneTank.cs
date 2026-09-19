@@ -27,6 +27,8 @@ namespace Alterverse.Combat
         private float nextAttack,nextScan,blockedTime,detourUntil;
         private Vector3 patrolTarget,home,detourDirection;
         private int patrolIndex;
+        private Transform turretPivot,barrelPivot,leftTrack,rightTrack;
+        private Material armorMat,darkMat,energyMat,jointMat;
 
         private static readonly Vector3[] ZeroPatrol=
         {
@@ -72,6 +74,7 @@ namespace Alterverse.Combat
 
             if(target!=null)
             {
+                AimTurretAt(target.transform.position);
                 Vector3 delta=target.transform.position-transform.position;delta.y=0;
                 if(delta.sqrMagnitude>ChaseLeash*ChaseLeash){target=null;SetNextPatrol();return;}
                 if(delta.sqrMagnitude<=AttackRange*AttackRange)
@@ -85,6 +88,7 @@ namespace Alterverse.Combat
             }
 
             if((patrolTarget-transform.position).sqrMagnitude<1.2f*1.2f)SetNextPatrol();
+            AimTurretAt(transform.position+transform.forward*4f);
             MoveToward(patrolTarget,.65f);
         }
 
@@ -114,9 +118,12 @@ namespace Alterverse.Combat
         {
             if(target==null||target.IsDead)return;
             nextAttack=Time.time+AttackCooldown;
-            Vector3 muzzle=transform.position+transform.forward*1.05f+Vector3.up*.78f;
+            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.15f)):transform.position+transform.forward*1.4f+Vector3.up*.95f;
             Vector3 hit=target.transform.position+Vector3.up*.55f;
-            PrototypeVfx.ProjectileLine(muzzle,hit,team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.13f);
+            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
+            PrototypeVfx.Burst(muzzle,energy,.28f,4);
+            if(barrelPivot!=null)barrelPivot.localPosition=new Vector3(0,0,.10f);
             target.TakeDamage(Damage,gameObject);
         }
 
@@ -133,7 +140,11 @@ namespace Alterverse.Combat
             requested=next-transform.position;
 
             Vector3 moved=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
-            if(moved.sqrMagnitude>.00001f)locomotion.FaceMovement(moved);
+            if(moved.sqrMagnitude>.00001f)
+            {
+                locomotion.FaceMovement(moved);
+                AnimateTracks(moved.magnitude);
+            }
 
             bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.08f;
             blockedTime=blocked?blockedTime+Time.deltaTime:0f;
@@ -156,40 +167,130 @@ namespace Alterverse.Combat
 
         private void BuildVisuals()
         {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+            if(shader==null)return;
+
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color dark=team==0?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;
-            Color armor=Color.Lerp(dark,new Color(.30f,.33f,.38f),.48f);
+            Color armor=Color.Lerp(dark,new Color(.34f,.37f,.42f),.52f);
+            Color joint=Color.Lerp(dark,Color.black,.30f);
 
-            Part("Hull",PrimitiveType.Cube,new Vector3(0,.10f,0),new Vector3(1.85f,.62f,2.35f),armor,Quaternion.identity);
-            Part("LowerHull",PrimitiveType.Cube,new Vector3(0,-.28f,.04f),new Vector3(1.65f,.32f,2.10f),dark,Quaternion.identity);
-            Part("TurretBase",PrimitiveType.Cylinder,new Vector3(0,.60f,-.05f),new Vector3(.72f,.18f,.72f),dark,Quaternion.identity);
-            Part("Turret",PrimitiveType.Cube,new Vector3(0,.88f,.10f),new Vector3(1.18f,.42f,1.02f),armor,Quaternion.identity);
-            Part("Cannon",PrimitiveType.Cube,new Vector3(0,.87f,1.00f),new Vector3(.24f,.20f,1.38f),dark,Quaternion.identity);
-            Part("Muzzle",PrimitiveType.Cube,new Vector3(0,.87f,1.72f),new Vector3(.34f,.30f,.20f),energy,Quaternion.identity);
+            armorMat=MakeMaterial(shader,armor,.72f,.28f,Color.black);
+            darkMat=MakeMaterial(shader,dark,.46f,.18f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.64f,.12f,Color.black);
+            energyMat=MakeMaterial(shader,energy,.18f,.62f,energy*2.6f);
 
-            for(int side=-1;side<=1;side+=2)
+            // Lower hull and layered glacis.
+            Part("LowerHull",PrimitiveType.Cube,transform,new Vector3(0,-.18f,0),new Vector3(1.78f,.38f,2.36f),darkMat,Quaternion.identity);
+            Part("UpperHull",PrimitiveType.Cube,transform,new Vector3(0,.20f,.08f),new Vector3(1.92f,.52f,2.08f),armorMat,Quaternion.Euler(-4,0,0));
+            Part("Glacis",PrimitiveType.Cube,transform,new Vector3(0,.28f,.98f),new Vector3(1.72f,.34f,.64f),armorMat,Quaternion.Euler(-17,0,0));
+            Part("RearDeck",PrimitiveType.Cube,transform,new Vector3(0,.28f,-1.00f),new Vector3(1.70f,.24f,.48f),darkMat,Quaternion.identity);
+
+            // Side armor and tracks. Wheels are individually visible instead of a single block.
+            leftTrack=new GameObject("DF_HotZoneTank_LeftTrack").transform;leftTrack.SetParent(transform,false);
+            rightTrack=new GameObject("DF_HotZoneTank_RightTrack").transform;rightTrack.SetParent(transform,false);
+            BuildTrack(leftTrack,-1f,armorMat,darkMat,jointMat);
+            BuildTrack(rightTrack,1f,armorMat,darkMat,jointMat);
+
+            // Functional turret stack: ring, rotating turret, mantlet and cannon pivot.
+            Part("TurretRing",PrimitiveType.Cylinder,transform,new Vector3(0,.56f,-.05f),new Vector3(.78f,.14f,.78f),jointMat,Quaternion.identity);
+            turretPivot=new GameObject("DF_HotZoneTank_TurretPivot").transform;turretPivot.SetParent(transform,false);turretPivot.localPosition=new Vector3(0,.76f,-.05f);
+            Part("TurretShell",PrimitiveType.Cube,turretPivot,new Vector3(0,.10f,.05f),new Vector3(1.26f,.46f,1.08f),armorMat,Quaternion.Euler(-2,0,0));
+            Part("TurretCheekL",PrimitiveType.Cube,turretPivot,new Vector3(-.60f,.08f,.18f),new Vector3(.28f,.40f,.72f),darkMat,Quaternion.Euler(0,8,0));
+            Part("TurretCheekR",PrimitiveType.Cube,turretPivot,new Vector3(.60f,.08f,.18f),new Vector3(.28f,.40f,.72f),darkMat,Quaternion.Euler(0,-8,0));
+            Part("Mantlet",PrimitiveType.Cylinder,turretPivot,new Vector3(0,.08f,.62f),new Vector3(.30f,.14f,.30f),jointMat,Quaternion.Euler(90,0,0));
+
+            barrelPivot=new GameObject("DF_HotZoneTank_BarrelPivot").transform;barrelPivot.SetParent(turretPivot,false);barrelPivot.localPosition=new Vector3(0,.08f,.62f);
+            Part("Cannon",PrimitiveType.Cube,barrelPivot,new Vector3(0,0,.76f),new Vector3(.22f,.18f,1.48f),darkMat,Quaternion.identity);
+            Part("BarrelSleeve",PrimitiveType.Cylinder,barrelPivot,new Vector3(0,0,.08f),new Vector3(.30f,.18f,.30f),armorMat,Quaternion.Euler(90,0,0));
+            Part("MuzzleBrake",PrimitiveType.Cube,barrelPivot,new Vector3(0,0,1.55f),new Vector3(.36f,.28f,.24f),energyMat,Quaternion.identity);
+
+            // Sensors and command optics.
+            Part("CommanderCupola",PrimitiveType.Cylinder,turretPivot,new Vector3(0,.46f,-.06f),new Vector3(.36f,.16f,.36f),darkMat,Quaternion.identity);
+            Part("SensorHead",PrimitiveType.Cube,turretPivot,new Vector3(0,.58f,.02f),new Vector3(.62f,.16f,.28f),armorMat,Quaternion.identity);
+            Part("Visor",PrimitiveType.Cube,turretPivot,new Vector3(0,.58f,.18f),new Vector3(.46f,.08f,.05f),energyMat,Quaternion.identity);
+            Part("RangefinderL",PrimitiveType.Cube,turretPivot,new Vector3(-.38f,.40f,.10f),new Vector3(.18f,.16f,.30f),darkMat,Quaternion.identity);
+            Part("RangefinderR",PrimitiveType.Cube,turretPivot,new Vector3(.38f,.40f,.10f),new Vector3(.18f,.16f,.30f),darkMat,Quaternion.identity);
+
+            // Rear reactor and faction silhouette.
+            Part("CoreHousing",PrimitiveType.Cube,transform,new Vector3(0,.36f,-1.26f),new Vector3(.72f,.42f,.34f),darkMat,Quaternion.identity);
+            Part("Core",PrimitiveType.Sphere,transform,new Vector3(0,.37f,-1.45f),new Vector3(.30f,.30f,.20f),energyMat,Quaternion.identity);
+            Part("ExhaustL",PrimitiveType.Cylinder,transform,new Vector3(-.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
+            Part("ExhaustR",PrimitiveType.Cylinder,transform,new Vector3(.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
+
+            if(team==0)
             {
-                Part(side<0?"TrackL":"TrackR",PrimitiveType.Cube,new Vector3(side*1.03f,-.30f,0),new Vector3(.42f,.46f,2.48f),dark,Quaternion.identity);
-                for(int z=-1;z<=1;z++)
-                    Part("Wheel",PrimitiveType.Cylinder,new Vector3(side*1.24f,-.30f,z*.72f),new Vector3(.28f,.16f,.28f),armor,Quaternion.Euler(0,0,90));
+                Part("FractureFinL",PrimitiveType.Cube,transform,new Vector3(-.78f,.68f,-.68f),new Vector3(.16f,.62f,.40f),energyMat,Quaternion.Euler(0,0,-17));
+                Part("FractureFinR",PrimitiveType.Cube,transform,new Vector3(.72f,.60f,-.76f),new Vector3(.12f,.44f,.34f),energyMat,Quaternion.Euler(0,0,9));
             }
-
-            Part("Core",PrimitiveType.Sphere,new Vector3(0,.86f,-.45f),new Vector3(.34f,.34f,.34f),energy,Quaternion.identity);
-            Part("Sensor",PrimitiveType.Cube,new Vector3(0,1.18f,.18f),new Vector3(.62f,.18f,.22f),energy,Quaternion.identity);
-            if(team==0)Part("FractureFin",PrimitiveType.Cube,new Vector3(-.62f,.78f,-.62f),new Vector3(.18f,.62f,.42f),energy,Quaternion.Euler(0,0,-16));
             else
             {
-                Part("LumenFinL",PrimitiveType.Cube,new Vector3(-.54f,.76f,-.60f),new Vector3(.12f,.48f,.36f),energy,Quaternion.identity);
-                Part("LumenFinR",PrimitiveType.Cube,new Vector3(.54f,.76f,-.60f),new Vector3(.12f,.48f,.36f),energy,Quaternion.identity);
+                Part("LumenFinL",PrimitiveType.Cube,transform,new Vector3(-.66f,.66f,-.72f),new Vector3(.11f,.52f,.36f),energyMat,Quaternion.identity);
+                Part("LumenFinR",PrimitiveType.Cube,transform,new Vector3(.66f,.66f,-.72f),new Vector3(.11f,.52f,.36f),energyMat,Quaternion.identity);
             }
         }
 
-        private void Part(string name,PrimitiveType type,Vector3 localPosition,Vector3 localScale,Color color,Quaternion rotation)
+        private void BuildTrack(Transform track,float side,Material armor,Material dark,Material joint)
         {
-            GameObject part=GameObject.CreatePrimitive(type);part.name="DF_HotZoneTank_"+name;part.transform.SetParent(transform,false);
+            Part(side<0?"TrackHousingL":"TrackHousingR",PrimitiveType.Cube,track,new Vector3(side*1.04f,-.30f,0),new Vector3(.46f,.52f,2.54f),dark,Quaternion.identity);
+            Part(side<0?"TrackArmorL":"TrackArmorR",PrimitiveType.Cube,track,new Vector3(side*1.06f,-.02f,0),new Vector3(.38f,.20f,2.18f),armor,Quaternion.identity);
+            for(int i=0;i<4;i++)
+            {
+                float z=-.90f+i*.60f;
+                Part("RoadWheel",PrimitiveType.Cylinder,track,new Vector3(side*1.25f,-.33f,z),new Vector3(.27f,.15f,.27f),joint,Quaternion.Euler(0,0,90));
+            }
+            Part("DriveWheel",PrimitiveType.Cylinder,track,new Vector3(side*1.25f,-.29f,-1.20f),new Vector3(.34f,.17f,.34f),armor,Quaternion.Euler(0,0,90));
+            Part("IdlerWheel",PrimitiveType.Cylinder,track,new Vector3(side*1.25f,-.29f,1.20f),new Vector3(.34f,.17f,.34f),armor,Quaternion.Euler(0,0,90));
+        }
+
+        private Material MakeMaterial(Shader shader,Color color,float metallic,float smoothness,Color emission)
+        {
+            Material m=new(shader){color=color};
+            if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
+            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);
+            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smoothness);
+            if(emission.maxColorComponent>0&&m.HasProperty("_EmissionColor")){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",emission);}
+            return m;
+        }
+
+        private Transform Part(string name,PrimitiveType type,Transform parent,Vector3 localPosition,Vector3 localScale,Material material,Quaternion rotation)
+        {
+            GameObject part=GameObject.CreatePrimitive(type);part.name="DF_HotZoneTank_"+name;part.transform.SetParent(parent,false);
             part.transform.localPosition=localPosition;part.transform.localScale=localScale;part.transform.localRotation=rotation;
             Collider c=part.GetComponent<Collider>();if(c!=null)c.enabled=false;
-            Renderer r=part.GetComponent<Renderer>();if(r!=null){r.material.color=color;r.shadowCastingMode=ShadowCastingMode.On;}
+            Renderer r=part.GetComponent<Renderer>();if(r!=null){r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.On;r.receiveShadows=true;}
+            return part.transform;
+        }
+
+        private void AimTurretAt(Vector3 worldTarget)
+        {
+            if(turretPivot==null)return;
+            Vector3 localTarget=transform.InverseTransformPoint(worldTarget);localTarget.y=turretPivot.localPosition.y;
+            Vector3 flat=new(localTarget.x,0,localTarget.z);
+            if(flat.sqrMagnitude>.01f)
+            {
+                Quaternion desired=Quaternion.LookRotation(flat.normalized,Vector3.up);
+                turretPivot.localRotation=Quaternion.Slerp(turretPivot.localRotation,desired,1f-Mathf.Exp(-9f*Time.deltaTime));
+            }
+            if(barrelPivot!=null)
+            {
+                barrelPivot.localPosition=Vector3.Lerp(barrelPivot.localPosition,new Vector3(0,.08f,.62f),1f-Mathf.Exp(-18f*Time.deltaTime));
+            }
+        }
+
+        private void AnimateTracks(float movement)
+        {
+            float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
+            if(leftTrack!=null)leftTrack.localPosition=new Vector3(0,bob,0);
+            if(rightTrack!=null)rightTrack.localPosition=new Vector3(0,-bob,0);
+        }
+
+        private void OnDestroy()
+        {
+            if(armorMat!=null)Destroy(armorMat);
+            if(darkMat!=null)Destroy(darkMat);
+            if(energyMat!=null)Destroy(energyMat);
+            if(jointMat!=null)Destroy(jointMat);
         }
     }
 }
