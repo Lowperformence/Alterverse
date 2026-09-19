@@ -99,7 +99,7 @@ namespace Alterverse.UI
         {
             if (page == next || launching) return;
             FlushAudio(); CancelName(); page = next; pageChangedAt = Time.unscaledTime;
-            profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
+            profileMessage = ""; shopMessage = ""; inventoryMessage = ""; GUI.FocusControl(null);
         }
         private void OnGUI()
         {
@@ -186,6 +186,8 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+28,350,w-56,62),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
             theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM / "+Alterverse.AI.BotDifficultySettings.Label(Alterverse.AI.BotDifficultySettings.Selected)+" BOTS",theme.Body);
             theme.Label(new Rect(Left+28,479,w-56,24),"Online multiplayer is not available yet.",theme.Small,true);
+            BattleItemType equippedItem=BattleItemInventory.Equipped;
+            theme.Label(new Rect(Left+28,510,w-56,24),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             if (theme.Action(new Rect(Left,554,w,76),"START AI MATCH",true)) BeginLaunch();
             theme.Label(new Rect(Left,642,w,28),launchMessage.Length>0?launchMessage:"Your selected hero is confirmed when the match starts.",theme.Small,true);
             float x = Left+w+32, rw = ContentWidth-w-32;
