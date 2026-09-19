@@ -66,7 +66,7 @@ namespace Alterverse.UI
                 case CombatGlyph.Phase: Ring(c+Vector2.left*s*.35f,s*.58f,3,col,16);Ring(c+Vector2.right*s*.35f,s*.58f,3,col,16);Arrow(c,s*.65f,col);break;
                 case CombatGlyph.Singularity: Ring(c,s*.9f,3,col,24);Ring(c,s*.55f,4,col,20);FrontEndTheme.Fill(new Rect(c.x-s*.18f,c.y-s*.18f,s*.36f,s*.36f),col);break;
                 case CombatGlyph.SupportShot: Ring(c,s*.35f,4,col,16);Line(c+new Vector2(-s,-s*.7f),c+new Vector2(s*.65f,s*.55f),3,col);break;
-                case CombatGlyph.Seed: Ring(c,s*.38f,4,col,16);for(int i=0;i<3;i++){float a=(-.7f+i*.7f);Line(c+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*s*.45f,c+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*s,col,3,col);}break;
+                case CombatGlyph.Seed: Ring(c,s*.38f,4,col,16);for(int i=0;i<3;i++){float a=(-.7f+i*.7f);Line(c+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*s*.45f,c+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*s,3,col);}break;
                 case CombatGlyph.Heal: Cross(c,s*.72f,7,col);Ring(c,s*.92f,2,col,20);break;
                 case CombatGlyph.Shelter: ShieldShape(c,s,col);Cross(c,s*.28f,3,col);break;
                 case CombatGlyph.Wildsurge: Cross(c,s*.48f,6,col);Ring(c,s*.68f,3,col,20);Ring(c,s,2,col,24);break;
