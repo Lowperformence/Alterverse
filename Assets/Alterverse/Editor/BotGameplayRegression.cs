@@ -227,6 +227,7 @@ namespace Alterverse.EditorChecks
         {
             Vector3 center = new(4000, 1, 4000);
             GameObject towerObject = Unit("Check_Tower", 1, center);
+            CapsuleCollider towerBody=towerObject.AddComponent<CapsuleCollider>();towerBody.radius=.70f;towerBody.height=2.3f;towerBody.center=Vector3.up*.45f;
             LaneTower tower = towerObject.AddComponent<LaneTower>(); tower.Initialize(1);
             GameObject hero = Unit("Check_TowerHero", 0, center + Vector3.right);
             hero.AddComponent<HeroIdentity>().Configure(HeroId.Rook);
@@ -255,10 +256,18 @@ namespace Alterverse.EditorChecks
             Set(mover, "towers", new[] { tower }); Set(mover, "nextWorldScan", float.MaxValue);
             hero.transform.position = center + Vector3.left * 7f;
             Vector3 guarded = (Vector3)Call(mover, "GuardAgainstTowers", center + Vector3.right * 7f);
-            Assert(guarded == hero.transform.position, "An uncovered movement step must not cross a tower circle.");
+            Assert(Vector3.Distance(guarded,center)>=tower.AttackRange+.70f, "An uncovered movement step must remain outside tower danger.");
             Assert(!mover.CanRepositionTo(center + Vector3.right * 7f), "A dash must not bypass tower avoidance.");
             selected.RestoreFull(); Set(tower, "currentTarget", selected);
             Assert(mover.CanRepositionTo(center + Vector3.left * 2f), "A live minion under fire must permit a push.");
+
+            GameObject alliedTowerObject = Unit("Check_AlliedTower", 0, center + Vector3.forward * 10f);
+            CapsuleCollider alliedBody=alliedTowerObject.AddComponent<CapsuleCollider>();alliedBody.radius=.70f;alliedBody.height=2.3f;alliedBody.center=Vector3.up*.45f;
+            LaneTower alliedTower=alliedTowerObject.AddComponent<LaneTower>();alliedTower.Initialize(0);
+            Set(mover,"towers",new[]{alliedTower});
+            hero.transform.position=alliedTowerObject.transform.position+Vector3.left*1.35f;
+            Vector3 skirted=(Vector3)Call(mover,"GuardAgainstTowers",hero.transform.position+Vector3.right*.25f);
+            Assert(Mathf.Abs(skirted.z-hero.transform.position.z)>.001f,"Bots must skirt allied tower bodies instead of walking straight into them.");
 
             GameObject planetObject = Unit("Check_Pulse", 1, center + Vector3.forward * 30f);
             Alterverse.Combat.PlanetPulseAttack pulse = planetObject.AddComponent<Alterverse.Combat.PlanetPulseAttack>();
