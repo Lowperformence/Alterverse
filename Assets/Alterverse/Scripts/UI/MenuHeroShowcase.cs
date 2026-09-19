@@ -26,6 +26,7 @@ namespace Alterverse.UI
             bool weapon=weaponOverride??Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
             if (hasSelection && selected == hero && selectedSkin==skin && selectedWeapon==weapon) return;
             selectedSkin=skin;selectedWeapon=weapon;
+            if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             actor = new GameObject("DF_MenuHero");
