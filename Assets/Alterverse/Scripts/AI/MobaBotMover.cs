@@ -251,21 +251,56 @@ namespace Alterverse.AI
                     Vector3 closest = away + step * along;
                     if (closest.sqrMagnitude < safeRadius * safeRadius)
                     {
-                        // Stage smoothly outside tower range instead of hitting an invisible wall.
-                        // As soon as a friendly lane minion supplies cover this guard stops applying.
-                        Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
-                        Vector3 tangent=Vector3.Cross(Vector3.up,radial);
-                        float spread=(rotationSlot-2)*.28f;
-                        Vector3 staging=tower.transform.position+radial*(safeRadius+.18f)+tangent*spread;
-                        staging.y=transform.position.y;
-                        next=Vector3.MoveTowards(transform.position,staging,MoveSpeed*Time.deltaTime);
+                        // Do not freeze on an invisible tower-radius line. If our lane wave is approaching,
+                        // follow just behind it until it enters tower range and becomes real cover.
+                        // With no wave nearby, fall back to a readable staging position outside danger.
+                        Vector3 staging;
+                        if(!TryGetWaveStaging(tower,out staging))
+                        {
+                            Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
+                            Vector3 tangent=Vector3.Cross(Vector3.up,radial);
+                            float spread=(rotationSlot-2)*.34f;
+                            staging=tower.transform.position+radial*(safeRadius+.55f)+tangent*spread;
+                            staging.y=transform.position.y;
+                        }
+
                         Vector3 stageDelta=staging-transform.position;stageDelta.y=0;
+                        float stageSpeed=MoveSpeed*Mathf.Clamp01(stageDelta.magnitude/1.4f+.18f);
+                        next=Vector3.MoveTowards(transform.position,staging,stageSpeed*Time.deltaTime);
                         if(stageDelta.sqrMagnitude>.001f)
-                            velocity=Vector3.Lerp(velocity,stageDelta.normalized*MoveSpeed,1f-Mathf.Exp(-10f*Time.deltaTime));
+                            velocity=Vector3.Lerp(velocity,stageDelta.normalized*stageSpeed,1f-Mathf.Exp(-7f*Time.deltaTime));
                     }
                 }
             }
             return next;
+        }
+
+        private bool TryGetWaveStaging(LaneTower tower,out Vector3 staging)
+        {
+            staging=transform.position;
+            if(tower==null||brain==null)return false;
+
+            LaneMinion best=null;
+            float bestSqr=12f*12f;
+            for(int i=0;i<Health.Active.Count;i++)
+            {
+                Health candidate=Health.Active[i];
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
+                LaneMinion minion=candidate.GetComponent<LaneMinion>();
+                if(minion==null||minion.Team!=brain.Team)continue;
+
+                Vector3 toTower=candidate.transform.position-tower.transform.position;toTower.y=0;
+                if(Mathf.Abs(candidate.transform.position.z-brain.LaneZ)>5f||toTower.sqrMagnitude>bestSqr)continue;
+                best=minion;bestSqr=toTower.sqrMagnitude;
+            }
+            if(best==null)return false;
+
+            Vector3 outward=best.transform.position-tower.transform.position;outward.y=0;
+            if(outward.sqrMagnitude<.01f)outward=brain.Team==0?Vector3.left:Vector3.right;
+            Vector3 tangent=Vector3.Cross(Vector3.up,outward.normalized);
+            staging=best.transform.position+outward.normalized*1.35f+tangent*((rotationSlot-2)*.22f);
+            staging.y=transform.position.y;
+            return true;
         }
 
         private void MoveToward(Vector3 destination, float stopDistance)
