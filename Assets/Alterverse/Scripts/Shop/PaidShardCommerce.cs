@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Alterverse.Profile;
 using UnityEngine;
 using UnityEngine.Networking;
 namespace Alterverse.Shop
@@ -84,9 +85,9 @@ namespace Alterverse.Shop
             {
                 if(PlayerPrefs.GetString(appliedKey,"")!=claimId)
                 {
-                    Profile.ProfileTransaction.Commit(
-                        new Profile.ProfileTransaction.Write("DF_Shards",Profile.ProfileTransaction.Add(Profile.PlayerWallet.Balance,amount)),
-                        new Profile.ProfileTransaction.Write(appliedKey,claimId));
+                    ProfileTransaction.Commit(
+                        new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,amount)),
+                        new ProfileTransaction.Write(appliedKey,claimId));
                 }
             }
             catch(Exception)
