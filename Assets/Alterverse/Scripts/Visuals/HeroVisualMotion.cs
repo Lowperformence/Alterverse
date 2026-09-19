@@ -16,7 +16,8 @@ namespace Alterverse.Visuals
         private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean;
         private bool wasDead;
         private int abilitySlot=-1,attackSerial;
-        private float windupUntil,empowerUntil,dashUntil;
+        private float windupUntil,empowerUntil,dashUntil,attackStarted;
+        private bool attackHasWindup;
         private Transform muzzle,weaponR,weaponL,orb;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -32,11 +33,15 @@ namespace Alterverse.Visuals
         {
             abilitySlot=ultimate?3:-1;attackSerial++;
             GetComponent<VoidWingPresentation>()?.Pulse();
-            attackDuration=ultimate?.32f:.22f;attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;
+            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
+            bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
+            attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
+            attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;
+            attackStarted=Time.time;attackHasWindup=false;
         }
         public void PulseAbility(int slot,float windup)
         {
-            PulseAttack(slot==3);abilitySlot=slot;
+            PulseAttack(slot==3);abilitySlot=slot;attackHasWindup=windup>0;
             windupUntil=Time.time+Mathf.Max(0,windup);attackUntil=windupUntil+attackDuration;
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
         }
@@ -128,7 +133,7 @@ namespace Alterverse.Visuals
             root.localPosition=basePosition+Vector3.up*(idle+bob);
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=0;}
             float preparation=Time.time<windupUntil?1:0;
-            float progress=Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration);
+            float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
             ApplyAttackPose(hero,kick,preparation,progress);
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
@@ -150,21 +155,57 @@ namespace Alterverse.Visuals
             if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Min(PlanarSpeed,8)*1.6f,0,8+Mathf.Sin(t*2)*2);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
         }
+        // Presentation-only keyframes. Existing damage is instantaneous; this never delays a hit or a cooldown.
+        // The weapon is a child of the shoulder rig, so both arm and weapon follow the full strike arc.
+        private void PoseStrike(Transform joint,Quaternion rest,Vector3 drawn,Vector3 contact,Vector3 through,
+            float preparation,float progress,float weight=1)
+        {
+            if(joint==null)return;
+            Quaternion ready=Quaternion.Euler(drawn),hit=Quaternion.Euler(contact),finish=Quaternion.Euler(through),pose;
+            if(preparation>0)
+            {
+                float charge=Mathf.Clamp01((Time.time-attackStarted)/Mathf.Max(.001f,windupUntil-attackStarted));
+                pose=Quaternion.Slerp(Quaternion.identity,ready,Mathf.SmoothStep(0,1,Mathf.Min(1,charge*2)));
+            }
+            else
+            {
+                // Existing windup skills already held their raised pose; instant basics get a short visible draw.
+                float drawEnd=attackHasWindup?0:.12f;
+                if(progress<drawEnd)pose=Quaternion.Slerp(Quaternion.identity,ready,Mathf.SmoothStep(0,1,progress/drawEnd));
+                else if(progress<.40f)pose=Quaternion.Slerp(ready,hit,Mathf.SmoothStep(0,1,(progress-drawEnd)/(.40f-drawEnd)));
+                else if(progress<.57f)pose=Quaternion.Slerp(hit,finish,(progress-.40f)/.17f);
+                else pose=Quaternion.Slerp(finish,Quaternion.identity,Mathf.SmoothStep(0,1,(progress-.57f)/.43f));
+            }
+            joint.localRotation=rest*Quaternion.Slerp(Quaternion.identity,pose,weight);
+        }
+
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress)
         {
             if(weaponR!=null){weaponR.localPosition=weaponPositionR;weaponR.localRotation=weaponRestR;}
             if(weaponL!=null){weaponL.localPosition=weaponPositionL;weaponL.localRotation=weaponRestL;}
             if(kick<=0&&preparation<=0&&Time.time>=empowerUntil)return;
-            float side=attackSerial%2==0?1:-1;
             switch(hero)
             {
                 case HeroId.Veyr:
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-24*preparation-65*kick,55*kick*side,-24*kick);
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-20*preparation-45*kick,-45*kick*side,24*kick);
+                    if(abilitySlot==2)break; // Dash has its own presentation.
+                    bool right=attackSerial%2!=0;
+                    bool dual=abilitySlot==3;
+                    PoseStrike(armR,armRestR,new Vector3(-30,-38,-40),new Vector3(-88,32,12),new Vector3(-48,58,25),
+                        preparation,progress,right||dual?1:.30f);
+                    PoseStrike(armL,armRestL,new Vector3(-30,38,40),new Vector3(-88,-32,-12),new Vector3(-48,-58,-25),
+                        preparation,progress,!right||dual?1:.30f);
+                    PoseStrike(weaponR,weaponRestR,new Vector3(12,-20,-20),new Vector3(32,20,15),new Vector3(48,32,25),preparation,progress,right||dual?1:.30f);
+                    PoseStrike(weaponL,weaponRestL,new Vector3(12,20,20),new Vector3(32,-20,-15),new Vector3(48,-32,-25),preparation,progress,!right||dual?1:.30f);
                     break;
                 case HeroId.Kaelon:
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-75*preparation+70*kick,0,-12*kick);
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-18*(preparation+kick),0,0);
+                    if(abilitySlot==1)
+                    {
+                        Swing(armL,armRestL,-55*(preparation+kick));break;
+                    }
+                    // Negative shoulder X raises the hand forward; wrist rotation brings the hammer head down.
+                    PoseStrike(armR,armRestR,new Vector3(-150,-15,-18),new Vector3(-75,8,-8),new Vector3(-35,16,8),preparation,progress);
+                    PoseStrike(weaponR,weaponRestR,new Vector3(-35,0,-10),new Vector3(110,0,5),new Vector3(130,0,12),preparation,progress);
+                    PoseStrike(armL,armRestL,new Vector3(-28,0,8),new Vector3(-45,0,8),new Vector3(-30,0,5),preparation,progress);
                     break;
                 case HeroId.Nyra:
                     if(weaponR!=null)weaponR.localPosition=weaponPositionR+Vector3.back*.12f*kick;
@@ -176,10 +217,19 @@ namespace Alterverse.Visuals
                     if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-25*preparation-25*kick,0,20*kick);
                     break;
                 case HeroId.Rook:
-                    float boost=Time.time<empowerUntil?.22f:0;
-                    float slam=abilitySlot==2||abilitySlot==3?1:0;
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-85*preparation+(-65+130*slam)*kick-20*boost,25*kick,0);
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-65*preparation+(-40+110*slam)*kick-20*boost,-25*kick,0);
+                    if(abilitySlot==1)
+                    {
+                        Swing(armR,armRestR,-38*(preparation+kick));Swing(armL,armRestL,-38*(preparation+kick));break;
+                    }
+                    bool slam=abilitySlot==2||abilitySlot==3;
+                    bool punchRight=attackSerial%2!=0;
+                    Vector3 drawR=slam?new Vector3(-150,-12,-12):new Vector3(-20,-22,-12);
+                    Vector3 hitR=slam?new Vector3(-65,4,0):new Vector3(-95,12,0);
+                    Vector3 finishR=slam?new Vector3(-22,8,6):new Vector3(-105,20,8);
+                    PoseStrike(armR,armRestR,drawR,hitR,finishR,preparation,progress,slam||punchRight?1:.25f);
+                    PoseStrike(armL,armRestL,new Vector3(drawR.x,-drawR.y,-drawR.z),
+                        new Vector3(hitR.x,-hitR.y,-hitR.z),new Vector3(finishR.x,-finishR.y,-finishR.z),
+                        preparation,progress,slam||!punchRight?1:.25f);
                     break;
             }
         }

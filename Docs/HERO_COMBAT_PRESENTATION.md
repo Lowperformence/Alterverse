@@ -120,3 +120,15 @@ The second presentation pass changes only `HeroVfxPool.cs` and `HeroSkillVfx.cs`
 Five additional cached shapes (Halo, Burst, Petals, ShockDome, Runes) extend the pool to fifteen meshes. Vertex gradients provide soft edges without textures or extra shader passes. Pool capacity remains 192, including 32 warning slots. Property blocks are now explicitly constructed in pool `Awake`; HeroVisualMotion retains its previous `Start` initialization fix. More visual layers can increase draw calls/overdraw; no device performance claim is made.
 
 All gameplay files, shader code, attack timing and damage are unchanged in this follow-up. Static C# parsing and whitespace checks passed. Actual visual quality, shader/render behavior and device frame rate still require a Unity run; no rendered comparison was possible here.
+
+## Follow-up: visible melee weapon strikes
+
+`HeroVisualMotion` previously jumped to its largest attack angle and only eased back toward rest. Auren's hammer and Brakk's slam also used positive shoulder-X angles, which swung the hanging arms backward. This has been replaced by explicit draw/contact/follow-through/recovery keyframes:
+
+- Zhaev alternates left/right blade strokes; the ultimate uses both blades. Wrist and shoulder rotations combine into a forward cutting arc.
+- Auren raises the hammer, brings the hand forward and rotates the hammer head down through the strike. The other arm braces the shield.
+- Brakk alternates forward punches and uses both raised gauntlets for ground slams.
+- Shield/self-buff and dash slots keep separate poses. Existing windup skills raise the weapon over their real preparation interval.
+- Basic visual cycles last 0.34 seconds (Zhaev/Brakk) or 0.40 seconds (Auren); ultimate recovery cycles last 0.46 seconds. These are cosmetic durations, not cooldown changes. Repeated attacks restart the animation without blocking combat or movement.
+
+Only the visual motion file and this report changed. The prior property-block initialization fix remains intact. Static C# parsing and whitespace checks passed. Actual Unity playback is still pending. Instant attacks still apply damage immediately; their cosmetic swing reaches its contact pose afterward. This patch does not claim animation-driven damage synchronization or add a damage delay.
