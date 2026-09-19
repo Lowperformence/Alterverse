@@ -75,6 +75,8 @@ namespace Alterverse.Match
         {
             state=State.Active;activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;
             BuildZoneVisual();
+            PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
+            PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
             HotZoneOpened?.Invoke();
         }
 
@@ -106,6 +108,9 @@ namespace Alterverse.Match
                 rewardIssued=HotZoneTank.Spawn(winner);
                 if(!rewardIssued)winner=-1;
             }
+            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
+            PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
+            PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
             if(zoneRoot!=null)Destroy(zoneRoot,1.2f);
         }
