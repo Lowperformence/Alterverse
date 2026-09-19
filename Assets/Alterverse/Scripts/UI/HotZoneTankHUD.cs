@@ -38,7 +38,8 @@ namespace Alterverse.UI
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
                 Rect label=new(x,y-20,116,18);
-                GUI.Label(label,tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK",labelStyle);
+                string unit=tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):(tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK");
+                GUI.Label(label,unit,labelStyle);
 
                 Rect back=new(x+8,y,100,8);
                 GUI.color=new Color(.035f,.04f,.055f,.92f);GUI.DrawTexture(back,pixel);
