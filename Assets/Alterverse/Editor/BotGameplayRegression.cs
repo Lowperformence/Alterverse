@@ -30,6 +30,7 @@ namespace Alterverse.EditorChecks
             {
                 Time.timeScale = 1f;
                 CheckBrainAndRespawn();
+                CheckObstacleRecovery();
                 CheckTargetRetention();
                 CheckDifficulty();
                 CheckAbilitySlots();
@@ -83,14 +84,51 @@ namespace Alterverse.EditorChecks
             hp.Heal(30); Call(brain, "Decide");
             Assert(brain.State == MobaBotBrain.BotState.Recover, "Recovery must persist until 80% HP.");
             Set(mover, "velocity", Vector3.left * 5f);
+            Set(mover, "detour", Vector3.forward);
+            Set(mover, "detourUntil", Time.time + 5f);
+            Set(mover, "recoveryAttempts", 2);
             hp.RestoreFull(); brain.ResumeLaneAfterRespawn();
             Assert(brain.State == MobaBotBrain.BotState.Lane && sensor.CurrentTarget == null, "Respawn must clear retreat and target.");
             Assert((Vector3)typeof(MobaBotMover).GetField("velocity", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old velocity.");
+            Assert((Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old detour.");
+            Assert((int)typeof(MobaBotMover).GetField("recoveryAttempts", Private).GetValue(mover) == 0, "Respawn must clear stuck recovery stage.");
             Assert(lane.GetDestination(brain.State).z == 16f, "Recovered bot must head to its assigned lane.");
             bot.transform.position = Vector3.zero;
             Call(mover, "MoveToward", new Vector3(.1f, 0, 0), .35f);
             Assert(bot.transform.position == Vector3.zero, "Arrival radius must stop movement.");
         }
+        private static void CheckObstacleRecovery()
+        {
+            Vector3 origin = new(6000, 1, 6000);
+            GameObject bot = Unit("Check_ObstacleBot", 0, origin);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Rook);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Rook);
+            bot.AddComponent<BotTargetSensor>();
+            MobaBotBrain brain = bot.AddComponent<MobaBotBrain>(); brain.Initialize(0, 16);
+            bot.AddComponent<BotLanePlan>().Initialize(0, 16);
+            MobaBotMover mover = bot.AddComponent<MobaBotMover>();
+            HeroLocomotion locomotion = bot.GetComponent<HeroLocomotion>();
+
+            GameObject wall = new("Check_PathWall"); Created.Add(wall);
+            wall.transform.position = origin + Vector3.right * 1.1f;
+            BoxCollider wallCollider = wall.AddComponent<BoxCollider>();
+            wallCollider.size = new Vector3(.35f, 3f, 3.2f);
+            Physics.SyncTransforms();
+
+            Assert(locomotion.TryFindClearDirection(Vector3.right, 1.35f, 1, out Vector3 steer),
+                "Blocked bot must find a local clear steering direction.");
+            Assert(Vector3.Dot(steer, Vector3.right) < .98f,
+                "Obstacle recovery must not keep steering straight into the blocker.");
+
+            Set(mover, "blockedTime", .4f);
+            Set(mover, "detourUntil", 0f);
+            Call(mover, "MoveToward", origin + Vector3.right * 5f, .1f);
+            float detourUntil = (float)typeof(MobaBotMover).GetField("detourUntil", Private).GetValue(mover);
+            Vector3 detour = (Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover);
+            Assert(detourUntil > Time.time && detour.sqrMagnitude > .5f,
+                "A sustained collision must start a committed detour instead of retrying the wall.");
+        }
+
         private static void CheckTargetRetention()
         {
             Vector3 origin = new(1000, 1, 1000);
