@@ -31,8 +31,9 @@ namespace Alterverse.Audio
             Camera camera=Camera.main;if(camera==null)return;Vector3 p=camera.WorldToViewportPoint(position);
             if(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f)return;
             int hero=(int)identity.Hero;if(hero<0||hero>=6||impact&&!HasImpact(hero,action))return;
-            float gain=action==0?(impact?.24f:.34f):action==4?(impact?.4f:.52f):(impact?.32f:.44f);
-            DimensionAudio.PlayHero(hero*10+action*2+(impact?1:0),gain,action==0?0:1,impact?.09f:.12f);
+            bool ultimate=action==4;
+            float gain=action==0?(impact?.24f:.34f):ultimate?(impact?.62f:.74f):(impact?.32f:.44f);
+            DimensionAudio.PlayHero(hero*10+action*2+(impact?1:0),gain,ultimate?2:action==0?0:1,ultimate?(impact?.22f:.3f):(impact?.09f:.12f));
         }
         public static void Cast(GameObject actor,int slot)=>Play(actor,slot+1,false,actor.transform.position);
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
