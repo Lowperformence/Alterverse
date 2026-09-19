@@ -14,7 +14,7 @@ namespace Alterverse.Shop
         [Serializable] sealed class Response {public bool fulfilled;public Snapshot wallet;}
         public static PaidShardCommerce Instance{get;private set;}
         public static int Balance=>Instance!=null&&Instance.Ready?Instance.snapshot.balance:0;
-        public bool Ready=>ready&&token!=null&&!string.IsNullOrEmpty(token());
+        public bool Ready=>ready&&!string.IsNullOrEmpty(ReadCredential());
         public string AccountHash{get;private set;}
         public int SessionVersion=>generation;
         public static bool OwnsVoidfall=>Instance!=null&&Instance.Ready&&Instance.snapshot.voidfall;
@@ -46,16 +46,25 @@ namespace Alterverse.Shop
         }
         IEnumerator Send(string route,Request body,Action<Response> done)
         {
-            int requestGeneration=generation;string credential=token?.Invoke();if(string.IsNullOrEmpty(credential)){Status="Sign in to reconnect the store.";done(null);yield break;}
+            int requestGeneration=generation;string credential=ReadCredential();if(string.IsNullOrEmpty(credential)){Status="Sign in to reconnect the store.";done(null);yield break;}
             using(var request=new UnityWebRequest(endpoint+route,"POST"))
             {
                 request.uploadHandler=new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));request.downloadHandler=new DownloadHandlerBuffer();request.timeout=20;
                 request.SetRequestHeader("Content-Type","application/json");request.SetRequestHeader("Authorization","Bearer "+credential);
                 yield return request.SendWebRequest();
                 if(requestGeneration!=generation){done(null);yield break;}
-                if(request.result!=UnityWebRequest.Result.Success){Status="Store connection interrupted. Purchases remain pending.";done(null);yield break;}
+                if(request.result!=UnityWebRequest.Result.Success){if(request.responseCode==401||request.responseCode==403){ready=false;snapshot=new Snapshot();}Status="Store connection interrupted. Purchases remain pending.";done(null);yield break;}
                 Response response=null;try{response=JsonUtility.FromJson<Response>(request.downloadHandler.text);}catch(ArgumentException){Status="Invalid store response.";}
                 if(response?.wallet==null||response.wallet.balance<0){done(null);yield break;}done(response);
+            }
+        }
+        string ReadCredential()
+        {
+            try{return token?.Invoke();}
+            catch(Exception)
+            {
+                // External login/refresh providers may fail; never throw from a shop getter.
+                ready=false;Status="Sign in to reconnect the store.";return null;
             }
         }
         void Apply(Snapshot value)

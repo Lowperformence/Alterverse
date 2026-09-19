@@ -43,11 +43,18 @@ namespace Alterverse.Shop
                 store.OnPurchasePending+=Pending;store.OnPurchaseConfirmed+=Confirmed;store.OnPurchaseFailed+=Failed;store.OnPurchaseDeferred+=Deferred;
                 store.OnPurchasesFetched+=Fetched;store.OnPurchasesFetchFailed+=FetchFailed;store.OnStoreDisconnected+=Disconnected;
                 store.GooglePlayStoreExtendedService?.SetObfuscatedAccountId(PaidShardCommerce.Instance.AccountHash);
-                await store.Connect();if(this==null)return;
+                var openingStore=store;
+                await openingStore.Connect();if(this==null)return;
+                var currentBackend=PaidShardCommerce.Instance;
+                if(store!=openingStore||currentBackend==null||!currentBackend.Ready||currentBackend.AccountHash!=connectedAccount||currentBackend.SessionVersion!=connectedSession)
+                {
+                    Unbind();store=null;Ready=false;prices.Clear();Busy=false;
+                    Status="Account changed. Reconnecting the store.";return;
+                }
                 var definitions=new List<ProductDefinition>();foreach(var p in ShardPacks.All)definitions.Add(new ProductDefinition(p.Id,ProductType.Consumable));store.FetchProducts(definitions);
             }
-            catch(Exception){Status="Google Play connection failed. Reconnect to retry.";Unbind();store=null;nextConnect=Time.unscaledTime+15;}
-            finally{connecting=false;}
+            catch(Exception){if(this==null)return;Status="Google Play connection failed. Reconnect to retry.";Unbind();store=null;nextConnect=Time.unscaledTime+15;}
+            finally{if(this!=null)connecting=false;}
         }
         void Products(List<Product> products){prices.Clear();foreach(var p in products)if(p.availableToPurchase&&ShardPacks.Contains(p.definition.id))prices[p.definition.id]=p.metadata.localizedPriceString;Ready=prices.Count>0;Status=Ready?"Prices supplied by Google Play.":"Products unavailable.";store.FetchPurchases();}
         void ProductsFailed(ProductFetchFailed failure){Ready=false;Status="Store products unavailable.";}
@@ -73,8 +80,8 @@ namespace Alterverse.Shop
                 store.ConfirmPurchase(order);Status="Shards credited to your store wallet.";
                 Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             }
-            catch(Exception){Status="Purchase retained for recovery. No local grant was made.";}
-            finally{processing.Remove(token);Busy=processing.Count>0;}
+            catch(Exception){if(this==null)return;Status="Purchase retained for recovery. No local grant was made.";}
+            finally{processing.Remove(token);if(this!=null)Busy=processing.Count>0;}
         }
         void Unbind(){if(store==null)return;store.OnProductsFetched-=Products;store.OnProductsFetchFailed-=ProductsFailed;store.OnPurchasePending-=Pending;store.OnPurchaseConfirmed-=Confirmed;store.OnPurchaseFailed-=Failed;store.OnPurchaseDeferred-=Deferred;store.OnPurchasesFetched-=Fetched;store.OnPurchasesFetchFailed-=FetchFailed;store.OnStoreDisconnected-=Disconnected;}
 #endif
