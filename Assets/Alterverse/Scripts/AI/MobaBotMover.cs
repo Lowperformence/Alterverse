@@ -127,8 +127,14 @@ namespace Alterverse.AI
             if(hotZone==null||!hotZone.IsActive)return false;
             Vector3 delta=hotZone.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude<11f*11f)return true;
+
+            float own=brain.Team==0?hotZone.ZeroControlSeconds:hotZone.LumenControlSeconds;
+            float enemy=brain.Team==0?hotZone.LumenControlSeconds:hotZone.ZeroControlSeconds;
+            float deficit=enemy-own;
             float focus=brain.ObjectiveFocus;
             int slots=focus>.72f?4:focus>.52f?3:2;
+            if(deficit>6f)slots=Mathf.Min(5,slots+1);
+            else if(deficit<-10f)slots=Mathf.Max(2,slots-1);
             return rotationSlot<slots;
         }
 
