@@ -139,17 +139,18 @@ namespace Alterverse.Combat
             for(int i=0;i<length;i++)
             {
                 float t=i/(float)rate;
-                float fm=.52f*Mathf.Sin(t*Mathf.PI*2f*3f)+.16f*Mathf.Sin(t*Mathf.PI*2f*7f);
-                float carrier=Mathf.Sin(t*Mathf.PI*2f*920f+fm);
-                float upper=Mathf.Sin(t*Mathf.PI*2f*1840f+fm*1.25f+.65f);
-                float whistle=Mathf.Sin(t*Mathf.PI*2f*1370f+.24f*Mathf.Sin(t*Mathf.PI*2f*2f));
+                // Narrow, high turbine signature: intentionally "hiiiiii", not a low engine/vacuum "huuuu".
+                float fm=.18f*Mathf.Sin(t*Mathf.PI*2f*5f)+.07f*Mathf.Sin(t*Mathf.PI*2f*11f);
+                float carrier=Mathf.Sin(t*Mathf.PI*2f*1480f+fm);
+                float upper=Mathf.Sin(t*Mathf.PI*2f*2960f+fm*.8f+.55f);
+                float whistle=Mathf.Sin(t*Mathf.PI*2f*2180f+.10f*Mathf.Sin(t*Mathf.PI*2f*3f));
 
                 noiseState^=noiseState<<13;noiseState^=noiseState>>17;noiseState^=noiseState<<5;
                 float raw=((noiseState&0xFFFF)/32767.5f)-1f;
                 float hiss=raw-previousNoise*.82f;previousNoise=raw;
 
-                float breathe=.90f+.10f*Mathf.Sin(t*Mathf.PI*2f*2f);
-                float mixed=(carrier*.50f+upper*.18f+whistle*.15f+hiss*.075f)*breathe*.44f;
+                float breathe=.97f+.03f*Mathf.Sin(t*Mathf.PI*2f*4f);
+                float mixed=(carrier*.54f+upper*.22f+whistle*.19f+hiss*.09f)*breathe*.39f;
                 samples[i]=Mathf.Clamp(mixed,-.82f,.82f);
             }
 
@@ -357,11 +358,11 @@ namespace Alterverse.Combat
             if(clip==null)return;
             jetAudio=gameObject.AddComponent<AudioSource>();
             jetAudio.clip=clip;jetAudio.loop=true;jetAudio.playOnAwake=false;
-            jetAudio.spatialBlend=.18f;jetAudio.dopplerLevel=0f;jetAudio.priority=140;
+            jetAudio.spatialBlend=.18f;jetAudio.dopplerLevel=0f;jetAudio.priority=140;jetAudio.pitch=1.04f;
             jetAudio.rolloffMode=AudioRolloffMode.Linear;jetAudio.minDistance=8f;jetAudio.maxDistance=75f;
-            jetAudio.volume=.14f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=420f;high.highpassResonanceQ=1.1f;
-            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=4300f;low.lowpassResonanceQ=1.05f;
+            jetAudio.volume=.098f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=720f;high.highpassResonanceQ=1.25f;
+            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=5600f;low.lowpassResonanceQ=1.08f;
             jetAudio.Play();
         }
 
