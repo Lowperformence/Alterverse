@@ -142,9 +142,22 @@ namespace Alterverse.UI
         private void DrawNavigation()
         {
             theme.Label(new Rect(Left,20,300,48),"DIMENSIONS FRONT",theme.Heading);
-            float start = Right-798;
-            for (int i=0;i<NavigationLabels.Length;i++)
-                if (theme.Action(new Rect(start+i*114,20,106,48),NavigationLabels[i],selected:(int)page==i)) SetPage((Page)i);
+
+            // INVENTORY needs more horizontal room than the short navigation labels.
+            // Use authored widths instead of equal buttons so every label stays on one line.
+            float[] widths={90f,90f,100f,90f,136f,100f,112f};
+            const float gap=8f;
+            float total=gap*(widths.Length-1);
+            for(int i=0;i<widths.Length;i++)total+=widths[i];
+            float x=Right-total;
+
+            for(int i=0;i<NavigationLabels.Length;i++)
+            {
+                if(theme.Action(new Rect(x,20,widths[i],48),NavigationLabels[i],selected:(int)page==i))
+                    SetPage((Page)i);
+                x+=widths[i]+gap;
+            }
+
             DimensionUiMotif.DrawHeaderLine(new Rect(Left,86,ContentWidth,2),Texture2D.whiteTexture,FrontEndTheme.Zero,FrontEndTheme.Accent,0);
         }
         private void Heading(string title, string description)
