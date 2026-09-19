@@ -59,6 +59,14 @@ namespace Alterverse.Combat
             return mech;
         }
 
+        public static void BuildRobotVisual(Transform root,int team)
+        {
+            bool zero=Mathf.Clamp(team,0,1)==0;
+            Color energy=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color dark=zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;
+            BuildRobotVisual(root,zero,dark,energy);
+        }
+
         private static void BuildRobotVisual(Transform root,bool zero,Color dark,Color energy)
         {
             Color armor=Color.Lerp(dark,new Color(.34f,.37f,.42f,1f),.48f);
