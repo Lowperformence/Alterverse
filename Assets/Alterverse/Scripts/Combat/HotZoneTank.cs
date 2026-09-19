@@ -55,7 +55,11 @@ namespace Alterverse.Combat
         public static bool Spawn(int winningTeam)
         {
             int team=Mathf.Clamp(winningTeam,0,1);
-            for(int i=0;i<active.Count;i++)if(active[i]!=null&&!active[i].health.IsDead&&active[i].team==team)return false;
+            for(int i=0;i<active.Count;i++)
+            {
+                HotZoneTank existing=active[i];
+                if(existing!=null&&existing.team==team&&existing.health!=null&&!existing.health.IsDead)return false;
+            }
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.name=team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank";
