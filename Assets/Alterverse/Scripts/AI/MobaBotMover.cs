@@ -458,7 +458,7 @@ namespace Alterverse.AI
                 detourUntil=Time.time+.92f;
             }
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             if(Time.time>=nextStuckLog)
             {
                 nextStuckLog=Time.time+2f;
