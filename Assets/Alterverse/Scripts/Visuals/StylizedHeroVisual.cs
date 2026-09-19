@@ -1,9 +1,9 @@
 using Alterverse.Characters;using Alterverse.Combat;using UnityEngine;
 namespace Alterverse.Visuals
 {
-public sealed class StylizedHeroVisual:MonoBehaviour
+public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CompleteArmor(legWidth);CreateSignature();BindArmor();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
+private bool voidfall;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);switch(identity.Hero){case HeroId.Kaelon:BuildKaelon();break;case HeroId.Nyra:BuildNyra();break;case HeroId.Elyra:BuildElyra();break;case HeroId.Mira:BuildMira();break;case HeroId.Rook:BuildRook();break;default:BuildVeyr();break;}float legWidth=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)?0.24f:0.17f;CreateLegs(legWidth);CompleteArmor(legWidth);CreateSignature();BuildCharacterFinish(legWidth);BindArmor();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -15,8 +15,8 @@ string suffix=side<0?"L":"R";
 if(root.Find("DF_Arm"+suffix)==null&&identity.Hero!=HeroId.Rook)
 {
 Create("Arm"+suffix,PrimitiveType.Capsule,new Vector3(side*.38f,.12f,.05f),new Vector3(.19f,.35f,.19f),dark,new Vector3(0,0,side*10));
-Create("Glove"+suffix,PrimitiveType.Cube,new Vector3(side*.4f,-.2f,.13f),new Vector3(.22f,.23f,.27f),accent);
 }
+if(identity.Hero!=HeroId.Rook)Create("Glove"+suffix,PrimitiveType.Cube,new Vector3(side*.4f,-.2f,.13f),new Vector3(.22f,.23f,.27f),dark);
 Create("Knee"+suffix,PrimitiveType.Cube,new Vector3(side*width,-.57f,.13f),new Vector3(.23f,.22f,.14f),accent);
 }
 }
@@ -122,7 +122,11 @@ GameObject part=new GameObject("DF_"+n);
 part.transform.SetParent(parent!=null?parent:root,false);
 part.transform.localPosition=pos;part.transform.localScale=scale;part.transform.localRotation=Quaternion.Euler(rotation);
 Mesh mesh;
-if(type==PrimitiveType.Capsule||type==PrimitiveType.Cylinder)
+if(n=="Torso")
+{
+mesh=BuildCuirass();detailMeshes.Add(mesh);
+}
+else if(type==PrimitiveType.Capsule||type==PrimitiveType.Cylinder)
 {
 if(limbMesh==null)limbMesh=BuildProfile("DF_TaperedArmor",new float[]{-1f,-.72f,.55f,1f},new float[]{.28f,.48f,.5f,.32f});
 mesh=limbMesh;
@@ -154,9 +158,9 @@ if(voidfall&&!energy&&color!=teamEdge)
     finish=color==armorLight?new Color(.26f,.16f,.36f):color==dark||color==cloth?new Color(.027f,.018f,.045f):Color.Lerp(color,new Color(.24f,.20f,.32f),.55f);
 Material material=new Material(shader){name=voidfall?"DF_VoidfallFinish":"DF_HeroPalette",color=finish};
 if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",finish);
-bool fabric=color==cloth;
-if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",fabric?.08f:energy?.55f:voidfall?.56f:.44f);
-if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",fabric?0f:energy?.12f:voidfall?.52f:.36f);
+bool fabric=color==cloth;bool matte=color==dark;
+if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",fabric?.08f:energy?.55f:matte?.18f:voidfall?.56f:.48f);
+if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",fabric?0f:energy?.12f:matte?.08f:voidfall?.52f:.65f);
 if(energy&&material.HasProperty("_EmissionColor")){material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",color*.3f);}
 palette.Add((color,energy),material);ownedMaterials.Add(material);return material;
 }
