@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Match;
 using Alterverse.Visuals;
@@ -18,16 +19,23 @@ namespace Alterverse.Combat
         private const float AcquireRadius=14f;
         private const float ChaseLeash=14f;
         private const float ScanInterval=.18f;
+        private const float ShotWindup=.22f;
         private const float ArenaHalfWidth=39f;
         private const float ArenaHalfHeight=32f;
 
         private int team;
         private Health health,target;
         private HeroLocomotion locomotion;
-        private float nextAttack,nextScan,blockedTime,detourUntil;
+        private float nextAttack,nextScan,blockedTime,detourUntil,shotAt;
         private Vector3 patrolTarget,home,detourDirection;
         private int patrolIndex;
+        private bool shotPending;
+        private Health shotTarget;
         private Transform turretPivot,barrelPivot,leftTrack,rightTrack;
+        private static readonly List<HotZoneTank> active=new();
+        public static IReadOnlyList<HotZoneTank> Active=>active;
+        public int Team=>team;
+        public Health TankHealth=>health;
         private Material armorMat,darkMat,energyMat,jointMat;
 
         private static readonly Vector3[] ZeroPatrol=
@@ -39,9 +47,15 @@ namespace Alterverse.Combat
             new(4,0,0),new(0,0,-12),new(-8,0,-4),new(-3,0,12),new(-14,0,3)
         };
 
-        public static void Spawn(int winningTeam)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRegistry()=>active.Clear();
+        private void OnEnable(){if(!active.Contains(this))active.Add(this);}
+        private void OnDisable(){active.Remove(this);shotPending=false;shotTarget=null;}
+
+        public static bool Spawn(int winningTeam)
         {
             int team=Mathf.Clamp(winningTeam,0,1);
+            for(int i=0;i<active.Count;i++)if(active[i]!=null&&!active[i].health.IsDead&&active[i].team==team)return false;
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.name=team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank";
@@ -53,6 +67,7 @@ namespace Alterverse.Combat
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
             go.AddComponent<HotZoneTank>().Initialize(team,spawn);
+            return true;
         }
 
         private void Initialize(int assignedTeam,Vector3 spawn)
@@ -66,6 +81,7 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+            if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
                 nextScan=Time.time+ScanInterval;
@@ -80,7 +96,7 @@ namespace Alterverse.Combat
                 if(delta.sqrMagnitude<=AttackRange*AttackRange)
                 {
                     locomotion.FaceAction(delta,AttackCooldown);
-                    if(Time.time>=nextAttack)Fire();
+                    if(Time.time>=nextAttack&&!shotPending)BeginFire();
                     return;
                 }
                 MoveToward(target.transform.position,.9f);
@@ -114,17 +130,33 @@ namespace Alterverse.Combat
             target=best;
         }
 
-        private void Fire()
+        private void BeginFire()
         {
             if(target==null||target.IsDead)return;
+            shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
+            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f;
-            Vector3 hit=target.transform.position+Vector3.up*.55f;
+            PrototypeVfx.Ring(muzzle,energy,.34f,ShotWindup);
+        }
+
+        private void ResolveShot()
+        {
+            shotPending=false;
+            Health victim=shotTarget;shotTarget=null;
+            if(victim==null||victim.IsDead)return;
+            TeamMember victimTeam=victim.GetComponent<TeamMember>();
+            if(victimTeam==null||victimTeam.Team==team)return;
+            Vector3 delta=victim.transform.position-transform.position;delta.y=0;
+            if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
+
+            Vector3 muzzle=barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f;
+            Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
             PrototypeVfx.Burst(muzzle,energy,.28f,4);
             if(barrelPivot!=null)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
-            target.TakeDamage(Damage,gameObject);
+            victim.TakeDamage(Damage,gameObject);
         }
 
         private void MoveToward(Vector3 destination,float stopDistance)
@@ -300,6 +332,7 @@ namespace Alterverse.Combat
 
         private void OnDestroy()
         {
+            active.Remove(this);
             if(armorMat!=null)Destroy(armorMat);
             if(darkMat!=null)Destroy(darkMat);
             if(energyMat!=null)Destroy(energyMat);
