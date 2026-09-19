@@ -120,6 +120,31 @@ namespace Alterverse.Visuals
                 Stroke(new[]{end-forward*.65f-side*.26f,end,end-forward*.65f+side*.26f},color,.13f,.22f,false,actor);
             }
         }
+        public static void Ultimate(GameObject actor, Vector3 target)
+        {
+            HeroIdentity identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
+            Color c=Accent(actor);Vector3 origin=actor.transform.position+Vector3.up*.7f;
+            Vector3 direction=target-origin;direction.y=0;if(direction.sqrMagnitude<.01f)direction=actor.transform.forward;direction.Normalize();
+            Vector3 side=Vector3.Cross(Vector3.up,direction);Vector3 end=origin+direction*Mathf.Max(3.2f,Vector3.Distance(actor.transform.position,target));
+            switch(identity.Hero)
+            {
+                case HeroId.Veyr: // fractured boomerang / void crescent
+                    Stroke(new[]{origin-side*.25f,origin+direction*1.4f+side*.9f,end,end-direction*.65f-side*.85f},c,.28f,.42f,false,actor);
+                    Stroke(new[]{end-side*.65f,end+direction*.35f,end+side*.65f},Color.white,.09f,.3f,false,actor);break;
+                case HeroId.Nyra: // long precision bolt
+                    Stroke(new[]{origin,end},c,.22f,.34f,false,actor);Stroke(new[]{origin+side*.28f,end-side*.28f},Color.white,.07f,.26f,false,actor);break;
+                case HeroId.Elyra: // unstable lightning fork
+                    Stroke(new[]{origin,origin+direction*1.2f+side*.45f,origin+direction*2.3f-side*.35f,end},c,.24f,.4f,false,actor);
+                    Stroke(new[]{origin+direction*2.1f,end-direction*.7f+side*.75f},c,.1f,.28f,false,actor);break;
+                case HeroId.Kaelon: // expanding citadel shock front
+                    Ring(actor,actor.transform.position+Vector3.up*.32f,1.15f,.38f,c,6);Ring(actor,actor.transform.position+Vector3.up*.34f,2.1f,.48f,c,6);break;
+                case HeroId.Mira: // large restorative dimensional bloom
+                    Ring(actor,actor.transform.position+Vector3.up*.38f,1.35f,.4f,c,12);Ring(actor,actor.transform.position+Vector3.up*.4f,2.5f,.55f,new Color(.45f,1f,.72f),12);break;
+                default: // heavy overdrive cleave
+                    Vector3 p=actor.transform.position+direction*1.7f+Vector3.up*.55f;
+                    Stroke(new[]{p-side*1.5f,p+direction*.75f,p+side*1.5f},c,.34f,.4f,false,actor);Ring(actor,p,.95f,.32f,c,8);break;
+            }
+        }
         public static void Impact(GameObject actor,Health target,int slot)
         {
             Vector3 p=target.transform.position+Vector3.up*.5f;Color c=Accent(actor);
