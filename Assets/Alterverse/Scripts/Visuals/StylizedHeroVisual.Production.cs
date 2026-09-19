@@ -107,11 +107,15 @@ namespace Alterverse.Visuals
         {var t=new GameObject("DF_Weapon"+suffix).transform;t.SetParent(root,false);t.localPosition=point;return t;}
         private void ProductionBlades()
         {
+            // Base Zhaev blades stay deliberately neutral so the purchasable weapon skin
+            // remains visually distinct. ApplyWeaponOverdrive() still replaces both complete
+            // weapon pivots with the cosmetic glow when that skin is equipped.
+            Color baseBladeGray=new Color(.42f,.45f,.49f,1f);
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";Transform weapon=WeaponPivot(s,new Vector3(side*.43f,-.18f,.13f));
                 Mesh blade=HeroMeshLibrary.Ribbon("DF_DimensionBlade"+s,new[]{new Vector3(0,-.10f,0),new Vector3(side*.035f,-.26f,.24f),new Vector3(side*.12f,-.49f,.66f),new Vector3(side*.21f,-.67f,1.05f)},new[]{.048f,.105f,.08f,.001f},.06f);
-                Sculpt("Blade"+s,blade,Vector3.zero,Vector3.one,accent,weapon,true);
+                Sculpt("Blade"+s,blade,Vector3.zero,Vector3.one,baseBladeGray,weapon,false);
                 Detail("Hilt"+s,weapon.localPosition,new Vector3(.14f,.20f,.12f),dark,default,"Weapon"+s);
                 Bind("Weapon"+s,"Arm"+s);
             }
