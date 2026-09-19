@@ -203,6 +203,12 @@ namespace Alterverse.EditorChecks
             selected.TakeDamage(100);
             Assert(!tower.HasMinionCoverFor(0), "Dead minion must stop providing cover immediately.");
             Assert((Health)Call(tower, "FindEnemyTarget") == hero.GetComponent<Health>(), "Tower must switch to hero when the wave is gone.");
+
+            GameObject deathTowerObject = Unit("Check_TowerDeath", 1, center + Vector3.forward * 8f);
+            LaneTower deathTower = deathTowerObject.AddComponent<LaneTower>(); deathTower.Initialize(1);
+            Health deathTowerHealth = deathTowerObject.GetComponent<Health>();
+            deathTowerHealth.TakeDamage(deathTowerHealth.Max);
+            Assert(deathTowerHealth.IsDead && !deathTower.enabled, "Lethal tower damage must immediately enter the destruction state.");
             hero.transform.position = center + Vector3.right * (tower.AttackRange + .01f);
             Assert(Call(tower, "FindEnemyTarget") == null, "Tower must obey the exact planar range.");
 
