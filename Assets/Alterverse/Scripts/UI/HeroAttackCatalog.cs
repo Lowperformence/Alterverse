@@ -49,6 +49,7 @@ namespace Alterverse.UI
             if(spec.Radius>0)spatial+= $"  •  AOE {spec.Radius:0.##}";
             string timing=$"CD {spec.Cooldown:0.#}s";
             if(spec.Windup>0)timing+= $"  •  WINDUP {spec.Windup:0.##}s";
+            if(slot==3)timing+= $"  •  START LOCK {HeroAbilityKit.UltimateInitialLock:0}s";
             string stats=string.IsNullOrEmpty(primary)?$"{spatial}  •  {timing}":$"{primary}  •  {spatial}  •  {timing}";
             return new HeroAttackCard(key,spec.Name,stats,Effect(hero,slot));
         }
