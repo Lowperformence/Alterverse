@@ -74,7 +74,7 @@ namespace Alterverse.AI
                 Vector3 delta = target.transform.position - transform.position; delta.y = 0;
                 if (delta.sqrMagnitude <= chaseLimit * chaseLimit)
                 {
-                    destination = target.transform.position; stopDistance = CombatStop;
+                    destination = target.transform.position; stopDistance = SolidTargetStopDistance(target,CombatStop);
                     if(profile!=null&&profile.AttackRange>4f&&delta.sqrMagnitude<CombatStop*CombatStop*.55f)
                     {
                         Vector3 back=transform.position-delta.normalized*1.6f*brain.Difficulty.Positioning;
@@ -123,6 +123,17 @@ namespace Alterverse.AI
                 if (distance < best) { best = distance; objective = planet; }
             }
         }
+        private float SolidTargetStopDistance(Health target,float fallback)
+        {
+            if(target==null||target.GetComponent<HeroIdentity>()!=null||target.GetComponent<LaneMinion>()!=null)return fallback;
+            Collider solid=target.GetComponent<Collider>();
+            if(solid==null||!solid.enabled||solid.isTrigger)return fallback;
+            Vector3 extents=solid.bounds.extents;
+            // HeroLocomotion sweeps a .48 m capsule. Leave a small visible gap so melee bots
+            // can attack solid objectives without repeatedly requesting movement inside them.
+            return Mathf.Max(fallback,Mathf.Max(extents.x,extents.z)+.58f);
+        }
+
         private bool ShouldContestHotZone()
         {
             if(hotZone==null||!hotZone.IsActive)return false;
