@@ -20,13 +20,11 @@ namespace Alterverse.UI
             if(Time.timeScale<=0f||MainMenuController.IsVisible)return;
             cam??=Camera.main;if(cam==null)return;
 
-            labelStyle??=new GUIStyle(GUI.skin.label)
+            if(labelStyle==null)
             {
-                alignment=TextAnchor.MiddleCenter,
-                fontStyle=FontStyle.Bold,
-                fontSize=12,
-                normal={textColor=Color.white}
-            };
+                labelStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=12};
+                labelStyle.normal.textColor=Color.white;
+            }
             hpStyle??=new GUIStyle(labelStyle){fontSize=10};
 
             var tanks=HotZoneTank.Active;
