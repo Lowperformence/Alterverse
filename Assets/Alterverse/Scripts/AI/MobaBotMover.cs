@@ -234,10 +234,14 @@ namespace Alterverse.AI
                 {
                     // If cover dies, leave the danger zone instead of continuing to dive.
                     if (away.sqrMagnitude < .001f) away = brain.Team == 0 ? Vector3.left : Vector3.right;
-                    Vector3 escape = tower.transform.position + away.normalized * (safeRadius + .1f);
+                    Vector3 escape = tower.transform.position + away.normalized * (safeRadius + .18f);
+                    Vector3 tangent=Vector3.Cross(Vector3.up,away.normalized);
+                    escape+=tangent*((rotationSlot-2)*.28f);
                     escape.y = transform.position.y;
                     next = Vector3.MoveTowards(transform.position, escape, MoveSpeed * Time.deltaTime);
-                    velocity = Vector3.zero;
+                    Vector3 escapeDelta=escape-transform.position;escapeDelta.y=0;
+                    if(escapeDelta.sqrMagnitude>.001f)
+                        velocity=Vector3.Lerp(velocity,escapeDelta.normalized*MoveSpeed,1f-Mathf.Exp(-12f*Time.deltaTime));
                 }
                 else
                 {
@@ -246,7 +250,19 @@ namespace Alterverse.AI
                     float along = step.sqrMagnitude > .000001f ? Mathf.Clamp01(-Vector3.Dot(away, step) / step.sqrMagnitude) : 0f;
                     Vector3 closest = away + step * along;
                     if (closest.sqrMagnitude < safeRadius * safeRadius)
-                    { next = transform.position; velocity = Vector3.zero; }
+                    {
+                        // Stage smoothly outside tower range instead of hitting an invisible wall.
+                        // As soon as a friendly lane minion supplies cover this guard stops applying.
+                        Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
+                        Vector3 tangent=Vector3.Cross(Vector3.up,radial);
+                        float spread=(rotationSlot-2)*.28f;
+                        Vector3 staging=tower.transform.position+radial*(safeRadius+.18f)+tangent*spread;
+                        staging.y=transform.position.y;
+                        next=Vector3.MoveTowards(transform.position,staging,MoveSpeed*Time.deltaTime);
+                        Vector3 stageDelta=staging-transform.position;stageDelta.y=0;
+                        if(stageDelta.sqrMagnitude>.001f)
+                            velocity=Vector3.Lerp(velocity,stageDelta.normalized*MoveSpeed,1f-Mathf.Exp(-10f*Time.deltaTime));
+                    }
                 }
             }
             return next;
