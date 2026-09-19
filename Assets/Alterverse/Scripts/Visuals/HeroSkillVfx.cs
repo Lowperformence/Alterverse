@@ -38,11 +38,15 @@ namespace Alterverse.Visuals
             HeroId h=Hero(actor);Color c=Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
             float flight=travel>0?travel:.065f;
-            HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Orb;
-            Vector3 size=h==HeroId.Nyra?new Vector3(.48f,.48f,.66f)*strength:Vector3.one*.26f*strength;
+            HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Mira?HeroFxShape.Petals:HeroFxShape.Orb;
+            Vector3 size=h==HeroId.Nyra?new Vector3(.48f,.48f,.66f)*strength:Vector3.one*.36f*strength;
             HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor);
+            // A second cached mesh adds a feathered halo or a long narrow tracer tail.
+            HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
+                h==HeroId.Nyra?new Vector3(.26f,.26f,1.25f)*strength:Vector3.one*.42f*strength,
+                new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor);
             // Short physical muzzle core, rather than a full-distance beam.
-            Fx(HeroFxShape.Orb,start,Color.Lerp(c,Color.white,.65f),.20f*strength,.07f,actor:actor);
+            Fx(HeroFxShape.Burst,start,Color.Lerp(c,Color.white,.65f),.32f*strength,.09f,rotation:Face(start,end),actor:actor);
             if(h==HeroId.Elyra)Ring(actor,start,.28f*strength,.15f);
             if(h==HeroId.Mira)Fx(HeroFxShape.Shard,start,c,.22f,.12f,rotation:Quaternion.Euler(35,0,25));
         }
@@ -50,15 +54,19 @@ namespace Alterverse.Visuals
         {
             float size=slot<0?.75f:slot==3?1.55f:1.12f;Color c=Accent(actor);
             Quaternion facing=Face(actor.transform.position,point);
-            Vector3 p=point+Vector3.up*.16f;
+            // Span from the weapon side toward contact instead of drawing a detached arc behind the victim.
+            Vector3 p=Vector3.Lerp(Muzzle(actor),point+Vector3.up*.16f,.62f);
             HeroVfxPool.Emit(HeroFxShape.Slash,p,p,new Vector3(size,1,size*(heavy?.75f:1)),c,heavy?.26f:.16f,HeroFxMotion.Sweep,facing,actor);
             if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.7f),size*.78f,.09f,HeroFxMotion.Sweep,facing,actor);
+            if(heavy)Fx(HeroFxShape.Burst,point+Vector3.up*.15f,c,size*.7f,.17f,rotation:facing);
             Shards(actor,p,size,slot<0?2:3);
         }
         private static void Rift(GameObject actor,Vector3 p,float size,float life)
         {
             Quaternion facing=Face(actor.transform.position,p);p+=Vector3.up*.20f;
             HeroVfxPool.Emit(HeroFxShape.Rift,p,p,new Vector3(size*1.2f,size,.9f),Accent(actor),life,HeroFxMotion.Contract,facing,actor);
+            Fx(HeroFxShape.Halo,p,Accent(actor)*new Color(1,1,1,.35f),size*.65f,life,HeroFxMotion.Contract,actor:actor);
+            Fx(HeroFxShape.Burst,p,Accent(actor),size*.8f,.14f,rotation:facing);
             HeroVfxPool.Emit(HeroFxShape.Rift,p-facing*Vector3.forward*.015f,p,new Vector3(size*.55f,size*.9f,.9f),DarkCore,life,HeroFxMotion.Contract,facing,actor);
         }
         public static void CancelWarnings(GameObject actor)=>HeroVfxPool.CancelWarnings(actor);
@@ -94,6 +102,18 @@ namespace Alterverse.Visuals
                 return;
             }
             float aftermath=slot==3?.48f:.30f;
+            // Inner decoration never replaces or enlarges the authoritative warning boundary.
+            if(h==HeroId.Mira)
+                Fx(HeroFxShape.Petals,p+Vector3.up*.04f,c,radius*.85f,.6f,HeroFxMotion.Expand);
+            else if(h==HeroId.Elyra)
+            {
+                Fx(HeroFxShape.Runes,p+Vector3.up*.03f,c,radius*.9f,aftermath,HeroFxMotion.Orbit);
+                if(slot==3)Fx(HeroFxShape.Halo,p+Vector3.up*.06f,new Color(c.r,c.g,c.b,.6f),radius*.7f,.22f,HeroFxMotion.Contract);
+            }
+            else if(h==HeroId.Kaelon||h==HeroId.Rook)
+                HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,slot==3?1.2f:.55f,radius),
+                    new Color(c.r,c.g,c.b,.65f),slot==3?.4f:.26f,HeroFxMotion.Expand);
+            if(slot==3)Fx(HeroFxShape.Burst,p+Vector3.up*.08f,Color.Lerp(c,Color.white,.35f),radius*.72f,.20f);
             switch(h)
             {
                 case HeroId.Elyra:
@@ -153,7 +173,23 @@ namespace Alterverse.Visuals
             if(actor==null||target==null)return;
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.26f:slot==3?.58f:.40f;
-            Fx(HeroFxShape.Orb,p,Color.Lerp(c,Color.white,.7f),strength,.10f);
+            Fx(HeroFxShape.Halo,p,Color.Lerp(c,Color.white,.7f),strength*1.8f,.10f);
+            HeroId hero=Hero(actor);
+            switch(hero)
+            {
+                case HeroId.Veyr:
+                    Fx(HeroFxShape.Slash,p,c,strength*2,.16f,HeroFxMotion.Sweep,Face(actor.transform.position,p)*Quaternion.Euler(25,0,30));break;
+                case HeroId.Kaelon:
+                    Fx(HeroFxShape.Hex,p,c,strength*1.7f,.19f,rotation:Quaternion.Euler(30,0,0));break;
+                case HeroId.Nyra:
+                    Fx(HeroFxShape.Burst,p,c,strength*2.1f,.13f,rotation:Face(actor.transform.position,p));break;
+                case HeroId.Elyra:
+                    Fx(HeroFxShape.Runes,p,c,strength*2,.24f,HeroFxMotion.Contract);break;
+                case HeroId.Mira:
+                    Fx(HeroFxShape.Petals,p,c,strength*2,.24f,HeroFxMotion.Expand);break;
+                case HeroId.Rook:
+                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);break;
+            }
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
                 Fx(HeroFxShape.Ring,p,c,.67f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,0,0),actor,target.transform);
@@ -175,13 +211,14 @@ namespace Alterverse.Visuals
             {
                 Color heal=new Color(.22f,1,.52f);
                 Fx(HeroFxShape.Plus,target.transform.position+Vector3.up*.45f,heal,.48f,.48f,actor:actor,follow:target.transform);
+                Fx(HeroFxShape.Petals,p+Vector3.up*.08f,new Color(heal.r,heal.g,heal.b,.65f),.8f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
                 HeroVfxPool.Emit(HeroFxShape.Ring,p,p+Vector3.up*.8f,Vector3.one*.58f,heal,.40f,HeroFxMotion.Travel,owner:actor);
             }
         }
         public static void SupportLink(GameObject actor,Health target)
         {
             if(actor==null||target==null)return;Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
-            for(int i=0;i<3;i++)HeroVfxPool.Emit(HeroFxShape.Shard,from,to,Vector3.one*.18f,new Color(.25f,1,.55f),.16f,HeroFxMotion.Travel,Face(from,to),actor,delay:i*.035f);
+            for(int i=0;i<3;i++)HeroVfxPool.Emit(HeroFxShape.Petals,from,to,Vector3.one*.25f,new Color(.25f,1,.55f),.16f,HeroFxMotion.Travel,Face(from,to),actor,delay:i*.035f);
         }
         public static void Debuff(GameObject actor,Health target)
         {
@@ -213,7 +250,7 @@ namespace Alterverse.Visuals
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
             if(h!=HeroId.Nyra)
             {
-                Fx(HeroFxShape.Ring,from,c,.64f,.17f,HeroFxMotion.Contract,face*Quaternion.Euler(90,0,0));
+                Fx(HeroFxShape.Runes,from,c,.72f,.17f,HeroFxMotion.Contract,face*Quaternion.Euler(70,0,0));
                 Fx(HeroFxShape.Ring,from,c,.64f,.17f,HeroFxMotion.Expand,face*Quaternion.Euler(90,0,0),actor,actor.transform,delay:.12f);
             }
             for(int i=0;i<3;i++)

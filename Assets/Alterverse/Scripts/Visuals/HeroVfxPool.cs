@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -14,7 +14,7 @@ namespace Alterverse.Visuals
         private sealed class Slot
         {
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
-            public readonly MaterialPropertyBlock Block=new();
+            public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
             public Color Color;public float Start,Duration;public bool Active,Warning;
             public HeroFxMotion Motion;public Transform Follow;public bool Follows;
@@ -22,7 +22,7 @@ namespace Alterverse.Visuals
         }
         private static HeroVfxPool instance;
         private readonly Slot[] slots=new Slot[Capacity];
-        private readonly Mesh[] shapes=new Mesh[10];
+        private readonly Mesh[] shapes=new Mesh[(int)HeroFxShape.Count];
         private Material material;
         private bool ownsMaterial;
         private int cursor;
@@ -46,7 +46,7 @@ namespace Alterverse.Visuals
                 var renderer=go.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;
                 renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
                 renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;renderer.enabled=false;
-                slots[i]=new Slot{Transform=go.transform,Renderer=renderer,Filter=go.AddComponent<MeshFilter>()};
+                slots[i]=new Slot{Block=new MaterialPropertyBlock(),Transform=go.transform,Renderer=renderer,Filter=go.AddComponent<MeshFilter>()};
             }
         }
         internal static void Emit(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
@@ -109,7 +109,7 @@ namespace Alterverse.Visuals
                 case HeroFxMotion.Sweep:rotation*=Quaternion.Euler(0,Mathf.Lerp(-35,35,t),0);scale=.88f+.12f*Mathf.Sin(t*Mathf.PI);break;
             }
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=s.Size*scale;
-            float fade=s.Warning?1:Mathf.Clamp01((1-t)*4);
+            float fade=s.Warning?1:Mathf.Clamp01((1-t)*3);
             Color color=s.Color;color.a*=fade;
             s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
@@ -128,6 +128,34 @@ namespace Alterverse.Visuals
             void Tri(Vector3 a,Vector3 b,Vector3 c,float alpha=1)
             {int i=v.Count;v.Add(a);v.Add(b);v.Add(c);colors.Add(new Color(1,1,1,alpha));colors.Add(new Color(1,1,1,alpha));colors.Add(new Color(1,1,1,alpha));triangles.Add(i);triangles.Add(i+1);triangles.Add(i+2);}
             void Quad(Vector3 a,Vector3 b,Vector3 c,Vector3 d,float alpha=1){Tri(a,b,c,alpha);Tri(a,c,d,alpha);}
+            // Feathered geometry stores luminous cores and transparent margins in vertex colors.
+            // Built once during Awake; all attacks reuse the resulting meshes.
+            void SoftQuad(Vector3 a,Vector3 b,Vector3 c,Vector3 d,Color edgeA,Color edgeB)
+            {
+                int n=v.Count;v.Add(a);v.Add(b);v.Add(c);v.Add(d);
+                colors.Add(edgeA);colors.Add(edgeB);colors.Add(edgeB);colors.Add(edgeA);
+                triangles.Add(n);triangles.Add(n+1);triangles.Add(n+2);
+                triangles.Add(n);triangles.Add(n+2);triangles.Add(n+3);
+            }
+            Color clear=new Color(1,1,1,0),hot=new Color(1.8f,1.8f,1.8f,1),soft=new Color(1,1,1,.55f);
+            void FeatherBand(float start,float end,float inner,float peak,float outer,int count,bool taper=false)
+            {
+                for(int i=0;i<count;i++)
+                {
+                    float u=(float)i/count,w=(float)(i+1)/count;
+                    Vector3 a=new Vector3(Mathf.Sin(Mathf.Lerp(start,end,u)),0,Mathf.Cos(Mathf.Lerp(start,end,u)));
+                    Vector3 b=new Vector3(Mathf.Sin(Mathf.Lerp(start,end,w)),0,Mathf.Cos(Mathf.Lerp(start,end,w)));
+                    float ta=taper?Mathf.Sin(u*Mathf.PI):1,tb=taper?Mathf.Sin(w*Mathf.PI):1;
+                    Vector3 ia=a*inner,ib=b*inner,pa=a*Mathf.Lerp(inner,peak,ta),pb=b*Mathf.Lerp(inner,peak,tb);
+                    Vector3 oa=a*Mathf.Lerp(inner,outer,ta),ob=b*Mathf.Lerp(inner,outer,tb);
+                    SoftQuad(ia,pa,pb,ib,clear,hot);SoftQuad(pa,oa,ob,pb,hot,clear);
+                }
+            }
+            void Ray(Vector3 end,Vector3 width)
+            {
+                SoftQuad(-width,Vector3.zero,end,end-width*.12f,clear,hot);
+                SoftQuad(Vector3.zero,width,end+width*.12f,end,hot,clear);
+            }
             void Band(float start,float end,float inner,float outer,int count,float y=0)
             {
                 for(int i=0;i<count;i++)
@@ -142,7 +170,7 @@ namespace Alterverse.Visuals
             {
                 case HeroFxShape.Ring:Band(0,Mathf.PI*2,.92f,1,48);break;
                 case HeroFxShape.Hex:Band(0,Mathf.PI*2,.89f,1,6);break;
-                case HeroFxShape.Slash:Band(-1.35f,1.35f,.62f,1,24);break;
+                case HeroFxShape.Slash:FeatherBand(-1.55f,1.55f,.48f,.87f,1,32,true);break;
                 case HeroFxShape.Rift:
                     for(int i=0;i<5;i++)
                     {
@@ -150,10 +178,61 @@ namespace Alterverse.Visuals
                         Quad(new Vector3(x-.08f,y,0),new Vector3(x+.055f,y,0),new Vector3(-x+.09f,y+.33f,0),new Vector3(-x-.05f,y+.33f,0));
                     }break;
                 case HeroFxShape.Bolt:
-                    Tri(new Vector3(-.15f,0,-.35f),new Vector3(0,.10f,1),new Vector3(.15f,0,-.35f));
-                    Tri(new Vector3(0,-.1f,-.35f),new Vector3(.15f,0,-.35f),new Vector3(0,.1f,1));
-                    Tri(new Vector3(-.15f,0,-.35f),new Vector3(0,-.1f,-.35f),new Vector3(0,.1f,1));break;
+                    // Crossed tapered luminous streaks remain visible from the gameplay camera.
+                    SoftQuad(new Vector3(-.16f,0,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(-.025f,0,.55f),clear,hot);
+                    SoftQuad(new Vector3(0,0,-1.4f),new Vector3(.16f,0,-1.4f),new Vector3(.025f,0,.55f),new Vector3(0,0,.55f),hot,clear);
+                    SoftQuad(new Vector3(0,-.12f,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(0,-.02f,.55f),clear,hot);
+                    SoftQuad(new Vector3(0,0,-1.4f),new Vector3(0,.12f,-1.4f),new Vector3(0,.02f,.55f),new Vector3(0,0,.55f),hot,clear);break;
+                case HeroFxShape.Halo:
+                    for(int i=0;i<32;i++)
+                    {
+                        float a=i*Mathf.PI/16,b=(i+1)*Mathf.PI/16;
+                        SoftQuad(Vector3.zero,new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),new Vector3(Mathf.Cos(b),0,Mathf.Sin(b)),Vector3.zero,hot,clear);
+                    }break;
+                case HeroFxShape.Burst:
+                    for(int i=0;i<9;i++)
+                    {
+                        float a=i*Mathf.PI*2/9;Vector3 d=new Vector3(Mathf.Cos(a),.12f,Mathf.Sin(a));
+                        Ray(d*(i%2==0?1:.65f),Vector3.Cross(Vector3.up,d)*.09f);
+                    }break;
+                case HeroFxShape.Petals:
+                    for(int i=0;i<6;i++)
+                    {
+                        float a=i*Mathf.PI/3;Vector3 d=new Vector3(Mathf.Cos(a),.18f,Mathf.Sin(a)),side=Vector3.Cross(Vector3.up,d)*.22f;
+                        SoftQuad(d*.18f,d*.60f+side,d,d*.60f-side,clear,soft);
+                        Ray(d*.90f,side*.17f);
+                    }break;
+                case HeroFxShape.ShockDome:
+                    for(int j=0;j<6;j++)for(int i=0;i<32;i++)
+                    {
+                        float y0=j/6f,y1=(j+1)/6f,r0=Mathf.Sqrt(1-y0*y0),r1=Mathf.Sqrt(1-y1*y1);
+                        float a=i*Mathf.PI/16,b=(i+1)*Mathf.PI/16;
+                        Vector3 d=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),e=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
+                        SoftQuad(d*r0+Vector3.up*y0,d*r1+Vector3.up*y1,e*r1+Vector3.up*y1,e*r0+Vector3.up*y0,
+                            new Color(1,1,1,.28f*(1-y0)),new Color(1,1,1,.28f*(1-y1)));
+                    }
+                    FeatherBand(0,Mathf.PI*2,.80f,.95f,1,40);break;
+                case HeroFxShape.Runes:
+                    for(int i=0;i<8;i++)
+                    {
+                        float a=i*Mathf.PI/4;Band(a+.06f,a+.44f,.80f,.86f,4);
+                        Vector3 d=new Vector3(Mathf.Sin(a),0,Mathf.Cos(a)),side=Vector3.Cross(Vector3.up,d);
+                        Quad(d*.60f-side*.025f,d*.78f-side*.025f,d*.78f+side*.025f,d*.60f+side*.025f,.7f);
+                    }break;
                 case HeroFxShape.Orb:
+                    // Rounded volume with a baked luminous upper hemisphere, no texture or dynamic light.
+                    for(int j=0;j<8;j++)for(int i=0;i<16;i++)
+                    {
+                        float a=i*Mathf.PI/8,b=(i+1)*Mathf.PI/8;
+                        float lat0=-Mathf.PI*.5f+j*Mathf.PI/8,lat1=lat0+Mathf.PI/8;
+                        Vector3 d=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),e=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
+                        float light0=.45f+1.05f*(Mathf.Sin(lat0)*.5f+.5f),light1=.45f+1.05f*(Mathf.Sin(lat1)*.5f+.5f);
+                        SoftQuad((d*Mathf.Cos(lat0)+Vector3.up*Mathf.Sin(lat0))*.5f,
+                            (d*Mathf.Cos(lat1)+Vector3.up*Mathf.Sin(lat1))*.5f,
+                            (e*Mathf.Cos(lat1)+Vector3.up*Mathf.Sin(lat1))*.5f,
+                            (e*Mathf.Cos(lat0)+Vector3.up*Mathf.Sin(lat0))*.5f,
+                            new Color(light0,light0,light0,1),new Color(light1,light1,light1,1));
+                    }break;
                 case HeroFxShape.Shard:
                     for(int i=0;i<8;i++)
                     {

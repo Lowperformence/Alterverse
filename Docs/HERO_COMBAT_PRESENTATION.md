@@ -62,7 +62,7 @@ Damage, ranges, cooldowns, status effects, targeting, AI and locomotion logic we
 
 `HeroMeshLibrary` caches source and vertex-colored mesh variants. Vertex RGB stores the palette; alpha marks energy surfaces. `HeroSurface` is a shared URP material with lighting, rim/specular response, energy pulse and property-block hit flash. Mesh combination reduces renderer count while keeping articulation. Source renderer/filter components are removed after batching, but sockets and transform pivots remain.
 
-`HeroVfxPool` prewarms 192 slots and ten reusable effect meshes. Thirty-two slots are reserved for warnings. Active warnings are never replaced; new effects can be dropped when their partition is full. Slots reuse renderers, mesh references, shared material and property blocks. The attack effect paths do not construct meshes, materials, textures, GameObjects or per-effect coroutines. Pool initialization and hero construction do allocate and must be profiled separately. This does not claim that the entire game allocates zero memory per attack.
+`HeroVfxPool` prewarms 192 slots and fifteen reusable effect meshes. Thirty-two slots are reserved for warnings. Active warnings are never replaced; new effects can be dropped when their partition is full. Slots reuse renderers, mesh references, shared material and property blocks. The attack effect paths do not construct meshes, materials, textures, GameObjects or per-effect coroutines. Pool initialization and hero construction do allocate and must be profiled separately. This does not claim that the entire game allocates zero memory per attack.
 
 Transparent effects use alpha blending, depth testing and no depth writes. Shield faces have low vertex opacity. Short effect lifetimes and bounded shard counts limit overdraw, but Android performance has not been measured. There are no newly generated textures.
 
@@ -102,3 +102,21 @@ Completed outside Unity:
 **Not executed:** Unity C# compilation, shader compilation, rendered comparison against the reference, all 30 attacks in Play mode, skin/founder combinations, device profiling or a 60 FPS Android measurement. No Unity editor or C# compiler is available in the implementation environment. Static parsing is not a compilation result.
 
 After pulling the branch, let Unity import the resources, start a disposable match and run **DIMENSIONS FRONT > Checks > Hero presentation assets and live meshes**. The added editor check inspects shader errors, vertex palettes, visual colliders, weapon parenting and the existing base-hero budgets of 24 renderers/6 materials; it does not enforce those budgets for all cosmetic combinations. Run the existing HeroOverhaulRegression checks as well. Visually exercise Basic/Q/W/E/Ultimate for every hero, including interrupts, death, shield depletion, paused time and repeated match reloads. Profile a crowded fight on the target Android device before claiming the 60 FPS goal is met.
+
+
+## Follow-up: attack graphics refinement
+
+The second presentation pass changes only `HeroVfxPool.cs` and `HeroSkillVfx.cs`:
+
+- Feathered blade ribbons with luminous centers, aligned between weapon and contact.
+- Crossed cyan projectile streaks and longer translucent tails for Sivra; compact muzzle bursts.
+- Rounded, shaded violet energy volumes with halos for Ione; rotating glyph fragments and collapsing inner light for area spells.
+- Mint petal projectiles, seed links and rotating healing accents for Tahla; the healing plus remains distinct from shields.
+- Amber impact hexagons and translucent ground shock domes for Auren.
+- Orange shock domes, radial contact bursts and stronger ground releases for Brakk.
+- Violet rift glow and slash-shaped contact feedback for Zhaev.
+- Separate compact impact shapes per hero rather than one shared small impact orb.
+
+Five additional cached shapes (Halo, Burst, Petals, ShockDome, Runes) extend the pool to fifteen meshes. Vertex gradients provide soft edges without textures or extra shader passes. Pool capacity remains 192, including 32 warning slots. Property blocks are now explicitly constructed in pool `Awake`; HeroVisualMotion retains its previous `Start` initialization fix. More visual layers can increase draw calls/overdraw; no device performance claim is made.
+
+All gameplay files, shader code, attack timing and damage are unchanged in this follow-up. Static C# parsing and whitespace checks passed. Actual visual quality, shader/render behavior and device frame rate still require a Unity run; no rendered comparison was possible here.
