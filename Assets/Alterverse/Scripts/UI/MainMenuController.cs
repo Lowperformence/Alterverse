@@ -9,10 +9,10 @@ namespace Alterverse.UI
 {
     public sealed class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Profile, Settings }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Settings }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "COSMETICS", "PROFILE", "SETTINGS" };
+        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "SETTINGS" };
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -25,9 +25,9 @@ namespace Alterverse.UI
         private Page page;
         private bool visible = true, launching, editingName, suspended;
         private int selectedHero, shopAvatarIndex;
-        private bool skinShop=true,shardShop,cosmeticBusy;
+        private bool skinShop=true,shardShop,itemShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
-        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
+        private string profileName, profileMessage = "", shopMessage = "", inventoryMessage = "", launchMessage = "";
         private FrontEndTheme theme;
         private MenuCosmicBackdrop backdrop;
         private MenuHeroShowcase showcase;
@@ -126,6 +126,7 @@ namespace Alterverse.UI
                     case Page.Play: DrawPlay(); break;
                     case Page.Heroes: DrawHeroes(); break;
                     case Page.Shop: DrawShop(); break;
+                    case Page.Inventory: DrawInventory(); break;
                     case Page.Profile: DrawProfile(); break;
                     case Page.Settings: DrawSettings(); break;
                     default: DrawHome(); break;
@@ -136,9 +137,9 @@ namespace Alterverse.UI
         private void DrawNavigation()
         {
             theme.Label(new Rect(Left,20,300,48),"DIMENSIONS FRONT",theme.Heading);
-            float start = Right-744;
+            float start = Right-798;
             for (int i=0;i<NavigationLabels.Length;i++)
-                if (theme.Action(new Rect(start+i*124,20,116,48),NavigationLabels[i],selected:(int)page==i)) SetPage((Page)i);
+                if (theme.Action(new Rect(start+i*114,20,106,48),NavigationLabels[i],selected:(int)page==i)) SetPage((Page)i);
             DimensionUiMotif.DrawHeaderLine(new Rect(Left,86,ContentWidth,2),Texture2D.whiteTexture,FrontEndTheme.Zero,FrontEndTheme.Accent,0);
         }
         private void Heading(string title, string description)
@@ -225,11 +226,13 @@ namespace Alterverse.UI
         }
         private void DrawShop()
         {
-            Heading("Cosmetics","Personalize your identity. No combat advantages.");
-            if(theme.Action(new Rect(Left,204,160,52),"SKINS",selected:skinShop&&!shardShop)){skinShop=true;shardShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+172,204,160,52),"AVATARS",selected:!skinShop&&!shardShop)){skinShop=false;shardShop=false;shopMessage="";}
+            Heading("Store","Cosmetics, shards and a limited battle supply.");
+            if(theme.Action(new Rect(Left,204,150,52),"SKINS",selected:skinShop&&!shardShop&&!itemShop)){skinShop=true;shardShop=false;itemShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+162,204,150,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop)){skinShop=false;shardShop=false;itemShop=false;shopMessage="";}
             theme.Label(new Rect(Right-264,116,264,42),$"EARNED {PlayerWallet.Balance}  /  STORE {PaidShardCommerce.Balance}",theme.Small);
-            if(theme.Action(new Rect(Left+344,204,160,52),"SHARDS",selected:shardShop)){shardShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+324,204,150,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+486,204,170,52),"BATTLE ITEM",selected:itemShop)){skinShop=false;shardShop=false;itemShop=true;shopMessage="";}
+            if(itemShop){DrawBattleItemShop();return;}
             if(shardShop){DrawShardShop();return;}
             if(skinShop){DrawSkinShop();return;}
             AvatarShopItem item=AvatarShopCatalog.Items[Mathf.Clamp(shopAvatarIndex,0,AvatarShopCatalog.Items.Length-1)];
@@ -311,6 +314,57 @@ namespace Alterverse.UI
             }
             theme.Label(new Rect(x,638,rw,48),shopMessage.Length>0?shopMessage:"Preview: VOIDFALL • cosmetic only",theme.Small,true);
         }
+        private void DrawBattleItemShop()
+        {
+            Heading("Battle Supply","Only the Aegis Core can be purchased. Other battle items are victory drops.");
+            float cardW=Mathf.Min(680,ContentWidth*.62f);
+            theme.Panel(new Rect(Left,286,cardW,318));
+            BattleItemIconRenderer.Draw(new Rect(Left+28,314,154,154),BattleItemType.Shield);
+            theme.Label(new Rect(Left+210,306,cardW-238,42),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
+            theme.Label(new Rect(Left+210,356,cardW-238,78),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nTriggers from your first successful ultimate next match.",theme.Body,true);
+            theme.Label(new Rect(Left+210,450,cardW-238,30),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
+            theme.Label(new Rect(Left+210,486,cardW-238,32),$"{BattleItemInventory.ShieldShardPrice} EARNED SHARDS",theme.Heading);
+            bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
+            if(theme.Action(new Rect(Left+210,536,cardW-238,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 EARNED SHARDS",true,enabled:canBuy))
+                shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":"Purchase failed.";
+            theme.Label(new Rect(Left,620,cardW,40),shopMessage.Length>0?shopMessage:"Earned shards only. Store-wallet shards cannot buy combat power.",theme.Small,true);
+
+            float x=Left+cardW+34,w=ContentWidth-cardW-34;
+            theme.Label(new Rect(x,302,w,38),"Victory drops",theme.Heading);
+            theme.Label(new Rect(x,352,w,126),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Meteor Cores are equally likely.",theme.Body,true);
+            theme.Label(new Rect(x,502,w,78),"Only one item can be equipped. It is consumed when its first valid Ultimate activation happens.",theme.Body,true);
+            if(theme.Action(new Rect(x,600,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
+        }
+
+        private void DrawInventory()
+        {
+            Heading("Battle Inventory","Equip one consumable for your next match. It activates on your first successful Ultimate.");
+            BattleItemType equipped=BattleItemInventory.Equipped;
+            float gap=18f,cardW=(ContentWidth-gap)/2f,cardH=202f;
+            for(int i=0;i<BattleItemInventory.All.Length;i++)
+            {
+                BattleItemType item=BattleItemInventory.All[i];
+                int row=i/2,col=i%2;
+                float x=Left+col*(cardW+gap),y=218+row*(cardH+18);
+                bool selected=equipped==item;
+                theme.Panel(new Rect(x,y,cardW,cardH));
+                BattleItemIconRenderer.Draw(new Rect(x+18,y+22,116,116),item,selected);
+                theme.Label(new Rect(x+154,y+18,cardW-172,32),BattleItemInventory.Name(item),theme.Heading);
+                theme.Label(new Rect(x+154,y+54,cardW-172,64),BattleItemInventory.ShortDescription(item),theme.Small,true);
+                int count=BattleItemInventory.Count(item);
+                theme.Label(new Rect(x+154,y+122,cardW-172,24),$"OWNED  {count}",theme.Small,true);
+                string action=selected?"EQUIPPED":count>0?"EQUIP":"NOT OWNED";
+                if(theme.Action(new Rect(x+154,y+154,cardW-172,38),action,selected,selected,enabled:count>0&&!selected))
+                {
+                    if(BattleItemInventory.Equip(item)){inventoryMessage=BattleItemInventory.Name(item)+" equipped for the next match.";equipped=item;}
+                }
+            }
+            string status=equipped==BattleItemType.None?"NO ITEM EQUIPPED":"EQUIPPED  ◆  "+BattleItemInventory.Name(equipped);
+            theme.Label(new Rect(Left,650,ContentWidth*.62f,28),inventoryMessage.Length>0?inventoryMessage:status,theme.Small,true);
+            if(equipped!=BattleItemType.None&&theme.Action(new Rect(Right-220,642,220,44),"UNEQUIP"))
+            {BattleItemInventory.Equip(BattleItemType.None);inventoryMessage="Battle item unequipped.";}
+        }
+
         private string XpLabel() => PlayerExperience.Level>=PlayerExperience.MaxLevel ? "MAX LEVEL" : $"{PlayerExperience.XpIntoLevel} / {PlayerExperience.XpIntoLevel+PlayerExperience.XpToNextLevel} XP";
         private void DrawProfile()
         {
@@ -344,7 +398,7 @@ namespace Alterverse.UI
                 if(theme.Action(avatar,"",selected:PlayerProfile.Avatar==avatarId)) PlayerProfile.Avatar=avatarId;
                 AvatarBadgeRenderer.Draw(new Rect(avatar.x+5,avatar.y+5,42,44),avatarId,Texture2D.whiteTexture,Time.unscaledTime);
             }
-            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;SetPage(Page.Shop);}
+            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;itemShop=false;SetPage(Page.Shop);}
             float x=Left+identityWidth+32,w=ContentWidth-identityWidth-32;
             ProfileStats stats=ProfileStatsSummary.Current;
             theme.Label(new Rect(x,230,w,36),"Lifetime record",theme.Heading);
