@@ -194,7 +194,7 @@ namespace Alterverse.Combat
         private static AudioClip BuildBomberEngineLoop()
         {
             const int rate=44100;
-            const float seconds=3.0f;
+            const float seconds=9.0f;
             int length=Mathf.CeilToInt(rate*seconds);
             float[] samples=new float[length];
 
@@ -219,34 +219,25 @@ namespace Alterverse.Combat
                 // Heavy reactor bed.
                 float reactorHz=52f+Mathf.Sin(t*Mathf.PI*2f*.42f)*3.2f;
                 reactorPhase+=Mathf.PI*2f*reactorHz/rate;
-                float reactor=(Mathf.Sin(reactorPhase)+.34f*Mathf.Sin(reactorPhase*.5f))*0.34f;
+                float reactor=(Mathf.Sin(reactorPhase)+.28f*Mathf.Sin(reactorPhase*.5f))*0.24f;
 
                 // Plasma turbine: frequency-modulated, smooth, no piston/vehicle rhythm.
                 float turbineHz=176f+Mathf.Sin(t*Mathf.PI*2f*.63f)*18f+Mathf.Sin(t*Mathf.PI*2f*.17f)*8f;
                 turbinePhase+=Mathf.PI*2f*turbineHz/rate;
-                float turbine=(Mathf.Sin(turbinePhase)+.30f*Mathf.Sin(turbinePhase*2.01f))*0.20f;
+                float turbine=(Mathf.Sin(turbinePhase)+.36f*Mathf.Sin(turbinePhase*2.01f))*0.25f;
 
                 // Thin sci-fi ion shimmer sitting above the low body.
                 float ionHz=610f+Mathf.Sin(t*Mathf.PI*2f*.91f)*54f;
                 ionPhase+=Mathf.PI*2f*ionHz/rate;
-                float ion=Mathf.Sin(ionPhase+.55f*Mathf.Sin(turbinePhase*.37f))*0.055f;
+                float ion=Mathf.Sin(ionPhase+.72f*Mathf.Sin(turbinePhase*.37f))*0.075f;
 
-                float airflow=airNoise*.22f+lowNoise*.08f;
+                float plasmaRush=high*(.12f+.05f*Mathf.Sin(t*Mathf.PI*2f*.77f));
+                float airflow=airNoise*.30f+lowNoise*.045f+plasmaRush;
                 float flutter=.95f+.05f*Mathf.Sin(t*Mathf.PI*2f*1.35f);
                 float mixed=(reactor+turbine+ion+airflow)*flutter;
 
                 // Soft saturation keeps the sound aggressive without harsh clipping.
                 samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.52f),-1f,1f);
-            }
-
-            // Circular crossfade removes the loop click.
-            int fade=Mathf.Min(length/6,Mathf.CeilToInt(rate*.10f));
-            for(int i=0;i<fade;i++)
-            {
-                float a=i/(float)Mathf.Max(1,fade-1);
-                int tail=length-fade+i;
-                float blended=Mathf.Lerp(samples[tail],samples[i],a);
-                samples[tail]=blended;
             }
 
             AudioClip clip=AudioClip.Create("DF_BomberIonEngineLoop",length,1,rate,false);
@@ -354,7 +345,7 @@ namespace Alterverse.Combat
             if(clip==null)return;
             engineAudio=gameObject.AddComponent<AudioSource>();
             engineAudio.clip=clip;
-            engineAudio.loop=true;
+            engineAudio.loop=false;
             engineAudio.playOnAwake=false;
             engineAudio.spatialBlend=.58f;
             engineAudio.dopplerLevel=0f;
@@ -378,7 +369,7 @@ namespace Alterverse.Combat
             float plasmaWobble=Mathf.Sin(Time.time*2.35f)*.012f;
             engineAudio.pitch=Mathf.Clamp(flybyPitch+plasmaWobble,.88f,1.12f);
 
-            float centerPresence=1f-Mathf.Abs(routeProgress*.2f-1f);
+            float centerPresence=1f-Mathf.Abs(routeProgress*2f-1f);
             float gain=Mathf.Lerp(.37f,.54f,Mathf.Clamp01(centerPresence));
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
         }
