@@ -71,35 +71,51 @@ namespace Alterverse.Shop
         }
         IEnumerator ClaimVerifiedShards(Action<bool> done)
         {
-            Response response=null;
-            yield return Send("/wallet/claim",new Request(),r=>response=r);
-            if(response==null||response.wallet==null){done(false);yield break;}
-            Apply(response.wallet);
-
-            string claimId=response.wallet.claimId;
-            int amount=response.wallet.claimAmount;
-            if(string.IsNullOrEmpty(claimId)||amount<=0){done(true);yield break;}
-
-            string appliedKey="DF_ShardClaim_"+AccountHash;
-            try
+            // Drain retry-safe claims until the verified server buffer is empty.
+            // This also handles a new Google purchase arriving while an older claim was still awaiting acknowledgement.
+            for(int pass=0;pass<4;pass++)
             {
-                if(PlayerPrefs.GetString(appliedKey,"")!=claimId)
+                Response response=null;
+                yield return Send("/wallet/claim",new Request(),r=>response=r);
+                if(response==null||response.wallet==null){done(false);yield break;}
+                Apply(response.wallet);
+
+                string claimId=response.wallet.claimId;
+                int amount=response.wallet.claimAmount;
+                if(string.IsNullOrEmpty(claimId)||amount<=0)
                 {
-                    ProfileTransaction.Commit(
-                        new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,amount)),
-                        new ProfileTransaction.Write(appliedKey,claimId));
+                    Status="Shard balance synchronized.";
+                    done(true);yield break;
                 }
-            }
-            catch(Exception)
-            {
-                Status="Verified shards are waiting to be synchronized.";
-                done(false);yield break;
+
+                string appliedKey="DF_ShardClaim_"+AccountHash;
+                try
+                {
+                    if(PlayerPrefs.GetString(appliedKey,"")!=claimId)
+                    {
+                        ProfileTransaction.Commit(
+                            new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,amount)),
+                            new ProfileTransaction.Write(appliedKey,claimId));
+                    }
+                }
+                catch(Exception)
+                {
+                    Status="Verified shards are waiting to be synchronized.";
+                    done(false);yield break;
+                }
+
+                Response ack=null;
+                yield return Send("/wallet/claim/ack",new Request{claimId=claimId},r=>ack=r);
+                if(ack==null)
+                {
+                    Status="Shards added. Store sync will finish on reconnect.";
+                    done(true);yield break;
+                }
+                if(ack.wallet!=null)Apply(ack.wallet);
             }
 
-            Response ack=null;
-            yield return Send("/wallet/claim/ack",new Request{claimId=claimId},r=>ack=r);
-            if(ack!=null&&ack.wallet!=null)Apply(ack.wallet);
-            Status=ack!=null?"Shards added to your balance.":"Shards added. Store sync will finish on reconnect.";
+            // More than four queued claims is abnormal; keep the local grants safe and finish on the next refresh.
+            Status="Shards added. Finishing store sync on reconnect.";
             done(true);
         }
 
