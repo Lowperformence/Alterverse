@@ -257,7 +257,7 @@ namespace Alterverse.UI
             float tabW=136f,tabGap=10f;
             if(theme.Action(new Rect(Left,204,tabW,52),"SKINS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop&&!weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;shopMessage="";}
-            theme.Label(new Rect(Right-264,116,264,42),$"EARNED {PlayerWallet.Balance}  /  STORE {PaidShardCommerce.Balance}",theme.Small);
+            theme.Label(new Rect(Right-264,116,264,42),$"SHARDS  {PlayerWallet.Balance}",theme.Small);
             if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;weaponShop=false;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=true;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,170,52),"BATTLE ITEM",selected:itemShop)){skinShop=false;shardShop=false;itemShop=true;weaponShop=false;shopMessage="";}
@@ -276,42 +276,26 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+32,542,64,60),"<")) { shopAvatarIndex=(shopAvatarIndex-1+AvatarShopCatalog.Items.Length)%AvatarShopCatalog.Items.Length; shopMessage=""; }
             theme.Center(new Rect(Left+102,542,90,60),$"{shopAvatarIndex+1} / {AvatarShopCatalog.Items.Length}");
             if (theme.Action(new Rect(Left+198,542,64,60),">")) { shopAvatarIndex=(shopAvatarIndex+1)%AvatarShopCatalog.Items.Length; shopMessage=""; }
-            bool affordable=PlayerWallet.CanAfford(item.Price)||PaidShardCommerce.Balance>=item.Price;
+            bool affordable=PlayerWallet.CanAfford(item.Price);
             string action=equipped?"EQUIPPED":owned?"EQUIP":affordable?"UNLOCK":"NEED MORE SHARDS";
             if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable)))
             {
                 if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
-                else if(!PlayerWallet.CanAfford(item.Price)){BuyPaidCosmetic("avatar_"+item.AvatarId,item.AvatarId);}
                 else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopMessage=result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
             }
             theme.Label(new Rect(Left+32,618,galleryWidth-64,26),shopMessage,theme.Small,true);
             float x=Left+galleryWidth+32, w=ContentWidth-galleryWidth-32;
-            theme.Label(new Rect(x,244,w,36),"Earned in battle",theme.Heading);
-            theme.Label(new Rect(x,296,w,100),"Earn shards in matches or buy optional packs. Cosmetics use one wallet per purchase; balances are not combined.",theme.Body,true);
+            theme.Label(new Rect(x,244,w,36),"One shard balance",theme.Heading);
+            theme.Label(new Rect(x,296,w,100),"Earn shards in matches or buy shard packs. They all enter the same balance and can be spent on any shard-priced item.",theme.Body,true);
             FrontEndTheme.Fill(new Rect(x,436,w,1),FrontEndTheme.Raised);
             theme.Label(new Rect(x,462,w,40),"Premium cosmetics",theme.Heading);
             theme.Label(new Rect(x,518,w,62),FounderEntitlement.Owned?"First Traveler status active.\nYour owned cosmetics remain available.":"The real-money store is not available yet.",theme.Body,true);
             if(RecallCosmeticEntitlement.Owned) theme.Label(new Rect(x,600,w,48),RecallCosmeticCatalog.DisplayName+" / OWNED",theme.Small,true);
         }
-        private async void BuyPaidCosmetic(string id,int avatar)
-        {
-            if(cosmeticBusy||PaidShardCommerce.Instance==null)return;cosmeticBusy=true;shopMessage="Confirming purchase…";
-            try
-            {
-                var backend=PaidShardCommerce.Instance;int session=backend.SessionVersion;
-                bool success=await backend.BuyCosmetic(id);
-                if(this==null)return;
-                if(backend==null||backend!=PaidShardCommerce.Instance||session!=backend.SessionVersion)success=false;
-                if(success){if(avatar<0)UniversalSkin.Equip(true);else PlayerProfile.Avatar=avatar;Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.6f);}
-                shopMessage=success?"Purchased and equipped.":"Could not confirm purchase. Reconnect and retry.";
-            }
-            catch(System.Exception){if(this!=null)shopMessage="Purchase interrupted. Reconnect to recover.";}
-            finally{if(this!=null)cosmeticBusy=false;}
-        }
         private void DrawShardShop()
         {
-            theme.Label(new Rect(Left,276,ContentWidth,36),"Optional shards. Cosmetics only.",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,32),$"EARNED: {PlayerWallet.Balance}   /   STORE WALLET: {PaidShardCommerce.Balance}",theme.Small,true);
+            theme.Label(new Rect(Left,276,ContentWidth,36),"Shard Packs",theme.Heading);
+            theme.Label(new Rect(Left,316,ContentWidth,32),$"BALANCE: {PlayerWallet.Balance} SHARDS  •  Earned and purchased shards are identical.",theme.Small,true);
             var store=GooglePlayShardStore.Instance;float w=(ContentWidth-48)/4;
             for(int i=0;i<ShardPacks.All.Length;i++)
             {
@@ -334,12 +318,11 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,346,rw,60),"UNIVERSAL ARMOR FINISH / ALL SIX HEROES",theme.Small,true);
             theme.Label(new Rect(x,410,rw,90),"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.",theme.Body,true);
             theme.Label(new Rect(x,510,rw,36),UniversalSkin.Owned?"OWNED":UniversalSkin.Price+" SHARDS",theme.Heading);
-            bool owned=UniversalSkin.Owned,equipped=UniversalSkin.Equipped,affordable=PlayerWallet.CanAfford(UniversalSkin.Price)||PaidShardCommerce.Balance>=UniversalSkin.Price;
+            bool owned=UniversalSkin.Owned,equipped=UniversalSkin.Equipped,affordable=PlayerWallet.CanAfford(UniversalSkin.Price);
             string label=equipped?"USE ORIGINAL":owned?"EQUIP VOIDFALL":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
             if(theme.Action(new Rect(x,562,rw,64),label,true,enabled:!cosmeticBusy&&(owned||affordable)))
             {
                 if(owned){UniversalSkin.Equip(!equipped);shopMessage=equipped?"Original finish equipped.":"VOIDFALL equipped for your next match.";}
-                else if(!PlayerWallet.CanAfford(UniversalSkin.Price))BuyPaidCosmetic("voidfall",-1);
                 else shopMessage=UniversalSkin.Purchase()==AvatarPurchaseResult.Purchased?"Purchased and equipped for all six heroes.":"Purchase could not be completed.";
             }
             theme.Label(new Rect(x,638,rw,48),shopMessage.Length>0?shopMessage:"Preview: VOIDFALL • cosmetic only",theme.Small,true);
@@ -378,12 +361,12 @@ namespace Alterverse.UI
                 {
                     AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero);
                     shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
-                        result==AvatarPurchaseResult.InsufficientShards?"Not enough earned shards.":"Purchase could not be completed.";
+                        result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
                 }
                 showcase.Present(hero,true,false,true);
             }
             theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:
-                $"EARNED SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
+                $"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
         }
 
         private void DrawBattleItemShop()
@@ -396,11 +379,11 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+180,370,cardW-204,38),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
             theme.Label(new Rect(Left+180,410,cardW-204,62),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nTriggers from your first successful ultimate next match.",theme.Body,true);
             theme.Label(new Rect(Left+180,478,cardW-204,24),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
-            theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} EARNED SHARDS",theme.Heading);
+            theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} SHARDS",theme.Heading);
             bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
-            if(theme.Action(new Rect(Left+180,548,cardW-204,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 EARNED SHARDS",true,enabled:canBuy))
+            if(theme.Action(new Rect(Left+180,548,cardW-204,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 SHARDS",true,enabled:canBuy))
                 shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":"Purchase failed.";
-            theme.Label(new Rect(Left,634,cardW,32),shopMessage.Length>0?shopMessage:"Earned shards only. Store-wallet shards cannot buy combat power.",theme.Small,true);
+            theme.Label(new Rect(Left,634,cardW,32),shopMessage.Length>0?shopMessage:"Any shards in your balance can buy the Aegis Core.",theme.Small,true);
 
             float x=Left+cardW+34,w=ContentWidth-cardW-34;
             theme.Label(new Rect(x,364,w,38),"Victory drops",theme.Heading);
