@@ -260,12 +260,31 @@ namespace Alterverse.UI
         {
             theme.Panel(rect);
             FrontEndTheme.Fill(new Rect(rect.x,rect.y,4,rect.height),accent);
-            Rect keyRect=new Rect(rect.x+14,rect.y+10,54,24);
+            Rect iconRect=new Rect(rect.x+12,rect.y+9,58,58);
+            FrontEndTheme.Fill(iconRect,FrontEndTheme.Raised);
+            if(ultimate)
+            {
+                CombatGlyphs.Ring(iconRect.center,25,2,new Color(accent.r,accent.g,accent.b,.72f),20);
+                CombatGlyphs.Ring(iconRect.center,29,1,new Color(accent.r,accent.g,accent.b,.34f),20);
+            }
+            CombatGlyphs.Draw(MenuGlyph((HeroId)selectedHero,attack.Key),iconRect.center,ultimate?34:31,ultimate?accent:FrontEndTheme.Text);
+            Rect keyRect=new Rect(rect.x+78,rect.y+7,52,22);
             FrontEndTheme.Fill(keyRect,ultimate?accent:FrontEndTheme.Raised);
             theme.Label(keyRect,attack.Key,theme.Small);
-            theme.Label(new Rect(rect.x+80,rect.y+7,rect.width-94,26),attack.Name,theme.Body);
-            theme.Label(new Rect(rect.x+14,rect.y+36,rect.width-28,18),attack.Stats,theme.Small,true);
-            theme.Label(new Rect(rect.x+14,rect.y+56,rect.width-28,22),attack.Effect,theme.Small,true);
+            theme.Label(new Rect(rect.x+138,rect.y+5,rect.width-150,26),attack.Name,theme.Body);
+            theme.Label(new Rect(rect.x+78,rect.y+34,rect.width-90,18),attack.Stats,theme.Small,true);
+            theme.Label(new Rect(rect.x+78,rect.y+54,rect.width-90,22),attack.Effect,theme.Small,true);
+        }
+        private static CombatGlyph MenuGlyph(HeroId h,string key)
+        {
+            if(key=="BASIC")return h==HeroId.Veyr?CombatGlyph.Blade:h==HeroId.Kaelon?CombatGlyph.Heavy:h==HeroId.Nyra?CombatGlyph.Rifle:h==HeroId.Elyra?CombatGlyph.Orb:h==HeroId.Mira?CombatGlyph.SupportShot:CombatGlyph.Gauntlet;
+            int slot=key=="Q"?0:key=="W"?1:key=="E"?2:3;
+            if(h==HeroId.Veyr)return slot==2?CombatGlyph.Dash:slot==3?CombatGlyph.Rift:slot==1?CombatGlyph.Rift:CombatGlyph.Blade;
+            if(h==HeroId.Kaelon)return slot==0?CombatGlyph.Stun:slot==1?CombatGlyph.Shield:slot==2?CombatGlyph.Area:CombatGlyph.Shield;
+            if(h==HeroId.Nyra)return slot==0?CombatGlyph.Rifle:slot==1?CombatGlyph.Dash:slot==2?CombatGlyph.Stun:CombatGlyph.Volley;
+            if(h==HeroId.Elyra)return slot==0?CombatGlyph.Area:slot==1?CombatGlyph.Rift:slot==2?CombatGlyph.Dash:CombatGlyph.Burst;
+            if(h==HeroId.Mira)return slot==0?CombatGlyph.SupportShot:slot==1?CombatGlyph.Heal:slot==2?CombatGlyph.Shield:CombatGlyph.Heal;
+            return slot==0?CombatGlyph.Gauntlet:slot==1?CombatGlyph.Shield:slot==2?CombatGlyph.Slam:CombatGlyph.Burst;
         }
         private void ChangeHero(int index)
         {
