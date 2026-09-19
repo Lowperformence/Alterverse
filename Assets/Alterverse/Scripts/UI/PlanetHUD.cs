@@ -26,6 +26,11 @@ namespace Alterverse.UI
                     Rect r=new Rect((layout.Width-440)*.5f,86,440,52);theme.Panel(r);
                     theme.Label(new Rect(r.x+12,r.y+4,r.width-24,r.height-8),DimensionPlanetDirector.Announcement,notice);
                 }
+                if(!string.IsNullOrEmpty(DimensionPlanetDirector.NextEventLabel))
+                {
+                    Rect next=new Rect(16,98,218,24);
+                    theme.Label(next,$"NEXT EVENT  •  {DimensionPlanetDirector.NextEventLabel}  {Mathf.CeilToInt(DimensionPlanetDirector.NextEventRemaining)}s",small,true);
+                }
                 if(playerBuff!=null&&playerBuff.ActiveRemaining>0)
                 {
                     Rect r=new Rect(16,126,218,64);theme.Panel(r);
