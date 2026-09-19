@@ -35,7 +35,8 @@ namespace Alterverse.Combat
             if (minion != null) return minion.Team != team;
             TeamMember member = candidate.GetComponent<TeamMember>();
             return member != null && member.Team != team &&
-                (candidate.GetComponent<HeroIdentity>() != null || candidate.GetComponent<HeroRespawn>() != null || candidate.GetComponent<MobaBotRespawn>() != null);
+                (candidate.GetComponent<HeroIdentity>() != null || candidate.GetComponent<HeroRespawn>() != null ||
+                 candidate.GetComponent<MobaBotRespawn>() != null || candidate.GetComponent<HotZoneTank>() != null);
         }
 
         private void Update()
