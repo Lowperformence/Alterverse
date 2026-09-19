@@ -56,7 +56,7 @@ namespace Alterverse.AI
             rotationSlot = (int)(hash % 5u);
         }
         private void OnEnable() { if (!ActiveBots.Contains(this)) ActiveBots.Add(this); }
-        private void OnDisable() { ActiveBots.Remove(this); if(ActiveBots.Count==0)nextSharedWorldScan=0; ResetMotion(); }
+        private void OnDisable() { ActiveBots.Remove(this); if(ActiveBots.Count==0){nextSharedWorldScan=0;sharedHotZone=null;} ResetMotion(); }
 
         private void Update()
         {
