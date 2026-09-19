@@ -195,8 +195,8 @@ namespace Alterverse.UI
                 Color edge=i==3?new Color(.9f,.73f,.42f):accent;
                 FrontEndTheme.Fill(r,held?FrontEndTheme.Raised:FrontEndTheme.Surface);
                 FrontEndTheme.Fill(new Rect(r.x,r.y,r.width,held?4:2),remaining>0?FrontEndTheme.Muted:edge);
-                CombatGlyph glyph=i<4?glyphs[i]:CombatGlyph.Strike;
-                CombatGlyphs.Draw(glyph,new Vector2(r.center.x,r.y+(i==4?38:28)),i==4?34:26,remaining>0?FrontEndTheme.Muted:FrontEndTheme.Text);
+                // Keep the combat buttons clean: the previous generic white glyph strokes read as stray slashes.
+                // Ability identity remains in the label, cooldown state and press feedback until final authored icons are available.
                 if(remaining>0)
                 {
                     float total=Mathf.Max(.01f,abilities.CooldownFor(i));float ratio=Mathf.Clamp01(remaining/total);
