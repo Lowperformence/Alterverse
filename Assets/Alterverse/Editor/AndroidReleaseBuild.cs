@@ -32,7 +32,12 @@ namespace Alterverse.EditorChecks
             if(PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)!=ScriptingImplementation.IL2CPP)errors.Add("Android requires IL2CPP for this release configuration.");
             if((PlayerSettings.Android.targetArchitectures&AndroidArchitecture.ARM64)==0)errors.Add("Enable ARM64.");
             if((int)PlayerSettings.Android.targetSdkVersion<36)errors.Add("Pin target SDK 36 or newer; automatic SDK selection is not a reproducible release gate.");
+            if(string.IsNullOrWhiteSpace(PlayerSettings.bundleVersion))errors.Add("Set a visible app version before uploading.");
             if(PlayerSettings.Android.bundleVersionCode<1)errors.Add("Set a positive, unused version code before uploading.");
+            if((int)PlayerSettings.Android.minSdkVersion<26)errors.Add("Minimum Android SDK must remain API 26 or newer for this release profile.");
+            Texture2D[] icons=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
+            bool hasIcon=false;if(icons!=null)foreach(Texture2D icon in icons)if(icon!=null){hasIcon=true;break;}
+            if(!hasIcon)errors.Add("Assign an Android launcher icon before uploading. The project currently has no Android application icon.");
             if(!EditorUserBuildSettings.buildAppBundle)errors.Add("Enable Android App Bundle (.aab).");
             if(!PlayerSettings.Android.useCustomKeystore||string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName)||string.IsNullOrWhiteSpace(PlayerSettings.Android.keyaliasName))errors.Add("Owner must configure upload signing locally. Never commit passwords or signing keys.");
             if(PlayerSettings.Android.useCustomKeystore&&!string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName))
@@ -50,6 +55,20 @@ namespace Alterverse.EditorChecks
             if(errors.Count>0)throw new BuildFailedException(string.Join("\n",errors));
             Debug.Log("DIMENSIONS FRONT: static Android settings gate passed. Device, manifest, asset and Play Console checks still required.");
         }
+        [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
+        public static void Prepare()
+        {
+            EditorUserBuildSettings.buildAppBundle=true;
+            EditorUserBuildSettings.development=false;
+            EditorUserBuildSettings.allowDebugging=false;
+            EditorUserBuildSettings.connectProfiler=false;
+            EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
+            PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARM64;
+            Debug.Log("DIMENSIONS FRONT: release-safe Android build flags applied. Running upload preflight...");
+            Validate();
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Build signed Android bundle")]
         public static void Build()
         {
