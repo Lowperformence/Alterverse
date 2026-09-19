@@ -6,7 +6,7 @@ namespace Alterverse.Match
     [RequireComponent(typeof(DimensionPlanet), typeof(Health))]
     public sealed class PlanetPulseAttack : MonoBehaviour
     {
-        [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 5.2f, damage = 7f;
+        [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 5.2f, damage = 60f;
         private const int Segments = 64;
         private DimensionPlanet planet;
         private Health health;
