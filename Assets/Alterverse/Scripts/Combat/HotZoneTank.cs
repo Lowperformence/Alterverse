@@ -58,7 +58,7 @@ namespace Alterverse.Combat
             for(int i=0;i<active.Count;i++)
             {
                 HotZoneTank existing=active[i];
-                if(existing!=null&&existing.team==team&&existing.health!=null&&!existing.health.IsDead)return false;
+                if(existing!=null&&existing.health!=null&&!existing.health.IsDead)return false;
             }
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
@@ -261,6 +261,8 @@ namespace Alterverse.Combat
             Part("TowHookR",PrimitiveType.Cylinder,transform,new Vector3(.46f,-.18f,1.34f),new Vector3(.08f,.12f,.08f),jointMat,Quaternion.Euler(90,0,0));
             Part("AntennaMast",PrimitiveType.Cylinder,turretPivot,new Vector3(.42f,.78f,-.24f),new Vector3(.035f,.38f,.035f),jointMat,Quaternion.Euler(0,0,-4));
             Part("AntennaTip",PrimitiveType.Sphere,turretPivot,new Vector3(.44f,1.17f,-.24f),new Vector3(.075f,.075f,.075f),energyMat,Quaternion.identity);
+            Part("TeamBeaconStem",PrimitiveType.Cylinder,turretPivot,new Vector3(-.42f,.76f,-.22f),new Vector3(.045f,.34f,.045f),jointMat,Quaternion.identity);
+            Part("TeamBeacon",PrimitiveType.Sphere,turretPivot,new Vector3(-.42f,1.13f,-.22f),new Vector3(.15f,.15f,.15f),energyMat,Quaternion.identity);
             for(int i=-1;i<=1;i++)
             {
                 float x=i*.42f;
