@@ -18,6 +18,14 @@ namespace Alterverse.AI
         private BotState state = BotState.Lane;
         private float nextDecisionTime;
         private bool wasDead;
+        private System.Random decisions;
+        private float lastHealth, threatUntil;
+        public BotDifficulty DifficultyLevel { get; private set; }
+        public BotDifficultyProfile Difficulty { get; private set; }
+        public bool GroupWithAllies { get; private set; }
+        public float TeamFocus=>personality!=null?personality.TeamFocus:.6f;
+        public float ObjectiveFocus=>personality!=null?personality.ObjectiveFocus:.6f;
+        public bool Chance(float probability)=>decisions.NextDouble()<Mathf.Clamp01(probability);
         public int Team => team;
         public float LaneZ => laneZ;
         public BotState State => state;
@@ -26,7 +34,9 @@ namespace Alterverse.AI
 
         private void Awake()
         {
-            health = GetComponent<Health>(); respawn = GetComponent<MobaBotRespawn>();
+            DifficultyLevel=BotDifficultySettings.Selected;Difficulty=BotDifficultyProfile.For(DifficultyLevel);
+            decisions=new System.Random(unchecked(GetInstanceID()*397^System.Environment.TickCount));
+            health = GetComponent<Health>();lastHealth=health.Normalized; respawn = GetComponent<MobaBotRespawn>();
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
         }
@@ -40,7 +50,7 @@ namespace Alterverse.AI
             if (respawn != null && respawn.IsRespawning) return;
             if (wasDead) ResumeLaneAfterRespawn();
             if (Time.time < nextDecisionTime) return;
-            nextDecisionTime = Time.time + Mathf.Max(.15f, decisionInterval);
+            nextDecisionTime = Time.time + Mathf.Max(.15f, decisionInterval*Difficulty.DecisionScale);
             Decide();
         }
         public void Initialize(int assignedTeam, float assignedLaneZ, float personalityAggression = .55f, float personalityCaution = .55f)
@@ -52,7 +62,7 @@ namespace Alterverse.AI
         }
         public void ResumeLaneAfterRespawn()
         {
-            wasDead = false; state = BotState.Lane; nextDecisionTime = Time.time + .1f;
+            wasDead = false;threatUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
@@ -72,7 +82,14 @@ namespace Alterverse.AI
         private void Decide()
         {
             float hp = health.Normalized;
-            if (hp <= lowHealthThreshold) { state = BotState.Retreat; return; }
+            if(lastHealth-hp>.08f)threatUntil=Time.time+Difficulty.MemorySeconds;
+            lastHealth=hp;
+            int pressure=targetSensor!=null?Mathf.Max(0,targetSensor.NearbyEnemies-targetSensor.NearbyAllies-1):0;
+            float danger=pressure*.035f*Difficulty.TargetAccuracy;
+            if(Time.time<threatUntil)danger+=.035f*Difficulty.TargetAccuracy;
+            GroupWithAllies=Chance(TeamFocus*Difficulty.Grouping);
+            float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.48f);
+            if (hp <= retreat) { state = BotState.Retreat; return; }
             if (state == BotState.Retreat || state == BotState.Recover)
             {
                 state = hp < .8f ? BotState.Recover : BotState.Lane;

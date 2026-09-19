@@ -39,7 +39,7 @@ namespace Alterverse.AI
         private int rotationSlot;
         public bool IsAvoidingHazard { get; private set; }
         private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
-        private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * .78f) : 1.4f;
+        private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * Mathf.Lerp(.65f,.88f,brain!=null?brain.Difficulty.Positioning:.6f)) : 1.4f;
 
         private void Awake()
         {
@@ -70,10 +70,23 @@ namespace Alterverse.AI
             {
                 Vector3 delta = target.transform.position - transform.position; delta.y = 0;
                 if (delta.sqrMagnitude <= chaseLimit * chaseLimit)
-                { destination = target.transform.position; stopDistance = CombatStop; }
+                {
+                    destination = target.transform.position; stopDistance = CombatStop;
+                    if(profile!=null&&profile.AttackRange>4f&&delta.sqrMagnitude<CombatStop*CombatStop*.55f)
+                    {
+                        Vector3 back=transform.position-delta.normalized*1.6f*brain.Difficulty.Positioning;
+                        if(CanRepositionTo(back)){destination=back;stopDistance=.15f;}
+                    }
+                }
             }
+            else if(brain.State==MobaBotBrain.BotState.Lane&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
+            { destination=sensor.RallyPosition;stopDistance=3f; }
             else if (brain.State == MobaBotBrain.BotState.Lane && objective != null && objective.Available && ShouldRotate())
             { destination = objective.transform.position; stopDistance = 2.2f; }
+
+            if(brain.State==MobaBotBrain.BotState.Fight&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0
+                &&sensor.NearbyEnemies>sensor.NearbyAllies+1&&profile!=null&&profile.AttackRange>4f)
+            {destination=sensor.RallyPosition;stopDistance=3f;}
 
             if (TryGetPulseEscape(out Vector3 escape))
             {
@@ -86,7 +99,7 @@ namespace Alterverse.AI
         private void ScanWorld()
         {
             if (Time.time < nextWorldScan) return;
-            nextWorldScan = Time.time + .5f;
+            nextWorldScan = Time.time + brain.Difficulty.ObjectiveInterval;
             if(Time.time>=nextSharedWorldScan)
             {
                 nextSharedWorldScan=Time.time+.5f;
@@ -108,7 +121,9 @@ namespace Alterverse.AI
         {
             if (objective == null) return false;
             float sqr = (objective.transform.position - transform.position).sqrMagnitude;
-            return sqr <= 26f * 26f && (rotationSlot < 2 || sqr < 10f * 10f);
+            float focus=brain.ObjectiveFocus;
+            int slots=focus>.75f?4:focus>.55f?3:2;
+            return sqr <= 26f * 26f && (rotationSlot < slots || sqr < 10f * 10f);
         }
 
         private bool TryGetPulseEscape(out Vector3 escape)

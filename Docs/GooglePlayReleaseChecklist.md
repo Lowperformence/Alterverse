@@ -1,3 +1,5 @@
+> Ergänzung nach dem Release-Pass: [AI-Difficulty.md](AI-Difficulty.md) dokumentiert die ausdrücklich nachbeauftragte, gespeicherte Bot-Schwierigkeit. Aktuell 210 lokale C#-Dateien syntaktisch geprüft; Unity-/Gerätefreigaben bleiben offen.
+
 # DIMENSIONS FRONT — Google Play Release Checklist
 
 Stand: 2026-09-19. Branch: `dev/vertical-slice`. **CODE READY zur Unity-Validierung**, nicht zur Veröffentlichung freigegeben. Feature Freeze nach Charakter-/Menü-Pass; keine weiteren freiwilligen Erweiterungen.

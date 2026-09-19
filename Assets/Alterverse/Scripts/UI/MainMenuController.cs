@@ -183,7 +183,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+28,244,w-56,26),"AVAILABLE NOW",theme.Small,true);
             theme.Label(new Rect(Left+28,286,w-56,50),"AI MATCH 5v5",theme.Title);
             theme.Label(new Rect(Left+28,350,w-56,62),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM  /  LOCAL MATCH",theme.Body);
+            theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM / "+Alterverse.AI.BotDifficultySettings.Label(Alterverse.AI.BotDifficultySettings.Selected)+" BOTS",theme.Body);
             theme.Label(new Rect(Left+28,479,w-56,24),"Online multiplayer is not available yet.",theme.Small,true);
             if (theme.Action(new Rect(Left,554,w,76),"START AI MATCH",true)) BeginLaunch();
             theme.Label(new Rect(Left,642,w,28),launchMessage.Length>0?launchMessage:"Your selected hero is confirmed when the match starts.",theme.Small,true);
@@ -379,7 +379,7 @@ namespace Alterverse.UI
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawSettings()
         {
-            Heading("Settings","Make the sound your own.");
+            Heading("Settings","Choose your challenge. Make the sound your own.");
             float w=ContentWidth*.64f;
             theme.Panel(new Rect(Left,222,w,438));
             float previousMaster=master, previousMusic=music, previousSfx=sfx;
@@ -389,11 +389,17 @@ namespace Alterverse.UI
             if(previousMaster!=master||previousMusic!=music||previousSfx!=sfx)
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
-            theme.Label(new Rect(x,248,rw,38),"Language",theme.Heading);
-            theme.Label(new Rect(x,296,rw,30),PlayerProfile.Language,theme.Body,true);
-            theme.Label(new Rect(x,398,rw,38),"Local profile",theme.Heading);
-            theme.Label(new Rect(x,446,rw,96),"Progress and preferences are saved on this device.",theme.Body,true);
-            theme.Label(new Rect(x,588,rw,60),"Hear changes immediately. Saved automatically when you leave.",theme.Small,true);
+            theme.Label(new Rect(x,238,rw,38),"BOT DIFFICULTY",theme.Heading);
+            var selected=Alterverse.AI.BotDifficultySettings.Selected;
+            for(int i=0;i<3;i++)
+            {
+                var level=(Alterverse.AI.BotDifficulty)i;
+                if(theme.Action(new Rect(x,288+i*62,rw,54),Alterverse.AI.BotDifficultySettings.Label(level),selected:selected==level))
+                    Alterverse.AI.BotDifficultySettings.Selected=level;
+            }
+            theme.Label(new Rect(x,482,rw,78),"Applies to both bot teams next match. Smarter decisions; same combat stats.",theme.Body,true);
+            theme.Label(new Rect(x,572,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
+            theme.Label(new Rect(x,612,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {

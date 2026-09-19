@@ -31,6 +31,7 @@ namespace Alterverse.EditorChecks
                 Time.timeScale = 1f;
                 CheckBrainAndRespawn();
                 CheckTargetRetention();
+                CheckDifficulty();
                 CheckAbilitySlots();
                 CheckMinionDuel();
                 CheckTowerAndHazardDecisions();
@@ -100,9 +101,61 @@ namespace Alterverse.EditorChecks
             Set(sensor, "currentTarget", first); Call(sensor, "Scan");
             Assert(sensor.CurrentTarget == first, "A tiny distance advantage must not change targets.");
             second.transform.position = origin + Vector3.right; Call(sensor, "Scan");
-            Assert(sensor.CurrentTarget == second, "A substantially closer enemy must be selectable.");
+            Assert(sensor.CurrentTarget == first, "A challenger must wait for reaction delay.");
+            Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget == second, "A substantially closer enemy must be selected after reaction delay.");
             second.TakeDamage(100); Call(sensor, "Scan");
-            Assert(sensor.CurrentTarget == first, "A dead target must be replaced immediately.");
+            Assert(sensor.CurrentTarget == null, "Dead targets must be cleared immediately without instant reacquisition.");
+            Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget == first, "A living target must be reacquired after reaction delay.");
+        }
+        private static void CheckDifficulty()
+        {
+            const string key="DF_BotDifficulty";
+            bool existed=PlayerPrefs.HasKey(key);int previous=PlayerPrefs.GetInt(key);
+            try
+            {
+                PlayerPrefs.DeleteKey(key);
+                Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Missing preference defaults to NORMAL.");
+                PlayerPrefs.SetInt(key,999);
+                Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Invalid preference defaults to NORMAL.");
+                for(int level=0;level<3;level++)
+                {
+                    BotDifficultySettings.Selected=(BotDifficulty)level;
+                    Assert(PlayerPrefs.GetInt(key)==level&&BotDifficultySettings.Selected==(BotDifficulty)level,"Difficulty is stored and read back.");
+                    for(int style=0;style<5;style++)
+                    {
+                        var bot=Unit("Check_Difficulty",0,new Vector3(8000+level*100,1,8000+style*20));
+                        bot.AddComponent<HeroIdentity>().Configure(HeroId.Nyra);
+                        var combat=bot.AddComponent<HeroCombatProfile>();combat.Configure(HeroId.Nyra);
+                        float hp=combat.Health,damage=combat.Attack,speed=combat.MoveSpeed,interval=combat.AttackInterval;
+                        var personality=bot.AddComponent<BotPersonality>();personality.Configure((BotPersonality.Style)style);
+                        var sensor=bot.AddComponent<BotTargetSensor>();
+                        var brain=bot.AddComponent<MobaBotBrain>();brain.Initialize(0,16);brain.RefreshPersonality();
+                        Assert(brain.DifficultyLevel==(BotDifficulty)level,"Bot captures selected difficulty.");
+                        Assert(brain.Aggression==personality.Aggression&&brain.Caution==personality.Caution,"Personality survives every difficulty.");
+                        Assert(hp==combat.Health&&damage==combat.Attack&&speed==combat.MoveSpeed&&interval==combat.AttackInterval,"Difficulty must not mutate combat stats.");
+                        Set(sensor,"brain",brain);
+                        var enemy=Unit("Check_Reaction",1,bot.transform.position+Vector3.right*4).GetComponent<Health>();
+                        Call(sensor,"Scan");Assert(sensor.CurrentTarget==null,"No frame-zero target acquisition.");
+                        Set(sensor,"candidateSince",Time.time-brain.Difficulty.ReactionDelay-.01f);Call(sensor,"Scan");
+                        Assert(sensor.CurrentTarget==enemy,"Every difficulty eventually acquires a visible target.");
+                        var wall=new GameObject("Check_SightWall");Created.Add(wall);
+                        wall.transform.position=bot.transform.position+Vector3.right*2;
+                        wall.AddComponent<BoxCollider>().size=new Vector3(.5f,3,3);
+                        Physics.SyncTransforms();Call(sensor,"Scan");
+                        Assert(sensor.CurrentTarget==null,"A solid wall blocks perception on every difficulty.");
+                        UnityEngine.Object.DestroyImmediate(wall);
+                        enemy.transform.position+=Vector3.right*30;Call(sensor,"Scan");
+                        Assert(sensor.CurrentTarget==null,"Memory cannot track an out-of-sight target.");
+                    }
+                }
+            }
+            finally
+            {
+                if(existed)PlayerPrefs.SetInt(key,previous);else PlayerPrefs.DeleteKey(key);
+                PlayerPrefs.Save();
+            }
         }
         private static HeroBotAbilities Abilities(HeroId hero, Vector3 position)
         {

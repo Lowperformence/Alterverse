@@ -24,7 +24,8 @@ namespace Alterverse.AI
         private void Update()
         {
             if (Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Time.time < nextDecision) return;
-            nextDecision = Time.time + Random.Range(.28f,.48f);
+            var difficulty=brain!=null?brain.Difficulty:BotDifficultyProfile.For(BotDifficulty.Normal);
+            nextDecision = Time.time + Random.Range(.28f,.48f)*difficulty.DecisionScale;
             Health target = sensor.CurrentTarget;
             HeroId h = identity.Hero;
             bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
@@ -40,7 +41,12 @@ namespace Alterverse.AI
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)))) return;
             if (h == HeroId.Veyr && ((!fighting && self.Normalized < .5f) || (fighting && distance > 3.1f && distance < 7f)) && TryCast(2,target)) return;
             if (!fighting) return;
+            // Missed opportunities delay a decision, never reset or shorten real cooldowns.
+            if(brain!=null&&brain.Chance(difficulty.AbilityMistake))return;
+            bool isHero=target.GetComponent<HeroIdentity>()!=null;
             bool ultimateWindow = h == HeroId.Veyr ? target.Normalized < .55f : h == HeroId.Kaelon ? distance <= kit.Ultimate.Radius : target.GetComponent<HeroIdentity>() != null && target.Normalized < .7f;
+            if(difficulty.TargetAccuracy>=.85f&&isHero&&sensor.NearbyEnemies>=2&&h!=HeroId.Veyr&&h!=HeroId.Kaelon)ultimateWindow=true;
+            if(h==HeroId.Rook)ultimateWindow=ultimateWindow&&distance<=kit.Ultimate.Radius;
             if (h != HeroId.Mira && ultimateWindow && TryCast(3,target)) return;
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra) && TryCast(1,target)) return;
