@@ -1,4 +1,5 @@
-"""Durable paid-currency ledger. Call only after authenticated Google verification.
+"""Durable Google-verified shard buffer.
+Verified purchases are claimed idempotently into the game's single shard balance.
 No client-supplied prices, shard amounts or user IDs may be trusted by the HTTP adapter.
 """
 import json
@@ -18,6 +19,13 @@ class Ledger:
             CREATE TABLE IF NOT EXISTS wallet (account TEXT PRIMARY KEY, balance INTEGER NOT NULL DEFAULT 0 CHECK(balance>=0), revision INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS purchase (token TEXT PRIMARY KEY, account TEXT NOT NULL, product TEXT NOT NULL, quantity INTEGER NOT NULL, credited INTEGER NOT NULL);
             CREATE TABLE IF NOT EXISTS cosmetic (account TEXT NOT NULL, sku TEXT NOT NULL, PRIMARY KEY(account,sku));
+            CREATE TABLE IF NOT EXISTS claim (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account TEXT NOT NULL,
+                amount INTEGER NOT NULL CHECK(amount>=0),
+                acknowledged INTEGER NOT NULL DEFAULT 0 CHECK(acknowledged IN (0,1))
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS claim_pending_per_account ON claim(account) WHERE acknowledged=0;
             ''')
     def connect(self):
         db = sqlite3.connect(self.path, timeout=15)
@@ -56,6 +64,43 @@ class Ledger:
             db.execute('INSERT INTO purchase VALUES (?,?,?,?,?)', (token, account, product, quantity, amount))
             db.execute('UPDATE wallet SET balance=balance+?,revision=revision+1 WHERE account=?', (amount, account))
             return self.snapshot(db, account)
+    def claim(self, account):
+        """Move the current verified server balance into one retry-safe client claim."""
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self.ensure(db, account)
+            pending = db.execute(
+                'SELECT id,amount FROM claim WHERE account=? AND acknowledged=0 ORDER BY id LIMIT 1',
+                (account,)).fetchone()
+            if pending is None:
+                balance = db.execute('SELECT balance FROM wallet WHERE account=?', (account,)).fetchone()[0]
+                if balance > 0:
+                    db.execute('UPDATE wallet SET balance=0,revision=revision+1 WHERE account=?', (account,))
+                    cursor = db.execute('INSERT INTO claim(account,amount,acknowledged) VALUES (?,?,0)', (account,balance))
+                    pending = (cursor.lastrowid,balance)
+
+            result = self.snapshot(db, account)
+            result['claimId'] = str(pending[0]) if pending is not None else ''
+            result['claimAmount'] = pending[1] if pending is not None else 0
+            return result
+
+    def acknowledge_claim(self, account, claim_id):
+        if not isinstance(claim_id, str) or not claim_id.isdigit():
+            raise ValueError('Invalid claim')
+        claim = int(claim_id)
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self.ensure(db, account)
+            row = db.execute('SELECT acknowledged FROM claim WHERE id=? AND account=?', (claim,account)).fetchone()
+            if row is None:
+                raise ValueError('Unknown claim')
+            if row[0] == 0:
+                db.execute('UPDATE claim SET acknowledged=1 WHERE id=? AND account=?', (claim,account))
+            result = self.snapshot(db, account)
+            result['claimId'] = ''
+            result['claimAmount'] = 0
+            return result
+
     def buy(self, account, sku):
         if sku not in COSMETICS: raise ValueError('Unknown cosmetic')
         with self.connect() as db:
