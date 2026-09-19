@@ -18,6 +18,8 @@ namespace Alterverse.Match
 
         private enum State { Waiting, Active, Resolved }
         private State state;
+        private static HotZoneDirector owner;
+        private bool rewardIssued;
         private float elapsed,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
@@ -36,7 +38,12 @@ namespace Alterverse.Match
         public int ZeroInside=>zeroInside;
         public int LumenInside=>lumenInside;
 
-        private void Awake(){front=FindAnyObjectByType<DimensionsFront>();}
+        private void Awake()
+        {
+            if(owner!=null&&owner!=this){enabled=false;Destroy(gameObject);return;}
+            owner=this;front=FindAnyObjectByType<DimensionsFront>();
+        }
+        private void OnDisable(){if(owner==this)owner=null;}
 
         private void Update()
         {
@@ -87,16 +94,24 @@ namespace Alterverse.Match
 
         private void Resolve()
         {
+            if(state==State.Resolved)return;
             state=State.Resolved;
+            front??=FindAnyObjectByType<DimensionsFront>();
+            if(front!=null&&front.HasEnded){ResolveNoReward();return;}
+
             int winner=zeroTime>lumenTime+.05f?0:lumenTime>zeroTime+.05f?1:-1;
-            if(winner>=0)HotZoneTank.Spawn(winner);
+            if(winner>=0&&!rewardIssued)
+            {
+                rewardIssued=HotZoneTank.Spawn(winner);
+                if(!rewardIssued)winner=-1;
+            }
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
             if(zoneRoot!=null)Destroy(zoneRoot,1.2f);
         }
 
         private void ResolveNoReward()
         {
-            state=State.Resolved;
+            state=State.Resolved;rewardIssued=true;
             if(zoneRoot!=null)Destroy(zoneRoot);
         }
 
@@ -111,8 +126,13 @@ namespace Alterverse.Match
             zoneRoot=new GameObject("DF_HotZoneVisual");zoneRoot.transform.position=transform.position;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)zoneRoot.transform.SetParent(world,true);
 
-            pulseRing=CreateRing(zoneRoot.transform,"DF_HotZoneOuter",Radius,.10f,neutralMat,64);
-            innerRing=CreateRing(zoneRoot.transform,"DF_HotZoneInner",Radius*.72f,.055f,neutralMat,48);
+            pulseRing=CreateRing(zoneRoot.transform,"DF_HotZoneOuter",Radius,.14f,neutralMat,64);
+            innerRing=CreateRing(zoneRoot.transform,"DF_HotZoneInner",Radius*.72f,.075f,neutralMat,48);
+            CreateRing(zoneRoot.transform,"DF_HotZoneCoreRing",Radius*.34f,.055f,neutralMat,32);
+            GameObject center=GameObject.CreatePrimitive(PrimitiveType.Cylinder);center.name="DF_HotZoneCenter";
+            center.transform.SetParent(zoneRoot.transform,false);center.transform.localPosition=Vector3.up*.045f;center.transform.localScale=new Vector3(2.1f,.018f,2.1f);
+            Collider centerCollider=center.GetComponent<Collider>();if(centerCollider!=null)centerCollider.enabled=false;
+            Renderer centerRenderer=center.GetComponent<Renderer>();if(centerRenderer!=null){centerRenderer.sharedMaterial=neutralMat;centerRenderer.shadowCastingMode=ShadowCastingMode.Off;centerRenderer.receiveShadows=false;}
             for(int i=0;i<8;i++)
             {
                 float a=i*Mathf.PI*2f/8f;
@@ -132,8 +152,12 @@ namespace Alterverse.Match
             Material active=zero?zeroMat:lumen?lumenMat:neutralMat;
             if(pulseRing!=null&&pulseRing.TryGetComponent(out LineRenderer a))a.sharedMaterial=active;
             if(innerRing!=null&&innerRing.TryGetComponent(out LineRenderer b))b.sharedMaterial=active;
-            zoneRoot.transform.Rotate(0,7f*Time.deltaTime,0,Space.World);
-            float pulse=1f+Mathf.Sin(Time.time*3.4f)*.018f;
+            Renderer[] markers=zoneRoot.GetComponentsInChildren<Renderer>();
+            for(int i=0;i<markers.Length;i++)
+                if(markers[i]!=null&&markers[i].gameObject.name.StartsWith("DF_HotZoneMarker"))
+                    markers[i].sharedMaterial=active;
+            zoneRoot.transform.Rotate(0,9f*Time.deltaTime,0,Space.World);
+            float pulse=1f+Mathf.Sin(Time.time*4.2f)*.028f;
             if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
         }
 
