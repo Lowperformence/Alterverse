@@ -35,7 +35,8 @@ namespace Alterverse.AI
         private void Awake()
         {
             DifficultyLevel=BotDifficultySettings.Selected;Difficulty=BotDifficultyProfile.For(DifficultyLevel);
-            decisions=new System.Random(unchecked(GetInstanceID()*397^System.Environment.TickCount));
+            // We only need per-bot entropy for the local RNG; an object hash is sufficient and avoids obsolete InstanceID APIs in Unity 6.6+.
+            decisions=new System.Random(unchecked(GetHashCode()*397^System.Environment.TickCount));
             health = GetComponent<Health>();lastHealth=health.Normalized; respawn = GetComponent<MobaBotRespawn>();
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
