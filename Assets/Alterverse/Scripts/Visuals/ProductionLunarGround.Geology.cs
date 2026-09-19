@@ -26,6 +26,30 @@ namespace Alterverse.Visuals
                 for(int i=0;i<5;i++)LandmarkRock("DF_DeadLunarGrowth",site+new Vector2(Mathf.Sin(i*2.4f)*.45f,Mathf.Cos(i*2.4f)*.4f),
                     new Vector3(.08f,.48f+i%3*.16f,.07f),i*71,0,darkRegolith);
         }
+        void BuildDistributedCraterDebris()
+        {
+            // Sparse rim fragments make selected impacts readable from the gameplay camera.
+            // Craters themselves remain surface relief; these rocks only punctuate a few rims.
+            Vector3[] impacts={
+                new(-31,.92f,17),new(-26,.88f,-15),new(-14,.62f,13),new(-13,.82f,-15),
+                new(-2,.68f,12),new(-1,.9f,-13),new(11,.64f,12),new(12,.86f,-14),
+                new(27,.92f,-16),new(32,.58f,18),new(-20,.74f,-20),new(19,.78f,-21)
+            };
+            for(int site=0;site<impacts.Length;site++)
+            {
+                Vector3 impact=impacts[site];
+                for(int i=0;i<3;i++)
+                {
+                    float angle=(site*37+i*121+18)*Mathf.Deg2Rad;
+                    float radius=impact.y*(1.05f+i*.16f);
+                    Vector2 p=new Vector2(impact.x+Mathf.Cos(angle)*radius,impact.z+Mathf.Sin(angle)*radius);
+                    float size=.18f+(site+i)%3*.09f;
+                    LandmarkRock("DF_CraterRimFragment",p,new Vector3(size,.12f+(i%2)*.08f,size*.78f),site*53+i*79,0,
+                        (site+i)%3==0?darkRegolith:rimMat);
+                }
+            }
+        }
+
         void BuildDensityClusters()
         {
             // Authored pockets with deliberate negative space: no rocks in lane, core or objective corridors.
