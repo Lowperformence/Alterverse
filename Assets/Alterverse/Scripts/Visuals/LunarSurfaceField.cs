@@ -103,6 +103,13 @@ namespace Alterverse.Visuals
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.29f,.66f,tone));
                     pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f*(1f-dust*.035f),1);
                 }
+                else if(ArenaVariantRuntime.IsGreenPlanet)
+                {
+                    // Mineral alien regolith: olive/moss/grey-green, with darker compacted lanes.
+                    float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.29f,.66f,tone));
+                    float laneMute=1f-dust*.055f;
+                    pixels[i]=new Color(value*.62f*laneMute,value*1.03f*mineral,value*.54f*laneMute,1);
+                }
                 else pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
