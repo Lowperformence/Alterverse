@@ -240,9 +240,14 @@ namespace Alterverse.UI
             bool active=joystickFinger>=0||mouseJoystick;
             Vector2 center=active?joystickCenter:new Vector2(104,layout.Height-104);
             Vector2 knob=active?joystickKnob:center;
-            CombatGlyphs.Ring(center,Radius,2,FrontEndTheme.Muted,32);
-            CombatGlyphs.Ring(knob,24,3,active?accent:FrontEndTheme.Text,20);
-            if(!active)theme.Label(new Rect(center.x-60,center.y+74,120,20),"MOVE",small,true);
+
+            // Quiet mobile joystick: smooth circular outlines only, no label or visual clutter.
+            Color baseRing=new Color(FrontEndTheme.Muted.r,FrontEndTheme.Muted.g,FrontEndTheme.Muted.b,active?.34f:.20f);
+            Color knobRing=active
+                ?new Color(accent.r,accent.g,accent.b,.48f)
+                :new Color(FrontEndTheme.Text.r,FrontEndTheme.Text.g,FrontEndTheme.Text.b,.26f);
+            CombatGlyphs.Ring(center,58f,1.5f,baseRing,72);
+            CombatGlyphs.Ring(knob,20f,2f,knobRing,56);
         }
         private void DrawHint()
         {
