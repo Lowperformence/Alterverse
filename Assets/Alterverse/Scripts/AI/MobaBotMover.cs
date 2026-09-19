@@ -22,8 +22,9 @@ namespace Alterverse.AI
         private static HotZoneDirector sharedHotZone;
         private long separationOrder;
         private HeroLocomotion locomotion;
-        private float blockedTime, detourUntil;
+        private float blockedTime, detourUntil, freeMoveTime, nextStuckLog;
         private Vector3 detour;
+        private int recoveryAttempts;
         private bool arrived;
         private Health health;
         private MobaBotBrain brain;
@@ -170,7 +171,7 @@ namespace Alterverse.AI
             ResetSteering(); locomotion?.ResetMotion(); objective = null; nextWorldScan = 0; IsAvoidingHazard = false;
         }
 
-        public void ResetSteering(){velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=0;detour=Vector3.zero;}
+        public void ResetSteering(){velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;recoveryAttempts=0;nextStuckLog=0;}
 
         public bool CanRepositionTo(Vector3 destination)
         {
@@ -327,17 +328,69 @@ namespace Alterverse.AI
             Vector3 requested=next-transform.position;
             Vector3 movement=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
             if(!arrived&&movement.sqrMagnitude>.00001f)locomotion.FaceMovement(movement);
-            bool blocked=!arrived&&requested.sqrMagnitude>.00001f&&movement.sqrMagnitude<requested.sqrMagnitude*.09f;
-            blockedTime=blocked?blockedTime+Time.deltaTime:0;
-            if(blockedTime>.22f&&Time.time>=detourUntil)
+
+            // Severe partial stalls count as blocked too. The previous 9% threshold missed bots
+            // that only scraped a few centimetres along a collider and could remain wedged.
+            bool hasIntent=!arrived&&requested.sqrMagnitude>.00001f;
+            float requestedSqr=requested.sqrMagnitude;
+            float progressRatio=requestedSqr>.000001f?movement.sqrMagnitude/requestedSqr:1f;
+            bool blocked=hasIntent&&progressRatio<.30f;
+            if(blocked){blockedTime+=Time.deltaTime;freeMoveTime=0;}
+            else if(hasIntent&&progressRatio>.70f)
             {
-                // Commit to one side briefly instead of recomputing alternating directions.
-                Vector3 normal=locomotion.LastCollisionNormal;normal.y=0;
-                Vector3 tangent=normal.sqrMagnitude>.01f?Vector3.Cross(Vector3.up,normal).normalized:Vector3.Cross(Vector3.up,delta.normalized);
-                float along=Vector3.Dot(tangent,delta);
-                if(along<-.01f||(Mathf.Abs(along)<=.01f&&rotationSlot%2==0))tangent=-tangent;
-                detour=tangent;detourUntil=Time.time+.55f;blockedTime=0;
+                blockedTime=0;freeMoveTime+=Time.deltaTime;
+                if(freeMoveTime>.65f){recoveryAttempts=0;freeMoveTime=.65f;}
             }
+            else {blockedTime=0;freeMoveTime=0;}
+
+            if(blockedTime>.28f&&Time.time>=detourUntil)
+                BeginStuckRecovery(delta);
+        }
+
+        private void BeginStuckRecovery(Vector3 towardDestination)
+        {
+            blockedTime=0;freeMoveTime=0;recoveryAttempts++;
+            towardDestination.y=0;
+            Vector3 desired=towardDestination.sqrMagnitude>.01f?towardDestination.normalized:transform.forward;
+            Vector3 normal=locomotion.LastCollisionNormal;normal.y=0;
+            int side=((rotationSlot+recoveryAttempts)&1)==0?1:-1;
+
+            // Prefer a tangent around the actual blocker, but verify it is open before committing.
+            Vector3 preferred=desired;
+            if(normal.sqrMagnitude>.01f)
+            {
+                preferred=Vector3.Cross(Vector3.up,normal.normalized)*side;
+                if(Vector3.Dot(preferred,desired)<-.25f)preferred=-preferred;
+            }
+
+            if(!locomotion.TryFindClearDirection(preferred,1.35f,side,out detour)
+                &&!locomotion.TryFindClearDirection(desired,1.35f,side,out detour))
+                detour=Vector3.Cross(Vector3.up,desired)*side;
+
+            detour.y=0;
+            if(detour.sqrMagnitude<.01f)detour=brain!=null&&brain.Team==0?Vector3.right:Vector3.left;
+            detour.Normalize();
+            detourUntil=Time.time+Mathf.Min(1.05f,.52f+recoveryAttempts*.12f);
+            velocity=Vector3.zero;
+
+            // Repeated collision means the tactical target/route may be stale. Reset only steering
+            // context; no combat stats or positions are changed and there is no teleport.
+            if(recoveryAttempts>=3)
+            {
+                sensor?.ClearTarget();
+                lanePlan?.ResetRoute();
+                detourUntil=Time.time+.92f;
+            }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if(Time.time>=nextStuckLog)
+            {
+                nextStuckLog=Time.time+2f;
+                string blocker=locomotion.LastCollisionCollider!=null?locomotion.LastCollisionCollider.name:"unknown";
+                string targetName=sensor!=null&&sensor.CurrentTarget!=null?sensor.CurrentTarget.name:"none";
+                Debug.LogWarning($"BOT STUCK RECOVERY: {name} pos={transform.position} state={(brain!=null?brain.State.ToString():"?")} lane={(brain!=null?brain.LaneZ:0)} target={targetName} blocker={blocker} attempt={recoveryAttempts}");
+            }
+#endif
         }
     }
 }
