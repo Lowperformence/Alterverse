@@ -19,7 +19,6 @@ namespace Alterverse.Visuals
                     LandmarkRock("DF_PerimeterFractureSpire",p,new Vector3(spire?.8f:.45f,height,spire?.7f:.38f),site*39+i*(zero?47:13),0,i%2==0?darkRegolith:rimMat);
                 }
                 Vector2 a=sites[site]+new Vector2(-1.2f,-.6f),b=sites[site]+new Vector2(.6f,-.1f);
-                LandmarkSeam(a,b,.08f,darkRegolith);
                 LandmarkSeam(Vector2.Lerp(a,b,.35f),Vector2.Lerp(a,b,.65f),.035f,zero?zeroEnergy:lumenEnergy);
             }
             // Two small dead crystalline growths. Opaque geometry, neutral stone, no grass cards.
@@ -43,7 +42,6 @@ namespace Alterverse.Visuals
                     // Low, partly buried slabs; outer pockets carry more relief than traversable interior.
                     LandmarkRock("DF_RegolithDebrisPocket",p,new Vector3(size,size*(site<4?.3f:.6f),size*.7f),site*37+i*71,0,i%3==0?darkRegolith:rimMat);
                 }
-                LandmarkSeam(centers[site]+new Vector2(-1.2f,-.55f),centers[site]+new Vector2(.75f,-.3f),.07f,darkRegolith);
             }
         }
         void BuildSmallLandmarks()
@@ -57,15 +55,8 @@ namespace Alterverse.Visuals
                 Vector2 p=impact+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*radius;
                 LandmarkRock("DF_AncientImpactEjecta",p,new Vector3(.42f+i%3*.19f,.24f+i%2*.12f,.32f+i%3*.13f),i*53,0,i%2==0?rimMat:darkRegolith);
             }
-            for(int i=0;i<3;i++)
-            {
-                Vector2 a=impact+new Vector2(-1.2f+i*.9f,-.4f+i*.26f);
-                LandmarkSeam(a,a+new Vector2(.8f,.55f),.12f,darkRegolith);
-            }
             // A fractured stone held just above an old void seam; no particles or moving object loop.
             Vector2 fracture=new(-18,-26);
-            LandmarkSeam(fracture+new Vector2(-1.1f,-.5f),fracture+new Vector2(.15f,.1f),.14f,darkRegolith);
-            LandmarkSeam(fracture+new Vector2(.15f,.1f),fracture+new Vector2(1.2f,.45f),.09f,darkRegolith);
             LandmarkSeam(fracture+new Vector2(-.32f,-.05f),fracture+new Vector2(.24f,.12f),.035f,zeroEnergy);
             for(int i=0;i<3;i++)LandmarkRock("DF_SuspendedVoidFragment",fracture+new Vector2((i-1)*.63f,(i%2)*.3f),
                 new Vector3(.38f,.3f+i*.07f,.3f),31+i*67,.55f+i*.16f,darkRegolith);
