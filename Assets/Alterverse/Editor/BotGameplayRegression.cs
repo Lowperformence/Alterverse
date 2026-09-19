@@ -120,9 +120,7 @@ namespace Alterverse.EditorChecks
             Assert(Vector3.Dot(steer, Vector3.right) < .98f,
                 "Obstacle recovery must not keep steering straight into the blocker.");
 
-            Set(mover, "blockedTime", .4f);
-            Set(mover, "detourUntil", 0f);
-            Call(mover, "MoveToward", origin + Vector3.right * 5f, .1f);
+            Call(mover, "BeginStuckRecovery", Vector3.right);
             float detourUntil = (float)typeof(MobaBotMover).GetField("detourUntil", Private).GetValue(mover);
             Vector3 detour = (Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover);
             Assert(detourUntil > Time.time && detour.sqrMagnitude > .5f,
