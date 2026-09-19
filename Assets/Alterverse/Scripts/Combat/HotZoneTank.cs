@@ -36,7 +36,7 @@ namespace Alterverse.Combat
         private Transform xenoVisualRoot,xenoTorsoPivot,xenoPelvisPivot,xenoHeadPivot,xenoBackRoot;
         private Transform xenoLeftShoulderPivot,xenoRightShoulderPivot,xenoLeftForearmPivot,xenoRightForearmPivot,xenoLeftClaw,xenoRightClaw;
         private Transform xenoLeftHipPivot,xenoRightHipPivot,xenoLeftShinPivot,xenoRightShinPivot,xenoLeftFoot,xenoRightFoot;
-        private Vector3 xenoVisualRootBasePosition;
+        private Vector3 xenoVisualRootBasePosition,xenoCoreBaseScale;
         private float xenoMoveBlend,xenoAttackKick,xenoHitUntil;
         private Color xenoArmorBase,xenoEnergyBase;
         private Renderer xenoCoreRenderer;
@@ -419,7 +419,7 @@ namespace Alterverse.Combat
             MeshPart("XenoChestLeft",chestSide,xenoTorsoPivot,new Vector3(-.72f,.05f,.48f),new Vector3(.95f,.94f,1f),armorMat,Quaternion.Euler(-2,-12,-4));
             MeshPart("XenoChestRight",chestSide,xenoTorsoPivot,new Vector3(.72f,.02f,.48f),new Vector3(1.03f,.90f,1f),armorMat,Quaternion.Euler(-1,12,5));
             Transform core=Part("XenoChestCore",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(0,-.05f,.78f),new Vector3(.24f,.20f,.16f),energyMat,Quaternion.identity);
-            xenoCoreRenderer=core.GetComponent<Renderer>();
+            xenoCoreRenderer=core.GetComponent<Renderer>();xenoCoreBaseScale=core.localScale;
 
             // Short separated energy channels read as biological veins instead of one neon rectangle.
             Mesh vein1=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(-.42f,.25f,.69f),new Vector3(-.14f,.05f,.78f),.030f,6));
@@ -429,8 +429,8 @@ namespace Alterverse.Combat
             MeshPart("XenoVeinR",vein2,xenoTorsoPivot,Vector3.zero,Vector3.one,energyMat,Quaternion.identity);
             MeshPart("XenoVeinLower",vein3,xenoTorsoPivot,Vector3.zero,Vector3.one,energyMat,Quaternion.identity);
 
-            BuildXenoArm(-1f,shoulderPlate,forearmPlate,clawBlade,markPlate,teamEnergy);
-            BuildXenoArm(1f,shoulderPlate,forearmPlate,clawBlade,markPlate,teamEnergy);
+            BuildXenoArm(-1f,shoulderPlate,forearmPlate,clawBlade,markPlate);
+            BuildXenoArm(1f,shoulderPlate,forearmPlate,clawBlade,markPlate);
             BuildXenoLeg(-1f,thighPlate,toeBlade);
             BuildXenoLeg(1f,thighPlate,toeBlade);
 
@@ -452,7 +452,7 @@ namespace Alterverse.Combat
             MeshPart("XenoSpineR2",spineB,xenoBackRoot,new Vector3(.69f,-.34f,.04f),new Vector3(.58f,.50f,.68f),darkMat,Quaternion.Euler(16,11,20));
         }
 
-        private void BuildXenoArm(float side,Mesh shoulderPlate,Mesh forearmPlate,Mesh clawBlade,Mesh markPlate,Color teamEnergy)
+        private void BuildXenoArm(float side,Mesh shoulderPlate,Mesh forearmPlate,Mesh clawBlade,Mesh markPlate)
         {
             bool left=side<0f;
             Transform shoulder=Pivot(left?"DF_XenoShoulderPivotL":"DF_XenoShoulderPivotR",xenoTorsoPivot,new Vector3(side*1.18f,.28f,-.02f),Quaternion.Euler(-8,0,side*8f));
@@ -538,7 +538,7 @@ namespace Alterverse.Combat
 
             float emission=1.75f+idle*.10f+attackWindup*1.65f+xenoAttackKick*.55f;
             if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))energyMat.SetColor("_EmissionColor",xenoEnergyBase*emission);
-            if(xenoCoreRenderer!=null)xenoCoreRenderer.transform.localScale=Vector3.one*(1f+attackWindup*.18f+idle*.025f);
+            if(xenoCoreRenderer!=null)xenoCoreRenderer.transform.localScale=xenoCoreBaseScale*(1f+attackWindup*.18f+idle*.025f);
 
             if(armorMat!=null)
             {
