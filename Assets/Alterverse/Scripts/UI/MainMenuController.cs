@@ -318,24 +318,25 @@ namespace Alterverse.UI
         }
         private void DrawBattleItemShop()
         {
-            Heading("Battle Supply","Only the Aegis Core can be purchased. Other battle items are victory drops.");
+            theme.Label(new Rect(Left,276,ContentWidth,36),"Battle Supply",theme.Heading);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Only the Aegis Core can be purchased. Other battle items are victory drops.",theme.Small,true);
             float cardW=Mathf.Min(680,ContentWidth*.62f);
-            theme.Panel(new Rect(Left,286,cardW,318));
-            BattleItemIconRenderer.Draw(new Rect(Left+28,314,154,154),BattleItemType.Shield);
-            theme.Label(new Rect(Left+210,306,cardW-238,42),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
-            theme.Label(new Rect(Left+210,356,cardW-238,78),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nTriggers from your first successful ultimate next match.",theme.Body,true);
-            theme.Label(new Rect(Left+210,450,cardW-238,30),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
-            theme.Label(new Rect(Left+210,486,cardW-238,32),$"{BattleItemInventory.ShieldShardPrice} EARNED SHARDS",theme.Heading);
+            theme.Panel(new Rect(Left,354,cardW,270));
+            BattleItemIconRenderer.Draw(new Rect(Left+24,374,132,132),BattleItemType.Shield);
+            theme.Label(new Rect(Left+180,370,cardW-204,38),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
+            theme.Label(new Rect(Left+180,410,cardW-204,62),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nTriggers from your first successful ultimate next match.",theme.Body,true);
+            theme.Label(new Rect(Left+180,478,cardW-204,24),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
+            theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} EARNED SHARDS",theme.Heading);
             bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
-            if(theme.Action(new Rect(Left+210,536,cardW-238,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 EARNED SHARDS",true,enabled:canBuy))
+            if(theme.Action(new Rect(Left+180,548,cardW-204,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 EARNED SHARDS",true,enabled:canBuy))
                 shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":"Purchase failed.";
-            theme.Label(new Rect(Left,620,cardW,40),shopMessage.Length>0?shopMessage:"Earned shards only. Store-wallet shards cannot buy combat power.",theme.Small,true);
+            theme.Label(new Rect(Left,634,cardW,32),shopMessage.Length>0?shopMessage:"Earned shards only. Store-wallet shards cannot buy combat power.",theme.Small,true);
 
             float x=Left+cardW+34,w=ContentWidth-cardW-34;
-            theme.Label(new Rect(x,302,w,38),"Victory drops",theme.Heading);
-            theme.Label(new Rect(x,352,w,126),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Meteor Cores are equally likely.",theme.Body,true);
-            theme.Label(new Rect(x,502,w,78),"Only one item can be equipped. It is consumed when its first valid Ultimate activation happens.",theme.Body,true);
-            if(theme.Action(new Rect(x,600,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
+            theme.Label(new Rect(x,364,w,38),"Victory drops",theme.Heading);
+            theme.Label(new Rect(x,410,w,110),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Meteor Cores are equally likely.",theme.Body,true);
+            theme.Label(new Rect(x,530,w,68),"Only one item can be equipped. It is consumed when its first valid Ultimate activation happens.",theme.Body,true);
+            if(theme.Action(new Rect(x,610,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
         }
 
         private void DrawInventory()
