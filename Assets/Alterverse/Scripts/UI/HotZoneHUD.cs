@@ -7,7 +7,7 @@ namespace Alterverse.UI
     {
         private HotZoneDirector zone;
         private FrontEndTheme theme;
-        private GUIStyle centerStyle;
+        private GUIStyle centerStyle,rightStyle;
         private string banner="";
         private float bannerUntil;
 
@@ -50,6 +50,7 @@ namespace Alterverse.UI
 
             theme??=new FrontEndTheme();
             centerStyle??=new GUIStyle(theme.Small){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold};
+            rightStyle??=new GUIStyle(centerStyle){alignment=TextAnchor.MiddleRight};
             CombatHudLayout layout=new(Screen.safeArea);
             Matrix4x4 previous=GUI.matrix;
             try
@@ -80,8 +81,7 @@ namespace Alterverse.UI
                     FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*zeroShare,bar.height),FrontEndTheme.Zero);
                     FrontEndTheme.Fill(new Rect(bar.x+bar.width*zeroShare,bar.y,bar.width*(1-zeroShare),bar.height),FrontEndTheme.Accent);
                     theme.Label(new Rect(p.x+18,p.y+43,p.width*.45f,14),$"ZERO {zone.ZeroControlSeconds:0.0}s",theme.Small,true);
-                    GUIStyle right=new(centerStyle){alignment=TextAnchor.MiddleRight};
-                    theme.Label(new Rect(p.x+p.width*.55f-18,p.y+43,p.width*.45f,14),$"LUMEN {zone.LumenControlSeconds:0.0}s",right,true);
+                    theme.Label(new Rect(p.x+p.width*.55f-18,p.y+43,p.width*.45f,14),$"LUMEN {zone.LumenControlSeconds:0.0}s",rightStyle,true);
                 }
             }
             finally{GUI.matrix=previous;}
