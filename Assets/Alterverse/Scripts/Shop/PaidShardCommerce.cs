@@ -6,11 +6,12 @@ using UnityEngine;
 using UnityEngine.Networking;
 namespace Alterverse.Shop
 {
-    // Paid currency is a server-owned wallet, deliberately separate from offline earned shards.
+    // Google-verified purchases are held server-side only until they can be claimed safely
+    // into the game's single shard balance. Players never see separate shard currencies.
     public sealed class PaidShardCommerce:MonoBehaviour
     {
-        [Serializable] public sealed class Snapshot {public long revision;public int balance;public bool voidfall;public int[] avatars;}
-        [Serializable] sealed class Request {public string productId,purchaseToken,cosmeticId;}
+        [Serializable] public sealed class Snapshot {public long revision;public int balance;public bool voidfall;public int[] avatars;public string claimId;public int claimAmount;}
+        [Serializable] sealed class Request {public string productId,purchaseToken,cosmeticId,claimId;}
         [Serializable] sealed class Response {public bool fulfilled;public Snapshot wallet;}
         public static PaidShardCommerce Instance{get;private set;}
         public static int Balance=>Instance!=null&&Instance.Ready?Instance.snapshot.balance:0;
@@ -32,18 +33,75 @@ namespace Alterverse.Shop
         public static void Disconnect(){if(Instance==null)return;var c=Instance;c.generation++;c.ready=false;c.token=null;c.AccountHash=null;c.snapshot=new Snapshot();c.CancelPending();c.Status="Store account disconnected.";}
         void CancelPending(){StopAllCoroutines();var tasks=new List<TaskCompletionSource<bool>>(pending);pending.Clear();foreach(var task in tasks)task.TrySetResult(false);}
         void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
-        IEnumerator Sync(){yield return Send("/wallet",new Request(),r=>{if(r!=null&&r.wallet!=null){Apply(r.wallet);ready=true;Status="Store account connected.";}});}
+        IEnumerator Sync()
+        {
+            Response response=null;
+            yield return Send("/wallet",new Request(),r=>response=r);
+            if(response==null||response.wallet==null)yield break;
+            Apply(response.wallet);ready=true;Status="Store account connected.";
+            bool claimed=false;
+            yield return ClaimVerifiedShards(ok=>claimed=ok);
+            if(claimed)Status="Shard balance synchronized.";
+        }
         public Task<bool> Fulfill(string product,string purchaseToken)
         {
             var task=new TaskCompletionSource<bool>();
             if(!Ready||!ShardPacks.Contains(product)||string.IsNullOrEmpty(purchaseToken)){task.SetResult(false);return task.Task;}
-            pending.Add(task);StartCoroutine(Send("/google-play/fulfill",new Request{productId=product,purchaseToken=purchaseToken},r=>{bool ok=r!=null&&r.fulfilled&&r.wallet!=null;if(ok)Apply(r.wallet);pending.Remove(task);task.TrySetResult(ok);}));return task.Task;
+            pending.Add(task);StartCoroutine(FulfillAndClaim(product,purchaseToken,task));return task.Task;
+        }
+        IEnumerator FulfillAndClaim(string product,string purchaseToken,TaskCompletionSource<bool> task)
+        {
+            Response response=null;
+            yield return Send("/google-play/fulfill",new Request{productId=product,purchaseToken=purchaseToken},r=>response=r);
+            bool ok=response!=null&&response.fulfilled&&response.wallet!=null;
+            if(ok)
+            {
+                Apply(response.wallet);
+                bool claimed=false;
+                yield return ClaimVerifiedShards(value=>claimed=value);
+                ok=claimed;
+            }
+            pending.Remove(task);task.TrySetResult(ok);
         }
         public Task<bool> BuyCosmetic(string id)
         {
             var task=new TaskCompletionSource<bool>();if(!Ready){task.SetResult(false);return task.Task;}
             pending.Add(task);StartCoroutine(Send("/cosmetics/buy",new Request{cosmeticId=id},r=>{bool ok=r!=null&&r.fulfilled&&r.wallet!=null;if(ok)Apply(r.wallet);pending.Remove(task);task.TrySetResult(ok);}));return task.Task;
         }
+        IEnumerator ClaimVerifiedShards(Action<bool> done)
+        {
+            Response response=null;
+            yield return Send("/wallet/claim",new Request(),r=>response=r);
+            if(response==null||response.wallet==null){done(false);yield break;}
+            Apply(response.wallet);
+
+            string claimId=response.wallet.claimId;
+            int amount=response.wallet.claimAmount;
+            if(string.IsNullOrEmpty(claimId)||amount<=0){done(true);yield break;}
+
+            string appliedKey="DF_ShardClaim_"+AccountHash;
+            try
+            {
+                if(PlayerPrefs.GetString(appliedKey,"")!=claimId)
+                {
+                    Profile.ProfileTransaction.Commit(
+                        new Profile.ProfileTransaction.Write("DF_Shards",Profile.ProfileTransaction.Add(Profile.PlayerWallet.Balance,amount)),
+                        new Profile.ProfileTransaction.Write(appliedKey,claimId));
+                }
+            }
+            catch(Exception)
+            {
+                Status="Verified shards are waiting to be synchronized.";
+                done(false);yield break;
+            }
+
+            Response ack=null;
+            yield return Send("/wallet/claim/ack",new Request{claimId=claimId},r=>ack=r);
+            if(ack!=null&&ack.wallet!=null)Apply(ack.wallet);
+            Status=ack!=null?"Shards added to your balance.":"Shards added. Store sync will finish on reconnect.";
+            done(true);
+        }
+
         IEnumerator Send(string route,Request body,Action<Response> done)
         {
             int requestGeneration=generation;string credential=ReadCredential();if(string.IsNullOrEmpty(credential)){Status="Sign in to reconnect the store.";done(null);yield break;}
