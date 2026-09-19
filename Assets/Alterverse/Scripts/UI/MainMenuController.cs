@@ -219,28 +219,53 @@ namespace Alterverse.UI
         private void DrawHeroes()
         {
             Heading("Heroes","Six roles. Choose how you fight.");
-            float rosterWidth = 288;
-            for (int i=0;i<6;i++)
+            const float rosterWidth=244f;
+            for(int i=0;i<6;i++)
             {
-                Rect row = new Rect(Left,216+i*74,rosterWidth,64);
-                bool chosen = i==selectedHero;
-                if (theme.Action(row,"",selected:chosen)) ChangeHero(i);
+                Rect row=new Rect(Left,216+i*74,rosterWidth,64);
+                bool chosen=i==selectedHero;
+                if(theme.Action(row,"",selected:chosen))ChangeHero(i);
                 FrontEndTheme.Fill(new Rect(row.x+5,row.y+12,3,row.height-24),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)i));
                 theme.Label(new Rect(row.x+18,row.y+8,row.width-32,26),HeroIdentity.NameFor((HeroId)i),theme.Body);
                 theme.Label(new Rect(row.x+18,row.y+35,row.width-32,22),Roles[i],theme.Small,true);
             }
-            float infoWidth = 300;
-            float portraitX=Left+rosterWidth+16, infoX=Right-infoWidth;
-            DrawPortrait(new Rect(portraitX,212,infoX-portraitX-12,456));
-            theme.Label(new Rect(infoX,232,infoWidth,72),HeroName,theme.Title);
-            theme.Label(new Rect(infoX,320,infoWidth,28),Roles[selectedHero],theme.Heading);
-            FrontEndTheme.Fill(new Rect(infoX,366,48,3),FrontEndTheme.Accent);
-            theme.Label(new Rect(infoX,390,infoWidth,96),RoleDescriptions[selectedHero],theme.Body,true);
-            theme.Label(new Rect(infoX,518,infoWidth,40),Strengths[selectedHero],theme.Small,true);
+
             HeroId heroId=(HeroId)selectedHero;
+            Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent(heroId);
+            float portraitX=Left+rosterWidth+16;
+            float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
+            float attacksX=portraitX+portraitWidth+18;
+            float attacksWidth=Right-attacksX;
+
+            theme.Label(new Rect(portraitX,212,portraitWidth,44),HeroName,theme.Heading);
+            theme.Label(new Rect(portraitX,250,portraitWidth,22),Roles[selectedHero]+"  •  "+Strengths[selectedHero],theme.Small,true);
+            DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
+            theme.Label(new Rect(portraitX,566,portraitWidth,46),RoleDescriptions[selectedHero],theme.Small,true);
             string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:"ORIGINAL WEAPON";
-            theme.Label(new Rect(infoX,562,infoWidth,30),"EQUIPMENT  /  "+weaponStatus,theme.Small,true);
-            if (theme.Action(new Rect(infoX,610,infoWidth,60),"DEPLOY",true)) SetPage(Page.Play);
+            theme.Label(new Rect(portraitX,616,portraitWidth,24),"EQUIPMENT  /  "+weaponStatus,theme.Small,true);
+            if(theme.Action(new Rect(portraitX,646,portraitWidth,38),"DEPLOY",true))SetPage(Page.Play);
+
+            theme.Label(new Rect(attacksX,212,attacksWidth,28),"COMBAT LOADOUT",theme.Heading);
+            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Live gameplay values • damage / range / cooldown / effects",theme.Small,true);
+            HeroAttackCard[] attacks=HeroAttackCatalog.For(heroId);
+            const float cardHeight=82f,gap=5f;
+            for(int i=0;i<attacks.Length;i++)
+            {
+                Rect card=new Rect(attacksX,266+i*(cardHeight+gap),attacksWidth,cardHeight);
+                DrawHeroAttackCard(card,attacks[i],accent,i==attacks.Length-1);
+            }
+        }
+
+        private void DrawHeroAttackCard(Rect rect,HeroAttackCard attack,Color accent,bool ultimate)
+        {
+            theme.Panel(rect);
+            FrontEndTheme.Fill(new Rect(rect.x,rect.y,4,rect.height),accent);
+            Rect keyRect=new Rect(rect.x+14,rect.y+10,54,24);
+            FrontEndTheme.Fill(keyRect,ultimate?accent:FrontEndTheme.Raised);
+            theme.Label(keyRect,attack.Key,theme.Small);
+            theme.Label(new Rect(rect.x+80,rect.y+7,rect.width-94,26),attack.Name,theme.Body);
+            theme.Label(new Rect(rect.x+14,rect.y+36,rect.width-28,18),attack.Stats,theme.Small,true);
+            theme.Label(new Rect(rect.x+14,rect.y+56,rect.width-28,22),attack.Effect,theme.Small,true);
         }
         private void ChangeHero(int index)
         {
