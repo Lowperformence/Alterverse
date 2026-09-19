@@ -33,7 +33,9 @@ namespace Alterverse.Combat
             if(owner!=null&&owner!=this){enabled=false;Destroy(gameObject);return;}
             owner=this;
             front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
-            rng=new System.Random(unchecked(Environment.TickCount^GetInstanceID()));
+            // Unity 6.6 marks GetInstanceID() obsolete. GetHashCode() is sufficient here
+            // because this value is only used to decorrelate the local visual-event RNG seed.
+            rng=new System.Random(unchecked(Environment.TickCount^GetHashCode()));
             BuildSharedMaterials();
             if(!materialsReady)
             {
