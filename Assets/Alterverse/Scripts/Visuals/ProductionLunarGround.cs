@@ -31,8 +31,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildHealingIntegration(-27.5f);
         BuildHealingIntegration(27.5f);
         BuildTowerIntegration();
-        BuildFractures();
-        BuildRealityTransitionScars();
+        // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
+        // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         BuildRocks();
         BuildSmallLandmarks();
         BuildDensityClusters();
