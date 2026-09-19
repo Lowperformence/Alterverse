@@ -1,6 +1,13 @@
 using UnityEngine;
 namespace Alterverse.Characters
 {
+    public readonly struct HeroCombatStats
+    {
+        public readonly float AttackRange,AttackInterval,MoveSpeed,Control,Sustain;
+        public HeroCombatStats(float range,float interval,float speed,float control,float sustain)
+        {AttackRange=range;AttackInterval=interval;MoveSpeed=speed;Control=control;Sustain=sustain;}
+    }
+
     public sealed class HeroCombatProfile : MonoBehaviour
     {
         public HeroId Hero { get; private set; }
@@ -12,21 +19,23 @@ namespace Alterverse.Characters
         public float AbilityPower => 1f; // AbilitySpec.Power is the actual baseline, no hidden role multiplier.
         public float Control { get; private set; }
         public float Sustain { get; private set; }
+
+        public static HeroCombatStats StatsFor(HeroId id)=>id switch
+        {
+            HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f,.2f,.1f),
+            HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,5.6f,1f,.8f),
+            HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,6.2f,.3f,.05f),
+            HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
+            HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
+            _=>new HeroCombatStats(2.5f,.9f,6.15f,.45f,.7f)
+        };
+
         public void Configure(HeroId id)
         {
-            Hero = id;
-            Health = HeroIdentity.BaseHealth(id); Attack = HeroIdentity.AttackDamage(id);
-            switch (id)
-            {
-                case HeroId.Veyr: Set(2.25f, .85f, 7.1f, .2f, .1f); break;
-                case HeroId.Kaelon: Set(2.3f, 1.05f, 5.6f, 1f, .8f); break;
-                case HeroId.Nyra: Set(6.8f, .62f, 6.2f, .3f, .05f); break;
-                case HeroId.Elyra: Set(6.1f, 1.10f, 5.9f, .85f, .05f); break;
-                case HeroId.Mira: Set(6.0f, 1f, 6.1f, .5f, 1f); break;
-                default: Set(2.5f, .9f, 6.15f, .45f, .7f); break;
-            }
+            Hero=id;Health=HeroIdentity.BaseHealth(id);Attack=HeroIdentity.AttackDamage(id);
+            HeroCombatStats stats=StatsFor(id);
+            AttackRange=stats.AttackRange;AttackInterval=stats.AttackInterval;MoveSpeed=stats.MoveSpeed;
+            Control=stats.Control;Sustain=stats.Sustain;
         }
-        private void Set(float range, float interval, float speed, float control, float sustain)
-        { AttackRange = range; AttackInterval = interval; MoveSpeed = speed; Control = control; Sustain = sustain; }
     }
 }
