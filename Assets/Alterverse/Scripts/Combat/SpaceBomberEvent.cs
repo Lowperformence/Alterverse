@@ -169,7 +169,8 @@ namespace Alterverse.Combat
             {
                 float a=i/(float)Mathf.Max(1,fade-1);
                 int tail=length-fade+i;
-                float head=samples[i];
+                // Reverse the head reference so the final sample approaches sample zero.
+                float head=samples[fade-1-i];
                 samples[tail]=Mathf.Lerp(samples[tail],head,a);
             }
 
@@ -240,7 +241,12 @@ namespace Alterverse.Combat
             if(completed)return;
             if(front==null)front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             if(front!=null&&front.HasEnded){Finish();return;}
-            if(Time.timeScale<=0f)return;
+            if(Time.timeScale<=0f)
+            {
+                if(jetSource!=null&&jetSource.isPlaying)jetSource.Pause();
+                return;
+            }
+            if(jetSource!=null&&!jetSource.isPlaying)jetSource.UnPause();
 
             travelled=Mathf.Min(length,travelled+speed*Time.deltaTime);
             float t=length>.01f?travelled/length:1f;
@@ -297,6 +303,7 @@ namespace Alterverse.Combat
             jetSource.minDistance=7f;
             jetSource.maxDistance=58f;
             jetSource.priority=92;
+            jetSource.bypassReverbZones=true;
             jetSource.volume=0f;
             jetSource.pitch=.97f;
             jetSource.Play();
