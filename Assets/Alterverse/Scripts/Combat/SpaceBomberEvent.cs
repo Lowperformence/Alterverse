@@ -1,5 +1,6 @@
 using System;
 using Alterverse.Characters;
+using Alterverse.Profile;
 using Alterverse.Visuals;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -190,6 +191,69 @@ namespace Alterverse.Combat
             return m;
         }
 
+        private static AudioClip BuildBomberEngineLoop()
+        {
+            const int rate=44100;
+            const float seconds=3.0f;
+            int length=Mathf.CeilToInt(rate*seconds);
+            float[] samples=new float[length];
+
+            uint noiseState=0x9E3779B9u;
+            float reactorPhase=0f,turbinePhase=0f,ionPhase=0f;
+            float lowNoise=0f,airNoise=0f;
+
+            for(int i=0;i<length;i++)
+            {
+                float t=i/(float)rate;
+
+                noiseState^=noiseState<<13;
+                noiseState^=noiseState>>17;
+                noiseState^=noiseState<<5;
+                float white=((noiseState&0xFFFF)/32767.5f)-1f;
+
+                // Broad, non-car-like airflow: filtered noise rather than repeating engine pulses.
+                lowNoise+= (white-lowNoise)*.018f;
+                float high=white-lowNoise;
+                airNoise+= (high-airNoise)*.12f;
+
+                // Heavy reactor bed.
+                float reactorHz=52f+Mathf.Sin(t*Mathf.PI*2f*.42f)*3.2f;
+                reactorPhase+=Mathf.PI*2f*reactorHz/rate;
+                float reactor=(Mathf.Sin(reactorPhase)+.34f*Mathf.Sin(reactorPhase*.5f))*0.34f;
+
+                // Plasma turbine: frequency-modulated, smooth, no piston/vehicle rhythm.
+                float turbineHz=176f+Mathf.Sin(t*Mathf.PI*2f*.63f)*18f+Mathf.Sin(t*Mathf.PI*2f*.17f)*8f;
+                turbinePhase+=Mathf.PI*2f*turbineHz/rate;
+                float turbine=(Mathf.Sin(turbinePhase)+.30f*Mathf.Sin(turbinePhase*2.01f))*0.20f;
+
+                // Thin sci-fi ion shimmer sitting above the low body.
+                float ionHz=610f+Mathf.Sin(t*Mathf.PI*2f*.91f)*54f;
+                ionPhase+=Mathf.PI*2f*ionHz/rate;
+                float ion=Mathf.Sin(ionPhase+.55f*Mathf.Sin(turbinePhase*.37f))*0.055f;
+
+                float airflow=airNoise*.22f+lowNoise*.08f;
+                float flutter=.95f+.05f*Mathf.Sin(t*Mathf.PI*2f*1.35f);
+                float mixed=(reactor+turbine+ion+airflow)*flutter;
+
+                // Soft saturation keeps the sound aggressive without harsh clipping.
+                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.52f),-1f,1f);
+            }
+
+            // Circular crossfade removes the loop click.
+            int fade=Mathf.Min(length/6,Mathf.CeilToInt(rate*.10f));
+            for(int i=0;i<fade;i++)
+            {
+                float a=i/(float)Mathf.Max(1,fade-1);
+                int tail=length-fade+i;
+                float blended=Mathf.Lerp(samples[tail],samples[i],a);
+                samples[tail]=blended;
+            }
+
+            AudioClip clip=AudioClip.Create("DF_BomberIonEngineLoop",length,1,rate,false);
+            clip.SetData(samples,0);
+            return clip;
+        }
+
         private void OnDestroy()
         {
             if(owner==this)owner=null;
@@ -198,6 +262,7 @@ namespace Alterverse.Combat
             if(energyMaterial!=null)Destroy(energyMaterial);
             if(warningMaterial!=null)Destroy(warningMaterial);
             if(bombMaterial!=null)Destroy(bombMaterial);
+            if(engineLoop!=null)Destroy(engineLoop);
             if(jetLoop!=null)Destroy(jetLoop);
         }
     }
@@ -216,6 +281,7 @@ namespace Alterverse.Combat
         private int passIndex;
         private Transform visual,engineGlowL,engineGlowR;
         private Material warningMaterial,bombMaterial,energyMaterial;
+        private AudioSource engineAudio;
         private AudioSource jetSource;
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
@@ -281,6 +347,40 @@ namespace Alterverse.Combat
             float z=Mathf.Clamp(routePoint.z+lateral.z*jitter,-32.5f,32.5f);
             Vector3 ground=LunarSurfaceField.Surface(x,z);
             SpaceBombStrike.Create(ground,routePoint.y-.55f,BombTelegraph,BombDamage,warningMaterial,bombMaterial,energyMaterial,front);
+        }
+
+        private void BuildEngineAudio(AudioClip clip)
+        {
+            if(clip==null)return;
+            engineAudio=gameObject.AddComponent<AudioSource>();
+            engineAudio.clip=clip;
+            engineAudio.loop=true;
+            engineAudio.playOnAwake=false;
+            engineAudio.spatialBlend=.58f;
+            engineAudio.dopplerLevel=0f;
+            engineAudio.rolloffMode=AudioRolloffMode.Linear;
+            engineAudio.minDistance=8f;
+            engineAudio.maxDistance=58f;
+            engineAudio.spread=28f;
+            engineAudio.priority=108;
+            engineAudio.volume=.50f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            engineAudio.pitch=1.02f;
+            engineAudio.Play();
+        }
+
+        private void UpdateEngineAudio(float routeProgress)
+        {
+            if(engineAudio==null)return;
+
+            // Manual fly-by pitch bend gives an aircraft-like pass without Unity's exaggerated Doppler.
+            float approach=Mathf.Clamp(routeProgress,0f,1f);
+            float flybyPitch=Mathf.Lerp(1.09f,.92f,approach);
+            float plasmaWobble=Mathf.Sin(Time.time*2.35f)*.012f;
+            engineAudio.pitch=Mathf.Clamp(flybyPitch+plasmaWobble,.88f,1.12f);
+
+            float centerPresence=1f-Mathf.Abs(routeProgress*.2f-1f);
+            float gain=Mathf.Lerp(.37f,.54f,Mathf.Clamp01(centerPresence));
+            engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
         }
 
         private void PulseEngines()
