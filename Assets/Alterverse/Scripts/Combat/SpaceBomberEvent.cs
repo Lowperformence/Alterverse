@@ -215,6 +215,8 @@ namespace Alterverse.Combat
         private Transform visual,engineGlowL,engineGlowR;
         private Material warningMaterial,bombMaterial,energyMaterial;
         private AudioSource engineAudio;
+        private HeroMotor localPlayer;
+        private float nextPlayerLookup;
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
         private bool completed;
@@ -225,6 +227,7 @@ namespace Alterverse.Combat
             director=source;start=routeStart;end=routeEnd;start.y=end.y=altitude;
             speed=Mathf.Max(2f,flightSpeed);length=Vector3.Distance(start,end);passIndex=pass;
             warningMaterial=warning;bombMaterial=bomb;energyMaterial=energy;front=matchFront;rng=random;
+            localPlayer=FindAnyObjectByType<HeroMotor>();
             transform.position=start;
             Vector3 direction=end-start;direction.y=0;
             if(direction.sqrMagnitude>.01f)transform.rotation=Quaternion.LookRotation(direction.normalized,Vector3.up);
@@ -288,11 +291,13 @@ namespace Alterverse.Combat
             engineAudio.clip=clip;
             engineAudio.loop=false;
             engineAudio.playOnAwake=false;
-            engineAudio.spatialBlend=.62f;
+            // Distance is driven by the controlled hero, not by the elevated top-down camera/AudioListener.
+            // This makes the fly-by audible only in the player's immediate battlefield area.
+            engineAudio.spatialBlend=0f;
             engineAudio.dopplerLevel=0f;
             engineAudio.rolloffMode=AudioRolloffMode.Linear;
-            engineAudio.minDistance=8f;
-            engineAudio.maxDistance=58f;
+            engineAudio.minDistance=1f;
+            engineAudio.maxDistance=2f;
             engineAudio.spread=24f;
             engineAudio.priority=108;
             engineAudio.volume=.154f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
@@ -306,11 +311,32 @@ namespace Alterverse.Combat
         {
             if(engineAudio==null)return;
 
-            // Keep the pitch almost fixed. A large pitch sweep was reading like a revving car.
-            // The generated clip already contains the sci-fi modulation; route position only changes loudness.
+            if(localPlayer==null&&Time.time>=nextPlayerLookup)
+            {
+                nextPlayerLookup=Time.time+1f;
+                localPlayer=FindAnyObjectByType<HeroMotor>();
+            }
+
+            // Keep the pitch almost fixed. The generated clip carries the jet character.
             engineAudio.pitch=1.02f+Mathf.Sin(Time.time*.92f)*.004f;
-            float centerPresence=1f-Mathf.Abs(routeProgress*2f-1f);
-            float gain=Mathf.Lerp(.098f,.168f,Mathf.Clamp01(centerPresence));
+
+            // Player-local audibility: full presence only when the craft is genuinely overhead/nearby,
+            // then a smooth fade to complete silence outside the local combat area.
+            float proximity=0f;
+            if(localPlayer!=null)
+            {
+                Vector3 delta=transform.position-localPlayer.transform.position;
+                delta.y=0f;
+                float distance=delta.magnitude;
+                const float fullRadius=8f;
+                const float audibleRadius=24f;
+                proximity=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(fullRadius,audibleRadius,distance));
+            }
+
+            // Soft route-edge fade prevents a hard audio pop when the aircraft enters/exits the arena.
+            float routeFade=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(routeProgress/.10f))
+                *Mathf.SmoothStep(0f,1f,Mathf.Clamp01((1f-routeProgress)/.10f));
+            float gain=.168f*proximity*routeFade;
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
         }
 
