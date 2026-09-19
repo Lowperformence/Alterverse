@@ -37,6 +37,11 @@ namespace Alterverse.Combat
         private Quaternion xenoLeftArmBase,xenoRightArmBase,xenoLeftLegBase,xenoRightLegBase,xenoHeadBase;
         private Vector3 xenoChestBaseScale;
         private float xenoMoveBlend;
+        private Transform skeletonLeftArm,skeletonRightArm,skeletonLeftLeg,skeletonRightLeg,skeletonSkull,skeletonPelvis;
+        private Quaternion skeletonLeftArmBase,skeletonRightArmBase,skeletonLeftLegBase,skeletonRightLegBase,skeletonSkullBase;
+        private Vector3 skeletonPelvisBaseScale;
+        private float skeletonMoveBlend;
+        private int movementRecoveryAttempt;
         private static readonly List<HotZoneTank> active=new();
         public static IReadOnlyList<HotZoneTank> Active=>active;
         public int Team=>team;
@@ -94,6 +99,7 @@ namespace Alterverse.Combat
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
             if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
+            if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
@@ -197,14 +203,25 @@ namespace Alterverse.Combat
                 AnimateTracks(moved.magnitude);
             }
 
-            bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.08f;
-            blockedTime=blocked?blockedTime+Time.deltaTime:0f;
+            bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.30f;
+            if(blocked)blockedTime+=Time.deltaTime;
+            else
+            {
+                blockedTime=0f;
+                if(moved.sqrMagnitude>requested.sqrMagnitude*.65f)movementRecoveryAttempt=0;
+            }
             if(blockedTime>.24f&&Time.time>=detourUntil)
             {
-                Vector3 tangent=Vector3.Cross(Vector3.up,delta.normalized);
-                if((patrolIndex&1)==0)tangent=-tangent;
-                detourDirection=tangent.normalized;
-                detourUntil=Time.time+.70f;
+                movementRecoveryAttempt++;
+                int side=((patrolIndex+movementRecoveryAttempt)&1)==0?1:-1;
+                Vector3 desired=delta.sqrMagnitude>.01f?delta.normalized:transform.forward;
+                if(!locomotion.TryFindClearDirection(desired,1.35f,side,out detourDirection))
+                {
+                    detourDirection=Vector3.Cross(Vector3.up,desired)*side;
+                    if(detourDirection.sqrMagnitude<.01f)detourDirection=team==0?Vector3.right:Vector3.left;
+                    detourDirection.Normalize();
+                }
+                detourUntil=Time.time+Mathf.Min(1.0f,.62f+movementRecoveryAttempt*.10f);
                 blockedTime=0f;
             }
         }
@@ -316,17 +333,32 @@ namespace Alterverse.Combat
             }
             Part("TitanShoulderL",PrimitiveType.Sphere,transform,new Vector3(-1.12f,1.72f,0),new Vector3(.52f,.42f,.55f),armorMat,Quaternion.identity);
             Part("TitanShoulderR",PrimitiveType.Sphere,transform,new Vector3(1.12f,1.72f,0),new Vector3(.52f,.42f,.55f),armorMat,Quaternion.identity);
-            Part("TitanArmL",PrimitiveType.Capsule,transform,new Vector3(-1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,-10));
-            Part("TitanArmR",PrimitiveType.Capsule,transform,new Vector3(1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,10));
+            skeletonLeftArm=Part("TitanArmL",PrimitiveType.Capsule,transform,new Vector3(-1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,-10));
+            skeletonRightArm=Part("TitanArmR",PrimitiveType.Capsule,transform,new Vector3(1.34f,.90f,.08f),new Vector3(.25f,.92f,.25f),armorMat,Quaternion.Euler(0,0,10));
+            skeletonLeftArmBase=skeletonLeftArm.localRotation;skeletonRightArmBase=skeletonRightArm.localRotation;
             Part("TitanClawL",PrimitiveType.Sphere,transform,new Vector3(-1.42f,.02f,.12f),new Vector3(.48f,.34f,.62f),jointMat,Quaternion.identity);
             barrelPivot=Part("TitanClawR",PrimitiveType.Sphere,transform,new Vector3(1.42f,.02f,.12f),new Vector3(.48f,.34f,.62f),energyMat,Quaternion.identity);
-            Part("TitanLegL",PrimitiveType.Capsule,transform,new Vector3(-.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,-4));
-            Part("TitanLegR",PrimitiveType.Capsule,transform,new Vector3(.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,4));
+            skeletonLeftLeg=Part("TitanLegL",PrimitiveType.Capsule,transform,new Vector3(-.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,-4));
+            skeletonRightLeg=Part("TitanLegR",PrimitiveType.Capsule,transform,new Vector3(.48f,-.72f,0),new Vector3(.32f,.95f,.32f),armorMat,Quaternion.Euler(0,0,4));
+            skeletonLeftLegBase=skeletonLeftLeg.localRotation;skeletonRightLegBase=skeletonRightLeg.localRotation;
+            skeletonPelvis=transform.Find("DF_HotZoneTank_TitanPelvis");if(skeletonPelvis!=null)skeletonPelvisBaseScale=skeletonPelvis.localScale;
             Transform skull=Part("TitanSkull",PrimitiveType.Sphere,transform,new Vector3(0,2.22f,.10f),new Vector3(.88f,.70f,.82f),armorMat,Quaternion.identity);
+            skeletonSkull=skull;skeletonSkullBase=skull.localRotation;
             Part("TitanJaw",PrimitiveType.Cube,skull,new Vector3(0,-.52f,.42f),new Vector3(.62f,.24f,.42f),jointMat,Quaternion.Euler(-8,0,0));
             Part("TitanEyeL",PrimitiveType.Sphere,skull,new Vector3(-.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
             Part("TitanEyeR",PrimitiveType.Sphere,skull,new Vector3(.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
             Part("TitanChestRift",PrimitiveType.Cube,transform,new Vector3(0,1.25f,.27f),new Vector3(.12f,.82f,.08f),energyMat,Quaternion.Euler(0,0,-18));
+        }
+
+        private void AnimateSkeleton()
+        {
+            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(Time.time*5.8f)*skeletonMoveBlend;
+            if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*18f,0,idle*1.5f);
+            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*18f-(shotPending?18f:0f),0,-idle*1.5f);
+            if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*16f,0,0);
+            if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*16f,0,0);
+            if(skeletonSkull!=null)skeletonSkull.localRotation=skeletonSkullBase*Quaternion.Euler(idle*1.2f,idle*2.4f,0);
+            if(skeletonPelvis!=null)skeletonPelvis.localScale=new Vector3(skeletonPelvisBaseScale.x,skeletonPelvisBaseScale.y*(1f+Mathf.Abs(stride)*.018f),skeletonPelvisBaseScale.z);
         }
 
         private void BuildAlienVisuals()
@@ -450,7 +482,7 @@ namespace Alterverse.Combat
         private void AnimateTracks(float movement)
         {
             if(xenoAlien){xenoMoveBlend=1f;return;}
-            if(marsSkeleton){float stride=Mathf.Sin(Time.time*6f)*Mathf.Clamp01(movement*7f);transform.localPosition+=Vector3.up*(stride*.002f);return;}
+            if(marsSkeleton){skeletonMoveBlend=1f;return;}
             float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
             if(leftTrack!=null)leftTrack.localPosition=new Vector3(0,bob,0);
             if(rightTrack!=null)rightTrack.localPosition=new Vector3(0,-bob,0);
