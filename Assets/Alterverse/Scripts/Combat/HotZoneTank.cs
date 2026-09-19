@@ -24,7 +24,7 @@ namespace Alterverse.Combat
         private const float ArenaHalfHeight=32f;
 
         private int team;
-        private bool marsSkeleton;
+        private bool marsSkeleton,xenoAlien;
         private Health health,target;
         private HeroLocomotion locomotion;
         private float nextAttack,nextScan,blockedTime,detourUntil,shotAt;
@@ -33,12 +33,17 @@ namespace Alterverse.Combat
         private bool shotPending;
         private Health shotTarget;
         private Transform turretPivot,barrelPivot,leftTrack,rightTrack;
+        private Transform xenoLeftArm,xenoRightArm,xenoLeftLeg,xenoRightLeg,xenoHead,xenoChest;
+        private Quaternion xenoLeftArmBase,xenoRightArmBase,xenoLeftLegBase,xenoRightLegBase,xenoHeadBase;
+        private Vector3 xenoChestBaseScale;
+        private float xenoMoveBlend;
         private static readonly List<HotZoneTank> active=new();
         public static IReadOnlyList<HotZoneTank> Active=>active;
         public int Team=>team;
         public Health TankHealth=>health;
         public bool IsMarsSkeleton=>marsSkeleton;
-        private Material armorMat,darkMat,energyMat,jointMat;
+        public bool IsXenoTitan=>xenoAlien;
+        private Material armorMat,darkMat,energyMat,jointMat,teamMat;
 
         private static readonly Vector3[] ZeroPatrol=
         {
@@ -64,8 +69,8 @@ namespace Alterverse.Combat
             }
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            bool skeleton=ArenaVariantRuntime.IsMars;
-            go.name=skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):(team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
+            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet;
+            go.name=alien?(team==0?"DF_ZeroXenoTitan":"DF_LumenXenoTitan"):skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):(team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
             go.transform.position=spawn;
             go.transform.localScale=new Vector3(1.15f,.9f,1.35f);
             GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)go.transform.SetParent(world.transform,true);
@@ -73,21 +78,22 @@ namespace Alterverse.Combat
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
-            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton);
+            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien);
             return true;
         }
 
-        private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton)
+        private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien)
         {
-            team=assignedTeam;marsSkeleton=skeleton;home=spawn;health=GetComponent<Health>();
+            team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
-            if(marsSkeleton)BuildSkeletonVisuals();else BuildVisuals();
+            if(xenoAlien)BuildAlienVisuals();else if(marsSkeleton)BuildSkeletonVisuals();else BuildVisuals();
             SetNextPatrol();
         }
 
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+            if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
@@ -142,9 +148,12 @@ namespace Alterverse.Combat
             if(target==null||target.IsDead)return;
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
-            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Vector3 muzzle=marsSkeleton&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
-            PrototypeVfx.Ring(muzzle,energy,.34f,ShotWindup);
+            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color energy=xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            bool creature=marsSkeleton||xenoAlien;
+            Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            PrototypeVfx.Ring(muzzle,energy,xenoAlien?.42f:.34f,ShotWindup);
+            if(xenoAlien)PrototypeVfx.Burst(muzzle,teamEnergy,.16f,3);
         }
 
         private void ResolveShot()
@@ -157,12 +166,15 @@ namespace Alterverse.Combat
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
-            Vector3 muzzle=marsSkeleton&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            bool creature=marsSkeleton||xenoAlien;
+            Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
-            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
-            PrototypeVfx.Burst(muzzle,energy,.28f,4);
-            if(barrelPivot!=null&&!marsSkeleton)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
+            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color energy=xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            PrototypeVfx.ProjectileLine(muzzle,hit,energy,xenoAlien?.18f:.13f);
+            PrototypeVfx.Burst(muzzle,xenoAlien?teamEnergy:energy,xenoAlien?.18f:.28f,xenoAlien?3:4);
+            if(xenoAlien)PrototypeVfx.Ring(hit,energy,.42f,.18f);
+            if(barrelPivot!=null&&!creature)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
             victim.TakeDamage(Damage,gameObject);
         }
 
@@ -317,6 +329,74 @@ namespace Alterverse.Combat
             Part("TitanChestRift",PrimitiveType.Cube,transform,new Vector3(0,1.25f,.27f),new Vector3(.12f,.82f,.08f),energyMat,Quaternion.Euler(0,0,-18));
         }
 
+        private void BuildAlienVisuals()
+        {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
+            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color xenoEnergy=new Color(.62f,.90f,.18f,1),hide=new Color(.085f,.14f,.085f,1);
+            Color plate=new Color(.16f,.24f,.12f,1),joint=new Color(.055f,.085f,.055f,1);
+            armorMat=MakeMaterial(shader,plate,.12f,.24f,Color.black);
+            darkMat=MakeMaterial(shader,hide,.05f,.16f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.08f,.14f,Color.black);
+            energyMat=MakeMaterial(shader,xenoEnergy,.06f,.58f,xenoEnergy*2.5f);
+            teamMat=MakeMaterial(shader,teamEnergy,.12f,.52f,teamEnergy*1.9f);
+
+            // Ancient xeno war creature: hunched, broad and deliberately non-human from the gameplay camera.
+            Transform pelvis=Part("XenoPelvis",PrimitiveType.Sphere,transform,new Vector3(0,.18f,-.04f),new Vector3(1.28f,.52f,.86f),darkMat,Quaternion.identity);
+            xenoChest=Part("XenoChest",PrimitiveType.Sphere,transform,new Vector3(0,1.25f,.04f),new Vector3(1.58f,1.12f,.95f),armorMat,Quaternion.Euler(10,0,0));
+            xenoChestBaseScale=xenoChest.localScale;
+            Part("XenoAbdomen",PrimitiveType.Capsule,transform,new Vector3(0,.62f,-.04f),new Vector3(.62f,.72f,.55f),darkMat,Quaternion.Euler(7,0,0));
+            Part("XenoShoulderL",PrimitiveType.Sphere,transform,new Vector3(-1.28f,1.58f,.00f),new Vector3(.66f,.48f,.72f),armorMat,Quaternion.Euler(0,0,-8));
+            Part("XenoShoulderR",PrimitiveType.Sphere,transform,new Vector3(1.28f,1.58f,.00f),new Vector3(.66f,.48f,.72f),armorMat,Quaternion.Euler(0,0,8));
+            Part("XenoShoulderBladeL",PrimitiveType.Cube,transform,new Vector3(-1.52f,1.83f,-.18f),new Vector3(.26f,.78f,.46f),armorMat,Quaternion.Euler(18,0,-28));
+            Part("XenoShoulderBladeR",PrimitiveType.Cube,transform,new Vector3(1.52f,1.83f,-.18f),new Vector3(.26f,.78f,.46f),armorMat,Quaternion.Euler(18,0,28));
+
+            xenoLeftArm=Part("XenoArmL",PrimitiveType.Capsule,transform,new Vector3(-1.48f,.82f,.10f),new Vector3(.34f,1.08f,.36f),darkMat,Quaternion.Euler(-6,0,-10));
+            xenoRightArm=Part("XenoArmR",PrimitiveType.Capsule,transform,new Vector3(1.48f,.82f,.10f),new Vector3(.34f,1.08f,.36f),darkMat,Quaternion.Euler(-6,0,10));
+            xenoLeftArmBase=xenoLeftArm.localRotation;xenoRightArmBase=xenoRightArm.localRotation;
+            Transform leftClaw=Part("XenoClawL",PrimitiveType.Sphere,transform,new Vector3(-1.58f,-.12f,.30f),new Vector3(.58f,.38f,.72f),armorMat,Quaternion.Euler(-8,0,-5));
+            Transform rightClaw=Part("XenoClawR",PrimitiveType.Sphere,transform,new Vector3(1.58f,-.12f,.30f),new Vector3(.58f,.38f,.72f),armorMat,Quaternion.Euler(-8,0,5));
+            for(int i=-1;i<=1;i++)
+            {
+                Part("XenoFingerL",PrimitiveType.Cube,leftClaw,new Vector3(i*.24f,-.05f,.52f),new Vector3(.12f,.12f,.58f),jointMat,Quaternion.Euler(-12,i*5f,0));
+                Part("XenoFingerR",PrimitiveType.Cube,rightClaw,new Vector3(i*.24f,-.05f,.52f),new Vector3(.12f,.12f,.58f),jointMat,Quaternion.Euler(-12,-i*5f,0));
+            }
+            barrelPivot=new GameObject("DF_XenoAttackSocket").transform;barrelPivot.SetParent(rightClaw,false);barrelPivot.localPosition=new Vector3(0,.08f,.78f);
+
+            xenoLeftLeg=Part("XenoLegL",PrimitiveType.Capsule,transform,new Vector3(-.58f,-.72f,-.04f),new Vector3(.45f,1.05f,.52f),darkMat,Quaternion.Euler(5,0,-5));
+            xenoRightLeg=Part("XenoLegR",PrimitiveType.Capsule,transform,new Vector3(.58f,-.72f,-.04f),new Vector3(.45f,1.05f,.52f),darkMat,Quaternion.Euler(5,0,5));
+            xenoLeftLegBase=xenoLeftLeg.localRotation;xenoRightLegBase=xenoRightLeg.localRotation;
+            Part("XenoFootL",PrimitiveType.Cube,transform,new Vector3(-.58f,-1.48f,.36f),new Vector3(.66f,.26f,.98f),jointMat,Quaternion.Euler(0,-4,0));
+            Part("XenoFootR",PrimitiveType.Cube,transform,new Vector3(.58f,-1.48f,.36f),new Vector3(.66f,.26f,.98f),jointMat,Quaternion.Euler(0,4,0));
+
+            Part("XenoNeck",PrimitiveType.Capsule,transform,new Vector3(0,2.02f,-.08f),new Vector3(.42f,.46f,.42f),jointMat,Quaternion.Euler(12,0,0));
+            xenoHead=Part("XenoHead",PrimitiveType.Sphere,transform,new Vector3(0,2.62f,.08f),new Vector3(1.08f,.68f,1.22f),armorMat,Quaternion.Euler(-6,0,0));
+            xenoHeadBase=xenoHead.localRotation;
+            Part("XenoCranialPlate",PrimitiveType.Sphere,xenoHead,new Vector3(0,.18f,-.36f),new Vector3(.94f,.52f,1.12f),darkMat,Quaternion.identity);
+            Part("XenoJaw",PrimitiveType.Cube,xenoHead,new Vector3(0,-.48f,.48f),new Vector3(.76f,.30f,.62f),jointMat,Quaternion.Euler(-9,0,0));
+            Part("XenoEyeL",PrimitiveType.Sphere,xenoHead,new Vector3(-.32f,.02f,.91f),new Vector3(.18f,.11f,.09f),energyMat,Quaternion.identity);
+            Part("XenoEyeR",PrimitiveType.Sphere,xenoHead,new Vector3(.32f,.02f,.91f),new Vector3(.18f,.11f,.09f),energyMat,Quaternion.identity);
+
+            Part("XenoVeinChest",PrimitiveType.Cube,transform,new Vector3(0,1.32f,.78f),new Vector3(.10f,.78f,.07f),energyMat,Quaternion.Euler(0,0,-16));
+            Part("XenoVeinArm",PrimitiveType.Cube,xenoRightArm,new Vector3(0,.08f,.30f),new Vector3(.08f,.72f,.06f),energyMat,Quaternion.Euler(0,0,6));
+            Part("XenoTeamMarkL",PrimitiveType.Sphere,transform,new Vector3(-1.30f,1.72f,.58f),new Vector3(.18f,.18f,.12f),teamMat,Quaternion.identity);
+            Part("XenoTeamMarkR",PrimitiveType.Sphere,transform,new Vector3(1.30f,1.72f,.58f),new Vector3(.18f,.18f,.12f),teamMat,Quaternion.identity);
+            Part("XenoBackSpineA",PrimitiveType.Cube,transform,new Vector3(0,1.85f,-.72f),new Vector3(.20f,.72f,.24f),armorMat,Quaternion.Euler(26,0,0));
+            Part("XenoBackSpineB",PrimitiveType.Cube,transform,new Vector3(-.42f,1.38f,-.74f),new Vector3(.16f,.58f,.20f),armorMat,Quaternion.Euler(24,0,-12));
+            Part("XenoBackSpineC",PrimitiveType.Cube,transform,new Vector3(.42f,1.38f,-.74f),new Vector3(.16f,.58f,.20f),armorMat,Quaternion.Euler(24,0,12));
+        }
+
+        private void AnimateXeno()
+        {
+            float idle=Mathf.Sin(Time.time*1.8f),stride=Mathf.Sin(Time.time*6.2f)*xenoMoveBlend;
+            if(xenoLeftArm!=null)xenoLeftArm.localRotation=xenoLeftArmBase*Quaternion.Euler(stride*20f,0,idle*2f);
+            if(xenoRightArm!=null)xenoRightArm.localRotation=xenoRightArmBase*Quaternion.Euler(-stride*20f-(shotPending?28f:0f),0,-idle*2f);
+            if(xenoLeftLeg!=null)xenoLeftLeg.localRotation=xenoLeftLegBase*Quaternion.Euler(-stride*17f,0,0);
+            if(xenoRightLeg!=null)xenoRightLeg.localRotation=xenoRightLegBase*Quaternion.Euler(stride*17f,0,0);
+            if(xenoHead!=null)xenoHead.localRotation=xenoHeadBase*Quaternion.Euler(idle*1.5f,idle*3.5f,0);
+            if(xenoChest!=null)xenoChest.localScale=new Vector3(xenoChestBaseScale.x,xenoChestBaseScale.y*(1f+idle*.012f),xenoChestBaseScale.z);
+        }
+
         private void BuildTrack(Transform track,float side,Material armor,Material dark,Material joint)
         {
             Part(side<0?"TrackHousingL":"TrackHousingR",PrimitiveType.Cube,track,new Vector3(side*1.04f,-.30f,0),new Vector3(.46f,.52f,2.54f),dark,Quaternion.identity);
@@ -351,6 +431,7 @@ namespace Alterverse.Combat
 
         private void AimTurretAt(Vector3 worldTarget)
         {
+            if(xenoAlien)return;
             if(marsSkeleton){if(barrelPivot!=null){Vector3 d=worldTarget-barrelPivot.position;d.y=0;if(d.sqrMagnitude>.01f)barrelPivot.rotation=Quaternion.Slerp(barrelPivot.rotation,Quaternion.LookRotation(d.normalized),1f-Mathf.Exp(-7f*Time.deltaTime));}return;}
             if(turretPivot==null)return;
             Vector3 localTarget=transform.InverseTransformPoint(worldTarget);localTarget.y=turretPivot.localPosition.y;
@@ -368,6 +449,7 @@ namespace Alterverse.Combat
 
         private void AnimateTracks(float movement)
         {
+            if(xenoAlien){xenoMoveBlend=1f;return;}
             if(marsSkeleton){float stride=Mathf.Sin(Time.time*6f)*Mathf.Clamp01(movement*7f);transform.localPosition+=Vector3.up*(stride*.002f);return;}
             float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
             if(leftTrack!=null)leftTrack.localPosition=new Vector3(0,bob,0);
@@ -381,6 +463,7 @@ namespace Alterverse.Combat
             if(darkMat!=null)Destroy(darkMat);
             if(energyMat!=null)Destroy(energyMat);
             if(jointMat!=null)Destroy(jointMat);
+            if(teamMat!=null)Destroy(teamMat);
         }
     }
 }
