@@ -130,8 +130,8 @@ namespace Alterverse.Match
             if(zoneRoot==null)return;
             bool zero=zeroInside>0&&lumenInside==0,lumen=lumenInside>0&&zeroInside==0;
             Material active=zero?zeroMat:lumen?lumenMat:neutralMat;
-            if(pulseRing!=null&&pulseRing.TryGetComponent(out MeshRenderer a))a.sharedMaterial=active;
-            if(innerRing!=null&&innerRing.TryGetComponent(out MeshRenderer b))b.sharedMaterial=active;
+            if(pulseRing!=null&&pulseRing.TryGetComponent(out LineRenderer a))a.sharedMaterial=active;
+            if(innerRing!=null&&innerRing.TryGetComponent(out LineRenderer b))b.sharedMaterial=active;
             zoneRoot.transform.Rotate(0,7f*Time.deltaTime,0,Space.World);
             float pulse=1f+Mathf.Sin(Time.time*3.4f)*.018f;
             if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
