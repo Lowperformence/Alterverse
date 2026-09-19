@@ -127,47 +127,6 @@ namespace Alterverse.Combat
             materialsReady=armorMaterial!=null&&darkMaterial!=null&&energyMaterial!=null&&bombMaterial!=null&&warningMaterial!=null;
         }
 
-        private static AudioClip CreateJetWhine()
-        {
-            const int rate=44100;
-            const float duration=2f;
-            int length=Mathf.CeilToInt(rate*duration);
-            float[] samples=new float[length];
-            uint noiseState=0x91E10DA5u;
-            float previousNoise=0f;
-
-            for(int i=0;i<length;i++)
-            {
-                float t=i/(float)rate;
-                // Narrow, high turbine signature: intentionally "hiiiiii", not a low engine/vacuum "huuuu".
-                float fm=.18f*Mathf.Sin(t*Mathf.PI*2f*5f)+.07f*Mathf.Sin(t*Mathf.PI*2f*11f);
-                float carrier=Mathf.Sin(t*Mathf.PI*2f*1480f+fm);
-                float upper=Mathf.Sin(t*Mathf.PI*2f*2960f+fm*.8f+.55f);
-                float whistle=Mathf.Sin(t*Mathf.PI*2f*2180f+.10f*Mathf.Sin(t*Mathf.PI*2f*3f));
-
-                noiseState^=noiseState<<13;noiseState^=noiseState>>17;noiseState^=noiseState<<5;
-                float raw=((noiseState&0xFFFF)/32767.5f)-1f;
-                float hiss=raw-previousNoise*.82f;previousNoise=raw;
-
-                float breathe=.97f+.03f*Mathf.Sin(t*Mathf.PI*2f*4f);
-                float mixed=(carrier*.54f+upper*.22f+whistle*.19f+hiss*.09f)*breathe*.39f;
-                samples[i]=Mathf.Clamp(mixed,-.82f,.82f);
-            }
-
-            // Blend the loop seam so the continuous turbine whine never clicks or "revs" like a car engine.
-            int fade=Mathf.Min(1024,length/8);
-            for(int i=0;i<fade;i++)
-            {
-                float a=i/(float)(fade-1);
-                int tail=length-fade+i;
-                samples[tail]=Mathf.Lerp(samples[tail],samples[i],a);
-            }
-
-            AudioClip clip=AudioClip.Create("DF_SpaceBomber_JetWhine",length,1,rate,false);
-            clip.SetData(samples,0);
-            return clip;
-        }
-
         private static Material CreateMaterial(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
         {
             Material m=new(shader){name=name,color=color};
@@ -187,7 +146,7 @@ namespace Alterverse.Combat
             float[] samples=new float[length];
 
             uint noiseState=0xA511E9B3u;
-            float whinePhase=0f,harmonicPhase=0f,airState=0f;
+            float whinePhase=0f,harmonicPhase=0f,edgePhase=0f,airState=0f;
 
             for(int i=0;i<length;i++)
             {
@@ -198,32 +157,33 @@ namespace Alterverse.Combat
                 noiseState^=noiseState<<5;
                 float white=((noiseState&0xFFFF)/32767.5f)-1f;
 
-                // Continuous high ion/jet howl: intentionally no low piston/turbine rhythm,
-                // so it reads as a fast spacecraft rather than a car engine.
-                float whineHz=1080f
-                    +Mathf.Sin(t*Mathf.PI*2f*.23f)*38f
-                    +Mathf.Sin(t*Mathf.PI*2f*.71f)*14f;
+                // High, narrow turbine/ion shriek: deliberately more "hiiiiii" than "huuuu".
+                // Keep modulation tiny so it never reads like a revving road vehicle.
+                float whineHz=1760f
+                    +Mathf.Sin(t*Mathf.PI*2f*.41f)*24f
+                    +Mathf.Sin(t*Mathf.PI*2f*1.12f)*8f;
                 whinePhase+=Mathf.PI*2f*whineHz/rate;
 
-                float harmonicHz=1680f+Mathf.Sin(t*Mathf.PI*2f*.31f)*52f;
+                float harmonicHz=3180f+Mathf.Sin(t*Mathf.PI*2f*.63f)*34f;
                 harmonicPhase+=Mathf.PI*2f*harmonicHz/rate;
 
-                float carrier=Mathf.Sin(whinePhase)*.46f;
-                float overtone=Mathf.Sin(harmonicPhase+.18f*Mathf.Sin(whinePhase*.5f))*.21f;
+                float edgeHz=2360f+Mathf.Sin(t*Mathf.PI*2f*.87f)*18f;
+                edgePhase+=Mathf.PI*2f*edgeHz/rate;
 
-                // Narrow airy hiss adds speed without turning into a roaring vehicle bed.
-                airState+=(white-airState)*.18f;
-                float hiss=(white-airState)*.11f;
+                float carrier=Mathf.Sin(whinePhase)*.50f;
+                float overtone=Mathf.Sin(harmonicPhase+.08f*Mathf.Sin(whinePhase*.5f))*.23f;
+                float edge=Mathf.Sin(edgePhase)*.17f;
 
-                // Very slow amplitude breathing keeps the howl alive while remaining continuous.
-                float breath=.93f+.07f*Mathf.Sin(t*Mathf.PI*2f*.36f);
-                float mixed=(carrier+overtone+hiss)*breath;
+                // Thin high-frequency airflow for an aggressive military fly-by, not a vacuum-cleaner bed.
+                airState+=(white-airState)*.10f;
+                float hiss=(white-airState)*.075f;
 
-                // Conservative saturation: aggressive tone, deliberately modest loudness.
-                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.62f),-1f,1f);
+                float breath=.985f+.015f*Mathf.Sin(t*Mathf.PI*2f*.52f);
+                float mixed=(carrier+overtone+edge+hiss)*breath;
+                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.52f),-1f,1f);
             }
 
-            AudioClip clip=AudioClip.Create("DF_BomberHighIonHowl",length,1,rate,false);
+            AudioClip clip=AudioClip.Create("DF_BomberHighIonShriek",length,1,rate,false);
             clip.SetData(samples,0);
             return clip;
         }
@@ -254,7 +214,6 @@ namespace Alterverse.Combat
         private int passIndex;
         private Transform visual,engineGlowL,engineGlowR;
         private Material warningMaterial,bombMaterial,energyMaterial;
-        private AudioSource jetAudio;
         private AudioSource engineAudio;
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
@@ -336,8 +295,10 @@ namespace Alterverse.Combat
             engineAudio.maxDistance=58f;
             engineAudio.spread=24f;
             engineAudio.priority=108;
-            engineAudio.volume=.22f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-            engineAudio.pitch=1f;
+            engineAudio.volume=.154f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            engineAudio.pitch=1.02f;
+            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=900f;high.highpassResonanceQ=1.18f;
+            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=6200f;low.lowpassResonanceQ=1.06f;
             engineAudio.Play();
         }
 
@@ -347,23 +308,10 @@ namespace Alterverse.Combat
 
             // Keep the pitch almost fixed. A large pitch sweep was reading like a revving car.
             // The generated clip already contains the sci-fi modulation; route position only changes loudness.
-            engineAudio.pitch=1f+Mathf.Sin(Time.time*.82f)*.008f;
+            engineAudio.pitch=1.02f+Mathf.Sin(Time.time*.92f)*.004f;
             float centerPresence=1f-Mathf.Abs(routeProgress*2f-1f);
-            float gain=Mathf.Lerp(.14f,.24f,Mathf.Clamp01(centerPresence));
+            float gain=Mathf.Lerp(.098f,.168f,Mathf.Clamp01(centerPresence));
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-        }
-
-        private void StartJetAudio(AudioClip clip)
-        {
-            if(clip==null)return;
-            jetAudio=gameObject.AddComponent<AudioSource>();
-            jetAudio.clip=clip;jetAudio.loop=true;jetAudio.playOnAwake=false;
-            jetAudio.spatialBlend=.18f;jetAudio.dopplerLevel=0f;jetAudio.priority=140;jetAudio.pitch=1.04f;
-            jetAudio.rolloffMode=AudioRolloffMode.Linear;jetAudio.minDistance=8f;jetAudio.maxDistance=75f;
-            jetAudio.volume=.098f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=720f;high.highpassResonanceQ=1.25f;
-            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=5600f;low.lowpassResonanceQ=1.08f;
-            jetAudio.Play();
         }
 
         private void PulseEngines()
