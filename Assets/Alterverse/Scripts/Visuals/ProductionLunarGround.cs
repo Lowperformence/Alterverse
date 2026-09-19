@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using Alterverse.Match;
 
 namespace Alterverse.Visuals
 {
@@ -18,11 +19,12 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void Start()
     {
         if(GetComponent<LunarLighting>()==null)gameObject.AddComponent<LunarLighting>();
-        root=new GameObject("DF_LunarGroundProduction").transform;
+        root=new GameObject(ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":"DF_LunarGroundProduction").transform;
         root.SetParent(transform,false);
-        regolith=Mat(new Color(.105f,.12f,.145f,1),.02f,.12f);
-        darkRegolith=Mat(new Color(.055f,.065f,.082f,1),.01f,.08f);
-        rimMat=Mat(new Color(.19f,.205f,.225f,1),.03f,.11f);
+        bool mars=ArenaVariantRuntime.IsMars;
+        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
+        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
+        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
         BuildSurface();
@@ -65,7 +67,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
         regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
-        MeshObject("DF_LunarRegolith",m,regolith,Vector3.zero);
+        MeshObject(ArenaVariantRuntime.IsMars?"DF_MarsRegolith":"DF_LunarRegolith",m,regolith,Vector3.zero);
         var edge=new List<Vector3>((xSeg+zSeg)*2);
         for(int x=0;x<xSeg;x++)edge.Add(v[x]);
         for(int z=0;z<zSeg;z++)edge.Add(v[z*(xSeg+1)+xSeg]);
