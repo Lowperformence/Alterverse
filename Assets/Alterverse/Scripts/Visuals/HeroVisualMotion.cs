@@ -21,7 +21,7 @@ namespace Alterverse.Visuals
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
         private Renderer[] energyRenderers;
-        private readonly MaterialPropertyBlock energyBlock=new();
+        private MaterialPropertyBlock energyBlock;
         private static readonly int EnergyBoost=Shader.PropertyToID("_EnergyBoost");
         public Vector3 ReleasePoint=>muzzle!=null?muzzle.position:orb!=null?orb.position:weaponR!=null?weaponR.position+transform.forward*.35f:transform.position+Vector3.up*.25f;
         // Stable values can later drive an Animator blend tree without replacing movement logic.
@@ -50,6 +50,8 @@ namespace Alterverse.Visuals
         }
         private void Start()
         {
+            // Native Unity objects must be created in a lifecycle callback, not a field initializer.
+            energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
             root=transform.Find("DF_VisualRoot");if(root==null)return;
             basePosition=root.localPosition;rootScale=root.localScale;lastPosition=transform.position;
@@ -184,4 +186,3 @@ namespace Alterverse.Visuals
 
     }
 }
-
