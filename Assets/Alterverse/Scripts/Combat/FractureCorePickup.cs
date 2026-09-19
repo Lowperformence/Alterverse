@@ -66,9 +66,10 @@ namespace Alterverse.Combat
             visual.SetParent(transform,false);
 
             innerCore=Primitive("DF_FractureCoreInner",PrimitiveType.Sphere,visual,Vector3.zero,new Vector3(.38f,.38f,.38f),coreMaterial);
-            Transform shell=Primitive("DF_FractureCoreShell",PrimitiveType.Sphere,visual,Vector3.zero,new Vector3(.60f,.60f,.60f),metalMaterial);
-            Renderer shellRenderer=shell.GetComponent<Renderer>();
-            if(shellRenderer!=null)shadowOff(shellRenderer);
+            // Do not wrap the bright core in an opaque sphere. Broken neutral shell pieces leave the energy visible.
+            Primitive("DF_FractureShellTop",PrimitiveType.Cube,visual,new Vector3(.05f,.30f,-.02f),new Vector3(.20f,.16f,.16f),metalMaterial).localRotation=Quaternion.Euler(22,31,18);
+            Primitive("DF_FractureShellLow",PrimitiveType.Cube,visual,new Vector3(-.22f,-.21f,.08f),new Vector3(.18f,.13f,.22f),metalMaterial).localRotation=Quaternion.Euler(-18,52,-24);
+            Primitive("DF_FractureShellRear",PrimitiveType.Cube,visual,new Vector3(.24f,-.04f,-.24f),new Vector3(.14f,.22f,.15f),metalMaterial).localRotation=Quaternion.Euler(38,-16,42);
 
             ringA=MeshPart("DF_FractureRingZero",visual,ringMesh,zeroMaterial,Vector3.zero,new Vector3(.86f,.86f,.86f));
             ringA.localRotation=Quaternion.Euler(18,0,12);
