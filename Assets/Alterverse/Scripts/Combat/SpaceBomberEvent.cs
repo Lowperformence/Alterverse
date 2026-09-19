@@ -145,9 +145,8 @@ namespace Alterverse.Combat
             int length=Mathf.CeilToInt(rate*seconds);
             float[] samples=new float[length];
 
-            uint noiseState=0x9E3779B9u;
-            float reactorPhase=0f,turbinePhase=0f,ionPhase=0f;
-            float lowNoise=0f,airNoise=0f;
+            uint noiseState=0xA511E9B3u;
+            float whinePhase=0f,harmonicPhase=0f,airState=0f;
 
             for(int i=0;i<length;i++)
             {
@@ -158,36 +157,32 @@ namespace Alterverse.Combat
                 noiseState^=noiseState<<5;
                 float white=((noiseState&0xFFFF)/32767.5f)-1f;
 
-                // Broad, non-car-like airflow: filtered noise rather than repeating engine pulses.
-                lowNoise+= (white-lowNoise)*.018f;
-                float high=white-lowNoise;
-                airNoise+= (high-airNoise)*.12f;
+                // Continuous high ion/jet howl: intentionally no low piston/turbine rhythm,
+                // so it reads as a fast spacecraft rather than a car engine.
+                float whineHz=1080f
+                    +Mathf.Sin(t*Mathf.PI*2f*.23f)*38f
+                    +Mathf.Sin(t*Mathf.PI*2f*.71f)*14f;
+                whinePhase+=Mathf.PI*2f*whineHz/rate;
 
-                // Heavy reactor bed.
-                float reactorHz=52f+Mathf.Sin(t*Mathf.PI*2f*.42f)*3.2f;
-                reactorPhase+=Mathf.PI*2f*reactorHz/rate;
-                float reactor=(Mathf.Sin(reactorPhase)+.28f*Mathf.Sin(reactorPhase*.5f))*0.24f;
+                float harmonicHz=1680f+Mathf.Sin(t*Mathf.PI*2f*.31f)*52f;
+                harmonicPhase+=Mathf.PI*2f*harmonicHz/rate;
 
-                // Plasma turbine: frequency-modulated, smooth, no piston/vehicle rhythm.
-                float turbineHz=176f+Mathf.Sin(t*Mathf.PI*2f*.63f)*18f+Mathf.Sin(t*Mathf.PI*2f*.17f)*8f;
-                turbinePhase+=Mathf.PI*2f*turbineHz/rate;
-                float turbine=(Mathf.Sin(turbinePhase)+.36f*Mathf.Sin(turbinePhase*2.01f))*0.25f;
+                float carrier=Mathf.Sin(whinePhase)*.46f;
+                float overtone=Mathf.Sin(harmonicPhase+.18f*Mathf.Sin(whinePhase*.5f))*.21f;
 
-                // Thin sci-fi ion shimmer sitting above the low body.
-                float ionHz=610f+Mathf.Sin(t*Mathf.PI*2f*.91f)*54f;
-                ionPhase+=Mathf.PI*2f*ionHz/rate;
-                float ion=Mathf.Sin(ionPhase+.72f*Mathf.Sin(turbinePhase*.37f))*0.075f;
+                // Narrow airy hiss adds speed without turning into a roaring vehicle bed.
+                airState+=(white-airState)*.18f;
+                float hiss=(white-airState)*.11f;
 
-                float plasmaRush=high*(.12f+.05f*Mathf.Sin(t*Mathf.PI*2f*.77f));
-                float airflow=airNoise*.30f+lowNoise*.045f+plasmaRush;
-                float flutter=.95f+.05f*Mathf.Sin(t*Mathf.PI*2f*1.35f);
-                float mixed=(reactor+turbine+ion+airflow)*flutter;
+                // Very slow amplitude breathing keeps the howl alive while remaining continuous.
+                float breath=.93f+.07f*Mathf.Sin(t*Mathf.PI*2f*.36f);
+                float mixed=(carrier+overtone+hiss)*breath;
 
-                // Soft saturation keeps the sound aggressive without harsh clipping.
-                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.52f),-1f,1f);
+                // Conservative saturation: aggressive tone, deliberately modest loudness.
+                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.62f),-1f,1f);
             }
 
-            AudioClip clip=AudioClip.Create("DF_BomberIonEngineLoop",length,1,rate,false);
+            AudioClip clip=AudioClip.Create("DF_BomberHighIonHowl",length,1,rate,false);
             clip.SetData(samples,0);
             return clip;
         }
@@ -292,15 +287,15 @@ namespace Alterverse.Combat
             engineAudio.clip=clip;
             engineAudio.loop=false;
             engineAudio.playOnAwake=false;
-            engineAudio.spatialBlend=.58f;
+            engineAudio.spatialBlend=.62f;
             engineAudio.dopplerLevel=0f;
             engineAudio.rolloffMode=AudioRolloffMode.Linear;
             engineAudio.minDistance=8f;
             engineAudio.maxDistance=58f;
-            engineAudio.spread=28f;
+            engineAudio.spread=24f;
             engineAudio.priority=108;
-            engineAudio.volume=.50f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-            engineAudio.pitch=1.02f;
+            engineAudio.volume=.22f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            engineAudio.pitch=1f;
             engineAudio.Play();
         }
 
@@ -308,14 +303,11 @@ namespace Alterverse.Combat
         {
             if(engineAudio==null)return;
 
-            // Manual fly-by pitch bend gives an aircraft-like pass without Unity's exaggerated Doppler.
-            float approach=Mathf.Clamp(routeProgress,0f,1f);
-            float flybyPitch=Mathf.Lerp(1.09f,.92f,approach);
-            float plasmaWobble=Mathf.Sin(Time.time*2.35f)*.012f;
-            engineAudio.pitch=Mathf.Clamp(flybyPitch+plasmaWobble,.88f,1.12f);
-
+            // Keep the pitch almost fixed. A large pitch sweep was reading like a revving car.
+            // The generated clip already contains the sci-fi modulation; route position only changes loudness.
+            engineAudio.pitch=1f+Mathf.Sin(Time.time*.82f)*.008f;
             float centerPresence=1f-Mathf.Abs(routeProgress*2f-1f);
-            float gain=Mathf.Lerp(.37f,.54f,Mathf.Clamp01(centerPresence));
+            float gain=Mathf.Lerp(.14f,.24f,Mathf.Clamp01(centerPresence));
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
         }
 
