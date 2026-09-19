@@ -193,15 +193,17 @@ namespace Alterverse.Combat
             GameObject go=new("DF_BattleItemMeteorStrike");
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)go.transform.SetParent(world,true);
             BattleItemMeteorStrike strike=go.AddComponent<BattleItemMeteorStrike>();
-            strike.source=source;strike.target=target;strike.damage=damage;strike.impact=target.transform.position;strike.impact.y=.14f;strike.hitAt=Time.time+Delay;
-            strike.Build(world);
+            strike.source=source;strike.target=target;strike.damage=damage;strike.impact=target.transform.position;
+            strike.impact.y=LunarSurfaceField.Surface(strike.impact.x,strike.impact.z).y+.10f;
+            strike.hitAt=Time.time+Delay;
+            if(!strike.Build(world)){Destroy(go);}
         }
 
-        private void Build(Transform world)
+        private bool Build(Transform world)
         {
             Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(ink==null||rock==null)return;
+            if(ink==null||rock==null)return false;
             warningMat=new Material(ink){name="DF_ItemMeteorWarning"};rockMat=new Material(rock){name="DF_ItemMeteorRock",color=new Color(.19f,.14f,.11f)};
             if(rockMat.HasProperty("_EmissionColor")){rockMat.EnableKeyword("_EMISSION");rockMat.SetColor("_EmissionColor",new Color(.55f,.15f,.025f));}
 
@@ -216,6 +218,7 @@ namespace Alterverse.Combat
             trail=meteor.AddComponent<LineRenderer>();trail.sharedMaterial=warningMat;trail.useWorldSpace=true;trail.positionCount=2;
             trail.startWidth=.16f;trail.endWidth=.02f;trail.startColor=new Color(1f,.55f,.15f);trail.endColor=new Color(.35f,.12f,.03f);
             trail.shadowCastingMode=ShadowCastingMode.Off;
+            return true;
         }
 
         private void DrawWarning()
