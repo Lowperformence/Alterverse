@@ -76,8 +76,9 @@ namespace Alterverse.Shop
                 int session=connectedSession;
                 if(backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token)){Status="Verification pending. Reconnect to recover purchase.";return;}
                 if(this==null||store==null||backend==null||backend!=PaidShardCommerce.Instance||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session)return;
-                // Server has durably credited this token exactly once. Only now consume/acknowledge.
-                store.ConfirmPurchase(order);Status="Shards credited to your store wallet.";
+                // Server verified the token and the retry-safe claim is now in the single game shard balance.
+                // Only after that durable handoff do we consume/acknowledge the Google Play order.
+                store.ConfirmPurchase(order);Status="Shards added to your balance.";
                 Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             }
             catch(Exception){if(this==null)return;Status="Purchase retained for recovery. No local grant was made.";}
