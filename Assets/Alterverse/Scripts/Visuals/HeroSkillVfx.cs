@@ -84,6 +84,41 @@ namespace Alterverse.Visuals
         static Color Accent(GameObject actor)=>StylizedArtDirection.HeroAccent(actor.GetComponent<HeroIdentity>().Hero);
         static void Follow(HeroSkillVfx fx,Transform target)
         {if(fx==null||target==null)return;fx.follow=target;fx.followPosition=target.position;fx.follows=true;}
+        static void BindShield(HeroSkillVfx fx,Health target)
+        {
+            if(fx==null||target==null)return;
+            Follow(fx,target.transform);fx.shieldHealth=target;fx.shieldBound=true;
+        }
+        static void ShieldShell(GameObject actor,Health target,float duration)
+        {
+            if(actor==null||target==null)return;
+            Color accent=Accent(actor);
+            Color shieldColor=Color.Lerp(accent,new Color(.25f,.9f,1f),.55f);
+            Vector3 c=target.transform.position;
+
+            // Three horizontal hex rings plus vertical ribs read as a real force shield
+            // from the top-down camera while staying cheap on mobile.
+            var lower=Ring(actor,c+Vector3.up*.22f,1.12f,duration,shieldColor,6);
+            var middle=Ring(actor,c+Vector3.up*.95f,.98f,duration,shieldColor,6);
+            var crown=Ring(actor,c+Vector3.up*1.62f,.46f,duration,Color.Lerp(shieldColor,Color.white,.45f),6);
+            BindShield(lower,target);BindShield(middle,target);BindShield(crown,target);
+
+            for(int i=0;i<3;i++)
+            {
+                float a=i*Mathf.PI/3f;
+                Vector3 d=new(Mathf.Cos(a),0,Mathf.Sin(a));
+                Vector3 side=Vector3.Cross(Vector3.up,d);
+                Vector3[] rib=
+                {
+                    c+d*1.08f+Vector3.up*.24f,
+                    c+d*.72f+side*.07f+Vector3.up*.94f,
+                    c+Vector3.up*1.78f,
+                    c-d*.72f-side*.07f+Vector3.up*.94f,
+                    c-d*1.08f+Vector3.up*.24f
+                };
+                BindShield(Stroke(rib,shieldColor,.115f,duration,false,actor),target);
+            }
+        }
         static HeroSkillVfx Ring(GameObject actor,Vector3 center,float radius,float seconds,Color color,int sides=20, bool warning=false)
         {
             Vector3[] points=new Vector3[sides];
@@ -156,13 +191,15 @@ namespace Alterverse.Visuals
         {
             Color c=shield?new Color(.3f,.82f,1):new Color(.35f,1,.65f);
             Vector3 p=target.transform.position+Vector3.up*.42f;
-            var fx=Ring(actor,p,shield?.8f:.65f,shield?duration:.45f,c,shield?6:16);Follow(fx,target.transform);
-            if(shield&&fx!=null){fx.shieldHealth=target;fx.shieldBound=true;}
-            if(!shield)
+            if(shield)
             {
-                Follow(Stroke(new[]{p+Vector3.left*.4f,p+Vector3.right*.4f},c,.18f,.45f,false,actor),target.transform);
-                Follow(Stroke(new[]{p+Vector3.back*.4f,p+Vector3.forward*.4f},c,.18f,.45f,false,actor),target.transform);
+                ShieldShell(actor,target,duration);
+                return;
             }
+
+            var fx=Ring(actor,p,.65f,.45f,c,16);Follow(fx,target.transform);
+            Follow(Stroke(new[]{p+Vector3.left*.4f,p+Vector3.right*.4f},c,.18f,.45f,false,actor),target.transform);
+            Follow(Stroke(new[]{p+Vector3.back*.4f,p+Vector3.forward*.4f},c,.18f,.45f,false,actor),target.transform);
         }
         public static void SupportLink(GameObject actor,Health target)
         {Stroke(new[]{actor.transform.position+Vector3.up*.6f,target.transform.position+Vector3.up*.6f},new Color(.4f,.92f,.75f),.13f,.25f,false,actor);}
