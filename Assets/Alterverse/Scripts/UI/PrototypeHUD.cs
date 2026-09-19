@@ -27,6 +27,7 @@ namespace Alterverse.UI
         private float feedbackUntil,damageTrail=1,damageHold,previousHp=1;
         private bool focused=true,suspended,combatInside;
         private int joystickFinger=-1,combatFinger=-1,pressedSlot=-1,inspectedSlot=-1;
+        private bool mouseJoystick;
         private Vector2 joystickCenter,joystickOrigin,joystickKnob;
         private const float Radius=64;
         private CombatHudLayout layout;
@@ -65,7 +66,7 @@ namespace Alterverse.UI
         private void OnDisable(){ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
         private void OnApplicationFocus(bool value){focused=value;if(!value)ResetInput();}
         private void OnApplicationPause(bool value){suspended=value;if(value)ResetInput();}
-        private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;combatInside=false;motor?.SetMoveInput(Vector2.zero);}
+        private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;mouseJoystick=false;combatInside=false;motor?.SetMoveInput(Vector2.zero);}
         private void Update()
         {
             layout=new CombatHudLayout(Screen.safeArea);
@@ -137,7 +138,38 @@ namespace Alterverse.UI
         {
             Mouse mouse=Mouse.current;if(mouse==null)return;
             Vector2 point=layout.Point(mouse.position.ReadValue());
-            if(mouse.leftButton.wasPressedThisFrame){int slot=layout.Hit(point);if(slot>=0)BeginPress(slot);}
+
+            if(mouse.leftButton.wasPressedThisFrame)
+            {
+                int slot=layout.Hit(point);
+                if(slot>=0)BeginPress(slot);
+                else if(layout.MoveCapture.Contains(point))
+                {
+                    mouseJoystick=true;
+                    joystickOrigin=point;
+                    joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));
+                    joystickKnob=joystickCenter;
+                }
+            }
+
+            if(mouseJoystick)
+            {
+                if(mouse.leftButton.isPressed)
+                {
+                    Vector2 delta=Vector2.ClampMagnitude(point-joystickOrigin,Radius);
+                    joystickKnob=joystickCenter+delta;
+                    float magnitude=delta.magnitude/Radius;
+                    Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
+                    motor?.SetMoveInput(new Vector2(input.x,-input.y));
+                }
+                if(mouse.leftButton.wasReleasedThisFrame)
+                {
+                    mouseJoystick=false;
+                    motor?.SetMoveInput(Vector2.zero);
+                }
+                return;
+            }
+
             if(pressedSlot<0)return;
             combatInside=layout.ContainsWithMargin(pressedSlot,point);
             if(mouse.leftButton.wasReleasedThisFrame)EndPress(combatInside);
@@ -209,11 +241,12 @@ namespace Alterverse.UI
         }
         private void DrawJoystick()
         {
-            Vector2 center=joystickFinger>=0?joystickCenter:new Vector2(104,layout.Height-104);
-            Vector2 knob=joystickFinger>=0?joystickKnob:center;
+            bool active=joystickFinger>=0||mouseJoystick;
+            Vector2 center=active?joystickCenter:new Vector2(104,layout.Height-104);
+            Vector2 knob=active?joystickKnob:center;
             CombatGlyphs.Ring(center,Radius,2,FrontEndTheme.Muted,32);
-            CombatGlyphs.Ring(knob,24,3,joystickFinger>=0?accent:FrontEndTheme.Text,20);
-            if(joystickFinger<0)theme.Label(new Rect(center.x-60,center.y+74,120,20),"MOVE",small,true);
+            CombatGlyphs.Ring(knob,24,3,active?accent:FrontEndTheme.Text,20);
+            if(!active)theme.Label(new Rect(center.x-60,center.y+74,120,20),"MOVE",small,true);
         }
         private void DrawHint()
         {
