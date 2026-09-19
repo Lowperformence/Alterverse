@@ -127,6 +127,46 @@ namespace Alterverse.Combat
             materialsReady=armorMaterial!=null&&darkMaterial!=null&&energyMaterial!=null&&bombMaterial!=null&&warningMaterial!=null;
         }
 
+        private static AudioClip CreateJetWhine()
+        {
+            const int rate=44100;
+            const float duration=2f;
+            int length=Mathf.CeilToInt(rate*duration);
+            float[] samples=new float[length];
+            uint noiseState=0x91E10DA5u;
+            float previousNoise=0f;
+
+            for(int i=0;i<length;i++)
+            {
+                float t=i/(float)rate;
+                float fm=.52f*Mathf.Sin(t*Mathf.PI*2f*3f)+.16f*Mathf.Sin(t*Mathf.PI*2f*7f);
+                float carrier=Mathf.Sin(t*Mathf.PI*2f*920f+fm);
+                float upper=Mathf.Sin(t*Mathf.PI*2f*1840f+fm*1.25f+.65f);
+                float whistle=Mathf.Sin(t*Mathf.PI*2f*1370f+.24f*Mathf.Sin(t*Mathf.PI*2f*2f));
+
+                noiseState^=noiseState<<13;noiseState^=noiseState>>17;noiseState^=noiseState<<5;
+                float raw=((noiseState&0xFFFF)/32767.5f)-1f;
+                float hiss=raw-previousNoise*.82f;previousNoise=raw;
+
+                float breathe=.90f+.10f*Mathf.Sin(t*Mathf.PI*2f*2f);
+                float mixed=(carrier*.50f+upper*.18f+whistle*.15f+hiss*.075f)*breathe*.44f;
+                samples[i]=Mathf.Clamp(mixed,-.82f,.82f);
+            }
+
+            // Blend the loop seam so the continuous turbine whine never clicks or "revs" like a car engine.
+            int fade=Mathf.Min(1024,length/8);
+            for(int i=0;i<fade;i++)
+            {
+                float a=i/(float)(fade-1);
+                int tail=length-fade+i;
+                samples[tail]=Mathf.Lerp(samples[tail],samples[i],a);
+            }
+
+            AudioClip clip=AudioClip.Create("DF_SpaceBomber_JetWhine",length,1,rate,false);
+            clip.SetData(samples,0);
+            return clip;
+        }
+
         private static Material CreateMaterial(Shader shader,string name,Color color,float metallic,float smoothness,Color emission)
         {
             Material m=new(shader){name=name,color=color};
@@ -213,6 +253,7 @@ namespace Alterverse.Combat
         private int passIndex;
         private Transform visual,engineGlowL,engineGlowR;
         private Material warningMaterial,bombMaterial,energyMaterial;
+        private AudioSource jetAudio;
         private AudioSource engineAudio;
         private Alterverse.Match.DimensionsFront front;
         private System.Random rng;
@@ -309,6 +350,19 @@ namespace Alterverse.Combat
             float centerPresence=1f-Mathf.Abs(routeProgress*2f-1f);
             float gain=Mathf.Lerp(.14f,.24f,Mathf.Clamp01(centerPresence));
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+        }
+
+        private void StartJetAudio(AudioClip clip)
+        {
+            if(clip==null)return;
+            jetAudio=gameObject.AddComponent<AudioSource>();
+            jetAudio.clip=clip;jetAudio.loop=true;jetAudio.playOnAwake=false;
+            jetAudio.spatialBlend=.18f;jetAudio.dopplerLevel=0f;jetAudio.priority=140;
+            jetAudio.rolloffMode=AudioRolloffMode.Linear;jetAudio.minDistance=8f;jetAudio.maxDistance=75f;
+            jetAudio.volume=.14f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=420f;high.highpassResonanceQ=1.1f;
+            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=4300f;low.lowpassResonanceQ=1.05f;
+            jetAudio.Play();
         }
 
         private void PulseEngines()
