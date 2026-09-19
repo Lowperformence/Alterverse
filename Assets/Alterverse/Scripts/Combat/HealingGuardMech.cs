@@ -10,7 +10,9 @@ namespace Alterverse.Combat
     public sealed class HealingGuardMech : MonoBehaviour
     {
         [SerializeField] private float protectRadius=7f;
-        [SerializeField] private float leashRadius=3.6f;
+        [SerializeField] private float leashRadius=4.5f;
+        [SerializeField] private float hardReturnRadius=5.25f;
+        [SerializeField] private float returnReleaseRadius=3.15f;
         [SerializeField] private float attackRange=4.6f;
         [SerializeField] private float attackDamage=13f;
         [SerializeField] private float attackCooldown=1.2f;
@@ -19,9 +21,10 @@ namespace Alterverse.Combat
 
         private Health health,target;
         private int team;
-        private Vector3 home;
+        private Vector3 guardPost,healingPlate;
         private float nextAttack,nextScan;
         private Color energy;
+        private bool forcedReturn;
 
         public static GameObject Spawn(int team,Vector3 healingPlate)
         {
@@ -48,7 +51,7 @@ namespace Alterverse.Combat
             hp.Configure(650,true);
             mech.AddComponent<TeamMember>().Initialize(team);
             HealingGuardMech guard=mech.AddComponent<HealingGuardMech>();
-            guard.Initialize(team,spawn,energy);
+            guard.Initialize(team,spawn,healingPlate,energy);
 
             // Same visual language as the minute-six siege unit, but with a taller defensive silhouette.
             CreatePart(mech.transform,"DF_GuardChest",PrimitiveType.Cube,new Vector3(0,.32f,0),new Vector3(1.95f,1.02f,1.18f),dark);
@@ -65,10 +68,11 @@ namespace Alterverse.Combat
             return mech;
         }
 
-        private void Initialize(int assignedTeam,Vector3 anchor,Color accent)
+        private void Initialize(int assignedTeam,Vector3 post,Vector3 plate,Color accent)
         {
             team=Mathf.Clamp(assignedTeam,0,1);
-            home=anchor;
+            guardPost=post;
+            healingPlate=plate;
             energy=accent;
             health=GetComponent<Health>();
             nextAttack=Time.time+.4f;
@@ -77,6 +81,17 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+
+            Vector3 plateDelta=transform.position-healingPlate;plateDelta.y=0;
+            if(plateDelta.sqrMagnitude>hardReturnRadius*hardReturnRadius)forcedReturn=true;
+            if(forcedReturn)
+            {
+                target=null;
+                MoveTowards(guardPost);
+                plateDelta=transform.position-healingPlate;plateDelta.y=0;
+                if(plateDelta.sqrMagnitude<=returnReleaseRadius*returnReleaseRadius)forcedReturn=false;
+                return;
+            }
 
             if(target!=null&&!ValidTarget(target))target=null;
             if(Time.time>=nextScan)
@@ -120,11 +135,11 @@ namespace Alterverse.Combat
                 if(candidate==null||candidate==health||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
                 if(!Enemy(candidate))continue;
 
-                Vector3 fromHome=candidate.transform.position-home;fromHome.y=0;
-                if(fromHome.sqrMagnitude>protectSqr)continue;
+                Vector3 fromPlate=candidate.transform.position-healingPlate;fromPlate.y=0;
+                if(fromPlate.sqrMagnitude>protectSqr)continue;
 
                 // Enemies closest to the healing plate are the highest protection priority.
-                float score=fromHome.sqrMagnitude;
+                float score=fromPlate.sqrMagnitude;
                 if(candidate.GetComponent<Alterverse.Characters.HeroIdentity>()!=null)score*=.72f;
                 if(score<bestScore){bestScore=score;best=candidate;}
             }
@@ -134,7 +149,7 @@ namespace Alterverse.Combat
         private bool ValidTarget(Health candidate)
         {
             if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled||!Enemy(candidate))return false;
-            Vector3 d=candidate.transform.position-home;d.y=0;
+            Vector3 d=candidate.transform.position-healingPlate;d.y=0;
             return d.sqrMagnitude<=protectRadius*protectRadius*1.15f;
         }
 
@@ -148,17 +163,18 @@ namespace Alterverse.Combat
 
         private void MoveWithinLeash(Vector3 destination)
         {
-            Vector3 desired=destination;desired.y=home.y;
-            Vector3 fromHome=desired-home;fromHome.y=0;
-            if(fromHome.sqrMagnitude>leashRadius*leashRadius)
-                desired=home+fromHome.normalized*leashRadius;
+            Vector3 desired=destination;desired.y=guardPost.y;
+            Vector3 fromPlate=desired-healingPlate;fromPlate.y=0;
+            if(fromPlate.sqrMagnitude>leashRadius*leashRadius)
+                desired=healingPlate+fromPlate.normalized*leashRadius;
+            desired.y=guardPost.y;
             MoveTowards(desired);
         }
 
         private void ReturnHome()
         {
-            Vector3 delta=home-transform.position;delta.y=0;
-            if(delta.sqrMagnitude>.12f)MoveTowards(home);
+            Vector3 delta=guardPost-transform.position;delta.y=0;
+            if(delta.sqrMagnitude>.12f)MoveTowards(guardPost);
         }
 
         private void MoveTowards(Vector3 point)
