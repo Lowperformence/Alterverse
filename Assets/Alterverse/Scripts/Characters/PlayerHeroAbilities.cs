@@ -57,7 +57,7 @@ namespace Alterverse.Characters
         public bool CastW() => Cast(1);
         public bool CastE() => Cast(2);
         public bool CastUltimate() => Cast(3);
-        private Vector3 DirectionFor(Health target) => motor != null && motor.HasMoveInput ? motor.LastMoveDirection :
+        private Vector3 DirectionFor(Health target) => motor != null && motor.HasMoveInput ? motor.CurrentMoveDirection.normalized :
             target != null && identity.Hero != HeroId.Veyr ? transform.position-target.transform.position : transform.forward;
         public Vector3 PreviewDirection(int slot)
         {

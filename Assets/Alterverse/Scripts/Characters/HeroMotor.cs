@@ -18,6 +18,18 @@ namespace Alterverse.Characters
         private Vector3 lastMoveDirection=Vector3.forward;
         private int externalFrame=-1;
         public Vector3 LastMoveDirection=>lastMoveDirection;
+        // Touch abilities run before this component's Update. Resolve their direction from
+        // the current input instead of the previous movement frame.
+        public Vector3 CurrentMoveDirection
+        {
+            get
+            {
+                if(cameraTransform==null&&Camera.main!=null)cameraTransform=Camera.main.transform;
+                Vector3 forward=cameraTransform!=null?cameraTransform.forward:Vector3.forward;
+                forward.y=0;if(forward.sqrMagnitude<.001f)forward=Vector3.forward;forward.Normalize();
+                return Vector3.ClampMagnitude(forward*moveInput.y+Vector3.Cross(Vector3.up,forward)*moveInput.x,1);
+            }
+        }
         public bool HasMoveInput=>moveInput.sqrMagnitude>.0001f;
         public float MoveSpeed=>(profile!=null?profile.MoveSpeed:fallbackMoveSpeed)*(planetBuff!=null?planetBuff.MoveSpeedMultiplier:1f)*body.SpeedMultiplier;
         private void Awake()
@@ -30,11 +42,7 @@ namespace Alterverse.Characters
         {
             if(!body.CanMove){ClearInput();return;}
             if(externalFrame!=Time.frameCount)ReadKeyboardInput();
-            if(cameraTransform==null&&Camera.main!=null)cameraTransform=Camera.main.transform;
-            Vector3 forward=cameraTransform!=null?cameraTransform.forward:Vector3.forward;
-            forward.y=0;if(forward.sqrMagnitude<.001f)forward=Vector3.forward;forward.Normalize();
-            Vector3 right=Vector3.Cross(Vector3.up,forward);
-            Vector3 direction=Vector3.ClampMagnitude(forward*moveInput.y+right*moveInput.x,1);
+            Vector3 direction=CurrentMoveDirection;
             if(direction.sqrMagnitude>.0001f)lastMoveDirection=direction.normalized;
             if(body.OwnsMovementFrame)return;
             // No input smoothing or release inertia. Weight belongs to the visual pose.

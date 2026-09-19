@@ -91,15 +91,14 @@ namespace Alterverse.UI
         {
             bool foundMove=false,foundCombat=false;
             var touches=ETouch.activeTouches;
+            // Resolve all movement before any combat release, regardless of finger order.
             for(int i=0;i<touches.Count;i++)
             {
                 var touch=touches[i];Vector2 point=layout.Point(touch.screenPosition);
                 bool ended=touch.phase==UnityEngine.InputSystem.TouchPhase.Ended,canceled=touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled;
                 if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began)
                 {
-                    int slot=layout.Hit(point);
-                    if(slot>=0&&combatFinger<0&&pressedSlot<0){combatFinger=touch.touchId;BeginPress(slot);}
-                    else if(joystickFinger<0&&layout.MoveCapture.Contains(point))
+                    if(layout.Hit(point)<0&&joystickFinger<0&&layout.MoveCapture.Contains(point))
                     {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));}
                 }
                 if(touch.touchId==joystickFinger)
@@ -114,6 +113,17 @@ namespace Alterverse.UI
                         motor?.SetMoveInput(new Vector2(input.x,-input.y));
                     }
                 }
+            }
+            if(!foundMove&&joystickFinger>=0){joystickFinger=-1;motor?.SetMoveInput(Vector2.zero);}
+            for(int i=0;i<touches.Count;i++)
+            {
+                var touch=touches[i];Vector2 point=layout.Point(touch.screenPosition);
+                bool ended=touch.phase==UnityEngine.InputSystem.TouchPhase.Ended,canceled=touch.phase==UnityEngine.InputSystem.TouchPhase.Canceled;
+                if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began&&combatFinger<0&&pressedSlot<0)
+                {
+                    int slot=layout.Hit(point);
+                    if(slot>=0){combatFinger=touch.touchId;BeginPress(slot);}
+                }
                 if(touch.touchId==combatFinger)
                 {
                     foundCombat=true;combatInside=layout.ContainsWithMargin(pressedSlot,point);
@@ -121,7 +131,6 @@ namespace Alterverse.UI
                     else if(pressedSlot==4&&combatInside)attack?.TryAttack();
                 }
             }
-            if(!foundMove&&joystickFinger>=0){joystickFinger=-1;motor?.SetMoveInput(Vector2.zero);}
             if(!foundCombat&&combatFinger>=0){EndPress(false);combatFinger=-1;}
         }
         private void HandleMouse()

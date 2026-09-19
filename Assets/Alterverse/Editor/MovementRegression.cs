@@ -26,6 +26,7 @@ namespace Alterverse.EditorChecks
                 actor.transform.position=new Vector3(0,80,0);
                 var cc=actor.AddComponent<CharacterController>();cc.height=2;cc.radius=.5f;
                 var health=actor.AddComponent<Health>();var body=actor.AddComponent<HeroLocomotion>();
+                CheckInputDirections(actor);
                 var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(transform);
                 floor.transform.position=new Vector3(0,78.8f,0);floor.transform.localScale=new Vector3(20,.2f,20);
                 var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(transform);
@@ -57,9 +58,29 @@ namespace Alterverse.EditorChecks
                 Check(body.BeginDash(actor.transform.position+Vector3.left*3),"dash refused after cleared status");
                 health.TakeDamage(1000);stopped=actor.transform.position;yield return null;
                 Check(!body.IsDashing&&(actor.transform.position-stopped).sqrMagnitude<.001f,"death did not cancel dash");
-                Debug.Log("DIMENSIONS FRONT: movement wall, slide, dash distance, stun and death checks passed.");
+                Debug.Log("DIMENSIONS FRONT: movement input direction, wall, slide, dash distance, stun and death checks passed.");
             }
             finally {Destroy(gameObject);}
+        }
+        private void CheckInputDirections(GameObject actor)
+        {
+            var motor=actor.AddComponent<HeroMotor>();motor.enabled=false;
+            var cameraBasis=new GameObject("DF_InputCameraBasis");cameraBasis.transform.SetParent(transform);
+            cameraBasis.transform.rotation=Quaternion.Euler(45,90,0);
+            typeof(HeroMotor).GetField("cameraTransform",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(motor,cameraBasis.transform);
+            // No Update/yield between inputs: ability release must see this frame's direction.
+            motor.SetMoveInput(Vector2.up);
+            Check(Vector3.Dot(motor.CurrentMoveDirection,Vector3.right)>.999f,"current input ignored camera yaw");
+            motor.SetMoveInput(Vector2.down);
+            Check(Vector3.Dot(motor.CurrentMoveDirection,Vector3.left)>.999f,"same-frame reversal retained stale direction");
+            motor.SetMoveInput(Vector2.one);
+            Check(Mathf.Abs(motor.CurrentMoveDirection.magnitude-1)<.001f,"diagonal input increased speed");
+            motor.SetMoveInput(new Vector2(0,.25f));
+            Check(Mathf.Abs(motor.CurrentMoveDirection.magnitude-.25f)<.001f,"analog magnitude was lost");
+            motor.SetMoveInput(Vector2.zero);
+            Check(!motor.HasMoveInput&&motor.CurrentMoveDirection==Vector3.zero,"released input retained movement");
+            motor.SetMoveInput(Vector2.up);motor.ClearInput();
+            Check(!motor.HasMoveInput&&motor.CurrentMoveDirection==Vector3.zero,"canceled input retained movement");
         }
         private static void Relocate(GameObject actor,CharacterController cc,HeroLocomotion body)
         {cc.enabled=false;actor.transform.position=new Vector3(0,80,0);cc.enabled=true;body.ResetMotion();}
