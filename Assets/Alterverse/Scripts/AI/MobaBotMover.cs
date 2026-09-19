@@ -19,6 +19,7 @@ namespace Alterverse.AI
         private static DimensionPlanet[] sharedPlanets=System.Array.Empty<DimensionPlanet>();
         private static LaneTower[] sharedTowers=System.Array.Empty<LaneTower>();
         private static Alterverse.Combat.PlanetPulseAttack[] sharedPulses=System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
+        private static HotZoneDirector sharedHotZone;
         private long separationOrder;
         private HeroLocomotion locomotion;
         private float blockedTime, detourUntil;
@@ -32,6 +33,7 @@ namespace Alterverse.AI
         private PlanetBuffReceiver planetBuff;
         private float nextWorldScan;
         private DimensionPlanet objective;
+        private HotZoneDirector hotZone;
         private DimensionPlanet[] planets = System.Array.Empty<DimensionPlanet>();
         private LaneTower[] towers = System.Array.Empty<LaneTower>();
         private Alterverse.Combat.PlanetPulseAttack[] pulses = System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
@@ -79,6 +81,8 @@ namespace Alterverse.AI
                     }
                 }
             }
+            else if(brain.State==MobaBotBrain.BotState.Lane&&hotZone!=null&&hotZone.IsActive&&ShouldContestHotZone())
+            { destination=hotZone.transform.position;stopDistance=3.4f; }
             else if(brain.State==MobaBotBrain.BotState.Lane&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
             { destination=sensor.RallyPosition;stopDistance=3f; }
             else if (brain.State == MobaBotBrain.BotState.Lane && objective != null && objective.Available && ShouldRotate())
@@ -106,8 +110,9 @@ namespace Alterverse.AI
                 sharedPlanets=FindObjectsByType<DimensionPlanet>();
                 sharedPulses=FindObjectsByType<Alterverse.Combat.PlanetPulseAttack>();
                 sharedTowers=FindObjectsByType<LaneTower>();
+                sharedHotZone=FindAnyObjectByType<HotZoneDirector>();
             }
-            planets=sharedPlanets;pulses=sharedPulses;towers=sharedTowers;
+            planets=sharedPlanets;pulses=sharedPulses;towers=sharedTowers;hotZone=sharedHotZone;
             objective = null;
             float best = float.MaxValue;
             foreach (DimensionPlanet planet in planets)
@@ -117,6 +122,16 @@ namespace Alterverse.AI
                 if (distance < best) { best = distance; objective = planet; }
             }
         }
+        private bool ShouldContestHotZone()
+        {
+            if(hotZone==null||!hotZone.IsActive)return false;
+            Vector3 delta=hotZone.transform.position-transform.position;delta.y=0;
+            if(delta.sqrMagnitude<11f*11f)return true;
+            float focus=brain.ObjectiveFocus;
+            int slots=focus>.72f?4:focus>.52f?3:2;
+            return rotationSlot<slots;
+        }
+
         private bool ShouldRotate()
         {
             if (objective == null) return false;
