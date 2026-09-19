@@ -22,7 +22,8 @@ namespace Alterverse.UI
         private readonly string[] names=new string[4],descriptions=new string[4],details=new string[4];
         private readonly CombatGlyph[] glyphs=new CombatGlyph[4];
         private string heroName,statusText="",feedback="",healthText="";
-        private readonly string[] cooldownText=new string[4];
+        private AbilityButtonView buttonView;
+        private float pressStarted=-10f;
         private float nextReadout;
         private float feedbackUntil,damageTrail=1,damageHold,previousHp=1;
         private bool focused=true,suspended,combatInside;
@@ -41,6 +42,7 @@ namespace Alterverse.UI
             heroName=identity!=null?identity.DisplayName.ToUpperInvariant():"HERO";
             accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):FrontEndTheme.Accent;
             damageTrail=health.Normalized;CacheAbilities();
+            buttonView?.Dispose();buttonView=new AbilityButtonView(transform,identity!=null?identity.Hero:HeroId.Veyr);
         }
         private void CacheAbilities()
         {
@@ -61,21 +63,17 @@ namespace Alterverse.UI
             if(h==HeroId.Mira)return slot==0?CombatGlyph.Seed:slot==1?CombatGlyph.Heal:slot==2?CombatGlyph.Shelter:CombatGlyph.Wildsurge;
             return slot==0?CombatGlyph.Swing:slot==1?CombatGlyph.Armor:slot==2?CombatGlyph.Slam:CombatGlyph.Overdrive;
         }
-        private CombatGlyph BasicGlyph()
-        {
-            HeroId h=identity!=null?identity.Hero:HeroId.Veyr;
-            return h==HeroId.Veyr?CombatGlyph.Blade:h==HeroId.Kaelon?CombatGlyph.Heavy:h==HeroId.Nyra?CombatGlyph.Rifle:h==HeroId.Elyra?CombatGlyph.Orb:h==HeroId.Mira?CombatGlyph.SupportShot:CombatGlyph.Gauntlet;
-        }
         private void OnEnable()=>EnhancedTouchSupport.Enable();
-        private void OnDisable(){ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
-        private void OnApplicationFocus(bool value){focused=value;if(!value)ResetInput();}
-        private void OnApplicationPause(bool value){suspended=value;if(value)ResetInput();}
+        private void OnDestroy()=>buttonView?.Dispose();
+        private void OnDisable(){buttonView?.SetVisible(false);ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
+        private void OnApplicationFocus(bool value){focused=value;if(!value){buttonView?.SetVisible(false);ResetInput();}}
+        private void OnApplicationPause(bool value){suspended=value;if(value){buttonView?.SetVisible(false);ResetInput();}}
         private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;mouseJoystick=false;combatInside=false;motor?.SetMoveInput(Vector2.zero);}
         private void Update()
         {
             layout=new CombatHudLayout(Screen.safeArea);
             if(previousSafe!=layout.Safe){previousSafe=layout.Safe;ResetInput();}
-            if(layout.Safe.width<=0||layout.Safe.height<=0||Time.timeScale<=0||health==null||health.IsDead||!focused||suspended){ResetInput();return;}
+            if(layout.Safe.width<=0||layout.Safe.height<=0||Time.timeScale<=0||health==null||health.IsDead||!focused||suspended){buttonView?.SetVisible(false);ResetInput();return;}
             float hp=health.Normalized;
             if(hp<previousHp)damageHold=Time.unscaledTime+.25f;previousHp=hp;
             if(hp>damageTrail)damageTrail=hp;
@@ -89,7 +87,22 @@ namespace Alterverse.UI
             {
                 nextReadout=Time.unscaledTime+.1f;
                 healthText=$"{health.Current:0} / {health.Max:0}"+(health.Shield>0?$"   +{health.Shield:0} SHIELD":"");
-                for(int i=0;i<4;i++)cooldownText[i]=abilities!=null?$"{abilities.RemainingFor(i):0.0}s":"";
+
+            }
+        }
+        private void LateUpdate()
+        {
+            bool visible=layout.Safe.width>0&&layout.Safe.height>0&&Time.timeScale>0&&health!=null&&!health.IsDead&&focused&&!suspended;
+            buttonView?.SetVisible(visible);
+            if(!visible||buttonView==null)return;
+            buttonView.Layout(layout);
+            bool blocked=!HeroCombatStatus.CanAct(health.gameObject);
+            for(int i=0;i<5;i++)
+            {
+                float remaining=i<4?(abilities!=null?abilities.RemainingFor(i):0):(attack!=null?attack.RemainingCooldown:0);
+                float duration=i<4?(abilities!=null?abilities.CooldownFor(i):1):(attack!=null?attack.AttackCooldown:1);
+                bool unavailable=blocked||(i<4?abilities==null:attack==null);
+                buttonView.SetState(i,remaining,duration,unavailable,pressedSlot==i&&combatInside,pressedSlot==i?Time.unscaledTime-pressStarted:10);
             }
         }
         private void HandleTouches()
@@ -181,7 +194,7 @@ namespace Alterverse.UI
         }
         private void BeginPress(int slot)
         {
-            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;
+            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;pressStarted=Time.unscaledTime;
             if(slot==4)attack?.TryAttack();
         }
         private void EndPress(bool commit)
@@ -207,7 +220,7 @@ namespace Alterverse.UI
             {
                 GUI.matrix=layout.Matrix;
                 if(Event.current.type!=EventType.Repaint)return;
-                DrawPreview();DrawHealth();DrawActions();DrawJoystick();DrawHint();
+                DrawPreview();DrawHealth();DrawJoystick();DrawHint();
             }
             finally{GUI.matrix=matrix;GUI.color=color;}
         }
@@ -221,42 +234,6 @@ namespace Alterverse.UI
             if(health.Shield>0)FrontEndTheme.Fill(new Rect(bar.x,bar.y+11,bar.width*Mathf.Clamp01(health.Shield/health.Max),3),FrontEndTheme.Accent);
             theme.Label(new Rect(r.x+12,r.y+48,194,22),healthText,small);
             if(statusText.Length>0)theme.Label(new Rect(r.x,r.yMax+4,r.width,25),statusText,centered);
-        }
-        private void DrawActions()
-        {
-            for(int i=0;i<5;i++)
-            {
-                Rect hit=layout.Action(i);bool held=pressedSlot==i&&combatInside;
-                float remaining=i<4&&abilities!=null?abilities.RemainingFor(i):0;
-                Color heroEdge=accent;
-                Color edge=i==3?Color.Lerp(accent,new Color(1f,.82f,.38f),.45f):heroEdge;
-                float diameter=Mathf.Min(hit.width-8,hit.height-(i==3?20:8));
-                float press=held?.94f:1f;diameter*=press;
-                Vector2 center=new Vector2(hit.center.x,hit.y+diameter*.5f+3);
-                Rect circle=new Rect(center.x-diameter*.5f,center.y-diameter*.5f,diameter,diameter);
-
-                // Visual button is circular; the original generous rectangular hit area remains unchanged.
-                CombatGlyphs.Disc(center,diameter*.5f,new Color(.018f,.026f,.043f,.96f),32);
-                CombatGlyphs.Ring(center,diameter*.5f-2,held?4:3,new Color(edge.r,edge.g,edge.b,remaining>0?.32f:.95f),32);
-                CombatGlyphs.Ring(center,diameter*.5f-7,1,new Color(edge.r,edge.g,edge.b,remaining>0?.12f:.36f),32);
-                if(i==3)
-                {
-                    CombatGlyphs.Ring(center,diameter*.5f+4,2,new Color(edge.r,edge.g,edge.b,remaining>0?.18f:.68f),32);
-                    for(int k=0;k<4;k++){float a=k*Mathf.PI*.5f;Vector2 d=new Vector2(Mathf.Cos(a),Mathf.Sin(a));CombatGlyphs.Line(center+d*(diameter*.5f+1),center+d*(diameter*.5f+7),3,edge);}
-                }
-
-                Color icon=remaining>0?new Color(.36f,.39f,.45f,.68f):Color.Lerp(Color.white,edge,.48f);
-                CombatGlyphs.Draw(i==4?BasicGlyph():glyphs[i],center,diameter*.48f,icon);
-
-                if(remaining>0)
-                {
-                    // A contained dark veil keeps the icon readable without drawing outside the circular face.
-                    CombatGlyphs.Disc(center,diameter*.5f-9,new Color(.008f,.012f,.02f,.46f),28);
-                    theme.Label(new Rect(circle.x,circle.center.y-14,circle.width,28),cooldownText[i],centered);
-                }
-                if(held)CombatGlyphs.Ring(center,diameter*.5f-5,3,new Color(1,1,1,.72f),28);
-                if(i==3)theme.Label(new Rect(hit.x,hit.y-20,hit.width,18),"ULTIMATE",small,true);
-            }
         }
         private void DrawJoystick()
         {
@@ -310,3 +287,4 @@ namespace Alterverse.UI
         }
     }
 }
+
