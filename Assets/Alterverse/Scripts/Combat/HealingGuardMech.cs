@@ -219,9 +219,7 @@ namespace Alterverse.Combat
         private bool Enemy(Health candidate)
         {
             TeamMember member=candidate.GetComponent<TeamMember>();
-            if(member!=null)return member.Team!=team;
-            LaneMinion minion=candidate.GetComponent<LaneMinion>();
-            return minion!=null&&minion.Team!=team;
+            return member!=null&&member.Team!=team;
         }
 
         private void MoveWithinLeash(Vector3 destination)
