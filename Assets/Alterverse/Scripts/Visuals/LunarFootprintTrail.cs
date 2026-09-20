@@ -27,7 +27,6 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
-            if(ArenaVariantRuntime.Current!=ArenaVariant.Moon){enabled=false;return;}
             health=GetComponent<Health>();
             if(health==null){enabled=false;return;}
 
@@ -150,7 +149,11 @@ namespace Alterverse.Visuals
             {
                 if(mark.Renderer==null)return;
                 block.Clear();
-                Color c=new(.025f,.03f,.038f,alpha);
+                Color c=ArenaVariantRuntime.Current==ArenaVariant.Mars
+                    ?new Color(.09f,.035f,.018f,alpha)
+                    :ArenaVariantRuntime.Current==ArenaVariant.GreenPlanet
+                        ?new Color(.025f,.05f,.022f,alpha)
+                        :new Color(.025f,.03f,.038f,alpha);
                 block.SetColor(BaseColor,c);
                 block.SetColor(ColorId,c);
                 mark.Renderer.SetPropertyBlock(block);
