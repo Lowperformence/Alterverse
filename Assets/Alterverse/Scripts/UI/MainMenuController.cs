@@ -413,10 +413,11 @@ namespace Alterverse.UI
                 ?"UNIVERSAL ARMOR FINISH / ALL SIX HEROES"
                 :"UNIVERSAL WING COSMETIC / ALL SIX HEROES";
             string description=plague
-                ?"Toxic pest wings born from the Green Planet.\nAcid-green, diseased and dangerous — cosmetic only."
+                ?"Toxic pest wings born from the Green Planet.\nAcid-green, diseased and dangerous. No combat power."
                 :beta
-                    ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening — cosmetic only."
-                    :"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.";
+                    ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening. No combat power."
+                    :"Fractured violet wings. Obsidian armor.\nDistinct visual finish with no combat power.";
+            string progressionBonus=WingMatchRewardBonus.ShopBonus(cosmetic);
             int price=plague?PlagueWings.Price:beta?BetaSupporterWings.Price:UniversalSkin.Price;
             bool owned=plague?PlagueWings.Owned:beta?BetaSupporterWings.Owned:UniversalSkin.Owned;
             bool equipped=plague?PlagueWings.Equipped:beta?BetaSupporterWings.Equipped:UniversalSkin.Equipped;
@@ -424,7 +425,8 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(x,322,rw,46),name,theme.Title);
             theme.Label(new Rect(x,372,rw,34),category,theme.Small,true);
-            theme.Label(new Rect(x,414,rw,78),description,theme.Body,true);
+            theme.Label(new Rect(x,414,rw,58),description,theme.Body,true);
+            theme.Label(new Rect(x,474,rw,24),"PROGRESSION BONUS  •  "+progressionBonus,theme.Small,true);
             theme.Label(new Rect(x,500,rw,32),equipped?"EQUIPPED":owned?"OWNED":price+" SHARDS",theme.Heading);
 
             string label=equipped?"USE ORIGINAL":owned?"EQUIP":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
@@ -449,7 +451,7 @@ namespace Alterverse.UI
                 }
             }
             theme.Label(new Rect(x,620,rw,48),shopMessage.Length>0?shopMessage:
-                $"Preview: {name}  •  {price} SHARDS  •  cosmetic only",theme.Small,true);
+                $"Preview: {name}  •  {progressionBonus}  •  NO COMBAT POWER",theme.Small,true);
         }
 
         private void DrawWeaponSkinShop()
