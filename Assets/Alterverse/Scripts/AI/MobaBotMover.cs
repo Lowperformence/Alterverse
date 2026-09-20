@@ -396,7 +396,19 @@ namespace Alterverse.AI
             }
             if(Time.time<detourUntil&&!arrived)advance=detour*MoveSpeed*Time.deltaTime;
             Vector3 separation=SeparationVelocity();
-            if(arrived&&separation.sqrMagnitude<.04f)separation=Vector3.zero;
+            if(arrived)
+            {
+                // Once the tactical destination is reached, crowd separation must not push the bot
+                // back across the stop boundary. That produced a repeatable settle -> separate ->
+                // re-approach loop that looked like slow forward micro-stutter.
+                if(separation.sqrMagnitude<.04f||delta.sqrMagnitude<.0001f)separation=Vector3.zero;
+                else
+                {
+                    Vector3 radial=delta.normalized;
+                    separation-=radial*Vector3.Dot(separation,radial);
+                    if(separation.sqrMagnitude<.04f)separation=Vector3.zero;
+                }
+            }
             Vector3 step = Vector3.ClampMagnitude(advance + separation * Time.deltaTime, MoveSpeed * Time.deltaTime);
             Vector3 next = GuardAgainstTowers(transform.position + step);
             next.x = Mathf.Clamp(next.x, -ArenaHalfWidth, ArenaHalfWidth);
