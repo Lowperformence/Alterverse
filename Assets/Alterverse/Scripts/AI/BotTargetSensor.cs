@@ -77,11 +77,14 @@ namespace Alterverse.AI
         {
             if(applied<=0||source==null)return;
             Health attacker=source.GetComponentInParent<Health>();
-            if(attacker==null||!IsEnemy(attacker))return;
-            // Remember only who actually hurt this bot. Selection still requires ordinary
-            // visibility, so this never reveals a hidden attacker's live position.
+            if(attacker==null||!IsEnemy(attacker)||attacker.GetComponent<HeroIdentity>()==null)return;
+            // Hero combat is the primary game loop. Remember only a hero who actually hurt us;
+            // selection still requires normal visibility, so this never becomes wall vision.
             recentAttacker=attacker;
             recentAttackerUntil=Time.time+1.8f;
+            // A hero that attacks us again has re-entered the fight and may immediately be
+            // considered for self-defence even if an earlier chase was intentionally abandoned.
+            if(disengagedTarget==attacker){disengagedTarget=null;disengagedUntil=0;}
         }
         public void ClearTarget() { ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = recentAttacker = null; disengagedUntil=recentAttackerUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
@@ -142,68 +145,96 @@ namespace Alterverse.AI
             TeamMember other = candidate.GetComponent<TeamMember>();
             return other != null && teamMember.IsEnemy(other);
         }
+        private int TargetTier(Health candidate)
+        {
+            // Lower is better. Hero combat always wins the target class decision; map pieces only
+            // become the focus when no legal visible hero is available.
+            if(candidate.GetComponent<HeroIdentity>()!=null)return 0;
+            if(candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<DimensionPlanet>()!=null)return 1;
+
+            LaneTower tower=candidate.GetComponent<LaneTower>();
+            if(tower!=null)
+            {
+                // A covered tower is a valid post-fight siege target. Without allied minion cover,
+                // clearing the wave is preferable to repeatedly selecting an unsafe structure.
+                return teamMember!=null&&tower.HasMinionCoverFor(teamMember.Team)?2:5;
+            }
+
+            // Reward/mech combat units stay secondary to heroes but ahead of lane farming.
+            if(candidate.GetComponent<TeamMember>()!=null&&candidate.GetComponent<LaneMinion>()==null)return 2;
+            if(candidate.GetComponent<LaneMinion>()!=null)return 3;
+            return 4;
+        }
+
         private float Score(Health candidate)
         {
             Vector3 delta = candidate.transform.position - transform.position;
             delta.y = 0;
             HeroIdentity candidateHero=candidate.GetComponent<HeroIdentity>();
             float objectiveAwareness=Difficulty.ObjectiveAwareness;
-            float priority = candidateHero != null ? .72f : 1f;
-            if (candidate.GetComponent<LaneMinion>() != null) priority = .94f;
-            if (candidate.GetComponent<LaneTower>() != null) priority = Mathf.Lerp(1.34f,.82f,objectiveAwareness);
-            if (candidate.GetComponent<RealityCore>() != null) priority = Mathf.Lerp(1.42f,.68f,objectiveAwareness);
-            if (candidate.GetComponent<DimensionPlanet>() != null) priority = Mathf.Lerp(1.48f,.78f,objectiveAwareness);
-
-            float accuracy=Difficulty.TargetAccuracy;
-            float aggression=brain!=null?brain.Aggression:.55f;
-            // Human-readable threat response: an invader in our own base and a recent
-            // visible attacker should outrank harmless farming targets. This is still bounded by
-            // normal scan radius and line of sight.
-            if(brain!=null&&brain.InsideOwnBase(transform.position)&&brain.IsLocalBaseThreat(candidate))
-                priority*=.38f;
-            if(candidate==recentAttacker&&Time.time<recentAttackerUntil&&
-                candidate.GetComponent<LaneTower>()==null&&candidate.GetComponent<RealityCore>()==null)
-                priority*=.48f;
+            float priority=1f;
 
             if(candidateHero!=null)
             {
-                priority*=Mathf.Lerp(1.15f,.8f,aggression);
-                // Role tendencies are soft preferences, not hidden information or hard rules.
+                // Within the hero tier, wounded/controlled/recently aggressive heroes become better
+                // choices. TargetTier already guarantees a tower or minion cannot steal the fight.
+                float heroBias=Mathf.Lerp(.46f,.24f,Difficulty.TargetAccuracy);
+                priority*=heroBias;
+                priority*=Mathf.Lerp(.42f,1f,candidate.Normalized);
+
+                HeroCombatStatus status=candidate.GetComponent<HeroCombatStatus>();
+                if(status!=null&&(status.Stunned||status.MoveMultiplier<.8f))priority*=.72f;
+
+                if(brain!=null&&brain.InsideOwnBase(transform.position)&&brain.IsLocalBaseThreat(candidate))
+                    priority*=.34f;
+                if(candidate==recentAttacker&&Time.time<recentAttackerUntil)
+                    priority*=.40f;
+
+                float aggression=brain!=null?brain.Aggression:.55f;
+                priority*=Mathf.Lerp(1.08f,.82f,aggression);
+
+                // Role tendencies are soft preferences; they never grant hidden information.
                 HeroId selfHero=profile!=null?profile.Hero:HeroId.Veyr;
                 switch(selfHero)
                 {
-                    case HeroId.Veyr: // assassin: wounded backline targets become more attractive
-                        priority*=Mathf.Lerp(.72f,1.05f,candidate.Normalized);
-                        if(candidateHero.Hero==HeroId.Kaelon)priority*=1.16f;
+                    case HeroId.Veyr: // assassin: prefer vulnerable backline, avoid healthy tank fixation
+                        if(BotTeamCoordinator.IsBackline(candidateHero.Hero))priority*=.72f;
+                        if(candidateHero.Hero==HeroId.Kaelon)priority*=1.18f;
                         break;
-                    case HeroId.Kaelon: // tank: willing to occupy enemy heroes rather than farm
-                        priority*=.88f;
+                    case HeroId.Kaelon: // tank: peel threats near allied backline through team bias
+                        priority*=.90f;
                         break;
-                    case HeroId.Nyra: // marksman: steady visible targets, no extreme preference
+                    case HeroId.Nyra: // marksman: reliable nearest safe hero pressure
                         priority*=.96f;
                         break;
                     case HeroId.Elyra:
                         priority*=.93f;
                         break;
-                    case HeroId.Mira: // support is slightly less eager to start a solo duel
-                        priority*=1.06f;
+                    case HeroId.Mira: // support remains slightly less eager to start a solo duel
+                        priority*=1.05f;
                         break;
                     default: // bruiser
                         priority*=.92f;
                         break;
                 }
             }
+            else
+            {
+                if(candidate.GetComponent<LaneMinion>()!=null)priority=1.08f;
+                if(candidate.GetComponent<LaneTower>()!=null)priority=Mathf.Lerp(1.32f,.86f,objectiveAwareness);
+                if(candidate.GetComponent<RealityCore>()!=null)priority=Mathf.Lerp(1.22f,.72f,objectiveAwareness);
+                if(candidate.GetComponent<DimensionPlanet>()!=null)priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
+            }
 
-            // Easy is more distance-led; stronger difficulties value visible wounded targets more,
-            // but no difficulty gets information that a player could not perceive.
-            // Stable perceptual bias: random rerolls each scan caused A/B/A target flicker.
+            float accuracy=Difficulty.TargetAccuracy;
+            // Stable perceptual bias: never reroll target preference every scan.
             uint bias=unchecked((uint)(candidate.GetEntityId().GetHashCode()*397)^((uint)GetEntityId().GetHashCode()));
-            float noise=1f+(1f-accuracy)*.45f*(bias%101u)/100f;
-            float woundedFocus=Mathf.Lerp(.30f,1f,candidate.Normalized);
+            float noise=1f+(1f-accuracy)*.32f*(bias%101u)/100f;
             float tacticalBias=brain!=null&&brain.FollowTeamCall
                 ?brain.Tactics.TargetBias(candidate,profile!=null?profile.Hero:HeroId.Veyr):1f;
-            return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise*tacticalBias;
+            return delta.sqrMagnitude*priority*noise*tacticalBias;
         }
+
         private void Scan()
         {
             if(brain==null)brain=GetComponent<MobaBotBrain>();
@@ -223,6 +254,7 @@ namespace Alterverse.AI
             if(!IsEnemy(currentTarget))currentTarget=null;
             Health best = null;
             float bestScore = float.MaxValue;
+            int bestTier=int.MaxValue;
             for(int index=0;index<Health.Active.Count;index++)
             {
                 Health candidate=Health.Active[index];
@@ -235,7 +267,8 @@ namespace Alterverse.AI
                     lastKnownPosition=candidate.transform.position;
                     lastSeenTime=Time.time;
                 }
-                if(candidate.GetComponent<HeroIdentity>()!=null)
+                HeroIdentity identity=candidate.GetComponent<HeroIdentity>();
+                if(identity!=null)
                 {
                     var member=candidate.GetComponent<TeamMember>();
                     if(member!=null&&member.Team==teamMember.Team){NearbyAllies++;allies+=candidate.transform.position;}
@@ -244,33 +277,50 @@ namespace Alterverse.AI
                 if (!IsEnemy(candidate)) continue;
                 if(ObservationCount<observations.Length)
                 {
-                    var identity=candidate.GetComponent<HeroIdentity>();
                     var status=candidate.GetComponent<HeroCombatStatus>();
                     observations[ObservationCount++]=new BotTeamCoordinator.Observation{
                         Target=candidate,Position=candidate.transform.position,Hp=candidate.Normalized,SeenAt=Time.time,
                         Hero=identity!=null,Role=identity!=null?identity.Hero:HeroId.Veyr,
                         Controlled=status!=null&&(status.Stunned||status.MoveMultiplier<.8f)};
                 }
-                // A failed chase cannot immediately reacquire the same fleeing opponent.
-                // Nearby opponents remain valid so disengaging never disables self-defence.
+                // A failed chase cannot immediately reacquire the same fleeing opponent. A hero
+                // that attacks us again clears this lock in OnDamaged, preserving local self-defence.
                 float defendRange=profile!=null?profile.AttackRange:fallbackScanRadius*.25f;
                 if(candidate==disengagedTarget && Time.time<disengagedUntil &&
                     (candidate.transform.position-transform.position).sqrMagnitude>defendRange*defendRange)continue;
                 Vector3 delta = candidate.transform.position - transform.position;
                 delta.y = 0;
                 if (delta.sqrMagnitude > radius * radius) continue;
+
+                int tier=TargetTier(candidate);
                 float score = Score(candidate);
-                // A challenger must be substantially better; small movements cannot flip targets.
-                if (candidate == currentTarget) score *= Time.time-retainedSince<Difficulty.MemorySeconds?.65f:.85f;
-                if (score < bestScore) { bestScore = score; best = candidate; }
+                // Preserve a valid current target against tiny within-tier improvements. Hero targets
+                // therefore feel committed instead of flickering between nearby opponents.
+                if (candidate == currentTarget) score *= Time.time-retainedSince<Difficulty.MemorySeconds?.62f:.84f;
+                if (tier < bestTier || tier == bestTier && score < bestScore)
+                {bestTier=tier;bestScore=score;best=candidate;}
             }
             if(!retainedVisible){currentTarget=null;ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;}
             if(NearbyAllies>0)RallyPosition=allies/NearbyAllies;
+
+            // Hold a visible hero for a short human-sized commitment window unless a clearly urgent
+            // hero target appears (recent attacker, team focus, or strong execute opportunity).
+            if(currentTarget!=null&&retainedVisible&&currentTarget.GetComponent<HeroIdentity>()!=null&&
+                best!=null&&best!=currentTarget&&best.GetComponent<HeroIdentity>()!=null)
+            {
+                float commitment=Mathf.Lerp(1.30f,.80f,Difficulty.TeamDiscipline);
+                bool urgent=best==recentAttacker&&Time.time<recentAttackerUntil||
+                    brain!=null&&brain.Difficulty.Coordinated&&brain.Tactics.Focus==best||
+                    best.Normalized<.30f&&currentTarget.Normalized>best.Normalized+.18f;
+                if(Time.time-retainedSince<commitment&&!urgent)best=currentTarget;
+            }
+
             if(best==currentTarget){candidateTarget=null;return;}
-            // Keep a still-visible candidate through its reaction window; score jitter cannot
-            // postpone first acquisition indefinitely in a crowded fight.
+            // Keep a pending candidate through its reaction window only if it is at least as important
+            // as the newly found class. A pending tower/minion can never delay a newly visible hero.
             if(currentTarget==null&&IsEnemy(candidateTarget)&&Visible(candidateTarget)&&
-                !(candidateTarget==disengagedTarget&&Time.time<disengagedUntil))best=candidateTarget;
+                !(candidateTarget==disengagedTarget&&Time.time<disengagedUntil)&&
+                TargetTier(candidateTarget)<=bestTier)best=candidateTarget;
             if(best!=candidateTarget){candidateTarget=best;candidateSince=Time.time;}
             float reaction=Difficulty.ReactionDelay*(brain!=null?brain.DecisionRhythm:1f);
             if(best!=null&&Time.time-candidateSince>=reaction)
