@@ -1,4 +1,5 @@
 using Alterverse.Visuals;
+using Alterverse.Match;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -54,7 +55,8 @@ namespace Alterverse.Combat
             HealingGuardMech guard=mech.AddComponent<HealingGuardMech>();
             guard.Initialize(team,spawn,healingPlate,energy);
 
-            BuildRobotVisual(mech.transform,zero,dark,energy);
+            if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,true);
+            else BuildRobotVisual(mech.transform,zero,dark,energy);
 
             return mech;
         }
