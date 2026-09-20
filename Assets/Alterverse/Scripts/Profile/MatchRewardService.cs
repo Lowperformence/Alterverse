@@ -22,7 +22,11 @@ namespace Alterverse.Profile
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
             if(PlayerPrefs.GetString(ReceiptKey,"")==matchId)
-                return new MatchRewardResult(PlayerPrefs.GetInt(ReceiptShards),PlayerPrefs.GetInt(ReceiptXp));
+            {
+                int storedXp=PlayerPrefs.GetInt(ReceiptXp);
+                BattlePassProgress.GrantMatchXp(storedXp,matchId);
+                return new MatchRewardResult(PlayerPrefs.GetInt(ReceiptShards),storedXp);
+            }
             kills=Mathf.Max(0,kills);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
             int shards=MatchShardRewards.Roll(won,kills,assists,objectives);
             long before=PlayerExperience.TotalXp;
@@ -39,6 +43,7 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ObjectivesKey,ProfileTransaction.Add(LifetimeObjectives,objectives)),
                 new ProfileTransaction.Write(ReceiptKey,matchId),
                 new ProfileTransaction.Write(ReceiptShards,shards),new ProfileTransaction.Write(ReceiptXp,xp));
+            BattlePassProgress.GrantMatchXp(xp,matchId);
             return new MatchRewardResult(shards,xp);
         }
     }
