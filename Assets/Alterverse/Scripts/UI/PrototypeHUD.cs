@@ -252,14 +252,37 @@ namespace Alterverse.UI
             bool active=joystickFinger>=0||mouseJoystick;
             Vector2 center=active?joystickCenter:new Vector2(104,layout.Height-104);
             Vector2 knob=active?joystickKnob:center;
+            Vector2 offset=knob-center;
+            float strength=Mathf.Clamp01(offset.magnitude/Radius);
 
-            // Quiet mobile joystick: smooth circular outlines only, no label or visual clutter.
-            Color baseRing=new Color(FrontEndTheme.Muted.r,FrontEndTheme.Muted.g,FrontEndTheme.Muted.b,active?.34f:.20f);
+            // Clean mobile movement pad: one soft base, one precise boundary and one solid thumb puck.
+            // Keep it readable over every arena without the layered/noisy "target reticle" look.
+            Color baseFill=new Color(.018f,.026f,.040f,active?.30f:.20f);
+            Color baseRing=new Color(FrontEndTheme.Text.r,FrontEndTheme.Text.g,FrontEndTheme.Text.b,active?.24f:.14f);
+            Color innerRing=new Color(FrontEndTheme.Muted.r,FrontEndTheme.Muted.g,FrontEndTheme.Muted.b,active?.16f:.09f);
+            Color knobFill=active
+                ?new Color(accent.r,accent.g,accent.b,.34f)
+                :new Color(.12f,.15f,.19f,.28f);
             Color knobRing=active
-                ?new Color(accent.r,accent.g,accent.b,.48f)
-                :new Color(FrontEndTheme.Text.r,FrontEndTheme.Text.g,FrontEndTheme.Text.b,.26f);
-            CombatGlyphs.Ring(center,58f,1.5f,baseRing,72);
-            CombatGlyphs.Ring(knob,20f,2f,knobRing,56);
+                ?new Color(accent.r,accent.g,accent.b,.78f)
+                :new Color(FrontEndTheme.Text.r,FrontEndTheme.Text.g,FrontEndTheme.Text.b,.34f);
+
+            CombatGlyphs.Disc(center,57f,baseFill,42);
+            CombatGlyphs.Ring(center,58f,1.6f,baseRing,64);
+            CombatGlyphs.Ring(center,43f,1f,innerRing,56);
+
+            if(active&&strength>.08f)
+            {
+                Vector2 direction=offset.normalized;
+                Vector2 lineStart=center+direction*22f;
+                Vector2 lineEnd=knob-direction*19f;
+                if((lineEnd-lineStart).sqrMagnitude>4f)
+                    CombatGlyphs.Line(lineStart,lineEnd,2.2f,new Color(accent.r,accent.g,accent.b,.30f*strength));
+            }
+
+            CombatGlyphs.Disc(knob,20f,knobFill,28);
+            CombatGlyphs.Ring(knob,20f,2f,knobRing,40);
+            CombatGlyphs.Ring(knob,14f,1f,new Color(1f,1f,1f,active?.13f:.07f),32);
         }
         private void DrawHint()
         {
