@@ -252,6 +252,43 @@ for(int i=0;i<redDetails.Length;i++)
 Transform detail=FindVisual(redDetails[i]);
 if(detail!=null)ApplyGlow(detail,redMaterial);
 }
+
+// Make the premium red construction unmistakable in both shop preview and match.
+// These pieces sit at the real weapon pivots and do not alter any combat collider.
+for(int side=-1;side<=1;side+=2)
+{
+string suffix=side<0?"L":"R";
+Transform weapon=side<0?leftWeapon:rightWeapon;
+if(weapon==null)continue;
+
+Transform hilt=FindVisual("Hilt"+suffix);
+if(hilt!=null)
+{
+hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.18f,1.28f,1.18f));
+ApplyGlow(hilt,redMaterial);
+}
+
+CreateNullEdgePart("OverdriveGrip"+suffix,weapon,
+new Vector3(0,-.015f,-.035f),new Vector3(.105f,.245f,.10f),
+Vector3.zero,redMaterial);
+CreateNullEdgePart("OverdriveGuard"+suffix,weapon,
+new Vector3(0,-.115f,.055f),new Vector3(.30f,.055f,.13f),
+new Vector3(0,0,side*8f),redMaterial);
+CreateNullEdgePart("OverdrivePommel"+suffix,weapon,
+new Vector3(0,.125f,-.055f),new Vector3(.13f,.085f,.13f),
+new Vector3(0,0,45f),redMaterial);
+CreateNullEdgePart("OverdriveBladeDetail"+suffix,weapon,
+new Vector3(side*.025f,-.20f,.18f),new Vector3(.035f,.19f,.035f),
+new Vector3(side*10f,0,side*7f),redMaterial);
+}
+}
+
+private GameObject CreateNullEdgePart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+if(renderer!=null)renderer.sharedMaterial=material;
+return part;
 }
 
 private void ApplyStarlineOverdrive(Shader shader,Material energyMaterial)
