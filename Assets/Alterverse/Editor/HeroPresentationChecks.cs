@@ -19,7 +19,7 @@ namespace Alterverse.EditorChecks
                 Require(material.shader!=null&&!ShaderUtil.ShaderHasError(material.shader),"Shader errors: "+path);
             }
             int checkedHeroes=0;
-            foreach(HeroIdentity hero in UnityEngine.Object.FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include,FindObjectsSortMode.None))
+            foreach(HeroIdentity hero in UnityEngine.Object.FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include))
             {
                 Transform root=hero.transform.Find("DF_VisualRoot");if(root==null)continue;
                 Require(root.GetComponentsInChildren<Collider>(true).Length==0,"Visual rig contains a gameplay collider.");
