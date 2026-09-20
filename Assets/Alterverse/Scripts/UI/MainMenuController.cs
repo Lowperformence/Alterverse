@@ -196,20 +196,36 @@ namespace Alterverse.UI
         }
         private void DrawPlay()
         {
-            Heading("Deployment","Choose your hero. Enter a local team battle.");
+            Heading("Deployment","Choose your hero. Select AI difficulty. Enter a local team battle.");
             float w = ContentWidth*.52f;
-            theme.Panel(new Rect(Left,222,w,306));
-            theme.Label(new Rect(Left+28,244,w-56,26),"AVAILABLE NOW",theme.Small,true);
-            theme.Label(new Rect(Left+28,286,w-56,50),"AI MATCH 5v5",theme.Title);
-            theme.Label(new Rect(Left+28,350,w-56,62),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            theme.Label(new Rect(Left+28,438,w-56,30),"ZERO TEAM / "+Alterverse.AI.BotDifficultySettings.Label(Alterverse.AI.BotDifficultySettings.Selected)+" BOTS",theme.Body);
-            theme.Label(new Rect(Left+28,479,w-56,24),"Online multiplayer is not available yet.",theme.Small,true);
+            theme.Panel(new Rect(Left,214,w,366));
+            theme.Label(new Rect(Left+28,232,w-56,24),"AVAILABLE NOW",theme.Small,true);
+            theme.Label(new Rect(Left+28,266,w-56,46),"AI MATCH 5v5",theme.Title);
+            theme.Label(new Rect(Left+28,322,w-56,54),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            theme.Label(new Rect(Left+28,390,w-56,22),"Online multiplayer is not available yet.",theme.Small,true);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
-            theme.Label(new Rect(Left+28,505,w-56,22),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
+            theme.Label(new Rect(Left+28,420,w-56,20),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,527,w-56,22),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
-            if (theme.Action(new Rect(Left,554,w,76),"START AI MATCH",true)) BeginLaunch();
-            theme.Label(new Rect(Left,642,w,28),launchMessage.Length>0?launchMessage:"Your selected hero is confirmed when the match starts.",theme.Small,true);
+            theme.Label(new Rect(Left+28,444,w-56,20),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
+
+            theme.Label(new Rect(Left+28,476,w-56,22),"AI DIFFICULTY",theme.Small,true);
+            var difficulty=Alterverse.AI.BotDifficultySettings.Selected;
+            float gap=8f,buttonW=(w-56-gap*3)/4f;
+            for(int i=0;i<4;i++)
+            {
+                var level=(Alterverse.AI.BotDifficulty)i;
+                if(theme.Action(new Rect(Left+28+i*(buttonW+gap),504,buttonW,48),
+                    Alterverse.AI.BotDifficultySettings.Label(level),selected:difficulty==level))
+                {
+                    Alterverse.AI.BotDifficultySettings.Selected=level;
+                    difficulty=level;
+                }
+            }
+
+            if (theme.Action(new Rect(Left,594,w,70),"START AI MATCH",true)) BeginLaunch();
+            theme.Label(new Rect(Left,672,w,24),launchMessage.Length>0?launchMessage:
+                "Difficulty affects bot decisions only — combat stats stay equal.",theme.Small,true);
+
             float x = Left+w+32, rw = ContentWidth-w-32;
             DrawPortrait(new Rect(x,198,rw,330));
             theme.Label(new Rect(x+24,538,rw-48,40),HeroName,theme.Heading);
@@ -514,7 +530,7 @@ namespace Alterverse.UI
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawSettings()
         {
-            Heading("Settings","Choose your challenge. Make the sound your own.");
+            Heading("Settings","Make the sound your own.");
             float w=ContentWidth*.64f;
             theme.Panel(new Rect(Left,222,w,438));
             float previousMaster=master, previousMusic=music, previousSfx=sfx;
@@ -524,17 +540,10 @@ namespace Alterverse.UI
             if(previousMaster!=master||previousMusic!=music||previousSfx!=sfx)
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
-            theme.Label(new Rect(x,238,rw,38),"BOT DIFFICULTY",theme.Heading);
-            var selected=Alterverse.AI.BotDifficultySettings.Selected;
-            for(int i=0;i<3;i++)
-            {
-                var level=(Alterverse.AI.BotDifficulty)i;
-                if(theme.Action(new Rect(x,288+i*62,rw,54),Alterverse.AI.BotDifficultySettings.Label(level),selected:selected==level))
-                    Alterverse.AI.BotDifficultySettings.Selected=level;
-            }
-            theme.Label(new Rect(x,482,rw,78),"Applies to both bot teams next match. Smarter decisions; same combat stats.",theme.Body,true);
-            theme.Label(new Rect(x,572,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
-            theme.Label(new Rect(x,612,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
+            theme.Label(new Rect(x,250,rw,38),"MATCH OPTIONS",theme.Heading);
+            theme.Label(new Rect(x,306,rw,82),"AI difficulty is selected directly before an AI match so you can change the challenge for every deployment.",theme.Body,true);
+            theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
+            theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {
