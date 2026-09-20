@@ -54,6 +54,7 @@ namespace Alterverse.Match
         public bool IsActive=>state==State.Active;
         public int ZeroInside=>zeroInside;
         public int LumenInside=>lumenInside;
+        public bool RewardSpawned=>rewardIssued;
 
         private void Awake()
         {
@@ -177,10 +178,7 @@ namespace Alterverse.Match
 
             int winner=zeroTime>lumenTime+.05f?0:lumenTime>zeroTime+.05f?1:-1;
             if(winner>=0&&!rewardIssued)
-            {
                 rewardIssued=HotZoneTank.Spawn(winner);
-                if(!rewardIssued)winner=-1;
-            }
 
             Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
                 winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
