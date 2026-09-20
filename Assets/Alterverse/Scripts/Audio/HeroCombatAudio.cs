@@ -32,7 +32,11 @@ namespace Alterverse.Audio
             if(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f)return;
             int hero=(int)identity.Hero;if(hero<0||hero>=6||impact&&!HasImpact(hero,action))return;
             bool ultimate=action==4;
-            float gain=action==0?(impact?.24f:.34f):ultimate?(impact?.62f:.74f):(impact?.32f:.44f);
+            CombatSoundIdentity identityTone=CombatSoundPalette.For(identity.Hero);
+            float actionPitch=action switch{0=>1f,1=>1.015f,2=>.985f,3=>1.03f,4=>.94f,_=>1f};
+            float phasePitch=impact?.985f:1.01f;
+            float gain=(action==0?(impact?.24f:.34f):ultimate?(impact?.62f:.74f):(impact?.32f:.44f))*identityTone.Gain;
+            float pitch=Mathf.Clamp(identityTone.Pitch*actionPitch*phasePitch,.82f,1.18f);
             // Mix around the ground point at screen center, not camera height above the map.
             Ray ray=camera.ViewportPointToRay(new Vector3(.5f,.5f,0));
             Plane ground=new Plane(Vector3.up,Vector3.zero);
@@ -45,7 +49,7 @@ namespace Alterverse.Audio
             float pan=Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f);
             // Four real volley releases .18s apart must not be swallowed by the generic .3s limiter.
             float cooldown=ultimate&&identity.Hero==HeroId.Nyra?.08f:ultimate?(impact?.22f:.3f):(impact?.09f:.12f);
-            DimensionAudio.PlayHero(hero*10+action*2+(impact?1:0),gain*attenuation,ultimate?2:action==0?0:1,cooldown,pan);
+            DimensionAudio.PlayHero(hero*10+action*2+(impact?1:0),gain*attenuation,ultimate?2:action==0?0:1,cooldown,pan,pitch);
         }
         public static void Cast(GameObject actor,int slot)=>Play(actor,slot+1,false,actor.transform.position);
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
