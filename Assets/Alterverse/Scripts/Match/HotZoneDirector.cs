@@ -18,6 +18,7 @@ namespace Alterverse.Match
         public const float SecondOpenAt=SpawnInterval*2f;
         public const float OpenAt=FirstOpenAt;
         public const float ActiveDuration=30f;
+        public const int MaxScoringHeroesPerTeam=5;
         public const float Radius=9.75f;
 
         private const float ArenaHalfWidth=42f;
