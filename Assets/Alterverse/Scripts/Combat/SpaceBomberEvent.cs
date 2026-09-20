@@ -410,6 +410,10 @@ namespace Alterverse.Combat
 
     public sealed class SpaceBombStrike : MonoBehaviour
     {
+        private static readonly System.Collections.Generic.List<SpaceBombStrike> active=new();
+        public static System.Collections.Generic.IReadOnlyList<SpaceBombStrike> Active=>active;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void ResetRegistry()=>active.Clear();
+
         private const float ImpactRadius=3.24f;
         private const int HitBufferSize=32;
         private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
@@ -421,6 +425,15 @@ namespace Alterverse.Combat
         private LineRenderer warningLine;
         private Alterverse.Match.DimensionsFront front;
         private bool resolved;
+
+        public Vector3 ImpactPosition=>target;
+        public float BlastRadius=>ImpactRadius;
+        public float TelegraphAge=>Mathf.Max(0f,Time.time-spawnAt);
+        public float TimeRemaining=>Mathf.Max(0f,hitAt-Time.time);
+        public bool IsTelegraphing=>!resolved&&Time.time<hitAt;
+
+        private void OnEnable(){if(!active.Contains(this))active.Add(this);}
+        private void OnDisable(){active.Remove(this);}
 
         public static void Create(Vector3 ground,float height,float delay,float dmg,Material warningMaterial,Material bombMaterial,Material energyMaterial,Alterverse.Match.DimensionsFront matchFront)
         {
@@ -537,6 +550,7 @@ namespace Alterverse.Combat
 
         private void OnDestroy()
         {
+            active.Remove(this);
             if(warning!=null)Destroy(warning);
             if(bomb!=null)Destroy(bomb);
         }
