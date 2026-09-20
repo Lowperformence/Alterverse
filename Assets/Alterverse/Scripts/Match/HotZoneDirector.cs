@@ -9,7 +9,7 @@ namespace Alterverse.Match
     /// <summary>
     /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
     /// stays active for 30 seconds, and relocates inside the central 60% of the arena.
-    /// Exclusive control scales linearly with the number of allied heroes inside.
+    /// Every hero inside scores independently for their team, even while both teams occupy the zone.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
     {
@@ -88,10 +88,11 @@ namespace Alterverse.Match
             activeElapsed+=Time.deltaTime;
             if(Time.time>=nextScan){nextScan=Time.time+.10f;ScanHeroes();}
 
-            // One hero preserves the old 1x control rate. Every additional uncontested hero
-            // contributes another full unit of control per second. Any enemy presence contests.
-            if(zeroInside>0&&lumenInside==0)zeroTime+=Time.deltaTime*zeroInside;
-            else if(lumenInside>0&&zeroInside==0)lumenTime+=Time.deltaTime*lumenInside;
+            // Every hero contributes one point per second to their own team.
+            // Opposing heroes do not cancel scoring: both teams can score simultaneously.
+            Vector2 scoreDelta=ScoreDelta(zeroInside,lumenInside,Time.deltaTime);
+            zeroTime+=scoreDelta.x;
+            lumenTime+=scoreDelta.y;
 
             AnimateZone();
             if(activeElapsed>=ActiveDuration)Resolve();
@@ -154,6 +155,12 @@ namespace Alterverse.Match
         }
 
         private float Next(float min,float max)=>(float)(min+(max-min)*rng.NextDouble());
+
+        public static Vector2 ScoreDelta(int zeroHeroes,int lumenHeroes,float seconds)
+        {
+            float dt=Mathf.Max(0f,seconds);
+            return new Vector2(Mathf.Max(0,zeroHeroes)*dt,Mathf.Max(0,lumenHeroes)*dt);
+        }
 
         private void ScanHeroes()
         {
