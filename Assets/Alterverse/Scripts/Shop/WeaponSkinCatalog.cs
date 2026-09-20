@@ -23,7 +23,7 @@ namespace Alterverse.Shop
             new(HeroId.Veyr,"NULL EDGE // OVERDRIVE","Twin Rift Blade","",new Color(1f,.16f,.86f)),
             new(HeroId.Kaelon,"AEGIS BREAKER // OVERDRIVE","Anchor Hammer","",new Color(1f,.72f,.12f)),
             new(HeroId.Nyra,"STARLINE // OVERDRIVE","Precision Rifle","",new Color(.08f,.94f,1f)),
-            new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","",new Color(.68f,.24f,1f)),
+            new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","",new Color(1f,.04f,.02f)),
             new(HeroId.Mira,"LIFEWEAVE // OVERDRIVE","Support Staff","",new Color(.12f,1f,.48f)),
             new(HeroId.Rook,"BREAKER FIST // OVERDRIVE","Breaker Gauntlet","",new Color(1f,.32f,.08f))
         };
