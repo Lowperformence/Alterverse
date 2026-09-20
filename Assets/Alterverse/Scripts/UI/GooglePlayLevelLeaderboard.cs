@@ -169,15 +169,13 @@ namespace Alterverse.Online
             // Unity plugin while still activating it automatically once installed.
             try
             {
-                Assembly[] assemblies=AppDomain.CurrentDomain.GetAssemblies();
-                for(int i=0;i<assemblies.Length;i++)
-                {
-                    Type type=assemblies[i].GetType("GooglePlayGames.PlayGamesPlatform",false);
-                    if(type==null)continue;
-                    MethodInfo activate=type.GetMethod("Activate",BindingFlags.Public|BindingFlags.Static);
-                    if(activate!=null)activate.Invoke(null,null);
-                    return;
-                }
+                // Resolve the optional provider directly by its known assembly name.
+                // This avoids enumerating Unity assemblies that may already be unloaded.
+                Type type=Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
+                    ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
+                if(type==null)return;
+                MethodInfo activate=type.GetMethod("Activate",BindingFlags.Public|BindingFlags.Static);
+                if(activate!=null)activate.Invoke(null,null);
             }
             catch(Exception exception)
             {
