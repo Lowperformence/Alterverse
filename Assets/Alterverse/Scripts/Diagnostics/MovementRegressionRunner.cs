@@ -24,7 +24,7 @@ namespace Alterverse.Diagnostics
                 var cc=actor.AddComponent<CharacterController>();cc.height=2;cc.radius=.5f;
                 var health=actor.AddComponent<Health>();var body=actor.AddComponent<HeroLocomotion>();
                 CheckInputDirections(actor);
-                CheckBaseRoutesAndSolidRange();
+                CheckFreeRoamRoutesAndSolidRange();
                 var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(transform);
                 floor.transform.position=new Vector3(0,78.8f,0);floor.transform.localScale=new Vector3(20,.2f,20);
                 var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(transform);
@@ -61,22 +61,27 @@ namespace Alterverse.Diagnostics
             finally {Destroy(gameObject);}
         }
 
-        private void CheckBaseRoutesAndSolidRange()
+        private void CheckFreeRoamRoutesAndSolidRange()
         {
             var actor=new GameObject("DF_RouteCheck");actor.transform.SetParent(transform);
             var route=actor.AddComponent<Alterverse.AI.BotLanePlan>();
-            for(int team=0;team<2;team++)for(int lane=-1;lane<=1;lane+=2)
+            for(int team=0;team<2;team++)
             {
-                float direction=team==0?1:-1;
-                actor.transform.position=new Vector3(-28*direction,80,lane*16);
-                route.Initialize(team,lane*16);
-                Vector3 exit=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
-                Check(Mathf.Abs(exit.x+22*direction)<.01f,"base exit does not advance beyond tactical gate");
-                actor.transform.position+=Vector3.forward*lane*1.1f;
-                Check(route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane)==exit,"lane-edge jitter resets latched exit");
-                actor.transform.position=new Vector3(-28*direction,80,0);route.ResetRoute();
-                Vector3 align=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
-                Check(Mathf.Abs(align.z-lane*16)<.01f&&Mathf.Abs(align.x+28*direction)<.01f,"respawn route did not reset alignment");
+                float homeX=team==0?-27.5f:27.5f;
+                actor.transform.position=new Vector3(homeX,80,0);
+                route.Initialize(team,16f); // legacy lane argument must not recreate lane routing.
+                Vector3 roam=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Roam);
+                Check(Mathf.Abs(roam.x)<=12.1f&&Mathf.Abs(roam.z)<=13.1f,
+                    "free-roam target left the intended open combat sectors");
+                Check(Mathf.Abs(Mathf.Abs(roam.z)-16f)>1f,
+                    "legacy z=+/-16 lane target returned");
+                Vector3 retreat=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Retreat);
+                Check(Mathf.Abs(retreat.x-homeX)<.01f&&Mathf.Abs(retreat.z)<.01f,
+                    "retreat destination is not the team home");
+                route.ResetRoute();
+                Vector3 resetRoam=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Roam);
+                Check(Mathf.Abs(resetRoam.x)<=12.1f&&Mathf.Abs(resetRoam.z)<=13.1f,
+                    "route reset did not return to a free-roam combat sector");
             }
             actor.transform.position=new Vector3(0,80,-3);
             actor.AddComponent<Health>();var locomotion=actor.AddComponent<HeroLocomotion>();
