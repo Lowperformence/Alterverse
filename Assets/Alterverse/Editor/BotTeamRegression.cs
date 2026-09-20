@@ -167,19 +167,16 @@ namespace Alterverse.EditorChecks
             for(int i=0;i<5;i++)Bot((HeroId)i,new Vector3(-5-i,1,i));Think();
             for(int i=0;i<3;i++)MarkDead(bots[i].Vitals);Think();
             Assert(Team.Call==BotTeamCoordinator.Intent.Disengage,"Two survivors after three deaths must regroup.");
-            var returning=bots[0];returning.Vitals.RestoreFull();returning.ResumeLaneAfterRespawn();Think();
+            var returning=bots[0];returning.Vitals.RestoreFull();returning.ResumeRoamAfterRespawn();Think();
             Assert(returning.FollowTeamCall&&returning.TacticalWithdrawal,"A respawn must join the active regroup instead of feeding alone.");
         }
         private static void CheckVictoryTempo()
         {
             Bot(HeroId.Kaelon,new Vector3(-4,1,0));Bot(HeroId.Nyra,new Vector3(-5,1,1));Bot(HeroId.Mira,new Vector3(-5,1,-1));
             Health enemy=Unit("LastVisibleEnemy",1,new Vector3(0,1,0),HeroId.Elyra).GetComponent<Health>();
-            var tower=Unit("ObjectiveTower",1,new Vector3(10,1,0)).AddComponent<LaneTower>();tower.Initialize(1);
             Think();MarkDead(enemy);Think();
             Assert(Team.Call==BotTeamCoordinator.Intent.Roam,
-                "A cleared fight with an observed kill must return to free-roam PvP without selecting a tower objective.");
-            Assert((Team.Destination-tower.transform.position).sqrMagnitude>1f,
-                "Bot team tempo must ignore the tower as an objective destination.");
+                "A cleared fight with an observed kill must return to free-roam PvP.");
         }
         private static void CheckCoreDefense()
         {
