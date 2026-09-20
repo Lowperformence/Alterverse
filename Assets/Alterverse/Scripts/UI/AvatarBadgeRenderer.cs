@@ -1,4 +1,5 @@
-using Alterverse.Profile;\nusing UnityEngine;
+using Alterverse.Profile;
+using UnityEngine;
 namespace Alterverse.UI
 {
     public static class AvatarBadgeRenderer
