@@ -34,8 +34,13 @@ namespace Alterverse.EditorChecks
                 Check(Mathf.Abs(bunker.AttackDamage - 5f) < .001f, bunker.name + " damage is not 5");
                 Check(bunker.AttackRange >= 15f, bunker.name + " lost its long defensive range");
 
-                BoxCollider solid = bunker.GetComponent<BoxCollider>();
-                Check(solid != null && solid.enabled, bunker.name + " has no solid bunker footprint");
+                Check(bunker.GetComponent<BoxCollider>() == null,
+                    bunker.name + " still uses the old sharp box footprint");
+                MeshCollider solid = bunker.GetComponent<MeshCollider>();
+                Check(solid != null && solid.enabled && solid.convex && solid.sharedMesh != null,
+                    bunker.name + " has no rounded convex bunker footprint");
+                Check(solid.sharedMesh.vertexCount >= 40,
+                    bunker.name + " rounded footprint is too coarse to provide useful slide normals");
 
                 Vector3 p = bunker.transform.position;
                 Check(Mathf.Abs(Mathf.Abs(p.x) - 26.25f) < .5f, bunker.name + " is not one bunker-length farther toward arena center");
@@ -56,7 +61,7 @@ namespace Alterverse.EditorChecks
                 else if(bunker.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
             }
             Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a bunker");
-            Debug.Log("Defense bunker regression passed: four indestructible bunkers, one on each base flank, moved toward arena center, 5 damage, long range.");
+            Debug.Log("Defense bunker regression passed: four indestructible bunkers with rounded convex collision, one on each base flank, 5 damage, long range.");
         }
     }
 }
