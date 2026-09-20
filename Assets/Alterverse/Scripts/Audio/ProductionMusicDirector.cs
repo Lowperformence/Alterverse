@@ -1,5 +1,4 @@
 using Alterverse.Match;
-using Alterverse.Combat;
 using Alterverse.Profile;
 using Alterverse.UI;
 using UnityEngine;
@@ -19,7 +18,7 @@ namespace Alterverse.Audio
             int missing=0;for(int i=0;i<2;i++){clips[i]=Resources.Load<AudioClip>("Audio/Music/"+Names[i]);if(clips[i]==null)missing++;}
             clips[2]=clips[3]=clips[1]; // One coherent licensed match bed; intensity changes mixing, not playback position.
             if(missing>0)Debug.LogWarning("DIMENSIONS FRONT: FINAL MUSIC ASSET REQUIRED — "+missing+" missing production clips. See Docs/Production-Audio.md.");
-            LaneWaveSpawner.SiegeWaveSpawned+=Event;DimensionPlanetDirector.PlanetArrived+=Planet;
+            DimensionPlanetDirector.PlanetArrived+=Planet;
         }
         void EnsureDecks()
         {
@@ -63,6 +62,6 @@ namespace Alterverse.Audio
             decks[deck].volume=gain*Mathf.Sin(fade*Mathf.PI*.5f);decks[1-deck].volume=gain*Mathf.Cos(fade*Mathf.PI*.5f);
             if(fade>=1)decks[1-deck].Stop();
         }
-        void OnDestroy(){if(front!=null)front.MatchEnded-=End;LaneWaveSpawner.SiegeWaveSpawned-=Event;DimensionPlanetDirector.PlanetArrived-=Planet;}
+        void OnDestroy(){if(front!=null)front.MatchEnded-=End;DimensionPlanetDirector.PlanetArrived-=Planet;}
     }
 }
