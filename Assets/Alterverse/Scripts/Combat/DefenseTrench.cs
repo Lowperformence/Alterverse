@@ -17,6 +17,7 @@ namespace Alterverse.Combat
         [SerializeField, Min(1f)] private float damageRadius = 5.25f;
         [SerializeField, Min(.05f)] private float damageTick = .25f;
 
+        private static readonly List<DefenseTrench> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
 
@@ -26,6 +27,7 @@ namespace Alterverse.Combat
         private Color teamEnergy;
         private Color hazardEnergy;
 
+        public static IReadOnlyList<DefenseTrench> Active => active;
         public int Team => team;
         public float DamagePerSecond => damagePerSecond;
         public float DamageRadius => damageRadius;
@@ -57,6 +59,11 @@ namespace Alterverse.Combat
             defense.BuildVisual(clampedTeam == 0 ? 0 : 1);
             return trench;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRegistry()=>active.Clear();
+        private void OnEnable(){if(!active.Contains(this))active.Add(this);}
+        private void OnDisable(){active.Remove(this);}
 
         private void Initialize(int teamId)
         {
@@ -106,14 +113,10 @@ namespace Alterverse.Combat
 
         private bool IsEnemyUnit(Health candidate)
         {
-            // Defensive trenches punish combat units, not enemy objectives/buildings.
-            if (candidate.GetComponent<RealityCore>() != null || candidate.GetComponent<LaneTower>() != null) return false;
-
+            // Only real combat units carry TeamMember. Legacy lane minion/tower types are intentionally
+            // not part of the current match architecture.
             TeamMember member = candidate.GetComponent<TeamMember>();
-            if (member != null) return member.Team != team;
-
-            LaneMinion minion = candidate.GetComponent<LaneMinion>();
-            return minion != null && minion.Team != team;
+            return member != null && member.Team != team;
         }
 
         private void BuildVisual(int variant)
