@@ -26,8 +26,9 @@ namespace Alterverse.EditorChecks
             {
                 CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.Voidfall);
                 CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.BetaSupporterWings);
+                CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.PlagueWings);
             }
-            Debug.Log("DIMENSIONS FRONT: VOIDFALL and BETA SUPPORTER WINGS preview construction passed for all six heroes. Purchase/restart and visual approval still require device testing.");
+            Debug.Log("DIMENSIONS FRONT: VOIDFALL, BETA SUPPORTER WINGS and PLAGUE WINGS preview construction passed for all six heroes. Purchase/restart and visual approval still require device testing.");
         }
 
         private static void CheckSkinPreview(HeroId hero,UniversalHeroCosmetic cosmetic)
@@ -44,12 +45,19 @@ namespace Alterverse.EditorChecks
                     foreach(var renderer in actor.GetComponentsInChildren<Renderer>())
                         if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_VoidfallFinish")found=true;
                 }
-                else
+                else if(cosmetic==UniversalHeroCosmetic.BetaSupporterWings)
                 {
                     Transform visual=actor.transform.Find("DF_VisualRoot");
                     found=visual!=null&&visual.Find("DF_BetaSupporterWingLeft")!=null&&visual.Find("DF_BetaSupporterWingRight")!=null;
                     foreach(var renderer in actor.GetComponentsInChildren<Renderer>())
                         if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_BetaSupporterWingCore")found=true;
+                }
+                else if(cosmetic==UniversalHeroCosmetic.PlagueWings)
+                {
+                    Transform visual=actor.transform.Find("DF_VisualRoot");
+                    found=visual!=null&&visual.Find("DF_PlagueWingLeft")!=null&&visual.Find("DF_PlagueWingRight")!=null;
+                    foreach(var renderer in actor.GetComponentsInChildren<Renderer>())
+                        if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_PlagueWingCore")found=true;
                 }
                 if(!found)throw new System.InvalidOperationException(cosmetic+" preview missing on hero "+hero);
                 if(actor.GetComponent<Alterverse.Combat.Health>()!=null||actor.GetComponentsInChildren<Collider>().Length>0)
