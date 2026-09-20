@@ -129,7 +129,7 @@ namespace Alterverse.Visuals
 
         private void ConfigureCameraBackdrop()
         {
-            Camera[] cameras=FindObjectsByType<Camera>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
+            Camera[] cameras=FindObjectsByType<Camera>(FindObjectsInactive.Exclude);
             Color voidColor=new Color(.004f,.006f,.014f,1);
             foreach(Camera camera in cameras)
             {
