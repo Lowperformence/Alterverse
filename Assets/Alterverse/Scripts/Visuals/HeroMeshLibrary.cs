@@ -68,19 +68,8 @@ namespace Alterverse.Visuals
         internal static Material Surface(Color color,int finish)
         {
             if(heroSurface==null)heroSurface=Resources.Load<Material>("HeroArt/HeroSurface");
+            if(heroSurface!=null)return heroSurface;
             var key=(color,finish);if(materials.TryGetValue(key,out Material cached)&&cached!=null)return cached;
-            if(heroSurface!=null)
-            {
-                // The custom hero shader reads color from vertex data, so only three shared finish
-                // variants are needed. Previously every part returned the exact same material and
-                // armor/fabric lost their visual separation.
-                var sharedKey=(Color.clear,finish);
-                if(materials.TryGetValue(sharedKey,out cached)&&cached!=null)return cached;
-                Material variant=new Material(heroSurface){name="DF_HeroSurface_Finish"+finish,enableInstancing=true};
-                if(variant.HasProperty("_SurfaceFinish"))variant.SetFloat("_SurfaceFinish",finish==1?1f:finish==2?.75f:0f);
-                materials[sharedKey]=variant;
-                return variant;
-            }
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return null;
             Material m=new Material(shader){name="DF_SharedHeroSurface",color=color,enableInstancing=true};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
