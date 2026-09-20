@@ -36,10 +36,10 @@ namespace Alterverse.UI
                 new HeroAttackCard("BASIC","Basic Attack",
                     $"{HeroIdentity.AttackDamage(hero):0} DMG  •  RANGE {stats.AttackRange:0.##}  •  {stats.AttackInterval:0.##}s / SHOT  •  WINDUP {HeroAttackDelivery.Windup(hero):0.##}s",
                     BasicEffect(hero)),
-                Ability(hero,"Q",0,kit.Q),
-                Ability(hero,"W",1,kit.W),
-                Ability(hero,"E",2,kit.E),
-                Ability(hero,"ULT",3,kit.Ultimate)
+                Ability(hero,"SKILL 1",0,kit.Q),
+                Ability(hero,"SKILL 2",1,kit.W),
+                Ability(hero,"SKILL 3",2,kit.E),
+                Ability(hero,"ULTIMATE",3,kit.Ultimate)
             };
         }
 
