@@ -31,6 +31,7 @@ namespace Alterverse.EditorChecks
                 Time.timeScale = 1f;
                 CheckBrainAndRespawn();
                 CheckObstacleRecovery();
+                CheckArrivalSeparationStability();
                 CheckTargetRetention();
                 CheckDifficulty();
                 CheckAbilitySlots();
@@ -127,6 +128,36 @@ namespace Alterverse.EditorChecks
                 "A sustained collision must start a committed detour instead of retrying the wall.");
         }
 
+        private static void CheckArrivalSeparationStability()
+        {
+            Vector3 origin=new(0f,1f,0f);
+            GameObject bot=Unit("Check_ArrivalStable",0,origin);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Rook);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Rook);
+            bot.AddComponent<BotTargetSensor>();
+            bot.AddComponent<MobaBotBrain>().Initialize(0,16);
+            bot.AddComponent<BotLanePlan>().Initialize(0,16);
+            MobaBotMover mover=bot.AddComponent<MobaBotMover>();
+            Set(mover,"towers",Array.Empty<LaneTower>());
+            Set(mover,"pulses",Array.Empty<Alterverse.Combat.PlanetPulseAttack>());
+            Set(mover,"nextWorldScan",float.MaxValue);
+
+            GameObject crowd=Unit("Check_ArrivalCrowd",0,origin+Vector3.forward*.75f);
+            crowd.AddComponent<BotTargetSensor>();
+            crowd.AddComponent<MobaBotBrain>().Initialize(0,16);
+            crowd.AddComponent<BotLanePlan>().Initialize(0,16);
+            crowd.AddComponent<MobaBotMover>();
+
+            Vector3 destination=origin+Vector3.forward*.10f;
+            Vector3 before=bot.transform.position;
+            Call(mover,"MoveToward",destination,.35f);
+            Vector3 moved=bot.transform.position-before;
+            Vector3 radial=destination-before;radial.y=0;radial.Normalize();
+
+            Assert(Mathf.Abs(Vector3.Dot(moved,radial))<.001f,
+                "An arrived bot must not be pushed radially across its stop boundary by crowd separation.");
+        }
+
         private static void CheckTargetRetention()
         {
             Vector3 origin = new(1000, 1, 1000);
@@ -155,7 +186,7 @@ namespace Alterverse.EditorChecks
                 Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Missing preference defaults to NORMAL.");
                 PlayerPrefs.SetInt(key,999);
                 Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Invalid preference defaults to NORMAL.");
-                for(int level=0;level<3;level++)
+                for(int level=0;level<4;level++)
                 {
                     BotDifficultySettings.Selected=(BotDifficulty)level;
                     Assert(PlayerPrefs.GetInt(key)==level&&BotDifficultySettings.Selected==(BotDifficulty)level,"Difficulty is stored and read back.");
