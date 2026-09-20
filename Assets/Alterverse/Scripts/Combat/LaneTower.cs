@@ -10,6 +10,8 @@ namespace Alterverse.Combat
     {
         [SerializeField] private float attackRange = 5.25f, attackDamage = 18f, attackCooldown = 1.2f;
         private Health health, currentTarget;
+        private MaterialPropertyBlock shotBlock;
+        private static readonly int BaseColor=Shader.PropertyToID("_BaseColor"),ColorId=Shader.PropertyToID("_Color");
         private int team;
         private float nextAttackTime, nextTargetScan, nextCoverScan;
         private int cachedCoverTeam=-1;
@@ -20,6 +22,7 @@ namespace Alterverse.Combat
         private void Awake()
         {
             health = GetComponent<Health>();
+            shotBlock = new MaterialPropertyBlock();
             if (health != null) health.Died += OnDied;
         }
         private void OnDestroy()
@@ -131,6 +134,6 @@ namespace Alterverse.Combat
             return minion != null ? minion : hero;
         }
 
-        private void SpawnShot(Vector3 target){Color c=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;DimensionTowerShell shell=GetComponent<DimensionTowerShell>();Vector3 origin=shell!=null?shell.MuzzlePosition:transform.position+Vector3.up*1.7f,direction=target-origin;float distance=direction.magnitude;if(distance<.01f)return;GameObject beam=GameObject.CreatePrimitive(PrimitiveType.Cube);beam.name="DF_TowerShot";beam.transform.position=origin+direction*.5f;beam.transform.rotation=Quaternion.LookRotation(direction);beam.transform.localScale=new Vector3(.11f,.11f,distance);Collider col=beam.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=beam.GetComponent<Renderer>();if(r!=null)r.material.color=c;PrototypeVfx.Ring(target,c,.65f,.18f);Destroy(beam,.1f);}
+        private void SpawnShot(Vector3 target){Color c=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;DimensionTowerShell shell=GetComponent<DimensionTowerShell>();Vector3 origin=shell!=null?shell.MuzzlePosition:transform.position+Vector3.up*1.7f,direction=target-origin;float distance=direction.magnitude;if(distance<.01f)return;GameObject beam=GameObject.CreatePrimitive(PrimitiveType.Cube);beam.name="DF_TowerShot";beam.transform.position=origin+direction*.5f;beam.transform.rotation=Quaternion.LookRotation(direction);beam.transform.localScale=new Vector3(.11f,.11f,distance);Collider col=beam.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=beam.GetComponent<Renderer>();if(r!=null){r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;r.receiveShadows=false;shotBlock??=new MaterialPropertyBlock();shotBlock.Clear();shotBlock.SetColor(BaseColor,c);shotBlock.SetColor(ColorId,c);r.SetPropertyBlock(shotBlock);}PrototypeVfx.Ring(target,c,.65f,.18f);Destroy(beam,.1f);}
     }
 }
