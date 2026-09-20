@@ -32,7 +32,7 @@ namespace Alterverse.UI
         }
 
         private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=new Color(.95f,.72f,.30f);bannerUntil=Time.time+4f;}
-        private void OnOpened(){banner="HOT ZONE ACTIVE · CONTROL THE ZONE";bannerColor=Color.white;bannerUntil=Time.time+4f;}
+        private void OnOpened(){banner="HOT ZONE ACTIVE · EVERY HERO INSIDE SCORES";bannerColor=Color.white;bannerUntil=Time.time+4f;}
         private void OnResolved(int winner,float zero,float lumen)
         {
             bool reward=zone!=null&&zone.RewardSpawned;
@@ -73,9 +73,9 @@ namespace Alterverse.UI
                     Rect p=new((layout.Width-450)*.5f,y,450,58);
                     theme.Panel(p);
                     float lead=zone.ZeroControlSeconds-zone.LumenControlSeconds;
-                    string state=zone.ZeroInside>0&&zone.LumenInside>0?"CONTESTED":
-                        zone.ZeroInside>0?$"ZERO CONTROLLING · x{zone.ZeroInside}":
-                        zone.LumenInside>0?$"LUMEN CONTROLLING · x{zone.LumenInside}":
+                    string state=zone.ZeroInside>0&&zone.LumenInside>0?$"BOTH SCORING · ZERO x{zone.ZeroInside} · LUMEN x{zone.LumenInside}":
+                        zone.ZeroInside>0?$"ZERO SCORING · x{zone.ZeroInside}":
+                        zone.LumenInside>0?$"LUMEN SCORING · x{zone.LumenInside}":
                         Mathf.Abs(lead)<.05f?"UNCLAIMED":
                         lead>0?$"ZERO LEADS +{lead:0.0}":$"LUMEN LEADS +{-lead:0.0}";
                     theme.Label(new Rect(p.x+12,p.y+5,p.width-24,20),
