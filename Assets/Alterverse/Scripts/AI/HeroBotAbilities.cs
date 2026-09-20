@@ -32,7 +32,8 @@ namespace Alterverse.AI
             Health target = sensor.CurrentTarget;
             if(target!=null&&!sensor.CanObserve(target))target=null;
             HeroId h = identity.Hero;
-            bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
+            bool localBaseDefense=brain!=null&&brain.IsLocalBaseThreat(target);
+            bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight || localBaseDefense;
             float distance = target != null ? HeroCombatRules.Distance(transform.position,target.transform.position) : float.MaxValue;
             float discipline=difficulty.AbilityDiscipline;
             bool coordinated=brain!=null&&difficulty.Coordinated;
