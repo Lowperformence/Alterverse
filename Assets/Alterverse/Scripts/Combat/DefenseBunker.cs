@@ -6,31 +6,36 @@ using UnityEngine.Rendering;
 namespace Alterverse.Combat
 {
     /// <summary>
-    /// Indestructible flank bastion shared by Moon, Mars and Green Planet.
-    /// It deliberately owns no Health component and is never a combat target.
-    /// Enemy combat units inside the short defensive perimeter take a steady 5 HP/s.
+    /// Permanent flank defense bunker for each team. It is intentionally not a Health owner:
+    /// gameplay targeting therefore cannot attack or destroy it, while the structure collider
+    /// still provides a solid bunker footprint.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DefenseBunker : MonoBehaviour
     {
-        [SerializeField, Min(0f)] private float damagePerSecond = 5f;
-        [SerializeField, Min(1f)] private float damageRadius = 5.25f;
-        [SerializeField, Min(.05f)] private float damageTick = .25f;
+        [SerializeField, Min(1f)] private float attackRange = 15.5f;
+        [SerializeField, Min(0f)] private float attackDamage = 5f;
+        [SerializeField, Min(.2f)] private float attackCooldown = 1f;
+        [SerializeField, Min(.05f)] private float scanInterval = .16f;
 
         private static readonly List<DefenseBunker> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
 
+        private Health currentTarget;
         private Transform visualRoot, turretHead, muzzle;
         private int team;
-        private float nextDamageTick;
+        private float nextAttack, nextScan;
         private Color energy;
 
         public static IReadOnlyList<DefenseBunker> Active => active;
         public int Team => team;
-        public float DamagePerSecond => damagePerSecond;
-        public float DamageRadius => damageRadius;
-        public float DamageTick => damageTick;
+        public float AttackRange => attackRange;
+        // Compatibility alias used by shared defensive-zone steering.
+        public float DamageRadius => attackRange;
+        public float AttackDamage => attackDamage;
+        public float AttackCooldown => attackCooldown;
+        public Health CurrentTarget => IsValidTarget(currentTarget) ? currentTarget : null;
 
         public static GameObject Spawn(int teamId, Vector3 position, string flank)
         {
@@ -55,7 +60,7 @@ namespace Alterverse.Combat
 
             DefenseBunker defense = bunker.AddComponent<DefenseBunker>();
             defense.Initialize(clampedTeam);
-            defense.BuildVisual(flank == "North" ? 0 : 1);
+            defense.BuildVisual(flank == "Left" || flank == "North" ? 0 : 1);
             return bunker;
         }
 
@@ -68,37 +73,96 @@ namespace Alterverse.Combat
         {
             team = Mathf.Clamp(teamId, 0, 1);
             energy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
-            nextDamageTick = Time.time + damageTick;
+            nextAttack = Time.time + .45f + Mathf.Abs(transform.position.z) * .007f;
+            nextScan = 0f;
         }
 
         private void Update()
         {
-            if (Time.timeScale <= 0f || Time.time < nextDamageTick) return;
-            nextDamageTick = Time.time + damageTick;
-            ApplyAreaDamage(damagePerSecond * damageTick);
-        }
+            if (Time.timeScale <= 0f) return;
 
-        private void ApplyAreaDamage(float amount)
-        {
-            if(amount<=0f)return;
-            float maxSqr=damageRadius*damageRadius;
-            bool hitAny=false;
-
-            for(int i=0;i<Health.Active.Count;i++)
+            if (currentTarget != null && !IsValidTarget(currentTarget)) currentTarget = null;
+            if (Time.time >= nextScan)
             {
-                Health candidate=Health.Active[i];
-                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
-                TeamMember member=candidate.GetComponent<TeamMember>();
-                if(member==null||member.Team==team)continue;
-
-                Vector3 delta=candidate.transform.position-transform.position;delta.y=0f;
-                if(delta.sqrMagnitude>maxSqr)continue;
-                candidate.TakeDamage(amount,gameObject);
-                hitAny=true;
+                nextScan = Time.time + scanInterval;
+                currentTarget = FindTarget();
             }
 
-            if(hitAny&&Random.value<.28f)
-                PrototypeVfx.Burst(transform.position+Vector3.up*.55f,energy,.10f,2);
+            Health target = CurrentTarget;
+            if (target == null) return;
+
+            AimAt(target.transform.position);
+            if (Time.time < nextAttack) return;
+
+            nextAttack = Time.time + attackCooldown;
+            Fire(target);
+        }
+
+        private Health FindTarget()
+        {
+            Health best = null;
+            float bestScore = float.MaxValue;
+            float maxSqr = attackRange * attackRange;
+
+            for (int i = 0; i < Health.Active.Count; i++)
+            {
+                Health candidate = Health.Active[i];
+                if (candidate == null || candidate.IsDead || !candidate.isActiveAndEnabled) continue;
+                if (!IsEnemyUnit(candidate)) continue;
+
+                Vector3 delta = candidate.transform.position - transform.position;
+                delta.y = 0f;
+                float sqr = delta.sqrMagnitude;
+                if (sqr > maxSqr) continue;
+
+                // Keep a target briefly to avoid noisy turret snapping. Otherwise shoot the closest threat.
+                float score = sqr * (candidate == currentTarget ? .68f : 1f);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+        private bool IsValidTarget(Health candidate)
+        {
+            if (candidate == null || candidate.IsDead || !candidate.isActiveAndEnabled || !IsEnemyUnit(candidate)) return false;
+            Vector3 delta = candidate.transform.position - transform.position;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= attackRange * attackRange * 1.08f;
+        }
+
+        private bool IsEnemyUnit(Health candidate)
+        {
+            TeamMember member = candidate.GetComponent<TeamMember>();
+            return member != null && member.Team != team;
+        }
+
+        private void AimAt(Vector3 targetPosition)
+        {
+            if (turretHead == null) return;
+            Vector3 direction = targetPosition - turretHead.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < .001f) return;
+
+            Quaternion wanted = Quaternion.LookRotation(direction, Vector3.up);
+            turretHead.rotation = Quaternion.RotateTowards(turretHead.rotation, wanted, 190f * Time.deltaTime);
+        }
+
+        private void Fire(Health target)
+        {
+            if (target == null || target.IsDead) return;
+
+            target.TakeDamage(attackDamage, gameObject);
+            Vector3 origin = muzzle != null ? muzzle.position : transform.position + Vector3.up * 2.65f;
+            PrototypeVfx.ProjectileLine(origin - Vector3.up * .65f, target.transform.position, energy, .105f);
+            PrototypeVfx.Burst(origin, Color.Lerp(energy, Color.white, .28f), .20f, 3);
+
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerShot, origin, .34f);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact, target.transform.position, .28f);
         }
 
         private void BuildVisual(int variant)
@@ -447,6 +511,7 @@ namespace Alterverse.Combat
 
         private void OnDestroy()
         {
+            active.Remove(this);
             for (int i = 0; i < materials.Count; i++) if (materials[i] != null) Destroy(materials[i]);
             for (int i = 0; i < meshes.Count; i++) if (meshes[i] != null) Destroy(meshes[i]);
         }
