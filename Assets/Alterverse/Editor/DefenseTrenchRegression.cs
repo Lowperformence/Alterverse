@@ -42,6 +42,9 @@ namespace Alterverse.EditorChecks
                         trench.name + " still contains the removed orange damage-radius ring");
 
                 Vector3 p = trench.transform.position;
+                Vector3 expectedOpenDirection = trench.Team == 0 ? Vector3.left : Vector3.right;
+                Check(Vector3.Dot(trench.transform.forward, expectedOpenDirection) > .95f,
+                    trench.name + " open side is not facing back toward its own base");
                 Check(Mathf.Abs(Mathf.Abs(p.x) - 25.25f) < .65f, trench.name + " is not one trench-length farther toward arena center");
                 Check(Mathf.Abs(Mathf.Abs(p.z) - 10.75f) < .65f, trench.name + " moved away from the intended left/right base flanks");
 
