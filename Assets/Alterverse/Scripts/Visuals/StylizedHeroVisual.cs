@@ -211,7 +211,7 @@ ownedMaterials.Add(weaponMaterial);
 // Keep cosmetic weapons attached to their animated hand pivots.
 if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);ScaleAndGlow("WeaponR",1.25f,weaponMaterial);}
 else if(identity.Hero==HeroId.Rook){ScaleAndGlow("GauntletL",1.25f,weaponMaterial);ScaleAndGlow("GauntletR",1.25f,weaponMaterial);}
-else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",1.35f,weaponMaterial);ScaleAndGlow("OrbitL",1.2f,weaponMaterial);ScaleAndGlow("OrbitR",1.2f,weaponMaterial);}
+else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",1.755f,weaponMaterial);ScaleAndGlow("OrbitL",1.56f,weaponMaterial);ScaleAndGlow("OrbitR",1.56f,weaponMaterial);}
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 }
 
