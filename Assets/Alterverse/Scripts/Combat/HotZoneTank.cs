@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Combat
 {
-    /// <summary>One-shot roaming reward from the minute-five Hot Zone.</summary>
+    /// <summary>Roaming reward spawned by either of the two scheduled Hot Zones.</summary>
     [RequireComponent(typeof(Health),typeof(TeamMember))]
     public sealed class HotZoneTank:MonoBehaviour
     {
@@ -71,12 +71,29 @@ namespace Alterverse.Combat
         public static bool Spawn(int winningTeam)
         {
             int team=Mathf.Clamp(winningTeam,0,1);
+
+            // Two Hot Zones may resolve in one match. Do not let the early reward suppress
+            // the original minute-five reward if its unit is still alive.
+            int living=0;
             for(int i=0;i<active.Count;i++)
             {
                 HotZoneTank existing=active[i];
-                if(existing!=null&&existing.health!=null&&!existing.health.IsDead)return false;
+                if(existing!=null&&existing.health!=null&&!existing.health.IsDead)living++;
             }
+            if(living>=2)return false;
+
             Vector3 spawn=new(team==0?-4f:4f,.95f,0f);
+            for(int i=0;i<active.Count;i++)
+            {
+                HotZoneTank existing=active[i];
+                if(existing==null||existing.health==null||existing.health.IsDead)continue;
+                Vector3 flat=existing.transform.position-spawn;flat.y=0;
+                if(flat.sqrMagnitude<2.4f*2.4f)
+                {
+                    spawn.z=team==0?2.6f:-2.6f;
+                    break;
+                }
+            }
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
             bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet;
             go.name=alien?(team==0?"DF_ZeroXenoTitan":"DF_LumenXenoTitan"):skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):(team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
