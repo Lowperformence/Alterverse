@@ -52,7 +52,7 @@ namespace Alterverse.Visuals
 
         void BuildDensityClusters()
         {
-            // Authored pockets with deliberate negative space: no rocks in lane, core or objective corridors.
+            // Authored pockets with deliberate negative space: no rocks in core, objective or high-traffic combat corridors.
             Vector2[] centers={new(-24,-8),new(-16,7),new(24,8),new(17,-7),new(-29,26),new(-15,-27),new(28,-26),new(16,28)};
             Vector2[] offsets={new(-1.1f,.25f),new(-.28f,-.5f),new(.6f,.3f),new(1.05f,.9f),new(-.9f,1.2f),new(.25f,1.45f)};
             for(int site=0;site<centers.Length;site++)
@@ -70,7 +70,7 @@ namespace Alterverse.Visuals
         }
         void BuildSmallLandmarks()
         {
-            // Three authored outer sites, away from lanes (z +/-16), objectives and the central collision.
+            // Three authored outer sites, away from objectives, bases and the central collision.
             // Static, collider-free fragments join the existing material/spatial batches.
             Vector2 impact=new(-23,27);
             for(int i=0;i<7;i++)
