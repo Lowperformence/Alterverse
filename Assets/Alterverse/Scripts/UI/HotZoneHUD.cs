@@ -83,8 +83,9 @@ namespace Alterverse.UI
                     Rect bar=new(p.x+24,p.y+34,p.width-48,8);
                     FrontEndTheme.Fill(bar,FrontEndTheme.Raised);
                     float half=bar.width*.5f;
-                    float zeroFill=half*Mathf.Clamp01(zone.ZeroControlSeconds/HotZoneDirector.ActiveDuration);
-                    float lumenFill=half*Mathf.Clamp01(zone.LumenControlSeconds/HotZoneDirector.ActiveDuration);
+                    float maxTeamScore=HotZoneDirector.ActiveDuration*HotZoneDirector.MaxScoringHeroesPerTeam;
+                    float zeroFill=half*Mathf.Clamp01(zone.ZeroControlSeconds/maxTeamScore);
+                    float lumenFill=half*Mathf.Clamp01(zone.LumenControlSeconds/maxTeamScore);
                     FrontEndTheme.Fill(new Rect(bar.x+half-zeroFill,bar.y,zeroFill,bar.height),FrontEndTheme.Zero);
                     FrontEndTheme.Fill(new Rect(bar.x+half,bar.y,lumenFill,bar.height),FrontEndTheme.Accent);
                     theme.Label(new Rect(p.x+18,p.y+43,p.width*.45f,14),$"ZERO {zone.ZeroControlSeconds:0.0}",theme.Small,true);
