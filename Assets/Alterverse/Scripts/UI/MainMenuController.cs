@@ -507,14 +507,34 @@ namespace Alterverse.UI
             }
 
             battlePassPreviewLevel=Mathf.Clamp(battlePassPreviewLevel,1,BattlePassProgress.MaxLevel);
-            theme.Panel(new Rect(Left,270,ContentWidth,94));
-            theme.Label(new Rect(Left+22,280,390,26),"BATTLE PASS  /  "+BattlePassProgress.SeasonName,theme.Heading);
-            theme.Label(new Rect(Left+22,310,250,30),$"LEVEL {BattlePassProgress.Level} / {BattlePassProgress.MaxLevel}",theme.Title);
-            theme.Progress(new Rect(Left+22,344,430,6),BattlePassProgress.TotalXpRequired<=0?1f:(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired);
-            string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel?"COMPLETE":$"{BattlePassProgress.XpToNextLevel:N0} BP XP TO NEXT LEVEL";
-            theme.Label(new Rect(Left+470,314,300,22),xpText,theme.Small,true);
-            theme.Label(new Rect(Right-390,282,368,22),BattlePassProgress.PremiumUnlocked?"PREMIUM ACTIVE":"PREMIUM LOCKED  /  1000 SHARDS",theme.Small,true);
-            theme.Label(new Rect(Right-390,314,368,22),$"{BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE  •  50 LEVELS",theme.Small,true);
+            theme.Panel(new Rect(Left,270,ContentWidth,102));
+
+            string seasonHeader=$"BATTLE PASS / {BattlePassProgress.SeasonName}";
+            theme.Label(new Rect(Left+22,282,540,20),seasonHeader,theme.Small,true);
+
+            theme.Label(new Rect(Left+22,304,250,28),$"LEVEL {BattlePassProgress.Level} / {BattlePassProgress.MaxLevel}",theme.Title);
+
+            float totalProgress=BattlePassProgress.TotalXpRequired<=0
+                ?1f
+                :(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired;
+
+            theme.Progress(new Rect(Left+22,338,430,6),totalProgress);
+
+            string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel
+                ?"COMPLETE"
+                :$"{BattlePassProgress.XpToNextLevel:N0} BP XP TO NEXT LEVEL";
+
+            theme.Label(new Rect(Left+470,304,300,20),xpText,theme.Small,true);
+
+            theme.Label(new Rect(Right-390,282,368,20),
+                BattlePassProgress.PremiumUnlocked
+                    ?"PREMIUM ACTIVE"
+                    :"PREMIUM LOCKED / 1000 SHARDS",
+                theme.Small,true);
+
+            theme.Label(new Rect(Right-390,304,368,20),
+                $"{BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE • 50 LEVELS",
+                theme.Small,true);
 
             // Milestones stay visible without opening every tier.
             theme.Label(new Rect(Left,374,ContentWidth,20),"MILESTONE REWARDS",theme.Small,true);
