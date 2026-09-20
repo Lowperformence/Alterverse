@@ -38,8 +38,8 @@ namespace Alterverse.EditorChecks
                 Check(solid != null && solid.enabled, bunker.name + " has no solid bunker footprint");
 
                 Vector3 p = bunker.transform.position;
-                Check(Mathf.Abs(Mathf.Abs(p.x) - 33.25f) < .5f, bunker.name + " moved away from the core flank");
-                Check(Mathf.Abs(Mathf.Abs(p.z) - 21.5f) < .5f, bunker.name + " moved away from the map-side flank");
+                Check(Mathf.Abs(Mathf.Abs(p.x) - 26.25f) < .5f, bunker.name + " is not one bunker-length farther toward arena center");
+                Check(Mathf.Abs(Mathf.Abs(p.z) - 21.5f) < .5f, bunker.name + " moved away from the intended left/right base flank");
 
                 if (bunker.Team == 0) zero++;
                 else if (bunker.Team == 1) lumen++;
@@ -47,7 +47,16 @@ namespace Alterverse.EditorChecks
             }
 
             Check(zero == 2 && lumen == 2, $"expected 2 bunkers per team, got ZERO={zero}, LUMEN={lumen}");
-            Debug.Log("Defense bunker regression passed: four indestructible flank bunkers, 5 damage, long range, two per team.");
+
+            bool zeroLeft=false,zeroRight=false,lumenLeft=false,lumenRight=false;
+            foreach(DefenseBunker bunker in bunkers)
+            {
+                Vector3 p=bunker.transform.position;
+                if(bunker.Team==0){zeroLeft|=p.z>0f;zeroRight|=p.z<0f;}
+                else if(bunker.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
+            }
+            Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a bunker");
+            Debug.Log("Defense bunker regression passed: four indestructible bunkers, one on each base flank, moved toward arena center, 5 damage, long range.");
         }
     }
 }
