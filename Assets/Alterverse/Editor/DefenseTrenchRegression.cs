@@ -34,8 +34,20 @@ namespace Alterverse.EditorChecks
                 Check(Mathf.Abs(trench.DamagePerSecond - 5f) < .001f, trench.name + " DPS is not 5");
                 Check(trench.DamageRadius >= 5f && trench.DamageRadius <= 5.75f, trench.name + " close-range radius changed");
 
-                BoxCollider solid = trench.GetComponent<BoxCollider>();
-                Check(solid != null && solid.enabled, trench.name + " has no stable gameplay footprint");
+                Check(trench.GetComponent<BoxCollider>() == null,
+                    trench.name + " still uses the old sharp box footprint");
+
+                MeshCollider solid = trench.GetComponent<MeshCollider>();
+                Check(solid != null && solid.enabled && solid.convex && solid.sharedMesh != null,
+                    trench.name + " has no rounded convex gameplay footprint");
+                Check(solid.sharedMesh.vertexCount >= 40,
+                    trench.name + " rounded footprint is too coarse to provide useful slide normals");
+
+                Vector3 footprint = solid.bounds.size;
+                float longSide = Mathf.Max(footprint.x, footprint.z);
+                float shortSide = Mathf.Min(footprint.x, footprint.z);
+                Check(longSide >= 7.0f && longSide <= 7.5f && shortSide >= 4.9f && shortSide <= 5.3f,
+                    trench.name + " rounded footprint changed the intended overall size");
 
                 foreach(Transform child in trench.GetComponentsInChildren<Transform>(true))
                     Check(child == null || child.name != "DF_Trench_DamagePerimeter",
@@ -71,7 +83,7 @@ namespace Alterverse.EditorChecks
                 else if(trench.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
             }
             Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a trench");
-            Debug.Log("Defense trench regression passed: two mirrored trenches per team, moved toward arena center, no orange damage ring, indestructible, 5 DPS close-range hazard.");
+            Debug.Log("Defense trench regression passed: two mirrored trenches per team, rounded convex bot-friendly collision, no orange damage ring, indestructible, 5 DPS close-range hazard.");
         }
     }
 }
