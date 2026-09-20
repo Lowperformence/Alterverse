@@ -38,8 +38,12 @@ namespace Alterverse.UI
 
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
-                Rect label=new(x,y-20,116,18);
                 string unit=tank.IsXenoTitan?(tank.Team==0?"ZERO XENO TITAN":"LUMEN XENO TITAN"):tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):(tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK");
+
+                // Size the world label to the actual localized/unit name instead of the old fixed
+                // 116 px box. This prevents clipping for Assault Tank, Mars Titan and Xeno Titan.
+                float labelWidth=Mathf.Clamp(labelStyle.CalcSize(new GUIContent(unit)).x+18f,116f,220f);
+                Rect label=new(screen.x-labelWidth*.5f,y-20,labelWidth,18);
                 GUI.Label(label,unit,labelStyle);
 
                 Rect back=new(x+8,y,100,8);
