@@ -75,7 +75,7 @@ namespace Alterverse.Shop
     public static class UniversalSkin
     {
         public const string Name="VOIDFALL",OwnedKey="DF_SkinOwned_Voidfall",EquippedKey="DF_Skin_Voidfall";
-        public static int Price=>ShardPacks.CosmeticPrice("voidfall");
+        public const int Price=2000;
         public static bool Owned=>PlayerPrefs.GetInt(OwnedKey,0)==1||PaidShardCommerce.OwnsVoidfall;
         public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.Voidfall;
         public static AvatarPurchaseResult Purchase()
