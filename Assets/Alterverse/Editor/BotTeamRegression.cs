@@ -176,8 +176,10 @@ namespace Alterverse.EditorChecks
             Health enemy=Unit("LastVisibleEnemy",1,new Vector3(0,1,0),HeroId.Elyra).GetComponent<Health>();
             var tower=Unit("ObjectiveTower",1,new Vector3(10,1,0)).AddComponent<LaneTower>();tower.Initialize(1);
             Think();MarkDead(enemy);Think();
-            Assert(Team.Call==BotTeamCoordinator.Intent.Siege,"A cleared fight with an observed kill must create objective tempo.");
-            Assert((Team.Destination-tower.transform.position).sqrMagnitude<.01f,"Tempo must target the tower, not the old lane centre.");
+            Assert(Team.Call==BotTeamCoordinator.Intent.Push,
+                "A cleared fight with an observed kill must create lane tempo without selecting a tower objective.");
+            Assert((Team.Destination-tower.transform.position).sqrMagnitude>1f,
+                "Bot team tempo must ignore the tower as an objective destination.");
         }
         private static void CheckCoreDefense()
         {
