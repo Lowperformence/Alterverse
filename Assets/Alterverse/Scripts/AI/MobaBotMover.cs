@@ -631,9 +631,12 @@ namespace Alterverse.AI
             Vector3 movement=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
             if(!arrived&&movement.sqrMagnitude>.00001f)locomotion.FaceMovement(movement);
 
-            // Severe partial stalls count as blocked too. The previous 9% threshold missed bots
-            // that only scraped a few centimetres along a collider and could remain wedged.
-            bool hasIntent=!arrived&&requested.sqrMagnitude>.00001f;
+            // Severe partial stalls count as blocked too, but do not run stuck recovery while
+            // a bot is already settling just outside its tactical stop distance. Close-range combat
+            // and recovery goals can legitimately move only a few centimetres and previously produced
+            // false "route/no collider" SideProbe warnings.
+            const float settleMargin=.35f;
+            bool hasIntent=!arrived&&distance>stopDistance+settleMargin&&requested.sqrMagnitude>.00001f;
             float requestedSqr=requested.sqrMagnitude;
             float progressRatio=requestedSqr>.000001f?movement.sqrMagnitude/requestedSqr:1f;
             bool blocked=hasIntent&&progressRatio<.30f;
@@ -684,6 +687,12 @@ namespace Alterverse.AI
                 progressWatchActive=false;
                 progressAnchor=transform.position;
                 progressCheckAt=0;
+                if(distance<=stopDistance+settleMargin)
+                {
+                    blockedTime=0;
+                    recoveryAttempts=0;
+                    recoveryMode="None";
+                }
             }
         }
 
