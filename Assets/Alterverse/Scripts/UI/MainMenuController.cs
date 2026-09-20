@@ -205,9 +205,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left,568,420,72),"PLAY",true)) SetPage(Page.Play);
             theme.Label(new Rect(Left,652,420,26),"AI MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
             DrawPortrait(new Rect(split,108,Right-split,444));
-            Color heroLine=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
-            heroLine.a=.55f;
-            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),heroLine);
+            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero));
             theme.Label(new Rect(split+48,570,Right-split-170,38),HeroName,theme.Heading);
             theme.Label(new Rect(split+48,616,Right-split-180,28),Roles[selectedHero],theme.Small,true);
             if (theme.Action(new Rect(Right-110,580,62,64),">")) SetPage(Page.Heroes);
