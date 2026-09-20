@@ -52,16 +52,16 @@ namespace Alterverse.Profile
             {
                 int storedShards=Mathf.Max(0,PlayerPrefs.GetInt(ReceiptShards,0));
                 int storedXp=Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXp,0));
-                int baseShards=PlayerPrefs.HasKey(ReceiptBaseShards)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseShards,0)):storedShards;
-                int shardBonus=PlayerPrefs.HasKey(ReceiptShardBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptShardBonus,0)):Mathf.Max(0,storedShards-baseShards);
-                int baseXp=PlayerPrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseXp,0)):storedXp;
-                int xpBonus=PlayerPrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-baseXp);
+                int storedBaseShards=PlayerPrefs.HasKey(ReceiptBaseShards)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseShards,0)):storedShards;
+                int storedShardBonus=PlayerPrefs.HasKey(ReceiptShardBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptShardBonus,0)):Mathf.Max(0,storedShards-storedBaseShards);
+                int storedBaseXp=PlayerPrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseXp,0)):storedXp;
+                int storedXpBonus=PlayerPrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-storedBaseXp);
                 int rawCosmetic=PlayerPrefs.GetInt(ReceiptBonusCosmetic,0);
                 UniversalHeroCosmetic storedCosmetic=rawCosmetic>=0&&rawCosmetic<=3?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
 
                 // Battle Pass intentionally receives BASE account XP only; its own receipt keeps this idempotent.
-                BattlePassProgress.GrantMatchXp(baseXp,matchId);
-                return new MatchRewardResult(baseShards,shardBonus,baseXp,xpBonus,storedCosmetic);
+                BattlePassProgress.GrantMatchXp(storedBaseXp,matchId);
+                return new MatchRewardResult(storedBaseShards,storedShardBonus,storedBaseXp,storedXpBonus,storedCosmetic);
             }
 
             kills=Mathf.Max(0,kills);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
