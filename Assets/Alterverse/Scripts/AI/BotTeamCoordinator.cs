@@ -182,7 +182,7 @@ namespace Alterverse.AI
             Observation best=default;float bestScore=float.MaxValue;bool retained=false;
             for(int i=0;i<seenCount;i++)
             {
-                Observation e=seen[i];if(!e.Hero||Time.time-e.SeenAt>.40f||UnsafeDefense(e.Position))continue;
+                Observation e=seen[i];if(!e.Hero||Time.time-e.SeenAt>.40f)continue;
                 int nearby=AlliesNear(e.Position,10f),reinforcements=EnemiesNear(e.Position,7f);
                 if(nearby<2||reinforcements>nearby||FightRatio(e.Position)<.95f)continue;
                 float score=(2f+Mathf.Sqrt(FlatSqr(e.Position-centroid)))*(.25f+e.Hp);
@@ -292,19 +292,14 @@ namespace Alterverse.AI
                 if(FlatSqr(allies[i].Position-point)<11f*11f)own+=allies[i].Power;
             for(int i=0;i<seenCount;i++)
                 if(seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&FlatSqr(seen[i].Position-point)<11f*11f)enemy+=RolePower(seen[i].Role)*(.35f+.65f*seen[i].Hp);
-            // Public defensive-zone locations are fair tactical information.
-            if(UnsafeDefense(point))enemy+=1.5f;
+            // Small defensive buildings are deliberately not part of fight-strength evaluation.
+            // Their 5 HP/s chip damage is too minor to drive tactical decisions.
             return enemy>.01f?own/enemy:2f;
         }
         public bool UnsafeDefense(Vector3 point)
         {
-            // Bastions are non-damaging cover. Only hostile trenches define a defensive damage zone.
-            foreach(DefenseTrench trench in DefenseTrench.Active)
-            {
-                if(trench==null||trench.Team==team)continue;
-                float radius=trench.DamageRadius+.65f;
-                if(FlatSqr(point-trench.transform.position)<radius*radius)return true;
-            }
+            // Compatibility hook for callers: these small buildings are not tactical no-go zones.
+            // Bots may fight, chase and reposition near them; only the physical collider matters.
             return false;
         }
         public int EnemiesNear(Vector3 point,float radius)
@@ -325,7 +320,7 @@ namespace Alterverse.AI
         public bool CanFinish(Health target,Vector3 point)
         {
             for(int i=0;i<seenCount;i++)if(seen[i].Target==target&&seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&seen[i].Hp<.30f)
-                return AlliesNear(point,8f)>=2&&FightRatio(point)>1.25f&&!UnsafeDefense(seen[i].Position);
+                return AlliesNear(point,8f)>=2&&FightRatio(point)>1.25f;
             return false;
         }
         public float TargetBias(Health target,HeroId role)
@@ -388,19 +383,6 @@ namespace Alterverse.AI
         {
             Vector3 best=Home;float distance=FlatSqr(Home-position);
 
-            // New shared defence concept: retreat behind an allied bastion/trench if it is on the
-            // way home. These are protection anchors only; once Retreat/Recover ends, normal roam resumes.
-            foreach(DefenseBunker bunker in DefenseBunker.Active)
-            {
-                if(bunker==null||bunker.Team!=team)continue;
-                ConsiderDefenseRefuge(position,bunker.transform,bunker.GetComponent<Collider>(),ref best,ref distance);
-            }
-            foreach(DefenseTrench trench in DefenseTrench.Active)
-            {
-                if(trench==null||trench.Team!=team)continue;
-                ConsiderDefenseRefuge(position,trench.transform,trench.GetComponent<Collider>(),ref best,ref distance);
-            }
-
             for(int i=0;i<allyCount;i++)
             {
                 var ally=allies[i];float d=FlatSqr(ally.Position-position);
@@ -410,15 +392,6 @@ namespace Alterverse.AI
             best.y=position.y;return best;
         }
 
-        private void ConsiderDefenseRefuge(Vector3 position,Transform structure,Collider body,ref Vector3 best,ref float distance)
-        {
-            float bodyExtent=body!=null&&body.enabled?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):2.5f;
-            Vector3 refuge=structure.position-Forward*(bodyExtent+.8f);
-            refuge.y=position.y;
-            float d=FlatSqr(refuge-position);
-            if(d>=distance||Vector3.Dot(refuge-position,Forward)>1f)return;
-            distance=d;best=refuge;
-        }
         public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira;
         private static float RolePower(HeroId role)=>role==HeroId.Mira?.78f:role==HeroId.Kaelon?1.1f:1f;
         private static float FlatSqr(Vector3 value){value.y=0;return value.sqrMagnitude;}
