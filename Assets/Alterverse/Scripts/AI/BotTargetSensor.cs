@@ -98,10 +98,20 @@ namespace Alterverse.AI
             if(count==sightHits.Length)return false;
             for(int i=0;i<count;i++)
             {
-                // Heroes/minions do not block sight, but health-bearing buildings still do.
+                // Mobile combat units are not opaque walls. This includes the healing guard,
+                // which previously could hide an attacker from bots standing on the healing plate.
+                // Static gameplay structures and environment colliders still block sight.
                 var owner=sightHits[i].collider.GetComponentInParent<Health>();
                 if(owner==selfHealth||owner==candidate)continue;
-                if(owner==null||(owner.GetComponent<HeroIdentity>()==null&&owner.GetComponent<LaneMinion>()==null))return false;
+                if(owner!=null)
+                {
+                    bool mobileUnit=owner.GetComponent<HeroIdentity>()!=null||
+                        owner.GetComponent<LaneMinion>()!=null||
+                        owner.GetComponent<TeamMember>()!=null&&
+                        owner.GetComponent<LaneTower>()==null&&owner.GetComponent<RealityCore>()==null;
+                    if(mobileUnit)continue;
+                }
+                return false;
             }
             return true;
         }
