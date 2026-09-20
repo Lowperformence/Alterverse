@@ -33,13 +33,17 @@ namespace Alterverse.Characters
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
             Health best = null; float lowest = shield ? .98f : .95f;
-            int hits=Physics.OverlapSphereNonAlloc(transform.position,range,scanBuffer,GameplayCollision.TargetMask,QueryTriggerInteraction.Collide);
-            for(int i=0;i<hits;i++)
+            float rangeSqr=range*range;
+            // Support targeting must not depend on a physics collider. Heroes are valid combat
+            // targets through Health/TeamMember even while a collider is absent or temporarily disabled.
+            for(int i=0;i<Health.Active.Count;i++)
             {
-                Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
+                Health h=Health.Active[i];
                 if(h==null||h.IsDead||!h.isActiveAndEnabled||h.GetComponent<HeroIdentity>()==null||h.Normalized>=lowest)continue;
                 TeamMember member=h.GetComponent<TeamMember>();
                 if(member==null||member.Team!=team.Team||(shield&&h.Shield>5f))continue;
+                Vector3 delta=h.transform.position-transform.position;delta.y=0;
+                if(delta.sqrMagnitude>rangeSqr)continue;
                 lowest=h.Normalized;best=h;
             }
             return best;
