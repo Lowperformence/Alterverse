@@ -158,6 +158,12 @@ namespace Alterverse.AI
         {
             if(hotZone==null||!hotZone.IsActive)return false;
             Vector3 delta=hotZone.transform.position-transform.position;delta.y=0;
+
+            // Support should not peel off across the map to solo an objective. If already close,
+            // it may still contest naturally; otherwise it waits for at least one nearby ally.
+            if(profile!=null&&profile.Hero==HeroId.Mira&&sensor!=null&&sensor.NearbyAllies==0&&delta.sqrMagnitude>6.5f*6.5f)
+                return false;
+
             if(delta.sqrMagnitude<11f*11f)return true;
 
             float own=brain.Team==0?hotZone.ZeroControlSeconds:hotZone.LumenControlSeconds;
@@ -174,6 +180,8 @@ namespace Alterverse.AI
         {
             if (objective == null) return false;
             float sqr = (objective.transform.position - transform.position).sqrMagnitude;
+            if(profile!=null&&profile.Hero==HeroId.Mira&&sensor!=null&&sensor.NearbyAllies==0&&sqr>8f*8f)
+                return false;
             float focus=brain.ObjectiveFocus;
             int slots=focus>.75f?4:focus>.55f?3:2;
             return sqr <= 26f * 26f && (rotationSlot < slots || sqr < 10f * 10f);
