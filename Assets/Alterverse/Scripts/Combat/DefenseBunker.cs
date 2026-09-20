@@ -405,7 +405,12 @@ namespace Alterverse.Combat
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
-            Gizmos.DrawWireSphere(transform.position, damageRadius);
+            BoxCollider body=GetComponent<BoxCollider>();
+            if(body==null)return;
+            Matrix4x4 previous=Gizmos.matrix;
+            Gizmos.matrix=transform.localToWorldMatrix;
+            Gizmos.DrawWireCube(body.center,body.size);
+            Gizmos.matrix=previous;
         }
 
         private void OnDestroy()
