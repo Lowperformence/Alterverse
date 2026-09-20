@@ -525,8 +525,8 @@ namespace Alterverse.Combat
                     if(prior!=null&&prior.GetComponentInParent<Health>()==h){duplicate=true;break;}
                 }
                 if(duplicate)continue;
-                if(h.GetComponent<RealityCore>()!=null||h.GetComponent<LaneTower>()!=null||h.GetComponent<Alterverse.Match.DimensionPlanet>()!=null)continue;
-                if(h.GetComponent<TeamMember>()==null&&h.GetComponent<LaneMinion>()==null)continue;
+                if(h.GetComponent<RealityCore>()!=null||h.GetComponent<Alterverse.Match.DimensionPlanet>()!=null)continue;
+                if(h.GetComponent<TeamMember>()==null)continue;
                 h.TakeDamage(damage,gameObject);
             }
             Cleanup();
