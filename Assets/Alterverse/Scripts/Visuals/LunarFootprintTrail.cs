@@ -70,7 +70,7 @@ namespace Alterverse.Visuals
 
             Vector3 forward=transform.forward;forward.y=0f;
             if(forward.sqrMagnitude<.001f)forward=Vector3.forward;
-            Quaternion rotation=Quaternion.LookRotation(forward.normalized,Vector3.up)*Quaternion.Euler(90f,0f,0f);
+            Quaternion rotation=Quaternion.LookRotation(forward.normalized,Vector3.up)*Quaternion.Euler(-90f,0f,0f);
             pool.Emit(p,rotation);
         }
 
