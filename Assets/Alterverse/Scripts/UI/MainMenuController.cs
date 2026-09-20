@@ -29,7 +29,7 @@ namespace Alterverse.UI
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
-        private string profileName, profileMessage = "", shopMessage = "", inventoryMessage = "", launchMessage = "";
+        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
         private FrontEndTheme theme;
         private MenuCosmicBackdrop backdrop;
         private MenuHeroShowcase showcase;
@@ -118,7 +118,7 @@ namespace Alterverse.UI
         {
             if (page == next || launching) return;
             FlushAudio(); CancelName(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
-            profileMessage = ""; shopMessage = ""; inventoryMessage = ""; GUI.FocusControl(null);
+            profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
         }
         private void OnGUI()
