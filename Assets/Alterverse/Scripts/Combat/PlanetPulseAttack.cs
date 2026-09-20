@@ -8,6 +8,10 @@ namespace Alterverse.Combat
     [RequireComponent(typeof(DimensionPlanet), typeof(Health))]
     public sealed class PlanetPulseAttack : MonoBehaviour
     {
+        private static readonly System.Collections.Generic.List<PlanetPulseAttack> active=new();
+        public static System.Collections.Generic.IReadOnlyList<PlanetPulseAttack> Active=>active;
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void ResetRegistry()=>active.Clear();
+
         [SerializeField] private float blastRadius = 4.6f;
         [SerializeField] private float damage = 7f;
         [SerializeField] private float cooldown = 7.5f;
@@ -15,11 +19,14 @@ namespace Alterverse.Combat
         private DimensionPlanet planet;
         private Health health;
         private float nextPulse,nextTargetScan;private bool targetNearby;private const int HitBufferSize=48;private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
-        private float blastAt = -1f;
+        private float blastAt = -1f,telegraphStartedAt=-1f;
         private bool telegraphing;
         private GameObject warningDisc;
         public float BlastRadius => blastRadius;
         public bool IsTelegraphing => telegraphing;
+        public Vector3 ImpactPosition=>transform.position;
+        public float TelegraphAge=>telegraphing?Mathf.Max(0f,Time.time-telegraphStartedAt):0f;
+        public float TimeRemaining=>telegraphing?Mathf.Max(0f,blastAt-Time.time):0f;
 
         private void Awake()
         {
@@ -27,6 +34,8 @@ namespace Alterverse.Combat
             health = GetComponent<Health>();
             nextPulse = Time.time + Random.Range(2.5f, 4f);
         }
+
+        private void OnEnable(){if(!active.Contains(this))active.Add(this);}
 
         private void Update()
         {
@@ -61,6 +70,7 @@ namespace Alterverse.Combat
         private void BeginTelegraph()
         {
             telegraphing = true;
+            telegraphStartedAt=Time.time;
             blastAt = Time.time + telegraphDuration;
             warningDisc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             warningDisc.name = "DF_PlanetPulseWarning";
@@ -83,6 +93,7 @@ namespace Alterverse.Combat
         private void Detonate()
         {
             telegraphing = false;
+            telegraphStartedAt=-1f;
             if (warningDisc != null) Destroy(warningDisc);
             PrototypeVfx.RadialBurst(transform.position + Vector3.up * .15f, new Color(1f, .48f, .12f), blastRadius);
             int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
@@ -105,6 +116,6 @@ namespace Alterverse.Combat
             if (warningDisc != null) Destroy(warningDisc);
         }
 
-        private void OnDisable() => CancelTelegraph();
+        private void OnDisable(){active.Remove(this);CancelTelegraph();}
     }
 }
