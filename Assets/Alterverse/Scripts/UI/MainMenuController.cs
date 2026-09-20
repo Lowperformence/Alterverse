@@ -398,14 +398,14 @@ namespace Alterverse.UI
 
             DrawPortrait(new Rect(Left,270,w,340));
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
-            theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON OVERDRIVE PREVIEW  •  +50% VISUAL SIZE",theme.Small,true);
+            theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON OVERDRIVE PREVIEW",theme.Small,true);
             if(theme.Action(new Rect(Left,614,64,54),"<")){ChangeHero((selectedHero+5)%6);shopMessage="";}
             theme.Center(new Rect(Left+72,614,w-144,54),$"{HeroName}  /  {item.WeaponName}");
             if(theme.Action(new Rect(Left+w-64,614,64,54),">")){ChangeHero((selectedHero+1)%6);shopMessage="";}
 
             theme.Label(new Rect(x,282,rw,62),item.Name,theme.Title);
             theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
-            theme.Label(new Rect(x,400,rw,90),item.Description+"\nVisual only — no damage, range or hitbox advantage.",theme.Body,true);
+            theme.Label(new Rect(x,400,rw,90),"Visual only — no damage, range or hitbox advantage.",theme.Body,true);
             theme.Label(new Rect(x,506,rw,34),owned?"OWNED":WeaponSkinCatalog.Price+" SHARDS",theme.Heading);
             FrontEndTheme.Fill(new Rect(x,548,rw,3),item.Glow);
 
