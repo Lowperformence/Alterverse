@@ -9,7 +9,7 @@ namespace Alterverse.EditorChecks
     public static class LunarEnvironmentChecks
     {
         private static void Check(bool value,string message){if(!value)throw new System.InvalidOperationException("Lunar check: "+message);}
-        [MenuItem("DIMENSIONS FRONT/Checks/Lunar geometry and corridor bounds")]
+        [MenuItem("DIMENSIONS FRONT/Checks/Lunar geometry and free-roam bounds")]
         public static void Geometry()
         {
             for(int z=-36;z<=36;z++)for(int x=-42;x<=42;x++)
@@ -18,8 +18,12 @@ namespace Alterverse.EditorChecks
                 Check(!float.IsNaN(p.y)&&p.y>=-.116f&&p.y<=.081f,"visual relief outside intended range");
                 Check(Mathf.Abs(p.x)<48&&Mathf.Abs(p.z)<42,"surface outside unique atlas");
             }
+            // Current PvP layout is free-roam: terrain must not secretly flatten or tint legacy lane corridors.
             for(int x=-28;x<=28;x++)
-            {Check(LunarSurfaceField.LaneWeight(x,16)>.8f,"north lane lost compression");Check(LunarSurfaceField.LaneWeight(x,-16)>.8f,"south lane lost compression");}
+            {
+                Check(Mathf.Approximately(LunarSurfaceField.LaneWeight(x,16),0f),"legacy north-lane terrain weighting returned");
+                Check(Mathf.Approximately(LunarSurfaceField.LaneWeight(x,-16),0f),"legacy south-lane terrain weighting returned");
+            }
             Mesh disc=ProductionMeshFactory.Disc(1,.2f,24);Mesh fragment=LunarFragmentGeometry.Create(7);
             try
             {
@@ -45,7 +49,7 @@ namespace Alterverse.EditorChecks
             var go=new GameObject("DF_LunarReviewCamera");Camera camera=go.AddComponent<Camera>();camera.CopyFrom(main);camera.enabled=false;
             RenderTexture target=new RenderTexture(1280,720,24);Texture2D pixels=new Texture2D(1280,720,TextureFormat.RGB24,false);
             RenderTexture previous=RenderTexture.active;
-            string[] labels={"zero-base","north-lane","center","south-lane","lumen-base","broken-rim"};
+            string[] labels={"zero-base","north-field","center","south-field","lumen-base","broken-rim"};
             Vector3[] points={new(-32,1,0),new(-15,1,16),new(0,1,0),new(15,1,-16),new(32,1,0),new(34,1,-30)};
             Vector3 offset=main.transform.position-player.transform.position;
             try
