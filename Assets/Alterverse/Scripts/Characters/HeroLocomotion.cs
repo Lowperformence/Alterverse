@@ -129,7 +129,7 @@ namespace Alterverse.Characters
             {
                 Vector3 point=new Vector3((i&1)==0?bounds.min.x:bounds.max.x,transform.position.y,
                     (i&2)==0?bounds.min.z:bounds.max.z);
-                if(Mathf.Abs(point.x)>39.5f||Mathf.Abs(point.z)>32.5f)continue;
+                if(!GameplayCollision.ContainsRoundedArena(point,39.5f,32.5f))continue;
                 Vector3 delta=point-transform.position;float distance=delta.magnitude;
                 if(distance<.3f||distance>8f||!DirectionClear(delta/distance,distance))continue;
                 float bias=Vector3.Dot(Vector3.Cross(Vector3.up,desired.normalized),delta.normalized)*side;
@@ -150,16 +150,14 @@ namespace Alterverse.Characters
             Vector3 before=transform.position; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
             if(!CanMove){Velocity=Vector3.zero;return Vector3.zero;}
             displacement.y=0;
-            Vector3 goal=before+displacement;
-            goal.x=Mathf.Clamp(goal.x,-halfWidth,halfWidth);goal.z=Mathf.Clamp(goal.z,-halfHeight,halfHeight);
+            Vector3 goal=GameplayCollision.ClampToRoundedArena(before+displacement,halfWidth,halfHeight);
             Vector3 remaining=goal-before;
             // Sweeps also protect transform-driven bots. Two contact planes permit wall sliding.
             for(int pass=0;pass<(slide?2:1)&&remaining.sqrMagnitude>.000001f;pass++)
             {
                 float distance=remaining.magnitude;Vector3 direction=remaining/distance;
                 Sweep(transform.position,direction,distance,out float allowed,out Vector3 normal,out Collider blocker);
-                Vector3 bounded=transform.position+direction*allowed;
-                bounded.x=Mathf.Clamp(bounded.x,-halfWidth,halfWidth);bounded.z=Mathf.Clamp(bounded.z,-halfHeight,halfHeight);
+                Vector3 bounded=GameplayCollision.ClampToRoundedArena(transform.position+direction*allowed,halfWidth,halfHeight);
                 Vector3 step=bounded-transform.position;
                 if(controller!=null){if(!controller.enabled)break;controller.Move(step);}
                 else transform.position+=step;
