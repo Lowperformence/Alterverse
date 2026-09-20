@@ -6,29 +6,34 @@ using UnityEngine.Rendering;
 namespace Alterverse.Combat
 {
     /// <summary>
-    /// Permanent indestructible flank bastion. It is intentionally not a Health owner, so it cannot
-    /// be targeted or destroyed. It provides physical cover only and deals exactly zero damage.
-    /// The damaging defensive structure is the separate DefenseTrench.
+    /// Permanent flank defense bunker for each team. It is intentionally not a Health owner:
+    /// gameplay targeting therefore cannot attack or destroy it, while the structure collider
+    /// still provides a solid bunker footprint.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DefenseBunker : MonoBehaviour
     {
+        [SerializeField, Min(1f)] private float attackRange = 15.5f;
+        [SerializeField, Min(0f)] private float attackDamage = 5f;
+        [SerializeField, Min(.2f)] private float attackCooldown = 1f;
+        [SerializeField, Min(.05f)] private float scanInterval = .16f;
+
         private static readonly List<DefenseBunker> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
 
-        private Transform visualRoot, turretHead;
+        private Health currentTarget;
+        private Transform visualRoot, turretHead, muzzle;
         private int team;
+        private float nextAttack, nextScan;
         private Color energy;
 
         public static IReadOnlyList<DefenseBunker> Active => active;
         public int Team => team;
-        public float DamagePerSecond => 0f;
-        public float DamageRadius => 0f;
-        public float DamageTick => 0f;
-        // Compatibility aliases for older checks/callers.
-        public float AttackDamage => 0f;
-        public float AttackRange => 0f;
+        public float AttackRange => attackRange;
+        public float AttackDamage => attackDamage;
+        public float AttackCooldown => attackCooldown;
+        public Health CurrentTarget => IsValidTarget(currentTarget) ? currentTarget : null;
 
         public static GameObject Spawn(int teamId, Vector3 position, string flank)
         {
@@ -53,7 +58,7 @@ namespace Alterverse.Combat
 
             DefenseBunker defense = bunker.AddComponent<DefenseBunker>();
             defense.Initialize(clampedTeam);
-            defense.BuildVisual(flank == "Left" || flank == "North" ? 0 : 1);
+            defense.BuildVisual(flank == "North" ? 0 : 1);
             return bunker;
         }
 
@@ -66,6 +71,103 @@ namespace Alterverse.Combat
         {
             team = Mathf.Clamp(teamId, 0, 1);
             energy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
+            nextAttack = Time.time + .45f + Mathf.Abs(transform.position.z) * .007f;
+            nextScan = 0f;
+        }
+
+        private void Update()
+        {
+            if (Time.timeScale <= 0f) return;
+
+            if (currentTarget != null && !IsValidTarget(currentTarget)) currentTarget = null;
+            if (Time.time >= nextScan)
+            {
+                nextScan = Time.time + scanInterval;
+                currentTarget = FindTarget();
+            }
+
+            Health target = CurrentTarget;
+            if (target == null) return;
+
+            AimAt(target.transform.position);
+            if (Time.time < nextAttack) return;
+
+            nextAttack = Time.time + attackCooldown;
+            Fire(target);
+        }
+
+        private Health FindTarget()
+        {
+            Health best = null;
+            float bestScore = float.MaxValue;
+            float maxSqr = attackRange * attackRange;
+
+            for (int i = 0; i < Health.Active.Count; i++)
+            {
+                Health candidate = Health.Active[i];
+                if (candidate == null || candidate.IsDead || !candidate.isActiveAndEnabled) continue;
+                if (!IsEnemyUnit(candidate)) continue;
+
+                Vector3 delta = candidate.transform.position - transform.position;
+                delta.y = 0f;
+                float sqr = delta.sqrMagnitude;
+                if (sqr > maxSqr) continue;
+
+                // Keep a target briefly to avoid noisy turret snapping. Otherwise shoot the closest threat.
+                float score = sqr * (candidate == currentTarget ? .68f : 1f);
+                if (score < bestScore)
+                {
+                    bestScore = score;
+                    best = candidate;
+                }
+            }
+
+            return best;
+        }
+
+        private bool IsValidTarget(Health candidate)
+        {
+            if (candidate == null || candidate.IsDead || !candidate.isActiveAndEnabled || !IsEnemyUnit(candidate)) return false;
+            Vector3 delta = candidate.transform.position - transform.position;
+            delta.y = 0f;
+            return delta.sqrMagnitude <= attackRange * attackRange * 1.08f;
+        }
+
+        private bool IsEnemyUnit(Health candidate)
+        {
+            LaneMinion minion = candidate.GetComponent<LaneMinion>();
+            if (minion != null) return minion.Team != team;
+
+            TeamMember member = candidate.GetComponent<TeamMember>();
+            if (member == null || member.Team == team) return false;
+
+            // Cores/towers are not bunker targets; the bunker exists to deny enemy units entering the flank.
+            if (candidate.GetComponent<RealityCore>() != null || candidate.GetComponent<LaneTower>() != null) return false;
+            return true;
+        }
+
+        private void AimAt(Vector3 targetPosition)
+        {
+            if (turretHead == null) return;
+            Vector3 direction = targetPosition - turretHead.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude < .001f) return;
+
+            Quaternion wanted = Quaternion.LookRotation(direction, Vector3.up);
+            turretHead.rotation = Quaternion.RotateTowards(turretHead.rotation, wanted, 190f * Time.deltaTime);
+        }
+
+        private void Fire(Health target)
+        {
+            if (target == null || target.IsDead) return;
+
+            target.TakeDamage(attackDamage, gameObject);
+            Vector3 origin = muzzle != null ? muzzle.position : transform.position + Vector3.up * 2.65f;
+            PrototypeVfx.ProjectileLine(origin - Vector3.up * .65f, target.transform.position, energy, .105f);
+            PrototypeVfx.Burst(origin, Color.Lerp(energy, Color.white, .28f), .20f, 3);
+
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerShot, origin, .34f);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact, target.transform.position, .28f);
         }
 
         private void BuildVisual(int variant)
@@ -209,6 +311,9 @@ namespace Alterverse.Combat
             Part("DF_Bunker_TurretSensor", PrimitiveType.Sphere, turretHead, new Vector3(0, .22f, .52f),
                 new Vector3(.17f, .17f, .12f), glow, Quaternion.identity, false);
 
+            muzzle = new GameObject("DF_Bunker_Muzzle").transform;
+            muzzle.SetParent(turretHead, false);
+            muzzle.localPosition = new Vector3(0, .17f, 1.16f);
         }
 
         private void BuildAntennae(Material metal, Material glow, int variant)
@@ -406,17 +511,11 @@ namespace Alterverse.Combat
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
-            BoxCollider body=GetComponent<BoxCollider>();
-            if(body==null)return;
-            Matrix4x4 previous=Gizmos.matrix;
-            Gizmos.matrix=transform.localToWorldMatrix;
-            Gizmos.DrawWireCube(body.center,body.size);
-            Gizmos.matrix=previous;
+            Gizmos.DrawWireSphere(transform.position, attackRange);
         }
 
         private void OnDestroy()
         {
-            active.Remove(this);
             for (int i = 0; i < materials.Count; i++) if (materials[i] != null) Destroy(materials[i]);
             for (int i = 0; i < meshes.Count; i++) if (meshes[i] != null) Destroy(meshes[i]);
         }
