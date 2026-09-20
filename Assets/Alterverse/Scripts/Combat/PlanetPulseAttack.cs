@@ -113,6 +113,7 @@ namespace Alterverse.Combat
         private void CancelTelegraph()
         {
             telegraphing = false;
+            telegraphStartedAt=-1f;
             if (warningDisc != null) Destroy(warningDisc);
         }
 
