@@ -214,8 +214,15 @@ namespace Alterverse.AI
             CoreEmergency=false;
             if(ownCore!=null&&ownCore.IsVulnerable)
             {
+                // A vulnerable core is not automatically an emergency. The old behaviour issued a
+                // permanent DEFEND call as soon as lane towers fell, which could pin the losing team
+                // around its healing plate even when no enemy was actually in the base.
                 CoreEmergency=ThreatsNear(ownCore.transform.position,18f)>0;
-                Commit(Intent.Defend,ownCore.transform.position+Forward*3f,true);return;
+                if(CoreEmergency)
+                {
+                    Commit(Intent.Defend,ownCore.transform.position+Forward*3f,true);
+                    return;
+                }
             }
             for(int i=0;i<towerCount;i++)
             {
