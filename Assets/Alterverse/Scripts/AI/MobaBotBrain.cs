@@ -7,8 +7,9 @@ namespace Alterverse.AI
     [RequireComponent(typeof(Health))]
     public sealed class MobaBotBrain : MonoBehaviour
     {
-        // "Lane" is retained as the serialized/state identifier for compatibility; it now means free-roam/search.
-        public enum BotState { Lane, Fight, Retreat, Recover }
+        // Roam is the active free-map search state. Lane remains only as a numeric compatibility alias
+        // for older serialized/editor content and is not used by current runtime decisions.
+        public enum BotState { Roam=0, Lane=Roam, Fight=1, Retreat=2, Recover=3 }
         [SerializeField] private int team;
         [SerializeField, Range(.1f, 1f)] private float aggression = .55f, caution = .55f;
         [SerializeField] private float decisionInterval = .35f, lowHealthThreshold = .30f;
@@ -16,7 +17,7 @@ namespace Alterverse.AI
         private MobaBotRespawn respawn;
         private BotPersonality personality;
         private BotTargetSensor targetSensor;
-        private BotState state = BotState.Lane;
+        private BotState state = BotState.Roam;
         private float nextDecisionTime, retreatUntil, baseDefenseUntil;
         private bool wasDead;
         private int observedCall=-1;
@@ -86,7 +87,7 @@ namespace Alterverse.AI
             if (targetSensor == null) targetSensor = GetComponent<BotTargetSensor>();
             if (health.IsDead) { wasDead = true; return; }
             if (respawn != null && respawn.IsRespawning) return;
-            if (wasDead) ResumeLaneAfterRespawn();
+            if (wasDead) ResumeRoamAfterRespawn();
             if (Time.time < nextDecisionTime) return;
             nextDecisionTime = Time.time + Mathf.Max(.15f, decisionInterval*Difficulty.DecisionScale*decisionRhythm);
             Decide();
@@ -96,15 +97,17 @@ namespace Alterverse.AI
             team = Mathf.Clamp(assignedTeam,0,1); observedCall=-1;TacticalWithdrawal=false;baseDefenseUntil=0;
             aggression = Mathf.Clamp01(personalityAggression); caution = Mathf.Clamp01(personalityCaution);
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
-            state = BotState.Lane; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
+            state = BotState.Roam; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
         }
-        public void ResumeLaneAfterRespawn()
+        public void ResumeRoamAfterRespawn()
         {
-            wasDead = false;combatResetAt=combatResetUntil=0;observedCall=-1;TacticalWithdrawal=false;retreatUntil=baseDefenseUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
+            wasDead = false;combatResetAt=combatResetUntil=0;observedCall=-1;TacticalWithdrawal=false;retreatUntil=baseDefenseUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Roam; nextDecisionTime = Time.time + .1f*decisionRhythm;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
         }
+        // Compatibility entry point for older editor checks/content.
+        public void ResumeLaneAfterRespawn()=>ResumeRoamAfterRespawn();
         public void RefreshPersonality()
         {
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
@@ -187,8 +190,8 @@ namespace Alterverse.AI
                     return;
                 }
 
-                state = (!winningFinish&&hp<recoverHealth)||Time.time<retreatUntil||pressure>0 ? BotState.Recover : BotState.Lane;
-                if(state==BotState.Lane){fightCommitUntil=0;TacticalWithdrawal=false;}
+                state = (!winningFinish&&hp<recoverHealth)||Time.time<retreatUntil||pressure>0 ? BotState.Recover : BotState.Roam;
+                if(state==BotState.Roam){fightCommitUntil=0;TacticalWithdrawal=false;}
                 return;
             }
 
@@ -200,11 +203,11 @@ namespace Alterverse.AI
             // Backline cannot start a solo duel while its team is reachable but elsewhere.
             if(coordinated&&identity!=null&&BotTeamCoordinator.IsBackline(identity.Hero)&&nearbyAllies==0&&
                 nearbyEnemies>0&&Tactics.AliveHeroes>1&&!winningFinish)
-            {state=BotState.Lane;return;}
+            {state=BotState.Roam;return;}
             // A base defence/regroup call is not cancelled by a harmless farming target.
             if(FollowTeamCall&&Tactics.Call==BotTeamCoordinator.Intent.Defend&&
                 (transform.position-Tactics.Destination).sqrMagnitude>12f*12f&&nearbyEnemies==0)
-                {state=BotState.Lane;return;}
+                {state=BotState.Roam;return;}
             bool recentMemory=targetSensor!=null&&targetSensor.HasRecentEnemyMemory;
 
             if(perceivedThreat)
@@ -220,7 +223,7 @@ namespace Alterverse.AI
 
             if(state==BotState.Fight&&recentMemory)return;
             fightCommitUntil=0;
-            state=BotState.Lane;
+            state=BotState.Roam;
         }
     }
 }
