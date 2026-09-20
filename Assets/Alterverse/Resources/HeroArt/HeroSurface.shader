@@ -1,6 +1,6 @@
 Shader "DimensionsFront/HeroSurface"
 {
- Properties { _BaseColor("Hit flash override",Color)=(1,1,1,0) _EnergyBoost("Attack energy",Float)=0 }
+ Properties { _BaseColor("Hit flash override",Color)=(1,1,1,0) _EnergyBoost("Attack energy",Float)=0 _SurfaceFinish("Surface finish",Float)=1 }
  SubShader
  {
   Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
@@ -18,6 +18,7 @@ Shader "DimensionsFront/HeroSurface"
    CBUFFER_START(UnityPerMaterial)
    half4 _BaseColor;
    half _EnergyBoost;
+   half _SurfaceFinish;
    CBUFFER_END
    V vert(A i) { V o;o.position=TransformObjectToHClip(i.position.xyz);o.world=TransformObjectToWorld(i.position.xyz);o.normal=TransformObjectToWorldNormal(i.normal);o.color=i.color;return o; }
    half4 frag(V i):SV_Target
@@ -31,8 +32,11 @@ Shader "DimensionsFront/HeroSurface"
     albedo=saturate((albedo-.5h)*1.06h+.5h);
     half diffuse=.22h+.78h*saturate(dot(n,key.direction));
     half3 ambient=max(SampleSH(n),half3(.18h,.20h,.24h));
-    half rim=pow(1-saturate(dot(n,view)),3)*.11h;
-    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),22)*.055h;
+    half finish=saturate(_SurfaceFinish);
+    half rim=pow(1-saturate(dot(n,view)),3)*lerp(.075h,.12h,finish);
+    half specPower=lerp(10h,28h,finish);
+    half specStrength=lerp(.018h,.070h,finish);
+    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),specPower)*specStrength;
     // Keep enough floor light for mobile readability, but avoid the old bright midpoint wash.
     half3 illumination=clamp(ambient*.40h+key.color*diffuse,half3(.43h,.43h,.43h),half3(1.02h,1.02h,1.02h));
     half3 lit=albedo*illumination+spec*min(key.color,1.0h)*.30h+rim*albedo;
