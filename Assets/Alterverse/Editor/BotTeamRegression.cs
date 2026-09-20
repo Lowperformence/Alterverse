@@ -185,6 +185,10 @@ namespace Alterverse.EditorChecks
             Set(front,"lumenControl",85f);
             var core=Unit("OwnCore",0,new Vector3(-27,1,0)).AddComponent<RealityCore>();core.Initialize(0);Set(core,"front",front);
             Bot(HeroId.Kaelon,new Vector3(-22,1,0));Bot(HeroId.Nyra,new Vector3(-23,1,1));Bot(HeroId.Mira,new Vector3(-24,1,-1));
+            Think();
+            Assert(!Team.CoreEmergency&&Team.Call!=BotTeamCoordinator.Intent.Defend,
+                "A merely vulnerable core with no observed base threat must not pin the losing team in permanent defence.");
+
             Unit("CoreThreat",1,new Vector3(-20,1,0),HeroId.Rook);Think();
             Assert(Team.CoreEmergency&&Team.Call==BotTeamCoordinator.Intent.Defend,"Visible pressure on a vulnerable core overrides all map objectives.");
             foreach(var b in bots)Assert(b.FollowTeamCall,"All available Expert bots must answer core danger.");
