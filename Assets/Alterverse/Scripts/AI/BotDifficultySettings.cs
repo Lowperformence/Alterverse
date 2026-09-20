@@ -9,14 +9,20 @@ namespace Alterverse.AI
             get
             {
                 int value=PlayerPrefs.GetInt(Key,(int)BotDifficulty.Normal);
-                return value>=0&&value<=2?(BotDifficulty)value:BotDifficulty.Normal;
+                return value>=0&&value<=3?(BotDifficulty)value:BotDifficulty.Normal;
             }
             set
             {
-                if(value<BotDifficulty.Easy||value>BotDifficulty.Hard)value=BotDifficulty.Normal;
+                if(value<BotDifficulty.Easy||value>BotDifficulty.Expert)value=BotDifficulty.Normal;
                 PlayerPrefs.SetInt(Key,(int)value);PlayerPrefs.Save();
             }
         }
-        public static string Label(BotDifficulty value)=>value switch{BotDifficulty.Easy=>"EASY",BotDifficulty.Hard=>"HARD",_=>"NORMAL"};
+        public static string Label(BotDifficulty value)=>value switch
+        {
+            BotDifficulty.Easy=>"EASY",
+            BotDifficulty.Hard=>"HARD",
+            BotDifficulty.Expert=>"EXPERT",
+            _=>"NORMAL"
+        };
     }
 }
