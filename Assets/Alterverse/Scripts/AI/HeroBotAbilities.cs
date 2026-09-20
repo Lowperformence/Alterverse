@@ -25,7 +25,8 @@ namespace Alterverse.AI
         {
             if (Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Time.time < nextDecision) return;
             var difficulty=brain!=null?brain.Difficulty:BotDifficultyProfile.For(BotDifficulty.Normal);
-            nextDecision = Time.time + Random.Range(.28f,.48f)*difficulty.DecisionScale;
+            float rhythm=brain!=null?brain.DecisionRhythm:1f;
+            nextDecision = Time.time + Random.Range(.28f,.48f)*difficulty.DecisionScale*rhythm;
             Health target = sensor.CurrentTarget;
             HeroId h = identity.Hero;
             bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
