@@ -17,7 +17,7 @@ namespace Alterverse.AI
         private BotPersonality personality;
         private BotTargetSensor targetSensor;
         private BotState state = BotState.Lane;
-        private float nextDecisionTime, retreatUntil;
+        private float nextDecisionTime, retreatUntil, baseDefenseUntil;
         private bool wasDead;
         private int observedCall=-1;
         private float callReadyAt;
@@ -49,6 +49,19 @@ namespace Alterverse.AI
         public float Caution => caution;
         public float DecisionRhythm => decisionRhythm;
         public float CommitmentRhythm => commitmentRhythm;
+        public bool BaseDefenseActive => Time.time < baseDefenseUntil;
+
+        public bool InsideOwnBase(Vector3 point)
+        {
+            Vector3 home=new(team==0?-27.5f:27.5f,point.y,0f);
+            Vector3 delta=point-home;delta.y=0;
+            return delta.sqrMagnitude<=13f*13f;
+        }
+
+        public bool IsLocalBaseThreat(Health target)
+        {
+            return target!=null&&!target.IsDead&&InsideOwnBase(target.transform.position);
+        }
 
         private void Awake()
         {
@@ -81,14 +94,14 @@ namespace Alterverse.AI
         }
         public void Initialize(int assignedTeam, float assignedLaneZ, float personalityAggression = .55f, float personalityCaution = .55f)
         {
-            team = Mathf.Clamp(assignedTeam,0,1); laneZ = assignedLaneZ; observedCall=-1;TacticalWithdrawal=false;
+            team = Mathf.Clamp(assignedTeam,0,1); laneZ = assignedLaneZ; observedCall=-1;TacticalWithdrawal=false;baseDefenseUntil=0;
             aggression = Mathf.Clamp01(personalityAggression); caution = Mathf.Clamp01(personalityCaution);
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
             state = BotState.Lane; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
         }
         public void ResumeLaneAfterRespawn()
         {
-            wasDead = false;combatResetAt=combatResetUntil=0;observedCall=-1;TacticalWithdrawal=false;retreatUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
+            wasDead = false;combatResetAt=combatResetUntil=0;observedCall=-1;TacticalWithdrawal=false;retreatUntil=baseDefenseUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
@@ -139,10 +152,18 @@ namespace Alterverse.AI
             Health visibleEnemy=targetSensor!=null?targetSensor.CurrentTarget:null;
             bool coordinated=Difficulty.Coordinated&&Tactics.HasPlan;
             bool winningFinish=coordinated&&hp>.27f&&Tactics.CanFinish(visibleEnemy,transform.position);
+            bool localBaseThreat=IsLocalBaseThreat(visibleEnemy)||(coordinated&&Tactics.CoreEmergency);
+            if(localBaseThreat)baseDefenseUntil=Time.time+1.5f;
             bool badlyOutnumbered=pressure>=2&&(coordinated||hp<=outnumberedRetreat);
             bool teamWithdrawal=FollowTeamCall&&Tactics.Call==BotTeamCoordinator.Intent.Disengage;
             bool losingFight=coordinated&&nearbyEnemies>0&&Tactics.FightRatio(transform.position)<.70f;
+
+            // Being outnumbered normally justifies a retreat. Inside our own base that same rule
+            // must never turn into passive surrender: once reasonably healthy, a visible invader
+            // forces a defensive fight instead of another trip back onto the healing plate.
+            bool healthyForBaseDefense=hp>=Mathf.Max(.48f,retreat+.10f);
             bool shouldRetreat=(!winningFinish&&hp<=retreat)||badlyOutnumbered||losingFight||teamWithdrawal;
+            if(localBaseThreat&&visibleEnemy!=null&&healthyForBaseDefense)shouldRetreat=false;
             if (shouldRetreat)
             {
                 if(state!=BotState.Retreat&&state!=BotState.Recover)
@@ -156,6 +177,17 @@ namespace Alterverse.AI
             if (state == BotState.Retreat || state == BotState.Recover)
             {
                 float recoverHealth=TacticalWithdrawal?.55f:.8f;
+
+                // Do not require a losing team to reach 100% HP before defending its own base.
+                // A reasonably recovered bot with a visible local threat re-enters Fight immediately.
+                if(localBaseThreat&&visibleEnemy!=null&&hp>=Mathf.Min(recoverHealth,.58f))
+                {
+                    state=BotState.Fight;
+                    TacticalWithdrawal=false;
+                    fightCommitUntil=Time.time+.65f*commitmentRhythm;
+                    return;
+                }
+
                 state = (!winningFinish&&hp<recoverHealth)||Time.time<retreatUntil||pressure>0 ? BotState.Recover : BotState.Lane;
                 if(state==BotState.Lane){fightCommitUntil=0;TacticalWithdrawal=false;}
                 return;
