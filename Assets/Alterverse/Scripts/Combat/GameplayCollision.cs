@@ -96,4 +96,12 @@ namespace Alterverse.Combat
             return mesh;
         }
     }
+
+    [DisallowMultipleComponent]
+    public sealed class GameplayCollisionMeshOwner : MonoBehaviour
+    {
+        private Mesh ownedMesh;
+        public void Own(Mesh mesh)=>ownedMesh=mesh;
+        private void OnDestroy(){if(ownedMesh!=null)Destroy(ownedMesh);}
+    }
 }
