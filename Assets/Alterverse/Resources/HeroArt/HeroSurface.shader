@@ -23,19 +23,23 @@ Shader "DimensionsFront/HeroSurface"
    half4 frag(V i):SV_Target
    {
     half3 n=normalize(i.normal);Light key=GetMainLight();half3 view=SafeNormalize(GetWorldSpaceViewDir(i.world));
-    half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,_BaseColor.a);
+
+    // Global hero saturation pass. Keep each authored hue/palette intact and only increase
+    // chroma uniformly so pale character surfaces read more clearly in combat.
+    half3 authoredColor=i.color.rgb;
+    half authoredLuma=dot(authoredColor,half3(.2126h,.7152h,.0722h));
+    authoredColor=saturate(lerp(authoredLuma.xxx,authoredColor,1.15h));
+    half3 albedo=lerp(authoredColor,_BaseColor.rgb,_BaseColor.a);
+
     half diffuse=.25h+.75h*saturate(dot(n,key.direction));
     half3 ambient=max(SampleSH(n),half3(.20h,.22h,.26h));
     half rim=pow(1-saturate(dot(n,view)),3)*.13h;
     half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),20)*.09h;
 
-    // Contrast-only hero pass:
-    // - albedo / authored hero colors are never altered
-    // - hue and saturation are never remapped
-    // - only the LIGHTING luminance is expanded, preserving the scene-light chromaticity
+    // Contrast pass remains independent from the saturation pass above:
+    // only LIGHTING luminance is expanded here, preserving scene-light chromaticity.
     // The previous per-channel 0.48 floor lifted shadows into pale midtones and made bright
-    // heroes look washed out. A luminance-preserving curve restores darker shade separation
-    // and slightly clearer highlights without touching the underlying character palette.
+    // heroes look washed out. This curve restores darker shade separation and clearer highlights.
     half3 rawIllumination=ambient*.45h+key.color*diffuse;
     half rawLuma=max(dot(rawIllumination,half3(.2126h,.7152h,.0722h)),.001h);
     half contrastLuma=lerp(.36h,1.12h,smoothstep(.34h,.96h,rawLuma));
