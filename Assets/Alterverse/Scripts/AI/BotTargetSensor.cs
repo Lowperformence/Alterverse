@@ -85,11 +85,12 @@ namespace Alterverse.AI
             Vector3 delta = candidate.transform.position - transform.position;
             delta.y = 0;
             HeroIdentity candidateHero=candidate.GetComponent<HeroIdentity>();
+            float objectiveAwareness=Difficulty.ObjectiveAwareness;
             float priority = candidateHero != null ? .72f : 1f;
-            if (candidate.GetComponent<LaneMinion>() != null) priority = .9f;
-            if (candidate.GetComponent<LaneTower>() != null) priority = 1.15f;
-            if (candidate.GetComponent<RealityCore>() != null) priority = 1.2f;
-            if (candidate.GetComponent<DimensionPlanet>() != null) priority = 1.35f;
+            if (candidate.GetComponent<LaneMinion>() != null) priority = .94f;
+            if (candidate.GetComponent<LaneTower>() != null) priority = Mathf.Lerp(1.34f,.82f,objectiveAwareness);
+            if (candidate.GetComponent<RealityCore>() != null) priority = Mathf.Lerp(1.42f,.68f,objectiveAwareness);
+            if (candidate.GetComponent<DimensionPlanet>() != null) priority = Mathf.Lerp(1.48f,.78f,objectiveAwareness);
 
             float accuracy=Difficulty.TargetAccuracy;
             float aggression=brain!=null?brain.Aggression:.55f;
@@ -124,8 +125,9 @@ namespace Alterverse.AI
 
             // Easy is more distance-led; stronger difficulties value visible wounded targets more,
             // but no difficulty gets information that a player could not perceive.
-            float noise=brain!=null&&brain.Chance((1-accuracy)*.25f)?1.30f:1f;
-            return delta.sqrMagnitude*Mathf.Lerp(1f,Mathf.Lerp(.45f,1f,candidate.Normalized)*priority,accuracy)*noise;
+            float noise=brain!=null&&brain.Chance((1-accuracy)*.45f)?1.45f:1f;
+            float woundedFocus=Mathf.Lerp(.30f,1f,candidate.Normalized);
+            return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise;
         }
         private void Scan()
         {
