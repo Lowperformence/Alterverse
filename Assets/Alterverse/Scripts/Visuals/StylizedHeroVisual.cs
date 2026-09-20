@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
+private bool voidfall,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();voidfall=skinPreview!=null?skinPreview.Voidfall:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.UniversalSkin.Equipped;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(weaponOverdrive)AttachWeaponOverdrivePresentation();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -116,6 +116,7 @@ private Mesh armorMesh,limbMesh,helmetMesh;
 private readonly System.Collections.Generic.List<Mesh> detailMeshes=new();
 private readonly System.Collections.Generic.Dictionary<(Color, bool),Material> palette=new();
 private readonly System.Collections.Generic.List<Material> ownedMaterials=new System.Collections.Generic.List<Material>();
+private Material weaponSkinEnergyMaterial;
 private GameObject Create(string n,PrimitiveType type,Vector3 pos,Vector3 scale,Color color,Vector3 rotation=default,Transform parent=null)
 {
 GameObject part=new GameObject("DF_"+n);
@@ -201,37 +202,130 @@ private void ApplyWeaponOverdrive()
 Alterverse.Shop.WeaponSkinItem skin=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero);
 Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");if(shader==null)return;
 Color glow=skin.Glow;
-Material weaponMaterial=new Material(shader){name="DF_WeaponOverdrive_"+identity.Hero,color=glow};
-if(weaponMaterial.HasProperty("_BaseColor"))weaponMaterial.SetColor("_BaseColor",glow);
-if(weaponMaterial.HasProperty("_Metallic"))weaponMaterial.SetFloat("_Metallic",.32f);
-if(weaponMaterial.HasProperty("_Smoothness"))weaponMaterial.SetFloat("_Smoothness",.72f);
-if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_EMISSION");weaponMaterial.SetColor("_EmissionColor",glow*3.4f);}
-ownedMaterials.Add(weaponMaterial);
 
-// Keep cosmetic weapons attached to their animated hand pivots.
-if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);ScaleAndGlow("WeaponR",1.25f,weaponMaterial);}
-else if(identity.Hero==HeroId.Rook){ScaleAndGlow("GauntletL",1.25f,weaponMaterial);ScaleAndGlow("GauntletR",1.25f,weaponMaterial);}
-else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",1.35f,weaponMaterial);ScaleAndGlow("OrbitL",1.2f,weaponMaterial);ScaleAndGlow("OrbitR",1.2f,weaponMaterial);}
-else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+// Premium skins now use two finishes: dark weapon-grade metal plus restrained emissive channels.
+// The old version simply painted the complete weapon neon and scaled it, which was barely a real skin.
+Material premiumMetal=new Material(shader){name="DF_WeaponPremiumMetal_"+identity.Hero,color=new Color(.075f,.085f,.105f)};
+if(premiumMetal.HasProperty("_BaseColor"))premiumMetal.SetColor("_BaseColor",new Color(.075f,.085f,.105f));
+if(premiumMetal.HasProperty("_Metallic"))premiumMetal.SetFloat("_Metallic",.82f);
+if(premiumMetal.HasProperty("_Smoothness"))premiumMetal.SetFloat("_Smoothness",.52f);
+ownedMaterials.Add(premiumMetal);
+
+weaponSkinEnergyMaterial=new Material(shader){name="DF_WeaponPremiumEnergy_"+identity.Hero,color=glow};
+if(weaponSkinEnergyMaterial.HasProperty("_BaseColor"))weaponSkinEnergyMaterial.SetColor("_BaseColor",Color.Lerp(glow,Color.white,.08f));
+if(weaponSkinEnergyMaterial.HasProperty("_Metallic"))weaponSkinEnergyMaterial.SetFloat("_Metallic",.18f);
+if(weaponSkinEnergyMaterial.HasProperty("_Smoothness"))weaponSkinEnergyMaterial.SetFloat("_Smoothness",.82f);
+if(weaponSkinEnergyMaterial.HasProperty("_EmissionColor"))
+{
+    weaponSkinEnergyMaterial.EnableKeyword("_EMISSION");
+    weaponSkinEnergyMaterial.SetColor("_EmissionColor",glow*1.65f);
+}
+ownedMaterials.Add(weaponSkinEnergyMaterial);
+
+switch(identity.Hero)
+{
+    case HeroId.Veyr:
+        PremiumVeyr(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+    case HeroId.Kaelon:
+        PremiumKaelon(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+    case HeroId.Nyra:
+        PremiumNyra(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+    case HeroId.Elyra:
+        PremiumElyra(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+    case HeroId.Mira:
+        PremiumMira(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+    default:
+        PremiumRook(premiumMetal,weaponSkinEnergyMaterial);
+        break;
+}
 }
 
-private void ScaleAndGlow(string visualName,float scale,Material material)
+private void PremiumVeyr(Material metal,Material energy)
 {
-Transform part=FindVisual(visualName);if(part==null)return;
-part.localScale*=scale;
-ApplyGlow(part,material);
+for(int side=-1;side<=1;side+=2)
+{
+    string s=side<0?"L":"R";Transform weapon=FindVisual("Weapon"+s);if(weapon==null)continue;
+    weapon.localScale*=1.10f;
+    PremiumPart("PremiumGuard"+s,weapon,new Vector3(0,-.10f,.14f),new Vector3(.30f,.055f,.12f),new Vector3(0,0,side*18),metal);
+    PremiumPart("PremiumEdge"+s,weapon,new Vector3(side*.018f,-.40f,.53f),new Vector3(.045f,.42f,.075f),new Vector3(7,0,side*-7),energy);
+    PremiumPart("PremiumTip"+s,weapon,new Vector3(side*.035f,-.62f,.91f),new Vector3(.08f,.18f,.055f),new Vector3(12,0,side*-12),energy);
+}
 }
 
-private void GroupAndScaleWeapon(string groupName,Vector3 pivot,float scale,Material material,params string[] names)
+private void PremiumKaelon(Material metal,Material energy)
 {
-Transform group=new GameObject(groupName).transform;group.SetParent(root,false);group.localPosition=pivot;
-for(int i=0;i<names.Length;i++)
-{
-Transform part=FindVisual(names[i]);if(part==null||part==group)continue;
-part.SetParent(group,true);
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;weapon.localScale*=1.10f;
+PremiumPart("PremiumHammerCrownL",weapon,new Vector3(-.27f,.43f,.03f),new Vector3(.14f,.30f,.24f),new Vector3(0,0,-18),metal);
+PremiumPart("PremiumHammerCrownR",weapon,new Vector3(.27f,.43f,.03f),new Vector3(.14f,.30f,.24f),new Vector3(0,0,18),metal);
+PremiumPart("PremiumHammerCore",weapon,new Vector3(0,.43f,.245f),new Vector3(.16f,.23f,.035f),default,energy);
+PremiumPart("PremiumHammerSpine",weapon,new Vector3(0,.19f,.16f),new Vector3(.055f,.58f,.045f),default,energy);
 }
-group.localScale=Vector3.one*scale;
-ApplyGlow(group,material);
+
+private void PremiumNyra(Material metal,Material energy)
+{
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;weapon.localScale*=1.08f;
+PremiumPart("PremiumRifleShroud",weapon,new Vector3(0,.02f,.23f),new Vector3(.28f,.18f,.56f),default,metal);
+PremiumPart("PremiumRailL",weapon,new Vector3(-.115f,.14f,.32f),new Vector3(.035f,.055f,.78f),default,energy);
+PremiumPart("PremiumRailR",weapon,new Vector3(.115f,.14f,.32f),new Vector3(.035f,.055f,.78f),default,energy);
+PremiumPart("PremiumMuzzle",weapon,new Vector3(0,.02f,.82f),new Vector3(.25f,.20f,.12f),default,metal);
+PremiumPart("PremiumMuzzleCore",weapon,new Vector3(0,.02f,.895f),new Vector3(.105f,.105f,.035f),default,energy);
+}
+
+private void PremiumElyra(Material metal,Material energy)
+{
+Transform orb=FindVisual("Orb");if(orb!=null)
+{
+    orb.localScale*=1.12f;
+    PremiumPart("PremiumOrbCore",orb,Vector3.zero,new Vector3(.45f,.45f,.45f),new Vector3(0,45,0),energy);
+}
+for(int side=-1;side<=1;side+=2)
+{
+    string s=side<0?"L":"R";Transform orbit=FindVisual("Orbit"+s);if(orbit==null)continue;
+    orbit.localScale*=1.10f;
+    PremiumPart("PremiumCatalyst"+s,orbit,new Vector3(0,.26f,.02f),new Vector3(.13f,.34f,.11f),new Vector3(0,0,side*24),metal);
+    PremiumPart("PremiumCatalystCore"+s,orbit,new Vector3(0,.28f,.09f),new Vector3(.055f,.23f,.03f),new Vector3(0,0,side*24),energy);
+}
+}
+
+private void PremiumMira(Material metal,Material energy)
+{
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;weapon.localScale*=1.10f;
+PremiumPart("PremiumStaffCrownL",weapon,new Vector3(-.15f,.78f,.05f),new Vector3(.10f,.30f,.10f),new Vector3(0,0,-24),metal);
+PremiumPart("PremiumStaffCrownR",weapon,new Vector3(.15f,.78f,.05f),new Vector3(.10f,.30f,.10f),new Vector3(0,0,24),metal);
+PremiumPart("PremiumLifeCore",weapon,new Vector3(0,.82f,.105f),new Vector3(.16f,.20f,.045f),new Vector3(0,0,45),energy);
+PremiumPart("PremiumStaffChannel",weapon,new Vector3(0,.28f,.075f),new Vector3(.045f,.72f,.035f),default,energy);
+}
+
+private void PremiumRook(Material metal,Material energy)
+{
+for(int side=-1;side<=1;side+=2)
+{
+    string s=side<0?"L":"R";Transform gauntlet=FindVisual("Gauntlet"+s);if(gauntlet==null)continue;
+    gauntlet.localScale*=1.08f;
+    PremiumPart("PremiumFistPlate"+s,gauntlet,new Vector3(0,.03f,.26f),new Vector3(.52f,.24f,.16f),new Vector3(0,0,side*7),metal);
+    PremiumPart("PremiumFistChannel"+s,gauntlet,new Vector3(0,.13f,.355f),new Vector3(.34f,.055f,.035f),new Vector3(0,0,side*7),energy);
+    for(int k=-1;k<=1;k++)
+        PremiumPart("PremiumKnuckle"+s+(k+1),gauntlet,new Vector3(k*.15f,-.08f,.38f),new Vector3(.105f,.15f,.08f),default,k==0?energy:metal);
+}
+}
+
+private GameObject PremiumPart(string name,Transform parent,Vector3 position,Vector3 scale,Vector3 rotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,position,scale,Color.white,rotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();if(renderer!=null)renderer.sharedMaterial=material;
+return part;
+}
+
+private void AttachWeaponOverdrivePresentation()
+{
+if(weaponSkinEnergyMaterial==null)return;
+var presentation=GetComponent<PremiumWeaponPresentation>()??gameObject.AddComponent<PremiumWeaponPresentation>();
+presentation.Configure(Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero).Glow,weaponSkinEnergyMaterial);
 }
 
 private Transform FindVisual(string shortName)
@@ -240,13 +334,6 @@ string target="DF_"+shortName;
 Transform[] all=root.GetComponentsInChildren<Transform>(true);
 for(int i=0;i<all.Length;i++)if(all[i]!=null&&all[i].name==target)return all[i];
 return null;
-}
-
-private static void ApplyGlow(Transform parent,Material material)
-{
-if(parent==null||material==null)return;
-MeshRenderer[] renderers=parent.GetComponentsInChildren<MeshRenderer>(true);
-for(int i=0;i<renderers.Length;i++)if(renderers[i]!=null)renderers[i].sharedMaterial=material;
 }
 
 private void BindArmor()
