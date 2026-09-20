@@ -23,7 +23,10 @@ namespace Alterverse.AI
         private long separationOrder;
         private HeroLocomotion locomotion;
         private float blockedTime, detourUntil, freeMoveTime, nextStuckLog;
-        private Vector3 detour;
+        private float progressCheckAt, hazardSeenAt;
+        private Vector3 detour, progressAnchor;
+        private bool progressWatchActive;
+        private Alterverse.Combat.PlanetPulseAttack observedHazard;
         private int recoveryAttempts;
         private bool arrived;
         private Health health;
@@ -83,6 +86,11 @@ namespace Alterverse.AI
                 // prolonged pursuit of a target that keeps escaping, never normal combat.
                 if(delta.sqrMagnitude<=combatStop*combatStop*1.30f)chaseStarted=Time.time;
                 float maxChase=Mathf.Lerp(2.7f,4.8f,brain.Aggression)*brain.CommitmentRhythm;
+                int chasePressure=sensor!=null?Mathf.Max(0,sensor.NearbyEnemies-(sensor.NearbyAllies+1)):0;
+                if(target.Normalized<.35f)
+                    maxChase*=Mathf.Lerp(1f,1.45f,brain.Difficulty.ChaseDiscipline);
+                if(chasePressure>0)
+                    maxChase*=Mathf.Lerp(1f,.55f,brain.Difficulty.ChaseDiscipline);
                 bool chaseExpired=Time.time-chaseStarted>maxChase&&
                     delta.sqrMagnitude>combatStop*combatStop*1.45f;
 
@@ -169,7 +177,7 @@ namespace Alterverse.AI
             float own=brain.Team==0?hotZone.ZeroControlSeconds:hotZone.LumenControlSeconds;
             float enemy=brain.Team==0?hotZone.LumenControlSeconds:hotZone.ZeroControlSeconds;
             float deficit=enemy-own;
-            float focus=brain.ObjectiveFocus;
+            float focus=brain.ObjectiveFocus*Mathf.Lerp(.55f,1.15f,brain.Difficulty.ObjectiveAwareness);
             int slots=focus>.72f?4:focus>.52f?3:2;
             if(deficit>6f)slots=Mathf.Min(5,slots+1);
             else if(deficit<-10f)slots=Mathf.Max(2,slots-1);
@@ -182,7 +190,7 @@ namespace Alterverse.AI
             float sqr = (objective.transform.position - transform.position).sqrMagnitude;
             if(profile!=null&&profile.Hero==HeroId.Mira&&sensor!=null&&sensor.NearbyAllies==0&&sqr>8f*8f)
                 return false;
-            float focus=brain.ObjectiveFocus;
+            float focus=brain.ObjectiveFocus*Mathf.Lerp(.55f,1.15f,brain.Difficulty.ObjectiveAwareness);
             int slots=focus>.75f?4:focus>.55f?3:2;
             return sqr <= 26f * 26f && (rotationSlot < slots || sqr < 10f * 10f);
         }
@@ -191,6 +199,7 @@ namespace Alterverse.AI
         {
             escape = transform.position;
             float deepest = 0f;
+            Alterverse.Combat.PlanetPulseAttack danger = null;
             foreach (Alterverse.Combat.PlanetPulseAttack pulse in pulses)
             {
                 if (pulse == null || !pulse.IsTelegraphing) continue;
@@ -198,11 +207,28 @@ namespace Alterverse.AI
                 float distance = away.magnitude, safeRadius = pulse.BlastRadius + .7f;
                 if (distance >= safeRadius || safeRadius - distance <= deepest) continue;
                 deepest = safeRadius - distance;
+                danger = pulse;
                 if (distance < .01f) away = brain.Team == 0 ? Vector3.left : Vector3.right;
                 escape = pulse.transform.position + away.normalized * safeRadius;
                 escape.y = transform.position.y;
             }
-            return deepest > 0f;
+
+            if(danger==null)
+            {
+                observedHazard=null;hazardSeenAt=0;
+                return false;
+            }
+
+            if(danger!=observedHazard)
+            {
+                observedHazard=danger;
+                hazardSeenAt=Time.time;
+            }
+
+            // All difficulties react only after the telegraph is visible. Better bots simply
+            // process that visible information faster; nobody gets pre-knowledge of the impact.
+            float reaction=Mathf.Lerp(.55f,.06f,brain.Difficulty.DodgeAwareness)*brain.DecisionRhythm;
+            return Time.time-hazardSeenAt>=reaction;
         }
 
         public void ResetMotion()
@@ -210,7 +236,12 @@ namespace Alterverse.AI
             ResetSteering(); locomotion?.ResetMotion(); objective = null; chaseTarget=null; chaseStarted=0; nextWorldScan = 0; IsAvoidingHazard = false;
         }
 
-        public void ResetSteering(){velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;recoveryAttempts=0;nextStuckLog=0;}
+        public void ResetSteering()
+        {
+            velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;
+            recoveryAttempts=0;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
+            observedHazard=null;hazardSeenAt=0;
+        }
 
         public bool CanRepositionTo(Vector3 destination)
         {
@@ -459,8 +490,38 @@ namespace Alterverse.AI
             }
             else {blockedTime=0;freeMoveTime=0;}
 
+            bool recoveredThisFrame=false;
             if(blockedTime>.28f&&Time.time>=detourUntil)
+            {
                 BeginStuckRecovery(delta);
+                recoveredThisFrame=true;
+            }
+
+            // Collision-only detection misses oscillation and tiny scrape movement. This low-cost
+            // watchdog checks real displacement a few times per second and recovers without teleporting.
+            if(hasIntent&&!arrived)
+            {
+                if(!progressWatchActive)
+                {
+                    progressWatchActive=true;
+                    progressAnchor=transform.position;
+                    progressCheckAt=Time.time+.65f;
+                }
+                else if(Time.time>=progressCheckAt)
+                {
+                    Vector3 travelled=transform.position-progressAnchor;travelled.y=0;
+                    if(travelled.sqrMagnitude<.14f*.14f&&!recoveredThisFrame&&Time.time>=detourUntil)
+                        BeginStuckRecovery(delta);
+                    progressAnchor=transform.position;
+                    progressCheckAt=Time.time+.65f;
+                }
+            }
+            else
+            {
+                progressWatchActive=false;
+                progressAnchor=transform.position;
+                progressCheckAt=0;
+            }
         }
 
         private void BeginStuckRecovery(Vector3 towardDestination)
@@ -483,10 +544,13 @@ namespace Alterverse.AI
                 &&!locomotion.TryFindClearDirection(desired,1.35f,side,out detour))
                 detour=Vector3.Cross(Vector3.up,desired)*side;
 
+            if(recoveryAttempts>=5&&locomotion.TryFindClearDirection(desired,2.2f,-side,out Vector3 longDetour))
+                detour=longDetour;
+
             detour.y=0;
             if(detour.sqrMagnitude<.01f)detour=brain!=null&&brain.Team==0?Vector3.right:Vector3.left;
             detour.Normalize();
-            detourUntil=Time.time+Mathf.Min(1.05f,.52f+recoveryAttempts*.12f);
+            detourUntil=Time.time+Mathf.Min(1.25f,.52f+recoveryAttempts*.12f);
             velocity=Vector3.zero;
 
             // Repeated collision means the tactical target/route may be stale. Reset only steering
