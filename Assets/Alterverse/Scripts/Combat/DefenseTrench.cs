@@ -17,6 +17,15 @@ namespace Alterverse.Combat
         [SerializeField, Min(1f)] private float damageRadius = 5.25f;
         [SerializeField, Min(.05f)] private float damageTick = .25f;
 
+        // Keep the old overall gameplay footprint, but remove the 90-degree horizontal corners.
+        // The rounded prism gives CharacterController capsule sweeps a useful lateral normal so
+        // bots naturally slide around the trench instead of pinning themselves on a box corner.
+        private const float GameplayColliderWidth = 7.25f;
+        private const float GameplayColliderHeight = 1.35f;
+        private const float GameplayColliderDepth = 5.10f;
+        private const float GameplayColliderCornerRadius = 1.45f;
+        private static readonly Vector3 GameplayColliderCenter = new(0f, .63f, -.12f);
+
         private static readonly List<DefenseTrench> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
@@ -50,15 +59,11 @@ namespace Alterverse.Combat
             GameObject world = GameObject.Find("DF_MatchWorld");
             if (world != null) trench.transform.SetParent(world.transform, true);
 
-            // A single stable gameplay footprint avoids decorative collider noise and bot snagging.
-            BoxCollider solid = trench.AddComponent<BoxCollider>();
-            solid.center = new Vector3(0f, .63f, -.12f);
-            solid.size = new Vector3(7.25f, 1.35f, 5.10f);
-
             trench.AddComponent<TeamMember>().Initialize(clampedTeam);
 
             DefenseTrench defense = trench.AddComponent<DefenseTrench>();
             defense.Initialize(clampedTeam);
+            defense.BuildGameplayCollider();
             defense.BuildVisual(clampedTeam == 0 ? 0 : 1);
             return trench;
         }
@@ -74,6 +79,98 @@ namespace Alterverse.Combat
             teamEnergy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
             hazardEnergy = new Color(.96f, .26f, .055f, 1f);
             nextDamageTick = Time.time + damageTick;
+        }
+
+        private void BuildGameplayCollider()
+        {
+            Mesh mesh = CreateRoundedPrismMesh(
+                GameplayColliderCenter,
+                GameplayColliderWidth,
+                GameplayColliderHeight,
+                GameplayColliderDepth,
+                GameplayColliderCornerRadius);
+            if (mesh == null) return;
+
+            meshes.Add(mesh);
+            MeshCollider solid = gameObject.AddComponent<MeshCollider>();
+            solid.sharedMesh = mesh;
+            solid.convex = true;
+        }
+
+        private static Mesh CreateRoundedPrismMesh(Vector3 center, float width, float height, float depth, float cornerRadius)
+        {
+            const int arcSegments = 6;
+            float halfWidth = width * .5f;
+            float halfDepth = depth * .5f;
+            float radius = Mathf.Max(.05f, Mathf.Min(cornerRadius, Mathf.Min(halfWidth - .01f, halfDepth - .01f)));
+
+            List<Vector2> footprint = new(4 * (arcSegments + 1));
+            Vector2[] cornerCenters =
+            {
+                new(halfWidth - radius, -halfDepth + radius),
+                new(halfWidth - radius, halfDepth - radius),
+                new(-halfWidth + radius, halfDepth - radius),
+                new(-halfWidth + radius, -halfDepth + radius)
+            };
+            float[] startAngles = { -90f, 0f, 90f, 180f };
+
+            for (int corner = 0; corner < cornerCenters.Length; corner++)
+            {
+                for (int segment = 0; segment <= arcSegments; segment++)
+                {
+                    float angle = (startAngles[corner] + 90f * segment / arcSegments) * Mathf.Deg2Rad;
+                    Vector2 offset = new(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius);
+                    footprint.Add(cornerCenters[corner] + offset);
+                }
+            }
+
+            int perimeter = footprint.Count;
+            float bottomY = center.y - height * .5f;
+            float topY = center.y + height * .5f;
+            List<Vector3> vertices = new(perimeter * 2 + 2);
+
+            for (int i = 0; i < perimeter; i++)
+                vertices.Add(new Vector3(center.x + footprint[i].x, bottomY, center.z + footprint[i].y));
+            for (int i = 0; i < perimeter; i++)
+                vertices.Add(new Vector3(center.x + footprint[i].x, topY, center.z + footprint[i].y));
+
+            int bottomCenter = vertices.Count;
+            vertices.Add(new Vector3(center.x, bottomY, center.z));
+            int topCenter = vertices.Count;
+            vertices.Add(new Vector3(center.x, topY, center.z));
+
+            List<int> triangles = new(perimeter * 12);
+            for (int i = 0; i < perimeter; i++)
+            {
+                int next = (i + 1) % perimeter;
+                int bottom = i;
+                int bottomNext = next;
+                int top = i + perimeter;
+                int topNext = next + perimeter;
+
+                // Side wall, outward facing for a counter-clockwise X/Z footprint.
+                triangles.Add(bottom);
+                triangles.Add(topNext);
+                triangles.Add(bottomNext);
+                triangles.Add(bottom);
+                triangles.Add(top);
+                triangles.Add(topNext);
+
+                // Flat caps keep the collider watertight for convex cooking.
+                triangles.Add(bottomCenter);
+                triangles.Add(bottom);
+                triangles.Add(bottomNext);
+                triangles.Add(topCenter);
+                triangles.Add(topNext);
+                triangles.Add(top);
+            }
+
+            Mesh mesh = new() { name = "DF_DefenseTrench_RoundedGameplayCollider" };
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateNormals();
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private void Update()
