@@ -8,7 +8,7 @@ namespace Alterverse.AI
     /// </summary>
     public sealed class BotPersonality : MonoBehaviour
     {
-        public enum Style { Balanced, Aggressive, Defensive, Supportive, ObjectiveFocused }
+        public enum Style { Balanced, Aggressive, Defensive, Supportive, ObjectiveFocused, Roamer }
 
         [SerializeField] private Style style = Style.Balanced;
         [SerializeField, Range(0.1f, 1f)] private float aggression = 0.55f;
@@ -40,6 +40,9 @@ namespace Alterverse.AI
                     break;
                 case Style.ObjectiveFocused:
                     Set(0.50f, 0.60f, 0.66f, 0.88f, 0.34f);
+                    break;
+                case Style.Roamer:
+                    Set(0.64f, 0.50f, 0.52f, 0.74f, 0.31f);
                     break;
                 default:
                     Set(0.55f, 0.55f, 0.60f, 0.60f, 0.35f);
