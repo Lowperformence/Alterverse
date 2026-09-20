@@ -191,6 +191,9 @@ namespace Alterverse.EditorChecks
             Set(sensor,"currentTarget",enemy);
             Call(sensor,"Scan");
             Assert(sensor.CurrentTarget==enemy,"Visible enemy must remain a valid humanized target.");
+            Call(brain,"Decide");
+            Assert(brain.State==MobaBotBrain.BotState.Fight,
+                "A perceived enemy must put the bot into a committed fight state.");
             Vector3 remembered=sensor.LastKnownEnemyPosition;
 
             GameObject wall=new("Check_HumanMemoryWall");Created.Add(wall);
