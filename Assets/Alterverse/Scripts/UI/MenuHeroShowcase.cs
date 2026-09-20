@@ -12,27 +12,37 @@ namespace Alterverse.UI
         private Camera previewCamera;
         private RenderTexture texture;
         private HeroId selected;
-        private bool hasSelection,selectedSkin,selectedWeapon;
+        private bool hasSelection,selectedWeapon;
+        private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
         public Texture Image => texture;
 
-        public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null)
+        public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
+            Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null)
         {
             if (!visible) { if (stage != null) stage.SetActive(false); return; }
             if (stage == null) CreateStage();
             stage.SetActive(true);
-            bool skin=skinOverride??Alterverse.Shop.UniversalSkin.Equipped;
+
+            Alterverse.Shop.UniversalHeroCosmetic cosmetic=cosmeticOverride ??
+                (skinOverride.HasValue
+                    ? (skinOverride.Value?Alterverse.Shop.UniversalHeroCosmetic.Voidfall:Alterverse.Shop.UniversalHeroCosmetic.Original)
+                    : Alterverse.Shop.UniversalCosmeticSelection.Equipped);
             bool weapon=weaponOverride??Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
-            if (hasSelection && selected == hero && selectedSkin==skin && selectedWeapon==weapon) return;
-            selectedSkin=skin;selectedWeapon=weapon;
-            if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:1.65f;
+
+            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon) return;
+            selectedCosmetic=cosmetic;selectedWeapon=weapon;
+            if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
+                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             actor = new GameObject("DF_MenuHero");
             actor.transform.SetParent(stage.transform, false);
             actor.AddComponent<HeroIdentity>().Configure(hero);
-            var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();preview.Voidfall=skin;preview.WeaponOverdrive=weapon;
+            var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
+            preview.UniversalCosmetic=cosmetic;
+            preview.WeaponOverdrive=weapon;
             actor.AddComponent<StylizedHeroVisual>().Build();
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
