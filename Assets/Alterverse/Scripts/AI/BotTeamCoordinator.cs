@@ -31,10 +31,9 @@ namespace Alterverse.AI
         private readonly int team;
         private readonly Ally[] allies=new Ally[10];
         private readonly Observation[] seen=new Observation[64];
-        private readonly LaneTower[] towers=new LaneTower[16];
         private readonly Health[] reportedDeaths=new Health[10];
         private readonly float[] deathTimes=new float[10];
-        private int allyCount,seenCount,towerCount,deathCursor,previousDead;
+        private int allyCount,seenCount,deathCursor,previousDead;
         private float nextTick,holdUntil,regroupUntil,tempoUntil,focusUntil,focusStarted;
         private Health focus;
         private Vector3 focusPosition,centroid;
@@ -74,13 +73,13 @@ namespace Alterverse.AI
         private static void Reset(){members.Clear();teams[0].Clear();teams[1].Clear();}
         private void Clear()
         {
-            allyCount=seenCount=towerCount=deathCursor=previousDead=Revision=0;
+            allyCount=seenCount=deathCursor=previousDead=Revision=0;
             ChangedAt=0;
             nextTick=holdUntil=regroupUntil=tempoUntil=focusUntil=focusStarted=nextEventScan=0;
             focus=null;ownCore=null;hotZone=null;HasPlan=CoreEmergency=false;
             Call=Intent.Roam;Destination=Home;centroid=Home;
             System.Array.Clear(allies,0,allies.Length);System.Array.Clear(seen,0,seen.Length);
-            System.Array.Clear(towers,0,towers.Length);System.Array.Clear(reportedDeaths,0,reportedDeaths.Length);
+            System.Array.Clear(reportedDeaths,0,reportedDeaths.Length);
 #if UNITY_EDITOR || DEBUG
             TacticalTicks=FocusCalls=RegroupCalls=TempoPushes=ObservedKills=0;
 #endif
@@ -129,13 +128,11 @@ namespace Alterverse.AI
         }
         private void ReadOwnTeam()
         {
-            allyCount=towerCount=0;centroid=Vector3.zero;int dead=0;
+            allyCount=0;centroid=Vector3.zero;int dead=0;
             ownCore=null;
             for(int i=0;i<Health.Active.Count;i++)
             {
                 Health h=Health.Active[i];if(h==null||!h.isActiveAndEnabled)continue;
-                var tower=h.GetComponent<LaneTower>();
-                if(tower!=null&&!h.IsDead&&towerCount<towers.Length)towers[towerCount++]=tower;
                 var core=h.GetComponent<RealityCore>();
                 if(core!=null&&!h.IsDead&&core.Team==team)ownCore=core;
                 var identity=h.GetComponent<HeroIdentity>();var member=h.GetComponent<TeamMember>();
@@ -185,7 +182,7 @@ namespace Alterverse.AI
             Observation best=default;float bestScore=float.MaxValue;bool retained=false;
             for(int i=0;i<seenCount;i++)
             {
-                Observation e=seen[i];if(!e.Hero||Time.time-e.SeenAt>.40f||UnsafeTower(e.Position))continue;
+                Observation e=seen[i];if(!e.Hero||Time.time-e.SeenAt>.40f||UnsafeDefense(e.Position))continue;
                 int nearby=AlliesNear(e.Position,10f),reinforcements=EnemiesNear(e.Position,7f);
                 if(nearby<2||reinforcements>nearby||FightRatio(e.Position)<.95f)continue;
                 float score=(2f+Mathf.Sqrt(FlatSqr(e.Position-centroid)))*(.25f+e.Hp);
@@ -295,17 +292,23 @@ namespace Alterverse.AI
                 if(FlatSqr(allies[i].Position-point)<11f*11f)own+=allies[i].Power;
             for(int i=0;i<seenCount;i++)
                 if(seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&FlatSqr(seen[i].Position-point)<11f*11f)enemy+=RolePower(seen[i].Role)*(.35f+.65f*seen[i].Hp);
-            // Public tower locations; no enemy cooldowns or unseen hero transforms are read.
-            if(UnsafeTower(point))enemy+=1.5f;
+            // Public defensive-zone locations are fair tactical information.
+            if(UnsafeDefense(point))enemy+=1.5f;
             return enemy>.01f?own/enemy:2f;
         }
-        public bool UnsafeTower(Vector3 point)
+        public bool UnsafeDefense(Vector3 point)
         {
-            for(int i=0;i<towerCount;i++)
+            foreach(DefenseBunker bunker in DefenseBunker.Active)
             {
-                var tower=towers[i];if(tower==null||tower.Team==team)continue;
-                float radius=tower.AttackRange+.75f;
-                if(FlatSqr(point-tower.transform.position)<radius*radius)return true;
+                if(bunker==null||bunker.Team==team)continue;
+                float radius=bunker.DamageRadius+.65f;
+                if(FlatSqr(point-bunker.transform.position)<radius*radius)return true;
+            }
+            foreach(DefenseTrench trench in DefenseTrench.Active)
+            {
+                if(trench==null||trench.Team==team)continue;
+                float radius=trench.DamageRadius+.65f;
+                if(FlatSqr(point-trench.transform.position)<radius*radius)return true;
             }
             return false;
         }
@@ -317,8 +320,8 @@ namespace Alterverse.AI
             for(int i=0;i<seenCount;i++)
             {
                 if(FlatSqr(seen[i].Position-point)>radius*radius)continue;
-                LaneMinion minion=seen[i].Target!=null?seen[i].Target.GetComponent<LaneMinion>():null;
-                if(seen[i].Hero||minion!=null&&minion.IsSiegeUnit)n++;
+                Health target=seen[i].Target;
+                if(seen[i].Hero||target!=null&&target.GetComponent<TeamMember>()!=null)n++;
             }
             return n;
         }
@@ -327,7 +330,7 @@ namespace Alterverse.AI
         public bool CanFinish(Health target,Vector3 point)
         {
             for(int i=0;i<seenCount;i++)if(seen[i].Target==target&&seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&seen[i].Hp<.30f)
-                return AlliesNear(point,8f)>=2&&FightRatio(point)>1.25f&&!UnsafeTower(seen[i].Position);
+                return AlliesNear(point,8f)>=2&&FightRatio(point)>1.25f&&!UnsafeDefense(seen[i].Position);
             return false;
         }
         public float TargetBias(Health target,HeroId role)
@@ -390,17 +393,17 @@ namespace Alterverse.AI
         {
             Vector3 best=Home;float distance=FlatSqr(Home-position);
 
-            // Allied towers remain valid protection anchors even though bot heroes never attack
-            // enemy towers. Retreat to the home-facing side of the nearest living allied tower,
-            // so the structure can provide cover without becoming a combat objective.
-            for(int i=0;i<towerCount;i++)
+            // New shared defence concept: retreat behind an allied bastion/trench if it is on the
+            // way home. These are protection anchors only; once Retreat/Recover ends, normal roam resumes.
+            foreach(DefenseBunker bunker in DefenseBunker.Active)
             {
-                LaneTower tower=towers[i];
-                if(tower==null||tower.Team!=team)continue;
-                Vector3 refuge=tower.transform.position-Forward*2.2f;
-                float d=FlatSqr(refuge-position);
-                if(d>=distance||Vector3.Dot(refuge-position,Forward)>1f)continue;
-                distance=d;best=refuge;
+                if(bunker==null||bunker.Team!=team)continue;
+                ConsiderDefenseRefuge(position,bunker.transform,bunker.GetComponent<Collider>(),ref best,ref distance);
+            }
+            foreach(DefenseTrench trench in DefenseTrench.Active)
+            {
+                if(trench==null||trench.Team!=team)continue;
+                ConsiderDefenseRefuge(position,trench.transform,trench.GetComponent<Collider>(),ref best,ref distance);
             }
 
             for(int i=0;i<allyCount;i++)
@@ -410,6 +413,16 @@ namespace Alterverse.AI
                 distance=d;best=ally.Position-Forward*2f;
             }
             best.y=position.y;return best;
+        }
+
+        private void ConsiderDefenseRefuge(Vector3 position,Transform structure,Collider body,ref Vector3 best,ref float distance)
+        {
+            float bodyExtent=body!=null&&body.enabled?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):2.5f;
+            Vector3 refuge=structure.position-Forward*(bodyExtent+.8f);
+            refuge.y=position.y;
+            float d=FlatSqr(refuge-position);
+            if(d>=distance||Vector3.Dot(refuge-position,Forward)>1f)return;
+            distance=d;best=refuge;
         }
         public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira;
         private static float RolePower(HeroId role)=>role==HeroId.Mira?.78f:role==HeroId.Kaelon?1.1f:1f;
