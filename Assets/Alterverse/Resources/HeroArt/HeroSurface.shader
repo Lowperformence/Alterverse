@@ -24,14 +24,19 @@ Shader "DimensionsFront/HeroSurface"
    {
     half3 n=normalize(i.normal);Light key=GetMainLight();half3 view=SafeNormalize(GetWorldSpaceViewDir(i.world));
     half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,_BaseColor.a);
-    half diffuse=.25h+.75h*saturate(dot(n,key.direction));
-    half3 ambient=max(SampleSH(n),half3(.20h,.22h,.26h));
-    half rim=pow(1-saturate(dot(n,view)),3)*.13h;
-    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),20)*.09h;
-    // Bound scene illumination on hero midtones; preserve hue under arena light.
-    half3 illumination=clamp(ambient*.45h+key.color*diffuse,half3(.48h,.48h,.48h),half3(1.08h,1.08h,1.08h));
-    half3 lit=albedo*illumination+spec*min(key.color,1.0h)*.4h+rim*albedo;
-    return half4(lerp(lit,albedo*(1.35h+_EnergyBoost*.55h),saturate(i.color.a)),1);
+    // Character-only grade. UI and arena colors are untouched: increase chroma and local
+    // contrast before lighting so the hero does not wash into grey/pastel midtones.
+    half luma=dot(albedo,half3(.2126h,.7152h,.0722h));
+    albedo=saturate(lerp(luma.xxx,albedo,1.10h));
+    albedo=saturate((albedo-.5h)*1.06h+.5h);
+    half diffuse=.22h+.78h*saturate(dot(n,key.direction));
+    half3 ambient=max(SampleSH(n),half3(.18h,.20h,.24h));
+    half rim=pow(1-saturate(dot(n,view)),3)*.11h;
+    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),22)*.055h;
+    // Keep enough floor light for mobile readability, but avoid the old bright midpoint wash.
+    half3 illumination=clamp(ambient*.40h+key.color*diffuse,half3(.43h,.43h,.43h),half3(1.02h,1.02h,1.02h));
+    half3 lit=albedo*illumination+spec*min(key.color,1.0h)*.30h+rim*albedo;
+    return half4(lerp(lit,albedo*(1.42h+_EnergyBoost*.55h),saturate(i.color.a)),1);
    }
    ENDHLSL
   }
