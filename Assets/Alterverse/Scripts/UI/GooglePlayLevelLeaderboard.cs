@@ -4,6 +4,9 @@ using Alterverse.Profile;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
+// Temporary compatibility bridge until the Google Play Games plugin is connected.
+#pragma warning disable CS0618 // Unity Social API is deprecated, but remains the compile-time fallback here.
+
 namespace Alterverse.Online
 {
     /// <summary>
@@ -189,3 +192,4 @@ namespace Alterverse.Online
         }
     }
 }
+#pragma warning restore CS0618
