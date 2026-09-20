@@ -17,7 +17,7 @@ namespace Alterverse.EditorChecks
         private static readonly List<GameObject> Created = new();
         private const BindingFlags Private = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        [MenuItem("DIMENSIONS FRONT/Checks/Bot and minion regression (Play mode)")]
+        [MenuItem("DIMENSIONS FRONT/Checks/Bot gameplay regression (Play mode)")]
         public static void Run()
         {
             if (!Application.isPlaying) throw new InvalidOperationException("Enter Play mode before running these checks.");
@@ -45,10 +45,8 @@ namespace Alterverse.EditorChecks
                 CheckHumanizedDecisionMemory();
                 CheckDifficulty();
                 CheckAbilitySlots();
-                CheckMinionDuel();
-                CheckSiegeMechMovement();
-                CheckTowerAndHazardDecisions();
-                Debug.Log("DIMENSIONS FRONT: all bot/minion regression assertions passed.");
+                CheckDefenseNavigation();
+                Debug.Log("DIMENSIONS FRONT: all free-roam bot regression assertions passed.");
             }
             finally
             {
@@ -102,8 +100,8 @@ namespace Alterverse.EditorChecks
             Set(mover, "detour", Vector3.forward);
             Set(mover, "detourUntil", Time.time + 5f);
             Set(mover, "recoveryAttempts", 2);
-            hp.RestoreFull(); brain.ResumeLaneAfterRespawn();
-            Assert(brain.State == MobaBotBrain.BotState.Lane && sensor.CurrentTarget == null, "Respawn must clear retreat and target.");
+            hp.RestoreFull(); brain.ResumeRoamAfterRespawn();
+            Assert(brain.State == MobaBotBrain.BotState.Roam && sensor.CurrentTarget == null, "Respawn must clear retreat and target.");
             Assert((Vector3)typeof(MobaBotMover).GetField("velocity", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old velocity.");
             Assert((Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old detour.");
             Assert((int)typeof(MobaBotMover).GetField("recoveryAttempts", Private).GetValue(mover) == 0, "Respawn must clear stuck recovery stage.");
@@ -174,8 +172,6 @@ namespace Alterverse.EditorChecks
             bot.AddComponent<MobaBotBrain>().Initialize(0,16);
             bot.AddComponent<BotLanePlan>().Initialize(0,16);
             MobaBotMover mover=bot.AddComponent<MobaBotMover>();
-            Set(mover,"towers",Array.Empty<LaneTower>());
-            Set(mover,"pulses",Array.Empty<Alterverse.Combat.PlanetPulseAttack>());
             Set(mover,"nextWorldScan",float.MaxValue);
 
             GameObject crowd=Unit("Check_ArrivalCrowd",0,origin+Vector3.forward*.75f);
@@ -220,19 +216,16 @@ namespace Alterverse.EditorChecks
             bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Nyra);
             BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
 
-            GameObject minionObject=Unit("Check_CloseMinion",1,origin+Vector3.right);
-            minionObject.AddComponent<LaneMinion>().Initialize(1,origin);
-            GameObject towerObject=Unit("Check_CloseTower",1,origin+Vector3.right*1.4f);
-            LaneTower tower=towerObject.AddComponent<LaneTower>();tower.Initialize(1);
+            GameObject specialObject=Unit("Check_CloseSpecialUnit",1,origin+Vector3.right*2f);
+            Health special=specialObject.GetComponent<Health>();
             GameObject heroObject=Unit("Check_FartherHero",1,origin+Vector3.right*5f);
             heroObject.AddComponent<HeroIdentity>().Configure(HeroId.Elyra);
             Health hero=heroObject.GetComponent<Health>();
 
             Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
             Assert(sensor.CurrentTarget==hero,
-                "A legal visible enemy hero must outrank a much closer tower or minion.");
+                "A legal visible enemy hero must outrank a closer special combat unit.");
 
-            // Low-health hero execution should beat a modest distance advantage inside the hero tier.
             GameObject healthyObject=Unit("Check_HealthyHero",1,origin+Vector3.forward*3f);
             healthyObject.AddComponent<HeroIdentity>().Configure(HeroId.Elyra);
             Health healthy=healthyObject.GetComponent<Health>();
@@ -243,20 +236,10 @@ namespace Alterverse.EditorChecks
             Assert((float)Call(sensor,"Score",wounded)<(float)Call(sensor,"Score",healthy),
                 "A safely reachable low-health hero must gain execute priority over a modestly closer healthy hero.");
 
-            // Once the hero fight is gone, ordinary minions and towers must remain invalid bot targets.
             hero.TakeDamage(hero.Max);healthy.TakeDamage(healthy.Max);wounded.TakeDamage(wounded.Max);
-            GameObject coverObject=Unit("Check_TowerCover",0,towerObject.transform.position+Vector3.left);
-            coverObject.AddComponent<LaneMinion>().Initialize(0,towerObject.transform.position);
             Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
-            Assert(sensor.CurrentTarget==null,
-                "Bot heroes must ignore ordinary lane minions and towers instead of falling back to farming or sieging.");
-
-            // Siege mechs intentionally reuse LaneMinion, but the explicit siege role must keep them targetable.
-            GameObject mechObject=Unit("Check_SiegeMech",1,origin+Vector3.right*3f);
-            LaneMinion mech=mechObject.AddComponent<LaneMinion>();mech.Initialize(1,origin);mech.ConfigureSiegeRole();
-            Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
-            Assert(sensor.CurrentTarget==mechObject.GetComponent<Health>(),
-                "Siege mechs must remain valid bot combat targets while ordinary minions and towers are ignored.");
+            Assert(sensor.CurrentTarget==special,
+                "Special TeamMember combat units must remain valid targets after the hero fight ends.");
         }
 
         private static void CheckRecentAttackerPriority()
@@ -374,7 +357,7 @@ namespace Alterverse.EditorChecks
             Set(sensor,"lastSeenTime",-100f);
             Set(brain,"fightCommitUntil",0f);
             Call(brain,"Decide");
-            Assert(brain.State==MobaBotBrain.BotState.Lane,
+            Assert(brain.State==MobaBotBrain.BotState.Roam,
                 "Expired perception memory and commitment must return the bot to lane play.");
         }
 
@@ -460,121 +443,36 @@ namespace Alterverse.EditorChecks
             ally.transform.position = mira.transform.position + Vector3.right;
             Assert((bool)Call(mira, "TryCast", 1, null) && ally.Current > 20, "Support must heal a wounded nearby ally without an enemy.");
         }
-        private static void CheckSiegeMechMovement()
+        private static void CheckDefenseNavigation()
         {
-            Vector3 origin=new(3500,.85f,3500);
-            GameObject mechObject=Unit("Check_SiegeMovement",0,origin);
-            LaneMinion mech=mechObject.AddComponent<LaneMinion>();
-            mech.Initialize(0,origin+Vector3.right*12f);
-            mech.ConfigureSiegeRole();
-            mech.ConfigureCombat(2.15f,8.2f,2.15f,10.5f,1.25f,1.65f);
-            Set(mech,"nextScanTime",float.MaxValue);
-
-            Vector3 before=mechObject.transform.position;
-            Call(mech,"Update");
-            Assert(mechObject.transform.position.x>before.x,
-                "A siege mech with no combat target must immediately advance along its lane.");
-
-            GameObject towerObject=Unit("Check_SiegeRouteTower",1,origin+Vector3.right*6f);
-            LaneTower tower=towerObject.AddComponent<LaneTower>();tower.Initialize(1);
-            Set(mech,"target",null);Set(mech,"nextScanTime",float.MaxValue);
-            before=mechObject.transform.position;
-            Call(mech,"Update");
-            Assert(mechObject.transform.position.x>before.x,
-                "An enemy tower elsewhere on the lane must not freeze siege-mech movement.");
-        }
-
-        private static void CheckTowerAndHazardDecisions()
-        {
-            Vector3 center = new(4000, 1, 4000);
-            GameObject towerObject = Unit("Check_Tower", 1, center);
-            CapsuleCollider towerBody=towerObject.AddComponent<CapsuleCollider>();towerBody.radius=.70f;towerBody.height=2.3f;towerBody.center=Vector3.up*.45f;
-            LaneTower tower = towerObject.AddComponent<LaneTower>(); tower.Initialize(1);
-            GameObject hero = Unit("Check_TowerHero", 0, center + Vector3.right);
+            Vector3 center=new(0f,1f,0f);
+            GameObject hero=Unit("Check_DefenseHero",0,center);
             hero.AddComponent<HeroIdentity>().Configure(HeroId.Rook);
-            GameObject wave = Unit("Check_TowerMinion", 0, center + Vector3.right * 3f);
-            wave.AddComponent<LaneMinion>().Initialize(0, center);
-            Health selected = (Health)Call(tower, "FindEnemyTarget");
-            Assert(selected == wave.GetComponent<Health>(), "Tower must prefer a minion over a nearer hero, without depending on colliders.");
-            Set(tower, "currentTarget", selected);
-            Assert(tower.HasMinionCoverFor(0), "Targeted living minion must provide cover.");
-            selected.TakeDamage(100);
-            Assert(!tower.HasMinionCoverFor(0), "Dead minion must stop providing cover immediately.");
-            Assert((Health)Call(tower, "FindEnemyTarget") == hero.GetComponent<Health>(), "Tower must switch to hero when the wave is gone.");
+            hero.AddComponent<HeroCombatProfile>().Configure(HeroId.Rook);
+            hero.AddComponent<BotTargetSensor>();
+            MobaBotBrain brain=hero.AddComponent<MobaBotBrain>();brain.Initialize(0,0);
+            hero.AddComponent<BotLanePlan>().Initialize(0,0);
+            MobaBotMover mover=hero.AddComponent<MobaBotMover>();
 
-            GameObject deathTowerObject = Unit("Check_TowerDeath", 1, center + Vector3.forward * 8f);
-            LaneTower deathTower = deathTowerObject.AddComponent<LaneTower>(); deathTower.Initialize(1);
-            Health deathTowerHealth = deathTowerObject.GetComponent<Health>();
-            deathTowerHealth.TakeDamage(deathTowerHealth.Max);
-            Assert(deathTowerHealth.IsDead && !deathTower.enabled, "Lethal tower damage must immediately enter the destruction state.");
-            hero.transform.position = center + Vector3.right * (tower.AttackRange + .01f);
-            Assert(Call(tower, "FindEnemyTarget") == null, "Tower must obey the exact planar range.");
+            GameObject enemyBastion=DefenseBunker.Spawn(1,new Vector3(8f,0f,0f),"CheckEnemy");
+            Created.Add(enemyBastion);
+            Assert(enemyBastion.GetComponent<Health>()==null,"Bastions must remain indestructible/non-targetable.");
+            Assert(!mover.CanRepositionTo(enemyBastion.transform.position),
+                "Bot mobility must not dash deeper into an enemy bastion damage zone.");
 
-            BotTargetSensor sensor = hero.AddComponent<BotTargetSensor>();
-            MobaBotBrain brain = hero.AddComponent<MobaBotBrain>(); brain.Initialize(0, 16);
-            hero.AddComponent<BotLanePlan>().Initialize(0, 16);
-            MobaBotMover mover = hero.AddComponent<MobaBotMover>();
-            Set(mover, "towers", new[] { tower }); Set(mover, "nextWorldScan", float.MaxValue);
-            hero.transform.position = center + Vector3.left * 7f;
-            Vector3 guarded = (Vector3)Call(mover, "GuardAgainstTowers", center + Vector3.right * 7f);
-            Assert(Vector3.Distance(guarded,center)>=tower.AttackRange+.70f, "An uncovered movement step must remain outside tower danger.");
-            Assert(!mover.CanRepositionTo(center + Vector3.right * 7f), "A dash must not bypass tower avoidance.");
-            selected.RestoreFull(); Set(tower, "currentTarget", selected);
-            Assert(!mover.CanRepositionTo(center + Vector3.left * 2f),
-                "Minion cover must not make enemy tower range safe for free-roam bot heroes.");
-
-            GameObject alliedTowerObject = Unit("Check_AlliedTower", 0, center + Vector3.forward * 10f);
-            CapsuleCollider alliedBody=alliedTowerObject.AddComponent<CapsuleCollider>();alliedBody.radius=.70f;alliedBody.height=2.3f;alliedBody.center=Vector3.up*.45f;
-            LaneTower alliedTower=alliedTowerObject.AddComponent<LaneTower>();alliedTower.Initialize(0);
-            Set(mover,"towers",new[]{alliedTower});
-            hero.transform.position=alliedTowerObject.transform.position+Vector3.left*1.35f;
+            GameObject alliedTrench=DefenseTrench.Spawn(0,new Vector3(-8f,0f,0f),"CheckAlly");
+            Created.Add(alliedTrench);
+            hero.transform.position=new Vector3(-3f,1f,0f);
             object[] refugeArgs={Vector3.zero};
-            Assert((bool)Call(mover,"TryGetOwnTowerRefuge",refugeArgs),
-                "A nearby living allied guardian tower must be available as temporary retreat cover.");
+            Assert((bool)Call(mover,"TryGetOwnDefenseRefuge",refugeArgs),
+                "Allied bastions/trenches must be available as temporary retreat anchors.");
             Vector3 refuge=(Vector3)refugeArgs[0];
-            Assert(Vector3.Distance(refuge,alliedTower.transform.position)>1.5f,
-                "Tower refuge must sit behind the solid tower body rather than inside it.");
-            Vector3 skirted=(Vector3)Call(mover,"GuardAgainstTowers",hero.transform.position+Vector3.right*.25f);
-            Assert(Mathf.Abs(skirted.z-hero.transform.position.z)>.001f,"Bots must skirt allied tower bodies instead of walking straight into them.");
+            Assert(refuge.x<alliedTrench.transform.position.x,
+                "Retreat refuge must be placed on the home-facing side of the allied defence.");
 
-            GameObject planetObject = Unit("Check_Pulse", 1, center + Vector3.forward * 30f);
-            Alterverse.Combat.PlanetPulseAttack pulse = planetObject.AddComponent<Alterverse.Combat.PlanetPulseAttack>();
-            Set(pulse, "telegraphing", true);
-            Assert(pulse.IsTelegraphing, "A live planet must expose its active warning.");
-            Set(mover, "pulses", new[] { pulse }); Set(mover, "towers", Array.Empty<LaneTower>());
-            hero.transform.position = planetObject.transform.position + Vector3.left * 2f;
-            object[] args = { Vector3.zero };
-            Assert(!(bool)Call(mover, "TryGetPulseEscape", args), "New warnings must respect reaction delay.");
-            Set(mover,"hazardSeenAt",Time.time-1f);
-            Assert((bool)Call(mover, "TryGetPulseEscape", args), "Bot in a warning circle must request an escape after reaction delay.");
-            Vector3 escape = (Vector3)args[0];
-            Assert(Vector3.Distance(escape, planetObject.transform.position) > pulse.BlastRadius, "Escape point must be outside blast radius.");
-            Assert(!mover.CanRepositionTo(planetObject.transform.position), "Offensive dash must not move deeper into a warned explosion.");
-            Assert(mover.CanRepositionTo(escape), "Escape dash must remain possible.");
-            pulse.enabled = false;
-            Assert(!pulse.IsTelegraphing, "Disabled warnings must not influence bots.");
-
-            GameObject other = Unit("Check_Overlap", 0, hero.transform.position);
-            other.AddComponent<BotTargetSensor>(); other.AddComponent<MobaBotBrain>().Initialize(0, 16);
-            other.AddComponent<BotLanePlan>().Initialize(0, 16);
-            MobaBotMover second = other.AddComponent<MobaBotMover>();
-            Vector3 firstPush = (Vector3)Call(mover, "SeparationVelocity");
-            Vector3 secondPush = (Vector3)Call(second, "SeparationVelocity");
-            Assert(firstPush.sqrMagnitude > 0 && Vector3.Dot(firstPush, secondPush) < 0, "Exact overlaps must separate in opposite directions.");
-        }
-        private static void CheckMinionDuel()
-        {
-            Vector3 origin = new(3000, .5f, 3000);
-            GameObject a = Unit("Check_MinionA", 0, origin), b = Unit("Check_MinionB", 1, origin + Vector3.right);
-            LaneMinion ma = a.AddComponent<LaneMinion>(), mb = b.AddComponent<LaneMinion>();
-            ma.Initialize(0, b.transform.position); mb.Initialize(1, a.transform.position);
-            Set(ma, "nextAttackTime", 0f); Set(mb, "nextAttackTime", 0f);
-            Call(ma, "Update"); Call(mb, "Update");
-            Assert(a.GetComponent<Health>().Current < 100 && b.GetComponent<Health>().Current < 100, "Opposing minions must damage each other.");
-            float before = b.GetComponent<Health>().Current;
-            Time.timeScale = 0; Set(ma, "nextAttackTime", 0f); Call(ma, "Update");
-            Assert(b.GetComponent<Health>().Current == before, "Paused minions must not attack.");
-            Time.timeScale = 1;
+            Vector3 skirted=(Vector3)Call(mover,"GuardAgainstDefenses",new Vector3(-9f,1f,0f));
+            Assert(Mathf.Abs(skirted.z-hero.transform.position.z)>.001f,
+                "Bots must skirt solid defence bodies instead of walking directly through them.");
         }
     }
 }
