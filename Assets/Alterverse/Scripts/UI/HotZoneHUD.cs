@@ -32,7 +32,7 @@ namespace Alterverse.UI
         }
 
         private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=new Color(.95f,.72f,.30f);bannerUntil=Time.time+4f;}
-        private void OnOpened(){banner="HOT ZONE ACTIVE · HOLD THE CENTER";bannerColor=Color.white;bannerUntil=Time.time+4f;}
+        private void OnOpened(){banner="HOT ZONE ACTIVE · CONTROL THE ZONE";bannerColor=Color.white;bannerUntil=Time.time+4f;}
         private void OnResolved(int winner,float zero,float lumen)
         {
             banner=winner==0?"ZERO WINS HOT ZONE · ASSAULT TANK DEPLOYED":
@@ -73,23 +73,21 @@ namespace Alterverse.UI
                     theme.Panel(p);
                     float lead=zone.ZeroControlSeconds-zone.LumenControlSeconds;
                     string state=zone.ZeroInside>0&&zone.LumenInside>0?"CONTESTED":
-                        zone.ZeroInside>0?"ZERO CONTROLLING":
-                        zone.LumenInside>0?"LUMEN CONTROLLING":
+                        zone.ZeroInside>0?$"ZERO CONTROLLING · x{zone.ZeroInside}":
+                        zone.LumenInside>0?$"LUMEN CONTROLLING · x{zone.LumenInside}":
                         Mathf.Abs(lead)<.05f?"UNCLAIMED":
-                        lead>0?$"ZERO LEADS +{lead:0.0}s":$"LUMEN LEADS +{-lead:0.0}s";
+                        lead>0?$"ZERO LEADS +{lead:0.0}":$"LUMEN LEADS +{-lead:0.0}";
                     theme.Label(new Rect(p.x+12,p.y+5,p.width-24,20),
                         $"HOT ZONE  {Mathf.CeilToInt(zone.Remaining)}s  ·  {state}",centerStyle);
-                    float total=zone.ZeroControlSeconds+zone.LumenControlSeconds;
                     Rect bar=new(p.x+24,p.y+34,p.width-48,8);
                     FrontEndTheme.Fill(bar,FrontEndTheme.Raised);
-                    if(total>.01f)
-                    {
-                        float zeroShare=zone.ZeroControlSeconds/total;
-                        FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*zeroShare,bar.height),FrontEndTheme.Zero);
-                        FrontEndTheme.Fill(new Rect(bar.x+bar.width*zeroShare,bar.y,bar.width*(1-zeroShare),bar.height),FrontEndTheme.Accent);
-                    }
-                    theme.Label(new Rect(p.x+18,p.y+43,p.width*.45f,14),$"ZERO {zone.ZeroControlSeconds:0.0}s",theme.Small,true);
-                    theme.Label(new Rect(p.x+p.width*.55f-18,p.y+43,p.width*.45f,14),$"LUMEN {zone.LumenControlSeconds:0.0}s",rightStyle,true);
+                    float half=bar.width*.5f;
+                    float zeroFill=half*Mathf.Clamp01(zone.ZeroControlSeconds/HotZoneDirector.ActiveDuration);
+                    float lumenFill=half*Mathf.Clamp01(zone.LumenControlSeconds/HotZoneDirector.ActiveDuration);
+                    FrontEndTheme.Fill(new Rect(bar.x+half-zeroFill,bar.y,zeroFill,bar.height),FrontEndTheme.Zero);
+                    FrontEndTheme.Fill(new Rect(bar.x+half,bar.y,lumenFill,bar.height),FrontEndTheme.Accent);
+                    theme.Label(new Rect(p.x+18,p.y+43,p.width*.45f,14),$"ZERO {zone.ZeroControlSeconds:0.0}",theme.Small,true);
+                    theme.Label(new Rect(p.x+p.width*.55f-18,p.y+43,p.width*.45f,14),$"LUMEN {zone.LumenControlSeconds:0.0}",rightStyle,true);
                 }
             }
             finally{GUI.matrix=previous;}
