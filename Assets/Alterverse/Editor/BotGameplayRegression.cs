@@ -33,6 +33,7 @@ namespace Alterverse.EditorChecks
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
                 CheckTargetRetention();
+                CheckHumanizedDecisionMemory();
                 CheckDifficulty();
                 CheckAbilitySlots();
                 CheckMinionDuel();
@@ -176,6 +177,45 @@ namespace Alterverse.EditorChecks
             Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
             Assert(sensor.CurrentTarget == first, "A living target must be reacquired after reaction delay.");
         }
+        private static void CheckHumanizedDecisionMemory()
+        {
+            Vector3 origin=new(11000,1,11000);
+            GameObject bot=Unit("Check_HumanMemory",0,origin);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Nyra);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Nyra);
+            BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
+            MobaBotBrain brain=bot.AddComponent<MobaBotBrain>();brain.Initialize(0,16);
+            Health enemy=Unit("Check_HumanMemoryEnemy",1,origin+Vector3.right*4).GetComponent<Health>();
+
+            Set(sensor,"brain",brain);
+            Set(sensor,"currentTarget",enemy);
+            Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==enemy,"Visible enemy must remain a valid humanized target.");
+            Vector3 remembered=sensor.LastKnownEnemyPosition;
+
+            GameObject wall=new("Check_HumanMemoryWall");Created.Add(wall);
+            wall.transform.position=origin+Vector3.right*2;
+            wall.AddComponent<BoxCollider>().size=new Vector3(.45f,3f,3f);
+            Physics.SyncTransforms();
+            Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==null&&sensor.HasRecentEnemyMemory,
+                "Losing sight must drop live tracking but retain a short last-seen memory.");
+
+            enemy.transform.position=origin+Vector3.right*8;
+            Assert((sensor.LastKnownEnemyPosition-remembered).sqrMagnitude<.0001f,
+                "Last-seen memory must stay frozen instead of following a hidden enemy.");
+
+            Call(brain,"Decide");
+            Assert(brain.State==MobaBotBrain.BotState.Fight,
+                "A bot may briefly investigate a recently seen enemy instead of instantly forgetting the fight.");
+
+            Set(sensor,"lastSeenTime",-100f);
+            Set(brain,"fightCommitUntil",0f);
+            Call(brain,"Decide");
+            Assert(brain.State==MobaBotBrain.BotState.Lane,
+                "Expired perception memory and commitment must return the bot to lane play.");
+        }
+
         private static void CheckDifficulty()
         {
             const string key="DF_BotDifficulty";
@@ -190,7 +230,7 @@ namespace Alterverse.EditorChecks
                 {
                     BotDifficultySettings.Selected=(BotDifficulty)level;
                     Assert(PlayerPrefs.GetInt(key)==level&&BotDifficultySettings.Selected==(BotDifficulty)level,"Difficulty is stored and read back.");
-                    for(int style=0;style<5;style++)
+                    for(int style=0;style<6;style++)
                     {
                         var bot=Unit("Check_Difficulty",0,new Vector3(8000+level*100,1,8000+style*20));
                         bot.AddComponent<HeroIdentity>().Configure(HeroId.Nyra);
