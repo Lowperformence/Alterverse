@@ -34,7 +34,6 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildCoreIntegration(36f,false);
         BuildHealingIntegration(-27.5f);
         BuildHealingIntegration(27.5f);
-        BuildTowerIntegration();
         // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         BuildRocks();
@@ -98,19 +97,6 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     {
         Disc("DF_HealingGroundInset",new Vector3(x,.062f,0),2.55f,28,darkRegolith);
         Ring("DF_HealingGroundRim",new Vector3(x,.078f,0),2.35f,2.52f,28,rimMat);
-    }
-
-    void BuildTowerIntegration()
-    {
-        foreach(float z in new[]{-16f,16f})
-        foreach(float x in new[]{-33.5f,-21f,21f,33.5f})
-        {
-            bool zero=x<0;Material energy=zero?zeroEnergy:lumenEnergy;
-            Disc("DF_BastionGroundSeat",new Vector3(x,.058f,z),2.15f,24,darkRegolith);
-            Ring("DF_BastionGroundTrim",new Vector3(x,.077f,z),1.82f,2.08f,24,rimMat);
-            float towardCenter=zero?1f:-1f;
-            Strip("DF_BastionBuriedFeed",new Vector2(x+towardCenter*1.25f,z),new Vector2(x+towardCenter*2.65f,z),.055f,.087f,energy);
-        }
     }
 
     void BuildFractures()
