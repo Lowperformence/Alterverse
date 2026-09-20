@@ -12,7 +12,7 @@ namespace Alterverse.AI
     public sealed class MobaBotMover : MonoBehaviour
     {
         [SerializeField] private float fallbackMoveSpeed = 3.35f, roamStopDistance = .35f, chaseLimit = 12f;
-        private const float ArenaHalfWidth = 40f, ArenaHalfHeight = 33f, DefenseMargin = .65f;
+        private const float ArenaHalfWidth = 40f, ArenaHalfHeight = 33f;
         private static readonly List<MobaBotMover> ActiveBots = new();
         private static long nextSeparationOrder;
         private static float nextSharedWorldScan;
@@ -85,11 +85,6 @@ namespace Alterverse.AI
             Health target = sensor != null ? sensor.CurrentTarget : null;
             if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseStarted=0;}
 
-            // Under active pressure, allied bastions/trenches are temporary protection anchors.
-            // Once Retreat ends the normal free-roam/search destination immediately takes over.
-            if(brain.State==MobaBotBrain.BotState.Retreat&&sensor!=null&&sensor.NearbyEnemies>0&&TryGetOwnDefenseRefuge(out Vector3 defenseRefuge))
-            {destination=defenseRefuge;stopDistance=.65f;}
-
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
                 // A defensive re-engage is intentionally local. Once the attacker leaves the
@@ -121,7 +116,6 @@ namespace Alterverse.AI
                 {
                     bool finish=brain.Tactics.CanFinish(target,transform.position);
                     maxChase*=finish?1.2f:.85f;
-                    if(brain.Tactics.UnsafeDefense(sensor.ObservedTargetPosition))maxChase=0;
                 }
                 bool chaseExpired=Time.time-chaseStarted>maxChase&&
                     delta.sqrMagnitude>combatStop*combatStop*1.45f;
@@ -170,7 +164,7 @@ namespace Alterverse.AI
                 bool retreating=brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover;
                 if(retreating&&brain.TacticalWithdrawal)
                 {
-                    if(!TryGetOwnDefenseRefuge(out destination))destination=brain.Tactics.SafeRetreat(transform.position);
+                    destination=brain.Tactics.SafeRetreat(transform.position);
                     stopDistance=.65f;
                 }
                 else if(!retreating&&brain.FollowTeamCall)
@@ -412,9 +406,9 @@ namespace Alterverse.AI
             if(brain!=null)
             {
                 foreach(DefenseBunker bunker in DefenseBunker.Active)
-                    if(bunker!=null&&DefenseBlocksReposition(destination,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,0f))return false;
+                    if(bunker!=null&&DefenseBlocksReposition(destination,bunker.transform,bunker.GetComponent<Collider>()))return false;
                 foreach(DefenseTrench trench in DefenseTrench.Active)
-                    if(trench!=null&&DefenseBlocksReposition(destination,trench.transform,trench.GetComponent<Collider>(),trench.Team,trench.DamageRadius))return false;
+                    if(trench!=null&&DefenseBlocksReposition(destination,trench.transform,trench.GetComponent<Collider>()))return false;
             }
 
             foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
@@ -426,31 +420,20 @@ namespace Alterverse.AI
             return true;
         }
 
-        private bool DefenseBlocksReposition(Vector3 destination,Transform structure,Collider body,int structureTeam,float damageRadius)
+        private bool DefenseBlocksReposition(Vector3 destination,Transform structure,Collider body)
         {
+            // Small defensive buildings may be crossed through tactically; only their solid body
+            // blocks movement. The 5 HP/s chip damage never creates an AI no-go radius.
             Vector3 from=transform.position-structure.position;from.y=0;
             Vector3 to=destination-structure.position;to.y=0;
             Vector3 step=to-from;
             float bodyRadius=StructureBodyClearance(body);
 
             if(from.sqrMagnitude<bodyRadius*bodyRadius)
-            {
-                if(to.sqrMagnitude<=from.sqrMagnitude)return true;
-            }
-            else
-            {
-                float bodyT=step.sqrMagnitude>.000001f?Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude):0f;
-                if((from+step*bodyT).sqrMagnitude<bodyRadius*bodyRadius)return true;
-            }
-
-            if(damageRadius<=0f||structureTeam==brain.Team)return false;
-
-            float safeRadius=damageRadius+DefenseMargin;
-            if(from.sqrMagnitude<safeRadius*safeRadius)
                 return to.sqrMagnitude<=from.sqrMagnitude;
 
-            float t=step.sqrMagnitude>.000001f?Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude):0f;
-            return (from+step*t).sqrMagnitude<safeRadius*safeRadius;
+            float bodyT=step.sqrMagnitude>.000001f?Mathf.Clamp01(-Vector3.Dot(from,step)/step.sqrMagnitude):0f;
+            return (from+step*bodyT).sqrMagnitude<bodyRadius*bodyRadius;
         }
 
         private Vector3 SeparationVelocity()
@@ -473,76 +456,10 @@ namespace Alterverse.AI
         {
             if(brain==null)return next;
             foreach(DefenseBunker bunker in DefenseBunker.Active)
-                if(bunker!=null)next=ApplyDefenseSteering(next,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,0f);
+                if(bunker!=null)next=SkirtStructureBody(bunker.transform,bunker.GetComponent<Collider>(),next);
             foreach(DefenseTrench trench in DefenseTrench.Active)
-                if(trench!=null)next=ApplyDefenseSteering(next,trench.transform,trench.GetComponent<Collider>(),trench.Team,trench.DamageRadius);
+                if(trench!=null)next=SkirtStructureBody(trench.transform,trench.GetComponent<Collider>(),next);
             return next;
-        }
-
-        private Vector3 ApplyDefenseSteering(Vector3 next,Transform structure,Collider body,int structureTeam,float damageRadius)
-        {
-            next=SkirtStructureBody(structure,body,next);
-            if(damageRadius<=0f||structureTeam==brain.Team)return next;
-
-            Vector3 away=transform.position-structure.position;away.y=0;
-            float safeRadius=damageRadius+DefenseMargin;
-            if(away.sqrMagnitude<safeRadius*safeRadius)
-            {
-                if(away.sqrMagnitude<.001f)away=brain.Team==0?Vector3.left:Vector3.right;
-                Vector3 escape=structure.position+away.normalized*(safeRadius+.18f);
-                Vector3 tangent=Vector3.Cross(Vector3.up,away.normalized);
-                escape+=tangent*((rotationSlot-2)*.24f);
-                escape.y=transform.position.y;
-                next=Vector3.MoveTowards(transform.position,escape,MoveSpeed*Time.deltaTime);
-                Vector3 escapeDelta=escape-transform.position;escapeDelta.y=0;
-                if(escapeDelta.sqrMagnitude>.001f)
-                    velocity=Vector3.Lerp(velocity,escapeDelta.normalized*MoveSpeed,1f-Mathf.Exp(-12f*Time.deltaTime));
-                return next;
-            }
-
-            Vector3 step=next-transform.position;step.y=0;
-            float along=step.sqrMagnitude>.000001f?Mathf.Clamp01(-Vector3.Dot(away,step)/step.sqrMagnitude):0f;
-            Vector3 closest=away+step*along;
-            if(closest.sqrMagnitude>=safeRadius*safeRadius)return next;
-
-            Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
-            Vector3 tangent2=Vector3.Cross(Vector3.up,radial);
-            float spread=(rotationSlot-2)*.30f;
-            Vector3 staging=structure.position+radial*(safeRadius+.48f)+tangent2*spread;
-            staging.y=transform.position.y;
-            Vector3 stageDelta=staging-transform.position;stageDelta.y=0;
-            float stageSpeed=MoveSpeed*Mathf.Clamp01(stageDelta.magnitude/1.4f+.18f);
-            next=Vector3.MoveTowards(transform.position,staging,stageSpeed*Time.deltaTime);
-            if(stageDelta.sqrMagnitude>.001f)
-                velocity=Vector3.Lerp(velocity,stageDelta.normalized*stageSpeed,1f-Mathf.Exp(-7f*Time.deltaTime));
-            return next;
-        }
-
-        private bool TryGetOwnDefenseRefuge(out Vector3 refuge)
-        {
-            refuge=transform.position;
-            if(brain==null)return false;
-            float best=20f*20f;
-            bool found=false;
-            Vector3 homeDirection=brain.Team==0?Vector3.left:Vector3.right;
-
-            foreach(DefenseBunker bunker in DefenseBunker.Active)
-                if(bunker!=null&&bunker.Team==brain.Team)
-                    ConsiderRefuge(bunker.transform,bunker.GetComponent<Collider>(),homeDirection,ref refuge,ref best,ref found);
-            foreach(DefenseTrench trench in DefenseTrench.Active)
-                if(trench!=null&&trench.Team==brain.Team)
-                    ConsiderRefuge(trench.transform,trench.GetComponent<Collider>(),homeDirection,ref refuge,ref best,ref found);
-            return found;
-        }
-
-        private void ConsiderRefuge(Transform structure,Collider body,Vector3 homeDirection,ref Vector3 refuge,ref float best,ref bool found)
-        {
-            float bodyExtent=body!=null&&body.enabled&&!body.isTrigger?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):2.5f;
-            Vector3 point=structure.position+homeDirection*(bodyExtent+.8f);
-            point.y=transform.position.y;
-            Vector3 d=point-transform.position;d.y=0;
-            if(d.sqrMagnitude>=best)return;
-            best=d.sqrMagnitude;refuge=point;found=true;
         }
 
         private float StructureBodyClearance(Collider body)
