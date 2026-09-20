@@ -10,7 +10,7 @@ namespace Alterverse.AI
     // from sensor snapshots; own roster and public map infrastructure can be queried.
     public sealed class BotTeamCoordinator
     {
-        public enum Intent { Group, Push, Defend, ContestObjective, TakeObjective, Teamfight, Disengage, Siege, Collapse }
+        public enum Intent { Group, Push, Defend, ContestObjective, TakeObjective, Teamfight, Disengage, Siege, Collapse, Roam }
         public struct Observation
         {
             public Health Target;
@@ -38,10 +38,10 @@ namespace Alterverse.AI
         private float nextTick,holdUntil,regroupUntil,tempoUntil,focusUntil,focusStarted;
         private Health focus;
         private Vector3 focusPosition,centroid;
-        private RealityCore ownCore,enemyCore;
+        private RealityCore ownCore;
         private HotZoneDirector hotZone;
         private float nextEventScan;
-        public Intent Call { get; private set; }=Intent.Push;
+        public Intent Call { get; private set; }=Intent.Roam;
         public Vector3 Destination { get; private set; }
         public int Revision { get; private set; }
         public bool CoreEmergency { get; private set; }
@@ -77,8 +77,8 @@ namespace Alterverse.AI
             allyCount=seenCount=towerCount=deathCursor=previousDead=Revision=0;
             ChangedAt=0;
             nextTick=holdUntil=regroupUntil=tempoUntil=focusUntil=focusStarted=nextEventScan=0;
-            focus=null;ownCore=enemyCore=null;hotZone=null;HasPlan=CoreEmergency=false;
-            Call=Intent.Push;Destination=Home;centroid=Home;
+            focus=null;ownCore=null;hotZone=null;HasPlan=CoreEmergency=false;
+            Call=Intent.Roam;Destination=Home;centroid=Home;
             System.Array.Clear(allies,0,allies.Length);System.Array.Clear(seen,0,seen.Length);
             System.Array.Clear(towers,0,towers.Length);System.Array.Clear(reportedDeaths,0,reportedDeaths.Length);
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
@@ -109,7 +109,7 @@ namespace Alterverse.AI
                 }
                 return nearer<2;
             }
-            // Hard keeps a lane player; this assignment changes with a committed call, not each frame.
+            // Hard keeps one independent roamer; this assignment changes with a committed call, not each frame.
             return CoreEmergency||Call==Intent.Disengage||bot.Difficulty.FullTeamCalls||(SlotFor(bot)+Revision)%5!=4;
         }
         public void Tick(BotDifficulty difficulty)
@@ -130,14 +130,14 @@ namespace Alterverse.AI
         private void ReadOwnTeam()
         {
             allyCount=towerCount=0;centroid=Vector3.zero;int dead=0;
-            ownCore=enemyCore=null;
+            ownCore=null;
             for(int i=0;i<Health.Active.Count;i++)
             {
                 Health h=Health.Active[i];if(h==null||!h.isActiveAndEnabled)continue;
                 var tower=h.GetComponent<LaneTower>();
                 if(tower!=null&&!h.IsDead&&towerCount<towers.Length)towers[towerCount++]=tower;
                 var core=h.GetComponent<RealityCore>();
-                if(core!=null&&!h.IsDead){if(core.Team==team)ownCore=core;else enemyCore=core;}
+                if(core!=null&&!h.IsDead&&core.Team==team)ownCore=core;
                 var identity=h.GetComponent<HeroIdentity>();var member=h.GetComponent<TeamMember>();
                 if(identity==null||member==null||member.Team!=team)continue;
                 if(h.IsDead){dead++;continue;}
@@ -242,8 +242,6 @@ namespace Alterverse.AI
                 for(int i=0;i<allyCount;i++){int n=AlliesNear(allies[i].Position,10f);if(n>connected){connected=n;rally=allies[i].Position;}}
                 Commit(Intent.Group,rally,false);return;
             }
-            if(enemyCore!=null&&enemyCore.IsVulnerable)
-            {Commit(Intent.TakeObjective,enemyCore.transform.position,tempo);return;}
             if(hotZone!=null&&hotZone.IsActive&&FlatSqr(hotZone.transform.position-centroid)<32f*32f)
             {Commit(Intent.ContestObjective,hotZone.transform.position,false);return;}
             // Neutral objective availability is accepted only when actually reported by a sensor.
@@ -253,10 +251,27 @@ namespace Alterverse.AI
                 if(FlatSqr(e.Position-centroid)>18f*18f||FightRatio(e.Position)<.9f)continue;
                 Commit(EnemiesNear(e.Position,9f)>0?Intent.ContestObjective:Intent.TakeObjective,e.Position,false);return;
             }
-            // Towers are navigation hazards only for bot heroes, never team objectives.
-            Vector3 lanePush=new Vector3(team==0?25f:-25f,0,centroid.z>=0?16f:-16f);
-            Commit(Intent.Push,lanePush,tempo);
+            // No lane/tower fallback: when no fight or event is active, move through open
+            // arena sectors to find the next PvP contact.
+            Commit(Intent.Roam,FreeRoamPoint(),tempo);
         }
+        private Vector3 FreeRoamPoint()
+        {
+            int phase=(Mathf.FloorToInt(Time.time/7f)+team*3)%6;
+            float forward=team==0?1f:-1f;
+            Vector3 point=phase switch
+            {
+                0=>new Vector3(0,0,0),
+                1=>new Vector3(5f*forward,0,10f),
+                2=>new Vector3(5f*forward,0,-10f),
+                3=>new Vector3(-5f*forward,0,7f),
+                4=>new Vector3(-5f*forward,0,-7f),
+                _=>new Vector3(10f*forward,0,0)
+            };
+            point.y=centroid.y;
+            return point;
+        }
+
         private void Commit(Intent intent,Vector3 destination,bool urgent)
         {
             bool same=HasPlan&&Call==intent&&FlatSqr(destination-Destination)<4f;
@@ -266,7 +281,7 @@ namespace Alterverse.AI
             ChangedAt=Time.time;Revision++;HasPlan=true;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if(intent==Intent.Disengage)RegroupCalls++;
-            if(Time.time<tempoUntil&&(intent==Intent.Push||intent==Intent.TakeObjective))TempoPushes++;
+            if(Time.time<tempoUntil&&(intent==Intent.Roam||intent==Intent.TakeObjective))TempoPushes++;
 #endif
         }
         public float FightRatio(Vector3 point)
@@ -286,14 +301,23 @@ namespace Alterverse.AI
             {
                 var tower=towers[i];if(tower==null||tower.Team==team)continue;
                 float radius=tower.AttackRange+.75f;
-                if(FlatSqr(point-tower.transform.position)<radius*radius&&!tower.HasMinionCoverFor(team))return true;
+                if(FlatSqr(point-tower.transform.position)<radius*radius)return true;
             }
             return false;
         }
         public int EnemiesNear(Vector3 point,float radius)
         {int n=0;for(int i=0;i<seenCount;i++)if(seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&FlatSqr(seen[i].Position-point)<=radius*radius)n++;return n;}
         private int ThreatsNear(Vector3 point,float radius)
-        {int n=0;for(int i=0;i<seenCount;i++)if(FlatSqr(seen[i].Position-point)<=radius*radius&&(seen[i].Hero||seen[i].Target!=null&&seen[i].Target.GetComponent<LaneMinion>()!=null))n++;return n;}
+        {
+            int n=0;
+            for(int i=0;i<seenCount;i++)
+            {
+                if(FlatSqr(seen[i].Position-point)>radius*radius)continue;
+                LaneMinion minion=seen[i].Target!=null?seen[i].Target.GetComponent<LaneMinion>():null;
+                if(seen[i].Hero||minion!=null&&minion.IsSiegeUnit)n++;
+            }
+            return n;
+        }
         public int AlliesNear(Vector3 point,float radius)
         {int n=0;for(int i=0;i<allyCount;i++)if(FlatSqr(allies[i].Position-point)<=radius*radius)n++;return n;}
         public bool CanFinish(Health target,Vector3 point)
