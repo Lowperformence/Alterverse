@@ -23,7 +23,7 @@ namespace Alterverse.AI
         private long separationOrder;
         private HeroLocomotion locomotion;
         private float blockedTime, detourUntil, freeMoveTime, nextStuckLog;
-        private float progressCheckAt, hazardSeenAt;
+        private float progressCheckAt;
         private Vector3 detour, progressAnchor, progressGoal;
         private Vector3 recoveryWaypoint;
         private bool hasRecoveryWaypoint;
@@ -34,7 +34,6 @@ namespace Alterverse.AI
         private string loggedMode;
         private int loggedAttempt;
         private bool progressWatchActive;
-        private Alterverse.Combat.PlanetPulseAttack observedHazard;
         private int recoveryAttempts, recoverySide;
         private LaneTower skirtTower;
         private float skirtUntil;
@@ -57,6 +56,8 @@ namespace Alterverse.AI
         private Health chaseTarget;
         private float chaseStarted;
         private int rotationSlot;
+        private static readonly float[] ExplosionEscapeAngles={0f,32f,-32f,64f,-64f,98f,-98f,132f,-132f};
+        private const float ExplosionSafetyMargin=.72f;
         public bool IsAvoidingHazard { get; private set; }
         private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
         private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * Mathf.Lerp(.65f,.88f,brain!=null?brain.Difficulty.Positioning:.6f)) : 1.4f;
@@ -204,7 +205,7 @@ namespace Alterverse.AI
             if(brain.Difficulty.Coordinated&&brain.NeedsCombatReset)
             {destination=brain.Tactics.SafeRetreat(transform.position);stopDistance=.4f;}
 
-            if (TryGetPulseEscape(out Vector3 escape))
+            if (TryGetExplosionEscape(out Vector3 escape))
             {
                 IsAvoidingHazard = true; detourUntil=0;
                 destination = escape; stopDistance = .1f;
@@ -278,40 +279,117 @@ namespace Alterverse.AI
             return sqr <= 26f * 26f && (rotationSlot < slots || sqr < 10f * 10f);
         }
 
-        private bool TryGetPulseEscape(out Vector3 escape)
+        private bool TryGetExplosionEscape(out Vector3 escape)
         {
-            escape = transform.position;
-            float deepest = 0f;
-            Alterverse.Combat.PlanetPulseAttack danger = null;
-            foreach (Alterverse.Combat.PlanetPulseAttack pulse in pulses)
-            {
-                if (pulse == null || !pulse.IsTelegraphing) continue;
-                Vector3 away = transform.position - pulse.transform.position; away.y = 0;
-                float distance = away.magnitude, safeRadius = pulse.BlastRadius + .7f;
-                if (distance >= safeRadius || safeRadius - distance <= deepest) continue;
-                deepest = safeRadius - distance;
-                danger = pulse;
-                if (distance < .01f) away = brain.Team == 0 ? Vector3.left : Vector3.right;
-                escape = pulse.transform.position + away.normalized * safeRadius;
-                escape.y = transform.position.y;
-            }
-
-            if(danger==null)
-            {
-                observedHazard=null;hazardSeenAt=0;
-                return false;
-            }
-
-            if(danger!=observedHazard)
-            {
-                observedHazard=danger;
-                hazardSeenAt=Time.time;
-            }
-
-            // All difficulties react only after the telegraph is visible. Better bots simply
-            // process that visible information faster; nobody gets pre-knowledge of the impact.
+            escape=transform.position;
             float reaction=Mathf.Lerp(.55f,.06f,brain.Difficulty.DodgeAwareness)*brain.DecisionRhythm;
-            return Time.time-hazardSeenAt>=reaction;
+            bool found=false;
+            Vector3 primaryCenter=Vector3.zero;
+            float primaryRadius=0f,bestUrgency=float.MaxValue;
+
+            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+                if(pulse!=null&&pulse.IsTelegraphing)
+                    ConsiderExplosionHazard(pulse.ImpactPosition,pulse.BlastRadius,pulse.TelegraphAge,pulse.TimeRemaining,reaction,
+                        ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
+
+            foreach(MeteorStrike meteor in MeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing)
+                    ConsiderExplosionHazard(meteor.ImpactPosition,meteor.BlastRadius,meteor.TelegraphAge,meteor.TimeRemaining,reaction,
+                        ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
+
+            foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
+                if(bomb!=null&&bomb.IsTelegraphing)
+                    ConsiderExplosionHazard(bomb.ImpactPosition,bomb.BlastRadius,bomb.TelegraphAge,bomb.TimeRemaining,reaction,
+                        ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
+
+            if(!found)return false;
+            escape=FindBestExplosionEscape(primaryCenter,primaryRadius+ExplosionSafetyMargin);
+            return true;
+        }
+
+        private void ConsiderExplosionHazard(Vector3 center,float radius,float telegraphAge,float remaining,float reaction,
+            ref bool found,ref Vector3 primaryCenter,ref float primaryRadius,ref float bestUrgency)
+        {
+            if(telegraphAge<reaction)return;
+            Vector3 away=transform.position-center;away.y=0;
+            float safeRadius=radius+ExplosionSafetyMargin;
+            float distance=away.magnitude;
+            if(distance>=safeRadius)return;
+
+            float depth=safeRadius-distance;
+            // Prefer the hazard that will land first, while giving a slight bias to deeper overlaps.
+            float urgency=remaining-depth*.12f;
+            if(found&&urgency>=bestUrgency)return;
+            found=true;bestUrgency=urgency;primaryCenter=center;primaryRadius=radius;
+        }
+
+        private Vector3 FindBestExplosionEscape(Vector3 center,float safeRadius)
+        {
+            Vector3 current=transform.position;
+            Vector3 offset=current-center;offset.y=0;
+            Vector3 radial=offset.sqrMagnitude>.001f?offset.normalized:(brain.Team==0?Vector3.left:Vector3.right);
+            float bestScore=float.NegativeInfinity;
+            Vector3 best=current+radial*(safeRadius+0.45f);
+
+            for(int i=0;i<ExplosionEscapeAngles.Length;i++)
+            {
+                Vector3 direction=Quaternion.AngleAxis(ExplosionEscapeAngles[i],Vector3.up)*radial;
+                float dot=Vector3.Dot(offset,direction);
+                float c=offset.sqrMagnitude-safeRadius*safeRadius;
+                float discriminant=Mathf.Max(0f,dot*dot-c);
+                float exitDistance=Mathf.Max(.25f,-dot+Mathf.Sqrt(discriminant));
+                Vector3 candidate=current+direction*(exitDistance+.42f);
+                candidate.x=Mathf.Clamp(candidate.x,-ArenaHalfWidth+.35f,ArenaHalfWidth-.35f);
+                candidate.z=Mathf.Clamp(candidate.z,-ArenaHalfHeight+.35f,ArenaHalfHeight-.35f);
+                candidate.y=current.y;
+
+                float clearance=ExplosionClearance(candidate);
+                float travel=(candidate-current).magnitude;
+                float outward=Vector3.Dot(direction,radial);
+                float score=clearance*4.2f-travel*.16f+outward*.18f;
+                if(score<=bestScore)continue;
+                bestScore=score;best=candidate;
+            }
+            return best;
+        }
+
+        private float ExplosionClearance(Vector3 point)
+        {
+            float minimum=float.PositiveInfinity;
+            bool any=false;
+
+            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+                if(pulse!=null&&pulse.IsTelegraphing)
+                    AccumulateExplosionClearance(point,pulse.ImpactPosition,pulse.BlastRadius,ref minimum,ref any);
+
+            foreach(MeteorStrike meteor in MeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing)
+                    AccumulateExplosionClearance(point,meteor.ImpactPosition,meteor.BlastRadius,ref minimum,ref any);
+
+            foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
+                if(bomb!=null&&bomb.IsTelegraphing)
+                    AccumulateExplosionClearance(point,bomb.ImpactPosition,bomb.BlastRadius,ref minimum,ref any);
+
+            return any?minimum:10f;
+        }
+
+        private static void AccumulateExplosionClearance(Vector3 point,Vector3 center,float radius,ref float minimum,ref bool any)
+        {
+            Vector3 delta=point-center;delta.y=0;
+            float clearance=delta.magnitude-(radius+ExplosionSafetyMargin);
+            if(clearance<minimum)minimum=clearance;
+            any=true;
+        }
+
+        private bool ExplosionBlocksReposition(Vector3 destination,Vector3 center,float radius)
+        {
+            Vector3 from=transform.position-center;from.y=0;
+            Vector3 to=destination-center;to.y=0;
+            float safeRadius=radius+ExplosionSafetyMargin,safeSqr=safeRadius*safeRadius;
+            if(to.sqrMagnitude>=safeSqr)return false;
+            // A move that starts inside a warning circle may continue if it increases safety.
+            if(from.sqrMagnitude<safeSqr&&to.sqrMagnitude>from.sqrMagnitude)return false;
+            return true;
         }
 
         public void ResetMotion()
@@ -325,7 +403,6 @@ namespace Alterverse.AI
             hasRecoveryWaypoint=false;recoveryBlocker=null;recoveryMode="None";recoveryCycle=0;
             loggedBlocker=null;loggedMode=null;loggedAttempt=0;
             recoveryAttempts=recoverySide=0;skirtTower=null;skirtUntil=0;keepingDistance=false;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
-            observedHazard=null;hazardSeenAt=0;
         }
 
         public bool CanRepositionTo(Vector3 destination)
@@ -366,14 +443,12 @@ namespace Alterverse.AI
                 float t = step.sqrMagnitude > .000001f ? Mathf.Clamp01(-Vector3.Dot(from, step) / step.sqrMagnitude) : 0;
                 if ((from + step * t).sqrMagnitude < safeRadius * safeRadius) return false;
             }
-            foreach (Alterverse.Combat.PlanetPulseAttack pulse in pulses)
-            {
-                if (pulse == null || !pulse.IsTelegraphing) continue;
-                Vector3 from = transform.position - pulse.transform.position; from.y = 0;
-                Vector3 to = destination - pulse.transform.position; to.y = 0;
-                float safeRadius = pulse.BlastRadius + .7f;
-                if (to.sqrMagnitude < safeRadius * safeRadius && to.sqrMagnitude <= from.sqrMagnitude) return false;
-            }
+            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+                if(pulse!=null&&pulse.IsTelegraphing&&ExplosionBlocksReposition(destination,pulse.ImpactPosition,pulse.BlastRadius))return false;
+            foreach(MeteorStrike meteor in MeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing&&ExplosionBlocksReposition(destination,meteor.ImpactPosition,meteor.BlastRadius))return false;
+            foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
+                if(bomb!=null&&bomb.IsTelegraphing&&ExplosionBlocksReposition(destination,bomb.ImpactPosition,bomb.BlastRadius))return false;
             return true;
         }
 
