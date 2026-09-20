@@ -7,9 +7,9 @@ namespace Alterverse.AI
     [RequireComponent(typeof(Health))]
     public sealed class MobaBotBrain : MonoBehaviour
     {
+        // "Lane" is retained as the serialized/state identifier for compatibility; it now means free-roam/search.
         public enum BotState { Lane, Fight, Retreat, Recover }
         [SerializeField] private int team;
-        [SerializeField] private float laneZ;
         [SerializeField, Range(.1f, 1f)] private float aggression = .55f, caution = .55f;
         [SerializeField] private float decisionInterval = .35f, lowHealthThreshold = .30f;
         private Health health;
@@ -43,7 +43,6 @@ namespace Alterverse.AI
         public float ObjectiveFocus=>personality!=null?personality.ObjectiveFocus:.6f;
         public bool Chance(float probability)=>decisions.NextDouble()<Mathf.Clamp01(probability);
         public int Team => team;
-        public float LaneZ => laneZ;
         public BotState State => state;
         public float Aggression => aggression;
         public float Caution => caution;
@@ -94,7 +93,7 @@ namespace Alterverse.AI
         }
         public void Initialize(int assignedTeam, float assignedLaneZ, float personalityAggression = .55f, float personalityCaution = .55f)
         {
-            team = Mathf.Clamp(assignedTeam,0,1); laneZ = assignedLaneZ; observedCall=-1;TacticalWithdrawal=false;baseDefenseUntil=0;
+            team = Mathf.Clamp(assignedTeam,0,1); observedCall=-1;TacticalWithdrawal=false;baseDefenseUntil=0;
             aggression = Mathf.Clamp01(personalityAggression); caution = Mathf.Clamp01(personalityCaution);
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
             state = BotState.Lane; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
