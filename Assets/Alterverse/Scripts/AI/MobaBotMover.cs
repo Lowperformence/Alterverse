@@ -334,8 +334,7 @@ namespace Alterverse.AI
                 float discriminant=Mathf.Max(0f,dot*dot-c);
                 float exitDistance=Mathf.Max(.25f,-dot+Mathf.Sqrt(discriminant));
                 Vector3 candidate=current+direction*(exitDistance+.42f);
-                candidate.x=Mathf.Clamp(candidate.x,-ArenaHalfWidth+.35f,ArenaHalfWidth-.35f);
-                candidate.z=Mathf.Clamp(candidate.z,-ArenaHalfHeight+.35f,ArenaHalfHeight-.35f);
+                candidate=GameplayCollision.ClampToRoundedArena(candidate,ArenaHalfWidth,ArenaHalfHeight,.35f);
                 candidate.y=current.y;
 
                 float clearance=ExplosionClearance(candidate);
@@ -539,8 +538,7 @@ namespace Alterverse.AI
             }
             Vector3 step = Vector3.ClampMagnitude(advance + separation * Time.deltaTime, MoveSpeed * Time.deltaTime);
             Vector3 next = GuardAgainstDefenses(transform.position + step);
-            next.x = Mathf.Clamp(next.x, -ArenaHalfWidth, ArenaHalfWidth);
-            next.z = Mathf.Clamp(next.z, -ArenaHalfHeight, ArenaHalfHeight);
+            next=GameplayCollision.ClampToRoundedArena(next,ArenaHalfWidth,ArenaHalfHeight);
             Vector3 requested=next-transform.position;
             Vector3 movement=locomotion.Move(requested,ArenaHalfWidth,ArenaHalfHeight);
             if(!arrived&&movement.sqrMagnitude>.00001f)locomotion.FaceMovement(movement);
