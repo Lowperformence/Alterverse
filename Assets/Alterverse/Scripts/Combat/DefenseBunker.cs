@@ -18,6 +18,12 @@ namespace Alterverse.Combat
         [SerializeField, Min(.2f)] private float attackCooldown = 1f;
         [SerializeField, Min(.05f)] private float scanInterval = .16f;
 
+        private const float GameplayColliderWidth=6.45f;
+        private const float GameplayColliderHeight=2.15f;
+        private const float GameplayColliderDepth=5.15f;
+        private const float GameplayColliderCornerRadius=1.35f;
+        private static readonly Vector3 GameplayColliderCenter=new(0f,1.02f,-.05f);
+
         private static readonly List<DefenseBunker> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
@@ -49,15 +55,11 @@ namespace Alterverse.Combat
             GameObject world = GameObject.Find("DF_MatchWorld");
             if (world != null) bunker.transform.SetParent(world.transform, true);
 
-            // One simple gameplay footprint only. Decorative armor, vents and antennae never get colliders.
-            BoxCollider solid = bunker.AddComponent<BoxCollider>();
-            solid.center = new Vector3(0, 1.02f, -.05f);
-            solid.size = new Vector3(6.45f, 2.15f, 5.15f);
-
             bunker.AddComponent<TeamMember>().Initialize(clampedTeam);
 
             DefenseBunker defense = bunker.AddComponent<DefenseBunker>();
             defense.Initialize(clampedTeam);
+            defense.BuildGameplayCollider();
             defense.BuildVisual(flank == "North" ? 0 : 1);
             return bunker;
         }
@@ -73,6 +75,19 @@ namespace Alterverse.Combat
             energy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
             nextAttack = Time.time + .45f + Mathf.Abs(transform.position.z) * .007f;
             nextScan = 0f;
+        }
+
+        private void BuildGameplayCollider()
+        {
+            // Rounded horizontal corners keep the same bunker footprint but prevent capsule-driven
+            // heroes and bots from pinning themselves against a sharp 90-degree corner.
+            Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(
+                GameplayColliderCenter,GameplayColliderWidth,GameplayColliderHeight,
+                GameplayColliderDepth,GameplayColliderCornerRadius);
+            meshes.Add(mesh);
+            MeshCollider solid=gameObject.AddComponent<MeshCollider>();
+            solid.sharedMesh=mesh;
+            solid.convex=true;
         }
 
         private void Update()
