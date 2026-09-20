@@ -39,6 +39,8 @@ namespace Alterverse.AI
         private LaneTower[] towers = System.Array.Empty<LaneTower>();
         private Alterverse.Combat.PlanetPulseAttack[] pulses = System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
         private Vector3 velocity;
+        private Health chaseTarget;
+        private float chaseStarted;
         private int rotationSlot;
         public bool IsAvoidingHazard { get; private set; }
         private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
@@ -69,18 +71,36 @@ namespace Alterverse.AI
             Vector3 destination = lanePlan.GetDestination(brain.State);
             float stopDistance = laneStopDistance;
             Health target = sensor != null ? sensor.CurrentTarget : null;
+            if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseStarted=0;}
+
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
+                if(target!=chaseTarget){chaseTarget=target;chaseStarted=Time.time;}
                 Vector3 delta = target.transform.position - transform.position; delta.y = 0;
-                if (delta.sqrMagnitude <= chaseLimit * chaseLimit)
+                float combatStop=SolidTargetStopDistance(target,CombatStop);
+
+                // Staying meaningfully engaged resets the chase clock. The timer only limits a
+                // prolonged pursuit of a target that keeps escaping, never normal combat.
+                if(delta.sqrMagnitude<=combatStop*combatStop*1.30f)chaseStarted=Time.time;
+                float maxChase=Mathf.Lerp(2.7f,4.8f,brain.Aggression)*brain.CommitmentRhythm;
+                bool chaseExpired=Time.time-chaseStarted>maxChase&&
+                    delta.sqrMagnitude>combatStop*combatStop*1.45f;
+
+                if (!chaseExpired && delta.sqrMagnitude <= chaseLimit * chaseLimit)
                 {
-                    destination = target.transform.position; stopDistance = SolidTargetStopDistance(target,CombatStop);
+                    destination = target.transform.position; stopDistance = combatStop;
                     if(profile!=null&&profile.AttackRange>4f&&delta.sqrMagnitude<CombatStop*CombatStop*.55f)
                     {
                         Vector3 back=transform.position-delta.normalized*1.6f*brain.Difficulty.Positioning;
                         if(CanRepositionTo(back)){destination=back;stopDistance=.15f;}
                     }
                 }
+            }
+            else if(brain.State==MobaBotBrain.BotState.Fight&&sensor!=null&&sensor.HasRecentEnemyMemory)
+            {
+                // Investigate only the frozen last-seen point. The hidden enemy's live transform
+                // is never consulted, so this behaves like human short-term memory rather than wall vision.
+                destination=sensor.LastKnownEnemyPosition;stopDistance=.75f;
             }
             else if(brain.State==MobaBotBrain.BotState.Lane&&hotZone!=null&&hotZone.IsActive&&ShouldContestHotZone())
             { destination=hotZone.transform.position;stopDistance=3.4f; }
@@ -179,7 +199,7 @@ namespace Alterverse.AI
 
         public void ResetMotion()
         {
-            ResetSteering(); locomotion?.ResetMotion(); objective = null; nextWorldScan = 0; IsAvoidingHazard = false;
+            ResetSteering(); locomotion?.ResetMotion(); objective = null; chaseTarget=null; chaseStarted=0; nextWorldScan = 0; IsAvoidingHazard = false;
         }
 
         public void ResetSteering(){velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;recoveryAttempts=0;nextStuckLog=0;}
