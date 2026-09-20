@@ -38,7 +38,6 @@ namespace Alterverse.Visuals
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
             float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
-            const float lane=0f;
             relief=(macro-.5f)*.17f+(medium-.5f)*.07f;
             tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.010f;
             dust=0f;
