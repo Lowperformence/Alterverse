@@ -42,7 +42,10 @@ namespace Alterverse.Combat
             GameObject trench = new GameObject($"DF_{(clampedTeam == 0 ? "Zero" : "Lumen")}_{flank}_DefenseTrench");
             trench.layer = GameplayCollision.Structures;
             trench.transform.position = position;
-            trench.transform.rotation = Quaternion.LookRotation(clampedTeam == 0 ? Vector3.right : Vector3.left, Vector3.up);
+            // The authored trench opens along local +Z. Keep that open side toward the owning
+            // base by rotating the previous arena-facing orientation 180 degrees.
+            Quaternion arenaFacing = Quaternion.LookRotation(clampedTeam == 0 ? Vector3.right : Vector3.left, Vector3.up);
+            trench.transform.rotation = arenaFacing * Quaternion.Euler(0f, 180f, 0f);
 
             GameObject world = GameObject.Find("DF_MatchWorld");
             if (world != null) trench.transform.SetParent(world.transform, true);
@@ -102,6 +105,13 @@ namespace Alterverse.Combat
                 if (delta.sqrMagnitude > maxSqr) continue;
 
                 candidate.TakeDamage(amount, gameObject);
+
+                // Make the trench attack readable in combat. Damage stays exactly the same;
+                // this is presentation only: a short, bright team-energy laser traces each hit.
+                Vector3 beamOrigin = transform.position + Vector3.up * 1.15f;
+                Vector3 beamTarget = candidate.transform.position + Vector3.up * .45f;
+                PrototypeVfx.ProjectileLine(beamOrigin, beamTarget, teamEnergy, .12f);
+                PrototypeVfx.Burst(beamTarget, Color.Lerp(teamEnergy, Color.white, .25f), .12f, 2);
                 hitAny = true;
             }
 
