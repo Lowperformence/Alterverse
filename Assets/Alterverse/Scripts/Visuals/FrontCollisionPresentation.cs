@@ -47,7 +47,6 @@ namespace Alterverse.Visuals
                 line.useWorldSpace=true;line.widthMultiplier=.065f;line.shadowCastingMode=ShadowCastingMode.Off;line.enabled=false;arcs[i]=line;
             }
             if(front!=null){pressure=front.LumenControl;front.ControlChanged+=Control;}
-            LaneWaveSpawner.SiegeWaveSpawned+=EventPulse;
             DimensionPlanetDirector.PlanetArrived+=PlanetPulse;
         }
         Transform Part(string name,Mesh mesh,Material material)
@@ -147,7 +146,7 @@ namespace Alterverse.Visuals
         void OnDestroy()
         {
             if(front!=null)front.ControlChanged-=Control;
-            LaneWaveSpawner.SiegeWaveSpawned-=EventPulse;DimensionPlanetDirector.PlanetArrived-=PlanetPulse;
+            DimensionPlanetDirector.PlanetArrived-=PlanetPulse;
             if(riftBed!=null)Destroy(riftBed);if(riftRims!=null)Destroy(riftRims);if(riftDark!=null)Destroy(riftDark);
             if(stone!=null)Destroy(stone);if(energy!=null)Destroy(energy);if(fracture!=null)Destroy(fracture);if(brace!=null)Destroy(brace);
         }
