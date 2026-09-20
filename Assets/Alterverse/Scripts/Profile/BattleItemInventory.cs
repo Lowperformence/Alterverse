@@ -6,6 +6,7 @@ namespace Alterverse.Profile
 
     public static class BattleItemInventory
     {
+        public static event System.Action Changed;
         public const float VictoryDropChance=.30f;
         public const int ShieldShardPrice=250;
 
@@ -53,16 +54,16 @@ namespace Alterverse.Profile
 
         public static bool Equip(BattleItemType item)
         {
-            if(item==BattleItemType.None){PlayerPrefs.SetInt(EquipKey,0);PlayerPrefs.Save();return true;}
+            if(item==BattleItemType.None){PlayerPrefs.SetInt(EquipKey,0);PlayerPrefs.Save();Changed?.Invoke();return true;}
             if(Count(item)<=0)return false;
-            PlayerPrefs.SetInt(EquipKey,(int)item);PlayerPrefs.Save();return true;
+            PlayerPrefs.SetInt(EquipKey,(int)item);PlayerPrefs.Save();Changed?.Invoke();return true;
         }
 
         public static void Grant(BattleItemType item,int amount=1)
         {
             if(item==BattleItemType.None||amount<=0)return;
             PlayerPrefs.SetInt(Key(item),ProfileTransaction.Add(Count(item),amount));
-            PlayerPrefs.Save();
+            PlayerPrefs.Save();Changed?.Invoke();
         }
 
         public static bool TryConsumeEquipped(BattleItemType expected)
@@ -71,7 +72,7 @@ namespace Alterverse.Profile
             int count=Count(expected);if(count<=0)return false;
             PlayerPrefs.SetInt(Key(expected),count-1);
             PlayerPrefs.SetInt(EquipKey,0);
-            PlayerPrefs.Save();
+            PlayerPrefs.Save();Changed?.Invoke();
             return true;
         }
 
@@ -113,3 +114,4 @@ namespace Alterverse.Profile
         private static string Key(BattleItemType item)=>"DF_BattleItem_"+(int)item;
     }
 }
+

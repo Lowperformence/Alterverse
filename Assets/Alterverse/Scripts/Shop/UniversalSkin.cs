@@ -11,86 +11,59 @@ namespace Alterverse.Shop
         PlagueWings=3
     }
 
-    /// <summary>
-    /// One exclusive universal cosmetic slot. The legacy VOIDFALL bool is preserved for save compatibility.
-    /// </summary>
+    /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>
     public static class UniversalCosmeticSelection
     {
         public const string EquippedKey="DF_Skin_UniversalEquipped";
+        public const string MigrationKey="DF_Skin_HeroEquip_v1";
+        public static string HeroKey(HeroId hero)=>"DF_Skin_HeroEquipped_"+(int)hero;
+        public static UniversalHeroCosmetic Equipped=>EquippedFor(PlayerHeroSelection.Selected);
+        public static bool IsOwned(UniversalHeroCosmetic cosmetic)=>CosmeticCatalog.IsOwned(cosmetic);
 
-        public static UniversalHeroCosmetic Equipped
+        public static void EnsureMigrated(HeroId selectedHero)
         {
-            get
+            CosmeticProfile.Recover();
+            if(CosmeticProfile.GetInt(MigrationKey,0)==1)return;
+            int raw=CosmeticProfile.HasKey(EquippedKey)?CosmeticProfile.GetInt(EquippedKey):
+                CosmeticProfile.GetInt(UniversalSkin.EquippedKey,0)==1?(int)UniversalHeroCosmetic.Voidfall:0;
+            var legacy=(UniversalHeroCosmetic)raw;
+            // Keep valid legacy intent even if a server entitlement has not synchronized yet.
+            if(CosmeticCatalog.Find(legacy)==null)legacy=UniversalHeroCosmetic.Original;
+            var writes=new System.Collections.Generic.List<ProfileTransaction.Write>(7);
+            // Preserve any already-existing per-hero slot, including a deliberate Original choice.
+            for(int i=0;i<6;i++)
             {
-                ProfileTransaction.Recover();
-                if(PlayerPrefs.HasKey(EquippedKey))
-                {
-                    int raw=PlayerPrefs.GetInt(EquippedKey,0);
-                    UniversalHeroCosmetic selected=raw>=0&&raw<=3?(UniversalHeroCosmetic)raw:UniversalHeroCosmetic.Original;
-                    if(raw>=0&&raw<=3&&IsOwned(selected))return selected;
-                    if(raw!=0)
-                    {
-                        ProfileTransaction.Commit(
-                            new ProfileTransaction.Write(EquippedKey,(int)UniversalHeroCosmetic.Original),
-                            new ProfileTransaction.Write(UniversalSkin.EquippedKey,0));
-                    }
-                    return UniversalHeroCosmetic.Original;
-                }
-
-                // Migrate the existing VOIDFALL equip bit without resetting ownership or requiring a repurchase.
-                if(PlayerPrefs.GetInt(UniversalSkin.EquippedKey,0)==1&&UniversalSkin.Owned)
-                {
-                    ProfileTransaction.Commit(new ProfileTransaction.Write(EquippedKey,(int)UniversalHeroCosmetic.Voidfall));
-                    return UniversalHeroCosmetic.Voidfall;
-                }
-                return UniversalHeroCosmetic.Original;
+                var hero=(HeroId)i;string key=HeroKey(hero);
+                if(!CosmeticProfile.HasKey(key))writes.Add(new ProfileTransaction.Write(key,hero==selectedHero?(int)legacy:0));
             }
+            writes.Add(new ProfileTransaction.Write(MigrationKey,1));
+            CosmeticProfile.Commit(writes.ToArray());
         }
-
-        public static bool IsOwned(UniversalHeroCosmetic cosmetic)=>cosmetic switch
+        public static UniversalHeroCosmetic EquippedFor(HeroId hero)
         {
-            UniversalHeroCosmetic.Original=>true,
-            UniversalHeroCosmetic.Voidfall=>UniversalSkin.Owned,
-            UniversalHeroCosmetic.BetaSupporterWings=>BetaSupporterWings.Owned,
-            UniversalHeroCosmetic.PlagueWings=>PlagueWings.Owned,
-            _=>false
-        };
-
-        // Current saves use one universal slot. This method is the stable read point for
-        // match systems and can become hero-specific later without changing reward code.
-        public static UniversalHeroCosmetic EquippedFor(HeroId hero)=>Equipped;
-
-        public static bool Equip(UniversalHeroCosmetic cosmetic)
+            EnsureMigrated(PlayerHeroSelection.Selected);
+            var selected=(UniversalHeroCosmetic)CosmeticProfile.GetInt(HeroKey(hero),0);
+            // Invalid or temporarily unavailable entitlements fall back without destroying saved intent.
+            return IsOwned(selected)?selected:UniversalHeroCosmetic.Original;
+        }
+        public static bool EquipFor(HeroId hero,UniversalHeroCosmetic cosmetic)
         {
-            ProfileTransaction.Recover();
-            if(!IsOwned(cosmetic))return false;
-            ProfileTransaction.Commit(
-                new ProfileTransaction.Write(EquippedKey,(int)cosmetic),
-                // Old builds and legacy code still see the correct VOIDFALL state.
-                new ProfileTransaction.Write(UniversalSkin.EquippedKey,cosmetic==UniversalHeroCosmetic.Voidfall?1:0));
+            EnsureMigrated(PlayerHeroSelection.Selected);
+            if((int)hero<0||(int)hero>=6||!IsOwned(cosmetic))return false;
+            CosmeticProfile.Commit(new ProfileTransaction.Write(HeroKey(hero),(int)cosmetic));
             return true;
         }
+        public static bool Equip(UniversalHeroCosmetic cosmetic)=>EquipFor(PlayerHeroSelection.Selected,cosmetic);
     }
 
     public static class UniversalSkin
     {
         public const string Name="VOIDFALL",OwnedKey="DF_SkinOwned_Voidfall",EquippedKey="DF_Skin_Voidfall";
         public const int Price=2000;
-        public static bool Owned=>PlayerPrefs.GetInt(OwnedKey,0)==1||PaidShardCommerce.OwnsVoidfall;
+        public static bool Owned=>CosmeticProfile.GetInt(OwnedKey,0)==1||CosmeticProfile.PaidVoidfall;
         public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.Voidfall;
-        public static AvatarPurchaseResult Purchase()
-        {
-            ProfileTransaction.Recover();
-            if(Owned)return AvatarPurchaseResult.AlreadyOwned;
-            if(!PlayerWallet.CanAfford(Price))return AvatarPurchaseResult.InsufficientShards;
-            ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-Price),
-                new ProfileTransaction.Write(OwnedKey,1),
-                new ProfileTransaction.Write(EquippedKey,1),
-                new ProfileTransaction.Write(UniversalCosmeticSelection.EquippedKey,(int)UniversalHeroCosmetic.Voidfall));
-            Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
-            return AvatarPurchaseResult.Purchased;
-        }
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.Voidfall);
+
         public static bool Equip(bool enabled)
         {
             if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Voidfall);
@@ -104,22 +77,10 @@ namespace Alterverse.Shop
         public const string OwnedKey="DF_SkinOwned_BetaSupporterWings";
         public const int Price=8000;
 
-        public static bool Owned=>PlayerPrefs.GetInt(OwnedKey,0)==1;
+        public static bool Owned=>CosmeticProfile.GetInt(OwnedKey,0)==1;
         public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.BetaSupporterWings;
 
-        public static AvatarPurchaseResult Purchase()
-        {
-            ProfileTransaction.Recover();
-            if(Owned)return AvatarPurchaseResult.AlreadyOwned;
-            if(!PlayerWallet.CanAfford(Price))return AvatarPurchaseResult.InsufficientShards;
-            ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-Price),
-                new ProfileTransaction.Write(OwnedKey,1),
-                new ProfileTransaction.Write(UniversalCosmeticSelection.EquippedKey,(int)UniversalHeroCosmetic.BetaSupporterWings),
-                new ProfileTransaction.Write(UniversalSkin.EquippedKey,0));
-            Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
-            return AvatarPurchaseResult.Purchased;
-        }
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.BetaSupporterWings);
 
         public static bool Equip(bool enabled)
         {
@@ -133,22 +94,10 @@ namespace Alterverse.Shop
         public const string OwnedKey="DF_SkinOwned_PlagueWings";
         public const int Price=4000;
 
-        public static bool Owned=>PlayerPrefs.GetInt(OwnedKey,0)==1;
+        public static bool Owned=>CosmeticProfile.GetInt(OwnedKey,0)==1;
         public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.PlagueWings;
 
-        public static AvatarPurchaseResult Purchase()
-        {
-            ProfileTransaction.Recover();
-            if(Owned)return AvatarPurchaseResult.AlreadyOwned;
-            if(!PlayerWallet.CanAfford(Price))return AvatarPurchaseResult.InsufficientShards;
-            ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-Price),
-                new ProfileTransaction.Write(OwnedKey,1),
-                new ProfileTransaction.Write(UniversalCosmeticSelection.EquippedKey,(int)UniversalHeroCosmetic.PlagueWings),
-                new ProfileTransaction.Write(UniversalSkin.EquippedKey,0));
-            Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
-            return AvatarPurchaseResult.Purchased;
-        }
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.PlagueWings);
 
         public static bool Equip(bool enabled)
         {
@@ -158,3 +107,4 @@ namespace Alterverse.Shop
     }
 
 }
+

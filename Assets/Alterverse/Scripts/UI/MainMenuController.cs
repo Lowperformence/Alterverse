@@ -25,7 +25,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
         private Page page;
         private bool visible = true, launching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, skinShopIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
@@ -33,6 +33,8 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private MenuCosmicBackdrop backdrop;
         private MenuHeroShowcase showcase;
+        private CosmeticCollectionPanel collection;
+        private System.Action<int> changeCollectionHero;
         private TouchScreenKeyboard nameKeyboard;
         private float master, music, sfx;
         private bool audioDirty;
@@ -54,6 +56,9 @@ namespace Alterverse.UI
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
+            collection=new CosmeticCollectionPanel();
+            changeCollectionHero=ChangeHero;
+            UniversalCosmeticSelection.EnsureMigrated((HeroId)selectedHero);
             if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
             MatchClock.Set(PauseReason.Menu,true);
         }
@@ -63,6 +68,8 @@ namespace Alterverse.UI
             instance.visible = true; instance.launching = false; instance.page = Page.Home;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
+            instance.collection?.Invalidate();
+            instance.showcase?.InvalidateLoadout();
             instance.gameObject.SetActive(true);
             if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
             MatchClock.Set(PauseReason.Menu,true);
@@ -77,20 +84,21 @@ namespace Alterverse.UI
         private void OnApplicationFocus(bool focused)
         {
             if (!focused && launching) { launching = false; page = Page.Play; }
-            if (focused && visible) MatchClock.Set(PauseReason.Menu,true);
+            if (focused && visible) { MatchClock.Set(PauseReason.Menu,true);collection?.Invalidate();showcase?.InvalidateLoadout(); }
         }
         private void OnDisable() { FlushAudio(); CloseKeyboard(); }
-        private void OnDestroy() { backdrop?.Dispose(); if (instance == this) instance = null; }
+        private void OnDestroy() { collection?.Dispose();backdrop?.Dispose(); if (instance == this) instance = null; }
         private void Update()
         {
             if (!visible || suspended) return;
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
+            bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
             showcase.Present((HeroId)selectedHero,
-                !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon),
+                !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory),
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
-                previewSkin?(UniversalHeroCosmetic?)SkinShopPreview:null);
+                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
             if (nameKeyboard != null)
             {
                 profileName = nameKeyboard.text;
@@ -109,7 +117,7 @@ namespace Alterverse.UI
         private void SetPage(Page next)
         {
             if (page == next || launching) return;
-            FlushAudio(); CancelName(); page = next; pageChangedAt = Time.unscaledTime;
+            FlushAudio(); CancelName(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; inventoryMessage = ""; GUI.FocusControl(null);
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
         }
@@ -149,7 +157,7 @@ namespace Alterverse.UI
         }
         private void DrawNavigation()
         {
-            theme.Label(new Rect(Left,20,300,48),"DIMENSIONS FRONT",theme.Heading);
+            theme.FitLabel(new Rect(Left,20,Mathf.Max(120,ContentWidth-970),48),"DIMENSIONS FRONT",theme.Small);
 
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
@@ -174,12 +182,6 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,166,ContentWidth,30),description,theme.Body,true);
         }
         private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
-        private UniversalHeroCosmetic SkinShopPreview => skinShopIndex switch
-        {
-            1=>UniversalHeroCosmetic.BetaSupporterWings,
-            2=>UniversalHeroCosmetic.PlagueWings,
-            _=>UniversalHeroCosmetic.Voidfall
-        };
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
@@ -321,19 +323,20 @@ namespace Alterverse.UI
             selectedHero=Mathf.Clamp(index,0,5);
             PlayerHeroSelection.Select((HeroId)selectedHero);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
+            bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
             showcase.Present((HeroId)selectedHero,true,
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
-                previewSkin?(UniversalHeroCosmetic?)SkinShopPreview:null);
+                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
         }
         private void DrawShop()
         {
             Heading("Store","Cosmetics, arenas, shards, battle supply and seasonal progression.");
             float tabW=112f,tabGap=8f;
-            if(theme.Action(new Rect(Left,204,tabW,52),"SKINS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left,204,tabW,52),"COSMETICS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
-            theme.Label(new Rect(Right-264,116,264,42),$"SHARDS  {PlayerWallet.Balance}",theme.Small);
+            theme.Label(new Rect(Right-264,116,264,42),collection.BalanceText((HeroId)selectedHero),theme.Small);
             if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=true;mapShop=false;battlePassShop=false;shopMessage="";}
             if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"MAPS",selected:mapShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=true;battlePassShop=false;shopMessage="";}
@@ -390,68 +393,7 @@ namespace Alterverse.UI
         }
         private void DrawSkinShop()
         {
-            float w=ContentWidth*.53f,x=Left+w+32,rw=ContentWidth-w-32;
-            DrawPortrait(new Rect(Left,270,w,340));
-            if(theme.Action(new Rect(Left,614,64,54),"<"))ChangeHero((selectedHero+5)%6);
-            theme.Center(new Rect(Left+72,614,w-144,54),HeroName);
-            if(theme.Action(new Rect(Left+w-64,614,64,54),">"))ChangeHero((selectedHero+1)%6);
-
-            float selectorGap=7f,selectorW=(rw-selectorGap*2)/3f;
-            if(theme.Action(new Rect(x,270,selectorW,40),"VOIDFALL",selected:skinShopIndex==0))
-            {skinShopIndex=0;shopMessage="";}
-            if(theme.Action(new Rect(x+selectorW+selectorGap,270,selectorW,40),"BETA WINGS",selected:skinShopIndex==1))
-            {skinShopIndex=1;shopMessage="";}
-            if(theme.Action(new Rect(x+(selectorW+selectorGap)*2,270,selectorW,40),"PLAGUE WINGS",selected:skinShopIndex==2))
-            {skinShopIndex=2;shopMessage="";}
-
-            UniversalHeroCosmetic cosmetic=SkinShopPreview;
-            bool beta=cosmetic==UniversalHeroCosmetic.BetaSupporterWings;
-            bool plague=cosmetic==UniversalHeroCosmetic.PlagueWings;
-
-            string name=plague?PlagueWings.Name:beta?BetaSupporterWings.Name:UniversalSkin.Name;
-            string category=cosmetic==UniversalHeroCosmetic.Voidfall
-                ?"UNIVERSAL ARMOR FINISH / ALL SIX HEROES"
-                :"UNIVERSAL WING COSMETIC / ALL SIX HEROES";
-            string description=plague
-                ?"Toxic pest wings born from the Green Planet.\nAcid-green, diseased and dangerous. No combat power."
-                :beta
-                    ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening. No combat power."
-                    :"Fractured violet wings. Obsidian armor.\nDistinct visual finish with no combat power.";
-            string progressionBonus=WingMatchRewardBonus.ShopBonus(cosmetic);
-            int price=plague?PlagueWings.Price:beta?BetaSupporterWings.Price:UniversalSkin.Price;
-            bool owned=plague?PlagueWings.Owned:beta?BetaSupporterWings.Owned:UniversalSkin.Owned;
-            bool equipped=plague?PlagueWings.Equipped:beta?BetaSupporterWings.Equipped:UniversalSkin.Equipped;
-            bool affordable=PlayerWallet.CanAfford(price);
-
-            theme.Label(new Rect(x,322,rw,46),name,theme.Title);
-            theme.Label(new Rect(x,372,rw,34),category,theme.Small,true);
-            theme.Label(new Rect(x,414,rw,58),description,theme.Body,true);
-            theme.Label(new Rect(x,474,rw,24),"PROGRESSION BONUS  •  "+progressionBonus,theme.Small,true);
-            theme.Label(new Rect(x,500,rw,32),equipped?"EQUIPPED":owned?"OWNED":price+" SHARDS",theme.Heading);
-
-            string label=equipped?"USE ORIGINAL":owned?"EQUIP":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
-            if(theme.Action(new Rect(x,548,rw,60),label,true,enabled:!cosmeticBusy&&(equipped||owned||affordable)))
-            {
-                if(equipped)
-                {
-                    UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
-                    shopMessage="Original hero appearance equipped.";
-                }
-                else if(owned)
-                {
-                    UniversalCosmeticSelection.Equip(cosmetic);
-                    shopMessage=name+" equipped for your next match.";
-                }
-                else
-                {
-                    AvatarPurchaseResult result=plague?PlagueWings.Purchase():beta?BetaSupporterWings.Purchase():UniversalSkin.Purchase();
-                    shopMessage=result==AvatarPurchaseResult.Purchased
-                        ?name+" purchased and equipped for all six heroes."
-                        :result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
-                }
-            }
-            theme.Label(new Rect(x,620,rw,48),shopMessage.Length>0?shopMessage:
-                $"Preview: {name}  •  {progressionBonus}  •  NO COMBAT POWER",theme.Small,true);
+            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,false,showcase,changeCollectionHero);
         }
 
         private void DrawWeaponSkinShop()
@@ -720,31 +662,9 @@ namespace Alterverse.UI
 
         private void DrawInventory()
         {
-            Heading("Battle Inventory","Equip one consumable for your next match. It activates on your first successful Ultimate.");
-            BattleItemType equipped=BattleItemInventory.Equipped;
-            float gap=18f,cardW=(ContentWidth-gap)/2f,cardH=202f;
-            for(int i=0;i<BattleItemInventory.All.Length;i++)
-            {
-                BattleItemType item=BattleItemInventory.All[i];
-                int row=i/2,col=i%2;
-                float x=Left+col*(cardW+gap),y=218+row*(cardH+18);
-                bool selected=equipped==item;
-                theme.Panel(new Rect(x,y,cardW,cardH));
-                BattleItemIconRenderer.Draw(new Rect(x+18,y+22,116,116),item,selected);
-                theme.Label(new Rect(x+154,y+18,cardW-172,32),BattleItemInventory.Name(item),theme.Heading);
-                theme.Label(new Rect(x+154,y+54,cardW-172,64),BattleItemInventory.ShortDescription(item),theme.Small,true);
-                int count=BattleItemInventory.Count(item);
-                theme.Label(new Rect(x+154,y+122,cardW-172,24),$"OWNED  {count}",theme.Small,true);
-                string action=selected?"EQUIPPED":count>0?"EQUIP":"NOT OWNED";
-                if(theme.Action(new Rect(x+154,y+154,cardW-172,38),action,selected,selected,enabled:count>0&&!selected))
-                {
-                    if(BattleItemInventory.Equip(item)){inventoryMessage=BattleItemInventory.Name(item)+" equipped for the next match.";equipped=item;}
-                }
-            }
-            string status=equipped==BattleItemType.None?"NO ITEM EQUIPPED":"EQUIPPED  ◆  "+BattleItemInventory.Name(equipped);
-            theme.Label(new Rect(Left,650,ContentWidth*.62f,28),inventoryMessage.Length>0?inventoryMessage:status,theme.Small,true);
-            if(equipped!=BattleItemType.None&&theme.Action(new Rect(Right-220,642,220,44),"UNEQUIP"))
-            {BattleItemInventory.Equip(BattleItemType.None);inventoryMessage="Battle item unequipped.";}
+            Heading("Inventory","Your collection. A personal loadout for every hero.");
+            collection.DrawInventoryTabs(theme,new Rect(Left,204,ContentWidth,52));
+            collection.Draw(theme,new Rect(Left,270,ContentWidth,410),(HeroId)selectedHero,true,showcase,changeCollectionHero);
         }
 
         private string XpLabel() => PlayerExperience.Level>=PlayerExperience.MaxLevel ? "MAX LEVEL" : $"{PlayerExperience.XpIntoLevel} / {PlayerExperience.XpIntoLevel+PlayerExperience.XpToNextLevel} XP";
@@ -925,4 +845,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

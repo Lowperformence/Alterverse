@@ -15,6 +15,7 @@ namespace Alterverse.Shop
         [Serializable] sealed class Request {public string productId,purchaseToken,cosmeticId,claimId;}
         [Serializable] sealed class Response {public bool fulfilled;public Snapshot wallet;}
         public static PaidShardCommerce Instance{get;private set;}
+        public static event Action EntitlementsChanged;
         public static int Balance=>Instance!=null&&Instance.Ready?Instance.snapshot.balance:0;
         public bool Ready=>ready&&!string.IsNullOrEmpty(ReadCredential());
         public string AccountHash{get;private set;}
@@ -28,10 +29,10 @@ namespace Alterverse.Shop
         {
             if(!Uri.TryCreate(httpsEndpoint,UriKind.Absolute,out var uri)||uri.Scheme!="https"||string.IsNullOrWhiteSpace(accountHash)||accountHash.Length>64)throw new ArgumentException("HTTPS commerce endpoint and obfuscated account ID required");
             if(Instance==null)new GameObject("DF_PaidShardCommerce").AddComponent<PaidShardCommerce>();
-            var c=Instance;c.generation++;c.ready=false;c.CancelPending();c.endpoint=httpsEndpoint.TrimEnd('/');c.token=accessToken;c.AccountHash=accountHash;c.ready=false;c.snapshot=new Snapshot();c.StartCoroutine(c.Sync());return c;
+            var c=Instance;c.generation++;c.ready=false;c.CancelPending();c.endpoint=httpsEndpoint.TrimEnd('/');c.token=accessToken;c.AccountHash=accountHash;c.ready=false;c.snapshot=new Snapshot();EntitlementsChanged?.Invoke();c.StartCoroutine(c.Sync());return c;
         }
         public void Refresh(){if(token!=null)StartCoroutine(Sync());}
-        public static void Disconnect(){if(Instance==null)return;var c=Instance;c.generation++;c.ready=false;c.token=null;c.AccountHash=null;c.snapshot=new Snapshot();c.CancelPending();c.Status="Store account disconnected.";}
+        public static void Disconnect(){if(Instance==null)return;var c=Instance;c.generation++;c.ready=false;c.token=null;c.AccountHash=null;c.snapshot=new Snapshot();c.CancelPending();c.Status="Store account disconnected.";EntitlementsChanged?.Invoke();}
         void CancelPending(){StopAllCoroutines();var tasks=new List<TaskCompletionSource<bool>>(pending);pending.Clear();foreach(var task in tasks)task.TrySetResult(false);}
         void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
         IEnumerator Sync()
@@ -39,7 +40,7 @@ namespace Alterverse.Shop
             Response response=null;
             yield return Send("/wallet",new Request(),r=>response=r);
             if(response==null||response.wallet==null)yield break;
-            Apply(response.wallet);ready=true;Status="Store account connected.";
+            Apply(response.wallet);ready=true;EntitlementsChanged?.Invoke();Status="Store account connected.";
             bool claimed=false;
             yield return ClaimVerifiedShards(ok=>claimed=ok);
             if(claimed)Status="Shard balance synchronized.";
@@ -144,9 +145,10 @@ namespace Alterverse.Shop
         }
         void Apply(Snapshot value)
         {
-            if(value.revision<snapshot.revision)return;snapshot=value;
+            if(value.revision<snapshot.revision)return;snapshot=value;EntitlementsChanged?.Invoke();
             // Paid entitlements belong only to this authenticated session; never write offline ownership keys.
         }
-        void OnDestroy(){ready=false;generation++;CancelPending();if(Instance==this)Instance=null;}
+        void OnDestroy(){ready=false;generation++;CancelPending();if(Instance==this)Instance=null;EntitlementsChanged?.Invoke();}
     }
 }
+

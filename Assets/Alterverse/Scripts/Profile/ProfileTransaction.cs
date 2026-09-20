@@ -5,6 +5,7 @@ namespace Alterverse.Profile
     /// <summary>Absolute-value journal: replay is idempotent after interrupted persistence.</summary>
     public static class ProfileTransaction
     {
+        public static event Action Committed;
         private const string Pending="DF_ProfileTransaction_v1";
         [Serializable] public sealed class Write
         {
@@ -49,7 +50,9 @@ namespace Alterverse.Profile
                 if(write.isText)PlayerPrefs.SetString(write.key,write.text);else PlayerPrefs.SetInt(write.key,write.number);
             PlayerPrefs.Save();
             PlayerPrefs.DeleteKey(Pending);PlayerPrefs.Save();
+            Committed?.Invoke();
         }
         public static int Add(int value,int amount)=>(int)Math.Min(int.MaxValue,Math.Max(0L,(long)value+amount));
     }
 }
+

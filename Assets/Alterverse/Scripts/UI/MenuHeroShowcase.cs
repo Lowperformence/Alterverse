@@ -15,6 +15,11 @@ namespace Alterverse.UI
         private bool hasSelection,selectedWeapon;
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
+        private bool loadoutDirty=true,cachedWeapon;
+        private HeroId cachedHero;
+        private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
+        public void InvalidateLoadout()=>loadoutDirty=true;
+        private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
         public Texture Image => texture;
 
@@ -25,11 +30,18 @@ namespace Alterverse.UI
             if (stage == null) CreateStage();
             stage.SetActive(true);
 
+            if(loadoutDirty||cachedHero!=hero)
+            {
+                cachedHero=hero;
+                cachedCosmetic=Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(hero);
+                cachedWeapon=Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
+                loadoutDirty=false;
+            }
             Alterverse.Shop.UniversalHeroCosmetic cosmetic=cosmeticOverride ??
                 (skinOverride.HasValue
                     ? (skinOverride.Value?Alterverse.Shop.UniversalHeroCosmetic.Voidfall:Alterverse.Shop.UniversalHeroCosmetic.Original)
-                    : Alterverse.Shop.UniversalCosmeticSelection.Equipped);
-            bool weapon=weaponOverride??Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
+                    : cachedCosmetic);
+            bool weapon=weaponOverride??cachedWeapon;
 
             if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon) return;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;
@@ -48,6 +60,9 @@ namespace Alterverse.UI
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
             wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
+            float facing=hero==HeroId.Nyra?-42:hero==HeroId.Kaelon?-24:-16;
+            actor.transform.localRotation=Quaternion.Euler(0,facing,0);
+            FitPreviewBounds();
             // No health, colliders, input, abilities, team membership or game-world registration.
             foreach (Transform part in actor.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = PreviewLayer;
             foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
@@ -55,6 +70,24 @@ namespace Alterverse.UI
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
             }
+        }
+        private void FitPreviewBounds()
+        {
+            Renderer[] renderers=actor.GetComponentsInChildren<Renderer>();
+            bool found=false;Bounds bounds=default;
+            foreach(var renderer in renderers)
+            {
+                if(!renderer.enabled)continue;
+                if(!found){bounds=renderer.bounds;found=true;}else bounds.Encapsulate(renderer.bounds);
+            }
+            if(!found)return;
+            Vector3 forward=previewCamera.transform.forward;
+            previewCamera.transform.position=bounds.center-forward*5f;
+            Vector3 extent=bounds.extents;
+            Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
+            float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
+            float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
+            previewCamera.orthographicSize=Mathf.Max(1.65f,Mathf.Max(vertical,horizontal/(640f/720f))*1.2f);
         }
         private void CreateStage()
         {
@@ -102,7 +135,7 @@ namespace Alterverse.UI
             if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
             if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
         }
-        private void OnDisable() { if (stage != null) stage.SetActive(false); }
+        private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; if (stage != null) stage.SetActive(false); }
         private void OnDestroy()
         {
             if (previewCamera != null) previewCamera.targetTexture = null;
@@ -111,5 +144,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
