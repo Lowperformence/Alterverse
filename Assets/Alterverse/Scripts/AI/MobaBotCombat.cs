@@ -28,10 +28,13 @@ namespace Alterverse.AI
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead||!HeroCombatStatus.CanAct(gameObject)||brain==null||sensor==null)return;
-            // A regroup/lane call may keep steering away while still firing in self-defence.
-            if(brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover)return;
             Health target=sensor.CurrentTarget;
             if(target==null||target.IsDead){observedTarget=null;return;}
+
+            // Retreat/Recover normally suppresses combat, but never disables local self-defence
+            // against a visible enemy inside our own base/healing area.
+            bool recovering=brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover;
+            if(recovering&&!brain.IsLocalBaseThreat(target))return;
             if(target!=observedTarget)
             {
                 observedTarget=target;
