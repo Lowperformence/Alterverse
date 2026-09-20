@@ -1,22 +1,54 @@
+using Alterverse.Shop;
 using UnityEngine;
+
 namespace Alterverse.Match
 {
     public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2 }
 
-    /// <summary>Persistent rotating visual arena choice. Gameplay geometry remains shared.</summary>
+    /// <summary>Persistent player-selected arena. Locked premium arenas always fall back to Moon.</summary>
     public static class ArenaVariantRuntime
     {
-        private const string NextKey="DF_NextArenaVariant";
+        internal const string SelectedKey="DF_SelectedArenaVariant";
         public static ArenaVariant Current { get; private set; }=ArenaVariant.Moon;
         public static bool IsMars=>Current==ArenaVariant.Mars;
         public static bool IsGreenPlanet=>Current==ArenaVariant.GreenPlanet;
 
+        public static ArenaVariant Selected
+        {
+            get
+            {
+                int raw=Mathf.Clamp(PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon),0,2);
+                ArenaVariant selected=(ArenaVariant)raw;
+                if(!ArenaUnlockInventory.Owned(selected))
+                {
+                    selected=ArenaVariant.Moon;
+                    PlayerPrefs.SetInt(SelectedKey,(int)selected);
+                    PlayerPrefs.Save();
+                }
+                return selected;
+            }
+        }
+
+        public static bool CanSelect(ArenaVariant variant)=>variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant);
+
+        public static bool Select(ArenaVariant variant)
+        {
+            if(!CanSelect(variant))return false;
+            PlayerPrefs.SetInt(SelectedKey,(int)variant);
+            PlayerPrefs.Save();
+            return true;
+        }
+
+        public static void EnsureValidSelection()
+        {
+            _=Selected;
+        }
+
         public static void BeginMatch()
         {
-            int next=Mathf.Clamp(PlayerPrefs.GetInt(NextKey,0),0,2);
-            Current=(ArenaVariant)next;
-            PlayerPrefs.SetInt(NextKey,(next+1)%3);
-            PlayerPrefs.Save();
+            // There is deliberately no automatic rotation here. A match can only use the
+            // player's persisted, ownership-validated selection.
+            Current=Selected;
         }
     }
 }
