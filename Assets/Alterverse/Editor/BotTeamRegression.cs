@@ -141,7 +141,7 @@ namespace Alterverse.EditorChecks
             Assert(Vector3.Distance(back,heal)>.5f&&Vector3.Distance(front,back)>1f,"Roles must not stack on one point.");
             Set(tank.Vitals,"<Current>k__BackingField",35f);Set(tank,"lastHealth",.35f);Invoke(tank,"Decide");
             Assert(tank.State==MobaBotBrain.BotState.Fight,"35% HP with allies can finish a 25% isolated opponent.");
-            int revision=Team.Revision;Invoke(Team,"Commit",BotTeamCoordinator.Intent.Push,new Vector3(20,1,16),false);
+            int revision=Team.Revision;Invoke(Team,"Commit",BotTeamCoordinator.Intent.Roam,new Vector3(6,1,8),false);
             Assert(Team.Revision==revision,"An ordinary new plan must respect intent hold time.");
         }
         private static void CheckCallParticipation()
@@ -176,8 +176,8 @@ namespace Alterverse.EditorChecks
             Health enemy=Unit("LastVisibleEnemy",1,new Vector3(0,1,0),HeroId.Elyra).GetComponent<Health>();
             var tower=Unit("ObjectiveTower",1,new Vector3(10,1,0)).AddComponent<LaneTower>();tower.Initialize(1);
             Think();MarkDead(enemy);Think();
-            Assert(Team.Call==BotTeamCoordinator.Intent.Push,
-                "A cleared fight with an observed kill must create lane tempo without selecting a tower objective.");
+            Assert(Team.Call==BotTeamCoordinator.Intent.Roam,
+                "A cleared fight with an observed kill must return to free-roam PvP without selecting a tower objective.");
             Assert((Team.Destination-tower.transform.position).sqrMagnitude>1f,
                 "Bot team tempo must ignore the tower as an objective destination.");
         }
