@@ -6,7 +6,8 @@ namespace Alterverse.Shop
     {
         Original=0,
         Voidfall=1,
-        BetaSupporterWings=2
+        BetaSupporterWings=2,
+        PlagueWings=3
     }
 
     /// <summary>
@@ -23,7 +24,7 @@ namespace Alterverse.Shop
                 ProfileTransaction.Recover();
                 if(PlayerPrefs.HasKey(EquippedKey))
                 {
-                    UniversalHeroCosmetic selected=(UniversalHeroCosmetic)Mathf.Clamp(PlayerPrefs.GetInt(EquippedKey,0),0,2);
+                    UniversalHeroCosmetic selected=(UniversalHeroCosmetic)Mathf.Clamp(PlayerPrefs.GetInt(EquippedKey,0),0,3);
                     if(IsOwned(selected))return selected;
                     if(selected!=UniversalHeroCosmetic.Original)
                     {
@@ -49,6 +50,7 @@ namespace Alterverse.Shop
             UniversalHeroCosmetic.Original=>true,
             UniversalHeroCosmetic.Voidfall=>UniversalSkin.Owned,
             UniversalHeroCosmetic.BetaSupporterWings=>BetaSupporterWings.Owned,
+            UniversalHeroCosmetic.PlagueWings=>PlagueWings.Owned,
             _=>false
         };
 
@@ -119,4 +121,34 @@ namespace Alterverse.Shop
             return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
         }
     }
+    public static class PlagueWings
+    {
+        public const string Name="PLAGUE WINGS";
+        public const string OwnedKey="DF_SkinOwned_PlagueWings";
+        public const int Price=4000;
+
+        public static bool Owned=>PlayerPrefs.GetInt(OwnedKey,0)==1;
+        public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.PlagueWings;
+
+        public static AvatarPurchaseResult Purchase()
+        {
+            ProfileTransaction.Recover();
+            if(Owned)return AvatarPurchaseResult.AlreadyOwned;
+            if(!PlayerWallet.CanAfford(Price))return AvatarPurchaseResult.InsufficientShards;
+            ProfileTransaction.Commit(
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-Price),
+                new ProfileTransaction.Write(OwnedKey,1),
+                new ProfileTransaction.Write(UniversalCosmeticSelection.EquippedKey,(int)UniversalHeroCosmetic.PlagueWings),
+                new ProfileTransaction.Write(UniversalSkin.EquippedKey,0));
+            Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
+            return AvatarPurchaseResult.Purchased;
+        }
+
+        public static bool Equip(bool enabled)
+        {
+            if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.PlagueWings);
+            return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
+        }
+    }
+
 }
