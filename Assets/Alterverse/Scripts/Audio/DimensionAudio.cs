@@ -82,10 +82,10 @@ namespace Alterverse.Audio
             if(instance==null)return;int cue=(int)sound;if(cue<0||cue>=instance.clips.Length||instance.clips[cue]==null)return;
             PlayCue(instance.clips[cue],cue,volume*Gain(sound),pitch,Priority(sound),Cooldown(sound));
         }
-        public static void PlayHero(int cue,float gain,int priority,float cooldown,float pan=0)
+        public static void PlayHero(int cue,float gain,int priority,float cooldown,float pan=0,float pitch=1f)
         {
             if(instance==null||cue<0||cue>=instance.heroClips.Length||instance.heroClips[cue]==null)return;
-            PlayCue(instance.heroClips[cue],instance.clips.Length+cue,gain,1,priority,cooldown,pan);
+            PlayCue(instance.heroClips[cue],instance.clips.Length+cue,gain,pitch,priority,cooldown,pan);
         }
         static void PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown,float pan=0)
         {
