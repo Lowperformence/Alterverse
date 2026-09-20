@@ -1,0 +1,122 @@
+#if UNITY_EDITOR
+using System.Collections;
+using Alterverse.Characters;
+using Alterverse.Combat;
+using UnityEngine;
+
+namespace Alterverse.Diagnostics
+{
+    // Play-mode runner lives outside an Editor folder so Unity can attach it to a GameObject.
+    // The UNITY_EDITOR guard keeps it out of Android/player builds.
+    public sealed class MovementRegressionRunner : MonoBehaviour
+    {
+        public void Begin()=>StartCoroutine(Run());
+
+        private static void Check(bool condition,string message)
+        {if(!condition)throw new System.InvalidOperationException("Movement regression: "+message);}
+
+        private IEnumerator Run()
+        {
+            try
+            {
+                var actor=new GameObject("DF_MovementCheckActor");actor.transform.SetParent(transform);
+                actor.transform.position=new Vector3(0,80,0);
+                var cc=actor.AddComponent<CharacterController>();cc.height=2;cc.radius=.5f;
+                var health=actor.AddComponent<Health>();var body=actor.AddComponent<HeroLocomotion>();
+                CheckInputDirections(actor);
+                CheckBaseRoutesAndSolidRange();
+                var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(transform);
+                floor.transform.position=new Vector3(0,78.8f,0);floor.transform.localScale=new Vector3(20,.2f,20);
+                var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(transform);
+                wall.transform.position=new Vector3(0,80,2);wall.transform.localScale=new Vector3(8,4,.2f);
+                Physics.SyncTransforms();
+                body.Move(Vector3.forward*6,40,33,false);
+                Check(actor.transform.position.z<1.55f,"swept movement crossed a solid wall");
+                Relocate(actor,cc,body);Physics.SyncTransforms();
+                body.Move(new Vector3(2,0,3),40,33);
+                Check(actor.transform.position.x>1.5f&&actor.transform.position.z<1.55f,"wall slide lost its tangent or crossed the wall");
+                Relocate(actor,cc,body);Physics.SyncTransforms();
+                Check(body.BeginDash(actor.transform.position+Vector3.forward*6),"wall approach dash refused");
+                float wallTimeout=Time.unscaledTime+1;
+                while(body.IsDashing&&Time.unscaledTime<wallTimeout)yield return null;
+                Check(!body.IsDashing&&actor.transform.position.z<1.55f,"dash crossed a solid wall");
+                wall.SetActive(false);Relocate(actor,cc,body);Physics.SyncTransforms();
+                Check(body.BeginDash(actor.transform.position+Vector3.right*3),"clear dash refused");
+                Check(actor.transform.position.x==0,"dash teleported at cast time");
+                float timeout=Time.unscaledTime+1;
+                while(body.IsDashing&&Time.unscaledTime<timeout)yield return null;
+                Check(Mathf.Abs(actor.transform.position.x-3)<.05f,"dash distance changed");
+                yield return null;
+                Check(body.BeginDash(actor.transform.position+Vector3.right*3),"second dash refused");
+                yield return null;
+                actor.GetComponent<HeroCombatStatus>().Stun(.5f);
+                Vector3 stopped=actor.transform.position;yield return null;
+                Check(!body.IsDashing&&(actor.transform.position-stopped).sqrMagnitude<.001f,"stun did not cancel dash");
+                actor.GetComponent<HeroCombatStatus>().Clear();yield return null;
+                Check(body.BeginDash(actor.transform.position+Vector3.left*3),"dash refused after cleared status");
+                health.TakeDamage(1000);stopped=actor.transform.position;yield return null;
+                Check(!body.IsDashing&&(actor.transform.position-stopped).sqrMagnitude<.001f,"death did not cancel dash");
+                Debug.Log("DIMENSIONS FRONT: movement input direction, wall, slide, dash distance, stun and death checks passed.");
+            }
+            finally {Destroy(gameObject);}
+        }
+
+        private void CheckBaseRoutesAndSolidRange()
+        {
+            var actor=new GameObject("DF_RouteCheck");actor.transform.SetParent(transform);
+            var route=actor.AddComponent<Alterverse.AI.BotLanePlan>();
+            for(int team=0;team<2;team++)for(int lane=-1;lane<=1;lane+=2)
+            {
+                float direction=team==0?1:-1;
+                actor.transform.position=new Vector3(-28*direction,80,lane*16);
+                route.Initialize(team,lane*16);
+                Vector3 exit=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
+                Check(Mathf.Abs(exit.x+22*direction)<.01f,"base exit does not advance beyond tactical gate");
+                actor.transform.position+=Vector3.forward*lane*1.1f;
+                Check(route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane)==exit,"lane-edge jitter resets latched exit");
+                actor.transform.position=new Vector3(-28*direction,80,0);route.ResetRoute();
+                Vector3 align=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
+                Check(Mathf.Abs(align.z-lane*16)<.01f&&Mathf.Abs(align.x+28*direction)<.01f,"respawn route did not reset alignment");
+            }
+            actor.transform.position=new Vector3(0,80,-3);
+            actor.AddComponent<Health>();var locomotion=actor.AddComponent<HeroLocomotion>();
+            var obstacle=GameObject.CreatePrimitive(PrimitiveType.Capsule);obstacle.transform.SetParent(transform);
+            obstacle.transform.position=new Vector3(0,80,0);
+            var capsule=obstacle.GetComponent<CapsuleCollider>();capsule.radius=.72f;capsule.height=2.05f;
+            var hp=obstacle.AddComponent<Health>();Physics.SyncTransforms();
+            Check(locomotion.TryFindObstacleWaypoint(capsule,new Vector3(0,80,3),1,out Vector3 point),"guardian has no swept-clear local waypoint");
+            Check(Mathf.Abs(point.x)>1.2f,"guardian waypoint lacks capsule clearance");
+            locomotion.Move(point-actor.transform.position,40,33);
+            Check(Vector3.Distance(actor.transform.position,point)<.05f,"waypoint probe disagrees with real movement");
+            Vector3 attackOrigin=new Vector3(0,80,-2);
+            Check(HeroCombatRules.BasicDistance(attackOrigin,hp)<1.4f,"solid surface remains out of melee range");
+            obstacle.AddComponent<HeroIdentity>();
+            Check(Mathf.Abs(HeroCombatRules.BasicDistance(attackOrigin,hp)-2)<.01f,"hero centre range changed");
+            obstacle.SetActive(false);actor.SetActive(false);
+        }
+
+        private void CheckInputDirections(GameObject actor)
+        {
+            var motor=actor.AddComponent<HeroMotor>();motor.enabled=false;
+            var cameraBasis=new GameObject("DF_InputCameraBasis");cameraBasis.transform.SetParent(transform);
+            cameraBasis.transform.rotation=Quaternion.Euler(45,90,0);
+            typeof(HeroMotor).GetField("cameraTransform",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic).SetValue(motor,cameraBasis.transform);
+            motor.SetMoveInput(Vector2.up);
+            Check(Vector3.Dot(motor.CurrentMoveDirection,Vector3.right)>.999f,"current input ignored camera yaw");
+            motor.SetMoveInput(Vector2.down);
+            Check(Vector3.Dot(motor.CurrentMoveDirection,Vector3.left)>.999f,"same-frame reversal retained stale direction");
+            motor.SetMoveInput(Vector2.one);
+            Check(Mathf.Abs(motor.CurrentMoveDirection.magnitude-1)<.001f,"diagonal input increased speed");
+            motor.SetMoveInput(new Vector2(0,.25f));
+            Check(Mathf.Abs(motor.CurrentMoveDirection.magnitude-.25f)<.001f,"analog magnitude was lost");
+            motor.SetMoveInput(Vector2.zero);
+            Check(!motor.HasMoveInput&&motor.CurrentMoveDirection==Vector3.zero,"released input retained movement");
+            motor.SetMoveInput(Vector2.up);motor.ClearInput();
+            Check(!motor.HasMoveInput&&motor.CurrentMoveDirection==Vector3.zero,"canceled input retained movement");
+        }
+
+        private static void Relocate(GameObject actor,CharacterController cc,HeroLocomotion body)
+        {cc.enabled=false;actor.transform.position=new Vector3(0,80,0);cc.enabled=true;body.ResetMotion();}
+    }
+}
+#endif
