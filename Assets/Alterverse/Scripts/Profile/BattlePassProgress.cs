@@ -19,7 +19,7 @@ namespace Alterverse.Profile
             AvatarId=avatarId;
         }
 
-        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0;
+        public static BattlePassReward Empty=>new BattlePassReward(0,BattleItemType.None,0,-1);\n        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0;
 
         public string Label
         {
@@ -148,13 +148,13 @@ namespace Alterverse.Profile
                 40=>new BattlePassReward(item:BattleItemType.Heal,itemAmount:2),
                 45=>new BattlePassReward(item:BattleItemType.Shield,itemAmount:2),
                 50=>new BattlePassReward(item:BattleItemType.Speed,itemAmount:2),
-                _=>default
+                _=>BattlePassReward.Empty
             };
         }
 
         public static BattlePassReward PremiumRewardFor(int level)
         {
-            if(level<1||level>MaxLevel)return default;
+            if(level<1||level>MaxLevel)return BattlePassReward.Empty;
 
             int shards=level switch
             {
