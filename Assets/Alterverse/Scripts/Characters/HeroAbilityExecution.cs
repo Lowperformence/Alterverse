@@ -58,7 +58,7 @@ namespace Alterverse.Characters
                 MobaBotMover mover = GetComponent<MobaBotMover>();
                 if (mover != null && target != null && Vector3.Dot(movement, target.transform.position - from) > 0)
                     end = from + movement.normalized * Mathf.Min(spec.Range, Mathf.Max(0, HeroCombatRules.Distance(from, target.transform.position) - 1.5f));
-                end.x = Mathf.Clamp(end.x, -40, 40); end.z = Mathf.Clamp(end.z, -33, 33);
+                end = GameplayCollision.ClampToRoundedArena(end,40f,33f);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
                 if(!locomotion.BeginDash(end))return false;
                 HeroCombatAudio.Cast(gameObject,slot);
