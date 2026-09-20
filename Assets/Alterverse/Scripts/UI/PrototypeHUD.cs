@@ -266,7 +266,7 @@ namespace Alterverse.UI
             GUI.color=new Color(1f,1f,1f,active?.36f:.22f);
             GUI.DrawTexture(new Rect(center.x-58f,center.y-58f,116f,116f),joystickOuterTexture,ScaleMode.StretchToFill,true);
 
-            GUI.color=new Color(.86f,.88f,.91f,active?.38f:.24f);
+            GUI.color=new Color(.90f,.90f,.90f,active?.36f:.22f);
             GUI.DrawTexture(new Rect(knob.x-20f,knob.y-20f,40f,40f),joystickThumbTexture,ScaleMode.StretchToFill,true);
             GUI.color=before;
         }
@@ -288,28 +288,20 @@ namespace Alterverse.UI
             };
             Color32[] pixels=new Color32[size*size];
             float center=(size-1)*.5f;
-            float radius=size*.46f;
-            float halfStroke=outlineOnly?size*.0105f:size*.018f;
-            float aa=Mathf.Max(1.25f,size*.008f);
+            // Match the visible radii to the GUI rects: about 57 and 19 UI units.
+            float radius=size*.5f-2f;
+            float stroke=size*(outlineOnly?1.25f/116f:.9f/40f);
 
             for(int y=0;y<size;y++)
             for(int x=0;x<size;x++)
             {
                 float dx=x-center,dy=y-center;
                 float distance=Mathf.Sqrt(dx*dx+dy*dy);
-                float alpha;
-
-                if(outlineOnly)
-                {
-                    float edge=Mathf.Abs(distance-radius);
-                    alpha=1f-Mathf.SmoothStep(halfStroke,halfStroke+aa,edge);
-                }
-                else
-                {
-                    float outer=1f-Mathf.SmoothStep(radius-aa,radius+aa,distance);
-                    float border=Mathf.SmoothStep(radius-halfStroke-aa,radius-halfStroke,distance);
-                    alpha=outer*Mathf.Lerp(.68f,1f,border);
-                }
+                // Flat fill and a single thin outline. Only the boundary pixels are
+                // antialiased; no radial gradient, glow or additional disc is drawn.
+                float outer=Mathf.Clamp01(radius+.5f-distance);
+                float inner=Mathf.Clamp01(radius-stroke+.5f-distance);
+                float alpha=outer-(outlineOnly?1f:.25f)*inner;
 
                 pixels[y*size+x]=new Color32(255,255,255,(byte)Mathf.RoundToInt(Mathf.Clamp01(alpha)*255f));
             }
