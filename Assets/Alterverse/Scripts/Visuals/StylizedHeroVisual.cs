@@ -209,13 +209,49 @@ if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_
 ownedMaterials.Add(weaponMaterial);
 
 // Keep cosmetic weapons attached to their animated hand pivots.
-if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);ScaleAndGlow("WeaponR",1.25f,weaponMaterial);}
+if(identity.Hero==HeroId.Veyr)ApplyNullEdgeOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
 else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+}
+
+private void ApplyNullEdgeOverdrive(Shader shader,Material bladeMaterial)
+{
+Transform leftWeapon=FindVisual("WeaponL");
+Transform rightWeapon=FindVisual("WeaponR");
+
+// Previous premium size was 1.25x. 1.50x is another +20% from that state.
+if(leftWeapon!=null)leftWeapon.localScale*=1.50f;
+if(rightWeapon!=null)rightWeapon.localScale*=1.50f;
+
+// Keep both blades in the existing NULL EDGE violet/pink premium glow.
+Transform bladeL=FindVisual("BladeL");
+Transform bladeR=FindVisual("BladeR");
+if(bladeL!=null)ApplyGlow(bladeL,bladeMaterial);
+if(bladeR!=null)ApplyGlow(bladeR,bladeMaterial);
+
+// Grips and weapon detail pieces get a separate high-emission red identity.
+Color detailRed=new Color(1f,.018f,.012f);
+Material redMaterial=new Material(shader){name="DF_NullEdgeRedDetails",color=detailRed};
+if(redMaterial.HasProperty("_BaseColor"))redMaterial.SetColor("_BaseColor",detailRed);
+if(redMaterial.HasProperty("_Metallic"))redMaterial.SetFloat("_Metallic",.18f);
+if(redMaterial.HasProperty("_Smoothness"))redMaterial.SetFloat("_Smoothness",.90f);
+if(redMaterial.HasProperty("_EmissionColor"))
+{
+redMaterial.EnableKeyword("_EMISSION");
+redMaterial.SetColor("_EmissionColor",detailRed*4.6f);
+}
+ownedMaterials.Add(redMaterial);
+
+string[] redDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
+for(int i=0;i<redDetails.Length;i++)
+{
+Transform detail=FindVisual(redDetails[i]);
+if(detail!=null)ApplyGlow(detail,redMaterial);
+}
 }
 
 private void ApplyStarlineOverdrive(Shader shader,Material energyMaterial)
