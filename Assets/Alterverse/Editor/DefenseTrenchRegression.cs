@@ -23,7 +23,7 @@ namespace Alterverse.EditorChecks
             }
 
             DefenseTrench[] trenches = UnityEngine.Object.FindObjectsByType<DefenseTrench>();
-            Check(trenches.Length == 2, $"expected 2 right-flank trenches, found {trenches.Length}");
+            Check(trenches.Length == 4, $"expected 4 mirrored defense trenches, found {trenches.Length}");
 
             int zero = 0, lumen = 0;
             foreach (DefenseTrench trench in trenches)
@@ -38,24 +38,33 @@ namespace Alterverse.EditorChecks
                 Check(solid != null && solid.enabled, trench.name + " has no stable gameplay footprint");
 
                 Vector3 p = trench.transform.position;
-                Check(Mathf.Abs(Mathf.Abs(p.x) - 30.375f) < .65f, trench.name + " moved away from the healpad-to-bunker midpoint");
-                Check(Mathf.Abs(Mathf.Abs(p.z) - 10.75f) < .65f, trench.name + " moved away from the right-flank midpoint");
+                Check(Mathf.Abs(Mathf.Abs(p.x) - 25.25f) < .65f, trench.name + " is not one trench-length farther toward arena center");
+                Check(Mathf.Abs(Mathf.Abs(p.z) - 10.75f) < .65f, trench.name + " moved away from the intended left/right base flanks");
 
                 if (trench.Team == 0)
                 {
                     zero++;
-                    Check(p.z < 0f, trench.name + " is not on ZERO's local right flank");
+                    Check(p.x < 0f, trench.name + " is not on ZERO's half");
                 }
                 else if (trench.Team == 1)
                 {
                     lumen++;
-                    Check(p.z > 0f, trench.name + " is not on LUMEN's local right flank");
+                    Check(p.x > 0f, trench.name + " is not on LUMEN's half");
                 }
                 else Check(false, trench.name + " has an invalid team");
             }
 
-            Check(zero == 1 && lumen == 1, $"expected one trench per team, got ZERO={zero}, LUMEN={lumen}");
-            Debug.Log("Defense trench regression passed: mirrored right-flank trench per team, indestructible, 5 DPS close-range hazard.");
+            Check(zero == 2 && lumen == 2, $"expected two trenches per team, got ZERO={zero}, LUMEN={lumen}");
+
+            bool zeroLeft=false,zeroRight=false,lumenLeft=false,lumenRight=false;
+            foreach(DefenseTrench trench in trenches)
+            {
+                Vector3 p=trench.transform.position;
+                if(trench.Team==0){zeroLeft|=p.z>0f;zeroRight|=p.z<0f;}
+                else if(trench.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
+            }
+            Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a trench");
+            Debug.Log("Defense trench regression passed: two mirrored trenches per team, moved toward arena center, indestructible, 5 DPS close-range hazard.");
         }
     }
 }
