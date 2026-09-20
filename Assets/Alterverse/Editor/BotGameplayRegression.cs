@@ -37,6 +37,8 @@ namespace Alterverse.EditorChecks
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
                 CheckTargetRetention();
+                CheckRecentAttackerPriority();
+                CheckBaseRecoveryDefense();
                 CheckChaseDisengagement();
                 CheckHumanizedDecisionMemory();
                 CheckDifficulty();
@@ -135,6 +137,12 @@ namespace Alterverse.EditorChecks
             Vector3 detour = (Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover);
             Assert(detourUntil > Time.time && detour.sqrMagnitude > .5f,
                 "A sustained collision must start a committed detour instead of retrying the wall.");
+
+            // A later progress-only stall must not keep routing around an old obstacle.
+            Set(mover,"recoveryBlocker",wallCollider);
+            Call(mover,"BeginStuckRecovery",Vector3.forward*2f);
+            Assert(typeof(MobaBotMover).GetField("recoveryBlocker",Private).GetValue(mover)==null,
+                "Progress-watch recovery must clear a stale collider from an earlier collision.");
         }
 
         private static void CheckArrivalSeparationStability()
@@ -185,6 +193,59 @@ namespace Alterverse.EditorChecks
             Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
             Assert(sensor.CurrentTarget == first, "A living target must be reacquired after reaction delay.");
         }
+        private static void CheckRecentAttackerPriority()
+        {
+            Vector3 origin=new(13000,1,13000);
+            GameObject bot=Unit("Check_ThreatMemory",0,origin);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Nyra);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Nyra);
+            BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
+
+            GameObject attackerObject=Unit("Check_RecentAttacker",1,origin+Vector3.right*2.2f);
+            attackerObject.AddComponent<HeroIdentity>().Configure(HeroId.Veyr);
+            Health attacker=attackerObject.GetComponent<Health>();
+            GameObject decoyObject=Unit("Check_CloserDecoy",1,origin+Vector3.right*1.6f);
+            decoyObject.AddComponent<HeroIdentity>().Configure(HeroId.Kaelon);
+            Health decoy=decoyObject.GetComponent<Health>();
+
+            float beforeAttacker=(float)Call(sensor,"Score",attacker);
+            float beforeDecoy=(float)Call(sensor,"Score",decoy);
+            Assert(beforeAttacker>beforeDecoy,
+                "Without threat memory the meaningfully closer visible enemy should win distance-led selection.");
+
+            bot.GetComponent<Health>().TakeDamage(5f,attackerObject);
+            float afterAttacker=(float)Call(sensor,"Score",attacker);
+            float afterDecoy=(float)Call(sensor,"Score",decoy);
+            Assert(afterAttacker<afterDecoy,
+                "A recent visible attacker must briefly outrank a slightly closer harmless target.");
+        }
+
+        private static void CheckBaseRecoveryDefense()
+        {
+            Vector3 home=new(-27.5f,1,0);
+            GameObject bot=Unit("Check_BaseRecovery",0,home);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Kaelon);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Kaelon);
+            BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
+            MobaBotBrain brain=bot.AddComponent<MobaBotBrain>();brain.Initialize(0,16);
+
+            Health enemy=Unit("Check_BaseInvader",1,home+Vector3.right*2.5f).GetComponent<Health>();
+            Set(sensor,"currentTarget",enemy);
+            Health hp=bot.GetComponent<Health>();
+            hp.TakeDamage(75f);
+            Call(brain,"Decide");
+            Assert(brain.State==MobaBotBrain.BotState.Retreat,
+                "A critically wounded base defender may still retreat to heal.");
+
+            hp.Heal(35f);
+            Set(sensor,"currentTarget",enemy);
+            Call(brain,"Decide");
+            Assert(brain.State==MobaBotBrain.BotState.Fight,
+                "A sufficiently recovered bot must re-engage a visible invader instead of remaining passive on the healing plate.");
+            Assert(brain.BaseDefenseActive,
+                "Visible base pressure must hold a short local-defense window.");
+        }
+
         private static void CheckChaseDisengagement()
         {
             Vector3 origin=new(12000,1,12000);
