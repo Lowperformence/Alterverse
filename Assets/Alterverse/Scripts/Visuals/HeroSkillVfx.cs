@@ -147,8 +147,22 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Orb,p,Color.Lerp(c,Color.white,.35f),size*.82f,.14f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Mira:
-                    Fx(HeroFxShape.Seed,p,c,size*1.18f,.14f,HeroFxMotion.Contract,facing,actor);
-                    Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.55f),size*.90f,.16f,HeroFxMotion.Orbit,actor:actor);
+                    if(slot==0)
+                    {
+                        // Resonant Seed is offensive: pointed seed + shard, never the soft heal petals.
+                        Fx(HeroFxShape.Seed,p,c,size*1.18f,.14f,HeroFxMotion.Contract,facing,actor);
+                        Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.45f),size*.62f,.11f,HeroFxMotion.Contract,actor:actor);
+                    }
+                    else if(slot==2)
+                    {
+                        Fx(HeroFxShape.Shield,p,c,size*.92f,.16f,HeroFxMotion.Contract,facing,actor);
+                        Fx(HeroFxShape.Ring,p,new Color(c.r,c.g,c.b,.52f),size*.88f,.15f,HeroFxMotion.Expand,actor:actor);
+                    }
+                    else
+                    {
+                        Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.62f),size*.95f,.16f,HeroFxMotion.Orbit,actor:actor);
+                        Fx(HeroFxShape.Plus,p,Color.Lerp(c,Color.white,.42f),size*.55f,.14f,HeroFxMotion.Contract,actor:actor);
+                    }
                     break;
                 default:
                     Fx(HeroFxShape.Burst,p,c,size*1.12f,.12f,rotation:facing,actor:actor);
@@ -282,7 +296,7 @@ namespace Alterverse.Visuals
                     break;
                 case HeroId.Mira:
                     Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));
-                    if(slot<0)Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.42f),strength*1.25f,.18f,HeroFxMotion.Contract,actor:actor);
+                    if(slot<0)Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.40f),strength*.92f,.13f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Rook:
                     HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);
