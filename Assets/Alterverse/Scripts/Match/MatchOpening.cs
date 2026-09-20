@@ -60,14 +60,18 @@ private void OnGUI()
     float uiScale=Mathf.Clamp(Screen.height/900f,.72f,1.30f);
     EnsureStyles(uiScale);
 
+    bool headline=display=="REALITY COLLIDE";
+    bool go=display=="LOS";
+    int phaseSize=Mathf.RoundToInt((headline?58f:go?86f:104f)*uiScale);
+    title.fontSize=phaseSize;
+    shadow.fontSize=phaseSize;
+
     float progress=Mathf.Clamp01(phaseElapsed/Mathf.Max(.01f,phaseDuration));
     float fadeIn=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress/.18f));
     float fadeOut=1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01((progress-.78f)/.22f));
     float alpha=Mathf.Clamp01(fadeIn*fadeOut);
     float punch=1f+(.105f*(1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress/.32f))));
 
-    bool headline=display=="REALITY COLLIDE";
-    bool go=display=="LOS";
     float width=Mathf.Min(Screen.width*.82f,headline?980f*uiScale:520f*uiScale);
     float height=(headline?112f:150f)*uiScale;
     Rect rect=new((Screen.width-width)*.5f,(Screen.height-height)*.47f,width,height);
