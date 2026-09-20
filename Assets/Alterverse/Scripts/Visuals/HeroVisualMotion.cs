@@ -117,7 +117,9 @@ namespace Alterverse.Visuals
             float travel=delta.magnitude;
             PlanarSpeed=travel/dt;
             float response=1-Mathf.Exp(-24*dt);
-            float desired=Dashing?0:Mathf.Clamp01(PlanarSpeed/.8f);
+            // Tiny steering corrections should not restart the walk cycle. The gameplay root
+            // can still settle by a few centimetres without making the hero visually shuffle.
+            float desired=Dashing?0:Mathf.InverseLerp(.10f,.80f,PlanarSpeed);
             if(Dashing)strideWeight=0;
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
