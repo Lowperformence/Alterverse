@@ -9,7 +9,6 @@ namespace Alterverse.AI
         [SerializeField] private float laneZ;
         private float nextObjectiveScan;
         private Health laneObjective;
-        private float towerApproachSpread;
         private bool exitAligned;
         public bool IsLeavingBase => transform.position.x * (team == 0 ? 1f : -1f) < -22.5f;
 
@@ -22,8 +21,6 @@ namespace Alterverse.AI
         {
             team = Mathf.Clamp(assignedTeam, 0, 1);
             laneZ = assignedLaneZ >= 0 ? 16f : -16f;
-            uint hash=0;foreach(char ch in gameObject.name)hash=unchecked(hash*31u+ch);
-            towerApproachSpread=((int)(hash%5u)-2)*.28f;
             ResetRoute();
         }
 
@@ -51,46 +48,18 @@ namespace Alterverse.AI
                 nextObjectiveScan = Time.time + 1f;
                 laneObjective = FindLaneObjective();
             }
-            return laneObjective != null ? ObjectiveApproach(laneObjective) : EnemySide;
-        }
-
-        private Vector3 ObjectiveApproach(Health objective)
-        {
-            Vector3 target=objective.transform.position;
-            LaneTower tower=objective.GetComponent<LaneTower>();
-            if(tower==null)return target;
-
-            // Never route a lane bot into the centre of a solid tower. Approach from the
-            // attacking side and spread the roster slightly across Z so melee heroes do not
-            // stack on one collider point.
-            Collider body=tower.GetComponent<Collider>();
-            float bodyRadius=body!=null&&body.enabled?Mathf.Max(body.bounds.extents.x,body.bounds.extents.z):.70f;
-            float direction=team==0?1f:-1f;
-            float standOff=bodyRadius+.72f;
-            target.x-=direction*standOff;
-            target.z+=towerApproachSpread;
-            target.y=transform.position.y;
-            return target;
+            return laneObjective != null ? laneObjective.transform.position : EnemySide;
         }
 
         private Health FindLaneObjective()
         {
-            Health best = null;
-            float bestScore = float.MaxValue;
-            foreach (LaneTower tower in FindObjectsByType<LaneTower>())
+            // Bot heroes never route toward towers. The lane plan keeps advancing naturally and
+            // only converts to a combat objective when the enemy Reality Core is actually vulnerable.
+            foreach (Health hp in Health.Active)
             {
-                Health hp = tower.GetComponent<Health>();
-                if (tower.Team == team || hp == null || hp.IsDead) continue;
-                // Clear our lane first, then help the other lane unlock the core.
-                float score = Mathf.Abs(tower.transform.position.z - laneZ) * 100f
-                    + (tower.transform.position - transform.position).sqrMagnitude;
-                if (score < bestScore) { bestScore = score; best = hp; }
-            }
-            if (best != null) return best;
-            foreach (RealityCore core in FindObjectsByType<RealityCore>())
-            {
-                Health hp = core.GetComponent<Health>();
-                if (core.Team != team && core.IsVulnerable && hp != null && !hp.IsDead) return hp;
+                if (hp == null || hp.IsDead || !hp.isActiveAndEnabled) continue;
+                RealityCore core = hp.GetComponent<RealityCore>();
+                if (core != null && core.Team != team && core.IsVulnerable) return hp;
             }
             return null;
         }
