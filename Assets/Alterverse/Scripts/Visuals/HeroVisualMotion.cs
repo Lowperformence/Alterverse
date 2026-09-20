@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
         private Transform muzzle,weaponR,weaponL,orb;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
+        private Quaternion attackArmR,attackArmL,attackWeaponR,attackWeaponL;
         private Renderer[] energyRenderers;
         private MaterialPropertyBlock energyBlock;
         private static readonly int EnergyBoost=Shader.PropertyToID("_EnergyBoost");
@@ -31,6 +32,9 @@ namespace Alterverse.Visuals
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
         {
+            // Snapshot the visible pose before restarting a combo; never snap a raised weapon to rest.
+            attackArmR=Rest(armR);attackArmL=Rest(armL);
+            attackWeaponR=Rest(weaponR);attackWeaponL=Rest(weaponL);
             abilitySlot=ultimate?3:-1;attackSerial++;
             GetComponent<VoidWingPresentation>()?.Pulse();
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
@@ -104,7 +108,7 @@ namespace Alterverse.Visuals
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
             if(Time.timeScale<=0){previousSpeed=0;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
-            if(health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;return;}
+            if(health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
             {wasDead=false;phase=0;strideWeight=previousSpeed=lean=0;root.localPosition=basePosition;root.localRotation=Quaternion.identity;delta=Vector3.zero;}
@@ -137,11 +141,7 @@ namespace Alterverse.Visuals
             float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
             ApplyAttackPose(hero,kick,preparation,progress);
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
-            if(energyRenderers!=null)foreach(Renderer renderer in energyRenderers)
-            {
-                if(renderer==null||!renderer.enabled)continue;
-                renderer.GetPropertyBlock(energyBlock);energyBlock.SetFloat(EnergyBoost,energy);renderer.SetPropertyBlock(energyBlock);
-            }
+            SetEnergy(energy);
             bool phaseDash=(Dashing||Time.time<dashUntil)&&(hero==HeroId.Veyr||hero==HeroId.Elyra);
             // Compress the render rig only; collider and movement are untouched.
             root.localScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
@@ -155,6 +155,16 @@ namespace Alterverse.Visuals
             if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Min(PlanarSpeed,8)*1.6f,0,8+Mathf.Sin(t*2)*2);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
         }
+        private void SetEnergy(float energy)
+        {
+            if(energyRenderers==null||energyBlock==null)return;
+            foreach(Renderer renderer in energyRenderers)
+            {
+                if(renderer==null||!renderer.enabled)continue;
+                renderer.GetPropertyBlock(energyBlock);energyBlock.SetFloat(EnergyBoost,energy);renderer.SetPropertyBlock(energyBlock);
+            }
+        }
+
         // Presentation-only keyframes. Existing damage is instantaneous; this never delays a hit or a cooldown.
         // The weapon is a child of the shoulder rig, so both arm and weapon follow the full strike arc.
         private void PoseStrike(Transform joint,Quaternion rest,Vector3 drawn,Vector3 contact,Vector3 through,
@@ -176,7 +186,13 @@ namespace Alterverse.Visuals
                 else if(progress<.57f)pose=Quaternion.Slerp(hit,finish,(progress-.40f)/.17f);
                 else pose=Quaternion.Slerp(finish,Quaternion.identity,Mathf.SmoothStep(0,1,(progress-.57f)/.43f));
             }
-            joint.localRotation=rest*Quaternion.Slerp(Quaternion.identity,pose,weight);
+            Quaternion target=rest*Quaternion.Slerp(Quaternion.identity,pose,weight);
+            // Restore the current walking swing during recovery rather than jumping into it on the next frame.
+            if(preparation<=0&&progress>.57f)
+                target=Quaternion.Slerp(target,joint.localRotation,Mathf.SmoothStep(0,1,(progress-.57f)/.43f));
+            Quaternion previous=joint==armR?attackArmR:joint==armL?attackArmL:joint==weaponR?attackWeaponR:attackWeaponL;
+            float entry=Mathf.SmoothStep(0,1,(Time.time-attackStarted)/.055f);
+            joint.localRotation=Quaternion.Slerp(previous,target,entry);
         }
 
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress)
