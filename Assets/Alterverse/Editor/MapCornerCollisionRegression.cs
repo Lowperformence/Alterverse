@@ -17,7 +17,7 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Checks/Map rounded collision (Play mode)")]
         public static void Run()
         {
-            Array variants=Enum.GetValues(typeof(ArenaVariant));
+            ArenaVariant[] variants=(ArenaVariant[])Enum.GetValues(typeof(ArenaVariant));
             Check(variants.Length==3,"expected exactly Moon, Mars and GreenPlanet arena variants");
             Check(Array.IndexOf(variants,ArenaVariant.Moon)>=0,"Moon arena missing");
             Check(Array.IndexOf(variants,ArenaVariant.Mars)>=0,"Mars arena missing");
