@@ -32,8 +32,6 @@ namespace Alterverse.AI
         private readonly Ally[] allies=new Ally[10];
         private readonly Observation[] seen=new Observation[64];
         private readonly LaneTower[] towers=new LaneTower[16];
-        private readonly Vector3[] friendlyWave=new Vector3[128];
-        private int waveCount;
         private readonly Health[] reportedDeaths=new Health[10];
         private readonly float[] deathTimes=new float[10];
         private int allyCount,seenCount,towerCount,deathCursor,previousDead;
@@ -140,8 +138,6 @@ namespace Alterverse.AI
                 if(tower!=null&&!h.IsDead&&towerCount<towers.Length)towers[towerCount++]=tower;
                 var core=h.GetComponent<RealityCore>();
                 if(core!=null&&!h.IsDead){if(core.Team==team)ownCore=core;else enemyCore=core;}
-                var minion=h.GetComponent<LaneMinion>();
-                if(minion!=null&&minion.Team==team&&!h.IsDead&&waveCount<friendlyWave.Length)friendlyWave[waveCount++]=h.transform.position;
                 var identity=h.GetComponent<HeroIdentity>();var member=h.GetComponent<TeamMember>();
                 if(identity==null||member==null||member.Team!=team)continue;
                 if(h.IsDead){dead++;continue;}
@@ -224,12 +220,6 @@ namespace Alterverse.AI
                     return;
                 }
             }
-            for(int i=0;i<towerCount;i++)
-            {
-                var tower=towers[i];
-                if(tower.Team==team&&ThreatsNear(tower.transform.position,8f)>0)
-                {Commit(Intent.Defend,tower.transform.position+Forward*2f,true);return;}
-            }
             if(allyCount<=2&&previousDead>=2||Time.time<regroupUntil)
             {
                 Vector3 rally=Home+Forward*7f;
@@ -254,15 +244,6 @@ namespace Alterverse.AI
             }
             if(enemyCore!=null&&enemyCore.IsVulnerable)
             {Commit(Intent.TakeObjective,enemyCore.transform.position,tempo);return;}
-            LaneTower bestTower=null;float nearest=float.MaxValue;
-            for(int i=0;i<towerCount;i++)
-            {
-                var tower=towers[i];if(tower.Team==team)continue;
-                float d=FlatSqr(tower.transform.position-centroid);
-                if(d<nearest){nearest=d;bestTower=tower;}
-            }
-            if(bestTower!=null&&(tempo||bestTower.HasMinionCoverFor(team)||nearest<14f*14f))
-            {Commit(Intent.Siege,bestTower.transform.position,tempo);return;}
             if(hotZone!=null&&hotZone.IsActive&&FlatSqr(hotZone.transform.position-centroid)<32f*32f)
             {Commit(Intent.ContestObjective,hotZone.transform.position,false);return;}
             // Neutral objective availability is accepted only when actually reported by a sensor.
@@ -272,7 +253,9 @@ namespace Alterverse.AI
                 if(FlatSqr(e.Position-centroid)>18f*18f||FightRatio(e.Position)<.9f)continue;
                 Commit(EnemiesNear(e.Position,9f)>0?Intent.ContestObjective:Intent.TakeObjective,e.Position,false);return;
             }
-            Commit(Intent.Push,bestTower!=null?bestTower.transform.position:new Vector3(team==0?25f:-25f,0,centroid.z>=0?16f:-16f),false);
+            // Towers are navigation hazards only for bot heroes, never team objectives.
+            Vector3 lanePush=new Vector3(team==0?25f:-25f,0,centroid.z>=0?16f:-16f);
+            Commit(Intent.Push,lanePush,tempo);
         }
         private void Commit(Intent intent,Vector3 destination,bool urgent)
         {
@@ -283,7 +266,7 @@ namespace Alterverse.AI
             ChangedAt=Time.time;Revision++;HasPlan=true;
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
             if(intent==Intent.Disengage)RegroupCalls++;
-            if(Time.time<tempoUntil&&(intent==Intent.Siege||intent==Intent.TakeObjective))TempoPushes++;
+            if(Time.time<tempoUntil&&(intent==Intent.Push||intent==Intent.TakeObjective))TempoPushes++;
 #endif
         }
         public float FightRatio(Vector3 point)
@@ -293,11 +276,6 @@ namespace Alterverse.AI
                 if(FlatSqr(allies[i].Position-point)<11f*11f)own+=allies[i].Power;
             for(int i=0;i<seenCount;i++)
                 if(seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&FlatSqr(seen[i].Position-point)<11f*11f)enemy+=RolePower(seen[i].Role)*(.35f+.65f*seen[i].Hp);
-            float ownWave=0,enemyWave=0;
-            for(int i=0;i<waveCount;i++)if(FlatSqr(friendlyWave[i]-point)<36f)ownWave+=.05f;
-            for(int i=0;i<seenCount;i++)if(!seen[i].Hero&&seen[i].Target!=null&&
-                seen[i].Target.GetComponent<LaneMinion>()!=null&&FlatSqr(seen[i].Position-point)<36f)enemyWave+=.05f;
-            own+=Mathf.Min(.3f,ownWave);enemy+=Mathf.Min(.3f,enemyWave);
             // Public tower locations; no enemy cooldowns or unseen hero transforms are read.
             if(UnsafeTower(point))enemy+=1.5f;
             return enemy>.01f?own/enemy:2f;
