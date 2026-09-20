@@ -218,7 +218,7 @@ else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial)
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 }
 
-private void ApplyNullEdgeOverdrive(Shader shader,Material detailMaterial)
+private void ApplyNullEdgeOverdrive(Shader shader,Material pinkMaterial)
 {
 Transform leftWeapon=FindVisual("WeaponL");
 Transform rightWeapon=FindVisual("WeaponR");
@@ -227,30 +227,18 @@ Transform rightWeapon=FindVisual("WeaponR");
 if(leftWeapon!=null)leftWeapon.localScale*=1.50f;
 if(rightWeapon!=null)rightWeapon.localScale*=1.50f;
 
-// Reverse the color concept: the actual blades now use an aggressive red glow.
-Color bladeRed=new Color(1f,.018f,.012f);
-Material redBladeMaterial=new Material(shader){name="DF_NullEdgeRedBlades",color=bladeRed};
-if(redBladeMaterial.HasProperty("_BaseColor"))redBladeMaterial.SetColor("_BaseColor",bladeRed);
-if(redBladeMaterial.HasProperty("_Metallic"))redBladeMaterial.SetFloat("_Metallic",.16f);
-if(redBladeMaterial.HasProperty("_Smoothness"))redBladeMaterial.SetFloat("_Smoothness",.92f);
-if(redBladeMaterial.HasProperty("_EmissionColor"))
-{
-redBladeMaterial.EnableKeyword("_EMISSION");
-redBladeMaterial.SetColor("_EmissionColor",bladeRed*4.8f);
-}
-ownedMaterials.Add(redBladeMaterial);
-
+// One unified NULL EDGE color: every visible premium weapon part uses
+// the same bright pink/violet emissive material.
 Transform bladeL=FindVisual("BladeL");
 Transform bladeR=FindVisual("BladeR");
-if(bladeL!=null)ApplyGlow(bladeL,redBladeMaterial);
-if(bladeR!=null)ApplyGlow(bladeR,redBladeMaterial);
+if(bladeL!=null)ApplyGlow(bladeL,pinkMaterial);
+if(bladeR!=null)ApplyGlow(bladeR,pinkMaterial);
 
-// The original NULL EDGE premium violet/pink becomes the detail identity.
-string[] violetDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
-for(int i=0;i<violetDetails.Length;i++)
+string[] pinkDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
+for(int i=0;i<pinkDetails.Length;i++)
 {
-Transform detail=FindVisual(violetDetails[i]);
-if(detail!=null)ApplyGlow(detail,detailMaterial);
+Transform detail=FindVisual(pinkDetails[i]);
+if(detail!=null)ApplyGlow(detail,pinkMaterial);
 }
 
 for(int side=-1;side<=1;side+=2)
@@ -263,21 +251,21 @@ Transform hilt=FindVisual("Hilt"+suffix);
 if(hilt!=null)
 {
 hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.18f,1.28f,1.18f));
-ApplyGlow(hilt,detailMaterial);
+ApplyGlow(hilt,pinkMaterial);
 }
 
 CreateNullEdgePart("OverdriveGrip"+suffix,weapon,
 new Vector3(0,-.015f,-.035f),new Vector3(.105f,.245f,.10f),
-Vector3.zero,detailMaterial);
+Vector3.zero,pinkMaterial);
 CreateNullEdgePart("OverdriveGuard"+suffix,weapon,
 new Vector3(0,-.115f,.055f),new Vector3(.30f,.055f,.13f),
-new Vector3(0,0,side*8f),detailMaterial);
+new Vector3(0,0,side*8f),pinkMaterial);
 CreateNullEdgePart("OverdrivePommel"+suffix,weapon,
 new Vector3(0,.125f,-.055f),new Vector3(.13f,.085f,.13f),
-new Vector3(0,0,45f),detailMaterial);
+new Vector3(0,0,45f),pinkMaterial);
 CreateNullEdgePart("OverdriveBladeDetail"+suffix,weapon,
 new Vector3(side*.025f,-.20f,.18f),new Vector3(.035f,.19f,.035f),
-new Vector3(side*10f,0,side*7f),detailMaterial);
+new Vector3(side*10f,0,side*7f),pinkMaterial);
 }
 }
 
