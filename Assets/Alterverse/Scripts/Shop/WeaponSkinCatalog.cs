@@ -20,12 +20,12 @@ namespace Alterverse.Shop
         public const int Price=500;
         public static readonly WeaponSkinItem[] Items=
         {
-            new(HeroId.Veyr,"NULL EDGE // OVERDRIVE","Twin Rift Blade","Forged dark-metal twin blades with dimensional edge channels, reinforced guards and reactive void cores.",new Color(1f,.16f,.86f)),
-            new(HeroId.Kaelon,"AEGIS BREAKER // OVERDRIVE","Anchor Hammer","Rebuilt fortress hammer with crown plates, a central reactor spine and reactive gold energy core.",new Color(1f,.72f,.12f)),
-            new(HeroId.Nyra,"STARLINE // OVERDRIVE","Precision Rifle","Premium rail rifle with twin energy rails, armored receiver shroud and energized muzzle core.",new Color(.08f,.94f,1f)),
-            new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","Upgraded orbital catalysts with armored focus blades and a reactive dimensional core.",new Color(.68f,.24f,1f)),
-            new(HeroId.Mira,"LIFEWEAVE // OVERDRIVE","Support Staff","Refined life-energy staff with a split crown, luminous channel and reactive crystal core.",new Color(.12f,1f,.48f)),
-            new(HeroId.Rook,"BREAKER FIST // OVERDRIVE","Breaker Gauntlet","Heavy overdrive gauntlets with reinforced fist plates, powered knuckles and molten reactor channels.",new Color(1f,.32f,.08f))
+            new(HeroId.Veyr,"NULL EDGE // OVERDRIVE","Twin Rift Blade","50% larger primary blade with a saturated violet-pink dimensional glow.",new Color(1f,.16f,.86f)),
+            new(HeroId.Kaelon,"AEGIS BREAKER // OVERDRIVE","Anchor Hammer","50% larger anchor hammer with a brilliant gold-cyan power core.",new Color(1f,.72f,.12f)),
+            new(HeroId.Nyra,"STARLINE // OVERDRIVE","Precision Rifle","50% larger precision rifle with a high-visibility electric-cyan finish.",new Color(.08f,.94f,1f)),
+            new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","50% larger dimensional catalysts with an intense arc-violet emission.",new Color(.68f,.24f,1f)),
+            new(HeroId.Mira,"LIFEWEAVE // OVERDRIVE","Support Staff","50% larger support staff with a vivid emerald-cyan energy finish.",new Color(.12f,1f,.48f)),
+            new(HeroId.Rook,"BREAKER FIST // OVERDRIVE","Breaker Gauntlet","50% larger breaker gauntlet with a molten orange-red reactor glow.",new Color(1f,.32f,.08f))
         };
 
         public static WeaponSkinItem For(HeroId hero)=>Items[Mathf.Clamp((int)hero,0,Items.Length-1)];
