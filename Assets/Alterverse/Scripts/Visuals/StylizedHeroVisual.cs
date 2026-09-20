@@ -244,7 +244,7 @@ if(head!=null)ApplyGlow(head,energyMaterial);
 
 // The shaft remains dark metal so the hand/weapon construction stays readable.
 Transform grip=FindVisual("HammerGrip");
-if(grip!=null)ApplyGlow(grip,metalMaterial);
+if(grip!=null)ApplyGlow(grip,energyMaterial);
 
 // Existing side energy inserts keep the same gold/amber glow.
 for(int side=-1;side<=1;side+=2)
