@@ -6,28 +6,34 @@ using UnityEngine.Rendering;
 namespace Alterverse.Combat
 {
     /// <summary>
-    /// Permanent flank defense bunker for each team. It is intentionally not a Health owner:
-    /// gameplay targeting therefore cannot attack or destroy it, while the structure collider
-    /// still provides a solid bunker footprint.
+    /// Permanent indestructible flank bunker. It is intentionally not a Health owner, so it cannot
+    /// be targeted or destroyed. It provides a little physical cover and deals only light 5 HP/s
+    /// chip damage nearby; bots are free to ignore that damage tactically.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DefenseBunker : MonoBehaviour
     {
+        [SerializeField, Min(0f)] private float damagePerSecond = 5f;
+        [SerializeField, Min(1f)] private float damageRadius = 5.25f;
+        [SerializeField, Min(.05f)] private float damageTick = .25f;
+
         private static readonly List<DefenseBunker> active = new();
         private readonly List<Material> materials = new();
         private readonly List<Mesh> meshes = new();
 
         private Transform visualRoot, turretHead;
         private int team;
+        private float nextDamageTick;
         private Color energy;
 
         public static IReadOnlyList<DefenseBunker> Active => active;
         public int Team => team;
-        // Bastions are protection/cover structures only. They never deal gameplay damage.
-        public float DamagePerSecond => 0f;
-        public float DamageRadius => 0f;
-        public float AttackDamage => 0f;
-        public float AttackRange => 0f;
+        public float DamagePerSecond => damagePerSecond;
+        public float DamageRadius => damageRadius;
+        public float DamageTick => damageTick;
+        // Compatibility aliases for older checks/callers.
+        public float AttackDamage => damagePerSecond;
+        public float AttackRange => damageRadius;
 
         public static GameObject Spawn(int teamId, Vector3 position, string flank)
         {
@@ -65,6 +71,38 @@ namespace Alterverse.Combat
         {
             team = Mathf.Clamp(teamId, 0, 1);
             energy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
+            nextDamageTick = Time.time + damageTick;
+        }
+
+        private void Update()
+        {
+            if(Time.timeScale<=0f || Time.time<nextDamageTick)return;
+            nextDamageTick=Time.time+damageTick;
+            ApplyAreaDamage(damagePerSecond*damageTick);
+        }
+
+        private void ApplyAreaDamage(float amount)
+        {
+            if(amount<=0f)return;
+            float maxSqr=damageRadius*damageRadius;
+
+            for(int i=0;i<Health.Active.Count;i++)
+            {
+                Health candidate=Health.Active[i];
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
+
+                TeamMember member=candidate.GetComponent<TeamMember>();
+                if(member==null||member.Team==team)continue;
+
+                // Small defensive buildings are chip-damage scenery, not objective killers.
+                if(candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<LaneTower>()!=null)continue;
+
+                Vector3 delta=candidate.transform.position-transform.position;
+                delta.y=0f;
+                if(delta.sqrMagnitude>maxSqr)continue;
+
+                candidate.TakeDamage(amount,gameObject);
+            }
         }
 
         private void BuildVisual(int variant)
