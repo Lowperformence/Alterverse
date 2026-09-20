@@ -371,6 +371,13 @@ namespace Alterverse.EditorChecks
                 Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Missing preference defaults to NORMAL.");
                 PlayerPrefs.SetInt(key,999);
                 Assert(BotDifficultySettings.Selected==BotDifficulty.Normal,"Invalid preference defaults to NORMAL.");
+                Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Easy).DamageTakenMultiplier,1f),
+                    "EASY must not receive a hidden damage reduction.");
+                Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Normal).DamageTakenMultiplier,1f),
+                    "NORMAL must not receive a hidden damage reduction.");
+                Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Hard).DamageTakenMultiplier,1f),
+                    "HARD must not receive a hidden damage reduction.");
+
                 for(int level=0;level<4;level++)
                 {
                     BotDifficultySettings.Selected=(BotDifficulty)level;
