@@ -214,7 +214,80 @@ else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMat
 else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
 else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
+else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+}
+
+private void ApplyStarlineOverdrive(Shader shader,Material energyMaterial)
+{
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
+
+// Bring the standard rifle detail pieces under the weapon pivot so the complete
+// premium rifle scales and moves as one readable weapon.
+Bind("RifleReceiver","WeaponR");
+Bind("RifleMagazine","WeaponR");
+Bind("MuzzleBrake","WeaponR");
+Bind("ScopeLens","WeaponR");
+Bind("BarrelRail-1","WeaponR");
+Bind("BarrelRail1","WeaponR");
+
+// The previous premium rifle was 1.25x. 1.50x is another +20% from that state.
+weapon.localScale*=1.50f;
+
+Color darkMetal=new Color(.045f,.055f,.072f);
+Material darkMaterial=new Material(shader){name="DF_StarlineDarkMetal",color=darkMetal};
+if(darkMaterial.HasProperty("_BaseColor"))darkMaterial.SetColor("_BaseColor",darkMetal);
+if(darkMaterial.HasProperty("_Metallic"))darkMaterial.SetFloat("_Metallic",.82f);
+if(darkMaterial.HasProperty("_Smoothness"))darkMaterial.SetFloat("_Smoothness",.43f);
+ownedMaterials.Add(darkMaterial);
+
+Color detailMetal=new Color(.42f,.49f,.58f);
+Material detailMaterial=new Material(shader){name="DF_StarlineDetailMetal",color=detailMetal};
+if(detailMaterial.HasProperty("_BaseColor"))detailMaterial.SetColor("_BaseColor",detailMetal);
+if(detailMaterial.HasProperty("_Metallic"))detailMaterial.SetFloat("_Metallic",.88f);
+if(detailMaterial.HasProperty("_Smoothness"))detailMaterial.SetFloat("_Smoothness",.56f);
+ownedMaterials.Add(detailMaterial);
+
+Color sightRed=new Color(1f,.018f,.012f);
+Material sightMaterial=new Material(shader){name="DF_StarlineRedSight",color=sightRed};
+if(sightMaterial.HasProperty("_BaseColor"))sightMaterial.SetColor("_BaseColor",sightRed);
+if(sightMaterial.HasProperty("_Metallic"))sightMaterial.SetFloat("_Metallic",.10f);
+if(sightMaterial.HasProperty("_Smoothness"))sightMaterial.SetFloat("_Smoothness",.96f);
+if(sightMaterial.HasProperty("_EmissionColor"))
+{
+sightMaterial.EnableKeyword("_EMISSION");
+sightMaterial.SetColor("_EmissionColor",sightRed*4.5f);
+}
+ownedMaterials.Add(sightMaterial);
+
+// Recreate the standard weapon's material separation instead of tinting the
+// whole hierarchy cyan. The receiver stays premium cyan; functional details read separately.
+Transform[] rifleParts=root.GetComponentsInChildren<Transform>(true);
+for(int i=0;i<rifleParts.Length;i++)
+{
+Transform part=rifleParts[i];if(part==null)continue;
+switch(part.name)
+{
+case "DF_Rifle":
+case "DF_RifleReceiver":
+ApplyGlow(part,energyMaterial);
+break;
+case "DF_RifleMagazine":
+case "DF_Scope":
+ApplyGlow(part,darkMaterial);
+break;
+case "DF_WeaponRail":
+case "DF_MuzzleBrake":
+case "DF_BarrelRail-1":
+case "DF_BarrelRail1":
+ApplyGlow(part,detailMaterial);
+break;
+case "DF_ScopeLens":
+part.localScale*=1.12f;
+ApplyGlow(part,sightMaterial);
+break;
+}
+}
 }
 
 private void ApplyLifeweaveOverdrive(Shader shader,Material energyMaterial)
