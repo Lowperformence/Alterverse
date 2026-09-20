@@ -142,8 +142,9 @@ namespace Alterverse.AI
 
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
             if (planet != null) return planet.Available;
-            RealityCore core = candidate.GetComponent<RealityCore>();
-            if (core != null) return core.Team != teamMember.Team && core.IsVulnerable;
+
+            // Reality cores are no longer bot combat objectives in the free-roam PvP model.
+            if (candidate.GetComponent<RealityCore>() != null) return false;
 
             LaneMinion minion = candidate.GetComponent<LaneMinion>();
             if (minion != null) return minion.IsSiegeUnit && minion.Team != teamMember.Team;
@@ -156,7 +157,7 @@ namespace Alterverse.AI
             // Lower is better. Towers and ordinary lane minions never reach this function because
             // IsEnemy rejects them. Heroes stay primary, while real mechs/special units remain valid.
             if(candidate.GetComponent<HeroIdentity>()!=null)return 0;
-            if(candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<DimensionPlanet>()!=null)return 1;
+            if(candidate.GetComponent<DimensionPlanet>()!=null)return 1;
 
             LaneMinion minion=candidate.GetComponent<LaneMinion>();
             if(minion!=null&&minion.IsSiegeUnit)return 2;
@@ -220,7 +221,6 @@ namespace Alterverse.AI
             {
                 LaneMinion minion=candidate.GetComponent<LaneMinion>();
                 if(minion!=null&&minion.IsSiegeUnit)priority=.96f;
-                if(candidate.GetComponent<RealityCore>()!=null)priority=Mathf.Lerp(1.22f,.72f,objectiveAwareness);
                 if(candidate.GetComponent<DimensionPlanet>()!=null)priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
             }
 
