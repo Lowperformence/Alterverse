@@ -360,7 +360,21 @@ namespace Alterverse.AI
         }
         public Vector3 SafeRetreat(Vector3 position)
         {
-            Vector3 best=Home;float distance=float.MaxValue;
+            Vector3 best=Home;float distance=FlatSqr(Home-position);
+
+            // Allied towers remain valid protection anchors even though bot heroes never attack
+            // enemy towers. Retreat to the home-facing side of the nearest living allied tower,
+            // so the structure can provide cover without becoming a combat objective.
+            for(int i=0;i<towerCount;i++)
+            {
+                LaneTower tower=towers[i];
+                if(tower==null||tower.Team!=team)continue;
+                Vector3 refuge=tower.transform.position-Forward*2.2f;
+                float d=FlatSqr(refuge-position);
+                if(d>=distance||Vector3.Dot(refuge-position,Forward)>1f)continue;
+                distance=d;best=refuge;
+            }
+
             for(int i=0;i<allyCount;i++)
             {
                 var ally=allies[i];float d=FlatSqr(ally.Position-position);
