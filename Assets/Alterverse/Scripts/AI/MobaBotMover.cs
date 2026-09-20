@@ -156,9 +156,9 @@ namespace Alterverse.AI
             }
             else if(ShouldPursueHotZone(brain.State,target!=null,hotZone!=null&&hotZone.IsActive)&&ShouldContestHotZone())
             { destination=hotZone.transform.position;stopDistance=3.4f; }
-            else if(brain.State==MobaBotBrain.BotState.Lane&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
+            else if(brain.State==MobaBotBrain.BotState.Roam&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
             { destination=sensor.RallyPosition;stopDistance=3f; }
-            else if (brain.State == MobaBotBrain.BotState.Lane && objective != null && objective.Available && ShouldRotate())
+            else if (brain.State == MobaBotBrain.BotState.Roam && objective != null && objective.Available && ShouldRotate())
             { destination = objective.transform.position; stopDistance = 2.2f; }
 
             if(brain.State==MobaBotBrain.BotState.Fight&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0
@@ -189,7 +189,7 @@ namespace Alterverse.AI
                         // Retreat/kiting still has priority when already inside the danger distance.
                         if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=.3f;}
                     }
-                    else if(brain.State==MobaBotBrain.BotState.Lane||target==null)
+                    else if(brain.State==MobaBotBrain.BotState.Roam||target==null)
                     {
                         destination=brain.Tactics.Formation(brain,role,brain.Tactics.Destination,false);stopDistance=.75f;
                     }
@@ -243,8 +243,8 @@ namespace Alterverse.AI
         public static bool ShouldPursueHotZone(MobaBotBrain.BotState state,bool hasVisibleCombatTarget,bool hotZoneActive)
         {
             // Combat beats objectives. The explicit target guard closes the small decision-tick
-            // window where perception may already see an enemy while the brain still reports Lane.
-            return hotZoneActive&&state==MobaBotBrain.BotState.Lane&&!hasVisibleCombatTarget;
+            // window where perception may already see an enemy while the brain still reports Roam.
+            return hotZoneActive&&state==MobaBotBrain.BotState.Roam&&!hasVisibleCombatTarget;
         }
 
         private bool ShouldContestHotZone()
