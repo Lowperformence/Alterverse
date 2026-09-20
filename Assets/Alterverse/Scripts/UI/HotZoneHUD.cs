@@ -23,14 +23,12 @@ namespace Alterverse.UI
         {
             HotZoneDirector.HotZoneOpening+=OnOpening;
             HotZoneDirector.HotZoneOpened+=OnOpened;
-            HotZoneDirector.HotZoneResolved+=OnResolved;
         }
 
         private void OnDisable()
         {
             HotZoneDirector.HotZoneOpening-=OnOpening;
             HotZoneDirector.HotZoneOpened-=OnOpened;
-            HotZoneDirector.HotZoneResolved-=OnResolved;
             if(compassArrow!=null)compassArrow.SetActive(false);
         }
 
@@ -42,16 +40,6 @@ namespace Alterverse.UI
 
         private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=new Color(.95f,.72f,.30f);bannerUntil=Time.time+4f;}
         private void OnOpened(){banner="HOT ZONE ACTIVE";bannerColor=Color.white;bannerUntil=Time.time+2.5f;}
-        private void OnResolved(int winner,float zero,float lumen)
-        {
-            bool reward=zone!=null&&zone.RewardSpawned;
-            banner=winner==0?(reward?"ZERO WINS HOT ZONE · ASSAULT TANK DEPLOYED":"ZERO WINS HOT ZONE"):
-                winner==1?(reward?"LUMEN WINS HOT ZONE · ASSAULT TANK DEPLOYED":"LUMEN WINS HOT ZONE"):
-                "HOT ZONE DRAW · NO TANK DEPLOYED";
-            bannerColor=winner==0?new Color(.72f,.25f,1f):winner==1?new Color(.16f,.88f,1f):new Color(.72f,.74f,.80f);
-            bannerUntil=Time.time+5f;
-        }
-
         private void UpdateCompass()
         {
             bool active=zone!=null&&zone.IsActive&&Time.timeScale>0f&&!MainMenuController.IsVisible;
