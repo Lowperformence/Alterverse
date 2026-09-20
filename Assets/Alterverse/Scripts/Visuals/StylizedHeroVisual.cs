@@ -210,9 +210,75 @@ ownedMaterials.Add(weaponMaterial);
 
 // Keep cosmetic weapons attached to their animated hand pivots.
 if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);ScaleAndGlow("WeaponR",1.25f,weaponMaterial);}
+else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+}
+
+private void ApplyAnchorHammerOverdrive(Shader shader,Material energyMaterial)
+{
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
+
+// Same premium rule as BREAKER FIST: restore a clear +50% silhouette,
+// but keep structure readable instead of painting every component as one glow mass.
+weapon.localScale*=1.50f;
+
+Color metalColor=new Color(.085f,.095f,.115f);
+Material metalMaterial=new Material(shader){name="DF_AnchorHammerMetal",color=metalColor};
+if(metalMaterial.HasProperty("_BaseColor"))metalMaterial.SetColor("_BaseColor",metalColor);
+if(metalMaterial.HasProperty("_Metallic"))metalMaterial.SetFloat("_Metallic",.86f);
+if(metalMaterial.HasProperty("_Smoothness"))metalMaterial.SetFloat("_Smoothness",.50f);
+ownedMaterials.Add(metalMaterial);
+
+Color edgeColor=new Color(.52f,.47f,.38f);
+Material edgeMaterial=new Material(shader){name="DF_AnchorHammerEdge",color=edgeColor};
+if(edgeMaterial.HasProperty("_BaseColor"))edgeMaterial.SetColor("_BaseColor",edgeColor);
+if(edgeMaterial.HasProperty("_Metallic"))edgeMaterial.SetFloat("_Metallic",.74f);
+if(edgeMaterial.HasProperty("_Smoothness"))edgeMaterial.SetFloat("_Smoothness",.40f);
+ownedMaterials.Add(edgeMaterial);
+
+// The hammer head is the premium glowing main body.
+Transform head=FindVisual("AnchorHead");
+if(head!=null)ApplyGlow(head,energyMaterial);
+
+// The shaft remains dark metal so the hand/weapon construction stays readable.
+Transform grip=FindVisual("HammerGrip");
+if(grip!=null)ApplyGlow(grip,metalMaterial);
+
+// Existing side energy inserts keep the same gold/amber glow.
+for(int side=-1;side<=1;side+=2)
+{
+string suffix=side<0?"-1":"1";
+Transform energy=FindVisual("HammerEnergy"+suffix);
+if(energy!=null)ApplyGlow(energy,energyMaterial);
+}
+
+// Add a restrained mechanical frame around the glowing head.
+// These parts create premium depth without covering the main silhouette.
+CreateAnchorHammerPart("OverdriveHammerTop",weapon,
+new Vector3(0,.63f,-.015f),new Vector3(.44f,.075f,.36f),
+Vector3.zero,metalMaterial);
+CreateAnchorHammerPart("OverdriveHammerLeft",weapon,
+new Vector3(-.37f,.43f,-.015f),new Vector3(.085f,.28f,.34f),
+new Vector3(0,0,-8),edgeMaterial);
+CreateAnchorHammerPart("OverdriveHammerRight",weapon,
+new Vector3(.37f,.43f,-.015f),new Vector3(.085f,.28f,.34f),
+new Vector3(0,0,8),edgeMaterial);
+CreateAnchorHammerPart("OverdriveCore",weapon,
+new Vector3(0,.43f,.235f),new Vector3(.16f,.20f,.035f),
+Vector3.zero,energyMaterial);
+CreateAnchorHammerPart("OverdriveShaftBrace",weapon,
+new Vector3(0,.08f,.075f),new Vector3(.11f,.32f,.11f),
+Vector3.zero,edgeMaterial);
+}
+
+private GameObject CreateAnchorHammerPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+if(renderer!=null)renderer.sharedMaterial=material;
+return part;
 }
 
 private void ApplyBreakerFistOverdrive(Shader shader,Material energyMaterial)
