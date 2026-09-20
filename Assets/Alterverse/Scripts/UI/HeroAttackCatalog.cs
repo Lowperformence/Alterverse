@@ -1,4 +1,5 @@
 using Alterverse.Characters;
+using Alterverse.Combat;
 
 namespace Alterverse.UI
 {
@@ -33,7 +34,7 @@ namespace Alterverse.UI
             return new[]
             {
                 new HeroAttackCard("BASIC","Basic Attack",
-                    $"{HeroIdentity.AttackDamage(hero):0} DMG  •  RANGE {stats.AttackRange:0.##}  •  {stats.AttackInterval:0.##}s / SHOT",
+                    $"{HeroIdentity.AttackDamage(hero):0} DMG  •  RANGE {stats.AttackRange:0.##}  •  {stats.AttackInterval:0.##}s / SHOT  •  WINDUP {HeroAttackDelivery.Windup(hero):0.##}s",
                     BasicEffect(hero)),
                 Ability(hero,"Q",0,kit.Q),
                 Ability(hero,"W",1,kit.W),
@@ -48,7 +49,8 @@ namespace Alterverse.UI
             string spatial=spec.Range>0?$"RANGE {spec.Range:0.##}":spec.Radius>0?"SELF":"SELF";
             if(spec.Radius>0)spatial+= $"  •  AOE {spec.Radius:0.##}";
             string timing=$"CD {spec.Cooldown:0.#}s";
-            if(spec.Windup>0)timing+= $"  •  WINDUP {spec.Windup:0.##}s";
+            float windup=HeroAttackDelivery.AbilityWindup(hero,slot,spec);
+            if(windup>0)timing+= $"  •  WINDUP {windup:0.##}s";
             if(slot==3)timing+= $"  •  START LOCK {HeroAbilityKit.UltimateInitialLock:0}s";
             string stats=string.IsNullOrEmpty(primary)?$"{spatial}  •  {timing}":$"{primary}  •  {spatial}  •  {timing}";
             return new HeroAttackCard(key,spec.Name,stats,Effect(hero,slot));
@@ -122,3 +124,4 @@ namespace Alterverse.UI
         };
     }
 }
+

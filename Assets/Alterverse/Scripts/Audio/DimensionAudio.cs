@@ -82,12 +82,12 @@ namespace Alterverse.Audio
             if(instance==null)return;int cue=(int)sound;if(cue<0||cue>=instance.clips.Length||instance.clips[cue]==null)return;
             PlayCue(instance.clips[cue],cue,volume*Gain(sound),pitch,Priority(sound),Cooldown(sound));
         }
-        public static void PlayHero(int cue,float gain,int priority,float cooldown)
+        public static void PlayHero(int cue,float gain,int priority,float cooldown,float pan=0)
         {
             if(instance==null||cue<0||cue>=instance.heroClips.Length||instance.heroClips[cue]==null)return;
-            PlayCue(instance.heroClips[cue],instance.clips.Length+cue,gain,1,priority,cooldown);
+            PlayCue(instance.heroClips[cue],instance.clips.Length+cue,gain,1,priority,cooldown,pan);
         }
-        static void PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown)
+        static void PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown,float pan=0)
         {
             if(Time.unscaledTime<instance.nextCue[cue])return;
             int budget=Mathf.Clamp(AudioStressBudget.RecommendedVoices,1,VoiceCount),slot=-1,overlap=0;
@@ -105,6 +105,8 @@ namespace Alterverse.Audio
             if(slot<0)return;
             instance.nextCue[cue]=Time.unscaledTime+cooldown;
             var voice=instance.voices[slot];voice.Stop();voice.clip=clip;
+            // Reset on every pooled use, including centered UI/objective cues.
+            voice.panStereo=Mathf.Clamp(pan,-.65f,.65f);
             // Deterministic presentation variation does not consume gameplay Random state.
             float variation=priority==0?Mathf.Sin(++instance.variation*2.39996f):0;
             voice.pitch=Mathf.Clamp(pitch*(1+variation*.018f),.8f,1.2f);
@@ -145,3 +147,4 @@ namespace Alterverse.Audio
         }
     }
 }
+

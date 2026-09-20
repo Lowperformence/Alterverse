@@ -17,15 +17,32 @@ namespace Alterverse.Visuals
         private bool wasDead;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,empowerUntil,dashUntil,attackStarted;
-        private bool attackHasWindup;
-        private Transform muzzle,weaponR,weaponL,orb;
+        private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
         private Quaternion attackArmR,attackArmL,attackWeaponR,attackWeaponL;
         private Renderer[] energyRenderers;
         private MaterialPropertyBlock energyBlock;
         private static readonly int EnergyBoost=Shader.PropertyToID("_EnergyBoost");
-        public Vector3 ReleasePoint=>muzzle!=null?muzzle.position:orb!=null?orb.position:weaponR!=null?weaponR.position+transform.forward*.35f:transform.position+Vector3.up*.25f;
+        public Vector3 ReleasePoint
+        {
+            get
+            {
+                if(muzzle!=null)return muzzle.position;
+                if(orb!=null)return orb.position;
+                HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
+                if(hero==HeroId.Mira&&weaponR!=null)return weaponR.TransformPoint(new Vector3(0,.80f,.06f));
+                if(hero==HeroId.Kaelon&&weaponR!=null)return weaponR.TransformPoint(new Vector3(0,.43f,.20f));
+                bool left=attackSerial%2==0;
+                if(hero==HeroId.Rook)
+                {
+                    Transform hand=left?gauntletL:gauntletR;
+                    if(hand!=null)return hand.TransformPoint(new Vector3(0,-.10f,.23f));
+                }
+                Transform weapon=hero==HeroId.Veyr&&left&&weaponL!=null?weaponL:weaponR;
+                return weapon!=null?weapon.TransformPoint(new Vector3(0,-.26f,.24f)):transform.position+Vector3.up*.25f;
+            }
+        }
         // Stable values can later drive an Animator blend tree without replacing movement logic.
         public float PlanarSpeed { get; private set; }
         public float GaitPhase=>phase;
@@ -41,11 +58,16 @@ namespace Alterverse.Visuals
             bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
             attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
             attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;
-            attackStarted=Time.time;attackHasWindup=false;
+            attackStarted=Time.time;
+        }
+        public void PulseBasic(float windup)
+        {
+            PulseAttack(false);
+            windupUntil=Time.time+windup;attackUntil=windupUntil+attackDuration;
         }
         public void PulseAbility(int slot,float windup)
         {
-            PulseAttack(slot==3);abilitySlot=slot;attackHasWindup=windup>0;
+            PulseAttack(slot==3);abilitySlot=slot;
             windupUntil=Time.time+Mathf.Max(0,windup);attackUntil=windupUntil+attackDuration;
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
         }
@@ -65,6 +87,7 @@ namespace Alterverse.Visuals
             root=transform.Find("DF_VisualRoot");if(root==null)return;
             basePosition=root.localPosition;rootScale=root.localScale;lastPosition=transform.position;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
+            gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
             muzzle=FindPart("Muzzle");weaponR=FindPart("WeaponR");weaponL=FindPart("WeaponL");orb=FindPart("Orb");
             if(weaponR!=null){weaponPositionR=weaponR.localPosition;weaponRestR=weaponR.localRotation;}
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
@@ -167,7 +190,7 @@ namespace Alterverse.Visuals
             }
         }
 
-        // Presentation-only keyframes. Existing damage is instantaneous; this never delays a hit or a cooldown.
+        // Presentation-only keyframes; HeroAttackDelivery owns windup/flight damage timing.
         // The weapon is a child of the shoulder rig, so both arm and weapon follow the full strike arc.
         private void PoseStrike(Transform joint,Quaternion rest,Vector3 drawn,Vector3 contact,Vector3 through,
             float preparation,float progress,float weight=1)
@@ -181,19 +204,16 @@ namespace Alterverse.Visuals
             }
             else
             {
-                // Existing windup skills already held their raised pose; instant basics get a short visible draw.
-                float drawEnd=attackHasWindup?0:.12f;
-                if(progress<drawEnd)pose=Quaternion.Slerp(Quaternion.identity,ready,Mathf.SmoothStep(0,1,progress/drawEnd));
-                else if(progress<.40f)pose=Quaternion.Slerp(ready,hit,Mathf.SmoothStep(0,1,(progress-drawEnd)/(.40f-drawEnd)));
-                else if(progress<.57f)pose=Quaternion.Slerp(hit,finish,(progress-.40f)/.17f);
-                else pose=Quaternion.Slerp(finish,Quaternion.identity,Mathf.SmoothStep(0,1,(progress-.57f)/.43f));
+                // Damage has already resolved. Contact is frame zero; no post-hit fake windup.
+                if(progress<.24f)pose=Quaternion.Slerp(hit,finish,Mathf.SmoothStep(0,1,progress/.24f));
+                else pose=Quaternion.Slerp(finish,Quaternion.identity,Mathf.SmoothStep(0,1,(progress-.24f)/.76f));
             }
             Quaternion target=rest*Quaternion.Slerp(Quaternion.identity,pose,weight);
             // Restore the current walking swing during recovery rather than jumping into it on the next frame.
-            if(preparation<=0&&progress>.57f)
-                target=Quaternion.Slerp(target,joint.localRotation,Mathf.SmoothStep(0,1,(progress-.57f)/.43f));
+            if(preparation<=0&&progress>.24f)
+                target=Quaternion.Slerp(target,joint.localRotation,Mathf.SmoothStep(0,1,(progress-.24f)/.76f));
             Quaternion previous=joint==armR?attackArmR:joint==armL?attackArmL:joint==weaponR?attackWeaponR:attackWeaponL;
-            float entry=Mathf.SmoothStep(0,1,(Time.time-attackStarted)/.055f);
+            float entry=preparation>0?Mathf.SmoothStep(0,1,(Time.time-attackStarted)/.055f):1;
             joint.localRotation=Quaternion.Slerp(previous,target,entry);
         }
 
@@ -254,3 +274,4 @@ namespace Alterverse.Visuals
 
     }
 }
+

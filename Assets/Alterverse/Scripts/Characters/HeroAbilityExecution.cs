@@ -23,7 +23,7 @@ namespace Alterverse.Characters
             ready[3] = Time.time + HeroAbilityKit.UltimateInitialLock;
             self.Died += CancelPending;
         }
-        private void CancelPending() { life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
+        private void CancelPending() { GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
@@ -47,6 +47,7 @@ namespace Alterverse.Characters
         {
             if (slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
+            float presentationWindup=spec.Windup;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2);
             if (mobility)
             {
@@ -94,15 +95,23 @@ namespace Alterverse.Characters
             else
             {
                 if (!ValidTarget(target, spec.Range)) return false;
-                HeroCombatAudio.Cast(gameObject,slot);
-                if (hero == HeroId.Nyra && slot == 3) StartCoroutine(Volley(target, life));
+                if(spec.Windup>0)HeroCombatAudio.Cast(gameObject,slot);
+                if (hero == HeroId.Nyra && slot == 3)
+                {
+                    presentationWindup=HeroAttackDelivery.Windup(hero,slot);
+                    StartCoroutine(Volley(target, life));
+                }
                 else if (spec.Windup > 0) StartCoroutine(DelayedSingle(slot, target, life));
-                else Hit(slot, target);
+                else
+                {
+                    presentationWindup=HeroAttackDelivery.Windup(hero,slot);
+                    HeroAttackDelivery.For(gameObject).Ability(this,slot,target);
+                }
             }
             HeroSkillVfx.Cast(gameObject,slot);
             if(target!=null&&!mobility)locomotion.FaceAction(target.transform.position-transform.position);
             ready[slot] = Time.time + Cooldown(slot);
-            GetComponent<HeroVisualMotion>()?.PulseAbility(slot,spec.Windup);
+            GetComponent<HeroVisualMotion>()?.PulseAbility(slot,presentationWindup);
             return true;
         }
         private bool ValidTarget(Health target, float range) => HeroCombatRules.Enemy(gameObject, target) && HeroCombatRules.Distance(transform.position, target.transform.position) <= range;
@@ -114,19 +123,24 @@ namespace Alterverse.Characters
         }
         private IEnumerator Volley(Health target, int castLife)
         {
+            // Existing four-shot cadence remains .18s; the first shot now has readable preparation.
+            yield return new WaitForSeconds(HeroAttackDelivery.Windup(identity.Hero,3));
             for (int i = 0; i < 4; i++)
             {
                 if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || !ValidTarget(target, kit.Ultimate.Range)) yield break;
-                if(i>0)HeroCombatAudio.Cast(gameObject,3);
-                float before=target.Current+target.Shield;
-                HeroCombatRules.Damage(gameObject, target, kit.Ultimate.Power / 4f);
-                HeroSkillVfx.Spell(gameObject,target.transform.position,3);
-                if(target.Current+target.Shield<before)
-                {
-                    HeroSkillVfx.Impact(gameObject,target,3);
-                    HeroCombatAudio.Impact(gameObject,3,target.transform.position);
-                }
+                HeroAttackDelivery.For(gameObject).Ability(this,3,target,true,0);
                 yield return new WaitForSeconds(.18f);
+            }
+        }
+        internal void ResolvePresentedHit(int slot,Health target,bool volley)
+        {
+            if(!volley){Hit(slot,target,true,true);return;}
+            float before=target.Current+target.Shield;
+            HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power/4f);
+            if(target.Current+target.Shield<before)
+            {
+                HeroSkillVfx.Impact(gameObject,target,3);
+                HeroCombatAudio.Impact(gameObject,3,target.transform.position);
             }
         }
         private IEnumerator ResolveArea(int slot, Vector3 center, int castLife)
@@ -155,7 +169,7 @@ namespace Alterverse.Characters
             HeroCombatAudio.Impact(gameObject,slot,center);
             HeroSkillVfx.Area(gameObject, center, spec.Radius, .3f, false,identity.Hero==HeroId.Mira,slot);
         }
-        private void Hit(int slot, Health target, bool visual = true)
+        private void Hit(int slot, Health target, bool visual = true,bool launched=false)
         {
             float damage = kit.Spec(slot).Power;
             if (identity.Hero == HeroId.Veyr && slot == 3 && target.GetComponent<HeroIdentity>() != null)
@@ -177,11 +191,12 @@ namespace Alterverse.Characters
                 case HeroId.Mira: HeroCombatStatus.Apply(target, .75f, 1.5f); break;
                 case HeroId.Rook: if (slot == 0) HeroCombatStatus.Apply(target, .8f, 1f); break;
             }
-            if (visual) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
+            if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
             if(damaged&&(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Mira||identity.Hero==HeroId.Veyr&&slot==1||
                 identity.Hero==HeroId.Nyra&&slot==2||identity.Hero==HeroId.Elyra&&(slot==1||slot==3)||identity.Hero==HeroId.Rook&&slot==0))
                 HeroSkillVfx.Debuff(gameObject,target);
         }
     }
 }
+
 

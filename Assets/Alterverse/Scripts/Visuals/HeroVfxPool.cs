@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -17,7 +17,8 @@ namespace Alterverse.Visuals
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
             public Color Color;public float Start,Duration;public bool Active,Warning;
-            public HeroFxMotion Motion;public Transform Follow;public bool Follows;
+            public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
+            public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
         }
         private static HeroVfxPool instance;
@@ -51,13 +52,13 @@ namespace Alterverse.Visuals
         }
         internal static void Emit(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
-            bool warning=false,Transform follow=null,Health shield=null,float delay=0)
+            bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null)
         {
             Warm();if(instance==null||instance.material==null)return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
-            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay)
+            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow)
         {
             int begin=warning?Capacity-WarningReserve:0,end=warning?Capacity:Capacity-WarningReserve;
             Slot slot=null;
@@ -71,6 +72,9 @@ namespace Alterverse.Visuals
             slot.Active=true;slot.Warning=warning;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
+            slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
+            slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
+            slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
             slot.From=from;slot.To=to;slot.Size=size;slot.Color=color;slot.Motion=motion;
             slot.Rotation=rotation==default?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
@@ -82,7 +86,13 @@ namespace Alterverse.Visuals
             if(instance==null)return;
             foreach(Slot slot in instance.slots)if(slot!=null&&slot.Active&&slot.Warning&&slot.Owner==actor)instance.Hide(slot);
         }
-        private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;}
+        public static void CancelProjectiles(GameObject actor)
+        {
+            if(instance==null)return;
+            foreach(Slot slot in instance.slots)
+                if(slot!=null&&slot.Active&&slot.TracksEnd&&slot.Owner==actor)instance.Hide(slot);
+        }
+        private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.TracksEnd=false;}
         private void Update()
         {
             if(Time.timeScale<=0)return;
@@ -90,6 +100,7 @@ namespace Alterverse.Visuals
             {
                 Slot s=slots[i];if(s==null||!s.Active)continue;
                 if(s.Warning&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
+                    s.TracksEnd&&(s.EndFollow==null||!s.EndFollow.gameObject.activeInHierarchy||s.EndHealth!=null&&s.EndHealth.IsDead)||
                     s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0))
                 {Hide(s);continue;}
                 float age=Time.time-s.Start;if(age<0)continue;
@@ -104,7 +115,11 @@ namespace Alterverse.Visuals
             {
                 case HeroFxMotion.Expand:scale=Mathf.Lerp(.32f,1,t);break;
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
-                case HeroFxMotion.Travel:point=Vector3.Lerp(s.From,s.To,t);break;
+                case HeroFxMotion.Travel:
+                    Vector3 end=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    point=Vector3.Lerp(s.From,end,t);
+                    if(s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
+                    break;
                 case HeroFxMotion.Orbit:rotation*=Quaternion.Euler(0,t*180,0);scale=1-t*.22f;break;
                 case HeroFxMotion.Sweep:rotation*=Quaternion.Euler(0,Mathf.Lerp(-35,35,t),0);scale=.88f+.12f*Mathf.Sin(t*Mathf.PI);break;
             }
@@ -168,7 +183,9 @@ namespace Alterverse.Visuals
             }
             switch(shape)
             {
-                case HeroFxShape.Ring:Band(0,Mathf.PI*2,.92f,1,48);break;
+                case HeroFxShape.Ring:
+                    // Circumscribed polygon: the outer edge never falls inside a radius-1 circle.
+                    Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
                 case HeroFxShape.Hex:Band(0,Mathf.PI*2,.89f,1,6);break;
                 case HeroFxShape.Slash:FeatherBand(-1.55f,1.55f,.48f,.87f,1,32,true);break;
                 case HeroFxShape.Rift:
@@ -183,6 +200,11 @@ namespace Alterverse.Visuals
                     SoftQuad(new Vector3(0,0,-1.4f),new Vector3(.16f,0,-1.4f),new Vector3(.025f,0,.55f),new Vector3(0,0,.55f),hot,clear);
                     SoftQuad(new Vector3(0,-.12f,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(0,-.02f,.55f),clear,hot);
                     SoftQuad(new Vector3(0,0,-1.4f),new Vector3(0,.12f,-1.4f),new Vector3(0,.02f,.55f),new Vector3(0,0,.55f),hot,clear);break;
+                case HeroFxShape.Seed:
+                    // Pointed leaf in two planes: offensive seed, deliberately not a healing flower.
+                    SoftQuad(new Vector3(0,0,-.60f),new Vector3(-.22f,0,-.08f),new Vector3(0,0,.62f),new Vector3(.22f,0,-.08f),soft,hot);
+                    SoftQuad(new Vector3(0,0,-.60f),new Vector3(0,-.13f,-.08f),new Vector3(0,0,.62f),new Vector3(0,.13f,-.08f),soft,hot);
+                    break;
                 case HeroFxShape.Halo:
                     for(int i=0;i<32;i++)
                     {
@@ -264,3 +286,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

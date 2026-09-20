@@ -33,22 +33,71 @@ namespace Alterverse.Visuals
             HeroVisualMotion motion=actor.GetComponent<HeroVisualMotion>();
             return motion!=null?motion.ReleasePoint:Chest(actor)+actor.transform.forward*.5f;
         }
-        private static void Projectile(GameObject actor,Vector3 end,int slot,float travel=0)
+        private static void Projectile(GameObject actor,Vector3 end,int slot,float travel=0,Transform target=null)
         {
             HeroId h=Hero(actor);Color c=Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
-            float flight=travel>0?travel:.065f;
-            HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Mira?HeroFxShape.Petals:HeroFxShape.Orb;
+            if(travel<=0)
+            {
+                InstantTrace(actor,start,end,slot,strength);
+                return;
+            }
+            float flight=travel;
+            HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Orb;
             Vector3 size=h==HeroId.Nyra?new Vector3(.48f,.48f,.66f)*strength:Vector3.one*.36f*strength;
-            HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor);
+            HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A second cached mesh adds a feathered halo or a long narrow tracer tail.
             HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
                 h==HeroId.Nyra?new Vector3(.26f,.26f,1.25f)*strength:Vector3.one*.42f*strength,
-                new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor);
+                new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // Short physical muzzle core, rather than a full-distance beam.
             Fx(HeroFxShape.Burst,start,Color.Lerp(c,Color.white,.65f),.32f*strength,.09f,rotation:Face(start,end),actor:actor);
             if(h==HeroId.Elyra)Ring(actor,start,.28f*strength,.15f);
             if(h==HeroId.Mira)Fx(HeroFxShape.Shard,start,c,.22f,.12f,rotation:Quaternion.Euler(35,0,25));
+        }
+        // Immediate gameplay hits need immediate visual contact, not a projectile arriving later.
+        private static void InstantTrace(GameObject actor,Vector3 start,Vector3 end,int slot,float strength)
+        {
+            HeroId h=Hero(actor);Color c=Accent(actor);Vector3 delta=end-start;
+            Quaternion direction=delta.sqrMagnitude>.0001f?Quaternion.LookRotation(delta):Quaternion.identity;
+            if(h==HeroId.Nyra)
+            {
+                // Bolt mesh spans -1.4..+.55 on Z. Fit those ends exactly to muzzle/contact.
+                float length=delta.magnitude/1.95f;
+                Vector3 center=start+delta*(1.4f/1.95f);
+                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.25f*strength,.25f*strength,length),c,.09f,HeroFxMotion.Hold,direction,actor);
+            }
+            else
+            {
+                HeroFxShape shape=h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Orb;
+                HeroVfxPool.Emit(shape,end,end,Vector3.one*.34f*strength,c,.14f,HeroFxMotion.Contract,direction,actor);
+                for(int i=1;i<=2;i++)
+                {
+                    Vector3 p=Vector3.Lerp(start,end,i/3f);
+                    Fx(h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Runes,p,new Color(c.r,c.g,c.b,.38f),
+                        (.16f+i*.035f)*strength,.12f,HeroFxMotion.Contract,direction,actor);
+                }
+            }
+            Fx(h==HeroId.Elyra?HeroFxShape.Ring:h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Burst,
+                start,Color.Lerp(c,Color.white,.5f),.25f*strength,.09f,rotation:direction,actor:actor);
+        }
+        private static void HeavyContact(GameObject actor,Vector3 impact,int slot)
+        {
+            bool tank=Hero(actor)==HeroId.Kaelon;float strength=slot<0?1:1.45f;
+            Vector3 p=impact+Vector3.up*.20f;Quaternion direction=Face(Muzzle(actor),p);
+            if(tank)
+            {
+                Fx(HeroFxShape.Hex,p,Accent(actor),.48f*strength,.20f,HeroFxMotion.Contract,Quaternion.Euler(25,0,0),actor);
+                Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.36f*strength,.20f,actor:actor);
+            }
+            else
+            {
+                Vector3 start=Muzzle(actor),center=Vector3.Lerp(start,p,.70f);
+                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.34f,.30f,.38f)*strength,
+                    Accent(actor),.11f,HeroFxMotion.Contract,direction,actor);
+                Ring(actor,p,.42f*strength,.18f);
+            }
+            Shards(actor,p,.58f*strength,2);
         }
         private static void Slash(GameObject actor,Vector3 point,int slot,bool heavy=false)
         {
@@ -70,6 +119,7 @@ namespace Alterverse.Visuals
             HeroVfxPool.Emit(HeroFxShape.Rift,p-facing*Vector3.forward*.015f,p,new Vector3(size*.55f,size*.9f,.9f),DarkCore,life,HeroFxMotion.Contract,facing,actor);
         }
         public static void CancelWarnings(GameObject actor)=>HeroVfxPool.CancelWarnings(actor);
+        public static void CancelProjectiles(GameObject actor)=>HeroVfxPool.CancelProjectiles(actor);
         public static void Cast(GameObject actor,int slot)
         {
             if(actor==null)return;
@@ -91,7 +141,7 @@ namespace Alterverse.Visuals
             if(warning)
             {
                 // Exactly the authoritative area radius, never a growing fake hit zone.
-                Fx(h==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Ring,p,beneficial?c:new Color(1,.48f,.16f),radius,life,HeroFxMotion.Hold,actor:actor,warning:true);
+                Fx(HeroFxShape.Ring,p,beneficial?c:new Color(1,.48f,.16f),radius,life,HeroFxMotion.Hold,actor:actor,warning:true);
                 if(h==HeroId.Elyra)
                 {
                     Fx(HeroFxShape.Orb,p+Vector3.up*.5f,slot==3?DarkCore:c,slot==3?.85f:.45f,life,HeroFxMotion.Contract,actor:actor,warning:true);
@@ -136,7 +186,7 @@ namespace Alterverse.Visuals
                 default:Ring(actor,p,radius,.3f);break;
             }
         }
-        public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0)
+        public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
             if(actor==null)return;HeroId h=Hero(actor);
             switch(h)
@@ -154,16 +204,16 @@ namespace Alterverse.Visuals
                 case HeroId.Kaelon:
                     if(slot==0){Ring(actor,Ground(impact),.9f,.24f,false,true);Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.75f,.22f);Shards(actor,impact,1,3);}break;
                 case HeroId.Rook:
-                    if(slot==0)Slash(actor,impact,slot,true);break;
+                    if(slot==0)HeavyContact(actor,impact,slot);break;
                 case HeroId.Elyra:
-                    if(slot==0)Projectile(actor,impact,slot,travelTime);
+                    if(slot==0)Projectile(actor,impact,slot,travelTime,target);
                     // Field and singularity form at their authoritative warning center.
                     break;
                 case HeroId.Nyra:
-                    Projectile(actor,impact,slot,travelTime);
+                    Projectile(actor,impact,slot,travelTime,target);
                     if(slot==3)actor.GetComponent<HeroVisualMotion>()?.PulseAbility(3,0);
                     break;
-                case HeroId.Mira:Projectile(actor,impact,slot,travelTime);break;
+                case HeroId.Mira:Projectile(actor,impact,slot,travelTime,target);break;
             }
         }
         public static void Ultimate(GameObject actor,Vector3 target)
@@ -186,7 +236,7 @@ namespace Alterverse.Visuals
                 case HeroId.Elyra:
                     Fx(HeroFxShape.Runes,p,c,strength*2,.24f,HeroFxMotion.Contract);break;
                 case HeroId.Mira:
-                    Fx(HeroFxShape.Petals,p,c,strength*2,.24f,HeroFxMotion.Expand);break;
+                    Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));break;
                 case HeroId.Rook:
                     HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);break;
             }
@@ -197,6 +247,14 @@ namespace Alterverse.Visuals
             }
             else if(slot>=0&&Hero(actor)==HeroId.Kaelon)
                 Fx(HeroFxShape.Hex,p+Vector3.up*.6f,c,.34f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
+        }
+        public static void ShieldContact(GameObject victim,GameObject source)
+        {
+            if(victim==null)return;
+            Vector3 p=victim.transform.position+Vector3.up*.35f;
+            Quaternion face=source!=null?Face(source.transform.position,p):Quaternion.identity;
+            Fx(HeroFxShape.Hex,p,new Color(.55f,.90f,1f),.72f,.16f,HeroFxMotion.Contract,
+                face*Quaternion.Euler(65,0,0),follow:victim.transform);
         }
         public static void Support(GameObject actor,Health target,bool shield,float duration)
         {
@@ -231,15 +289,15 @@ namespace Alterverse.Visuals
             if(victim==null||source==null)return;
             Fx(HeroFxShape.Slash,Chest(victim),new Color(1,.50f,.28f),.43f,.10f,HeroFxMotion.Contract,Face(victim.transform.position,source.transform.position));
         }
-        public static void Basic(GameObject actor,Vector3 impact)
+        public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
-            if(actor==null)return;actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
             switch(Hero(actor))
             {
                 case HeroId.Veyr:Slash(actor,impact,-1);break;
-                case HeroId.Kaelon:Slash(actor,impact,-1,true);Ring(actor,Ground(impact),.48f,.18f,false,true);break;
-                case HeroId.Rook:Slash(actor,impact,-1,true);Ring(actor,Ground(impact),.43f,.16f);break;
-                default:Projectile(actor,impact,-1);break;
+                case HeroId.Kaelon:
+                case HeroId.Rook:HeavyContact(actor,impact,-1);break;
+                default:Projectile(actor,impact,-1,travelTime,target);break;
             }
         }
         public static void Link(GameObject actor,Vector3 impact,bool ultimate=false)
@@ -262,3 +320,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

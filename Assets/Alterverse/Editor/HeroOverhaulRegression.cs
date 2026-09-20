@@ -46,6 +46,8 @@ namespace Alterverse.EditorChecks
                     float before = hp.Current;
                     var attack = actor.AddComponent<BasicAttack>(); attack.enabled = false;
                     Assert(attack.TryAttack(), "Player must target collider-free enemies.");
+                    Assert(hp.Current==before,"Basic must not damage before preparation/contact.");
+                    yield return new WaitForSeconds(.55f);
                     float playerDamage = before-hp.Current; hp.RestoreFull();
                     var sensor = actor.AddComponent<BotTargetSensor>(); sensor.enabled = false;
                     typeof(BotTargetSensor).GetField("currentTarget",Hidden).SetValue(sensor,hp);
@@ -53,6 +55,10 @@ namespace Alterverse.EditorChecks
                     typeof(MobaBotBrain).GetMethod("Decide",Hidden).Invoke(brain,null);
                     var combat = actor.AddComponent<MobaBotCombat>(); combat.enabled = false;
                     typeof(MobaBotCombat).GetMethod("Update",Hidden).Invoke(combat,null);
+                    yield return new WaitForSeconds(.25f); // Existing bot reaction delay, at most .22s.
+                    typeof(MobaBotCombat).GetMethod("Update",Hidden).Invoke(combat,null);
+                    Assert(hp.Current==before,"Bot must use the same delayed delivery.");
+                    yield return new WaitForSeconds(.55f);
                     Assert(Mathf.Abs(playerDamage-(before-hp.Current)) < .001f, "Player and bot basic damage must match for " + (HeroId)i);
                     Assert(Mathf.Abs(playerDamage-actor.GetComponent<HeroCombatProfile>().Attack) < .001f, "No hidden ranged damage tax.");
                     hp.RestoreFull(); hp.AddShield(50,.1f); hp.TakeDamage(30);
@@ -113,3 +119,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
