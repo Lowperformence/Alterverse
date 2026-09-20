@@ -21,10 +21,8 @@ namespace Alterverse.Combat
         private readonly List<Mesh> meshes = new();
 
         private Transform visualRoot;
-        private Transform hazardRing;
         private int team;
         private float nextDamageTick;
-        private float pulseSeed;
         private Color teamEnergy;
         private Color hazardEnergy;
 
@@ -66,18 +64,11 @@ namespace Alterverse.Combat
             teamEnergy = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
             hazardEnergy = new Color(.96f, .26f, .055f, 1f);
             nextDamageTick = Time.time + damageTick;
-            pulseSeed = Mathf.Abs(transform.position.x * .17f + transform.position.z * .31f);
         }
 
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
-
-            if (hazardRing != null)
-            {
-                float pulse = 1f + Mathf.Sin(Time.time * 3.2f + pulseSeed) * .012f;
-                hazardRing.localScale = new Vector3(pulse, 1f, pulse);
-            }
 
             if (Time.time < nextDamageTick) return;
 
@@ -146,14 +137,13 @@ namespace Alterverse.Combat
             Material recess = Mat(recessColor, .10f, .05f);
             Material sandbag = Mat(sandbagColor, .01f, .13f);
             Material teamGlow = Mat(teamEnergy, .08f, .62f, true);
-            Material hazard = Mat(hazardEnergy, .04f, .58f, true);
 
             BuildExcavation(soil, deep);
             BuildArmoredWalls(armor, armorLight, metal, recess, variant);
             BuildSandbags(sandbag, variant);
             BuildRearShelter(armor, armorLight, metal, recess, teamGlow, variant);
             BuildFieldDetails(soil, metal, recess, sandbag, variant);
-            BuildWarningPerimeter(metal, teamGlow, hazard);
+            BuildFactionDetails(metal, teamGlow);
         }
 
         private void BuildExcavation(Material soil, Material deep)
@@ -335,20 +325,10 @@ namespace Alterverse.Combat
                 Quaternion.Euler(0f, -12f, 90f), sandbag);
         }
 
-        private void BuildWarningPerimeter(Material metal, Material teamGlow, Material hazard)
+        private void BuildFactionDetails(Material metal, Material teamGlow)
         {
-            Mesh ringMesh = ProductionMeshFactory.Ring(damageRadius, .055f, 40, 6);
-            meshes.Add(ringMesh);
-            GameObject ring = ProductionMeshFactory.MeshObject("DF_Trench_DamagePerimeter", visualRoot, ringMesh, hazard);
-            ring.transform.localPosition = new Vector3(0f, .11f, 0f);
-            hazardRing = ring.transform;
-            Renderer ringRenderer = ring.GetComponent<Renderer>();
-            if (ringRenderer != null)
-            {
-                ringRenderer.shadowCastingMode = ShadowCastingMode.Off;
-                ringRenderer.receiveShadows = false;
-            }
-
+            // No visible damage-radius ring. The trench remains a close-range hazard, but its
+            // presentation stays environmental rather than drawing a bright gameplay circle.
             Vector3[] pylons =
             {
                 new(-3.70f,.58f, 2.45f), new(3.70f,.58f,2.45f),
@@ -358,10 +338,10 @@ namespace Alterverse.Combat
             for (int i = 0; i < pylons.Length; i++)
             {
                 Vector3 p = pylons[i];
-                Part($"DF_Trench_WarningPost_{i}", PrimitiveType.Cylinder, visualRoot, p,
+                Part($"DF_Trench_FieldPost_{i}", PrimitiveType.Cylinder, visualRoot, p,
                     new Vector3(.11f, .58f, .11f), metal);
-                Part($"DF_Trench_WarningLamp_{i}", PrimitiveType.Sphere, visualRoot, p + Vector3.up * .67f,
-                    new Vector3(.19f, .19f, .19f), i < 2 ? hazard : teamGlow, Quaternion.identity, false);
+                Part($"DF_Trench_TeamLamp_{i}", PrimitiveType.Sphere, visualRoot, p + Vector3.up * .67f,
+                    new Vector3(.15f, .15f, .15f), teamGlow, Quaternion.identity, false);
             }
 
             Part("DF_Trench_FactionMarkL", PrimitiveType.Cube, visualRoot, new Vector3(-2.83f, 1.00f, -.12f),
