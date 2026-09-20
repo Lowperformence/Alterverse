@@ -31,8 +31,8 @@ namespace Alterverse.EditorChecks
                 Check(bunker != null, "null bunker");
                 Check(bunker.GetComponent<Health>() == null, bunker.name + " unexpectedly has Health and can be attacked");
                 Check(bunker.gameObject.layer == GameplayCollision.Structures, bunker.name + " is not on Structures layer");
-                Check(Mathf.Approximately(bunker.DamagePerSecond,0f), bunker.name + " must deal zero damage");
-                Check(Mathf.Approximately(bunker.DamageRadius,0f), bunker.name + " must not have a damage radius");
+                Check(Mathf.Abs(bunker.AttackDamage - 5f) < .001f, bunker.name + " damage is not 5");
+                Check(bunker.AttackRange >= 15f, bunker.name + " lost its long defensive range");
 
                 BoxCollider solid = bunker.GetComponent<BoxCollider>();
                 Check(solid != null && solid.enabled, bunker.name + " has no solid bunker footprint");
@@ -56,7 +56,7 @@ namespace Alterverse.EditorChecks
                 else if(bunker.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
             }
             Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a bunker");
-            Debug.Log("Defense bunker regression passed: four indestructible non-damaging bastions with shared visuals and solid cover.");
+            Debug.Log("Defense bunker regression passed: four indestructible bunkers, one on each base flank, moved toward arena center, 5 damage, long range.");
         }
     }
 }
