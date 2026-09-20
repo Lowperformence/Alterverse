@@ -1,5 +1,6 @@
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.Online;
 using Alterverse.Profile;
 using Alterverse.Shop;
 using UnityEngine;
@@ -9,10 +10,10 @@ namespace Alterverse.UI
 {
     public sealed class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Settings }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "SETTINGS" };
+        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -52,6 +53,7 @@ namespace Alterverse.UI
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
+            if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
             MatchClock.Set(PauseReason.Menu,true);
         }
         public static void ShowHome()
@@ -60,7 +62,9 @@ namespace Alterverse.UI
             instance.visible = true; instance.launching = false; instance.page = Page.Home;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
-            instance.gameObject.SetActive(true); MatchClock.Set(PauseReason.Menu,true);
+            instance.gameObject.SetActive(true);
+            if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
+            MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnEnable() { if (visible) MatchClock.Set(PauseReason.Menu,true); }
         private void OnApplicationPause(bool paused)
@@ -105,6 +109,7 @@ namespace Alterverse.UI
             if (page == next || launching) return;
             FlushAudio(); CancelName(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; inventoryMessage = ""; GUI.FocusControl(null);
+            if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
         }
         private void OnGUI()
         {
@@ -133,6 +138,7 @@ namespace Alterverse.UI
                     case Page.Shop: DrawShop(); break;
                     case Page.Inventory: DrawInventory(); break;
                     case Page.Profile: DrawProfile(); break;
+                    case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
                     default: DrawHome(); break;
                 }
@@ -145,7 +151,7 @@ namespace Alterverse.UI
 
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={90f,90f,100f,90f,136f,100f,112f};
+            float[] widths={82f,82f,94f,82f,126f,92f,108f,104f};
             const float gap=8f;
             float total=gap*(widths.Length-1);
             for(int i=0;i<widths.Length;i++)total+=widths[i];
@@ -583,7 +589,7 @@ namespace Alterverse.UI
             Stat(x,458,w,"ASSISTS",ProgressionSummary.Assists.ToString());
             Stat(x,514,w,"OBJECTIVES",ProgressionSummary.Objectives.ToString());
             Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
-            theme.Label(new Rect(x,626,w,48),"LOCAL PROFILE / UNRANKED\nAccount level grants no combat power.",theme.Small,true);
+            theme.Label(new Rect(x,626,w,48),"GLOBAL LEVEL RANKING  /  RANKING TAB\nAccount level grants no combat power.",theme.Small,true);
         }
         private void Stat(float x,float y,float w,string label,string value)
         {
@@ -606,6 +612,40 @@ namespace Alterverse.UI
         }
         private void CancelName() { CloseKeyboard(); editingName=false; profileName=PlayerProfile.PlayerName; }
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
+        private void DrawLeaderboard()
+        {
+            Heading("Global Ranking","Worldwide account-level ranking powered by Google Play Games.");
+
+            float leftWidth=ContentWidth*.58f;
+            theme.Panel(new Rect(Left,220,leftWidth,430));
+            theme.Label(new Rect(Left+28,244,leftWidth-56,24),"GLOBAL LEVEL",theme.Small,true);
+            theme.Label(new Rect(Left+28,278,leftWidth-56,54),$"LEVEL {PlayerExperience.Level}",theme.Title);
+            theme.Progress(new Rect(Left+28,344,leftWidth-56,6),PlayerExperience.LevelProgress);
+            theme.Label(new Rect(Left+28,360,leftWidth-56,26),XpLabel(),theme.Small,true);
+
+            theme.Label(new Rect(Left+28,410,leftWidth-56,22),"GOOGLE PLAY GAMES ACCOUNT",theme.Small,true);
+            theme.Label(new Rect(Left+28,440,leftWidth-56,32),GooglePlayLevelLeaderboard.PlayerName,theme.Heading);
+            theme.Label(new Rect(Left+28,484,leftWidth-56,54),GooglePlayLevelLeaderboard.Status,theme.Small,true);
+
+            bool configured=GooglePlayLevelLeaderboard.IsConfigured;
+            string syncLabel=GooglePlayLevelLeaderboard.IsAuthenticated?"SYNC LEVEL":"CONNECT & SYNC";
+            if(theme.Action(new Rect(Left+28,558,(leftWidth-68)*.5f,58),syncLabel,true,enabled:configured))
+                GooglePlayLevelLeaderboard.AuthenticateAndSync();
+            if(theme.Action(new Rect(Left+40+(leftWidth-68)*.5f,558,(leftWidth-68)*.5f,58),"OPEN GLOBAL RANKING",true,enabled:configured))
+                GooglePlayLevelLeaderboard.ShowLeaderboard();
+
+            float x=Left+leftWidth+32,w=ContentWidth-leftWidth-32;
+            theme.Label(new Rect(x,230,w,36),"How ranking works",theme.Heading);
+            theme.Label(new Rect(x,282,w,112),
+                "Your current account level is submitted as your Google Play leaderboard score. Higher level means a higher global position.",theme.Body,true);
+            Stat(x,420,w,"YOUR LEVEL",PlayerExperience.Level.ToString());
+            Stat(x,476,w,"LAST SYNCED",GooglePlayLevelLeaderboard.LastSubmittedLevel>0?GooglePlayLevelLeaderboard.LastSubmittedLevel.ToString():"—");
+            Stat(x,532,w,"SCOPE","ALL-TIME / GLOBAL");
+            theme.Label(new Rect(x,604,w,56),
+                configured?"Google Play keeps the global leaderboard. No separate DIMENSIONS FRONT ranking server is required.":
+                "SETUP REQUIRED  /  Add the GLOBAL LEVEL leaderboard ID from Google Play Console.",theme.Small,true);
+        }
+
         private void DrawSettings()
         {
             Heading("Settings","Make the sound your own.");
