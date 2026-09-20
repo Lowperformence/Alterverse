@@ -228,12 +228,24 @@ namespace Alterverse.UI
         {
             Rect r=new Rect(16,16,218,76);theme.Panel(r);
             theme.Label(new Rect(r.x+12,r.y+5,194,24),heroName,centered);
-            Rect bar=new Rect(r.x+12,r.y+34,194,9);FrontEndTheme.Fill(bar,FrontEndTheme.Background);
-            FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*damageTrail,bar.height),new Color(.7f,.75f,.8f));
+            Rect bar=new Rect(r.x+12,r.y+34,194,9);
+            FrontEndTheme.Fill(new Rect(bar.x-1,bar.y-1,bar.width+2,bar.height+2),new Color(.18f,.22f,.28f,.92f));
+            FrontEndTheme.Fill(bar,FrontEndTheme.Background);
+            FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*damageTrail,bar.height),new Color(.72f,.76f,.82f,.58f));
             FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*health.Normalized,bar.height),health.Normalized<.3f?new Color(.95f,.43f,.32f):accent);
-            if(health.Shield>0)FrontEndTheme.Fill(new Rect(bar.x,bar.y+11,bar.width*Mathf.Clamp01(health.Shield/health.Max),3),FrontEndTheme.Accent);
+            if(health.Shield>0)
+            {
+                Rect shield=new Rect(bar.x,bar.y+11,bar.width*Mathf.Clamp01(health.Shield/health.Max),3);
+                FrontEndTheme.Fill(shield,FrontEndTheme.Accent);
+            }
             theme.Label(new Rect(r.x+12,r.y+48,194,22),healthText,small);
-            if(statusText.Length>0)theme.Label(new Rect(r.x,r.yMax+4,r.width,25),statusText,centered);
+            if(statusText.Length>0)
+            {
+                Rect status=new Rect(r.x+28,r.yMax+4,r.width-56,23);
+                FrontEndTheme.Fill(status,new Color(FrontEndTheme.Surface.r,FrontEndTheme.Surface.g,FrontEndTheme.Surface.b,.92f));
+                FrontEndTheme.Fill(new Rect(status.x,status.y,status.width,1),statusText=="STUNNED"?new Color(.96f,.48f,.32f):new Color(.86f,.72f,.34f));
+                theme.Label(status,statusText,centered);
+            }
         }
         private void DrawJoystick()
         {
