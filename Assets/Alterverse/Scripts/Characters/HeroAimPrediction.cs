@@ -1,3 +1,4 @@
+using Alterverse.Combat;
 using UnityEngine;
 namespace Alterverse.Characters
 {
@@ -11,8 +12,8 @@ namespace Alterverse.Characters
             Vector3 lead=Vector3.ClampMagnitude(velocity*time,1.2f);
             Vector3 offset=position+lead-origin;offset.y=0;
             Vector3 result=origin+Vector3.ClampMagnitude(offset,range);
-            result.y=position.y;result.x=Mathf.Clamp(result.x,-40,40);result.z=Mathf.Clamp(result.z,-33,33);
-            return result;
+            result.y=position.y;
+            return GameplayCollision.ClampToRoundedArena(result,40f,33f);
         }
     }
 }
