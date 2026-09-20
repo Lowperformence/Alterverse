@@ -246,6 +246,15 @@ if(gem!=null)
 gem.localScale*=1.12f;
 ApplyGlow(gem,gemMaterial);
 }
+
+// Saturn-like premium ring around the staff crown. It keeps the staff's
+// emerald/cyan energy identity while framing the red center gem.
+Mesh planetRingMesh=HeroMeshLibrary.Ring("DF_LifeweavePlanetRing",.34f,.022f);
+GameObject planetRing=Sculpt("LifeweavePlanetRing",planetRingMesh,
+new Vector3(0,.80f,.06f),Vector3.one,skin.Glow,weapon,true);
+planetRing.transform.localRotation=Quaternion.Euler(72f,0f,28f);
+MeshRenderer ringRenderer=planetRing.GetComponent<MeshRenderer>();
+if(ringRenderer!=null)ringRenderer.sharedMaterial=energyMaterial;
 }
 
 private void ApplyAnchorHammerOverdrive(Shader shader,Material energyMaterial)
