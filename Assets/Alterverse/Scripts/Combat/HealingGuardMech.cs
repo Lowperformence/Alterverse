@@ -50,7 +50,7 @@ namespace Alterverse.Combat
             if(collider!=null){collider.radius=.72f;collider.height=2.05f;}
 
             Health hp=mech.AddComponent<Health>();
-            hp.Configure(650,true);
+            hp.Configure(520f,true);
             mech.AddComponent<TeamMember>().Initialize(team);
             HealingGuardMech guard=mech.AddComponent<HealingGuardMech>();
             guard.Initialize(team,spawn,healingPlate,energy);
