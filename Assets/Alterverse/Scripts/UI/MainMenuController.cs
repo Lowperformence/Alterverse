@@ -512,13 +512,11 @@ namespace Alterverse.UI
             string seasonHeader=$"BATTLE PASS / {BattlePassProgress.SeasonName}";
             theme.Label(new Rect(Left+22,282,540,20),seasonHeader,theme.Small,true);
 
-            theme.Label(new Rect(Left+22,304,250,28),$"LEVEL {BattlePassProgress.Level} / {BattlePassProgress.MaxLevel}",theme.Title);
-
             float totalProgress=BattlePassProgress.TotalXpRequired<=0
                 ?1f
                 :(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired;
 
-            theme.Progress(new Rect(Left+22,338,430,6),totalProgress);
+            theme.Progress(new Rect(Left+22,320,430,6),totalProgress);
 
             string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel
                 ?"COMPLETE"
