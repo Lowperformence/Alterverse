@@ -25,7 +25,6 @@ namespace Alterverse.Audio
             clips[(int)DimensionSound.HeroDeath]=heroDeathSignature;
             for(int i=0;i<VoiceCount;i++){voices[i]=gameObject.AddComponent<AudioSource>();voices[i].playOnAwake=false;voices[i].spatialBlend=0;}
             if(missing>0)Debug.LogWarning("DIMENSIONS FRONT: FINAL SFX ASSETS REQUIRED — "+missing+" missing cues. Synthetic prototype tones are disabled.");
-            Alterverse.Combat.LaneWaveSpawner.SiegeWaveSpawned+=Siege;
             Alterverse.Match.DimensionPlanetDirector.PlanetArrived+=Planet;
         }
         static AudioClip CreateHeroDeathSignature()
@@ -69,7 +68,6 @@ namespace Alterverse.Audio
             return clip;
         }
 
-        static void Siege()=>Play(DimensionSound.SiegeArrival,.65f);
         static void Planet(Vector3 position)=>Play(DimensionSound.PlanetArrival,.65f);
         public static void PlayAt(DimensionSound sound,Vector3 position,float volume=.5f)
         {
@@ -141,7 +139,7 @@ namespace Alterverse.Audio
         void OnDestroy()
         {
             if(instance!=this)return;instance=null;
-            Alterverse.Combat.LaneWaveSpawner.SiegeWaveSpawned-=Siege;Alterverse.Match.DimensionPlanetDirector.PlanetArrived-=Planet;
+            Alterverse.Match.DimensionPlanetDirector.PlanetArrived-=Planet;
             if(heroDeathSignature!=null)Destroy(heroDeathSignature);
             // Remaining resource clips are shared assets; never Destroy them.
         }
