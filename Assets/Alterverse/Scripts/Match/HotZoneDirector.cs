@@ -7,42 +7,50 @@ using UnityEngine.Rendering;
 namespace Alterverse.Match
 {
     /// <summary>
-    /// Two match-wide Hot Zones on every arena:
-    /// the first opens 40 seconds after round start, the second keeps the original 5:00 timing.
-    /// Each Hot Zone remains active for 40 seconds. Exclusive hero presence earns control time;
-    /// contested presence earns neither team.
+    /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
+    /// stays active for 30 seconds, and relocates inside the central 60% of the arena.
+    /// Exclusive control scales linearly with the number of allied heroes inside.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
     {
-        public const float FirstOpenAt=40f;
-        public const float SecondOpenAt=300f;
-        public const float OpenAt=SecondOpenAt; // legacy/reference compatibility for the original Hot Zone timing
-        public const float ActiveDuration=40f;
-        public const float Radius=6.5f;
+        public const float SpawnInterval=60f;
+        public const float FirstOpenAt=SpawnInterval;
+        public const float SecondOpenAt=SpawnInterval*2f;
+        public const float OpenAt=FirstOpenAt;
+        public const float ActiveDuration=30f;
+        public const float Radius=9.75f;
+
+        private const float ArenaHalfWidth=42f;
+        private const float ArenaHalfHeight=36f;
+        private const float CentralWidthFraction=.60f;
+        private const float SpawnPadX=27.5f;
 
         private enum State { Waiting, Active, Finished }
         private State state;
         private static HotZoneDirector owner;
         private bool rewardIssued,openingAnnounced;
         private int occurrence;
-        private float elapsed,activeElapsed,zeroTime,lumenTime,nextScan;
+        private float elapsed,nextOpenAt=SpawnInterval,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
         private Transform pulseRing,innerRing;
         private Renderer[] markerRenderers=System.Array.Empty<Renderer>();
         private Material neutralMat,zeroMat,lumenMat;
         private DimensionsFront front;
+        private System.Random rng;
+        private Vector3 lastSpawnPosition;
+        private bool hasLastSpawn;
+        private readonly Collider[] spawnBlockers=new Collider[12];
 
         public static event System.Action HotZoneOpening;
         public static event System.Action HotZoneOpened;
         public static event System.Action<int,float,float> HotZoneResolved;
 
-        private float NextOpenAt=>occurrence==0?FirstOpenAt:SecondOpenAt;
-        public int Occurrence=>Mathf.Clamp(occurrence+1,1,2);
+        public int Occurrence=>occurrence+1;
         public float ZeroControlSeconds=>zeroTime;
         public float LumenControlSeconds=>lumenTime;
         public float Remaining=>state==State.Active?Mathf.Max(0,ActiveDuration-activeElapsed):
-            state==State.Waiting?Mathf.Max(0,NextOpenAt-elapsed):0;
+            state==State.Waiting?Mathf.Max(0,nextOpenAt-elapsed):0;
         public bool IsActive=>state==State.Active;
         public int ZeroInside=>zeroInside;
         public int LumenInside=>lumenInside;
@@ -50,7 +58,10 @@ namespace Alterverse.Match
         private void Awake()
         {
             if(owner!=null&&owner!=this){enabled=false;Destroy(gameObject);return;}
-            owner=this;front=FindAnyObjectByType<DimensionsFront>();
+            owner=this;
+            front=FindAnyObjectByType<DimensionsFront>();
+            rng=new System.Random(unchecked(System.Environment.TickCount^GetHashCode()));
+            nextOpenAt=SpawnInterval;
         }
         private void OnDisable(){if(owner==this)owner=null;}
 
@@ -63,13 +74,12 @@ namespace Alterverse.Match
             elapsed+=Time.deltaTime;
             if(state==State.Waiting)
             {
-                float openAt=NextOpenAt;
-                if(!openingAnnounced&&elapsed>=openAt-10f)
+                if(!openingAnnounced&&elapsed>=nextOpenAt-10f)
                 {
                     openingAnnounced=true;
                     HotZoneOpening?.Invoke();
                 }
-                if(elapsed<openAt)return;
+                if(elapsed<nextOpenAt)return;
                 Open();
             }
 
@@ -77,8 +87,10 @@ namespace Alterverse.Match
             activeElapsed+=Time.deltaTime;
             if(Time.time>=nextScan){nextScan=Time.time+.10f;ScanHeroes();}
 
-            if(zeroInside>0&&lumenInside==0)zeroTime+=Time.deltaTime;
-            else if(lumenInside>0&&zeroInside==0)lumenTime+=Time.deltaTime;
+            // One hero preserves the old 1x control rate. Every additional uncontested hero
+            // contributes another full unit of control per second. Any enemy presence contests.
+            if(zeroInside>0&&lumenInside==0)zeroTime+=Time.deltaTime*zeroInside;
+            else if(lumenInside>0&&zeroInside==0)lumenTime+=Time.deltaTime*lumenInside;
 
             AnimateZone();
             if(activeElapsed>=ActiveDuration)Resolve();
@@ -89,11 +101,58 @@ namespace Alterverse.Match
             state=State.Active;
             rewardIssued=false;
             activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;nextScan=0;
+            transform.position=ChooseSpawnPosition();
             BuildZoneVisual();
             PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
             PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
             HotZoneOpened?.Invoke();
         }
+
+        private Vector3 ChooseSpawnPosition()
+        {
+            float xLimit=ArenaHalfWidth*CentralWidthFraction;
+            float zLimit=Mathf.Max(1f,ArenaHalfHeight-Radius-.75f);
+            Vector3 fallback=LunarSurfaceField.Surface(0f,0f);
+
+            for(int attempt=0;attempt<24;attempt++)
+            {
+                float x=Next(-xLimit,xLimit);
+                float z=Next(-zLimit,zLimit);
+                Vector3 candidate=LunarSurfaceField.Surface(x,z);
+                if(!IsSpawnPositionSafe(candidate))continue;
+                if(hasLastSpawn)
+                {
+                    Vector3 delta=candidate-lastSpawnPosition;delta.y=0;
+                    if(delta.sqrMagnitude<6.5f*6.5f)continue;
+                }
+                lastSpawnPosition=candidate;hasLastSpawn=true;
+                return candidate;
+            }
+
+            // Deterministic safe fallback in the central arena if random rejection is exhausted.
+            float fallbackZ=(occurrence&1)==0?12f:-12f;
+            fallback=LunarSurfaceField.Surface(0f,fallbackZ);
+            lastSpawnPosition=fallback;hasLastSpawn=true;
+            return fallback;
+        }
+
+        private bool IsSpawnPositionSafe(Vector3 candidate)
+        {
+            // Keep the enlarged circle away from both base healing/spawn pads.
+            float baseClearance=Radius+2.25f;
+            Vector3 left=new(-SpawnPadX,candidate.y,0);
+            Vector3 right=new(SpawnPadX,candidate.y,0);
+            Vector3 dl=candidate-left;dl.y=0;
+            Vector3 dr=candidate-right;dr.y=0;
+            if(dl.sqrMagnitude<baseClearance*baseClearance||dr.sqrMagnitude<baseClearance*baseClearance)return false;
+
+            // Spawn-time-only structure check: never place the zone centre directly on a large
+            // gameplay structure. This is intentionally not a per-frame physics cost.
+            int count=Physics.OverlapSphereNonAlloc(candidate,2.2f,spawnBlockers,1<<GameplayCollision.Structures,QueryTriggerInteraction.Ignore);
+            return count==0;
+        }
+
+        private float Next(float min,float max)=>(float)(min+(max-min)*rng.NextDouble());
 
         private void ScanHeroes()
         {
@@ -131,14 +190,11 @@ namespace Alterverse.Match
             if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
             pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
 
-            if(occurrence==0)
-            {
-                occurrence=1;
-                openingAnnounced=false;
-                state=State.Waiting;
-                zeroInside=lumenInside=0;
-            }
-            else state=State.Finished;
+            occurrence++;
+            openingAnnounced=false;
+            zeroInside=lumenInside=0;
+            state=State.Waiting;
+            do nextOpenAt+=SpawnInterval; while(nextOpenAt<=elapsed);
         }
 
         private void ResolveNoReward()
@@ -153,13 +209,13 @@ namespace Alterverse.Match
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(shader==null)return;
 
-            // Reuse the same three materials for both occurrences to avoid unnecessary allocations.
+            // Reuse the same three materials across recurring Hot Zones to avoid allocations.
             neutralMat??=CreateMaterial(shader,new Color(.42f,.44f,.52f,1),1.1f);
             zeroMat??=CreateMaterial(shader,StylizedArtDirection.ZeroEnergy,2.1f);
             lumenMat??=CreateMaterial(shader,StylizedArtDirection.LumenEnergy,2.1f);
 
             if(zoneRoot!=null)Destroy(zoneRoot);
-            zoneRoot=new GameObject(occurrence==0?"DF_HotZoneVisual_Early":"DF_HotZoneVisual_Main");
+            zoneRoot=new GameObject($"DF_HotZoneVisual_{occurrence+1}");
             zoneRoot.transform.position=transform.position;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)zoneRoot.transform.SetParent(world,true);
 
@@ -178,7 +234,7 @@ namespace Alterverse.Match
                 GameObject shard=GameObject.CreatePrimitive(PrimitiveType.Cube);shard.name="DF_HotZoneMarker";shard.transform.SetParent(zoneRoot.transform,false);
                 shard.transform.localPosition=p;shard.transform.localRotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,45);
                 shard.transform.localScale=new Vector3(.10f,.42f,.22f);
-                Collider c=shard.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Collider col=shard.GetComponent<Collider>();if(col!=null)col.enabled=false;
                 Renderer r=shard.GetComponent<Renderer>();
                 if(r!=null){r.sharedMaterial=neutralMat;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;markerRenderers[i]=r;}
             }
