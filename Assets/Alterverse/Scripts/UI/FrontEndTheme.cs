@@ -14,6 +14,17 @@ namespace Alterverse.UI
         public static readonly Color Zero = new(.51f, .38f, .69f);
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered;
+        private readonly GUIContent measuredText=new GUIContent();
+        // Compact labels cannot wrap into neighbouring controls. Shared styles are restored.
+        public void FitLabel(Rect rect,string text,GUIStyle style,bool muted=false)
+        {
+            int size=style.fontSize;bool wrap=style.wordWrap;TextClipping clip=style.clipping;
+            style.wordWrap=false;style.clipping=TextClipping.Clip;measuredText.text=text;
+            float width=style.CalcSize(measuredText).x;
+            if(width>rect.width)style.fontSize=Mathf.Max(14,Mathf.FloorToInt(size*rect.width/width));
+            Label(rect,text,style,muted);
+            style.fontSize=size;style.wordWrap=wrap;style.clipping=clip;
+        }
 
         public FrontEndTheme()
         {
@@ -41,7 +52,7 @@ namespace Alterverse.UI
         public void Panel(Rect rect)
         {
             Fill(rect, Surface);
-            Fill(new Rect(rect.x, rect.y, rect.width, 1), new Color(.24f,.29f,.35f));
+            Fill(new Rect(rect.x, rect.y, rect.width, 1), new Color(.17f,.21f,.26f));
             Fill(new Rect(rect.x, rect.yMax-1, rect.width, 1), new Color(.035f,.045f,.065f));
         }
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
@@ -75,3 +86,4 @@ namespace Alterverse.UI
         public void Center(Rect rect, string text) => Label(rect, text, centered, true);
     }
 }
+

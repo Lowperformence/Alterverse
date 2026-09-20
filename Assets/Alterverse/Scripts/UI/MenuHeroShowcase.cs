@@ -51,7 +51,7 @@ namespace Alterverse.UI
             stage.transform.SetParent(transform, false);
             stage.transform.position = new Vector3(12000,12000,12000);
             texture = new RenderTexture(640,720,24,RenderTextureFormat.ARGB32)
-            { name = "DF_HeroPortrait", antiAliasing = 1, useMipMap = false };
+            { name = "DF_HeroPortrait", antiAliasing = Application.isMobilePlatform ? 2 : 1, useMipMap = false };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();
@@ -59,7 +59,7 @@ namespace Alterverse.UI
             previewCamera.backgroundColor = Color.clear;
             previewCamera.orthographic = true; previewCamera.orthographicSize = 1.65f;
             previewCamera.nearClipPlane = .1f; previewCamera.farClipPlane = 12;
-            previewCamera.allowHDR = false; previewCamera.allowMSAA = false;
+            previewCamera.allowHDR = false; previewCamera.allowMSAA = Application.isMobilePlatform;
             previewCamera.useOcclusionCulling = false; previewCamera.cullingMask = 1 << PreviewLayer;
             previewCamera.targetTexture = texture; previewCamera.depth = -20;
             var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
@@ -100,4 +100,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

@@ -33,6 +33,7 @@ namespace Alterverse.EditorChecks
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
                 CheckTargetRetention();
+                CheckChaseDisengagement();
                 CheckHumanizedDecisionMemory();
                 CheckDifficulty();
                 CheckAbilitySlots();
@@ -177,6 +178,27 @@ namespace Alterverse.EditorChecks
             Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
             Assert(sensor.CurrentTarget == first, "A living target must be reacquired after reaction delay.");
         }
+        private static void CheckChaseDisengagement()
+        {
+            Vector3 origin=new(12000,1,12000);
+            GameObject bot=Unit("Check_Disengage",0,origin);
+            BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
+            Health enemy=Unit("Check_Fleeing",1,origin+Vector3.right*6).GetComponent<Health>();
+            Set(sensor,"currentTarget",enemy);Call(sensor,"Scan");
+            Vector3 observed=sensor.ObservedTargetPosition;
+            enemy.transform.position+=Vector3.forward;
+            Assert(sensor.ObservedTargetPosition==observed,"Movement must use the observed position until the next perception tick.");
+            sensor.Disengage(enemy);Call(sensor,"Scan");
+            Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==null,"A fleeing enemy must not immediately restart an abandoned chase.");
+            enemy.transform.position=origin+Vector3.right;
+            Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==enemy,"Disengagement must still allow close-range self-defence after reaction delay.");
+            float score=(float)Call(sensor,"Score",enemy);
+            for(int i=0;i<8;i++)Assert((float)Call(sensor,"Score",enemy)==score,
+                "Unchanged visible targets must not reroll their priority each scan.");
+        }
+
         private static void CheckHumanizedDecisionMemory()
         {
             Vector3 origin=new(11000,1,11000);
@@ -248,7 +270,7 @@ namespace Alterverse.EditorChecks
                         Set(sensor,"brain",brain);
                         var enemy=Unit("Check_Reaction",1,bot.transform.position+Vector3.right*4).GetComponent<Health>();
                         Call(sensor,"Scan");Assert(sensor.CurrentTarget==null,"No frame-zero target acquisition.");
-                        Set(sensor,"candidateSince",Time.time-brain.Difficulty.ReactionDelay-.01f);Call(sensor,"Scan");
+                        Set(sensor,"candidateSince",Time.time-brain.Difficulty.ReactionDelay*brain.DecisionRhythm-.01f);Call(sensor,"Scan");
                         Assert(sensor.CurrentTarget==enemy,"Every difficulty eventually acquires a visible target.");
                         var wall=new GameObject("Check_SightWall");Created.Add(wall);
                         wall.transform.position=bot.transform.position+Vector3.right*2;
@@ -285,6 +307,10 @@ namespace Alterverse.EditorChecks
             Health hp = rook.GetComponent<Health>(); hp.TakeDamage(50);
             Assert((bool)Call(rook, "TryCast", 1, null) && hp.Current > 50, "Rook W must heal without an enemy despite zero cast range.");
             Health enemy = Unit("Check_SkillEnemy", 1, origin + Vector3.right * 2f).GetComponent<Health>();
+            enemy.transform.position=origin+Vector3.right*8f;
+            Assert(!(bool)Call(rook,"TryCast",2,enemy)&&rook.GetComponent<HeroAbilityExecution>().Remaining(2)==0,
+                "An out-of-radius self-centred attack must preserve its cooldown.");
+            enemy.transform.position=origin+Vector3.right*2f;
             Call(rook, "TryCast", 2, enemy);
             Assert(rook.GetComponent<HeroAbilityExecution>().Remaining(2) > 0, "Rook E must start its telegraphed area attack.");
             HeroBotAbilities kaelon = Abilities(HeroId.Kaelon, origin + Vector3.forward * 20);
@@ -350,7 +376,9 @@ namespace Alterverse.EditorChecks
             Set(mover, "pulses", new[] { pulse }); Set(mover, "towers", Array.Empty<LaneTower>());
             hero.transform.position = planetObject.transform.position + Vector3.left * 2f;
             object[] args = { Vector3.zero };
-            Assert((bool)Call(mover, "TryGetPulseEscape", args), "Bot in a warning circle must request an escape.");
+            Assert(!(bool)Call(mover, "TryGetPulseEscape", args), "New warnings must respect reaction delay.");
+            Set(mover,"hazardSeenAt",Time.time-1f);
+            Assert((bool)Call(mover, "TryGetPulseEscape", args), "Bot in a warning circle must request an escape after reaction delay.");
             Vector3 escape = (Vector3)args[0];
             Assert(Vector3.Distance(escape, planetObject.transform.position) > pulse.BlastRadius, "Escape point must be outside blast radius.");
             Assert(!mover.CanRepositionTo(planetObject.transform.position), "Offensive dash must not move deeper into a warned explosion.");
@@ -383,4 +411,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

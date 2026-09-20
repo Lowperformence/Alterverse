@@ -27,9 +27,9 @@ Shader "DimensionsFront/HeroSurface"
     half diffuse=.25h+.75h*saturate(dot(n,key.direction));
     half3 ambient=max(SampleSH(n),half3(.20h,.22h,.26h));
     half rim=pow(1-saturate(dot(n,view)),3)*.13h;
-    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),28)*.13h;
+    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),20)*.09h;
     half3 lit=albedo*(ambient*.65h+key.color*diffuse)+spec*key.color+rim*albedo;
-    return half4(lerp(lit,albedo*(1.5h+_EnergyBoost*.65h),saturate(i.color.a)),1);
+    return half4(lerp(lit,albedo*(1.35h+_EnergyBoost*.55h),saturate(i.color.a)),1);
    }
    ENDHLSL
   }
@@ -37,3 +37,4 @@ Shader "DimensionsFront/HeroSurface"
   UsePass "Universal Render Pipeline/Lit/DepthOnly"
  }
 }
+

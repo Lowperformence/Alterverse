@@ -52,7 +52,7 @@ namespace Alterverse.Visuals
             float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
             float lane=LaneWeight(x,z);
             relief=(macro-.5f)*.17f+(medium-.5f)*.07f;
-            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.10f+(fine-.5f)*.025f;
+            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.010f;
             dust=lane;
             // Chipped rim, bowl, uneven ejecta; relief is very shallow over the unchanged flat collider.
             for(int i=0;i<craters.Length;i++)
@@ -67,8 +67,8 @@ namespace Alterverse.Visuals
                 float eroded=.65f+.35f*Noise(x,z,.8f,19+i);
                 relief+=(-bowl*.12f+rim*.06f)*eroded;
                 float shadow=bowl*(.055f+.055f*Mathf.Clamp01((dx-dz)/r+.5f));
-                tone+=rim*.07f*eroded-shadow;
-                if(q>1&&q<1.6f)tone+=.024f*(1-(q-1)/.6f)*Mathf.Max(0,Mathf.Sin(angle*11+i)*.5f+.5f);
+                tone+=rim*.05f*eroded-shadow*.85f;
+                if(q>1&&q<1.6f)tone+=.012f*(1-(q-1)/.6f)*Mathf.Max(0,Mathf.Sin(angle*11+i)*.5f+.5f);
             }
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
@@ -116,11 +116,12 @@ namespace Alterverse.Visuals
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));
                 float dz=(heights[Mathf.Min(size-1,z+1)*size+x]-heights[Mathf.Max(0,z-1)*size+x])/(2*spanZ/(size-1));
-                Vector3 n=new Vector3(-dx*3,-dz*3,1).normalized;normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
+                Vector3 n=new Vector3(-dx*1.8f,-dz*1.8f,1).normalized;normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
-            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear};
-            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear};
+            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
+            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
             albedo.SetPixels32(pixels);albedo.Apply(true,true);normals.SetPixels32(normalPixels);normals.Apply(true,true);
         }
     }
 }
+

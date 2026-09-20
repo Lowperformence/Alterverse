@@ -152,7 +152,7 @@ namespace Alterverse.Visuals
                 triangles.Add(n);triangles.Add(n+1);triangles.Add(n+2);
                 triangles.Add(n);triangles.Add(n+2);triangles.Add(n+3);
             }
-            Color clear=new Color(1,1,1,0),hot=new Color(1.8f,1.8f,1.8f,1),soft=new Color(1,1,1,.55f);
+            Color clear=new Color(1,1,1,0),hot=new Color(1.4f,1.4f,1.4f,1),soft=new Color(1,1,1,.55f);
             void FeatherBand(float start,float end,float inner,float peak,float outer,int count,bool taper=false)
             {
                 for(int i=0;i<count;i++)
@@ -286,4 +286,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

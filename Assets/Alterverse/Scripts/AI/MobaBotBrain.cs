@@ -16,7 +16,7 @@ namespace Alterverse.AI
         private BotPersonality personality;
         private BotTargetSensor targetSensor;
         private BotState state = BotState.Lane;
-        private float nextDecisionTime;
+        private float nextDecisionTime, retreatUntil;
         private bool wasDead;
         private System.Random decisions;
         private float lastHealth, threatUntil, fightCommitUntil, groupDecisionUntil;
@@ -72,7 +72,7 @@ namespace Alterverse.AI
         }
         public void ResumeLaneAfterRespawn()
         {
-            wasDead = false;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
+            wasDead = false;retreatUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
@@ -116,6 +116,8 @@ namespace Alterverse.AI
             bool badlyOutnumbered=pressure>=2&&hp<=outnumberedRetreat;
             if (hp <= retreat || badlyOutnumbered)
             {
+                if(state!=BotState.Retreat&&state!=BotState.Recover)
+                    retreatUntil=Time.time+1.2f*commitmentRhythm;
                 state = BotState.Retreat;
                 fightCommitUntil=0;
                 return;
@@ -123,7 +125,7 @@ namespace Alterverse.AI
 
             if (state == BotState.Retreat || state == BotState.Recover)
             {
-                state = hp < .8f ? BotState.Recover : BotState.Lane;
+                state = hp < .8f || Time.time<retreatUntil || pressure>0 ? BotState.Recover : BotState.Lane;
                 if(state==BotState.Lane)fightCommitUntil=0;
                 return;
             }
@@ -150,3 +152,4 @@ namespace Alterverse.AI
         }
     }
 }
+

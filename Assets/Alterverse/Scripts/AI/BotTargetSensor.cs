@@ -13,7 +13,17 @@ namespace Alterverse.AI
         private Health selfHealth, currentTarget;
         private HeroCombatProfile profile;
         private float nextScanTime, candidateSince, retainedSince, lastSeenTime=-100f;
-        private Health candidateTarget;
+        private Health candidateTarget, disengagedTarget;
+        private float disengagedUntil;
+        // Consumers steer toward the last observation, never a hidden live transform.
+        public Vector3 ObservedTargetPosition => lastKnownPosition;
+        public bool CanObserve(Health target) => IsEnemy(target) && Visible(target);
+        public void Disengage(Health target)
+        {
+            ClearTarget();
+            disengagedTarget=target;
+            disengagedUntil=Time.time+Mathf.Lerp(1.2f,2.5f,Difficulty.ChaseDiscipline);
+        }
         private Vector3 lastKnownPosition;
         private MobaBotBrain brain;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
@@ -24,15 +34,16 @@ namespace Alterverse.AI
         public Vector3 LastKnownEnemyPosition=>lastKnownPosition;
         private BotDifficultyProfile Difficulty=>brain!=null?brain.Difficulty:BotDifficultyProfile.For(BotDifficulty.Normal);
         private float Radius=>profile!=null?Mathf.Max(fallbackScanRadius,profile.AttackRange+4f):fallbackScanRadius;
-        public Health CurrentTarget => IsEnemy(currentTarget) && Visible(currentTarget) ? currentTarget : null;
+        public Health CurrentTarget => IsEnemy(currentTarget) && InRadius(currentTarget) ? currentTarget : null;
 
         private void Awake()
         {
             teamMember = GetComponent<TeamMember>();
             selfHealth = GetComponent<Health>();
             profile = GetComponent<HeroCombatProfile>();
+            nextScanTime=Time.time+(Mathf.Abs(GetInstanceID()%17)/17f)*scanInterval;
         }
-        public void ClearTarget() { currentTarget = candidateTarget = null; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
+        public void ClearTarget() { currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
@@ -59,9 +70,10 @@ namespace Alterverse.AI
             if(count==sightHits.Length)return false;
             for(int i=0;i<count;i++)
             {
-                // Units are not opaque walls. Ground/obstacle colliders block all difficulties equally.
+                // Heroes/minions do not block sight, but health-bearing buildings still do.
                 var owner=sightHits[i].collider.GetComponentInParent<Health>();
-                if(owner==null)return false;
+                if(owner==selfHealth||owner==candidate)continue;
+                if(owner==null||(owner.GetComponent<HeroIdentity>()==null&&owner.GetComponent<LaneMinion>()==null))return false;
             }
             return true;
         }
@@ -125,7 +137,9 @@ namespace Alterverse.AI
 
             // Easy is more distance-led; stronger difficulties value visible wounded targets more,
             // but no difficulty gets information that a player could not perceive.
-            float noise=brain!=null&&brain.Chance((1-accuracy)*.45f)?1.45f:1f;
+            // Stable perceptual bias: random rerolls each scan caused A/B/A target flicker.
+            uint bias=unchecked((uint)(candidate.GetInstanceID()*397)^((uint)GetInstanceID()));
+            float noise=1f+(1f-accuracy)*.45f*(bias%101u)/100f;
             float woundedFocus=Mathf.Lerp(.30f,1f,candidate.Normalized);
             return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise;
         }
@@ -134,17 +148,8 @@ namespace Alterverse.AI
             float radius = Radius;
             NearbyEnemies=NearbyAllies=0;RallyPosition=transform.position;
             Vector3 allies=Vector3.zero;
-            if(currentTarget!=null)
-            {
-                bool valid=IsEnemy(currentTarget);
-                bool visible=valid&&Visible(currentTarget);
-                if(visible)
-                {
-                    lastKnownPosition=currentTarget.transform.position;
-                    lastSeenTime=Time.time;
-                }
-                else currentTarget=null;
-            }
+            bool retainedVisible=false;
+            if(!IsEnemy(currentTarget))currentTarget=null;
             Health best = null;
             float bestScore = float.MaxValue;
             for(int index=0;index<Health.Active.Count;index++)
@@ -152,6 +157,12 @@ namespace Alterverse.AI
                 Health candidate=Health.Active[index];
                 if(candidate==null||candidate==selfHealth||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
                 if(!Visible(candidate))continue;
+                if(candidate==currentTarget)
+                {
+                    retainedVisible=true;
+                    lastKnownPosition=candidate.transform.position;
+                    lastSeenTime=Time.time;
+                }
                 if(candidate.GetComponent<HeroIdentity>()!=null)
                 {
                     var member=candidate.GetComponent<TeamMember>();
@@ -159,6 +170,11 @@ namespace Alterverse.AI
                     else if(member!=null)NearbyEnemies++;
                 }
                 if (!IsEnemy(candidate)) continue;
+                // A failed chase cannot immediately reacquire the same fleeing opponent.
+                // Nearby opponents remain valid so disengaging never disables self-defence.
+                float defendRange=profile!=null?profile.AttackRange:fallbackScanRadius*.25f;
+                if(candidate==disengagedTarget && Time.time<disengagedUntil &&
+                    (candidate.transform.position-transform.position).sqrMagnitude>defendRange*defendRange)continue;
                 Vector3 delta = candidate.transform.position - transform.position;
                 delta.y = 0;
                 if (delta.sqrMagnitude > radius * radius) continue;
@@ -167,6 +183,7 @@ namespace Alterverse.AI
                 if (candidate == currentTarget) score *= Time.time-retainedSince<Difficulty.MemorySeconds?.65f:.85f;
                 if (score < bestScore) { bestScore = score; best = candidate; }
             }
+            if(!retainedVisible)currentTarget=null;
             if(NearbyAllies>0)RallyPosition=allies/NearbyAllies;
             if(best==currentTarget){candidateTarget=null;return;}
             if(best!=candidateTarget){candidateTarget=best;candidateSince=Time.time;}
@@ -179,3 +196,4 @@ namespace Alterverse.AI
         }
     }
 }
+

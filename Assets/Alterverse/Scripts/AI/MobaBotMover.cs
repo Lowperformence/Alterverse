@@ -27,7 +27,11 @@ namespace Alterverse.AI
         private Vector3 detour, progressAnchor;
         private bool progressWatchActive;
         private Alterverse.Combat.PlanetPulseAttack observedHazard;
-        private int recoveryAttempts;
+        private int recoveryAttempts, recoverySide;
+        private LaneTower skirtTower;
+        private float skirtUntil;
+        private int skirtSide;
+        private bool keepingDistance;
         private bool arrived;
         private Health health;
         private MobaBotBrain brain;
@@ -78,8 +82,8 @@ namespace Alterverse.AI
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
-                if(target!=chaseTarget){chaseTarget=target;chaseStarted=Time.time;}
-                Vector3 delta = target.transform.position - transform.position; delta.y = 0;
+                if(target!=chaseTarget){chaseTarget=target;chaseStarted=Time.time;keepingDistance=false;}
+                Vector3 delta = sensor.ObservedTargetPosition - transform.position; delta.y = 0;
                 float combatStop=SolidTargetStopDistance(target,CombatStop);
 
                 // Staying meaningfully engaged resets the chase clock. The timer only limits a
@@ -96,12 +100,24 @@ namespace Alterverse.AI
 
                 if (!chaseExpired && delta.sqrMagnitude <= chaseLimit * chaseLimit)
                 {
-                    destination = target.transform.position; stopDistance = combatStop;
-                    if(profile!=null&&profile.AttackRange>4f&&delta.sqrMagnitude<CombatStop*CombatStop*.55f)
+                    destination = sensor.ObservedTargetPosition; stopDistance = combatStop;
+                    bool ranged=profile!=null&&profile.AttackRange>4f;
+                    if(ranged)
+                    {
+                        float exitRange=CombatStop*.96f,enterRange=CombatStop*.74f;
+                        if(delta.sqrMagnitude<enterRange*enterRange)keepingDistance=true;
+                        else if(delta.sqrMagnitude>exitRange*exitRange)keepingDistance=false;
+                    }
+                    if(ranged&&keepingDistance)
                     {
                         Vector3 back=transform.position-delta.normalized*1.6f*brain.Difficulty.Positioning;
                         if(CanRepositionTo(back)){destination=back;stopDistance=.15f;}
                     }
+                }
+                else
+                {
+                    sensor.Disengage(target);
+                    chaseTarget=null;keepingDistance=false;
                 }
             }
             else if(brain.State==MobaBotBrain.BotState.Fight&&sensor!=null&&sensor.HasRecentEnemyMemory)
@@ -239,7 +255,7 @@ namespace Alterverse.AI
         public void ResetSteering()
         {
             velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;
-            recoveryAttempts=0;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
+            recoveryAttempts=recoverySide=0;skirtTower=null;skirtUntil=0;keepingDistance=false;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
             observedHazard=null;hazardSeenAt=0;
         }
 
@@ -398,10 +414,13 @@ namespace Alterverse.AI
             Vector3 radial=from.sqrMagnitude>.001f?from.normalized:(brain.Team==0?Vector3.left:Vector3.right);
             Vector3 desired=step/stepLength;
             Vector3 tangent=Vector3.Cross(Vector3.up,radial).normalized;
-            Vector3 opposite=-tangent;
-            float tangentScore=Vector3.Dot(tangent,desired),oppositeScore=Vector3.Dot(opposite,desired);
-            if(oppositeScore>tangentScore+.02f)tangent=opposite;
-            else if(Mathf.Abs(oppositeScore-tangentScore)<=.02f&&((rotationSlot&1)==0))tangent=opposite;
+            if(skirtTower!=tower||Time.time>=skirtUntil)
+            {
+                float alignment=Vector3.Dot(tangent,desired);
+                skirtSide=Mathf.Abs(alignment)>.08f?(alignment>0?1:-1):((rotationSlot&1)==0?-1:1);
+                skirtTower=tower;skirtUntil=Time.time+1.4f;
+            }
+            tangent*=skirtSide;
 
             // Tangential motion gets the largest weight, while a small outward component prevents
             // the bot from scraping the collider and the desired component keeps lane progress.
@@ -530,7 +549,10 @@ namespace Alterverse.AI
             towardDestination.y=0;
             Vector3 desired=towardDestination.sqrMagnitude>.01f?towardDestination.normalized:transform.forward;
             Vector3 normal=locomotion.LastCollisionNormal;normal.y=0;
-            int side=((rotationSlot+recoveryAttempts)&1)==0?1:-1;
+            // Keep one side across retries; only reverse after repeated failure.
+            if(recoverySide==0)recoverySide=(rotationSlot&1)==0?1:-1;
+            else if(recoveryAttempts%3==0)recoverySide=-recoverySide;
+            int side=recoverySide;
 
             // Prefer a tangent around the actual blocker, but verify it is open before committing.
             Vector3 preferred=desired;
@@ -574,4 +596,5 @@ namespace Alterverse.AI
         }
     }
 }
+
 

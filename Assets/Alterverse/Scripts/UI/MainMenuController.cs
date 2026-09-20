@@ -510,27 +510,28 @@ namespace Alterverse.UI
             theme.Panel(new Rect(Left,270,ContentWidth,102));
 
             string seasonHeader=$"BATTLE PASS / {BattlePassProgress.SeasonName}";
-            theme.Label(new Rect(Left+22,282,540,20),seasonHeader,theme.Small,true);
+            float headerColumn=(ContentWidth-60f)*.5f;
+            theme.FitLabel(new Rect(Left+22,282,headerColumn,24),seasonHeader,theme.Small,true);
 
             float totalProgress=BattlePassProgress.TotalXpRequired<=0
                 ?1f
                 :(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired;
 
-            theme.Progress(new Rect(Left+22,320,430,6),totalProgress);
+            theme.Progress(new Rect(Left+22,314,headerColumn,6),totalProgress);
 
             string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel
                 ?"COMPLETE"
                 :$"{BattlePassProgress.XpToNextLevel:N0} BP XP TO NEXT LEVEL";
 
-            theme.Label(new Rect(Left+470,304,300,20),xpText,theme.Small,true);
+            theme.FitLabel(new Rect(Left+22,330,headerColumn,24),xpText,theme.Small,true);
 
-            theme.Label(new Rect(Right-390,282,368,20),
+            theme.FitLabel(new Rect(Right-22-headerColumn,282,headerColumn,24),
                 BattlePassProgress.PremiumUnlocked
                     ?"PREMIUM ACTIVE"
                     :"PREMIUM LOCKED / 1000 SHARDS",
                 theme.Small,true);
 
-            theme.Label(new Rect(Right-390,304,368,20),
+            theme.FitLabel(new Rect(Right-22-headerColumn,330,headerColumn,24),
                 $"{BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE • 50 LEVELS",
                 theme.Small,true);
 
@@ -583,10 +584,10 @@ namespace Alterverse.UI
             bool selected=battlePassPreviewLevel==level&&battlePassPreviewPremium==premium;
             if(theme.Action(rect,"",selected:selected))
             { battlePassPreviewLevel=level; battlePassPreviewPremium=premium; return; }
-            theme.Label(new Rect(rect.x+4,rect.y+3,rect.width-8,16),(premium?"PREMIUM":"FREE")+"  /  "+status,theme.Small,true);
+            theme.FitLabel(new Rect(rect.x+4,rect.y+2,rect.width-8,20),(premium?"PREMIUM":"FREE")+"  /  "+status,theme.Small,true);
             if(reward.IsEmpty) { theme.Label(new Rect(rect.x+4,rect.y+23,rect.width-8,18),"—",theme.Small,true); return; }
             Rect icon=new(rect.x+4,rect.y+22,25,25); DrawBattlePassRewardIcon(icon,reward);
-            theme.Label(new Rect(rect.x+34,rect.y+21,rect.width-38,27),reward.Label,theme.Small,true);
+            theme.FitLabel(new Rect(rect.x+34,rect.y+23,rect.width-38,24),reward.Label,theme.Small,true);
         }
 
         private void DrawBattlePassRewardPreview(Rect rect,int level,bool premium)
@@ -597,11 +598,11 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(rect.x,rect.y,4,rect.height),premium?FrontEndTheme.Zero:FrontEndTheme.Accent);
             theme.Label(new Rect(rect.x+14,rect.y+10,rect.width-28,20),level==50&&premium?"FINAL REWARD":$"LEVEL {level}",theme.Small,true);
             Rect icon=new(rect.x+14,rect.y+36,72,72); DrawBattlePassRewardIcon(icon,reward);
-            theme.Label(new Rect(rect.x+98,rect.y+36,rect.width-110,24),reward.IsEmpty?"NO REWARD":reward.Label,theme.Heading);
-            theme.Label(new Rect(rect.x+98,rect.y+64,rect.width-110,18),(premium?"PREMIUM REWARD":"FREE REWARD")+"  /  "+status,theme.Small,true);
+            theme.FitLabel(new Rect(rect.x+98,rect.y+34,rect.width-110,28),reward.IsEmpty?"NO REWARD":reward.Label,theme.Heading);
+            theme.FitLabel(new Rect(rect.x+98,rect.y+64,rect.width-110,22),(premium?"PREMIUM REWARD":"FREE REWARD")+"  /  "+status,theme.Small,true);
             string description=BattlePassRewardDescription(reward);
             theme.Label(new Rect(rect.x+98,rect.y+88,rect.width-110,40),description,theme.Small,true);
-            if(level==50&&premium)theme.Label(new Rect(rect.x+98,rect.y+130,rect.width-110,18),"BETA SEASON 01  •  EXCLUSIVE PREMIUM AVATAR",theme.Small,true);
+            if(level==50&&premium)theme.FitLabel(new Rect(rect.x+98,rect.y+130,rect.width-110,24),"BETA SEASON 01  •  EXCLUSIVE PREMIUM AVATAR",theme.Small,true);
 
             bool canClaim=premium?BattlePassProgress.CanClaimPremium(level):BattlePassProgress.CanClaimFree(level);
             if(canClaim&&theme.Action(new Rect(rect.x+14,rect.yMax-34,72,24),"CLAIM",true))
@@ -868,3 +869,4 @@ namespace Alterverse.UI
         }
     }
 }
+

@@ -37,7 +37,8 @@ namespace Alterverse.AI
             if (transform.position.x * direction < -23f && Mathf.Abs(transform.position.z - laneZ) > 1f)
                 return new Vector3(-28f * direction, transform.position.y, laneZ);
 
-            if (laneObjective == null || laneObjective.IsDead || Time.time >= nextObjectiveScan)
+            // No objective is a valid cached result too; do not allocate scene scans every frame.
+            if (Time.time >= nextObjectiveScan || laneObjective != null && laneObjective.IsDead)
             {
                 nextObjectiveScan = Time.time + 1f;
                 laneObjective = FindLaneObjective();
@@ -87,3 +88,4 @@ namespace Alterverse.AI
         }
     }
 }
+

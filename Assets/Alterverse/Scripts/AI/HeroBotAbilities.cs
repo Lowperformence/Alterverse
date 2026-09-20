@@ -24,10 +24,12 @@ namespace Alterverse.AI
         private void Update()
         {
             if (Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Time.time < nextDecision) return;
+            if(brain==null)brain=GetComponent<MobaBotBrain>();
             var difficulty=brain!=null?brain.Difficulty:BotDifficultyProfile.For(BotDifficulty.Normal);
             float rhythm=brain!=null?brain.DecisionRhythm:1f;
             nextDecision = Time.time + Random.Range(.28f,.48f)*difficulty.DecisionScale*rhythm;
             Health target = sensor.CurrentTarget;
+            if(target!=null&&!sensor.CanObserve(target))target=null;
             HeroId h = identity.Hero;
             bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
             float distance = target != null ? HeroCombatRules.Distance(transform.position,target.transform.position) : float.MaxValue;
@@ -37,10 +39,12 @@ namespace Alterverse.AI
                 Health ally = execution.WoundedAlly(kit.Ultimate.Radius);
                 float supportUltThreshold=Mathf.Lerp(.30f,.62f,discipline);
                 if (ally != null && ally.Normalized < supportUltThreshold && TryCast(3,target)) return;
-                if (TryCast(1,target) || TryCast(2,target)) return;
+                Health healAlly=execution.WoundedAlly(kit.Spec(1).Range);
+                if(healAlly!=null&&healAlly.Normalized<Mathf.Lerp(.70f,.90f,discipline)&&TryCast(1,target))return;
+                if(sensor.NearbyEnemies>0&&TryCast(2,target))return;
             }
             float defensiveThreshold=Mathf.Lerp(.55f,.82f,discipline);
-            if ((h == HeroId.Kaelon || h == HeroId.Rook) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
+            if ((h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
             if (target == null) return;
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)))) return;
             if (h == HeroId.Veyr && ((!fighting && self.Normalized < .5f) || (fighting && distance > 3.1f && distance < 7f)) && TryCast(2,target)) return;
@@ -67,9 +71,19 @@ namespace Alterverse.AI
         }
         private bool TryCast(int slot, Health target)
         {
+            if(execution.Remaining(slot)>0)return false;
+            AbilitySpec spec=kit.Spec(slot);
+            bool support=identity.Hero==HeroId.Mira&&(slot==1||slot==2||slot==3);
+            bool defensive=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1;
+            if(!support&&!defensive&&spec.Radius>0&&spec.Range<=0)
+            {
+                // The execution layer permits ground casts; AI must avoid empty circles.
+                if(target==null||HeroCombatRules.Distance(transform.position,target.transform.position)>spec.Radius*.92f)return false;
+            }
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
             if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight)) direction = -direction;
             return execution.TryCast(slot,target,direction);
         }
     }
 }
+
