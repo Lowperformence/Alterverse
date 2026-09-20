@@ -25,7 +25,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
         private Page page;
         private bool visible = true, launching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int selectedHero, shopAvatarIndex, skinShopIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
@@ -88,8 +88,9 @@ namespace Alterverse.UI
             bool previewWeapon=page==Page.Shop&&weaponShop;
             showcase.Present((HeroId)selectedHero,
                 !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon),
-                previewSkin?(bool?)true:previewWeapon?(bool?)false:null,
-                previewWeapon?(bool?)true:null);
+                previewSkin?null:previewWeapon?(bool?)false:null,
+                previewWeapon?(bool?)true:null,
+                previewSkin?(UniversalHeroCosmetic?)SkinShopPreview:null);
             if (nameKeyboard != null)
             {
                 profileName = nameKeyboard.text;
@@ -173,6 +174,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,166,ContentWidth,30),description,theme.Body,true);
         }
         private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
+        private UniversalHeroCosmetic SkinShopPreview => skinShopIndex==1?UniversalHeroCosmetic.BetaSupporterWings:UniversalHeroCosmetic.Voidfall;
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
@@ -315,7 +317,10 @@ namespace Alterverse.UI
             PlayerHeroSelection.Select((HeroId)selectedHero);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
             bool previewWeapon=page==Page.Shop&&weaponShop;
-            showcase.Present((HeroId)selectedHero,true,previewSkin?(bool?)true:previewWeapon?(bool?)false:null,previewWeapon?(bool?)true:null);
+            showcase.Present((HeroId)selectedHero,true,
+                previewSkin?null:previewWeapon?(bool?)false:null,
+                previewWeapon?(bool?)true:null,
+                previewSkin?(UniversalHeroCosmetic?)SkinShopPreview:null);
         }
         private void DrawShop()
         {
@@ -385,19 +390,54 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Left,614,64,54),"<"))ChangeHero((selectedHero+5)%6);
             theme.Center(new Rect(Left+72,614,w-144,54),HeroName);
             if(theme.Action(new Rect(Left+w-64,614,64,54),">"))ChangeHero((selectedHero+1)%6);
-            theme.Label(new Rect(x,282,rw,52),UniversalSkin.Name,theme.Title);
-            theme.Label(new Rect(x,346,rw,60),"UNIVERSAL ARMOR FINISH / ALL SIX HEROES",theme.Small,true);
-            theme.Label(new Rect(x,410,rw,90),"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.",theme.Body,true);
-            theme.Label(new Rect(x,510,rw,36),UniversalSkin.Owned?"OWNED":UniversalSkin.Price+" SHARDS",theme.Heading);
-            bool owned=UniversalSkin.Owned,equipped=UniversalSkin.Equipped,affordable=PlayerWallet.CanAfford(UniversalSkin.Price);
-            string label=equipped?"USE ORIGINAL":owned?"EQUIP VOIDFALL":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
-            if(theme.Action(new Rect(x,562,rw,64),label,true,enabled:!cosmeticBusy&&(owned||affordable)))
+
+            float selectorGap=8f,selectorW=(rw-selectorGap)*.5f;
+            if(theme.Action(new Rect(x,270,selectorW,40),"VOIDFALL",selected:skinShopIndex==0))
+            {skinShopIndex=0;shopMessage="";}
+            if(theme.Action(new Rect(x+selectorW+selectorGap,270,selectorW,40),"BETA WINGS",selected:skinShopIndex==1))
+            {skinShopIndex=1;shopMessage="";}
+
+            bool beta=skinShopIndex==1;
+            string name=beta?BetaSupporterWings.Name:UniversalSkin.Name;
+            string category=beta?"UNIVERSAL WING COSMETIC / ALL SIX HEROES":"UNIVERSAL ARMOR FINISH / ALL SIX HEROES";
+            string description=beta
+                ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening — cosmetic only."
+                :"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.";
+            int price=beta?BetaSupporterWings.Price:UniversalSkin.Price;
+            bool owned=beta?BetaSupporterWings.Owned:UniversalSkin.Owned;
+            bool equipped=beta?BetaSupporterWings.Equipped:UniversalSkin.Equipped;
+            bool affordable=PlayerWallet.CanAfford(price);
+
+            theme.Label(new Rect(x,322,rw,46),name,theme.Title);
+            theme.Label(new Rect(x,372,rw,34),category,theme.Small,true);
+            theme.Label(new Rect(x,414,rw,78),description,theme.Body,true);
+            theme.Label(new Rect(x,500,rw,32),equipped?"EQUIPPED":owned?"OWNED":price+" SHARDS",theme.Heading);
+
+            string label=equipped?"USE ORIGINAL":owned?"EQUIP":affordable?"BUY & EQUIP":"NEED MORE SHARDS";
+            if(theme.Action(new Rect(x,548,rw,60),label,true,enabled:!cosmeticBusy&&(equipped||owned||affordable)))
             {
-                if(owned){UniversalSkin.Equip(!equipped);shopMessage=equipped?"Original finish equipped.":"VOIDFALL equipped for your next match.";}
-                else shopMessage=UniversalSkin.Purchase()==AvatarPurchaseResult.Purchased?"Purchased and equipped for all six heroes.":"Purchase could not be completed.";
+                if(equipped)
+                {
+                    UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
+                    shopMessage="Original hero appearance equipped.";
+                }
+                else if(owned)
+                {
+                    UniversalCosmeticSelection.Equip(beta?UniversalHeroCosmetic.BetaSupporterWings:UniversalHeroCosmetic.Voidfall);
+                    shopMessage=name+" equipped for your next match.";
+                }
+                else
+                {
+                    AvatarPurchaseResult result=beta?BetaSupporterWings.Purchase():UniversalSkin.Purchase();
+                    shopMessage=result==AvatarPurchaseResult.Purchased
+                        ?name+" purchased and equipped for all six heroes."
+                        :result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
+                }
             }
-            theme.Label(new Rect(x,638,rw,48),shopMessage.Length>0?shopMessage:"Preview: VOIDFALL • cosmetic only",theme.Small,true);
+            theme.Label(new Rect(x,620,rw,48),shopMessage.Length>0?shopMessage:
+                $"Preview: {name}  •  {price} SHARDS  •  cosmetic only",theme.Small,true);
         }
+
         private void DrawWeaponSkinShop()
         {
             HeroId hero=(HeroId)selectedHero;
