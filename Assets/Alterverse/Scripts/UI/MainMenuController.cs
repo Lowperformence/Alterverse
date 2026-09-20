@@ -151,7 +151,7 @@ namespace Alterverse.UI
 
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={82f,82f,94f,82f,126f,92f,108f,104f};
+            float[] widths={82f,82f,94f,82f,126f,92f,108f,126f};
             const float gap=8f;
             float total=gap*(widths.Length-1);
             for(int i=0;i<widths.Length;i++)total+=widths[i];
