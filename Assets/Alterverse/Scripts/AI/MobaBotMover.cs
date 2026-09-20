@@ -18,7 +18,6 @@ namespace Alterverse.AI
         private static float nextSharedWorldScan;
         private static DimensionPlanet[] sharedPlanets=System.Array.Empty<DimensionPlanet>();
         private static LaneTower[] sharedTowers=System.Array.Empty<LaneTower>();
-        private static Alterverse.Combat.PlanetPulseAttack[] sharedPulses=System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
         private static HotZoneDirector sharedHotZone;
         private long separationOrder;
         private HeroLocomotion locomotion;
@@ -51,7 +50,6 @@ namespace Alterverse.AI
         private HotZoneDirector hotZone;
         private DimensionPlanet[] planets = System.Array.Empty<DimensionPlanet>();
         private LaneTower[] towers = System.Array.Empty<LaneTower>();
-        private Alterverse.Combat.PlanetPulseAttack[] pulses = System.Array.Empty<Alterverse.Combat.PlanetPulseAttack>();
         private Vector3 velocity;
         private Health chaseTarget;
         private float chaseStarted;
@@ -221,11 +219,10 @@ namespace Alterverse.AI
             {
                 nextSharedWorldScan=Time.time+.5f;
                 sharedPlanets=FindObjectsByType<DimensionPlanet>();
-                sharedPulses=FindObjectsByType<Alterverse.Combat.PlanetPulseAttack>();
                 sharedTowers=FindObjectsByType<LaneTower>();
                 sharedHotZone=FindAnyObjectByType<HotZoneDirector>();
             }
-            planets=sharedPlanets;pulses=sharedPulses;towers=sharedTowers;hotZone=sharedHotZone;
+            planets=sharedPlanets;towers=sharedTowers;hotZone=sharedHotZone;
             objective = null;
             float best = float.MaxValue;
             foreach (DimensionPlanet planet in planets)
