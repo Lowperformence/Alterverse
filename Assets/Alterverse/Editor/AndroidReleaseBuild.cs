@@ -64,9 +64,13 @@ namespace Alterverse.EditorChecks
             bool assigned=false;if(current!=null)foreach(Texture2D candidate in current)if(candidate!=null){assigned=true;break;}
             if(!assigned)
             {
-                PlayerSettings.SetIcons(NamedBuildTarget.Android,new[]{icon},IconKind.Application);
+                int[] sizes=PlayerSettings.GetIconSizes(NamedBuildTarget.Android,IconKind.Application);
+                if(sizes==null||sizes.Length==0)throw new BuildFailedException("Unity reported no Android application icon slots.");
+                Texture2D[] icons=new Texture2D[sizes.Length];
+                for(int i=0;i<icons.Length;i++)icons[i]=icon;
+                PlayerSettings.SetIcons(NamedBuildTarget.Android,icons,IconKind.Application);
                 AssetDatabase.SaveAssets();
-                Debug.Log("DIMENSIONS FRONT: assigned Android launcher icon from "+AppIconPath);
+                Debug.Log("DIMENSIONS FRONT: assigned Android launcher icon to "+icons.Length+" icon slots from "+AppIconPath);
             }
         }
 
