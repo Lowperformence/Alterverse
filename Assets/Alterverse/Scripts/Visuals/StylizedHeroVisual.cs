@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
+private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.085f,.105f,.15f),.70f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -25,8 +25,8 @@ private void CreateSignature()
 // Team color is a restrained, consistent shoulder insignia; hero identity keeps its own palette.
 Create("TeamInsignia",PrimitiveType.Cube,new Vector3(.33f,.49f,.21f),new Vector3(.19f,.07f,.05f),teamEdge);
 }
-private Color armorLight=>new Color(.7f,.74f,.77f);
-private Color cloth=>new Color(.075f,.09f,.13f);
+private Color armorLight=>new Color(.58f,.64f,.70f);
+private Color cloth=>new Color(.045f,.055f,.085f);
 private void BuildVeyr()
 {
 Create("Torso",PrimitiveType.Capsule,new Vector3(0,.02f,0),new Vector3(.66f,.65f,.44f),dark);
@@ -159,10 +159,29 @@ bool fabric=color==cloth;bool matte=color==dark;
 Material material=HeroMeshLibrary.Surface(finish,energy?2:fabric||matte?0:1);
 palette.Add((color,energy),material);return material;
 }
+private static Color GradeHeroColor(Color color,bool energy)
+{
+    // Hero-only color grade: preserve hue while separating darks, mids and accents.
+    // This is evaluated while building the mesh, so it adds no per-frame mobile cost.
+    float luma=color.r*.2126f+color.g*.7152f+color.b*.0722f;
+    float saturation=energy?1.12f:1.24f;
+    Color graded=new Color(
+        Mathf.Clamp01(luma+(color.r-luma)*saturation),
+        Mathf.Clamp01(luma+(color.g-luma)*saturation),
+        Mathf.Clamp01(luma+(color.b-luma)*saturation),
+        color.a);
+    float contrast=energy?1.04f:1.10f;
+    graded.r=Mathf.Clamp01((graded.r-.5f)*contrast+.5f);
+    graded.g=Mathf.Clamp01((graded.g-.5f)*contrast+.5f);
+    graded.b=Mathf.Clamp01((graded.b-.5f)*contrast+.5f);
+    return graded;
+}
 private Color FinishedColor(Color color,bool energy)
 {
-if(!voidfall||energy||color==teamEdge)return color;
-return color==armorLight?new Color(.26f,.16f,.36f):color==dark||color==cloth?new Color(.027f,.018f,.045f):Color.Lerp(color,new Color(.24f,.20f,.32f),.55f);
+Color result=color;
+if(voidfall&&!energy&&color!=teamEdge)
+    result=color==armorLight?new Color(.26f,.16f,.36f):color==dark||color==cloth?new Color(.027f,.018f,.045f):Color.Lerp(color,new Color(.24f,.20f,.32f),.55f);
+return GradeHeroColor(result,energy);
 }
 private void Panel(string name,Vector2[] outline,float depth,Vector3 position,Color color)
 {
