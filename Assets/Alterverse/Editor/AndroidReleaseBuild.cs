@@ -107,6 +107,18 @@ namespace Alterverse.EditorChecks
                 locationPathName="Builds/Android/DIMENSIONS-FRONT-"+PlayerSettings.Android.bundleVersionCode+".aab"
             });
             if(report.summary.result!=BuildResult.Succeeded)throw new BuildFailedException("DIMENSIONS FRONT Android build failed. Inspect the Unity build log.");
+            string output=Path.GetFullPath(report.summary.outputPath);
+            Debug.Log("DIMENSIONS FRONT: signed Android bundle created at "+output);
+            EditorUtility.RevealInFinder(output);
+        }
+
+        [MenuItem("DIMENSIONS FRONT/Release/Open Android build folder")]
+        public static void OpenBuildFolder()
+        {
+            string folder=Path.GetFullPath("Builds/Android");
+            Directory.CreateDirectory(folder);
+            EditorUtility.RevealInFinder(folder);
+            Debug.Log("DIMENSIONS FRONT: Android build folder "+folder);
         }
     }
 }
