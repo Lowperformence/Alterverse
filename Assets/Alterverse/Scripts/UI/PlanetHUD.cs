@@ -21,7 +21,7 @@ namespace Alterverse.UI
             try
             {
                 GUI.matrix=layout.Matrix;
-                if(!SiegeWaveAnnouncement.IsVisible&&Time.unscaledTime<DimensionPlanetDirector.AnnouncementUntil&&!string.IsNullOrEmpty(DimensionPlanetDirector.Announcement))
+                if(Time.unscaledTime<DimensionPlanetDirector.AnnouncementUntil&&!string.IsNullOrEmpty(DimensionPlanetDirector.Announcement))
                 {
                     Rect r=new Rect((layout.Width-440)*.5f,86,440,52);theme.Panel(r);
                     theme.Label(new Rect(r.x+12,r.y+4,r.width-24,r.height-8),DimensionPlanetDirector.Announcement,notice);
