@@ -213,7 +213,39 @@ if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);Scal
 else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
+else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+}
+
+private void ApplyLifeweaveOverdrive(Shader shader,Material energyMaterial)
+{
+Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
+
+// The previous premium staff used 1.25x. Another +20% from that state equals 1.50x.
+weapon.localScale*=1.50f;
+
+// Preserve the existing emerald/cyan premium glow on the full staff.
+ApplyGlow(weapon,energyMaterial);
+
+// Turn the existing center lens in the staff crown into a distinct glowing red gem.
+Color gemColor=new Color(1f,.025f,.02f);
+Material gemMaterial=new Material(shader){name="DF_LifeweaveRuby",color=gemColor};
+if(gemMaterial.HasProperty("_BaseColor"))gemMaterial.SetColor("_BaseColor",gemColor);
+if(gemMaterial.HasProperty("_Metallic"))gemMaterial.SetFloat("_Metallic",.12f);
+if(gemMaterial.HasProperty("_Smoothness"))gemMaterial.SetFloat("_Smoothness",.96f);
+if(gemMaterial.HasProperty("_EmissionColor"))
+{
+gemMaterial.EnableKeyword("_EMISSION");
+gemMaterial.SetColor("_EmissionColor",gemColor*4.4f);
+}
+ownedMaterials.Add(gemMaterial);
+
+Transform gem=FindVisual("EmitterLens");
+if(gem!=null)
+{
+gem.localScale*=1.12f;
+ApplyGlow(gem,gemMaterial);
+}
 }
 
 private void ApplyAnchorHammerOverdrive(Shader shader,Material energyMaterial)
