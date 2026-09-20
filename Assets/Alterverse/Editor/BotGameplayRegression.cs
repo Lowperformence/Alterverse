@@ -34,6 +34,7 @@ namespace Alterverse.EditorChecks
                 BotTeamRegression.Run();
                 PlayerPrefs.SetInt("DF_BotDifficulty",(int)BotDifficulty.Normal);
                 CheckBrainAndRespawn();
+                CheckPvpProgressModel();
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
                 CheckTargetRetention();
@@ -106,11 +107,27 @@ namespace Alterverse.EditorChecks
             Assert((Vector3)typeof(MobaBotMover).GetField("velocity", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old velocity.");
             Assert((Vector3)typeof(MobaBotMover).GetField("detour", Private).GetValue(mover) == Vector3.zero, "Respawn must clear old detour.");
             Assert((int)typeof(MobaBotMover).GetField("recoveryAttempts", Private).GetValue(mover) == 0, "Respawn must clear stuck recovery stage.");
-            Assert(lane.GetDestination(brain.State).z == 16f, "Recovered bot must head to its assigned lane.");
+            Vector3 roam=lane.GetDestination(brain.State);
+            Assert(Mathf.Abs(roam.z)<15f&&Mathf.Abs(roam.x)<=12.1f,
+                "Recovered bot must return to a free-roam combat sector instead of an assigned lane.");
             bot.transform.position = Vector3.zero;
             Call(mover, "MoveToward", new Vector3(.1f, 0, 0), .35f);
             Assert(bot.transform.position == Vector3.zero, "Arrival radius must stop movement.");
         }
+        private static void CheckPvpProgressModel()
+        {
+            GameObject frontObject=new("Check_PvpProgress");Created.Add(frontObject);
+            DimensionsFront front=frontObject.AddComponent<DimensionsFront>();
+            float before=front.ZeroControl;
+            front.RegisterMinionKill(0);
+            front.RegisterTowerDestroyed(0);
+            Assert(Mathf.Approximately(front.ZeroControl,before),
+                "Normal minion and tower kills must not create match progress in the PvP model.");
+            front.RegisterHeroKill(0);
+            Assert(front.ZeroControl>before,
+                "A hero kill must create team match progress.");
+        }
+
         private static void CheckObstacleRecovery()
         {
             Vector3 origin = new(6000, 1, 6000);
@@ -503,13 +520,20 @@ namespace Alterverse.EditorChecks
             Assert(Vector3.Distance(guarded,center)>=tower.AttackRange+.70f, "An uncovered movement step must remain outside tower danger.");
             Assert(!mover.CanRepositionTo(center + Vector3.right * 7f), "A dash must not bypass tower avoidance.");
             selected.RestoreFull(); Set(tower, "currentTarget", selected);
-            Assert(mover.CanRepositionTo(center + Vector3.left * 2f), "A live minion under fire must permit a push.");
+            Assert(!mover.CanRepositionTo(center + Vector3.left * 2f),
+                "Minion cover must not make enemy tower range safe for free-roam bot heroes.");
 
             GameObject alliedTowerObject = Unit("Check_AlliedTower", 0, center + Vector3.forward * 10f);
             CapsuleCollider alliedBody=alliedTowerObject.AddComponent<CapsuleCollider>();alliedBody.radius=.70f;alliedBody.height=2.3f;alliedBody.center=Vector3.up*.45f;
             LaneTower alliedTower=alliedTowerObject.AddComponent<LaneTower>();alliedTower.Initialize(0);
             Set(mover,"towers",new[]{alliedTower});
             hero.transform.position=alliedTowerObject.transform.position+Vector3.left*1.35f;
+            object[] refugeArgs={Vector3.zero};
+            Assert((bool)Call(mover,"TryGetOwnTowerRefuge",refugeArgs),
+                "A nearby living allied guardian tower must be available as temporary retreat cover.");
+            Vector3 refuge=(Vector3)refugeArgs[0];
+            Assert(Vector3.Distance(refuge,alliedTower.transform.position)>1.5f,
+                "Tower refuge must sit behind the solid tower body rather than inside it.");
             Vector3 skirted=(Vector3)Call(mover,"GuardAgainstTowers",hero.transform.position+Vector3.right*.25f);
             Assert(Mathf.Abs(skirted.z-hero.transform.position.z)>.001f,"Bots must skirt allied tower bodies instead of walking straight into them.");
 
