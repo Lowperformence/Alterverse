@@ -121,9 +121,7 @@ namespace Alterverse.AI
                 if(owner!=null)
                 {
                     bool mobileUnit=owner.GetComponent<HeroIdentity>()!=null||
-                        owner.GetComponent<LaneMinion>()!=null||
-                        owner.GetComponent<TeamMember>()!=null&&
-                        owner.GetComponent<LaneTower>()==null&&owner.GetComponent<RealityCore>()==null;
+                        owner.GetComponent<TeamMember>()!=null&&owner.GetComponent<RealityCore>()==null;
                     if(mobileUnit)continue;
                 }
                 return false;
@@ -135,32 +133,21 @@ namespace Alterverse.AI
             if (candidate == null || candidate == selfHealth || candidate.IsDead ||
                 !candidate.isActiveAndEnabled || teamMember == null) return false;
 
-            // Bot heroes intentionally ignore lane towers and ordinary lane minions as combat
-            // targets. Siege mechs reuse LaneMinion for movement/combat, so preserve them by
-            // checking the explicit siege role instead of rejecting every LaneMinion component.
-            if (candidate.GetComponent<LaneTower>() != null) return false;
-
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
             if (planet != null) return planet.Available;
 
-            // Reality cores are no longer bot combat objectives in the free-roam PvP model.
+            // Reality cores and defensive structures are not bot combat objectives.
+            // Real heroes/mechs are represented by TeamMember and remain targetable.
             if (candidate.GetComponent<RealityCore>() != null) return false;
-
-            LaneMinion minion = candidate.GetComponent<LaneMinion>();
-            if (minion != null) return minion.IsSiegeUnit && minion.Team != teamMember.Team;
 
             TeamMember other = candidate.GetComponent<TeamMember>();
             return other != null && teamMember.IsEnemy(other);
         }
         private int TargetTier(Health candidate)
         {
-            // Lower is better. Towers and ordinary lane minions never reach this function because
-            // IsEnemy rejects them. Heroes stay primary, while real mechs/special units remain valid.
+            // Lower is better: hero PvP first, then live event objectives, then special combat units/mechs.
             if(candidate.GetComponent<HeroIdentity>()!=null)return 0;
             if(candidate.GetComponent<DimensionPlanet>()!=null)return 1;
-
-            LaneMinion minion=candidate.GetComponent<LaneMinion>();
-            if(minion!=null&&minion.IsSiegeUnit)return 2;
             if(candidate.GetComponent<TeamMember>()!=null)return 2;
             return 4;
         }
@@ -176,7 +163,7 @@ namespace Alterverse.AI
             if(candidateHero!=null)
             {
                 // Within the hero tier, wounded/controlled/recently aggressive heroes become better
-                // choices. TargetTier already guarantees a tower or minion cannot steal the fight.
+                // choices. TargetTier already guarantees a non-hero cannot steal the fight.
                 float heroBias=Mathf.Lerp(.46f,.24f,Difficulty.TargetAccuracy);
                 priority*=heroBias;
                 priority*=Mathf.Lerp(.42f,1f,candidate.Normalized);
@@ -217,11 +204,9 @@ namespace Alterverse.AI
                         break;
                 }
             }
-            else
+            else if(candidate.GetComponent<DimensionPlanet>()!=null)
             {
-                LaneMinion minion=candidate.GetComponent<LaneMinion>();
-                if(minion!=null&&minion.IsSiegeUnit)priority=.96f;
-                if(candidate.GetComponent<DimensionPlanet>()!=null)priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
+                priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
             }
 
             float accuracy=Difficulty.TargetAccuracy;
