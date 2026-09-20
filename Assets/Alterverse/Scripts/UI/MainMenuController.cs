@@ -25,7 +25,8 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
         private Page page;
         private bool visible = true, launching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, battlePassPageStart=1;
+        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private string profileName, profileMessage = "", shopMessage = "", inventoryMessage = "", launchMessage = "";
@@ -505,95 +506,131 @@ namespace Alterverse.UI
                 BattlePassProgress.AcknowledgeCurrentLevel();
             }
 
-            theme.Panel(new Rect(Left,270,ContentWidth,118));
-            theme.Label(new Rect(Left+22,282,390,28),"BATTLE PASS  /  "+BattlePassProgress.SeasonName,theme.Heading);
-            theme.Label(new Rect(Left+22,316,330,34),$"LEVEL {BattlePassProgress.Level} / {BattlePassProgress.MaxLevel}",theme.Title);
-            float totalProgress=BattlePassProgress.TotalXpRequired<=0?1f:(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired;
-            theme.Progress(new Rect(Left+22,354,470,6),totalProgress);
-            string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel
-                ?$"{BattlePassProgress.Xp:N0} BP XP  /  COMPLETE"
-                :$"{BattlePassProgress.XpIntoLevel:N0} / {BattlePassProgress.XpIntoLevel+BattlePassProgress.XpToNextLevel:N0} BP XP  •  {BattlePassProgress.XpToNextLevel:N0} TO NEXT LEVEL";
-            theme.Label(new Rect(Left+22,364,560,20),xpText,theme.Small,true);
+            battlePassPreviewLevel=Mathf.Clamp(battlePassPreviewLevel,1,BattlePassProgress.MaxLevel);
+            theme.Panel(new Rect(Left,270,ContentWidth,94));
+            theme.Label(new Rect(Left+22,280,390,26),"BATTLE PASS  /  "+BattlePassProgress.SeasonName,theme.Heading);
+            theme.Label(new Rect(Left+22,310,250,30),$"LEVEL {BattlePassProgress.Level} / {BattlePassProgress.MaxLevel}",theme.Title);
+            theme.Progress(new Rect(Left+22,344,430,6),BattlePassProgress.TotalXpRequired<=0?1f:(float)BattlePassProgress.Xp/BattlePassProgress.TotalXpRequired);
+            string xpText=BattlePassProgress.Level>=BattlePassProgress.MaxLevel?"COMPLETE":$"{BattlePassProgress.XpToNextLevel:N0} BP XP TO NEXT LEVEL";
+            theme.Label(new Rect(Left+470,314,300,22),xpText,theme.Small,true);
+            theme.Label(new Rect(Right-390,282,368,22),BattlePassProgress.PremiumUnlocked?"PREMIUM ACTIVE":"PREMIUM LOCKED  /  1000 SHARDS",theme.Small,true);
+            theme.Label(new Rect(Right-390,314,368,22),$"{BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE  •  50 LEVELS",theme.Small,true);
 
-            float infoX=Left+ContentWidth*.52f;
-            theme.Label(new Rect(infoX,282,Right-infoX-18,24),BattlePassProgress.PremiumUnlocked?"PREMIUM ACTIVE":"PREMIUM LOCKED  /  1000 SHARDS",theme.Small,true);
-            theme.Label(new Rect(infoX,312,Right-infoX-18,24),$"50 LEVELS  •  {BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE",theme.Small,true);
-            theme.Label(new Rect(infoX,340,Right-infoX-18,38),BattlePassProgress.BetaCrownUnlocked?"BETA CROWN UNLOCKED":"FINAL REWARD  /  EXCLUSIVE BETA CROWN",theme.Body,true);
+            // Milestones stay visible without opening every tier.
+            theme.Label(new Rect(Left,374,ContentWidth,20),"MILESTONE REWARDS",theme.Small,true);
+            int[] milestones={10,20,30,40,45,49,50};
+            float mg=6f,mw=(ContentWidth-mg*(milestones.Length-1))/milestones.Length;
+            for(int i=0;i<milestones.Length;i++)
+            {
+                int level=milestones[i]; BattlePassReward reward=BattlePassProgress.PremiumRewardFor(level);
+                Rect r=new(Left+i*(mw+mg),396,mw,48);
+                bool selected=battlePassPreviewPremium&&battlePassPreviewLevel==level;
+                if(theme.Action(r,$"L{level}  {reward.Shards}◆"+(level==50?" + CROWN":""),selected:selected))
+                { battlePassPreviewLevel=level; battlePassPreviewPremium=true; }
+            }
 
-            theme.Label(new Rect(Left,400,ContentWidth,26),"REWARD TRACK",theme.Heading);
             const int visible=4;
             battlePassPageStart=Mathf.Clamp(battlePassPageStart,1,BattlePassProgress.MaxLevel);
-            float gap=10f,cardW=(ContentWidth-gap*(visible-1))/visible;
+            float previewW=Mathf.Clamp(ContentWidth*.29f,330f,410f);
+            float trackW=ContentWidth-previewW-18f;
+            float gap=8f,cardW=(trackW-gap*(visible-1))/visible;
+            theme.Label(new Rect(Left,452,trackW,22),"REWARD TRACK",theme.Heading);
             for(int i=0;i<visible;i++)
             {
-                int level=battlePassPageStart+i;
-                if(level>BattlePassProgress.MaxLevel)break;
-                float x=Left+i*(cardW+gap),y=430;
-                theme.Panel(new Rect(x,y,cardW,174));
-                bool reached=level<=BattlePassProgress.Level;
-                FrontEndTheme.Fill(new Rect(x,y,cardW,4),reached?FrontEndTheme.Accent:FrontEndTheme.Raised);
-                theme.Label(new Rect(x+12,y+10,cardW-24,26),$"LEVEL {level}",theme.Heading);
-
-                BattlePassReward free=BattlePassProgress.FreeRewardFor(level);
-                BattlePassReward premium=BattlePassProgress.PremiumRewardFor(level);
-                theme.Label(new Rect(x+12,y+42,cardW-24,18),"FREE  /  "+BattlePassProgress.Status(false,level),theme.Small,true);
-                theme.Label(new Rect(x+12,y+62,cardW-24,34),free.Label,theme.Small,true);
-                if(BattlePassProgress.CanClaimFree(level)&&theme.Action(new Rect(x+12,y+96,cardW-24,28),"CLAIM FREE",true))
-                {
-                    BattlePassProgress.ClaimFree(level);
-                    shopMessage="Free reward claimed.";
-                }
-
-                theme.Label(new Rect(x+12,y+126,cardW-24,18),"PREMIUM  /  "+BattlePassProgress.Status(true,level),theme.Small,true);
-                theme.Label(new Rect(x+12,y+145,cardW-24,24),premium.Label,theme.Small,true);
-                if(BattlePassProgress.CanClaimPremium(level)&&theme.Action(new Rect(x+cardW-94,y+8,82,28),"CLAIM",true))
-                {
-                    BattlePassProgress.ClaimPremium(level);
-                    shopMessage="Premium reward claimed.";
-                }
+                int level=battlePassPageStart+i;if(level>BattlePassProgress.MaxLevel)break;
+                float x=Left+i*(cardW+gap),y=478;
+                theme.Panel(new Rect(x,y,cardW,148));
+                theme.Label(new Rect(x+8,y+7,cardW-16,20),$"LEVEL {level}",theme.Small,true);
+                DrawBattlePassRewardRow(new Rect(x+8,y+32,cardW-16,50),level,false);
+                DrawBattlePassRewardRow(new Rect(x+8,y+88,cardW-16,50),level,true);
             }
+
+            float px=Left+trackW+18f;
+            DrawBattlePassRewardPreview(new Rect(px,452,previewW,174),battlePassPreviewLevel,battlePassPreviewPremium);
 
             bool canBack=battlePassPageStart>1,canForward=battlePassPageStart+visible<=BattlePassProgress.MaxLevel;
-            if(theme.Action(new Rect(Left,618,54,48),"<",enabled:canBack))battlePassPageStart=Mathf.Max(1,battlePassPageStart-visible);
+            if(theme.Action(new Rect(Left,638,46,36),"<",enabled:canBack))battlePassPageStart=Mathf.Max(1,battlePassPageStart-visible);
             int last=Mathf.Min(BattlePassProgress.MaxLevel,battlePassPageStart+visible-1);
-            theme.Center(new Rect(Left+62,618,174,48),$"TIERS {battlePassPageStart}–{last}");
-            if(theme.Action(new Rect(Left+244,618,54,48),">",enabled:canForward))battlePassPageStart=Mathf.Min(BattlePassProgress.MaxLevel,battlePassPageStart+visible);
+            theme.Center(new Rect(Left+52,638,142,36),$"{battlePassPageStart}–{last}");
+            if(theme.Action(new Rect(Left+200,638,46,36),">",enabled:canForward))battlePassPageStart=Mathf.Min(BattlePassProgress.MaxLevel,battlePassPageStart+visible);
 
             int available=BattlePassProgress.AvailableClaimCount();
-            if(theme.Action(new Rect(Left+324,618,230,48),available>0?$"CLAIM ALL  ({available})":"NO REWARDS READY",true,enabled:available>0))
-            {
-                int claimed=BattlePassProgress.ClaimAllAvailable();
-                shopMessage=$"{claimed} Battle Pass reward{(claimed==1?"":"s")} claimed.";
-            }
+            if(theme.Action(new Rect(Left+260,638,190,36),available>0?$"CLAIM ALL ({available})":"NO REWARDS READY",true,enabled:available>0))
+            { int claimed=BattlePassProgress.ClaimAllAvailable(); shopMessage=$"{claimed} Battle Pass reward{(claimed==1?"":"s")} claimed."; }
 
-            float actionX=Left+580,actionW=Right-actionX;
             if(!BattlePassProgress.PremiumUnlocked)
             {
                 bool canBuy=PlayerWallet.CanAfford(BattlePassProgress.PremiumPrice);
-                string label=canBuy?"UNLOCK PREMIUM  •  1000 SHARDS":$"NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance} SHARDS";
-                if(theme.Action(new Rect(actionX,618,actionW,48),label,true,enabled:canBuy))
+                if(theme.Action(new Rect(Left+464,638,300,36),canBuy?"UNLOCK PREMIUM • 1000 SHARDS":$"NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance} SHARDS",true,enabled:canBuy))
                 {
                     BattlePassPurchaseResult result=BattlePassProgress.UnlockPremium();
-                    shopMessage=result==BattlePassPurchaseResult.Unlocked?"PREMIUM BATTLE PASS UNLOCKED. Reached premium rewards are now claimable.":
-                        result==BattlePassPurchaseResult.AlreadyOwned?"Premium already active.":"Not enough shards.";
+                    shopMessage=result==BattlePassPurchaseResult.Unlocked?"PREMIUM BATTLE PASS UNLOCKED.":"Not enough shards.";
                 }
             }
-            else if(BattlePassProgress.BetaCrownUnlocked)
-            {
-                bool equipped=PlayerProfile.Avatar==BattlePassProgress.BetaCrownAvatarId;
-                if(theme.Action(new Rect(actionX,618,actionW,48),equipped?"BETA CROWN EQUIPPED":"EQUIP BETA CROWN",true,enabled:!equipped))
-                {
-                    PlayerProfile.Avatar=BattlePassProgress.BetaCrownAvatarId;
-                    shopMessage="BETA CROWN equipped.";
-                }
-            }
-            else
-            {
-                theme.Center(new Rect(actionX,618,actionW,48),"PREMIUM ACTIVE  •  BETA CROWN AT LEVEL 50");
-            }
+            theme.Label(new Rect(Left,682,ContentWidth,20),shopMessage.Length>0?shopMessage:
+                $"FINAL REWARD  •  LEVEL 50 BETA CROWN    /    PREMIUM SHARD RETURN {BattlePassProgress.PremiumShardTotal()}",theme.Small,true);
+        }
 
-            theme.Label(new Rect(Left,674,ContentWidth,24),shopMessage.Length>0?shopMessage:
-                $"NEXT TIER  /  LEVEL {BattlePassProgress.NextRewardLevel()}    •    TOTAL {BattlePassProgress.TotalXpRequired:N0} BP XP    •    PREMIUM SHARD RETURN {BattlePassProgress.PremiumShardTotal()}",theme.Small,true);
+        private void DrawBattlePassRewardRow(Rect rect,int level,bool premium)
+        {
+            BattlePassReward reward=premium?BattlePassProgress.PremiumRewardFor(level):BattlePassProgress.FreeRewardFor(level);
+            string status=BattlePassProgress.Status(premium,level);
+            bool selected=battlePassPreviewLevel==level&&battlePassPreviewPremium==premium;
+            if(theme.Action(rect,"",selected:selected))
+            { battlePassPreviewLevel=level; battlePassPreviewPremium=premium; return; }
+            theme.Label(new Rect(rect.x+4,rect.y+3,rect.width-8,16),(premium?"PREMIUM":"FREE")+"  /  "+status,theme.Small,true);
+            if(reward.IsEmpty) { theme.Label(new Rect(rect.x+4,rect.y+23,rect.width-8,18),"—",theme.Small,true); return; }
+            Rect icon=new(rect.x+4,rect.y+22,25,25); DrawBattlePassRewardIcon(icon,reward);
+            theme.Label(new Rect(rect.x+34,rect.y+21,rect.width-38,27),reward.Label,theme.Small,true);
+        }
+
+        private void DrawBattlePassRewardPreview(Rect rect,int level,bool premium)
+        {
+            BattlePassReward reward=premium?BattlePassProgress.PremiumRewardFor(level):BattlePassProgress.FreeRewardFor(level);
+            string status=BattlePassProgress.Status(premium,level);
+            theme.Panel(rect);
+            FrontEndTheme.Fill(new Rect(rect.x,rect.y,4,rect.height),premium?FrontEndTheme.Zero:FrontEndTheme.Accent);
+            theme.Label(new Rect(rect.x+14,rect.y+10,rect.width-28,20),level==50&&premium?"FINAL REWARD":$"LEVEL {level}",theme.Small,true);
+            Rect icon=new(rect.x+14,rect.y+36,72,72); DrawBattlePassRewardIcon(icon,reward);
+            theme.Label(new Rect(rect.x+98,rect.y+36,rect.width-110,24),reward.IsEmpty?"NO REWARD":reward.Label,theme.Heading);
+            theme.Label(new Rect(rect.x+98,rect.y+64,rect.width-110,18),(premium?"PREMIUM REWARD":"FREE REWARD")+"  /  "+status,theme.Small,true);
+            string description=BattlePassRewardDescription(reward);
+            theme.Label(new Rect(rect.x+98,rect.y+88,rect.width-110,40),description,theme.Small,true);
+            if(level==50&&premium)theme.Label(new Rect(rect.x+98,rect.y+130,rect.width-110,18),"BETA SEASON 01  •  EXCLUSIVE PREMIUM AVATAR",theme.Small,true);
+
+            bool canClaim=premium?BattlePassProgress.CanClaimPremium(level):BattlePassProgress.CanClaimFree(level);
+            if(canClaim&&theme.Action(new Rect(rect.x+14,rect.yMax-34,72,24),"CLAIM",true))
+            {
+                bool claimed=premium?BattlePassProgress.ClaimPremium(level):BattlePassProgress.ClaimFree(level);
+                if(claimed)shopMessage=(premium?"Premium":"Free")+" reward claimed.";
+            }
+        }
+
+        private void DrawBattlePassRewardIcon(Rect rect,BattlePassReward reward)
+        {
+            if(reward.AvatarId>=0) { AvatarBadgeRenderer.Draw(rect,reward.AvatarId,Texture2D.whiteTexture,Time.unscaledTime); return; }
+            if(reward.Item!=BattleItemType.None) { BattleItemIconRenderer.Draw(rect,reward.Item); return; }
+            if(reward.Shards>0) { DrawShardRewardIcon(rect); return; }
+            FrontEndTheme.Fill(rect,new Color(.035f,.045f,.062f,.72f));
+        }
+
+        private void DrawShardRewardIcon(Rect rect)
+        {
+            Color cyan=new(.10f,.88f,1f,1f);
+            FrontEndTheme.Fill(rect,new Color(.025f,.045f,.065f,.96f));
+            float w=rect.width*.34f,h=rect.height*.62f;
+            FrontEndTheme.Fill(new Rect(rect.center.x-w*.5f,rect.center.y-h*.5f,w,h),new Color(cyan.r,cyan.g,cyan.b,.72f));
+            FrontEndTheme.Fill(new Rect(rect.center.x-w*.18f,rect.y+rect.height*.10f,w*.36f,rect.height*.80f),cyan);
+            FrontEndTheme.Fill(new Rect(rect.x+rect.width*.18f,rect.y+rect.height*.62f,rect.width*.18f,rect.height*.20f),new Color(.3f,.95f,1f,.8f));
+            FrontEndTheme.Fill(new Rect(rect.x+rect.width*.68f,rect.y+rect.height*.22f,rect.width*.14f,rect.height*.22f),new Color(.3f,.95f,1f,.7f));
+        }
+
+        private string BattlePassRewardDescription(BattlePassReward reward)
+        {
+            if(reward.AvatarId==BattlePassProgress.BetaCrownAvatarId)return "Exclusive Beta Crown avatar.";
+            if(reward.Item!=BattleItemType.None)return BattleItemInventory.ShortDescription(reward.Item);
+            if(reward.Shards>0)return "Shard currency reward.";
+            return "No reward on this track at this level.";
         }
 
         private void DrawBattleItemShop()
