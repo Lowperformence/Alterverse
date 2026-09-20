@@ -134,35 +134,33 @@ namespace Alterverse.AI
         {
             if (candidate == null || candidate == selfHealth || candidate.IsDead ||
                 !candidate.isActiveAndEnabled || teamMember == null) return false;
+
+            // Bot heroes intentionally ignore lane towers and ordinary lane minions as combat
+            // targets. Siege mechs reuse LaneMinion for movement/combat, so preserve them by
+            // checking the explicit siege role instead of rejecting every LaneMinion component.
+            if (candidate.GetComponent<LaneTower>() != null) return false;
+
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
             if (planet != null) return planet.Available;
             RealityCore core = candidate.GetComponent<RealityCore>();
             if (core != null) return core.Team != teamMember.Team && core.IsVulnerable;
+
             LaneMinion minion = candidate.GetComponent<LaneMinion>();
-            if (minion != null) return minion.Team != teamMember.Team;
-            LaneTower tower = candidate.GetComponent<LaneTower>();
-            if (tower != null) return tower.Team != teamMember.Team;
+            if (minion != null) return minion.IsSiegeUnit && minion.Team != teamMember.Team;
+
             TeamMember other = candidate.GetComponent<TeamMember>();
             return other != null && teamMember.IsEnemy(other);
         }
         private int TargetTier(Health candidate)
         {
-            // Lower is better. Hero combat always wins the target class decision; map pieces only
-            // become the focus when no legal visible hero is available.
+            // Lower is better. Towers and ordinary lane minions never reach this function because
+            // IsEnemy rejects them. Heroes stay primary, while real mechs/special units remain valid.
             if(candidate.GetComponent<HeroIdentity>()!=null)return 0;
             if(candidate.GetComponent<RealityCore>()!=null||candidate.GetComponent<DimensionPlanet>()!=null)return 1;
 
-            LaneTower tower=candidate.GetComponent<LaneTower>();
-            if(tower!=null)
-            {
-                // A covered tower is a valid post-fight siege target. Without allied minion cover,
-                // clearing the wave is preferable to repeatedly selecting an unsafe structure.
-                return teamMember!=null&&tower.HasMinionCoverFor(teamMember.Team)?2:5;
-            }
-
-            // Reward/mech combat units stay secondary to heroes but ahead of lane farming.
-            if(candidate.GetComponent<TeamMember>()!=null&&candidate.GetComponent<LaneMinion>()==null)return 2;
-            if(candidate.GetComponent<LaneMinion>()!=null)return 3;
+            LaneMinion minion=candidate.GetComponent<LaneMinion>();
+            if(minion!=null&&minion.IsSiegeUnit)return 2;
+            if(candidate.GetComponent<TeamMember>()!=null)return 2;
             return 4;
         }
 
@@ -220,8 +218,8 @@ namespace Alterverse.AI
             }
             else
             {
-                if(candidate.GetComponent<LaneMinion>()!=null)priority=1.08f;
-                if(candidate.GetComponent<LaneTower>()!=null)priority=Mathf.Lerp(1.32f,.86f,objectiveAwareness);
+                LaneMinion minion=candidate.GetComponent<LaneMinion>();
+                if(minion!=null&&minion.IsSiegeUnit)priority=.96f;
                 if(candidate.GetComponent<RealityCore>()!=null)priority=Mathf.Lerp(1.22f,.72f,objectiveAwareness);
                 if(candidate.GetComponent<DimensionPlanet>()!=null)priority=Mathf.Lerp(1.30f,.78f,objectiveAwareness);
             }
@@ -316,8 +314,8 @@ namespace Alterverse.AI
             }
 
             if(best==currentTarget){candidateTarget=null;return;}
-            // Keep a pending candidate through its reaction window only if it is at least as important
-            // as the newly found class. A pending tower/minion can never delay a newly visible hero.
+            // Keep a pending candidate through its reaction window only if it is still a legal
+            // bot target and at least as important as the newly found class.
             if(currentTarget==null&&IsEnemy(candidateTarget)&&Visible(candidateTarget)&&
                 !(candidateTarget==disengagedTarget&&Time.time<disengagedUntil)&&
                 TargetTier(candidateTarget)<=bestTier)best=candidateTarget;
