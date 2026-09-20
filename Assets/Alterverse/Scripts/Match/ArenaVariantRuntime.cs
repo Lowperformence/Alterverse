@@ -17,9 +17,9 @@ namespace Alterverse.Match
         {
             get
             {
-                int raw=Mathf.Clamp(PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon),0,2);
-                ArenaVariant selected=(ArenaVariant)raw;
-                if(!ArenaUnlockInventory.Owned(selected))
+                int raw=PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon);
+                ArenaVariant selected=raw>=0&&raw<=2?(ArenaVariant)raw:ArenaVariant.Moon;
+                if(!ArenaUnlockInventory.Owned(selected)||raw<0||raw>2)
                 {
                     selected=ArenaVariant.Moon;
                     PlayerPrefs.SetInt(SelectedKey,(int)selected);
