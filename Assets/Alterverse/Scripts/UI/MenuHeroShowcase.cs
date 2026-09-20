@@ -34,7 +34,8 @@ namespace Alterverse.UI
             if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon) return;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;
             if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
-                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:1.65f;
+                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:
+                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             actor = new GameObject("DF_MenuHero");
