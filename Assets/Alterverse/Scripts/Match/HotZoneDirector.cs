@@ -7,19 +7,24 @@ using UnityEngine.Rendering;
 namespace Alterverse.Match
 {
     /// <summary>
-    /// One-shot mid-match objective. Opens at 5:00 for 40 seconds.
-    /// Exclusive hero presence earns control time; contested presence earns neither team.
+    /// Two match-wide Hot Zones on every arena:
+    /// the first opens 40 seconds after round start, the second keeps the original 5:00 timing.
+    /// Each Hot Zone remains active for 40 seconds. Exclusive hero presence earns control time;
+    /// contested presence earns neither team.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
     {
-        public const float OpenAt=300f;
+        public const float FirstOpenAt=40f;
+        public const float SecondOpenAt=300f;
+        public const float OpenAt=SecondOpenAt; // legacy/reference compatibility for the original Hot Zone timing
         public const float ActiveDuration=40f;
         public const float Radius=6.5f;
 
-        private enum State { Waiting, Active, Resolved }
+        private enum State { Waiting, Active, Finished }
         private State state;
         private static HotZoneDirector owner;
-        private bool rewardIssued;
+        private bool rewardIssued,openingAnnounced;
+        private int occurrence;
         private float elapsed,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
@@ -32,9 +37,12 @@ namespace Alterverse.Match
         public static event System.Action HotZoneOpened;
         public static event System.Action<int,float,float> HotZoneResolved;
 
+        private float NextOpenAt=>occurrence==0?FirstOpenAt:SecondOpenAt;
+        public int Occurrence=>Mathf.Clamp(occurrence+1,1,2);
         public float ZeroControlSeconds=>zeroTime;
         public float LumenControlSeconds=>lumenTime;
-        public float Remaining=>state==State.Active?Mathf.Max(0,ActiveDuration-activeElapsed):state==State.Waiting?Mathf.Max(0,OpenAt-elapsed):0;
+        public float Remaining=>state==State.Active?Mathf.Max(0,ActiveDuration-activeElapsed):
+            state==State.Waiting?Mathf.Max(0,NextOpenAt-elapsed):0;
         public bool IsActive=>state==State.Active;
         public int ZeroInside=>zeroInside;
         public int LumenInside=>lumenInside;
@@ -48,15 +56,20 @@ namespace Alterverse.Match
 
         private void Update()
         {
-            if(Time.timeScale<=0f||state==State.Resolved)return;
+            if(Time.timeScale<=0f||state==State.Finished)return;
             if(front==null)front=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
 
             elapsed+=Time.deltaTime;
             if(state==State.Waiting)
             {
-                if(elapsed>=OpenAt-10f&&elapsed-Time.deltaTime<OpenAt-10f)HotZoneOpening?.Invoke();
-                if(elapsed<OpenAt)return;
+                float openAt=NextOpenAt;
+                if(!openingAnnounced&&elapsed>=openAt-10f)
+                {
+                    openingAnnounced=true;
+                    HotZoneOpening?.Invoke();
+                }
+                if(elapsed<openAt)return;
                 Open();
             }
 
@@ -73,7 +86,9 @@ namespace Alterverse.Match
 
         private void Open()
         {
-            state=State.Active;activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;
+            state=State.Active;
+            rewardIssued=false;
+            activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;nextScan=0;
             BuildZoneVisual();
             PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
             PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
@@ -97,8 +112,7 @@ namespace Alterverse.Match
 
         private void Resolve()
         {
-            if(state==State.Resolved)return;
-            state=State.Resolved;
+            if(state!=State.Active)return;
             front??=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
 
@@ -108,28 +122,45 @@ namespace Alterverse.Match
                 rewardIssued=HotZoneTank.Spawn(winner);
                 if(!rewardIssued)winner=-1;
             }
-            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
+
+            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
+                winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
             PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
             PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
-            if(zoneRoot!=null)Destroy(zoneRoot,1.2f);
+            if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
+            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
+
+            if(occurrence==0)
+            {
+                occurrence=1;
+                openingAnnounced=false;
+                state=State.Waiting;
+                zeroInside=lumenInside=0;
+            }
+            else state=State.Finished;
         }
 
         private void ResolveNoReward()
         {
-            state=State.Resolved;rewardIssued=true;
-            if(zoneRoot!=null)Destroy(zoneRoot);
+            state=State.Finished;rewardIssued=true;
+            if(zoneRoot!=null){Destroy(zoneRoot);zoneRoot=null;}
+            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
         }
 
         private void BuildZoneVisual()
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(shader==null)return;
-            neutralMat=CreateMaterial(shader,new Color(.42f,.44f,.52f,1),1.1f);
-            zeroMat=CreateMaterial(shader,StylizedArtDirection.ZeroEnergy,2.1f);
-            lumenMat=CreateMaterial(shader,StylizedArtDirection.LumenEnergy,2.1f);
 
-            zoneRoot=new GameObject("DF_HotZoneVisual");zoneRoot.transform.position=transform.position;
+            // Reuse the same three materials for both occurrences to avoid unnecessary allocations.
+            neutralMat??=CreateMaterial(shader,new Color(.42f,.44f,.52f,1),1.1f);
+            zeroMat??=CreateMaterial(shader,StylizedArtDirection.ZeroEnergy,2.1f);
+            lumenMat??=CreateMaterial(shader,StylizedArtDirection.LumenEnergy,2.1f);
+
+            if(zoneRoot!=null)Destroy(zoneRoot);
+            zoneRoot=new GameObject(occurrence==0?"DF_HotZoneVisual_Early":"DF_HotZoneVisual_Main");
+            zoneRoot.transform.position=transform.position;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)zoneRoot.transform.SetParent(world,true);
 
             pulseRing=CreateRing(zoneRoot.transform,"DF_HotZoneOuter",Radius,.14f,neutralMat,64);
