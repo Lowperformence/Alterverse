@@ -536,29 +536,16 @@ namespace Alterverse.UI
                 $"{BattlePassProgress.PremiumShardReturn} SHARDS RETURNABLE • 50 LEVELS",
                 theme.Small,true);
 
-            // Milestones stay visible without opening every tier.
-            theme.Label(new Rect(Left,374,ContentWidth,20),"MILESTONE REWARDS",theme.Small,true);
-            int[] milestones={10,20,30,40,45,49,50};
-            float mg=6f,mw=(ContentWidth-mg*(milestones.Length-1))/milestones.Length;
-            for(int i=0;i<milestones.Length;i++)
-            {
-                int level=milestones[i]; BattlePassReward reward=BattlePassProgress.PremiumRewardFor(level);
-                Rect r=new(Left+i*(mw+mg),396,mw,48);
-                bool selected=battlePassPreviewPremium&&battlePassPreviewLevel==level;
-                if(theme.Action(r,$"L{level}  {reward.Shards}◆"+(level==50?" + CROWN":""),selected:selected))
-                { battlePassPreviewLevel=level; battlePassPreviewPremium=true; }
-            }
-
             const int visible=4;
             battlePassPageStart=Mathf.Clamp(battlePassPageStart,1,BattlePassProgress.MaxLevel);
             float previewW=Mathf.Clamp(ContentWidth*.29f,330f,410f);
             float trackW=ContentWidth-previewW-18f;
             float gap=8f,cardW=(trackW-gap*(visible-1))/visible;
-            theme.Label(new Rect(Left,452,trackW,22),"REWARD TRACK",theme.Heading);
+            theme.Label(new Rect(Left,382,trackW,22),"REWARD TRACK",theme.Heading);
             for(int i=0;i<visible;i++)
             {
                 int level=battlePassPageStart+i;if(level>BattlePassProgress.MaxLevel)break;
-                float x=Left+i*(cardW+gap),y=478;
+                float x=Left+i*(cardW+gap),y=408;
                 theme.Panel(new Rect(x,y,cardW,148));
                 theme.Label(new Rect(x+8,y+7,cardW-16,20),$"LEVEL {level}",theme.Small,true);
                 DrawBattlePassRewardRow(new Rect(x+8,y+32,cardW-16,50),level,false);
@@ -566,7 +553,7 @@ namespace Alterverse.UI
             }
 
             float px=Left+trackW+18f;
-            DrawBattlePassRewardPreview(new Rect(px,452,previewW,174),battlePassPreviewLevel,battlePassPreviewPremium);
+            DrawBattlePassRewardPreview(new Rect(px,382,previewW,174),battlePassPreviewLevel,battlePassPreviewPremium);
 
             bool canBack=battlePassPageStart>1,canForward=battlePassPageStart+visible<=BattlePassProgress.MaxLevel;
             if(theme.Action(new Rect(Left,638,46,36),"<",enabled:canBack))battlePassPageStart=Mathf.Max(1,battlePassPageStart-visible);
