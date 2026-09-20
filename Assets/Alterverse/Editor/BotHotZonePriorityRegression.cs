@@ -22,9 +22,17 @@ namespace Alterverse.EditorChecks
             Check(!MobaBotMover.ShouldPursueHotZone(MobaBotBrain.BotState.Fight,true,true),
                 "Fight state was allowed to rotate to Hot Zone");
 
-            // Priority 2: when no combat target is perceived, an active Hot Zone is a legal objective.
+            // Priority 2: when no hero combat target is perceived, an active Hot Zone is a legal objective.
             Check(MobaBotMover.ShouldPursueHotZone(MobaBotBrain.BotState.Lane,false,true),
                 "active Hot Zone was not available from free-roam Lane state");
+
+            // Non-hero objectives/units must not steal Priority 2 from an active Hot Zone.
+            Check(BotTargetSensor.HotZoneAllowsTarget(true,true),
+                "visible hero was incorrectly suppressed during an active Hot Zone");
+            Check(!BotTargetSensor.HotZoneAllowsTarget(true,false),
+                "non-hero target was allowed to pre-empt an active Hot Zone");
+            Check(BotTargetSensor.HotZoneAllowsTarget(false,false),
+                "non-hero target remained suppressed after the Hot Zone ended");
 
             // Survival/recovery and inactive objectives must never be mistaken for Hot Zone rotations.
             Check(!MobaBotMover.ShouldPursueHotZone(MobaBotBrain.BotState.Retreat,false,true),
