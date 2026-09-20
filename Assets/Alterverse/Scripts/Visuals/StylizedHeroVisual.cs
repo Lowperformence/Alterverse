@@ -218,43 +218,41 @@ else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial)
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 }
 
-private void ApplyNullEdgeOverdrive(Shader shader,Material bladeMaterial)
+private void ApplyNullEdgeOverdrive(Shader shader,Material detailMaterial)
 {
 Transform leftWeapon=FindVisual("WeaponL");
 Transform rightWeapon=FindVisual("WeaponR");
 
-// Previous premium size was 1.25x. 1.50x is another +20% from that state.
+// Keep the current premium size at 150%.
 if(leftWeapon!=null)leftWeapon.localScale*=1.50f;
 if(rightWeapon!=null)rightWeapon.localScale*=1.50f;
 
-// Keep both blades in the existing NULL EDGE violet/pink premium glow.
+// Reverse the color concept: the actual blades now use an aggressive red glow.
+Color bladeRed=new Color(1f,.018f,.012f);
+Material redBladeMaterial=new Material(shader){name="DF_NullEdgeRedBlades",color=bladeRed};
+if(redBladeMaterial.HasProperty("_BaseColor"))redBladeMaterial.SetColor("_BaseColor",bladeRed);
+if(redBladeMaterial.HasProperty("_Metallic"))redBladeMaterial.SetFloat("_Metallic",.16f);
+if(redBladeMaterial.HasProperty("_Smoothness"))redBladeMaterial.SetFloat("_Smoothness",.92f);
+if(redBladeMaterial.HasProperty("_EmissionColor"))
+{
+redBladeMaterial.EnableKeyword("_EMISSION");
+redBladeMaterial.SetColor("_EmissionColor",bladeRed*4.8f);
+}
+ownedMaterials.Add(redBladeMaterial);
+
 Transform bladeL=FindVisual("BladeL");
 Transform bladeR=FindVisual("BladeR");
-if(bladeL!=null)ApplyGlow(bladeL,bladeMaterial);
-if(bladeR!=null)ApplyGlow(bladeR,bladeMaterial);
+if(bladeL!=null)ApplyGlow(bladeL,redBladeMaterial);
+if(bladeR!=null)ApplyGlow(bladeR,redBladeMaterial);
 
-// Grips and weapon detail pieces get a separate high-emission red identity.
-Color detailRed=new Color(1f,.018f,.012f);
-Material redMaterial=new Material(shader){name="DF_NullEdgeRedDetails",color=detailRed};
-if(redMaterial.HasProperty("_BaseColor"))redMaterial.SetColor("_BaseColor",detailRed);
-if(redMaterial.HasProperty("_Metallic"))redMaterial.SetFloat("_Metallic",.18f);
-if(redMaterial.HasProperty("_Smoothness"))redMaterial.SetFloat("_Smoothness",.90f);
-if(redMaterial.HasProperty("_EmissionColor"))
+// The original NULL EDGE premium violet/pink becomes the detail identity.
+string[] violetDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
+for(int i=0;i<violetDetails.Length;i++)
 {
-redMaterial.EnableKeyword("_EMISSION");
-redMaterial.SetColor("_EmissionColor",detailRed*4.6f);
-}
-ownedMaterials.Add(redMaterial);
-
-string[] redDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
-for(int i=0;i<redDetails.Length;i++)
-{
-Transform detail=FindVisual(redDetails[i]);
-if(detail!=null)ApplyGlow(detail,redMaterial);
+Transform detail=FindVisual(violetDetails[i]);
+if(detail!=null)ApplyGlow(detail,detailMaterial);
 }
 
-// Make the premium red construction unmistakable in both shop preview and match.
-// These pieces sit at the real weapon pivots and do not alter any combat collider.
 for(int side=-1;side<=1;side+=2)
 {
 string suffix=side<0?"L":"R";
@@ -265,21 +263,21 @@ Transform hilt=FindVisual("Hilt"+suffix);
 if(hilt!=null)
 {
 hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.18f,1.28f,1.18f));
-ApplyGlow(hilt,redMaterial);
+ApplyGlow(hilt,detailMaterial);
 }
 
 CreateNullEdgePart("OverdriveGrip"+suffix,weapon,
 new Vector3(0,-.015f,-.035f),new Vector3(.105f,.245f,.10f),
-Vector3.zero,redMaterial);
+Vector3.zero,detailMaterial);
 CreateNullEdgePart("OverdriveGuard"+suffix,weapon,
 new Vector3(0,-.115f,.055f),new Vector3(.30f,.055f,.13f),
-new Vector3(0,0,side*8f),redMaterial);
+new Vector3(0,0,side*8f),detailMaterial);
 CreateNullEdgePart("OverdrivePommel"+suffix,weapon,
 new Vector3(0,.125f,-.055f),new Vector3(.13f,.085f,.13f),
-new Vector3(0,0,45f),redMaterial);
+new Vector3(0,0,45f),detailMaterial);
 CreateNullEdgePart("OverdriveBladeDetail"+suffix,weapon,
 new Vector3(side*.025f,-.20f,.18f),new Vector3(.035f,.19f,.035f),
-new Vector3(side*10f,0,side*7f),redMaterial);
+new Vector3(side*10f,0,side*7f),detailMaterial);
 }
 }
 
