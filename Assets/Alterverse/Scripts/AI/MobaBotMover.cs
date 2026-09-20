@@ -11,7 +11,7 @@ namespace Alterverse.AI
     [RequireComponent(typeof(BotTargetSensor))]
     public sealed class MobaBotMover : MonoBehaviour
     {
-        [SerializeField] private float fallbackMoveSpeed = 3.35f, laneStopDistance = .35f, chaseLimit = 12f;
+        [SerializeField] private float fallbackMoveSpeed = 3.35f, roamStopDistance = .35f, chaseLimit = 12f;
         private const float ArenaHalfWidth = 40f, ArenaHalfHeight = 33f, TowerMargin = .75f;
         private static readonly List<MobaBotMover> ActiveBots = new();
         private static long nextSeparationOrder;
@@ -84,9 +84,14 @@ namespace Alterverse.AI
             if (!locomotion.CanMove || locomotion.OwnsMovementFrame) { velocity=Vector3.zero; return; }
             ScanWorld();
             Vector3 destination = lanePlan.GetDestination(brain.State);
-            float stopDistance = laneStopDistance;
+            float stopDistance = roamStopDistance;
             Health target = sensor != null ? sensor.CurrentTarget : null;
             if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseStarted=0;}
+
+            // Under active pressure, an allied guardian tower can be used as temporary cover.
+            // Once the brain leaves Retreat, normal free-roam/search resumes, preventing camping.
+            if(brain.State==MobaBotBrain.BotState.Retreat&&sensor!=null&&sensor.NearbyEnemies>0&&TryGetOwnTowerRefuge(out Vector3 towerRefuge))
+            {destination=towerRefuge;stopDistance=.65f;}
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
@@ -167,7 +172,10 @@ namespace Alterverse.AI
             {
                 bool retreating=brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover;
                 if(retreating&&brain.TacticalWithdrawal)
-                {destination=brain.Tactics.SafeRetreat(transform.position);stopDistance=.65f;}
+                {
+                    if(!TryGetOwnTowerRefuge(out destination))destination=brain.Tactics.SafeRetreat(transform.position);
+                    stopDistance=.65f;
+                }
                 else if(!retreating&&brain.FollowTeamCall)
                 {
                     HeroId role=profile!=null?profile.Hero:HeroId.Veyr;
@@ -201,10 +209,6 @@ namespace Alterverse.AI
                 IsAvoidingHazard = true; detourUntil=0;
                 destination = escape; stopDistance = .1f;
             }
-            if(!IsAvoidingHazard&&brain.State==MobaBotBrain.BotState.Lane&&
-                (!brain.FollowTeamCall||brain.Tactics.Call!=BotTeamCoordinator.Intent.Defend)&&
-                lanePlan.IsLeavingBase)
-            {destination=lanePlan.GetDestination(brain.State);stopDistance=laneStopDistance;}
             MoveToward(destination, stopDistance);
         }
 
@@ -350,7 +354,7 @@ namespace Alterverse.AI
                     if ((from + step * bodyT).sqrMagnitude < bodyRadius * bodyRadius) return false;
                 }
 
-                if (tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
+                if (tower.Team == brain.Team) continue;
 
                 float safeRadius = tower.AttackRange + TowerMargin;
                 // Allow an escape from existing danger, never a new dive or a crossing dash.
@@ -402,7 +406,7 @@ namespace Alterverse.AI
                 // missing case that caused lane bots to repeatedly collide with their own bastions.
                 next = SkirtTowerBody(tower,next);
 
-                if (tower.Team == brain.Team || tower.HasMinionCoverFor(brain.Team)) continue;
+                if (tower.Team == brain.Team) continue;
                 Vector3 away = transform.position - tower.transform.position; away.y = 0;
                 float safeRadius = tower.AttackRange + TowerMargin;
                 if (away.sqrMagnitude < safeRadius * safeRadius)
@@ -426,18 +430,13 @@ namespace Alterverse.AI
                     Vector3 closest = away + step * along;
                     if (closest.sqrMagnitude < safeRadius * safeRadius)
                     {
-                        // Do not freeze on an invisible tower-radius line. If our lane wave is approaching,
-                        // follow just behind it until it enters tower range and becomes real cover.
-                        // With no wave nearby, fall back to a readable staging position outside danger.
-                        Vector3 staging;
-                        if(!TryGetWaveStaging(tower,out staging))
-                        {
-                            Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
-                            Vector3 tangent=Vector3.Cross(Vector3.up,radial);
-                            float spread=(rotationSlot-2)*.34f;
-                            staging=tower.transform.position+radial*(safeRadius+.55f)+tangent*spread;
-                            staging.y=transform.position.y;
-                        }
+                        // Enemy towers are hazards only. Stage outside their range without consulting
+                        // minion waves, because normal minions are irrelevant to hero navigation.
+                        Vector3 radial=away.sqrMagnitude>.001f?away.normalized:(brain.Team==0?Vector3.left:Vector3.right);
+                        Vector3 tangent=Vector3.Cross(Vector3.up,radial);
+                        float spread=(rotationSlot-2)*.34f;
+                        Vector3 staging=tower.transform.position+radial*(safeRadius+.55f)+tangent*spread;
+                        staging.y=transform.position.y;
 
                         Vector3 stageDelta=staging-transform.position;stageDelta.y=0;
                         float stageSpeed=MoveSpeed*Mathf.Clamp01(stageDelta.magnitude/1.4f+.18f);
@@ -448,6 +447,26 @@ namespace Alterverse.AI
                 }
             }
             return next;
+        }
+
+        private bool TryGetOwnTowerRefuge(out Vector3 refuge)
+        {
+            refuge=transform.position;
+            if(brain==null)return false;
+            float best=20f*20f;
+            bool found=false;
+            Vector3 homeDirection=brain.Team==0?Vector3.left:Vector3.right;
+            foreach(LaneTower tower in towers)
+            {
+                if(tower==null||!tower.isActiveAndEnabled||tower.Team!=brain.Team)continue;
+                Health hp=tower.GetComponent<Health>();if(hp==null||hp.IsDead)continue;
+                Vector3 point=tower.transform.position+homeDirection*2.2f;
+                point.y=transform.position.y;
+                Vector3 d=point-transform.position;d.y=0;
+                if(d.sqrMagnitude>=best)continue;
+                best=d.sqrMagnitude;refuge=point;found=true;
+            }
+            return found;
         }
 
         private float TowerBodyClearance(LaneTower tower)
@@ -493,34 +512,6 @@ namespace Alterverse.AI
             Vector3 skirted=current+steer*stepLength;
             skirted.y=next.y;
             return skirted;
-        }
-
-        private bool TryGetWaveStaging(LaneTower tower,out Vector3 staging)
-        {
-            staging=transform.position;
-            if(tower==null||brain==null)return false;
-
-            LaneMinion best=null;
-            float bestSqr=12f*12f;
-            for(int i=0;i<Health.Active.Count;i++)
-            {
-                Health candidate=Health.Active[i];
-                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
-                LaneMinion minion=candidate.GetComponent<LaneMinion>();
-                if(minion==null||minion.Team!=brain.Team)continue;
-
-                Vector3 toTower=candidate.transform.position-tower.transform.position;toTower.y=0;
-                if(Mathf.Abs(candidate.transform.position.z-brain.LaneZ)>5f||toTower.sqrMagnitude>bestSqr)continue;
-                best=minion;bestSqr=toTower.sqrMagnitude;
-            }
-            if(best==null)return false;
-
-            Vector3 outward=best.transform.position-tower.transform.position;outward.y=0;
-            if(outward.sqrMagnitude<.01f)outward=brain.Team==0?Vector3.left:Vector3.right;
-            Vector3 tangent=Vector3.Cross(Vector3.up,outward.normalized);
-            staging=best.transform.position+outward.normalized*1.35f+tangent*((rotationSlot-2)*.22f);
-            staging.y=transform.position.y;
-            return true;
         }
 
         private void MoveToward(Vector3 destination, float stopDistance)
@@ -663,7 +654,7 @@ namespace Alterverse.AI
                 loggedBlocker=recoveryBlocker;loggedMode=recoveryMode;loggedAttempt=recoveryAttempts;
                 string blockerName=recoveryBlocker!=null?recoveryBlocker.name:"route/no collider";
                 string targetName=sensor!=null&&sensor.CurrentTarget!=null?sensor.CurrentTarget.name:"none";
-                Debug.LogWarning($"BOT STUCK RECOVERY: {name} pos={transform.position} state={(brain!=null?brain.State.ToString():"?")} lane={(brain!=null?brain.LaneZ:0)} target={targetName} destination={transform.position+towardDestination} distance={towardDestination.magnitude:F2} blocker={blockerName} attempt={recoveryAttempts} mode={recoveryMode}");
+                Debug.LogWarning($"BOT STUCK RECOVERY: {name} pos={transform.position} state={(brain!=null?brain.State.ToString():"?")} target={targetName} destination={transform.position+towardDestination} distance={towardDestination.magnitude:F2} blocker={blockerName} attempt={recoveryAttempts} mode={recoveryMode}");
             }
 #endif
         }
