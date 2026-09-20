@@ -13,8 +13,8 @@ namespace Alterverse.AI
         private Health selfHealth, currentTarget;
         private HeroCombatProfile profile;
         private float nextScanTime, candidateSince, retainedSince, lastSeenTime=-100f;
-        private Health candidateTarget, disengagedTarget;
-        private float disengagedUntil;
+        private Health candidateTarget, disengagedTarget, recentAttacker;
+        private float disengagedUntil, recentAttackerUntil;
         // Consumers steer toward the last observation, never a hidden live transform.
         public Vector3 ObservedTargetPosition => lastKnownPosition;
         public bool CanObserve(Health target) => IsEnemy(target) && Visible(target);
@@ -71,7 +71,19 @@ namespace Alterverse.AI
             profile = GetComponent<HeroCombatProfile>();
             nextScanTime=Time.time+(Mathf.Abs(GetEntityId().GetHashCode()%17)/17f)*scanInterval;
         }
-        public void ClearTarget() { ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
+        private void OnEnable(){if(selfHealth!=null)selfHealth.Damaged+=OnDamaged;}
+        private void OnDisable(){if(selfHealth!=null)selfHealth.Damaged-=OnDamaged;}
+        private void OnDamaged(float applied,float absorbed,GameObject source)
+        {
+            if(applied<=0||source==null)return;
+            Health attacker=source.GetComponentInParent<Health>();
+            if(attacker==null||!IsEnemy(attacker))return;
+            // Remember only who actually hurt this bot. Selection still requires ordinary
+            // visibility, so this never reveals a hidden attacker's live position.
+            recentAttacker=attacker;
+            recentAttackerUntil=Time.time+1.8f;
+        }
+        public void ClearTarget() { ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = recentAttacker = null; disengagedUntil=recentAttackerUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
@@ -144,6 +156,15 @@ namespace Alterverse.AI
 
             float accuracy=Difficulty.TargetAccuracy;
             float aggression=brain!=null?brain.Aggression:.55f;
+            // Human-readable threat response: an invader in our own base and a recent
+            // visible attacker should outrank harmless farming targets. This is still bounded by
+            // normal scan radius and line of sight.
+            if(brain!=null&&brain.InsideOwnBase(transform.position)&&brain.IsLocalBaseThreat(candidate))
+                priority*=.38f;
+            if(candidate==recentAttacker&&Time.time<recentAttackerUntil&&
+                candidate.GetComponent<LaneTower>()==null&&candidate.GetComponent<RealityCore>()==null)
+                priority*=.48f;
+
             if(candidateHero!=null)
             {
                 priority*=Mathf.Lerp(1.15f,.8f,aggression);
