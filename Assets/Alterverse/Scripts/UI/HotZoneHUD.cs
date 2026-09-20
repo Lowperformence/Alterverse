@@ -35,8 +35,9 @@ namespace Alterverse.UI
         private void OnOpened(){banner="HOT ZONE ACTIVE · CONTROL THE ZONE";bannerColor=Color.white;bannerUntil=Time.time+4f;}
         private void OnResolved(int winner,float zero,float lumen)
         {
-            banner=winner==0?"ZERO WINS HOT ZONE · ASSAULT TANK DEPLOYED":
-                winner==1?"LUMEN WINS HOT ZONE · ASSAULT TANK DEPLOYED":
+            bool reward=zone!=null&&zone.RewardSpawned;
+            banner=winner==0?(reward?"ZERO WINS HOT ZONE · ASSAULT TANK DEPLOYED":"ZERO WINS HOT ZONE"):
+                winner==1?(reward?"LUMEN WINS HOT ZONE · ASSAULT TANK DEPLOYED":"LUMEN WINS HOT ZONE"):
                 "HOT ZONE DRAW · NO TANK DEPLOYED";
             bannerColor=winner==0?new Color(.72f,.25f,1f):winner==1?new Color(.16f,.88f,1f):new Color(.72f,.74f,.80f);
             bannerUntil=Time.time+5f;
