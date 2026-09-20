@@ -506,7 +506,7 @@ namespace Alterverse.Combat
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = team == 0 ? StylizedArtDirection.ZeroEnergy : StylizedArtDirection.LumenEnergy;
-            Gizmos.DrawWireSphere(transform.position, attackRange);
+            Gizmos.DrawWireSphere(transform.position, damageRadius);
         }
 
         private void OnDestroy()
