@@ -19,7 +19,8 @@ namespace Alterverse.AI
         private float nextDecisionTime;
         private bool wasDead;
         private System.Random decisions;
-        private float lastHealth, threatUntil;
+        private float lastHealth, threatUntil, fightCommitUntil, groupDecisionUntil;
+        private float decisionRhythm=1f, commitmentRhythm=1f;
         public BotDifficulty DifficultyLevel { get; private set; }
         public BotDifficultyProfile Difficulty { get; private set; }
         public bool GroupWithAllies { get; private set; }
@@ -31,12 +32,20 @@ namespace Alterverse.AI
         public BotState State => state;
         public float Aggression => aggression;
         public float Caution => caution;
+        public float DecisionRhythm => decisionRhythm;
+        public float CommitmentRhythm => commitmentRhythm;
 
         private void Awake()
         {
             DifficultyLevel=BotDifficultySettings.Selected;Difficulty=BotDifficultyProfile.For(DifficultyLevel);
-            // We only need per-bot entropy for the local RNG; an object hash is sufficient and avoids obsolete InstanceID APIs in Unity 6.6+.
-            decisions=new System.Random(unchecked(GetHashCode()*397^System.Environment.TickCount));
+
+            // Each bot gets a stable personal rhythm so a whole team never thinks on the same beat.
+            uint hash=2166136261u;
+            foreach(char ch in gameObject.name){hash^=ch;hash*=16777619u;}
+            decisionRhythm=Mathf.Lerp(.88f,1.14f,(hash%997u)/996f);
+            commitmentRhythm=Mathf.Lerp(.90f,1.12f,((hash/997u)%991u)/990f);
+            decisions=new System.Random(unchecked((int)hash^System.Environment.TickCount));
+
             health = GetComponent<Health>();lastHealth=health.Normalized; respawn = GetComponent<MobaBotRespawn>();
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
@@ -51,7 +60,7 @@ namespace Alterverse.AI
             if (respawn != null && respawn.IsRespawning) return;
             if (wasDead) ResumeLaneAfterRespawn();
             if (Time.time < nextDecisionTime) return;
-            nextDecisionTime = Time.time + Mathf.Max(.15f, decisionInterval*Difficulty.DecisionScale);
+            nextDecisionTime = Time.time + Mathf.Max(.15f, decisionInterval*Difficulty.DecisionScale*decisionRhythm);
             Decide();
         }
         public void Initialize(int assignedTeam, float assignedLaneZ, float personalityAggression = .55f, float personalityCaution = .55f)
@@ -59,11 +68,11 @@ namespace Alterverse.AI
             team = assignedTeam; laneZ = assignedLaneZ;
             aggression = Mathf.Clamp01(personalityAggression); caution = Mathf.Clamp01(personalityCaution);
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
-            state = BotState.Lane; nextDecisionTime = 0;
+            state = BotState.Lane; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
         }
         public void ResumeLaneAfterRespawn()
         {
-            wasDead = false;threatUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f;
+            wasDead = false;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
@@ -85,20 +94,54 @@ namespace Alterverse.AI
             float hp = health.Normalized;
             if(lastHealth-hp>.08f)threatUntil=Time.time+Difficulty.MemorySeconds;
             lastHealth=hp;
+
             int pressure=targetSensor!=null?Mathf.Max(0,targetSensor.NearbyEnemies-targetSensor.NearbyAllies-1):0;
             float danger=pressure*.035f*Difficulty.TargetAccuracy;
             if(Time.time<threatUntil)danger+=.035f*Difficulty.TargetAccuracy;
-            GroupWithAllies=Chance(TeamFocus*Difficulty.Grouping);
+
+            // Team intention persists for a short human-sized window instead of being rerolled
+            // every decision tick. Different personal rhythms prevent hive-mind synchronization.
+            if(Time.time>=groupDecisionUntil)
+            {
+                GroupWithAllies=Chance(TeamFocus*Difficulty.Grouping);
+                float groupHold=Mathf.Lerp(2.1f,1.15f,Difficulty.TargetAccuracy)*commitmentRhythm;
+                groupDecisionUntil=Time.time+groupHold;
+            }
+
             float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.48f);
-            if (hp <= retreat) { state = BotState.Retreat; return; }
+            if (hp <= retreat)
+            {
+                state = BotState.Retreat;
+                fightCommitUntil=0;
+                return;
+            }
+
             if (state == BotState.Retreat || state == BotState.Recover)
             {
                 state = hp < .8f ? BotState.Recover : BotState.Lane;
+                if(state==BotState.Lane)fightCommitUntil=0;
                 return;
             }
-            // No second HP gate: otherwise wounded bots keep advancing but refuse to fight.
+
+            // Perception owns what the bot can know. A short frozen last-seen memory is allowed,
+            // but it never exposes the hidden live position of an unseen enemy.
             Health enemy = targetSensor != null ? targetSensor.CurrentTarget : null;
-            state = enemy != null && !enemy.IsDead ? BotState.Fight : BotState.Lane;
+            bool perceivedThreat=enemy!=null&&!enemy.IsDead;
+            bool recentMemory=targetSensor!=null&&targetSensor.HasRecentEnemyMemory;
+
+            if(perceivedThreat)
+            {
+                if(state!=BotState.Fight)
+                {
+                    state=BotState.Fight;
+                    float hold=Mathf.Lerp(1.05f,.58f,Difficulty.TargetAccuracy)*commitmentRhythm;
+                    fightCommitUntil=Time.time+hold;
+                }
+                return;
+            }
+
+            if(state==BotState.Fight&&(recentMemory||Time.time<fightCommitUntil))return;
+            state=BotState.Lane;
         }
     }
 }
