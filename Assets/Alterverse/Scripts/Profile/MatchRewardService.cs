@@ -57,11 +57,11 @@ namespace Alterverse.Profile
                 int baseXp=PlayerPrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseXp,0)):storedXp;
                 int xpBonus=PlayerPrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-baseXp);
                 int rawCosmetic=PlayerPrefs.GetInt(ReceiptBonusCosmetic,0);
-                UniversalHeroCosmetic cosmetic=rawCosmetic>=0&&rawCosmetic<=3?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
+                UniversalHeroCosmetic storedCosmetic=rawCosmetic>=0&&rawCosmetic<=3?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
 
                 // Battle Pass intentionally receives BASE account XP only; its own receipt keeps this idempotent.
                 BattlePassProgress.GrantMatchXp(baseXp,matchId);
-                return new MatchRewardResult(baseShards,shardBonus,baseXp,xpBonus,cosmetic);
+                return new MatchRewardResult(baseShards,shardBonus,baseXp,xpBonus,storedCosmetic);
             }
 
             kills=Mathf.Max(0,kills);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
