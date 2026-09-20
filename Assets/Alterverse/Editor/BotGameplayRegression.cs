@@ -37,6 +37,7 @@ namespace Alterverse.EditorChecks
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
                 CheckTargetRetention();
+                CheckHeroCombatPriority();
                 CheckRecentAttackerPriority();
                 CheckBaseRecoveryDefense();
                 CheckChaseDisengagement();
@@ -193,6 +194,46 @@ namespace Alterverse.EditorChecks
             Set(sensor,"candidateSince",Time.time-1f);Call(sensor,"Scan");
             Assert(sensor.CurrentTarget == first, "A living target must be reacquired after reaction delay.");
         }
+        private static void CheckHeroCombatPriority()
+        {
+            Vector3 origin=new(12500,1,12500);
+            GameObject bot=Unit("Check_HeroFirst",0,origin);
+            bot.AddComponent<HeroIdentity>().Configure(HeroId.Nyra);
+            bot.AddComponent<HeroCombatProfile>().Configure(HeroId.Nyra);
+            BotTargetSensor sensor=bot.AddComponent<BotTargetSensor>();
+
+            GameObject minionObject=Unit("Check_CloseMinion",1,origin+Vector3.right);
+            minionObject.AddComponent<LaneMinion>().Initialize(1,origin);
+            GameObject towerObject=Unit("Check_CloseTower",1,origin+Vector3.right*1.4f);
+            LaneTower tower=towerObject.AddComponent<LaneTower>();tower.Initialize(1);
+            GameObject heroObject=Unit("Check_FartherHero",1,origin+Vector3.right*5f);
+            heroObject.AddComponent<HeroIdentity>().Configure(HeroId.Elyra);
+            Health hero=heroObject.GetComponent<Health>();
+
+            Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==hero,
+                "A legal visible enemy hero must outrank a much closer tower or minion.");
+
+            // Low-health hero execution should beat a modest distance advantage inside the hero tier.
+            GameObject healthyObject=Unit("Check_HealthyHero",1,origin+Vector3.forward*3f);
+            healthyObject.AddComponent<HeroIdentity>().Configure(HeroId.Elyra);
+            Health healthy=healthyObject.GetComponent<Health>();
+            GameObject woundedObject=Unit("Check_WoundedHero",1,origin+Vector3.forward*4f);
+            woundedObject.AddComponent<HeroIdentity>().Configure(HeroId.Elyra);
+            Health wounded=woundedObject.GetComponent<Health>();
+            Set(wounded,"<Current>k__BackingField",20f);
+            Assert((float)Call(sensor,"Score",wounded)<(float)Call(sensor,"Score",healthy),
+                "A safely reachable low-health hero must gain execute priority over a modestly closer healthy hero.");
+
+            // Once the hero fight is gone, a covered tower becomes a valid siege target ahead of farming.
+            hero.TakeDamage(hero.Max);healthy.TakeDamage(healthy.Max);wounded.TakeDamage(wounded.Max);
+            GameObject coverObject=Unit("Check_TowerCover",0,towerObject.transform.position+Vector3.left);
+            coverObject.AddComponent<LaneMinion>().Initialize(0,towerObject.transform.position);
+            Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==towerObject.GetComponent<Health>(),
+                "After hero threats are gone, a tower with allied minion cover should outrank enemy lane farming.");
+        }
+
         private static void CheckRecentAttackerPriority()
         {
             Vector3 origin=new(13000,1,13000);
@@ -213,11 +254,14 @@ namespace Alterverse.EditorChecks
             Assert(beforeAttacker>beforeDecoy,
                 "Without threat memory the meaningfully closer visible enemy should win distance-led selection.");
 
+            sensor.Disengage(attacker);
             bot.GetComponent<Health>().TakeDamage(5f,attackerObject);
+            Assert(typeof(BotTargetSensor).GetField("disengagedTarget",Private).GetValue(sensor)==null,
+                "A hero that attacks again must clear an old disengage lock for self-defence.");
             float afterAttacker=(float)Call(sensor,"Score",attacker);
             float afterDecoy=(float)Call(sensor,"Score",decoy);
             Assert(afterAttacker<afterDecoy,
-                "A recent visible attacker must briefly outrank a slightly closer harmless target.");
+                "A recent visible attacker must briefly outrank a slightly closer harmless hero.");
         }
 
         private static void CheckBaseRecoveryDefense()
