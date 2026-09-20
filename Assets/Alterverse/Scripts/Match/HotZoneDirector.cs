@@ -7,13 +7,13 @@ using UnityEngine.Rendering;
 namespace Alterverse.Match
 {
     /// <summary>
-    /// One-shot mid-match objective. Opens at 5:00 for 60 seconds.
+    /// One-shot mid-match objective. Opens at 5:00 for 30 seconds.
     /// Exclusive hero presence earns control time; contested presence earns neither team.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
     {
         public const float OpenAt=300f;
-        public const float ActiveDuration=60f;
+        public const float ActiveDuration=30f;
         public const float Radius=6.5f;
 
         private enum State { Waiting, Active, Resolved }
