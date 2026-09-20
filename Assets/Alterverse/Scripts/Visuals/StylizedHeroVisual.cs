@@ -238,6 +238,18 @@ if(edgeMaterial.HasProperty("_Metallic"))edgeMaterial.SetFloat("_Metallic",.74f)
 if(edgeMaterial.HasProperty("_Smoothness"))edgeMaterial.SetFloat("_Smoothness",.40f);
 ownedMaterials.Add(edgeMaterial);
 
+Color gemColor=new Color(1f,.025f,.015f);
+Material gemMaterial=new Material(shader){name="DF_AnchorHammerRuby",color=gemColor};
+if(gemMaterial.HasProperty("_BaseColor"))gemMaterial.SetColor("_BaseColor",gemColor);
+if(gemMaterial.HasProperty("_Metallic"))gemMaterial.SetFloat("_Metallic",.16f);
+if(gemMaterial.HasProperty("_Smoothness"))gemMaterial.SetFloat("_Smoothness",.94f);
+if(gemMaterial.HasProperty("_EmissionColor"))
+{
+gemMaterial.EnableKeyword("_EMISSION");
+gemMaterial.SetColor("_EmissionColor",gemColor*4.2f);
+}
+ownedMaterials.Add(gemMaterial);
+
 // The hammer head is the premium glowing main body.
 Transform head=FindVisual("AnchorHead");
 if(head!=null)ApplyGlow(head,energyMaterial);
@@ -268,6 +280,12 @@ new Vector3(0,0,8),edgeMaterial);
 CreateAnchorHammerPart("OverdriveCore",weapon,
 new Vector3(0,.43f,.235f),new Vector3(.16f,.20f,.035f),
 Vector3.zero,energyMaterial);
+
+// Faceted ruby set into the exact center of the hammer head.
+// It sits slightly in front of the amber core so the red gem remains readable.
+CreateAnchorHammerPart("OverdriveRuby",weapon,
+new Vector3(0,.43f,.285f),new Vector3(.115f,.145f,.055f),
+new Vector3(0,0,45),gemMaterial);
 CreateAnchorHammerPart("OverdriveShaftBrace",weapon,
 new Vector3(0,.08f,.075f),new Vector3(.11f,.32f,.11f),
 Vector3.zero,edgeMaterial);
