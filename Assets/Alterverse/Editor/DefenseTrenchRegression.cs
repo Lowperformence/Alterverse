@@ -37,6 +37,10 @@ namespace Alterverse.EditorChecks
                 BoxCollider solid = trench.GetComponent<BoxCollider>();
                 Check(solid != null && solid.enabled, trench.name + " has no stable gameplay footprint");
 
+                foreach(Transform child in trench.GetComponentsInChildren<Transform>(true))
+                    Check(child == null || child.name != "DF_Trench_DamagePerimeter",
+                        trench.name + " still contains the removed orange damage-radius ring");
+
                 Vector3 p = trench.transform.position;
                 Check(Mathf.Abs(Mathf.Abs(p.x) - 25.25f) < .65f, trench.name + " is not one trench-length farther toward arena center");
                 Check(Mathf.Abs(Mathf.Abs(p.z) - 10.75f) < .65f, trench.name + " moved away from the intended left/right base flanks");
@@ -64,7 +68,7 @@ namespace Alterverse.EditorChecks
                 else if(trench.Team==1){lumenLeft|=p.z<0f;lumenRight|=p.z>0f;}
             }
             Check(zeroLeft&&zeroRight&&lumenLeft&&lumenRight,"one or more base flanks are missing a trench");
-            Debug.Log("Defense trench regression passed: two mirrored trenches per team, moved toward arena center, indestructible, 5 DPS close-range hazard.");
+            Debug.Log("Defense trench regression passed: two mirrored trenches per team, moved toward arena center, no orange damage ring, indestructible, 5 DPS close-range hazard.");
         }
     }
 }
