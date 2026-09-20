@@ -210,9 +210,87 @@ ownedMaterials.Add(weaponMaterial);
 
 // Keep cosmetic weapons attached to their animated hand pivots.
 if(identity.Hero==HeroId.Veyr){ScaleAndGlow("WeaponL",1.25f,weaponMaterial);ScaleAndGlow("WeaponR",1.25f,weaponMaterial);}
-else if(identity.Hero==HeroId.Rook){ScaleAndGlow("GauntletL",1.25f,weaponMaterial);ScaleAndGlow("GauntletR",1.25f,weaponMaterial);}
+else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+}
+
+private void ApplyBreakerFistOverdrive(Shader shader,Material energyMaterial)
+{
+// Keep the hand silhouette readable: premium strength comes from layered armor,
+// separated knuckles and energy channels instead of scaling one glowing block.
+Color metalColor=new Color(.075f,.085f,.105f);
+Material metalMaterial=new Material(shader){name="DF_BreakerFistMetal",color=metalColor};
+if(metalMaterial.HasProperty("_BaseColor"))metalMaterial.SetColor("_BaseColor",metalColor);
+if(metalMaterial.HasProperty("_Metallic"))metalMaterial.SetFloat("_Metallic",.82f);
+if(metalMaterial.HasProperty("_Smoothness"))metalMaterial.SetFloat("_Smoothness",.48f);
+ownedMaterials.Add(metalMaterial);
+
+Color knuckleColor=new Color(.46f,.49f,.53f);
+Material knuckleMaterial=new Material(shader){name="DF_BreakerFistKnuckles",color=knuckleColor};
+if(knuckleMaterial.HasProperty("_BaseColor"))knuckleMaterial.SetColor("_BaseColor",knuckleColor);
+if(knuckleMaterial.HasProperty("_Metallic"))knuckleMaterial.SetFloat("_Metallic",.72f);
+if(knuckleMaterial.HasProperty("_Smoothness"))knuckleMaterial.SetFloat("_Smoothness",.38f);
+ownedMaterials.Add(knuckleMaterial);
+
+for(int side=-1;side<=1;side+=2)
+{
+string suffix=side<0?"L":"R";
+Transform gauntlet=FindVisual("Gauntlet"+suffix);
+if(gauntlet==null)continue;
+
+// Only a restrained overall increase; the fingers stay separated and visible.
+gauntlet.localScale*=1.10f;
+ApplyGlow(gauntlet,metalMaterial);
+
+for(int k=0;k<3;k++)
+{
+Transform knuckle=FindVisual("Knuckle"+suffix+k);
+if(knuckle!=null)
+{
+knuckle.localScale=Vector3.Scale(knuckle.localScale,new Vector3(.86f,.92f,.82f));
+ApplyGlow(knuckle,knuckleMaterial);
+}
+}
+
+Transform reactor=FindVisual("GauntletReactor"+suffix);
+if(reactor!=null)ApplyGlow(reactor,energyMaterial);
+
+// Thin premium armor sits on the back/sides of the hand. Nothing closes the
+// front of the fist, so the three knuckle/finger gaps remain readable.
+CreateBreakerFistPart("OverdriveBackPlate"+suffix,gauntlet,
+new Vector3(0,.105f,.015f),new Vector3(.31f,.055f,.25f),
+new Vector3(0,0,side*5),metalMaterial);
+CreateBreakerFistPart("OverdriveSideGuardA"+suffix,gauntlet,
+new Vector3(-.19f,.015f,.075f),new Vector3(.045f,.15f,.17f),
+new Vector3(0,0,-10),metalMaterial);
+CreateBreakerFistPart("OverdriveSideGuardB"+suffix,gauntlet,
+new Vector3(.19f,.015f,.075f),new Vector3(.045f,.15f,.17f),
+new Vector3(0,0,10),metalMaterial);
+CreateBreakerFistPart("OverdriveEnergyRail"+suffix,gauntlet,
+new Vector3(0,.155f,.095f),new Vector3(.18f,.022f,.12f),
+Vector3.zero,energyMaterial);
+}
+
+Transform carapace=FindVisual("BreakerCarapace");
+if(carapace!=null)
+{
+carapace.localScale*=.80f;
+ApplyGlow(carapace,metalMaterial);
+}
+for(int i=0;i<3;i++)
+{
+Transform piston=FindVisual("RamPiston"+i);
+if(piston!=null)ApplyGlow(piston,knuckleMaterial);
+}
+}
+
+private GameObject CreateBreakerFistPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+if(renderer!=null)renderer.sharedMaterial=material;
+return part;
 }
 
 private void ScaleAndGlow(string visualName,float scale,Material material)
