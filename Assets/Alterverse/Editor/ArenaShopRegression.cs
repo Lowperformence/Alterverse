@@ -65,6 +65,11 @@ namespace Alterverse.EditorChecks
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,
                     "A stale locked Green Planet selection must fall back to Moon.");
 
+                PlayerPrefs.SetInt(SelectedKey,999);
+                PlayerPrefs.Save();
+                Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,
+                    "An invalid stored arena value must fall back to Moon.");
+
                 PlayerPrefs.SetInt(BalanceKey,500);
                 PlayerPrefs.Save();
                 Assert(ArenaUnlockInventory.Purchase(ArenaVariant.GreenPlanet)==ArenaPurchaseResult.Purchased,
