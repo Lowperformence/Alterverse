@@ -1,4 +1,5 @@
 using Alterverse.Profile;
+using Alterverse.Characters;
 using UnityEngine;
 namespace Alterverse.Shop
 {
@@ -24,9 +25,10 @@ namespace Alterverse.Shop
                 ProfileTransaction.Recover();
                 if(PlayerPrefs.HasKey(EquippedKey))
                 {
-                    UniversalHeroCosmetic selected=(UniversalHeroCosmetic)Mathf.Clamp(PlayerPrefs.GetInt(EquippedKey,0),0,3);
-                    if(IsOwned(selected))return selected;
-                    if(selected!=UniversalHeroCosmetic.Original)
+                    int raw=PlayerPrefs.GetInt(EquippedKey,0);
+                    UniversalHeroCosmetic selected=raw>=0&&raw<=3?(UniversalHeroCosmetic)raw:UniversalHeroCosmetic.Original;
+                    if(raw>=0&&raw<=3&&IsOwned(selected))return selected;
+                    if(raw!=0)
                     {
                         ProfileTransaction.Commit(
                             new ProfileTransaction.Write(EquippedKey,(int)UniversalHeroCosmetic.Original),
@@ -53,6 +55,10 @@ namespace Alterverse.Shop
             UniversalHeroCosmetic.PlagueWings=>PlagueWings.Owned,
             _=>false
         };
+
+        // Current saves use one universal slot. This method is the stable read point for
+        // match systems and can become hero-specific later without changing reward code.
+        public static UniversalHeroCosmetic EquippedFor(HeroId hero)=>Equipped;
 
         public static bool Equip(UniversalHeroCosmetic cosmetic)
         {
