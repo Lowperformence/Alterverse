@@ -31,8 +31,8 @@ namespace Alterverse.EditorChecks
                 Check(bunker != null, "null bunker");
                 Check(bunker.GetComponent<Health>() == null, bunker.name + " unexpectedly has Health and can be attacked");
                 Check(bunker.gameObject.layer == GameplayCollision.Structures, bunker.name + " is not on Structures layer");
-                Check(Mathf.Approximately(bunker.DamagePerSecond,0f), bunker.name + " must deal zero damage");
-                Check(Mathf.Approximately(bunker.DamageRadius,0f), bunker.name + " must not expose a damage radius");
+                Check(Mathf.Abs(bunker.DamagePerSecond-5f)<.001f, bunker.name + " DPS is not 5");
+                Check(bunker.DamageRadius>=5f&&bunker.DamageRadius<=5.75f, bunker.name + " close-range radius changed");
 
                 BoxCollider solid = bunker.GetComponent<BoxCollider>();
                 Check(solid != null && solid.enabled, bunker.name + " has no solid bunker footprint");
