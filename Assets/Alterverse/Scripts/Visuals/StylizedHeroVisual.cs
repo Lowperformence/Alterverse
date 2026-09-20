@@ -239,9 +239,10 @@ string suffix=side<0?"L":"R";
 Transform gauntlet=FindVisual("Gauntlet"+suffix);
 if(gauntlet==null)continue;
 
-// Only a restrained overall increase; the fingers stay separated and visible.
-gauntlet.localScale*=1.10f;
-ApplyGlow(gauntlet,metalMaterial);
+// Restore the premium +50% silhouette while keeping the finger/knuckle parts
+// visually separated from the glowing main gauntlet body.
+gauntlet.localScale*=1.50f;
+ApplyGlow(gauntlet,energyMaterial);
 
 for(int k=0;k<3;k++)
 {
