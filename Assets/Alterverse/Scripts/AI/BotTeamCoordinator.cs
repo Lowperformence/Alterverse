@@ -235,15 +235,19 @@ namespace Alterverse.AI
             {Commit(Intent.Disengage,Vector3.Lerp(centroid,Home,.5f),true);return;}
             // A remembered enemy disappearing is NOT counted as a kill. Tempo requires a visible defeat.
             bool tempo=Time.time<tempoUntil&&EnemiesNear(centroid,11f)==0;
+
+            // The recurring Hot Zone is the primary non-combat rally point. Its transform moves
+            // every occurrence, so always use the live runtime position rather than a fixed centre.
+            if(hotZone!=null&&hotZone.IsActive)
+            {Commit(Intent.ContestObjective,hotZone.transform.position,false);return;}
+
             if(!tempo&&allyCount>=3&&AlliesNear(centroid,10f)<Mathf.Min(3,allyCount))
             {
-                // Regroup at the most connected ally, not at a midpoint between distant lanes.
+                // Regroup at the most connected ally when no PvP event is active.
                 Vector3 rally=allies[0].Position;int connected=-1;
                 for(int i=0;i<allyCount;i++){int n=AlliesNear(allies[i].Position,10f);if(n>connected){connected=n;rally=allies[i].Position;}}
                 Commit(Intent.Group,rally,false);return;
             }
-            if(hotZone!=null&&hotZone.IsActive&&FlatSqr(hotZone.transform.position-centroid)<32f*32f)
-            {Commit(Intent.ContestObjective,hotZone.transform.position,false);return;}
             // Neutral objective availability is accepted only when actually reported by a sensor.
             for(int i=0;i<seenCount;i++)
             {
