@@ -41,7 +41,7 @@ namespace Alterverse.AI
             teamMember = GetComponent<TeamMember>();
             selfHealth = GetComponent<Health>();
             profile = GetComponent<HeroCombatProfile>();
-            nextScanTime=Time.time+(Mathf.Abs(GetInstanceID()%17)/17f)*scanInterval;
+            nextScanTime=Time.time+(Mathf.Abs(GetEntityId().GetHashCode()%17)/17f)*scanInterval;
         }
         public void ClearTarget() { currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
@@ -138,7 +138,7 @@ namespace Alterverse.AI
             // Easy is more distance-led; stronger difficulties value visible wounded targets more,
             // but no difficulty gets information that a player could not perceive.
             // Stable perceptual bias: random rerolls each scan caused A/B/A target flicker.
-            uint bias=unchecked((uint)(candidate.GetInstanceID()*397)^((uint)GetInstanceID()));
+            uint bias=unchecked((uint)(candidate.GetEntityId().GetHashCode()*397)^((uint)GetEntityId().GetHashCode()));
             float noise=1f+(1f-accuracy)*.45f*(bias%101u)/100f;
             float woundedFocus=Mathf.Lerp(.30f,1f,candidate.Normalized);
             return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise;
