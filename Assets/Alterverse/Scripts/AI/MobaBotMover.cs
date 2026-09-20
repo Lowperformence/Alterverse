@@ -412,7 +412,7 @@ namespace Alterverse.AI
             if(brain!=null)
             {
                 foreach(DefenseBunker bunker in DefenseBunker.Active)
-                    if(bunker!=null&&DefenseBlocksReposition(destination,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,bunker.DamageRadius))return false;
+                    if(bunker!=null&&DefenseBlocksReposition(destination,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,0f))return false;
                 foreach(DefenseTrench trench in DefenseTrench.Active)
                     if(trench!=null&&DefenseBlocksReposition(destination,trench.transform,trench.GetComponent<Collider>(),trench.Team,trench.DamageRadius))return false;
             }
@@ -443,7 +443,7 @@ namespace Alterverse.AI
                 if((from+step*bodyT).sqrMagnitude<bodyRadius*bodyRadius)return true;
             }
 
-            if(structureTeam==brain.Team)return false;
+            if(damageRadius<=0f||structureTeam==brain.Team)return false;
 
             float safeRadius=damageRadius+DefenseMargin;
             if(from.sqrMagnitude<safeRadius*safeRadius)
@@ -473,7 +473,7 @@ namespace Alterverse.AI
         {
             if(brain==null)return next;
             foreach(DefenseBunker bunker in DefenseBunker.Active)
-                if(bunker!=null)next=ApplyDefenseSteering(next,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,bunker.DamageRadius);
+                if(bunker!=null)next=ApplyDefenseSteering(next,bunker.transform,bunker.GetComponent<Collider>(),bunker.Team,0f);
             foreach(DefenseTrench trench in DefenseTrench.Active)
                 if(trench!=null)next=ApplyDefenseSteering(next,trench.transform,trench.GetComponent<Collider>(),trench.Team,trench.DamageRadius);
             return next;
@@ -482,7 +482,7 @@ namespace Alterverse.AI
         private Vector3 ApplyDefenseSteering(Vector3 next,Transform structure,Collider body,int structureTeam,float damageRadius)
         {
             next=SkirtStructureBody(structure,body,next);
-            if(structureTeam==brain.Team)return next;
+            if(damageRadius<=0f||structureTeam==brain.Team)return next;
 
             Vector3 away=transform.position-structure.position;away.y=0;
             float safeRadius=damageRadius+DefenseMargin;
