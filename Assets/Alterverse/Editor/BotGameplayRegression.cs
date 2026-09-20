@@ -358,7 +358,7 @@ namespace Alterverse.EditorChecks
             Set(brain,"fightCommitUntil",0f);
             Call(brain,"Decide");
             Assert(brain.State==MobaBotBrain.BotState.Roam,
-                "Expired perception memory and commitment must return the bot to lane play.");
+                "Expired perception memory and commitment must return the bot to free-roam play.");
         }
 
         private static void CheckDifficulty()
@@ -470,16 +470,12 @@ namespace Alterverse.EditorChecks
             GameObject alliedTrench=DefenseTrench.Spawn(0,new Vector3(-8f,0f,0f),"CheckAlly");
             Created.Add(alliedTrench);
             hero.transform.position=new Vector3(-3f,1f,0f);
-            object[] refugeArgs={Vector3.zero};
-            Assert((bool)Call(mover,"TryGetOwnDefenseRefuge",refugeArgs),
-                "Allied bastions/trenches must be available as temporary retreat anchors.");
-            Vector3 refuge=(Vector3)refugeArgs[0];
-            Assert(refuge.x<alliedTrench.transform.position.x,
-                "Retreat refuge must be placed on the home-facing side of the allied defence.");
+            Assert(!mover.CanRepositionTo(alliedTrench.transform.position),
+                "Allied defense structures must still block mobility through their solid body.");
 
             Vector3 skirted=(Vector3)Call(mover,"GuardAgainstDefenses",new Vector3(-9f,1f,0f));
             Assert(Mathf.Abs(skirted.z-hero.transform.position.z)>.001f,
-                "Bots must skirt solid defence bodies instead of walking directly through them.");
+                "Bots must skirt solid defense bodies instead of walking directly through them.");
         }
     }
 }
