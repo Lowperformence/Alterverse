@@ -34,6 +34,7 @@ namespace Alterverse.UI
         private CombatHudLayout layout;
         private Rect previousSafe;
         private Color accent;
+        private Texture2D joystickOuterTexture,joystickThumbTexture;
         public void Initialize(Health player,VeyrAbilities legacyAbilities,Health enemy)
         {
             health=player;if(player==null)return;
@@ -64,7 +65,12 @@ namespace Alterverse.UI
             return slot==0?CombatGlyph.Swing:slot==1?CombatGlyph.Armor:slot==2?CombatGlyph.Slam:CombatGlyph.Overdrive;
         }
         private void OnEnable()=>EnhancedTouchSupport.Enable();
-        private void OnDestroy()=>buttonView?.Dispose();
+        private void OnDestroy()
+        {
+            buttonView?.Dispose();
+            if(joystickOuterTexture!=null)Destroy(joystickOuterTexture);
+            if(joystickThumbTexture!=null)Destroy(joystickThumbTexture);
+        }
         private void OnDisable(){buttonView?.SetVisible(false);ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
         private void OnApplicationFocus(bool value){focused=value;if(!value){buttonView?.SetVisible(false);ResetInput();}}
         private void OnApplicationPause(bool value){suspended=value;if(value){buttonView?.SetVisible(false);ResetInput();}}
@@ -252,17 +258,67 @@ namespace Alterverse.UI
             bool active=joystickFinger>=0||mouseJoystick;
             Vector2 center=active?joystickCenter:new Vector2(104,layout.Height-104);
             Vector2 knob=active?joystickKnob:center;
+            EnsureJoystickTextures();
 
-            // Intentionally minimal mobile joystick: one outer circle and one thumb circle.
-            // No fill on the movement field, no accent color, no direction line, glow or extra rings.
-            Color outer=new Color(1f,1f,1f,active?.36f:.22f);
-            Color thumbFill=new Color(.82f,.84f,.87f,active?.32f:.20f);
-            Color thumbOutline=new Color(1f,1f,1f,active?.40f:.25f);
+            // Draw each joystick part as one anti-aliased circle texture.
+            // This avoids the segmented/ribbed look caused by CombatGlyphs.Ring line segments.
+            Color before=GUI.color;
+            GUI.color=new Color(1f,1f,1f,active?.36f:.22f);
+            GUI.DrawTexture(new Rect(center.x-58f,center.y-58f,116f,116f),joystickOuterTexture,ScaleMode.StretchToFill,true);
 
-            CombatGlyphs.Ring(center,58f,1.5f,outer,64);
-            CombatGlyphs.Disc(knob,20f,thumbFill,28);
-            CombatGlyphs.Ring(knob,20f,1.25f,thumbOutline,40);
+            GUI.color=new Color(.86f,.88f,.91f,active?.38f:.24f);
+            GUI.DrawTexture(new Rect(knob.x-20f,knob.y-20f,40f,40f),joystickThumbTexture,ScaleMode.StretchToFill,true);
+            GUI.color=before;
         }
+
+        private void EnsureJoystickTextures()
+        {
+            if(joystickOuterTexture==null)joystickOuterTexture=BuildJoystickCircleTexture(192,true);
+            if(joystickThumbTexture==null)joystickThumbTexture=BuildJoystickCircleTexture(96,false);
+        }
+
+        private static Texture2D BuildJoystickCircleTexture(int size,bool outlineOnly)
+        {
+            Texture2D texture=new Texture2D(size,size,TextureFormat.RGBA32,false,true)
+            {
+                name=outlineOnly?"DF_JoystickOuterCircle":"DF_JoystickThumbCircle",
+                filterMode=FilterMode.Bilinear,
+                wrapMode=TextureWrapMode.Clamp,
+                hideFlags=HideFlags.HideAndDontSave
+            };
+            Color32[] pixels=new Color32[size*size];
+            float center=(size-1)*.5f;
+            float radius=size*.46f;
+            float halfStroke=outlineOnly?size*.0105f:size*.018f;
+            float aa=Mathf.Max(1.25f,size*.008f);
+
+            for(int y=0;y<size;y++)
+            for(int x=0;x<size;x++)
+            {
+                float dx=x-center,dy=y-center;
+                float distance=Mathf.Sqrt(dx*dx+dy*dy);
+                float alpha;
+
+                if(outlineOnly)
+                {
+                    float edge=Mathf.Abs(distance-radius);
+                    alpha=1f-Mathf.SmoothStep(halfStroke,halfStroke+aa,edge);
+                }
+                else
+                {
+                    float outer=1f-Mathf.SmoothStep(radius-aa,radius+aa,distance);
+                    float border=Mathf.SmoothStep(radius-halfStroke-aa,radius-halfStroke,distance);
+                    alpha=outer*Mathf.Lerp(.68f,1f,border);
+                }
+
+                pixels[y*size+x]=new Color32(255,255,255,(byte)Mathf.RoundToInt(Mathf.Clamp01(alpha)*255f));
+            }
+
+            texture.SetPixels32(pixels);
+            texture.Apply(false,true);
+            return texture;
+        }
+
         private void DrawHint()
         {
             if(inspectedSlot<0)
