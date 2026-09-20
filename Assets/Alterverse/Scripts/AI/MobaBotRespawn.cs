@@ -8,6 +8,6 @@ private void Awake(){health=GetComponent<Health>();spawnPoint=transform.position
 private IEnumerator RespawnRoutine(float delay){respawning=true;Renderer[] renderers=GetComponentsInChildren<Renderer>(true);Collider[] colliders=GetComponentsInChildren<Collider>(true);bool[] rendererStates=new bool[renderers.Length];bool[] colliderStates=new bool[colliders.Length];
 for(int i=0;i<renderers.Length;i++){if(renderers[i]==null)continue;rendererStates[i]=renderers[i].enabled;renderers[i].enabled=false;}
 for(int i=0;i<colliders.Length;i++){if(colliders[i]==null)continue;colliderStates[i]=colliders[i].enabled;colliders[i].enabled=false;}float remaining=delay;while(remaining>0){yield return null;if(Time.timeScale>0)remaining-=Time.deltaTime;}transform.SetPositionAndRotation(spawnPoint,Quaternion.LookRotation(spawnPoint.x<0?Vector3.right:Vector3.left));health.RestoreFull();for(int i=0;i<renderers.Length;i++)if(renderers[i]!=null)renderers[i].enabled=rendererStates[i];
-for(int i=0;i<colliders.Length;i++)if(colliders[i]!=null)colliders[i].enabled=colliderStates[i];respawning=false;MobaBotBrain brain=GetComponent<MobaBotBrain>();if(brain!=null)brain.ResumeLaneAfterRespawn();Respawned?.Invoke();}
+for(int i=0;i<colliders.Length;i++)if(colliders[i]!=null)colliders[i].enabled=colliderStates[i];respawning=false;MobaBotBrain brain=GetComponent<MobaBotBrain>();if(brain!=null)brain.ResumeRoamAfterRespawn();Respawned?.Invoke();}
 }
 }
