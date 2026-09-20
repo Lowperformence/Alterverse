@@ -43,6 +43,7 @@ namespace Alterverse.AI
             ObservedTargetVelocity=velocity;
         }
         private MobaBotBrain brain;
+        private HotZoneDirector hotZone;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
         private readonly BotTeamCoordinator.Observation[] observations=new BotTeamCoordinator.Observation[48];
         public int ObservationCount { get; private set; }
@@ -128,16 +129,23 @@ namespace Alterverse.AI
             }
             return true;
         }
+        public static bool HotZoneAllowsTarget(bool hotZoneActive,bool heroTarget)
+            =>!hotZoneActive||heroTarget;
+
         private bool IsEnemy(Health candidate)
         {
             if (candidate == null || candidate == selfHealth || candidate.IsDead ||
                 !candidate.isActiveAndEnabled || teamMember == null) return false;
 
+            HeroIdentity hero=candidate.GetComponent<HeroIdentity>();
+            hotZone??=FindAnyObjectByType<HotZoneDirector>();
+            if(!HotZoneAllowsTarget(hotZone!=null&&hotZone.IsActive,hero!=null))return false;
+
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
             if (planet != null) return planet.Available;
 
             // Reality cores and defensive structures are not bot combat objectives.
-            // Real heroes/mechs are represented by TeamMember and remain targetable.
+            // Real heroes/mechs are represented by TeamMember and remain targetable outside Hot Zones.
             if (candidate.GetComponent<RealityCore>() != null) return false;
 
             TeamMember other = candidate.GetComponent<TeamMember>();
