@@ -95,6 +95,12 @@ namespace Alterverse.AI
                     maxChase*=Mathf.Lerp(1f,1.45f,brain.Difficulty.ChaseDiscipline);
                 if(chasePressure>0)
                     maxChase*=Mathf.Lerp(1f,.55f,brain.Difficulty.ChaseDiscipline);
+                if(brain.Difficulty.Coordinated)
+                {
+                    bool finish=brain.Tactics.CanFinish(target,transform.position);
+                    maxChase*=finish?1.2f:.85f;
+                    if(brain.Tactics.UnsafeTower(sensor.ObservedTargetPosition))maxChase=0;
+                }
                 bool chaseExpired=Time.time-chaseStarted>maxChase&&
                     delta.sqrMagnitude>combatStop*combatStop*1.45f;
 
@@ -117,7 +123,7 @@ namespace Alterverse.AI
                 else
                 {
                     sensor.Disengage(target);
-                    chaseTarget=null;keepingDistance=false;
+                    chaseTarget=null;keepingDistance=false;target=null;
                 }
             }
             else if(brain.State==MobaBotBrain.BotState.Fight&&sensor!=null&&sensor.HasRecentEnemyMemory)
@@ -137,11 +143,43 @@ namespace Alterverse.AI
                 &&sensor.NearbyEnemies>sensor.NearbyAllies+1&&profile!=null&&profile.AttackRange>4f)
             {destination=sensor.RallyPosition;stopDistance=3f;}
 
+            if(brain.Difficulty.Coordinated&&brain.Tactics.HasPlan)
+            {
+                bool retreating=brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover;
+                if(retreating&&brain.TacticalWithdrawal)
+                {destination=brain.Tactics.SafeRetreat(transform.position);stopDistance=.65f;}
+                else if(!retreating&&brain.FollowTeamCall)
+                {
+                    HeroId role=profile!=null?profile.Hero:HeroId.Veyr;
+                    bool combat=brain.State==MobaBotBrain.BotState.Fight&&target!=null&&target.GetComponent<HeroIdentity>()!=null;
+                    if(combat)
+                    {
+                        Vector3 formed=brain.Tactics.Formation(brain,role,sensor.ObservedTargetPosition,true);
+                        if(role==HeroId.Mira)formed=brain.Tactics.SupportPosition(brain,formed);
+                        // Retreat/kiting still has priority when already inside the danger distance.
+                        if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=.3f;}
+                    }
+                    else if(brain.State==MobaBotBrain.BotState.Lane||target==null)
+                    {
+                        destination=brain.Tactics.Formation(brain,role,brain.Tactics.Destination,false);stopDistance=.75f;
+                    }
+                }
+                else if(!retreating&&profile!=null&&BotTeamCoordinator.IsBackline(profile.Hero)&&sensor.NearbyAllies==0&&sensor.NearbyEnemies>0)
+                {destination=brain.Tactics.SafeRetreat(transform.position);stopDistance=.75f;}
+            }
+
+            if(brain.Difficulty.Coordinated&&brain.NeedsCombatReset)
+            {destination=brain.Tactics.SafeRetreat(transform.position);stopDistance=.4f;}
+
             if (TryGetPulseEscape(out Vector3 escape))
             {
                 IsAvoidingHazard = true; detourUntil=0;
                 destination = escape; stopDistance = .1f;
             }
+            if(!IsAvoidingHazard&&brain.State==MobaBotBrain.BotState.Lane&&
+                (!brain.FollowTeamCall||brain.Tactics.Call!=BotTeamCoordinator.Intent.Defend)&&
+                transform.position.x*(brain.Team==0?1f:-1f)<-23f&&Mathf.Abs(transform.position.z-brain.LaneZ)>1f)
+            {destination=lanePlan.GetDestination(brain.State);stopDistance=laneStopDistance;}
             MoveToward(destination, stopDistance);
         }
 
@@ -596,5 +634,6 @@ namespace Alterverse.AI
         }
     }
 }
+
 
 

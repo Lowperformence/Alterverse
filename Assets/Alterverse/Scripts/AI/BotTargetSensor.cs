@@ -27,6 +27,17 @@ namespace Alterverse.AI
         private Vector3 lastKnownPosition;
         private MobaBotBrain brain;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
+        private readonly BotTeamCoordinator.Observation[] observations=new BotTeamCoordinator.Observation[48];
+        public int ObservationCount { get; private set; }
+        public BotTeamCoordinator.Observation ObservationAt(int index)=>observations[index];
+        public int VisibleHeroesNear(Vector3 point,float radius)
+        {
+            int count=0;
+            for(int i=0;i<ObservationCount;i++)
+                if(observations[i].Hero&&Time.time-observations[i].SeenAt<.5f&&
+                    (observations[i].Position-point).sqrMagnitude<=radius*radius)count++;
+            return count;
+        }
         public int NearbyEnemies { get; private set; }
         public int NearbyAllies { get; private set; }
         public Vector3 RallyPosition { get; private set; }
@@ -43,7 +54,7 @@ namespace Alterverse.AI
             profile = GetComponent<HeroCombatProfile>();
             nextScanTime=Time.time+(Mathf.Abs(GetEntityId().GetHashCode()%17)/17f)*scanInterval;
         }
-        public void ClearTarget() { currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
+        public void ClearTarget() { ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
@@ -141,10 +152,22 @@ namespace Alterverse.AI
             uint bias=unchecked((uint)(candidate.GetEntityId().GetHashCode()*397)^((uint)GetEntityId().GetHashCode()));
             float noise=1f+(1f-accuracy)*.45f*(bias%101u)/100f;
             float woundedFocus=Mathf.Lerp(.30f,1f,candidate.Normalized);
-            return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise;
+            float tacticalBias=brain!=null&&brain.FollowTeamCall
+                ?brain.Tactics.TargetBias(candidate,profile!=null?profile.Hero:HeroId.Veyr):1f;
+            return delta.sqrMagnitude*Mathf.Lerp(1f,woundedFocus*priority,accuracy)*noise*tacticalBias;
         }
         private void Scan()
         {
+            if(brain==null)brain=GetComponent<MobaBotBrain>();
+            // Only recently observed, still locally visible deaths grant objective tempo.
+            if(brain!=null&&brain.Difficulty.Coordinated)
+                for(int i=0;i<ObservationCount;i++)
+                {
+                    var old=observations[i];
+                    if(old.Hero&&old.Target!=null&&old.Target.IsDead&&Time.time-old.SeenAt<.65f&&Visible(old.Target))
+                        brain.Tactics.ReportVisibleDefeat(old.Target);
+                }
+            ObservationCount=0;
             float radius = Radius;
             NearbyEnemies=NearbyAllies=0;RallyPosition=transform.position;
             Vector3 allies=Vector3.zero;
@@ -170,6 +193,15 @@ namespace Alterverse.AI
                     else if(member!=null)NearbyEnemies++;
                 }
                 if (!IsEnemy(candidate)) continue;
+                if(ObservationCount<observations.Length)
+                {
+                    var identity=candidate.GetComponent<HeroIdentity>();
+                    var status=candidate.GetComponent<HeroCombatStatus>();
+                    observations[ObservationCount++]=new BotTeamCoordinator.Observation{
+                        Target=candidate,Position=candidate.transform.position,Hp=candidate.Normalized,SeenAt=Time.time,
+                        Hero=identity!=null,Role=identity!=null?identity.Hero:HeroId.Veyr,
+                        Controlled=status!=null&&(status.Stunned||status.MoveMultiplier<.8f)};
+                }
                 // A failed chase cannot immediately reacquire the same fleeing opponent.
                 // Nearby opponents remain valid so disengaging never disables self-defence.
                 float defendRange=profile!=null?profile.AttackRange:fallbackScanRadius*.25f;
@@ -196,4 +228,5 @@ namespace Alterverse.AI
         }
     }
 }
+
 

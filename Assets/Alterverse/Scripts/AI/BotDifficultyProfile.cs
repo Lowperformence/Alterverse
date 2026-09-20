@@ -9,6 +9,11 @@ namespace Alterverse.AI
         public readonly float RetreatAdjustment, Grouping, MemorySeconds, AbilityMistake, Positioning;
         public readonly float ThreatAwareness, TeamDiscipline, ObjectiveAwareness, DodgeAwareness;
         public readonly float ChaseDiscipline, AbilityDiscipline;
+        // Architecture gates: existing Hard/Expert discipline profiles opt into shared calls.
+        public bool Coordinated => TeamDiscipline >= .8f;
+        public bool FullTeamCalls => TeamDiscipline >= .95f;
+        public float TeamCallDelay => FullTeamCalls ? .18f : .32f;
+        public float FollowUpDelay => FullTeamCalls ? .12f : .28f;
 
         private BotDifficultyProfile(
             float reaction,float decision,float objective,float accuracy,float retreat,float grouping,
@@ -37,3 +42,4 @@ namespace Alterverse.AI
         };
     }
 }
+

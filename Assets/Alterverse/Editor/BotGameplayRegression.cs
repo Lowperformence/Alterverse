@@ -22,6 +22,8 @@ namespace Alterverse.EditorChecks
         {
             if (!Application.isPlaying) throw new InvalidOperationException("Enter Play mode before running these checks.");
             float previousScale = Time.timeScale;
+            bool hadDifficulty=PlayerPrefs.HasKey("DF_BotDifficulty");
+            int previousDifficulty=PlayerPrefs.GetInt("DF_BotDifficulty");
             // Remove existing movers from the separation registry for an isolated synchronous check.
             var suspended = new List<MobaBotMover>();
             foreach (MobaBotMover mover in UnityEngine.Object.FindObjectsByType<MobaBotMover>())
@@ -29,6 +31,8 @@ namespace Alterverse.EditorChecks
             try
             {
                 Time.timeScale = 1f;
+                BotTeamRegression.Run();
+                PlayerPrefs.SetInt("DF_BotDifficulty",(int)BotDifficulty.Normal);
                 CheckBrainAndRespawn();
                 CheckObstacleRecovery();
                 CheckArrivalSeparationStability();
@@ -44,6 +48,9 @@ namespace Alterverse.EditorChecks
             finally
             {
                 Time.timeScale = previousScale;
+                if(hadDifficulty)PlayerPrefs.SetInt("DF_BotDifficulty",previousDifficulty);
+                else PlayerPrefs.DeleteKey("DF_BotDifficulty");
+                PlayerPrefs.Save();
                 foreach (GameObject obj in Created) if (obj != null) UnityEngine.Object.DestroyImmediate(obj);
                 Created.Clear();
                 foreach (MobaBotMover mover in suspended) if (mover != null) mover.enabled = true;
@@ -411,5 +418,6 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 
 

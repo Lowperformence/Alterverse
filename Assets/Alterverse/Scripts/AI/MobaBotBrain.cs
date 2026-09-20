@@ -1,5 +1,6 @@
 using UnityEngine;
 using Alterverse.Combat;
+using Alterverse.Characters;
 
 namespace Alterverse.AI
 {
@@ -18,6 +19,20 @@ namespace Alterverse.AI
         private BotState state = BotState.Lane;
         private float nextDecisionTime, retreatUntil;
         private bool wasDead;
+        private int observedCall=-1;
+        private float callReadyAt;
+        private HeroIdentity identity;
+        public Health Vitals=>health;
+        public BotTargetSensor Sensor=>targetSensor!=null?targetSensor:(targetSensor=GetComponent<BotTargetSensor>());
+        public BotTeamCoordinator Tactics=>BotTeamCoordinator.ForTeam(team);
+        private bool assignedCall;
+        public bool FollowTeamCall=>Difficulty.Coordinated&&assignedCall&&Time.time>=callReadyAt&&observedCall==Tactics.Revision;
+        public bool TacticalWithdrawal { get; private set; }
+        private float combatResetAt,combatResetUntil;
+        public bool NeedsCombatReset=>Time.time>=combatResetAt&&Time.time<combatResetUntil;
+        public void RequestCombatReset(){combatResetAt=Time.time+.4f;combatResetUntil=combatResetAt+1.1f;}
+        private void OnEnable()=>BotTeamCoordinator.Register(this);
+        private void OnDisable()=>BotTeamCoordinator.Unregister(this);
         private System.Random decisions;
         private float lastHealth, threatUntil, fightCommitUntil, groupDecisionUntil;
         private float decisionRhythm=1f, commitmentRhythm=1f;
@@ -46,6 +61,7 @@ namespace Alterverse.AI
             commitmentRhythm=Mathf.Lerp(.90f,1.12f,((hash/997u)%991u)/990f);
             decisions=new System.Random(unchecked((int)hash^System.Environment.TickCount));
 
+            identity=GetComponent<HeroIdentity>();
             health = GetComponent<Health>();lastHealth=health.Normalized; respawn = GetComponent<MobaBotRespawn>();
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
@@ -65,14 +81,14 @@ namespace Alterverse.AI
         }
         public void Initialize(int assignedTeam, float assignedLaneZ, float personalityAggression = .55f, float personalityCaution = .55f)
         {
-            team = assignedTeam; laneZ = assignedLaneZ;
+            team = Mathf.Clamp(assignedTeam,0,1); laneZ = assignedLaneZ; observedCall=-1;TacticalWithdrawal=false;
             aggression = Mathf.Clamp01(personalityAggression); caution = Mathf.Clamp01(personalityCaution);
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
             state = BotState.Lane; nextDecisionTime = 0; fightCommitUntil=groupDecisionUntil=0;
         }
         public void ResumeLaneAfterRespawn()
         {
-            wasDead = false;retreatUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
+            wasDead = false;combatResetAt=combatResetUntil=0;observedCall=-1;TacticalWithdrawal=false;retreatUntil=0;threatUntil=0;fightCommitUntil=groupDecisionUntil=0;lastHealth=health.Normalized;GroupWithAllies=false; state = BotState.Lane; nextDecisionTime = Time.time + .1f*decisionRhythm;
             GetComponent<BotTargetSensor>()?.ClearTarget();
             GetComponent<MobaBotMover>()?.ResetMotion();
             GetComponent<BotLanePlan>()?.ResetRoute();
@@ -91,6 +107,13 @@ namespace Alterverse.AI
         }
         private void Decide()
         {
+            if(Difficulty.Coordinated)
+            {
+                Tactics.Tick(DifficultyLevel);
+                if(observedCall!=Tactics.Revision)
+                {observedCall=Tactics.Revision;callReadyAt=Time.time+Difficulty.TeamCallDelay*decisionRhythm;}
+                assignedCall=Tactics.Follows(this);
+            }
             float hp = health.Normalized;
             if(lastHealth-hp>.08f)threatUntil=Time.time+Difficulty.MemorySeconds;
             lastHealth=hp;
@@ -113,11 +136,18 @@ namespace Alterverse.AI
 
             float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.58f);
             float outnumberedRetreat=Mathf.Lerp(.34f,.70f,Difficulty.TeamDiscipline);
-            bool badlyOutnumbered=pressure>=2&&hp<=outnumberedRetreat;
-            if (hp <= retreat || badlyOutnumbered)
+            Health visibleEnemy=targetSensor!=null?targetSensor.CurrentTarget:null;
+            bool coordinated=Difficulty.Coordinated&&Tactics.HasPlan;
+            bool winningFinish=coordinated&&hp>.27f&&Tactics.CanFinish(visibleEnemy,transform.position);
+            bool badlyOutnumbered=pressure>=2&&(coordinated||hp<=outnumberedRetreat);
+            bool teamWithdrawal=FollowTeamCall&&Tactics.Call==BotTeamCoordinator.Intent.Disengage;
+            bool losingFight=coordinated&&nearbyEnemies>0&&Tactics.FightRatio(transform.position)<.70f;
+            bool shouldRetreat=(!winningFinish&&hp<=retreat)||badlyOutnumbered||losingFight||teamWithdrawal;
+            if (shouldRetreat)
             {
                 if(state!=BotState.Retreat&&state!=BotState.Recover)
                     retreatUntil=Time.time+1.2f*commitmentRhythm;
+                TacticalWithdrawal=coordinated&&hp>retreat&&(badlyOutnumbered||losingFight||teamWithdrawal);
                 state = BotState.Retreat;
                 fightCommitUntil=0;
                 return;
@@ -125,8 +155,9 @@ namespace Alterverse.AI
 
             if (state == BotState.Retreat || state == BotState.Recover)
             {
-                state = hp < .8f || Time.time<retreatUntil || pressure>0 ? BotState.Recover : BotState.Lane;
-                if(state==BotState.Lane)fightCommitUntil=0;
+                float recoverHealth=TacticalWithdrawal?.55f:.8f;
+                state = (!winningFinish&&hp<recoverHealth)||Time.time<retreatUntil||pressure>0 ? BotState.Recover : BotState.Lane;
+                if(state==BotState.Lane){fightCommitUntil=0;TacticalWithdrawal=false;}
                 return;
             }
 
@@ -134,6 +165,15 @@ namespace Alterverse.AI
             // but it never exposes the hidden live position of an unseen enemy.
             Health enemy = targetSensor != null ? targetSensor.CurrentTarget : null;
             bool perceivedThreat=enemy!=null&&!enemy.IsDead;
+            if(identity==null)identity=GetComponent<HeroIdentity>();
+            // Backline cannot start a solo duel while its team is reachable but elsewhere.
+            if(coordinated&&identity!=null&&BotTeamCoordinator.IsBackline(identity.Hero)&&nearbyAllies==0&&
+                nearbyEnemies>0&&Tactics.AliveHeroes>1&&!winningFinish)
+            {state=BotState.Lane;return;}
+            // A base defence/regroup call is not cancelled by a harmless farming target.
+            if(FollowTeamCall&&Tactics.Call==BotTeamCoordinator.Intent.Defend&&
+                (transform.position-Tactics.Destination).sqrMagnitude>12f*12f&&nearbyEnemies==0)
+                {state=BotState.Lane;return;}
             bool recentMemory=targetSensor!=null&&targetSensor.HasRecentEnemyMemory;
 
             if(perceivedThreat)
@@ -152,4 +192,5 @@ namespace Alterverse.AI
         }
     }
 }
+
 

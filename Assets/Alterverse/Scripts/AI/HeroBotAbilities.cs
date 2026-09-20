@@ -13,7 +13,8 @@ namespace Alterverse.AI
         private HeroAbilityKit kit;
         private HeroAbilityExecution execution;
         private MobaBotBrain brain;
-        private float nextDecision;
+        private float nextDecision, controlReadyAt;
+        private Health controlledTarget;
         private void Awake()
         {
             self = GetComponent<Health>(); sensor = GetComponent<BotTargetSensor>();
@@ -34,6 +35,19 @@ namespace Alterverse.AI
             bool fighting = brain == null || brain.State == MobaBotBrain.BotState.Fight;
             float distance = target != null ? HeroCombatRules.Distance(transform.position,target.transform.position) : float.MaxValue;
             float discipline=difficulty.AbilityDiscipline;
+            bool coordinated=brain!=null&&difficulty.Coordinated;
+            bool followUp=false;
+            if(coordinated&&target!=null)
+            {
+                // Only after this bot has actually seen the stun/slow, never from an input or cooldown.
+                HeroCombatStatus status=target.GetComponent<HeroCombatStatus>();
+                bool controlled=status!=null&&(status.Stunned||status.MoveMultiplier<.8f);
+                if(controlled&&controlledTarget!=target)
+                {controlledTarget=target;controlReadyAt=Time.time+difficulty.FollowUpDelay*rhythm;}
+                else if(!controlled)controlledTarget=null;
+                followUp=controlled&&controlledTarget==target&&Time.time>=controlReadyAt;
+            }
+            else controlledTarget=null;
             if (h == HeroId.Mira)
             {
                 Health ally = execution.WoundedAlly(kit.Ultimate.Radius);
@@ -47,8 +61,11 @@ namespace Alterverse.AI
             if ((h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
             if (target == null) return;
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)))) return;
-            if (h == HeroId.Veyr && ((!fighting && self.Normalized < .5f) || (fighting && distance > 3.1f && distance < 7f)) && TryCast(2,target)) return;
-            if (!fighting) return;
+            bool safeEngage=!coordinated||!brain.NeedsCombatReset&&target!=null&&!brain.Tactics.UnsafeTower(target.transform.position)&&
+                (brain.Tactics.CanFinish(target,transform.position)||
+                 brain.Tactics.FightRatio(transform.position)>=1f&&(sensor.VisibleHeroesNear(target.transform.position,6f)<=1||followUp));
+            if (h == HeroId.Veyr && (!fighting||safeEngage) && ((!fighting && self.Normalized < .5f) || (fighting && distance > 3.1f && distance < 7f)) && TryCast(2,target)) return;
+            if (!fighting || coordinated&&h==HeroId.Veyr&&brain.NeedsCombatReset) return;
             // Missed opportunities delay a decision, never reset or shorten real cooldowns.
             if(brain!=null&&brain.Chance(difficulty.AbilityMistake))return;
             bool isHero=target.GetComponent<HeroIdentity>()!=null;
@@ -64,7 +81,22 @@ namespace Alterverse.AI
             if(discipline>=.82f&&isHero&&sensor.NearbyEnemies>=2&&h!=HeroId.Veyr&&h!=HeroId.Kaelon)
                 ultimateWindow=true;
             if(h==HeroId.Rook)ultimateWindow=ultimateWindow&&distance<=kit.Ultimate.Radius;
+            if(coordinated&&isHero)
+            {
+                Vector3 center=kit.Ultimate.Range>0?target.transform.position:transform.position;
+                int grouped=sensor.VisibleHeroesNear(center,Mathf.Max(1f,kit.Ultimate.Radius));
+                bool execute=target.Current<=kit.Ultimate.Power*.9f;
+                bool teamfight=sensor.NearbyEnemies>=2&&sensor.NearbyAllies>=1;
+                bool ordinaryFinish=execution.Remaining(0)<=0&&target.Current<=kit.Q.Power&&distance<=kit.Q.Range;
+                // No solo high-HP ultimate merely because it is off cooldown; preserve it for a real window.
+                ultimateWindow=!ordinaryFinish&&(execute||grouped>=2||teamfight&&followUp);
+                if(h==HeroId.Veyr)ultimateWindow&=safeEngage;
+                if((h==HeroId.Kaelon||h==HeroId.Rook)&&distance>kit.Ultimate.Radius)ultimateWindow=false;
+                if(controlledTarget==target&&!followUp&&!execute)ultimateWindow=false;
+            }
             if (h != HeroId.Mira && ultimateWindow && TryCast(3,target)) return;
+            // Mage follows visible CC after a human delay. Ordinary uncoordinated casts still work.
+            if(coordinated&&h==HeroId.Elyra&&controlledTarget==target&&!followUp)return;
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra) && TryCast(1,target)) return;
             if ((h == HeroId.Kaelon || h == HeroId.Nyra || h == HeroId.Rook) && distance <= Mathf.Max(kit.E.Range,kit.E.Radius)) TryCast(2,target);
@@ -80,10 +112,30 @@ namespace Alterverse.AI
                 // The execution layer permits ground casts; AI must avoid empty circles.
                 if(target==null||HeroCombatRules.Distance(transform.position,target.transform.position)>spec.Radius*.92f)return false;
             }
+            if(brain!=null&&brain.Difficulty.Coordinated&&identity.Hero==HeroId.Elyra&&spec.Radius>0&&spec.Range>0)
+                target=SelectAreaTarget(target,spec);
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
-            if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight)) direction = -direction;
-            return execution.TryCast(slot,target,direction);
+            if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
+            bool cast=execution.TryCast(slot,target,direction);
+            if(cast&&slot==1&&identity.Hero==HeroId.Veyr&&brain!=null&&brain.Difficulty.Coordinated&&
+                execution.Remaining(0)>0&&!brain.Tactics.CanFinish(target,transform.position))brain.RequestCombatReset();
+            return cast;
+        }
+        private Health SelectAreaTarget(Health fallback,AbilitySpec spec)
+        {
+            Health best=fallback;
+            int bestCount=fallback!=null?sensor.VisibleHeroesNear(fallback.transform.position,spec.Radius):0;
+            for(int i=0;i<sensor.ObservationCount;i++)
+            {
+                var sample=sensor.ObservationAt(i);
+                if(!sample.Hero||sample.Target==null||Time.time-sample.SeenAt>.4f||
+                    HeroCombatRules.Distance(transform.position,sample.Position)>spec.Range)continue;
+                int count=sensor.VisibleHeroesNear(sample.Position,spec.Radius);
+                if(count>bestCount){bestCount=count;best=sample.Target;}
+            }
+            return best!=null&&sensor.CanObserve(best)?best:fallback;
         }
     }
 }
+
 
