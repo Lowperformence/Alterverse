@@ -96,6 +96,9 @@ namespace Alterverse.Visuals
                 HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.34f,.30f,.38f)*strength,
                     Accent(actor),.11f,HeroFxMotion.Contract,direction,actor);
                 Ring(actor,p,.42f*strength,.18f);
+                // Brakk's gauntlet contact reads through a short ground fracture rather than
+                // Auren's geometric shield/hex language.
+                Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.34f*strength,.18f,actor:actor);
             }
             Shards(actor,p,.58f*strength,2);
         }
@@ -123,9 +126,41 @@ namespace Alterverse.Visuals
         public static void Cast(GameObject actor,int slot)
         {
             if(actor==null)return;
-            HeroId h=Hero(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
-            Fx(h==HeroId.Mira?HeroFxShape.Shard:HeroFxShape.Orb,p,Accent(actor),size,.12f,HeroFxMotion.Contract,actor:actor);
-            if(slot==3&&(h==HeroId.Rook||h==HeroId.Kaelon))Ring(actor,Chest(actor),.65f,.22f,true,h==HeroId.Kaelon);
+            HeroId h=Hero(actor);Color c=Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
+            Quaternion facing=actor.transform.rotation;
+            switch(h)
+            {
+                case HeroId.Veyr:
+                    Fx(HeroFxShape.Rift,p,c,size*1.35f,.13f,HeroFxMotion.Contract,facing,actor);
+                    Fx(HeroFxShape.Slash,p+actor.transform.forward*.08f,Color.Lerp(c,Color.white,.55f),size*1.15f,.09f,HeroFxMotion.Sweep,facing,actor);
+                    break;
+                case HeroId.Kaelon:
+                    Fx(HeroFxShape.Hex,p,c,size*1.25f,.15f,HeroFxMotion.Contract,Quaternion.Euler(25,0,0),actor);
+                    Fx(HeroFxShape.Shard,p,c,size*.75f,.12f,HeroFxMotion.Contract,actor:actor);
+                    break;
+                case HeroId.Nyra:
+                    Fx(HeroFxShape.Bolt,p,Color.Lerp(c,Color.white,.55f),size*1.15f,.10f,HeroFxMotion.Contract,facing,actor);
+                    Fx(HeroFxShape.Burst,p,c,size*.80f,.09f,rotation:facing,actor:actor);
+                    break;
+                case HeroId.Elyra:
+                    Fx(HeroFxShape.Runes,p,c,size*1.30f,.16f,HeroFxMotion.Orbit,facing,actor);
+                    Fx(HeroFxShape.Orb,p,Color.Lerp(c,Color.white,.35f),size*.82f,.14f,HeroFxMotion.Contract,actor:actor);
+                    break;
+                case HeroId.Mira:
+                    Fx(HeroFxShape.Seed,p,c,size*1.18f,.14f,HeroFxMotion.Contract,facing,actor);
+                    Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.55f),size*.90f,.16f,HeroFxMotion.Orbit,actor:actor);
+                    break;
+                default:
+                    Fx(HeroFxShape.Burst,p,c,size*1.12f,.12f,rotation:facing,actor:actor);
+                    Fx(HeroFxShape.Cracks,Ground(actor.transform.position),c,size*.85f,.16f,actor:actor);
+                    break;
+            }
+            if(slot==3)
+            {
+                if(h==HeroId.Rook||h==HeroId.Kaelon)Ring(actor,Chest(actor),.65f,.22f,true,h==HeroId.Kaelon);
+                else if(h==HeroId.Elyra)Fx(HeroFxShape.Ring,Chest(actor),c,.72f,.22f,HeroFxMotion.Contract,Quaternion.Euler(28,0,0),actor);
+                else if(h==HeroId.Veyr)Fx(HeroFxShape.Halo,Chest(actor),new Color(c.r,c.g,c.b,.42f),.68f,.18f,HeroFxMotion.Contract,actor:actor);
+            }
         }
         public static void TargetWarning(GameObject actor,Health target,float seconds)
         {
@@ -223,22 +258,36 @@ namespace Alterverse.Visuals
             if(actor==null||target==null)return;
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.26f:slot==3?.58f:.40f;
-            Fx(HeroFxShape.Halo,p,Color.Lerp(c,Color.white,.7f),strength*1.8f,.10f);
             HeroId hero=Hero(actor);
+            // Contact core is deliberately small. The hero-specific silhouette below is what
+            // communicates who hit you, instead of one generic white explosion for every attack.
+            Fx(slot<0&&hero==HeroId.Nyra?HeroFxShape.Burst:HeroFxShape.Halo,p,
+                Color.Lerp(c,Color.white,.68f),strength*(slot<0?1.35f:1.8f),.10f);
+
             switch(hero)
             {
                 case HeroId.Veyr:
-                    Fx(HeroFxShape.Slash,p,c,strength*2,.16f,HeroFxMotion.Sweep,Face(actor.transform.position,p)*Quaternion.Euler(25,0,30));break;
+                    Fx(HeroFxShape.Slash,p,c,strength*2,.16f,HeroFxMotion.Sweep,Face(actor.transform.position,p)*Quaternion.Euler(25,0,30));
+                    if(slot<0)Fx(HeroFxShape.Rift,p,DarkCore,strength*1.15f,.12f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
+                    break;
                 case HeroId.Kaelon:
-                    Fx(HeroFxShape.Hex,p,c,strength*1.7f,.19f,rotation:Quaternion.Euler(30,0,0));break;
+                    Fx(HeroFxShape.Hex,p,c,strength*1.7f,.19f,rotation:Quaternion.Euler(30,0,0));
+                    if(slot<0)Fx(HeroFxShape.Cracks,Ground(target.transform.position),c,strength*1.35f,.18f,actor:actor);
+                    break;
                 case HeroId.Nyra:
                     Fx(HeroFxShape.Burst,p,c,strength*2.1f,.13f,rotation:Face(actor.transform.position,p));break;
                 case HeroId.Elyra:
-                    Fx(HeroFxShape.Runes,p,c,strength*2,.24f,HeroFxMotion.Contract);break;
+                    Fx(HeroFxShape.Runes,p,c,strength*2,.24f,HeroFxMotion.Contract);
+                    if(slot<0)Fx(HeroFxShape.Orb,p,DarkCore,strength*.82f,.16f,HeroFxMotion.Contract,actor:actor);
+                    break;
                 case HeroId.Mira:
-                    Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));break;
+                    Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));
+                    if(slot<0)Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.42f),strength*1.25f,.18f,HeroFxMotion.Contract,actor:actor);
+                    break;
                 case HeroId.Rook:
-                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);break;
+                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);
+                    if(slot<0)Fx(HeroFxShape.Cracks,Ground(target.transform.position),c,strength*1.55f,.20f,actor:actor);
+                    break;
             }
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
