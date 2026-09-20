@@ -206,7 +206,7 @@ namespace Alterverse.Combat
         private const float DropSpacing=8.5f;
         private const float EndMargin=9f;
         private const float BombTelegraph=1.28f;
-        private const float BombDamage=80f;
+        private const float BombDamage=60f;
 
         private SpaceBomberDirector director;
         private Vector3 start,end;
@@ -410,7 +410,7 @@ namespace Alterverse.Combat
 
     public sealed class SpaceBombStrike : MonoBehaviour
     {
-        private const float ImpactRadius=2.7f;
+        private const float ImpactRadius=3.24f;
         private const int HitBufferSize=32;
         private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
 
