@@ -206,7 +206,7 @@ namespace Alterverse.Combat
         private const float DropSpacing=8.5f;
         private const float EndMargin=9f;
         private const float BombTelegraph=1.28f;
-        private const float BombDamage=12f;
+        private const float BombDamage=80f;
 
         private SpaceBomberDirector director;
         private Vector3 start,end;
