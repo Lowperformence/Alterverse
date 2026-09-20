@@ -631,7 +631,9 @@ namespace Alterverse.AI
             towardDestination.y=0;
             Vector3 desired=towardDestination.sqrMagnitude>.01f?towardDestination.normalized:transform.forward;
             Collider blocker=locomotion.LastCollisionCollider;
-            if(blocker!=null)recoveryBlocker=blocker;
+            // Never carry an unrelated blocker into a later progress-watch recovery. If the
+            // current stall has no physical collision, use a clear-direction probe instead.
+            recoveryBlocker=blocker;
             recoverySide=(recoveryCycle&1)==0?1:-1;
             hasRecoveryWaypoint=false;
             // Replan navigation, not perception: a collision must not erase a visible opponent.
