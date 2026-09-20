@@ -87,55 +87,54 @@ namespace Alterverse.Visuals
             if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=true;
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
 
-            // Dark diseased core with an acid-green edge, visually tied to the Green Planet arena.
-            core=new Material(shader){name="DF_PlagueWingCore",color=new Color(.025f,.075f,.018f)};
-            edge=new Material(shader){name="DF_PlagueWingToxin",color=new Color(.18f,.86f,.055f)};
-            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.12f);
-            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.34f);
-            energyColor=new Color(.28f,1f,.045f);
-            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.82f);
+            // Intentionally simpler and less prestigious than the Beta Supporter wings:
+            // moss-green diseased plates with restrained toxic seams, tied to Green Planet.
+            core=new Material(shader){name="DF_PlagueWingCore",color=new Color(.13f,.24f,.065f)};
+            edge=new Material(shader){name="DF_PlagueWingToxin",color=new Color(.34f,.72f,.10f)};
+            if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.04f);
+            if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.22f);
+            energyColor=new Color(.43f,.90f,.09f);
+            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.28f);
 
-            // Five torn toxic blades create a broad pest-wing silhouette without transparent overdraw.
+            // Three torn pest leaves only: smaller, narrower and visibly less heroic than Beta Wings.
+            // Their irregular shoulders read as rotten organic plates rather than premium energy blades.
             var v=new System.Collections.Generic.List<Vector3>();var t=new System.Collections.Generic.List<int>();
-            float[] tipX={1.38f,1.66f,1.74f,1.56f,1.24f};
-            float[] tipY={1.46f,1.00f,.42f,-.18f,-.72f};
-            for(int blade=0;blade<5;blade++)
+            float[] tipX={1.02f,1.22f,1.08f};
+            float[] tipY={1.12f,.38f,-.48f};
+            float[] shoulderDrop={.34f,.18f,.31f};
+            for(int blade=0;blade<3;blade++)
             {
-                float rootX=.17f+blade*.045f;
-                float rootY=.39f-blade*.23f;
-                float tear=blade%2==0?.18f:-.10f;
+                float rootX=.16f+blade*.055f;
+                float rootY=.32f-blade*.30f;
                 int n=v.Count;
                 v.Add(new Vector3(rootX,rootY,0));
-                v.Add(new Vector3(tipX[blade],tipY[blade],-.12f));
-                v.Add(new Vector3(tipX[blade]-.34f,tipY[blade]-.22f+tear,.025f));
-                v.Add(new Vector3(rootX+.13f,rootY-.16f,.02f));
+                v.Add(new Vector3(tipX[blade],tipY[blade],-.09f));
+                v.Add(new Vector3(tipX[blade]-.30f,tipY[blade]-shoulderDrop[blade],.025f));
+                v.Add(new Vector3(rootX+.12f,rootY-.17f,.018f));
                 t.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});
             }
             AddBackFaces(v,t);
-            mesh=new Mesh{name="DF_PlagueWingBlades"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            mesh=new Mesh{name="DF_PlagueWingLeaves"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
 
-            float scale=HeroScale(hero,1.08f,.96f,.98f,1.03f,1.16f,1.19f);
-            float height=hero==HeroId.Rook?.30f:hero==HeroId.Kaelon?.28f:.24f;
+            float scale=HeroScale(hero,.88f,.80f,.82f,.85f,.96f,.99f);
+            float height=hero==HeroId.Rook?.27f:hero==HeroId.Kaelon?.25f:.21f;
             for(int side=0;side<2;side++)
             {
                 var wing=new GameObject(side==0?"DF_PlagueWingLeft":"DF_PlagueWingRight");wing.transform.SetParent(visual,false);wings[side]=wing.transform;
-                wing.transform.localPosition=new Vector3(side==0?-.15f:.15f,height,-.35f);
+                wing.transform.localPosition=new Vector3(side==0?-.13f:.13f,height,-.33f);
                 wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
-                AddEnergyEdges(wing.transform,v,5,.030f,"PlagueToxinVein");
+                AddEnergyEdges(wing.transform,v,3,.022f,"PlagueToxinVein");
 
-                // Two tiny toxin nodes add a diseased organic focal point without particles or dynamic lights.
-                for(int node=0;node<2;node++)
-                {
-                    var toxicNode=GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    toxicNode.name="DF_PlagueToxinNode";
-                    toxicNode.transform.SetParent(wing.transform,false);
-                    toxicNode.transform.localPosition=new Vector3(.30f+node*.18f,.19f-node*.28f,.03f);
-                    toxicNode.transform.localScale=Vector3.one*(node==0?.085f:.065f);
-                    var collider=toxicNode.GetComponent<Collider>();if(collider!=null)Destroy(collider);
-                    var nr=toxicNode.GetComponent<MeshRenderer>();nr.sharedMaterial=edge;nr.shadowCastingMode=ShadowCastingMode.Off;nr.receiveShadows=false;
-                }
+                // One restrained toxin node per wing keeps the diseased identity without making it flashy.
+                var toxicNode=GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                toxicNode.name="DF_PlagueToxinNode";
+                toxicNode.transform.SetParent(wing.transform,false);
+                toxicNode.transform.localPosition=new Vector3(.31f,.08f,.025f);
+                toxicNode.transform.localScale=Vector3.one*.060f;
+                var collider=toxicNode.GetComponent<Collider>();if(collider!=null)Destroy(collider);
+                var nr=toxicNode.GetComponent<MeshRenderer>();nr.sharedMaterial=edge;nr.shadowCastingMode=ShadowCastingMode.Off;nr.receiveShadows=false;
             }
             lastPosition=transform.position;
         }
@@ -192,9 +191,9 @@ namespace Alterverse.Visuals
             }
             if(edge!=null)
             {
-                float baseIntensity=plague?1.50f:betaSupporter?1.72f:1.15f;
-                float wave=plague?Mathf.Sin(time*1.35f)*.22f:betaSupporter?Mathf.Sin(time*1.6f)*.16f:Mathf.Sin(time*2)*.12f;
-                float pulseBoost=plague?.68f:betaSupporter?.75f:.6f;
+                float baseIntensity=plague?1.12f:betaSupporter?1.72f:1.15f;
+                float wave=plague?Mathf.Sin(time*1.15f)*.10f:betaSupporter?Mathf.Sin(time*1.6f)*.16f:Mathf.Sin(time*2)*.12f;
+                float pulseBoost=plague?.42f:betaSupporter?.75f:.6f;
                 edge.SetColor("_EmissionColor",energyColor*(baseIntensity+wave+pulse*pulseBoost));
             }
         }
