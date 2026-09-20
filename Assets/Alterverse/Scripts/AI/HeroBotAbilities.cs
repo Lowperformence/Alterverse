@@ -62,7 +62,7 @@ namespace Alterverse.AI
             if ((h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
             if (target == null) return;
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)))) return;
-            bool safeEngage=!coordinated||!brain.NeedsCombatReset&&target!=null&&!brain.Tactics.UnsafeTower(target.transform.position)&&
+            bool safeEngage=!coordinated||!brain.NeedsCombatReset&&target!=null&&!brain.Tactics.UnsafeDefense(target.transform.position)&&
                 (brain.Tactics.CanFinish(target,transform.position)||
                  brain.Tactics.FightRatio(transform.position)>=1f&&(sensor.VisibleHeroesNear(target.transform.position,6f)<=1||followUp));
             if (h == HeroId.Veyr && (!fighting||safeEngage) && ((!fighting && self.Normalized < .5f) || (fighting && distance > 3.1f && distance < 7f)) && TryCast(2,target)) return;
