@@ -113,10 +113,14 @@ namespace Alterverse.Combat
 
         private bool IsEnemyUnit(Health candidate)
         {
-            // Only real combat units carry TeamMember. Legacy lane minion/tower types are intentionally
-            // not part of the current match architecture.
+            // Defensive trenches punish combat units, not enemy objectives/buildings.
+            if (candidate.GetComponent<RealityCore>() != null || candidate.GetComponent<LaneTower>() != null) return false;
+
             TeamMember member = candidate.GetComponent<TeamMember>();
-            return member != null && member.Team != team;
+            if (member != null) return member.Team != team;
+
+            LaneMinion minion = candidate.GetComponent<LaneMinion>();
+            return minion != null && minion.Team != team;
         }
 
         private void BuildVisual(int variant)
