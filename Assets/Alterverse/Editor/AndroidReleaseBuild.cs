@@ -10,6 +10,7 @@ namespace Alterverse.EditorChecks
     /// <summary>Reproducible build entry point, not a claim of store approval.</summary>
     public sealed class AndroidReleaseBuild : IPreprocessBuildWithReport
     {
+        private const string AppIconPath="Assets/Alterverse/Branding/DimensionsFrontAppIcon.png";
         public int callbackOrder=>0;
         public void OnPreprocessBuild(BuildReport report)
         {
@@ -37,7 +38,7 @@ namespace Alterverse.EditorChecks
             if((int)PlayerSettings.Android.minSdkVersion<26)errors.Add("Minimum Android SDK must remain API 26 or newer for this release profile.");
             Texture2D[] icons=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
             bool hasIcon=false;if(icons!=null)foreach(Texture2D icon in icons)if(icon!=null){hasIcon=true;break;}
-            if(!hasIcon)errors.Add("Assign an Android launcher icon before uploading. The project currently has no Android application icon.");
+            if(!hasIcon)errors.Add("Android launcher icon is not assigned. Run Prepare Android upload; it assigns "+AppIconPath+".");
             if(!EditorUserBuildSettings.buildAppBundle)errors.Add("Enable Android App Bundle (.aab).");
             if(!PlayerSettings.Android.useCustomKeystore||string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName)||string.IsNullOrWhiteSpace(PlayerSettings.Android.keyaliasName))errors.Add("Owner must configure upload signing locally. Never commit passwords or signing keys.");
             if(PlayerSettings.Android.useCustomKeystore&&!string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName))
@@ -55,9 +56,24 @@ namespace Alterverse.EditorChecks
             if(errors.Count>0)throw new BuildFailedException(string.Join("\n",errors));
             Debug.Log("DIMENSIONS FRONT: static Android settings gate passed. Device, manifest, asset and Play Console checks still required.");
         }
+        private static void EnsureLauncherIcon()
+        {
+            Texture2D icon=AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconPath);
+            if(icon==null)throw new BuildFailedException("Required launcher icon asset is missing: "+AppIconPath);
+            Texture2D[] current=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
+            bool assigned=false;if(current!=null)foreach(Texture2D candidate in current)if(candidate!=null){assigned=true;break;}
+            if(!assigned)
+            {
+                PlayerSettings.SetIcons(NamedBuildTarget.Android,new[]{icon},IconKind.Application);
+                AssetDatabase.SaveAssets();
+                Debug.Log("DIMENSIONS FRONT: assigned Android launcher icon from "+AppIconPath);
+            }
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
         public static void Prepare()
         {
+            EnsureLauncherIcon();
             EditorUserBuildSettings.buildAppBundle=true;
             EditorUserBuildSettings.development=false;
             EditorUserBuildSettings.allowDebugging=false;
@@ -72,6 +88,7 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Release/Build signed Android bundle")]
         public static void Build()
         {
+            EnsureLauncherIcon();
             EditorUserBuildSettings.buildAppBundle=true;
             EditorUserBuildSettings.development=false;
             EditorUserBuildSettings.allowDebugging=false;
