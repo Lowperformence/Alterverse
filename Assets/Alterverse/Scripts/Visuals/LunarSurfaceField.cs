@@ -5,8 +5,8 @@ namespace Alterverse.Visuals
     /// <summary>Deterministic visual geology. No physics, navigation or global random state.</summary>
     public static class LunarSurfaceField
     {
-        // Impact field spans the whole moon slab. Larger landmark craters remain sparse while
-        // small/medium impacts fill the quiet gaps; lane blending below keeps combat paths readable.
+        // Impact field spans the whole arena slab. Larger landmark craters remain sparse while
+        // small/medium impacts fill the quiet gaps. No lane flattening is applied in free-roam PvP.
         private static readonly Vector3[] craters={
             new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),
             new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),
@@ -32,28 +32,16 @@ namespace Alterverse.Visuals
             new(6,.44f,3),new(8,.6f,-2),new(-1,.38f,9),new(3,.42f,-9)
         };
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
-        public static float LaneWeight(float x,float z)
-        {
-            float bend=(Noise(x,z,.12f,41)-.5f)*.9f;
-            float distance=Mathf.Min(Mathf.Abs(z-16-bend),Mathf.Abs(z+16-bend));
-            float lane=1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(1.3f,3.4f,distance));
-            lane*=1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(30,39,Mathf.Abs(x)));
-            for(int side=-1;side<=1;side+=2)for(int sign=-1;sign<=1;sign+=2)
-            {
-                Vector2 a=new(side*34.5f,sign*7.68f),b=new(side*29.2f,sign*16f),p=new(x,z),ab=b-a;
-                float t=Mathf.Clamp01(Vector2.Dot(p-a,ab)/ab.sqrMagnitude);
-                float d=Vector2.Distance(p,a+ab*t);
-                lane=Mathf.Max(lane,1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(.8f,2.3f,d)));
-            }
-            return lane;
-        }
+        // Kept only as a compatibility hook for callers from older content. The current game has
+        // no lane corridors, so terrain receives no lane-specific flattening or tint.
+        public static float LaneWeight(float x,float z)=>0f;
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
             float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
-            float lane=LaneWeight(x,z);
+            const float lane=0f;
             relief=(macro-.5f)*.17f+(medium-.5f)*.07f;
             tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.010f;
-            dust=lane;
+            dust=0f;
             // Chipped rim, bowl, uneven ejecta; relief is very shallow over the unchanged flat collider.
             for(int i=0;i<craters.Length;i++)
             {
@@ -75,9 +63,6 @@ namespace Alterverse.Visuals
             float broken=Mathf.Clamp01(.35f+Mathf.Sin(a0*3+.8f));
             tone-=frontRing*.045f*broken;
             relief-=frontRing*.025f*broken;
-            // Worn lanes stay quiet and slightly lighter, without hard boundaries or road lines.
-            tone=Mathf.Lerp(tone,.54f+(macro-.5f)*.09f+(medium-.5f)*.025f,lane*.65f);
-            relief=Mathf.Lerp(relief,.008f,lane*.82f);
             relief=Mathf.Clamp(relief,-.13f,.065f);tone=Mathf.Clamp(tone,.29f,.66f);
         }
         public static Vector3 Surface(float x,float z)
@@ -105,10 +90,9 @@ namespace Alterverse.Visuals
                 }
                 else if(ArenaVariantRuntime.IsGreenPlanet)
                 {
-                    // Mineral alien regolith: olive/moss/grey-green, with darker compacted lanes.
+                    // Mineral alien regolith: olive/moss/grey-green.
                     float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.29f,.66f,tone));
-                    float laneMute=1f-dust*.055f;
-                    pixels[i]=new Color(value*.62f*laneMute,value*1.03f*mineral,value*.54f*laneMute,1);
+                    pixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
                 }
                 else pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
