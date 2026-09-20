@@ -174,7 +174,12 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,166,ContentWidth,30),description,theme.Body,true);
         }
         private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
-        private UniversalHeroCosmetic SkinShopPreview => skinShopIndex==1?UniversalHeroCosmetic.BetaSupporterWings:UniversalHeroCosmetic.Voidfall;
+        private UniversalHeroCosmetic SkinShopPreview => skinShopIndex switch
+        {
+            1=>UniversalHeroCosmetic.BetaSupporterWings,
+            2=>UniversalHeroCosmetic.PlagueWings,
+            _=>UniversalHeroCosmetic.Voidfall
+        };
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
@@ -391,21 +396,30 @@ namespace Alterverse.UI
             theme.Center(new Rect(Left+72,614,w-144,54),HeroName);
             if(theme.Action(new Rect(Left+w-64,614,64,54),">"))ChangeHero((selectedHero+1)%6);
 
-            float selectorGap=8f,selectorW=(rw-selectorGap)*.5f;
+            float selectorGap=7f,selectorW=(rw-selectorGap*2)/3f;
             if(theme.Action(new Rect(x,270,selectorW,40),"VOIDFALL",selected:skinShopIndex==0))
             {skinShopIndex=0;shopMessage="";}
             if(theme.Action(new Rect(x+selectorW+selectorGap,270,selectorW,40),"BETA WINGS",selected:skinShopIndex==1))
             {skinShopIndex=1;shopMessage="";}
+            if(theme.Action(new Rect(x+(selectorW+selectorGap)*2,270,selectorW,40),"PLAGUE WINGS",selected:skinShopIndex==2))
+            {skinShopIndex=2;shopMessage="";}
 
-            bool beta=skinShopIndex==1;
-            string name=beta?BetaSupporterWings.Name:UniversalSkin.Name;
-            string category=beta?"UNIVERSAL WING COSMETIC / ALL SIX HEROES":"UNIVERSAL ARMOR FINISH / ALL SIX HEROES";
-            string description=beta
-                ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening — cosmetic only."
-                :"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.";
-            int price=beta?BetaSupporterWings.Price:UniversalSkin.Price;
-            bool owned=beta?BetaSupporterWings.Owned:UniversalSkin.Owned;
-            bool equipped=beta?BetaSupporterWings.Equipped:UniversalSkin.Equipped;
+            UniversalHeroCosmetic cosmetic=SkinShopPreview;
+            bool beta=cosmetic==UniversalHeroCosmetic.BetaSupporterWings;
+            bool plague=cosmetic==UniversalHeroCosmetic.PlagueWings;
+
+            string name=plague?PlagueWings.Name:beta?BetaSupporterWings.Name:UniversalSkin.Name;
+            string category=cosmetic==UniversalHeroCosmetic.Voidfall
+                ?"UNIVERSAL ARMOR FINISH / ALL SIX HEROES"
+                :"UNIVERSAL WING COSMETIC / ALL SIX HEROES";
+            string description=plague
+                ?"Toxic pest wings born from the Green Planet.\nAcid-green, diseased and dangerous — cosmetic only."
+                :beta
+                    ?"Massive crimson dimensional wings created for Beta Supporters.\nLarge, glowing and threatening — cosmetic only."
+                    :"Fractured violet wings. Obsidian armor.\nYour hero's energy and team identity remain distinct.";
+            int price=plague?PlagueWings.Price:beta?BetaSupporterWings.Price:UniversalSkin.Price;
+            bool owned=plague?PlagueWings.Owned:beta?BetaSupporterWings.Owned:UniversalSkin.Owned;
+            bool equipped=plague?PlagueWings.Equipped:beta?BetaSupporterWings.Equipped:UniversalSkin.Equipped;
             bool affordable=PlayerWallet.CanAfford(price);
 
             theme.Label(new Rect(x,322,rw,46),name,theme.Title);
@@ -423,12 +437,12 @@ namespace Alterverse.UI
                 }
                 else if(owned)
                 {
-                    UniversalCosmeticSelection.Equip(beta?UniversalHeroCosmetic.BetaSupporterWings:UniversalHeroCosmetic.Voidfall);
+                    UniversalCosmeticSelection.Equip(cosmetic);
                     shopMessage=name+" equipped for your next match.";
                 }
                 else
                 {
-                    AvatarPurchaseResult result=beta?BetaSupporterWings.Purchase():UniversalSkin.Purchase();
+                    AvatarPurchaseResult result=plague?PlagueWings.Purchase():beta?BetaSupporterWings.Purchase():UniversalSkin.Purchase();
                     shopMessage=result==AvatarPurchaseResult.Purchased
                         ?name+" purchased and equipped for all six heroes."
                         :result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
