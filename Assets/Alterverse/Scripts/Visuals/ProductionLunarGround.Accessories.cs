@@ -29,7 +29,7 @@ namespace Alterverse.Visuals
             BuildFieldGenerator(new Vector2(25.4f,7.2f),194f,false,false);
             BuildFieldGenerator(new Vector2(12.4f,-9.7f),151f,false,false);
 
-            // Neutral wrecks/probes fill outer and midfield crater pockets while staying off the two lane centers.
+            // Neutral wrecks/probes fill outer and midfield crater pockets while preserving readable free-roam combat space.
             BuildRoverWreck(new Vector2(-33.7f,27.0f),32f,true);
             BuildRoverWreck(new Vector2(-27.4f,-20.8f),118f,true);
             BuildRoverWreck(new Vector2(33.8f,-27.0f),205f,false);
