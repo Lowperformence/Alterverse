@@ -22,7 +22,7 @@ namespace Alterverse.AI
             BotDifficulty.Easy=>"EASY",
             BotDifficulty.Hard=>"HARD",
             BotDifficulty.Expert=>"EXPERT",
-            _=>"NORMAL"
+            _=>"MEDIUM"
         };
     }
 }
