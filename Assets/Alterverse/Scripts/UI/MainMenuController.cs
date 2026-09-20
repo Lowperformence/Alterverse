@@ -25,7 +25,7 @@ namespace Alterverse.UI
         private Page page;
         private bool visible = true, launching, editingName, suspended;
         private int selectedHero, shopAvatarIndex;
-        private bool skinShop=true,shardShop,itemShop,weaponShop,cosmeticBusy;
+        private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private string profileName, profileMessage = "", shopMessage = "", inventoryMessage = "", launchMessage = "";
         private FrontEndTheme theme;
@@ -79,7 +79,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
-            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop;
+            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop;
             bool previewWeapon=page==Page.Shop&&weaponShop;
             showcase.Present((HeroId)selectedHero,
                 !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon),
@@ -196,25 +196,25 @@ namespace Alterverse.UI
         }
         private void DrawPlay()
         {
-            Heading("Deployment","Choose your hero. Select AI difficulty. Enter a local team battle.");
+            Heading("Deployment","Choose your hero, AI difficulty and arena before entering the Front.");
             float w = ContentWidth*.52f;
-            theme.Panel(new Rect(Left,214,w,366));
-            theme.Label(new Rect(Left+28,232,w-56,24),"AVAILABLE NOW",theme.Small,true);
-            theme.Label(new Rect(Left+28,266,w-56,46),"AI MATCH 5v5",theme.Title);
-            theme.Label(new Rect(Left+28,322,w-56,54),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            theme.Label(new Rect(Left+28,390,w-56,22),"Online multiplayer is not available yet.",theme.Small,true);
+            theme.Panel(new Rect(Left,214,w,394));
+            theme.Label(new Rect(Left+28,228,w-56,22),"AVAILABLE NOW",theme.Small,true);
+            theme.Label(new Rect(Left+28,252,w-56,42),"AI MATCH 5v5",theme.Title);
+            theme.Label(new Rect(Left+28,300,w-56,48),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            theme.Label(new Rect(Left+28,354,w-56,20),"Online multiplayer is not available yet.",theme.Small,true);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
-            theme.Label(new Rect(Left+28,420,w-56,20),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
+            theme.Label(new Rect(Left+28,382,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,444,w-56,20),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,404,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
 
-            theme.Label(new Rect(Left+28,476,w-56,22),"AI DIFFICULTY",theme.Small,true);
+            theme.Label(new Rect(Left+28,438,w-56,20),"AI DIFFICULTY",theme.Small,true);
             var difficulty=Alterverse.AI.BotDifficultySettings.Selected;
             float gap=8f,buttonW=(w-56-gap*3)/4f;
             for(int i=0;i<4;i++)
             {
                 var level=(Alterverse.AI.BotDifficulty)i;
-                if(theme.Action(new Rect(Left+28+i*(buttonW+gap),504,buttonW,48),
+                if(theme.Action(new Rect(Left+28+i*(buttonW+gap),462,buttonW,42),
                     Alterverse.AI.BotDifficultySettings.Label(level),selected:difficulty==level))
                 {
                     Alterverse.AI.BotDifficultySettings.Selected=level;
@@ -222,9 +222,27 @@ namespace Alterverse.UI
                 }
             }
 
-            if (theme.Action(new Rect(Left,594,w,70),"START AI MATCH",true)) BeginLaunch();
-            theme.Label(new Rect(Left,672,w,24),launchMessage.Length>0?launchMessage:
-                "Difficulty affects bot decisions only — combat stats stay equal.",theme.Small,true);
+            theme.Label(new Rect(Left+28,516,w-56,20),"ARENA",theme.Small,true);
+            ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
+            float arenaW=(w-56-gap*2)/3f;
+            for(int i=0;i<3;i++)
+            {
+                ArenaVariant arena=(ArenaVariant)i;
+                bool owned=ArenaUnlockInventory.Owned(arena);
+                string label=arena==ArenaVariant.GreenPlanet?"GREEN":arena.ToString().ToUpperInvariant();
+                if(!owned)label+="  LOCKED";
+                if(theme.Action(new Rect(Left+28+i*(arenaW+gap),540,arenaW,42),label,
+                    selected:selectedArena==arena,enabled:owned))
+                {
+                    ArenaVariantRuntime.Select(arena);
+                    selectedArena=arena;
+                    launchMessage="";
+                }
+            }
+
+            if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
+            theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
+                ArenaShopCatalog.For(selectedArena).Name+"  /  Locked arenas are available in Store > Maps.",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
             DrawPortrait(new Rect(x,198,rw,330));
@@ -288,21 +306,23 @@ namespace Alterverse.UI
             if (index==selectedHero) return;
             selectedHero=Mathf.Clamp(index,0,5);
             PlayerHeroSelection.Select((HeroId)selectedHero);
-            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop;
+            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop;
             bool previewWeapon=page==Page.Shop&&weaponShop;
             showcase.Present((HeroId)selectedHero,true,previewSkin?(bool?)true:previewWeapon?(bool?)false:null,previewWeapon?(bool?)true:null);
         }
         private void DrawShop()
         {
-            Heading("Store","Cosmetics, shards and a limited battle supply.");
-            float tabW=136f,tabGap=10f;
-            if(theme.Action(new Rect(Left,204,tabW,52),"SKINS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop&&!weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;shopMessage="";}
+            Heading("Store","Cosmetics, arenas, shards and a limited battle supply.");
+            float tabW=126f,tabGap=8f;
+            if(theme.Action(new Rect(Left,204,tabW,52),"SKINS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;shopMessage="";}
             theme.Label(new Rect(Right-264,116,264,42),$"SHARDS  {PlayerWallet.Balance}",theme.Small);
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;weaponShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=true;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,170,52),"BATTLE ITEM",selected:itemShop)){skinShop=false;shardShop=false;itemShop=true;weaponShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;weaponShop=false;mapShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=true;mapShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"MAPS",selected:mapShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*5,204,160,52),"BATTLE ITEM",selected:itemShop)){skinShop=false;shardShop=false;itemShop=true;weaponShop=false;mapShop=false;shopMessage="";}
             if(itemShop){DrawBattleItemShop();return;}
+            if(mapShop){DrawMapShop();return;}
             if(weaponShop){DrawWeaponSkinShop();return;}
             if(shardShop){DrawShardShop();return;}
             if(skinShop){DrawSkinShop();return;}
@@ -410,6 +430,64 @@ namespace Alterverse.UI
                 $"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
         }
 
+        private void DrawMapShop()
+        {
+            theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon is included. Mars and Green Planet unlock permanently for 500 shards each.",theme.Small,true);
+
+            ArenaVariant selected=ArenaVariantRuntime.Selected;
+            float gap=16f,cardW=(ContentWidth-gap*2)/3f;
+            for(int i=0;i<3;i++)
+            {
+                ArenaVariant arena=(ArenaVariant)i;
+                ArenaShopItem item=ArenaShopCatalog.For(arena);
+                bool owned=ArenaUnlockInventory.Owned(arena);
+                bool selectedNow=selected==arena;
+                float x=Left+i*(cardW+gap);
+
+                theme.Panel(new Rect(x,356,cardW,274));
+                FrontEndTheme.Fill(new Rect(x,356,cardW,5),item.Accent);
+                FrontEndTheme.Fill(new Rect(x+18,378,cardW-36,72),new Color(item.Accent.r*.18f,item.Accent.g*.18f,item.Accent.b*.18f,.72f));
+                FrontEndTheme.Fill(new Rect(x+36,416,cardW-72,3),new Color(item.Accent.r,item.Accent.g,item.Accent.b,.72f));
+
+                theme.Label(new Rect(x+18,466,cardW-36,32),item.Name,theme.Heading);
+                theme.Label(new Rect(x+18,500,cardW-36,22),item.Subtitle,theme.Small,true);
+                theme.Label(new Rect(x+18,530,cardW-36,28),owned?"OWNED":item.Price+" SHARDS",theme.Body);
+
+                string action;
+                bool enabled=true;
+                if(selectedNow)action="SELECTED";
+                else if(owned)action="SELECT";
+                else if(PlayerWallet.CanAfford(item.Price))action="UNLOCK 500";
+                else {action="NEED 500 SHARDS";enabled=false;}
+
+                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,selected:selectedNow,enabled:enabled&&!selectedNow))
+                {
+                    if(owned)
+                    {
+                        ArenaVariantRuntime.Select(arena);
+                        selected=arena;
+                        shopMessage=item.Name+" selected for your next match.";
+                    }
+                    else
+                    {
+                        ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(arena);
+                        if(result==ArenaPurchaseResult.Purchased)
+                        {
+                            ArenaVariantRuntime.Select(arena);
+                            selected=arena;
+                            shopMessage=item.Name+" UNLOCKED and selected.";
+                        }
+                        else if(result==ArenaPurchaseResult.InsufficientShards)shopMessage="Not enough shards.";
+                        else shopMessage="Arena purchase could not be completed.";
+                    }
+                }
+            }
+
+            theme.Label(new Rect(Left,646,ContentWidth,32),shopMessage.Length>0?shopMessage:
+                $"SELECTED ARENA  /  {ArenaShopCatalog.For(selected).Name}    •    SHARDS {PlayerWallet.Balance}",theme.Small,true);
+        }
+
         private void DrawBattleItemShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Battle Supply",theme.Heading);
@@ -495,7 +573,7 @@ namespace Alterverse.UI
                 if(theme.Action(avatar,"",selected:PlayerProfile.Avatar==avatarId)) PlayerProfile.Avatar=avatarId;
                 AvatarBadgeRenderer.Draw(new Rect(avatar.x+5,avatar.y+5,42,44),avatarId,Texture2D.whiteTexture,Time.unscaledTime);
             }
-            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;SetPage(Page.Shop);}
+            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;SetPage(Page.Shop);}
             float x=Left+identityWidth+32,w=ContentWidth-identityWidth-32;
             ProfileStats stats=ProfileStatsSummary.Current;
             theme.Label(new Rect(x,230,w,36),"Lifetime record",theme.Heading);
@@ -570,6 +648,14 @@ namespace Alterverse.UI
         private void BeginLaunch()
         {
             if (launching) return;
+            ArenaVariantRuntime.EnsureValidSelection();
+            ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
+            if(!ArenaUnlockInventory.Owned(selectedArena))
+            {
+                ArenaVariantRuntime.Select(ArenaVariant.Moon);
+                launchMessage="Selected arena is locked. Moon restored.";
+                return;
+            }
             PlayerHeroSelection.Select((HeroId)selectedHero); FlushAudio();
             launchMessage=""; launching=true; launchAt=Time.unscaledTime; GUI.FocusControl(null);
             showcase.Present((HeroId)selectedHero,false);
@@ -578,12 +664,18 @@ namespace Alterverse.UI
         {
             theme.Label(new Rect(Left,230,ContentWidth,60),"Entering the Front",theme.Title);
             theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
-            theme.Label(new Rect(Left,372,ContentWidth,32),"AI MATCH 5v5  /  ZERO TEAM",theme.Body,true);
+            theme.Label(new Rect(Left,372,ContentWidth,32),"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM",theme.Body,true);
             theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
             theme.Label(new Rect(Left,480,ContentWidth,30),"Preparing your local match",theme.Small,true);
         }
         private void EnterMatch()
         {
+            ArenaVariantRuntime.EnsureValidSelection();
+            if(!ArenaUnlockInventory.Owned(ArenaVariantRuntime.Selected))
+            {
+                ArenaVariantRuntime.Select(ArenaVariant.Moon);
+                launching=false;page=Page.Play;launchMessage="Locked arena blocked. Moon restored.";return;
+            }
             var bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
             if (bootstrap==null) { launching=false; page=Page.Play; launchMessage="Match could not start. Please try again."; Debug.LogError("DIMENSIONS FRONT: match bootstrap unavailable."); return; }
             launching=false; visible=false; MatchClock.Set(PauseReason.Result,false); MatchClock.Set(PauseReason.Menu,false);
