@@ -250,20 +250,20 @@ namespace Alterverse.AI
             if(hotZone==null||!hotZone.IsActive)return false;
             Vector3 delta=hotZone.transform.position-transform.position;delta.y=0;
 
-            // Support should not peel off across the map to solo an objective. If already close,
-            // it may still contest naturally; otherwise it waits for at least one nearby ally.
-            if(profile!=null&&profile.Hero==HeroId.Mira&&sensor!=null&&sensor.NearbyAllies==0&&delta.sqrMagnitude>6.5f*6.5f)
-                return false;
-
-            if(delta.sqrMagnitude<11f*11f)return true;
+            // Once near the enlarged zone, every available bot may join the skirmish.
+            float nearRadius=HotZoneDirector.Radius+3f;
+            if(delta.sqrMagnitude<nearRadius*nearRadius)return true;
 
             float own=brain.Team==0?hotZone.ZeroControlSeconds:hotZone.LumenControlSeconds;
             float enemy=brain.Team==0?hotZone.LumenControlSeconds:hotZone.ZeroControlSeconds;
             float deficit=enemy-own;
-            float focus=brain.ObjectiveFocus*Mathf.Lerp(.55f,1.15f,brain.Difficulty.ObjectiveAwareness);
-            int slots=focus>.72f?4:focus>.52f?3:2;
-            if(deficit>6f)slots=Mathf.Min(5,slots+1);
-            else if(deficit<-10f)slots=Mathf.Max(2,slots-1);
+            float focus=brain.ObjectiveFocus*Mathf.Lerp(.70f,1.25f,brain.Difficulty.ObjectiveAwareness);
+
+            // The Hot Zone is now the main PvP magnet: even low-objective-focus teams send
+            // several heroes, while high-focus teams can commit all five.
+            int slots=focus>.82f?5:focus>.58f?4:3;
+            if(deficit>5f)slots=Mathf.Min(5,slots+1);
+            else if(deficit<-14f)slots=Mathf.Max(3,slots-1);
             return rotationSlot<slots;
         }
 
