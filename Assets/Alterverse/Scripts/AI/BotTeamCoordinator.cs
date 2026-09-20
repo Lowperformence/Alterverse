@@ -74,7 +74,7 @@ namespace Alterverse.AI
         private static void Reset(){members.Clear();teams[0].Clear();teams[1].Clear();}
         private void Clear()
         {
-            allyCount=seenCount=towerCount=waveCount=deathCursor=previousDead=Revision=0;
+            allyCount=seenCount=towerCount=deathCursor=previousDead=Revision=0;
             ChangedAt=0;
             nextTick=holdUntil=regroupUntil=tempoUntil=focusUntil=focusStarted=nextEventScan=0;
             focus=null;ownCore=enemyCore=null;hotZone=null;HasPlan=CoreEmergency=false;
@@ -129,7 +129,7 @@ namespace Alterverse.AI
         }
         private void ReadOwnTeam()
         {
-            allyCount=towerCount=waveCount=0;centroid=Vector3.zero;int dead=0;
+            allyCount=towerCount=0;centroid=Vector3.zero;int dead=0;
             ownCore=enemyCore=null;
             for(int i=0;i<Health.Active.Count;i++)
             {
