@@ -24,21 +24,38 @@ namespace Alterverse.EditorChecks
             if(!Application.isPlaying){Debug.LogWarning("Enter Play mode to check skin meshes.");return;}
             for(int i=0;i<6;i++)
             {
-                GameObject actor=new GameObject("DF_SkinRegression");actor.transform.position=new Vector3(14000,14000,14000);
-                try
-                {
-                    actor.AddComponent<HeroIdentity>().Configure((HeroId)i);
-                    actor.AddComponent<SkinPreviewSelection>().Voidfall=true;
-                    actor.AddComponent<StylizedHeroVisual>().Build();
-                    var renderers=actor.GetComponentsInChildren<Renderer>();bool found=false;
-                    foreach(var renderer in renderers)if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_VoidfallFinish")found=true;
-                    if(!found)throw new System.InvalidOperationException("VOIDFALL finish missing on hero "+i);
-                    if(actor.GetComponent<Alterverse.Combat.Health>()!=null||actor.GetComponentsInChildren<Collider>().Length>0)
-                        throw new System.InvalidOperationException("Cosmetic preview unexpectedly contains gameplay components");
-                }
-                finally{actor.SetActive(false);Object.Destroy(actor);}
+                CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.Voidfall);
+                CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.BetaSupporterWings);
             }
-            Debug.Log("DIMENSIONS FRONT: all six skin preview construction checks passed. Purchase/restart and visual approval still required.");
+            Debug.Log("DIMENSIONS FRONT: VOIDFALL and BETA SUPPORTER WINGS preview construction passed for all six heroes. Purchase/restart and visual approval still require device testing.");
+        }
+
+        private static void CheckSkinPreview(HeroId hero,UniversalHeroCosmetic cosmetic)
+        {
+            GameObject actor=new GameObject("DF_SkinRegression_"+cosmetic);actor.transform.position=new Vector3(14000,14000,14000);
+            try
+            {
+                actor.AddComponent<HeroIdentity>().Configure(hero);
+                actor.AddComponent<SkinPreviewSelection>().UniversalCosmetic=cosmetic;
+                actor.AddComponent<StylizedHeroVisual>().Build();
+                bool found=false;
+                if(cosmetic==UniversalHeroCosmetic.Voidfall)
+                {
+                    foreach(var renderer in actor.GetComponentsInChildren<Renderer>())
+                        if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_VoidfallFinish")found=true;
+                }
+                else
+                {
+                    Transform visual=actor.transform.Find("DF_VisualRoot");
+                    found=visual!=null&&visual.Find("DF_BetaSupporterWingLeft")!=null&&visual.Find("DF_BetaSupporterWingRight")!=null;
+                    foreach(var renderer in actor.GetComponentsInChildren<Renderer>())
+                        if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.name=="DF_BetaSupporterWingCore")found=true;
+                }
+                if(!found)throw new System.InvalidOperationException(cosmetic+" preview missing on hero "+hero);
+                if(actor.GetComponent<Alterverse.Combat.Health>()!=null||actor.GetComponentsInChildren<Collider>().Length>0)
+                    throw new System.InvalidOperationException(cosmetic+" preview unexpectedly contains gameplay components");
+            }
+            finally{actor.SetActive(false);Object.Destroy(actor);}
         }
     }
 }
