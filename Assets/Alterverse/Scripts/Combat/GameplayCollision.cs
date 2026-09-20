@@ -1,12 +1,99 @@
+using System.Collections.Generic;
 using UnityEngine;
+
 namespace Alterverse.Combat
 {
     // Root hitboxes stay queryable. Mobile units never form movement walls.
+    // All three arena variants share these collision rules, so Moon, Mars and Green Planet
+    // receive the same rounded navigation treatment.
     public static class GameplayCollision
     {
         public const int Units=8, Structures=9, Ground=10, Decorative=11;
         public const int MovementMask=(1<<0)|(1<<Structures)|(1<<Ground);
         public const int TargetMask=(1<<0)|(1<<Units)|(1<<Structures);
         public const int SightMask=(1<<0)|(1<<Structures);
+        public const float ArenaCornerRadius=3f;
+
+        public static Vector3 ClampToRoundedArena(Vector3 point,float halfWidth,float halfHeight,float inset=0f)
+        {
+            halfWidth=Mathf.Max(.2f,halfWidth-Mathf.Max(0f,inset));
+            halfHeight=Mathf.Max(.2f,halfHeight-Mathf.Max(0f,inset));
+            float radius=Mathf.Min(ArenaCornerRadius,Mathf.Min(halfWidth,halfHeight)-.01f);
+
+            float signX=point.x<0f?-1f:1f,signZ=point.z<0f?-1f:1f;
+            float x=Mathf.Min(Mathf.Abs(point.x),halfWidth);
+            float z=Mathf.Min(Mathf.Abs(point.z),halfHeight);
+            float innerX=halfWidth-radius,innerZ=halfHeight-radius;
+
+            if(x>innerX&&z>innerZ)
+            {
+                Vector2 cornerDelta=new(x-innerX,z-innerZ);
+                float length=cornerDelta.magnitude;
+                if(length>radius&&length>.0001f)
+                {
+                    cornerDelta*=radius/length;
+                    x=innerX+cornerDelta.x;
+                    z=innerZ+cornerDelta.y;
+                }
+            }
+
+            point.x=x*signX;
+            point.z=z*signZ;
+            return point;
+        }
+
+        public static bool ContainsRoundedArena(Vector3 point,float halfWidth,float halfHeight,float inset=0f)
+        {
+            Vector3 clamped=ClampToRoundedArena(point,halfWidth,halfHeight,inset);
+            return Mathf.Abs(clamped.x-point.x)<.001f&&Mathf.Abs(clamped.z-point.z)<.001f;
+        }
+
+        public static Mesh CreateRoundedPrismMesh(Vector3 center,float width,float height,float depth,float cornerRadius,int arcSegments=6)
+        {
+            arcSegments=Mathf.Clamp(arcSegments,2,12);
+            float halfWidth=width*.5f,halfDepth=depth*.5f;
+            float radius=Mathf.Max(.05f,Mathf.Min(cornerRadius,Mathf.Min(halfWidth-.01f,halfDepth-.01f)));
+
+            List<Vector2> footprint=new(4*(arcSegments+1));
+            Vector2[] cornerCenters=
+            {
+                new(halfWidth-radius,-halfDepth+radius),
+                new(halfWidth-radius,halfDepth-radius),
+                new(-halfWidth+radius,halfDepth-radius),
+                new(-halfWidth+radius,-halfDepth+radius)
+            };
+            float[] startAngles={-90f,0f,90f,180f};
+
+            for(int corner=0;corner<cornerCenters.Length;corner++)
+            for(int segment=0;segment<=arcSegments;segment++)
+            {
+                float angle=(startAngles[corner]+90f*segment/arcSegments)*Mathf.Deg2Rad;
+                Vector2 offset=new(Mathf.Cos(angle)*radius,Mathf.Sin(angle)*radius);
+                footprint.Add(cornerCenters[corner]+offset);
+            }
+
+            int perimeter=footprint.Count;
+            float bottomY=center.y-height*.5f,topY=center.y+height*.5f;
+            List<Vector3> vertices=new(perimeter*2+2);
+            for(int i=0;i<perimeter;i++)vertices.Add(new Vector3(center.x+footprint[i].x,bottomY,center.z+footprint[i].y));
+            for(int i=0;i<perimeter;i++)vertices.Add(new Vector3(center.x+footprint[i].x,topY,center.z+footprint[i].y));
+
+            int bottomCenter=vertices.Count;vertices.Add(new Vector3(center.x,bottomY,center.z));
+            int topCenter=vertices.Count;vertices.Add(new Vector3(center.x,topY,center.z));
+            List<int> triangles=new(perimeter*12);
+
+            for(int i=0;i<perimeter;i++)
+            {
+                int next=(i+1)%perimeter,bottom=i,bottomNext=next,top=i+perimeter,topNext=next+perimeter;
+                triangles.Add(bottom);triangles.Add(topNext);triangles.Add(bottomNext);
+                triangles.Add(bottom);triangles.Add(top);triangles.Add(topNext);
+                triangles.Add(bottomCenter);triangles.Add(bottom);triangles.Add(bottomNext);
+                triangles.Add(topCenter);triangles.Add(topNext);triangles.Add(top);
+            }
+
+            Mesh mesh=new(){name="DF_RoundedGameplayCollider"};
+            mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            return mesh;
+        }
     }
 }
