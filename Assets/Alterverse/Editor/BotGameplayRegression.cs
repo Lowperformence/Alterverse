@@ -45,6 +45,7 @@ namespace Alterverse.EditorChecks
                 CheckDifficulty();
                 CheckAbilitySlots();
                 CheckMinionDuel();
+                CheckSiegeMechMovement();
                 CheckTowerAndHazardDecisions();
                 Debug.Log("DIMENSIONS FRONT: all bot/minion regression assertions passed.");
             }
@@ -225,13 +226,20 @@ namespace Alterverse.EditorChecks
             Assert((float)Call(sensor,"Score",wounded)<(float)Call(sensor,"Score",healthy),
                 "A safely reachable low-health hero must gain execute priority over a modestly closer healthy hero.");
 
-            // Once the hero fight is gone, a covered tower becomes a valid siege target ahead of farming.
+            // Once the hero fight is gone, ordinary minions and towers must remain invalid bot targets.
             hero.TakeDamage(hero.Max);healthy.TakeDamage(healthy.Max);wounded.TakeDamage(wounded.Max);
             GameObject coverObject=Unit("Check_TowerCover",0,towerObject.transform.position+Vector3.left);
             coverObject.AddComponent<LaneMinion>().Initialize(0,towerObject.transform.position);
             Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
-            Assert(sensor.CurrentTarget==towerObject.GetComponent<Health>(),
-                "After hero threats are gone, a tower with allied minion cover should outrank enemy lane farming.");
+            Assert(sensor.CurrentTarget==null,
+                "Bot heroes must ignore ordinary lane minions and towers instead of falling back to farming or sieging.");
+
+            // Siege mechs intentionally reuse LaneMinion, but the explicit siege role must keep them targetable.
+            GameObject mechObject=Unit("Check_SiegeMech",1,origin+Vector3.right*3f);
+            LaneMinion mech=mechObject.AddComponent<LaneMinion>();mech.Initialize(1,origin);mech.ConfigureSiegeRole();
+            Call(sensor,"Scan");Set(sensor,"candidateSince",Time.time-2f);Call(sensor,"Scan");
+            Assert(sensor.CurrentTarget==mechObject.GetComponent<Health>(),
+                "Siege mechs must remain valid bot combat targets while ordinary minions and towers are ignored.");
         }
 
         private static void CheckRecentAttackerPriority()
@@ -435,6 +443,30 @@ namespace Alterverse.EditorChecks
             ally.transform.position = mira.transform.position + Vector3.right;
             Assert((bool)Call(mira, "TryCast", 1, null) && ally.Current > 20, "Support must heal a wounded nearby ally without an enemy.");
         }
+        private static void CheckSiegeMechMovement()
+        {
+            Vector3 origin=new(3500,.85f,3500);
+            GameObject mechObject=Unit("Check_SiegeMovement",0,origin);
+            LaneMinion mech=mechObject.AddComponent<LaneMinion>();
+            mech.Initialize(0,origin+Vector3.right*12f);
+            mech.ConfigureSiegeRole();
+            mech.ConfigureCombat(2.15f,8.2f,2.15f,10.5f,1.25f,1.65f);
+            Set(mech,"nextScanTime",float.MaxValue);
+
+            Vector3 before=mechObject.transform.position;
+            Call(mech,"Update");
+            Assert(mechObject.transform.position.x>before.x,
+                "A siege mech with no combat target must immediately advance along its lane.");
+
+            GameObject towerObject=Unit("Check_SiegeRouteTower",1,origin+Vector3.right*6f);
+            LaneTower tower=towerObject.AddComponent<LaneTower>();tower.Initialize(1);
+            Set(mech,"target",null);Set(mech,"nextScanTime",float.MaxValue);
+            before=mechObject.transform.position;
+            Call(mech,"Update");
+            Assert(mechObject.transform.position.x>before.x,
+                "An enemy tower elsewhere on the lane must not freeze siege-mech movement.");
+        }
+
         private static void CheckTowerAndHazardDecisions()
         {
             Vector3 center = new(4000, 1, 4000);
