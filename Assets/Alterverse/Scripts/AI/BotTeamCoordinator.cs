@@ -53,7 +53,7 @@ namespace Alterverse.AI
         public Vector3 FocusPosition=>focusPosition;
         private Vector3 Home=>new(team==0?-27.5f:27.5f,0,0);
         private Vector3 Forward=>team==0?Vector3.right:Vector3.left;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
         public int TacticalTicks { get; private set; }
         public int FocusCalls { get; private set; }
         public int RegroupCalls { get; private set; }
@@ -81,7 +81,7 @@ namespace Alterverse.AI
             Call=Intent.Roam;Destination=Home;centroid=Home;
             System.Array.Clear(allies,0,allies.Length);System.Array.Clear(seen,0,seen.Length);
             System.Array.Clear(towers,0,towers.Length);System.Array.Clear(reportedDeaths,0,reportedDeaths.Length);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             TacticalTicks=FocusCalls=RegroupCalls=TempoPushes=ObservedKills=0;
 #endif
         }
@@ -117,7 +117,7 @@ namespace Alterverse.AI
             if(Time.timeScale<=0||Time.time<nextTick)return;
             bool expert=difficulty==BotDifficulty.Expert;
             nextTick=Time.time+(expert?.35f:.60f);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             TacticalTicks++;
 #endif
             ReadOwnTeam();ReadObservations();
@@ -176,7 +176,7 @@ namespace Alterverse.AI
             for(int i=0;i<reportedDeaths.Length;i++)if(reportedDeaths[i]==target&&Time.time-deathTimes[i]<2f)return;
             reportedDeaths[deathCursor]=target;deathTimes[deathCursor]=Time.time;deathCursor=(deathCursor+1)%reportedDeaths.Length;
             tempoUntil=Time.time+7f;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             ObservedKills++;
 #endif
         }
@@ -199,7 +199,7 @@ namespace Alterverse.AI
             if(best.Target!=focus||Time.time>=focusUntil||!retained)
             {
                 focus=best.Target;focusStarted=Time.time;focusUntil=Time.time+(expert?2.2f:1.5f);
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
                 FocusCalls++;
 #endif
             }
@@ -283,7 +283,7 @@ namespace Alterverse.AI
             if(HasPlan&&!urgent&&Time.time<holdUntil)return;
             Call=intent;Destination=destination;holdUntil=Time.time+(intent==Intent.Disengage?2.5f:2f);
             ChangedAt=Time.time;Revision++;HasPlan=true;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEBUG
             if(intent==Intent.Disengage)RegroupCalls++;
             if(Time.time<tempoUntil&&(intent==Intent.Roam||intent==Intent.TakeObjective))TempoPushes++;
 #endif
