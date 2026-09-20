@@ -294,7 +294,7 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(portraitX,646,portraitWidth,38),"DEPLOY",true))SetPage(Page.Play);
 
             theme.Label(new Rect(attacksX,212,attacksWidth,28),"COMBAT LOADOUT",theme.Heading);
-            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Base gameplay values • damage / range / cooldown / effects",theme.Small,true);
+            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Mobile combat loadout • damage / range / cooldown / effects",theme.Small,true);
             HeroAttackCard[] attacks=HeroAttackCatalog.For(heroId);
             const float cardHeight=82f,gap=5f;
             for(int i=0;i<attacks.Length;i++)
@@ -308,10 +308,10 @@ namespace Alterverse.UI
         {
             theme.Panel(rect);
             FrontEndTheme.Fill(new Rect(rect.x,rect.y,4,rect.height),accent);
-            Rect keyRect=new Rect(rect.x+14,rect.y+10,54,24);
+            Rect keyRect=new Rect(rect.x+14,rect.y+10,76,24);
             FrontEndTheme.Fill(keyRect,ultimate?accent:FrontEndTheme.Raised);
             theme.Label(keyRect,attack.Key,theme.Small);
-            theme.Label(new Rect(rect.x+80,rect.y+7,rect.width-94,26),attack.Name,theme.Body);
+            theme.Label(new Rect(rect.x+102,rect.y+7,rect.width-116,26),attack.Name,theme.Body);
             theme.Label(new Rect(rect.x+14,rect.y+36,rect.width-28,18),attack.Stats,theme.Small,true);
             theme.Label(new Rect(rect.x+14,rect.y+56,rect.width-28,22),attack.Effect,theme.Small,true);
         }
