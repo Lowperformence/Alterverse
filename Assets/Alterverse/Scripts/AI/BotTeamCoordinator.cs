@@ -292,14 +292,14 @@ namespace Alterverse.AI
                 if(FlatSqr(allies[i].Position-point)<11f*11f)own+=allies[i].Power;
             for(int i=0;i<seenCount;i++)
                 if(seen[i].Hero&&Time.time-seen[i].SeenAt<=.65f&&FlatSqr(seen[i].Position-point)<11f*11f)enemy+=RolePower(seen[i].Role)*(.35f+.65f*seen[i].Hp);
-            // Small defensive buildings are deliberately not part of fight-strength evaluation.
-            // Their 5 HP/s chip damage is too minor to drive tactical decisions.
+            // Small defensive structures are deliberately not part of fight-strength evaluation.
+            // Bastions deal zero damage; the trench's 5 HP/s chip damage is too minor to drive teamfight scoring.
             return enemy>.01f?own/enemy:2f;
         }
         public bool UnsafeDefense(Vector3 point)
         {
-            // Compatibility hook for callers: these small buildings are not tactical no-go zones.
-            // Bots may fight, chase and reposition near them; only the physical collider matters.
+            // Compatibility hook for callers: bastions/trenches are not hard tactical no-go zones.
+            // Bots may fight, chase and reposition near them; solid structure collision is handled by movement.
             return false;
         }
         public int EnemiesNear(Vector3 point,float radius)
