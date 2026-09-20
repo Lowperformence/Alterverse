@@ -19,7 +19,8 @@ namespace Alterverse.Profile
             AvatarId=avatarId;
         }
 
-        public static BattlePassReward Empty=>new BattlePassReward(0,BattleItemType.None,0,-1);\n        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0;
+        public static BattlePassReward Empty=>new BattlePassReward(0,BattleItemType.None,0,-1);
+        public bool IsEmpty=>Shards<=0&&(Item==BattleItemType.None||ItemAmount<=0)&&AvatarId<0;
 
         public string Label
         {
