@@ -8,12 +8,12 @@ using UnityEngine.Rendering;
 namespace Alterverse.Combat
 {
     /// <summary>
-    /// Neutral recurring battlefield event. Every 60 match-seconds one compact bomber
+    /// Neutral recurring battlefield event. Every 30 match-seconds one compact bomber
     /// crosses the arena on a varied route and drops readable, dodgeable bomb hazards.
     /// </summary>
     public sealed class SpaceBomberDirector : MonoBehaviour
     {
-        public const float FlyoverInterval=60f;
+        public const float FlyoverInterval=30f;
         private const float BomberAltitude=7.4f;
         private const float BomberSpeed=12.5f;
 
