@@ -39,10 +39,12 @@ namespace Alterverse.EditorChecks
             foreach(Collider collider in colliders)
             {
                 if(collider==null||!collider.enabled||collider.isTrigger)continue;
-                if(collider.gameObject.layer!=GameplayCollision.Structures)continue;
+                bool mapBlockingLayer=collider.gameObject.layer==GameplayCollision.Structures||
+                    collider.gameObject.layer==GameplayCollision.Ground;
+                if(!mapBlockingLayer)continue;
 
-                // Any enabled blocking BoxCollider on the Structures layer reintroduces a sharp
-                // map corner that can catch capsule-driven bots.
+                // Any enabled blocking BoxCollider on map collision layers reintroduces a sharp
+                // corner that can catch capsule-driven bots.
                 Check(collider is not BoxCollider,collider.name+" still has a sharp blocking BoxCollider");
 
                 DefenseBunker bunker=collider.GetComponentInParent<DefenseBunker>();
@@ -75,7 +77,14 @@ namespace Alterverse.EditorChecks
             Check(roundedTrenches==4,$"expected 4 rounded trenches, found {roundedTrenches}");
             Check(roundedCores==2,$"expected 2 rounded reality cores, found {roundedCores}");
 
-            Debug.Log("Map rounded collision regression passed: Moon, Mars and Green Planet share rounded arena corners; all live blocking structures are rounded and no sharp Structure BoxCollider remains.");
+            GameObject floor=GameObject.Find("DF_ArenaFloor");
+            Check(floor!=null,"arena floor missing");
+            MeshCollider floorCollider=floor.GetComponent<MeshCollider>();
+            Check(floor.layer==GameplayCollision.Ground&&floorCollider!=null&&floorCollider.enabled&&floorCollider.convex,
+                "arena floor is not using rounded mesh collision");
+            Check(floor.GetComponent<BoxCollider>()==null,"arena floor still has square box collision");
+
+            Debug.Log("Map rounded collision regression passed: Moon, Mars and Green Planet share rounded arena corners; floor, bunkers, trenches and cores are rounded and no sharp blocking BoxCollider remains.");
         }
 
         private static void CheckRoundedBounds(float halfWidth,float halfHeight,string label)
