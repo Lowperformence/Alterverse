@@ -12,13 +12,16 @@ namespace Alterverse.AI
         private TeamMember teamMember;
         private Health selfHealth, currentTarget;
         private HeroCombatProfile profile;
-        private float nextScanTime, candidateSince, retainedSince;
+        private float nextScanTime, candidateSince, retainedSince, lastSeenTime=-100f;
         private Health candidateTarget;
+        private Vector3 lastKnownPosition;
         private MobaBotBrain brain;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
         public int NearbyEnemies { get; private set; }
         public int NearbyAllies { get; private set; }
         public Vector3 RallyPosition { get; private set; }
+        public bool HasRecentEnemyMemory=>Time.time-lastSeenTime<=Mathf.Min(1.8f,Difficulty.MemorySeconds);
+        public Vector3 LastKnownEnemyPosition=>lastKnownPosition;
         private BotDifficultyProfile Difficulty=>brain!=null?brain.Difficulty:BotDifficultyProfile.For(BotDifficulty.Normal);
         private float Radius=>profile!=null?Mathf.Max(fallbackScanRadius,profile.AttackRange+4f):fallbackScanRadius;
         public Health CurrentTarget => IsEnemy(currentTarget) && Visible(currentTarget) ? currentTarget : null;
@@ -29,14 +32,15 @@ namespace Alterverse.AI
             selfHealth = GetComponent<Health>();
             profile = GetComponent<HeroCombatProfile>();
         }
-        public void ClearTarget() { currentTarget = candidateTarget = null; candidateSince=retainedSince=0; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
+        public void ClearTarget() { currentTarget = candidateTarget = null; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
             if(brain==null)brain=GetComponent<MobaBotBrain>();
             if (selfHealth != null && selfHealth.IsDead) { ClearTarget(); return; }
             if (Time.time < nextScanTime) return;
-            nextScanTime = Time.time + Mathf.Max(.12f, scanInterval*Difficulty.DecisionScale);
+            float rhythm=brain!=null?brain.DecisionRhythm:1f;
+            nextScanTime = Time.time + Mathf.Max(.12f, scanInterval*Difficulty.DecisionScale*rhythm);
             Scan();
         }
         private bool InRadius(Health candidate)
@@ -80,15 +84,46 @@ namespace Alterverse.AI
         {
             Vector3 delta = candidate.transform.position - transform.position;
             delta.y = 0;
-            float priority = candidate.GetComponent<HeroIdentity>() != null ? .72f : 1f;
+            HeroIdentity candidateHero=candidate.GetComponent<HeroIdentity>();
+            float priority = candidateHero != null ? .72f : 1f;
             if (candidate.GetComponent<LaneMinion>() != null) priority = .9f;
             if (candidate.GetComponent<LaneTower>() != null) priority = 1.15f;
             if (candidate.GetComponent<RealityCore>() != null) priority = 1.2f;
             if (candidate.GetComponent<DimensionPlanet>() != null) priority = 1.35f;
+
             float accuracy=Difficulty.TargetAccuracy;
             float aggression=brain!=null?brain.Aggression:.55f;
-            if(candidate.GetComponent<HeroIdentity>()!=null)priority*=Mathf.Lerp(1.15f,.8f,aggression);
-            // Easy is more distance-led; hard values visible wounded opponents more reliably.
+            if(candidateHero!=null)
+            {
+                priority*=Mathf.Lerp(1.15f,.8f,aggression);
+                // Role tendencies are soft preferences, not hidden information or hard rules.
+                HeroId selfHero=profile!=null?profile.Hero:HeroId.Veyr;
+                switch(selfHero)
+                {
+                    case HeroId.Veyr: // assassin: wounded backline targets become more attractive
+                        priority*=Mathf.Lerp(.72f,1.05f,candidate.Normalized);
+                        if(candidateHero.Hero==HeroId.Kaelon)priority*=1.16f;
+                        break;
+                    case HeroId.Kaelon: // tank: willing to occupy enemy heroes rather than farm
+                        priority*=.88f;
+                        break;
+                    case HeroId.Nyra: // marksman: steady visible targets, no extreme preference
+                        priority*=.96f;
+                        break;
+                    case HeroId.Elyra:
+                        priority*=.93f;
+                        break;
+                    case HeroId.Mira: // support is slightly less eager to start a solo duel
+                        priority*=1.06f;
+                        break;
+                    default: // bruiser
+                        priority*=.92f;
+                        break;
+                }
+            }
+
+            // Easy is more distance-led; stronger difficulties value visible wounded targets more,
+            // but no difficulty gets information that a player could not perceive.
             float noise=brain!=null&&brain.Chance((1-accuracy)*.25f)?1.30f:1f;
             return delta.sqrMagnitude*Mathf.Lerp(1f,Mathf.Lerp(.45f,1f,candidate.Normalized)*priority,accuracy)*noise;
         }
@@ -97,7 +132,17 @@ namespace Alterverse.AI
             float radius = Radius;
             NearbyEnemies=NearbyAllies=0;RallyPosition=transform.position;
             Vector3 allies=Vector3.zero;
-            if(currentTarget!=null&&(!IsEnemy(currentTarget)||!Visible(currentTarget)))currentTarget=null;
+            if(currentTarget!=null)
+            {
+                bool valid=IsEnemy(currentTarget);
+                bool visible=valid&&Visible(currentTarget);
+                if(visible)
+                {
+                    lastKnownPosition=currentTarget.transform.position;
+                    lastSeenTime=Time.time;
+                }
+                else currentTarget=null;
+            }
             Health best = null;
             float bestScore = float.MaxValue;
             for(int index=0;index<Health.Active.Count;index++)
@@ -123,8 +168,12 @@ namespace Alterverse.AI
             if(NearbyAllies>0)RallyPosition=allies/NearbyAllies;
             if(best==currentTarget){candidateTarget=null;return;}
             if(best!=candidateTarget){candidateTarget=best;candidateSince=Time.time;}
-            if(best!=null&&Time.time-candidateSince>=Difficulty.ReactionDelay)
-            {currentTarget=best;retainedSince=Time.time;candidateTarget=null;}
+            float reaction=Difficulty.ReactionDelay*(brain!=null?brain.DecisionRhythm:1f);
+            if(best!=null&&Time.time-candidateSince>=reaction)
+            {
+                currentTarget=best;retainedSince=Time.time;candidateTarget=null;
+                lastKnownPosition=best.transform.position;lastSeenTime=Time.time;
+            }
         }
     }
 }
