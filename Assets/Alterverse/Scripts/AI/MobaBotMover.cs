@@ -156,7 +156,7 @@ namespace Alterverse.AI
                 // is never consulted, so this behaves like human short-term memory rather than wall vision.
                 destination=sensor.LastKnownEnemyPosition;stopDistance=.75f;
             }
-            else if(brain.State==MobaBotBrain.BotState.Lane&&hotZone!=null&&hotZone.IsActive&&ShouldContestHotZone())
+            else if(ShouldPursueHotZone(brain.State,target,hotZone!=null&&hotZone.IsActive)&&ShouldContestHotZone())
             { destination=hotZone.transform.position;stopDistance=3.4f; }
             else if(brain.State==MobaBotBrain.BotState.Lane&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
             { destination=sensor.RallyPosition;stopDistance=3f; }
@@ -241,6 +241,13 @@ namespace Alterverse.AI
             // HeroLocomotion sweeps a .48 m capsule. Leave a small visible gap so melee bots
             // can attack solid objectives without repeatedly requesting movement inside them.
             return Mathf.Max(fallback,Mathf.Max(extents.x,extents.z)+.78f);
+        }
+
+        public static bool ShouldPursueHotZone(MobaBotBrain.BotState state,Health visibleCombatTarget,bool hotZoneActive)
+        {
+            // Combat beats objectives. The explicit target guard closes the small decision-tick
+            // window where perception may already see an enemy while the brain still reports Lane.
+            return hotZoneActive&&state==MobaBotBrain.BotState.Lane&&visibleCombatTarget==null;
         }
 
         private bool ShouldContestHotZone()
