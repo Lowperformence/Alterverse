@@ -174,7 +174,10 @@ namespace Alterverse.AI
                 // choices. TargetTier already guarantees a non-hero cannot steal the fight.
                 float heroBias=Mathf.Lerp(.46f,.24f,Difficulty.TargetAccuracy);
                 priority*=heroBias;
-                priority*=Mathf.Lerp(.42f,1f,candidate.Normalized);
+                // Critical execute opportunities must remain stronger than the small stable
+                // perception noise, otherwise a 20% HP hero can randomly lose priority to a
+                // slightly closer full-health hero on Easy/Normal.
+                priority*=Mathf.Lerp(.30f,1f,candidate.Normalized);
 
                 HeroCombatStatus status=candidate.GetComponent<HeroCombatStatus>();
                 if(status!=null&&(status.Stunned||status.MoveMultiplier<.8f))priority*=.72f;
