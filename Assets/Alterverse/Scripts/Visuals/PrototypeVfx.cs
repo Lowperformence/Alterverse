@@ -1,8 +1,11 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
 public static class PrototypeVfx
 {
+private static readonly int BaseColor=Shader.PropertyToID("_BaseColor"),ColorId=Shader.PropertyToID("_Color");
+private static MaterialPropertyBlock colorBlock;
 public static void RadialBurst(Vector3 position,Color color,float radius){Shockwave(position,color,radius);}
 public static void Burst(Vector3 position,Color color,float size=1f,int pieces=7){for(int i=0;i<pieces;i++){float angle=360f/pieces*i;Vector3 direction=Quaternion.Euler(0,angle,0)*Vector3.forward;GameObject shard=Create(PrimitiveType.Cube,"DF_VFX_Burst",position+Vector3.up*.8f+direction*.2f,color);shard.transform.rotation=Quaternion.LookRotation(direction,Vector3.up);shard.AddComponent<TransientScaleVfx>().Configure(new Vector3(.10f,.10f,.35f)*size,new Vector3(.02f,.02f,1.65f)*size,.24f,220f);}}
 public static void Ring(Vector3 position,Color color,float radius=1.5f,float duration=.35f){GameObject ring=Create(PrimitiveType.Cylinder,"DF_VFX_Ring",position+Vector3.up*.06f,color);ring.AddComponent<TransientScaleVfx>().Configure(new Vector3(.25f,.025f,.25f),new Vector3(radius,.015f,radius),duration,90f);}
@@ -17,7 +20,7 @@ public static void GravityField(Vector3 position,Color color,float radius=2f){Ri
 public static void Bloom(Vector3 position,Color color,float radius=2f){Ring(position,color,radius,.45f);for(int i=0;i<6;i++){float a=i*60*Mathf.Deg2Rad;Vector3 d=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a));GameObject petal=Create(PrimitiveType.Cube,"DF_VFX_BloomPetal",position+Vector3.up*.2f+d*.35f,color);petal.transform.rotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,35);petal.AddComponent<TransientScaleVfx>().Configure(new Vector3(.18f,.04f,.38f),new Vector3(.5f,.02f,radius*.65f),.42f,70);}}
 public static void Guard(Vector3 position,Color color,float radius=1.5f){for(int i=0;i<6;i++){float a=i*60*Mathf.Deg2Rad;Vector3 p=position+Vector3.up*.75f+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius);GameObject panel=Create(PrimitiveType.Cube,"DF_VFX_GuardPanel",p,color);panel.transform.LookAt(position+Vector3.up*.75f);panel.transform.localScale=new Vector3(.55f,.7f,.05f);panel.AddComponent<TransientScaleVfx>().Configure(new Vector3(.1f,.2f,.03f),new Vector3(.55f,.7f,.05f),.34f,0);}}
 private static void Beam(Vector3 from,Vector3 to,Color color,float width,float duration,string name){Vector3 delta=to-from;if(delta.sqrMagnitude<.01f)return;GameObject g=Create(PrimitiveType.Cube,name,(from+to)*.5f,color);g.transform.rotation=Quaternion.LookRotation(delta.normalized,Vector3.up);g.AddComponent<TransientScaleVfx>().Configure(new Vector3(width,width,delta.magnitude),new Vector3(.02f,.02f,delta.magnitude*1.03f),duration,0);}
-private static GameObject Create(PrimitiveType type,string name,Vector3 position,Color color){GameObject target=GameObject.CreatePrimitive(type);target.name=name;target.transform.position=position;Collider collider=target.GetComponent<Collider>();if(collider!=null)collider.enabled=false;Renderer renderer=target.GetComponent<Renderer>();if(renderer!=null)renderer.material.color=color;return target;}
+private static GameObject Create(PrimitiveType type,string name,Vector3 position,Color color){GameObject target=GameObject.CreatePrimitive(type);target.name=name;target.transform.position=position;Collider collider=target.GetComponent<Collider>();if(collider!=null)collider.enabled=false;Renderer renderer=target.GetComponent<Renderer>();if(renderer!=null){renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;colorBlock??=new MaterialPropertyBlock();colorBlock.Clear();colorBlock.SetColor(BaseColor,color);colorBlock.SetColor(ColorId,color);renderer.SetPropertyBlock(colorBlock);}return target;}
 }
 }
 
