@@ -298,12 +298,7 @@ namespace Alterverse.AI
         }
         public bool UnsafeDefense(Vector3 point)
         {
-            foreach(DefenseBunker bunker in DefenseBunker.Active)
-            {
-                if(bunker==null||bunker.Team==team)continue;
-                float radius=bunker.DamageRadius+.65f;
-                if(FlatSqr(point-bunker.transform.position)<radius*radius)return true;
-            }
+            // Bastions are non-damaging cover. Only hostile trenches define a defensive damage zone.
             foreach(DefenseTrench trench in DefenseTrench.Active)
             {
                 if(trench==null||trench.Team==team)continue;
