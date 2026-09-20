@@ -54,7 +54,6 @@ namespace Alterverse.Visuals
             attackWeaponR=Rest(weaponR);attackWeaponL=Rest(weaponL);
             abilitySlot=ultimate?3:-1;attackSerial++;
             GetComponent<VoidWingPresentation>()?.Pulse();
-            GetComponent<PremiumWeaponPresentation>()?.Pulse(ultimate?1.25f:.78f);
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
             attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
