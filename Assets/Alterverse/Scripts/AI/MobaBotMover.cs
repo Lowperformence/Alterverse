@@ -24,7 +24,15 @@ namespace Alterverse.AI
         private HeroLocomotion locomotion;
         private float blockedTime, detourUntil, freeMoveTime, nextStuckLog;
         private float progressCheckAt, hazardSeenAt;
-        private Vector3 detour, progressAnchor;
+        private Vector3 detour, progressAnchor, progressGoal;
+        private Vector3 recoveryWaypoint;
+        private bool hasRecoveryWaypoint;
+        private Collider recoveryBlocker;
+        private string recoveryMode = "None";
+        private int recoveryCycle;
+        private Collider loggedBlocker;
+        private string loggedMode;
+        private int loggedAttempt;
         private bool progressWatchActive;
         private Alterverse.Combat.PlanetPulseAttack observedHazard;
         private int recoveryAttempts, recoverySide;
@@ -156,6 +164,11 @@ namespace Alterverse.AI
                     {
                         Vector3 formed=brain.Tactics.Formation(brain,role,sensor.ObservedTargetPosition,true);
                         if(role==HeroId.Mira)formed=brain.Tactics.SupportPosition(brain,formed);
+                        // Formation offsets cannot park an engaged hero outside basic range.
+                        Vector3 offset=formed-sensor.ObservedTargetPosition;offset.y=0;
+                        formed=sensor.ObservedTargetPosition+Vector3.ClampMagnitude(offset,
+                            profile!=null?Mathf.Max(.1f,profile.AttackRange-.5f):CombatStop);
+                        formed.y=transform.position.y;
                         // Retreat/kiting still has priority when already inside the danger distance.
                         if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=.3f;}
                     }
@@ -178,7 +191,7 @@ namespace Alterverse.AI
             }
             if(!IsAvoidingHazard&&brain.State==MobaBotBrain.BotState.Lane&&
                 (!brain.FollowTeamCall||brain.Tactics.Call!=BotTeamCoordinator.Intent.Defend)&&
-                transform.position.x*(brain.Team==0?1f:-1f)<-23f&&Mathf.Abs(transform.position.z-brain.LaneZ)>1f)
+                lanePlan.IsLeavingBase)
             {destination=lanePlan.GetDestination(brain.State);stopDistance=laneStopDistance;}
             MoveToward(destination, stopDistance);
         }
@@ -213,7 +226,7 @@ namespace Alterverse.AI
             Vector3 extents=solid.bounds.extents;
             // HeroLocomotion sweeps a .48 m capsule. Leave a small visible gap so melee bots
             // can attack solid objectives without repeatedly requesting movement inside them.
-            return Mathf.Max(fallback,Mathf.Max(extents.x,extents.z)+.58f);
+            return Mathf.Max(fallback,Mathf.Max(extents.x,extents.z)+.78f);
         }
 
         private bool ShouldContestHotZone()
@@ -293,6 +306,8 @@ namespace Alterverse.AI
         public void ResetSteering()
         {
             velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;
+            hasRecoveryWaypoint=false;recoveryBlocker=null;recoveryMode="None";recoveryCycle=0;
+            loggedBlocker=null;loggedMode=null;loggedAttempt=0;
             recoveryAttempts=recoverySide=0;skirtTower=null;skirtUntil=0;keepingDistance=false;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
             observedHazard=null;hazardSeenAt=0;
         }
@@ -510,7 +525,15 @@ namespace Alterverse.AI
                 velocity = Vector3.Lerp(velocity, delta.normalized * MoveSpeed, 1f-Mathf.Exp(-18f*Time.deltaTime));
                 advance = Vector3.ClampMagnitude(velocity * Time.deltaTime, Mathf.Max(0f, delta.magnitude - stopDistance));
             }
-            if(Time.time<detourUntil&&!arrived)advance=detour*MoveSpeed*Time.deltaTime;
+            if(Time.time<detourUntil&&!arrived)
+            {
+                Vector3 recoveryDelta=hasRecoveryWaypoint?recoveryWaypoint-transform.position:detour;
+                recoveryDelta.y=0;
+                if(hasRecoveryWaypoint&&recoveryDelta.sqrMagnitude<.25f*.25f)
+                {detourUntil=0;hasRecoveryWaypoint=false;}
+                else advance=recoveryDelta.normalized*Mathf.Min(MoveSpeed*Time.deltaTime,
+                    hasRecoveryWaypoint?recoveryDelta.magnitude:float.MaxValue);
+            }
             Vector3 separation=SeparationVelocity();
             if(arrived)
             {
@@ -543,7 +566,7 @@ namespace Alterverse.AI
             else if(hasIntent&&progressRatio>.70f)
             {
                 blockedTime=0;freeMoveTime+=Time.deltaTime;
-                if(freeMoveTime>.65f){recoveryAttempts=0;freeMoveTime=.65f;}
+                if(freeMoveTime>.65f)freeMoveTime=.65f;
             }
             else {blockedTime=0;freeMoveTime=0;}
 
@@ -562,15 +585,23 @@ namespace Alterverse.AI
                 {
                     progressWatchActive=true;
                     progressAnchor=transform.position;
-                    progressCheckAt=Time.time+.65f;
+                    progressCheckAt=Time.time+1.2f;progressGoal=destination;
                 }
                 else if(Time.time>=progressCheckAt)
                 {
                     Vector3 travelled=transform.position-progressAnchor;travelled.y=0;
-                    if(travelled.sqrMagnitude<.14f*.14f&&!recoveredThisFrame&&Time.time>=detourUntil)
+                    Vector3 oldDelta=progressGoal-progressAnchor;oldDelta.y=0;
+                    Vector3 newDelta=progressGoal-transform.position;newDelta.y=0;
+                    bool sameGoal=(destination-progressGoal).sqrMagnitude<1f;
+                    float approach=oldDelta.magnitude-newDelta.magnitude;
+                    // A completed sidestep is useful; oscillation around a fixed goal is not.
+                    if(approach>.45f){recoveryAttempts=0;recoveryMode="None";}
+                    bool stalled=travelled.sqrMagnitude<.14f*.14f||
+                        sameGoal&&approach<.06f&&travelled.sqrMagnitude<.8f*.8f;
+                    if(stalled&&!recoveredThisFrame&&Time.time>=detourUntil)
                         BeginStuckRecovery(delta);
                     progressAnchor=transform.position;
-                    progressCheckAt=Time.time+.65f;
+                    progressCheckAt=Time.time+1.2f;progressGoal=destination;
                 }
             }
             else
@@ -583,52 +614,42 @@ namespace Alterverse.AI
 
         private void BeginStuckRecovery(Vector3 towardDestination)
         {
-            blockedTime=0;freeMoveTime=0;recoveryAttempts++;
+            blockedTime=0;freeMoveTime=0;
+            recoveryAttempts=Mathf.Min(6,recoveryAttempts+1);recoveryCycle++;
             towardDestination.y=0;
             Vector3 desired=towardDestination.sqrMagnitude>.01f?towardDestination.normalized:transform.forward;
-            Vector3 normal=locomotion.LastCollisionNormal;normal.y=0;
-            // Keep one side across retries; only reverse after repeated failure.
-            if(recoverySide==0)recoverySide=(rotationSlot&1)==0?1:-1;
-            else if(recoveryAttempts%3==0)recoverySide=-recoverySide;
-            int side=recoverySide;
-
-            // Prefer a tangent around the actual blocker, but verify it is open before committing.
-            Vector3 preferred=desired;
-            if(normal.sqrMagnitude>.01f)
+            Collider blocker=locomotion.LastCollisionCollider;
+            if(blocker!=null)recoveryBlocker=blocker;
+            recoverySide=(recoveryCycle&1)==0?1:-1;
+            hasRecoveryWaypoint=false;
+            // Replan navigation, not perception: a collision must not erase a visible opponent.
+            if(recoveryAttempts==3)lanePlan?.ResetRoute();
+            if((recoveryAttempts<5||recoveryCycle%3!=0)&&recoveryBlocker!=null&&recoveryBlocker.enabled&&
+                locomotion.TryFindObstacleWaypoint(recoveryBlocker,transform.position+towardDestination,
+                    recoverySide,out recoveryWaypoint,recoveryAttempts>=4?1.4f:.8f))
             {
-                preferred=Vector3.Cross(Vector3.up,normal.normalized)*side;
-                if(Vector3.Dot(preferred,desired)<-.25f)preferred=-preferred;
+                hasRecoveryWaypoint=true;recoveryMode=recoveryAttempts>=4?"WideWaypoint":"ObstacleWaypoint";
+                detourUntil=Time.time+Mathf.Clamp(Vector3.Distance(transform.position,recoveryWaypoint)/MoveSpeed+.4f,.6f,4f);
             }
-
-            if(!locomotion.TryFindClearDirection(preferred,1.35f,side,out detour)
-                &&!locomotion.TryFindClearDirection(desired,1.35f,side,out detour))
-                detour=Vector3.Cross(Vector3.up,desired)*side;
-
-            if(recoveryAttempts>=5&&locomotion.TryFindClearDirection(desired,2.2f,-side,out Vector3 longDetour))
-                detour=longDetour;
-
-            detour.y=0;
-            if(detour.sqrMagnitude<.01f)detour=brain!=null&&brain.Team==0?Vector3.right:Vector3.left;
-            detour.Normalize();
-            detourUntil=Time.time+Mathf.Min(1.25f,.52f+recoveryAttempts*.12f);
+            else
+            {
+                Vector3 probe=recoveryAttempts>=4?-desired:
+                    Quaternion.AngleAxis(recoverySide*(recoveryAttempts>=2?75f:35f),Vector3.up)*desired;
+                recoveryMode=recoveryAttempts>=4?"LocalEscape":"SideProbe";
+                if(!locomotion.TryFindClearDirection(probe,recoveryAttempts>=4?2f:1f,recoverySide,out detour))
+                {detour=Vector3.zero;recoveryMode="WaitForBlocker";}
+                detourUntil=Time.time+(recoveryAttempts>=4?1f:.65f);
+            }
             velocity=Vector3.zero;
 
-            // Repeated collision means the tactical target/route may be stale. Reset only steering
-            // context; no combat stats or positions are changed and there is no teleport.
-            if(recoveryAttempts>=3)
-            {
-                sensor?.ClearTarget();
-                lanePlan?.ResetRoute();
-                detourUntil=Time.time+.92f;
-            }
-
 #if UNITY_EDITOR || DEBUG
-            if(Time.time>=nextStuckLog)
+            if(Time.time>=nextStuckLog&&(loggedBlocker!=recoveryBlocker||loggedMode!=recoveryMode||loggedAttempt!=recoveryAttempts))
             {
                 nextStuckLog=Time.time+2f;
-                string blocker=locomotion.LastCollisionCollider!=null?locomotion.LastCollisionCollider.name:"unknown";
+                loggedBlocker=recoveryBlocker;loggedMode=recoveryMode;loggedAttempt=recoveryAttempts;
+                string blockerName=recoveryBlocker!=null?recoveryBlocker.name:"route/no collider";
                 string targetName=sensor!=null&&sensor.CurrentTarget!=null?sensor.CurrentTarget.name:"none";
-                Debug.LogWarning($"BOT STUCK RECOVERY: {name} pos={transform.position} state={(brain!=null?brain.State.ToString():"?")} lane={(brain!=null?brain.LaneZ:0)} target={targetName} blocker={blocker} attempt={recoveryAttempts}");
+                Debug.LogWarning($"BOT STUCK RECOVERY: {name} pos={transform.position} state={(brain!=null?brain.State.ToString():"?")} lane={(brain!=null?brain.LaneZ:0)} target={targetName} destination={transform.position+towardDestination} distance={towardDestination.magnitude:F2} blocker={blockerName} attempt={recoveryAttempts} mode={recoveryMode}");
             }
 #endif
         }

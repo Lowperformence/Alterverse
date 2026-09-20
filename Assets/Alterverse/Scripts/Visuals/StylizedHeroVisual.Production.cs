@@ -10,12 +10,13 @@ namespace Alterverse.Visuals
         {
             HeroId h=identity.Hero;bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.48f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
-            Color trim=tank?new Color(.66f,.43f,.16f):Color.Lerp(accent,dark,.65f);
+            Color trim=tank?new Color(.66f,.43f,.16f):Color.Lerp(accent,dark,.28f);
             Color metal=tank?new Color(.41f,.44f,.47f):h==HeroId.Mira?new Color(.72f,.77f,.70f):new Color(.29f,.33f,.40f);
+            Color identityPanel=Color.Lerp(accent,metal,.32f);
             Mesh chest=HeroMeshLibrary.Loft("DF_AnatomicalCuirass",new[]{-.36f,-.19f,.08f,.34f,.45f,.53f},new[]{.24f,.23f,.32f,.39f,.33f,.14f},new[]{.15f,.14f,.21f,.23f,.19f,.12f});
             Sculpt("Torso",chest,Vector3.zero,new Vector3(breadth,1,heavy?1.18f:1),dark);
             // Overlapping breastplate and abdominal courses share a contoured rib cage, not a stack of boxes.
-            Plate("Breastplate",new Vector3(0,.24f,.20f),.61f*breadth,.46f,.12f,metal);
+            Plate("Breastplate",new Vector3(0,.24f,.20f),.61f*breadth,.46f,.12f,identityPanel);
             Plate("Abdomen",new Vector3(0,-.08f,.155f),.39f*breadth,.30f,.11f,dark);
             Plate("Gorget",new Vector3(0,.48f,.10f),.38f*breadth,.17f,.22f,trim);
             Mesh pelvis=HeroMeshLibrary.Loft("DF_Pelvis",new[]{-.43f,-.30f,-.19f},new[]{.25f,.30f,.24f},new[]{.14f,.17f,.14f});
@@ -38,7 +39,7 @@ namespace Alterverse.Visuals
                 Mesh glove=HeroMeshLibrary.Loft("DF_Glove",new[]{-.13f,-.07f,.07f,.11f},new[]{.055f,.09f,.095f,.07f},new[]{.065f,.075f,.085f,.055f});
                 Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.06f),Vector3.one,dark,arm);
                 arm.localRotation=Quaternion.Euler(h==HeroId.Nyra?-48:h==HeroId.Elyra?-18:0,0,h==HeroId.Nyra?(side<0?55:-8):side*(heavy?-8:-10));
-                Plate("Shoulder"+s,new Vector3(side*(heavy?.53f:.36f),.43f,0),heavy?.52f:.29f,heavy?.38f:.24f,heavy?.50f:.31f,side<0?metal:trim,side*-16);
+                Plate("Shoulder"+s,new Vector3(side*(heavy?.53f:.36f),.43f,0),heavy?.52f:.29f,heavy?.38f:.24f,heavy?.50f:.31f,side<0?identityPanel:trim,side*-16);
                 Plate("Tasset"+s,new Vector3(side*.20f*breadth,-.31f,.15f),.20f*breadth,.30f,.08f,metal,side*9);
             }
             BuildProductionHead(h,metal,trim);
@@ -184,7 +185,7 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh clothMesh=HeroMeshLibrary.Ribbon("DF_CoatTail"+side+(longCoat?"Long":"Short"),new[]{new Vector3(side*.18f,.16f,-.15f),new Vector3(side*.24f,-.24f,-.20f),new Vector3(side*.34f,-.59f,-.27f),new Vector3(side*.46f,longCoat?-.92f:-.73f,-.35f)},new[]{.10f,.15f,.16f,.06f},.025f);
-                Sculpt(side<0?"Cape":"CoatTailR",clothMesh,Vector3.zero,Vector3.one,side<0?cloth:Color.Lerp(accent,cloth,.72f));
+                Sculpt(side<0?"Cape":"CoatTailR",clothMesh,Vector3.zero,Vector3.one,side<0?cloth:Color.Lerp(accent,cloth,.42f));
             }
         }
     }

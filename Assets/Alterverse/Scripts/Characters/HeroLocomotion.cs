@@ -105,9 +105,9 @@ namespace Alterverse.Characters
             int preferred=sidePreference>=0?1:-1;
             if(DirectionClear(desired,probeDistance)){clearDirection=desired;return true;}
             Vector3 right=Vector3.Cross(Vector3.up,desired).normalized;
-            for(int pass=0;pass<3;pass++)
+            for(int pass=0;pass<5;pass++)
             {
-                float angle=pass==0?42f:pass==1?68f:92f;
+                float angle=pass==0?42f:pass==1?68f:pass==2?92f:pass==3?135f:180f;
                 float radians=angle*Mathf.Deg2Rad,cos=Mathf.Cos(radians),sin=Mathf.Sin(radians);
                 Vector3 first=(desired*cos+right*(preferred*sin)).normalized;
                 if(DirectionClear(first,probeDistance)){clearDirection=first;return true;}
@@ -117,10 +117,33 @@ namespace Alterverse.Characters
             return false;
         }
 
+        // Low-frequency recovery only. Bounds cover walls, towers and moving guardians alike.
+        // The collider remains solid; candidates must pass the same swept-capsule test as movement.
+        public bool TryFindObstacleWaypoint(Collider obstacle,Vector3 goal,int side,out Vector3 waypoint,float clearance=.8f)
+        {
+            waypoint=transform.position;
+            Bounds bounds=obstacle.bounds;bounds.Expand(new Vector3(clearance*2f,0,clearance*2f));
+            float best=float.MaxValue;bool found=false;
+            Vector3 desired=goal-transform.position;desired.y=0;
+            for(int i=0;i<4;i++)
+            {
+                Vector3 point=new Vector3((i&1)==0?bounds.min.x:bounds.max.x,transform.position.y,
+                    (i&2)==0?bounds.min.z:bounds.max.z);
+                if(Mathf.Abs(point.x)>39.5f||Mathf.Abs(point.z)>32.5f)continue;
+                Vector3 delta=point-transform.position;float distance=delta.magnitude;
+                if(distance<.3f||distance>8f||!DirectionClear(delta/distance,distance))continue;
+                float bias=Vector3.Dot(Vector3.Cross(Vector3.up,desired.normalized),delta.normalized)*side;
+                float score=distance+Vector3.Distance(point,goal)-bias*.6f;
+                if(score>=best)continue;
+                best=score;waypoint=point;found=true;
+            }
+            return found;
+        }
+
         private bool DirectionClear(Vector3 direction,float distance)
         {
             Sweep(transform.position,direction,distance,out float allowed,out _,out _);
-            return allowed>=distance*.72f;
+            return allowed>=distance-.03f;
         }
         public Vector3 Move(Vector3 displacement,float halfWidth,float halfHeight,bool slide=true)
         {

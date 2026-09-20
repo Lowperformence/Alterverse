@@ -218,6 +218,10 @@ namespace Alterverse.AI
             if(!retainedVisible)currentTarget=null;
             if(NearbyAllies>0)RallyPosition=allies/NearbyAllies;
             if(best==currentTarget){candidateTarget=null;return;}
+            // Keep a still-visible candidate through its reaction window; score jitter cannot
+            // postpone first acquisition indefinitely in a crowded fight.
+            if(currentTarget==null&&IsEnemy(candidateTarget)&&Visible(candidateTarget)&&
+                !(candidateTarget==disengagedTarget&&Time.time<disengagedUntil))best=candidateTarget;
             if(best!=candidateTarget){candidateTarget=best;candidateSince=Time.time;}
             float reaction=Difficulty.ReactionDelay*(brain!=null?brain.DecisionRhythm:1f);
             if(best!=null&&Time.time-candidateSince>=reaction)

@@ -27,6 +27,7 @@ namespace Alterverse.EditorChecks
                 var cc=actor.AddComponent<CharacterController>();cc.height=2;cc.radius=.5f;
                 var health=actor.AddComponent<Health>();var body=actor.AddComponent<HeroLocomotion>();
                 CheckInputDirections(actor);
+                CheckBaseRoutesAndSolidRange();
                 var floor=GameObject.CreatePrimitive(PrimitiveType.Cube);floor.transform.SetParent(transform);
                 floor.transform.position=new Vector3(0,78.8f,0);floor.transform.localScale=new Vector3(20,.2f,20);
                 var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.SetParent(transform);
@@ -62,6 +63,40 @@ namespace Alterverse.EditorChecks
             }
             finally {Destroy(gameObject);}
         }
+        private void CheckBaseRoutesAndSolidRange()
+        {
+            var actor=new GameObject("DF_RouteCheck");actor.transform.SetParent(transform);
+            var route=actor.AddComponent<Alterverse.AI.BotLanePlan>();
+            for(int team=0;team<2;team++)for(int lane=-1;lane<=1;lane+=2)
+            {
+                float direction=team==0?1:-1;
+                actor.transform.position=new Vector3(-28*direction,80,lane*16);
+                route.Initialize(team,lane*16);
+                Vector3 exit=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
+                Check(Mathf.Abs(exit.x+22*direction)<.01f,"base exit does not advance beyond tactical gate");
+                actor.transform.position+=Vector3.forward*lane*1.1f;
+                Check(route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane)==exit,"lane-edge jitter resets latched exit");
+                actor.transform.position=new Vector3(-28*direction,80,0);route.ResetRoute();
+                Vector3 align=route.GetDestination(Alterverse.AI.MobaBotBrain.BotState.Lane);
+                Check(Mathf.Abs(align.z-lane*16)<.01f&&Mathf.Abs(align.x+28*direction)<.01f,"respawn route did not reset alignment");
+            }
+            actor.transform.position=new Vector3(0,80,-3);
+            actor.AddComponent<Health>();var locomotion=actor.AddComponent<HeroLocomotion>();
+            var obstacle=GameObject.CreatePrimitive(PrimitiveType.Capsule);obstacle.transform.SetParent(transform);
+            obstacle.transform.position=new Vector3(0,80,0);
+            var capsule=obstacle.GetComponent<CapsuleCollider>();capsule.radius=.72f;capsule.height=2.05f;
+            var hp=obstacle.AddComponent<Health>();Physics.SyncTransforms();
+            Check(locomotion.TryFindObstacleWaypoint(capsule,new Vector3(0,80,3),1,out Vector3 point),"guardian has no swept-clear local waypoint");
+            Check(Mathf.Abs(point.x)>1.2f,"guardian waypoint lacks capsule clearance");
+            Vector3 moved=locomotion.Move(point-actor.transform.position,40,33);
+            Check(Vector3.Distance(actor.transform.position,point)<.05f,"waypoint probe disagrees with real movement");
+            Vector3 attackOrigin=new Vector3(0,80,-2);
+            Check(HeroCombatRules.BasicDistance(attackOrigin,hp)<1.4f,"solid surface remains out of melee range");
+            obstacle.AddComponent<HeroIdentity>();
+            Check(Mathf.Abs(HeroCombatRules.BasicDistance(attackOrigin,hp)-2)<.01f,"hero centre range changed");
+            obstacle.SetActive(false);actor.SetActive(false);
+        }
+
         private void CheckInputDirections(GameObject actor)
         {
             var motor=actor.AddComponent<HeroMotor>();motor.enabled=false;

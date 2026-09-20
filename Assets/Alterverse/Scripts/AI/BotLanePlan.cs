@@ -10,6 +10,8 @@ namespace Alterverse.AI
         private float nextObjectiveScan;
         private Health laneObjective;
         private float towerApproachSpread;
+        private bool exitAligned;
+        public bool IsLeavingBase => transform.position.x * (team == 0 ? 1f : -1f) < -22.5f;
 
         public Vector3 Home => new(team == 0 ? -27.5f : 27.5f, transform.position.y, 0f);
         public Vector3 Staging => new(team == 0 ? 1.5f : -1.5f, transform.position.y, laneZ);
@@ -25,7 +27,7 @@ namespace Alterverse.AI
             ResetRoute();
         }
 
-        public void ResetRoute() { laneObjective = null; nextObjectiveScan = 0; }
+        public void ResetRoute() { laneObjective = null; nextObjectiveScan = 0; exitAligned = false; }
 
         public Vector3 GetDestination(MobaBotBrain.BotState state)
         {
@@ -34,8 +36,14 @@ namespace Alterverse.AI
 
             // Leave the actual healing station through the assigned lane before advancing.
             float direction = team == 0 ? 1f : -1f;
-            if (transform.position.x * direction < -23f && Mathf.Abs(transform.position.z - laneZ) > 1f)
-                return new Vector3(-28f * direction, transform.position.y, laneZ);
+            if (IsLeavingBase)
+            {
+                // Latch alignment: tactical calls must not flip the destination at the lane edge.
+                if (Mathf.Abs(transform.position.z - laneZ) < .6f) exitAligned = true;
+                if (Mathf.Abs(transform.position.z - laneZ) > 3f) exitAligned = false;
+                return new Vector3((exitAligned ? -22f : -28f) * direction, transform.position.y, laneZ);
+            }
+            exitAligned = false;
 
             // No objective is a valid cached result too; do not allocate scene scans every frame.
             if (Time.time >= nextObjectiveScan || laneObjective != null && laneObjective.IsDead)

@@ -187,7 +187,8 @@ namespace Alterverse.AI
                 return;
             }
 
-            if(state==BotState.Fight&&(recentMemory||Time.time<fightCommitUntil))return;
+            if(state==BotState.Fight&&recentMemory)return;
+            fightCommitUntil=0;
             state=BotState.Lane;
         }
     }

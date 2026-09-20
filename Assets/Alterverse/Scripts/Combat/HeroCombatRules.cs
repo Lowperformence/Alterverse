@@ -6,6 +6,18 @@ namespace Alterverse.Combat
     public static class HeroCombatRules
     {
         public static float Distance(Vector3 a, Vector3 b) { a.y = b.y = 0; return Vector3.Distance(a, b); }
+        // Basic attacks measure solid objectives at their surface. Hero/minion duels keep
+        // the authored centre-to-centre range. Reuse this at windup and impact, too.
+        public static float BasicDistance(Vector3 origin,Health target)
+        {
+            if(target==null)return float.MaxValue;
+            if(target.GetComponent<HeroIdentity>()!=null||target.GetComponent<LaneMinion>()!=null)
+                return Distance(origin,target.transform.position);
+            Collider body=target.GetComponent<Collider>();
+            if(body==null||!body.enabled||body.isTrigger)return Distance(origin,target.transform.position);
+            Vector3 point=origin;point.y=body.bounds.center.y;
+            return Distance(origin,body.ClosestPoint(point));
+        }
         public static bool Enemy(GameObject actor, Health target)
         {
             if (target == null || target.IsDead || !target.isActiveAndEnabled || target.gameObject == actor) return false;

@@ -97,7 +97,7 @@ namespace Alterverse.Combat
                 {
                     if(Time.time<p.ReleaseAt)continue;
                     // Keep the originally selected target. Leaving the existing range can avoid contact.
-                    if(HeroCombatRules.Distance(transform.position,p.Target.transform.position)>p.Range)
+                    if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range)
                     {pending[i]=default;continue;}
                     Vector3 origin=GetComponent<HeroVisualMotion>()?.ReleasePoint??transform.position;
                     float flight=Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
@@ -117,7 +117,7 @@ namespace Alterverse.Combat
                 if(Time.time<p.HitAt)continue;
                 // Clear before callbacks (a hit can disable/destroy a component or trigger death).
                 pending[i]=default;
-                if(HeroCombatRules.Distance(transform.position,p.Target.transform.position)>p.Range)continue;
+                if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range)continue;
                 if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
                 else p.Execution.ResolvePresentedHit(p.Slot,p.Target,p.Volley);
             }

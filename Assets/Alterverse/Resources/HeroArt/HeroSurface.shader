@@ -28,7 +28,9 @@ Shader "DimensionsFront/HeroSurface"
     half3 ambient=max(SampleSH(n),half3(.20h,.22h,.26h));
     half rim=pow(1-saturate(dot(n,view)),3)*.13h;
     half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),20)*.09h;
-    half3 lit=albedo*(ambient*.65h+key.color*diffuse)+spec*key.color+rim*albedo;
+    // Bound scene illumination on hero midtones; preserve hue under arena light.
+    half3 illumination=clamp(ambient*.45h+key.color*diffuse,half3(.48h,.48h,.48h),half3(1.08h,1.08h,1.08h));
+    half3 lit=albedo*illumination+spec*min(key.color,1.0h)*.4h+rim*albedo;
     return half4(lerp(lit,albedo*(1.35h+_EnergyBoost*.55h),saturate(i.color.a)),1);
    }
    ENDHLSL
