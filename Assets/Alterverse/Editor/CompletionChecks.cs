@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using Alterverse.Characters;
 using Alterverse.Shop;
+using Alterverse.Match;
 using Alterverse.Visuals;
 using UnityEditor;
 using UnityEngine;
@@ -8,6 +9,28 @@ namespace Alterverse.EditorChecks
 {
     public static class CompletionChecks
     {
+        private static void Check(bool valid,string message)
+        {
+            if(!valid)throw new System.InvalidOperationException("DIMENSIONS FRONT completion check: "+message);
+        }
+
+        [MenuItem("DIMENSIONS FRONT/Checks/Wing match reward bonuses")]
+        public static void WingRewardBonuses()
+        {
+            Check(WingMatchRewardBonus.Percent(UniversalHeroCosmetic.Original)==0,"Original must have 0% reward bonus");
+            Check(WingMatchRewardBonus.Percent(UniversalHeroCosmetic.Voidfall)==5,"VOIDFALL must have 5% reward bonus");
+            Check(WingMatchRewardBonus.Percent(UniversalHeroCosmetic.PlagueWings)==10,"PLAGUE WINGS must have 10% reward bonus");
+            Check(WingMatchRewardBonus.Percent(UniversalHeroCosmetic.BetaSupporterWings)==20,"BETA SUPPORTER WINGS must have 20% reward bonus");
+            Check(WingMatchRewardBonus.CalculateBonus(100,UniversalHeroCosmetic.Original)==0,"Original 100 reward bonus");
+            Check(WingMatchRewardBonus.CalculateBonus(100,UniversalHeroCosmetic.Voidfall)==5,"VOIDFALL 100 reward bonus");
+            Check(WingMatchRewardBonus.CalculateBonus(100,UniversalHeroCosmetic.PlagueWings)==10,"PLAGUE 100 reward bonus");
+            Check(WingMatchRewardBonus.CalculateBonus(100,UniversalHeroCosmetic.BetaSupporterWings)==20,"BETA 100 reward bonus");
+            Check(WingMatchRewardBonus.CalculateBonus(0,UniversalHeroCosmetic.BetaSupporterWings)==0,"zero reward must stay zero");
+            Check(WingMatchRewardBonus.Percent((UniversalHeroCosmetic)999)==0,"invalid cosmetic must not grant a bonus");
+            Check(PlagueWings.Price==4000,"PLAGUE WINGS price changed");
+            Check(BetaSupporterWings.Price==8000,"BETA SUPPORTER WINGS price changed");
+            Debug.Log("DIMENSIONS FRONT: wing reward bonus definitions passed — Original 0%, VOIDFALL 5%, PLAGUE 10%, BETA 20%.");
+        }
         [MenuItem("DIMENSIONS FRONT/Checks/Production audio assets")]
         public static void AudioAssets()
         {
