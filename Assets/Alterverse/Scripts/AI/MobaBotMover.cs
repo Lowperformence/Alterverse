@@ -90,6 +90,18 @@ namespace Alterverse.AI
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
             {
+                // A defensive re-engage is intentionally local. Once the attacker leaves the
+                // base area, drop the chase and return to normal defence/recovery instead of
+                // following them back toward mid lane.
+                if(brain.BaseDefenseActive&&!brain.InsideOwnBase(sensor.ObservedTargetPosition))
+                {
+                    sensor.Disengage(target);
+                    chaseTarget=null;keepingDistance=false;target=null;
+                }
+            }
+
+            if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
+            {
                 if(target!=chaseTarget){chaseTarget=target;chaseStarted=Time.time;keepingDistance=false;}
                 Vector3 delta = sensor.ObservedTargetPosition - transform.position; delta.y = 0;
                 float combatStop=SolidTargetStopDistance(target,CombatStop);
