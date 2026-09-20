@@ -132,6 +132,7 @@ namespace Alterverse.Combat
 
         private void Initialize(int assignedTeam,Vector3 post,Vector3 plate,Color accent)
         {
+            gameObject.layer=GameplayCollision.Units;
             team=Mathf.Clamp(assignedTeam,0,1);
             guardPost=post;
             healingPlate=plate;
@@ -259,7 +260,7 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);
             part.name=name;part.transform.SetParent(parent,false);part.transform.localPosition=pos;part.transform.localRotation=rotation;part.transform.localScale=scale;
-            Collider collider=part.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             Renderer renderer=part.GetComponent<Renderer>();if(renderer!=null){renderer.material.color=color;renderer.shadowCastingMode=ShadowCastingMode.On;}
         }
 
@@ -267,7 +268,7 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);
             part.name=name;part.transform.SetParent(parent,false);part.transform.localPosition=pos;part.transform.localRotation=rotation;part.transform.localScale=scale;
-            Collider collider=part.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             Renderer renderer=part.GetComponent<Renderer>();
             if(renderer!=null)
             {

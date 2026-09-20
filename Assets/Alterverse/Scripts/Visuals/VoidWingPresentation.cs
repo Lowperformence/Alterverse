@@ -133,7 +133,7 @@ namespace Alterverse.Visuals
                 toxicNode.transform.SetParent(wing.transform,false);
                 toxicNode.transform.localPosition=new Vector3(.31f,.08f,.025f);
                 toxicNode.transform.localScale=Vector3.one*.060f;
-                var collider=toxicNode.GetComponent<Collider>();if(collider!=null)Destroy(collider);
+                var collider=toxicNode.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Destroy(collider);}
                 var nr=toxicNode.GetComponent<MeshRenderer>();nr.sharedMaterial=edge;nr.shadowCastingMode=ShadowCastingMode.Off;nr.receiveShadows=false;
             }
             lastPosition=transform.position;

@@ -92,7 +92,18 @@ namespace Alterverse.EditorChecks
                         Check(target.Current==1000,"range loss during flight connected");
                         victim.transform.position=new Vector3(1,80,0);
                     }
-                    // These Q abilities use new delivery; Ione Q is an unchanged area coroutine.
+                    if(!HeroAttackDelivery.IsRanged((HeroId)hero))
+                    {
+                        float range=source.GetComponent<HeroCombatProfile>().AttackRange;
+                        target.RestoreFull();victim.transform.position=new Vector3(range-.05f,80,0);
+                        HeroCombatRules.BasicHit(source,target,power);
+                        victim.transform.position=new Vector3(range+.20f,80,0);Drain(delivery);
+                        Check(target.Current==1000-power,"small windup range loss ignored melee grace");
+                        target.RestoreFull();HeroCombatRules.BasicHit(source,target,power);Drain(delivery);
+                        Check(target.Current==1000,"grace allowed an initially invalid attack");
+                        victim.transform.position=new Vector3(1,80,0);
+                    }
+                    // Ione Q uses the fixed-centre area coroutine.
                     if((HeroId)hero!=HeroId.Elyra)
                     {
                         var execution=source.AddComponent<HeroAbilityExecution>();

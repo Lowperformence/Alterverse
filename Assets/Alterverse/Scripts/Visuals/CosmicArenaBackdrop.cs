@@ -47,7 +47,7 @@ namespace Alterverse.Visuals
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Quad);g.name="DF_CosmicVoid";
             g.transform.SetParent(transform,false);g.transform.position=new Vector3(0,-48f,0);
             g.transform.rotation=Quaternion.Euler(90,0,0);g.transform.localScale=new Vector3(260,180,1);
-            Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+            Collider c=g.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}
             Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
         }
 
@@ -152,7 +152,7 @@ namespace Alterverse.Visuals
                 GameObject g=new GameObject("DF_FloatingMoonFragment");g.AddComponent<MeshFilter>().sharedMesh=fragment;g.AddComponent<MeshRenderer>();
                 g.transform.SetParent(transform,false);g.transform.position=sites[i];float scale=1.7f+(i%3)*.85f;
                 g.transform.localScale=new Vector3(scale*1.4f,scale*.7f,scale);g.transform.rotation=Quaternion.Euler(i*17,31+i*49,12+i*9);
-                Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Collider c=g.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
         }
@@ -167,7 +167,7 @@ namespace Alterverse.Visuals
         private void ShadowDisc(Vector3 p,float size,Material m)
         {
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_PlanetNightSide";g.transform.SetParent(distantBodies,false);g.transform.position=p;g.transform.localScale=Vector3.one*size;
-            Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
+            Collider c=g.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
         }
 
         private void BuildPlanetRings()
@@ -203,7 +203,7 @@ namespace Alterverse.Visuals
             Material m=Mat(color,false);if(m==null)return;
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Sphere);g.name="DF_DistantPlanet";g.transform.SetParent(distantBodies!=null?distantBodies:transform,false);
             g.transform.position=p;g.transform.localScale=Vector3.one*size;g.isStatic=true;
-            Collider c=g.GetComponent<Collider>();if(c!=null)c.enabled=false;
+            Collider c=g.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}
             Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
         }
 

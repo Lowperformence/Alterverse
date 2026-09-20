@@ -25,6 +25,23 @@ namespace Alterverse.AI
             disengagedUntil=Time.time+Mathf.Lerp(1.2f,2.5f,Difficulty.ChaseDiscipline);
         }
         private Vector3 lastKnownPosition;
+        public Vector3 ObservedTargetVelocity { get; private set; }
+        public bool HasSteadyMotion { get; private set; }
+        public bool TryObservedVelocity(Health target,out Vector3 velocity)
+        {
+            velocity=Vector3.zero;
+            if(target==null||target!=currentTarget||Time.time-lastSeenTime>.5f)return false;
+            velocity=ObservedTargetVelocity;return true;
+        }
+        private void ObserveMotion(Vector3 position)
+        {
+            float elapsed=Time.time-lastSeenTime;
+            Vector3 velocity=elapsed>.04f&&elapsed<.6f?(position-lastKnownPosition)/elapsed:Vector3.zero;
+            velocity.y=0;velocity=Vector3.ClampMagnitude(velocity,8f);
+            HasSteadyMotion=velocity.sqrMagnitude<.25f||ObservedTargetVelocity.sqrMagnitude>.25f&&
+                Vector3.Dot(velocity.normalized,ObservedTargetVelocity.normalized)>.8f;
+            ObservedTargetVelocity=velocity;
+        }
         private MobaBotBrain brain;
         private readonly RaycastHit[] sightHits=new RaycastHit[32];
         private readonly BotTeamCoordinator.Observation[] observations=new BotTeamCoordinator.Observation[48];
@@ -54,7 +71,7 @@ namespace Alterverse.AI
             profile = GetComponent<HeroCombatProfile>();
             nextScanTime=Time.time+(Mathf.Abs(GetEntityId().GetHashCode()%17)/17f)*scanInterval;
         }
-        public void ClearTarget() { ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
+        public void ClearTarget() { ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;ObservationCount=0; currentTarget = candidateTarget = disengagedTarget = null; disengagedUntil=0; candidateSince=retainedSince=0; lastSeenTime=-100f; lastKnownPosition=transform.position; nextScanTime = 0; NearbyEnemies=NearbyAllies=0; }
         private void Update()
         {
             if (Time.timeScale <= 0f) return;
@@ -77,7 +94,7 @@ namespace Alterverse.AI
             Vector3 end=candidate.transform.position+Vector3.up*.4f;
             Vector3 ray=end-origin;
             if(ray.sqrMagnitude<.001f)return true;
-            int count=Physics.RaycastNonAlloc(origin,ray.normalized,sightHits,ray.magnitude,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore);
+            int count=Physics.RaycastNonAlloc(origin,ray.normalized,sightHits,ray.magnitude,GameplayCollision.SightMask,QueryTriggerInteraction.Ignore);
             if(count==sightHits.Length)return false;
             for(int i=0;i<count;i++)
             {
@@ -183,6 +200,7 @@ namespace Alterverse.AI
                 if(candidate==currentTarget)
                 {
                     retainedVisible=true;
+                    ObserveMotion(candidate.transform.position);
                     lastKnownPosition=candidate.transform.position;
                     lastSeenTime=Time.time;
                 }
@@ -215,7 +233,7 @@ namespace Alterverse.AI
                 if (candidate == currentTarget) score *= Time.time-retainedSince<Difficulty.MemorySeconds?.65f:.85f;
                 if (score < bestScore) { bestScore = score; best = candidate; }
             }
-            if(!retainedVisible)currentTarget=null;
+            if(!retainedVisible){currentTarget=null;ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;}
             if(NearbyAllies>0)RallyPosition=allies/NearbyAllies;
             if(best==currentTarget){candidateTarget=null;return;}
             // Keep a still-visible candidate through its reaction window; score jitter cannot
@@ -226,7 +244,7 @@ namespace Alterverse.AI
             float reaction=Difficulty.ReactionDelay*(brain!=null?brain.DecisionRhythm:1f);
             if(best!=null&&Time.time-candidateSince>=reaction)
             {
-                currentTarget=best;retainedSince=Time.time;candidateTarget=null;
+                currentTarget=best;retainedSince=Time.time;candidateTarget=null;ObservedTargetVelocity=Vector3.zero;HasSteadyMotion=false;
                 lastKnownPosition=best.transform.position;lastSeenTime=Time.time;
             }
         }

@@ -30,7 +30,7 @@ namespace Alterverse.UI
         private int joystickFinger=-1,combatFinger=-1,pressedSlot=-1,inspectedSlot=-1;
         private bool mouseJoystick;
         private Vector2 joystickCenter,joystickOrigin,joystickKnob;
-        private const float Radius=64;
+        private const float Radius=CombatHudLayout.JoystickRadius;
         private CombatHudLayout layout;
         private Rect previousSafe;
         private Color accent;
@@ -123,7 +123,7 @@ namespace Alterverse.UI
                 if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began)
                 {
                     if(layout.Hit(point)<0&&joystickFinger<0&&layout.MoveCapture.Contains(point))
-                    {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));}
+                    {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));joystickKnob=joystickCenter;}
                 }
                 if(touch.touchId==joystickFinger)
                 {
@@ -256,7 +256,7 @@ namespace Alterverse.UI
         private void DrawJoystick()
         {
             bool active=joystickFinger>=0||mouseJoystick;
-            Vector2 center=active?joystickCenter:new Vector2(104,layout.Height-104);
+            Vector2 center=active?joystickCenter:layout.JoystickIdle;
             Vector2 knob=active?joystickKnob:center;
             EnsureJoystickTextures();
 
@@ -264,17 +264,17 @@ namespace Alterverse.UI
             // This avoids the segmented/ribbed look caused by CombatGlyphs.Ring line segments.
             Color before=GUI.color;
             GUI.color=new Color(1f,1f,1f,active?.36f:.22f);
-            GUI.DrawTexture(new Rect(center.x-58f,center.y-58f,116f,116f),joystickOuterTexture,ScaleMode.StretchToFill,true);
+            GUI.DrawTexture(new Rect(center.x-Radius,center.y-Radius,Radius*2,Radius*2),joystickOuterTexture,ScaleMode.StretchToFill,true);
 
             GUI.color=new Color(.90f,.90f,.90f,active?.36f:.22f);
-            GUI.DrawTexture(new Rect(knob.x-20f,knob.y-20f,40f,40f),joystickThumbTexture,ScaleMode.StretchToFill,true);
+            GUI.DrawTexture(new Rect(knob.x-CombatHudLayout.ThumbRadius,knob.y-CombatHudLayout.ThumbRadius,CombatHudLayout.ThumbRadius*2,CombatHudLayout.ThumbRadius*2),joystickThumbTexture,ScaleMode.StretchToFill,true);
             GUI.color=before;
         }
 
         private void EnsureJoystickTextures()
         {
-            if(joystickOuterTexture==null)joystickOuterTexture=BuildJoystickCircleTexture(192,true);
-            if(joystickThumbTexture==null)joystickThumbTexture=BuildJoystickCircleTexture(96,false);
+            if(joystickOuterTexture==null)joystickOuterTexture=BuildJoystickCircleTexture(256,true);
+            if(joystickThumbTexture==null)joystickThumbTexture=BuildJoystickCircleTexture(128,false);
         }
 
         private static Texture2D BuildJoystickCircleTexture(int size,bool outlineOnly)
@@ -288,9 +288,9 @@ namespace Alterverse.UI
             };
             Color32[] pixels=new Color32[size*size];
             float center=(size-1)*.5f;
-            // Match the visible radii to the GUI rects: about 57 and 19 UI units.
+            // Cached analytic circle coverage; no segmented line drawing.
             float radius=size*.5f-2f;
-            float stroke=size*(outlineOnly?1.25f/116f:.9f/40f);
+            float stroke=size*(outlineOnly?1.25f/(Radius*2):.9f/(CombatHudLayout.ThumbRadius*2));
 
             for(int y=0;y<size;y++)
             for(int x=0;x<size;x++)

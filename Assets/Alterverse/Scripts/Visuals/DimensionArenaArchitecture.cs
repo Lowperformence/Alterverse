@@ -139,7 +139,7 @@ namespace Alterverse.Visuals
         {
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Cube);g.name=label;
             g.transform.SetParent(transform,false);g.transform.position=position;g.transform.localScale=scale;g.transform.rotation=Quaternion.Euler(rotation);
-            Collider collider=g.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            Collider collider=g.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             if(!materials.TryGetValue(color,out Material material))
             {
                 Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");

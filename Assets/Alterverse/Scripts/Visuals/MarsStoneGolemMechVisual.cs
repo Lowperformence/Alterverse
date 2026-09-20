@@ -194,7 +194,7 @@ namespace Alterverse.Visuals
             part.transform.localPosition=localPosition;
             part.transform.localScale=localScale;
             part.transform.localRotation=rotation;
-            Collider collider=part.GetComponent<Collider>();if(collider!=null)collider.enabled=false;
+            Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             Renderer renderer=part.GetComponent<Renderer>();
             if(renderer!=null)
             {

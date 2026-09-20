@@ -41,13 +41,13 @@ namespace Alterverse.Characters
                     new("Null Cut",7,38,3.1f),
                     new("Rift Scar",10,28,3.3f),
                     new("Gapfold",12,0,4.2f),
-                    new("Vacant Echo",48,58,3.5f,0,.4f)),
+                    new("Vacant Echo",48,58,3.5f,0,.32f)),
                 HeroId.Kaelon=>new HeroAbilityLoadout(
                     new("Frontline",0,0,0),
                     new("Anchor Strike",9,24,3.4f),
                     new("Lumen Wall",14,75,0),
-                    new("Gravity Anchor",12,20,5f,2.6f,.5f),
-                    new("Kest Citadel",55,38,0,3.8f,.65f)),
+                    new("Gravity Anchor",12,20,5f,2.6f,.45f),
+                    new("Kest Citadel",55,38,0,3.8f,.55f)),
                 HeroId.Nyra=>new HeroAbilityLoadout(
                     new("Calibrated edge",0,0,0),
                     new("Prism Shot",7,32,7.8f),
@@ -56,10 +56,10 @@ namespace Alterverse.Characters
                     new("Sightline Break",50,64,7.8f)),
                 HeroId.Elyra=>new HeroAbilityLoadout(
                     new("Field geometry",0,0,0),
-                    new("Orbit Fracture",8,45,7.3f,2f,.45f),
-                    new("Invert Field",12,26,6.5f,2.6f,.55f),
+                    new("Orbit Fracture",8,45,7.3f,2f,.38f),
+                    new("Invert Field",12,26,6.5f,2.6f,.46f),
                     new("Phase Fold",16,0,1.8f),
-                    new("Impossible Center",58,72,7f,3.5f,.85f)),
+                    new("Impossible Center",58,72,7f,3.5f,.68f)),
                 HeroId.Mira=>new HeroAbilityLoadout(
                     new("Living memory",0,0,0),
                     new("Resonant Seed",7,18,6.5f),
@@ -70,8 +70,8 @@ namespace Alterverse.Characters
                     new("Scrap recovery",0,.12f,0),
                     new("Wreck Swing",7,34,2.9f),
                     new("Armor Grip",13,30,0),
-                    new("Wreckstorm",10,28,0,2.8f,.35f),
-                    new("Orun Overdrive",52,48,0,3.2f,.6f))
+                    new("Wreckstorm",10,28,0,2.8f,.30f),
+                    new("Orun Overdrive",52,48,0,3.2f,.50f))
             };
         }
 

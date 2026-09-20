@@ -110,6 +110,7 @@ namespace Alterverse.Combat
 
         private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien)
         {
+            gameObject.layer=GameplayCollision.Units;
             team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             if(xenoAlien){BuildAlienVisuals();health.Damaged+=OnXenoDamaged;}else if(marsSkeleton)BuildSkeletonVisuals();else BuildVisuals();
@@ -598,7 +599,7 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);part.name="DF_HotZoneTank_"+name;part.transform.SetParent(parent,false);
             part.transform.localPosition=localPosition;part.transform.localScale=localScale;part.transform.localRotation=rotation;
-            Collider c=part.GetComponent<Collider>();if(c!=null)c.enabled=false;
+            Collider c=part.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}
             Renderer r=part.GetComponent<Renderer>();if(r!=null){r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.On;r.receiveShadows=true;}
             return part.transform;
         }

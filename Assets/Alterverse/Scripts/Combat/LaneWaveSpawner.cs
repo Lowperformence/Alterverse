@@ -13,6 +13,6 @@ mech.transform.localScale=new Vector3(1.05f,1.05f,1.05f);Renderer renderer=mech.
 Health hp=mech.AddComponent<Health>();hp.Configure(420,true);LaneMinion unit=mech.AddComponent<LaneMinion>();unit.Initialize(team,new Vector3(destinationX,.85f,laneZ));unit.ConfigureFrontInfluence(.30f);unit.ConfigureSiegeRole();unit.ConfigureCombat(2.15f,8.2f,2.15f,10.5f,1.25f,1.65f);
 if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,false);else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,false);else HealingGuardMech.BuildRobotVisual(mech.transform,team);
 Object.Destroy(mech,100);}
-private static void CreatePart(Transform parent,string name,PrimitiveType type,Vector3 pos,Vector3 scale,Color color){GameObject p=GameObject.CreatePrimitive(type);p.name=name;p.transform.SetParent(parent,false);p.transform.localPosition=pos;p.transform.localScale=scale;Collider c=p.GetComponent<Collider>();if(c!=null)c.enabled=false;Renderer r=p.GetComponent<Renderer>();if(r!=null)r.material.color=color;}
+private static void CreatePart(Transform parent,string name,PrimitiveType type,Vector3 pos,Vector3 scale,Color color){GameObject p=GameObject.CreatePrimitive(type);p.name=name;p.transform.SetParent(parent,false);p.transform.localPosition=pos;p.transform.localScale=scale;Collider c=p.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}Renderer r=p.GetComponent<Renderer>();if(r!=null)r.material.color=color;}
 }
 }

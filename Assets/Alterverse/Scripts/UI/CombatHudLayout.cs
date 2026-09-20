@@ -23,7 +23,9 @@ namespace Alterverse.UI
         public int Hit(Vector2 point){for(int i=0;i<5;i++)if(Action(i).Contains(point))return i;return -1;}
         public bool ContainsWithMargin(int slot,Vector2 point)
         {Rect r=Action(slot);r.xMin-=20;r.yMin-=20;r.xMax+=20;r.yMax+=20;return r.Contains(point);}
-        public Rect MoveCapture=>new Rect(0,Height-220,Mathf.Min(Width*.36f,300),220);
+        public const float JoystickRadius=74f, ThumbRadius=26f;
+        public Vector2 JoystickIdle=>new Vector2(JoystickRadius+90f,Height-124f);
+        public Rect MoveCapture=>new Rect(0,Height-260,Mathf.Min(Width*.38f,360),260);
         public Matrix4x4 Matrix=>Matrix4x4.TRS(new Vector3(Safe.x,Screen.height-Safe.yMax,0),Quaternion.identity,Vector3.one*Scale);
     }
 }

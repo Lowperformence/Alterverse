@@ -82,14 +82,14 @@ namespace Alterverse.Characters
         private void Sweep(Vector3 center,Vector3 direction,float distance,out float allowed,out Vector3 normal,out Collider blocker)
         {
             allowed=distance;normal=Vector3.zero;blocker=null;
-            int count=Physics.CapsuleCastNonAlloc(center+Vector3.up*.45f,center-Vector3.up*.45f,.48f,direction,hits,distance+.025f,~0,QueryTriggerInteraction.Ignore);
+            int count=Physics.CapsuleCastNonAlloc(center+Vector3.up*.45f,center-Vector3.up*.45f,.48f,direction,hits,distance+.025f,GameplayCollision.MovementMask,QueryTriggerInteraction.Ignore);
             if(count==hits.Length){allowed=0;return;}
             for(int i=0;i<count;i++)
             {
                 Collider other=hits[i].collider;
                 if(other==null||other.transform.IsChildOf(transform)||hits[i].normal.y>.65f)continue;
                 // Crowd spacing is owned by bot separation. Static structures remain solid.
-                if(controller==null&&(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null))continue;
+                if(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null)continue;
                 if(Vector3.Dot(direction,hits[i].normal)>=-.001f)continue;
                 float travel=Mathf.Max(0,hits[i].distance-.025f);
                 if(travel<allowed){allowed=travel;normal=hits[i].normal;blocker=other;}

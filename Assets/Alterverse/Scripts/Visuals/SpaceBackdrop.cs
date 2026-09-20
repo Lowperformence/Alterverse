@@ -35,7 +35,7 @@ namespace Alterverse.Visuals
                 star.transform.position = new Vector3(Mathf.Cos(a)*radius,y,Mathf.Sin(a)*radius);
                 star.transform.localScale = Vector3.one * size;
                 star.transform.LookAt(Vector3.zero);
-                Collider c=star.GetComponent<Collider>();if(c!=null)c.enabled=false;
+                Collider c=star.GetComponent<Collider>();if(c!=null){c.enabled=false;UnityEngine.Object.Destroy(c);}
                 Renderer r=star.GetComponent<Renderer>();r.sharedMaterial=i%7==0?bright:dim;
                 r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;r.receiveShadows=false;
             }
@@ -53,7 +53,7 @@ namespace Alterverse.Visuals
             Material surface=MakeLit(Color.Lerp(dark,light,.42f));if(surface==null)return;
             GameObject planet=GameObject.CreatePrimitive(PrimitiveType.Sphere);planet.name="DF_DistantPlanet";
             planet.transform.SetParent(transform,false);planet.transform.position=position;planet.transform.localScale=Vector3.one*size;
-            Collider c=planet.GetComponent<Collider>();if(c!=null)c.enabled=false;
+            Collider c=planet.GetComponent<Collider>();if(c!=null){c.enabled=false;UnityEngine.Object.Destroy(c);}
             Renderer r=planet.GetComponent<Renderer>();r.sharedMaterial=surface;r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 

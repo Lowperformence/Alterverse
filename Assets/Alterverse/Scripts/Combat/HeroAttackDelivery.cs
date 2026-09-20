@@ -19,7 +19,7 @@ namespace Alterverse.Combat
             public Health Target;
             public HeroAbilityExecution Execution;
             public int Slot;
-            public float Damage,Range,ReleaseAt,HitAt;
+            public float Damage,Range,Grace,ReleaseAt,HitAt;
         }
         // Four volley shots + Q/W/E + one basic fit without growing the pool.
         private readonly Pending[] pending=new Pending[8];
@@ -33,8 +33,8 @@ namespace Alterverse.Combat
         {
             float basic=hero switch
             {
-                HeroId.Veyr=>.10f,HeroId.Kaelon=>.20f,HeroId.Nyra=>.08f,
-                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,_=>.16f
+                HeroId.Veyr=>.09f,HeroId.Kaelon=>.16f,HeroId.Nyra=>.08f,
+                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,_=>.13f
             };
             return slot<0?basic:hero==HeroId.Nyra&&slot==3?.22f:basic+.04f;
         }
@@ -61,19 +61,21 @@ namespace Alterverse.Combat
         }
         public void Basic(Health target,float amount,float range)
         {
-            int i=FreeSlot();if(i<0||target==null)return;
+            if(target==null||HeroCombatRules.BasicDistance(transform.position,target)>range)return;
+            int i=FreeSlot();if(i<0)return;
             float windup=Windup(identity.Hero);
             hasPending=true;
-            pending[i]=new Pending{Active=true,Basic=true,Slot=-1,Target=target,Damage=amount,Range=range,ReleaseAt=Time.time+windup};
+            pending[i]=new Pending{Active=true,Basic=true,Slot=-1,Target=target,Damage=amount,Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+windup};
             GetComponent<HeroVisualMotion>()?.PulseBasic(windup);
         }
         public void Ability(HeroAbilityExecution execution,int slot,Health target,bool volley=false,float windup=-1)
         {
             int i=FreeSlot();if(i<0||target==null)return;
             float range=GetComponent<HeroAbilityKit>().Spec(slot).Range;
+            if(HeroCombatRules.Distance(transform.position,target.transform.position)>range)return;
             hasPending=true;
             pending[i]=new Pending{Active=true,Slot=slot,Target=target,Execution=execution,Volley=volley,
-                Range=range,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
+                Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
         }
         public void Cancel()
         {
@@ -97,7 +99,7 @@ namespace Alterverse.Combat
                 {
                     if(Time.time<p.ReleaseAt)continue;
                     // Keep the originally selected target. Leaving the existing range can avoid contact.
-                    if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range)
+                    if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range+p.Grace)
                     {pending[i]=default;continue;}
                     Vector3 origin=GetComponent<HeroVisualMotion>()?.ReleasePoint??transform.position;
                     float flight=Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
@@ -117,7 +119,7 @@ namespace Alterverse.Combat
                 if(Time.time<p.HitAt)continue;
                 // Clear before callbacks (a hit can disable/destroy a component or trigger death).
                 pending[i]=default;
-                if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range)continue;
+                if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range+p.Grace)continue;
                 if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
                 else p.Execution.ResolvePresentedHit(p.Slot,p.Target,p.Volley);
             }

@@ -114,6 +114,14 @@ namespace Alterverse.AI
             }
             if(brain!=null&&brain.Difficulty.Coordinated&&identity.Hero==HeroId.Elyra&&spec.Radius>0&&spec.Range>0)
                 target=SelectAreaTarget(target,spec);
+            if(slot==3&&!support&&spec.Radius>0&&spec.Windup>0&&brain!=null&&brain.Difficulty.Coordinated&&target!=null)
+            {
+                HeroCombatStatus status=target.GetComponent<HeroCombatStatus>();
+                bool controlled=status!=null&&(status.Stunned||status.MoveMultiplier<.8f);
+                Vector3 center=spec.Range>0?execution.PredictedAreaCenter(target,spec):transform.position;
+                bool group=sensor.VisibleHeroesNear(center,spec.Radius)>=2;
+                if(!controlled&&!group&&!sensor.HasSteadyMotion&&target.Current>spec.Power)return false;
+            }
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
             if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
             bool cast=execution.TryCast(slot,target,direction);

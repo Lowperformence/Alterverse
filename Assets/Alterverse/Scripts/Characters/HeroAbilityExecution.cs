@@ -16,6 +16,7 @@ namespace Alterverse.Characters
         private readonly float[] ready = new float[4];
         private const int ScanBufferSize=64;private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
         private int life;
+        private readonly RaycastHit[] sightHits=new RaycastHit[16];
         private void Awake()
         {
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
@@ -32,7 +33,7 @@ namespace Alterverse.Characters
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
             Health best = null; float lowest = shield ? .98f : .95f;
-            int hits=Physics.OverlapSphereNonAlloc(transform.position,range,scanBuffer);
+            int hits=Physics.OverlapSphereNonAlloc(transform.position,range,scanBuffer,GameplayCollision.TargetMask,QueryTriggerInteraction.Collide);
             for(int i=0;i<hits;i++)
             {
                 Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
@@ -84,7 +85,7 @@ namespace Alterverse.Characters
                 if (spec.Range > 0)
                 {
                     if (!ValidTarget(target, spec.Range)) return false;
-                    center = target.transform.position;
+                    center = PredictedAreaCenter(target,spec);
                 }
                 if (hero == HeroId.Mira && WoundedAlly(spec.Radius) == null) return false;
                 HeroCombatAudio.Cast(gameObject,slot);
@@ -114,12 +115,43 @@ namespace Alterverse.Characters
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,presentationWindup);
             return true;
         }
+        public Vector3 PredictedAreaCenter(Health target,AbilitySpec spec)
+        {
+            Vector3 position=target.transform.position,velocity=Vector3.zero;
+            float quality=.55f;
+            BotTargetSensor sensor=GetComponent<BotTargetSensor>();
+            if(sensor!=null)
+            {
+                if(!sensor.CanObserve(target)||!sensor.TryObservedVelocity(target,out velocity))return position;
+                position=sensor.ObservedTargetPosition;
+                MobaBotBrain brain=GetComponent<MobaBotBrain>();
+                quality=brain==null?.35f:brain.DifficultyLevel switch
+                {BotDifficulty.Easy=>.05f,BotDifficulty.Normal=>.35f,BotDifficulty.Hard=>.65f,_=>.8f};
+            }
+            else
+            {
+                // No player input or hidden movement: verify the current line of sight first.
+                Vector3 from=transform.position+Vector3.up*.4f,to=position+Vector3.up*.4f;
+                Vector3 ray=to-from;
+                int count=Physics.RaycastNonAlloc(from,ray.normalized,sightHits,ray.magnitude,
+                    GameplayCollision.SightMask,QueryTriggerInteraction.Ignore);
+                if(count==sightHits.Length)return position;
+                for(int i=0;i<count;i++)
+                {
+                    Health owner=sightHits[i].collider.GetComponentInParent<Health>();
+                    if(owner!=self&&owner!=target)return position;
+                }
+                HeroLocomotion body=target.GetComponent<HeroLocomotion>();
+                if(body!=null)velocity=body.Velocity;
+            }
+            return HeroAimPrediction.Point(transform.position,position,velocity,spec.Windup,quality,spec.Range);
+        }
         private bool ValidTarget(Health target, float range) => HeroCombatRules.Enemy(gameObject, target) && HeroCombatRules.Distance(transform.position, target.transform.position) <= range;
         private IEnumerator DelayedSingle(int slot, Health target, int castLife)
         {
             HeroSkillVfx.TargetWarning(gameObject,target,kit.Spec(slot).Windup);
             yield return new WaitForSeconds(kit.Spec(slot).Windup);
-            if (castLife == life && !self.IsDead && HeroCombatStatus.CanAct(gameObject) && ValidTarget(target, kit.Spec(slot).Range)) Hit(slot, target);
+            if (castLife == life && !self.IsDead && HeroCombatStatus.CanAct(gameObject) && ValidTarget(target, kit.Spec(slot).Range+.30f)) Hit(slot, target);
         }
         private IEnumerator Volley(Health target, int castLife)
         {
@@ -149,7 +181,7 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(spec.Windup);
             if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject)) yield break;
             TeamMember own = GetComponent<TeamMember>();
-            int hits=Physics.OverlapSphereNonAlloc(center,spec.Radius,scanBuffer);
+            int hits=Physics.OverlapSphereNonAlloc(center,spec.Radius,scanBuffer,GameplayCollision.TargetMask,QueryTriggerInteraction.Collide);
             resolvedTargets.Clear();
             for(int i=0;i<hits;i++)
             {
