@@ -109,6 +109,6 @@ namespace Alterverse.Profile
             return true;
         }
 
-        private static string Key(BattleItemType item)=>"DF_BattleItem_"+(int)item;
+        internal static string StorageKey(BattleItemType item)=>Key(item);\n        private static string Key(BattleItemType item)=>"DF_BattleItem_"+(int)item;
     }
 }
