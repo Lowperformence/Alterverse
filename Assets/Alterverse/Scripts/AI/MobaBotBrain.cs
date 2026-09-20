@@ -95,21 +95,26 @@ namespace Alterverse.AI
             if(lastHealth-hp>.08f)threatUntil=Time.time+Difficulty.MemorySeconds;
             lastHealth=hp;
 
-            int pressure=targetSensor!=null?Mathf.Max(0,targetSensor.NearbyEnemies-targetSensor.NearbyAllies-1):0;
-            float danger=pressure*.035f*Difficulty.TargetAccuracy;
-            if(Time.time<threatUntil)danger+=.035f*Difficulty.TargetAccuracy;
+            int nearbyEnemies=targetSensor!=null?targetSensor.NearbyEnemies:0;
+            int nearbyAllies=targetSensor!=null?targetSensor.NearbyAllies:0;
+            int pressure=Mathf.Max(0,nearbyEnemies-(nearbyAllies+1));
+            float danger=pressure*Mathf.Lerp(.018f,.085f,Difficulty.ThreatAwareness);
+            if(Time.time<threatUntil)danger+=Mathf.Lerp(.018f,.060f,Difficulty.ThreatAwareness);
 
             // Team intention persists for a short human-sized window instead of being rerolled
             // every decision tick. Different personal rhythms prevent hive-mind synchronization.
             if(Time.time>=groupDecisionUntil)
             {
-                GroupWithAllies=Chance(TeamFocus*Difficulty.Grouping);
-                float groupHold=Mathf.Lerp(2.1f,1.15f,Difficulty.TargetAccuracy)*commitmentRhythm;
+                float groupChance=Mathf.Clamp01(TeamFocus*Difficulty.Grouping*Mathf.Lerp(.85f,1.08f,Difficulty.TeamDiscipline));
+                GroupWithAllies=Chance(groupChance);
+                float groupHold=Mathf.Lerp(2.25f,1.00f,Difficulty.TeamDiscipline)*commitmentRhythm;
                 groupDecisionUntil=Time.time+groupHold;
             }
 
-            float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.48f);
-            if (hp <= retreat)
+            float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.58f);
+            float outnumberedRetreat=Mathf.Lerp(.34f,.70f,Difficulty.TeamDiscipline);
+            bool badlyOutnumbered=pressure>=2&&hp<=outnumberedRetreat;
+            if (hp <= retreat || badlyOutnumbered)
             {
                 state = BotState.Retreat;
                 fightCommitUntil=0;
@@ -134,7 +139,7 @@ namespace Alterverse.AI
                 if(state!=BotState.Fight)
                 {
                     state=BotState.Fight;
-                    float hold=Mathf.Lerp(1.05f,.58f,Difficulty.TargetAccuracy)*commitmentRhythm;
+                    float hold=Mathf.Lerp(1.15f,.46f,Difficulty.TeamDiscipline)*commitmentRhythm;
                     fightCommitUntil=Time.time+hold;
                 }
                 return;
