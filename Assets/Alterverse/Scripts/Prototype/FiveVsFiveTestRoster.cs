@@ -10,7 +10,7 @@ private static HeroId[] BuildAllies(HeroId selected){HeroId[] result=new HeroId[
 private static Vector3 SafeSpawn(int team,int index)
 {
     // Free-roam formation: spread heroes around the base opening rather than assigning lanes.
-    // This also keeps the roster clear of the guardian towers at z +/-16 and the healing guards.
+    // This also keeps the roster clear of the new flank defense bunkers and the healing guards.
     float side=team==0?-1f:1f;
     float x=side*(index<2?30f:index<4?28.8f:30.8f);
     float z=SpawnRows[Mathf.Clamp(index,0,SpawnRows.Length-1)];
