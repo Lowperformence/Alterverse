@@ -1,3 +1,4 @@
+using Alterverse.Multiplayer;
 using Alterverse.UI;
 using UnityEngine;
 namespace Alterverse.Match
@@ -36,6 +37,32 @@ namespace Alterverse.Match
                 theme.Label(new Rect(r.x+14,r.y+52,110,22),$"{front.ZeroControl:0.#}%",theme.Small,true);
                 theme.Label(new Rect(r.xMax-66,r.y+52,60,22),$"{front.LumenControl:0.#}%",theme.Small,true);
                 theme.Center(new Rect(r.x+90,r.y+52,240,22),front.IsOvertime?"OVERTIME":"DIMENSIONS FRONT");
+
+                if(CoopAuthority.Active)
+                {
+                    CoopVoiceChatService voice=CoopVoiceChatService.Instance;
+                    float micW=150f;
+                    Rect micRect=new Rect(width-micW-16,16,micW,42);
+                    string micLabel=voice==null?"VOICE...":
+                        voice.PermissionDenied||!voice.HasMicrophonePermission?"ENABLE MIC":
+                        !voice.IsConnected?"VOICE...":
+                        voice.IsMuted?"MIC OFF":"MIC ON";
+                    bool micOn=voice!=null&&voice.IsConnected&&!voice.IsMuted;
+                    if(theme.Action(micRect,micLabel,selected:micOn,enabled:voice!=null&&!voice.Busy))
+                    {
+                        if(voice.PermissionDenied||!voice.HasMicrophonePermission||!voice.IsConnected)
+                            voice.RequestMicrophoneAndJoin();
+                        else voice.ToggleMute();
+                    }
+
+                    if(voice!=null)
+                    {
+                        string voiceLine=voice.IsConnected
+                            ?$"CO-OP VOICE  •  {voice.ParticipantCount} CONNECTED"
+                            :voice.Status;
+                        theme.Label(new Rect(width-260,62,244,20),voiceLine,theme.Small,true);
+                    }
+                }
             }
             finally{GUI.matrix=previous;GUI.color=color;}
         }
