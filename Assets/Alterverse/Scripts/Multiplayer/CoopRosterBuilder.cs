@@ -83,8 +83,8 @@ namespace Alterverse.Multiplayer
             CoopHeroSlot netSlot=hero.GetComponent<CoopHeroSlot>()??hero.AddComponent<CoopHeroSlot>();
             netSlot.Configure(slot,data);
 
-            StylizedHeroVisual visual=hero.GetComponent<StylizedHeroVisual>()??hero.AddComponent<StylizedHeroVisual>();
-            visual.Build();
+            StylizedHeroVisual visual=hero.GetComponent<StylizedHeroVisual>();
+            if(visual==null){visual=hero.AddComponent<StylizedHeroVisual>();visual.Build();}
 
             // Remote human actors need the same combat execution stack on the host so
             // network commands can be validated/executed there, but they never read host input.
