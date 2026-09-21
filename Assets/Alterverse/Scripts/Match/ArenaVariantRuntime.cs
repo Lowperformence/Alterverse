@@ -81,10 +81,10 @@ namespace Alterverse.Match
                 return;
             }
 
-            int rawLast=PlayerPrefs.GetInt(LastShuffleKey,-1);
-            ArenaVariant avoid=rawLast>=0&&rawLast<ArenaShopCatalog.Items.Length
-                ?(ArenaVariant)rawLast
-                :Selected;
+            int rawLast=PlayerPrefs.GetInt(LastShuffleKey,int.MinValue);
+            ArenaVariant avoid=Selected;
+            for(int i=0;i<ArenaShopCatalog.Items.Length;i++)
+                if((int)ArenaShopCatalog.Items[i].Variant==rawLast){avoid=ArenaShopCatalog.Items[i].Variant;break;}
             Current=RandomOwnedArena(avoid);
         }
 
