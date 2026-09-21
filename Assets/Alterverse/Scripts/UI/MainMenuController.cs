@@ -394,12 +394,13 @@ namespace Alterverse.UI
 
                 if(member.IsLocal)
                 {
-                    if(theme.Action(new Rect(x+playerW-142,408,48,38),"<",enabled:!coop.Busy))
+                    bool lobbyEditable=!coop.Busy&&!coop.IsStaging;
+                    if(theme.Action(new Rect(x+playerW-142,408,48,38),"<",enabled:lobbyEditable))
                         _=coop.CycleLocalHeroAsync(-1);
-                    if(theme.Action(new Rect(x+playerW-84,408,48,38),">",enabled:!coop.Busy))
+                    if(theme.Action(new Rect(x+playerW-84,408,48,38),">",enabled:lobbyEditable))
                         _=coop.CycleLocalHeroAsync(1);
                     string readyText=coop.LocalReady?"UNREADY":"READY";
-                    if(theme.Action(new Rect(x+playerW-184,462,148,42),readyText,true,enabled:!coop.Busy&&!coop.HasHeroConflict))
+                    if(theme.Action(new Rect(x+playerW-184,462,148,42),readyText,true,enabled:lobbyEditable&&!coop.HasHeroConflict))
                         _=coop.SetLocalReadyAsync(!coop.LocalReady);
                 }
             }
@@ -408,31 +409,45 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+22,548,110,20),"MATCH",theme.Small,true);
 
             float mapX=Left+132;
-            if(coop.IsHost&&theme.Action(new Rect(mapX,548,42,34),"<",enabled:!coop.Busy))
+            bool hostEditable=coop.IsHost&&!coop.Busy&&!coop.IsStaging;
+            if(coop.IsHost&&theme.Action(new Rect(mapX,548,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(-1);
             theme.Center(new Rect(mapX+48,548,220,34),arenaItem.Name);
-            if(coop.IsHost&&theme.Action(new Rect(mapX+274,548,42,34),">",enabled:!coop.Busy))
+            if(coop.IsHost&&theme.Action(new Rect(mapX+274,548,42,34),">",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(1);
 
             float aiX=Left+480;
-            if(coop.IsHost&&theme.Action(new Rect(aiX,548,42,34),"<",enabled:!coop.Busy))
+            if(coop.IsHost&&theme.Action(new Rect(aiX,548,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(-1);
             theme.Center(new Rect(aiX+48,548,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
-            if(coop.IsHost&&theme.Action(new Rect(aiX+238,548,42,34),">",enabled:!coop.Busy))
+            if(coop.IsHost&&theme.Action(new Rect(aiX+238,548,42,34),">",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(1);
 
-            string startLabel=coop.CanStartLobby
-                ?(coop.MatchNetworkingEnabled?"START CO-OP":"LOBBY READY • MATCH SYNC NEXT")
-                :"WAITING FOR BOTH PLAYERS";
-            theme.Action(new Rect(Right-330,548,330,54),startLabel,true,
-                enabled:coop.CanStartLobby&&coop.MatchNetworkingEnabled&&!coop.Busy);
+            if(coop.IsStaging)
+            {
+                string staged=coop.TryBuildMatchPlan(out CoopMatchPlan plan)&&plan?.Session!=null
+                    ?$"STAGED  •  2 PLAYERS + 3 ALLY BOTS VS 5 BOTS"
+                    :"STAGED  •  VALIDATING ROSTER";
+                theme.Center(new Rect(Right-382,548,382,28),staged);
+                if(coop.IsHost&&theme.Action(new Rect(Right-330,584,330,32),"CANCEL MATCH PREP",enabled:!coop.Busy))
+                    _=coop.CancelMatchStagingAsync();
+            }
+            else
+            {
+                string startLabel=coop.CanStageMatch?"PREPARE CO-OP MATCH":
+                    coop.CanStartLobby?"WAITING FOR RELAY LINK":"WAITING FOR BOTH PLAYERS";
+                if(theme.Action(new Rect(Right-330,548,330,54),startLabel,true,
+                    enabled:coop.IsHost&&coop.CanStageMatch&&!coop.Busy))
+                    _=coop.BeginMatchStagingAsync();
+            }
 
             string state=coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
                 !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
-            string transport=coop.RelayConnected?"RELAY CONNECTED":"RELAY CONNECTING";
-            theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+transport,theme.Small,true);
+            theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+coop.NetworkLinkState,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
-                "SAFE PHASE 1: LOBBY + RELAY ARE LIVE. THE EXISTING LOCAL MATCH IS NOT NETWORK-LAUNCHED YET.",theme.Small,true);
+                coop.IsStaging
+                    ?"PHASE 2A: SESSION, RELAY AND 10-SLOT ROSTER ARE LOCKED. GAMEPLAY AUTHORITY IS NEXT."
+                    :"PRIVATE SESSION + RELAY ACTIVE • HOST PREPARES MATCH WHEN BOTH PLAYERS ARE READY.",theme.Small,true);
         }
 
         private void DrawHeroes()
