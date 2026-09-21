@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Match;
