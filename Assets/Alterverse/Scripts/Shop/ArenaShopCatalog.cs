@@ -57,12 +57,12 @@ namespace Alterverse.Shop
         public static bool Owned(ArenaVariant variant)
         {
             if(variant==ArenaVariant.Moon)return true;
-            if(variant==ArenaVariant.Noxara)return MatchRewardService.MatchesCompleted>=NoxaraMatchesRequired;
+            if(variant==ArenaVariant.Noxara)return Alterverse.Profile.MatchRewardService.MatchesCompleted>=NoxaraMatchesRequired;
             string key=Key(variant);
             return !string.IsNullOrEmpty(key)&&PlayerPrefs.GetInt(key,0)==1;
         }
 
-        public static int NoxaraProgress=>Mathf.Clamp(MatchRewardService.MatchesCompleted,0,NoxaraMatchesRequired);
+        public static int NoxaraProgress=>Mathf.Clamp(Alterverse.Profile.MatchRewardService.MatchesCompleted,0,NoxaraMatchesRequired);
         public static string UnlockRequirement(ArenaVariant variant)=>variant==ArenaVariant.Noxara
             ? $"COMPLETE {NoxaraMatchesRequired} MATCHES"
             : "STORE UNLOCK";
