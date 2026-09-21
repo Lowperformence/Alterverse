@@ -291,7 +291,14 @@ namespace Alterverse.UI
                 }
             }
 
-            theme.Label(new Rect(Left+28,520,w-56,20),"ARENA",theme.Small,true);
+            theme.Label(new Rect(Left+28,520,w-230,20),"ARENA",theme.Small,true);
+            bool arenaShuffle=ArenaVariantRuntime.ShuffleEnabled;
+            if(theme.Action(new Rect(Left+w-194,514,166,28),arenaShuffle?"SHUFFLE  ON":"SHUFFLE",selected:arenaShuffle))
+            {
+                ArenaVariantRuntime.SetShuffleEnabled(!arenaShuffle);
+                arenaShuffle=!arenaShuffle;
+                launchMessage=arenaShuffle?"Arena shuffle enabled.":"Arena shuffle disabled.";
+            }
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
             int arenaCount=ArenaShopCatalog.Items.Length;
             if(arenaCount>0)
@@ -330,11 +337,14 @@ namespace Alterverse.UI
                 browsed=ArenaShopCatalog.Items[playArenaBrowseIndex];
                 owned=ArenaUnlockInventory.Owned(browsed.Variant);
                 selectedNow=selectedArena==browsed.Variant;
-                theme.Center(new Rect(selectorX,590,selectorW,18),ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
+                theme.Center(new Rect(selectorX,590,selectorW,18),arenaShuffle
+                    ?"SHUFFLE ON  •  RANDOM OWNED ARENA EACH MATCH"
+                    :ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
             }
 
             if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
+                arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
@@ -443,15 +453,19 @@ namespace Alterverse.UI
             theme.Panel(new Rect(Left,526,ContentWidth,100));
             theme.Label(new Rect(Left+22,538,110,20),"MATCH",theme.Small,true);
 
-            float mapX=Left+132;
+            float mapX=Left+122;
             bool hostEditable=coop.IsHost&&!coop.Busy&&coop.IsLobby;
-            if(coop.IsHost&&theme.Action(new Rect(mapX,538,42,34),"<",enabled:hostEditable))
+            bool lobbyShuffle=coop.LobbyArenaShuffle;
+            if(coop.IsHost&&theme.Action(new Rect(mapX,538,36,34),"<",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(-1);
-            theme.Center(new Rect(mapX+48,538,220,34),arenaItem.Name);
-            if(coop.IsHost&&theme.Action(new Rect(mapX+274,538,42,34),">",enabled:hostEditable))
+            theme.Center(new Rect(mapX+42,538,146,34),lobbyShuffle?"RANDOM":arenaItem.Name);
+            if(coop.IsHost&&theme.Action(new Rect(mapX+194,538,36,34),">",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(1);
+            if(theme.Action(new Rect(mapX+238,538,112,34),lobbyShuffle?"SHUFFLE ON":"SHUFFLE",
+                selected:lobbyShuffle,enabled:hostEditable))
+                _=coop.SetHostArenaShuffleAsync(!lobbyShuffle);
 
-            float aiX=Left+480;
+            float aiX=Left+500;
             if(coop.IsHost&&theme.Action(new Rect(aiX,538,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(-1);
             theme.Center(new Rect(aiX+48,538,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
@@ -668,9 +682,7 @@ namespace Alterverse.UI
         private void DrawMapShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,28),"Browse every arena here. The carousel expands automatically as new maps are added.",theme.Small,true);
-
-            ArenaVariant selected=ArenaVariantRuntime.Selected;
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Unlock arenas here. Arena selection and shuffle are handled from PLAY.",theme.Small,true);
             int count=ArenaShopCatalog.Items.Length;
             const int visible=3;
             int maxStart=Mathf.Max(0,count-visible);
@@ -685,7 +697,6 @@ namespace Alterverse.UI
                 ArenaShopItem item=ArenaShopCatalog.Items[index];
                 ArenaVariant arena=item.Variant;
                 bool owned=ArenaUnlockInventory.Owned(arena);
-                bool selectedNow=selected==arena;
                 bool progressionArena=!owned&&item.Price<=0;
                 float x=Left+slot*(cardW+gap);
 
@@ -705,31 +716,18 @@ namespace Alterverse.UI
 
                 string action;
                 bool enabled=true;
-                if(selectedNow)action="SELECTED";
-                else if(owned)action="SELECT";
+                if(owned){action="OWNED";enabled=false;}
                 else if(progressionArena){action="PLAY TO UNLOCK";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
                 else {action=$"NEED {item.Price} SHARDS";enabled=false;}
 
-                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,selected:selectedNow,enabled:enabled&&!selectedNow))
+                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled))
                 {
-                    if(owned)
-                    {
-                        ArenaVariantRuntime.Select(arena);
-                        selected=arena;
-                        playArenaBrowseIndex=ArenaShopCatalog.IndexOf(arena);
-                        shopMessage=item.Name+" selected for your next match.";
-                    }
-                    else if(!progressionArena)
+                    if(!owned&&!progressionArena)
                     {
                         ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(arena);
                         if(result==ArenaPurchaseResult.Purchased)
-                        {
-                            ArenaVariantRuntime.Select(arena);
-                            selected=arena;
-                            playArenaBrowseIndex=ArenaShopCatalog.IndexOf(arena);
-                            shopMessage=item.Name+" UNLOCKED and selected.";
-                        }
+                            shopMessage=item.Name+" UNLOCKED. Choose it from PLAY.";
                         else if(result==ArenaPurchaseResult.InsufficientShards)shopMessage="Not enough shards.";
                         else shopMessage="Arena purchase could not be completed.";
                     }
@@ -753,7 +751,7 @@ namespace Alterverse.UI
             }
 
             theme.Label(new Rect(Left,684,ContentWidth,24),shopMessage.Length>0?shopMessage:
-                $"SELECTED ARENA  /  {ArenaShopCatalog.For(selected).Name}    •    SHARDS {PlayerWallet.Balance}",theme.Small,true);
+                $"MAP SELECTION  /  PLAY MENU    •    SHARDS {PlayerWallet.Balance}",theme.Small,true);
         }
 
         private void DrawBattlePassShop()
@@ -1125,7 +1123,9 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
             string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
                 ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
-                :"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
+                :ArenaVariantRuntime.ShuffleEnabled
+                    ?"AI MATCH 5v5  /  RANDOM OWNED ARENA  /  ZERO TEAM"
+                    :"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
             theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
             theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
             theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);
