@@ -100,6 +100,13 @@ namespace Alterverse.Visuals
                     float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.29f,.66f,tone));
                     pixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
                 }
+                else if(ArenaVariantRuntime.IsKryon)
+                {
+                    // Kryon keeps the exact Moon relief but reads as compacted ice and frozen dust.
+                    float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.29f,.66f,tone));
+                    frost*=1f-dust*.035f;
+                    pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
+                }
                 else pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
