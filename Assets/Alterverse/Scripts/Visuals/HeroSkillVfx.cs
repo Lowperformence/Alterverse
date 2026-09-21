@@ -151,23 +151,29 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Orb,p,Color.Lerp(c,Color.white,.35f),size*.82f,.14f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Mira:
-                    if(slot==0)
                     {
-                        // Resonant Seed is offensive: pointed seed + shard, never the soft heal petals.
-                        Fx(HeroFxShape.Seed,p,c,size*1.18f,.14f,HeroFxMotion.Contract,facing,actor);
-                        Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.45f),size*.62f,.11f,HeroFxMotion.Contract,actor:actor);
+                        Color holy=Color.Lerp(c,Color.white,.28f);
+                        if(slot==0)
+                        {
+                            // Offensive seed keeps its sharp identity, now framed by Tahla's ascendant light.
+                            Fx(HeroFxShape.Seed,p,holy,size*1.18f,.14f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.68f),size*.62f,.11f,HeroFxMotion.Contract,actor:actor);
+                            Fx(HeroFxShape.Ring,p,new Color(c.r,c.g,c.b,.45f),size*.72f,.12f,HeroFxMotion.Contract,facing,actor);
+                        }
+                        else if(slot==2)
+                        {
+                            Fx(HeroFxShape.Shield,p,holy,size*.98f,.17f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Ring,p,new Color(c.r,c.g,c.b,.58f),size*.94f,.16f,HeroFxMotion.Expand,actor:actor);
+                            Fx(HeroFxShape.Halo,p,Color.Lerp(c,Color.white,.55f),size*.62f,.14f,HeroFxMotion.Contract,actor:actor);
+                        }
+                        else
+                        {
+                            Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.68f),size*1.02f,.17f,HeroFxMotion.Orbit,actor:actor);
+                            Fx(HeroFxShape.Plus,p,Color.Lerp(c,Color.white,.65f),size*.60f,.15f,HeroFxMotion.Contract,actor:actor);
+                            Fx(HeroFxShape.Halo,p,holy,size*(slot==3?.92f:.62f),slot==3?.22f:.14f,HeroFxMotion.Contract,actor:actor);
+                        }
+                        break;
                     }
-                    else if(slot==2)
-                    {
-                        Fx(HeroFxShape.Shield,p,c,size*.92f,.16f,HeroFxMotion.Contract,facing,actor);
-                        Fx(HeroFxShape.Ring,p,new Color(c.r,c.g,c.b,.52f),size*.88f,.15f,HeroFxMotion.Expand,actor:actor);
-                    }
-                    else
-                    {
-                        Fx(HeroFxShape.Petals,p,new Color(c.r,c.g,c.b,.62f),size*.95f,.16f,HeroFxMotion.Orbit,actor:actor);
-                        Fx(HeroFxShape.Plus,p,Color.Lerp(c,Color.white,.42f),size*.55f,.14f,HeroFxMotion.Contract,actor:actor);
-                    }
-                    break;
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -237,7 +243,15 @@ namespace Alterverse.Visuals
                         if(slot==3)Ring(actor,p,radius,.16f);
                     }break;
                 case HeroId.Mira:
-                    Ring(actor,p,radius,.55f);Fx(HeroFxShape.Plus,p+Vector3.up*.12f,c,.8f,.45f);break;
+                    {
+                        Color holy=Color.Lerp(c,Color.white,.42f);
+                        Ring(actor,p,radius,.55f);
+                        Fx(HeroFxShape.Plus,p+Vector3.up*.12f,holy,.82f,.45f);
+                        Fx(HeroFxShape.Petals,p+Vector3.up*.05f,new Color(c.r,c.g,c.b,.58f),radius*.72f,.42f,HeroFxMotion.Orbit);
+                        Fx(HeroFxShape.Runes,p+Vector3.up*.02f,new Color(holy.r,holy.g,holy.b,.45f),radius*.62f,.34f,HeroFxMotion.Contract);
+                        if(slot==3)Fx(HeroFxShape.Halo,p+Vector3.up*.10f,holy,radius*.52f,.30f,HeroFxMotion.Expand);
+                        break;
+                    }
                 case HeroId.Kaelon:
                     Ring(actor,p,radius,.42f,slot==2,true);
                     if(slot==3)HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(radius,.65f,radius),new Color(c.r,c.g,c.b,.60f),.40f,HeroFxMotion.Expand);
@@ -351,25 +365,40 @@ namespace Alterverse.Visuals
         }
         public static void Support(GameObject actor,Health target,bool shield,float duration)
         {
-            if(actor==null||target==null)return;Color c=Accent(actor);Vector3 p=target.transform.position+Vector3.down*.70f;
+            if(actor==null||target==null)return;
+            HeroId hero=Hero(actor);
+            Color c=Accent(actor);
+            Color holy=hero==HeroId.Mira?Color.Lerp(c,Color.white,.38f):c;
+            Vector3 p=target.transform.position+Vector3.down*.70f;
             if(shield)
             {
-                // Color follows the caster: Auren amber, Tahla green. Lifespan follows real shield health.
-                HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(.87f,1.1f,.87f),c,duration,HeroFxMotion.Hold,owner:actor,follow:target.transform,shield:target);
-                if(Hero(actor)==HeroId.Rook)actor.GetComponent<HeroVisualMotion>()?.Empower(Mathf.Min(duration,1.2f));
+                HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(.87f,1.1f,.87f),holy,duration,HeroFxMotion.Hold,owner:actor,follow:target.transform,shield:target);
+                if(hero==HeroId.Mira)
+                {
+                    Fx(HeroFxShape.Ring,p+Vector3.up*.07f,new Color(c.r,c.g,c.b,.55f),.88f,.32f,HeroFxMotion.Expand,actor:actor,follow:target.transform);
+                    Fx(HeroFxShape.Halo,target.transform.position+Vector3.up*.42f,holy,.52f,.24f,HeroFxMotion.Contract,actor:actor,follow:target.transform);
+                }
+                if(hero==HeroId.Rook)actor.GetComponent<HeroVisualMotion>()?.Empower(Mathf.Min(duration,1.2f));
             }
             else
             {
-                Color heal=new Color(.22f,1,.52f);
-                Fx(HeroFxShape.Plus,target.transform.position+Vector3.up*.45f,heal,.48f,.48f,actor:actor,follow:target.transform);
-                Fx(HeroFxShape.Petals,p+Vector3.up*.08f,new Color(heal.r,heal.g,heal.b,.65f),.8f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
-                HeroVfxPool.Emit(HeroFxShape.Ring,p,p+Vector3.up*.8f,Vector3.one*.58f,heal,.40f,HeroFxMotion.Travel,owner:actor);
+                Color heal=hero==HeroId.Mira?new Color(.68f,.97f,1f):new Color(.22f,1,.52f);
+                Fx(HeroFxShape.Plus,target.transform.position+Vector3.up*.45f,heal,.52f,.48f,actor:actor,follow:target.transform);
+                Fx(HeroFxShape.Petals,p+Vector3.up*.08f,new Color(heal.r,heal.g,heal.b,.68f),.86f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
+                HeroVfxPool.Emit(HeroFxShape.Ring,p,p+Vector3.up*.8f,Vector3.one*.62f,heal,.40f,HeroFxMotion.Travel,owner:actor);
+                if(hero==HeroId.Mira)
+                    Fx(HeroFxShape.Halo,target.transform.position+Vector3.up*.25f,Color.Lerp(heal,Color.white,.45f),.58f,.28f,HeroFxMotion.Contract,actor:actor,follow:target.transform);
             }
         }
         public static void SupportLink(GameObject actor,Health target)
         {
-            if(actor==null||target==null)return;Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
-            for(int i=0;i<3;i++)HeroVfxPool.Emit(HeroFxShape.Petals,from,to,Vector3.one*.25f,new Color(.25f,1,.55f),.16f,HeroFxMotion.Travel,Face(from,to),actor,delay:i*.035f);
+            if(actor==null||target==null)return;
+            Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
+            Color link=Hero(actor)==HeroId.Mira?new Color(.68f,.97f,1f):new Color(.25f,1,.55f);
+            for(int i=0;i<3;i++)
+                HeroVfxPool.Emit(HeroFxShape.Petals,from,to,Vector3.one*.25f,link,.16f,HeroFxMotion.Travel,Face(from,to),actor,delay:i*.035f);
+            if(Hero(actor)==HeroId.Mira)
+                HeroVfxPool.Emit(HeroFxShape.Bolt,from,to,new Vector3(.10f,.10f,.48f),new Color(link.r,link.g,link.b,.42f),.14f,HeroFxMotion.Travel,Face(from,to),actor);
         }
         public static void Debuff(GameObject actor,Health target)
         {
