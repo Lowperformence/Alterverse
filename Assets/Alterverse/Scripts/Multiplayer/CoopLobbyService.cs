@@ -51,7 +51,7 @@ namespace Alterverse.Multiplayer
 
         public string ProviderName=>"Unity Private Co-op";
         public bool IsAvailable=>true;
-        public bool IsConnected=>AuthenticationService.Instance.IsSignedIn;
+        public bool IsConnected=>servicesInitialized&&AuthenticationService.Instance.IsSignedIn;
         public bool InLobby=>session!=null;
         public bool Busy=>busy;
         public bool IsHost=>session!=null&&session.IsHost;
@@ -97,7 +97,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> EnsureServicesAsync()
         {
-            if(busy)return AuthenticationService.Instance.IsSignedIn;
+            if(busy)return servicesInitialized&&AuthenticationService.Instance.IsSignedIn;
             try
             {
                 busy=true;lastError="";SetStatus("CONNECTING TO UNITY SERVICES");
