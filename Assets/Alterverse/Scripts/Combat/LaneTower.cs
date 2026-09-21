@@ -95,6 +95,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if (Time.timeScale <= 0f || health == null || health.IsDead) return;
             if (Time.time >= nextTargetScan || (currentTarget != null && CurrentTarget == null))
             {
