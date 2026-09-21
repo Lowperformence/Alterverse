@@ -32,7 +32,7 @@ namespace Alterverse.Visuals
                 if(orb!=null)return orb.position;
                 HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
                 if(hero==HeroId.Mira&&weaponR!=null)return weaponR.TransformPoint(new Vector3(0,.80f,.06f));
-                if(hero==HeroId.Kaelon&&weaponR!=null)return weaponR.TransformPoint(new Vector3(0,.43f,.20f));
+                if(hero==HeroId.Kaelon&&weaponR!=null)return weaponR.TransformPoint(new Vector3(0,.54f,.29f));
                 bool left=attackSerial%2==0;
                 if(hero==HeroId.Rook)
                 {
