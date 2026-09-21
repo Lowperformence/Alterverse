@@ -128,7 +128,7 @@ namespace Alterverse.Multiplayer
 
         private void OnOwnerPose(ulong senderClientId,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost)return;
+            if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost||Time.timeScale<=0f)return;
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsHost)return;
 
