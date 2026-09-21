@@ -39,7 +39,17 @@ namespace Alterverse.Shop
             new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT • PLAY TO UNLOCK",0,new Color(.52f,.90f,1f))
         };
 
-        public static ArenaShopItem For(ArenaVariant variant)=>Items[Mathf.Clamp((int)variant,0,Items.Length-1)];
+        public static ArenaShopItem For(ArenaVariant variant)
+        {
+            for(int i=0;i<Items.Length;i++)if(Items[i].Variant==variant)return Items[i];
+            return Items.Length>0?Items[0]:default;
+        }
+
+        public static int IndexOf(ArenaVariant variant)
+        {
+            for(int i=0;i<Items.Length;i++)if(Items[i].Variant==variant)return i;
+            return 0;
+        }
     }
 
     public static class ArenaUnlockInventory
