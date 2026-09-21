@@ -46,6 +46,8 @@ namespace Alterverse.Match
         public static event System.Action HotZoneOpening;
         public static event System.Action HotZoneOpened;
         public static event System.Action<int,float,float> HotZoneResolved;
+        public static event System.Action<Vector3,int> NetworkZoneOpened;
+        public static event System.Action<int,float,float,int> NetworkZoneResolved;
 
         public int Occurrence=>occurrence+1;
         public float ZeroControlSeconds=>zeroTime;
@@ -69,7 +71,11 @@ namespace Alterverse.Match
 
         private void Update()
         {
-            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(state==State.Active&&Time.timeScale>0f)AnimateZone();
+                return;
+            }
             if(Time.timeScale<=0f||state==State.Finished)return;
             if(front==null)front=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
@@ -110,6 +116,8 @@ namespace Alterverse.Match
             PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
             PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
             HotZoneOpened?.Invoke();
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkZoneOpened?.Invoke(transform.position,occurrence);
         }
 
         private Vector3 ChooseSpawnPosition()
@@ -194,6 +202,8 @@ namespace Alterverse.Match
             PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
             PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkZoneResolved?.Invoke(winner,zeroTime,lumenTime,occurrence);
             if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
             pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
 
@@ -202,6 +212,41 @@ namespace Alterverse.Match
             zeroInside=lumenInside=0;
             state=State.Waiting;
             do nextOpenAt+=SpawnInterval; while(nextOpenAt<=elapsed);
+        }
+
+        public void ApplyNetworkOpen(Vector3 position,int occurrenceIndex)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            occurrence=Mathf.Max(0,occurrenceIndex);
+            state=State.Active;
+            rewardIssued=false;
+            activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;
+            transform.position=position;
+            BuildZoneVisual();
+            PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
+            PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
+            HotZoneOpened?.Invoke();
+        }
+
+        public void ApplyNetworkResolve(int winner,float zeroScore,float lumenScore,int occurrenceIndex)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            occurrence=Mathf.Max(0,occurrenceIndex);
+            zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
+            rewardIssued=winner>=0;
+            if(winner>=0)HotZoneTank.Spawn(winner);
+
+            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
+                winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
+            PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
+            PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
+            HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
+
+            if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
+            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
+            zeroInside=lumenInside=0;
+            occurrence++;
+            state=State.Waiting;
         }
 
         private void ResolveNoReward()
