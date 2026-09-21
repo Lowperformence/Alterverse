@@ -9,6 +9,8 @@ namespace Alterverse.Combat
     public sealed class PlanetPulseAttack : MonoBehaviour
     {
         private static readonly System.Collections.Generic.List<PlanetPulseAttack> active=new();
+        public static event System.Action<string,float> NetworkPulseStarted;
+        public static event System.Action<string> NetworkPulseDetonated;
         public static System.Collections.Generic.IReadOnlyList<PlanetPulseAttack> Active=>active;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)] private static void ResetRegistry()=>active.Clear();
 
@@ -39,12 +41,18 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(telegraphing&&Time.timeScale>0f)UpdateWarning();
+                return;
+            }
+
             if (Time.timeScale <= 0f || health == null || health.IsDead || planet == null || !planet.Available)
             { CancelTelegraph(); return; }
 
             if (telegraphing)
             {
-                if (Time.time >= blastAt) Detonate();
+                if (Time.time >= blastAt) Detonate(true);
                 else UpdateWarning();
                 return;
             }
@@ -52,11 +60,13 @@ namespace Alterverse.Combat
             if (Time.time < nextPulse) return;
             if(Time.time>=nextTargetScan){nextTargetScan=Time.time+.25f;targetNearby=HasTargetInRange();}
             if(!targetNearby)return;
-            BeginTelegraph();
+            BeginTelegraph(true);
         }
 
         private bool HasTargetInRange()
         {
+            if(authoritative)
+            {
             int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
             for(int i=0;i<hits;i++)
             {
@@ -67,11 +77,13 @@ namespace Alterverse.Combat
             return false;
         }
 
-        private void BeginTelegraph()
+        private void BeginTelegraph(bool announceNetwork)
         {
             telegraphing = true;
             telegraphStartedAt=Time.time;
             blastAt = Time.time + telegraphDuration;
+            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkPulseStarted?.Invoke(gameObject.name,telegraphDuration);
             warningDisc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             warningDisc.name = "DF_PlanetPulseWarning";
             GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)warningDisc.transform.SetParent(world.transform,true);
@@ -90,7 +102,7 @@ namespace Alterverse.Combat
             warningDisc.transform.localScale = new Vector3(blastRadius * 2f * pulse, .025f, blastRadius * 2f * pulse);
         }
 
-        private void Detonate()
+        private void Detonate(bool authoritative)
         {
             telegraphing = false;
             telegraphStartedAt=-1f;
@@ -107,7 +119,33 @@ namespace Alterverse.Combat
                 if(hp.GetComponent<TeamMember>()==null&&hp.GetComponent<LaneMinion>()==null)continue;
                 hp.TakeDamage(damage,gameObject);
             }
+            }
+            if(authoritative&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkPulseDetonated?.Invoke(gameObject.name);
             nextPulse = Time.time + cooldown;
+        }
+
+        public static void ApplyNetworkPulseStart(string ownerName,float duration)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            for(int i=0;i<active.Count;i++)
+            {
+                PlanetPulseAttack pulse=active[i];
+                if(pulse==null||pulse.gameObject.name!=ownerName)continue;
+                pulse.telegraphDuration=Mathf.Max(.1f,duration);
+                pulse.BeginTelegraph(false);
+                return;
+            }
+        }
+
+        public static void ApplyNetworkPulseDetonate(string ownerName)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            for(int i=0;i<active.Count;i++)
+            {
+                PlanetPulseAttack pulse=active[i];
+                if(pulse!=null&&pulse.gameObject.name==ownerName){pulse.Detonate(false);return;}
+            }
         }
 
         private void CancelTelegraph()
