@@ -143,8 +143,11 @@ namespace Alterverse.Multiplayer
             Vector3 desired=GameplayCollision.ClampToRoundedArena(new Vector3(x,y,z),40f,33f);
             desired.y=actor.transform.position.y;
             Vector3 delta=desired-actor.transform.position;delta.y=0;
-            if(delta.magnitude>MaxOwnerStep)desired=actor.transform.position+delta.normalized*MaxOwnerStep;
-            actor.transform.SetPositionAndRotation(desired,Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0));
+            if(delta.magnitude>MaxOwnerStep)delta=delta.normalized*MaxOwnerStep;
+            HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
+            if(locomotion!=null)locomotion.Move(delta,40f,33f);
+            else actor.transform.position=GameplayCollision.ClampToRoundedArena(actor.transform.position+delta,40f,33f);
+            actor.transform.rotation=Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0);
         }
 
         private bool ValidateOwner(ulong senderClientId,int rosterSlot,string playerId)
@@ -216,10 +219,12 @@ namespace Alterverse.Multiplayer
 
                 Vector3 hostPosition=new(x,y,z);
                 bool localOwner=actor.IsLocalHuman;
-                if(!localOwner||dead||(actor.transform.position-hostPosition).sqrMagnitude>36f)
+                float errorSqr=(actor.transform.position-hostPosition).sqrMagnitude;
+                if(!localOwner||dead||errorSqr>36f)
                     actor.transform.SetPositionAndRotation(hostPosition,Quaternion.Euler(0,yaw,0));
-                else if(!localOwner)
-                    actor.transform.rotation=Quaternion.Euler(0,yaw,0);
+                else if(localOwner&&errorSqr>.49f)
+                    actor.transform.position=Vector3.Lerp(actor.transform.position,hostPosition,.42f);
+                if(!localOwner)actor.transform.rotation=Quaternion.Euler(0,yaw,0);
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);
