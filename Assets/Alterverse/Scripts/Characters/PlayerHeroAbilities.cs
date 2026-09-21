@@ -29,6 +29,8 @@ namespace Alterverse.Characters
         private void Update()
         {
             if (Time.timeScale <= 0 || Keyboard.current == null) return;
+            Alterverse.Multiplayer.CoopHeroSlot coopSlot=GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+            if(coopSlot!=null&&coopSlot.IsHuman&&!coopSlot.IsLocalHuman)return;
             if (Keyboard.current.qKey.wasPressedThisFrame) CastQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) CastW();
             if (Keyboard.current.rKey.wasPressedThisFrame) CastE();
@@ -66,10 +68,33 @@ namespace Alterverse.Characters
         }
         private bool Cast(int slot)
         {
+            if(slot<0||slot>3||execution==null||execution.Remaining(slot)>0)return false;
             Health target = targeting.Acquire(Mathf.Max(kit.Spec(slot).Range, 1f), transform.forward, true);
             Vector3 direction = DirectionFor(target);
-            bool success = execution.TryCast(slot, target, direction);
-            if (success)
+
+            if(Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
+            {
+                if(!Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(gameObject,slot))return false;
+                execution.MarkNetworkRequestCooldown(slot);
+                targeting.RegisterOffensiveAction();
+                Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
+                return true;
+            }
+
+            return CastAuthoritative(slot,target,direction);
+        }
+
+        public bool CastNetworkAuthoritative(int slot)
+        {
+            if(slot<0||slot>3)return false;
+            Health target=targeting.Acquire(Mathf.Max(kit.Spec(slot).Range,1f),transform.forward,true);
+            return CastAuthoritative(slot,target,DirectionFor(target));
+        }
+
+        private bool CastAuthoritative(int slot,Health target,Vector3 direction)
+        {
+            bool success=execution.TryCast(slot,target,direction);
+            if(success)
             {
                 targeting.RegisterOffensiveAction();
                 Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
