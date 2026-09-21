@@ -1052,12 +1052,16 @@ namespace Alterverse.UI
         private void BeginCoopLaunch(CoopLobbyService coop)
         {
             if(coop==null||!coop.InLobby||!coop.IsLaunching||launching)return;
-            if(CoopAuthority.PreparedPlan==null&&!coop.TryBuildMatchPlan(out CoopMatchPlan rebuilt))
+            CoopMatchPlan prepared=CoopAuthority.PreparedPlan;
+            if(prepared==null)
             {
-                launchMessage="Co-op match plan unavailable.";
-                return;
+                if(!coop.TryBuildMatchPlan(out prepared))
+                {
+                    launchMessage="Co-op match plan unavailable.";
+                    return;
+                }
+                CoopAuthority.Prepare(prepared);
             }
-            if(CoopAuthority.PreparedPlan==null)CoopAuthority.Prepare(rebuilt);
             if(!CoopAuthority.BeginPreparedMatch(coop.IsHost))
             {
                 launchMessage="Co-op match could not initialize.";
