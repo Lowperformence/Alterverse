@@ -10,7 +10,7 @@ namespace Alterverse.Combat
     public sealed class LaneWaveSpawner:MonoBehaviour
     {
         [SerializeField]private float firstWaveDelay=4,waveInterval=25,unitSpacing=1.1f;
-        public const float SoldierSpawnFrontX=20.5f;
+        public const float SoldierSpawnFrontX=18.5f;
         [SerializeField]private int unitsPerWave=3;
         [SerializeField]private float siegeMechTime=360f;
 
@@ -128,8 +128,8 @@ namespace Alterverse.Combat
         public static Vector3 SoldierSpawnPoint(int team,float laneZ,int index,float spacing=1.1f)
         {
             float startX=team==0?-SoldierSpawnFrontX:SoldierSpawnFrontX;
-            float towardCenter=team==0?1f:-1f;
-            return new Vector3(startX+towardCenter*Mathf.Max(0,index)*Mathf.Max(.1f,spacing),.55f,laneZ);
+            float lateral=(Mathf.Max(0,index)-1)*Mathf.Max(.45f,spacing*.68f);
+            return new Vector3(startX,.55f,laneZ+lateral);
         }
 
         public static void ApplyNetworkUnitSpawn(string key,int team,Vector3 spawn,Vector3 destination,bool siege)
@@ -169,7 +169,9 @@ namespace Alterverse.Combat
             Health health=minion.AddComponent<Health>();
             health.Configure(45.5f,true);
             if(CoopAuthority.Active)minion.AddComponent<CoopWorldEntityKey>().Configure(key);
-            minion.AddComponent<LaneMinion>().Initialize(team,destination);
+            LaneMinion unit=minion.AddComponent<LaneMinion>();
+            unit.Initialize(team,destination);
+            unit.ConfigureWaveGroup(key,index);
 
             CreatePart(minion.transform,"DF_Visor",PrimitiveType.Cube,new Vector3(0,.42f,.42f),new Vector3(.62f,.12f,.10f),energy);
             CreatePart(minion.transform,"DF_Shoulder",PrimitiveType.Cube,new Vector3(0,.12f,0),new Vector3(.92f,.14f,.5f),energy);
