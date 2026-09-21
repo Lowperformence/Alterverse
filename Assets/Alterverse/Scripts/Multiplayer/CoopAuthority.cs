@@ -22,6 +22,11 @@ namespace Alterverse.Multiplayer
             PreparedPlan=plan;
         }
 
+        public static void ClearPrepared()
+        {
+            if(!Active)PreparedPlan=null;
+        }
+
         public static bool BeginPreparedMatch(bool localIsHost)
         {
             if(PreparedPlan==null)return false;
