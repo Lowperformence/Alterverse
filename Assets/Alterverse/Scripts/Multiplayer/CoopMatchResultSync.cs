@@ -95,6 +95,8 @@ namespace Alterverse.Multiplayer
             if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost||resultReady)return;
             CaptureHostResult(winner);
             BroadcastResult();
+            CoopLobbyService lobby=CoopLobbyService.Instance;
+            if(lobby!=null)_=lobby.EnterPostMatchAsync();
         }
 
         private void CaptureHostResult(int winner)
