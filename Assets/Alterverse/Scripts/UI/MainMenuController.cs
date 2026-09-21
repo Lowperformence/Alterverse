@@ -71,7 +71,7 @@ namespace Alterverse.UI
         public static void ShowHome()
         {
             if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
-            instance.visible = true; instance.launching = false; instance.page = Page.Home;
+            instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Home;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
             instance.collection?.Invalidate();
@@ -80,6 +80,21 @@ namespace Alterverse.UI
             if(GooglePlayLevelLeaderboard.IsConfigured)GooglePlayLevelLeaderboard.AuthenticateAndSync();
             MatchClock.Set(PauseReason.Menu,true);
         }
+
+        public static void ShowCoopAfterMatch(string message="")
+        {
+            if(instance==null)new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
+            if(instance==null)return;
+            instance.visible=true;instance.launching=false;instance.coopLaunching=false;instance.page=Page.Coop;
+            instance.editingName=false;instance.profileName=PlayerProfile.PlayerName;
+            instance.profileMessage="";instance.shopMessage="";instance.launchMessage=message??"";
+            instance.pageChangedAt=Time.unscaledTime;
+            instance.collection?.Invalidate();instance.showcase?.InvalidateLoadout();
+            instance.gameObject.SetActive(true);
+            MatchClock.Set(PauseReason.Result,false);
+            MatchClock.Set(PauseReason.Menu,true);
+        }
+
         private void OnEnable() { if (visible) MatchClock.Set(PauseReason.Menu,true); }
         private void OnApplicationPause(bool paused)
         {
@@ -399,7 +414,7 @@ namespace Alterverse.UI
 
                 if(member.IsLocal)
                 {
-                    bool lobbyEditable=!coop.Busy&&!coop.IsStaging;
+                    bool lobbyEditable=!coop.Busy&&coop.IsLobby;
                     if(theme.Action(new Rect(x+10,456,34,34),"<",enabled:lobbyEditable))
                         _=coop.CycleLocalHeroAsync(-1);
                     if(theme.Action(new Rect(x+playerW-44,456,34,34),">",enabled:lobbyEditable))
@@ -415,7 +430,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+22,538,110,20),"MATCH",theme.Small,true);
 
             float mapX=Left+132;
-            bool hostEditable=coop.IsHost&&!coop.Busy&&!coop.IsStaging;
+            bool hostEditable=coop.IsHost&&!coop.Busy&&coop.IsLobby;
             if(coop.IsHost&&theme.Action(new Rect(mapX,538,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(-1);
             theme.Center(new Rect(mapX+48,538,220,34),arenaItem.Name);
@@ -444,7 +459,9 @@ namespace Alterverse.UI
             }
             else
             {
-                string startLabel=coop.CanStageMatch?"PREPARE CO-OP MATCH":
+                string startLabel=coop.IsPostMatch?(coop.IsHost?"RETURNING TO LOBBY":"WAITING FOR HOST"):
+                    coop.IsAborted?"MATCH ABORTED":
+                    coop.CanStageMatch?"PREPARE CO-OP MATCH":
                     coop.CanStartLobby?"WAITING FOR RELAY LINK":
                     coop.PlayerCount<CoopLobbyService.MinHumanPlayers?"WAITING FOR FRIEND":"WAITING FOR ALL READY";
                 if(theme.Action(new Rect(Right-330,538,330,54),startLabel,true,
@@ -452,7 +469,8 @@ namespace Alterverse.UI
                     _=coop.BeginMatchStagingAsync();
             }
 
-            string state=coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
+            string state=!string.IsNullOrEmpty(launchMessage)?launchMessage:
+                coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
                 !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
             theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+coop.NetworkLinkState,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
