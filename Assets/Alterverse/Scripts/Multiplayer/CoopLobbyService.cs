@@ -446,7 +446,7 @@ namespace Alterverse.Multiplayer
                 IHostSession host=session.AsHost();
                 host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
-                SetStatus("MATCH STAGING • BOTH PLAYERS CONNECTED");
+                SetStatus($"MATCH STAGING • {PlayerCount} PLAYERS CONNECTED");
                 return true;
             }
             catch(Exception ex){Fail("COULD NOT PREPARE CO-OP MATCH",ex);return false;}
