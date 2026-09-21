@@ -65,7 +65,7 @@ namespace Alterverse.AI
 
         private void Awake()
         {
-            DifficultyLevel=BotDifficultySettings.Selected;Difficulty=BotDifficultyProfile.For(DifficultyLevel);
+            DifficultyLevel=BotDifficultySettings.Current;Difficulty=BotDifficultyProfile.For(DifficultyLevel);
 
             // Each bot gets a stable personal rhythm so a whole team never thinks on the same beat.
             uint hash=2166136261u;
