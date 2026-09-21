@@ -726,7 +726,7 @@ namespace Alterverse.Multiplayer
             RaiseChanged();
         }
 
-        private void OnPlayerLeft(string _)
+        private void OnPlayerLeft(string playerId)
         {
             int expected=CoopAuthority.ActivePlan?.HumanCount??CoopAuthority.PreparedPlan?.HumanCount??PlayerCount;
             RefreshPreparedPlan();
