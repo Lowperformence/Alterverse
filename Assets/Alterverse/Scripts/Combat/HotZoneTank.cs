@@ -25,10 +25,10 @@ namespace Alterverse.Combat
 
         private int team;
         private bool marsSkeleton,xenoAlien,noxaraSpider,kryonBear;
-        private Health health,target;
+        private Health health,target,supportLeader;
         private HeroLocomotion locomotion;
-        private float nextAttack,nextScan,blockedTime,detourUntil,shotAt;
-        private Vector3 patrolTarget,home,detourDirection;
+        private float nextAttack,nextScan,nextSupportScan,blockedTime,detourUntil,shotAt;
+        private Vector3 patrolTarget,home,detourDirection,supportAnchor;
         private int patrolIndex;
         private bool shotPending;
         private Health shotTarget;
@@ -180,6 +180,16 @@ namespace Alterverse.Combat
             if(kryonBear){bearMoveBlend=Mathf.MoveTowards(bearMoveBlend,0f,Time.deltaTime*3.6f);AnimateKryonBear();}
             if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear){moonMoveBlend=Mathf.MoveTowards(moonMoveBlend,0f,Time.deltaTime*4.2f);AnimateMoonGuard();}
             if(shotPending&&Time.time>=shotAt)ResolveShot();
+            if(Time.time>=nextSupportScan)
+            {
+                nextSupportScan=Time.time+.42f;
+                if(!TeamSupportGroup.TryGetMonsterAnchor(team,transform.position,out supportLeader,out supportAnchor))
+                {
+                    supportLeader=null;
+                    supportAnchor=Vector3.zero;
+                }
+            }
+
             if(Time.time>=nextScan)
             {
                 nextScan=Time.time+ScanInterval;
@@ -190,14 +200,38 @@ namespace Alterverse.Combat
             {
                 AimTurretAt(target.transform.position);
                 Vector3 delta=target.transform.position-transform.position;delta.y=0;
-                if(delta.sqrMagnitude>ChaseLeash*ChaseLeash){target=null;SetNextPatrol();return;}
-                if(delta.sqrMagnitude<=AttackRange*AttackRange)
+                bool hasGroup=supportLeader!=null&&!supportLeader.IsDead;
+                if(delta.sqrMagnitude>ChaseLeash*ChaseLeash||
+                   hasGroup&&(target.transform.position-supportAnchor).sqrMagnitude>11.5f*11.5f)
                 {
-                    locomotion.FaceAction(delta,AttackCooldown);
-                    if(Time.time>=nextAttack&&!shotPending)BeginFire();
+                    target=null;
+                }
+                else
+                {
+                    if(delta.sqrMagnitude<=AttackRange*AttackRange)
+                    {
+                        locomotion.FaceAction(delta,AttackCooldown);
+                        if(Time.time>=nextAttack&&!shotPending)BeginFire();
+                        return;
+                    }
+                    MoveToward(target.transform.position,1.25f);
                     return;
                 }
-                MoveToward(target.transform.position,.9f);
+            }
+
+            if(supportLeader!=null&&!supportLeader.IsDead)
+            {
+                // Large rewards take an outer formation slot so they feel like part of the army
+                // without standing on top of the small infantry or heroes.
+                Vector3 forward=supportLeader.transform.forward;forward.y=0;
+                if(forward.sqrMagnitude<.01f)forward=team==0?Vector3.right:Vector3.left;
+                forward.Normalize();
+                Vector3 right=Vector3.Cross(Vector3.up,forward).normalized;
+                float side=((GetInstanceID()&1)==0?-1f:1f);
+                Vector3 groupDestination=supportAnchor-forward*2.8f+right*side*2.4f;
+                groupDestination.y=transform.position.y;
+                AimTurretAt(transform.position+forward*4f);
+                MoveToward(groupDestination,1.25f);
                 return;
             }
 
@@ -208,22 +242,50 @@ namespace Alterverse.Combat
 
         private void ValidateOrAcquireTarget()
         {
+            if(target!=null&&!TeamSupportGroup.IsEnemyCombatUnit(target,team))target=null;
+
+            // Respect the same team focus as soldiers/bots whenever that target is close enough
+            // to the group. This makes the monster visibly participate in the same fight.
+            Health focus=TeamSupportGroup.FocusFor(team);
+            if(focus!=null)
+            {
+                Vector3 fromMonster=focus.transform.position-transform.position;fromMonster.y=0;
+                Vector3 fromGroup=focus.transform.position-(supportLeader!=null?supportAnchor:transform.position);fromGroup.y=0;
+                if(fromMonster.sqrMagnitude<=AcquireRadius*AcquireRadius&&fromGroup.sqrMagnitude<=11.5f*11.5f)
+                {
+                    target=focus;
+                    return;
+                }
+            }
+
             if(target!=null)
             {
-                TeamMember tm=target.GetComponent<TeamMember>();
-                if(target.IsDead||tm==null||tm.Team==team||target.GetComponent<HeroIdentity>()==null)target=null;
+                Vector3 d=target.transform.position-transform.position;d.y=0;
+                Vector3 dg=target.transform.position-(supportLeader!=null?supportAnchor:transform.position);dg.y=0;
+                if(d.sqrMagnitude<=AcquireRadius*AcquireRadius*1.35f&&
+                   (supportLeader==null||dg.sqrMagnitude<=11.5f*11.5f))return;
+                target=null;
             }
-            if(target!=null)return;
 
-            float bestSqr=AcquireRadius*AcquireRadius;
+            float bestScore=AcquireRadius*AcquireRadius;
             Health best=null;
             for(int i=0;i<Health.Active.Count;i++)
             {
                 Health h=Health.Active[i];
-                if(h==null||h.IsDead||h==health||h.GetComponent<HeroIdentity>()==null)continue;
-                TeamMember member=h.GetComponent<TeamMember>();if(member==null||member.Team==team)continue;
+                if(h==null||h.IsDead||h==health||!TeamSupportGroup.IsEnemyCombatUnit(h,team))continue;
                 Vector3 d=h.transform.position-transform.position;d.y=0;
-                float sqr=d.sqrMagnitude;if(sqr<bestSqr){bestSqr=sqr;best=h;}
+                float sqr=d.sqrMagnitude;if(sqr>AcquireRadius*AcquireRadius)continue;
+
+                if(supportLeader!=null)
+                {
+                    Vector3 groupDelta=h.transform.position-supportAnchor;groupDelta.y=0;
+                    if(groupDelta.sqrMagnitude>11.5f*11.5f)continue;
+                }
+
+                float score=sqr;
+                if(h.GetComponent<HeroIdentity>()!=null)score*=.68f;
+                if(h.GetComponent<TrenchSoldier>()!=null)score*=.82f;
+                if(score<bestScore){bestScore=score;best=h;}
             }
             target=best;
         }
