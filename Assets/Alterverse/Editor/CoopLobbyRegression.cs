@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using Alterverse.AI;
 using Alterverse.Characters;
+using Alterverse.Match;
 using Alterverse.Multiplayer;
 using UnityEditor;
 using UnityEngine;
@@ -44,6 +46,27 @@ namespace Alterverse.Editor
                 for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].Team==1,$"Lumen slot {i} has wrong team.");
                 Assert(plan.Session.Slots[0].IsHost,"First Team Zero slot must be the host.");
             }
+
+            var fiveA=new List<CoopLobbyService.MemberView>
+            {
+                new(){PlayerId="host",DisplayName="Host",Hero=HeroId.Veyr,Ready=true,IsHost=true,IsLocal=true},
+                new(){PlayerId="d",DisplayName="D",Hero=HeroId.Elyra,Ready=true},
+                new(){PlayerId="b",DisplayName="B",Hero=HeroId.Mira,Ready=true},
+                new(){PlayerId="c",DisplayName="C",Hero=HeroId.Nyra,Ready=true},
+                new(){PlayerId="a",DisplayName="A",Hero=HeroId.Kaelon,Ready=true}
+            };
+            var fiveB=new List<CoopLobbyService.MemberView>
+            {
+                new(){PlayerId="c",DisplayName="C",Hero=HeroId.Nyra,Ready=true,IsLocal=true},
+                new(){PlayerId="a",DisplayName="A",Hero=HeroId.Kaelon,Ready=true},
+                new(){PlayerId="host",DisplayName="Host",Hero=HeroId.Veyr,Ready=true,IsHost=true},
+                new(){PlayerId="b",DisplayName="B",Hero=HeroId.Mira,Ready=true},
+                new(){PlayerId="d",DisplayName="D",Hero=HeroId.Elyra,Ready=true}
+            };
+            CoopMatchPlan orderedA=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fiveA);
+            CoopMatchPlan orderedB=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fiveB);
+            Assert(CoopPlanHandshake.Fingerprint(orderedA)==CoopPlanHandshake.Fingerprint(orderedB),
+                "Five-player match plan fingerprint must not depend on local member-list ordering.");
 
             bool duplicateRejected=false;
             try
