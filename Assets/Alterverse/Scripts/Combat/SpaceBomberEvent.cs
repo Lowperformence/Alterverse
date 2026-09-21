@@ -19,6 +19,7 @@ namespace Alterverse.Combat
         private const float BomberSpeed=12.5f;
 
         private static SpaceBomberDirector owner;
+        public static event System.Action<int,int> NetworkFlyoverSpawned;
         private float elapsed,nextFlyover=FlyoverInterval;
         private int passIndex;
         private SpaceBomberFlyover activeFlyover;
@@ -72,20 +73,36 @@ namespace Alterverse.Combat
         private void SpawnFlyover()
         {
             passIndex++;
-            CreateRoute(out Vector3 start,out Vector3 end);
+            int seed=rng.Next();
+            SpawnFlyover(passIndex,seed,true);
+        }
+
+        public void ApplyNetworkFlyover(int replicatedPass,int seed)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||activeFlyover!=null)return;
+            passIndex=Mathf.Max(passIndex,replicatedPass);
+            SpawnFlyover(replicatedPass,seed,false);
+        }
+
+        private void SpawnFlyover(int pass,int seed,bool announceNetwork)
+        {
+            System.Random passRandom=new(seed);
+            CreateRoute(passRandom,out Vector3 start,out Vector3 end);
             GameObject root=new("DF_SpaceBomber");
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)root.transform.SetParent(world,true);
             activeFlyover=root.AddComponent<SpaceBomberFlyover>();
-            activeFlyover.Initialize(this,start,end,BomberAltitude,BomberSpeed,passIndex,
-                armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial,engineLoop,front,rng);
+            activeFlyover.Initialize(this,start,end,BomberAltitude,BomberSpeed,pass,
+                armorMaterial,darkMaterial,energyMaterial,warningMaterial,bombMaterial,engineLoop,front,passRandom);
+            if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkFlyoverSpawned?.Invoke(pass,seed);
         }
 
-        private void CreateRoute(out Vector3 start,out Vector3 end)
+        private void CreateRoute(System.Random random,out Vector3 start,out Vector3 end)
         {
-            int route=rng.Next(0,4);
-            float laneOffset=Next(-23f,23f);
-            float slant=Next(-7f,7f);
+            int route=random.Next(0,4);
+            float laneOffset=Next(random,-23f,23f);
+            float slant=Next(random,-7f,7f);
             switch(route)
             {
                 case 0:
@@ -97,18 +114,18 @@ namespace Alterverse.Combat
                     end=new Vector3(-48f,BomberAltitude,Mathf.Clamp(laneOffset+slant,-27f,27f));
                     break;
                 case 2:
-                    start=new Vector3(-47f,BomberAltitude,Next(20f,29f));
-                    end=new Vector3(47f,BomberAltitude,Next(-29f,-20f));
+                    start=new Vector3(-47f,BomberAltitude,Next(random,20f,29f));
+                    end=new Vector3(47f,BomberAltitude,Next(random,-29f,-20f));
                     break;
                 default:
-                    start=new Vector3(-47f,BomberAltitude,Next(-29f,-20f));
-                    end=new Vector3(47f,BomberAltitude,Next(20f,29f));
-                    if(rng.Next(0,2)==1){Vector3 swap=start;start=end;end=swap;}
+                    start=new Vector3(-47f,BomberAltitude,Next(random,-29f,-20f));
+                    end=new Vector3(47f,BomberAltitude,Next(random,20f,29f));
+                    if(random.Next(0,2)==1){Vector3 swap=start;start=end;end=swap;}
                     break;
             }
         }
 
-        private float Next(float min,float max)=>(float)(min+(max-min)*rng.NextDouble());
+        private static float Next(System.Random random,float min,float max)=>(float)(min+(max-min)*random.NextDouble());
 
         internal void FlyoverFinished(SpaceBomberFlyover flyover)
         {
