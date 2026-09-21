@@ -33,6 +33,10 @@ namespace Alterverse.Combat
         private bool shotPending;
         private Health shotTarget;
         private Transform turretPivot,barrelPivot,leftTrack,rightTrack;
+        private Transform moonBodyRoot,moonLeftArm,moonRightArm,moonLeftLeg,moonRightLeg;
+        private Quaternion moonLeftArmBase,moonRightArmBase,moonLeftLegBase,moonRightLegBase;
+        private Vector3 moonBodyRest;
+        private float moonMoveBlend;
         private Transform xenoVisualRoot,xenoTorsoPivot,xenoPelvisPivot,xenoHeadPivot,xenoBackRoot;
         private Transform xenoLeftShoulderPivot,xenoRightShoulderPivot,xenoLeftForearmPivot,xenoRightForearmPivot,xenoLeftClaw,xenoRightClaw;
         private Transform xenoLeftHipPivot,xenoRightHipPivot,xenoLeftShinPivot,xenoRightShinPivot,xenoLeftFoot,xenoRightFoot;
@@ -167,12 +171,14 @@ namespace Alterverse.Combat
                 if(marsSkeleton)AnimateSkeleton();
                 if(noxaraSpider)AnimateNoxaraSpider();
                 if(kryonBear)AnimateKryonBear();
+                if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
                 return;
             }
             if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
             if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
             if(noxaraSpider)AnimateNoxaraSpider();
             if(kryonBear){bearMoveBlend=Mathf.MoveTowards(bearMoveBlend,0f,Time.deltaTime*3.6f);AnimateKryonBear();}
+            if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear){moonMoveBlend=Mathf.MoveTowards(moonMoveBlend,0f,Time.deltaTime*4.2f);AnimateMoonGuard();}
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
@@ -320,79 +326,147 @@ namespace Alterverse.Combat
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             if(shader==null)return;
 
-            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color dark=team==0?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;
-            Color armor=Color.Lerp(dark,new Color(.34f,.37f,.42f),.52f);
-            Color joint=Color.Lerp(dark,Color.black,.30f);
+            // Moon Guard: compact military security mech, based on the supplied reference.
+            // Layered olive armor, exposed dark mechanics, cyan optics and readable hard-surface
+            // segmentation give it a much higher-detail silhouette without expensive textures.
+            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color cyan=new(.08f,.82f,1f,1f);
+            Color glow=Color.Lerp(teamEnergy,cyan,.70f);
+            Color olive=new(.185f,.235f,.195f,1f);
+            Color oliveLight=new(.285f,.325f,.270f,1f);
+            Color dark=new(.028f,.036f,.038f,1f);
+            Color joint=new(.070f,.082f,.080f,1f);
 
-            armorMat=MakeMaterial(shader,armor,.72f,.28f,Color.black);
-            darkMat=MakeMaterial(shader,dark,.46f,.18f,Color.black);
-            jointMat=MakeMaterial(shader,joint,.64f,.12f,Color.black);
-            energyMat=MakeMaterial(shader,energy,.18f,.62f,energy*2.6f);
+            armorMat=MakeMaterial(shader,olive,.58f,.30f,Color.black);
+            darkMat=MakeMaterial(shader,dark,.76f,.22f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.84f,.26f,Color.black);
+            energyMat=MakeMaterial(shader,glow,.08f,.80f,glow*3.25f);
+            teamMat=MakeMaterial(shader,teamEnergy,.10f,.50f,teamEnergy*1.10f);
 
-            // Lower hull and layered glacis.
-            Part("LowerHull",PrimitiveType.Cube,transform,new Vector3(0,-.18f,0),new Vector3(1.78f,.38f,2.36f),darkMat,Quaternion.identity);
-            Part("UpperHull",PrimitiveType.Cube,transform,new Vector3(0,.20f,.08f),new Vector3(1.92f,.52f,2.08f),armorMat,Quaternion.Euler(-4,0,0));
-            Part("Glacis",PrimitiveType.Cube,transform,new Vector3(0,.28f,.98f),new Vector3(1.72f,.34f,.64f),armorMat,Quaternion.Euler(-17,0,0));
-            Part("RearDeck",PrimitiveType.Cube,transform,new Vector3(0,.28f,-1.00f),new Vector3(1.70f,.24f,.48f),darkMat,Quaternion.identity);
+            Mesh chestPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardChestPlate",new[]{
+                new Vector2(-.64f,-.42f),new Vector2(.64f,-.42f),new Vector2(.78f,.02f),
+                new Vector2(.50f,.52f),new Vector2(.12f,.66f),new Vector2(-.48f,.57f),new Vector2(-.76f,.08f)},.18f));
+            Mesh shoulderPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardShoulderPlate",new[]{
+                new Vector2(-.50f,-.36f),new Vector2(.46f,-.38f),new Vector2(.58f,.20f),
+                new Vector2(.25f,.47f),new Vector2(-.44f,.43f),new Vector2(-.60f,.04f)},.18f));
+            Mesh forearmPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardForearmPlate",new[]{
+                new Vector2(-.36f,-.50f),new Vector2(.36f,-.50f),new Vector2(.43f,.34f),
+                new Vector2(.16f,.55f),new Vector2(-.34f,.46f)},.16f));
+            Mesh shinPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardShinPlate",new[]{
+                new Vector2(-.34f,-.55f),new Vector2(.34f,-.55f),new Vector2(.42f,.22f),
+                new Vector2(.20f,.58f),new Vector2(-.30f,.48f)},.16f));
+            Mesh headPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardHeadPlate",new[]{
+                new Vector2(-.46f,-.24f),new Vector2(.46f,-.24f),new Vector2(.40f,.28f),
+                new Vector2(.16f,.46f),new Vector2(-.30f,.41f)},.15f));
+            Mesh footPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_MoonGuardFootPlate",new[]{
+                new Vector2(-.46f,-.22f),new Vector2(.46f,-.22f),new Vector2(.52f,.18f),
+                new Vector2(.20f,.36f),new Vector2(-.42f,.30f)},.18f));
 
-            // Side armor and tracks. Wheels are individually visible instead of a single block.
-            leftTrack=new GameObject("DF_HotZoneTank_LeftTrack").transform;leftTrack.SetParent(transform,false);
-            rightTrack=new GameObject("DF_HotZoneTank_RightTrack").transform;rightTrack.SetParent(transform,false);
-            BuildTrack(leftTrack,-1f,armorMat,darkMat,jointMat);
-            BuildTrack(rightTrack,1f,armorMat,darkMat,jointMat);
+            moonBodyRoot=Pivot("DF_MoonGuardBody",transform,new Vector3(0,.32f,0),Quaternion.identity);
+            moonBodyRest=moonBodyRoot.localPosition;
 
-            // Functional turret stack: ring, rotating turret, mantlet and cannon pivot.
-            Part("TurretRing",PrimitiveType.Cylinder,transform,new Vector3(0,.56f,-.05f),new Vector3(.78f,.14f,.78f),jointMat,Quaternion.identity);
-            turretPivot=new GameObject("DF_HotZoneTank_TurretPivot").transform;turretPivot.SetParent(transform,false);turretPivot.localPosition=new Vector3(0,.76f,-.05f);
-            Part("TurretShell",PrimitiveType.Cube,turretPivot,new Vector3(0,.10f,.05f),new Vector3(1.26f,.46f,1.08f),armorMat,Quaternion.Euler(-2,0,0));
-            Part("TurretCheekL",PrimitiveType.Cube,turretPivot,new Vector3(-.60f,.08f,.18f),new Vector3(.28f,.40f,.72f),darkMat,Quaternion.Euler(0,8,0));
-            Part("TurretCheekR",PrimitiveType.Cube,turretPivot,new Vector3(.60f,.08f,.18f),new Vector3(.28f,.40f,.72f),darkMat,Quaternion.Euler(0,-8,0));
-            Part("Mantlet",PrimitiveType.Cylinder,turretPivot,new Vector3(0,.08f,.62f),new Vector3(.30f,.14f,.30f),jointMat,Quaternion.Euler(90,0,0));
+            // Pelvis and flexible waist expose the machine under the armor.
+            Part("MoonGuardPelvisCore",PrimitiveType.Cylinder,moonBodyRoot,new Vector3(0,.04f,-.06f),new Vector3(.62f,.18f,.62f),jointMat,Quaternion.identity);
+            Part("MoonGuardWaist",PrimitiveType.Cylinder,moonBodyRoot,new Vector3(0,.32f,-.02f),new Vector3(.48f,.20f,.48f),darkMat,Quaternion.identity);
+            Part("MoonGuardHipArmorL",PrimitiveType.Cube,moonBodyRoot,new Vector3(-.49f,.05f,.05f),new Vector3(.40f,.42f,.62f),armorMat,Quaternion.Euler(0,-4,-5));
+            Part("MoonGuardHipArmorR",PrimitiveType.Cube,moonBodyRoot,new Vector3(.49f,.05f,.05f),new Vector3(.40f,.42f,.62f),armorMat,Quaternion.Euler(0,4,5));
 
-            barrelPivot=new GameObject("DF_HotZoneTank_BarrelPivot").transform;barrelPivot.SetParent(turretPivot,false);barrelPivot.localPosition=new Vector3(0,.08f,.62f);
-            Part("Cannon",PrimitiveType.Cube,barrelPivot,new Vector3(0,0,.76f),new Vector3(.22f,.18f,1.48f),darkMat,Quaternion.identity);
-            Part("BarrelSleeve",PrimitiveType.Cylinder,barrelPivot,new Vector3(0,0,.08f),new Vector3(.30f,.18f,.30f),armorMat,Quaternion.Euler(90,0,0));
-            Part("MuzzleBrake",PrimitiveType.Cube,barrelPivot,new Vector3(0,0,1.55f),new Vector3(.36f,.28f,.24f),energyMat,Quaternion.identity);
+            // The upper body rotates toward targets, like the reference's compact armored torso.
+            turretPivot=Pivot("DF_MoonGuardUpperBody",moonBodyRoot,new Vector3(0,.73f,0),Quaternion.identity);
+            Part("MoonGuardTorsoCore",PrimitiveType.Cube,turretPivot,new Vector3(0,0,-.04f),new Vector3(1.45f,.76f,.86f),darkMat,Quaternion.identity);
+            MeshPart("MoonGuardChestArmor",chestPlate,turretPivot,new Vector3(0,.03f,.53f),new Vector3(1.20f,1.02f,1f),armorMat,Quaternion.Euler(-4,0,0));
+            Part("MoonGuardUpperChest",PrimitiveType.Cube,turretPivot,new Vector3(0,.30f,.22f),new Vector3(1.26f,.30f,.72f),armorMat,Quaternion.Euler(-4,0,0));
+            Part("MoonGuardChestInset",PrimitiveType.Cube,turretPivot,new Vector3(0,-.12f,.57f),new Vector3(.54f,.18f,.055f),jointMat,Quaternion.identity);
+            Part("MoonGuardChestLightL",PrimitiveType.Cube,turretPivot,new Vector3(-.23f,-.11f,.61f),new Vector3(.16f,.065f,.035f),energyMat,Quaternion.identity);
+            Part("MoonGuardChestLightR",PrimitiveType.Cube,turretPivot,new Vector3(.23f,-.11f,.61f),new Vector3(.16f,.065f,.035f),energyMat,Quaternion.identity);
 
-            // Sensors and command optics.
-            Part("CommanderCupola",PrimitiveType.Cylinder,turretPivot,new Vector3(0,.46f,-.06f),new Vector3(.36f,.16f,.36f),darkMat,Quaternion.identity);
-            Part("SensorHead",PrimitiveType.Cube,turretPivot,new Vector3(0,.58f,.02f),new Vector3(.62f,.16f,.28f),armorMat,Quaternion.identity);
-            Part("Visor",PrimitiveType.Cube,turretPivot,new Vector3(0,.58f,.18f),new Vector3(.46f,.08f,.05f),energyMat,Quaternion.identity);
-            Part("RangefinderL",PrimitiveType.Cube,turretPivot,new Vector3(-.38f,.40f,.10f),new Vector3(.18f,.16f,.30f),darkMat,Quaternion.identity);
-            Part("RangefinderR",PrimitiveType.Cube,turretPivot,new Vector3(.38f,.40f,.10f),new Vector3(.18f,.16f,.30f),darkMat,Quaternion.identity);
+            // Compact sensor head recessed into the torso.
+            Transform head=Pivot("DF_MoonGuardHead",turretPivot,new Vector3(0,.64f,.12f),Quaternion.Euler(-3,0,0));
+            Part("MoonGuardHeadCore",PrimitiveType.Cube,head,new Vector3(0,0,0),new Vector3(.70f,.42f,.56f),darkMat,Quaternion.identity);
+            MeshPart("MoonGuardHeadArmor",headPlate,head,new Vector3(0,.04f,.34f),new Vector3(.82f,.78f,.92f),armorMat,Quaternion.Euler(-4,0,0));
+            Part("MoonGuardVisor",PrimitiveType.Cube,head,new Vector3(0,-.05f,.49f),new Vector3(.43f,.075f,.045f),energyMat,Quaternion.identity);
+            Part("MoonGuardSensorL",PrimitiveType.Cube,head,new Vector3(-.28f,.12f,.35f),new Vector3(.10f,.10f,.08f),energyMat,Quaternion.identity);
+            Part("MoonGuardSensorR",PrimitiveType.Cube,head,new Vector3(.28f,.12f,.35f),new Vector3(.10f,.10f,.08f),energyMat,Quaternion.identity);
 
-            // Rear reactor and faction silhouette.
-            Part("CoreHousing",PrimitiveType.Cube,transform,new Vector3(0,.36f,-1.26f),new Vector3(.72f,.42f,.34f),darkMat,Quaternion.identity);
-            Part("Core",PrimitiveType.Sphere,transform,new Vector3(0,.37f,-1.45f),new Vector3(.30f,.30f,.20f),energyMat,Quaternion.identity);
-            Part("ExhaustL",PrimitiveType.Cylinder,transform,new Vector3(-.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
-            Part("ExhaustR",PrimitiveType.Cylinder,transform,new Vector3(.52f,.43f,-1.38f),new Vector3(.12f,.34f,.12f),jointMat,Quaternion.Euler(90,0,0));
+            // Shoulder blocks and backpack sensor pods create the recognizable military silhouette.
+            BuildMoonGuardArm(-1f,shoulderPlate,forearmPlate,oliveLight);
+            BuildMoonGuardArm(1f,shoulderPlate,forearmPlate,oliveLight);
+            Part("MoonGuardBackpack",PrimitiveType.Cube,turretPivot,new Vector3(0,.24f,-.56f),new Vector3(.90f,.66f,.38f),darkMat,Quaternion.identity);
+            Part("MoonGuardPodL",PrimitiveType.Cube,turretPivot,new Vector3(-.43f,.67f,-.48f),new Vector3(.40f,.42f,.42f),armorMat,Quaternion.Euler(-2,-5,-3));
+            Part("MoonGuardPodR",PrimitiveType.Cube,turretPivot,new Vector3(.43f,.67f,-.48f),new Vector3(.40f,.42f,.42f),armorMat,Quaternion.Euler(-2,5,3));
+            Part("MoonGuardPodLensL",PrimitiveType.Cube,turretPivot,new Vector3(-.43f,.66f,-.25f),new Vector3(.18f,.09f,.04f),energyMat,Quaternion.identity);
+            Part("MoonGuardPodLensR",PrimitiveType.Cube,turretPivot,new Vector3(.43f,.66f,-.25f),new Vector3(.18f,.09f,.04f),energyMat,Quaternion.identity);
+            Part("MoonGuardAntenna",PrimitiveType.Cylinder,turretPivot,new Vector3(.50f,1.13f,-.48f),new Vector3(.025f,.50f,.025f),jointMat,Quaternion.Euler(0,0,-5));
+            Part("MoonGuardAntennaTip",PrimitiveType.Sphere,turretPivot,new Vector3(.54f,1.65f,-.48f),new Vector3(.055f,.055f,.055f),energyMat,Quaternion.identity);
 
-            // Small readable hardware details add scale without adding gameplay colliders.
-            Part("HeadlightL",PrimitiveType.Cube,transform,new Vector3(-.58f,.24f,1.34f),new Vector3(.18f,.12f,.08f),energyMat,Quaternion.Euler(-8,0,0));
-            Part("HeadlightR",PrimitiveType.Cube,transform,new Vector3(.58f,.24f,1.34f),new Vector3(.18f,.12f,.08f),energyMat,Quaternion.Euler(-8,0,0));
-            Part("TowHookL",PrimitiveType.Cylinder,transform,new Vector3(-.46f,-.18f,1.34f),new Vector3(.08f,.12f,.08f),jointMat,Quaternion.Euler(90,0,0));
-            Part("TowHookR",PrimitiveType.Cylinder,transform,new Vector3(.46f,-.18f,1.34f),new Vector3(.08f,.12f,.08f),jointMat,Quaternion.Euler(90,0,0));
-            Part("AntennaMast",PrimitiveType.Cylinder,turretPivot,new Vector3(.42f,.78f,-.24f),new Vector3(.035f,.38f,.035f),jointMat,Quaternion.Euler(0,0,-4));
-            Part("AntennaTip",PrimitiveType.Sphere,turretPivot,new Vector3(.44f,1.17f,-.24f),new Vector3(.075f,.075f,.075f),energyMat,Quaternion.identity);
-            Part("TeamBeaconStem",PrimitiveType.Cylinder,turretPivot,new Vector3(-.42f,.76f,-.22f),new Vector3(.045f,.34f,.045f),jointMat,Quaternion.identity);
-            Part("TeamBeacon",PrimitiveType.Sphere,turretPivot,new Vector3(-.42f,1.13f,-.22f),new Vector3(.15f,.15f,.15f),energyMat,Quaternion.identity);
+            // Weapon emitter is integrated into the chest instead of a tank cannon.
+            barrelPivot=Pivot("DF_MoonGuardAttackSocket",turretPivot,new Vector3(0,-.12f,.72f),Quaternion.identity);
+            Part("MoonGuardEmitterHousing",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.15f,.055f,.15f),jointMat,Quaternion.Euler(90,0,0));
+            Part("MoonGuardEmitter",PrimitiveType.Sphere,barrelPivot,new Vector3(0,0,.07f),new Vector3(.13f,.10f,.08f),energyMat,Quaternion.identity);
+
+            BuildMoonGuardLeg(-1f,shinPlate,footPlate);
+            BuildMoonGuardLeg(1f,shinPlate,footPlate);
+
+            // Small panel details sell scale at gameplay-camera distance.
+            Part("MoonGuardIDPlate",PrimitiveType.Cube,turretPivot,new Vector3(-.43f,.25f,.57f),new Vector3(.22f,.09f,.035f),teamMat,Quaternion.identity);
             for(int i=-1;i<=1;i++)
             {
-                float x=i*.42f;
-                Part("DeckBolt",PrimitiveType.Cylinder,transform,new Vector3(x,.50f,.46f),new Vector3(.055f,.025f,.055f),jointMat,Quaternion.identity);
+                float x=i*.32f;
+                Part("MoonGuardChestBolt",PrimitiveType.Cylinder,turretPivot,new Vector3(x,-.27f,.54f),
+                    new Vector3(.045f,.018f,.045f),jointMat,Quaternion.Euler(90,0,0));
             }
+        }
 
-            if(team==0)
-            {
-                Part("FractureFinL",PrimitiveType.Cube,transform,new Vector3(-.78f,.68f,-.68f),new Vector3(.16f,.62f,.40f),energyMat,Quaternion.Euler(0,0,-17));
-                Part("FractureFinR",PrimitiveType.Cube,transform,new Vector3(.72f,.60f,-.76f),new Vector3(.12f,.44f,.34f),energyMat,Quaternion.Euler(0,0,9));
-            }
-            else
-            {
-                Part("LumenFinL",PrimitiveType.Cube,transform,new Vector3(-.66f,.66f,-.72f),new Vector3(.11f,.52f,.36f),energyMat,Quaternion.identity);
-                Part("LumenFinR",PrimitiveType.Cube,transform,new Vector3(.66f,.66f,-.72f),new Vector3(.11f,.52f,.36f),energyMat,Quaternion.identity);
-            }
+        private void BuildMoonGuardArm(float side,Mesh shoulderPlate,Mesh forearmPlate,Color accent)
+        {
+            bool left=side<0f;
+            Transform shoulder=Pivot(left?"DF_MoonGuardArmL":"DF_MoonGuardArmR",turretPivot,new Vector3(side*.91f,.24f,-.02f),Quaternion.Euler(0,0,side*4f));
+            Part(left?"MoonGuardShoulderCoreL":"MoonGuardShoulderCoreR",PrimitiveType.Sphere,shoulder,Vector3.zero,new Vector3(.44f,.38f,.46f),jointMat,Quaternion.identity);
+            MeshPart(left?"MoonGuardShoulderArmorL":"MoonGuardShoulderArmorR",shoulderPlate,shoulder,new Vector3(side*.08f,.09f,.29f),new Vector3(.90f,.88f,.86f),armorMat,Quaternion.Euler(-4,side*6f,side*-5f));
+            Part(left?"MoonGuardUpperArmL":"MoonGuardUpperArmR",PrimitiveType.Capsule,shoulder,new Vector3(0,-.48f,.02f),new Vector3(.25f,.54f,.27f),darkMat,Quaternion.identity);
+            Part(left?"MoonGuardElbowL":"MoonGuardElbowR",PrimitiveType.Sphere,shoulder,new Vector3(0,-.82f,.06f),new Vector3(.24f,.22f,.24f),jointMat,Quaternion.identity);
+            MeshPart(left?"MoonGuardForearmArmorL":"MoonGuardForearmArmorR",forearmPlate,shoulder,new Vector3(0,-1.08f,.22f),new Vector3(.84f,.88f,.82f),armorMat,Quaternion.Euler(-5,0,side*3f));
+            Part(left?"MoonGuardForearmCoreL":"MoonGuardForearmCoreR",PrimitiveType.Cube,shoulder,new Vector3(0,-1.05f,.02f),new Vector3(.36f,.58f,.36f),darkMat,Quaternion.identity);
+            Part(left?"MoonGuardWristL":"MoonGuardWristR",PrimitiveType.Cylinder,shoulder,new Vector3(0,-1.39f,.08f),new Vector3(.16f,.12f,.16f),jointMat,Quaternion.identity);
+            Part(left?"MoonGuardHandL":"MoonGuardHandR",PrimitiveType.Cube,shoulder,new Vector3(0,-1.54f,.14f),new Vector3(.31f,.25f,.36f),darkMat,Quaternion.Euler(-4,0,0));
+
+            if(left){moonLeftArm=shoulder;moonLeftArmBase=shoulder.localRotation;}
+            else{moonRightArm=shoulder;moonRightArmBase=shoulder.localRotation;}
+        }
+
+        private void BuildMoonGuardLeg(float side,Mesh shinPlate,Mesh footPlate)
+        {
+            bool left=side<0f;
+            Transform leg=Pivot(left?"DF_MoonGuardLegL":"DF_MoonGuardLegR",moonBodyRoot,new Vector3(side*.42f,.02f,-.04f),Quaternion.Euler(3,0,side*2f));
+            Part(left?"MoonGuardThighCoreL":"MoonGuardThighCoreR",PrimitiveType.Capsule,leg,new Vector3(0,-.38f,.01f),new Vector3(.34f,.58f,.36f),darkMat,Quaternion.identity);
+            Part(left?"MoonGuardThighArmorL":"MoonGuardThighArmorR",PrimitiveType.Cube,leg,new Vector3(0,-.34f,.23f),new Vector3(.54f,.58f,.38f),armorMat,Quaternion.Euler(-3,0,side*2f));
+            Part(left?"MoonGuardKneeL":"MoonGuardKneeR",PrimitiveType.Sphere,leg,new Vector3(0,-.73f,.12f),new Vector3(.29f,.25f,.30f),jointMat,Quaternion.identity);
+            Part(left?"MoonGuardKneeLightL":"MoonGuardKneeLightR",PrimitiveType.Cube,leg,new Vector3(0,-.72f,.32f),new Vector3(.15f,.07f,.045f),energyMat,Quaternion.identity);
+            Part(left?"MoonGuardShinCoreL":"MoonGuardShinCoreR",PrimitiveType.Capsule,leg,new Vector3(0,-1.02f,.09f),new Vector3(.32f,.52f,.35f),darkMat,Quaternion.identity);
+            MeshPart(left?"MoonGuardShinArmorL":"MoonGuardShinArmorR",shinPlate,leg,new Vector3(0,-1.01f,.32f),new Vector3(.88f,.82f,.90f),armorMat,Quaternion.Euler(-6,0,side*2f));
+
+            Transform foot=Pivot(left?"DF_MoonGuardFootL":"DF_MoonGuardFootR",leg,new Vector3(0,-1.34f,.28f),Quaternion.identity);
+            Part(left?"MoonGuardFootCoreL":"MoonGuardFootCoreR",PrimitiveType.Cube,foot,new Vector3(0,0,.08f),new Vector3(.58f,.22f,.78f),darkMat,Quaternion.identity);
+            MeshPart(left?"MoonGuardFootArmorL":"MoonGuardFootArmorR",footPlate,foot,new Vector3(0,.02f,.42f),new Vector3(.78f,.58f,.88f),armorMat,Quaternion.Euler(-12,0,0));
+            Part(left?"MoonGuardHeelL":"MoonGuardHeelR",PrimitiveType.Cube,foot,new Vector3(0,.01f,-.26f),new Vector3(.42f,.18f,.34f),jointMat,Quaternion.identity);
+
+            if(left){moonLeftLeg=leg;moonLeftLegBase=leg.localRotation;}
+            else{moonRightLeg=leg;moonRightLegBase=leg.localRotation;}
+        }
+
+        private void AnimateMoonGuard()
+        {
+            if(moonBodyRoot==null)return;
+            float t=Time.time;
+            float stride=Mathf.Sin(t*5.2f)*moonMoveBlend;
+            float bob=Mathf.Abs(stride)*.030f*moonMoveBlend;
+            moonBodyRoot.localPosition=moonBodyRest+Vector3.up*bob;
+            moonBodyRoot.localRotation=Quaternion.Euler(-1f+Mathf.Cos(t*5.2f)*.45f*moonMoveBlend,0,stride*.55f);
+
+            if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*17f,0,0);
+            if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*17f,0,0);
+            if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-stride*10f,0,0);
+            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*10f,0,0);
         }
 
         private void BuildSkeletonVisuals()
@@ -1109,9 +1183,7 @@ namespace Alterverse.Combat
             if(kryonBear){bearMoveBlend=1f;return;}
             if(xenoAlien){xenoMoveBlend=1f;return;}
             if(marsSkeleton){skeletonMoveBlend=1f;return;}
-            float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
-            if(leftTrack!=null)leftTrack.localPosition=new Vector3(0,bob,0);
-            if(rightTrack!=null)rightTrack.localPosition=new Vector3(0,-bob,0);
+            moonMoveBlend=1f;
         }
 
         private void OnDestroy()
