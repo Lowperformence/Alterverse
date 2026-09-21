@@ -494,6 +494,7 @@ namespace Alterverse.Multiplayer
                 else await old.LeaveAsync();
             }
             catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT: lobby leave cleanup failed: "+ex.Message);}
+            finally{CoopNetworkBootstrap.ShutdownLocalNetwork();}
         }
 
         private async Task SafeLeaveAfterFailureAsync()
