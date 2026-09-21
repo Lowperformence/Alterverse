@@ -16,23 +16,34 @@ namespace Alterverse.Editor
             Assert(CoopLobbyService.NormalizeJoinCode("  ")=="",
                 "Blank join codes must stay blank.");
 
-            var members=new List<CoopLobbyService.MemberView>
+            HeroId[] humanHeroes={HeroId.Veyr,HeroId.Mira,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra};
+            for(int humanCount=CoopLobbyService.MinHumanPlayers;humanCount<=CoopLobbyService.MaxHumanPlayers;humanCount++)
             {
-                new(){PlayerId="host",DisplayName="Host",Hero=HeroId.Veyr,Ready=true,IsHost=true,IsLocal=true},
-                new(){PlayerId="friend",DisplayName="Friend",Hero=HeroId.Mira,Ready=true,IsHost=false,IsLocal=false}
-            };
-            CoopMatchPlan plan=CoopMatchPlan.Build("regression-plan",ArenaVariant.Kryon,BotDifficulty.Hard,members);
-            Assert(plan!=null&&plan.Session!=null,"Co-op match plan was not created.");
-            Assert(plan.Arena==ArenaVariant.Kryon&&plan.Difficulty==BotDifficulty.Hard,"Host match settings were not preserved.");
-            Assert(plan.Session.IsFull,"2 humans + 3 allied bots + 5 enemy bots must fill a 10-slot co-op plan.");
-            Assert(!plan.Session.Slots[0].IsBot&&!plan.Session.Slots[1].IsBot,"First two co-op slots must be human.");
-            Assert(plan.Session.Slots[0].IsHost&&!plan.Session.Slots[1].IsHost,"Only the first human slot may be host.");
-            for(int i=2;i<10;i++)Assert(plan.Session.Slots[i].IsBot,$"Slot {i} must be AI.");
-            for(int i=0;i<5;i++)Assert(plan.Session.Slots[i].Team==0,$"Zero slot {i} has wrong team.");
-            for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].Team==1,$"Lumen slot {i} has wrong team.");
-            for(int i=2;i<5;i++)
-                Assert(plan.Session.Slots[i].Hero!=HeroId.Veyr&&plan.Session.Slots[i].Hero!=HeroId.Mira,
-                    "Allied bot must not duplicate a human hero.");
+                var members=new List<CoopLobbyService.MemberView>();
+                for(int i=0;i<humanCount;i++)
+                    members.Add(new CoopLobbyService.MemberView
+                    {
+                        PlayerId=i==0?"host":$"friend-{i}",
+                        DisplayName=i==0?"Host":$"Friend {i}",
+                        Hero=humanHeroes[i],
+                        Ready=true,
+                        IsHost=i==0,
+                        IsLocal=i==0
+                    });
+
+                CoopMatchPlan plan=CoopMatchPlan.Build($"regression-{humanCount}",ArenaVariant.Kryon,BotDifficulty.Hard,members);
+                Assert(plan!=null&&plan.Session!=null,$"{humanCount}-player co-op match plan was not created.");
+                Assert(plan.HumanCount==humanCount,$"{humanCount}-player plan reports wrong human count.");
+                Assert(plan.Arena==ArenaVariant.Kryon&&plan.Difficulty==BotDifficulty.Hard,"Host match settings were not preserved.");
+                Assert(plan.Session.IsFull,$"{humanCount}-player co-op plan must always fill ten match slots.");
+
+                for(int i=0;i<humanCount;i++)Assert(!plan.Session.Slots[i].IsBot,$"Human slot {i} became AI.");
+                for(int i=humanCount;i<5;i++)Assert(plan.Session.Slots[i].IsBot,$"Missing Team Zero bot in slot {i}.");
+                for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].IsBot,$"Lumen slot {i} must always be AI.");
+                for(int i=0;i<5;i++)Assert(plan.Session.Slots[i].Team==0,$"Zero slot {i} has wrong team.");
+                for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].Team==1,$"Lumen slot {i} has wrong team.");
+                Assert(plan.Session.Slots[0].IsHost,"First Team Zero slot must be the host.");
+            }
 
             bool duplicateRejected=false;
             try
@@ -59,7 +70,7 @@ namespace Alterverse.Editor
             for(int i=0;i<5;i++)
                 Assert(session.TryAssign(5+i,Slot("enemy-"+i,enemies[i],1,true,false)),$"Enemy bot {i} failed.");
 
-            Assert(session.IsFull,"2 humans + 3 allied bots + 5 enemy bots must fill a 10-slot match.");
+            Assert(session.IsFull,"A complete co-op roster must fill all 10 match slots.");
             Assert(!session.TryAssign(9,Slot("overflow",HeroId.Rook,0,true,false)),
                 "A sixth Team Zero member must be rejected even when replacing a Team One slot.");
 
