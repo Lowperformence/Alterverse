@@ -561,7 +561,7 @@ namespace Alterverse.Combat
                     spiderSwingStart[i]=spiderFootPlant[i];
                     // Place the next step slightly ahead of the moving body. This produces a
                     // visible plant / push / lift cycle rather than foot skating.
-                    Vector3 lead=velocity*.24f;
+                    Vector3 lead=velocity*.18f;
                     spiderSwingEnd[i]=SpiderDesiredFootWorld(i,lead);
                 }
 
