@@ -21,6 +21,7 @@ namespace Alterverse.Multiplayer
         private const string PlanetPulseStartMessage="DF_COOP_PLANET_PULSE_START_V1";
         private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V1";
         private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V1";
+        private const string PlanetBuffMessage="DF_COOP_PLANET_BUFF_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -49,6 +50,7 @@ namespace Alterverse.Multiplayer
             PlanetPulseAttack.NetworkPulseStarted+=OnHostPlanetPulseStart;
             PlanetPulseAttack.NetworkPulseDetonated+=OnHostPlanetPulseDetonate;
             CentralHealingPickup.NetworkAvailabilityChanged+=OnHostCentralHealChanged;
+            DimensionPlanet.NetworkBuffGranted+=OnHostPlanetBuffGranted;
             eventsBound=true;
         }
 
@@ -64,6 +66,7 @@ namespace Alterverse.Multiplayer
             PlanetPulseAttack.NetworkPulseStarted-=OnHostPlanetPulseStart;
             PlanetPulseAttack.NetworkPulseDetonated-=OnHostPlanetPulseDetonate;
             CentralHealingPickup.NetworkAvailabilityChanged-=OnHostCentralHealChanged;
+            DimensionPlanet.NetworkBuffGranted-=OnHostPlanetBuffGranted;
             eventsBound=false;
         }
 
@@ -143,6 +146,14 @@ namespace Alterverse.Multiplayer
             using FastBufferWriter writer=new(16,Allocator.Temp);
             writer.WriteValueSafe(available);writer.WriteValueSafe(readyIn);
             SendAll(CentralHealMessage,writer);
+        }
+
+        private void OnHostPlanetBuffGranted(int team,PlanetBuffType type,float duration)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(20,Allocator.Temp);
+            writer.WriteValueSafe(team);writer.WriteValueSafe((int)type);writer.WriteValueSafe(duration);
+            SendAll(PlanetBuffMessage,writer);
         }
 
         private bool CanBroadcast()
@@ -232,6 +243,14 @@ namespace Alterverse.Multiplayer
             FindAnyObjectByType<CentralHealingPickup>()?.ApplyNetworkAvailability(available,readyIn);
         }
 
+        private void OnPlanetBuff(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out int team);reader.ReadValueSafe(out int rawType);reader.ReadValueSafe(out float duration);
+            if(rawType<0||rawType>1)return;
+            DimensionPlanet.ApplyNetworkBuff(Mathf.Clamp(team,0,1),(PlanetBuffType)rawType,duration);
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -252,6 +271,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(PlanetPulseStartMessage,OnPlanetPulseStart);
             messaging.RegisterNamedMessageHandler(PlanetPulseDetonateMessage,OnPlanetPulseDetonate);
             messaging.RegisterNamedMessageHandler(CentralHealMessage,OnCentralHeal);
+            messaging.RegisterNamedMessageHandler(PlanetBuffMessage,OnPlanetBuff);
             attached=true;
         }
 
@@ -267,6 +287,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(PlanetPulseStartMessage);
             messaging.UnregisterNamedMessageHandler(PlanetPulseDetonateMessage);
             messaging.UnregisterNamedMessageHandler(CentralHealMessage);
+            messaging.UnregisterNamedMessageHandler(PlanetBuffMessage);
             messaging=null;attached=false;
         }
     }
