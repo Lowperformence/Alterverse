@@ -99,12 +99,26 @@ namespace Alterverse.UI
         private void OnApplicationPause(bool paused)
         {
             suspended = paused;
-            if (paused) { FlushAudio(); if (launching) { launching = false; page = Page.Play; } }
+            if (paused)
+            {
+                FlushAudio();
+                if(launching)
+                {
+                    launching=false;
+                    page=coopLaunching?Page.Coop:Page.Play;
+                    coopLaunching=false;
+                }
+            }
             if (visible) MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnApplicationFocus(bool focused)
         {
-            if (!focused && launching) { launching = false; page = Page.Play; }
+            if(!focused&&launching)
+            {
+                launching=false;
+                page=coopLaunching?Page.Coop:Page.Play;
+                coopLaunching=false;
+            }
             if (focused && visible) { MatchClock.Set(PauseReason.Menu,true);collection?.Invalidate();showcase?.InvalidateLoadout(); }
         }
         private void OnDisable() { FlushAudio(); CloseKeyboard(); }
