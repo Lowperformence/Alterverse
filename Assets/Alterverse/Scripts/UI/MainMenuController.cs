@@ -313,7 +313,7 @@ namespace Alterverse.UI
         }
         private void DrawCoop()
         {
-            Heading("Private Co-op","Create a two-player lobby, invite one friend by code, then play together against AI.");
+            Heading("Private Co-op","Create a private lobby for 2–5 players and fight together against the AI.");
 
             CoopLobbyService coop=CoopLobbyService.Instance;
             if(coop==null)
@@ -330,8 +330,8 @@ namespace Alterverse.UI
 
                 theme.Panel(new Rect(Left,226,panelW,360));
                 theme.Label(new Rect(Left+28,250,panelW-56,32),"CREATE LOBBY",theme.Heading);
-                theme.Label(new Rect(Left+28,292,panelW-56,74),"Host a private room for you and one friend.\nNo matchmaking. No public player list.",theme.Body,true);
-                theme.Label(new Rect(Left+28,386,panelW-56,42),"HOST + FRIEND + 3 BOTS  VS  5 BOTS",theme.Small,true);
+                theme.Label(new Rect(Left+28,292,panelW-56,74),"Host a private room for up to four friends.\nNo matchmaking. No public player list.",theme.Body,true);
+                theme.Label(new Rect(Left+28,386,panelW-56,42),"2–5 PLAYERS  •  EMPTY ALLY SLOTS BECOME BOTS",theme.Small,true);
                 if(theme.Action(new Rect(Left+28,454,panelW-56,58),coop.Busy?"CONNECTING...":"CREATE PRIVATE LOBBY",true,enabled:!coop.Busy))
                     _=coop.CreateLobbyAsync();
 
@@ -349,7 +349,7 @@ namespace Alterverse.UI
 
                 string footer=string.IsNullOrEmpty(coop.LastError)?coop.Status:coop.Status+"  •  "+coop.LastError;
                 theme.Label(new Rect(Left,610,ContentWidth,52),footer,theme.Small,true);
-                theme.Label(new Rect(Left,670,ContentWidth,24),"PHASE 1 • LOBBY / HERO / READY / HOST SETTINGS",theme.Small,true);
+                theme.Label(new Rect(Left,670,ContentWidth,24),"PRIVATE CO-OP • 2–5 PLAYERS • HOST + RELAY",theme.Small,true);
                 return;
             }
 
@@ -369,74 +369,78 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Right-170,244,170,44),coop.Busy?"PLEASE WAIT":"LEAVE LOBBY",enabled:!coop.Busy))
                 _=coop.LeaveLobbyAsync();
 
-            float playerGap=18f;
-            float playerW=(ContentWidth-playerGap)*.5f;
+            const int visibleSlots=CoopLobbyService.MaxHumanPlayers;
+            const float playerGap=8f;
+            float playerW=(ContentWidth-playerGap*(visibleSlots-1))/visibleSlots;
             IReadOnlyList<CoopLobbyService.MemberView> members=coop.Members;
-            for(int slot=0;slot<2;slot++)
+            for(int slot=0;slot<visibleSlots;slot++)
             {
                 float x=Left+slot*(playerW+playerGap);
-                theme.Panel(new Rect(x,332,playerW,188));
+                theme.Panel(new Rect(x,332,playerW,178));
 
                 if(slot>=members.Count)
                 {
-                    theme.Label(new Rect(x+22,350,playerW-44,28),slot==0?"HOST":"FRIEND",theme.Small,true);
-                    theme.Center(new Rect(x+22,405,playerW-44,42),"WAITING FOR FRIEND...");
+                    theme.Label(new Rect(x+10,344,playerW-20,20),slot==0?"HOST":$"SLOT {slot+1}",theme.Small,true);
+                    theme.Center(new Rect(x+10,386,playerW-20,36),"OPEN");
+                    theme.Label(new Rect(x+10,454,playerW-20,20),"WAITING...",theme.Small,true);
                     continue;
                 }
 
                 CoopLobbyService.MemberView member=members[slot];
-                string role=member.IsHost?"HOST":"FRIEND";
-                if(member.IsLocal)role+="  •  YOU";
-                theme.Label(new Rect(x+22,350,playerW-44,22),role,theme.Small,true);
-                theme.Label(new Rect(x+22,376,playerW-44,30),member.DisplayName,theme.Heading);
-                theme.Label(new Rect(x+22,414,playerW-44,26),"HERO  /  "+HeroIdentity.NameFor(member.Hero).ToUpperInvariant(),theme.Body);
-                theme.Label(new Rect(x+22,452,playerW-44,24),member.Ready?"READY":"NOT READY",theme.Small,true);
+                string role=member.IsHost?"HOST":$"PLAYER {slot+1}";
+                if(member.IsLocal)role+=" • YOU";
+                theme.Label(new Rect(x+10,344,playerW-20,20),role,theme.Small,true);
+                theme.FitLabel(new Rect(x+10,368,playerW-20,26),member.DisplayName,theme.Heading);
+                theme.FitLabel(new Rect(x+10,400,playerW-20,22),HeroIdentity.NameFor(member.Hero).ToUpperInvariant(),theme.Small,true);
+                theme.Center(new Rect(x+10,430,playerW-20,20),member.Ready?"READY":"NOT READY");
 
                 if(member.IsLocal)
                 {
                     bool lobbyEditable=!coop.Busy&&!coop.IsStaging;
-                    if(theme.Action(new Rect(x+playerW-142,408,48,38),"<",enabled:lobbyEditable))
+                    if(theme.Action(new Rect(x+10,456,34,34),"<",enabled:lobbyEditable))
                         _=coop.CycleLocalHeroAsync(-1);
-                    if(theme.Action(new Rect(x+playerW-84,408,48,38),">",enabled:lobbyEditable))
+                    if(theme.Action(new Rect(x+playerW-44,456,34,34),">",enabled:lobbyEditable))
                         _=coop.CycleLocalHeroAsync(1);
+                    float readyX=x+50f,readyW=Mathf.Max(42f,playerW-100f);
                     string readyText=coop.LocalReady?"UNREADY":"READY";
-                    if(theme.Action(new Rect(x+playerW-184,462,148,42),readyText,true,enabled:lobbyEditable&&!coop.HasHeroConflict))
+                    if(theme.Action(new Rect(readyX,456,readyW,34),readyText,true,enabled:lobbyEditable&&!coop.HasHeroConflict))
                         _=coop.SetLocalReadyAsync(!coop.LocalReady);
                 }
             }
 
-            theme.Panel(new Rect(Left,536,ContentWidth,90));
-            theme.Label(new Rect(Left+22,548,110,20),"MATCH",theme.Small,true);
+            theme.Panel(new Rect(Left,526,ContentWidth,100));
+            theme.Label(new Rect(Left+22,538,110,20),"MATCH",theme.Small,true);
 
             float mapX=Left+132;
             bool hostEditable=coop.IsHost&&!coop.Busy&&!coop.IsStaging;
-            if(coop.IsHost&&theme.Action(new Rect(mapX,548,42,34),"<",enabled:hostEditable))
+            if(coop.IsHost&&theme.Action(new Rect(mapX,538,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(-1);
-            theme.Center(new Rect(mapX+48,548,220,34),arenaItem.Name);
-            if(coop.IsHost&&theme.Action(new Rect(mapX+274,548,42,34),">",enabled:hostEditable))
+            theme.Center(new Rect(mapX+48,538,220,34),arenaItem.Name);
+            if(coop.IsHost&&theme.Action(new Rect(mapX+274,538,42,34),">",enabled:hostEditable))
                 _=coop.CycleHostArenaAsync(1);
 
             float aiX=Left+480;
-            if(coop.IsHost&&theme.Action(new Rect(aiX,548,42,34),"<",enabled:hostEditable))
+            if(coop.IsHost&&theme.Action(new Rect(aiX,538,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(-1);
-            theme.Center(new Rect(aiX+48,548,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
-            if(coop.IsHost&&theme.Action(new Rect(aiX+238,548,42,34),">",enabled:hostEditable))
+            theme.Center(new Rect(aiX+48,538,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
+            if(coop.IsHost&&theme.Action(new Rect(aiX+238,538,42,34),">",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(1);
 
             if(coop.IsStaging)
             {
                 string staged=coop.TryBuildMatchPlan(out CoopMatchPlan plan)&&plan?.Session!=null
-                    ?$"STAGED  •  2 PLAYERS + 3 ALLY BOTS VS 5 BOTS"
+                    ?$"STAGED  •  {plan.HumanCount} PLAYERS + {5-plan.HumanCount} ALLY BOTS VS 5 BOTS"
                     :"STAGED  •  VALIDATING ROSTER";
-                theme.Center(new Rect(Right-382,548,382,28),staged);
-                if(coop.IsHost&&theme.Action(new Rect(Right-330,584,330,32),"CANCEL MATCH PREP",enabled:!coop.Busy))
+                theme.Center(new Rect(Right-382,538,382,28),staged);
+                if(coop.IsHost&&theme.Action(new Rect(Right-330,576,330,32),"CANCEL MATCH PREP",enabled:!coop.Busy))
                     _=coop.CancelMatchStagingAsync();
             }
             else
             {
                 string startLabel=coop.CanStageMatch?"PREPARE CO-OP MATCH":
-                    coop.CanStartLobby?"WAITING FOR RELAY LINK":"WAITING FOR BOTH PLAYERS";
-                if(theme.Action(new Rect(Right-330,548,330,54),startLabel,true,
+                    coop.CanStartLobby?"WAITING FOR RELAY LINK":
+                    coop.PlayerCount<CoopLobbyService.MinHumanPlayers?"WAITING FOR FRIEND":"WAITING FOR ALL READY";
+                if(theme.Action(new Rect(Right-330,538,330,54),startLabel,true,
                     enabled:coop.IsHost&&coop.CanStageMatch&&!coop.Busy))
                     _=coop.BeginMatchStagingAsync();
             }
