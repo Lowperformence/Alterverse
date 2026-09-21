@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private int weaponVariant;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponVariant=skinPreview!=null?skinPreview.WeaponVariant:(int)Alterverse.Shop.WeaponSkinInventory.EquippedTier(identity.Hero);weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);if(identity.Hero==HeroId.Veyr&&weaponOverdrive&&weaponVariant<=0)weaponVariant=(int)Alterverse.Shop.WeaponSkinTier.Legendary;accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
+private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -198,9 +198,7 @@ part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>(
 }
 private void ApplyWeaponOverdrive()
 {
-Alterverse.Shop.WeaponSkinItem skin=identity.Hero==HeroId.Veyr
-?Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero,(Alterverse.Shop.WeaponSkinTier)Mathf.Clamp(weaponVariant,1,3))
-:Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero);
+Alterverse.Shop.WeaponSkinItem skin=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero);
 Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");if(shader==null)return;
 Color glow=skin.Glow;
 Material weaponMaterial=new Material(shader){name="DF_WeaponOverdrive_"+identity.Hero,color=glow};
@@ -222,30 +220,28 @@ else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 
 private void ApplyNullEdgeOverdrive(Shader shader,Material voidMaterial)
 {
-int tier=Mathf.Clamp(weaponVariant,1,3);
 Transform leftWeapon=FindVisual("WeaponL");
 Transform rightWeapon=FindVisual("WeaponR");
 
-float weaponScale=tier==1?1.04f:tier==2?1.11f:1.18f;
-if(leftWeapon!=null)leftWeapon.localScale*=weaponScale;
-if(rightWeapon!=null)rightWeapon.localScale*=weaponScale;
+if(leftWeapon!=null)leftWeapon.localScale*=1.11f;
+if(rightWeapon!=null)rightWeapon.localScale*=1.11f;
 
-Color blackSteel=tier==1?new Color(.055f,.048f,.070f,1f):new Color(.025f,.020f,.035f,1f);
-Material steelMaterial=new Material(shader){name="DF_VeyrSkinBlackSteel_T"+tier,color=blackSteel};
+Color blackSteel=new(.025f,.020f,.035f,1f);
+Material steelMaterial=new Material(shader){name="DF_NightBlossomBlackSteel",color=blackSteel};
 if(steelMaterial.HasProperty("_BaseColor"))steelMaterial.SetColor("_BaseColor",blackSteel);
-if(steelMaterial.HasProperty("_Metallic"))steelMaterial.SetFloat("_Metallic",tier==1?.72f:.84f);
-if(steelMaterial.HasProperty("_Smoothness"))steelMaterial.SetFloat("_Smoothness",tier==1?.44f:.58f);
+if(steelMaterial.HasProperty("_Metallic"))steelMaterial.SetFloat("_Metallic",.84f);
+if(steelMaterial.HasProperty("_Smoothness"))steelMaterial.SetFloat("_Smoothness",.58f);
 ownedMaterials.Add(steelMaterial);
 
-Color violetCore=tier==1?new Color(.56f,.12f,.90f,1f):tier==2?new Color(.72f,.16f,1f,1f):new Color(.86f,.24f,1f,1f);
-Material coreMaterial=new Material(shader){name="DF_VeyrSkinVoidCore_T"+tier,color=violetCore};
+Color violetCore=new(.72f,.16f,1f,1f);
+Material coreMaterial=new Material(shader){name="DF_NightBlossomVoidCore",color=violetCore};
 if(coreMaterial.HasProperty("_BaseColor"))coreMaterial.SetColor("_BaseColor",violetCore);
 if(coreMaterial.HasProperty("_Metallic"))coreMaterial.SetFloat("_Metallic",.10f);
 if(coreMaterial.HasProperty("_Smoothness"))coreMaterial.SetFloat("_Smoothness",.90f);
 if(coreMaterial.HasProperty("_EmissionColor"))
 {
 coreMaterial.EnableKeyword("_EMISSION");
-coreMaterial.SetColor("_EmissionColor",violetCore*(tier==1?2.8f:tier==2?3.5f:4.3f));
+coreMaterial.SetColor("_EmissionColor",violetCore*3.5f);
 }
 ownedMaterials.Add(coreMaterial);
 
@@ -257,31 +253,31 @@ if(weapon==null)continue;
 
 Transform blade=FindVisual("Blade"+suffix);
 if(blade!=null)ApplyGlow(blade,steelMaterial);
+
 Transform edge=FindVisual("BladeEdge"+suffix);
 if(edge!=null)
 {
-edge.localScale*=tier==1?1.05f:tier==2?1.11f:1.17f;
+edge.localScale*=1.11f;
 ApplyGlow(edge,voidMaterial);
 }
+
 Transform hilt=FindVisual("Hilt"+suffix);
 if(hilt!=null)
 {
-hilt.localScale=Vector3.Scale(hilt.localScale,tier==1?new Vector3(1.05f,1.08f,1.05f):new Vector3(1.12f,1.18f,1.12f));
+hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.10f,1.15f,1.10f));
 ApplyGlow(hilt,steelMaterial);
 }
+
 Transform guard=FindVisual("Guard"+suffix);
-if(guard!=null){guard.localScale*=tier==1?1.04f:tier==2?1.12f:1.20f;ApplyGlow(guard,steelMaterial);}
+if(guard!=null){guard.localScale*=1.12f;ApplyGlow(guard,steelMaterial);}
+
 Transform pommel=FindVisual("Pommel"+suffix);
 if(pommel!=null)ApplyGlow(pommel,coreMaterial);
 
-// VOID EDGE / RARE: lean silhouette, brighter edge and small core.
-CreateNullEdgePart("VeyrSkinCore"+suffix,weapon,
-new Vector3(0,-.105f,.13f),new Vector3(tier==1?.060f:.085f,tier==1?.060f:.085f,.045f),
+CreateNullEdgePart("NightBlossomCore"+suffix,weapon,
+new Vector3(0,-.105f,.13f),new Vector3(.080f,.080f,.045f),
 new Vector3(0,0,45f),coreMaterial);
 
-if(tier>=2)
-{
-// NIGHT BLOSSOM / EPIC adds split guards and ornamental void geometry.
 CreateNullEdgePart("NightGuardWingA"+suffix,weapon,
 new Vector3(side*.12f,-.12f,.09f),new Vector3(.055f,.24f,.08f),
 new Vector3(0,0,side*-34f),steelMaterial);
@@ -291,21 +287,6 @@ new Vector3(0,0,side*34f),steelMaterial);
 CreateNullEdgePart("NightPetal"+suffix,weapon,
 new Vector3(side*.12f,-.28f,.31f),new Vector3(.032f,.16f,.022f),
 new Vector3(side*14f,0,side*18f),coreMaterial);
-}
-
-if(tier>=3)
-{
-// OBLIVION / LEGENDARY adds the floating halo and full-length void spine.
-CreateNullEdgePart("OblivionSpine"+suffix,weapon,
-new Vector3(side*.035f,-.34f,.45f),new Vector3(.030f,.32f,.025f),
-new Vector3(side*7f,0,side*5f),voidMaterial);
-
-Mesh haloMesh=HeroMeshLibrary.Ring("DF_OblivionHalo"+suffix,.19f,.016f);
-GameObject halo=Sculpt("OblivionHalo"+suffix,haloMesh,new Vector3(0,-.12f,.13f),Vector3.one,violetCore,weapon,true);
-halo.transform.localRotation=Quaternion.Euler(76f,0f,side*18f);
-MeshRenderer haloRenderer=halo.GetComponent<MeshRenderer>();
-if(haloRenderer!=null)haloRenderer.sharedMaterial=coreMaterial;
-}
 }
 }
 
