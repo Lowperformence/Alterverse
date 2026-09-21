@@ -17,11 +17,12 @@ namespace Alterverse.Multiplayer
         private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V1";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/12f;
-        private const float MaxOwnerStep=6.5f;
+        private const float MinimumMovementSlack=.18f;
 
         private CustomMessagingManager messaging;
         private readonly CoopHeroSlot[] slots=new CoopHeroSlot[MatchSession.MaxPlayers];
         private readonly Dictionary<ulong,string> senderOwners=new();
+        private readonly Dictionary<ulong,float> senderLastPoseAt=new();
         private float nextOwnerSend,nextHostSnapshot,nextRefresh;
         private int localSlot=-1;
         private string localPlayerId="";
@@ -101,6 +102,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(HeroSnapshotMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
+            senderLastPoseAt.Clear();
         }
 
         private void SendOwnerPose(NetworkManager manager)
@@ -143,8 +145,23 @@ namespace Alterverse.Multiplayer
             Vector3 desired=GameplayCollision.ClampToRoundedArena(new Vector3(x,y,z),40f,33f);
             desired.y=actor.transform.position.y;
             Vector3 delta=desired-actor.transform.position;delta.y=0;
-            if(delta.magnitude>MaxOwnerStep)delta=delta.normalized*MaxOwnerStep;
+
             HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
+            if(locomotion!=null&&locomotion.IsDashing)return;
+
+            float now=Time.unscaledTime;
+            float dt=senderLastPoseAt.TryGetValue(senderClientId,out float previous)
+                ?Mathf.Clamp(now-previous,.015f,.25f):OwnerSendInterval*2f;
+            senderLastPoseAt[senderClientId]=now;
+
+            HeroCombatProfile profile=actor.GetComponent<HeroCombatProfile>();
+            PlanetBuffReceiver buff=actor.GetComponent<PlanetBuffReceiver>();
+            float baseSpeed=profile!=null?profile.MoveSpeed:6.5f;
+            float buffSpeed=buff!=null?buff.MoveSpeedMultiplier:1f;
+            float statusSpeed=locomotion!=null?locomotion.SpeedMultiplier:HeroCombatStatus.Speed(actor);
+            float allowed=Mathf.Max(MinimumMovementSlack,baseSpeed*buffSpeed*statusSpeed*dt*1.40f+MinimumMovementSlack);
+            if(delta.magnitude>allowed)delta=delta.normalized*allowed;
+
             if(locomotion!=null)locomotion.Move(delta,40f,33f);
             else actor.transform.position=GameplayCollision.ClampToRoundedArena(actor.transform.position+delta,40f,33f);
             actor.transform.rotation=Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0);
@@ -188,6 +205,12 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(health.Current);
                 writer.WriteValueSafe(health.Shield);
                 writer.WriteValueSafe(health.IsDead);
+                HeroCombatStatus status=slot.GetComponent<HeroCombatStatus>();
+                writer.WriteValueSafe(status!=null&&status.Stunned);
+                writer.WriteValueSafe(status!=null?status.MoveMultiplier:1f);
+                HeroRespawn respawn=slot.GetComponent<HeroRespawn>();
+                writer.WriteValueSafe(respawn!=null&&respawn.IsRespawning);
+                writer.WriteValueSafe(respawn!=null?respawn.RemainingSeconds:0f);
             }
 
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -212,6 +235,10 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float current);
                 reader.ReadValueSafe(out float shield);
                 reader.ReadValueSafe(out bool dead);
+                reader.ReadValueSafe(out bool stunned);
+                reader.ReadValueSafe(out float moveMultiplier);
+                reader.ReadValueSafe(out bool respawning);
+                reader.ReadValueSafe(out float respawnRemaining);
 
                 if(rosterSlot<0||rosterSlot>=slots.Length)continue;
                 CoopHeroSlot actor=slots[rosterSlot];if(actor==null)continue;
@@ -227,6 +254,9 @@ namespace Alterverse.Multiplayer
                 if(!localOwner)actor.transform.rotation=Quaternion.Euler(0,yaw,0);
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
+                HeroCombatStatus status=actor.GetComponent<HeroCombatStatus>()??actor.gameObject.AddComponent<HeroCombatStatus>();
+                status.ApplyNetworkSnapshot(stunned,moveMultiplier);
+                actor.GetComponent<CoopRespawnReplica>()?.Apply(respawning,respawnRemaining);
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);
             }
         }
