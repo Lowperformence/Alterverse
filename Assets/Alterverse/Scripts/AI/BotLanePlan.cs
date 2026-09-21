@@ -63,7 +63,9 @@ namespace Alterverse.AI
 
             point.y=transform.position.y;
             roamTarget=point;
-            nextRoamPick=Time.time+Mathf.Lerp(3.5f,6f,(value%101u)/100f);
+            // The match is under constant time pressure: do not spend too long on a low-value
+            // search sector. Reaching the point still causes an immediate repick above.
+            nextRoamPick=Time.time+Mathf.Lerp(2.8f,4.5f,(value%101u)/100f);
         }
     }
 }
