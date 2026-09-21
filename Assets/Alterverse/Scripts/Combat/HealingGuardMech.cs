@@ -143,6 +143,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
 
             Vector3 plateDelta=transform.position-healingPlate;plateDelta.y=0;
