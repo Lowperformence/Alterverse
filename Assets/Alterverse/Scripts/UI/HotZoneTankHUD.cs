@@ -9,6 +9,8 @@ namespace Alterverse.UI
         private GUIStyle labelStyle,hpStyle;
         private Texture2D pixel;
         private Camera cam;
+        private TeamMember playerTeam;
+        private float nextPlayerResolve;
 
         private void Awake()
         {
@@ -19,6 +21,12 @@ namespace Alterverse.UI
         {
             if(Time.timeScale<=0f||MainMenuController.IsVisible)return;
             cam??=Camera.main;if(cam==null)return;
+            if((playerTeam==null||!playerTeam.isActiveAndEnabled)&&Time.unscaledTime>=nextPlayerResolve)
+            {
+                nextPlayerResolve=Time.unscaledTime+.5f;
+                GameObject player=GameObject.Find("AV_Player");
+                if(player!=null)playerTeam=player.GetComponent<TeamMember>();
+            }
 
             if(labelStyle==null)
             {
@@ -54,7 +62,12 @@ namespace Alterverse.UI
                 GUI.color=new Color(.035f,.04f,.055f,.92f);GUI.DrawTexture(back,pixel);
                 float normalized=Mathf.Clamp01(tank.TankHealth.Normalized);
                 Color teamColor=tank.Team==0?new Color(.72f,.25f,1f):new Color(.16f,.88f,1f);
-                GUI.color=teamColor;GUI.DrawTexture(new Rect(back.x+1,back.y+1,(back.width-2)*normalized,back.height-2),pixel);
+                // Enemy Hot Zone monsters always use a red HP fill for immediate combat readability.
+                // Friendly reward monsters keep their existing team color.
+                Color barColor=playerTeam!=null&&tank.Team!=playerTeam.Team
+                    ?new Color(1f,.10f,.10f,.98f)
+                    :teamColor;
+                GUI.color=barColor;GUI.DrawTexture(new Rect(back.x+1,back.y+1,(back.width-2)*normalized,back.height-2),pixel);
                 GUI.color=Color.white;
                 GUI.Label(new Rect(x,y+8,116,16),$"{Mathf.CeilToInt(tank.TankHealth.Current)} / {Mathf.CeilToInt(tank.TankHealth.Max)}",hpStyle);
             }
