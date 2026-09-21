@@ -3,8 +3,16 @@ namespace Alterverse.Combat
 {
 [RequireComponent(typeof(Health))]public sealed class LaneMinion:MonoBehaviour
 {
-[SerializeField]private float moveSpeed=2.8f,detectionRange=7.5f,attackRange=1.85f,attackDamage=3.25f,attackCooldown=1.35f;private Health health,target;private int team;private Alterverse.Match.DimensionsFront front;private float structureDamageMultiplier=1f,frontInfluenceOnDeath;private bool siegeUnit;public bool IsSiegeUnit=>siegeUnit;private Vector3 destination;public Vector3 LaneDestination=>destination;private float nextAttackTime,nextScanTime,nextRouteScan;private RealityCore routeCore;private bool routeBlocked;public int Team=>team;public void ConfigureFrontInfluence(float percent)=>frontInfluenceOnDeath=Mathf.Max(0f,percent);public void ConfigureSiegeRole(bool enabled=true)=>siegeUnit=enabled;public void ConfigureCombat(float speed,float detection,float range,float damage,float cooldown,float vsStructures=1f){moveSpeed=speed;detectionRange=detection;attackRange=range;attackDamage=damage;attackCooldown=cooldown;structureDamageMultiplier=Mathf.Max(1f,vsStructures);}private void Awake(){gameObject.layer=GameplayCollision.Units;health=GetComponent<Health>();front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(health!=null)health.Died+=OnDied;}private void OnDestroy(){if(health!=null)health.Died-=OnDied;}private void OnDied(){if(frontInfluenceOnDeath<=0f)return;front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(front!=null)front.Push(team==0?1:0,frontInfluenceOnDeath);}public void Initialize(int teamId,Vector3 laneDestination){team=teamId;destination=laneDestination;nextAttackTime=Time.time+Random.Range(.2f,.65f);}
-private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;if(Time.timeScale<=0f||health==null||health.IsDead||!HeroCombatStatus.CanAct(gameObject))return;if(front!=null&&front.HasEnded)return;if(!IsValidTarget(target))target=null;if(Time.time>=nextScanTime){target=FindTarget();nextScanTime=Time.time+.2f;}if(target!=null){Vector3 delta=target.transform.position-transform.position;delta.y=0;float range=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?2.4f:attackRange;if(delta.sqrMagnitude<=range*range){Face(delta);if(Time.time>=nextAttackTime){nextAttackTime=Time.time+attackCooldown;float dealt=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?attackDamage*structureDamageMultiplier:attackDamage;target.TakeDamage(dealt,gameObject);Alterverse.Visuals.PrototypeVfx.ProjectileLine(transform.position+Vector3.up*.15f,target.transform.position+Vector3.up*.15f,team==0?new Color(.76f,.24f,1f):new Color(.18f,.92f,1f),.065f);}return;}MoveTowards(target.transform.position);return;}
+[SerializeField]private float moveSpeed=2.8f,detectionRange=7.5f,attackRange=1.85f,attackDamage=3.25f,attackCooldown=1.35f;private Health health,target;private int team;private Alterverse.Match.DimensionsFront front;private float structureDamageMultiplier=1f,frontInfluenceOnDeath;private bool siegeUnit;public bool IsSiegeUnit=>siegeUnit;private Vector3 destination;public Vector3 LaneDestination=>destination;private float nextAttackTime,nextScanTime,nextRouteScan;private string waveGroupKey;private int waveSlot;private float regroupGraceUntil;private RealityCore routeCore;private bool routeBlocked;public int Team=>team;public void ConfigureFrontInfluence(float percent)=>frontInfluenceOnDeath=Mathf.Max(0f,percent);public void ConfigureSiegeRole(bool enabled=true)=>siegeUnit=enabled;public void ConfigureCombat(float speed,float detection,float range,float damage,float cooldown,float vsStructures=1f){moveSpeed=speed;detectionRange=detection;attackRange=range;attackDamage=damage;attackCooldown=cooldown;structureDamageMultiplier=Mathf.Max(1f,vsStructures);}private void Awake(){gameObject.layer=GameplayCollision.Units;health=GetComponent<Health>();front=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(health!=null)health.Died+=OnDied;}private void OnDestroy(){if(health!=null)health.Died-=OnDied;}private void OnDied(){if(frontInfluenceOnDeath<=0f)return;front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();if(front!=null)front.Push(team==0?1:0,frontInfluenceOnDeath);}public void Initialize(int teamId,Vector3 laneDestination){team=teamId;destination=laneDestination;nextAttackTime=Time.time+Random.Range(.2f,.65f);}
+public void ConfigureWaveGroup(string unitKey,int slot)
+{
+    if(string.IsNullOrEmpty(unitKey))return;
+    int marker=unitKey.LastIndexOf(":I");
+    waveGroupKey=marker>0?unitKey.Substring(0,marker):unitKey;
+    waveSlot=Mathf.Max(0,slot);
+    regroupGraceUntil=Time.time+2.5f;
+}
+private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;if(Time.timeScale<=0f||health==null||health.IsDead||!HeroCombatStatus.CanAct(gameObject))return;if(front!=null&&front.HasEnded)return;if(TryRegroup()){target=null;return;}if(!IsValidTarget(target))target=null;if(Time.time>=nextScanTime){target=FindTarget();nextScanTime=Time.time+.2f;}if(target!=null){Vector3 delta=target.transform.position-transform.position;delta.y=0;float range=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?2.4f:attackRange;if(delta.sqrMagnitude<=range*range){Face(delta);if(Time.time>=nextAttackTime){nextAttackTime=Time.time+attackCooldown;float dealt=(target.GetComponent<LaneTower>()!=null||target.GetComponent<RealityCore>()!=null)?attackDamage*structureDamageMultiplier:attackDamage;target.TakeDamage(dealt,gameObject);Alterverse.Visuals.PrototypeVfx.ProjectileLine(transform.position+Vector3.up*.15f,target.transform.position+Vector3.up*.15f,team==0?new Color(.76f,.24f,1f):new Color(.18f,.92f,1f),.065f);}return;}MoveTowards(target.transform.position);return;}
 
     // Siege mechs must always advance when combat is not actively holding them in range.
     // They deliberately bypass the ordinary wave's bastion/core route gate: their lane destination
@@ -12,6 +20,36 @@ private void Update(){if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGa
     if(siegeUnit){AdvanceSiegeLane();return;}
 
     if(Time.time>=nextRouteScan){nextRouteScan=Time.time+.2f;routeCore=FindEnemyCore();routeBlocked=HasEnemyBastion();}if(!routeBlocked&&routeCore!=null&&routeCore.IsVulnerable){MoveTowards(routeCore.transform.position);return;}MoveTowards(destination);}
+private bool TryRegroup()
+{
+    if(siegeUnit||string.IsNullOrEmpty(waveGroupKey))return false;
+
+    LaneMinion leader=null;
+    float bestX=team==0?float.NegativeInfinity:float.PositiveInfinity;
+    for(int i=0;i<Health.Active.Count;i++)
+    {
+        Health hp=Health.Active[i];
+        if(hp==null||hp.IsDead)continue;
+        LaneMinion other=hp.GetComponent<LaneMinion>();
+        if(other==null||other.team!=team||other.siegeUnit||other.waveGroupKey!=waveGroupKey)continue;
+        float x=other.transform.position.x;
+        if((team==0&&x>bestX)||(team==1&&x<bestX)){bestX=x;leader=other;}
+    }
+
+    if(leader==null||leader==this)return false;
+    float behind=team==0?leader.transform.position.x-transform.position.x:transform.position.x-leader.transform.position.x;
+    bool assembly=Time.time<regroupGraceUntil;
+    if(!assembly&&behind<2.15f)return false;
+
+    Vector3 slot=leader.transform.position;
+    float rear=.85f+Mathf.Max(0,waveSlot-1)*.55f;
+    slot.x+=team==0?-rear:rear;
+    slot.z=destination.z+(waveSlot-1)*.72f;
+    slot.y=transform.position.y;
+    MoveTowards(slot,1.55f);
+    return true;
+}
+
 private void AdvanceSiegeLane()
 {
     Vector3 lanePoint=destination;
@@ -40,7 +78,7 @@ if(delta.sqrMagnitude<nearest){nearest=delta.sqrMagnitude;closest=hp;}
 return closest;
 }
 private bool HasEnemyBastion(){for(int index=0;index<Health.Active.Count;index++){LaneTower tower=Health.Active[index].GetComponent<LaneTower>();if(tower==null||tower.Team==team)continue;Health h=tower.GetComponent<Health>();if(h==null||h.IsDead)continue;/* Only the bastion on this minion's lane blocks its route. The other lane must not hold this wave hostage. */if(Mathf.Abs(tower.transform.position.z-transform.position.z)<6f)return true;}return false;}private RealityCore FindEnemyCore(){for(int index=0;index<Health.Active.Count;index++){RealityCore core=Health.Active[index].GetComponent<RealityCore>();if(core!=null&&core.Team!=team)return core;}return null;}
-private void MoveTowards(Vector3 point){Vector3 direction=point-transform.position;direction.y=0;if(direction.sqrMagnitude<.16f)return;float distance=direction.magnitude;direction.Normalize();transform.position+=direction*Mathf.Min(moveSpeed*HeroCombatStatus.Speed(gameObject)*Time.deltaTime,distance);Face(direction);}private void Face(Vector3 direction){direction.y=0;if(direction.sqrMagnitude>.001f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(direction),10*Time.deltaTime);}
+private void MoveTowards(Vector3 point,float speedMultiplier=1f){Vector3 direction=point-transform.position;direction.y=0;if(direction.sqrMagnitude<.16f)return;float distance=direction.magnitude;direction.Normalize();transform.position+=direction*Mathf.Min(moveSpeed*Mathf.Max(.1f,speedMultiplier)*HeroCombatStatus.Speed(gameObject)*Time.deltaTime,distance);Face(direction);}private void Face(Vector3 direction){direction.y=0;if(direction.sqrMagnitude>.001f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(direction),10*Time.deltaTime);}
 }
 }
 
