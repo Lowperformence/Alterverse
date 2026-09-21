@@ -157,6 +157,8 @@ namespace Alterverse.Multiplayer
 
                 activeChannel=channel;
                 muted=false;
+                // Open microphone is the default for private co-op after the player has explicitly
+                // granted microphone permission. Players can still mute at any time in lobby or match.
                 VivoxService.Instance.UnmuteInputDevice();
                 status="VOICE CONNECTED • MIC OPEN";
             }
