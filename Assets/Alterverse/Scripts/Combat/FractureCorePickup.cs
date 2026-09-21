@@ -22,6 +22,9 @@ namespace Alterverse.Combat
 
         static Material coreMaterial,zeroMaterial,lumenMaterial,metalMaterial;
         static Mesh ringMesh;
+        static int coopSerial;
+        public static event System.Action<int,Vector3> NetworkSpawned;
+        public static event System.Action<int> NetworkClaimed;
 
         Transform visual,innerCore,ringA,ringB,zeroShard,lumenShard;
         DimensionsFront front;
@@ -38,8 +41,10 @@ namespace Alterverse.Combat
             if(lumenMaterial!=null)Destroy(lumenMaterial);
             if(metalMaterial!=null)Destroy(metalMaterial);
             if(ringMesh!=null)Destroy(ringMesh);
-            coreMaterial=null;zeroMaterial=null;lumenMaterial=null;metalMaterial=null;ringMesh=null;
+            coreMaterial=null;zeroMaterial=null;lumenMaterial=null;metalMaterial=null;ringMesh=null;coopSerial=0;
         }
+
+        int networkId=-1;
 
         public static void Spawn(Vector3 deathPosition)
         {
@@ -61,7 +66,33 @@ namespace Alterverse.Combat
             go.transform.position=ground;
             FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
             pickup.groundPosition=ground;
+            if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+            {
+                pickup.networkId=coopSerial++;
+                NetworkSpawned?.Invoke(pickup.networkId,ground);
+            }
             pickup.BuildVisual();
+        }
+
+        public static void ApplyNetworkSpawn(int id,Vector3 ground)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            FractureCorePickup[] existing=FindObjectsByType<FractureCorePickup>(FindObjectsInactive.Exclude);
+            for(int i=0;i<existing.Length;i++)if(existing[i]!=null&&existing[i].networkId==id)return;
+            GameObject go=new($"DF_FractureCore_Net_{id}");
+            GameObject world=GameObject.Find("DF_MatchWorld");
+            if(world!=null)go.transform.SetParent(world.transform,true);
+            go.transform.position=ground;
+            FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
+            pickup.networkId=id;pickup.groundPosition=ground;pickup.BuildVisual();
+        }
+
+        public static void ApplyNetworkClaim(int id)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            FractureCorePickup[] existing=FindObjectsByType<FractureCorePickup>(FindObjectsInactive.Exclude);
+            for(int i=0;i<existing.Length;i++)
+                if(existing[i]!=null&&existing[i].networkId==id){Destroy(existing[i].gameObject);return;}
         }
 
         void BuildVisual()
@@ -176,6 +207,7 @@ namespace Alterverse.Combat
             if(zeroShard!=null)zeroShard.Rotate(0,Time.deltaTime*105f,Time.deltaTime*28f,Space.Self);
             if(lumenShard!=null)lumenShard.Rotate(0,Time.deltaTime*-92f,Time.deltaTime*-24f,Space.Self);
 
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(age<PickupDelay||Time.time<nextScan)return;
             nextScan=Time.time+ScanInterval;
             TryClaim();
@@ -205,6 +237,8 @@ namespace Alterverse.Combat
             claimed=true;
             collector=health.transform;
             collectStarted=Time.time;
+            if(networkId>=0&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                NetworkClaimed?.Invoke(networkId);
 
             health.Heal(health.Max*HealFraction,false);
             health.AddShield(health.Max*ShieldFraction,ShieldDuration,false);
