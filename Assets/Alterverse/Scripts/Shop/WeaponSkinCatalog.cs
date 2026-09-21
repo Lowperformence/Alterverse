@@ -20,7 +20,7 @@ namespace Alterverse.Shop
         public const int Price=500;
         public static readonly WeaponSkinItem[] Items=
         {
-            new(HeroId.Veyr,"NULL EDGE // OVERDRIVE","Twin Rift Blade","",new Color(1f,.16f,.86f)),
+            new(HeroId.Veyr,"OBLIVION // LEGENDARY","Twin Void Blades","Reference-inspired black steel dual blades with a violet void core.",new Color(.78f,.20f,1f)),
             new(HeroId.Kaelon,"AEGIS BREAKER // OVERDRIVE","Anchor Hammer","",new Color(1f,.72f,.12f)),
             new(HeroId.Nyra,"STARLINE // OVERDRIVE","Precision Rifle","",new Color(.08f,.94f,1f)),
             new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","",new Color(1f,.04f,.02f)),
