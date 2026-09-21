@@ -673,7 +673,7 @@ namespace Alterverse.UI
             showcase.Present(hero,true,false,true,null);
             DrawPortrait(new Rect(Left,270,w,340));
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
-            theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON OVERDRIVE PREVIEW",theme.Small,true);
+            theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON SKIN PREVIEW",theme.Small,true);
 
             if(theme.Action(new Rect(Left,614,64,54),"<")){ChangeHero((selectedHero+5)%6);shopMessage="";}
             theme.Center(new Rect(Left+72,614,w-144,54),$"{HeroName}  /  {item.WeaponName}");
