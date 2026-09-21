@@ -10,7 +10,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     readonly List<Material> materials=new();
     readonly List<Mesh> meshes=new();
     Transform root;
-    Material regolith,darkRegolith,rimMat,zeroEnergy,lumenEnergy,alienMineral;
+    Material regolith,darkRegolith,rimMat,zeroEnergy,lumenEnergy,alienMineral,cryoIce;
     Mesh rockMesh,rockMeshB,rockMeshC;
     Texture2D surfaceAlbedo,surfaceNormals;
     public Texture2D SurfaceAlbedo=>surfaceAlbedo;
@@ -21,14 +21,16 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         if(GetComponent<LunarLighting>()==null)gameObject.AddComponent<LunarLighting>();
         string rootName=ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetGroundProduction":
-            ArenaVariantRuntime.IsNoxara?"DF_NoxaraGroundProduction":"DF_LunarGroundProduction";
+            ArenaVariantRuntime.IsNoxara?"DF_NoxaraGroundProduction":
+            ArenaVariantRuntime.IsKryon?"DF_KryonGroundProduction":"DF_LunarGroundProduction";
         root=new GameObject(rootName).transform;
         root.SetParent(transform,false);
-        bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet,noxara=ArenaVariantRuntime.IsNoxara;
-        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):noxara?new Color(.045f,.075f,.19f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
-        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):noxara?new Color(.015f,.026f,.075f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
-        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):noxara?new Color(.09f,.15f,.34f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
+        bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet,noxara=ArenaVariantRuntime.IsNoxara,kryon=ArenaVariantRuntime.IsKryon;
+        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):noxara?new Color(.045f,.075f,.19f,1):kryon?new Color(.62f,.75f,.80f,1):new Color(.105f,.12f,.145f,1),.02f,kryon?.34f:.12f);
+        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):noxara?new Color(.015f,.026f,.075f,1):kryon?new Color(.16f,.24f,.29f,1):new Color(.055f,.065f,.082f,1),.01f,kryon?.22f:.08f);
+        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):noxara?new Color(.09f,.15f,.34f,1):kryon?new Color(.55f,.78f,.86f,1):new Color(.19f,.205f,.225f,1),.03f,kryon?.38f:.11f);
         if(green)alienMineral=Mat(new Color(.35f,.48f,.16f,1),.02f,.18f,true);
+        if(kryon)cryoIce=Mat(new Color(.26f,.90f,1f,1),.08f,.62f,true);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
         BuildSurface();
@@ -40,6 +42,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         BuildRocks();
         if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
+        if(ArenaVariantRuntime.IsKryon)BuildKryonIceAccents();
         BuildDistributedCraterDebris();
         BuildBattlefieldAccessories();
         BuildSmallLandmarks();
@@ -73,7 +76,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
         string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
-            ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":"DF_LunarRegolith";
+            ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":
+            ArenaVariantRuntime.IsKryon?"DF_KryonIceRegolith":"DF_LunarRegolith";
         MeshObject(surfaceName,m,regolith,Vector3.zero);
         var edge=new List<Vector3>((xSeg+zSeg)*2);
         for(int x=0;x<xSeg;x++)edge.Add(v[x]);
@@ -163,6 +167,37 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
             float s=.28f+(i%3)*.09f;
             g.transform.localScale=new Vector3(s*.75f,s*1.65f,s*.65f);
             g.transform.localRotation=Quaternion.Euler(i*9f,i*53f,i%2==0?13f:-9f);
+        }
+    }
+
+    void BuildKryonIceAccents()
+    {
+        if(cryoIce==null||rockMeshB==null)return;
+
+        // Emissive fissures and small ice shards are presentation only: no new colliders,
+        // pathing or arena geometry are introduced.
+        Vector2[] cracks={
+            new(-31,25),new(-18,-27),new(-7,19),new(8,-20),
+            new(20,27),new(33,-24),new(-35,-11),new(35,12)
+        };
+        for(int i=0;i<cracks.Length;i++)
+        {
+            float dir=i%2==0?1f:-1f;
+            Vector2 a=cracks[i];
+            Vector2 b=a+new Vector2((1.45f+(i%3)*.35f)*dir,(i%2==0?.85f:-.95f));
+            Strip("DF_KryonCryoFissure",a,b,.045f,.091f,cryoIce);
+        }
+
+        Vector3[] shards={
+            new(-39,.10f,27),new(-30,.09f,-31),new(-14,.08f,32),new(15,.08f,-32),
+            new(31,.10f,30),new(39,.10f,-27),new(-41,.09f,-7),new(41,.09f,8)
+        };
+        for(int i=0;i<shards.Length;i++)
+        {
+            GameObject g=MeshObject("DF_KryonIceShard",rockMeshB,cryoIce,shards[i]);
+            float s=.22f+(i%3)*.07f;
+            g.transform.localScale=new Vector3(s*.62f,s*1.70f,s*.58f);
+            g.transform.localRotation=Quaternion.Euler(i*11f,i*49f,i%2==0?10f:-8f);
         }
     }
 
