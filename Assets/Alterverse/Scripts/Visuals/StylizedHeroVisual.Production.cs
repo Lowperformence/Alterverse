@@ -21,6 +21,12 @@ namespace Alterverse.Visuals
                 CreateSignature();
                 return;
             }
+            if(h==HeroId.Nyra)
+            {
+                BuildNyraEliteMarksman();
+                CreateSignature();
+                return;
+            }
             bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.60f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
             // Kaelon follows the supplied heavy-hammer reference: pale worn plate over a warm dark undersuit.
@@ -72,6 +78,180 @@ namespace Alterverse.Visuals
             CreateSignature();
             // This remains the same runtime model in matches and in the menu showcase.
         }
+        private void BuildNyraEliteMarksman()
+        {
+            // Reference-driven elite marksman: heavy black armor, oversized shoulders, hooded
+            // sensor helmet, red optics, a short tabard and a long precision rifle.
+            Color black=new(.025f,.028f,.033f,1f);
+            Color charcoal=new(.070f,.078f,.086f,1f);
+            Color steel=new(.20f,.22f,.24f,1f);
+            Color olive=new(.16f,.18f,.13f,1f);
+            Color clothBlack=new(.035f,.038f,.043f,1f);
+            Color tabard=new(.63f,.62f,.56f,1f);
+            Color brass=new(.48f,.34f,.13f,1f);
+            Color red=new(.94f,.035f,.025f,1f);
+            Color redHot=new(1f,.16f,.07f,1f);
+
+            Mesh torso=HeroMeshLibrary.Loft("DF_NyraEliteTorso",
+                new[]{-.38f,-.22f,-.02f,.20f,.39f,.52f},
+                new[]{.25f,.28f,.38f,.48f,.50f,.29f},
+                new[]{.17f,.20f,.27f,.33f,.34f,.20f},
+                new[]{.01f,.015f,.025f,.035f,.02f,0f},16);
+            Sculpt("Torso",torso,new Vector3(0,.05f,0),new Vector3(1.08f,1f,1.04f),black);
+            Plate("NyraChestL",new Vector3(-.22f,.24f,.225f),.47f,.43f,.12f,charcoal,-5);
+            Plate("NyraChestR",new Vector3(.22f,.24f,.225f),.47f,.43f,.12f,charcoal,5);
+            Plate("NyraAbdomen",new Vector3(0,-.08f,.16f),.48f,.28f,.10f,black);
+            Plate("NyraGorget",new Vector3(0,.49f,.095f),.48f,.18f,.22f,olive);
+            Detail("NyraChestSeal",new Vector3(.12f,.19f,.302f),new Vector3(.085f,.085f,.020f),brass,new Vector3(0,0,45));
+            for(int i=0;i<4;i++)
+                Detail("NyraAmmo"+i,new Vector3(-.24f+i*.075f,-.02f,.245f),
+                    new Vector3(.040f,.12f,.025f),brass,new Vector3(0,0,-6));
+
+            Mesh pelvis=HeroMeshLibrary.Loft("DF_NyraPelvis",
+                new[]{-.44f,-.30f,-.18f},new[]{.26f,.33f,.27f},new[]{.15f,.18f,.15f});
+            Sculpt("Pelvis",pelvis,new Vector3(0,-.02f,0),new Vector3(1.08f,1f,1.02f),black);
+
+            float legX=.205f;
+            Mesh leg=HeroMeshLibrary.Loft("DF_NyraArmoredLeg",
+                new[]{-1f,-.76f,-.22f,.12f,.64f,1f},
+                new[]{.075f,.10f,.11f,.145f,.16f,.135f},
+                new[]{.09f,.105f,.115f,.15f,.15f,.125f},
+                new[]{.02f,.018f,.002f,.006f,0f,0f});
+            Mesh boot=HeroMeshLibrary.Loft("DF_NyraHeavyBoot",
+                new[]{-.08f,-.03f,.075f,.16f},
+                new[]{.14f,.155f,.13f,.085f},
+                new[]{.22f,.26f,.20f,.11f},
+                new[]{.085f,.095f,.06f,0f});
+
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Sculpt("Leg"+s,leg,new Vector3(side*legX,-.62f,0),new Vector3(1.08f,.35f,1.06f),black);
+                Sculpt("Boot"+s,boot,new Vector3(side*legX,-.93f,.025f),new Vector3(1.08f,1.03f,1.10f),steel);
+                Plate("Knee"+s,new Vector3(side*legX,-.57f,.125f),.24f,.24f,.10f,charcoal,side*-3,"Leg"+s);
+                Plate("NyraThigh"+s,new Vector3(side*legX,-.39f,.115f),.25f,.31f,.09f,black,side*-7,"Leg"+s);
+                Plate("NyraShin"+s,new Vector3(side*legX,-.74f,.105f),.24f,.30f,.085f,charcoal,side*4,"Leg"+s);
+
+                Transform arm=new GameObject("DF_Arm"+s).transform;
+                arm.SetParent(root,false);
+                arm.localPosition=new Vector3(side*.43f,.40f,.015f);
+
+                Mesh upper=HeroMeshLibrary.Loft("DF_NyraUpperArm",
+                    new[]{-.32f,-.25f,-.06f,.04f},
+                    new[]{.075f,.105f,.145f,.11f},
+                    new[]{.085f,.11f,.14f,.10f});
+                Sculpt("UpperArm"+s,upper,Vector3.zero,new Vector3(1.10f,1f,1.06f),black,arm);
+
+                Mesh fore=HeroMeshLibrary.Loft("DF_NyraForearm",
+                    new[]{-.27f,-.21f,-.055f,.025f},
+                    new[]{.075f,.11f,.125f,.085f},
+                    new[]{.08f,.11f,.13f,.085f});
+                Sculpt("Vambrace"+s,fore,new Vector3(0,-.30f,.02f),new Vector3(1.08f,1f,1.05f),charcoal,arm);
+                Sculpt("Glove"+s,HeroMeshLibrary.Loft("DF_NyraGlove",
+                    new[]{-.13f,-.07f,.07f,.11f},new[]{.060f,.095f,.10f,.075f},new[]{.070f,.080f,.090f,.060f}),
+                    new Vector3(0,-.59f,.055f),Vector3.one,black,arm);
+
+                arm.localRotation=Quaternion.Euler(side<0?-42f:-48f,0,side<0?42f:-10f);
+
+                // Huge asymmetric shoulder plates inspired by the supplied elite-sniper reference.
+                float shoulderX=side*.50f;
+                Plate("NyraShoulder"+s,new Vector3(shoulderX,.45f,.005f),
+                    side<0?.62f:.55f,side<0?.49f:.43f,side<0?.48f:.43f,
+                    side<0?charcoal:black,side*-12f);
+                Bind("NyraShoulder"+s,"Arm"+s);
+                if(side<0)
+                {
+                    Plate("NyraShoulderBadge",new Vector3(shoulderX,.45f,.263f),.28f,.29f,.035f,black,-8,"Arm"+s);
+                    Detail("NyraShoulderMark",new Vector3(shoulderX,.45f,.286f),
+                        new Vector3(.055f,.18f,.018f),tabard,new Vector3(0,0,-22),"Arm"+s);
+                }
+            }
+
+            // Hood/helmet hybrid: no human face, only red target optics and a compact sensor stack.
+            Vector3 hp=new(0,.80f,.02f);
+            Mesh helmet=HeroMeshLibrary.Loft("DF_NyraHunterHelmet",
+                new[]{-.23f,-.16f,-.05f,.09f,.19f,.27f},
+                new[]{.085f,.15f,.19f,.20f,.17f,.07f},
+                new[]{.080f,.14f,.16f,.16f,.13f,.06f},
+                new[]{.045f,.033f,.016f,0f,-.008f,-.016f},16);
+            Sculpt("Head",helmet,hp,new Vector3(1.04f,.98f,1.00f),black);
+            Sculpt("Neck",HeroMeshLibrary.Loft("DF_NyraNeck",
+                new[]{-.10f,.09f},new[]{.085f,.095f},new[]{.082f,.09f}),
+                new Vector3(0,.55f,0),Vector3.one,charcoal);
+            Plate("NyraFaceMask",hp+new Vector3(0,-.035f,.155f),.33f,.30f,.075f,black);
+            Plate("NyraHoodBrow",hp+new Vector3(0,.16f,.075f),.42f,.23f,.19f,olive);
+            Plate("NyraHoodLeft",hp+new Vector3(-.14f,.05f,.015f),.18f,.42f,.20f,olive,-13);
+            Plate("NyraHoodRight",hp+new Vector3(.14f,.05f,.015f),.18f,.42f,.20f,olive,13);
+
+            // Multi-lens red optics with one dominant targeting eye.
+            Detail("NyraOpticMain",hp+new Vector3(-.045f,.055f,.205f),new Vector3(.105f,.105f,.022f),redHot,default,null,true);
+            Detail("NyraOpticAuxA",hp+new Vector3(.065f,.080f,.198f),new Vector3(.055f,.055f,.018f),red,default,null,true);
+            Detail("NyraOpticAuxB",hp+new Vector3(.080f,.010f,.196f),new Vector3(.040f,.040f,.018f),red,default,null,true);
+            Detail("NyraSensorBlock",hp+new Vector3(-.09f,.20f,-.005f),new Vector3(.14f,.15f,.12f),charcoal,new Vector3(-8,0,-5));
+            Detail("NyraAntenna",hp+new Vector3(.10f,.34f,-.015f),new Vector3(.018f,.30f,.018f),steel);
+            Detail("NyraAntennaTip",hp+new Vector3(.10f,.50f,-.015f),new Vector3(.035f,.035f,.035f),red,default,null,true);
+
+            // Short front tabard gives the elite-order silhouette without expensive cloth simulation.
+            Mesh tabardMesh=HeroMeshLibrary.Ribbon("DF_NyraTabard",
+                new[]{new Vector3(0,-.20f,.13f),new Vector3(0,-.42f,.15f),new Vector3(0,-.67f,.17f),new Vector3(0,-.88f,.18f)},
+                new[]{.19f,.20f,.18f,.13f},.024f);
+            Sculpt("NyraTabard",tabardMesh,Vector3.zero,Vector3.one,tabard);
+            Detail("NyraTabardEdge",new Vector3(0,-.71f,.197f),new Vector3(.30f,.030f,.016f),brass);
+            Detail("NyraTabardSeal",new Vector3(0,-.60f,.200f),new Vector3(.085f,.085f,.016f),black,new Vector3(0,0,45));
+
+            BuildNyraPrecisionRifle(black,charcoal,steel,red,redHot);
+            Detail("IdentityCore",new Vector3(0,.28f,.305f),new Vector3(.055f,.11f,.020f),red,default,null,true);
+        }
+
+        private void BuildNyraPrecisionRifle(Color black,Color charcoal,Color steel,Color red,Color redHot)
+        {
+            Transform weapon=WeaponPivot("R",new Vector3(.27f,.08f,.37f));
+            weapon.localRotation=Quaternion.Euler(-2f,-3f,-2f);
+
+            // Long battle-rifle/sniper hybrid with a visibly separate receiver, barrel and stock.
+            Mesh receiver=HeroMeshLibrary.Loft("DF_NyraPrecisionReceiver",
+                new[]{-.52f,-.36f,-.17f,.26f,.48f,.64f},
+                new[]{.105f,.14f,.16f,.12f,.085f,.060f},
+                new[]{.12f,.15f,.14f,.095f,.065f,.050f});
+            GameObject rifle=Sculpt("Rifle",receiver,new Vector3(0,0,.02f),Vector3.one,charcoal,weapon);
+            rifle.transform.localRotation=Quaternion.Euler(90,0,0);
+
+            Create("RifleReceiver",PrimitiveType.Cube,new Vector3(0,.01f,.15f),
+                new Vector3(.23f,.19f,.64f),black,default,weapon);
+            Create("RifleStock",PrimitiveType.Cube,new Vector3(0,-.02f,-.33f),
+                new Vector3(.26f,.23f,.36f),charcoal,new Vector3(-6,0,0),weapon);
+            Create("RifleBarrel",PrimitiveType.Cylinder,new Vector3(0,.015f,.75f),
+                new Vector3(.060f,.52f,.060f),steel,new Vector3(90,0,0),weapon);
+            Create("MuzzleBrake",PrimitiveType.Cube,new Vector3(0,.015f,1.28f),
+                new Vector3(.16f,.14f,.22f),black,default,weapon);
+            Create("RifleMagazine",PrimitiveType.Cube,new Vector3(0,-.18f,.10f),
+                new Vector3(.15f,.27f,.24f),black,new Vector3(-12,0,0),weapon);
+
+            Create("Scope",PrimitiveType.Cube,new Vector3(0,.22f,.23f),
+                new Vector3(.16f,.14f,.48f),black,default,weapon);
+            Create("ScopeBridge",PrimitiveType.Cube,new Vector3(0,.12f,.21f),
+                new Vector3(.10f,.09f,.26f),steel,default,weapon);
+            Create("ScopeLens",PrimitiveType.Cube,new Vector3(0,.22f,.49f),
+                new Vector3(.095f,.085f,.022f),redHot,default,weapon);
+            Transform lens=FindVisual("ScopeLens");if(lens!=null)ApplyGlow(lens,MaterialFor(redHot,true));
+
+            Create("WeaponRail",PrimitiveType.Cube,new Vector3(0,.12f,.62f),
+                new Vector3(.055f,.035f,.70f),steel,default,weapon);
+            Create("RifleForegrip",PrimitiveType.Cube,new Vector3(0,-.12f,.57f),
+                new Vector3(.11f,.20f,.14f),black,new Vector3(8,0,0),weapon);
+            Create("RifleSensor",PrimitiveType.Cube,new Vector3(.12f,.12f,.40f),
+                new Vector3(.07f,.10f,.16f),charcoal,default,weapon);
+            Create("RifleSensorGlow",PrimitiveType.Cube,new Vector3(.158f,.12f,.43f),
+                new Vector3(.018f,.055f,.055f),red,default,weapon);
+            Transform sensorGlow=FindVisual("RifleSensorGlow");if(sensorGlow!=null)ApplyGlow(sensorGlow,MaterialFor(red,true));
+
+            var muzzle=new GameObject("DF_Muzzle").transform;
+            muzzle.SetParent(weapon,false);
+            muzzle.localPosition=new Vector3(0,.015f,1.41f);
+
+            Bind("WeaponR","ArmR");
+        }
+
         private void BuildBrakkIndustrialBruiser()
         {
             // Reference-driven heavy industrial melee mech. The construction keeps the existing
