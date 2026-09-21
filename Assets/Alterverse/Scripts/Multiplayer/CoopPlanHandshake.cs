@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Unity.Collections;
 using Unity.Netcode;
@@ -24,6 +25,8 @@ namespace Alterverse.Multiplayer
         private string status="WAITING FOR STAGED PLAN";
         private float nextProbeAt;
         private uint lastFingerprint;
+        private int lastExpectedPlayers;
+        private readonly HashSet<ulong> approvedClients=new();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -52,23 +55,34 @@ namespace Alterverse.Multiplayer
 
             Attach(manager.CustomMessagingManager);
 
-            if(!lobby.IsStaging||CoopAuthority.PreparedPlan==null||lobby.PlayerCount!=2)
+            if(!lobby.IsStaging||CoopAuthority.PreparedPlan==null||
+               lobby.PlayerCount<CoopLobbyService.MinHumanPlayers||lobby.PlayerCount>CoopLobbyService.MaxHumanPlayers)
             {
                 ResetHandshake(lobby.IsStaging?"WAITING FOR MATCH PLAN":"WAITING FOR MATCH STAGING");
                 return;
             }
 
+            int expectedPlayers=lobby.PlayerCount;
             uint fingerprint=Fingerprint(CoopAuthority.PreparedPlan);
-            if(fingerprint!=lastFingerprint)
+            if(fingerprint!=lastFingerprint||expectedPlayers!=lastExpectedPlayers)
             {
                 lastFingerprint=fingerprint;
+                lastExpectedPlayers=expectedPlayers;
                 planHandshakeReady=false;
+                approvedClients.Clear();
                 nextProbeAt=0f;
             }
 
             if(manager.IsHost)
             {
-                if(!planHandshakeReady)status="HOST WAITING FOR CLIENT PLAN";
+                approvedClients.RemoveWhere(id=>!IsConnected(manager,id));
+                int expectedClients=Mathf.Max(1,expectedPlayers-1);
+                planHandshakeReady=manager.ConnectedClientsIds!=null&&
+                    manager.ConnectedClientsIds.Count>=expectedPlayers&&
+                    approvedClients.Count>=expectedClients;
+                status=planHandshakeReady
+                    ?$"MATCH PLAN SYNCED • {expectedPlayers}/{expectedPlayers} PLAYERS"
+                    :$"HOST WAITING FOR PLAN SYNC • {Mathf.Min(approvedClients.Count+1,expectedPlayers)}/{expectedPlayers}";
                 return;
             }
 
@@ -119,10 +133,24 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out uint clientFingerprint);
 
             uint hostFingerprint=Fingerprint(CoopAuthority.PreparedPlan);
-            bool valid=protocol==ProtocolVersion&&clientFingerprint==hostFingerprint&&lobby.PlayerCount==2;
-            planHandshakeReady=valid;
+            bool valid=protocol==ProtocolVersion&&clientFingerprint==hostFingerprint&&
+                lobby.PlayerCount>=CoopLobbyService.MinHumanPlayers&&
+                lobby.PlayerCount<=CoopLobbyService.MaxHumanPlayers;
+            if(valid)approvedClients.Add(senderClientId);
+            else approvedClients.Remove(senderClientId);
+
+            int expectedPlayers=lobby.PlayerCount;
+            int expectedClients=Mathf.Max(1,expectedPlayers-1);
+            planHandshakeReady=valid&&manager.ConnectedClientsIds!=null&&
+                manager.ConnectedClientsIds.Count>=expectedPlayers&&
+                approvedClients.Count>=expectedClients;
             lastFingerprint=hostFingerprint;
-            status=valid?"MATCH PLAN SYNCED":"MATCH PLAN MISMATCH";
+            lastExpectedPlayers=expectedPlayers;
+            status=planHandshakeReady
+                ?$"MATCH PLAN SYNCED • {expectedPlayers}/{expectedPlayers} PLAYERS"
+                :valid
+                    ?$"PLAN VERIFIED • {Mathf.Min(approvedClients.Count+1,expectedPlayers)}/{expectedPlayers}"
+                    :"MATCH PLAN MISMATCH";
 
             using FastBufferWriter writer=new(20,Allocator.Temp);
             writer.WriteValueSafe(ProtocolVersion);
@@ -153,10 +181,20 @@ namespace Alterverse.Multiplayer
             if(!planHandshakeReady)nextProbeAt=Time.unscaledTime+.75f;
         }
 
+        private static bool IsConnected(NetworkManager manager,ulong clientId)
+        {
+            if(manager?.ConnectedClientsIds==null)return false;
+            for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
+                if(manager.ConnectedClientsIds[i]==clientId)return true;
+            return false;
+        }
+
         private void ResetHandshake(string nextStatus)
         {
             planHandshakeReady=false;
             lastFingerprint=0;
+            lastExpectedPlayers=0;
+            approvedClients.Clear();
             nextProbeAt=0f;
             status=nextStatus;
         }
