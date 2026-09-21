@@ -50,6 +50,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             front??=FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             if(front!=null&&front.HasEnded)
             {
