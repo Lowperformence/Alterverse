@@ -16,6 +16,10 @@ namespace Alterverse.Multiplayer
         private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V1";
         private const string PlanetMessage="DF_COOP_PLANET_V1";
         private const string BomberMessage="DF_COOP_BOMBER_V1";
+        private const string PlanetMeteorMessage="DF_COOP_PLANET_METEOR_V1";
+        private const string NoxaraMeteorMessage="DF_COOP_NOXARA_METEOR_V1";
+        private const string PlanetPulseStartMessage="DF_COOP_PLANET_PULSE_START_V1";
+        private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -39,6 +43,10 @@ namespace Alterverse.Multiplayer
             HotZoneDirector.NetworkZoneResolved+=OnHostHotResolved;
             DimensionPlanetDirector.NetworkPlanetSpawned+=OnHostPlanetSpawned;
             SpaceBomberDirector.NetworkFlyoverSpawned+=OnHostBomberSpawned;
+            PlanetMeteorShower.NetworkMeteorSpawned+=OnHostPlanetMeteor;
+            NoxaraSpiderMeteorShower.NetworkMeteorSpawned+=OnHostNoxaraMeteor;
+            PlanetPulseAttack.NetworkPulseStarted+=OnHostPlanetPulseStart;
+            PlanetPulseAttack.NetworkPulseDetonated+=OnHostPlanetPulseDetonate;
             eventsBound=true;
         }
 
@@ -49,6 +57,10 @@ namespace Alterverse.Multiplayer
             HotZoneDirector.NetworkZoneResolved-=OnHostHotResolved;
             DimensionPlanetDirector.NetworkPlanetSpawned-=OnHostPlanetSpawned;
             SpaceBomberDirector.NetworkFlyoverSpawned-=OnHostBomberSpawned;
+            PlanetMeteorShower.NetworkMeteorSpawned-=OnHostPlanetMeteor;
+            NoxaraSpiderMeteorShower.NetworkMeteorSpawned-=OnHostNoxaraMeteor;
+            PlanetPulseAttack.NetworkPulseStarted-=OnHostPlanetPulseStart;
+            PlanetPulseAttack.NetworkPulseDetonated-=OnHostPlanetPulseDetonate;
             eventsBound=false;
         }
 
@@ -83,6 +95,43 @@ namespace Alterverse.Multiplayer
             using FastBufferWriter writer=new(12,Allocator.Temp);
             writer.WriteValueSafe(pass);writer.WriteValueSafe(seed);
             SendAll(BomberMessage,writer);
+        }
+
+        private void OnHostPlanetMeteor(string ownerName,Vector3 point,float delay,float damage,float stagger)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
+            writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
+            writer.WriteValueSafe(point.x);writer.WriteValueSafe(point.y);writer.WriteValueSafe(point.z);
+            writer.WriteValueSafe(delay);writer.WriteValueSafe(damage);writer.WriteValueSafe(stagger);
+            SendAll(PlanetMeteorMessage,writer);
+        }
+
+        private void OnHostNoxaraMeteor(int team,Vector3 point,float delay,float damage,float stagger)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(128,Allocator.Temp);
+            writer.WriteValueSafe(team);
+            writer.WriteValueSafe(point.x);writer.WriteValueSafe(point.y);writer.WriteValueSafe(point.z);
+            writer.WriteValueSafe(delay);writer.WriteValueSafe(damage);writer.WriteValueSafe(stagger);
+            SendAll(NoxaraMeteorMessage,writer);
+        }
+
+        private void OnHostPlanetPulseStart(string ownerName,float duration)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(176,Allocator.Temp);
+            writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
+            writer.WriteValueSafe(duration);
+            SendAll(PlanetPulseStartMessage,writer);
+        }
+
+        private void OnHostPlanetPulseDetonate(string ownerName)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(160,Allocator.Temp);
+            writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
+            SendAll(PlanetPulseDetonateMessage,writer);
         }
 
         private bool CanBroadcast()
@@ -133,6 +182,38 @@ namespace Alterverse.Multiplayer
             FindAnyObjectByType<SpaceBomberDirector>()?.ApplyNetworkFlyover(pass,seed);
         }
 
+        private void OnPlanetMeteor(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out FixedString128Bytes owner);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out float delay);reader.ReadValueSafe(out float damage);reader.ReadValueSafe(out float stagger);
+            PlanetMeteorShower.ApplyNetworkMeteor(owner.ToString(),new Vector3(x,y,z),delay,damage,stagger);
+        }
+
+        private void OnNoxaraMeteor(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out int team);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out float delay);reader.ReadValueSafe(out float damage);reader.ReadValueSafe(out float stagger);
+            NoxaraSpiderMeteorShower.ApplyNetworkMeteor(team,new Vector3(x,y,z),delay,damage,stagger);
+        }
+
+        private void OnPlanetPulseStart(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out FixedString128Bytes owner);reader.ReadValueSafe(out float duration);
+            PlanetPulseAttack.ApplyNetworkPulseStart(owner.ToString(),duration);
+        }
+
+        private void OnPlanetPulseDetonate(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out FixedString128Bytes owner);
+            PlanetPulseAttack.ApplyNetworkPulseDetonate(owner.ToString());
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -148,6 +229,10 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(HotResolveMessage,OnHotResolve);
             messaging.RegisterNamedMessageHandler(PlanetMessage,OnPlanet);
             messaging.RegisterNamedMessageHandler(BomberMessage,OnBomber);
+            messaging.RegisterNamedMessageHandler(PlanetMeteorMessage,OnPlanetMeteor);
+            messaging.RegisterNamedMessageHandler(NoxaraMeteorMessage,OnNoxaraMeteor);
+            messaging.RegisterNamedMessageHandler(PlanetPulseStartMessage,OnPlanetPulseStart);
+            messaging.RegisterNamedMessageHandler(PlanetPulseDetonateMessage,OnPlanetPulseDetonate);
             attached=true;
         }
 
@@ -158,6 +243,10 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(HotResolveMessage);
             messaging.UnregisterNamedMessageHandler(PlanetMessage);
             messaging.UnregisterNamedMessageHandler(BomberMessage);
+            messaging.UnregisterNamedMessageHandler(PlanetMeteorMessage);
+            messaging.UnregisterNamedMessageHandler(NoxaraMeteorMessage);
+            messaging.UnregisterNamedMessageHandler(PlanetPulseStartMessage);
+            messaging.UnregisterNamedMessageHandler(PlanetPulseDetonateMessage);
             messaging=null;attached=false;
         }
     }
