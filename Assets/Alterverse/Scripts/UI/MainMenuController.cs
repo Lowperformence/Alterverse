@@ -311,6 +311,12 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(selectorX,544,arrowW,44),"<",enabled:arenaCount>1))
                 {
                     playArenaBrowseIndex=(playArenaBrowseIndex-1+arenaCount)%arenaCount;
+                    ArenaShopItem target=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                    if(!arenaShuffle&&ArenaUnlockInventory.Owned(target.Variant))
+                    {
+                        ArenaVariantRuntime.Select(target.Variant);
+                        selectedArena=target.Variant;
+                    }
                     launchMessage="";
                 }
 
@@ -331,6 +337,12 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(selectorX+selectorW-arrowW,544,arrowW,44),">",enabled:arenaCount>1))
                 {
                     playArenaBrowseIndex=(playArenaBrowseIndex+1)%arenaCount;
+                    ArenaShopItem target=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                    if(!arenaShuffle&&ArenaUnlockInventory.Owned(target.Variant))
+                    {
+                        ArenaVariantRuntime.Select(target.Variant);
+                        selectedArena=target.Variant;
+                    }
                     launchMessage="";
                 }
 
@@ -1084,12 +1096,27 @@ namespace Alterverse.UI
         private void BeginLaunch()
         {
             if (launching) return;
+
+            // The arena visible in the PLAY slider is the arena that starts.
+            // Previously the slider could browse Kryon/Noxara while an older persisted arena
+            // (often Moon) remained selected, so START AI MATCH launched the wrong battlefield.
+            if(!ArenaVariantRuntime.ShuffleEnabled&&
+               playArenaBrowseIndex>=0&&playArenaBrowseIndex<ArenaShopCatalog.Items.Length)
+            {
+                ArenaShopItem browsed=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                if(!ArenaUnlockInventory.Owned(browsed.Variant))
+                {
+                    launchMessage=browsed.Name+" LOCKED  •  "+ArenaUnlockInventory.UnlockRequirement(browsed.Variant);
+                    return;
+                }
+                ArenaVariantRuntime.Select(browsed.Variant);
+            }
+
             ArenaVariantRuntime.EnsureValidSelection();
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
             if(!ArenaUnlockInventory.Owned(selectedArena))
             {
-                ArenaVariantRuntime.Select(ArenaVariant.Moon);
-                launchMessage="Selected arena is locked. Moon restored.";
+                launchMessage="Selected arena is locked.";
                 return;
             }
             PlayerHeroSelection.Select((HeroId)selectedHero); FlushAudio();
