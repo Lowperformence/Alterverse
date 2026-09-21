@@ -45,11 +45,22 @@ namespace Alterverse.Combat
         private Quaternion skeletonLeftArmBase,skeletonRightArmBase,skeletonLeftLegBase,skeletonRightLegBase,skeletonSkullBase;
         private Vector3 skeletonPelvisBaseScale;
         private float skeletonMoveBlend;
+        private const float SpiderUpperLength=1.08f;
+        private const float SpiderLowerLength=1.18f;
+        private const float SpiderSwingFraction=.34f;
         private Transform spiderBodyRoot;
         private readonly Transform[] spiderLegRoots=new Transform[8];
+        private readonly Transform[] spiderKneePivots=new Transform[8];
+        private readonly Transform[] spiderFootPivots=new Transform[8];
         private readonly Quaternion[] spiderLegBase=new Quaternion[8];
+        private readonly Vector3[] spiderHipLocal=new Vector3[8];
+        private readonly Vector3[] spiderFootPlant=new Vector3[8];
+        private readonly Vector3[] spiderSwingStart=new Vector3[8];
+        private readonly Vector3[] spiderSwingEnd=new Vector3[8];
+        private readonly bool[] spiderWasSwing=new bool[8];
         private Vector3 spiderBodyRest,spiderBarrelRest;
-        private float spiderMoveBlend;
+        private float spiderMoveBlend,spiderGaitClock,spiderTurnLean;
+        private bool spiderFeetInitialized;
         private Color spiderEnergyBase=new(1f,.72f,.04f,1f);
         private int movementRecoveryAttempt;
         private static readonly List<HotZoneTank> active=new();
@@ -139,7 +150,7 @@ namespace Alterverse.Combat
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
             if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
             if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
-            if(noxaraSpider){spiderMoveBlend=Mathf.MoveTowards(spiderMoveBlend,0f,Time.deltaTime*3.8f);AnimateNoxaraSpider();}
+            if(noxaraSpider)AnimateNoxaraSpider();
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
@@ -441,6 +452,8 @@ namespace Alterverse.Combat
             Part("SpiderMandibleR",PrimitiveType.Cube,turretPivot,new Vector3(.31f,-.24f,.54f),new Vector3(.15f,.12f,.38f),jointMat,Quaternion.Euler(12,10,10));
             Part("SpiderTeamMark",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.66f,-.43f),new Vector3(.34f,.05f,.22f),teamMat,Quaternion.identity);
 
+            // Eight articulated legs. Each leg has a hip, knee and ankle so the feet can remain
+            // planted while the body moves over them instead of all eight legs simply rocking.
             for(int sideIndex=0;sideIndex<2;sideIndex++)
             {
                 float side=sideIndex==0?-1f:1f;
@@ -448,29 +461,128 @@ namespace Alterverse.Combat
                 {
                     int index=sideIndex*4+leg;
                     float z=.78f-leg*.52f;
-                    float yaw=(leg-1.5f)*8f;
-                    Transform root=Pivot($"DF_NoxaraSpiderLeg_{index}",spiderBodyRoot,new Vector3(side*.70f,.28f,z),Quaternion.Euler(0,yaw,0));
-                    spiderLegRoots[index]=root;spiderLegBase[index]=root.localRotation;
-                    Part("SpiderUpperLeg"+index,PrimitiveType.Cube,root,new Vector3(side*.58f,-.12f,0),new Vector3(1.08f,.13f,.18f),armorMat,Quaternion.Euler(0,0,side*15f));
-                    Part("SpiderKnee"+index,PrimitiveType.Sphere,root,new Vector3(side*1.08f,-.28f,0),new Vector3(.20f,.20f,.20f),jointMat,Quaternion.identity);
-                    Part("SpiderLowerLeg"+index,PrimitiveType.Cube,root,new Vector3(side*1.38f,-.56f,0),new Vector3(.70f,.12f,.16f),darkMat,Quaternion.Euler(0,0,side*42f));
-                    Part("SpiderFoot"+index,PrimitiveType.Cube,root,new Vector3(side*1.62f,-.83f,.03f),new Vector3(.34f,.10f,.24f),jointMat,Quaternion.Euler(0,0,side*8f));
+                    float spreadZ=leg==0?.48f:leg==1?.18f:leg==2?-.18f:-.48f;
+                    Vector3 hip=new(side*.68f,.30f,z);
+                    Vector3 outward=new Vector3(side,0f,spreadZ).normalized;
+                    Quaternion baseRotation=Quaternion.FromToRotation(Vector3.right,outward);
+
+                    Transform root=Pivot($"DF_NoxaraSpiderLeg_{index}",spiderBodyRoot,hip,baseRotation);
+                    spiderLegRoots[index]=root;spiderLegBase[index]=baseRotation;spiderHipLocal[index]=hip;
+
+                    Part("SpiderUpperLeg"+index,PrimitiveType.Cube,root,
+                        new Vector3(SpiderUpperLength*.5f,0,0),
+                        new Vector3(SpiderUpperLength,.13f,.17f),armorMat,Quaternion.identity);
+
+                    Transform knee=Pivot($"DF_NoxaraSpiderKnee_{index}",root,
+                        new Vector3(SpiderUpperLength,0,0),Quaternion.identity);
+                    spiderKneePivots[index]=knee;
+                    Part("SpiderKnee"+index,PrimitiveType.Sphere,knee,Vector3.zero,
+                        new Vector3(.20f,.20f,.20f),jointMat,Quaternion.identity);
+
+                    Part("SpiderLowerLeg"+index,PrimitiveType.Cube,knee,
+                        new Vector3(SpiderLowerLength*.5f,0,0),
+                        new Vector3(SpiderLowerLength,.11f,.145f),darkMat,Quaternion.identity);
+
+                    Transform foot=Pivot($"DF_NoxaraSpiderAnkle_{index}",knee,
+                        new Vector3(SpiderLowerLength,0,0),Quaternion.identity);
+                    spiderFootPivots[index]=foot;
+                    Part("SpiderAnkle"+index,PrimitiveType.Sphere,foot,Vector3.zero,
+                        new Vector3(.13f,.13f,.13f),jointMat,Quaternion.identity);
+                    Part("SpiderFoot"+index,PrimitiveType.Cube,foot,
+                        new Vector3(.17f,-.035f,.03f),new Vector3(.36f,.09f,.23f),
+                        jointMat,Quaternion.Euler(0,0,-4f));
                 }
             }
+
+            spiderGaitClock=0f;spiderMoveBlend=0f;spiderTurnLean=0f;
+            for(int i=0;i<8;i++)
+            {
+                Vector3 rest=SpiderDesiredFootWorld(i,Vector3.zero);
+                spiderFootPlant[i]=spiderSwingStart[i]=spiderSwingEnd[i]=rest;
+                spiderWasSwing[i]=false;
+                ApplyNoxaraSpiderLegIk(i,rest);
+            }
+            spiderFeetInitialized=true;
         }
 
         private void AnimateNoxaraSpider()
         {
-            float idle=Mathf.Sin(Time.time*2.0f);
-            float stride=Mathf.Sin(Time.time*6.2f)*spiderMoveBlend;
-            if(spiderBodyRoot!=null)spiderBodyRoot.localPosition=spiderBodyRest+Vector3.up*(Mathf.Abs(stride)*.045f+idle*.008f);
-            for(int i=0;i<spiderLegRoots.Length;i++)
+            if(spiderBodyRoot==null)return;
+
+            Vector3 velocity=locomotion!=null?locomotion.Velocity:Vector3.zero;velocity.y=0;
+            float speed=velocity.magnitude;
+            float movement01=Mathf.Clamp01(speed/(MoveSpeed*.85f));
+            float blendRate=movement01>spiderMoveBlend?7.5f:4.2f;
+            spiderMoveBlend=Mathf.MoveTowards(spiderMoveBlend,movement01,Time.deltaTime*blendRate);
+
+            if(spiderMoveBlend>.015f)
             {
-                Transform leg=spiderLegRoots[i];if(leg==null)continue;
-                float phase=(i%2==0?1f:-1f)*stride;
-                float side=i<4?-1f:1f;
-                leg.localRotation=spiderLegBase[i]*Quaternion.Euler(phase*13f,phase*7f,side*phase*8f);
+                float gaitHz=Mathf.Lerp(.92f,1.42f,movement01);
+                spiderGaitClock+=Time.deltaTime*gaitHz*Mathf.Lerp(.35f,1f,spiderMoveBlend);
             }
+
+            float idle=Mathf.Sin(Time.time*1.65f);
+            float support=Mathf.Sin(spiderGaitClock*Mathf.PI*2f);
+            float turnError=speed>.06f?Vector3.SignedAngle(transform.forward,velocity.normalized,Vector3.up):0f;
+            float desiredLean=Mathf.Clamp(turnError*.12f,-4.2f,4.2f);
+            spiderTurnLean=Mathf.Lerp(spiderTurnLean,desiredLean,1f-Mathf.Exp(-5.5f*Time.deltaTime));
+
+            float gaitBob=Mathf.Abs(Mathf.Sin(spiderGaitClock*Mathf.PI*4f))*.025f*spiderMoveBlend;
+            float roll=support*1.15f*spiderMoveBlend-spiderTurnLean*.45f;
+            float pitch=Mathf.Cos(spiderGaitClock*Mathf.PI*2f)*.55f*spiderMoveBlend;
+            spiderBodyRoot.localPosition=spiderBodyRest+Vector3.up*(gaitBob+idle*.006f);
+            spiderBodyRoot.localRotation=Quaternion.Euler(pitch,0f,roll);
+
+            if(!spiderFeetInitialized)
+            {
+                for(int i=0;i<8;i++)spiderFootPlant[i]=SpiderDesiredFootWorld(i,Vector3.zero);
+                spiderFeetInitialized=true;
+            }
+
+            for(int i=0;i<8;i++)
+            {
+                float cycle=Mathf.Repeat(spiderGaitClock+SpiderLegPhase(i),1f);
+                bool swinging=spiderMoveBlend>.08f&&cycle<SpiderSwingFraction;
+
+                if(swinging&&!spiderWasSwing[i])
+                {
+                    spiderSwingStart[i]=spiderFootPlant[i];
+                    // Place the next step slightly ahead of the moving body. This produces a
+                    // visible plant / push / lift cycle rather than foot skating.
+                    Vector3 lead=velocity*.24f;
+                    spiderSwingEnd[i]=SpiderDesiredFootWorld(i,lead);
+                }
+
+                if(swinging)
+                {
+                    float u=Mathf.Clamp01(cycle/SpiderSwingFraction);
+                    float smooth=u*u*(3f-2f*u);
+                    Vector3 target=Vector3.Lerp(spiderSwingStart[i],spiderSwingEnd[i],smooth);
+                    target.y+=Mathf.Sin(u*Mathf.PI)*Mathf.Lerp(.16f,.27f,spiderMoveBlend);
+                    spiderFootPlant[i]=target;
+                }
+                else
+                {
+                    if(spiderWasSwing[i])
+                        spiderFootPlant[i]=SpiderDesiredGroundPoint(spiderSwingEnd[i]);
+
+                    // While idle, quietly settle back into a symmetric stance. During locomotion
+                    // the stance foot remains planted unless it would become visibly over-stretched.
+                    Vector3 desired=SpiderDesiredFootWorld(i,Vector3.zero);
+                    if(spiderMoveBlend<.08f)
+                        spiderFootPlant[i]=Vector3.Lerp(spiderFootPlant[i],desired,1f-Mathf.Exp(-4f*Time.deltaTime));
+                    else
+                    {
+                        Vector3 flat=spiderFootPlant[i]-desired;flat.y=0;
+                        if(flat.sqrMagnitude>1.45f*1.45f)
+                            spiderFootPlant[i]=Vector3.Lerp(spiderFootPlant[i],desired,1f-Mathf.Exp(-2.4f*Time.deltaTime));
+                    }
+                }
+
+                ApplyNoxaraSpiderLegIk(i,spiderFootPlant[i]);
+                spiderWasSwing[i]=swinging;
+            }
+
             if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))
             {
                 float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
@@ -481,6 +593,70 @@ namespace Alterverse.Combat
                 float pulse=1f+(shotPending?.16f:0f)+Mathf.Max(0,idle)*.03f;
                 barrelPivot.localScale=Vector3.one*pulse;
             }
+        }
+
+        private static float SpiderLegPhase(int index)
+        {
+            // Alternating tetrapod gait: L1/L3/R2/R4 oppose L2/L4/R1/R3.
+            // Tiny offsets prevent the motion from reading as a perfectly synchronized machine.
+            return index switch
+            {
+                0=>0f,1=>.51f,2=>.035f,3=>.545f,
+                4=>.50f,5=>.02f,6=>.53f,_=>.06f
+            };
+        }
+
+        private Vector3 SpiderDesiredFootWorld(int index,Vector3 lead)
+        {
+            int leg=index&3;
+            float side=index<4?-1f:1f;
+            float reach=leg==0||leg==3?2.24f:2.34f;
+            float z=leg==0?1.34f:leg==1?.47f:leg==2?-.47f:-1.34f;
+            Vector3 world=spiderBodyRoot.TransformPoint(new Vector3(side*reach,-.62f,z));
+            world+=lead;
+            return SpiderDesiredGroundPoint(world);
+        }
+
+        private static Vector3 SpiderDesiredGroundPoint(Vector3 world)
+        {
+            Vector3 surface=LunarSurfaceField.Surface(world.x,world.z);
+            world.y=surface.y+.045f;
+            return world;
+        }
+
+        private void ApplyNoxaraSpiderLegIk(int index,Vector3 targetWorld)
+        {
+            Transform root=spiderLegRoots[index];
+            Transform knee=spiderKneePivots[index];
+            Transform foot=spiderFootPivots[index];
+            if(root==null||knee==null||foot==null||spiderBodyRoot==null)return;
+
+            Vector3 targetBody=spiderBodyRoot.InverseTransformPoint(targetWorld);
+            Vector3 deltaBody=targetBody-spiderHipLocal[index];
+            Vector3 local=Quaternion.Inverse(spiderLegBase[index])*deltaBody;
+
+            float planar=Mathf.Sqrt(local.x*local.x+local.z*local.z);
+            planar=Mathf.Max(.04f,planar);
+            float yaw=Mathf.Atan2(-local.z,local.x)*Mathf.Rad2Deg;
+            float distance=Mathf.Sqrt(planar*planar+local.y*local.y);
+            distance=Mathf.Clamp(distance,.18f,SpiderUpperLength+SpiderLowerLength-.035f);
+
+            float targetAngle=Mathf.Atan2(local.y,planar)*Mathf.Rad2Deg;
+            float hipCos=(SpiderUpperLength*SpiderUpperLength+distance*distance-SpiderLowerLength*SpiderLowerLength)/
+                (2f*SpiderUpperLength*distance);
+            float hipOffset=Mathf.Acos(Mathf.Clamp(hipCos,-1f,1f))*Mathf.Rad2Deg;
+            float hip=targetAngle+hipOffset;
+
+            float kneeCos=(SpiderUpperLength*SpiderUpperLength+SpiderLowerLength*SpiderLowerLength-distance*distance)/
+                (2f*SpiderUpperLength*SpiderLowerLength);
+            float internalKnee=Mathf.Acos(Mathf.Clamp(kneeCos,-1f,1f))*Mathf.Rad2Deg;
+            float kneeBend=-(180f-internalKnee);
+
+            root.localRotation=spiderLegBase[index]*
+                Quaternion.AngleAxis(yaw,Vector3.up)*
+                Quaternion.AngleAxis(hip,Vector3.forward);
+            knee.localRotation=Quaternion.AngleAxis(kneeBend,Vector3.forward);
+            foot.localRotation=Quaternion.AngleAxis(-(hip+kneeBend),Vector3.forward);
         }
 
         private void BuildAlienVisuals()
@@ -735,7 +911,7 @@ namespace Alterverse.Combat
 
         private void AnimateTracks(float movement)
         {
-            if(noxaraSpider){spiderMoveBlend=1f;return;}
+            if(noxaraSpider)return;
             if(xenoAlien){xenoMoveBlend=1f;return;}
             if(marsSkeleton){skeletonMoveBlend=1f;return;}
             float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
