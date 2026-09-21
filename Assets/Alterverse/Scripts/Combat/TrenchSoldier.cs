@@ -115,6 +115,9 @@ namespace Alterverse.Combat
 
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             go.AddComponent<TeamMember>().Initialize(team);
+            CharacterController controller=go.AddComponent<CharacterController>();
+            controller.radius=.22f;controller.height=.78f;controller.center=new Vector3(0,.34f,0);
+            controller.stepOffset=0f;controller.skinWidth=.025f;controller.minMoveDistance=0f;
             go.AddComponent<HeroLocomotion>();
             TrenchSoldier soldier=go.AddComponent<TrenchSoldier>();
             soldier.Initialize(team,slot);
@@ -130,7 +133,7 @@ namespace Alterverse.Combat
             formationSlot=Mathf.Max(0,slot);
             health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>();
-            nextGroupScan=Time.time+Random.Range(.05f,.22f);
+            nextGroupScan=Time.time;
             nextTargetScan=Time.time+Random.Range(.05f,.18f);
             nextAttack=Time.time+Random.Range(.25f,.70f);
             BuildVisual();
@@ -266,8 +269,8 @@ namespace Alterverse.Combat
             if(leader!=null&&!leader.IsDead)
             {
                 int lane=formationSlot%5;
-                float lateral=(lane-2)*.78f;
-                float depth=1.70f+(formationSlot/5)*.68f;
+                float lateral=(lane-2)*.52f;
+                float depth=1.15f+(formationSlot/5)*.48f;
                 Transform lt=leader.transform;
                 Vector3 slot=groupAnchor+lt.right*lateral-lt.forward*depth;
                 slot.y=transform.position.y;
@@ -294,11 +297,25 @@ namespace Alterverse.Combat
                 return;
             }
 
-            Vector3 direction=delta.normalized+Separation()*1.10f;
-            direction.y=0;if(direction.sqrMagnitude>.001f)direction.Normalize();
-            Vector3 moved=locomotion.Move(direction*(MoveSpeed*speedScale*Time.deltaTime),ArenaHalfWidth,ArenaHalfHeight);
+            Vector3 desired=delta.normalized+Separation()*.72f;
+            desired.y=0;if(desired.sqrMagnitude>.001f)desired.Normalize();
+
+            float step=MoveSpeed*speedScale*Time.deltaTime;
+            Vector3 moved=locomotion.Move(desired*step,ArenaHalfWidth,ArenaHalfHeight);
+
+            // A trench wall or another static structure may block the straight line. Probe an
+            // alternate direction immediately instead of leaving the infantry standing still.
+            if(moved.sqrMagnitude<step*step*.08f&&
+               locomotion.TryFindClearDirection(desired,1.0f,(formationSlot&1)==0?1:-1,out Vector3 detour))
+            {
+                Vector3 retry=locomotion.Move(detour*step,ArenaHalfWidth,ArenaHalfHeight);
+                if(retry.sqrMagnitude>moved.sqrMagnitude)moved=retry;
+            }
+
             if(moved.sqrMagnitude>.00001f)locomotion.FaceMovement(moved);
-            moveBlend=Mathf.MoveTowards(moveBlend,moved.sqrMagnitude>.00001f?1f:0f,Time.deltaTime*5f);
+            else locomotion.FaceMovement(desired);
+
+            moveBlend=Mathf.MoveTowards(moveBlend,moved.sqrMagnitude>.00001f?1f:0f,Time.deltaTime*6f);
             AnimateVisual();
         }
 
@@ -368,7 +385,7 @@ namespace Alterverse.Combat
 
             visualRoot=new GameObject("DF_TrenchSoldierVisual").transform;
             visualRoot.SetParent(transform,false);
-            visualRoot.localScale=Vector3.one*.72f;
+            visualRoot.localScale=Vector3.one*.36f;
             visualRest=visualRoot.localPosition;
 
             // Compact astronaut infantry silhouette based on the supplied reference.
@@ -388,20 +405,29 @@ namespace Alterverse.Combat
             leftLegBase=leftLeg.localRotation;rightLegBase=rightLeg.localRotation;
             BuildLeg(leftLeg,-1f);BuildLeg(rightLeg,1f);
 
-            // Arms are posed around the rifle rather than hanging as blocks.
-            Transform armL=Pivot("ArmL",visualRoot,new Vector3(-.42f,1.43f,.02f),Quaternion.Euler(34,4,-18));
-            Transform armR=Pivot("ArmR",visualRoot,new Vector3(.42f,1.43f,.02f),Quaternion.Euler(26,-8,20));
-            Part("UpperArmL",PrimitiveType.Capsule,armL,new Vector3(0,-.26f,.08f),new Vector3(.20f,.36f,.20f),suitMat,Quaternion.identity);
-            Part("ForearmL",PrimitiveType.Capsule,armL,new Vector3(.10f,-.50f,.28f),new Vector3(.18f,.34f,.18f),darkMat,Quaternion.Euler(62,0,-10));
-            Part("UpperArmR",PrimitiveType.Capsule,armR,new Vector3(0,-.25f,.08f),new Vector3(.20f,.36f,.20f),suitMat,Quaternion.identity);
-            Part("ForearmR",PrimitiveType.Capsule,armR,new Vector3(-.08f,-.48f,.28f),new Vector3(.18f,.34f,.18f),darkMat,Quaternion.Euler(58,0,8));
+            // Both hands visibly grip the rifle. The weapon points along local +Z, matching
+            // the soldier's facing direction instead of floating sideways across the chest.
+            Transform armL=Pivot("ArmL",visualRoot,new Vector3(-.40f,1.43f,.02f),Quaternion.Euler(18,0,-12));
+            Transform armR=Pivot("ArmR",visualRoot,new Vector3(.40f,1.43f,.02f),Quaternion.Euler(16,0,12));
+            Part("UpperArmL",PrimitiveType.Capsule,armL,new Vector3(.04f,-.25f,.10f),new Vector3(.19f,.34f,.19f),suitMat,Quaternion.Euler(10,0,-8));
+            Part("UpperArmR",PrimitiveType.Capsule,armR,new Vector3(-.04f,-.25f,.10f),new Vector3(.19f,.34f,.19f),suitMat,Quaternion.Euler(10,0,8));
 
-            Transform rifle=Pivot("Rifle",visualRoot,new Vector3(0,1.13f,.47f),Quaternion.Euler(0,-7,-6));
-            Part("RifleBody",PrimitiveType.Cube,rifle,new Vector3(.18f,0,.18f),new Vector3(.78f,.17f,.19f),weaponMat,Quaternion.identity);
-            Part("RifleStock",PrimitiveType.Cube,rifle,new Vector3(-.34f,.02f,.12f),new Vector3(.26f,.20f,.22f),darkMat,Quaternion.identity);
-            Part("RifleCore",PrimitiveType.Cube,rifle,new Vector3(.12f,.10f,.20f),new Vector3(.28f,.055f,.035f),energyMat,Quaternion.identity);
-            Part("RifleBarrel",PrimitiveType.Cylinder,rifle,new Vector3(.67f,0,.18f),new Vector3(.055f,.37f,.055f),darkMat,Quaternion.Euler(0,0,90));
-            muzzle=Pivot("Muzzle",rifle,new Vector3(1.06f,0,.18f),Quaternion.identity);
+            Transform leftHand=Pivot("LeftHand",visualRoot,new Vector3(-.16f,1.12f,.60f),Quaternion.Euler(-8,0,-8));
+            Transform rightHand=Pivot("RightHand",visualRoot,new Vector3(.16f,1.18f,.43f),Quaternion.Euler(-6,0,6));
+            Part("ForearmL",PrimitiveType.Capsule,armL,new Vector3(.16f,-.50f,.29f),new Vector3(.17f,.36f,.17f),darkMat,Quaternion.Euler(64,0,-18));
+            Part("ForearmR",PrimitiveType.Capsule,armR,new Vector3(-.14f,-.48f,.24f),new Vector3(.17f,.34f,.17f),darkMat,Quaternion.Euler(60,0,16));
+            Part("HandL",PrimitiveType.Cube,leftHand,Vector3.zero,new Vector3(.18f,.16f,.20f),darkMat,Quaternion.identity);
+            Part("HandR",PrimitiveType.Cube,rightHand,Vector3.zero,new Vector3(.18f,.16f,.20f),darkMat,Quaternion.identity);
+
+            // Parent the rifle to the right hand so it is literally carried by the hand hierarchy.
+            Transform rifle=Pivot("Rifle",rightHand,new Vector3(-.16f,-.04f,.04f),Quaternion.Euler(-3,0,0));
+            Part("RifleBody",PrimitiveType.Cube,rifle,new Vector3(0,0,.34f),new Vector3(.20f,.17f,.72f),weaponMat,Quaternion.identity);
+            Part("RifleStock",PrimitiveType.Cube,rifle,new Vector3(0,.01f,-.10f),new Vector3(.24f,.20f,.28f),darkMat,Quaternion.identity);
+            Part("RifleCore",PrimitiveType.Cube,rifle,new Vector3(.11f,.08f,.36f),new Vector3(.055f,.055f,.28f),energyMat,Quaternion.identity);
+            Part("RifleForeGrip",PrimitiveType.Cube,rifle,new Vector3(-.16f,-.09f,.50f),new Vector3(.12f,.22f,.14f),darkMat,Quaternion.Euler(8,0,0));
+            Part("RifleBarrel",PrimitiveType.Cylinder,rifle,new Vector3(0,0,.82f),new Vector3(.055f,.30f,.055f),darkMat,Quaternion.Euler(90,0,0));
+            Part("RifleMuzzleBrake",PrimitiveType.Cube,rifle,new Vector3(0,0,1.13f),new Vector3(.13f,.11f,.14f),weaponMat,Quaternion.identity);
+            muzzle=Pivot("Muzzle",rifle,new Vector3(0,0,1.22f),Quaternion.identity);
         }
 
         private void BuildLeg(Transform leg,float side)
