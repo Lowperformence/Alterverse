@@ -43,9 +43,13 @@ namespace Alterverse.EditorChecks
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must start locked.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),"Green Planet must start locked.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked before five completed matches.");
+                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Kryon),"Kryon must start locked before ten completed matches.");
                 Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.NotPurchasable,
                     "Noxara must never be purchasable with shards.");
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Kryon)==ArenaPurchaseResult.NotPurchasable,
+                    "Kryon must never be purchasable with shards.");
                 Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
+                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Kryon),"Locked Kryon must not be selectable.");
                 Assert(!ArenaVariantRuntime.Select(ArenaVariant.Mars),"Locked Mars must not be selectable.");
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,"Locked selection must remain Moon.");
 
@@ -91,6 +95,13 @@ namespace Alterverse.EditorChecks
                     "Noxara must unlock from completed-match progression.");
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Noxara)&&ArenaVariantRuntime.Selected==ArenaVariant.Noxara,
                     "Progression-unlocked Noxara must be selectable.");
+
+                PlayerPrefs.SetInt(MatchesKey,ArenaUnlockInventory.KryonMatchesRequired);
+                PlayerPrefs.Save();
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Kryon),
+                    "Kryon must unlock from completed-match progression.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.Kryon)&&ArenaVariantRuntime.Selected==ArenaVariant.Kryon,
+                    "Progression-unlocked Kryon must be selectable.");
 
                 Debug.Log("DIMENSIONS FRONT: arena shop regression assertions passed.");
             }
