@@ -145,9 +145,9 @@ namespace Alterverse.Multiplayer
                 IHostSession host=session.AsHost();
                 host.SetProperties(new Dictionary<string,SessionProperty>
                 {
-                    {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                    {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                    {PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member)}
+                    {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                    {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                    {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
                 });
                 await host.SavePropertiesAsync();
 
@@ -226,8 +226,8 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 session.CurrentPlayer.SetProperties(new Dictionary<string,PlayerProperty>
                 {
-                    {PlayerHeroKey,new PlayerProperty(((int)hero).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                    {PlayerReadyKey,new PlayerProperty("0",VisibilityOptions.Member)}
+                    {PlayerHeroKey,new PlayerProperty(((int)hero).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                    {PlayerReadyKey,new PlayerProperty("0",VisibilityPropertyOptions.Member)}
                 });
                 await session.SaveCurrentPlayerDataAsync();
                 PlayerHeroSelection.Select(hero);
@@ -252,7 +252,7 @@ namespace Alterverse.Multiplayer
             try
             {
                 busy=true;lastError="";
-                session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityOptions.Member));
+                session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member));
                 await session.SaveCurrentPlayerDataAsync();
                 SetStatus(ready?"READY • WAITING FOR TEAM":"NOT READY");
                 return true;
@@ -293,7 +293,7 @@ namespace Alterverse.Multiplayer
             {
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
-                host.SetProperty(key,new SessionProperty(value,VisibilityOptions.Member));
+                host.SetProperty(key,new SessionProperty(value,VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus(okStatus);
                 return true;
@@ -388,9 +388,9 @@ namespace Alterverse.Multiplayer
             string name=SanitizeDisplayName(PlayerProfile.PlayerName);
             session.CurrentPlayer.SetProperties(new Dictionary<string,PlayerProperty>
             {
-                {PlayerNameKey,new PlayerProperty(name,VisibilityOptions.Member)},
-                {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                {PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityOptions.Member)}
+                {PlayerNameKey,new PlayerProperty(name,VisibilityPropertyOptions.Member)},
+                {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                {PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member)}
             });
             await session.SaveCurrentPlayerDataAsync();
         }
