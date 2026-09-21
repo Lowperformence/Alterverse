@@ -39,6 +39,7 @@ namespace Alterverse.Multiplayer
         private const string ArenaKey="arena";
         private const string DifficultyKey="difficulty";
         private const string PhaseKey="phase";
+        private const string MatchIdKey="matchId";
 
         public static CoopLobbyService Instance { get; private set; }
 
@@ -151,7 +152,8 @@ namespace Alterverse.Multiplayer
                     {
                         {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                         {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
-                        {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
+                        {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)},
+                        {MatchIdKey,new SessionProperty("",VisibilityPropertyOptions.Member)}
                     }
                 }.WithRelayNetwork();
 
@@ -416,7 +418,9 @@ namespace Alterverse.Multiplayer
             if(members.Count!=session.PlayerCount)return false;
             try
             {
-                plan=CoopMatchPlan.Build(session.Id,LobbyArena,LobbyDifficulty,members);
+                string matchId=ReadSession(MatchIdKey,session.Id);
+                if(string.IsNullOrEmpty(matchId))matchId=session.Id;
+                plan=CoopMatchPlan.Build(matchId,LobbyArena,LobbyDifficulty,members);
                 return plan!=null;
             }
             catch(Exception ex)
@@ -449,7 +453,11 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
                 host.IsLocked=true;
-                host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member));
+                host.SetProperties(new Dictionary<string,SessionProperty>
+                {
+                    {MatchIdKey,new SessionProperty(Guid.NewGuid().ToString("N"),VisibilityPropertyOptions.Member)},
+                    {PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member)}
+                });
                 await host.SavePropertiesAsync();
                 SetStatus($"MATCH STAGING • {PlayerCount} PLAYERS CONNECTED");
                 return true;
