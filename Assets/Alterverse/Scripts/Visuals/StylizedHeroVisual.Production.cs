@@ -209,26 +209,26 @@ namespace Alterverse.Visuals
             {
                 // Closed "breacher" helmet based on the reference: broad steel shell, deep face plate
                 // and a vented visor that remains readable from the top-down camera.
-                Vector3 p=new(0,.80f,.02f);
-                Mesh helmet=HeroMeshLibrary.Loft("DF_KaelonBreacherHelm",
+                Vector3 kaelonHeadPos=new(0,.80f,.02f);
+                Mesh kaelonHelmet=HeroMeshLibrary.Loft("DF_KaelonBreacherHelm",
                     new[]{-.24f,-.17f,-.05f,.10f,.22f,.29f},
                     new[]{.085f,.155f,.205f,.215f,.185f,.075f},
                     new[]{.080f,.145f,.175f,.170f,.135f,.065f},
                     new[]{.045f,.035f,.015f,0f,-.010f,-.018f},16);
-                Sculpt("Head",helmet,p,new Vector3(1.18f,1.05f,1.12f),metal);
+                Sculpt("Head",kaelonHelmet,kaelonHeadPos,new Vector3(1.18f,1.05f,1.12f),metal);
                 Sculpt("Neck",HeroMeshLibrary.Loft("DF_KaelonNeck",new[]{-.10f,.09f},new[]{.09f,.10f},new[]{.085f,.09f}),
                     new Vector3(0,.54f,0),Vector3.one,dark);
-                Plate("KaelonFacePlate",p+new Vector3(0,-.015f,.178f),.41f,.35f,.085f,new Color(.34f,.35f,.35f));
-                Plate("KaelonBrowArmor",p+new Vector3(0,.155f,.105f),.48f,.20f,.20f,metal);
-                Plate("KaelonJawGuard",p+new Vector3(0,-.155f,.135f),.36f,.18f,.16f,trim);
+                Plate("KaelonFacePlate",kaelonHeadPos+new Vector3(0,-.015f,.178f),.41f,.35f,.085f,new Color(.34f,.35f,.35f));
+                Plate("KaelonBrowArmor",kaelonHeadPos+new Vector3(0,.155f,.105f),.48f,.20f,.20f,metal);
+                Plate("KaelonJawGuard",kaelonHeadPos+new Vector3(0,-.155f,.135f),.36f,.18f,.16f,trim);
                 for(int row=0;row<2;row++)
                 for(int i=-2;i<=2;i++)
                     Detail("KaelonVent"+row+"_"+(i+2),
-                        p+new Vector3(i*.068f,.055f-row*.072f,.229f),
+                        kaelonHeadPos+new Vector3(i*.068f,.055f-row*.072f,.229f),
                         new Vector3(.041f,.018f,.014f),cloth,default,null,false);
-                Detail("KaelonVisorSlit",p+new Vector3(0,.112f,.232f),new Vector3(.33f,.026f,.016f),teamEdge,default,null,true);
+                Detail("KaelonVisorSlit",kaelonHeadPos+new Vector3(0,.112f,.232f),new Vector3(.33f,.026f,.016f),teamEdge,default,null,true);
                 for(int side=-1;side<=1;side+=2)
-                    Plate("KaelonHelmCheek"+side,p+new Vector3(side*.205f,-.015f,.035f),.13f,.35f,.20f,metal,side*-8);
+                    Plate("KaelonHelmCheek"+side,kaelonHeadPos+new Vector3(side*.205f,-.015f,.035f),.13f,.35f,.20f,metal,side*-8);
                 return;
             }
             bool helmet=h==HeroId.Veyr||h==HeroId.Kaelon;
