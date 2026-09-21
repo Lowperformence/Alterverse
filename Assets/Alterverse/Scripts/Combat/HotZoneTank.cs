@@ -89,8 +89,9 @@ namespace Alterverse.Combat
             new(4,0,0),new(0,0,-12),new(-8,0,-4),new(-3,0,12),new(-14,0,3)
         };
 
+        private static int coopSpawnSerial;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetRegistry()=>active.Clear();
+        private static void ResetRegistry(){active.Clear();coopSpawnSerial=0;}
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
         private void OnDisable(){active.Remove(this);shotPending=false;shotTarget=null;}
 
@@ -134,6 +135,8 @@ namespace Alterverse.Combat
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
+            if(Alterverse.Multiplayer.CoopAuthority.Active)
+                go.AddComponent<Alterverse.Multiplayer.CoopWorldEntityKey>().Configure($"HOTZONE:{coopSpawnSerial++}");
             go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
             return true;
         }
@@ -158,6 +161,14 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+            {
+                if(xenoAlien)AnimateXeno();
+                if(marsSkeleton)AnimateSkeleton();
+                if(noxaraSpider)AnimateNoxaraSpider();
+                if(kryonBear)AnimateKryonBear();
+                return;
+            }
             if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
             if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
             if(noxaraSpider)AnimateNoxaraSpider();
