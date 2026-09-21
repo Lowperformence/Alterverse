@@ -191,6 +191,22 @@ namespace Alterverse.AI
                     return;
                 }
 
+                // If the retreat is no longer tactically necessary and the pursuing hero keeps
+                // attacking us, turn and fight instead of running all the way to 80% HP.
+                // Critical HP, real outnumbering and team disengage orders still keep retreat priority.
+                bool pressuredByAttacker=visibleEnemy!=null&&visibleEnemy.GetComponent<HeroIdentity>()!=null&&
+                    targetSensor!=null&&targetSensor.IsRecentAttacker(visibleEnemy);
+                float counterFightHealth=Mathf.Max(.42f,retreat+.10f);
+                bool canCounterFight=pressuredByAttacker&&hp>=counterFightHealth&&pressure==0&&
+                    !teamWithdrawal&&!losingFight&&!badlyOutnumbered&&Time.time>=retreatUntil-.35f;
+                if(canCounterFight)
+                {
+                    state=BotState.Fight;
+                    TacticalWithdrawal=false;
+                    fightCommitUntil=Time.time+.80f*commitmentRhythm;
+                    return;
+                }
+
                 state = (!winningFinish&&hp<recoverHealth)||Time.time<retreatUntil||pressure>0 ? BotState.Recover : BotState.Roam;
                 if(state==BotState.Roam){fightCommitUntil=0;TacticalWithdrawal=false;}
                 return;
