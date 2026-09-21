@@ -97,6 +97,13 @@ namespace Alterverse.AI
         public bool Follows(MobaBotBrain bot)
         {
             if(!bot.Difficulty.Coordinated||!HasPlan)return false;
+
+            // Roam is a search order, not a rally point. Making coordinated bots follow one
+            // shared Roam destination caused them to arrive, stand there and wait for the
+            // coordinator's next sector change. During normal downtime every healthy bot
+            // should keep searching independently instead of wasting match time.
+            if(Call==Intent.Roam)return false;
+
             if(Call==Intent.Defend&&!CoreEmergency)
             {
                 int nearer=0;float distance=FlatSqr(bot.transform.position-Destination);
