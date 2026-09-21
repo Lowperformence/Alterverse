@@ -39,6 +39,7 @@ namespace Alterverse.Characters
         public AbilitySpec SpecFor(int slot) => kit.Spec(slot);
         public float RemainingFor(int slot) => execution != null ? execution.Remaining(slot) : 0;
         public float CooldownFor(int slot) => execution.Cooldown(slot);
+        public void ApplyNetworkCooldown(int slot,float remaining)=>execution?.ApplyNetworkCooldown(slot,remaining);
         public float PreviewRange(int slot) => kit.Spec(slot).Range > 0 ? kit.Spec(slot).Range : kit.Spec(slot).Radius;
         public string Describe(int slot)
         {
