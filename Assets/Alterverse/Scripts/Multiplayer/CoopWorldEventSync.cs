@@ -22,6 +22,7 @@ namespace Alterverse.Multiplayer
         private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V1";
         private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V1";
         private const string PlanetBuffMessage="DF_COOP_PLANET_BUFF_V1";
+        private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -51,6 +52,7 @@ namespace Alterverse.Multiplayer
             PlanetPulseAttack.NetworkPulseDetonated+=OnHostPlanetPulseDetonate;
             CentralHealingPickup.NetworkAvailabilityChanged+=OnHostCentralHealChanged;
             DimensionPlanet.NetworkBuffGranted+=OnHostPlanetBuffGranted;
+            LaneWaveSpawner.NetworkUnitSpawned+=OnHostLaneUnitSpawned;
             eventsBound=true;
         }
 
@@ -67,6 +69,7 @@ namespace Alterverse.Multiplayer
             PlanetPulseAttack.NetworkPulseDetonated-=OnHostPlanetPulseDetonate;
             CentralHealingPickup.NetworkAvailabilityChanged-=OnHostCentralHealChanged;
             DimensionPlanet.NetworkBuffGranted-=OnHostPlanetBuffGranted;
+            LaneWaveSpawner.NetworkUnitSpawned-=OnHostLaneUnitSpawned;
             eventsBound=false;
         }
 
@@ -154,6 +157,18 @@ namespace Alterverse.Multiplayer
             using FastBufferWriter writer=new(20,Allocator.Temp);
             writer.WriteValueSafe(team);writer.WriteValueSafe((int)type);writer.WriteValueSafe(duration);
             SendAll(PlanetBuffMessage,writer);
+        }
+
+        private void OnHostLaneUnitSpawned(string key,int team,Vector3 spawn,Vector3 destination,bool siege)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
+            writer.WriteValueSafe(new FixedString128Bytes(key??""));
+            writer.WriteValueSafe(team);
+            writer.WriteValueSafe(spawn.x);writer.WriteValueSafe(spawn.y);writer.WriteValueSafe(spawn.z);
+            writer.WriteValueSafe(destination.x);writer.WriteValueSafe(destination.y);writer.WriteValueSafe(destination.z);
+            writer.WriteValueSafe(siege);
+            SendAll(LaneUnitMessage,writer);
         }
 
         private bool CanBroadcast()
@@ -251,6 +266,18 @@ namespace Alterverse.Multiplayer
             DimensionPlanet.ApplyNetworkBuff(Mathf.Clamp(team,0,1),(PlanetBuffType)rawType,duration);
         }
 
+        private void OnLaneUnit(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out FixedString128Bytes fixedKey);
+            reader.ReadValueSafe(out int team);
+            reader.ReadValueSafe(out float sx);reader.ReadValueSafe(out float sy);reader.ReadValueSafe(out float sz);
+            reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);
+            reader.ReadValueSafe(out bool siege);
+            LaneWaveSpawner.ApplyNetworkUnitSpawn(
+                fixedKey.ToString(),team,new Vector3(sx,sy,sz),new Vector3(dx,dy,dz),siege);
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -272,6 +299,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(PlanetPulseDetonateMessage,OnPlanetPulseDetonate);
             messaging.RegisterNamedMessageHandler(CentralHealMessage,OnCentralHeal);
             messaging.RegisterNamedMessageHandler(PlanetBuffMessage,OnPlanetBuff);
+            messaging.RegisterNamedMessageHandler(LaneUnitMessage,OnLaneUnit);
             attached=true;
         }
 
@@ -288,6 +316,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(PlanetPulseDetonateMessage);
             messaging.UnregisterNamedMessageHandler(CentralHealMessage);
             messaging.UnregisterNamedMessageHandler(PlanetBuffMessage);
+            messaging.UnregisterNamedMessageHandler(LaneUnitMessage);
             messaging=null;attached=false;
         }
     }
