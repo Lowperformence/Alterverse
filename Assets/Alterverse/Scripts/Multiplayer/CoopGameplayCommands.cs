@@ -77,7 +77,14 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(id);
 
             string message=abilitySlot<0?BasicMessage:AbilityMessage;
-            if(abilitySlot>=0)writer.WriteValueSafe(abilitySlot);
+            if(abilitySlot>=0)
+            {
+                writer.WriteValueSafe(abilitySlot);
+                HeroMotor motor=actor.GetComponent<HeroMotor>();
+                Vector3 direction=motor!=null&&motor.CurrentMoveDirection.sqrMagnitude>.0001f
+                    ?motor.CurrentMoveDirection.normalized:actor.transform.forward;
+                writer.WriteValueSafe(direction.x);writer.WriteValueSafe(direction.y);writer.WriteValueSafe(direction.z);
+            }
             messaging.SendNamedMessage(message,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
             return true;
         }
@@ -110,8 +117,11 @@ namespace Alterverse.Multiplayer
         {
             if(!TryReadAuthorizedActor(senderClientId,reader,out GameObject actor))return;
             reader.ReadValueSafe(out int slot);
+            reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);
             if(slot<0||slot>3)return;
-            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot);
+            Vector3 requestedDirection=new(dx,dy,dz);requestedDirection.y=0f;
+            if(requestedDirection.sqrMagnitude>.0001f)requestedDirection.Normalize();
+            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot,requestedDirection);
         }
 
         private bool TryReadAuthorizedActor(ulong senderClientId,FastBufferReader reader,out GameObject actor)
