@@ -13,6 +13,7 @@ namespace Alterverse.EditorChecks
         private const string BalanceKey="DF_Shards";
         private const string MarsKey="DF_ArenaOwned_Mars";
         private const string GreenKey="DF_ArenaOwned_GreenPlanet";
+        private const string MatchesKey="DF_MatchesCompleted";
         private const string SelectedKey="DF_SelectedArenaVariant";
 
         private readonly struct PrefSnapshot
@@ -28,18 +29,23 @@ namespace Alterverse.EditorChecks
         public static void Run()
         {
             ProfileTransaction.Recover();
-            PrefSnapshot balance=new(BalanceKey),mars=new(MarsKey),green=new(GreenKey),selected=new(SelectedKey);
+            PrefSnapshot balance=new(BalanceKey),mars=new(MarsKey),green=new(GreenKey),matches=new(MatchesKey),selected=new(SelectedKey);
             try
             {
                 PlayerPrefs.SetInt(BalanceKey,1000);
                 PlayerPrefs.DeleteKey(MarsKey);
                 PlayerPrefs.DeleteKey(GreenKey);
+                PlayerPrefs.SetInt(MatchesKey,0);
                 PlayerPrefs.DeleteKey(SelectedKey);
                 PlayerPrefs.Save();
 
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be owned.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must start locked.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),"Green Planet must start locked.");
+                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked before five completed matches.");
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.NotPurchasable,
+                    "Noxara must never be purchasable with shards.");
+                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
                 Assert(!ArenaVariantRuntime.Select(ArenaVariant.Mars),"Locked Mars must not be selectable.");
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,"Locked selection must remain Moon.");
 
@@ -79,11 +85,18 @@ namespace Alterverse.EditorChecks
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.GreenPlanet)&&ArenaVariantRuntime.Selected==ArenaVariant.GreenPlanet,
                     "Owned Green Planet must be selectable.");
 
+                PlayerPrefs.SetInt(MatchesKey,ArenaUnlockInventory.NoxaraMatchesRequired);
+                PlayerPrefs.Save();
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Noxara),
+                    "Noxara must unlock from completed-match progression.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.Noxara)&&ArenaVariantRuntime.Selected==ArenaVariant.Noxara,
+                    "Progression-unlocked Noxara must be selectable.");
+
                 Debug.Log("DIMENSIONS FRONT: arena shop regression assertions passed.");
             }
             finally
             {
-                balance.Restore();mars.Restore();green.Restore();selected.Restore();PlayerPrefs.Save();
+                balance.Restore();mars.Restore();green.Restore();matches.Restore();selected.Restore();PlayerPrefs.Save();
             }
         }
 
