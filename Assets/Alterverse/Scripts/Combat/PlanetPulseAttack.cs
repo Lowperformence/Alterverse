@@ -65,8 +65,6 @@ namespace Alterverse.Combat
 
         private bool HasTargetInRange()
         {
-            if(authoritative)
-            {
             int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
             for(int i=0;i<hits;i++)
             {
@@ -108,17 +106,19 @@ namespace Alterverse.Combat
             telegraphStartedAt=-1f;
             if (warningDisc != null) Destroy(warningDisc);
             PrototypeVfx.RadialBurst(transform.position + Vector3.up * .15f, new Color(1f, .48f, .12f), blastRadius);
-            int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
-            for(int i=0;i<hits;i++)
+            if(authoritative)
             {
-                Collider c=hitBuffer[i];if(c==null)continue;
-                Health hp=c.GetComponentInParent<Health>();
-                if(hp==null||hp==health||hp.IsDead)continue;
-                bool duplicate=false;for(int j=0;j<i;j++){Collider prior=hitBuffer[j];if(prior!=null&&prior.GetComponentInParent<Health>()==hp){duplicate=true;break;}}
-                if(duplicate||hp.GetComponent<RealityCore>()!=null||hp.GetComponent<LaneTower>()!=null||hp.GetComponent<DimensionPlanet>()!=null)continue;
-                if(hp.GetComponent<TeamMember>()==null&&hp.GetComponent<LaneMinion>()==null)continue;
-                hp.TakeDamage(damage,gameObject);
-            }
+                int hits=Physics.OverlapSphereNonAlloc(transform.position,blastRadius,hitBuffer);
+                for(int i=0;i<hits;i++)
+                {
+                    Collider c=hitBuffer[i];if(c==null)continue;
+                    Health hp=c.GetComponentInParent<Health>();
+                    if(hp==null||hp==health||hp.IsDead)continue;
+                    bool duplicate=false;for(int j=0;j<i;j++){Collider prior=hitBuffer[j];if(prior!=null&&prior.GetComponentInParent<Health>()==hp){duplicate=true;break;}}
+                    if(duplicate||hp.GetComponent<RealityCore>()!=null||hp.GetComponent<LaneTower>()!=null||hp.GetComponent<DimensionPlanet>()!=null)continue;
+                    if(hp.GetComponent<TeamMember>()==null&&hp.GetComponent<LaneMinion>()==null)continue;
+                    hp.TakeDamage(damage,gameObject);
+                }
             }
             if(authoritative&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkPulseDetonated?.Invoke(gameObject.name);
