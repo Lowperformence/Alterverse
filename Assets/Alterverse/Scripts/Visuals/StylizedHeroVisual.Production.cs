@@ -76,7 +76,7 @@ namespace Alterverse.Visuals
             Color metal=new(.25f,.22f,.31f,1f);
             Color violet=new(.58f,.12f,.92f,1f);
             Color violetHot=new(.86f,.30f,1f,1f);
-            Color skin=new(.68f,.49f,.43f,1f);
+            Color faceBlack=new(.004f,.003f,.008f,1f);
             Color hair=new(.018f,.014f,.028f,1f);
 
             // Feminine, agile proportions: narrow waist, slightly wider upper torso, long readable legs.
@@ -142,16 +142,18 @@ namespace Alterverse.Visuals
                 new[]{.052f,.112f,.158f,.164f,.140f,.060f},
                 new[]{.050f,.102f,.136f,.138f,.108f,.052f},
                 new[]{.048f,.033f,.016f,0f,-.004f,-.014f},16);
-            Sculpt("Head",head,hp,Vector3.one,skin);
+            Sculpt("Head",head,hp,Vector3.one,faceBlack);
             Sculpt("Neck",HeroMeshLibrary.Loft("DF_VeyrNeck",new[]{-.09f,.08f},new[]{.068f,.078f},new[]{.064f,.070f}),
-                new Vector3(0,.55f,0),Vector3.one,skin);
-            Plate("VeyrMask",hp+new Vector3(0,-.065f,.137f),.30f,.22f,.055f,shadow);
-            Detail("VeyrMaskSeam",hp+new Vector3(0,-.045f,.170f),new Vector3(.20f,.025f,.012f),violet,default,null,true);
+                new Vector3(0,.55f,0),Vector3.one,faceBlack);
+            Plate("VeyrMask",hp+new Vector3(0,-.065f,.137f),.30f,.22f,.055f,faceBlack);
+
+            // The face is intentionally featureless black. Only two narrow violet eyes remain visible.
+            // No glowing mouth seam or facial stripe.
             for(int side=-1;side<=1;side+=2)
             {
-                Detail("EyeWhite"+side,hp+new Vector3(side*.073f,.040f,.148f),new Vector3(.061f,.025f,.015f),armorLight);
-                Detail("Iris"+side,hp+new Vector3(side*.071f,.040f,.160f),new Vector3(.022f,.026f,.010f),violetHot,default,null,true);
-                Detail("Brow"+side,hp+new Vector3(side*.071f,.074f,.148f),new Vector3(.079f,.020f,.018f),hair,new Vector3(0,0,side*-12));
+                Detail("EyeGlow"+side,hp+new Vector3(side*.073f,.042f,.160f),
+                    new Vector3(.104f,.016f,.012f),violetHot,
+                    new Vector3(0,0,side*-8f),null,true);
             }
 
             Mesh cap=HeroMeshLibrary.Loft("DF_VeyrHairCap",
