@@ -553,6 +553,18 @@ hotMaterial.SetColor("_EmissionColor",hotOrange*4.1f);
 }
 ownedMaterials.Add(hotMaterial);
 
+Color clawRed=new(1f,.018f,.012f,1f);
+Material clawMaterial=new Material(shader){name="DF_ReactorBreakerRedClaws",color=clawRed};
+if(clawMaterial.HasProperty("_BaseColor"))clawMaterial.SetColor("_BaseColor",clawRed);
+if(clawMaterial.HasProperty("_Metallic"))clawMaterial.SetFloat("_Metallic",.08f);
+if(clawMaterial.HasProperty("_Smoothness"))clawMaterial.SetFloat("_Smoothness",.96f);
+if(clawMaterial.HasProperty("_EmissionColor"))
+{
+clawMaterial.EnableKeyword("_EMISSION");
+clawMaterial.SetColor("_EmissionColor",clawRed*5.0f);
+}
+ownedMaterials.Add(clawMaterial);
+
 for(int side=-1;side<=1;side+=2)
 {
 string suffix=side<0?"L":"R";
@@ -609,7 +621,43 @@ new Vector3(0,0,8f),hotMaterial);
 CreateBreakerFistPart("ReactorBreakerCore"+suffix,gauntlet,
 new Vector3(0,.095f,.205f),new Vector3(.10f,.085f,.035f),
 new Vector3(0,0,45f),hotMaterial);
+
+// Reference-driven asymmetry: the right epic power fist carries four long,
+// bright red reactor claws while the left remains the bracing impact gauntlet.
+if(side>0)CreateBreakerClawRack(gauntlet,clawMaterial);
 }
+}
+
+private void CreateBreakerClawRack(Transform gauntlet,Material material)
+{
+Mesh source=HeroMeshLibrary.Loft("DF_ReactorBreakerClaw",
+new[]{0f,.17f,.48f,.80f},
+new[]{.070f,.066f,.042f,.002f},
+new[]{.060f,.058f,.036f,.002f});
+
+var combine=new CombineInstance[4];
+for(int i=0;i<4;i++)
+{
+float x=(i-1.5f)*.135f;
+float y=-.115f+Mathf.Abs(i-1.5f)*.012f;
+float yaw=(i-1.5f)*-3.5f;
+combine[i]=new CombineInstance
+{
+mesh=source,
+transform=Matrix4x4.TRS(new Vector3(x,y,.225f),Quaternion.Euler(90f,yaw,0f),Vector3.one)
+};
+}
+Mesh rack=new Mesh{name="DF_ReactorBreakerRedClawRack"};
+rack.CombineMeshes(combine,true,true);
+rack.RecalculateNormals();
+rack.RecalculateBounds();
+detailMeshes.Add(source);
+detailMeshes.Add(rack);
+
+GameObject go=new GameObject("DF_ReactorBreakerRedClaws");
+go.transform.SetParent(gauntlet,false);
+go.AddComponent<MeshFilter>().sharedMesh=rack;
+go.AddComponent<MeshRenderer>().sharedMaterial=material;
 }
 
 private GameObject CreateBreakerFistPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
