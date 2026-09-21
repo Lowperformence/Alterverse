@@ -33,6 +33,12 @@ namespace Alterverse.Visuals
                 CreateSignature();
                 return;
             }
+            if(h==HeroId.Mira)
+            {
+                BuildTahlaAscendantHealer();
+                CreateSignature();
+                return;
+            }
             bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.60f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
             // Kaelon follows the supplied heavy-hammer reference: pale worn plate over a warm dark undersuit.
@@ -84,6 +90,182 @@ namespace Alterverse.Visuals
             CreateSignature();
             // This remains the same runtime model in matches and in the menu showcase.
         }
+        private void BuildTahlaAscendantHealer()
+        {
+            // Reference-driven ascendant healer: luminous white/silver robe, cyan holy energy,
+            // elegant proportions, a halo language and a long ceremonial healing staff.
+            Color white=new(.88f,.91f,.92f,1f);
+            Color pearl=new(.72f,.80f,.82f,1f);
+            Color silver=new(.52f,.60f,.64f,1f);
+            Color cyan=new(.42f,.92f,1f,1f);
+            Color cyanHot=new(.78f,.98f,1f,1f);
+            Color gold=new(.72f,.58f,.24f,1f);
+            Color shadow=new(.105f,.13f,.15f,1f);
+            Color hair=new(.82f,.86f,.88f,1f);
+            Color skin=new(.70f,.56f,.50f,1f);
+
+            Mesh torso=HeroMeshLibrary.Loft("DF_TahlaAscendantTorso",
+                new[]{-.38f,-.24f,-.05f,.17f,.35f,.49f},
+                new[]{.17f,.20f,.25f,.31f,.32f,.20f},
+                new[]{.12f,.14f,.17f,.20f,.20f,.13f},
+                new[]{.01f,.01f,.015f,.018f,.01f,0f},16);
+            Sculpt("Torso",torso,new Vector3(0,.05f,0),new Vector3(.94f,1f,.94f),pearl);
+            Plate("TahlaChest",new Vector3(0,.23f,.195f),.56f,.43f,.095f,white);
+            Plate("TahlaChestInset",new Vector3(0,.22f,.252f),.34f,.29f,.030f,silver);
+            Detail("TahlaChestLight",new Vector3(0,.25f,.279f),new Vector3(.075f,.16f,.020f),cyanHot,new Vector3(0,0,45),null,true);
+            Plate("TahlaWaist",new Vector3(0,-.12f,.145f),.40f,.22f,.075f,silver);
+            Detail("TahlaWaistGem",new Vector3(0,-.21f,.196f),new Vector3(.075f,.085f,.022f),cyanHot,new Vector3(0,0,45),null,true);
+
+            Mesh pelvis=HeroMeshLibrary.Loft("DF_TahlaPelvis",
+                new[]{-.43f,-.30f,-.18f},new[]{.20f,.25f,.21f},new[]{.12f,.14f,.12f});
+            Sculpt("Pelvis",pelvis,new Vector3(0,-.02f,0),new Vector3(.96f,1f,.94f),shadow);
+
+            // Slim hidden legs preserve the existing movement rig beneath the robe.
+            float legX=.16f;
+            Mesh leg=HeroMeshLibrary.Loft("DF_TahlaLeg",
+                new[]{-1f,-.76f,-.20f,.12f,.63f,1f},
+                new[]{.050f,.060f,.070f,.090f,.10f,.080f},
+                new[]{.060f,.068f,.078f,.092f,.095f,.078f},
+                new[]{.012f,.010f,0f,.003f,0f,0f});
+            Mesh boot=HeroMeshLibrary.Loft("DF_TahlaBoot",
+                new[]{-.08f,-.03f,.07f,.15f},
+                new[]{.085f,.095f,.080f,.050f},
+                new[]{.135f,.16f,.12f,.070f},
+                new[]{.05f,.055f,.035f,0f});
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Sculpt("Leg"+s,leg,new Vector3(side*legX,-.62f,0),new Vector3(.94f,.34f,.94f),shadow);
+                Sculpt("Boot"+s,boot,new Vector3(side*legX,-.93f,.015f),Vector3.one,silver);
+
+                Transform arm=new GameObject("DF_Arm"+s).transform;
+                arm.SetParent(root,false);
+                arm.localPosition=new Vector3(side*.33f,.39f,.02f);
+                arm.localRotation=Quaternion.Euler(-10f,0,side*-10f);
+
+                Mesh upper=HeroMeshLibrary.Loft("DF_TahlaUpperArm",
+                    new[]{-.31f,-.24f,-.05f,.04f},
+                    new[]{.052f,.070f,.092f,.070f},
+                    new[]{.058f,.074f,.090f,.068f});
+                Sculpt("UpperArm"+s,upper,Vector3.zero,Vector3.one,white,arm);
+
+                Mesh fore=HeroMeshLibrary.Loft("DF_TahlaForearm",
+                    new[]{-.27f,-.20f,-.05f,.025f},
+                    new[]{.052f,.078f,.088f,.060f},
+                    new[]{.055f,.078f,.090f,.060f});
+                Sculpt("Vambrace"+s,fore,new Vector3(0,-.30f,.02f),Vector3.one,silver,arm);
+
+                Mesh glove=HeroMeshLibrary.Loft("DF_TahlaGlove",
+                    new[]{-.13f,-.07f,.07f,.11f},
+                    new[]{.040f,.065f,.070f,.050f},
+                    new[]{.045f,.060f,.066f,.046f});
+                Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.052f),Vector3.one,white,arm);
+
+                Plate("TahlaShoulder"+s,new Vector3(side*.35f,.43f,.01f),.24f,.20f,.24f,white,side*-14);
+                Bind("TahlaShoulder"+s,"Arm"+s);
+                Detail("TahlaWristLight"+s,new Vector3(0,-.39f,.105f),new Vector3(.055f,.12f,.020f),cyanHot,
+                    new Vector3(0,0,side*8),"Arm"+s,true);
+            }
+
+            // Long layered robe panels create the tall priestess silhouette without cloth simulation.
+            Mesh robeFront=HeroMeshLibrary.Ribbon("DF_TahlaRobeFront",
+                new[]{new Vector3(0,-.16f,.11f),new Vector3(0,-.40f,.14f),new Vector3(0,-.70f,.16f),new Vector3(0,-1.00f,.18f)},
+                new[]{.22f,.28f,.31f,.24f},.030f);
+            Sculpt("TahlaRobeFront",robeFront,Vector3.zero,Vector3.one,white);
+            Mesh robeBack=HeroMeshLibrary.Ribbon("DF_TahlaRobeBack",
+                new[]{new Vector3(0,-.14f,-.11f),new Vector3(0,-.42f,-.16f),new Vector3(0,-.73f,-.20f),new Vector3(0,-1.02f,-.22f)},
+                new[]{.20f,.29f,.32f,.23f},.025f);
+            Sculpt("TahlaRobeBack",robeBack,Vector3.zero,Vector3.one,pearl);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh sideRobe=HeroMeshLibrary.Ribbon("DF_TahlaRobeSide"+side,
+                    new[]{new Vector3(side*.16f,-.18f,.02f),new Vector3(side*.25f,-.45f,.02f),
+                          new Vector3(side*.30f,-.74f,.00f),new Vector3(side*.24f,-1.00f,-.02f)},
+                    new[]{.09f,.13f,.14f,.08f},.022f);
+                Sculpt("TahlaRobeSide"+(side<0?"L":"R"),sideRobe,Vector3.zero,Vector3.one,silver);
+            }
+            Detail("TahlaRobeLine",new Vector3(0,-.61f,.205f),new Vector3(.060f,.50f,.018f),cyan,default,null,true);
+            Detail("TahlaRobeGold",new Vector3(0,-.91f,.205f),new Vector3(.34f,.035f,.018f),gold);
+
+            // Calm uncovered face framed by a small silver halo and pale hair.
+            Vector3 hp=new(0,.80f,.015f);
+            Mesh head=HeroMeshLibrary.Loft("DF_TahlaFace",
+                new[]{-.22f,-.15f,-.04f,.09f,.18f,.24f},
+                new[]{.052f,.112f,.158f,.164f,.140f,.060f},
+                new[]{.050f,.102f,.136f,.138f,.108f,.052f},
+                new[]{.048f,.033f,.016f,0f,-.004f,-.014f},16);
+            Sculpt("Head",head,hp,Vector3.one,skin);
+            Sculpt("Neck",HeroMeshLibrary.Loft("DF_TahlaNeck",new[]{-.09f,.08f},new[]{.066f,.075f},new[]{.062f,.068f}),
+                new Vector3(0,.55f,0),Vector3.one,skin);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Detail("TahlaEye"+side,hp+new Vector3(side*.071f,.038f,.156f),new Vector3(.036f,.021f,.012f),cyanHot,default,null,true);
+                Detail("TahlaBrow"+side,hp+new Vector3(side*.071f,.072f,.148f),new Vector3(.072f,.018f,.016f),hair,new Vector3(0,0,side*-8));
+            }
+            Mesh cap=HeroMeshLibrary.Loft("DF_TahlaHairCap",
+                new[]{.01f,.12f,.21f,.28f},new[]{.17f,.18f,.145f,.03f},
+                new[]{.14f,.15f,.13f,.04f},new[]{-.055f,-.043f,-.020f,-.014f});
+            Sculpt("Hair",cap,hp,Vector3.one,hair);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh strand=HeroMeshLibrary.Ribbon("DF_TahlaHairLock"+side,
+                    new[]{new Vector3(side*.11f,.97f,.01f),new Vector3(side*.17f,.80f,.06f),
+                          new Vector3(side*.18f,.61f,.00f),new Vector3(side*.15f,.45f,-.05f)},
+                    new[]{.050f,.045f,.032f,.008f},.020f);
+                Sculpt("TahlaHairLock"+(side<0?"L":"R"),strand,Vector3.zero,Vector3.one,hair);
+            }
+            GameObject halo=Sculpt("TahlaHalo",HeroMeshLibrary.Ring("DF_TahlaHaloMesh",.25f,.020f),
+                hp+new Vector3(0,.15f,-.10f),Vector3.one,cyan,null,true);
+            halo.transform.localRotation=Quaternion.Euler(76f,0f,0f);
+
+            // Subtle permanent floor aura sells the floating/lightborne read from top-down view.
+            GameObject groundHalo=Sculpt("TahlaGroundHalo",HeroMeshLibrary.Ring("DF_TahlaGroundHaloMesh",.42f,.018f),
+                new Vector3(0,-1.04f,0),Vector3.one,new Color(.55f,.96f,1f,1f),null,true);
+            groundHalo.transform.localRotation=Quaternion.Euler(90f,0f,0f);
+
+            BuildTahlaLightStaff(silver,white,gold,cyan,cyanHot);
+            Detail("IdentityCore",new Vector3(0,.25f,.284f),new Vector3(.065f,.13f,.022f),cyanHot,new Vector3(0,0,45),null,true);
+        }
+
+        private void BuildTahlaLightStaff(Color silver,Color white,Color gold,Color cyan,Color cyanHot)
+        {
+            Transform weapon=WeaponPivot("R",new Vector3(.49f,-.03f,.18f));
+            weapon.localRotation=Quaternion.Euler(0,-4f,-8f);
+
+            Mesh shaft=HeroMeshLibrary.Loft("DF_TahlaLightStaff",
+                new[]{-.88f,-.60f,.05f,.64f,.87f},
+                new[]{.024f,.036f,.033f,.040f,.020f},
+                new[]{.026f,.038f,.034f,.040f,.021f},
+                new[]{0f,.008f,.00f,.035f,.055f});
+            Sculpt("Staff",shaft,Vector3.zero,Vector3.one,silver,weapon);
+
+            Create("StaffLowerCap",PrimitiveType.Cube,new Vector3(0,-.83f,.01f),new Vector3(.10f,.12f,.10f),gold,default,weapon);
+            Create("StaffGrip",PrimitiveType.Cube,new Vector3(0,-.18f,.01f),new Vector3(.075f,.28f,.075f),white,default,weapon);
+
+            GameObject crown=Sculpt("Emitter",HeroMeshLibrary.Ring("DF_TahlaStaffCrown",.23f,.028f),
+                new Vector3(0,.77f,.055f),Vector3.one,cyan,weapon,true);
+            crown.transform.localRotation=Quaternion.Euler(70f,0f,0f);
+
+            GameObject crown2=Sculpt("StaffCrownInner",HeroMeshLibrary.Ring("DF_TahlaStaffInner",.14f,.018f),
+                new Vector3(0,.77f,.060f),Vector3.one,white,weapon,true);
+            crown2.transform.localRotation=Quaternion.Euler(70f,0f,35f);
+
+            Mesh crystal=HeroMeshLibrary.Loft("DF_TahlaStaffCrystal",
+                new[]{-.16f,-.06f,.05f,.17f},
+                new[]{.010f,.085f,.060f,.004f},
+                new[]{.010f,.068f,.052f,.004f});
+            Sculpt("EmitterLens",crystal,new Vector3(0,.77f,.065f),new Vector3(1.15f,1.20f,1.10f),cyanHot,weapon,true);
+
+            for(int side=-1;side<=1;side+=2)
+            {
+                Create("StaffWing"+(side<0?"L":"R"),PrimitiveType.Cube,
+                    new Vector3(side*.18f,.70f,.035f),new Vector3(.055f,.24f,.055f),gold,
+                    new Vector3(0,0,side*-28f),weapon);
+            }
+
+            Bind("WeaponR","ArmR");
+        }
+
         private void BuildNyraEliteMarksman()
         {
             // Reference-driven elite marksman: heavy black armor, oversized shoulders, hooded
