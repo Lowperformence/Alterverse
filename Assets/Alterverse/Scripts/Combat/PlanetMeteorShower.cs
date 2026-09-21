@@ -4,9 +4,36 @@ namespace Alterverse.Combat
 [RequireComponent(typeof(DimensionPlanet),typeof(Health))]public sealed class PlanetMeteorShower:MonoBehaviour
 {
 public const float MeteorDamage=14f;
+public static event System.Action<string,Vector3,float,float,float> NetworkMeteorSpawned;
 [SerializeField]private float radius=11f,cooldown=8.5f,telegraph=1.55f,damage=MeteorDamage;[SerializeField]private int meteors=7;private const int HeroScanBufferSize=32;private readonly Collider[] heroScanBuffer=new Collider[HeroScanBufferSize];private Health self;private DimensionPlanet planet;private float next,nextHeroScan;private bool heroNearby;
 private void Awake(){self=GetComponent<Health>();planet=GetComponent<DimensionPlanet>();next=Time.time+3f;}
-private void Update(){if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;if(Time.time>=nextHeroScan){nextHeroScan=Time.time+.25f;heroNearby=HasHero();}if(!heroNearby)return;next=Time.time+cooldown;for(int i=0;i<meteors;i++){Vector2 r=Random.insideUnitCircle*radius;Vector3 p=transform.position+new Vector3(r.x,0,r.y);MeteorStrike.Create(p,telegraph,damage,i*.16f,planet);}}
+private void Update()
+{
+if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;
+if(Time.time>=nextHeroScan){nextHeroScan=Time.time+.25f;heroNearby=HasHero();}
+if(!heroNearby)return;
+next=Time.time+cooldown;
+for(int i=0;i<meteors;i++)
+{
+Vector2 r=Random.insideUnitCircle*radius;
+Vector3 p=transform.position+new Vector3(r.x,0,r.y);
+float stagger=i*.16f;
+MeteorStrike.Create(p,telegraph,damage,stagger,planet);
+if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+    NetworkMeteorSpawned?.Invoke(gameObject.name,p,telegraph,damage,stagger);
+}
+}
+public static void ApplyNetworkMeteor(string ownerName,Vector3 point,float delay,float damage,float stagger)
+{
+if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+DimensionPlanet[] planets=Object.FindObjectsByType<DimensionPlanet>(FindObjectsInactive.Exclude);
+for(int i=0;i<planets.Length;i++)
+{
+DimensionPlanet p=planets[i];
+if(p!=null&&p.gameObject.name==ownerName){MeteorStrike.Create(point,delay,damage,stagger,p);return;}
+}
+}
 private bool HasHero(){int hits=Physics.OverlapSphereNonAlloc(transform.position,radius,heroScanBuffer);for(int i=0;i<hits;i++){Collider c=heroScanBuffer[i];if(c==null)continue;TeamMember m=c.GetComponentInParent<TeamMember>();if(m==null)continue;Health h=m.GetComponent<Health>();if(h!=null&&!h.IsDead)return true;}return false;}
 }
 public sealed class MeteorStrike:MonoBehaviour
