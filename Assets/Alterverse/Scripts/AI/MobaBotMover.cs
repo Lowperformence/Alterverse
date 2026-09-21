@@ -283,7 +283,7 @@ namespace Alterverse.AI
             Vector3 primaryCenter=Vector3.zero;
             float primaryRadius=0f,bestUrgency=float.MaxValue;
 
-            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+            foreach(Alterverse.Match.PlanetPulseAttack pulse in Alterverse.Match.PlanetPulseAttack.Active)
                 if(pulse!=null&&pulse.IsTelegraphing)
                     ConsiderExplosionHazard(pulse.ImpactPosition,pulse.BlastRadius,pulse.TelegraphAge,pulse.TimeRemaining,reaction,
                         ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
@@ -353,7 +353,7 @@ namespace Alterverse.AI
             float minimum=float.PositiveInfinity;
             bool any=false;
 
-            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+            foreach(Alterverse.Match.PlanetPulseAttack pulse in Alterverse.Match.PlanetPulseAttack.Active)
                 if(pulse!=null&&pulse.IsTelegraphing)
                     AccumulateExplosionClearance(point,pulse.ImpactPosition,pulse.BlastRadius,ref minimum,ref any);
 
@@ -411,7 +411,7 @@ namespace Alterverse.AI
                     if(trench!=null&&DefenseBlocksReposition(destination,trench.transform,trench.GetComponent<Collider>()))return false;
             }
 
-            foreach(Alterverse.Combat.PlanetPulseAttack pulse in Alterverse.Combat.PlanetPulseAttack.Active)
+            foreach(Alterverse.Match.PlanetPulseAttack pulse in Alterverse.Match.PlanetPulseAttack.Active)
                 if(pulse!=null&&pulse.IsTelegraphing&&ExplosionBlocksReposition(destination,pulse.ImpactPosition,pulse.BlastRadius))return false;
             foreach(MeteorStrike meteor in MeteorStrike.Active)
                 if(meteor!=null&&meteor.IsTelegraphing&&ExplosionBlocksReposition(destination,meteor.ImpactPosition,meteor.BlastRadius))return false;
