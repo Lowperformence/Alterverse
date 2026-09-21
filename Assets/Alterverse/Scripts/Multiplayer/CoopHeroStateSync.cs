@@ -160,7 +160,7 @@ namespace Alterverse.Multiplayer
             PlanetBuffReceiver buff=actor.GetComponent<PlanetBuffReceiver>();
             float baseSpeed=profile!=null?profile.MoveSpeed:6.5f;
             float buffSpeed=buff!=null?buff.MoveSpeedMultiplier:1f;
-            float statusSpeed=locomotion!=null?locomotion.SpeedMultiplier:HeroCombatStatus.Speed(actor);
+            float statusSpeed=locomotion!=null?locomotion.SpeedMultiplier:HeroCombatStatus.Speed(actor.gameObject);
             float allowed=Mathf.Max(MinimumMovementSlack,baseSpeed*buffSpeed*statusSpeed*dt*1.40f+MinimumMovementSlack);
             if(delta.magnitude>allowed)delta=delta.normalized*allowed;
 
