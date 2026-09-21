@@ -240,14 +240,14 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(Left+28,516,w-56,20),"ARENA",theme.Small,true);
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
-            float arenaW=(w-56-gap*3)/4f;
-            for(int i=0;i<4;i++)
+            float arenaGap=6f,arenaW=(w-56-arenaGap*4)/5f;
+            for(int i=0;i<5;i++)
             {
                 ArenaVariant arena=(ArenaVariant)i;
                 bool owned=ArenaUnlockInventory.Owned(arena);
                 string label=arena==ArenaVariant.GreenPlanet?"GREEN":arena.ToString().ToUpperInvariant();
                 if(!owned)label+="  LOCKED";
-                if(theme.Action(new Rect(Left+28+i*(arenaW+gap),540,arenaW,42),label,
+                if(theme.Action(new Rect(Left+28+i*(arenaW+arenaGap),540,arenaW,42),label,
                     selected:selectedArena==arena,enabled:owned))
                 {
                     ArenaVariantRuntime.Select(arena);
@@ -257,9 +257,11 @@ namespace Alterverse.UI
             }
 
             if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
-            string arenaHint=ArenaUnlockInventory.Owned(ArenaVariant.Noxara)
-                ?"Mars / Green Planet: Store unlocks  •  Noxara: gameplay unlock"
-                :$"NOXARA  /  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES COMPLETED";
+            string arenaHint=!ArenaUnlockInventory.Owned(ArenaVariant.Noxara)
+                ?$"NOXARA  /  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES COMPLETED"
+                :!ArenaUnlockInventory.Owned(ArenaVariant.Kryon)
+                    ?$"KRYON  /  {ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES COMPLETED"
+                    :"Mars / Green: Store  •  Noxara / Kryon: gameplay unlocks";
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 ArenaShopCatalog.For(selectedArena).Name+"  /  "+arenaHint,theme.Small,true);
 
@@ -444,17 +446,17 @@ namespace Alterverse.UI
         private void DrawMapShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon is included. Mars / Green Planet cost 500 shards. Noxara unlocks after 5 completed matches.",theme.Small,true);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon included. Mars / Green cost 500 shards. Noxara unlocks at 5 matches; Kryon at 10.",theme.Small,true);
 
             ArenaVariant selected=ArenaVariantRuntime.Selected;
-            float gap=12f,cardW=(ContentWidth-gap*3)/4f;
-            for(int i=0;i<4;i++)
+            float gap=8f,cardW=(ContentWidth-gap*4)/5f;
+            for(int i=0;i<5;i++)
             {
                 ArenaVariant arena=(ArenaVariant)i;
                 ArenaShopItem item=ArenaShopCatalog.For(arena);
                 bool owned=ArenaUnlockInventory.Owned(arena);
                 bool selectedNow=selected==arena;
-                bool progressionArena=arena==ArenaVariant.Noxara;
+                bool progressionArena=arena==ArenaVariant.Noxara||arena==ArenaVariant.Kryon;
                 float x=Left+i*(cardW+gap);
 
                 theme.Panel(new Rect(x,356,cardW,274));
@@ -464,9 +466,11 @@ namespace Alterverse.UI
 
                 theme.Label(new Rect(x+18,466,cardW-36,32),item.Name,theme.Heading);
                 theme.Label(new Rect(x+18,500,cardW-36,22),item.Subtitle,theme.Small,true);
-                string status=owned?"OWNED":progressionArena
+                string status=owned?"OWNED":arena==ArenaVariant.Noxara
                     ?$"{ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES"
-                    :item.Price+" SHARDS";
+                    :arena==ArenaVariant.Kryon
+                        ?$"{ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES"
+                        :item.Price+" SHARDS";
                 theme.Label(new Rect(x+18,530,cardW-36,28),status,theme.Body);
 
                 string action;
