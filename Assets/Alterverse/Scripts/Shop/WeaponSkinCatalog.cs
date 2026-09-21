@@ -33,7 +33,9 @@ namespace Alterverse.Shop
             new(HeroId.Nyra,"STARLINE // OVERDRIVE","Precision Rifle","",new Color(.08f,.94f,1f)),
             new(HeroId.Elyra,"RIFT CATALYST // OVERDRIVE","Orbit Catalysts","",new Color(1f,.04f,.02f)),
             new(HeroId.Mira,"LIFEWEAVE // OVERDRIVE","Support Staff","",new Color(.12f,1f,.48f)),
-            new(HeroId.Rook,"BREAKER FIST // OVERDRIVE","Breaker Gauntlet","",new Color(1f,.32f,.08f))
+            new(HeroId.Rook,"REACTOR BREAKER // EPIC","Reactor Breaker Gauntlets",
+                "Reinforced yellow-black impact gauntlets with brighter orange reactor channels and an expanded premium melee silhouette.",
+                new Color(1f,.32f,.06f))
         };
 
         public static WeaponSkinItem For(HeroId hero)=>Items[Mathf.Clamp((int)hero,0,Items.Length-1)];
