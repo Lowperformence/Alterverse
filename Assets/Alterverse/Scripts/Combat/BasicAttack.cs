@@ -7,8 +7,32 @@ namespace Alterverse.Combat
 // Read-only HUD values; attack timing and execution are unchanged.
 public float RemainingCooldown=>Mathf.Max(0,nextAttackTime-Time.time);
 public float AttackCooldown=>Cooldown;
-private void Awake(){locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();selfHealth=GetComponent<Health>();profile=GetComponent<HeroCombatProfile>();identity=GetComponent<HeroIdentity>();targeting=GetComponent<SoftTargeting>()??gameObject.AddComponent<SoftTargeting>();}private void Update(){if(Time.timeScale<=0f)return;if(Keyboard.current!=null&&Keyboard.current.spaceKey.wasPressedThisFrame)TryAttack();}
-public bool TryAttack(){if(Time.timeScale<=0f||selfHealth==null||selfHealth.IsDead||!HeroCombatStatus.CanAct(gameObject)||Time.time<nextAttackTime)return false;Health target=targeting.Acquire(Range,transform.forward,true);if(target==null)return false;nextAttackTime=Time.time+Cooldown;targeting.RegisterOffensiveAction();Color attackColor=HeroColor();Vector3 look=target.transform.position-transform.position;look.y=0;locomotion.FaceAction(look);HeroCombatRules.BasicHit(gameObject,target,Damage);OnboardingSessionGuard.Attack(this);return true;}
+private void Awake(){locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();selfHealth=GetComponent<Health>();profile=GetComponent<HeroCombatProfile>();identity=GetComponent<HeroIdentity>();targeting=GetComponent<SoftTargeting>()??gameObject.AddComponent<SoftTargeting>();}
+private void Update()
+{
+    if(Time.timeScale<=0f)return;
+    Alterverse.Multiplayer.CoopHeroSlot slot=GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+    if(slot!=null&&slot.IsHuman&&!slot.IsLocalHuman)return;
+    if(Keyboard.current!=null&&Keyboard.current.spaceKey.wasPressedThisFrame)TryAttack();
+}
+public bool TryAttack()
+{
+    if(Time.timeScale<=0f||selfHealth==null||selfHealth.IsDead||!HeroCombatStatus.CanAct(gameObject)||Time.time<nextAttackTime)return false;
+    Health target=targeting.Acquire(Range,transform.forward,true);if(target==null)return false;
+
+    if(Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
+    {
+        if(!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject))return false;
+        nextAttackTime=Time.time+Cooldown;
+        targeting.RegisterOffensiveAction();
+        Vector3 predictedLook=target.transform.position-transform.position;predictedLook.y=0;locomotion.FaceAction(predictedLook);
+        GetComponent<HeroVisualMotion>()?.PulseBasic(HeroAttackDelivery.Windup(identity!=null?identity.Hero:HeroId.Veyr));
+        OnboardingSessionGuard.Attack(this);
+        return true;
+    }
+
+    nextAttackTime=Time.time+Cooldown;targeting.RegisterOffensiveAction();Color attackColor=HeroColor();Vector3 look=target.transform.position-transform.position;look.y=0;locomotion.FaceAction(look);HeroCombatRules.BasicHit(gameObject,target,Damage);OnboardingSessionGuard.Attack(this);return true;
+}
 private Color HeroColor()=>identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):StylizedArtDirection.ZeroEnergy;private void OnDrawGizmosSelected(){Gizmos.DrawWireSphere(transform.position,Application.isPlaying?Range:fallbackRange);}
 }
 }
