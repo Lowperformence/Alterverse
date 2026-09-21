@@ -60,7 +60,7 @@ namespace Alterverse.Combat
         private readonly bool[] spiderWasSwing=new bool[8];
         private Vector3 spiderBodyRest,spiderBarrelRest;
         private float spiderMoveBlend,spiderGaitClock,spiderTurnLean,spiderVisualYaw;
-        private Vector3 spiderPreviousForward;
+        private Vector3 spiderPreviousForward,spiderPreviousWorldPosition;
         private bool spiderFeetInitialized;
         private Color spiderEnergyBase=new(1f,.72f,.04f,1f);
         private int movementRecoveryAttempt;
@@ -497,6 +497,7 @@ namespace Alterverse.Combat
 
             spiderGaitClock=0f;spiderMoveBlend=0f;spiderTurnLean=0f;spiderVisualYaw=0f;
             spiderPreviousForward=transform.forward;
+            spiderPreviousWorldPosition=transform.position;
             for(int i=0;i<8;i++)
             {
                 Vector3 rest=SpiderDesiredFootWorld(i,Vector3.zero);
@@ -511,7 +512,10 @@ namespace Alterverse.Combat
         {
             if(spiderBodyRoot==null)return;
 
-            Vector3 velocity=locomotion!=null?locomotion.Velocity:Vector3.zero;velocity.y=0;
+            Vector3 displacement=transform.position-spiderPreviousWorldPosition;
+            spiderPreviousWorldPosition=transform.position;
+            displacement.y=0f;
+            Vector3 velocity=Time.deltaTime>.0001f?displacement/Time.deltaTime:Vector3.zero;
             float speed=velocity.magnitude;
             float movement01=Mathf.Clamp01(speed/(MoveSpeed*.85f));
             float blendRate=movement01>spiderMoveBlend?7.5f:4.2f;
