@@ -82,14 +82,41 @@ namespace Alterverse.Characters
         private void Sweep(Vector3 center,Vector3 direction,float distance,out float allowed,out Vector3 normal,out Collider blocker)
         {
             allowed=distance;normal=Vector3.zero;blocker=null;
-            int count=Physics.CapsuleCastNonAlloc(center+Vector3.up*.45f,center-Vector3.up*.45f,.48f,direction,hits,distance+.025f,GameplayCollision.MovementMask,QueryTriggerInteraction.Ignore);
+
+            // Match the sweep to the actual CharacterController instead of assuming hero dimensions.
+            // Support soldiers are much shorter than heroes; the previous fixed .48 / +/- .45 capsule
+            // extended into the ground for them and could make every horizontal move look blocked.
+            Vector3 castTop;
+            Vector3 castBottom;
+            float castRadius;
+            if(controller!=null)
+            {
+                Vector3 scale=transform.lossyScale;
+                float horizontalScale=Mathf.Max(Mathf.Abs(scale.x),Mathf.Abs(scale.z));
+                float verticalScale=Mathf.Abs(scale.y);
+                float controllerRadius=Mathf.Max(.05f,controller.radius*horizontalScale);
+                float controllerHeight=Mathf.Max(controllerRadius*2f,controller.height*verticalScale);
+                float halfSegment=Mathf.Max(0f,controllerHeight*.5f-controllerRadius);
+                Vector3 worldCenter=transform.TransformPoint(controller.center);
+                castRadius=Mathf.Max(.04f,controllerRadius-Mathf.Max(.015f,controller.skinWidth));
+                castTop=worldCenter+transform.up*halfSegment;
+                castBottom=worldCenter-transform.up*halfSegment;
+            }
+            else
+            {
+                castRadius=.48f;
+                castTop=center+Vector3.up*.45f;
+                castBottom=center-Vector3.up*.45f;
+            }
+
+            int count=Physics.CapsuleCastNonAlloc(castTop,castBottom,castRadius,direction,hits,distance+.025f,GameplayCollision.MovementMask,QueryTriggerInteraction.Ignore);
             if(count==hits.Length){allowed=0;return;}
             for(int i=0;i<count;i++)
             {
                 Collider other=hits[i].collider;
                 if(other==null||other.transform.IsChildOf(transform)||hits[i].normal.y>.65f)continue;
                 // Crowd spacing is owned by bot separation. Static structures remain solid.
-                if(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null)continue;
+                if(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null||other.GetComponentInParent<TrenchSoldier>()!=null)continue;
                 if(Vector3.Dot(direction,hits[i].normal)>=-.001f)continue;
                 float travel=Mathf.Max(0,hits[i].distance-.025f);
                 if(travel<allowed){allowed=travel;normal=hits[i].normal;blocker=other;}
