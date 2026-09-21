@@ -16,9 +16,10 @@ namespace Alterverse.Visuals
                 return;
             }
             bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
-            float breadth=tank?1.48f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
-            Color trim=tank?new Color(.66f,.43f,.16f):Color.Lerp(accent,dark,.28f);
-            Color metal=tank?new Color(.41f,.44f,.47f):h==HeroId.Mira?new Color(.72f,.77f,.70f):new Color(.29f,.33f,.40f);
+            float breadth=tank?1.60f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
+            // Kaelon follows the supplied heavy-hammer reference: pale worn plate over a warm dark undersuit.
+            Color trim=tank?new Color(.30f,.235f,.17f):Color.Lerp(accent,dark,.28f);
+            Color metal=tank?new Color(.58f,.60f,.60f):h==HeroId.Mira?new Color(.72f,.77f,.70f):new Color(.29f,.33f,.40f);
             Color identityPanel=Color.Lerp(accent,metal,.32f);
             Mesh chest=HeroMeshLibrary.Loft("DF_AnatomicalCuirass",new[]{-.36f,-.19f,.08f,.34f,.45f,.53f},new[]{.24f,.23f,.32f,.39f,.33f,.14f},new[]{.15f,.14f,.21f,.23f,.19f,.12f});
             Sculpt("Torso",chest,Vector3.zero,new Vector3(breadth,1,heavy?1.18f:1),dark);
@@ -46,10 +47,13 @@ namespace Alterverse.Visuals
                 Mesh glove=HeroMeshLibrary.Loft("DF_Glove",new[]{-.13f,-.07f,.07f,.11f},new[]{.055f,.09f,.095f,.07f},new[]{.065f,.075f,.085f,.055f});
                 Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.06f),Vector3.one,dark,arm);
                 arm.localRotation=Quaternion.Euler(h==HeroId.Nyra?-48:h==HeroId.Elyra?-18:0,0,h==HeroId.Nyra?(side<0?55:-8):side*(heavy?-8:-10));
-                Plate("Shoulder"+s,new Vector3(side*(heavy?.53f:.36f),.43f,0),heavy?.52f:.29f,heavy?.38f:.24f,heavy?.50f:.31f,side<0?identityPanel:trim,side*-16);
+                Plate("Shoulder"+s,new Vector3(side*(tank?.58f:heavy?.53f:.36f),tank?.46f:.43f,0),
+                    tank?.66f:heavy?.52f:.29f,tank?.46f:heavy?.38f:.24f,tank?.62f:heavy?.50f:.31f,
+                    tank?metal:(side<0?identityPanel:trim),side*(tank?-11:-16));
                 Plate("Tasset"+s,new Vector3(side*.20f*breadth,-.31f,.15f),.20f*breadth,.30f,.08f,metal,side*9);
             }
             BuildProductionHead(h,metal,trim);
+            if(tank)BuildKaelonReferenceArmor(metal,trim);
             switch(h)
             {
                 case HeroId.Kaelon: ProductionCitadel(metal,trim);break;
@@ -199,6 +203,32 @@ namespace Alterverse.Visuals
         }
         private void BuildProductionHead(HeroId h,Color metal,Color trim)
         {
+            if(h==HeroId.Kaelon)
+            {
+                // Closed "breacher" helmet based on the reference: broad steel shell, deep face plate
+                // and a vented visor that remains readable from the top-down camera.
+                Vector3 p=new(0,.80f,.02f);
+                Mesh helmet=HeroMeshLibrary.Loft("DF_KaelonBreacherHelm",
+                    new[]{-.24f,-.17f,-.05f,.10f,.22f,.29f},
+                    new[]{.085f,.155f,.205f,.215f,.185f,.075f},
+                    new[]{.080f,.145f,.175f,.170f,.135f,.065f},
+                    new[]{.045f,.035f,.015f,0f,-.010f,-.018f},16);
+                Sculpt("Head",helmet,p,new Vector3(1.18f,1.05f,1.12f),metal);
+                Sculpt("Neck",HeroMeshLibrary.Loft("DF_KaelonNeck",new[]{-.10f,.09f},new[]{.09f,.10f},new[]{.085f,.09f}),
+                    new Vector3(0,.54f,0),Vector3.one,dark);
+                Plate("KaelonFacePlate",p+new Vector3(0,-.015f,.178f),.41f,.35f,.085f,new Color(.34f,.35f,.35f));
+                Plate("KaelonBrowArmor",p+new Vector3(0,.155f,.105f),.48f,.20f,.20f,metal);
+                Plate("KaelonJawGuard",p+new Vector3(0,-.155f,.135f),.36f,.18f,.16f,trim);
+                for(int row=0;row<2;row++)
+                for(int i=-2;i<=2;i++)
+                    Detail("KaelonVent"+row+"_"+(i+2),
+                        p+new Vector3(i*.068f,.055f-row*.072f,.229f),
+                        new Vector3(.041f,.018f,.014f),cloth,default,null,false);
+                Detail("KaelonVisorSlit",p+new Vector3(0,.112f,.232f),new Vector3(.33f,.026f,.016f),teamEdge,default,null,true);
+                for(int side=-1;side<=1;side+=2)
+                    Plate("KaelonHelmCheek"+side,p+new Vector3(side*.205f,-.015f,.035f),.13f,.35f,.20f,metal,side*-8);
+                return;
+            }
             bool helmet=h==HeroId.Veyr||h==HeroId.Kaelon;
             float[] y={-.22f,-.15f,-.04f,.09f,.18f,.24f};
             Mesh head=HeroMeshLibrary.Loft(helmet?"DF_VisoredHelm":"DF_SculptedFace",y,new[]{.055f,.115f,.165f,.17f,.145f,.065f},new[]{.055f,.105f,.14f,.14f,.11f,.055f},new[]{.05f,.035f,.018f,0f,-.005f,-.015f},16);
@@ -273,18 +303,74 @@ namespace Alterverse.Visuals
                 Bind("Weapon"+s,"Arm"+s);
             }
         }
+        private void BuildKaelonReferenceArmor(Color metal,Color trim)
+        {
+            Color under=new(.105f,.082f,.060f,1f);
+            Color steelLight=new(.68f,.69f,.68f,1f);
+            Color steelDark=new(.29f,.30f,.30f,1f);
+
+            // Layered chest slab and high collar: big shapes first for mobile/top-down readability.
+            Plate("KaelonChestSlab",new Vector3(0,.24f,.285f),.95f,.53f,.15f,steelLight);
+            Plate("KaelonChestInset",new Vector3(0,.20f,.373f),.62f,.34f,.045f,steelDark);
+            Detail("KaelonChestBrace",new Vector3(0,.19f,.407f),new Vector3(.095f,.30f,.025f),trim,default,null,false);
+            Detail("KaelonChestCore",new Vector3(0,.29f,.430f),new Vector3(.075f,.13f,.024f),teamEdge,new Vector3(0,0,45),null,true);
+            Plate("KaelonCollarL",new Vector3(-.29f,.54f,.11f),.34f,.24f,.30f,metal,-13);
+            Plate("KaelonCollarR",new Vector3(.29f,.54f,.11f),.34f,.24f,.30f,metal,13);
+
+            // Oversized segmented pauldrons and broad forearm armor echo the reference without extra colliders.
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.45f,.52f,.67f,metal,side*-7);
+                Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.39f,.20f,.59f,steelLight,side*-9);
+                Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.345f),new Vector3(.18f,.10f,.025f),steelDark,default,null,false);
+
+                // Root-space detail is bound after creation so it follows the arm rig.
+                Plate("KaelonForearmPlate"+s,new Vector3(side*.51f,.04f,.19f),.36f,.49f,.30f,metal,side*6,"Arm"+s);
+                Detail("KaelonForearmInset"+s,new Vector3(side*.51f,.04f,.352f),new Vector3(.19f,.27f,.025f),under,default,"Arm"+s,false);
+                if(side>0)
+                    Detail("KaelonForearmCell",new Vector3(side*.51f,.05f,.375f),new Vector3(.10f,.12f,.018f),teamEdge,default,"Arm"+s,true);
+            }
+
+            // Layered waist plating keeps the tank planted and visually heavier.
+            Plate("KaelonBeltArmor",new Vector3(0,-.25f,.19f),.78f,.18f,.17f,under);
+            Plate("KaelonTassetL",new Vector3(-.31f,-.39f,.16f),.31f,.42f,.15f,metal,8);
+            Plate("KaelonTassetR",new Vector3(.31f,-.39f,.16f),.31f,.42f,.15f,metal,-8);
+        }
+
         private void ProductionCitadel(Color metal,Color trim)
         {
-            var shield=WeaponPivot("L",new Vector3(-.72f,.06f,.32f));
-            Plate("Shield",shield.localPosition,.80f,1.25f,.19f,metal,0,"WeaponL");
-            Plate("ShieldInset",shield.localPosition+Vector3.forward*.115f,.63f,1.06f,.055f,trim,0,"WeaponL");
-            Plate("ShieldDark",shield.localPosition+Vector3.forward*.15f,.45f,.85f,.03f,dark,0,"WeaponL");
-            Detail("ShieldCore",shield.localPosition+Vector3.forward*.18f,new Vector3(.08f,.57f,.03f),accent,default,"WeaponL",true);
-            var weapon=WeaponPivot("R",new Vector3(.58f,-.18f,.14f));
-            Mesh grip=HeroMeshLibrary.Loft("DF_HammerShaft",new[]{-.38f,.48f},new[]{.045f,.05f},new[]{.045f,.05f});
-            Sculpt("HammerGrip",grip,Vector3.zero,Vector3.one,cloth,weapon);
-            Plate("AnchorHead",weapon.localPosition+Vector3.up*.43f,.63f,.38f,.42f,metal,0,"WeaponR");
-            for(int side=-1;side<=1;side+=2)Detail("HammerEnergy"+side,weapon.localPosition+new Vector3(side*.24f,.43f,.225f),new Vector3(.095f,.23f,.03f),accent,default,"WeaponR",true);
+            // Compact left-arm breacher guard instead of the old oversized fantasy shield.
+            // It preserves the tank read while letting the hammer dominate the silhouette like the reference.
+            var guard=WeaponPivot("L",new Vector3(-.53f,-.05f,.18f));
+            guard.localRotation=Quaternion.Euler(0,0,8f);
+            Create("BreachGuard",PrimitiveType.Cube,new Vector3(0,.08f,.05f),new Vector3(.34f,.54f,.25f),metal,default,guard);
+            Create("BreachGuardInset",PrimitiveType.Cube,new Vector3(0,.08f,.19f),new Vector3(.20f,.31f,.035f),trim,default,guard);
+            Create("BreachGuardRail",PrimitiveType.Cube,new Vector3(0,.08f,.216f),new Vector3(.07f,.24f,.018f),teamEdge,default,guard);
+
+            var weapon=WeaponPivot("R",new Vector3(.57f,-.20f,.18f));
+            weapon.localRotation=Quaternion.Euler(0,-5f,-16f);
+
+            // Long, two-hand-capable shaft and broad industrial sledge head.
+            Mesh grip=HeroMeshLibrary.Loft("DF_HammerShaft",
+                new[]{-.62f,-.48f,.18f,.66f},new[]{.047f,.055f,.052f,.043f},new[]{.047f,.055f,.052f,.043f});
+            Sculpt("HammerGrip",grip,Vector3.zero,Vector3.one,new Color(.075f,.068f,.060f),weapon);
+            Create("HammerLowerPommel",PrimitiveType.Cube,new Vector3(0,-.61f,0),new Vector3(.15f,.12f,.15f),trim,default,weapon);
+            Create("HammerCollar",PrimitiveType.Cube,new Vector3(0,.31f,0),new Vector3(.18f,.16f,.18f),new Color(.32f,.33f,.33f),default,weapon);
+
+            Create("AnchorHead",PrimitiveType.Cube,new Vector3(0,.54f,.03f),new Vector3(.86f,.43f,.48f),metal,default,weapon);
+            Create("HammerFace",PrimitiveType.Cube,new Vector3(0,.54f,.285f),new Vector3(.60f,.30f,.055f),new Color(.31f,.32f,.32f),default,weapon);
+            Create("HammerTopPlate",PrimitiveType.Cube,new Vector3(0,.79f,.02f),new Vector3(.64f,.09f,.40f),new Color(.69f,.69f,.67f),default,weapon);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Create("HammerCheek"+side,PrimitiveType.Cube,new Vector3(side*.47f,.54f,.01f),new Vector3(.12f,.34f,.40f),trim,
+                    new Vector3(0,0,side*8f),weapon);
+                Create("HammerEnergy"+side,PrimitiveType.Cube,new Vector3(side*.235f,.54f,.321f),new Vector3(.115f,.18f,.022f),accent,default,weapon);
+            }
+            // Vented strike face gives the head the same industrial language as the helmet.
+            for(int i=-2;i<=2;i++)
+                Create("HammerVent"+(i+2),PrimitiveType.Cube,new Vector3(i*.105f,.57f,.322f),new Vector3(.055f,.025f,.018f),cloth,default,weapon);
+
             Bind("WeaponL","ArmL");Bind("WeaponR","ArmR");
         }
         private void ProductionRifle(Color metal)
