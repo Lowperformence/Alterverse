@@ -240,8 +240,8 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(Left+28,516,w-56,20),"ARENA",theme.Small,true);
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
-            float arenaW=(w-56-gap*2)/3f;
-            for(int i=0;i<3;i++)
+            float arenaW=(w-56-gap*3)/4f;
+            for(int i=0;i<4;i++)
             {
                 ArenaVariant arena=(ArenaVariant)i;
                 bool owned=ArenaUnlockInventory.Owned(arena);
@@ -257,8 +257,11 @@ namespace Alterverse.UI
             }
 
             if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
+            string arenaHint=ArenaUnlockInventory.Owned(ArenaVariant.Noxara)
+                ?"Mars / Green Planet: Store unlocks  •  Noxara: gameplay unlock"
+                :$"NOXARA  /  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES COMPLETED";
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
-                ArenaShopCatalog.For(selectedArena).Name+"  /  Locked arenas are available in Store > Maps.",theme.Small,true);
+                ArenaShopCatalog.For(selectedArena).Name+"  /  "+arenaHint,theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
             DrawPortrait(new Rect(x,198,rw,330));
@@ -441,16 +444,17 @@ namespace Alterverse.UI
         private void DrawMapShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon is included. Mars and Green Planet unlock permanently for 500 shards each.",theme.Small,true);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon is included. Mars / Green Planet cost 500 shards. Noxara unlocks after 5 completed matches.",theme.Small,true);
 
             ArenaVariant selected=ArenaVariantRuntime.Selected;
-            float gap=16f,cardW=(ContentWidth-gap*2)/3f;
-            for(int i=0;i<3;i++)
+            float gap=12f,cardW=(ContentWidth-gap*3)/4f;
+            for(int i=0;i<4;i++)
             {
                 ArenaVariant arena=(ArenaVariant)i;
                 ArenaShopItem item=ArenaShopCatalog.For(arena);
                 bool owned=ArenaUnlockInventory.Owned(arena);
                 bool selectedNow=selected==arena;
+                bool progressionArena=arena==ArenaVariant.Noxara;
                 float x=Left+i*(cardW+gap);
 
                 theme.Panel(new Rect(x,356,cardW,274));
@@ -460,12 +464,16 @@ namespace Alterverse.UI
 
                 theme.Label(new Rect(x+18,466,cardW-36,32),item.Name,theme.Heading);
                 theme.Label(new Rect(x+18,500,cardW-36,22),item.Subtitle,theme.Small,true);
-                theme.Label(new Rect(x+18,530,cardW-36,28),owned?"OWNED":item.Price+" SHARDS",theme.Body);
+                string status=owned?"OWNED":progressionArena
+                    ?$"{ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES"
+                    :item.Price+" SHARDS";
+                theme.Label(new Rect(x+18,530,cardW-36,28),status,theme.Body);
 
                 string action;
                 bool enabled=true;
                 if(selectedNow)action="SELECTED";
                 else if(owned)action="SELECT";
+                else if(progressionArena){action="PLAY TO UNLOCK";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action="UNLOCK 500";
                 else {action="NEED 500 SHARDS";enabled=false;}
 
@@ -477,7 +485,7 @@ namespace Alterverse.UI
                         selected=arena;
                         shopMessage=item.Name+" selected for your next match.";
                     }
-                    else
+                    else if(!progressionArena)
                     {
                         ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(arena);
                         if(result==ArenaPurchaseResult.Purchased)
