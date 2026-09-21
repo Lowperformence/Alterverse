@@ -66,8 +66,11 @@ namespace Alterverse.Multiplayer
         public bool PlayerLinkReady=>InLobby&&CoopNetworkBootstrap.IsLinkReadyForPlayers(PlayerCount);
         public string NetworkLinkState=>CoopNetworkBootstrap.LinkStateForPlayers(Mathf.Max(MinHumanPlayers,PlayerCount));
         public string LobbyPhase=>ReadSession(PhaseKey,"lobby");
+        public bool IsLobby=>string.Equals(LobbyPhase,"lobby",StringComparison.Ordinal);
         public bool IsStaging=>string.Equals(LobbyPhase,"staging",StringComparison.Ordinal);
         public bool IsLaunching=>string.Equals(LobbyPhase,"launching",StringComparison.Ordinal);
+        public bool IsPostMatch=>string.Equals(LobbyPhase,"postmatch",StringComparison.Ordinal);
+        public bool IsAborted=>string.Equals(LobbyPhase,"aborted",StringComparison.Ordinal);
         public bool IsMatchPreparing=>IsStaging||IsLaunching;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -398,7 +401,7 @@ namespace Alterverse.Multiplayer
         {
             get
             {
-                if(session==null||!IsHost||IsStaging||HasHeroConflict)return false;
+                if(session==null||!IsHost||!IsLobby||HasHeroConflict)return false;
                 if(session.PlayerCount<MinHumanPlayers||session.PlayerCount>MaxHumanPlayers)return false;
                 return AllPresentPlayersReady;
             }
@@ -446,6 +449,7 @@ namespace Alterverse.Multiplayer
             {
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
+                host.IsLocked=true;
                 host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus($"MATCH STAGING • {PlayerCount} PLAYERS CONNECTED");
@@ -494,6 +498,7 @@ namespace Alterverse.Multiplayer
             {
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
+                host.IsLocked=false;
                 host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus("BACK IN CO-OP LOBBY");
@@ -501,6 +506,78 @@ namespace Alterverse.Multiplayer
             }
             catch(Exception ex){Fail("COULD NOT RETURN TO LOBBY",ex);return false;}
             finally{busy=false;RaiseChanged();}
+        }
+
+        public async Task<bool> EnterPostMatchAsync()
+        {
+            if(session==null||!IsHost)return false;
+            try
+            {
+                IHostSession host=session.AsHost();
+                host.IsLocked=true;
+                host.SetProperty(PhaseKey,new SessionProperty("postmatch",VisibilityOptions.Member));
+                await host.SavePropertiesAsync();
+                SetStatus("MATCH COMPLETE • RETURNING TO CO-OP LOBBY");
+                return true;
+            }
+            catch(Exception ex){Fail("COULD NOT FINALIZE CO-OP MATCH",ex);return false;}
+        }
+
+        public async Task<bool> FinishMatchAndReturnToLobbyAsync()
+        {
+            if(session==null)
+            {
+                CoopAuthority.EndMatch();
+                return false;
+            }
+            if(busy)return false;
+
+            try
+            {
+                busy=true;lastError="";
+                if(session.CurrentPlayer!=null)
+                {
+                    session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty("0",VisibilityOptions.Member));
+                    await session.SaveCurrentPlayerDataAsync();
+                }
+
+                if(IsHost)
+                {
+                    IHostSession host=session.AsHost();
+                    host.IsLocked=false;
+                    host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member));
+                    await host.SavePropertiesAsync();
+                }
+
+                CoopAuthority.EndMatch();
+                SetStatus(IsHost?"CO-OP LOBBY READY":"WAITING IN CO-OP LOBBY");
+                return true;
+            }
+            catch(Exception ex)
+            {
+                CoopAuthority.EndMatch();
+                Fail("COULD NOT RESET CO-OP LOBBY",ex);
+                return false;
+            }
+            finally{busy=false;RaiseChanged();}
+        }
+
+        private async Task AbortActiveMatchAsync(string reason)
+        {
+            if(session==null||!IsHost)return;
+            try
+            {
+                IHostSession host=session.AsHost();
+                host.IsLocked=false;
+                host.SetProperty(PhaseKey,new SessionProperty("aborted",VisibilityOptions.Member));
+                await host.SavePropertiesAsync();
+            }
+            catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT CO-OP: failed to publish aborted match state: "+ex.Message);}
+            lastError=reason;
+            status="CO-OP MATCH ABORTED";
+            CoopAuthority.EndMatch();
+            Alterverse.UI.MainMenuController.ShowCoopAfterMatch(reason);
+            RaiseChanged();
         }
 
         public bool MatchNetworkingEnabled=>true;
@@ -573,8 +650,8 @@ namespace Alterverse.Multiplayer
             value.Changed+=OnSessionChanged;
             value.SessionPropertiesChanged+=OnSessionChanged;
             value.PlayerPropertiesChanged+=OnSessionChanged;
-            value.PlayerJoined+=OnPlayerChanged;
-            value.PlayerHasLeft+=OnPlayerChanged;
+            value.PlayerJoined+=OnPlayerJoined;
+            value.PlayerHasLeft+=OnPlayerLeft;
             value.RemovedFromSession+=OnRemovedFromSession;
             value.Deleted+=OnSessionDeleted;
             RefreshPreparedPlan();
@@ -587,14 +664,46 @@ namespace Alterverse.Multiplayer
             value.Changed-=OnSessionChanged;
             value.SessionPropertiesChanged-=OnSessionChanged;
             value.PlayerPropertiesChanged-=OnSessionChanged;
-            value.PlayerJoined-=OnPlayerChanged;
-            value.PlayerHasLeft-=OnPlayerChanged;
+            value.PlayerJoined-=OnPlayerJoined;
+            value.PlayerHasLeft-=OnPlayerLeft;
             value.RemovedFromSession-=OnRemovedFromSession;
             value.Deleted-=OnSessionDeleted;
         }
 
-        private void OnSessionChanged(){RefreshPreparedPlan();RaiseChanged();}
-        private void OnPlayerChanged(string _){RefreshPreparedPlan();RaiseChanged();}
+        private void OnSessionChanged()
+        {
+            RefreshPreparedPlan();
+            if(IsAborted&&CoopAuthority.Active)
+            {
+                CoopAuthority.EndMatch();
+                Alterverse.UI.MainMenuController.ShowCoopAfterMatch(
+                    string.IsNullOrEmpty(lastError)?"A co-op player disconnected.":lastError);
+            }
+            RaiseChanged();
+        }
+
+        private void OnPlayerJoined(string _)
+        {
+            RefreshPreparedPlan();
+            RaiseChanged();
+        }
+
+        private void OnPlayerLeft(string _)
+        {
+            int expected=CoopAuthority.ActivePlan?.HumanCount??PlayerCount;
+            RefreshPreparedPlan();
+
+            if(IsHost&&IsStaging)
+            {
+                _=CancelMatchStagingAsync();
+                status="PLAYER LEFT • MATCH PREP CANCELLED";
+            }
+            else if(IsHost&&(IsLaunching||CoopAuthority.Active)&&PlayerCount<expected)
+            {
+                _=AbortActiveMatchAsync("A co-op player disconnected from the match.");
+            }
+            RaiseChanged();
+        }
 
         private void RefreshPreparedPlan()
         {
@@ -608,19 +717,23 @@ namespace Alterverse.Multiplayer
 
         private void OnRemovedFromSession()
         {
+            bool wasMatch=CoopAuthority.Active;
             DetachSession(session);
             session=null;
             CoopAuthority.EndMatch();
             SetStatus("REMOVED FROM CO-OP LOBBY");
+            if(wasMatch)Alterverse.UI.MainMenuController.ShowCoopAfterMatch("The co-op connection was lost.");
             RaiseChanged();
         }
 
         private void OnSessionDeleted()
         {
+            bool wasMatch=CoopAuthority.Active;
             DetachSession(session);
             session=null;
             CoopAuthority.EndMatch();
             SetStatus("CO-OP LOBBY CLOSED");
+            if(wasMatch)Alterverse.UI.MainMenuController.ShowCoopAfterMatch("The host closed the co-op lobby.");
             RaiseChanged();
         }
 
