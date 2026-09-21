@@ -84,11 +84,19 @@ namespace Alterverse.Characters
             return CastAuthoritative(slot,target,direction);
         }
 
-        public bool CastNetworkAuthoritative(int slot)
+        public bool CastNetworkAuthoritative(int slot,Vector3 requestedDirection)
         {
             if(slot<0||slot>3)return false;
             Health target=targeting.Acquire(Mathf.Max(kit.Spec(slot).Range,1f),transform.forward,true);
-            return CastAuthoritative(slot,target,DirectionFor(target));
+            Vector3 direction=DirectionFor(target);
+            if(UsesMovementDirection(slot)&&requestedDirection.sqrMagnitude>.0001f)direction=requestedDirection.normalized;
+            return CastAuthoritative(slot,target,direction);
+        }
+
+        private bool UsesMovementDirection(int slot)
+        {
+            HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
+            return (hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2);
         }
 
         private bool CastAuthoritative(int slot,Health target,Vector3 direction)
