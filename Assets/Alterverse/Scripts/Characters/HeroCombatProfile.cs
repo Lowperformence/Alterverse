@@ -16,7 +16,7 @@ namespace Alterverse.Characters
         public float AttackRange { get; private set; }
         public float AttackInterval { get; private set; }
         public float MoveSpeed { get; private set; }
-        public const float GlobalMoveSpeedMultiplier = .90f;
+        public const float GlobalMoveSpeedMultiplier = .855f;
         public float AbilityPower => 1f; // AbilitySpec.Power is the actual baseline, no hidden role multiplier.
         public float Control { get; private set; }
         public float Sustain { get; private set; }
@@ -36,7 +36,7 @@ namespace Alterverse.Characters
             Hero=id;Health=HeroIdentity.BaseHealth(id);Attack=HeroIdentity.AttackDamage(id);
             HeroCombatStats stats=StatsFor(id);
             AttackRange=stats.AttackRange;AttackInterval=stats.AttackInterval;
-            // Global pacing pass: every hero, player and bot, runs 10% slower while preserving
+            // Global pacing pass: every hero, player and bot, now runs another 5% slower than the previous 0.90 multiplier while preserving
             // the authored speed differences between roles.
             MoveSpeed=stats.MoveSpeed*GlobalMoveSpeedMultiplier;
             Control=stats.Control;Sustain=stats.Sustain;
