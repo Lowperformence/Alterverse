@@ -8,7 +8,14 @@ namespace Alterverse.Visuals
         // Model coordinates preserve the existing collider, camera framing and foot planting contract.
         private void BuildProductionHero()
         {
-            HeroId h=identity.Hero;bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
+            HeroId h=identity.Hero;
+            if(h==HeroId.Veyr)
+            {
+                BuildVeyrShadowAssassin();
+                CreateSignature();
+                return;
+            }
+            bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.48f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
             Color trim=tank?new Color(.66f,.43f,.16f):Color.Lerp(accent,dark,.28f);
             Color metal=tank?new Color(.41f,.44f,.47f):h==HeroId.Mira?new Color(.72f,.77f,.70f):new Color(.29f,.33f,.40f);
@@ -45,7 +52,6 @@ namespace Alterverse.Visuals
             BuildProductionHead(h,metal,trim);
             switch(h)
             {
-                case HeroId.Veyr: ProductionBlades();ProductionCoat(false);break;
                 case HeroId.Kaelon: ProductionCitadel(metal,trim);break;
                 case HeroId.Nyra: ProductionRifle(metal);break;
                 case HeroId.Elyra: ProductionOrbit();ProductionCoat(true);break;
@@ -56,6 +62,135 @@ namespace Alterverse.Visuals
             CreateSignature();
             // This remains the same runtime model in matches and in the menu showcase.
         }
+        private void BuildVeyrShadowAssassin()
+        {
+            // Reference-driven premium mobile silhouette: exposed eyes + face mask, tied dark hair,
+            // narrow layered torso, high boots, asymmetrical cloth and twin violet shadow blades.
+            Color shadow=new(.020f,.016f,.030f,1f);
+            Color leather=new(.055f,.045f,.075f,1f);
+            Color graphite=new(.12f,.11f,.16f,1f);
+            Color metal=new(.25f,.22f,.31f,1f);
+            Color violet=new(.58f,.12f,.92f,1f);
+            Color violetHot=new(.86f,.30f,1f,1f);
+            Color skin=new(.68f,.49f,.43f,1f);
+            Color hair=new(.018f,.014f,.028f,1f);
+
+            // Feminine, agile proportions: narrow waist, slightly wider upper torso, long readable legs.
+            Mesh torso=HeroMeshLibrary.Loft("DF_VeyrShadowTorso",
+                new[]{-.38f,-.24f,-.06f,.16f,.34f,.48f},
+                new[]{.18f,.20f,.24f,.33f,.36f,.24f},
+                new[]{.12f,.13f,.16f,.20f,.21f,.14f},
+                new[]{.01f,0f,.01f,.02f,.015f,0f},16);
+            Sculpt("Torso",torso,new Vector3(0,.04f,0),new Vector3(.93f,1f,.92f),shadow);
+            Plate("VeyrChestWrap",new Vector3(0,.23f,.19f),.57f,.43f,.085f,leather);
+            Plate("VeyrChestEdge",new Vector3(.015f,.22f,.238f),.38f,.30f,.026f,graphite,-7);
+            Detail("VeyrChestRune",new Vector3(.06f,.18f,.278f),new Vector3(.045f,.31f,.020f),violetHot,new Vector3(0,0,-24),null,true);
+            Plate("VeyrWaistArmor",new Vector3(0,-.13f,.145f),.43f,.24f,.08f,shadow);
+            Detail("VeyrBelt",new Vector3(0,-.27f,.13f),new Vector3(.47f,.075f,.12f),graphite);
+            Detail("VeyrBeltGem",new Vector3(0,-.265f,.205f),new Vector3(.095f,.11f,.025f),violetHot,new Vector3(0,0,45),null,true);
+
+            Mesh pelvis=HeroMeshLibrary.Loft("DF_VeyrPelvis",
+                new[]{-.43f,-.30f,-.18f},new[]{.20f,.26f,.21f},new[]{.12f,.15f,.12f});
+            Sculpt("Pelvis",pelvis,new Vector3(0,-.02f,0),new Vector3(.93f,1f,.94f),leather);
+
+            float legX=.165f;
+            Mesh leg=HeroMeshLibrary.Loft("DF_VeyrLongGreave",
+                new[]{-1f,-.76f,-.20f,.13f,.66f,1f},
+                new[]{.055f,.068f,.074f,.105f,.116f,.095f},
+                new[]{.070f,.078f,.086f,.105f,.108f,.090f},
+                new[]{.018f,.014f,0f,.004f,0f,0f});
+            Mesh boot=HeroMeshLibrary.Loft("DF_VeyrHighBoot",
+                new[]{-.10f,-.04f,.08f,.19f},new[]{.105f,.115f,.095f,.060f},
+                new[]{.17f,.20f,.145f,.08f},new[]{.065f,.075f,.045f,0f});
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Sculpt("Leg"+s,leg,new Vector3(side*legX,-.62f,0),new Vector3(1f,.37f,1f),shadow);
+                Sculpt("Boot"+s,boot,new Vector3(side*legX,-.94f,.025f),new Vector3(1.04f,1.06f,1.04f),leather);
+                Plate("Knee"+s,new Vector3(side*legX,-.58f,.105f),.17f,.21f,.08f,metal,side*-5,"Leg"+s);
+                Plate("VeyrThighGuard"+s,new Vector3(side*legX,-.39f,.105f),.17f,.28f,.065f,graphite,side*-9,"Leg"+s);
+                Detail("VeyrThighStrap"+s,new Vector3(side*legX,-.31f,.14f),new Vector3(.20f,.045f,.035f),violet,default,"Leg"+s,true);
+
+                Transform arm=new GameObject("DF_Arm"+s).transform;
+                arm.SetParent(root,false);
+                arm.localPosition=new Vector3(side*.345f,.39f,.015f);
+                arm.localRotation=Quaternion.Euler(-5,0,side*-11f);
+
+                Mesh upper=HeroMeshLibrary.Loft("DF_VeyrUpperArm",
+                    new[]{-.32f,-.24f,-.05f,.04f},new[]{.055f,.071f,.095f,.075f},new[]{.062f,.078f,.092f,.070f});
+                Sculpt("UpperArm"+s,upper,Vector3.zero,Vector3.one,shadow,arm);
+                Mesh fore=HeroMeshLibrary.Loft("DF_VeyrForearm",
+                    new[]{-.28f,-.20f,-.055f,.025f},new[]{.055f,.082f,.092f,.064f},new[]{.060f,.082f,.095f,.063f});
+                Sculpt("Vambrace"+s,fore,new Vector3(0,-.30f,.02f),Vector3.one,graphite,arm);
+                Mesh glove=HeroMeshLibrary.Loft("DF_VeyrGlove",
+                    new[]{-.13f,-.07f,.07f,.11f},new[]{.045f,.075f,.080f,.060f},new[]{.052f,.065f,.073f,.050f});
+                Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.055f),Vector3.one,leather,arm);
+
+                Plate("VeyrShoulder"+s,new Vector3(side*.37f,.43f,.005f),.27f,.22f,.26f,side<0?graphite:shadow,side*-18);
+                Bind("VeyrShoulder"+s,"Arm"+s);
+                Detail("VeyrArmRune"+s,new Vector3(0,-.31f,.115f),new Vector3(.045f,.21f,.020f),violetHot,new Vector3(0,0,side*8), "Arm"+s,true);
+            }
+
+            // Visible face and eyes with a cloth mask instead of the old full helmet.
+            Vector3 hp=new(0,.80f,.015f);
+            Mesh head=HeroMeshLibrary.Loft("DF_VeyrFace",
+                new[]{-.22f,-.15f,-.04f,.09f,.18f,.24f},
+                new[]{.052f,.112f,.158f,.164f,.140f,.060f},
+                new[]{.050f,.102f,.136f,.138f,.108f,.052f},
+                new[]{.048f,.033f,.016f,0f,-.004f,-.014f},16);
+            Sculpt("Head",head,hp,Vector3.one,skin);
+            Sculpt("Neck",HeroMeshLibrary.Loft("DF_VeyrNeck",new[]{-.09f,.08f},new[]{.068f,.078f},new[]{.064f,.070f}),
+                new Vector3(0,.55f,0),Vector3.one,skin);
+            Plate("VeyrMask",hp+new Vector3(0,-.065f,.137f),.30f,.22f,.055f,shadow);
+            Detail("VeyrMaskSeam",hp+new Vector3(0,-.045f,.170f),new Vector3(.20f,.025f,.012f),violet,default,null,true);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Detail("EyeWhite"+side,hp+new Vector3(side*.073f,.040f,.148f),new Vector3(.061f,.025f,.015f),armorLight);
+                Detail("Iris"+side,hp+new Vector3(side*.071f,.040f,.160f),new Vector3(.022f,.026f,.010f),violetHot,default,null,true);
+                Detail("Brow"+side,hp+new Vector3(side*.071f,.074f,.148f),new Vector3(.079f,.020f,.018f),hair,new Vector3(0,0,side*-12));
+            }
+
+            Mesh cap=HeroMeshLibrary.Loft("DF_VeyrHairCap",
+                new[]{.01f,.12f,.21f,.28f},new[]{.172f,.181f,.148f,.032f},
+                new[]{.145f,.153f,.132f,.040f},new[]{-.055f,-.043f,-.020f,-.014f});
+            Sculpt("Hair",cap,hp,Vector3.one,hair);
+
+            // High ponytail + loose side locks create the silhouette of the reference without hair physics.
+            Mesh pony=HeroMeshLibrary.Ribbon("DF_VeyrPonytail",
+                new[]{new Vector3(.04f,1.02f,-.05f),new Vector3(.18f,.92f,-.16f),new Vector3(.30f,.66f,-.26f),new Vector3(.42f,.35f,-.33f),new Vector3(.35f,.06f,-.36f)},
+                new[]{.11f,.13f,.115f,.082f,.018f},.035f);
+            Sculpt("VeyrPonytail",pony,Vector3.zero,Vector3.one,hair);
+            Mesh ponyGlow=HeroMeshLibrary.Ribbon("DF_VeyrPonyGlow",
+                new[]{new Vector3(.06f,1.02f,-.02f),new Vector3(.20f,.90f,-.13f),new Vector3(.31f,.64f,-.23f),new Vector3(.40f,.35f,-.30f)},
+                new[]{.020f,.023f,.018f,.004f},.012f);
+            Sculpt("VeyrPonyGlow",ponyGlow,Vector3.zero,Vector3.one,violet,null,true);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh lockMesh=HeroMeshLibrary.Ribbon("DF_VeyrFaceLock"+side,
+                    new[]{new Vector3(side*.11f,.98f,.02f),new Vector3(side*.17f,.82f,.08f),new Vector3(side*.18f,.60f,.00f),new Vector3(side*.15f,.43f,-.05f)},
+                    new[]{.060f,.052f,.037f,.010f},.025f);
+                Sculpt("VeyrHairLock"+(side<0?"L":"R"),lockMesh,Vector3.zero,Vector3.one,hair);
+            }
+
+            // Layered asymmetrical cloth tails keep her readable in motion and from the top-down camera.
+            Mesh cape=HeroMeshLibrary.Ribbon("DF_VeyrCape",
+                new[]{new Vector3(-.17f,.13f,-.16f),new Vector3(-.23f,-.18f,-.22f),new Vector3(-.31f,-.52f,-.29f),new Vector3(-.43f,-.90f,-.35f)},
+                new[]{.13f,.18f,.17f,.055f},.022f);
+            Sculpt("Cape",cape,Vector3.zero,Vector3.one,shadow);
+            Mesh tailR=HeroMeshLibrary.Ribbon("DF_VeyrTailR",
+                new[]{new Vector3(.15f,.10f,-.16f),new Vector3(.22f,-.22f,-.23f),new Vector3(.35f,-.50f,-.29f),new Vector3(.47f,-.78f,-.34f)},
+                new[]{.11f,.16f,.14f,.045f},.020f);
+            Sculpt("CoatTailR",tailR,Vector3.zero,Vector3.one,Color.Lerp(shadow,violet,.20f));
+            Mesh centerTail=HeroMeshLibrary.Ribbon("DF_VeyrCenterTail",
+                new[]{new Vector3(.00f,.05f,-.18f),new Vector3(.04f,-.28f,-.24f),new Vector3(-.02f,-.58f,-.30f),new Vector3(.08f,-.83f,-.35f)},
+                new[]{.09f,.12f,.10f,.025f},.018f);
+            Sculpt("VeyrCenterTail",centerTail,Vector3.zero,Vector3.one,leather);
+
+            ProductionBlades();
+
+            Detail("IdentityCore",new Vector3(0,.29f,.288f),new Vector3(.070f,.15f,.030f),violetHot,new Vector3(0,0,45),null,true);
+        }
+
         private GameObject Sculpt(string name,Mesh mesh,Vector3 position,Vector3 scale,Color color,Transform parent=null,bool energy=false)
         {
             var go=new GameObject("DF_"+name);go.transform.SetParent(parent!=null?parent:root,false);
@@ -108,16 +243,33 @@ namespace Alterverse.Visuals
         {var t=new GameObject("DF_Weapon"+suffix).transform;t.SetParent(root,false);t.localPosition=point;return t;}
         private void ProductionBlades()
         {
-            // Base Zhaev blades stay deliberately neutral so the purchasable weapon skin
-            // remains visually distinct. ApplyWeaponOverdrive() still replaces both complete
-            // weapon pivots with the cosmetic glow when that skin is equipped.
-            Color baseBladeGray=new Color(.42f,.45f,.49f,1f);
+            // SHADOW STEEL base set: dark physical blade with a thin violet energy edge.
+            Color bladeMetal=new(.11f,.10f,.15f,1f);
+            Color bladeSpine=new(.24f,.21f,.31f,1f);
+            Color edge=new(.56f,.12f,.90f,1f);
             for(int side=-1;side<=1;side+=2)
             {
-                string s=side<0?"L":"R";Transform weapon=WeaponPivot(s,new Vector3(side*.43f,-.18f,.13f));
-                Mesh blade=HeroMeshLibrary.Ribbon("DF_DimensionBlade"+s,new[]{new Vector3(0,-.10f,0),new Vector3(side*.035f,-.26f,.24f),new Vector3(side*.12f,-.49f,.66f),new Vector3(side*.21f,-.67f,1.05f)},new[]{.048f,.105f,.08f,.001f},.06f);
-                Sculpt("Blade"+s,blade,Vector3.zero,Vector3.one,baseBladeGray,weapon,false);
-                Detail("Hilt"+s,weapon.localPosition,new Vector3(.14f,.20f,.12f),dark,default,"Weapon"+s);
+                string s=side<0?"L":"R";
+                Transform weapon=WeaponPivot(s,new Vector3(side*.43f,-.19f,.16f));
+                weapon.localRotation=Quaternion.Euler(6f,side*-7f,side*-10f);
+
+                Mesh blade=HeroMeshLibrary.Ribbon("DF_ShadowSteelBlade"+s,
+                    new[]{new Vector3(0,-.09f,0),new Vector3(side*.028f,-.22f,.27f),
+                        new Vector3(side*.075f,-.41f,.64f),new Vector3(side*.15f,-.58f,1.08f),
+                        new Vector3(side*.12f,-.63f,1.26f)},
+                    new[]{.050f,.095f,.090f,.052f,.001f},.052f);
+                Sculpt("Blade"+s,blade,Vector3.zero,Vector3.one,bladeMetal,weapon,false);
+
+                Mesh energyEdge=HeroMeshLibrary.Ribbon("DF_ShadowSteelEdge"+s,
+                    new[]{new Vector3(side*.010f,-.10f,.02f),new Vector3(side*.040f,-.23f,.28f),
+                        new Vector3(side*.092f,-.42f,.65f),new Vector3(side*.157f,-.58f,1.08f),
+                        new Vector3(side*.125f,-.63f,1.255f)},
+                    new[]{.014f,.019f,.016f,.011f,.001f},.014f);
+                Sculpt("BladeEdge"+s,energyEdge,Vector3.zero,Vector3.one,edge,weapon,true);
+
+                Detail("Hilt"+s,new Vector3(0,-.015f,-.035f),new Vector3(.105f,.235f,.105f),bladeSpine,default,"Weapon"+s);
+                Detail("Guard"+s,new Vector3(0,-.115f,.060f),new Vector3(.28f,.050f,.12f),bladeMetal,new Vector3(0,0,side*8f),"Weapon"+s);
+                Detail("Pommel"+s,new Vector3(0,.13f,-.060f),new Vector3(.11f,.075f,.11f),edge,new Vector3(0,0,45),"Weapon"+s,true);
                 Bind("Weapon"+s,"Arm"+s);
             }
         }
