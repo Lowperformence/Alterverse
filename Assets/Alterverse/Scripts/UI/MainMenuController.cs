@@ -26,6 +26,7 @@ namespace Alterverse.UI
         private Page page;
         private bool visible = true, launching, editingName, suspended;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
@@ -53,6 +54,8 @@ namespace Alterverse.UI
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
             selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,5);
+            playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
+            mapShopPageStart=Mathf.Max(0,playArenaBrowseIndex-1);
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
@@ -182,6 +185,19 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,166,ContentWidth,30),description,theme.Body,true);
         }
         private string HeroName => HeroIdentity.NameFor((HeroId)selectedHero);
+
+        private string ArenaBrowseStatus(ArenaVariant arena,bool owned,bool selected)
+        {
+            if(selected)return "SELECTED FOR NEXT MATCH";
+            if(owned)return "OWNED  •  TAP ARENA TO SELECT";
+            if(arena==ArenaVariant.Noxara)
+                return $"PLAY TO UNLOCK  •  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES";
+            if(arena==ArenaVariant.Kryon)
+                return $"PLAY TO UNLOCK  •  {ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES";
+            ArenaShopItem item=ArenaShopCatalog.For(arena);
+            return item.Price>0?$"LOCKED  •  {item.Price} SHARDS IN STORE":"LOCKED  •  "+ArenaUnlockInventory.UnlockRequirement(arena);
+        }
+
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
@@ -240,30 +256,49 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(Left+28,516,w-56,20),"ARENA",theme.Small,true);
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
-            float arenaGap=6f,arenaW=(w-56-arenaGap*4)/5f;
-            for(int i=0;i<5;i++)
+            int arenaCount=ArenaShopCatalog.Items.Length;
+            if(arenaCount>0)
             {
-                ArenaVariant arena=(ArenaVariant)i;
-                bool owned=ArenaUnlockInventory.Owned(arena);
-                string label=arena==ArenaVariant.GreenPlanet?"GREEN":arena.ToString().ToUpperInvariant();
-                if(!owned)label+="  LOCKED";
-                if(theme.Action(new Rect(Left+28+i*(arenaW+arenaGap),540,arenaW,42),label,
-                    selected:selectedArena==arena,enabled:owned))
+                if(playArenaBrowseIndex<0||playArenaBrowseIndex>=arenaCount)
+                    playArenaBrowseIndex=ArenaShopCatalog.IndexOf(selectedArena);
+
+                float arrowW=46f,selectorGap=8f;
+                float selectorX=Left+28f,selectorW=w-56f;
+                if(theme.Action(new Rect(selectorX,540,arrowW,44),"<",enabled:arenaCount>1))
                 {
-                    ArenaVariantRuntime.Select(arena);
-                    selectedArena=arena;
+                    playArenaBrowseIndex=(playArenaBrowseIndex-1+arenaCount)%arenaCount;
                     launchMessage="";
                 }
+
+                ArenaShopItem browsed=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                bool owned=ArenaUnlockInventory.Owned(browsed.Variant);
+                bool selectedNow=selectedArena==browsed.Variant;
+                float centerX=selectorX+arrowW+selectorGap;
+                float centerW=selectorW-arrowW*2-selectorGap*2;
+                string arenaLabel=$"{playArenaBrowseIndex+1} / {arenaCount}   •   {browsed.Name}";
+                if(theme.Action(new Rect(centerX,540,centerW,44),arenaLabel,selected:selectedNow,enabled:owned))
+                {
+                    ArenaVariantRuntime.Select(browsed.Variant);
+                    selectedArena=browsed.Variant;
+                    launchMessage="";
+                }
+                FrontEndTheme.Fill(new Rect(centerX+16,580,centerW-32,3),new Color(browsed.Accent.r,browsed.Accent.g,browsed.Accent.b,.85f));
+
+                if(theme.Action(new Rect(selectorX+selectorW-arrowW,540,arrowW,44),">",enabled:arenaCount>1))
+                {
+                    playArenaBrowseIndex=(playArenaBrowseIndex+1)%arenaCount;
+                    launchMessage="";
+                }
+
+                browsed=ArenaShopCatalog.Items[playArenaBrowseIndex];
+                owned=ArenaUnlockInventory.Owned(browsed.Variant);
+                selectedNow=selectedArena==browsed.Variant;
+                theme.Center(new Rect(selectorX,586,selectorW,22),ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
             }
 
             if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
-            string arenaHint=!ArenaUnlockInventory.Owned(ArenaVariant.Noxara)
-                ?$"NOXARA  /  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES COMPLETED"
-                :!ArenaUnlockInventory.Owned(ArenaVariant.Kryon)
-                    ?$"KRYON  /  {ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES COMPLETED"
-                    :"Mars / Green: Store  •  Noxara / Kryon: gameplay unlocks";
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
-                ArenaShopCatalog.For(selectedArena).Name+"  /  "+arenaHint,theme.Small,true);
+                $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
 
             float x = Left+w+32, rw = ContentWidth-w-32;
             DrawPortrait(new Rect(x,198,rw,330));
@@ -446,18 +481,26 @@ namespace Alterverse.UI
         private void DrawMapShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,28),"Moon included. Mars / Green cost 500 shards. Noxara unlocks at 5 matches; Kryon at 10.",theme.Small,true);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"Browse every arena here. The carousel expands automatically as new maps are added.",theme.Small,true);
 
             ArenaVariant selected=ArenaVariantRuntime.Selected;
-            float gap=8f,cardW=(ContentWidth-gap*4)/5f;
-            for(int i=0;i<5;i++)
+            int count=ArenaShopCatalog.Items.Length;
+            const int visible=3;
+            int maxStart=Mathf.Max(0,count-visible);
+            mapShopPageStart=Mathf.Clamp(mapShopPageStart,0,maxStart);
+
+            float gap=14f,cardW=(ContentWidth-gap*(visible-1))/visible;
+            for(int slot=0;slot<visible;slot++)
             {
-                ArenaVariant arena=(ArenaVariant)i;
-                ArenaShopItem item=ArenaShopCatalog.For(arena);
+                int index=mapShopPageStart+slot;
+                if(index>=count)break;
+
+                ArenaShopItem item=ArenaShopCatalog.Items[index];
+                ArenaVariant arena=item.Variant;
                 bool owned=ArenaUnlockInventory.Owned(arena);
                 bool selectedNow=selected==arena;
-                bool progressionArena=arena==ArenaVariant.Noxara||arena==ArenaVariant.Kryon;
-                float x=Left+i*(cardW+gap);
+                bool progressionArena=!owned&&item.Price<=0;
+                float x=Left+slot*(cardW+gap);
 
                 theme.Panel(new Rect(x,356,cardW,274));
                 FrontEndTheme.Fill(new Rect(x,356,cardW,5),item.Accent);
@@ -470,7 +513,7 @@ namespace Alterverse.UI
                     ?$"{ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES"
                     :arena==ArenaVariant.Kryon
                         ?$"{ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES"
-                        :item.Price+" SHARDS";
+                        :item.Price>0?item.Price+" SHARDS":"PLAY TO UNLOCK";
                 theme.Label(new Rect(x+18,530,cardW-36,28),status,theme.Body);
 
                 string action;
@@ -478,8 +521,8 @@ namespace Alterverse.UI
                 if(selectedNow)action="SELECTED";
                 else if(owned)action="SELECT";
                 else if(progressionArena){action="PLAY TO UNLOCK";enabled=false;}
-                else if(PlayerWallet.CanAfford(item.Price))action="UNLOCK 500";
-                else {action="NEED 500 SHARDS";enabled=false;}
+                else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
+                else {action=$"NEED {item.Price} SHARDS";enabled=false;}
 
                 if(theme.Action(new Rect(x+18,572,cardW-36,44),action,selected:selectedNow,enabled:enabled&&!selectedNow))
                 {
@@ -487,6 +530,7 @@ namespace Alterverse.UI
                     {
                         ArenaVariantRuntime.Select(arena);
                         selected=arena;
+                        playArenaBrowseIndex=ArenaShopCatalog.IndexOf(arena);
                         shopMessage=item.Name+" selected for your next match.";
                     }
                     else if(!progressionArena)
@@ -496,6 +540,7 @@ namespace Alterverse.UI
                         {
                             ArenaVariantRuntime.Select(arena);
                             selected=arena;
+                            playArenaBrowseIndex=ArenaShopCatalog.IndexOf(arena);
                             shopMessage=item.Name+" UNLOCKED and selected.";
                         }
                         else if(result==ArenaPurchaseResult.InsufficientShards)shopMessage="Not enough shards.";
@@ -504,7 +549,23 @@ namespace Alterverse.UI
                 }
             }
 
-            theme.Label(new Rect(Left,646,ContentWidth,32),shopMessage.Length>0?shopMessage:
+            bool canBack=mapShopPageStart>0;
+            bool canForward=mapShopPageStart<maxStart;
+            if(theme.Action(new Rect(Left,640,48,38),"<",enabled:canBack))
+            {
+                mapShopPageStart=Mathf.Max(0,mapShopPageStart-visible);
+                shopMessage="";
+            }
+            int first=count==0?0:mapShopPageStart+1;
+            int last=Mathf.Min(count,mapShopPageStart+visible);
+            theme.Center(new Rect(Left+56,640,150,38),$"{first}–{last} / {count}");
+            if(theme.Action(new Rect(Left+214,640,48,38),">",enabled:canForward))
+            {
+                mapShopPageStart=Mathf.Min(maxStart,mapShopPageStart+visible);
+                shopMessage="";
+            }
+
+            theme.Label(new Rect(Left,684,ContentWidth,24),shopMessage.Length>0?shopMessage:
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selected).Name}    •    SHARDS {PlayerWallet.Balance}",theme.Small,true);
         }
 
