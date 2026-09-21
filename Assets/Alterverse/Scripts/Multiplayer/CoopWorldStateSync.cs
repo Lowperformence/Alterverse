@@ -124,6 +124,8 @@ namespace Alterverse.Multiplayer
                 Health health=entity.GetComponent<Health>();if(health==null)continue;
                 entity.ApplyTarget(new Vector3(x,y,z),yaw,false);
                 health.ApplyNetworkSnapshot(current,shield,dead);
+                DimensionPlanet planet=entity.GetComponent<DimensionPlanet>();
+                if(planet!=null)planet.ApplyNetworkAvailability(!dead);
                 entity.ApplyAlivePresentation(!dead);
             }
 
