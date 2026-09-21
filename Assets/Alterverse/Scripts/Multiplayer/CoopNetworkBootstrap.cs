@@ -72,6 +72,7 @@ namespace Alterverse.Multiplayer
 
             UnityTransport transport=root.AddComponent<UnityTransport>();
             NetworkManager manager=root.AddComponent<NetworkManager>();
+            manager.NetworkConfig ??= new NetworkConfig();
             manager.NetworkConfig.NetworkTransport=transport;
             manager.NetworkConfig.EnableSceneManagement=false;
             manager.NetworkConfig.ConnectionApproval=false;
