@@ -10,6 +10,7 @@ namespace Alterverse.Combat
     public sealed class LaneWaveSpawner:MonoBehaviour
     {
         [SerializeField]private float firstWaveDelay=4,waveInterval=25,unitSpacing=1.1f;
+        public const float SoldierSpawnFrontX=20.5f;
         [SerializeField]private int unitsPerWave=3;
         [SerializeField]private float siegeMechTime=360f;
 
@@ -112,14 +113,23 @@ namespace Alterverse.Combat
 
         private void SpawnWave(int team,float laneZ,int laneIndex,int serial)
         {
-            float startX=team==0?-30:30,destinationX=team==0?31:-31,direction=team==0?-1:1;
+            // Regular soldiers now spawn on the arena-centre side of the defensive trenches.
+            // This keeps the whole wave clear of the rear fortification area where units could bunch up.
+            float destinationX=team==0?31:-31;
             for(int i=0;i<unitsPerWave;i++)
             {
-                Vector3 spawn=new(startX+direction*i*unitSpacing,.55f,laneZ);
+                Vector3 spawn=SoldierSpawnPoint(team,laneZ,i,unitSpacing);
                 Vector3 destination=new(destinationX,.55f,laneZ);
                 string key=$"MINION:W{serial}:T{team}:L{laneIndex}:I{i}";
                 CreateMinion(team,spawn,destination,i,key,true);
             }
+        }
+
+        public static Vector3 SoldierSpawnPoint(int team,float laneZ,int index,float spacing=1.1f)
+        {
+            float startX=team==0?-SoldierSpawnFrontX:SoldierSpawnFrontX;
+            float towardCenter=team==0?1f:-1f;
+            return new Vector3(startX+towardCenter*Mathf.Max(0,index)*Mathf.Max(.1f,spacing),.55f,laneZ);
         }
 
         public static void ApplyNetworkUnitSpawn(string key,int team,Vector3 spawn,Vector3 destination,bool siege)
