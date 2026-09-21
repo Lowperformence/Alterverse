@@ -120,9 +120,13 @@ namespace Alterverse.Combat
             Shader unlit=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             if(lit==null||unlit==null)return;
 
-            armorMaterial=CreateMaterial(lit,"DF_BomberArmor",new Color(.20f,.235f,.28f),.66f,.34f,Color.black);
-            darkMaterial=CreateMaterial(lit,"DF_BomberDark",new Color(.035f,.045f,.065f),.48f,.22f,Color.black);
-            energyMaterial=CreateMaterial(lit,"DF_BomberEnergy",new Color(.16f,.88f,1f),.18f,.72f,new Color(.16f,.88f,1f)*3.0f);
+            bool kryon=ArenaVariantRuntime.IsKryon;
+            Color bomberArmor=kryon?new Color(.88f,.94f,.97f):new Color(.20f,.235f,.28f);
+            Color bomberDark=kryon?new Color(.52f,.64f,.70f):new Color(.035f,.045f,.065f);
+            Color bomberEnergy=kryon?new Color(.30f,.95f,1f):new Color(.16f,.88f,1f);
+            armorMaterial=CreateMaterial(lit,"DF_BomberArmor",bomberArmor,.66f,kryon?.46f:.34f,Color.black);
+            darkMaterial=CreateMaterial(lit,"DF_BomberDark",bomberDark,.48f,kryon?.34f:.22f,Color.black);
+            energyMaterial=CreateMaterial(lit,"DF_BomberEnergy",bomberEnergy,.18f,.72f,bomberEnergy*3.0f);
             Color bombShell=ArenaVariantRuntime.IsKryon?new Color(.72f,.91f,.96f):ArenaVariantRuntime.IsNoxara?new Color(.96f,.72f,.035f):new Color(.14f,.15f,.17f);
             Color bombEmission=ArenaVariantRuntime.IsKryon?new Color(.25f,.92f,1f)*1.45f:ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f)*1.25f:new Color(.95f,.22f,.05f)*.35f;
             bombMaterial=CreateMaterial(lit,"DF_BombShell",bombShell,.72f,.26f,bombEmission);
@@ -466,16 +470,33 @@ namespace Alterverse.Combat
                 }
             }
 
-            bomb=new GameObject("DF_FallingBomb");bomb.transform.SetParent(world,false);
+            bool kryon=ArenaVariantRuntime.IsKryon;
+            bomb=new GameObject(kryon?"DF_FallingIcicle":"DF_FallingBomb");bomb.transform.SetParent(world,false);
             bomb.transform.position=new Vector3(target.x,startHeight,target.z);
-            Transform body=Primitive("Body",PrimitiveType.Capsule,bomb.transform,Vector3.zero,new Vector3(.24f,.44f,.24f),bombMaterial,Quaternion.identity);
-            Primitive("Nose",PrimitiveType.Sphere,bomb.transform,new Vector3(0,-.43f,0),new Vector3(.22f,.28f,.22f),bombMaterial,Quaternion.identity);
-            finRoot=new GameObject("DF_BombFins").transform;finRoot.SetParent(bomb.transform,false);finRoot.localPosition=new Vector3(0,.35f,0);
-            Primitive("FinX",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.58f,.06f,.16f),bombMaterial,Quaternion.identity);
-            Primitive("FinZ",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.16f,.06f,.58f),bombMaterial,Quaternion.identity);
-            Material blinkMaterial=ArenaVariantRuntime.IsNoxara||ArenaVariantRuntime.IsKryon?bombMaterial:energyMaterial;
-            blink=Primitive("WarningCore",PrimitiveType.Cylinder,bomb.transform,new Vector3(0,.05f,0),new Vector3(.285f,.045f,.285f),blinkMaterial,Quaternion.identity);
-            if(body!=null)body.localRotation=Quaternion.Euler(0,0,2f);
+
+            if(kryon)
+            {
+                // Kryon changes only presentation: the falling object still uses the exact same
+                // target, timing, trajectory, blast radius and damage resolution as every bomb.
+                Transform upper=Primitive("IcicleUpper",PrimitiveType.Capsule,bomb.transform,new Vector3(0,.24f,0),new Vector3(.20f,.46f,.20f),bombMaterial,Quaternion.identity);
+                Primitive("IcicleMid",PrimitiveType.Capsule,bomb.transform,new Vector3(0,-.18f,0),new Vector3(.155f,.42f,.155f),bombMaterial,Quaternion.identity);
+                Primitive("IcicleTip",PrimitiveType.Sphere,bomb.transform,new Vector3(0,-.62f,0),new Vector3(.095f,.34f,.095f),bombMaterial,Quaternion.identity);
+                Primitive("IcicleFacetL",PrimitiveType.Cube,bomb.transform,new Vector3(-.12f,.12f,0),new Vector3(.035f,.58f,.10f),energyMaterial,Quaternion.Euler(0,0,-8f));
+                Primitive("IcicleFacetR",PrimitiveType.Cube,bomb.transform,new Vector3(.12f,.12f,0),new Vector3(.035f,.58f,.10f),energyMaterial,Quaternion.Euler(0,0,8f));
+                blink=Primitive("IcicleCore",PrimitiveType.Sphere,bomb.transform,new Vector3(0,.48f,0),new Vector3(.16f,.11f,.16f),energyMaterial,Quaternion.identity);
+                if(upper!=null)upper.localRotation=Quaternion.Euler(0,0,1.5f);
+            }
+            else
+            {
+                Transform body=Primitive("Body",PrimitiveType.Capsule,bomb.transform,Vector3.zero,new Vector3(.24f,.44f,.24f),bombMaterial,Quaternion.identity);
+                Primitive("Nose",PrimitiveType.Sphere,bomb.transform,new Vector3(0,-.43f,0),new Vector3(.22f,.28f,.22f),bombMaterial,Quaternion.identity);
+                finRoot=new GameObject("DF_BombFins").transform;finRoot.SetParent(bomb.transform,false);finRoot.localPosition=new Vector3(0,.35f,0);
+                Primitive("FinX",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.58f,.06f,.16f),bombMaterial,Quaternion.identity);
+                Primitive("FinZ",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.16f,.06f,.58f),bombMaterial,Quaternion.identity);
+                Material blinkMaterial=ArenaVariantRuntime.IsNoxara?bombMaterial:energyMaterial;
+                blink=Primitive("WarningCore",PrimitiveType.Cylinder,bomb.transform,new Vector3(0,.05f,0),new Vector3(.285f,.045f,.285f),blinkMaterial,Quaternion.identity);
+                if(body!=null)body.localRotation=Quaternion.Euler(0,0,2f);
+            }
         }
 
         private void Update()
