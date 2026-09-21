@@ -69,6 +69,7 @@ namespace Alterverse.Match
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(Time.timeScale<=0f||state==State.Finished)return;
             if(front==null)front=FindAnyObjectByType<DimensionsFront>();
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
