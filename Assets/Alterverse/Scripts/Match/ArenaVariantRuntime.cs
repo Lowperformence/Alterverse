@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Shop;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ namespace Alterverse.Match
     public static class ArenaVariantRuntime
     {
         internal const string SelectedKey="DF_SelectedArenaVariant";
+        internal const string ShuffleKey="DF_ArenaShuffle";
+        internal const string LastShuffleKey="DF_LastShuffledArena";
         public static ArenaVariant Current { get; private set; }=ArenaVariant.Moon;
         public static bool IsMars=>Current==ArenaVariant.Mars;
         public static bool IsGreenPlanet=>Current==ArenaVariant.GreenPlanet;
@@ -31,14 +34,38 @@ namespace Alterverse.Match
             }
         }
 
+        public static bool ShuffleEnabled=>PlayerPrefs.GetInt(ShuffleKey,0)==1;
         public static bool CanSelect(ArenaVariant variant)=>variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant);
 
         public static bool Select(ArenaVariant variant)
         {
             if(!CanSelect(variant))return false;
             PlayerPrefs.SetInt(SelectedKey,(int)variant);
+            PlayerPrefs.SetInt(ShuffleKey,0);
             PlayerPrefs.Save();
             return true;
+        }
+
+        public static void SetShuffleEnabled(bool enabled)
+        {
+            PlayerPrefs.SetInt(ShuffleKey,enabled?1:0);
+            PlayerPrefs.Save();
+        }
+
+        public static ArenaVariant RandomOwnedArena(ArenaVariant avoid)
+        {
+            List<ArenaVariant> owned=new();
+            for(int i=0;i<ArenaShopCatalog.Items.Length;i++)
+            {
+                ArenaVariant candidate=ArenaShopCatalog.Items[i].Variant;
+                if(ArenaUnlockInventory.Owned(candidate))owned.Add(candidate);
+            }
+            if(owned.Count==0)return ArenaVariant.Moon;
+            if(owned.Count>1)owned.Remove(avoid);
+            ArenaVariant picked=owned[Random.Range(0,owned.Count)];
+            PlayerPrefs.SetInt(LastShuffleKey,(int)picked);
+            PlayerPrefs.Save();
+            return picked;
         }
 
         public static void EnsureValidSelection()
@@ -48,9 +75,17 @@ namespace Alterverse.Match
 
         public static void BeginMatch()
         {
-            // There is deliberately no automatic rotation here. A local match can only use the
-            // player's persisted, ownership-validated selection.
-            Current=Selected;
+            if(!ShuffleEnabled)
+            {
+                Current=Selected;
+                return;
+            }
+
+            int rawLast=PlayerPrefs.GetInt(LastShuffleKey,-1);
+            ArenaVariant avoid=rawLast>=0&&rawLast<ArenaShopCatalog.Items.Length
+                ?(ArenaVariant)rawLast
+                :Selected;
+            Current=RandomOwnedArena(avoid);
         }
 
         public static void BeginCoopMatch(ArenaVariant arena)
