@@ -14,6 +14,12 @@ namespace Alterverse.Multiplayer
         public static NetworkManager Manager => NetworkManager.Singleton;
         public static bool IsListening => NetworkManager.Singleton!=null&&NetworkManager.Singleton.IsListening;
 
+        public static void ShutdownLocalNetwork()
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager!=null&&manager.IsListening)manager.Shutdown();
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
         {
