@@ -27,7 +27,7 @@ namespace Alterverse.UI
             "Win the long fight. Trade at close range with heavy strikes and sustain." };
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
         private Page page;
-        private bool visible = true, launching, editingName, suspended;
+        private bool visible = true, launching, coopLaunching, editingName, suspended;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
@@ -97,6 +97,9 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
+            CoopLobbyService coop=CoopLobbyService.Instance;
+            if(!launching&&page==Page.Coop&&coop!=null&&coop.InLobby&&coop.IsLaunching)
+                BeginCoopLaunch(coop);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
             bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
@@ -431,8 +434,12 @@ namespace Alterverse.UI
                 string staged=coop.TryBuildMatchPlan(out CoopMatchPlan plan)&&plan?.Session!=null
                     ?$"STAGED  •  {plan.HumanCount} PLAYERS + {5-plan.HumanCount} ALLY BOTS VS 5 BOTS"
                     :"STAGED  •  VALIDATING ROSTER";
-                theme.Center(new Rect(Right-382,538,382,28),staged);
-                if(coop.IsHost&&theme.Action(new Rect(Right-330,576,330,32),"CANCEL MATCH PREP",enabled:!coop.Busy))
+                theme.Center(new Rect(Right-382,530,382,22),staged);
+                string sync=CoopPlanHandshake.PlanHandshakeReady?"START CO-OP MATCH":"SYNCING MATCH PLAN...";
+                if(coop.IsHost&&theme.Action(new Rect(Right-330,554,330,38),sync,true,
+                    enabled:!coop.Busy&&CoopPlanHandshake.PlanHandshakeReady))
+                    _=coop.LaunchPreparedMatchAsync();
+                if(coop.IsHost&&theme.Action(new Rect(Right-330,596,330,26),"CANCEL MATCH PREP",enabled:!coop.Busy))
                     _=coop.CancelMatchStagingAsync();
             }
             else
@@ -1042,26 +1049,80 @@ namespace Alterverse.UI
             launchMessage=""; launching=true; launchAt=Time.unscaledTime; GUI.FocusControl(null);
             showcase.Present((HeroId)selectedHero,false);
         }
+        private void BeginCoopLaunch(CoopLobbyService coop)
+        {
+            if(coop==null||!coop.InLobby||!coop.IsLaunching||launching)return;
+            if(CoopAuthority.PreparedPlan==null&&!coop.TryBuildMatchPlan(out CoopMatchPlan rebuilt))
+            {
+                launchMessage="Co-op match plan unavailable.";
+                return;
+            }
+            if(CoopAuthority.PreparedPlan==null)CoopAuthority.Prepare(rebuilt);
+            if(!CoopAuthority.BeginPreparedMatch(coop.IsHost))
+            {
+                launchMessage="Co-op match could not initialize.";
+                return;
+            }
+
+            int localSlot=CoopRosterBuilder.FindLocalHumanSlot(CoopAuthority.ActivePlan);
+            if(localSlot<0)
+            {
+                CoopAuthority.EndMatch();
+                launchMessage="Local co-op player slot missing.";
+                return;
+            }
+
+            selectedHero=(int)CoopAuthority.ActivePlan.Session.Slots[localSlot].Hero;
+            PlayerHeroSelection.Select((HeroId)selectedHero);
+            FlushAudio();
+            launchMessage="";
+            coopLaunching=true;
+            launching=true;
+            launchAt=Time.unscaledTime;
+            GUI.FocusControl(null);
+            showcase.Present((HeroId)selectedHero,false);
+        }
+
         private void DrawLaunch()
         {
             theme.Label(new Rect(Left,230,ContentWidth,60),"Entering the Front",theme.Title);
             theme.Label(new Rect(Left,316,ContentWidth,40),HeroName+"  /  "+Roles[selectedHero],theme.Heading);
-            theme.Label(new Rect(Left,372,ContentWidth,32),"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM",theme.Body,true);
+            string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
+                ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
+                :"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
+            theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
             theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
-            theme.Label(new Rect(Left,480,ContentWidth,30),"Preparing your local match",theme.Small,true);
+            theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);
         }
         private void EnterMatch()
         {
-            ArenaVariantRuntime.EnsureValidSelection();
-            if(!ArenaUnlockInventory.Owned(ArenaVariantRuntime.Selected))
+            if(!coopLaunching)
             {
-                ArenaVariantRuntime.Select(ArenaVariant.Moon);
-                launching=false;page=Page.Play;launchMessage="Locked arena blocked. Moon restored.";return;
+                ArenaVariantRuntime.EnsureValidSelection();
+                if(!ArenaUnlockInventory.Owned(ArenaVariantRuntime.Selected))
+                {
+                    ArenaVariantRuntime.Select(ArenaVariant.Moon);
+                    launching=false;page=Page.Play;launchMessage="Locked arena blocked. Moon restored.";return;
+                }
             }
+            else if(!CoopAuthority.Active||CoopAuthority.ActivePlan?.Session==null)
+            {
+                launching=false;coopLaunching=false;page=Page.Coop;launchMessage="Co-op session was lost before launch.";return;
+            }
+
             var bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
-            if (bootstrap==null) { launching=false; page=Page.Play; launchMessage="Match could not start. Please try again."; Debug.LogError("DIMENSIONS FRONT: match bootstrap unavailable."); return; }
-            launching=false; visible=false; MatchClock.Set(PauseReason.Result,false); MatchClock.Set(PauseReason.Menu,false);
-            if (GameObject.Find("DF_MatchWorld")!=null) bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+            if (bootstrap==null)
+            {
+                launching=false;
+                page=coopLaunching?Page.Coop:Page.Play;
+                coopLaunching=false;
+                launchMessage="Match could not start. Please try again.";
+                Debug.LogError("DIMENSIONS FRONT: match bootstrap unavailable.");
+                return;
+            }
+
+            launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
+            if(GameObject.Find("DF_MatchWorld")!=null)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
             gameObject.SetActive(false);
         }
     }
