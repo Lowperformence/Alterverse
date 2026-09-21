@@ -35,6 +35,13 @@ namespace Alterverse.Characters
             ready[slot]=Time.time+Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,HeroAttackDelivery.AbilityWindup(identity.Hero,slot,kit.Spec(slot)));
         }
+
+        public void ApplyNetworkCooldown(int slot,float remaining)
+        {
+            if(!Alterverse.Multiplayer.CoopAuthority.Active||Alterverse.Multiplayer.CoopAuthority.LocalIsHost)return;
+            slot=Mathf.Clamp(slot,0,3);
+            ready[slot]=Time.time+Mathf.Max(0f,remaining);
+        }
         public Health WoundedAlly(float range, bool shield = false)
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
