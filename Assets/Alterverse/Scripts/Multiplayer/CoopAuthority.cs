@@ -16,6 +16,7 @@ namespace Alterverse.Multiplayer
         public static bool Active=>ActivePlan!=null;
         public static bool LocalIsHost { get; private set; }
         public static bool CanSimulateHostGameplay=>!Active||LocalIsHost;
+        public static bool CanMutateAuthoritativeState=>!Active||LocalIsHost;
 
         public static void Prepare(CoopMatchPlan plan)
         {
