@@ -67,6 +67,8 @@ namespace Alterverse.Multiplayer
         public string NetworkLinkState=>CoopNetworkBootstrap.LinkStateForPlayers(Mathf.Max(MinHumanPlayers,PlayerCount));
         public string LobbyPhase=>ReadSession(PhaseKey,"lobby");
         public bool IsStaging=>string.Equals(LobbyPhase,"staging",StringComparison.Ordinal);
+        public bool IsLaunching=>string.Equals(LobbyPhase,"launching",StringComparison.Ordinal);
+        public bool IsMatchPreparing=>IsStaging||IsLaunching;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -453,6 +455,38 @@ namespace Alterverse.Multiplayer
             finally{busy=false;RaiseChanged();}
         }
 
+        public async Task<bool> LaunchPreparedMatchAsync()
+        {
+            if(session==null||!IsHost||busy||!IsStaging)return false;
+            if(!CoopPlanHandshake.PlanHandshakeReady)
+            {
+                lastError="Every connected player must verify the same match plan first.";
+                SetStatus("WAITING FOR MATCH PLAN SYNC");
+                RaiseChanged();
+                return false;
+            }
+            if(!TryBuildMatchPlan(out CoopMatchPlan plan))
+            {
+                lastError="The co-op match plan is no longer valid.";
+                SetStatus("CO-OP ROSTER INVALID");
+                RaiseChanged();
+                return false;
+            }
+
+            try
+            {
+                busy=true;lastError="";
+                CoopAuthority.Prepare(plan);
+                IHostSession host=session.AsHost();
+                host.SetProperty(PhaseKey,new SessionProperty("launching",VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+                SetStatus("LAUNCHING CO-OP MATCH");
+                return true;
+            }
+            catch(Exception ex){Fail("COULD NOT LAUNCH CO-OP MATCH",ex);return false;}
+            finally{busy=false;RaiseChanged();}
+        }
+
         public async Task<bool> CancelMatchStagingAsync()
         {
             if(session==null||!IsHost||busy||!IsStaging)return false;
@@ -469,11 +503,7 @@ namespace Alterverse.Multiplayer
             finally{busy=false;RaiseChanged();}
         }
 
-        /// <summary>
-        /// Full gameplay replication is intentionally still disabled.
-        /// The new staging state verifies session, roster and Relay before match authority is enabled.
-        /// </summary>
-        public bool MatchNetworkingEnabled=>false;
+        public bool MatchNetworkingEnabled=>true;
 
         private static Dictionary<string,PlayerProperty> BuildLocalPlayerProperties(bool ready)
         {
@@ -568,7 +598,7 @@ namespace Alterverse.Multiplayer
 
         private void RefreshPreparedPlan()
         {
-            if(!IsStaging)
+            if(!IsMatchPreparing)
             {
                 CoopAuthority.ClearPrepared();
                 return;
