@@ -373,41 +373,83 @@ private void ApplyLifeweaveOverdrive(Shader shader,Material energyMaterial)
 {
 Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
 
-// The previous premium staff used 1.25x. Another +20% from that state equals 1.50x.
-weapon.localScale*=1.50f;
+// ASCENSION OF AURORA // LEGENDARY: taller ceremonial silhouette, silver-white body,
+// layered cyan halos, a larger floating crystal and gold holy accents.
+weapon.localScale*=1.22f;
 
-// Preserve the existing emerald/cyan premium glow on the full staff.
-ApplyGlow(weapon,energyMaterial);
+Color pearl=new(.78f,.84f,.86f,1f);
+Material pearlMaterial=new Material(shader){name="DF_AuroraPearl",color=pearl};
+if(pearlMaterial.HasProperty("_BaseColor"))pearlMaterial.SetColor("_BaseColor",pearl);
+if(pearlMaterial.HasProperty("_Metallic"))pearlMaterial.SetFloat("_Metallic",.62f);
+if(pearlMaterial.HasProperty("_Smoothness"))pearlMaterial.SetFloat("_Smoothness",.66f);
+ownedMaterials.Add(pearlMaterial);
 
-// Turn the existing center lens in the staff crown into a distinct glowing red gem.
-Color gemColor=new Color(1f,.025f,.02f);
-Material gemMaterial=new Material(shader){name="DF_LifeweaveRuby",color=gemColor};
-if(gemMaterial.HasProperty("_BaseColor"))gemMaterial.SetColor("_BaseColor",gemColor);
-if(gemMaterial.HasProperty("_Metallic"))gemMaterial.SetFloat("_Metallic",.12f);
-if(gemMaterial.HasProperty("_Smoothness"))gemMaterial.SetFloat("_Smoothness",.96f);
-if(gemMaterial.HasProperty("_EmissionColor"))
+Color gold=new(.72f,.58f,.24f,1f);
+Material goldMaterial=new Material(shader){name="DF_AuroraGold",color=gold};
+if(goldMaterial.HasProperty("_BaseColor"))goldMaterial.SetColor("_BaseColor",gold);
+if(goldMaterial.HasProperty("_Metallic"))goldMaterial.SetFloat("_Metallic",.78f);
+if(goldMaterial.HasProperty("_Smoothness"))goldMaterial.SetFloat("_Smoothness",.62f);
+ownedMaterials.Add(goldMaterial);
+
+Color aurora=new(.58f,.96f,1f,1f);
+Material auroraMaterial=new Material(shader){name="DF_AuroraLight",color=aurora};
+if(auroraMaterial.HasProperty("_BaseColor"))auroraMaterial.SetColor("_BaseColor",aurora);
+if(auroraMaterial.HasProperty("_Metallic"))auroraMaterial.SetFloat("_Metallic",.05f);
+if(auroraMaterial.HasProperty("_Smoothness"))auroraMaterial.SetFloat("_Smoothness",.96f);
+if(auroraMaterial.HasProperty("_EmissionColor"))
 {
-gemMaterial.EnableKeyword("_EMISSION");
-gemMaterial.SetColor("_EmissionColor",gemColor*4.4f);
+auroraMaterial.EnableKeyword("_EMISSION");
+auroraMaterial.SetColor("_EmissionColor",aurora*4.3f);
 }
-ownedMaterials.Add(gemMaterial);
+ownedMaterials.Add(auroraMaterial);
 
-Transform gem=FindVisual("EmitterLens");
-if(gem!=null)
+Transform staff=FindVisual("Staff");if(staff!=null)ApplyGlow(staff,pearlMaterial);
+Transform lowerCap=FindVisual("StaffLowerCap");if(lowerCap!=null)ApplyGlow(lowerCap,goldMaterial);
+Transform grip=FindVisual("StaffGrip");if(grip!=null)ApplyGlow(grip,pearlMaterial);
+Transform emitter=FindVisual("Emitter");if(emitter!=null){emitter.localScale*=1.16f;ApplyGlow(emitter,auroraMaterial);}
+Transform inner=FindVisual("StaffCrownInner");if(inner!=null){inner.localScale*=1.14f;ApplyGlow(inner,pearlMaterial);}
+Transform gem=FindVisual("EmitterLens");if(gem!=null){gem.localScale*=1.34f;ApplyGlow(gem,auroraMaterial);}
+Transform wingL=FindVisual("StaffWingL");if(wingL!=null)ApplyGlow(wingL,goldMaterial);
+Transform wingR=FindVisual("StaffWingR");if(wingR!=null)ApplyGlow(wingR,goldMaterial);
+
+// Legendary-only floating architecture around the crown.
+Mesh outerRingMesh=HeroMeshLibrary.Ring("DF_AuroraOuterHalo",.39f,.022f);
+GameObject outerRing=Sculpt("AuroraOuterHalo",outerRingMesh,new Vector3(0,.77f,.06f),Vector3.one,aurora,weapon,true);
+outerRing.transform.localRotation=Quaternion.Euler(68f,0f,28f);
+MeshRenderer outerRenderer=outerRing.GetComponent<MeshRenderer>();
+if(outerRenderer!=null)outerRenderer.sharedMaterial=auroraMaterial;
+
+Mesh secondRingMesh=HeroMeshLibrary.Ring("DF_AuroraSecondHalo",.30f,.016f);
+GameObject secondRing=Sculpt("AuroraSecondHalo",secondRingMesh,new Vector3(0,.77f,.06f),Vector3.one,aurora,weapon,true);
+secondRing.transform.localRotation=Quaternion.Euler(82f,0f,-32f);
+MeshRenderer secondRenderer=secondRing.GetComponent<MeshRenderer>();
+if(secondRenderer!=null)secondRenderer.sharedMaterial=auroraMaterial;
+
+for(int side=-1;side<=1;side+=2)
 {
-gem.localScale*=1.12f;
-ApplyGlow(gem,gemMaterial);
+CreateAuroraStaffPart("AuroraCrownBlade"+(side<0?"L":"R"),weapon,
+new Vector3(side*.29f,.76f,.05f),new Vector3(.055f,.30f,.050f),
+new Vector3(0,0,side*-34f),goldMaterial);
+
+CreateAuroraStaffPart("AuroraLightFin"+(side<0?"L":"R"),weapon,
+new Vector3(side*.20f,.93f,.055f),new Vector3(.025f,.16f,.025f),
+new Vector3(0,0,side*-18f),auroraMaterial);
 }
 
-// Saturn-like premium ring around the staff crown. It keeps the staff's
-// emerald/cyan energy identity while framing the red center gem.
-Mesh planetRingMesh=HeroMeshLibrary.Ring("DF_LifeweavePlanetRing",.34f,.022f);
-Color ringColor=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero).Glow;
-GameObject planetRing=Sculpt("LifeweavePlanetRing",planetRingMesh,
-new Vector3(0,.80f,.06f),Vector3.one,ringColor,weapon,true);
-planetRing.transform.localRotation=Quaternion.Euler(72f,0f,28f);
-MeshRenderer ringRenderer=planetRing.GetComponent<MeshRenderer>();
-if(ringRenderer!=null)ringRenderer.sharedMaterial=energyMaterial;
+CreateAuroraStaffPart("AuroraCrownSpire",weapon,
+new Vector3(0,1.00f,.06f),new Vector3(.060f,.28f,.060f),
+Vector3.zero,pearlMaterial);
+CreateAuroraStaffPart("AuroraCoreBrace",weapon,
+new Vector3(0,.58f,.04f),new Vector3(.13f,.18f,.10f),
+Vector3.zero,goldMaterial);
+}
+
+private GameObject CreateAuroraStaffPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+if(renderer!=null)renderer.sharedMaterial=material;
+return part;
 }
 
 private void ApplyAnchorHammerOverdrive(Shader shader,Material energyMaterial)
