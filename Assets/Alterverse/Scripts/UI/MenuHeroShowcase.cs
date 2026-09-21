@@ -13,9 +13,11 @@ namespace Alterverse.UI
         private RenderTexture texture;
         private HeroId selected;
         private bool hasSelection,selectedWeapon;
+        private int selectedWeaponVariant;
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
         private bool loadoutDirty=true,cachedWeapon;
+        private int cachedWeaponVariant;
         private HeroId cachedHero;
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
         public void InvalidateLoadout()=>loadoutDirty=true;
@@ -24,7 +26,7 @@ namespace Alterverse.UI
         public Texture Image => texture;
 
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
-            Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null)
+            Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null,int weaponVariantOverride=-1)
         {
             if (!visible) { if (stage != null) stage.SetActive(false); return; }
             if (stage == null) CreateStage();
@@ -35,6 +37,7 @@ namespace Alterverse.UI
                 cachedHero=hero;
                 cachedCosmetic=Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(hero);
                 cachedWeapon=Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
+                cachedWeaponVariant=(int)Alterverse.Shop.WeaponSkinInventory.EquippedTier(hero);
                 loadoutDirty=false;
             }
             Alterverse.Shop.UniversalHeroCosmetic cosmetic=cosmeticOverride ??
@@ -42,9 +45,14 @@ namespace Alterverse.UI
                     ? (skinOverride.Value?Alterverse.Shop.UniversalHeroCosmetic.Voidfall:Alterverse.Shop.UniversalHeroCosmetic.Original)
                     : cachedCosmetic);
             bool weapon=weaponOverride??cachedWeapon;
+            int weaponVariant=weapon?(
+                weaponVariantOverride>=0?weaponVariantOverride:
+                cachedWeaponVariant>0?cachedWeaponVariant:
+                hero==HeroId.Veyr?(int)Alterverse.Shop.WeaponSkinTier.Legendary:1):0;
 
-            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon) return;
-            selectedCosmetic=cosmetic;selectedWeapon=weapon;
+            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon &&
+                selectedWeaponVariant==weaponVariant) return;
+            selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
             if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
@@ -56,6 +64,7 @@ namespace Alterverse.UI
             var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
             preview.UniversalCosmetic=cosmetic;
             preview.WeaponOverdrive=weapon;
+            preview.WeaponVariant=weaponVariant;
             actor.AddComponent<StylizedHeroVisual>().Build();
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
