@@ -429,9 +429,10 @@ namespace Alterverse.UI
 
             string state=coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
                 !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
-            theme.Label(new Rect(Left,646,ContentWidth,28),state,theme.Small,true);
+            string transport=coop.RelayConnected?"RELAY CONNECTED":"RELAY CONNECTING";
+            theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+transport,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
-                "SAFE PHASE 1: PRIVATE SESSION IS LIVE. THE EXISTING LOCAL MATCH IS NOT NETWORK-LAUNCHED YET.",theme.Small,true);
+                "SAFE PHASE 1: LOBBY + RELAY ARE LIVE. THE EXISTING LOCAL MATCH IS NOT NETWORK-LAUNCHED YET.",theme.Small,true);
         }
 
         private void DrawHeroes()
