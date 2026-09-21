@@ -386,8 +386,9 @@ namespace Alterverse.Multiplayer
             get
             {
                 int raw=ReadSessionInt(ArenaKey,(int)ArenaVariantRuntime.Selected);
-                if(raw<0||raw>=ArenaShopCatalog.Items.Length)return ArenaVariantRuntime.Selected;
-                return (ArenaVariant)raw;
+                for(int i=0;i<ArenaShopCatalog.Items.Length;i++)
+                    if((int)ArenaShopCatalog.Items[i].Variant==raw)return ArenaShopCatalog.Items[i].Variant;
+                return ArenaVariantRuntime.Selected;
             }
         }
 
