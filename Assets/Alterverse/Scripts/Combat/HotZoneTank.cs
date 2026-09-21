@@ -123,7 +123,11 @@ namespace Alterverse.Combat
             gameObject.layer=GameplayCollision.Units;
             team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;noxaraSpider=spider;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
-            if(noxaraSpider)BuildNoxaraSpiderVisuals();
+            if(noxaraSpider)
+            {
+                BuildNoxaraSpiderVisuals();
+                if(GetComponent<NoxaraSpiderMeteorShower>()==null)gameObject.AddComponent<NoxaraSpiderMeteorShower>();
+            }
             else if(xenoAlien){BuildAlienVisuals();health.Damaged+=OnXenoDamaged;}
             else if(marsSkeleton)BuildSkeletonVisuals();
             else BuildVisuals();
