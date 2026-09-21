@@ -27,6 +27,7 @@ namespace Alterverse.AI
         }
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(Time.timeScale<=0f||health==null||health.IsDead||!HeroCombatStatus.CanAct(gameObject)||brain==null||sensor==null)return;
             Health target=sensor.CurrentTarget;
             if(target==null||target.IsDead){observedTarget=null;return;}
