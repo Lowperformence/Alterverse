@@ -227,7 +227,7 @@ namespace Alterverse.Combat
                 if(forward.sqrMagnitude<.01f)forward=team==0?Vector3.right:Vector3.left;
                 forward.Normalize();
                 Vector3 right=Vector3.Cross(Vector3.up,forward).normalized;
-                float side=((GetInstanceID()&1)==0?-1f:1f);
+                float side=((transform.GetSiblingIndex() & 1) == 0 ? -1f : 1f);
                 Vector3 groupDestination=supportAnchor-forward*2.8f+right*side*2.4f;
                 groupDestination.y=transform.position.y;
                 AimTurretAt(transform.position+forward*4f);
