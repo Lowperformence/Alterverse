@@ -225,13 +225,9 @@ namespace Alterverse.UI
         private string ArenaBrowseStatus(ArenaVariant arena,bool owned,bool selected)
         {
             if(selected)return "SELECTED FOR NEXT MATCH";
-            if(owned)return "OWNED  •  TAP ARENA TO SELECT";
-            if(arena==ArenaVariant.Noxara)
-                return $"PLAY TO UNLOCK  •  {ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES";
-            if(arena==ArenaVariant.Kryon)
-                return $"PLAY TO UNLOCK  •  {ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES";
+            if(owned)return "FREE  •  TAP ARENA TO SELECT";
             ArenaShopItem item=ArenaShopCatalog.For(arena);
-            return item.Price>0?$"LOCKED  •  {item.Price} SHARDS IN STORE":"LOCKED  •  "+ArenaUnlockInventory.UnlockRequirement(arena);
+            return item.Price>0?$"LOCKED  •  {item.Price} SHARDS IN STORE":"FREE  •  TAP ARENA TO SELECT";
         }
 
         private void DrawPortrait(Rect rect)
@@ -726,7 +722,6 @@ namespace Alterverse.UI
                 ArenaShopItem item=ArenaShopCatalog.Items[index];
                 ArenaVariant arena=item.Variant;
                 bool owned=ArenaUnlockInventory.Owned(arena);
-                bool progressionArena=!owned&&item.Price<=0;
                 float x=Left+slot*(cardW+gap);
 
                 theme.Panel(new Rect(x,356,cardW,274));
@@ -736,23 +731,20 @@ namespace Alterverse.UI
 
                 theme.Label(new Rect(x+18,466,cardW-36,32),item.Name,theme.Heading);
                 theme.Label(new Rect(x+18,500,cardW-36,22),item.Subtitle,theme.Small,true);
-                string status=owned?"OWNED":arena==ArenaVariant.Noxara
-                    ?$"{ArenaUnlockInventory.NoxaraProgress}/{ArenaUnlockInventory.NoxaraMatchesRequired} MATCHES"
-                    :arena==ArenaVariant.Kryon
-                        ?$"{ArenaUnlockInventory.KryonProgress}/{ArenaUnlockInventory.KryonMatchesRequired} MATCHES"
-                        :item.Price>0?item.Price+" SHARDS":"PLAY TO UNLOCK";
+                string status=owned
+                    ?(item.Price>0?"OWNED":"FREE")
+                    :item.Price+" SHARDS";
                 theme.Label(new Rect(x+18,530,cardW-36,28),status,theme.Body);
 
                 string action;
                 bool enabled=true;
-                if(owned){action="OWNED";enabled=false;}
-                else if(progressionArena){action="PLAY TO UNLOCK";enabled=false;}
+                if(owned){action=item.Price>0?"OWNED":"FREE";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
                 else {action=$"NEED {item.Price} SHARDS";enabled=false;}
 
                 if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled))
                 {
-                    if(!owned&&!progressionArena)
+                    if(!owned)
                     {
                         ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(arena);
                         if(result==ArenaPurchaseResult.Purchased)
