@@ -255,7 +255,7 @@ namespace Alterverse.UI
             theme.Progress(new Rect(Left,492,420,5),PlayerExperience.LevelProgress);
             theme.Label(new Rect(Left,506,420,28),XpLabel(),theme.Small,true);
             if (theme.Action(new Rect(Left,568,420,72),"PLAY",true)) SetPage(Page.Play);
-            theme.Label(new Rect(Left,652,420,26),"AI MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
+            theme.Label(new Rect(Left,652,420,26),"MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
             DrawPortrait(new Rect(split,108,Right-split,444));
             FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero));
             theme.Label(new Rect(split+48,570,Right-split-170,38),HeroName,theme.Heading);
@@ -264,20 +264,20 @@ namespace Alterverse.UI
         }
         private void DrawPlay()
         {
-            Heading("Deployment","Choose your hero, AI difficulty and arena before entering the Front.");
+            Heading("Deployment","Choose your hero, difficulty and arena before entering the Front.");
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
             theme.Label(new Rect(Left+28,228,w-56,22),"AVAILABLE NOW",theme.Small,true);
-            theme.Label(new Rect(Left+28,252,w-56,42),"AI MATCH 5v5",theme.Title);
-            theme.Label(new Rect(Left+28,300,w-56,48),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP VS AI  •  PRIVATE LOBBY",true))
+            theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 5v5",theme.Title);
+            theme.Label(new Rect(Left+28,300,w-56,48),"Five versus five.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP  •  PRIVATE LOBBY",true))
                 SetPage(Page.Coop);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
             theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
 
-            theme.Label(new Rect(Left+28,446,w-56,20),"AI DIFFICULTY",theme.Small,true);
+            theme.Label(new Rect(Left+28,446,w-56,20),"DIFFICULTY",theme.Small,true);
             var difficulty=BotDifficultySettings.Selected;
             float gap=8f,buttonW=(w-56-gap*3)/4f;
             for(int i=0;i<4;i++)
@@ -354,7 +354,7 @@ namespace Alterverse.UI
                     :ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
             }
 
-            if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
+            if (theme.Action(new Rect(Left,620,w,58),"START MATCH",true)) BeginLaunch();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
@@ -367,7 +367,7 @@ namespace Alterverse.UI
         }
         private void DrawCoop()
         {
-            Heading("Private Co-op","Create a private lobby for 2–5 players and fight together against the AI.");
+            Heading("Private Co-op","Create a private lobby for 2–5 players and fight together.");
 
             CoopLobbyService coop=CoopLobbyService.Instance;
             if(coop==null)
@@ -385,7 +385,7 @@ namespace Alterverse.UI
                 theme.Panel(new Rect(Left,226,panelW,360));
                 theme.Label(new Rect(Left+28,250,panelW-56,32),"CREATE LOBBY",theme.Heading);
                 theme.Label(new Rect(Left+28,292,panelW-56,74),"Host a private room for up to four friends.\nNo matchmaking. No public player list.",theme.Body,true);
-                theme.Label(new Rect(Left+28,386,panelW-56,42),"2–5 PLAYERS  •  EMPTY ALLY SLOTS BECOME BOTS",theme.Small,true);
+                theme.Label(new Rect(Left+28,386,panelW-56,42),"2–5 PLAYERS  •  EMPTY ALLY SLOTS FILL AUTOMATICALLY",theme.Small,true);
                 if(theme.Action(new Rect(Left+28,454,panelW-56,58),coop.Busy?"CONNECTING...":"CREATE PRIVATE LOBBY",true,enabled:!coop.Busy))
                     _=coop.CreateLobbyAsync();
 
@@ -494,14 +494,14 @@ namespace Alterverse.UI
             float aiX=Left+500;
             if(coop.IsHost&&theme.Action(new Rect(aiX,538,42,34),"<",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(-1);
-            theme.Center(new Rect(aiX+48,538,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
+            theme.Center(new Rect(aiX+48,538,184,34),"DIFFICULTY  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
             if(coop.IsHost&&theme.Action(new Rect(aiX+238,538,42,34),">",enabled:hostEditable))
                 _=coop.CycleHostDifficultyAsync(1);
 
             if(coop.IsStaging)
             {
                 string staged=coop.TryBuildMatchPlan(out CoopMatchPlan plan)&&plan?.Session!=null
-                    ?$"STAGED  •  {plan.HumanCount} PLAYERS + {5-plan.HumanCount} ALLY BOTS VS 5 BOTS"
+                    ?$"STAGED  •  {plan.HumanCount} PLAYERS  •  TEAM FILLED AUTOMATICALLY"
                     :"STAGED  •  VALIDATING ROSTER";
                 theme.Center(new Rect(Right-382,530,382,22),staged);
                 string sync=CoopPlanHandshake.PlanHandshakeReady?"START CO-OP MATCH":"SYNCING MATCH PLAN...";
@@ -1067,7 +1067,7 @@ namespace Alterverse.UI
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
             theme.Label(new Rect(x,250,rw,38),"MATCH OPTIONS",theme.Heading);
-            theme.Label(new Rect(x,306,rw,82),"AI difficulty is selected directly before an AI match so you can change the challenge for every deployment.",theme.Body,true);
+            theme.Label(new Rect(x,306,rw,82),"Difficulty is selected directly before each match so you can change the challenge for every deployment.",theme.Body,true);
             theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
             theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
         }
@@ -1099,7 +1099,7 @@ namespace Alterverse.UI
 
             // The arena visible in the PLAY slider is the arena that starts.
             // Previously the slider could browse Kryon/Noxara while an older persisted arena
-            // (often Moon) remained selected, so START AI MATCH launched the wrong battlefield.
+            // (often Moon) remained selected, so START MATCH launched the wrong battlefield.
             if(!ArenaVariantRuntime.ShuffleEnabled&&
                playArenaBrowseIndex>=0&&playArenaBrowseIndex<ArenaShopCatalog.Items.Length)
             {
@@ -1168,8 +1168,8 @@ namespace Alterverse.UI
             string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
                 ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
                 :ArenaVariantRuntime.ShuffleEnabled
-                    ?"AI MATCH 5v5  /  RANDOM OWNED ARENA  /  ZERO TEAM"
-                    :"AI MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
+                    ?"MATCH 5v5  /  RANDOM OWNED ARENA  /  ZERO TEAM"
+                    : "MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
             theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
             theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
             theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);
