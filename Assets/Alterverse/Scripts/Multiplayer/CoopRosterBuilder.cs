@@ -82,6 +82,7 @@ namespace Alterverse.Multiplayer
             HeroLocomotion locomotion=hero.GetComponent<HeroLocomotion>()??hero.AddComponent<HeroLocomotion>();
             CoopHeroSlot netSlot=hero.GetComponent<CoopHeroSlot>()??hero.AddComponent<CoopHeroSlot>();
             netSlot.Configure(slot,data);
+            if(hero.GetComponent<CoopRespawnReplica>()==null)hero.AddComponent<CoopRespawnReplica>();
 
             StylizedHeroVisual visual=hero.GetComponent<StylizedHeroVisual>();
             if(visual==null){visual=hero.AddComponent<StylizedHeroVisual>();visual.Build();}
