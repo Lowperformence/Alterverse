@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Alterverse.Match
 {
-    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2 }
+    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2, Noxara=3 }
 
     /// <summary>Persistent player-selected arena. Locked premium arenas always fall back to Moon.</summary>
     public static class ArenaVariantRuntime
@@ -12,14 +12,15 @@ namespace Alterverse.Match
         public static ArenaVariant Current { get; private set; }=ArenaVariant.Moon;
         public static bool IsMars=>Current==ArenaVariant.Mars;
         public static bool IsGreenPlanet=>Current==ArenaVariant.GreenPlanet;
+        public static bool IsNoxara=>Current==ArenaVariant.Noxara;
 
         public static ArenaVariant Selected
         {
             get
             {
                 int raw=PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon);
-                ArenaVariant selected=raw>=0&&raw<=2?(ArenaVariant)raw:ArenaVariant.Moon;
-                if(!ArenaUnlockInventory.Owned(selected)||raw<0||raw>2)
+                ArenaVariant selected=raw>=0&&raw<=3?(ArenaVariant)raw:ArenaVariant.Moon;
+                if(!ArenaUnlockInventory.Owned(selected)||raw<0||raw>3)
                 {
                     selected=ArenaVariant.Moon;
                     PlayerPrefs.SetInt(SelectedKey,(int)selected);
