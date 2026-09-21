@@ -42,14 +42,70 @@ namespace Alterverse.Combat
                 int team=Mathf.Clamp(trench.Team,0,1);
                 if(alive[team]>=MaxAlivePerTeam)continue;
 
-                // The authored trench opens toward local +Z. Spawn just outside the throat so the
-                // unit visually emerges from the fortification without being born inside its collider.
-                Vector3 spawn=trench.transform.TransformPoint(new Vector3(0f,.08f,3.05f));
+                // Reinforcements no longer spawn at the trench throat. That point can sit against
+                // the rear/side collision shell and trap a fresh CharacterController before it has
+                // room to steer. Deploy near the team's healing zone instead, on a verified clear
+                // staging point, then let TrenchSoldier immediately join the allied hero group.
+                Vector3 spawn=ResolveDeploymentPoint(team,alive[team],trench);
                 string key=$"TRENCH_SOLDIER:{trench.gameObject.name}:W{waveIndex}";
                 TrenchSoldier.Spawn(team,spawn,alive[team],key);
                 alive[team]++;
             }
             waveIndex++;
+        }
+
+        private static Vector3 ResolveDeploymentPoint(int team,int slot,DefenseTrench sourceTrench)
+        {
+            SpawnHealingZone[] zones=Object.FindObjectsByType<SpawnHealingZone>(FindObjectsSortMode.None);
+            SpawnHealingZone bestZone=null;
+            float bestDistance=float.MaxValue;
+
+            for(int i=0;i<zones.Length;i++)
+            {
+                SpawnHealingZone zone=zones[i];
+                if(zone==null||zone.Team!=team)continue;
+                Vector3 d=zone.transform.position-sourceTrench.transform.position;d.y=0f;
+                float sqr=d.sqrMagnitude;
+                if(sqr>=bestDistance)continue;
+                bestDistance=sqr;
+                bestZone=zone;
+            }
+
+            // The fallback is the same safe base-side staging area the soldiers already use when
+            // no hero/coordinator destination is available, so reinforcements never depend on a trench.
+            Vector3 center=bestZone!=null
+                ? bestZone.transform.position
+                : new Vector3(team==0?-16.25f:16.25f,0f,0f);
+
+            Vector3 attack=team==0?Vector3.right:Vector3.left;
+            float slotLateral=((slot%5)-2)*.82f;
+            int[] sideProbe={0,1,-1,2,-2,3,-3};
+
+            for(int pass=0;pass<2;pass++)
+            {
+                float forward=2.65f+pass*1.45f;
+                for(int i=0;i<sideProbe.Length;i++)
+                {
+                    float lateral=slotLateral+sideProbe[i]*.78f;
+                    Vector3 candidate=center+attack*forward+Vector3.forward*lateral;
+                    candidate=GameplayCollision.ClampToRoundedArena(candidate,39f,32f,1f);
+                    candidate.y=LunarSurfaceField.Surface(candidate.x,candidate.z).y+.08f;
+                    if(IsDeploymentClear(candidate))return candidate;
+                }
+            }
+
+            Vector3 fallback=center+attack*4.6f+Vector3.forward*slotLateral;
+            fallback=GameplayCollision.ClampToRoundedArena(fallback,39f,32f,1f);
+            fallback.y=LunarSurfaceField.Surface(fallback.x,fallback.z).y+.08f;
+            return fallback;
+        }
+
+        private static bool IsDeploymentClear(Vector3 position)
+        {
+            int obstacleMask=GameplayCollision.MovementMask&~(1<<GameplayCollision.Ground);
+            Vector3 bottom=position+Vector3.up*.10f;
+            Vector3 top=position+Vector3.up*.78f;
+            return !Physics.CheckCapsule(bottom,top,.30f,obstacleMask,QueryTriggerInteraction.Ignore);
         }
     }
 
@@ -133,7 +189,10 @@ namespace Alterverse.Combat
             formationSlot=Mathf.Max(0,slot);
             health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>();
-            nextGroupScan=Time.time;
+            // Bind to the hero group immediately on spawn. The periodic refresh below keeps the
+            // formation current afterwards, but the soldier never spends its first frames leaderless.
+            TeamSupportGroup.TryGetAnchor(team,transform.position,out leader,out groupAnchor);
+            nextGroupScan=Time.time+GroupRefresh;
             nextTargetScan=Time.time+Random.Range(.05f,.18f);
             nextAttack=Time.time+Random.Range(.25f,.70f);
             BuildVisual();
