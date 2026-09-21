@@ -486,21 +486,31 @@ return part;
 
 private void ApplyBreakerFistOverdrive(Shader shader,Material energyMaterial)
 {
-// Keep the hand silhouette readable: premium strength comes from layered armor,
-// separated knuckles and energy channels instead of scaling one glowing block.
-Color metalColor=new Color(.075f,.085f,.105f);
-Material metalMaterial=new Material(shader){name="DF_BreakerFistMetal",color=metalColor};
-if(metalMaterial.HasProperty("_BaseColor"))metalMaterial.SetColor("_BaseColor",metalColor);
-if(metalMaterial.HasProperty("_Metallic"))metalMaterial.SetFloat("_Metallic",.82f);
-if(metalMaterial.HasProperty("_Smoothness"))metalMaterial.SetFloat("_Smoothness",.48f);
-ownedMaterials.Add(metalMaterial);
+Color darkSteel=new(.045f,.050f,.058f,1f);
+Material darkMaterial=new Material(shader){name="DF_ReactorBreakerDarkSteel",color=darkSteel};
+if(darkMaterial.HasProperty("_BaseColor"))darkMaterial.SetColor("_BaseColor",darkSteel);
+if(darkMaterial.HasProperty("_Metallic"))darkMaterial.SetFloat("_Metallic",.86f);
+if(darkMaterial.HasProperty("_Smoothness"))darkMaterial.SetFloat("_Smoothness",.48f);
+ownedMaterials.Add(darkMaterial);
 
-Color knuckleColor=new Color(.46f,.49f,.53f);
-Material knuckleMaterial=new Material(shader){name="DF_BreakerFistKnuckles",color=knuckleColor};
-if(knuckleMaterial.HasProperty("_BaseColor"))knuckleMaterial.SetColor("_BaseColor",knuckleColor);
-if(knuckleMaterial.HasProperty("_Metallic"))knuckleMaterial.SetFloat("_Metallic",.72f);
-if(knuckleMaterial.HasProperty("_Smoothness"))knuckleMaterial.SetFloat("_Smoothness",.38f);
-ownedMaterials.Add(knuckleMaterial);
+Color armorYellow=new(.78f,.49f,.045f,1f);
+Material yellowMaterial=new Material(shader){name="DF_ReactorBreakerYellowArmor",color=armorYellow};
+if(yellowMaterial.HasProperty("_BaseColor"))yellowMaterial.SetColor("_BaseColor",armorYellow);
+if(yellowMaterial.HasProperty("_Metallic"))yellowMaterial.SetFloat("_Metallic",.62f);
+if(yellowMaterial.HasProperty("_Smoothness"))yellowMaterial.SetFloat("_Smoothness",.38f);
+ownedMaterials.Add(yellowMaterial);
+
+Color hotOrange=new(1f,.34f,.025f,1f);
+Material hotMaterial=new Material(shader){name="DF_ReactorBreakerCore",color=hotOrange};
+if(hotMaterial.HasProperty("_BaseColor"))hotMaterial.SetColor("_BaseColor",hotOrange);
+if(hotMaterial.HasProperty("_Metallic"))hotMaterial.SetFloat("_Metallic",.12f);
+if(hotMaterial.HasProperty("_Smoothness"))hotMaterial.SetFloat("_Smoothness",.92f);
+if(hotMaterial.HasProperty("_EmissionColor"))
+{
+hotMaterial.EnableKeyword("_EMISSION");
+hotMaterial.SetColor("_EmissionColor",hotOrange*4.1f);
+}
+ownedMaterials.Add(hotMaterial);
 
 for(int side=-1;side<=1;side+=2)
 {
@@ -508,50 +518,56 @@ string suffix=side<0?"L":"R";
 Transform gauntlet=FindVisual("Gauntlet"+suffix);
 if(gauntlet==null)continue;
 
-// Restore the premium +50% silhouette while keeping the finger/knuckle parts
-// visually separated from the glowing main gauntlet body.
-gauntlet.localScale*=1.50f;
-ApplyGlow(gauntlet,energyMaterial);
+// EPIC silhouette is larger and more armored, but not an oversized glowing block.
+gauntlet.localScale*=1.24f;
+ApplyGlow(gauntlet,darkMaterial);
 
 for(int k=0;k<3;k++)
 {
 Transform knuckle=FindVisual("Knuckle"+suffix+k);
 if(knuckle!=null)
 {
-knuckle.localScale=Vector3.Scale(knuckle.localScale,new Vector3(.86f,.92f,.82f));
-ApplyGlow(knuckle,knuckleMaterial);
+knuckle.localScale=Vector3.Scale(knuckle.localScale,new Vector3(1.04f,1.08f,1.08f));
+ApplyGlow(knuckle,yellowMaterial);
 }
 }
 
 Transform reactor=FindVisual("GauntletReactor"+suffix);
-if(reactor!=null)ApplyGlow(reactor,energyMaterial);
-
-// Thin premium armor sits on the back/sides of the hand. Nothing closes the
-// front of the fist, so the three knuckle/finger gaps remain readable.
-CreateBreakerFistPart("OverdriveBackPlate"+suffix,gauntlet,
-new Vector3(0,.105f,.015f),new Vector3(.31f,.055f,.25f),
-new Vector3(0,0,side*5),metalMaterial);
-CreateBreakerFistPart("OverdriveSideGuardA"+suffix,gauntlet,
-new Vector3(-.19f,.015f,.075f),new Vector3(.045f,.15f,.17f),
-new Vector3(0,0,-10),metalMaterial);
-CreateBreakerFistPart("OverdriveSideGuardB"+suffix,gauntlet,
-new Vector3(.19f,.015f,.075f),new Vector3(.045f,.15f,.17f),
-new Vector3(0,0,10),metalMaterial);
-CreateBreakerFistPart("OverdriveEnergyRail"+suffix,gauntlet,
-new Vector3(0,.155f,.095f),new Vector3(.18f,.022f,.12f),
-Vector3.zero,energyMaterial);
+if(reactor!=null)
+{
+reactor.localScale=Vector3.Scale(reactor.localScale,new Vector3(1.20f,1.18f,1.10f));
+ApplyGlow(reactor,hotMaterial);
 }
 
-Transform carapace=FindVisual("BreakerCarapace");
-if(carapace!=null)
-{
-carapace.localScale*=.80f;
-ApplyGlow(carapace,metalMaterial);
-}
-for(int i=0;i<3;i++)
-{
-Transform piston=FindVisual("RamPiston"+i);
-if(piston!=null)ApplyGlow(piston,knuckleMaterial);
+Transform fistPlate=FindVisual("BrakkFistPlate"+suffix);
+if(fistPlate!=null)ApplyGlow(fistPlate,yellowMaterial);
+Transform fistSide=FindVisual("BrakkFistSide"+suffix);
+if(fistSide!=null)ApplyGlow(fistSide,darkMaterial);
+
+// Layered impact frame inspired by the reference's reinforced power-fist construction.
+CreateBreakerFistPart("ReactorBreakerBackPlate"+suffix,gauntlet,
+new Vector3(0,.115f,.015f),new Vector3(.34f,.070f,.28f),
+new Vector3(0,0,side*4f),yellowMaterial);
+CreateBreakerFistPart("ReactorBreakerSideA"+suffix,gauntlet,
+new Vector3(-.215f,.018f,.080f),new Vector3(.055f,.18f,.19f),
+new Vector3(0,0,-10f),darkMaterial);
+CreateBreakerFistPart("ReactorBreakerSideB"+suffix,gauntlet,
+new Vector3(.215f,.018f,.080f),new Vector3(.055f,.18f,.19f),
+new Vector3(0,0,10f),darkMaterial);
+
+// Orange energy channels make the epic skin immediately readable in the shop and in combat.
+CreateBreakerFistPart("ReactorBreakerRailTop"+suffix,gauntlet,
+new Vector3(0,.165f,.105f),new Vector3(.22f,.025f,.13f),
+Vector3.zero,hotMaterial);
+CreateBreakerFistPart("ReactorBreakerRailL"+suffix,gauntlet,
+new Vector3(-.145f,.045f,.165f),new Vector3(.025f,.15f,.040f),
+new Vector3(0,0,-8f),hotMaterial);
+CreateBreakerFistPart("ReactorBreakerRailR"+suffix,gauntlet,
+new Vector3(.145f,.045f,.165f),new Vector3(.025f,.15f,.040f),
+new Vector3(0,0,8f),hotMaterial);
+CreateBreakerFistPart("ReactorBreakerCore"+suffix,gauntlet,
+new Vector3(0,.095f,.205f),new Vector3(.10f,.085f,.035f),
+new Vector3(0,0,45f),hotMaterial);
 }
 }
 
