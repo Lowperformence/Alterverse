@@ -247,8 +247,10 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out bool respawning);
                 reader.ReadValueSafe(out float respawnRemaining);
                 reader.ReadValueSafe(out float basicRemaining);
-                float[] abilityRemaining=new float[4];
-                for(int ability=0;ability<4;ability++)reader.ReadValueSafe(out abilityRemaining[ability]);
+                reader.ReadValueSafe(out float qRemaining);
+                reader.ReadValueSafe(out float wRemaining);
+                reader.ReadValueSafe(out float eRemaining);
+                reader.ReadValueSafe(out float ultRemaining);
 
                 if(rosterSlot<0||rosterSlot>=slots.Length)continue;
                 CoopHeroSlot actor=slots[rosterSlot];if(actor==null)continue;
@@ -271,8 +273,13 @@ namespace Alterverse.Multiplayer
                 {
                     actor.GetComponent<BasicAttack>()?.ApplyNetworkCooldown(basicRemaining);
                     PlayerHeroAbilities localAbilities=actor.GetComponent<PlayerHeroAbilities>();
-                    if(localAbilities!=null)for(int ability=0;ability<4;ability++)
-                        localAbilities.ApplyNetworkCooldown(ability,abilityRemaining[ability]);
+                    if(localAbilities!=null)
+                    {
+                        localAbilities.ApplyNetworkCooldown(0,qRemaining);
+                        localAbilities.ApplyNetworkCooldown(1,wRemaining);
+                        localAbilities.ApplyNetworkCooldown(2,eRemaining);
+                        localAbilities.ApplyNetworkCooldown(3,ultRemaining);
+                    }
                 }
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);
             }
