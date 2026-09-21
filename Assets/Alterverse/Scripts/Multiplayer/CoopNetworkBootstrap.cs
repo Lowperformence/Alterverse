@@ -13,6 +13,27 @@ namespace Alterverse.Multiplayer
         public static CoopNetworkBootstrap Instance { get; private set; }
         public static NetworkManager Manager => NetworkManager.Singleton;
         public static bool IsListening => NetworkManager.Singleton!=null&&NetworkManager.Singleton.IsListening;
+        public static bool IsTwoPlayerLinkReady
+        {
+            get
+            {
+                NetworkManager manager=NetworkManager.Singleton;
+                if(manager==null||!manager.IsListening)return false;
+                if(manager.IsHost)return manager.ConnectedClientsIds!=null&&manager.ConnectedClientsIds.Count>=2;
+                return manager.IsConnectedClient;
+            }
+        }
+
+        public static string LinkState
+        {
+            get
+            {
+                NetworkManager manager=NetworkManager.Singleton;
+                if(manager==null||!manager.IsListening)return "OFFLINE";
+                if(manager.IsHost)return IsTwoPlayerLinkReady?"HOST + CLIENT CONNECTED":"HOST WAITING FOR CLIENT";
+                return manager.IsConnectedClient?"CLIENT CONNECTED":"CLIENT CONNECTING";
+            }
+        }
 
         public static void ShutdownLocalNetwork()
         {
