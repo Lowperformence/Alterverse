@@ -1,5 +1,7 @@
+using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.Multiplayer;
 using Alterverse.Online;
 using Alterverse.Profile;
 using Alterverse.Shop;
@@ -10,7 +12,7 @@ namespace Alterverse.UI
 {
     public sealed class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings, Coop }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
         private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
@@ -30,7 +32,7 @@ namespace Alterverse.UI
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
-        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "";
+        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
         private FrontEndTheme theme;
         private MenuCosmicBackdrop backdrop;
         private MenuHeroShowcase showcase;
@@ -153,6 +155,7 @@ namespace Alterverse.UI
                     case Page.Profile: DrawProfile(); break;
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
+                    case Page.Coop: DrawCoop(); break;
                     default: DrawHome(); break;
                 }
             }
@@ -234,27 +237,28 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+28,228,w-56,22),"AVAILABLE NOW",theme.Small,true);
             theme.Label(new Rect(Left+28,252,w-56,42),"AI MATCH 5v5",theme.Title);
             theme.Label(new Rect(Left+28,300,w-56,48),"You + 4 allied bots against 5 enemy bots.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            theme.Label(new Rect(Left+28,354,w-56,20),"Online multiplayer is not available yet.",theme.Small,true);
+            if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP VS AI  •  PRIVATE LOBBY",true))
+                SetPage(Page.Coop);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
-            theme.Label(new Rect(Left+28,382,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
+            theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,404,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
 
-            theme.Label(new Rect(Left+28,438,w-56,20),"AI DIFFICULTY",theme.Small,true);
-            var difficulty=Alterverse.AI.BotDifficultySettings.Selected;
+            theme.Label(new Rect(Left+28,446,w-56,20),"AI DIFFICULTY",theme.Small,true);
+            var difficulty=BotDifficultySettings.Selected;
             float gap=8f,buttonW=(w-56-gap*3)/4f;
             for(int i=0;i<4;i++)
             {
-                var level=(Alterverse.AI.BotDifficulty)i;
-                if(theme.Action(new Rect(Left+28+i*(buttonW+gap),462,buttonW,42),
-                    Alterverse.AI.BotDifficultySettings.Label(level),selected:difficulty==level))
+                var level=(BotDifficulty)i;
+                if(theme.Action(new Rect(Left+28+i*(buttonW+gap),470,buttonW,42),
+                    BotDifficultySettings.Label(level),selected:difficulty==level))
                 {
-                    Alterverse.AI.BotDifficultySettings.Selected=level;
+                    BotDifficultySettings.Selected=level;
                     difficulty=level;
                 }
             }
 
-            theme.Label(new Rect(Left+28,516,w-56,20),"ARENA",theme.Small,true);
+            theme.Label(new Rect(Left+28,520,w-56,20),"ARENA",theme.Small,true);
             ArenaVariant selectedArena=ArenaVariantRuntime.Selected;
             int arenaCount=ArenaShopCatalog.Items.Length;
             if(arenaCount>0)
@@ -264,7 +268,7 @@ namespace Alterverse.UI
 
                 float arrowW=46f,selectorGap=8f;
                 float selectorX=Left+28f,selectorW=w-56f;
-                if(theme.Action(new Rect(selectorX,540,arrowW,44),"<",enabled:arenaCount>1))
+                if(theme.Action(new Rect(selectorX,544,arrowW,44),"<",enabled:arenaCount>1))
                 {
                     playArenaBrowseIndex=(playArenaBrowseIndex-1+arenaCount)%arenaCount;
                     launchMessage="";
@@ -276,15 +280,15 @@ namespace Alterverse.UI
                 float centerX=selectorX+arrowW+selectorGap;
                 float centerW=selectorW-arrowW*2-selectorGap*2;
                 string arenaLabel=$"{playArenaBrowseIndex+1} / {arenaCount}   •   {browsed.Name}";
-                if(theme.Action(new Rect(centerX,540,centerW,44),arenaLabel,selected:selectedNow,enabled:owned))
+                if(theme.Action(new Rect(centerX,544,centerW,44),arenaLabel,selected:selectedNow,enabled:owned))
                 {
                     ArenaVariantRuntime.Select(browsed.Variant);
                     selectedArena=browsed.Variant;
                     launchMessage="";
                 }
-                FrontEndTheme.Fill(new Rect(centerX+16,580,centerW-32,3),new Color(browsed.Accent.r,browsed.Accent.g,browsed.Accent.b,.85f));
+                FrontEndTheme.Fill(new Rect(centerX+16,584,centerW-32,3),new Color(browsed.Accent.r,browsed.Accent.g,browsed.Accent.b,.85f));
 
-                if(theme.Action(new Rect(selectorX+selectorW-arrowW,540,arrowW,44),">",enabled:arenaCount>1))
+                if(theme.Action(new Rect(selectorX+selectorW-arrowW,544,arrowW,44),">",enabled:arenaCount>1))
                 {
                     playArenaBrowseIndex=(playArenaBrowseIndex+1)%arenaCount;
                     launchMessage="";
@@ -293,7 +297,7 @@ namespace Alterverse.UI
                 browsed=ArenaShopCatalog.Items[playArenaBrowseIndex];
                 owned=ArenaUnlockInventory.Owned(browsed.Variant);
                 selectedNow=selectedArena==browsed.Variant;
-                theme.Center(new Rect(selectorX,586,selectorW,22),ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
+                theme.Center(new Rect(selectorX,590,selectorW,18),ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
             }
 
             if (theme.Action(new Rect(Left,620,w,58),"START AI MATCH",true)) BeginLaunch();
@@ -306,6 +310,129 @@ namespace Alterverse.UI
             theme.Label(new Rect(x+24,578,rw-48,24),Roles[selectedHero],theme.Small,true);
             if (theme.Action(new Rect(x+24,620,rw-48,54),"CHANGE HERO")) SetPage(Page.Heroes);
         }
+        private void DrawCoop()
+        {
+            Heading("Private Co-op","Create a two-player lobby, invite one friend by code, then play together against AI.");
+
+            CoopLobbyService coop=CoopLobbyService.Instance;
+            if(coop==null)
+            {
+                theme.Panel(new Rect(Left,226,ContentWidth,360));
+                theme.Center(new Rect(Left+32,360,ContentWidth-64,42),"INITIALIZING CO-OP SERVICES...");
+                return;
+            }
+
+            if(!coop.InLobby)
+            {
+                float gap=24f;
+                float panelW=(ContentWidth-gap)*.5f;
+
+                theme.Panel(new Rect(Left,226,panelW,360));
+                theme.Label(new Rect(Left+28,250,panelW-56,32),"CREATE LOBBY",theme.Heading);
+                theme.Label(new Rect(Left+28,292,panelW-56,74),"Host a private room for you and one friend.\nNo matchmaking. No public player list.",theme.Body,true);
+                theme.Label(new Rect(Left+28,386,panelW-56,42),"HOST + FRIEND + 3 BOTS  VS  5 BOTS",theme.Small,true);
+                if(theme.Action(new Rect(Left+28,454,panelW-56,58),coop.Busy?"CONNECTING...":"CREATE PRIVATE LOBBY",true,enabled:!coop.Busy))
+                    _=coop.CreateLobbyAsync();
+
+                float right=Left+panelW+gap;
+                theme.Panel(new Rect(right,226,panelW,360));
+                theme.Label(new Rect(right+28,250,panelW-56,32),"JOIN LOBBY",theme.Heading);
+                theme.Label(new Rect(right+28,292,panelW-56,52),"Enter the join code your friend sent you.",theme.Body,true);
+                GUI.SetNextControlName("DF_CoopJoinCode");
+                joinCodeInput=CoopLobbyService.NormalizeJoinCode(
+                    GUI.TextField(new Rect(right+28,366,panelW-56,54),joinCodeInput,12,theme.Field));
+                theme.Center(new Rect(right+28,426,panelW-56,24),string.IsNullOrEmpty(joinCodeInput)?"ENTER CODE":joinCodeInput);
+                if(theme.Action(new Rect(right+28,454,panelW-56,58),coop.Busy?"CONNECTING...":"JOIN PRIVATE LOBBY",true,
+                    enabled:!coop.Busy&&joinCodeInput.Length>=4))
+                    _=coop.JoinLobbyAsync(joinCodeInput);
+
+                string footer=string.IsNullOrEmpty(coop.LastError)?coop.Status:coop.Status+"  •  "+coop.LastError;
+                theme.Label(new Rect(Left,610,ContentWidth,52),footer,theme.Small,true);
+                theme.Label(new Rect(Left,670,ContentWidth,24),"PHASE 1 • LOBBY / HERO / READY / HOST SETTINGS",theme.Small,true);
+                return;
+            }
+
+            ArenaVariant lobbyArena=coop.LobbyArena;
+            BotDifficulty lobbyDifficulty=coop.LobbyDifficulty;
+            ArenaShopItem arenaItem=ArenaShopCatalog.For(lobbyArena);
+
+            theme.Panel(new Rect(Left,222,ContentWidth,94));
+            theme.Label(new Rect(Left+24,238,220,22),coop.IsHost?"HOST LOBBY":"FRIEND LOBBY",theme.Small,true);
+            theme.Label(new Rect(Left+24,262,310,36),$"CODE  {coop.JoinCode}",theme.Heading);
+            if(theme.Action(new Rect(Left+350,244,126,44),"COPY CODE",enabled:!string.IsNullOrEmpty(coop.JoinCode)))
+            {
+                GUIUtility.systemCopyBuffer=coop.JoinCode;
+                joinCodeInput=coop.JoinCode;
+            }
+            theme.Label(new Rect(Left+500,246,ContentWidth-690,22),$"PLAYERS  {coop.PlayerCount} / {coop.MaxPlayers}",theme.Small,true);
+            if(theme.Action(new Rect(Right-170,244,170,44),coop.Busy?"PLEASE WAIT":"LEAVE LOBBY",enabled:!coop.Busy))
+                _=coop.LeaveLobbyAsync();
+
+            float playerGap=18f;
+            float playerW=(ContentWidth-playerGap)*.5f;
+            IReadOnlyList<CoopLobbyService.MemberView> members=coop.Members;
+            for(int slot=0;slot<2;slot++)
+            {
+                float x=Left+slot*(playerW+playerGap);
+                theme.Panel(new Rect(x,332,playerW,188));
+
+                if(slot>=members.Count)
+                {
+                    theme.Label(new Rect(x+22,350,playerW-44,28),slot==0?"HOST":"FRIEND",theme.Small,true);
+                    theme.Center(new Rect(x+22,405,playerW-44,42),"WAITING FOR FRIEND...");
+                    continue;
+                }
+
+                CoopLobbyService.MemberView member=members[slot];
+                string role=member.IsHost?"HOST":"FRIEND";
+                if(member.IsLocal)role+="  •  YOU";
+                theme.Label(new Rect(x+22,350,playerW-44,22),role,theme.Small,true);
+                theme.Label(new Rect(x+22,376,playerW-44,30),member.DisplayName,theme.Heading);
+                theme.Label(new Rect(x+22,414,playerW-44,26),"HERO  /  "+HeroIdentity.NameFor(member.Hero).ToUpperInvariant(),theme.Body);
+                theme.Label(new Rect(x+22,452,playerW-44,24),member.Ready?"READY":"NOT READY",theme.Small,true);
+
+                if(member.IsLocal)
+                {
+                    if(theme.Action(new Rect(x+playerW-142,408,48,38),"<",enabled:!coop.Busy))
+                        _=coop.CycleLocalHeroAsync(-1);
+                    if(theme.Action(new Rect(x+playerW-84,408,48,38),">",enabled:!coop.Busy))
+                        _=coop.CycleLocalHeroAsync(1);
+                    string readyText=coop.LocalReady?"UNREADY":"READY";
+                    if(theme.Action(new Rect(x+playerW-184,462,148,42),readyText,true,enabled:!coop.Busy&&!coop.HasHeroConflict))
+                        _=coop.SetLocalReadyAsync(!coop.LocalReady);
+                }
+            }
+
+            theme.Panel(new Rect(Left,536,ContentWidth,90));
+            theme.Label(new Rect(Left+22,548,110,20),"MATCH",theme.Small,true);
+
+            float mapX=Left+132;
+            if(coop.IsHost&&theme.Action(new Rect(mapX,548,42,34),"<",enabled:!coop.Busy))
+                _=coop.CycleHostArenaAsync(-1);
+            theme.Center(new Rect(mapX+48,548,220,34),arenaItem.Name);
+            if(coop.IsHost&&theme.Action(new Rect(mapX+274,548,42,34),">",enabled:!coop.Busy))
+                _=coop.CycleHostArenaAsync(1);
+
+            float aiX=Left+480;
+            if(coop.IsHost&&theme.Action(new Rect(aiX,548,42,34),"<",enabled:!coop.Busy))
+                _=coop.CycleHostDifficultyAsync(-1);
+            theme.Center(new Rect(aiX+48,548,184,34),"AI  •  "+BotDifficultySettings.Label(lobbyDifficulty).ToUpperInvariant());
+            if(coop.IsHost&&theme.Action(new Rect(aiX+238,548,42,34),">",enabled:!coop.Busy))
+                _=coop.CycleHostDifficultyAsync(1);
+
+            string startLabel=coop.CanStartLobby
+                ?(coop.MatchNetworkingEnabled?"START CO-OP":"LOBBY READY • MATCH SYNC NEXT")
+                :"WAITING FOR BOTH PLAYERS";
+            theme.Action(new Rect(Right-330,548,330,54),startLabel,true,
+                enabled:coop.CanStartLobby&&coop.MatchNetworkingEnabled&&!coop.Busy);
+
+            string state=coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
+                !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
+            theme.Label(new Rect(Left,646,ContentWidth,28),state,theme.Small,true);
+            theme.Label(new Rect(Left,678,ContentWidth,20),
+                "SAFE PHASE 1: PRIVATE SESSION IS LIVE. THE EXISTING LOCAL MATCH IS NOT NETWORK-LAUNCHED YET.",theme.Small,true);
+        }
+
         private void DrawHeroes()
         {
             Heading("Heroes","Six roles. Choose how you fight.");
