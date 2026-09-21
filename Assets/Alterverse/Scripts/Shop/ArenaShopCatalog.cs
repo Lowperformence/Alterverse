@@ -34,7 +34,8 @@ namespace Alterverse.Shop
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
             new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",PremiumArenaPrice,new Color(.88f,.28f,.12f)),
-            new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",PremiumArenaPrice,new Color(.20f,.78f,.38f))
+            new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",PremiumArenaPrice,new Color(.20f,.78f,.38f)),
+            new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT • PLAY TO UNLOCK",0,new Color(.16f,.36f,.92f))
         };
 
         public static ArenaShopItem For(ArenaVariant variant)=>Items[Mathf.Clamp((int)variant,0,Items.Length-1)];
@@ -44,6 +45,7 @@ namespace Alterverse.Shop
     {
         internal const string MarsOwnedKey="DF_ArenaOwned_Mars";
         internal const string GreenOwnedKey="DF_ArenaOwned_GreenPlanet";
+        public const int NoxaraMatchesRequired=5;
 
         private static string Key(ArenaVariant variant)=>variant switch
         {
@@ -55,14 +57,21 @@ namespace Alterverse.Shop
         public static bool Owned(ArenaVariant variant)
         {
             if(variant==ArenaVariant.Moon)return true;
+            if(variant==ArenaVariant.Noxara)return MatchRewardService.MatchesCompleted>=NoxaraMatchesRequired;
             string key=Key(variant);
             return !string.IsNullOrEmpty(key)&&PlayerPrefs.GetInt(key,0)==1;
         }
+
+        public static int NoxaraProgress=>Mathf.Clamp(MatchRewardService.MatchesCompleted,0,NoxaraMatchesRequired);
+        public static string UnlockRequirement(ArenaVariant variant)=>variant==ArenaVariant.Noxara
+            ? $"COMPLETE {NoxaraMatchesRequired} MATCHES"
+            : "STORE UNLOCK";
 
         public static ArenaPurchaseResult Purchase(ArenaVariant variant)
         {
             ProfileTransaction.Recover();
             if(variant==ArenaVariant.Moon)return ArenaPurchaseResult.AlreadyOwned;
+            if(variant==ArenaVariant.Noxara)return ArenaPurchaseResult.NotPurchasable;
             string key=Key(variant);
             if(string.IsNullOrEmpty(key))return ArenaPurchaseResult.NotPurchasable;
             if(Owned(variant))return ArenaPurchaseResult.AlreadyOwned;
