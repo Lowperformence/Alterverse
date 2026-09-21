@@ -15,6 +15,8 @@ namespace Alterverse.EditorChecks
         private const string GreenKey="DF_ArenaOwned_GreenPlanet";
         private const string MatchesKey="DF_MatchesCompleted";
         private const string SelectedKey="DF_SelectedArenaVariant";
+        private const string ShuffleKey="DF_ArenaShuffle";
+        private const string LastShuffleKey="DF_LastShuffledArena";
 
         private readonly struct PrefSnapshot
         {
@@ -29,7 +31,8 @@ namespace Alterverse.EditorChecks
         public static void Run()
         {
             ProfileTransaction.Recover();
-            PrefSnapshot balance=new(BalanceKey),mars=new(MarsKey),green=new(GreenKey),matches=new(MatchesKey),selected=new(SelectedKey);
+            PrefSnapshot balance=new(BalanceKey),mars=new(MarsKey),green=new(GreenKey),matches=new(MatchesKey),selected=new(SelectedKey),
+                shuffle=new(ShuffleKey),lastShuffle=new(LastShuffleKey);
             try
             {
                 PlayerPrefs.SetInt(BalanceKey,1000);
@@ -37,6 +40,8 @@ namespace Alterverse.EditorChecks
                 PlayerPrefs.DeleteKey(GreenKey);
                 PlayerPrefs.SetInt(MatchesKey,0);
                 PlayerPrefs.DeleteKey(SelectedKey);
+                PlayerPrefs.DeleteKey(ShuffleKey);
+                PlayerPrefs.DeleteKey(LastShuffleKey);
                 PlayerPrefs.Save();
 
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be owned.");
@@ -62,6 +67,12 @@ namespace Alterverse.EditorChecks
                 Assert(PlayerWallet.Balance==500,"Duplicate Mars purchase must not debit shards.");
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&ArenaVariantRuntime.Selected==ArenaVariant.Mars,
                     "Owned Mars must be selectable.");
+                ArenaVariantRuntime.SetShuffleEnabled(true);
+                Assert(ArenaVariantRuntime.ShuffleEnabled,"Arena shuffle must persist when enabled.");
+                Assert(ArenaVariantRuntime.RandomOwnedArena(ArenaVariant.Moon)==ArenaVariant.Mars,
+                    "Shuffle must avoid the previous arena when exactly one other owned arena exists.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&!ArenaVariantRuntime.ShuffleEnabled,
+                    "Manual arena selection must turn shuffle off.");
 
                 PlayerPrefs.SetInt(BalanceKey,499);
                 PlayerPrefs.Save();
@@ -107,7 +118,8 @@ namespace Alterverse.EditorChecks
             }
             finally
             {
-                balance.Restore();mars.Restore();green.Restore();matches.Restore();selected.Restore();PlayerPrefs.Save();
+                balance.Restore();mars.Restore();green.Restore();matches.Restore();selected.Restore();
+                shuffle.Restore();lastShuffle.Restore();PlayerPrefs.Save();
             }
         }
 
