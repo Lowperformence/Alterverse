@@ -582,6 +582,33 @@ namespace Alterverse.Multiplayer
 
         public bool MatchNetworkingEnabled=>true;
 
+        public void HandleTransportDisconnect(bool localConnectionLost)
+        {
+            if(session==null)return;
+
+            if(IsHost)
+            {
+                if(IsStaging)
+                {
+                    _=CancelMatchStagingAsync();
+                    status="RELAY CLIENT LOST • MATCH PREP CANCELLED";
+                }
+                else if((IsLaunching||CoopAuthority.Active)&&!IsPostMatch&&!IsAborted)
+                    _=AbortActiveMatchAsync("A co-op player lost the Relay connection.");
+                RaiseChanged();
+                return;
+            }
+
+            if(!localConnectionLost||(!CoopAuthority.Active&&!IsMatchPreparing))return;
+            string reason="Connection to the co-op host was lost.";
+            CoopAuthority.EndMatch();
+            lastError=reason;
+            status="CO-OP CONNECTION LOST";
+            Alterverse.UI.MainMenuController.ShowCoopAfterMatch(reason);
+            RaiseChanged();
+            _=LeaveLobbyAsync();
+        }
+
         private static Dictionary<string,PlayerProperty> BuildLocalPlayerProperties(bool ready)
         {
             string name=SanitizeDisplayName(PlayerProfile.PlayerName);
