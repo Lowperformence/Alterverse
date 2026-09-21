@@ -343,10 +343,11 @@ namespace Alterverse.Visuals
                     new[]{.11f,.15f,.18f,.12f});
                 Sculpt("Vambrace"+s,fore,new Vector3(0,-.31f,.02f),new Vector3(1.24f,1f,1.18f),jointMetal,arm);
 
-                // Oversized shoulder armor creates the reference's broad silhouette.
-                Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.68f,.46f,.52f,yellow,side*-10);
+                // Keep Brakk broad, but reduce the shoulder armor to 50% of the previous size
+                // so the torso, head and gauntlets remain readable from the gameplay camera.
+                Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.34f,.23f,.26f,yellow,side*-10);
                 Bind("BrakkShoulder"+s,"Arm"+s);
-                Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.29f),new Vector3(.25f,.045f,.030f),blackMetal,
+                Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.15f),new Vector3(.125f,.0225f,.015f),blackMetal,
                     new Vector3(0,0,side*-14),"Arm"+s);
             }
 
