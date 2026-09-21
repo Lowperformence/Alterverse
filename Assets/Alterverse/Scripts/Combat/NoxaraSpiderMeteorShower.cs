@@ -18,6 +18,7 @@ namespace Alterverse.Combat
         private const float Telegraph=1.55f;
         private const int Meteors=7;
         private const int ScanBufferSize=32;
+        public static event System.Action<int,Vector3,float,float,float> NetworkMeteorSpawned;
 
         private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];
         private HotZoneTank owner;
@@ -34,6 +35,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(Time.timeScale<=0f||owner==null||self==null||self.IsDead||!owner.IsNoxaraSpider)return;
 
             if(Time.time>=nextScan)
@@ -50,7 +52,22 @@ namespace Alterverse.Combat
                 Vector2 offset=Random.insideUnitCircle*Radius;
                 Vector3 point=transform.position+new Vector3(offset.x,0f,offset.y);
                 point.y=LunarSurfaceField.Surface(point.x,point.z).y;
-                NoxaraMeteorStrike.Create(point,Telegraph,PlanetMeteorShower.MeteorDamage,i*.16f,owner);
+                float stagger=i*.16f;
+                NoxaraMeteorStrike.Create(point,Telegraph,PlanetMeteorShower.MeteorDamage,stagger,owner);
+                if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
+                    NetworkMeteorSpawned?.Invoke(owner.Team,point,Telegraph,PlanetMeteorShower.MeteorDamage,stagger);
+            }
+        }
+
+        public static void ApplyNetworkMeteor(int team,Vector3 point,float delay,float damage,float stagger)
+        {
+            if(Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
+            System.Collections.Generic.IReadOnlyList<HotZoneTank> tanks=HotZoneTank.Active;
+            for(int i=0;i<tanks.Count;i++)
+            {
+                HotZoneTank tank=tanks[i];
+                if(tank!=null&&tank.IsNoxaraSpider&&tank.Team==team&&tank.TankHealth!=null&&!tank.TankHealth.IsDead)
+                {NoxaraMeteorStrike.Create(point,delay,damage,stagger,tank);return;}
             }
         }
 
