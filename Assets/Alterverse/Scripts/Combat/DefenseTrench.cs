@@ -175,6 +175,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if (Time.timeScale <= 0f) return;
 
             if (Time.time < nextDamageTick) return;
