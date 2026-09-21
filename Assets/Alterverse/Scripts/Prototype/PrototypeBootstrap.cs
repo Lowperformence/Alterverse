@@ -70,6 +70,7 @@ new GameObject("DF_CoopHeroStateSync").AddComponent<CoopHeroStateSync>();
 new GameObject("DF_CoopMatchStateSync").AddComponent<CoopMatchStateSync>();
 new GameObject("DF_CoopWorldEventSync").AddComponent<CoopWorldEventSync>();
 new GameObject("DF_CoopWorldStateSync").AddComponent<CoopWorldStateSync>();
+new GameObject("DF_CoopMatchResultSync").AddComponent<CoopMatchResultSync>();
 }
 else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
 
