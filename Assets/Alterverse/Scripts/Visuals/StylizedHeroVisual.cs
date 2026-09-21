@@ -302,72 +302,71 @@ private void ApplyStarlineOverdrive(Shader shader,Material energyMaterial)
 {
 Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
 
-// Bring the standard rifle detail pieces under the weapon pivot so the complete
-// premium rifle scales and moves as one readable weapon.
-Bind("RifleReceiver","WeaponR");
-Bind("RifleMagazine","WeaponR");
-Bind("MuzzleBrake","WeaponR");
-Bind("ScopeLens","WeaponR");
-Bind("BarrelRail-1","WeaponR");
-Bind("BarrelRail1","WeaponR");
+// RED JUDGEMENT // EPIC: keep the elite base rifle architecture but push it into a
+// longer precision silhouette with black armor, gunmetal reinforcement and red optics.
+weapon.localScale*=1.18f;
 
-// The previous premium rifle was 1.25x. 1.50x is another +20% from that state.
-weapon.localScale*=1.50f;
+Color blackSteel=new(.030f,.034f,.040f,1f);
+Material blackMaterial=new Material(shader){name="DF_RedJudgementBlackSteel",color=blackSteel};
+if(blackMaterial.HasProperty("_BaseColor"))blackMaterial.SetColor("_BaseColor",blackSteel);
+if(blackMaterial.HasProperty("_Metallic"))blackMaterial.SetFloat("_Metallic",.88f);
+if(blackMaterial.HasProperty("_Smoothness"))blackMaterial.SetFloat("_Smoothness",.42f);
+ownedMaterials.Add(blackMaterial);
 
-Color darkMetal=new Color(.045f,.055f,.072f);
-Material darkMaterial=new Material(shader){name="DF_StarlineDarkMetal",color=darkMetal};
-if(darkMaterial.HasProperty("_BaseColor"))darkMaterial.SetColor("_BaseColor",darkMetal);
-if(darkMaterial.HasProperty("_Metallic"))darkMaterial.SetFloat("_Metallic",.82f);
-if(darkMaterial.HasProperty("_Smoothness"))darkMaterial.SetFloat("_Smoothness",.43f);
-ownedMaterials.Add(darkMaterial);
+Color gunmetal=new(.24f,.26f,.29f,1f);
+Material gunmetalMaterial=new Material(shader){name="DF_RedJudgementGunmetal",color=gunmetal};
+if(gunmetalMaterial.HasProperty("_BaseColor"))gunmetalMaterial.SetColor("_BaseColor",gunmetal);
+if(gunmetalMaterial.HasProperty("_Metallic"))gunmetalMaterial.SetFloat("_Metallic",.90f);
+if(gunmetalMaterial.HasProperty("_Smoothness"))gunmetalMaterial.SetFloat("_Smoothness",.54f);
+ownedMaterials.Add(gunmetalMaterial);
 
-Color detailMetal=new Color(.42f,.49f,.58f);
-Material detailMaterial=new Material(shader){name="DF_StarlineDetailMetal",color=detailMetal};
-if(detailMaterial.HasProperty("_BaseColor"))detailMaterial.SetColor("_BaseColor",detailMetal);
-if(detailMaterial.HasProperty("_Metallic"))detailMaterial.SetFloat("_Metallic",.88f);
-if(detailMaterial.HasProperty("_Smoothness"))detailMaterial.SetFloat("_Smoothness",.56f);
-ownedMaterials.Add(detailMaterial);
-
-Color sightRed=new Color(1f,.018f,.012f);
-Material sightMaterial=new Material(shader){name="DF_StarlineRedSight",color=sightRed};
-if(sightMaterial.HasProperty("_BaseColor"))sightMaterial.SetColor("_BaseColor",sightRed);
-if(sightMaterial.HasProperty("_Metallic"))sightMaterial.SetFloat("_Metallic",.10f);
-if(sightMaterial.HasProperty("_Smoothness"))sightMaterial.SetFloat("_Smoothness",.96f);
-if(sightMaterial.HasProperty("_EmissionColor"))
+Color redCore=new(1f,.025f,.018f,1f);
+Material redMaterial=new Material(shader){name="DF_RedJudgementOptic",color=redCore};
+if(redMaterial.HasProperty("_BaseColor"))redMaterial.SetColor("_BaseColor",redCore);
+if(redMaterial.HasProperty("_Metallic"))redMaterial.SetFloat("_Metallic",.08f);
+if(redMaterial.HasProperty("_Smoothness"))redMaterial.SetFloat("_Smoothness",.96f);
+if(redMaterial.HasProperty("_EmissionColor"))
 {
-sightMaterial.EnableKeyword("_EMISSION");
-sightMaterial.SetColor("_EmissionColor",sightRed*4.5f);
+redMaterial.EnableKeyword("_EMISSION");
+redMaterial.SetColor("_EmissionColor",redCore*4.6f);
 }
-ownedMaterials.Add(sightMaterial);
+ownedMaterials.Add(redMaterial);
 
-// Recreate the standard weapon's material separation instead of tinting the
-// whole hierarchy cyan. The receiver stays premium cyan; functional details read separately.
-Transform[] rifleParts=root.GetComponentsInChildren<Transform>(true);
-for(int i=0;i<rifleParts.Length;i++)
+string[] blackParts={"Rifle","RifleReceiver","RifleStock","RifleMagazine","Scope","RifleForegrip","RifleSensor"};
+for(int i=0;i<blackParts.Length;i++)
 {
-Transform part=rifleParts[i];if(part==null)continue;
-switch(part.name)
+Transform part=FindVisual(blackParts[i]);
+if(part!=null)ApplyGlow(part,blackMaterial);
+}
+string[] metalParts={"RifleBarrel","MuzzleBrake","ScopeBridge","WeaponRail"};
+for(int i=0;i<metalParts.Length;i++)
 {
-case "DF_Rifle":
-case "DF_RifleReceiver":
-ApplyGlow(part,energyMaterial);
-break;
-case "DF_RifleMagazine":
-case "DF_Scope":
-ApplyGlow(part,darkMaterial);
-break;
-case "DF_WeaponRail":
-case "DF_MuzzleBrake":
-case "DF_BarrelRail-1":
-case "DF_BarrelRail1":
-ApplyGlow(part,detailMaterial);
-break;
-case "DF_ScopeLens":
-part.localScale*=1.12f;
-ApplyGlow(part,sightMaterial);
-break;
+Transform part=FindVisual(metalParts[i]);
+if(part!=null)ApplyGlow(part,gunmetalMaterial);
 }
+Transform lens=FindVisual("ScopeLens");
+if(lens!=null){lens.localScale*=1.18f;ApplyGlow(lens,redMaterial);}
+Transform sensor=FindVisual("RifleSensorGlow");
+if(sensor!=null){sensor.localScale*=1.22f;ApplyGlow(sensor,redMaterial);}
+
+// Premium silhouette changes: elongated shroud, split muzzle cage, side energy rails,
+// secondary rangefinder and a red judgement core. Not a recolor.
+CreateRedJudgementPart("RJ_UpperShroud",weapon,new Vector3(0,.10f,.78f),new Vector3(.18f,.10f,.62f),Vector3.zero,blackMaterial);
+CreateRedJudgementPart("RJ_LeftRail",weapon,new Vector3(-.135f,.03f,.55f),new Vector3(.028f,.055f,.58f),Vector3.zero,redMaterial);
+CreateRedJudgementPart("RJ_RightRail",weapon,new Vector3(.135f,.03f,.55f),new Vector3(.028f,.055f,.58f),Vector3.zero,redMaterial);
+CreateRedJudgementPart("RJ_MuzzleWingL",weapon,new Vector3(-.115f,.015f,1.34f),new Vector3(.070f,.16f,.22f),new Vector3(0,0,-8f),gunmetalMaterial);
+CreateRedJudgementPart("RJ_MuzzleWingR",weapon,new Vector3(.115f,.015f,1.34f),new Vector3(.070f,.16f,.22f),new Vector3(0,0,8f),gunmetalMaterial);
+CreateRedJudgementPart("RJ_Rangefinder",weapon,new Vector3(.145f,.25f,.24f),new Vector3(.095f,.12f,.30f),Vector3.zero,blackMaterial);
+CreateRedJudgementPart("RJ_RangefinderLens",weapon,new Vector3(.145f,.25f,.405f),new Vector3(.050f,.050f,.018f),Vector3.zero,redMaterial);
+CreateRedJudgementPart("RJ_Core",weapon,new Vector3(-.13f,.02f,.18f),new Vector3(.030f,.10f,.18f),Vector3.zero,redMaterial);
 }
+
+private GameObject CreateRedJudgementPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
+{
+GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
+MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+if(renderer!=null)renderer.sharedMaterial=material;
+return part;
 }
 
 private void ApplyLifeweaveOverdrive(Shader shader,Material energyMaterial)
