@@ -67,6 +67,7 @@ Debug.LogError("DIMENSIONS FRONT CO-OP: deterministic roster build failed.");
 return;
 }
 new GameObject("DF_CoopHeroStateSync").AddComponent<CoopHeroStateSync>();
+new GameObject("DF_CoopMatchStateSync").AddComponent<CoopMatchStateSync>();
 }
 else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
 
