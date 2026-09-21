@@ -44,9 +44,9 @@ namespace Alterverse.AI
             if(target!=observedTarget)
             {
                 observedTarget=target;
-                float reactionScale=counterFire?.28f:.65f;
+                float reactionScale=counterFire ? 0.28f : 0.65f;
                 targetReadyAt=Time.time+Mathf.Clamp(brain.Difficulty.ReactionDelay*reactionScale*brain.DecisionRhythm,
-                    counterFire?.025f:.06f,counterFire?.18f:.55f);
+                    counterFire ? 0.025f : 0.06f,counterFire ? 0.18f : 0.55f);
             }
             if(targetDistance>range)return;
             Vector3 delta=sensor.ObservedTargetPosition-transform.position;delta.y=0;
