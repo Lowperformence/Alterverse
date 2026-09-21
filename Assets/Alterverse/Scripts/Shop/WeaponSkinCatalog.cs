@@ -36,7 +36,9 @@ namespace Alterverse.Shop
             new(HeroId.Elyra,"ASTRAL ORBIT // EPIC","Astral Crystal Staff",
                 "A void-lit crystal focus with silver orbital rings, suspended shards and a deep violet stellar core.",
                 new Color(.70f,.24f,1f)),
-            new(HeroId.Mira,"LIFEWEAVE // OVERDRIVE","Support Staff","",new Color(.12f,1f,.48f)),
+            new(HeroId.Mira,"ASCENSION OF AURORA // LEGENDARY","Ascendant Light Staff",
+                "Ceremonial pearl-and-gold healing staff with layered cyan halos, an enlarged light crystal and floating crown geometry.",
+                new Color(.58f,.96f,1f)),
             new(HeroId.Rook,"REACTOR BREAKER // EPIC","Reactor Breaker Gauntlets",
                 "Reinforced yellow-black impact gauntlets with brighter orange reactor channels and an expanded premium melee silhouette.",
                 new Color(1f,.32f,.06f))
