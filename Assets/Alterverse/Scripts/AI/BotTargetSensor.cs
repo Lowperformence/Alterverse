@@ -18,6 +18,7 @@ namespace Alterverse.AI
         // Consumers steer toward the last observation, never a hidden live transform.
         public Vector3 ObservedTargetPosition => lastKnownPosition;
         public bool CanObserve(Health target) => IsEnemy(target) && Visible(target);
+        public bool IsRecentAttacker(Health target)=>target!=null&&target==recentAttacker&&Time.time<recentAttackerUntil;
         public void Disengage(Health target)
         {
             ClearTarget();
