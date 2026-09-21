@@ -212,7 +212,7 @@ ownedMaterials.Add(weaponMaterial);
 if(identity.Hero==HeroId.Veyr)ApplyNullEdgeOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Elyra){ScaleAndGlow("Orb",2.106f,weaponMaterial);ScaleAndGlow("OrbitL",1.872f,weaponMaterial);ScaleAndGlow("OrbitR",1.872f,weaponMaterial);}
+else if(identity.Hero==HeroId.Elyra)ApplyAstralOrbitOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
