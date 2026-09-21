@@ -93,6 +93,13 @@ namespace Alterverse.Visuals
                     float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.29f,.66f,tone));
                     pixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
                 }
+                else if(ArenaVariantRuntime.IsNoxara)
+                {
+                    // Noxara reuses the exact lunar relief while shifting the regolith into a
+                    // deep cobalt/navy range. Keep values restrained so heroes remain readable.
+                    float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.29f,.66f,tone));
+                    pixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
+                }
                 else pixels[i]=new Color(value*.94f,value*.98f,value*(1.055f-dust*.025f),1);
             }
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
