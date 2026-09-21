@@ -59,7 +59,8 @@ namespace Alterverse.Combat
         private readonly Vector3[] spiderSwingEnd=new Vector3[8];
         private readonly bool[] spiderWasSwing=new bool[8];
         private Vector3 spiderBodyRest,spiderBarrelRest;
-        private float spiderMoveBlend,spiderGaitClock,spiderTurnLean;
+        private float spiderMoveBlend,spiderGaitClock,spiderTurnLean,spiderVisualYaw;
+        private Vector3 spiderPreviousForward;
         private bool spiderFeetInitialized;
         private Color spiderEnergyBase=new(1f,.72f,.04f,1f);
         private int movementRecoveryAttempt;
@@ -494,7 +495,8 @@ namespace Alterverse.Combat
                 }
             }
 
-            spiderGaitClock=0f;spiderMoveBlend=0f;spiderTurnLean=0f;
+            spiderGaitClock=0f;spiderMoveBlend=0f;spiderTurnLean=0f;spiderVisualYaw=0f;
+            spiderPreviousForward=transform.forward;
             for(int i=0;i<8;i++)
             {
                 Vector3 rest=SpiderDesiredFootWorld(i,Vector3.zero);
@@ -527,11 +529,21 @@ namespace Alterverse.Combat
             float desiredLean=Mathf.Clamp(turnError*.12f,-4.2f,4.2f);
             spiderTurnLean=Mathf.Lerp(spiderTurnLean,desiredLean,1f-Mathf.Exp(-5.5f*Time.deltaTime));
 
+            // The locomotion owner turns the gameplay root quickly for responsiveness. Counter-lag
+            // the visual chassis a little so a heavy eight-legged machine appears to carry inertia.
+            if(spiderPreviousForward.sqrMagnitude>.01f)
+            {
+                float parentTurn=Vector3.SignedAngle(spiderPreviousForward,transform.forward,Vector3.up);
+                spiderVisualYaw=Mathf.Clamp(spiderVisualYaw-parentTurn,-26f,26f);
+            }
+            spiderPreviousForward=transform.forward;
+            spiderVisualYaw=Mathf.MoveTowards(spiderVisualYaw,0f,150f*Time.deltaTime);
+
             float gaitBob=Mathf.Abs(Mathf.Sin(spiderGaitClock*Mathf.PI*4f))*.025f*spiderMoveBlend;
             float roll=support*1.15f*spiderMoveBlend-spiderTurnLean*.45f;
             float pitch=Mathf.Cos(spiderGaitClock*Mathf.PI*2f)*.55f*spiderMoveBlend;
             spiderBodyRoot.localPosition=spiderBodyRest+Vector3.up*(gaitBob+idle*.006f);
-            spiderBodyRoot.localRotation=Quaternion.Euler(pitch,0f,roll);
+            spiderBodyRoot.localRotation=Quaternion.Euler(pitch,spiderVisualYaw,roll);
 
             if(!spiderFeetInitialized)
             {
@@ -610,8 +622,8 @@ namespace Alterverse.Combat
         {
             int leg=index&3;
             float side=index<4?-1f:1f;
-            float reach=leg==0||leg==3?2.24f:2.34f;
-            float z=leg==0?1.34f:leg==1?.47f:leg==2?-.47f:-1.34f;
+            float reach=leg==0||leg==3?2.12f:2.22f;
+            float z=leg==0?1.30f:leg==1?.45f:leg==2?-.45f:-1.30f;
             Vector3 world=spiderBodyRoot.TransformPoint(new Vector3(side*reach,-.62f,z));
             world+=lead;
             return SpiderDesiredGroundPoint(world);
