@@ -19,13 +19,15 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void Start()
     {
         if(GetComponent<LunarLighting>()==null)gameObject.AddComponent<LunarLighting>();
-        string rootName=ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetGroundProduction":"DF_LunarGroundProduction";
+        string rootName=ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":
+            ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetGroundProduction":
+            ArenaVariantRuntime.IsNoxara?"DF_NoxaraGroundProduction":"DF_LunarGroundProduction";
         root=new GameObject(rootName).transform;
         root.SetParent(transform,false);
-        bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet;
-        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
-        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
-        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
+        bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet,noxara=ArenaVariantRuntime.IsNoxara;
+        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):noxara?new Color(.045f,.075f,.19f,1):new Color(.105f,.12f,.145f,1),.02f,.12f);
+        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):noxara?new Color(.015f,.026f,.075f,1):new Color(.055f,.065f,.082f,1),.01f,.08f);
+        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):noxara?new Color(.09f,.15f,.34f,1):new Color(.19f,.205f,.225f,1),.03f,.11f);
         if(green)alienMineral=Mat(new Color(.35f,.48f,.16f,1),.02f,.18f,true);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
@@ -69,7 +71,9 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
         regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
-        string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":"DF_LunarRegolith";
+        string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
+            ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
+            ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":"DF_LunarRegolith";
         MeshObject(surfaceName,m,regolith,Vector3.zero);
         var edge=new List<Vector3>((xSeg+zSeg)*2);
         for(int x=0;x<xSeg;x++)edge.Add(v[x]);
