@@ -82,7 +82,7 @@ namespace Alterverse.Combat
             // no hero/coordinator destination is available, so reinforcements never depend on a trench.
             Vector3 center=bestZone!=null
                 ? bestZone.transform.position
-                : new Vector3(team==0?-16.25f:16.25f,0f,0f);
+                : new Vector3(team==0?-16.25f:16.25f,.14f,0f);
 
             Vector3 attack=team==0?Vector3.right:Vector3.left;
             float slotLateral=((slot%5)-2)*.82f;
@@ -96,14 +96,17 @@ namespace Alterverse.Combat
                     float lateral=slotLateral+sideProbe[i]*.78f;
                     Vector3 candidate=center+attack*forward+Vector3.forward*lateral;
                     candidate=GameplayCollision.ClampToRoundedArena(candidate,39f,32f,1f);
-                    candidate.y=LunarSurfaceField.Surface(candidate.x,candidate.z).y+.08f;
+                    // Gameplay collision uses the arena floor/zone height, while LunarSurfaceField
+                    // contains visual relief. Spawning at visual relief could start the tiny
+                    // CharacterController partially inside the real floor collider.
+                    candidate.y=center.y;
                     if(IsDeploymentClear(candidate))return candidate;
                 }
             }
 
             Vector3 fallback=center+attack*4.6f+Vector3.forward*slotLateral;
             fallback=GameplayCollision.ClampToRoundedArena(fallback,39f,32f,1f);
-            fallback.y=LunarSurfaceField.Surface(fallback.x,fallback.z).y+.08f;
+            fallback.y=center.y;
             return fallback;
         }
 
