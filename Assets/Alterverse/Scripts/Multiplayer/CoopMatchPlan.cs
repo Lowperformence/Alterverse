@@ -16,6 +16,7 @@ namespace Alterverse.Multiplayer
 
         public MatchPlayerSlot Host=>Session?.Slots[0];
         public MatchPlayerSlot Friend=>Session?.Slots[1];
+        public int HumanCount { get; private set; }
 
         public static CoopMatchPlan Build(
             string matchId,
@@ -23,28 +24,51 @@ namespace Alterverse.Multiplayer
             BotDifficulty difficulty,
             IReadOnlyList<CoopLobbyService.MemberView> members)
         {
-            if(members==null||members.Count!=2)throw new InvalidOperationException("Co-op match plan requires exactly two human players.");
-            if(members[0].Hero==members[1].Hero)throw new InvalidOperationException("Co-op human players must use different heroes.");
+            if(members==null||members.Count<CoopLobbyService.MinHumanPlayers||members.Count>CoopLobbyService.MaxHumanPlayers)
+                throw new InvalidOperationException($"Co-op match plan requires {CoopLobbyService.MinHumanPlayers}-{CoopLobbyService.MaxHumanPlayers} human players.");
+
+            List<CoopLobbyService.MemberView> ordered=new(members.Count);
+            CoopLobbyService.MemberView host=null;
+            for(int i=0;i<members.Count;i++)
+            {
+                CoopLobbyService.MemberView member=members[i];
+                if(member==null)throw new InvalidOperationException("Co-op lobby contains an invalid player.");
+                if(member.IsHost)
+                {
+                    if(host!=null)throw new InvalidOperationException("Co-op lobby contains multiple hosts.");
+                    host=member;
+                }
+            }
+            if(host==null)throw new InvalidOperationException("Co-op lobby has no host.");
+            ordered.Add(host);
+
+            List<CoopLobbyService.MemberView> guests=new(members.Count-1);
+            for(int i=0;i<members.Count;i++)if(members[i]!=host)guests.Add(members[i]);
+            guests.Sort((a,b)=>string.CompareOrdinal(a.PlayerId,b.PlayerId));
+            ordered.AddRange(guests);
+
+            HashSet<HeroId> humanHeroes=new();
+            for(int i=0;i<ordered.Count;i++)
+                if(!humanHeroes.Add(ordered[i].Hero))
+                    throw new InvalidOperationException("Co-op human players must use different heroes.");
 
             MatchSession session=new(matchId,SessionMode.Private);
-
-            CoopLobbyService.MemberView host=members[0].IsHost?members[0]:members[1];
-            CoopLobbyService.MemberView friend=members[0].IsHost?members[1]:members[0];
-
-            if(!session.TryAssign(0,HumanSlot(host,true)))throw new InvalidOperationException("Could not assign co-op host.");
-            if(!session.TryAssign(1,HumanSlot(friend,false)))throw new InvalidOperationException("Could not assign co-op friend.");
+            for(int i=0;i<ordered.Count;i++)
+                if(!session.TryAssign(i,HumanSlot(ordered[i],i==0)))
+                    throw new InvalidOperationException($"Could not assign co-op human slot {i}.");
 
             HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook};
-            int allySlot=2;
-            for(int i=0;i<pool.Length&&allySlot<5;i++)
+            int allySlot=ordered.Count;
+            for(int i=0;i<pool.Length&&allySlot<MatchSession.TeamSize;i++)
             {
                 HeroId hero=pool[i];
-                if(hero==host.Hero||hero==friend.Hero)continue;
+                if(humanHeroes.Contains(hero))continue;
                 if(!session.TryAssign(allySlot,BotSlot($"ally-{allySlot}",hero,0)))
                     throw new InvalidOperationException("Could not assign allied co-op bot.");
                 allySlot++;
             }
-            if(allySlot!=5)throw new InvalidOperationException("Co-op roster could not fill three allied bot slots.");
+            if(allySlot!=MatchSession.TeamSize)
+                throw new InvalidOperationException("Co-op roster could not fill Team Zero to five members.");
 
             HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Rook};
             for(int i=0;i<enemyHeroes.Length;i++)
@@ -58,7 +82,8 @@ namespace Alterverse.Multiplayer
                 MatchId=matchId,
                 Arena=arena,
                 Difficulty=difficulty,
-                Session=session
+                Session=session,
+                HumanCount=ordered.Count
             };
         }
 
