@@ -271,7 +271,7 @@ namespace Alterverse.UI
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":"WEAPON  /  ORIGINAL",theme.Small,true);
 
             theme.Label(new Rect(Left+28,446,w-56,20),"DIFFICULTY",theme.Small,true);
             var difficulty=BotDifficultySettings.Selected;
@@ -557,7 +557,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(portraitX,250,portraitWidth,22),Roles[selectedHero]+"  •  "+Strengths[selectedHero],theme.Small,true);
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
             theme.Label(new Rect(portraitX,566,portraitWidth,46),RoleDescriptions[selectedHero],theme.Small,true);
-            string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:"ORIGINAL WEAPON";
+            string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:heroId==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL WEAPON";
             theme.Label(new Rect(portraitX,616,portraitWidth,24),"EQUIPMENT  /  "+weaponStatus,theme.Small,true);
             if(theme.Action(new Rect(portraitX,646,portraitWidth,38),"DEPLOY",true))SetPage(Page.Play);
 
