@@ -783,9 +783,9 @@ namespace Alterverse.Combat
                 bearLegRoots[i]=leg;bearLegBase[i]=leg.localRotation;
 
                 Part("KryonBearUpperLegCore"+i,PrimitiveType.Capsule,leg,new Vector3(0,-.43f,.02f),
-                    new Vector3(front?.42f:.34f,front?.69f:.61f,front?.44f:.37f),darkMat,Quaternion.identity);
+                    new Vector3(front ? .42f : .34f,front ? .69f : .61f,front ? .44f : .37f),darkMat,Quaternion.identity);
                 MeshPart("KryonBearUpperLegArmor"+i,limbPlate,leg,new Vector3(0,-.38f,.30f),
-                    new Vector3(front?.95f:.78f,front?.90f:.78f,.90f),armorMat,Quaternion.Euler(-5,0,side*3f));
+                    new Vector3(front ? .95f : .78f,front ? .90f : .78f,.90f),armorMat,Quaternion.Euler(-5,0,side*3f));
                 Part("KryonBearKnee"+i,PrimitiveType.Sphere,leg,new Vector3(0,-.84f,.09f),new Vector3(.31f,.27f,.31f),jointMat,Quaternion.identity);
                 Part("KryonBearKneeGlow"+i,PrimitiveType.Cylinder,leg,new Vector3(side*.19f,-.84f,.09f),
                     new Vector3(.15f,.055f,.15f),energyMat,Quaternion.Euler(0,0,90));
@@ -796,7 +796,7 @@ namespace Alterverse.Combat
                 MeshPart("KryonBearPawCap"+i,shoulderPlate,leg,new Vector3(0,-1.34f,.58f),new Vector3(.68f,.44f,.72f),armorMat,Quaternion.Euler(-18,0,0));
                 for(int claw=-1;claw<=1;claw++)
                     MeshPart("KryonBearClaw"+i+"_"+claw,clawBlade,leg,new Vector3(claw*.18f,-1.43f,.68f),
-                        new Vector3(.78f,claw==0?.92f:.80f,claw==0?1.08f:.94f),bearIceMat,Quaternion.Euler(-8,claw*5f,0));
+                        new Vector3(.78f,claw==0 ? .92f : .80f,claw==0 ? 1.08f : .94f),bearIceMat,Quaternion.Euler(-8,claw*5f,0));
             }
         }
 
@@ -942,7 +942,7 @@ namespace Alterverse.Combat
             Part(left?"XenoUpperArmL":"XenoUpperArmR",PrimitiveType.Capsule,shoulder,new Vector3(0,-.72f,.03f),new Vector3(.29f,.88f,.31f),darkMat,Quaternion.Euler(0,0,side*3f));
             Transform forearm=Pivot(left?"DF_XenoForearmPivotL":"DF_XenoForearmPivotR",shoulder,new Vector3(0,-1.36f,.10f),Quaternion.Euler(10,0,side*5f));
             Part(left?"XenoForearmMassL":"XenoForearmMassR",PrimitiveType.Capsule,forearm,new Vector3(0,-.44f,.02f),new Vector3(.36f,.76f,.38f),jointMat,Quaternion.identity);
-            MeshPart(left?"XenoForearmArmorL":"XenoForearmArmorR",forearmPlate,forearm,new Vector3(0,-.40f,.31f),new Vector3(left?.94f:1.08f,1.10f,.94f),armorMat,Quaternion.Euler(-5,0,side*4f));
+            MeshPart(left?"XenoForearmArmorL":"XenoForearmArmorR",forearmPlate,forearm,new Vector3(0,-.40f,.31f),new Vector3(left ? .94f : 1.08f,1.10f,.94f),armorMat,Quaternion.Euler(-5,0,side*4f));
 
             Transform claw=Pivot(left?"DF_XenoClawPivotL":"DF_XenoClawPivotR",forearm,new Vector3(0,-.98f,.20f),Quaternion.Euler(-9,0,side*5f));
             Part(left?"XenoPalmL":"XenoPalmR",PrimitiveType.Sphere,claw,new Vector3(0,0,.08f),new Vector3(.50f,.29f,.62f),armorMat,Quaternion.identity);
