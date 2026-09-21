@@ -48,9 +48,16 @@ namespace Alterverse.Match
 
         public static void BeginMatch()
         {
-            // There is deliberately no automatic rotation here. A match can only use the
+            // There is deliberately no automatic rotation here. A local match can only use the
             // player's persisted, ownership-validated selection.
             Current=Selected;
+        }
+
+        public static void BeginCoopMatch(ArenaVariant arena)
+        {
+            // A guest may temporarily play the host-selected arena without receiving ownership.
+            // Never persist this override to PlayerPrefs.
+            Current=System.Enum.IsDefined(typeof(ArenaVariant),arena)?arena:ArenaVariant.Moon;
         }
     }
 }
