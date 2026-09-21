@@ -434,75 +434,65 @@ private void ApplyAnchorHammerOverdrive(Shader shader,Material energyMaterial)
 {
 Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
 
-// Same premium rule as BREAKER FIST: restore a clear +50% silhouette,
-// but keep structure readable instead of painting every component as one glow mass.
-weapon.localScale*=1.50f;
+// Premium version keeps the same industrial breacher language as Kaelon's new base hammer:
+// blackened forged metal, pale impact caps and restrained amber energy channels.
+weapon.localScale*=1.18f;
 
-Color metalColor=new Color(.085f,.095f,.115f);
-Material metalMaterial=new Material(shader){name="DF_AnchorHammerMetal",color=metalColor};
-if(metalMaterial.HasProperty("_BaseColor"))metalMaterial.SetColor("_BaseColor",metalColor);
-if(metalMaterial.HasProperty("_Metallic"))metalMaterial.SetFloat("_Metallic",.86f);
-if(metalMaterial.HasProperty("_Smoothness"))metalMaterial.SetFloat("_Smoothness",.50f);
-ownedMaterials.Add(metalMaterial);
+Color blackSteel=new Color(.045f,.050f,.055f);
+Material steelMaterial=new Material(shader){name="DF_SiegeBreakerBlackSteel",color=blackSteel};
+if(steelMaterial.HasProperty("_BaseColor"))steelMaterial.SetColor("_BaseColor",blackSteel);
+if(steelMaterial.HasProperty("_Metallic"))steelMaterial.SetFloat("_Metallic",.90f);
+if(steelMaterial.HasProperty("_Smoothness"))steelMaterial.SetFloat("_Smoothness",.38f);
+ownedMaterials.Add(steelMaterial);
 
-Color edgeColor=new Color(.52f,.47f,.38f);
-Material edgeMaterial=new Material(shader){name="DF_AnchorHammerEdge",color=edgeColor};
-if(edgeMaterial.HasProperty("_BaseColor"))edgeMaterial.SetColor("_BaseColor",edgeColor);
-if(edgeMaterial.HasProperty("_Metallic"))edgeMaterial.SetFloat("_Metallic",.74f);
-if(edgeMaterial.HasProperty("_Smoothness"))edgeMaterial.SetFloat("_Smoothness",.40f);
-ownedMaterials.Add(edgeMaterial);
+Color impactSteel=new Color(.67f,.65f,.58f);
+Material impactMaterial=new Material(shader){name="DF_SiegeBreakerImpactSteel",color=impactSteel};
+if(impactMaterial.HasProperty("_BaseColor"))impactMaterial.SetColor("_BaseColor",impactSteel);
+if(impactMaterial.HasProperty("_Metallic"))impactMaterial.SetFloat("_Metallic",.82f);
+if(impactMaterial.HasProperty("_Smoothness"))impactMaterial.SetFloat("_Smoothness",.46f);
+ownedMaterials.Add(impactMaterial);
 
-Color gemColor=new Color(1f,.025f,.015f);
-Material gemMaterial=new Material(shader){name="DF_AnchorHammerRuby",color=gemColor};
-if(gemMaterial.HasProperty("_BaseColor"))gemMaterial.SetColor("_BaseColor",gemColor);
-if(gemMaterial.HasProperty("_Metallic"))gemMaterial.SetFloat("_Metallic",.16f);
-if(gemMaterial.HasProperty("_Smoothness"))gemMaterial.SetFloat("_Smoothness",.94f);
-if(gemMaterial.HasProperty("_EmissionColor"))
+Color coreColor=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero).Glow;
+Material coreMaterial=new Material(shader){name="DF_SiegeBreakerCore",color=coreColor};
+if(coreMaterial.HasProperty("_BaseColor"))coreMaterial.SetColor("_BaseColor",coreColor);
+if(coreMaterial.HasProperty("_Metallic"))coreMaterial.SetFloat("_Metallic",.16f);
+if(coreMaterial.HasProperty("_Smoothness"))coreMaterial.SetFloat("_Smoothness",.92f);
+if(coreMaterial.HasProperty("_EmissionColor"))
 {
-gemMaterial.EnableKeyword("_EMISSION");
-gemMaterial.SetColor("_EmissionColor",gemColor*4.2f);
+coreMaterial.EnableKeyword("_EMISSION");
+coreMaterial.SetColor("_EmissionColor",coreColor*3.7f);
 }
-ownedMaterials.Add(gemMaterial);
+ownedMaterials.Add(coreMaterial);
 
-// The hammer head is the premium glowing main body.
-Transform head=FindVisual("AnchorHead");
-if(head!=null)ApplyGlow(head,energyMaterial);
+Transform head=FindVisual("AnchorHead");if(head!=null)ApplyGlow(head,steelMaterial);
+Transform face=FindVisual("HammerFace");if(face!=null)ApplyGlow(face,impactMaterial);
+Transform top=FindVisual("HammerTopPlate");if(top!=null)ApplyGlow(top,impactMaterial);
+Transform grip=FindVisual("HammerGrip");if(grip!=null)ApplyGlow(grip,steelMaterial);
+Transform collar=FindVisual("HammerCollar");if(collar!=null)ApplyGlow(collar,impactMaterial);
+Transform pommel=FindVisual("HammerLowerPommel");if(pommel!=null)ApplyGlow(pommel,impactMaterial);
 
-// The shaft remains dark metal so the hand/weapon construction stays readable.
-Transform grip=FindVisual("HammerGrip");
-if(grip!=null)ApplyGlow(grip,energyMaterial);
-
-// Existing side energy inserts keep the same gold/amber glow.
 for(int side=-1;side<=1;side+=2)
 {
-string suffix=side<0?"-1":"1";
-Transform energy=FindVisual("HammerEnergy"+suffix);
-if(energy!=null)ApplyGlow(energy,energyMaterial);
+Transform cheek=FindVisual("HammerCheek"+side);if(cheek!=null)ApplyGlow(cheek,steelMaterial);
+Transform channel=FindVisual("HammerEnergy"+side);if(channel!=null){channel.localScale*=1.22f;ApplyGlow(channel,coreMaterial);}
+}
+for(int i=0;i<5;i++)
+{
+Transform vent=FindVisual("HammerVent"+i);if(vent!=null)ApplyGlow(vent,steelMaterial);
 }
 
-// Add a restrained mechanical frame around the glowing head.
-// These parts create premium depth without covering the main silhouette.
-CreateAnchorHammerPart("OverdriveHammerTop",weapon,
-new Vector3(0,.63f,-.015f),new Vector3(.44f,.075f,.36f),
-Vector3.zero,metalMaterial);
-CreateAnchorHammerPart("OverdriveHammerLeft",weapon,
-new Vector3(-.37f,.43f,-.015f),new Vector3(.085f,.28f,.34f),
-new Vector3(0,0,-8),edgeMaterial);
-CreateAnchorHammerPart("OverdriveHammerRight",weapon,
-new Vector3(.37f,.43f,-.015f),new Vector3(.085f,.28f,.34f),
-new Vector3(0,0,8),edgeMaterial);
-CreateAnchorHammerPart("OverdriveCore",weapon,
-new Vector3(0,.43f,.235f),new Vector3(.16f,.20f,.035f),
-Vector3.zero,energyMaterial);
-
-// Faceted ruby set into the exact center of the hammer head.
-// It sits slightly in front of the amber core so the red gem remains readable.
-CreateAnchorHammerPart("OverdriveRuby",weapon,
-new Vector3(0,.43f,.285f),new Vector3(.115f,.145f,.055f),
-new Vector3(0,0,45),gemMaterial);
-CreateAnchorHammerPart("OverdriveShaftBrace",weapon,
-new Vector3(0,.08f,.075f),new Vector3(.11f,.32f,.11f),
-Vector3.zero,edgeMaterial);
+// Shop-only premium geometry: reinforced end caps, frontal energy spine and a compact core.
+// These are attached to the animated weapon pivot, so the preview and in-game attack stay identical.
+CreateAnchorHammerPart("OverdriveEndCapL",weapon,new Vector3(-.52f,.54f,.02f),new Vector3(.13f,.38f,.47f),
+new Vector3(0,0,-7f),impactMaterial);
+CreateAnchorHammerPart("OverdriveEndCapR",weapon,new Vector3(.52f,.54f,.02f),new Vector3(.13f,.38f,.47f),
+new Vector3(0,0,7f),impactMaterial);
+CreateAnchorHammerPart("OverdriveEnergySpine",weapon,new Vector3(0,.54f,.344f),new Vector3(.42f,.045f,.018f),
+Vector3.zero,coreMaterial);
+CreateAnchorHammerPart("OverdriveCore",weapon,new Vector3(0,.54f,.366f),new Vector3(.13f,.13f,.026f),
+new Vector3(0,0,45f),coreMaterial);
+CreateAnchorHammerPart("OverdriveShaftBrace",weapon,new Vector3(0,.22f,.02f),new Vector3(.12f,.24f,.13f),
+Vector3.zero,impactMaterial);
 }
 
 private GameObject CreateAnchorHammerPart(string name,Transform parent,Vector3 localPosition,Vector3 localScale,Vector3 localRotation,Material material)
