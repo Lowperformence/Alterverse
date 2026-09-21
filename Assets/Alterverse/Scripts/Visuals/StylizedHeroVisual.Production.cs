@@ -15,6 +15,12 @@ namespace Alterverse.Visuals
                 CreateSignature();
                 return;
             }
+            if(h==HeroId.Rook)
+            {
+                BuildBrakkIndustrialBruiser();
+                CreateSignature();
+                return;
+            }
             bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.60f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
             // Kaelon follows the supplied heavy-hammer reference: pale worn plate over a warm dark undersuit.
@@ -66,6 +72,153 @@ namespace Alterverse.Visuals
             CreateSignature();
             // This remains the same runtime model in matches and in the menu showcase.
         }
+        private void BuildBrakkIndustrialBruiser()
+        {
+            // Reference-driven heavy industrial melee mech. The construction keeps the existing
+            // animation contract (Arm/Leg/Boot/Gauntlet names) while replacing the old humanoid
+            // bruiser silhouette with a broad yellow reactor-powered combat frame.
+            Color yellow=new(.72f,.47f,.055f,1f);
+            Color yellowDark=new(.42f,.27f,.035f,1f);
+            Color blackMetal=new(.055f,.060f,.070f,1f);
+            Color jointMetal=new(.16f,.17f,.19f,1f);
+            Color edgeMetal=new(.31f,.32f,.34f,1f);
+            Color reactor=new(1f,.29f,.035f,1f);
+            Color reactorHot=new(1f,.64f,.10f,1f);
+
+            // Massive compact torso with broad chest and narrower mechanical waist.
+            Mesh torso=HeroMeshLibrary.Loft("DF_BrakkHeavyTorso",
+                new[]{-.39f,-.25f,-.05f,.16f,.35f,.51f},
+                new[]{.27f,.34f,.46f,.58f,.60f,.34f},
+                new[]{.19f,.24f,.33f,.40f,.39f,.22f},
+                new[]{.015f,.02f,.025f,.035f,.02f,0f},16);
+            Sculpt("Torso",torso,new Vector3(0,.06f,0),new Vector3(1.18f,1f,1.08f),blackMetal);
+            Plate("BrakkChestL",new Vector3(-.27f,.25f,.245f),.63f,.46f,.15f,yellow,-6);
+            Plate("BrakkChestR",new Vector3(.27f,.25f,.245f),.63f,.46f,.15f,yellow,6);
+            Plate("BrakkAbdomen",new Vector3(0,-.08f,.185f),.54f,.30f,.12f,jointMetal);
+            Plate("BrakkGorget",new Vector3(0,.50f,.09f),.60f,.18f,.26f,yellowDark);
+            Detail("BrakkHazardL",new Vector3(-.31f,.18f,.335f),new Vector3(.055f,.23f,.025f),blackMetal,new Vector3(0,0,-28));
+            Detail("BrakkHazardR",new Vector3(.31f,.18f,.335f),new Vector3(.055f,.23f,.025f),blackMetal,new Vector3(0,0,28));
+
+            // Large orange chest reactor: the visual center of the character from gameplay camera.
+            GameObject reactorRing=Sculpt("BrakkReactorRing",HeroMeshLibrary.Ring("DF_BrakkReactorRingMesh",.235f,.042f),
+                new Vector3(0,.20f,.375f),Vector3.one,reactor,null,true);
+            reactorRing.transform.localRotation=Quaternion.Euler(90,0,0);
+            GameObject reactorInner=Sculpt("BrakkReactorInner",HeroMeshLibrary.Ring("DF_BrakkReactorInnerMesh",.145f,.035f),
+                new Vector3(0,.20f,.392f),Vector3.one,reactorHot,null,true);
+            reactorInner.transform.localRotation=Quaternion.Euler(90,0,0);
+            Detail("BrakkReactorCore",new Vector3(0,.20f,.405f),new Vector3(.115f,.115f,.030f),reactorHot,new Vector3(0,0,45),null,true);
+            for(int i=-1;i<=1;i++)
+                Detail("BrakkSpineGlow"+(i+1),new Vector3(0,-.01f-i*.075f,.245f),new Vector3(.075f,.050f,.025f),reactor,default,null,true);
+
+            // Pelvis/hips: dark mechanics under yellow segmented plates.
+            Mesh pelvis=HeroMeshLibrary.Loft("DF_BrakkPelvis",
+                new[]{-.45f,-.31f,-.18f},new[]{.29f,.39f,.30f},new[]{.18f,.24f,.18f});
+            Sculpt("Pelvis",pelvis,new Vector3(0,-.02f,0),new Vector3(1.20f,1f,1.12f),blackMetal);
+            Plate("BrakkHipL",new Vector3(-.30f,-.29f,.12f),.40f,.32f,.14f,yellow,-8);
+            Plate("BrakkHipR",new Vector3(.30f,-.29f,.12f),.40f,.32f,.14f,yellow,8);
+
+            // Thick articulated legs, large knees and wide planted industrial feet.
+            float legX=.255f;
+            Mesh leg=HeroMeshLibrary.Loft("DF_BrakkHeavyLeg",
+                new[]{-1f,-.77f,-.24f,.10f,.62f,1f},
+                new[]{.095f,.13f,.14f,.18f,.21f,.17f},
+                new[]{.11f,.14f,.15f,.19f,.21f,.17f},
+                new[]{.03f,.025f,.005f,.012f,.005f,0f});
+            Mesh boot=HeroMeshLibrary.Loft("DF_BrakkHeavyBoot",
+                new[]{-.10f,-.04f,.085f,.19f},
+                new[]{.17f,.19f,.16f,.10f},
+                new[]{.27f,.32f,.24f,.13f},
+                new[]{.105f,.115f,.070f,0f});
+
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Sculpt("Leg"+s,leg,new Vector3(side*legX,-.62f,0),new Vector3(1.18f,.35f,1.18f),blackMetal);
+                Sculpt("Boot"+s,boot,new Vector3(side*legX,-.94f,.035f),new Vector3(1.18f,1.05f,1.20f),edgeMetal);
+                Plate("Knee"+s,new Vector3(side*legX,-.57f,.145f),.31f,.29f,.15f,yellow,side*-4,"Leg"+s);
+                Plate("BrakkShin"+s,new Vector3(side*legX,-.74f,.12f),.31f,.33f,.12f,yellowDark,side*3,"Leg"+s);
+                Plate("BrakkThigh"+s,new Vector3(side*legX,-.39f,.13f),.34f,.35f,.12f,yellow,side*-7,"Leg"+s);
+                Detail("BrakkKneeHub"+s,new Vector3(side*legX,-.57f,.235f),new Vector3(.12f,.12f,.035f),jointMetal,default,"Leg"+s);
+
+                Transform arm=new GameObject("DF_Arm"+s).transform;
+                arm.SetParent(root,false);
+                arm.localPosition=new Vector3(side*.56f,.40f,.015f);
+                arm.localRotation=Quaternion.Euler(-3,0,side*-7f);
+
+                Mesh upper=HeroMeshLibrary.Loft("DF_BrakkUpperArm",
+                    new[]{-.34f,-.26f,-.06f,.05f},
+                    new[]{.10f,.14f,.19f,.14f},
+                    new[]{.11f,.15f,.19f,.14f});
+                Sculpt("UpperArm"+s,upper,Vector3.zero,new Vector3(1.22f,1f,1.18f),blackMetal,arm);
+
+                Mesh fore=HeroMeshLibrary.Loft("DF_BrakkForearm",
+                    new[]{-.28f,-.21f,-.055f,.03f},
+                    new[]{.10f,.15f,.17f,.12f},
+                    new[]{.11f,.15f,.18f,.12f});
+                Sculpt("Vambrace"+s,fore,new Vector3(0,-.31f,.02f),new Vector3(1.24f,1f,1.18f),jointMetal,arm);
+
+                // Oversized shoulder armor creates the reference's broad silhouette.
+                Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.68f,.46f,.52f,yellow,side*-10);
+                Bind("BrakkShoulder"+s,"Arm"+s);
+                Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.29f),new Vector3(.25f,.045f,.030f),blackMetal,
+                    new Vector3(0,0,side*-14),"Arm"+s);
+            }
+
+            // Small armored mech head with a narrow orange visor. No human features.
+            Vector3 hp=new(0,.80f,.015f);
+            Mesh head=HeroMeshLibrary.Loft("DF_BrakkCombatHead",
+                new[]{-.22f,-.15f,-.04f,.09f,.18f,.24f},
+                new[]{.085f,.145f,.185f,.195f,.165f,.075f},
+                new[]{.080f,.135f,.155f,.155f,.125f,.065f},
+                new[]{.045f,.032f,.014f,0f,-.008f,-.016f},16);
+            Sculpt("Head",head,hp,new Vector3(1.02f,.95f,.98f),yellowDark);
+            Sculpt("Neck",HeroMeshLibrary.Loft("DF_BrakkNeck",new[]{-.10f,.09f},new[]{.10f,.11f},new[]{.10f,.105f}),
+                new Vector3(0,.55f,0),Vector3.one,blackMetal);
+            Plate("BrakkFacePlate",hp+new Vector3(0,-.025f,.151f),.34f,.27f,.075f,blackMetal);
+            Detail("BrakkVisor",hp+new Vector3(0,.055f,.198f),new Vector3(.25f,.030f,.018f),reactorHot,default,null,true);
+            Plate("BrakkBrow",hp+new Vector3(0,.145f,.095f),.40f,.18f,.17f,yellow,0);
+            Detail("BrakkJawVent",hp+new Vector3(0,-.12f,.185f),new Vector3(.20f,.035f,.020f),jointMetal);
+
+            // Two compact shoulder/back launcher housings echo the supplied reference without adding projectiles.
+            for(int side=-1;side<=1;side+=2)
+            {
+                Vector3 podPos=new(side*.38f,.70f,-.20f);
+                Detail("BrakkBackPod"+(side<0?"L":"R"),podPos,new Vector3(.24f,.22f,.30f),yellowDark,new Vector3(-12,side*5,0));
+                for(int cell=0;cell<2;cell++)
+                    Detail("BrakkPodVent"+(side<0?"L":"R")+cell,
+                        podPos+new Vector3((cell==0?-.055f:.055f),.02f,.165f),
+                        new Vector3(.045f,.055f,.018f),blackMetal);
+            }
+
+            // Base melee weapons are integrated gauntlets: yellow armor, dark mechanics, orange reactor strip.
+            Mesh gauntlet=HeroMeshLibrary.Loft("DF_BrakkImpactGauntlet",
+                new[]{-.28f,-.21f,.01f,.24f,.34f},
+                new[]{.20f,.29f,.31f,.25f,.15f},
+                new[]{.23f,.30f,.32f,.26f,.16f});
+            for(int side=-1;side<=1;side+=2)
+            {
+                string s=side<0?"L":"R";
+                Vector3 p=new(side*.61f,-.17f,.20f);
+                Sculpt("Gauntlet"+s,gauntlet,p,new Vector3(1.10f,1f,1.12f),yellowDark);
+                Bind("Gauntlet"+s,"Arm"+s);
+
+                for(int k=0;k<3;k++)
+                {
+                    Detail("Knuckle"+s+k,p+new Vector3((k-1)*.135f,-.105f,.275f),
+                        new Vector3(.115f,.19f,.095f),edgeMetal,default,"Gauntlet"+s);
+                }
+                Detail("GauntletReactor"+s,p+new Vector3(0,.12f,.285f),
+                    new Vector3(.27f,.060f,.025f),reactor,default,"Gauntlet"+s,true);
+                Detail("BrakkFistPlate"+s,p+new Vector3(0,.02f,.255f),
+                    new Vector3(.32f,.13f,.045f),yellow,default,"Gauntlet"+s);
+                Detail("BrakkFistSide"+s,p+new Vector3(side*.17f,.02f,.15f),
+                    new Vector3(.065f,.22f,.16f),blackMetal,new Vector3(0,0,side*8),"Gauntlet"+s);
+            }
+
+            Detail("IdentityCore",new Vector3(0,.20f,.407f),new Vector3(.065f,.065f,.018f),reactorHot,
+                new Vector3(0,0,45),null,true);
+        }
+
         private void BuildVeyrShadowAssassin()
         {
             // Reference-driven premium mobile silhouette: exposed eyes + face mask, tied dark hair,
