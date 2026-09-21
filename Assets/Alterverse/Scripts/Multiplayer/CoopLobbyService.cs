@@ -342,7 +342,9 @@ namespace Alterverse.Multiplayer
                     });
                 }
                 memberBuffer.Sort((a,b)=>a.IsHost==b.IsHost?string.CompareOrdinal(a.PlayerId,b.PlayerId):(a.IsHost?-1:1));
-                return memberBuffer;
+                // Return an immutable snapshot. Lobby UI and validation may query Members again
+                // while iterating; exposing the reusable buffer could mutate the caller's list.
+                return memberBuffer.ToArray();
             }
         }
 
