@@ -66,7 +66,7 @@ namespace Alterverse.Visuals
                 Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.06f),Vector3.one,dark,arm);
                 arm.localRotation=Quaternion.Euler(h==HeroId.Nyra?-48:h==HeroId.Elyra?-18:0,0,h==HeroId.Nyra?(side<0?55:-8):side*(heavy?-8:-10));
                 Plate("Shoulder"+s,new Vector3(side*(tank?.58f:heavy?.53f:.36f),tank?.46f:.43f,0),
-                    tank?.66f:heavy?.52f:.29f,tank?.46f:heavy?.38f:.24f,tank?.62f:heavy?.50f:.31f,
+                    tank?.528f:heavy?.52f:.29f,tank?.368f:heavy?.38f:.24f,tank?.496f:heavy?.50f:.31f,
                     tank?metal:(side<0?identityPanel:trim),side*(tank?-11:-16));
                 Plate("Tasset"+s,new Vector3(side*.20f*breadth,-.31f,.15f),.20f*breadth,.30f,.08f,metal,side*9);
             }
@@ -663,9 +663,9 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.45f,.52f,.67f,metal,side*-7);
-                Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.39f,.20f,.59f,steelLight,side*-9);
-                Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.345f),new Vector3(.18f,.10f,.025f),steelDark,default,null,false);
+                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.36f,.416f,.536f,metal,side*-7);
+                Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.312f,.16f,.472f,steelLight,side*-9);
+                Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.276f),new Vector3(.144f,.08f,.020f),steelDark,default,null,false);
 
                 // Root-space detail is bound after creation so it follows the arm rig.
                 Plate("KaelonForearmPlate"+s,new Vector3(side*.51f,.04f,.19f),.36f,.49f,.30f,metal,side*6,"Arm"+s);
