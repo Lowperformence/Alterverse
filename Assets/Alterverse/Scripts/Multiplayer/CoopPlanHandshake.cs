@@ -7,8 +7,9 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Verifies that host and client produced the same staged 10-slot match plan before
-    /// any gameplay world is allowed to launch. Uses NGO named messages over the Relay link.
+    /// Verifies that the host and every connected co-op client produced the same staged
+    /// 10-slot match plan before gameplay is allowed to launch. Uses NGO named messages
+    /// over the Relay link and scales from two to five human players.
     /// </summary>
     public sealed class CoopPlanHandshake : MonoBehaviour
     {
