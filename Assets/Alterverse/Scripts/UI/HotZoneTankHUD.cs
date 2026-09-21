@@ -32,20 +32,21 @@ namespace Alterverse.UI
             {
                 HotZoneTank tank=tanks[i];
                 if(tank==null||tank.TankHealth==null||tank.TankHealth.IsDead||!tank.isActiveAndEnabled)continue;
-                float markerHeight=tank.IsXenoTitan?3.35f:tank.IsNoxaraSpider?2.85f:2.55f;
+                float markerHeight=tank.IsXenoTitan?3.35f:tank.IsKryonBear?3.05f:tank.IsNoxaraSpider?2.85f:2.55f;
                 Vector3 screen=cam.WorldToScreenPoint(tank.transform.position+Vector3.up*markerHeight);
                 if(screen.z<=0f)continue;
 
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
-                string unit=tank.IsNoxaraSpider?(tank.Team==0?"ZERO NOXARA SPIDER":"LUMEN NOXARA SPIDER"):
+                string unit=tank.IsKryonBear?(tank.Team==0?"ZERO KRYON FROST BEAR":"LUMEN KRYON FROST BEAR"):
+                    tank.IsNoxaraSpider?(tank.Team==0?"ZERO NOXARA SPIDER":"LUMEN NOXARA SPIDER"):
                     tank.IsXenoTitan?(tank.Team==0?"ZERO XENO TITAN":"LUMEN XENO TITAN"):
                     tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):
                     (tank.Team==0?"ZERO ASSAULT TANK":"LUMEN ASSAULT TANK");
 
                 // Size the world label to the actual localized/unit name instead of the old fixed
                 // 116 px box. This prevents clipping for Assault Tank, Mars Titan and Xeno Titan.
-                float labelWidth=Mathf.Clamp(labelStyle.CalcSize(new GUIContent(unit)).x+18f,116f,220f);
+                float labelWidth=Mathf.Clamp(labelStyle.CalcSize(new GUIContent(unit)).x+18f,116f,260f);
                 Rect label=new(screen.x-labelWidth*.5f,y-20,labelWidth,18);
                 GUI.Label(label,unit,labelStyle);
 
