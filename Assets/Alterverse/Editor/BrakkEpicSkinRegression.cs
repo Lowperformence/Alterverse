@@ -28,11 +28,22 @@ namespace Alterverse.EditorChecks
 
                 Transform root=hero.transform.Find("DF_VisualRoot");
                 Require(root!=null,"Visual root missing.");
-                Transform claws=Find(root,"DF_ReactorBreakerRedClaws");
-                Require(claws!=null,"Red claw rack missing from Brakk epic shop skin.");
-                MeshFilter filter=claws.GetComponent<MeshFilter>();
-                Require(filter!=null&&filter.sharedMesh!=null&&filter.sharedMesh.vertexCount>0,"Red claw rack mesh is empty.");
-                Require(claws.IsChildOf(Find(root,"DF_GauntletR")),"Red claws are not attached to the right gauntlet.");
+                Transform clawsL=Find(root,"DF_ReactorBreakerRedClawsL");
+                Transform clawsR=Find(root,"DF_ReactorBreakerRedClawsR");
+                Require(clawsL!=null,"Left red claw rack missing from Brakk epic shop skin.");
+                Require(clawsR!=null,"Right red claw rack missing from Brakk epic shop skin.");
+
+                MeshFilter filterL=clawsL.GetComponent<MeshFilter>();
+                MeshFilter filterR=clawsR.GetComponent<MeshFilter>();
+                Require(filterL!=null&&filterL.sharedMesh!=null&&filterL.sharedMesh.vertexCount>0,
+                    "Left red claw rack mesh is empty.");
+                Require(filterR!=null&&filterR.sharedMesh!=null&&filterR.sharedMesh.vertexCount>0,
+                    "Right red claw rack mesh is empty.");
+
+                Require(clawsL.IsChildOf(Find(root,"DF_GauntletL")),
+                    "Left red claws are not attached to the left gauntlet.");
+                Require(clawsR.IsChildOf(Find(root,"DF_GauntletR")),
+                    "Right red claws are not attached to the right gauntlet.");
 
                 Debug.Log("DIMENSIONS FRONT: Brakk epic red claw skin regression PASSED.");
             }
