@@ -14,12 +14,13 @@ namespace Alterverse.Multiplayer
         private Collider[] colliders=System.Array.Empty<Collider>();
         private bool[] rendererStates=System.Array.Empty<bool>();
         private bool[] colliderStates=System.Array.Empty<bool>();
-        private bool hidden;
+        private bool hidden,configured;
 
         public string Key=>key;
 
         public void Configure(string explicitKey=null)
         {
+            if(configured&&string.IsNullOrEmpty(explicitKey))return;
             if(!string.IsNullOrEmpty(explicitKey))key=explicitKey;
             if(string.IsNullOrEmpty(key))
             {
@@ -32,6 +33,7 @@ namespace Alterverse.Multiplayer
             targetPosition=transform.position;
             targetRotation=transform.rotation;
             CachePresentation();
+            configured=true;
         }
 
         public void ApplyTarget(Vector3 position,float yaw,bool immediate)
