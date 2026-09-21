@@ -40,8 +40,8 @@ namespace Alterverse.Shop
                 "Ceremonial pearl-and-gold healing staff with layered cyan halos, an enlarged light crystal and floating crown geometry.",
                 new Color(.58f,.96f,1f)),
             new(HeroId.Rook,"REACTOR BREAKER // EPIC","Reactor Breaker Gauntlets",
-                "Reinforced yellow-black impact gauntlets with brighter orange reactor channels and an expanded premium melee silhouette.",
-                new Color(1f,.32f,.06f))
+                "Reinforced yellow-black impact gauntlets with a dominant right-hand rack of four glowing red reactor claws, inspired by the supplied reference.",
+                new Color(1f,.035f,.02f))
         };
 
         public static WeaponSkinItem For(HeroId hero)=>Items[Mathf.Clamp((int)hero,0,Items.Length-1)];
