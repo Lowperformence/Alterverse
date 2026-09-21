@@ -164,6 +164,14 @@ namespace Alterverse.Visuals
                         Fx(HeroFxShape.Plus,p,Color.Lerp(c,Color.white,.42f),size*.55f,.14f,HeroFxMotion.Contract,actor:actor);
                     }
                     break;
+                case HeroId.Rook:
+                    {
+                        Color hot=new(1f,.34f,.035f);
+                        Fx(HeroFxShape.Burst,p,hot,size*1.28f,.13f,rotation:facing,actor:actor);
+                        Fx(HeroFxShape.Ring,Ground(actor.transform.position),new Color(hot.r,hot.g,hot.b,.62f),size*.95f,.16f,HeroFxMotion.Expand,actor:actor);
+                        Fx(HeroFxShape.Cracks,Ground(actor.transform.position),c,size*.92f,.18f,actor:actor);
+                        break;
+                    }
                 default:
                     Fx(HeroFxShape.Burst,p,c,size*1.12f,.12f,rotation:facing,actor:actor);
                     Fx(HeroFxShape.Cracks,Ground(actor.transform.position),c,size*.85f,.16f,actor:actor);
@@ -231,7 +239,14 @@ namespace Alterverse.Visuals
                     if(slot==3)HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(radius,.65f,radius),new Color(c.r,c.g,c.b,.60f),.40f,HeroFxMotion.Expand);
                     else Fx(HeroFxShape.Shard,p+Vector3.up*.25f,c,.5f,.2f);break;
                 case HeroId.Rook:
-                    Ring(actor,p,radius,.28f);Fx(HeroFxShape.Cracks,p+Vector3.up*.012f,c,radius*.86f,.38f);Shards(actor,p,radius*.6f,4);break;
+                    {
+                        Color hot=new(1f,.34f,.035f);
+                        Ring(actor,p,radius,.28f);
+                        Fx(HeroFxShape.Burst,p+Vector3.up*.08f,hot,radius*.34f,.16f);
+                        Fx(HeroFxShape.Cracks,p+Vector3.up*.012f,c,radius*.90f,.38f);
+                        Shards(actor,p,radius*.65f,4);
+                        break;
+                    }
                 default:Ring(actor,p,radius,.3f);break;
             }
         }
@@ -299,9 +314,14 @@ namespace Alterverse.Visuals
                     if(slot<0)Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.40f),strength*.92f,.13f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Rook:
-                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2,strength,strength*2),c,.18f);
-                    if(slot<0)Fx(HeroFxShape.Cracks,Ground(target.transform.position),c,strength*1.55f,.20f,actor:actor);
-                    break;
+                    {
+                        Color hot=new(1f,.34f,.035f);
+                        HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(strength*2.15f,strength*1.05f,strength*2.15f),
+                            new Color(hot.r,hot.g,hot.b,.78f),.18f);
+                        Fx(HeroFxShape.Burst,p,Color.Lerp(hot,Color.white,.28f),strength*1.25f,.12f,rotation:Face(actor.transform.position,p),actor:actor);
+                        if(slot<0)Fx(HeroFxShape.Cracks,Ground(target.transform.position),c,strength*1.65f,.22f,actor:actor);
+                        break;
+                    }
             }
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
