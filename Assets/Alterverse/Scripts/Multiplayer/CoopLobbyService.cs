@@ -60,6 +60,7 @@ namespace Alterverse.Multiplayer
         public string LastError=>lastError;
         public int PlayerCount=>session?.PlayerCount??0;
         public int MaxPlayers=>session?.MaxPlayers??2;
+        public bool RelayConnected=>InLobby&&CoopNetworkBootstrap.IsListening;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -142,7 +143,7 @@ namespace Alterverse.Multiplayer
                         {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                         {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
                     }
-                };
+                }.WithRelayNetwork();
 
                 session=await MultiplayerService.Instance.CreateSessionAsync(options);
                 AttachSession(session);
@@ -487,7 +488,11 @@ namespace Alterverse.Multiplayer
             if(old==null)return;
             DetachSession(old);
             session=null;
-            try{await old.LeaveAsync();}
+            try
+            {
+                if(old.IsHost)await old.AsHost().DeleteAsync();
+                else await old.LeaveAsync();
+            }
             catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT: lobby leave cleanup failed: "+ex.Message);}
         }
 
