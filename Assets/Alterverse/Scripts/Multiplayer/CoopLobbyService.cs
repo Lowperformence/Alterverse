@@ -61,6 +61,10 @@ namespace Alterverse.Multiplayer
         public int PlayerCount=>session?.PlayerCount??0;
         public int MaxPlayers=>session?.MaxPlayers??2;
         public bool RelayConnected=>InLobby&&CoopNetworkBootstrap.IsListening;
+        public bool TwoPlayerLinkReady=>InLobby&&CoopNetworkBootstrap.IsTwoPlayerLinkReady;
+        public string NetworkLinkState=>CoopNetworkBootstrap.LinkState;
+        public string LobbyPhase=>ReadSession(PhaseKey,"lobby");
+        public bool IsStaging=>string.Equals(LobbyPhase,"staging",StringComparison.Ordinal);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -178,6 +182,13 @@ namespace Alterverse.Multiplayer
                 };
                 session=await MultiplayerService.Instance.JoinSessionByCodeAsync(code,joinOptions);
                 AttachSession(session);
+                if(!string.Equals(LobbyPhase,"lobby",StringComparison.Ordinal))
+                {
+                    await LeaveExistingSessionInternalAsync();
+                    lastError="This co-op room has already started preparing a match.";
+                    SetStatus("LOBBY IS ALREADY STARTING");
+                    return false;
+                }
                 SetStatus("JOINED CO-OP LOBBY");
                 return true;
             }
@@ -370,15 +381,82 @@ namespace Alterverse.Multiplayer
         {
             get
             {
-                if(session==null||!IsHost||session.PlayerCount!=2||HasHeroConflict)return false;
+                if(session==null||!IsHost||session.PlayerCount!=2||HasHeroConflict||IsStaging)return false;
                 IReadOnlyList<MemberView> members=Members;
                 return members.Count==2&&members[0].Ready&&members[1].Ready;
             }
         }
 
+        public bool CanStageMatch=>CanStartLobby&&TwoPlayerLinkReady;
+
+        public bool TryBuildMatchPlan(out CoopMatchPlan plan)
+        {
+            plan=null;
+            if(session==null||session.PlayerCount!=2||HasHeroConflict)return false;
+            IReadOnlyList<MemberView> members=Members;
+            if(members.Count!=2)return false;
+            try
+            {
+                plan=CoopMatchPlan.Build(session.Id,LobbyArena,LobbyDifficulty,members);
+                return plan!=null;
+            }
+            catch(Exception ex)
+            {
+                Debug.LogError("DIMENSIONS FRONT CO-OP: could not build match plan.\n"+ex);
+                return false;
+            }
+        }
+
+        public async Task<bool> BeginMatchStagingAsync()
+        {
+            if(session==null||!IsHost||busy)return false;
+            if(!CanStageMatch)
+            {
+                lastError=!TwoPlayerLinkReady?"Relay link is not ready on both players.":"Both players must be connected, use different heroes, and be ready.";
+                SetStatus("CO-OP MATCH NOT READY");
+                RaiseChanged();
+                return false;
+            }
+            if(!TryBuildMatchPlan(out _))
+            {
+                lastError="The co-op roster could not be built safely.";
+                SetStatus("CO-OP ROSTER INVALID");
+                RaiseChanged();
+                return false;
+            }
+
+            try
+            {
+                busy=true;lastError="";
+                IHostSession host=session.AsHost();
+                host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+                SetStatus("MATCH STAGING • BOTH PLAYERS CONNECTED");
+                return true;
+            }
+            catch(Exception ex){Fail("COULD NOT PREPARE CO-OP MATCH",ex);return false;}
+            finally{busy=false;RaiseChanged();}
+        }
+
+        public async Task<bool> CancelMatchStagingAsync()
+        {
+            if(session==null||!IsHost||busy||!IsStaging)return false;
+            try
+            {
+                busy=true;lastError="";
+                IHostSession host=session.AsHost();
+                host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+                SetStatus("BACK IN CO-OP LOBBY");
+                return true;
+            }
+            catch(Exception ex){Fail("COULD NOT RETURN TO LOBBY",ex);return false;}
+            finally{busy=false;RaiseChanged();}
+        }
+
         /// <summary>
-        /// Deliberately false until the gameplay authority/network phase is implemented.
-        /// Prevents accidentally launching the current local-only match on both devices.
+        /// Full gameplay replication is intentionally still disabled.
+        /// The new staging state verifies session, roster and Relay before match authority is enabled.
         /// </summary>
         public bool MatchNetworkingEnabled=>false;
 
@@ -402,11 +480,17 @@ namespace Alterverse.Multiplayer
             return false;
         }
 
+        private string ReadSession(string key,string fallback)
+        {
+            if(session!=null&&session.Properties.TryGetValue(key,out SessionProperty value)&&!string.IsNullOrEmpty(value.Value))
+                return value.Value;
+            return fallback;
+        }
+
         private int ReadSessionInt(string key,int fallback)
         {
-            if(session!=null&&session.Properties.TryGetValue(key,out SessionProperty value)&&
-               int.TryParse(value.Value,NumberStyles.Integer,CultureInfo.InvariantCulture,out int parsed))return parsed;
-            return fallback;
+            string text=ReadSession(key,null);
+            return text!=null&&int.TryParse(text,NumberStyles.Integer,CultureInfo.InvariantCulture,out int parsed)?parsed:fallback;
         }
 
         private static int ReadIntPlayer(IReadOnlyPlayer player,string key,int fallback)
