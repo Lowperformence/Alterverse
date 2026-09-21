@@ -44,8 +44,10 @@ namespace Alterverse.EditorChecks
                     Require(root.Find("DF_ArmL/DF_WeaponL")!=null,"Left weapon detached on "+hero.DisplayName);
                     Require(root.Find("DF_ArmR/DF_WeaponR")!=null,"Right weapon detached on "+hero.DisplayName);
                 }
-                if(hero.Hero==HeroId.Nyra||hero.Hero==HeroId.Mira)
+                if(hero.Hero==HeroId.Nyra||hero.Hero==HeroId.Elyra||hero.Hero==HeroId.Mira)
                     Require(root.Find("DF_ArmR/DF_WeaponR")!=null,"Weapon detached on "+hero.DisplayName);
+                if(hero.Hero==HeroId.Elyra)
+                    Require(root.Find("DF_ArmR/DF_WeaponR/DF_Orb")!=null,"Mage staff crystal/release point detached on "+hero.DisplayName);
                 checkedHeroes++;
             }
             Debug.Log("DIMENSIONS FRONT: presentation asset checks passed; live hero rigs checked: "+checkedHeroes+
