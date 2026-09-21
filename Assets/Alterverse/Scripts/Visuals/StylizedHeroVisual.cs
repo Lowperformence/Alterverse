@@ -218,28 +218,32 @@ else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial)
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 }
 
-private void ApplyNullEdgeOverdrive(Shader shader,Material pinkMaterial)
+private void ApplyNullEdgeOverdrive(Shader shader,Material voidMaterial)
 {
 Transform leftWeapon=FindVisual("WeaponL");
 Transform rightWeapon=FindVisual("WeaponR");
 
-// Keep the current premium size at 150%.
-if(leftWeapon!=null)leftWeapon.localScale*=1.50f;
-if(rightWeapon!=null)rightWeapon.localScale*=1.50f;
+if(leftWeapon!=null)leftWeapon.localScale*=1.18f;
+if(rightWeapon!=null)rightWeapon.localScale*=1.18f;
 
-// One unified NULL EDGE color: every visible premium weapon part uses
-// the same bright pink/violet emissive material.
-Transform bladeL=FindVisual("BladeL");
-Transform bladeR=FindVisual("BladeR");
-if(bladeL!=null)ApplyGlow(bladeL,pinkMaterial);
-if(bladeR!=null)ApplyGlow(bladeR,pinkMaterial);
+Color blackSteel=new(.025f,.020f,.035f,1f);
+Material steelMaterial=new Material(shader){name="DF_OblivionBlackSteel",color=blackSteel};
+if(steelMaterial.HasProperty("_BaseColor"))steelMaterial.SetColor("_BaseColor",blackSteel);
+if(steelMaterial.HasProperty("_Metallic"))steelMaterial.SetFloat("_Metallic",.82f);
+if(steelMaterial.HasProperty("_Smoothness"))steelMaterial.SetFloat("_Smoothness",.56f);
+ownedMaterials.Add(steelMaterial);
 
-string[] pinkDetails={"HiltL","HiltR","BladeRSpine","BladeGuard"};
-for(int i=0;i<pinkDetails.Length;i++)
+Color violetCore=new(.78f,.20f,1f,1f);
+Material coreMaterial=new Material(shader){name="DF_OblivionVoidCore",color=violetCore};
+if(coreMaterial.HasProperty("_BaseColor"))coreMaterial.SetColor("_BaseColor",violetCore);
+if(coreMaterial.HasProperty("_Metallic"))coreMaterial.SetFloat("_Metallic",.10f);
+if(coreMaterial.HasProperty("_Smoothness"))coreMaterial.SetFloat("_Smoothness",.90f);
+if(coreMaterial.HasProperty("_EmissionColor"))
 {
-Transform detail=FindVisual(pinkDetails[i]);
-if(detail!=null)ApplyGlow(detail,pinkMaterial);
+coreMaterial.EnableKeyword("_EMISSION");
+coreMaterial.SetColor("_EmissionColor",violetCore*4.2f);
 }
+ownedMaterials.Add(coreMaterial);
 
 for(int side=-1;side<=1;side+=2)
 {
@@ -247,25 +251,37 @@ string suffix=side<0?"L":"R";
 Transform weapon=side<0?leftWeapon:rightWeapon;
 if(weapon==null)continue;
 
+// Physical blade remains dark; the edge/core carries the premium void energy.
+Transform blade=FindVisual("Blade"+suffix);
+if(blade!=null)ApplyGlow(blade,steelMaterial);
+Transform edge=FindVisual("BladeEdge"+suffix);
+if(edge!=null){edge.localScale*=1.16f;ApplyGlow(edge,voidMaterial);}
 Transform hilt=FindVisual("Hilt"+suffix);
-if(hilt!=null)
-{
-hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.18f,1.28f,1.18f));
-ApplyGlow(hilt,pinkMaterial);
-}
+if(hilt!=null){hilt.localScale=Vector3.Scale(hilt.localScale,new Vector3(1.12f,1.18f,1.12f));ApplyGlow(hilt,steelMaterial);}
+Transform guard=FindVisual("Guard"+suffix);
+if(guard!=null){guard.localScale*=1.18f;ApplyGlow(guard,steelMaterial);}
+Transform pommel=FindVisual("Pommel"+suffix);
+if(pommel!=null)ApplyGlow(pommel,coreMaterial);
 
-CreateNullEdgePart("OverdriveGrip"+suffix,weapon,
-new Vector3(0,-.015f,-.035f),new Vector3(.105f,.245f,.10f),
-Vector3.zero,pinkMaterial);
-CreateNullEdgePart("OverdriveGuard"+suffix,weapon,
-new Vector3(0,-.115f,.055f),new Vector3(.30f,.055f,.13f),
-new Vector3(0,0,side*8f),pinkMaterial);
-CreateNullEdgePart("OverdrivePommel"+suffix,weapon,
-new Vector3(0,.125f,-.055f),new Vector3(.13f,.085f,.13f),
-new Vector3(0,0,45f),pinkMaterial);
-CreateNullEdgePart("OverdriveBladeDetail"+suffix,weapon,
-new Vector3(side*.025f,-.20f,.18f),new Vector3(.035f,.19f,.035f),
-new Vector3(side*10f,0,side*7f),pinkMaterial);
+// Legendary silhouette: split guard horns, central gem and a floating energy halo.
+CreateNullEdgePart("OblivionGuardWingA"+suffix,weapon,
+new Vector3(side*.12f,-.12f,.09f),new Vector3(.055f,.24f,.08f),
+new Vector3(0,0,side*-34f),steelMaterial);
+CreateNullEdgePart("OblivionGuardWingB"+suffix,weapon,
+new Vector3(side*-.12f,-.12f,.09f),new Vector3(.055f,.24f,.08f),
+new Vector3(0,0,side*34f),steelMaterial);
+CreateNullEdgePart("OblivionGem"+suffix,weapon,
+new Vector3(0,-.105f,.13f),new Vector3(.085f,.085f,.050f),
+new Vector3(0,0,45f),coreMaterial);
+CreateNullEdgePart("OblivionSpine"+suffix,weapon,
+new Vector3(side*.035f,-.34f,.45f),new Vector3(.030f,.32f,.025f),
+new Vector3(side*7f,0,side*5f),voidMaterial);
+
+Mesh haloMesh=HeroMeshLibrary.Ring("DF_OblivionHalo"+suffix,.19f,.016f);
+GameObject halo=Sculpt("OblivionHalo"+suffix,haloMesh,new Vector3(0,-.12f,.13f),Vector3.one,violetCore,weapon,true);
+halo.transform.localRotation=Quaternion.Euler(76f,0f,side*18f);
+MeshRenderer haloRenderer=halo.GetComponent<MeshRenderer>();
+if(haloRenderer!=null)haloRenderer.sharedMaterial=coreMaterial;
 }
 }
 
