@@ -95,12 +95,21 @@ namespace Alterverse.Multiplayer
             if(local)
             {
                 if(hero.GetComponent<HeroMotor>()==null)hero.AddComponent<HeroMotor>();
-                if(CoopAuthority.LocalIsHost&&hero.GetComponent<HeroRespawn>()==null)hero.AddComponent<HeroRespawn>();
             }
             else
             {
                 HeroMotor motor=hero.GetComponent<HeroMotor>();
                 if(motor!=null)Object.Destroy(motor);
+            }
+
+            if(CoopAuthority.LocalIsHost)
+            {
+                HeroRespawn respawn=hero.GetComponent<HeroRespawn>()??hero.AddComponent<HeroRespawn>();
+                if(!local&&hero.GetComponent<CoopRemoteAutoRespawn>()==null)hero.AddComponent<CoopRemoteAutoRespawn>();
+                _=respawn;
+            }
+            else
+            {
                 HeroRespawn respawn=hero.GetComponent<HeroRespawn>();
                 if(respawn!=null)Object.Destroy(respawn);
             }
