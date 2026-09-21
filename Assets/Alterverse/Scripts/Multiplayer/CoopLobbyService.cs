@@ -37,6 +37,7 @@ namespace Alterverse.Multiplayer
         private const string PlayerHeroKey="hero";
         private const string PlayerReadyKey="ready";
         private const string ArenaKey="arena";
+        private const string ArenaShuffleKey="arenaShuffle";
         private const string DifficultyKey="difficulty";
         private const string PhaseKey="phase";
         private const string MatchIdKey="matchId";
@@ -151,6 +152,7 @@ namespace Alterverse.Multiplayer
                     SessionProperties=new Dictionary<string,SessionProperty>
                     {
                         {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {ArenaShuffleKey,new SessionProperty(ArenaVariantRuntime.ShuffleEnabled?"1":"0",VisibilityPropertyOptions.Member)},
                         {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                         {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)},
                         {MatchIdKey,new SessionProperty("",VisibilityPropertyOptions.Member)}
@@ -290,11 +292,31 @@ namespace Alterverse.Multiplayer
             {
                 int index=Mod(start+Math.Sign(direction)*step,items.Length);
                 ArenaVariant candidate=items[index].Variant;
-                if(ArenaUnlockInventory.Owned(candidate))
-                    return await SetHostSettingAsync(ArenaKey,((int)candidate).ToString(CultureInfo.InvariantCulture),
-                        $"ARENA • {items[index].Name}");
+                if(!ArenaUnlockInventory.Owned(candidate))continue;
+                try
+                {
+                    busy=true;lastError="";
+                    IHostSession host=session.AsHost();
+                    host.SetProperties(new Dictionary<string,SessionProperty>
+                    {
+                        {ArenaKey,new SessionProperty(((int)candidate).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {ArenaShuffleKey,new SessionProperty("0",VisibilityPropertyOptions.Member)}
+                    });
+                    await host.SavePropertiesAsync();
+                    SetStatus($"ARENA • {items[index].Name}");
+                    return true;
+                }
+                catch(Exception ex){Fail("COULD NOT UPDATE LOBBY",ex);return false;}
+                finally{busy=false;RaiseChanged();}
             }
             return false;
+        }
+
+        public Task<bool> SetHostArenaShuffleAsync(bool enabled)
+        {
+            if(session==null||!IsHost||busy)return Task.FromResult(false);
+            return SetHostSettingAsync(ArenaShuffleKey,enabled?"1":"0",
+                enabled?"ARENA SHUFFLE • RANDOM OWNED MAP":"ARENA SHUFFLE • OFF");
         }
 
         public async Task<bool> CycleHostDifficultyAsync(int direction)
@@ -368,6 +390,8 @@ namespace Alterverse.Multiplayer
                 return (ArenaVariant)raw;
             }
         }
+
+        public bool LobbyArenaShuffle=>ReadSession(ArenaShuffleKey,"0")=="1";
 
         public BotDifficulty LobbyDifficulty
         {
@@ -455,8 +479,12 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
                 host.IsLocked=true;
+                ArenaVariant stagedArena=LobbyArenaShuffle
+                    ?ArenaVariantRuntime.RandomOwnedArena(LobbyArena)
+                    :LobbyArena;
                 host.SetProperties(new Dictionary<string,SessionProperty>
                 {
+                    {ArenaKey,new SessionProperty(((int)stagedArena).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                     {MatchIdKey,new SessionProperty(Guid.NewGuid().ToString("N"),VisibilityPropertyOptions.Member)},
                     {PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member)}
                 });
