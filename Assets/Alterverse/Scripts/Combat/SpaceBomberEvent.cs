@@ -123,10 +123,10 @@ namespace Alterverse.Combat
             armorMaterial=CreateMaterial(lit,"DF_BomberArmor",new Color(.20f,.235f,.28f),.66f,.34f,Color.black);
             darkMaterial=CreateMaterial(lit,"DF_BomberDark",new Color(.035f,.045f,.065f),.48f,.22f,Color.black);
             energyMaterial=CreateMaterial(lit,"DF_BomberEnergy",new Color(.16f,.88f,1f),.18f,.72f,new Color(.16f,.88f,1f)*3.0f);
-            Color bombShell=ArenaVariantRuntime.IsNoxara?new Color(.96f,.72f,.035f):new Color(.14f,.15f,.17f);
-            Color bombEmission=ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f)*1.25f:new Color(.95f,.22f,.05f)*.35f;
+            Color bombShell=ArenaVariantRuntime.IsKryon?new Color(.72f,.91f,.96f):ArenaVariantRuntime.IsNoxara?new Color(.96f,.72f,.035f):new Color(.14f,.15f,.17f);
+            Color bombEmission=ArenaVariantRuntime.IsKryon?new Color(.25f,.92f,1f)*1.45f:ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f)*1.25f:new Color(.95f,.22f,.05f)*.35f;
             bombMaterial=CreateMaterial(lit,"DF_BombShell",bombShell,.72f,.26f,bombEmission);
-            warningMaterial=new Material(unlit){name="DF_BombWarning",color=ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f):new Color(1f,.22f,.07f)};
+            warningMaterial=new Material(unlit){name="DF_BombWarning",color=ArenaVariantRuntime.IsKryon?new Color(.32f,.94f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f):new Color(1f,.22f,.07f)};
             materialsReady=armorMaterial!=null&&darkMaterial!=null&&energyMaterial!=null&&bombMaterial!=null&&warningMaterial!=null;
         }
 
@@ -456,7 +456,7 @@ namespace Alterverse.Combat
                 warning=new GameObject("DF_BombWarning");warning.transform.SetParent(world,false);
                 warningLine=warning.AddComponent<LineRenderer>();warningLine.sharedMaterial=warningMaterial;warningLine.loop=true;
                 warningLine.useWorldSpace=true;warningLine.positionCount=36;warningLine.widthMultiplier=.065f;
-                Color warningColor=ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.98f):new Color(1f,.22f,.07f,.95f);
+                Color warningColor=ArenaVariantRuntime.IsKryon?new Color(.34f,.95f,1f,.98f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.98f):new Color(1f,.22f,.07f,.95f);
                 warningLine.startColor=warningLine.endColor=warningColor;
                 warningLine.shadowCastingMode=ShadowCastingMode.Off;warningLine.receiveShadows=false;
                 for(int i=0;i<36;i++)
@@ -473,7 +473,7 @@ namespace Alterverse.Combat
             finRoot=new GameObject("DF_BombFins").transform;finRoot.SetParent(bomb.transform,false);finRoot.localPosition=new Vector3(0,.35f,0);
             Primitive("FinX",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.58f,.06f,.16f),bombMaterial,Quaternion.identity);
             Primitive("FinZ",PrimitiveType.Cube,finRoot,Vector3.zero,new Vector3(.16f,.06f,.58f),bombMaterial,Quaternion.identity);
-            Material blinkMaterial=ArenaVariantRuntime.IsNoxara?bombMaterial:energyMaterial;
+            Material blinkMaterial=ArenaVariantRuntime.IsNoxara||ArenaVariantRuntime.IsKryon?bombMaterial:energyMaterial;
             blink=Primitive("WarningCore",PrimitiveType.Cylinder,bomb.transform,new Vector3(0,.05f,0),new Vector3(.285f,.045f,.285f),blinkMaterial,Quaternion.identity);
             if(body!=null)body.localRotation=Quaternion.Euler(0,0,2f);
         }
@@ -513,8 +513,8 @@ namespace Alterverse.Combat
         {
             if(resolved)return;resolved=true;
             Vector3 impact=new(target.x,target.y+.25f,target.z);
-            Color blast=ArenaVariantRuntime.IsNoxara?new Color(1f,.74f,.04f):new Color(1f,.34f,.10f);
-            Color shock=ArenaVariantRuntime.IsNoxara?new Color(1f,.66f,.02f):new Color(1f,.28f,.08f);
+            Color blast=ArenaVariantRuntime.IsKryon?new Color(.72f,.97f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.74f,.04f):new Color(1f,.34f,.10f);
+            Color shock=ArenaVariantRuntime.IsKryon?new Color(.24f,.88f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.66f,.02f):new Color(1f,.28f,.08f);
             CombatImpactPool.Emit(impact,blast,1);
             PrototypeVfx.Shockwave(impact,shock,ImpactRadius*1.05f);
 
