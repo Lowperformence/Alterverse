@@ -24,7 +24,7 @@ namespace Alterverse.Combat
         private const float ArenaHalfHeight=32f;
 
         private int team;
-        private bool marsSkeleton,xenoAlien,noxaraSpider;
+        private bool marsSkeleton,xenoAlien,noxaraSpider,kryonBear;
         private Health health,target;
         private HeroLocomotion locomotion;
         private float nextAttack,nextScan,blockedTime,detourUntil,shotAt;
@@ -63,6 +63,12 @@ namespace Alterverse.Combat
         private Vector3 spiderPreviousForward,spiderPreviousWorldPosition;
         private bool spiderFeetInitialized;
         private Color spiderEnergyBase=new(1f,.72f,.04f,1f);
+        private Transform bearBodyRoot,bearHeadPivot;
+        private readonly Transform[] bearLegRoots=new Transform[4];
+        private readonly Quaternion[] bearLegBase=new Quaternion[4];
+        private Vector3 bearBodyRest,bearBarrelRest;
+        private float bearMoveBlend;
+        private Color bearEnergyBase=new(.28f,.94f,1f,1f);
         private int movementRecoveryAttempt;
         private static readonly List<HotZoneTank> active=new();
         public static IReadOnlyList<HotZoneTank> Active=>active;
@@ -71,7 +77,8 @@ namespace Alterverse.Combat
         public bool IsMarsSkeleton=>marsSkeleton;
         public bool IsXenoTitan=>xenoAlien;
         public bool IsNoxaraSpider=>noxaraSpider;
-        private Material armorMat,darkMat,energyMat,jointMat,teamMat;
+        public bool IsKryonBear=>kryonBear;
+        private Material armorMat,darkMat,energyMat,jointMat,teamMat,bearIceMat;
 
         private static readonly Vector3[] ZeroPatrol=
         {
@@ -114,8 +121,9 @@ namespace Alterverse.Combat
                 }
             }
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara;
-            go.name=spider?(team==0?"DF_ZeroNoxaraSpider":"DF_LumenNoxaraSpider"):
+            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
+            go.name=bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
+                spider?(team==0?"DF_ZeroNoxaraSpider":"DF_LumenNoxaraSpider"):
                 alien?(team==0?"DF_ZeroXenoTitan":"DF_LumenXenoTitan"):
                 skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):
                 (team==0?"DF_ZeroHotZoneTank":"DF_LumenHotZoneTank");
@@ -126,16 +134,17 @@ namespace Alterverse.Combat
             Renderer baseRenderer=go.GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;
             Health hp=go.AddComponent<Health>();hp.Configure(MaxHp,true);
             TeamMember member=go.AddComponent<TeamMember>();member.Initialize(team);
-            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider);
+            go.AddComponent<HotZoneTank>().Initialize(team,spawn,skeleton,alien,spider,bear);
             return true;
         }
 
-        private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien,bool spider)
+        private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien,bool spider,bool bear)
         {
             gameObject.layer=GameplayCollision.Units;
-            team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;noxaraSpider=spider;home=spawn;health=GetComponent<Health>();
+            team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;noxaraSpider=spider;kryonBear=bear;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
-            if(noxaraSpider)
+            if(kryonBear)BuildKryonBearVisuals();
+            else if(noxaraSpider)
             {
                 BuildNoxaraSpiderVisuals();
                 if(GetComponent<NoxaraSpiderMeteorShower>()==null)gameObject.AddComponent<NoxaraSpiderMeteorShower>();
@@ -152,6 +161,7 @@ namespace Alterverse.Combat
             if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
             if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
             if(noxaraSpider)AnimateNoxaraSpider();
+            if(kryonBear){bearMoveBlend=Mathf.MoveTowards(bearMoveBlend,0f,Time.deltaTime*3.6f);AnimateKryonBear();}
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextScan)
             {
@@ -207,11 +217,12 @@ namespace Alterverse.Combat
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
-            bool creature=marsSkeleton||xenoAlien||noxaraSpider;
+            Color energy=kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            bool creature=marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
             Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
-            PrototypeVfx.Ring(muzzle,energy,noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
-            if(noxaraSpider)PrototypeVfx.Burst(muzzle,energy,.12f,3);
+            PrototypeVfx.Ring(muzzle,energy,kryonBear?.40f:noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
+            if(kryonBear)PrototypeVfx.Burst(muzzle,Color.Lerp(energy,Color.white,.35f),.15f,4);
+            else if(noxaraSpider)PrototypeVfx.Burst(muzzle,energy,.12f,3);
             else if(xenoAlien)PrototypeVfx.Burst(muzzle,teamEnergy,.10f,2);
         }
 
@@ -225,11 +236,11 @@ namespace Alterverse.Combat
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
-            bool creature=marsSkeleton||xenoAlien||noxaraSpider;
+            bool creature=marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
             Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            Color energy=kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
             if(xenoAlien)
             {
                 PrototypeVfx.BioBolt(muzzle,hit,energy,teamEnergy);
@@ -675,6 +686,80 @@ namespace Alterverse.Combat
             foot.localRotation=Quaternion.AngleAxis(-(hip+kneeBend),Vector3.forward);
         }
 
+        private void BuildKryonBearVisuals()
+        {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
+            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            Color armor=new(.68f,.76f,.79f,1f),ice=new(.80f,.90f,.93f,1f),deep=new(.035f,.055f,.070f,1f),joint=new(.10f,.15f,.18f,1f);
+            armorMat=MakeMaterial(shader,armor,.62f,.38f,Color.black);
+            darkMat=MakeMaterial(shader,deep,.74f,.22f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.82f,.26f,Color.black);
+            energyMat=MakeMaterial(shader,bearEnergyBase,.12f,.76f,bearEnergyBase*3.2f);
+            teamMat=MakeMaterial(shader,teamEnergy,.12f,.48f,teamEnergy*1.05f);
+            bearIceMat=MakeMaterial(shader,ice,.18f,.62f,new Color(.16f,.55f,.62f)*.30f);
+
+            bearBodyRoot=Pivot("DF_KryonBearBody",transform,new Vector3(0,.22f,0),Quaternion.identity);
+            bearBodyRest=bearBodyRoot.localPosition;
+            Part("KryonBearTorso",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.42f,-.20f),new Vector3(1.48f,.88f,1.92f),armorMat,Quaternion.identity);
+            Part("KryonBearBackArmor",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.78f,-.28f),new Vector3(1.10f,.18f,1.28f),bearIceMat,Quaternion.Euler(3,0,0));
+            Part("KryonBearChest",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.35f,.62f),new Vector3(1.08f,.68f,.48f),darkMat,Quaternion.Euler(-6,0,0));
+            Part("KryonBearReactor",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.48f,-1.06f),new Vector3(.34f,.34f,.22f),energyMat,Quaternion.identity);
+            Part("KryonBearTeamMark",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.88f,-.18f),new Vector3(.34f,.045f,.25f),teamMat,Quaternion.identity);
+
+            turretPivot=Pivot("DF_KryonBearHeadPivot",bearBodyRoot,new Vector3(0,.70f,.82f),Quaternion.identity);
+            bearHeadPivot=turretPivot;
+            Part("KryonBearHead",PrimitiveType.Sphere,turretPivot,new Vector3(0,.02f,.18f),new Vector3(.92f,.66f,.78f),armorMat,Quaternion.identity);
+            Part("KryonBearBrow",PrimitiveType.Cube,turretPivot,new Vector3(0,.20f,.48f),new Vector3(.76f,.18f,.28f),bearIceMat,Quaternion.Euler(-7,0,0));
+            Part("KryonBearSnout",PrimitiveType.Cube,turretPivot,new Vector3(0,-.12f,.62f),new Vector3(.58f,.34f,.54f),darkMat,Quaternion.Euler(4,0,0));
+            Part("KryonBearEarL",PrimitiveType.Sphere,turretPivot,new Vector3(-.38f,.35f,.02f),new Vector3(.26f,.28f,.20f),jointMat,Quaternion.identity);
+            Part("KryonBearEarR",PrimitiveType.Sphere,turretPivot,new Vector3(.38f,.35f,.02f),new Vector3(.26f,.28f,.20f),jointMat,Quaternion.identity);
+            Part("KryonBearEyeL",PrimitiveType.Sphere,turretPivot,new Vector3(-.22f,.08f,.55f),new Vector3(.11f,.085f,.065f),energyMat,Quaternion.identity);
+            Part("KryonBearEyeR",PrimitiveType.Sphere,turretPivot,new Vector3(.22f,.08f,.55f),new Vector3(.11f,.085f,.065f),energyMat,Quaternion.identity);
+
+            barrelPivot=Pivot("DF_KryonBearMuzzle",turretPivot,new Vector3(0,-.13f,.88f),Quaternion.identity);
+            bearBarrelRest=barrelPivot.localPosition;
+            Part("KryonBearMuzzleCore",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.19f,.07f,.19f),energyMat,Quaternion.Euler(90,0,0));
+
+            Vector3[] hips={new(-.63f,.28f,.60f),new(.63f,.28f,.60f),new(-.66f,.28f,-.82f),new(.66f,.28f,-.82f)};
+            for(int i=0;i<4;i++)
+            {
+                float side=i%2==0?-1f:1f;
+                Transform leg=Pivot($"DF_KryonBearLeg_{i}",bearBodyRoot,hips[i],Quaternion.Euler(6f,0,side*4f));
+                bearLegRoots[i]=leg;bearLegBase[i]=leg.localRotation;
+                Part("KryonBearUpperLeg"+i,PrimitiveType.Capsule,leg,new Vector3(0,-.43f,.03f),new Vector3(.36f,.64f,.40f),armorMat,Quaternion.identity);
+                Part("KryonBearKnee"+i,PrimitiveType.Sphere,leg,new Vector3(0,-.83f,.08f),new Vector3(.30f,.26f,.30f),jointMat,Quaternion.identity);
+                Part("KryonBearLowerLeg"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.08f,.13f),new Vector3(.32f,.56f,.36f),darkMat,Quaternion.Euler(-7f,0,side*2f));
+                Part("KryonBearPaw"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.35f,.31f),new Vector3(.58f,.22f,.72f),bearIceMat,Quaternion.Euler(0,0,side*1.5f));
+                Part("KryonBearPawGlow"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.45f,.35f),new Vector3(.30f,.035f,.38f),energyMat,Quaternion.identity);
+            }
+        }
+
+        private void AnimateKryonBear()
+        {
+            if(bearBodyRoot==null)return;
+            float idle=Mathf.Sin(Time.time*1.55f);
+            float stride=Mathf.Sin(Time.time*4.65f)*bearMoveBlend;
+            float lift=Mathf.Abs(stride)*.035f*bearMoveBlend;
+            bearBodyRoot.localPosition=bearBodyRest+Vector3.up*(lift+idle*.006f);
+            bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(Time.time*4.65f)*.65f*bearMoveBlend,0,stride*.85f);
+
+            for(int i=0;i<bearLegRoots.Length;i++)
+            {
+                Transform leg=bearLegRoots[i];if(leg==null)continue;
+                float phase=(i==0||i==3?1f:-1f)*stride;
+                float side=i%2==0?-1f:1f;
+                leg.localRotation=bearLegBase[i]*Quaternion.Euler(phase*23f,0,side*Mathf.Abs(phase)*3.5f);
+            }
+
+            if(bearHeadPivot!=null)
+                bearHeadPivot.localRotation=Quaternion.Euler(idle*1.2f,-stride*2.2f,0);
+            if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))
+            {
+                float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
+                energyMat.SetColor("_EmissionColor",bearEnergyBase*(2.8f+idle*.12f+windup*2.0f));
+            }
+        }
+
         private void BuildAlienVisuals()
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
@@ -920,7 +1005,7 @@ namespace Alterverse.Combat
             }
             if(barrelPivot!=null)
             {
-                Vector3 rest=noxaraSpider?spiderBarrelRest:new Vector3(0,.08f,.62f);
+                Vector3 rest=noxaraSpider?spiderBarrelRest:kryonBear?bearBarrelRest:new Vector3(0,.08f,.62f);
                 barrelPivot.localPosition=Vector3.Lerp(barrelPivot.localPosition,rest,1f-Mathf.Exp(-18f*Time.deltaTime));
             }
         }
@@ -928,6 +1013,7 @@ namespace Alterverse.Combat
         private void AnimateTracks(float movement)
         {
             if(noxaraSpider)return;
+            if(kryonBear){bearMoveBlend=1f;return;}
             if(xenoAlien){xenoMoveBlend=1f;return;}
             if(marsSkeleton){skeletonMoveBlend=1f;return;}
             float bob=Mathf.Sin(Time.time*9f)*Mathf.Clamp01(movement*8f)*.008f;
@@ -945,6 +1031,7 @@ namespace Alterverse.Combat
             if(energyMat!=null)Destroy(energyMat);
             if(jointMat!=null)Destroy(jointMat);
             if(teamMat!=null)Destroy(teamMat);
+            if(bearIceMat!=null)Destroy(bearIceMat);
         }
     }
 }
