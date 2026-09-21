@@ -56,14 +56,21 @@ namespace Alterverse.Combat
 
         private static Vector3 ResolveDeploymentPoint(int team,int slot,DefenseTrench sourceTrench)
         {
-            SpawnHealingZone[] zones=Object.FindObjectsByType<SpawnHealingZone>(FindObjectsSortMode.None);
+            // Unity 6.6: use the parameterless FindObjectsByType overload. Do not depend on
+            // SpawnHealingZone exposing a Team property; choose the healing zone on the owning
+            // side of the arena and then prefer the one closest to the source trench.
+            SpawnHealingZone[] zones=Object.FindObjectsByType<SpawnHealingZone>();
             SpawnHealingZone bestZone=null;
             float bestDistance=float.MaxValue;
 
             for(int i=0;i<zones.Length;i++)
             {
                 SpawnHealingZone zone=zones[i];
-                if(zone==null||zone.Team!=team)continue;
+                if(zone==null)continue;
+                float x=zone.transform.position.x;
+                bool belongsToTeam=team==0?x<0f:x>0f;
+                if(!belongsToTeam)continue;
+
                 Vector3 d=zone.transform.position-sourceTrench.transform.position;d.y=0f;
                 float sqr=d.sqrMagnitude;
                 if(sqr>=bestDistance)continue;
