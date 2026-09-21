@@ -263,7 +263,7 @@ namespace Alterverse.Combat
                 PrototypeVfx.Burst(muzzle,energy,.28f,4);
             }
             if(barrelPivot!=null&&!creature)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
-            victim.TakeDamage(Damage,gameObject);
+            victim.TakeDamage(kryonBear?Damage+5f:Damage,gameObject);
         }
 
         private void MoveToward(Vector3 destination,float stopDistance)
@@ -701,47 +701,102 @@ namespace Alterverse.Combat
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color armor=new(.68f,.76f,.79f,1f),ice=new(.80f,.90f,.93f,1f),deep=new(.035f,.055f,.070f,1f),joint=new(.10f,.15f,.18f,1f);
-            armorMat=MakeMaterial(shader,armor,.62f,.38f,Color.black);
-            darkMat=MakeMaterial(shader,deep,.74f,.22f,Color.black);
-            jointMat=MakeMaterial(shader,joint,.82f,.26f,Color.black);
-            energyMat=MakeMaterial(shader,bearEnergyBase,.12f,.76f,bearEnergyBase*3.2f);
-            teamMat=MakeMaterial(shader,teamEnergy,.12f,.48f,teamEnergy*1.05f);
-            bearIceMat=MakeMaterial(shader,ice,.18f,.62f,new Color(.16f,.55f,.62f)*.30f);
+            Color armor=new(.72f,.80f,.84f,1f),ice=new(.88f,.95f,.98f,1f),deep=new(.022f,.038f,.052f,1f),joint=new(.07f,.12f,.15f,1f);
+            armorMat=MakeMaterial(shader,armor,.68f,.42f,Color.black);
+            darkMat=MakeMaterial(shader,deep,.78f,.24f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.86f,.30f,Color.black);
+            energyMat=MakeMaterial(shader,bearEnergyBase,.10f,.80f,bearEnergyBase*3.6f);
+            teamMat=MakeMaterial(shader,teamEnergy,.12f,.52f,teamEnergy*1.15f);
+            bearIceMat=MakeMaterial(shader,ice,.24f,.68f,new Color(.18f,.62f,.72f)*.34f);
 
-            bearBodyRoot=Pivot("DF_KryonBearBody",transform,new Vector3(0,.22f,0),Quaternion.identity);
+            // The original bear relied heavily on spheres/cubes and read like a prototype.
+            // These authored low-poly plates and blades create the segmented robotic silhouette
+            // from the concept reference while keeping the runtime-only/mobile-friendly workflow.
+            Mesh shoulderPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_KryonBearShoulderPlate",new[]{
+                new Vector2(-.55f,-.38f),new Vector2(.46f,-.42f),new Vector2(.68f,.04f),
+                new Vector2(.40f,.50f),new Vector2(-.24f,.60f),new Vector2(-.62f,.18f)},.20f));
+            Mesh chestPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_KryonBearChestPlate",new[]{
+                new Vector2(-.54f,-.38f),new Vector2(.54f,-.38f),new Vector2(.64f,.12f),
+                new Vector2(.28f,.58f),new Vector2(0,.66f),new Vector2(-.28f,.58f),new Vector2(-.64f,.12f)},.18f));
+            Mesh facePlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_KryonBearFacePlate",new[]{
+                new Vector2(-.50f,-.20f),new Vector2(.50f,-.20f),new Vector2(.42f,.28f),
+                new Vector2(.20f,.48f),new Vector2(-.20f,.48f),new Vector2(-.42f,.28f)},.16f));
+            Mesh jawPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_KryonBearJawPlate",new[]{
+                new Vector2(-.38f,-.18f),new Vector2(.38f,-.18f),new Vector2(.30f,.18f),
+                new Vector2(0,.29f),new Vector2(-.30f,.18f)},.15f));
+            Mesh limbPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_KryonBearLimbPlate",new[]{
+                new Vector2(-.30f,-.46f),new Vector2(.30f,-.46f),new Vector2(.40f,.08f),
+                new Vector2(.15f,.50f),new Vector2(-.28f,.40f)},.15f));
+            Mesh clawBlade=TrackXenoMesh(XenoTitanMeshFactory.ClawBlade("DF_KryonBearClaw",.48f,.13f,.10f,.12f));
+            Mesh iceFin=TrackXenoMesh(XenoTitanMeshFactory.Spine("DF_KryonBearIceFin",.56f,.25f,.28f));
+
+            bearBodyRoot=Pivot("DF_KryonBearBody",transform,new Vector3(0,.18f,0),Quaternion.Euler(-2f,0,0));
             bearBodyRest=bearBodyRoot.localPosition;
-            Part("KryonBearTorso",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.42f,-.20f),new Vector3(1.48f,.88f,1.92f),armorMat,Quaternion.identity);
-            Part("KryonBearBackArmor",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.78f,-.28f),new Vector3(1.10f,.18f,1.28f),bearIceMat,Quaternion.Euler(3,0,0));
-            Part("KryonBearChest",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.35f,.62f),new Vector3(1.08f,.68f,.48f),darkMat,Quaternion.Euler(-6,0,0));
-            Part("KryonBearReactor",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.48f,-1.06f),new Vector3(.34f,.34f,.22f),energyMat,Quaternion.identity);
-            Part("KryonBearTeamMark",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.88f,-.18f),new Vector3(.34f,.045f,.25f),teamMat,Quaternion.identity);
 
-            turretPivot=Pivot("DF_KryonBearHeadPivot",bearBodyRoot,new Vector3(0,.70f,.82f),Quaternion.identity);
+            // Broad mechanical polar-bear mass with visible dark inner chassis.
+            Part("KryonBearInnerTorso",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.40f,-.18f),new Vector3(1.58f,.90f,2.05f),darkMat,Quaternion.identity);
+            Part("KryonBearUpperShell",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.54f,-.12f),new Vector3(1.46f,.74f,1.78f),armorMat,Quaternion.identity);
+            MeshPart("KryonBearChestArmor",chestPlate,bearBodyRoot,new Vector3(0,.48f,.92f),new Vector3(1.10f,.94f,1f),armorMat,Quaternion.Euler(-8,0,0));
+            MeshPart("KryonBearShoulderArmorL",shoulderPlate,bearBodyRoot,new Vector3(-.78f,.66f,.50f),new Vector3(1.05f,1.10f,1f),bearIceMat,Quaternion.Euler(-10,-12,-10));
+            MeshPart("KryonBearShoulderArmorR",shoulderPlate,bearBodyRoot,new Vector3(.78f,.66f,.50f),new Vector3(1.05f,1.10f,1f),bearIceMat,Quaternion.Euler(-10,12,10));
+            MeshPart("KryonBearFlankArmorL",shoulderPlate,bearBodyRoot,new Vector3(-.72f,.54f,-.66f),new Vector3(.90f,.82f,.90f),armorMat,Quaternion.Euler(2,-18,-8));
+            MeshPart("KryonBearFlankArmorR",shoulderPlate,bearBodyRoot,new Vector3(.72f,.54f,-.66f),new Vector3(.90f,.82f,.90f),armorMat,Quaternion.Euler(2,18,8));
+
+            // Layered dorsal armor and ice fins break up the toy-like smooth back.
+            MeshPart("KryonBearBackPlateA",chestPlate,bearBodyRoot,new Vector3(0,.94f,.25f),new Vector3(.92f,.45f,.86f),bearIceMat,Quaternion.Euler(78,0,0));
+            MeshPart("KryonBearBackPlateB",chestPlate,bearBodyRoot,new Vector3(0,.91f,-.44f),new Vector3(.84f,.40f,.78f),armorMat,Quaternion.Euler(82,0,0));
+            MeshPart("KryonBearIceFinC",iceFin,bearBodyRoot,new Vector3(0,.92f,-.92f),new Vector3(.70f,.92f,.72f),bearIceMat,Quaternion.Euler(7,0,0));
+            MeshPart("KryonBearIceFinL",iceFin,bearBodyRoot,new Vector3(-.48f,.82f,-.58f),new Vector3(.50f,.68f,.58f),bearIceMat,Quaternion.Euler(9,-12,-18));
+            MeshPart("KryonBearIceFinR",iceFin,bearBodyRoot,new Vector3(.48f,.82f,-.58f),new Vector3(.50f,.68f,.58f),bearIceMat,Quaternion.Euler(9,12,18));
+
+            Part("KryonBearChestCore",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.43f,1.05f),new Vector3(.24f,.21f,.16f),energyMat,Quaternion.identity);
+            Part("KryonBearTeamMark",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.98f,-.12f),new Vector3(.30f,.035f,.22f),teamMat,Quaternion.identity);
+
+            // Lower, angular head with cheek armor, mechanical jaw and visible fangs.
+            turretPivot=Pivot("DF_KryonBearHeadPivot",bearBodyRoot,new Vector3(0,.66f,.92f),Quaternion.Euler(-4,0,0));
             bearHeadPivot=turretPivot;
-            Part("KryonBearHead",PrimitiveType.Sphere,turretPivot,new Vector3(0,.02f,.18f),new Vector3(.92f,.66f,.78f),armorMat,Quaternion.identity);
-            Part("KryonBearBrow",PrimitiveType.Cube,turretPivot,new Vector3(0,.20f,.48f),new Vector3(.76f,.18f,.28f),bearIceMat,Quaternion.Euler(-7,0,0));
-            Part("KryonBearSnout",PrimitiveType.Cube,turretPivot,new Vector3(0,-.12f,.62f),new Vector3(.58f,.34f,.54f),darkMat,Quaternion.Euler(4,0,0));
-            Part("KryonBearEarL",PrimitiveType.Sphere,turretPivot,new Vector3(-.38f,.35f,.02f),new Vector3(.26f,.28f,.20f),jointMat,Quaternion.identity);
-            Part("KryonBearEarR",PrimitiveType.Sphere,turretPivot,new Vector3(.38f,.35f,.02f),new Vector3(.26f,.28f,.20f),jointMat,Quaternion.identity);
-            Part("KryonBearEyeL",PrimitiveType.Sphere,turretPivot,new Vector3(-.22f,.08f,.55f),new Vector3(.11f,.085f,.065f),energyMat,Quaternion.identity);
-            Part("KryonBearEyeR",PrimitiveType.Sphere,turretPivot,new Vector3(.22f,.08f,.55f),new Vector3(.11f,.085f,.065f),energyMat,Quaternion.identity);
+            Part("KryonBearHeadCore",PrimitiveType.Sphere,turretPivot,new Vector3(0,.00f,.12f),new Vector3(.86f,.61f,.74f),darkMat,Quaternion.identity);
+            MeshPart("KryonBearForehead",facePlate,turretPivot,new Vector3(0,.14f,.54f),new Vector3(.92f,.90f,.88f),armorMat,Quaternion.Euler(-7,0,0));
+            MeshPart("KryonBearCheekL",shoulderPlate,turretPivot,new Vector3(-.36f,-.06f,.48f),new Vector3(.55f,.56f,.70f),bearIceMat,Quaternion.Euler(-10,-18,-10));
+            MeshPart("KryonBearCheekR",shoulderPlate,turretPivot,new Vector3(.36f,-.06f,.48f),new Vector3(.55f,.56f,.70f),bearIceMat,Quaternion.Euler(-10,18,10));
+            Part("KryonBearSnout",PrimitiveType.Cube,turretPivot,new Vector3(0,-.15f,.66f),new Vector3(.54f,.28f,.50f),jointMat,Quaternion.Euler(3,0,0));
+            MeshPart("KryonBearJaw",jawPlate,turretPivot,new Vector3(0,-.33f,.70f),new Vector3(.90f,.82f,.90f),darkMat,Quaternion.Euler(-6,0,0));
+            Part("KryonBearNose",PrimitiveType.Sphere,turretPivot,new Vector3(0,-.10f,.94f),new Vector3(.25f,.15f,.16f),jointMat,Quaternion.identity);
+            Part("KryonBearEarL",PrimitiveType.Sphere,turretPivot,new Vector3(-.37f,.36f,-.02f),new Vector3(.20f,.24f,.16f),jointMat,Quaternion.identity);
+            Part("KryonBearEarR",PrimitiveType.Sphere,turretPivot,new Vector3(.37f,.36f,-.02f),new Vector3(.20f,.24f,.16f),jointMat,Quaternion.identity);
+            Part("KryonBearEyeL",PrimitiveType.Sphere,turretPivot,new Vector3(-.22f,.07f,.64f),new Vector3(.105f,.072f,.060f),energyMat,Quaternion.identity);
+            Part("KryonBearEyeR",PrimitiveType.Sphere,turretPivot,new Vector3(.22f,.07f,.64f),new Vector3(.105f,.072f,.060f),energyMat,Quaternion.identity);
+            MeshPart("KryonBearFangL",clawBlade,turretPivot,new Vector3(-.18f,-.28f,.84f),new Vector3(.62f,.72f,.72f),bearIceMat,Quaternion.Euler(92,-5,0));
+            MeshPart("KryonBearFangR",clawBlade,turretPivot,new Vector3(.18f,-.28f,.84f),new Vector3(.62f,.72f,.72f),bearIceMat,Quaternion.Euler(92,5,0));
 
-            barrelPivot=Pivot("DF_KryonBearMuzzle",turretPivot,new Vector3(0,-.13f,.88f),Quaternion.identity);
+            barrelPivot=Pivot("DF_KryonBearMuzzle",turretPivot,new Vector3(0,-.18f,1.02f),Quaternion.identity);
             bearBarrelRest=barrelPivot.localPosition;
-            Part("KryonBearMuzzleCore",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.19f,.07f,.19f),energyMat,Quaternion.Euler(90,0,0));
+            Part("KryonBearMuzzleCore",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.18f,.06f,.18f),energyMat,Quaternion.Euler(90,0,0));
 
-            Vector3[] hips={new(-.63f,.28f,.60f),new(.63f,.28f,.60f),new(-.66f,.28f,-.82f),new(.66f,.28f,-.82f)};
+            // Articulated legs: oversized front shoulders, visible joint cores and long metal claws.
+            Vector3[] hips={new(-.66f,.30f,.58f),new(.66f,.30f,.58f),new(-.64f,.27f,-.78f),new(.64f,.27f,-.78f)};
             for(int i=0;i<4;i++)
             {
+                bool front=i<2;
                 float side=i%2==0?-1f:1f;
-                Transform leg=Pivot($"DF_KryonBearLeg_{i}",bearBodyRoot,hips[i],Quaternion.Euler(6f,0,side*4f));
+                Transform leg=Pivot($"DF_KryonBearLeg_{i}",bearBodyRoot,hips[i],Quaternion.Euler(front?7f:4f,0,side*(front?6f:3f)));
                 bearLegRoots[i]=leg;bearLegBase[i]=leg.localRotation;
-                Part("KryonBearUpperLeg"+i,PrimitiveType.Capsule,leg,new Vector3(0,-.43f,.03f),new Vector3(.36f,.64f,.40f),armorMat,Quaternion.identity);
-                Part("KryonBearKnee"+i,PrimitiveType.Sphere,leg,new Vector3(0,-.83f,.08f),new Vector3(.30f,.26f,.30f),jointMat,Quaternion.identity);
-                Part("KryonBearLowerLeg"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.08f,.13f),new Vector3(.32f,.56f,.36f),darkMat,Quaternion.Euler(-7f,0,side*2f));
-                Part("KryonBearPaw"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.35f,.31f),new Vector3(.58f,.22f,.72f),bearIceMat,Quaternion.Euler(0,0,side*1.5f));
-                Part("KryonBearPawGlow"+i,PrimitiveType.Cube,leg,new Vector3(0,-1.45f,.35f),new Vector3(.30f,.035f,.38f),energyMat,Quaternion.identity);
+
+                Part("KryonBearUpperLegCore"+i,PrimitiveType.Capsule,leg,new Vector3(0,-.43f,.02f),
+                    new Vector3(front?.42f:.34f,front?.69f:.61f,front?.44f:.37f),darkMat,Quaternion.identity);
+                MeshPart("KryonBearUpperLegArmor"+i,limbPlate,leg,new Vector3(0,-.38f,.30f),
+                    new Vector3(front?.95f:.78f,front?.90f:.78f,.90f),armorMat,Quaternion.Euler(-5,0,side*3f));
+                Part("KryonBearKnee"+i,PrimitiveType.Sphere,leg,new Vector3(0,-.84f,.09f),new Vector3(.31f,.27f,.31f),jointMat,Quaternion.identity);
+                Part("KryonBearKneeGlow"+i,PrimitiveType.Cylinder,leg,new Vector3(side*.19f,-.84f,.09f),
+                    new Vector3(.15f,.055f,.15f),energyMat,Quaternion.Euler(0,0,90));
+                Part("KryonBearLowerLeg"+i,PrimitiveType.Capsule,leg,new Vector3(0,-1.10f,.15f),new Vector3(.30f,.48f,.32f),jointMat,Quaternion.Euler(-7f,0,side*2f));
+                MeshPart("KryonBearShinArmor"+i,limbPlate,leg,new Vector3(0,-1.08f,.37f),
+                    new Vector3(.70f,.64f,.74f),bearIceMat,Quaternion.Euler(-8,0,side*2f));
+                Part("KryonBearPaw"+i,PrimitiveType.Sphere,leg,new Vector3(0,-1.36f,.35f),new Vector3(.62f,.22f,.78f),darkMat,Quaternion.identity);
+                MeshPart("KryonBearPawCap"+i,shoulderPlate,leg,new Vector3(0,-1.34f,.58f),new Vector3(.68f,.44f,.72f),armorMat,Quaternion.Euler(-18,0,0));
+                for(int claw=-1;claw<=1;claw++)
+                    MeshPart("KryonBearClaw"+i+"_"+claw,clawBlade,leg,new Vector3(claw*.18f,-1.43f,.68f),
+                        new Vector3(.78f,claw==0?.92f:.80f,claw==0?1.08f:.94f),bearIceMat,Quaternion.Euler(-8,claw*5f,0));
             }
         }
 
@@ -775,55 +830,69 @@ namespace Alterverse.Combat
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            xenoEnergyBase=new Color(.54f,.86f,.16f,1f);
-            xenoArmorBase=new Color(.17f,.245f,.12f,1f);
-            Color hide=new Color(.055f,.085f,.052f,1f),joint=new Color(.035f,.055f,.038f,1f);
-            armorMat=MakeMaterial(shader,xenoArmorBase,.10f,.31f,Color.black);
-            darkMat=MakeMaterial(shader,hide,.02f,.12f,Color.black);
-            jointMat=MakeMaterial(shader,joint,.03f,.09f,Color.black);
-            energyMat=MakeMaterial(shader,xenoEnergyBase,.04f,.56f,xenoEnergyBase*2.0f);
-            teamMat=MakeMaterial(shader,teamEnergy,.10f,.46f,teamEnergy*1.45f);
 
-            // Custom low-poly plates replace the box-heavy silhouette while a few hidden organic
-            // masses preserve readable volume from the gameplay camera.
+            // Reference direction: glossy obsidian bio-mechanical predator with long limbs,
+            // amber eyes and a crown of threatening back tendrils. Green remains only as a
+            // subtle map-biome undertone instead of making the whole creature look toy-like.
+            xenoEnergyBase=new Color(1f,.54f,.07f,1f);
+            xenoArmorBase=new Color(.050f,.072f,.060f,1f);
+            Color hide=new(.017f,.027f,.024f,1f),joint=new(.025f,.040f,.035f,1f);
+            armorMat=MakeMaterial(shader,xenoArmorBase,.28f,.58f,Color.black);
+            darkMat=MakeMaterial(shader,hide,.12f,.36f,Color.black);
+            jointMat=MakeMaterial(shader,joint,.22f,.42f,Color.black);
+            energyMat=MakeMaterial(shader,xenoEnergyBase,.04f,.72f,xenoEnergyBase*3.2f);
+            teamMat=MakeMaterial(shader,Color.Lerp(teamEnergy,new Color(.18f,.75f,.20f),.45f),.10f,.48f,teamEnergy*1.20f);
+
             Mesh chestCenter=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoChestCenter",new[]{
-                new Vector2(-.48f,-.60f),new Vector2(.48f,-.60f),new Vector2(.67f,.05f),new Vector2(.42f,.68f),new Vector2(0,.82f),new Vector2(-.42f,.68f),new Vector2(-.67f,.05f)},.16f));
+                new Vector2(-.42f,-.68f),new Vector2(.42f,-.68f),new Vector2(.60f,.02f),
+                new Vector2(.36f,.72f),new Vector2(0,.92f),new Vector2(-.36f,.72f),new Vector2(-.60f,.02f)},.15f));
             Mesh chestSide=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoChestSide",new[]{
-                new Vector2(-.38f,-.52f),new Vector2(.32f,-.46f),new Vector2(.48f,.16f),new Vector2(.20f,.67f),new Vector2(-.36f,.54f),new Vector2(-.52f,.02f)},.14f));
+                new Vector2(-.34f,-.58f),new Vector2(.28f,-.52f),new Vector2(.46f,.12f),
+                new Vector2(.18f,.72f),new Vector2(-.32f,.58f),new Vector2(-.48f,.00f)},.13f));
             Mesh shoulderPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoShoulderPlate",new[]{
-                new Vector2(-.52f,-.24f),new Vector2(.40f,-.30f),new Vector2(.62f,.18f),new Vector2(.20f,.56f),new Vector2(-.48f,.42f)},.18f));
+                new Vector2(-.52f,-.22f),new Vector2(.38f,-.30f),new Vector2(.66f,.14f),
+                new Vector2(.18f,.62f),new Vector2(-.44f,.46f)},.16f));
             Mesh forearmPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoForearmPlate",new[]{
-                new Vector2(-.30f,-.54f),new Vector2(.30f,-.48f),new Vector2(.38f,.32f),new Vector2(0,.58f),new Vector2(-.34f,.28f)},.12f));
+                new Vector2(-.27f,-.60f),new Vector2(.27f,-.54f),new Vector2(.36f,.34f),
+                new Vector2(0,.66f),new Vector2(-.32f,.30f)},.11f));
             Mesh thighPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoThighPlate",new[]{
-                new Vector2(-.38f,-.50f),new Vector2(.38f,-.50f),new Vector2(.46f,.20f),new Vector2(.16f,.60f),new Vector2(-.32f,.50f)},.14f));
+                new Vector2(-.34f,-.56f),new Vector2(.34f,-.56f),new Vector2(.42f,.20f),
+                new Vector2(.12f,.66f),new Vector2(-.30f,.52f)},.12f));
             Mesh jawPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoJawPlate",new[]{
-                new Vector2(-.46f,-.18f),new Vector2(.46f,-.18f),new Vector2(.34f,.24f),new Vector2(0,.34f),new Vector2(-.34f,.24f)},.20f));
+                new Vector2(-.42f,-.17f),new Vector2(.42f,-.17f),new Vector2(.30f,.22f),
+                new Vector2(0,.36f),new Vector2(-.30f,.22f)},.17f));
             Mesh markPlate=TrackXenoMesh(XenoTitanMeshFactory.Plate("DF_XenoTeamMark",new[]{
-                new Vector2(-.16f,-.12f),new Vector2(.16f,-.12f),new Vector2(.12f,.14f),new Vector2(0,.22f),new Vector2(-.12f,.14f)},.055f));
+                new Vector2(-.14f,-.11f),new Vector2(.14f,-.11f),new Vector2(.10f,.13f),
+                new Vector2(0,.21f),new Vector2(-.10f,.13f)},.040f));
             Mesh headShell=TrackXenoMesh(XenoTitanMeshFactory.HeadShell("DF_XenoHeadShell"));
-            Mesh clawBlade=TrackXenoMesh(XenoTitanMeshFactory.ClawBlade("DF_XenoClawBlade",.78f,.16f,.12f,.18f));
-            Mesh toeBlade=TrackXenoMesh(XenoTitanMeshFactory.ClawBlade("DF_XenoToeBlade",.52f,.14f,.10f,.10f));
-            Mesh spineA=TrackXenoMesh(XenoTitanMeshFactory.Spine("DF_XenoSpineA",.92f,.24f,.30f));
-            Mesh spineB=TrackXenoMesh(XenoTitanMeshFactory.Spine("DF_XenoSpineB",.72f,.20f,.25f));
+            Mesh clawBlade=TrackXenoMesh(XenoTitanMeshFactory.ClawBlade("DF_XenoClawBlade",1.04f,.14f,.10f,.24f));
+            Mesh toeBlade=TrackXenoMesh(XenoTitanMeshFactory.ClawBlade("DF_XenoToeBlade",.62f,.12f,.09f,.12f));
+            Mesh spineLong=TrackXenoMesh(XenoTitanMeshFactory.Spine("DF_XenoSpineLong",1.20f,.18f,.22f));
+            Mesh spineShort=TrackXenoMesh(XenoTitanMeshFactory.Spine("DF_XenoSpineShort",.82f,.15f,.19f));
 
-            xenoVisualRoot=Pivot("DF_XenoVisualRoot",transform,new Vector3(0,.05f,0),Quaternion.identity);
+            xenoVisualRoot=Pivot("DF_XenoVisualRoot",transform,new Vector3(0,.02f,0),Quaternion.identity);
+            xenoVisualRoot.localScale=new Vector3(.94f,1.08f,.94f);
             xenoVisualRootBasePosition=xenoVisualRoot.localPosition;
-            xenoPelvisPivot=Pivot("DF_XenoPelvisPivot",xenoVisualRoot,new Vector3(0,.18f,-.08f),Quaternion.Euler(6,0,0));
-            Part("XenoPelvisMass",PrimitiveType.Sphere,xenoPelvisPivot,Vector3.zero,new Vector3(1.30f,.55f,.86f),darkMat,Quaternion.identity);
-            MeshPart("XenoHipCarapace",chestSide,xenoPelvisPivot,new Vector3(0,.10f,.52f),new Vector3(1.18f,.64f,.82f),armorMat,Quaternion.Euler(-5,0,0));
 
-            xenoTorsoPivot=Pivot("DF_XenoTorsoPivot",xenoVisualRoot,new Vector3(0,1.30f,.02f),Quaternion.Euler(10,0,0));
-            Part("XenoTorsoMass",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(0,-.06f,-.06f),new Vector3(1.62f,1.02f,.92f),darkMat,Quaternion.identity);
-            MeshPart("XenoChestCenter",chestCenter,xenoTorsoPivot,new Vector3(0,.02f,.64f),Vector3.one,armorMat,Quaternion.Euler(-3,0,0));
-            MeshPart("XenoChestLeft",chestSide,xenoTorsoPivot,new Vector3(-.72f,.05f,.48f),new Vector3(.95f,.94f,1f),armorMat,Quaternion.Euler(-2,-12,-4));
-            MeshPart("XenoChestRight",chestSide,xenoTorsoPivot,new Vector3(.72f,.02f,.48f),new Vector3(1.03f,.90f,1f),armorMat,Quaternion.Euler(-1,12,5));
-            Transform core=Part("XenoChestCore",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(0,-.05f,.78f),new Vector3(.24f,.20f,.16f),energyMat,Quaternion.identity);
+            // Narrow pelvis + tall ribcage give a much more predatory humanoid silhouette.
+            xenoPelvisPivot=Pivot("DF_XenoPelvisPivot",xenoVisualRoot,new Vector3(0,.16f,-.10f),Quaternion.Euler(5,0,0));
+            Part("XenoPelvisMass",PrimitiveType.Sphere,xenoPelvisPivot,Vector3.zero,new Vector3(1.04f,.48f,.70f),darkMat,Quaternion.identity);
+            MeshPart("XenoHipCarapace",chestSide,xenoPelvisPivot,new Vector3(0,.08f,.46f),new Vector3(1.02f,.60f,.76f),armorMat,Quaternion.Euler(-6,0,0));
+
+            xenoTorsoPivot=Pivot("DF_XenoTorsoPivot",xenoVisualRoot,new Vector3(0,1.34f,.02f),Quaternion.Euler(11,0,0));
+            Part("XenoTorsoMass",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(0,-.05f,-.08f),new Vector3(1.36f,1.12f,.78f),darkMat,Quaternion.identity);
+            MeshPart("XenoChestCenter",chestCenter,xenoTorsoPivot,new Vector3(0,.04f,.57f),new Vector3(.94f,1.06f,.92f),armorMat,Quaternion.Euler(-4,0,0));
+            MeshPart("XenoChestLeft",chestSide,xenoTorsoPivot,new Vector3(-.61f,.02f,.43f),new Vector3(.88f,1.02f,.92f),armorMat,Quaternion.Euler(-3,-15,-7));
+            MeshPart("XenoChestRight",chestSide,xenoTorsoPivot,new Vector3(.61f,-.01f,.43f),new Vector3(.94f,.98f,.92f),armorMat,Quaternion.Euler(-2,15,7));
+            MeshPart("XenoRibL",forearmPlate,xenoTorsoPivot,new Vector3(-.50f,-.38f,.40f),new Vector3(.62f,.74f,.70f),jointMat,Quaternion.Euler(-8,-14,-18));
+            MeshPart("XenoRibR",forearmPlate,xenoTorsoPivot,new Vector3(.50f,-.38f,.40f),new Vector3(.62f,.74f,.70f),jointMat,Quaternion.Euler(-8,14,18));
+
+            Transform core=Part("XenoChestCore",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(0,-.10f,.68f),new Vector3(.17f,.16f,.12f),energyMat,Quaternion.identity);
             xenoCoreRenderer=core.GetComponent<Renderer>();xenoCoreBaseScale=core.localScale;
 
-            // Short separated energy channels read as biological veins instead of one neon rectangle.
-            Mesh vein1=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(-.42f,.25f,.69f),new Vector3(-.14f,.05f,.78f),.030f,6));
-            Mesh vein2=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(.42f,.22f,.67f),new Vector3(.15f,.03f,.78f),.030f,6));
-            Mesh vein3=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(-.12f,-.26f,.74f),new Vector3(.11f,-.36f,.68f),.024f,6));
+            Mesh vein1=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(-.38f,.26f,.61f),new Vector3(-.10f,.03f,.69f),.026f,6));
+            Mesh vein2=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(.38f,.23f,.60f),new Vector3(.10f,.02f,.69f),.026f,6));
+            Mesh vein3=TrackXenoMesh(ProductionMeshFactory.Tube(new Vector3(-.10f,-.28f,.65f),new Vector3(.10f,-.39f,.58f),.020f,6));
             MeshPart("XenoVeinL",vein1,xenoTorsoPivot,Vector3.zero,Vector3.one,energyMat,Quaternion.identity);
             MeshPart("XenoVeinR",vein2,xenoTorsoPivot,Vector3.zero,Vector3.one,energyMat,Quaternion.identity);
             MeshPart("XenoVeinLower",vein3,xenoTorsoPivot,Vector3.zero,Vector3.one,energyMat,Quaternion.identity);
@@ -833,69 +902,82 @@ namespace Alterverse.Combat
             BuildXenoLeg(-1f,thighPlate,toeBlade);
             BuildXenoLeg(1f,thighPlate,toeBlade);
 
-            // Elongated low-poly skull with layered cranial armor and a narrow jaw.
-            xenoHeadPivot=Pivot("DF_XenoHeadPivot",xenoTorsoPivot,new Vector3(0,1.30f,.05f),Quaternion.Euler(-10,0,0));
-            MeshPart("XenoHeadShell",headShell,xenoHeadPivot,new Vector3(0,0,.08f),new Vector3(1.02f,1.02f,1.08f),armorMat,Quaternion.identity);
-            MeshPart("XenoCranialPlate",chestSide,xenoHeadPivot,new Vector3(0,.20f,-.48f),new Vector3(1.12f,.62f,1.35f),darkMat,Quaternion.Euler(8,0,180));
-            MeshPart("XenoCranialShard",shoulderPlate,xenoHeadPivot,new Vector3(-.24f,.24f,-.72f),new Vector3(.62f,.42f,.72f),armorMat,Quaternion.Euler(8,-7,-8));
-            MeshPart("XenoJaw",jawPlate,xenoHeadPivot,new Vector3(0,-.36f,.70f),Vector3.one,jointMat,Quaternion.Euler(-8,0,0));
-            Part("XenoEyeL",PrimitiveType.Sphere,xenoHeadPivot,new Vector3(-.27f,.03f,.82f),new Vector3(.15f,.10f,.08f),energyMat,Quaternion.identity);
-            Part("XenoEyeR",PrimitiveType.Sphere,xenoHeadPivot,new Vector3(.27f,.03f,.82f),new Vector3(.15f,.10f,.08f),energyMat,Quaternion.identity);
+            // Elongated skull, heavy brow and hot amber eyes.
+            xenoHeadPivot=Pivot("DF_XenoHeadPivot",xenoTorsoPivot,new Vector3(0,1.40f,.03f),Quaternion.Euler(-12,0,0));
+            MeshPart("XenoHeadShell",headShell,xenoHeadPivot,new Vector3(0,0,.10f),new Vector3(.88f,.92f,1.18f),armorMat,Quaternion.identity);
+            MeshPart("XenoCranialPlate",chestSide,xenoHeadPivot,new Vector3(0,.22f,-.50f),new Vector3(1.00f,.56f,1.48f),darkMat,Quaternion.Euler(9,0,180));
+            MeshPart("XenoCranialShardL",shoulderPlate,xenoHeadPivot,new Vector3(-.23f,.28f,-.70f),new Vector3(.56f,.40f,.74f),armorMat,Quaternion.Euler(8,-9,-12));
+            MeshPart("XenoCranialShardR",shoulderPlate,xenoHeadPivot,new Vector3(.22f,.23f,-.66f),new Vector3(.46f,.36f,.66f),armorMat,Quaternion.Euler(11,11,10));
+            MeshPart("XenoJaw",jawPlate,xenoHeadPivot,new Vector3(0,-.37f,.76f),new Vector3(.92f,.92f,1f),jointMat,Quaternion.Euler(-10,0,0));
+            Part("XenoEyeL",PrimitiveType.Sphere,xenoHeadPivot,new Vector3(-.24f,.015f,.88f),new Vector3(.13f,.078f,.055f),energyMat,Quaternion.identity);
+            Part("XenoEyeR",PrimitiveType.Sphere,xenoHeadPivot,new Vector3(.24f,.015f,.88f),new Vector3(.13f,.078f,.055f),energyMat,Quaternion.identity);
 
-            // Irregular back silhouette: five different-height spines, intentionally not mirrored.
-            xenoBackRoot=Pivot("DF_XenoBackRoot",xenoTorsoPivot,new Vector3(0,.28f,-.48f),Quaternion.Euler(22,0,0));
-            MeshPart("XenoSpineCenter",spineA,xenoBackRoot,new Vector3(.04f,.05f,-.08f),new Vector3(1.05f,1.15f,1f),armorMat,Quaternion.Euler(8,4,-2));
-            MeshPart("XenoSpineL1",spineB,xenoBackRoot,new Vector3(-.42f,-.08f,-.04f),new Vector3(.90f,.92f,.90f),armorMat,Quaternion.Euler(14,-8,-16));
-            MeshPart("XenoSpineR1",spineB,xenoBackRoot,new Vector3(.44f,-.12f,-.02f),new Vector3(.78f,.76f,.85f),armorMat,Quaternion.Euler(12,9,13));
-            MeshPart("XenoSpineL2",spineB,xenoBackRoot,new Vector3(-.72f,-.30f,.02f),new Vector3(.62f,.58f,.72f),darkMat,Quaternion.Euler(18,-13,-24));
-            MeshPart("XenoSpineR2",spineB,xenoBackRoot,new Vector3(.69f,-.34f,.04f),new Vector3(.58f,.50f,.68f),darkMat,Quaternion.Euler(16,11,20));
+            // Long, irregular appendages reproduce the reference's threatening crown silhouette.
+            xenoBackRoot=Pivot("DF_XenoBackRoot",xenoTorsoPivot,new Vector3(0,.30f,-.43f),Quaternion.Euler(20,0,0));
+            BuildXenoTendril("C",new Vector3(.02f,.18f,-.02f),new Vector3(8,4,-2),1.12f,spineLong,spineShort);
+            BuildXenoTendril("L1",new Vector3(-.30f,.10f,0),new Vector3(18,-10,-23),1.02f,spineLong,spineShort);
+            BuildXenoTendril("R1",new Vector3(.31f,.08f,.01f),new Vector3(15,10,21),.98f,spineLong,spineShort);
+            BuildXenoTendril("L2",new Vector3(-.52f,-.05f,.06f),new Vector3(27,-14,-38),.86f,spineLong,spineShort);
+            BuildXenoTendril("R2",new Vector3(.50f,-.08f,.07f),new Vector3(25,13,35),.82f,spineLong,spineShort);
+            BuildXenoTendril("L3",new Vector3(-.65f,-.22f,.12f),new Vector3(34,-18,-52),.68f,spineShort,spineShort);
+            BuildXenoTendril("R3",new Vector3(.63f,-.24f,.12f),new Vector3(33,18,50),.66f,spineShort,spineShort);
+        }
+
+        private void BuildXenoTendril(string suffix,Vector3 rootPosition,Vector3 rotation,float scale,Mesh firstMesh,Mesh secondMesh)
+        {
+            Transform root=Pivot("DF_XenoTendrilRoot_"+suffix,xenoBackRoot,rootPosition,Quaternion.Euler(rotation));
+            MeshPart("XenoTendril_"+suffix+"_A",firstMesh,root,Vector3.zero,new Vector3(scale*.78f,scale*1.35f,scale*.78f),armorMat,Quaternion.identity);
+            Transform bend=Pivot("DF_XenoTendrilBend_"+suffix,root,new Vector3(0,1.28f*scale,0),Quaternion.Euler(18f,0,rotation.z*.22f));
+            MeshPart("XenoTendril_"+suffix+"_B",secondMesh,bend,Vector3.zero,new Vector3(scale*.66f,scale*1.05f,scale*.66f),jointMat,Quaternion.identity);
         }
 
         private void BuildXenoArm(float side,Mesh shoulderPlate,Mesh forearmPlate,Mesh clawBlade,Mesh markPlate)
         {
             bool left=side<0f;
-            Transform shoulder=Pivot(left?"DF_XenoShoulderPivotL":"DF_XenoShoulderPivotR",xenoTorsoPivot,new Vector3(side*1.18f,.28f,-.02f),Quaternion.Euler(-8,0,side*8f));
-            Part(left?"XenoShoulderMassL":"XenoShoulderMassR",PrimitiveType.Sphere,shoulder,new Vector3(0,-.03f,0),new Vector3(.72f,.52f,.72f),darkMat,Quaternion.identity);
-            MeshPart(left?"XenoShoulderArmorL":"XenoShoulderArmorR",shoulderPlate,shoulder,new Vector3(side*.10f,.12f,.38f),new Vector3(left?1.12f:1f,left?1.08f:.98f,1f),armorMat,Quaternion.Euler(-2,side*8f,side*-8f));
-            MeshPart(left?"XenoTeamMarkL":"XenoTeamMarkR",markPlate,shoulder,new Vector3(side*.06f,.13f,.51f),new Vector3(.72f,.72f,.72f),teamMat,Quaternion.Euler(-2,side*7f,0));
+            Transform shoulder=Pivot(left?"DF_XenoShoulderPivotL":"DF_XenoShoulderPivotR",xenoTorsoPivot,new Vector3(side*1.08f,.30f,-.03f),Quaternion.Euler(-10,0,side*10f));
+            Part(left?"XenoShoulderMassL":"XenoShoulderMassR",PrimitiveType.Sphere,shoulder,new Vector3(0,-.04f,0),new Vector3(.64f,.46f,.64f),darkMat,Quaternion.identity);
+            MeshPart(left?"XenoShoulderArmorL":"XenoShoulderArmorR",shoulderPlate,shoulder,new Vector3(side*.10f,.12f,.36f),new Vector3(left?1.08f:1f,1.04f,.96f),armorMat,Quaternion.Euler(-3,side*10f,side*-10f));
+            MeshPart(left?"XenoTeamMarkL":"XenoTeamMarkR",markPlate,shoulder,new Vector3(side*.05f,.13f,.49f),new Vector3(.62f,.62f,.62f),teamMat,Quaternion.Euler(-3,side*8f,0));
 
-            Part(left?"XenoUpperArmL":"XenoUpperArmR",PrimitiveType.Capsule,shoulder,new Vector3(0,-.62f,.04f),new Vector3(.34f,.76f,.36f),darkMat,Quaternion.Euler(0,0,side*2f));
-            Transform forearm=Pivot(left?"DF_XenoForearmPivotL":"DF_XenoForearmPivotR",shoulder,new Vector3(0,-1.18f,.10f),Quaternion.Euler(8,0,side*4f));
-            Part(left?"XenoForearmMassL":"XenoForearmMassR",PrimitiveType.Capsule,forearm,new Vector3(0,-.36f,.02f),new Vector3(.42f,.62f,.44f),jointMat,Quaternion.identity);
-            MeshPart(left?"XenoForearmArmorL":"XenoForearmArmorR",forearmPlate,forearm,new Vector3(0,-.34f,.34f),new Vector3(left?1f:1.13f,1f,1f),armorMat,Quaternion.Euler(-4,0,side*3f));
+            Part(left?"XenoUpperArmL":"XenoUpperArmR",PrimitiveType.Capsule,shoulder,new Vector3(0,-.72f,.03f),new Vector3(.29f,.88f,.31f),darkMat,Quaternion.Euler(0,0,side*3f));
+            Transform forearm=Pivot(left?"DF_XenoForearmPivotL":"DF_XenoForearmPivotR",shoulder,new Vector3(0,-1.36f,.10f),Quaternion.Euler(10,0,side*5f));
+            Part(left?"XenoForearmMassL":"XenoForearmMassR",PrimitiveType.Capsule,forearm,new Vector3(0,-.44f,.02f),new Vector3(.36f,.76f,.38f),jointMat,Quaternion.identity);
+            MeshPart(left?"XenoForearmArmorL":"XenoForearmArmorR",forearmPlate,forearm,new Vector3(0,-.40f,.31f),new Vector3(left?.94f:1.08f,1.10f,.94f),armorMat,Quaternion.Euler(-5,0,side*4f));
 
-            Transform claw=Pivot(left?"DF_XenoClawPivotL":"DF_XenoClawPivotR",forearm,new Vector3(0,-.82f,.20f),Quaternion.Euler(-7,0,side*4f));
-            Part(left?"XenoPalmL":"XenoPalmR",PrimitiveType.Sphere,claw,new Vector3(0,0,.08f),new Vector3(.58f,.34f,.68f),armorMat,Quaternion.identity);
+            Transform claw=Pivot(left?"DF_XenoClawPivotL":"DF_XenoClawPivotR",forearm,new Vector3(0,-.98f,.20f),Quaternion.Euler(-9,0,side*5f));
+            Part(left?"XenoPalmL":"XenoPalmR",PrimitiveType.Sphere,claw,new Vector3(0,0,.08f),new Vector3(.50f,.29f,.62f),armorMat,Quaternion.identity);
             for(int i=-1;i<=1;i++)
             {
-                float spread=i*.22f;
-                Transform finger=MeshPart(left?"XenoClawBladeL":"XenoClawBladeR",clawBlade,claw,new Vector3(spread,-.03f,.38f),new Vector3(1f,i==0?1.12f:.92f,i==0?1.08f:.92f),jointMat,Quaternion.Euler(-8-i*3f,side*i*7f,side*i*3f));
-                finger.localPosition+=Vector3.forward*(i==0?.06f:0f);
+                float spread=i*.20f;
+                Transform finger=MeshPart(left?"XenoClawBladeL":"XenoClawBladeR",clawBlade,claw,new Vector3(spread,-.04f,.38f),
+                    new Vector3(.92f,i==0?1.18f:.96f,i==0?1.16f:.98f),jointMat,Quaternion.Euler(-10-i*3f,side*i*8f,side*i*4f));
+                finger.localPosition+=Vector3.forward*(i==0?.10f:0f);
             }
 
             if(left){xenoLeftShoulderPivot=shoulder;xenoLeftForearmPivot=forearm;xenoLeftClaw=claw;}
             else
             {
                 xenoRightShoulderPivot=shoulder;xenoRightForearmPivot=forearm;xenoRightClaw=claw;
-                barrelPivot=Pivot("DF_XenoAttackSocket",claw,new Vector3(0,.02f,1.18f),Quaternion.identity);
+                barrelPivot=Pivot("DF_XenoAttackSocket",claw,new Vector3(0,.02f,1.48f),Quaternion.identity);
             }
         }
 
         private void BuildXenoLeg(float side,Mesh thighPlate,Mesh toeBlade)
         {
             bool left=side<0f;
-            Transform hip=Pivot(left?"DF_XenoHipPivotL":"DF_XenoHipPivotR",xenoPelvisPivot,new Vector3(side*.54f,-.22f,.02f),Quaternion.Euler(5,0,side*5f));
-            Part(left?"XenoThighMassL":"XenoThighMassR",PrimitiveType.Capsule,hip,new Vector3(0,-.44f,-.02f),new Vector3(.52f,.74f,.54f),darkMat,Quaternion.identity);
-            MeshPart(left?"XenoThighArmorL":"XenoThighArmorR",thighPlate,hip,new Vector3(0,-.38f,.42f),Vector3.one,armorMat,Quaternion.Euler(-3,0,side*2f));
+            Transform hip=Pivot(left?"DF_XenoHipPivotL":"DF_XenoHipPivotR",xenoPelvisPivot,new Vector3(side*.47f,-.22f,.01f),Quaternion.Euler(6,0,side*6f));
+            Part(left?"XenoThighMassL":"XenoThighMassR",PrimitiveType.Capsule,hip,new Vector3(0,-.51f,-.02f),new Vector3(.43f,.84f,.46f),darkMat,Quaternion.identity);
+            MeshPart(left?"XenoThighArmorL":"XenoThighArmorR",thighPlate,hip,new Vector3(0,-.45f,.36f),new Vector3(.88f,1.05f,.90f),armorMat,Quaternion.Euler(-4,0,side*3f));
 
-            Transform shin=Pivot(left?"DF_XenoShinPivotL":"DF_XenoShinPivotR",hip,new Vector3(0,-1.02f,.08f),Quaternion.Euler(9,0,side*3f));
-            Part(left?"XenoShinMassL":"XenoShinMassR",PrimitiveType.Capsule,shin,new Vector3(0,-.38f,.08f),new Vector3(.40f,.64f,.46f),jointMat,Quaternion.identity);
-            MeshPart(left?"XenoShinArmorL":"XenoShinArmorR",thighPlate,shin,new Vector3(0,-.36f,.39f),new Vector3(.82f,.78f,.90f),armorMat,Quaternion.Euler(-8,0,side*2f));
+            Transform shin=Pivot(left?"DF_XenoShinPivotL":"DF_XenoShinPivotR",hip,new Vector3(0,-1.16f,.10f),Quaternion.Euler(11,0,side*4f));
+            Part(left?"XenoShinMassL":"XenoShinMassR",PrimitiveType.Capsule,shin,new Vector3(0,-.44f,.08f),new Vector3(.33f,.74f,.39f),jointMat,Quaternion.identity);
+            MeshPart(left?"XenoShinArmorL":"XenoShinArmorR",thighPlate,shin,new Vector3(0,-.41f,.34f),new Vector3(.72f,.88f,.82f),armorMat,Quaternion.Euler(-9,0,side*3f));
 
-            Transform foot=Pivot(left?"DF_XenoFootPivotL":"DF_XenoFootPivotR",shin,new Vector3(0,-.84f,.30f),Quaternion.Euler(0,side*-3f,0));
-            Part(left?"XenoFootMassL":"XenoFootMassR",PrimitiveType.Sphere,foot,new Vector3(0,0,.18f),new Vector3(.70f,.28f,.92f),darkMat,Quaternion.identity);
+            Transform foot=Pivot(left?"DF_XenoFootPivotL":"DF_XenoFootPivotR",shin,new Vector3(0,-.98f,.35f),Quaternion.Euler(0,side*-4f,0));
+            Part(left?"XenoFootMassL":"XenoFootMassR",PrimitiveType.Sphere,foot,new Vector3(0,0,.18f),new Vector3(.60f,.24f,.82f),darkMat,Quaternion.identity);
             for(int i=-1;i<=1;i++)
-                MeshPart(left?"XenoToeL":"XenoToeR",toeBlade,foot,new Vector3(i*.20f,-.04f,.42f),new Vector3(.92f,.85f,i==0?1.08f:.92f),jointMat,Quaternion.Euler(-4,side*i*8f,0));
+                MeshPart(left?"XenoToeL":"XenoToeR",toeBlade,foot,new Vector3(i*.18f,-.05f,.41f),
+                    new Vector3(.86f,.82f,i==0?1.14f:.96f),jointMat,Quaternion.Euler(-5,side*i*9f,0));
 
             if(left){xenoLeftHipPivot=hip;xenoLeftShinPivot=shin;xenoLeftFoot=foot;}
             else{xenoRightHipPivot=hip;xenoRightShinPivot=shin;xenoRightFoot=foot;}
@@ -913,13 +995,13 @@ namespace Alterverse.Combat
             if(xenoVisualRoot!=null)
                 xenoVisualRoot.localPosition=xenoVisualRootBasePosition+Vector3.up*(strideAbs*.045f*xenoMoveBlend);
             if(xenoTorsoPivot!=null)
-                xenoTorsoPivot.localRotation=Quaternion.Euler(10f+idle*1.1f,-stride*3.2f,stride*1.4f);
+                xenoTorsoPivot.localRotation=Quaternion.Euler(11f+idle*1.5f,-stride*4.0f,stride*1.8f);
             if(xenoPelvisPivot!=null)
-                xenoPelvisPivot.localRotation=Quaternion.Euler(6f,-stride*3.6f,-stride*.9f);
+                xenoPelvisPivot.localRotation=Quaternion.Euler(5f,-stride*4.1f,-stride*1.1f);
             if(xenoHeadPivot!=null)
-                xenoHeadPivot.localRotation=Quaternion.Euler(-10f+idle*1.4f,idle*3.2f+stride*1.4f,0);
+                xenoHeadPivot.localRotation=Quaternion.Euler(-12f+idle*1.8f,idle*4.2f+stride*1.8f,0);
             if(xenoBackRoot!=null)
-                xenoBackRoot.localRotation=Quaternion.Euler(22f+idle*1.2f,0,stride*.6f);
+                xenoBackRoot.localRotation=Quaternion.Euler(20f+idle*2.0f,0,stride*1.1f);
 
             if(xenoLeftShoulderPivot!=null)xenoLeftShoulderPivot.localRotation=Quaternion.Euler(-8f+stride*16f,idle*.8f,-8f+stride*1.5f);
             if(xenoRightShoulderPivot!=null)xenoRightShoulderPivot.localRotation=Quaternion.Euler(-8f-stride*16f-attackWindup*25f+xenoAttackKick*31f,-idle*.8f,8f-stride*1.5f);
