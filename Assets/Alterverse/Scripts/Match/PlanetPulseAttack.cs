@@ -12,7 +12,7 @@ namespace Alterverse.Match
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRegistry()=>active.Clear();
 
-        [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 5.2f, damage = 60f;
+        [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 4.16f, damage = 60f;
         private const int Segments = 64;
         private DimensionPlanet planet;
         private Health health;
