@@ -81,6 +81,7 @@ namespace Alterverse.AI
         }
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if (Time.timeScale <= 0f || health == null) return;
             // The roster adds respawn after the brain, so Awake alone cannot resolve it.
             if (respawn == null) respawn = GetComponent<MobaBotRespawn>();
