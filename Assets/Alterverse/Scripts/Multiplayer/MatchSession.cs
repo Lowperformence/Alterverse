@@ -2,7 +2,7 @@ using System;using Alterverse.Characters;
 namespace Alterverse.Multiplayer
 {
 public enum SessionMode{LocalBots,OnlineCasual,OnlineRanked,Private}
-[Serializable]public sealed class MatchPlayerSlot{public string PlayerId;public string DisplayName;public int Team;public HeroId Hero;public bool IsLocal;public bool IsBot;}
+[Serializable]public sealed class MatchPlayerSlot{public string PlayerId;public string DisplayName;public int Team;public HeroId Hero;public bool IsLocal;public bool IsBot;public bool Ready;public bool Connected=true;public bool IsHost;}
 public sealed class MatchSession
 {
 public const int TeamSize=5;public const int MaxPlayers=10;public string SessionId{get;private set;}public SessionMode Mode{get;private set;}public MatchPlayerSlot[] Slots{get;private set;}=new MatchPlayerSlot[MaxPlayers];public bool IsOnline=>Mode!=SessionMode.LocalBots;public bool IsFull{get{for(int i=0;i<Slots.Length;i++)if(Slots[i]==null)return false;return true;}}
