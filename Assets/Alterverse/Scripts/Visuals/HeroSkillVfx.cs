@@ -35,7 +35,7 @@ namespace Alterverse.Visuals
         }
         private static void Projectile(GameObject actor,Vector3 end,int slot,float travel=0,Transform target=null)
         {
-            HeroId h=Hero(actor);Color c=Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
+            HeroId h=Hero(actor);Color c=h==HeroId.Nyra?new Color(1f,.045f,.025f):Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
             if(travel<=0)
             {
@@ -58,7 +58,7 @@ namespace Alterverse.Visuals
         // Immediate gameplay hits need immediate visual contact, not a projectile arriving later.
         private static void InstantTrace(GameObject actor,Vector3 start,Vector3 end,int slot,float strength)
         {
-            HeroId h=Hero(actor);Color c=Accent(actor);Vector3 delta=end-start;
+            HeroId h=Hero(actor);Color c=h==HeroId.Nyra?new Color(1f,.045f,.025f):Accent(actor);Vector3 delta=end-start;
             Quaternion direction=delta.sqrMagnitude>.0001f?Quaternion.LookRotation(delta):Quaternion.identity;
             if(h==HeroId.Nyra)
             {
@@ -139,9 +139,13 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Shard,p,c,size*.75f,.12f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Nyra:
-                    Fx(HeroFxShape.Bolt,p,Color.Lerp(c,Color.white,.55f),size*1.15f,.10f,HeroFxMotion.Contract,facing,actor);
-                    Fx(HeroFxShape.Burst,p,c,size*.80f,.09f,rotation:facing,actor:actor);
-                    break;
+                    {
+                        Color sniperRed=new(1f,.045f,.025f);
+                        Fx(HeroFxShape.Bolt,p,Color.Lerp(sniperRed,Color.white,.40f),size*1.28f,.10f,HeroFxMotion.Contract,facing,actor);
+                        Fx(HeroFxShape.Burst,p,sniperRed,size*.86f,.09f,rotation:facing,actor:actor);
+                        Fx(HeroFxShape.Ring,p,new Color(sniperRed.r,sniperRed.g,sniperRed.b,.48f),size*.72f,.12f,HeroFxMotion.Contract,facing,actor);
+                        break;
+                    }
                 case HeroId.Elyra:
                     Fx(HeroFxShape.Runes,p,c,size*1.30f,.16f,HeroFxMotion.Orbit,facing,actor);
                     Fx(HeroFxShape.Orb,p,Color.Lerp(c,Color.white,.35f),size*.82f,.14f,HeroFxMotion.Contract,actor:actor);
@@ -304,7 +308,12 @@ namespace Alterverse.Visuals
                     if(slot<0)Fx(HeroFxShape.Cracks,Ground(target.transform.position),c,strength*1.35f,.18f,actor:actor);
                     break;
                 case HeroId.Nyra:
-                    Fx(HeroFxShape.Burst,p,c,strength*2.1f,.13f,rotation:Face(actor.transform.position,p));break;
+                    {
+                        Color sniperRed=new(1f,.045f,.025f);
+                        Fx(HeroFxShape.Burst,p,sniperRed,strength*2.15f,.13f,rotation:Face(actor.transform.position,p));
+                        Fx(HeroFxShape.Halo,p,Color.Lerp(sniperRed,Color.white,.35f),strength*.92f,.11f,HeroFxMotion.Contract,actor:actor);
+                        break;
+                    }
                 case HeroId.Elyra:
                     Fx(HeroFxShape.Runes,p,c,strength*2,.24f,HeroFxMotion.Contract);
                     if(slot<0)Fx(HeroFxShape.Orb,p,DarkCore,strength*.82f,.16f,HeroFxMotion.Contract,actor:actor);
@@ -325,8 +334,9 @@ namespace Alterverse.Visuals
             }
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
-                Fx(HeroFxShape.Ring,p,c,.67f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,0,0),actor,target.transform);
-                Fx(HeroFxShape.Ring,p,c,.70f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,70,0),actor,target.transform);
+                Color sniperRed=new(1f,.045f,.025f);
+                Fx(HeroFxShape.Ring,p,sniperRed,.67f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,0,0),actor,target.transform);
+                Fx(HeroFxShape.Ring,p,sniperRed,.70f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,70,0),actor,target.transform);
             }
             else if(slot>=0&&Hero(actor)==HeroId.Kaelon)
                 Fx(HeroFxShape.Hex,p+Vector3.up*.6f,c,.34f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
