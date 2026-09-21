@@ -28,6 +28,13 @@ namespace Alterverse.Multiplayer
         private uint lastFingerprint;
         private int lastExpectedPlayers;
         private readonly HashSet<ulong> approvedClients=new();
+        private readonly Dictionary<ulong,string> approvedPlayerIds=new();
+
+        public static bool IsAuthorizedClient(ulong clientId,string playerId)
+        {
+            return Instance!=null&&!string.IsNullOrEmpty(playerId)&&
+                Instance.approvedPlayerIds.TryGetValue(clientId,out string approved)&&approved==playerId;
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -56,10 +63,18 @@ namespace Alterverse.Multiplayer
 
             Attach(manager.CustomMessagingManager);
 
-            if(!lobby.IsStaging||CoopAuthority.PreparedPlan==null||
+            if(!lobby.IsStaging)
+            {
+                // Keep the verified Relay-client -> session-player binding through launch and the
+                // active match. It is cleared only after returning to a normal lobby/disconnect.
+                if(lobby.IsLaunching||CoopAuthority.Active)return;
+                ResetHandshake("WAITING FOR MATCH STAGING");
+                return;
+            }
+            if(CoopAuthority.PreparedPlan==null||
                lobby.PlayerCount<CoopLobbyService.MinHumanPlayers||lobby.PlayerCount>CoopLobbyService.MaxHumanPlayers)
             {
-                ResetHandshake(lobby.IsStaging?"WAITING FOR MATCH PLAN":"WAITING FOR MATCH STAGING");
+                ResetHandshake("WAITING FOR MATCH PLAN");
                 return;
             }
 
@@ -71,12 +86,16 @@ namespace Alterverse.Multiplayer
                 lastExpectedPlayers=expectedPlayers;
                 planHandshakeReady=false;
                 approvedClients.Clear();
+                approvedPlayerIds.Clear();
                 nextProbeAt=0f;
             }
 
             if(manager.IsHost)
             {
                 approvedClients.RemoveWhere(id=>!IsConnected(manager,id));
+                var stale=new List<ulong>();
+                foreach(var pair in approvedPlayerIds)if(!IsConnected(manager,pair.Key))stale.Add(pair.Key);
+                for(int i=0;i<stale.Count;i++)approvedPlayerIds.Remove(stale[i]);
                 int expectedClients=Mathf.Max(1,expectedPlayers-1);
                 planHandshakeReady=manager.ConnectedClientsIds!=null&&
                     manager.ConnectedClientsIds.Count>=expectedPlayers&&
@@ -114,9 +133,16 @@ namespace Alterverse.Multiplayer
         private void SendProbe(NetworkManager manager,uint fingerprint)
         {
             if(manager==null||manager.IsHost||registeredMessaging==null)return;
-            using FastBufferWriter writer=new(16,Allocator.Temp);
+            CoopMatchPlan plan=CoopAuthority.PreparedPlan;
+            int localSlot=CoopRosterBuilder.FindLocalHumanSlot(plan);
+            if(localSlot<0||plan?.Session?.Slots==null)return;
+            string playerId=plan.Session.Slots[localSlot]?.PlayerId??"";
+            if(string.IsNullOrEmpty(playerId))return;
+
+            using FastBufferWriter writer=new(160,Allocator.Temp);
             writer.WriteValueSafe(ProtocolVersion);
             writer.WriteValueSafe(fingerprint);
+            writer.WriteValueSafe(new FixedString128Bytes(playerId));
             registeredMessaging.SendNamedMessage(
                 ProbeMessage,
                 NetworkManager.ServerClientId,
@@ -132,13 +158,28 @@ namespace Alterverse.Multiplayer
 
             reader.ReadValueSafe(out int protocol);
             reader.ReadValueSafe(out uint clientFingerprint);
+            reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
+            string playerId=fixedPlayerId.ToString();
 
             uint hostFingerprint=Fingerprint(CoopAuthority.PreparedPlan);
-            bool valid=protocol==ProtocolVersion&&clientFingerprint==hostFingerprint&&
+            bool playerValid=PlayerExistsAsGuest(CoopAuthority.PreparedPlan,playerId);
+            bool alreadyClaimed=false;
+            foreach(var pair in approvedPlayerIds)
+                if(pair.Key!=senderClientId&&pair.Value==playerId){alreadyClaimed=true;break;}
+
+            bool valid=protocol==ProtocolVersion&&clientFingerprint==hostFingerprint&&playerValid&&!alreadyClaimed&&
                 lobby.PlayerCount>=CoopLobbyService.MinHumanPlayers&&
                 lobby.PlayerCount<=CoopLobbyService.MaxHumanPlayers;
-            if(valid)approvedClients.Add(senderClientId);
-            else approvedClients.Remove(senderClientId);
+            if(valid)
+            {
+                approvedClients.Add(senderClientId);
+                approvedPlayerIds[senderClientId]=playerId;
+            }
+            else
+            {
+                approvedClients.Remove(senderClientId);
+                approvedPlayerIds.Remove(senderClientId);
+            }
 
             int expectedPlayers=lobby.PlayerCount;
             int expectedClients=Mathf.Max(1,expectedPlayers-1);
@@ -182,6 +223,17 @@ namespace Alterverse.Multiplayer
             if(!planHandshakeReady)nextProbeAt=Time.unscaledTime+.75f;
         }
 
+        private static bool PlayerExistsAsGuest(CoopMatchPlan plan,string playerId)
+        {
+            if(plan?.Session?.Slots==null||string.IsNullOrEmpty(playerId))return false;
+            for(int i=0;i<MatchSession.TeamSize;i++)
+            {
+                MatchPlayerSlot slot=plan.Session.Slots[i];
+                if(slot!=null&&!slot.IsBot&&!slot.IsHost&&slot.PlayerId==playerId)return true;
+            }
+            return false;
+        }
+
         private static bool IsConnected(NetworkManager manager,ulong clientId)
         {
             if(manager?.ConnectedClientsIds==null)return false;
@@ -196,6 +248,7 @@ namespace Alterverse.Multiplayer
             lastFingerprint=0;
             lastExpectedPlayers=0;
             approvedClients.Clear();
+            approvedPlayerIds.Clear();
             nextProbeAt=0f;
             status=nextStatus;
         }
