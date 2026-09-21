@@ -150,7 +150,7 @@ namespace Alterverse.Multiplayer
                     PlayerProperties=BuildLocalPlayerProperties(false),
                     SessionProperties=new Dictionary<string,SessionProperty>
                     {
-                        {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
+                        {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                         {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
                         {PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member)}
                     }
