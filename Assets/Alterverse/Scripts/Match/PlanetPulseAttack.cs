@@ -20,8 +20,12 @@ namespace Alterverse.Match
         private Material ringMaterial;
         private float nextPulse, telegraphStart, flashUntil;
         private bool telegraphing;
+        public static System.Collections.Generic.IReadOnlyList<PlanetPulseAttack> Active=>active;
         public bool IsTelegraphing => isActiveAndEnabled && telegraphing && planet != null && planet.Available && health != null && !health.IsDead;
+        public Vector3 ImpactPosition=>transform.position;
         public float BlastRadius => radius;
+        public float TelegraphAge=>telegraphing?Mathf.Max(0f,Time.time-telegraphStart):0f;
+        public float TimeRemaining=>telegraphing?Mathf.Max(0f,telegraphDuration-TelegraphAge):0f;
         private readonly Color warning = new Color(1f, .48f, .12f);
 
         private void Awake()
