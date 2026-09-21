@@ -532,6 +532,7 @@ namespace Alterverse.Multiplayer
             value.PlayerHasLeft+=OnPlayerChanged;
             value.RemovedFromSession+=OnRemovedFromSession;
             value.Deleted+=OnSessionDeleted;
+            RefreshPreparedPlan();
             RaiseChanged();
         }
 
@@ -547,13 +548,24 @@ namespace Alterverse.Multiplayer
             value.Deleted-=OnSessionDeleted;
         }
 
-        private void OnSessionChanged(){RaiseChanged();}
-        private void OnPlayerChanged(string _){RaiseChanged();}
+        private void OnSessionChanged(){RefreshPreparedPlan();RaiseChanged();}
+        private void OnPlayerChanged(string _){RefreshPreparedPlan();RaiseChanged();}
+
+        private void RefreshPreparedPlan()
+        {
+            if(!IsStaging)
+            {
+                CoopAuthority.ClearPrepared();
+                return;
+            }
+            if(TryBuildMatchPlan(out CoopMatchPlan plan))CoopAuthority.Prepare(plan);
+        }
 
         private void OnRemovedFromSession()
         {
             DetachSession(session);
             session=null;
+            CoopAuthority.EndMatch();
             SetStatus("REMOVED FROM CO-OP LOBBY");
             RaiseChanged();
         }
@@ -562,6 +574,7 @@ namespace Alterverse.Multiplayer
         {
             DetachSession(session);
             session=null;
+            CoopAuthority.EndMatch();
             SetStatus("CO-OP LOBBY CLOSED");
             RaiseChanged();
         }
@@ -572,6 +585,7 @@ namespace Alterverse.Multiplayer
             if(old==null)return;
             DetachSession(old);
             session=null;
+            CoopAuthority.EndMatch();
             try
             {
                 if(old.IsHost)await old.AsHost().DeleteAsync();
