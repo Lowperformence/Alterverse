@@ -622,39 +622,39 @@ CreateBreakerFistPart("ReactorBreakerCore"+suffix,gauntlet,
 new Vector3(0,.095f,.205f),new Vector3(.10f,.085f,.035f),
 new Vector3(0,0,45f),hotMaterial);
 
-// Reference-driven asymmetry: the right epic power fist carries four long,
-// bright red reactor claws while the left remains the bracing impact gauntlet.
-if(side>0)CreateBreakerClawRack(gauntlet,clawMaterial);
+// Smaller red reactor claws on both epic gauntlets.
+CreateBreakerClawRack(gauntlet,clawMaterial,suffix);
 }
 }
 
-private void CreateBreakerClawRack(Transform gauntlet,Material material)
+private void CreateBreakerClawRack(Transform gauntlet,Material material,string suffix)
 {
-Mesh source=HeroMeshLibrary.Loft("DF_ReactorBreakerClaw",
-new[]{0f,.17f,.48f,.80f},
-new[]{.070f,.066f,.042f,.002f},
-new[]{.060f,.058f,.036f,.002f});
+// More compact than the first version: about 18% shorter, narrower and tucked closer to the fist.
+Mesh source=HeroMeshLibrary.Loft("DF_ReactorBreakerClaw"+suffix,
+new[]{0f,.14f,.40f,.66f},
+new[]{.058f,.054f,.034f,.002f},
+new[]{.050f,.048f,.030f,.002f});
 
 var combine=new CombineInstance[4];
 for(int i=0;i<4;i++)
 {
-float x=(i-1.5f)*.135f;
-float y=-.115f+Mathf.Abs(i-1.5f)*.012f;
-float yaw=(i-1.5f)*-3.5f;
+float x=(i-1.5f)*.118f;
+float y=-.105f+Mathf.Abs(i-1.5f)*.010f;
+float yaw=(i-1.5f)*-3.0f;
 combine[i]=new CombineInstance
 {
 mesh=source,
-transform=Matrix4x4.TRS(new Vector3(x,y,.225f),Quaternion.Euler(90f,yaw,0f),Vector3.one)
+transform=Matrix4x4.TRS(new Vector3(x,y,.195f),Quaternion.Euler(90f,yaw,0f),Vector3.one)
 };
 }
-Mesh rack=new Mesh{name="DF_ReactorBreakerRedClawRack"};
+Mesh rack=new Mesh{name="DF_ReactorBreakerRedClawRack"+suffix};
 rack.CombineMeshes(combine,true,true);
 rack.RecalculateNormals();
 rack.RecalculateBounds();
 detailMeshes.Add(source);
 detailMeshes.Add(rack);
 
-GameObject go=new GameObject("DF_ReactorBreakerRedClaws");
+GameObject go=new GameObject("DF_ReactorBreakerRedClaws"+suffix);
 go.transform.SetParent(gauntlet,false);
 go.AddComponent<MeshFilter>().sharedMesh=rack;
 go.AddComponent<MeshRenderer>().sharedMaterial=material;
