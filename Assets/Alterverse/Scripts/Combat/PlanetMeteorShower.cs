@@ -3,7 +3,8 @@ namespace Alterverse.Combat
 {
 [RequireComponent(typeof(DimensionPlanet),typeof(Health))]public sealed class PlanetMeteorShower:MonoBehaviour
 {
-[SerializeField]private float radius=11f,cooldown=8.5f,telegraph=1.55f,damage=14f;[SerializeField]private int meteors=7;private const int HeroScanBufferSize=32;private readonly Collider[] heroScanBuffer=new Collider[HeroScanBufferSize];private Health self;private DimensionPlanet planet;private float next,nextHeroScan;private bool heroNearby;
+public const float MeteorDamage=14f;
+[SerializeField]private float radius=11f,cooldown=8.5f,telegraph=1.55f,damage=MeteorDamage;[SerializeField]private int meteors=7;private const int HeroScanBufferSize=32;private readonly Collider[] heroScanBuffer=new Collider[HeroScanBufferSize];private Health self;private DimensionPlanet planet;private float next,nextHeroScan;private bool heroNearby;
 private void Awake(){self=GetComponent<Health>();planet=GetComponent<DimensionPlanet>();next=Time.time+3f;}
 private void Update(){if(Time.timeScale<=0||self==null||self.IsDead||planet==null||!planet.Available||Time.time<next)return;if(Time.time>=nextHeroScan){nextHeroScan=Time.time+.25f;heroNearby=HasHero();}if(!heroNearby)return;next=Time.time+cooldown;for(int i=0;i<meteors;i++){Vector2 r=Random.insideUnitCircle*radius;Vector3 p=transform.position+new Vector3(r.x,0,r.y);MeteorStrike.Create(p,telegraph,damage,i*.16f,planet);}}
 private bool HasHero(){int hits=Physics.OverlapSphereNonAlloc(transform.position,radius,heroScanBuffer);for(int i=0;i<hits;i++){Collider c=heroScanBuffer[i];if(c==null)continue;TeamMember m=c.GetComponentInParent<TeamMember>();if(m==null)continue;Health h=m.GetComponent<Health>();if(h!=null&&!h.IsDead)return true;}return false;}
