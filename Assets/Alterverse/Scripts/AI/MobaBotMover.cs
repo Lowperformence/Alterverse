@@ -75,6 +75,7 @@ namespace Alterverse.AI
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay){velocity=Vector3.zero;return;}
             IsAvoidingHazard = false;
             if (Time.timeScale <= 0f || health == null || health.IsDead || brain == null || lanePlan == null)
             { velocity = Vector3.zero; return; }
