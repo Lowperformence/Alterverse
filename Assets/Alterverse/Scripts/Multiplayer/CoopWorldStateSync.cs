@@ -68,9 +68,9 @@ namespace Alterverse.Multiplayer
             tombstones.Clear();
             foreach(string old in previousHostKeys)if(!currentHostKeys.Contains(old))tombstones.Add(old);
 
-            int count=Mathf.Min(entities.Count,48);
-            int tombCount=Mathf.Min(tombstones.Count,24);
-            using FastBufferWriter writer=new(8192,Allocator.Temp);
+            int count=Mathf.Min(entities.Count,96);
+            int tombCount=Mathf.Min(tombstones.Count,64);
+            using FastBufferWriter writer=new(16384,Allocator.Temp);
             writer.WriteValueSafe(count);
             int written=0;
             foreach(KeyValuePair<string,CoopWorldEntityKey> pair in entities)
@@ -109,7 +109,7 @@ namespace Alterverse.Multiplayer
             RefreshEntities();
 
             reader.ReadValueSafe(out int count);
-            count=Mathf.Clamp(count,0,48);
+            count=Mathf.Clamp(count,0,96);
             for(int i=0;i<count;i++)
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);
@@ -130,7 +130,7 @@ namespace Alterverse.Multiplayer
             }
 
             reader.ReadValueSafe(out int tombCount);
-            tombCount=Mathf.Clamp(tombCount,0,24);
+            tombCount=Mathf.Clamp(tombCount,0,64);
             for(int i=0;i<tombCount;i++)
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);
