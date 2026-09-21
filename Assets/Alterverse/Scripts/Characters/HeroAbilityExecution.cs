@@ -29,6 +29,12 @@ namespace Alterverse.Characters
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
         public float Cooldown(int slot) => HeroCombatRules.Interval(gameObject, kit.Spec(slot).Cooldown);
+        public void MarkNetworkRequestCooldown(int slot)
+        {
+            slot=Mathf.Clamp(slot,0,3);
+            ready[slot]=Time.time+Cooldown(slot);
+            GetComponent<HeroVisualMotion>()?.PulseAbility(slot,HeroAttackDelivery.AbilityWindup(identity.Hero,slot,kit.Spec(slot)));
+        }
         public Health WoundedAlly(float range, bool shield = false)
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
