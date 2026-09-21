@@ -708,8 +708,10 @@ namespace Alterverse.Multiplayer
 
         private void OnSessionChanged()
         {
+            bool hadPreparedOrActive=CoopAuthority.PreparedPlan!=null||CoopAuthority.Active;
+            bool aborted=IsAborted;
             RefreshPreparedPlan();
-            if(IsAborted&&CoopAuthority.Active)
+            if(aborted&&hadPreparedOrActive)
             {
                 CoopAuthority.EndMatch();
                 Alterverse.UI.MainMenuController.ShowCoopAfterMatch(
@@ -726,7 +728,7 @@ namespace Alterverse.Multiplayer
 
         private void OnPlayerLeft(string _)
         {
-            int expected=CoopAuthority.ActivePlan?.HumanCount??PlayerCount;
+            int expected=CoopAuthority.ActivePlan?.HumanCount??CoopAuthority.PreparedPlan?.HumanCount??PlayerCount;
             RefreshPreparedPlan();
 
             if(IsHost&&IsStaging)
