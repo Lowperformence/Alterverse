@@ -134,23 +134,18 @@ namespace Alterverse.Multiplayer
                     Name="DIMENSIONS FRONT CO-OP",
                     MaxPlayers=2,
                     IsPrivate=true,
-                    IsLocked=false
+                    IsLocked=false,
+                    PlayerProperties=BuildLocalPlayerProperties(false),
+                    SessionProperties=new Dictionary<string,SessionProperty>
+                    {
+                        {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
+                    }
                 };
 
                 session=await MultiplayerService.Instance.CreateSessionAsync(options);
                 AttachSession(session);
-
-                await PublishLocalPlayerAsync(false);
-
-                IHostSession host=session.AsHost();
-                host.SetProperties(new Dictionary<string,SessionProperty>
-                {
-                    {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
-                    {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
-                    {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
-                });
-                await host.SavePropertiesAsync();
-
                 SetStatus("LOBBY CREATED • SHARE THE JOIN CODE");
                 return true;
             }
@@ -175,9 +170,13 @@ namespace Alterverse.Multiplayer
                 if(!await EnsureServicesWhileBusyAsync())return false;
                 await LeaveExistingSessionInternalAsync();
 
-                session=await MultiplayerService.Instance.JoinSessionByCodeAsync(code);
+                var joinOptions=new JoinSessionOptions
+                {
+                    Type=SessionType,
+                    PlayerProperties=BuildLocalPlayerProperties(false)
+                };
+                session=await MultiplayerService.Instance.JoinSessionByCodeAsync(code,joinOptions);
                 AttachSession(session);
-                await PublishLocalPlayerAsync(false);
                 SetStatus("JOINED CO-OP LOBBY");
                 return true;
             }
@@ -382,17 +381,15 @@ namespace Alterverse.Multiplayer
         /// </summary>
         public bool MatchNetworkingEnabled=>false;
 
-        private async Task PublishLocalPlayerAsync(bool ready)
+        private static Dictionary<string,PlayerProperty> BuildLocalPlayerProperties(bool ready)
         {
-            if(session?.CurrentPlayer==null)return;
             string name=SanitizeDisplayName(PlayerProfile.PlayerName);
-            session.CurrentPlayer.SetProperties(new Dictionary<string,PlayerProperty>
+            return new Dictionary<string,PlayerProperty>
             {
                 {PlayerNameKey,new PlayerProperty(name,VisibilityPropertyOptions.Member)},
                 {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
                 {PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member)}
-            });
-            await session.SaveCurrentPlayerDataAsync();
+            };
         }
 
         private bool HeroUsedByOther(HeroId hero)
