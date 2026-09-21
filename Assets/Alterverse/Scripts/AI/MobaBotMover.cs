@@ -54,6 +54,10 @@ namespace Alterverse.AI
         private int rotationSlot;
         private static readonly float[] ExplosionEscapeAngles={0f,32f,-32f,64f,-64f,98f,-98f,132f,-132f};
         private const float ExplosionSafetyMargin=.72f;
+        private const float HazardEscapeReleaseGrace=.30f;
+        private Vector3 hazardEscapePoint;
+        private float hazardEscapeReleaseAt;
+        private bool hazardEscapeLatched;
         public bool IsAvoidingHazard { get; private set; }
         private float MoveSpeed => (profile != null ? profile.MoveSpeed : fallbackMoveSpeed) * (planetBuff != null ? planetBuff.MoveSpeedMultiplier : 1f) * locomotion.SpeedMultiplier;
         private float CombatStop => profile != null ? Mathf.Max(1.15f, profile.AttackRange * Mathf.Lerp(.65f,.88f,brain!=null?brain.Difficulty.Positioning:.6f)) : 1.4f;
@@ -293,14 +297,44 @@ namespace Alterverse.AI
                     ConsiderExplosionHazard(meteor.ImpactPosition,meteor.BlastRadius,meteor.TelegraphAge,meteor.TimeRemaining,reaction,
                         ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
 
+            foreach(NoxaraMeteorStrike meteor in NoxaraMeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing)
+                    ConsiderExplosionHazard(meteor.ImpactPosition,meteor.BlastRadius,meteor.TelegraphAge,meteor.TimeRemaining,reaction,
+                        ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
+
             foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
                 if(bomb!=null&&bomb.IsTelegraphing)
                     ConsiderExplosionHazard(bomb.ImpactPosition,bomb.BlastRadius,bomb.TelegraphAge,bomb.TimeRemaining,reaction,
                         ref found,ref primaryCenter,ref primaryRadius,ref bestUrgency);
 
-            if(!found)return false;
-            escape=FindBestExplosionEscape(primaryCenter,primaryRadius+ExplosionSafetyMargin);
-            return true;
+            if(found)
+            {
+                // Keep one escape target while the warning is active. Recomputing a slightly
+                // different best point every frame made bots alternate directions and visibly jitter.
+                // Only abandon the latched point when a newly-overlapping hazard makes it unsafe.
+                if(!hazardEscapeLatched||ExplosionClearance(hazardEscapePoint)<-.08f)
+                    hazardEscapePoint=FindBestExplosionEscape(primaryCenter,primaryRadius+ExplosionSafetyMargin);
+                hazardEscapeLatched=true;
+                hazardEscapeReleaseAt=Time.time+HazardEscapeReleaseGrace;
+                escape=hazardEscapePoint;
+                return true;
+            }
+
+            // Small hysteresis after crossing the warning edge prevents safe/unsafe toggling on
+            // adjacent frames from making the bot snap back toward its combat destination.
+            if(hazardEscapeLatched&&Time.time<hazardEscapeReleaseAt)
+            {
+                Vector3 remaining=hazardEscapePoint-transform.position;remaining.y=0;
+                if(remaining.sqrMagnitude>.12f*.12f)
+                {
+                    escape=hazardEscapePoint;
+                    return true;
+                }
+            }
+
+            hazardEscapeLatched=false;
+            hazardEscapeReleaseAt=0f;
+            return false;
         }
 
         private void ConsiderExplosionHazard(Vector3 center,float radius,float telegraphAge,float remaining,float reaction,
@@ -361,6 +395,10 @@ namespace Alterverse.AI
                 if(meteor!=null&&meteor.IsTelegraphing)
                     AccumulateExplosionClearance(point,meteor.ImpactPosition,meteor.BlastRadius,ref minimum,ref any);
 
+            foreach(NoxaraMeteorStrike meteor in NoxaraMeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing)
+                    AccumulateExplosionClearance(point,meteor.ImpactPosition,meteor.BlastRadius,ref minimum,ref any);
+
             foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
                 if(bomb!=null&&bomb.IsTelegraphing)
                     AccumulateExplosionClearance(point,bomb.ImpactPosition,bomb.BlastRadius,ref minimum,ref any);
@@ -395,6 +433,7 @@ namespace Alterverse.AI
         public void ResetSteering()
         {
             velocity=Vector3.zero;arrived=false;blockedTime=detourUntil=freeMoveTime=0;detour=Vector3.zero;
+            hazardEscapeLatched=false;hazardEscapeReleaseAt=0f;hazardEscapePoint=Vector3.zero;
             hasRecoveryWaypoint=false;recoveryBlocker=null;recoveryMode="None";recoveryCycle=0;
             loggedBlocker=null;loggedMode=null;loggedAttempt=0;
             recoveryAttempts=recoverySide=0;skirtStructure=null;skirtUntil=0;keepingDistance=false;nextStuckLog=0;progressCheckAt=0;progressAnchor=transform.position;progressWatchActive=false;
@@ -414,6 +453,8 @@ namespace Alterverse.AI
             foreach(Alterverse.Match.PlanetPulseAttack pulse in Alterverse.Match.PlanetPulseAttack.Active)
                 if(pulse!=null&&pulse.IsTelegraphing&&ExplosionBlocksReposition(destination,pulse.ImpactPosition,pulse.BlastRadius))return false;
             foreach(MeteorStrike meteor in MeteorStrike.Active)
+                if(meteor!=null&&meteor.IsTelegraphing&&ExplosionBlocksReposition(destination,meteor.ImpactPosition,meteor.BlastRadius))return false;
+            foreach(NoxaraMeteorStrike meteor in NoxaraMeteorStrike.Active)
                 if(meteor!=null&&meteor.IsTelegraphing&&ExplosionBlocksReposition(destination,meteor.ImpactPosition,meteor.BlastRadius))return false;
             foreach(SpaceBombStrike bomb in SpaceBombStrike.Active)
                 if(bomb!=null&&bomb.IsTelegraphing&&ExplosionBlocksReposition(destination,bomb.ImpactPosition,bomb.BlastRadius))return false;
