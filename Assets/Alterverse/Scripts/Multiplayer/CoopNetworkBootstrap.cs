@@ -13,27 +13,42 @@ namespace Alterverse.Multiplayer
         public static CoopNetworkBootstrap Instance { get; private set; }
         public static NetworkManager Manager => NetworkManager.Singleton;
         public static bool IsListening => NetworkManager.Singleton!=null&&NetworkManager.Singleton.IsListening;
-        public static bool IsTwoPlayerLinkReady
+
+        public static int ConnectedPeerCount
         {
             get
             {
                 NetworkManager manager=NetworkManager.Singleton;
-                if(manager==null||!manager.IsListening)return false;
-                if(manager.IsHost)return manager.ConnectedClientsIds!=null&&manager.ConnectedClientsIds.Count>=2;
-                return manager.IsConnectedClient;
+                if(manager==null||!manager.IsListening)return 0;
+                if(manager.IsHost)return manager.ConnectedClientsIds?.Count??0;
+                return manager.IsConnectedClient?1:0;
             }
         }
 
-        public static string LinkState
+        public static bool IsLinkReadyForPlayers(int expectedPlayers)
         {
-            get
-            {
-                NetworkManager manager=NetworkManager.Singleton;
-                if(manager==null||!manager.IsListening)return "OFFLINE";
-                if(manager.IsHost)return IsTwoPlayerLinkReady?"HOST + CLIENT CONNECTED":"HOST WAITING FOR CLIENT";
-                return manager.IsConnectedClient?"CLIENT CONNECTED":"CLIENT CONNECTING";
-            }
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager==null||!manager.IsListening)return false;
+            expectedPlayers=Mathf.Clamp(expectedPlayers,2,CoopLobbyService.MaxHumanPlayers);
+            if(manager.IsHost)return manager.ConnectedClientsIds!=null&&manager.ConnectedClientsIds.Count>=expectedPlayers;
+            return manager.IsConnectedClient;
         }
+
+        public static string LinkStateForPlayers(int expectedPlayers)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            if(manager==null||!manager.IsListening)return "OFFLINE";
+            if(manager.IsHost)
+            {
+                int connected=manager.ConnectedClientsIds?.Count??0;
+                return connected>=expectedPlayers
+                    ?$"HOST + {Mathf.Max(0,connected-1)} FRIEND{(connected==2?"":"S")} CONNECTED"
+                    :$"RELAY {connected}/{expectedPlayers} PLAYERS CONNECTED";
+            }
+            return manager.IsConnectedClient?"CLIENT CONNECTED":"CLIENT CONNECTING";
+        }
+
+        public static string LinkState=>LinkStateForPlayers(CoopLobbyService.MinHumanPlayers);
 
         public static void ShutdownLocalNetwork()
         {
