@@ -450,8 +450,8 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+coop.NetworkLinkState,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
                 coop.IsStaging
-                    ?"PHASE 2A: SESSION, RELAY AND 10-SLOT ROSTER ARE LOCKED. GAMEPLAY AUTHORITY IS NEXT."
-                    :"PRIVATE SESSION + RELAY ACTIVE • HOST PREPARES MATCH WHEN BOTH PLAYERS ARE READY.",theme.Small,true);
+                    ?$"PLAN SYNC  /  {CoopPlanHandshake.HandshakeStatus}"
+                    :"PRIVATE SESSION + RELAY ACTIVE • HOST CAN START WITH 2–5 READY PLAYERS.",theme.Small,true);
         }
 
         private void DrawHeroes()
