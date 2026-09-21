@@ -11,9 +11,7 @@ namespace Alterverse.EditorChecks
     public static class ArenaShopRegression
     {
         private const string BalanceKey="DF_Shards";
-        private const string MarsKey="DF_ArenaOwned_Mars";
-        private const string GreenKey="DF_ArenaOwned_GreenPlanet";
-        private const string MatchesKey="DF_MatchesCompleted";
+        private const string NoxaraKey="DF_ArenaOwned_Noxara";
         private const string SelectedKey="DF_SelectedArenaVariant";
         private const string ShuffleKey="DF_ArenaShuffle";
         private const string LastShuffleKey="DF_LastShuffledArena";
@@ -31,94 +29,66 @@ namespace Alterverse.EditorChecks
         public static void Run()
         {
             ProfileTransaction.Recover();
-            PrefSnapshot balance=new(BalanceKey),mars=new(MarsKey),green=new(GreenKey),matches=new(MatchesKey),selected=new(SelectedKey),
+            PrefSnapshot balance=new(BalanceKey),noxara=new(NoxaraKey),selected=new(SelectedKey),
                 shuffle=new(ShuffleKey),lastShuffle=new(LastShuffleKey);
             try
             {
                 PlayerPrefs.SetInt(BalanceKey,1000);
-                PlayerPrefs.DeleteKey(MarsKey);
-                PlayerPrefs.DeleteKey(GreenKey);
-                PlayerPrefs.SetInt(MatchesKey,0);
+                PlayerPrefs.DeleteKey(NoxaraKey);
                 PlayerPrefs.DeleteKey(SelectedKey);
                 PlayerPrefs.DeleteKey(ShuffleKey);
                 PlayerPrefs.DeleteKey(LastShuffleKey);
                 PlayerPrefs.Save();
 
-                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be owned.");
-                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must start locked.");
-                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),"Green Planet must start locked.");
-                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked before five completed matches.");
-                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Kryon),"Kryon must start locked before ten completed matches.");
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.NotPurchasable,
-                    "Noxara must never be purchasable with shards.");
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Kryon)==ArenaPurchaseResult.NotPurchasable,
-                    "Kryon must never be purchasable with shards.");
-                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
-                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Kryon),"Locked Kryon must not be selectable.");
-                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Mars),"Locked Mars must not be selectable.");
-                Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,"Locked selection must remain Moon.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be free.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must always be free.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),"Green Planet must always be free.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Kryon),"Kryon must always be free.");
+                Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked.");
+                Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==1000,"Noxara must cost exactly 1000 shards.");
 
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Mars)==ArenaPurchaseResult.Purchased,
-                    "Mars must unlock with sufficient shards.");
-                Assert(PlayerWallet.Balance==500,"Mars must debit exactly 500 shards.");
-                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars ownership must persist immediately.");
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Mars)==ArenaPurchaseResult.AlreadyOwned,
-                    "Owned Mars must not be purchasable twice.");
-                Assert(PlayerWallet.Balance==500,"Duplicate Mars purchase must not debit shards.");
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&ArenaVariantRuntime.Selected==ArenaVariant.Mars,
-                    "Owned Mars must be selectable.");
+                    "Free Mars must be selectable.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.GreenPlanet)&&ArenaVariantRuntime.Selected==ArenaVariant.GreenPlanet,
+                    "Free Green Planet must be selectable.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.Kryon)&&ArenaVariantRuntime.Selected==ArenaVariant.Kryon,
+                    "Free Kryon must be selectable.");
+                Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
+
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.Purchased,
+                    "Noxara must unlock with 1000 shards.");
+                Assert(PlayerWallet.Balance==0,"Noxara must debit exactly 1000 shards.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara ownership must persist.");
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.AlreadyOwned,
+                    "Owned Noxara must not be purchasable twice.");
+                Assert(PlayerWallet.Balance==0,"Duplicate Noxara purchase must not debit shards.");
+                Assert(ArenaVariantRuntime.Select(ArenaVariant.Noxara)&&ArenaVariantRuntime.Selected==ArenaVariant.Noxara,
+                    "Owned Noxara must be selectable.");
+
                 ArenaVariantRuntime.SetShuffleEnabled(true);
                 Assert(ArenaVariantRuntime.ShuffleEnabled,"Arena shuffle must persist when enabled.");
-                Assert(ArenaVariantRuntime.RandomOwnedArena(ArenaVariant.Moon)==ArenaVariant.Mars,
-                    "Shuffle must avoid the previous arena when exactly one other owned arena exists.");
-                Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&!ArenaVariantRuntime.ShuffleEnabled,
-                    "Manual arena selection must turn shuffle off.");
 
-                PlayerPrefs.SetInt(BalanceKey,499);
+                PlayerPrefs.DeleteKey(NoxaraKey);
+                PlayerPrefs.SetInt(BalanceKey,999);
+                PlayerPrefs.SetInt(SelectedKey,(int)ArenaVariant.Noxara);
                 PlayerPrefs.Save();
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.GreenPlanet)==ArenaPurchaseResult.InsufficientShards,
-                    "Green Planet must reject a balance below 500.");
-                Assert(PlayerWallet.Balance==499&&!ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),
-                    "Failed Green Planet purchase must change neither balance nor ownership.");
-
-                PlayerPrefs.SetInt(SelectedKey,(int)ArenaVariant.GreenPlanet);
-                PlayerPrefs.Save();
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.InsufficientShards,
+                    "Noxara must reject a balance below 1000.");
+                Assert(PlayerWallet.Balance==999&&!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),
+                    "Failed Noxara purchase must change neither balance nor ownership.");
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,
-                    "A stale locked Green Planet selection must fall back to Moon.");
+                    "A stale locked Noxara selection must fall back to Moon.");
 
                 PlayerPrefs.SetInt(SelectedKey,999);
                 PlayerPrefs.Save();
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,
                     "An invalid stored arena value must fall back to Moon.");
 
-                PlayerPrefs.SetInt(BalanceKey,500);
-                PlayerPrefs.Save();
-                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.GreenPlanet)==ArenaPurchaseResult.Purchased,
-                    "Green Planet must unlock for exactly 500 shards.");
-                Assert(PlayerWallet.Balance==0&&ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),
-                    "Green Planet purchase must atomically debit 500 and grant ownership.");
-                Assert(ArenaVariantRuntime.Select(ArenaVariant.GreenPlanet)&&ArenaVariantRuntime.Selected==ArenaVariant.GreenPlanet,
-                    "Owned Green Planet must be selectable.");
-
-                PlayerPrefs.SetInt(MatchesKey,ArenaUnlockInventory.NoxaraMatchesRequired);
-                PlayerPrefs.Save();
-                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Noxara),
-                    "Noxara must unlock from completed-match progression.");
-                Assert(ArenaVariantRuntime.Select(ArenaVariant.Noxara)&&ArenaVariantRuntime.Selected==ArenaVariant.Noxara,
-                    "Progression-unlocked Noxara must be selectable.");
-
-                PlayerPrefs.SetInt(MatchesKey,ArenaUnlockInventory.KryonMatchesRequired);
-                PlayerPrefs.Save();
-                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Kryon),
-                    "Kryon must unlock from completed-match progression.");
-                Assert(ArenaVariantRuntime.Select(ArenaVariant.Kryon)&&ArenaVariantRuntime.Selected==ArenaVariant.Kryon,
-                    "Progression-unlocked Kryon must be selectable.");
-
                 Debug.Log("DIMENSIONS FRONT: arena shop regression assertions passed.");
             }
             finally
             {
-                balance.Restore();mars.Restore();green.Restore();matches.Restore();selected.Restore();
+                balance.Restore();noxara.Restore();selected.Restore();
                 shuffle.Restore();lastShuffle.Restore();PlayerPrefs.Save();
             }
         }
