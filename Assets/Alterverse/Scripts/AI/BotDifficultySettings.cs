@@ -4,6 +4,18 @@ namespace Alterverse.AI
     public static class BotDifficultySettings
     {
         private const string Key="DF_BotDifficulty";
+        private static bool hasMatchOverride;
+        private static BotDifficulty matchOverride;
+        public static BotDifficulty Current=>hasMatchOverride?matchOverride:Selected;
+
+        public static void BeginMatchOverride(BotDifficulty value)
+        {
+            matchOverride=value<BotDifficulty.Easy||value>BotDifficulty.Expert?BotDifficulty.Normal:value;
+            hasMatchOverride=true;
+        }
+
+        public static void EndMatchOverride(){hasMatchOverride=false;matchOverride=BotDifficulty.Normal;}
+
         public static BotDifficulty Selected
         {
             get
