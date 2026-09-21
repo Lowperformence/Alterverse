@@ -26,17 +26,17 @@ namespace Alterverse.Shop
         NotPurchasable
     }
 
-    /// <summary>Content unlock catalog. Arena ownership never changes gameplay values.</summary>
+    /// <summary>All arenas are free except Noxara, which is a shard unlock.</summary>
     public static class ArenaShopCatalog
     {
-        public const int PremiumArenaPrice=500;
+        public const int NoxaraPrice=1000;
         public static readonly ArenaShopItem[] Items=
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
-            new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",PremiumArenaPrice,new Color(.88f,.28f,.12f)),
-            new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",PremiumArenaPrice,new Color(.20f,.78f,.38f)),
-            new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT • PLAY TO UNLOCK",0,new Color(.16f,.36f,.92f)),
-            new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT • PLAY TO UNLOCK",0,new Color(.52f,.90f,1f))
+            new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",0,new Color(.88f,.28f,.12f)),
+            new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
+            new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
+            new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f))
         };
 
         public static ArenaShopItem For(ArenaVariant variant)
@@ -54,49 +54,28 @@ namespace Alterverse.Shop
 
     public static class ArenaUnlockInventory
     {
-        internal const string MarsOwnedKey="DF_ArenaOwned_Mars";
-        internal const string GreenOwnedKey="DF_ArenaOwned_GreenPlanet";
-        public const int NoxaraMatchesRequired=5;
-        public const int KryonMatchesRequired=10;
-
-        private static string Key(ArenaVariant variant)=>variant switch
-        {
-            ArenaVariant.Mars=>MarsOwnedKey,
-            ArenaVariant.GreenPlanet=>GreenOwnedKey,
-            _=>string.Empty
-        };
+        internal const string NoxaraOwnedKey="DF_ArenaOwned_Noxara";
 
         public static bool Owned(ArenaVariant variant)
         {
-            if(variant==ArenaVariant.Moon)return true;
-            if(variant==ArenaVariant.Noxara)return Alterverse.Profile.MatchRewardService.MatchesCompleted>=NoxaraMatchesRequired;
-            if(variant==ArenaVariant.Kryon)return Alterverse.Profile.MatchRewardService.MatchesCompleted>=KryonMatchesRequired;
-            string key=Key(variant);
-            return !string.IsNullOrEmpty(key)&&PlayerPrefs.GetInt(key,0)==1;
+            if(variant!=ArenaVariant.Noxara)return true;
+            return PlayerPrefs.GetInt(NoxaraOwnedKey,0)==1;
         }
 
-        public static int NoxaraProgress=>Mathf.Clamp(Alterverse.Profile.MatchRewardService.MatchesCompleted,0,NoxaraMatchesRequired);
-        public static int KryonProgress=>Mathf.Clamp(Alterverse.Profile.MatchRewardService.MatchesCompleted,0,KryonMatchesRequired);
         public static string UnlockRequirement(ArenaVariant variant)=>variant==ArenaVariant.Noxara
-            ? $"COMPLETE {NoxaraMatchesRequired} MATCHES"
-            : variant==ArenaVariant.Kryon
-                ? $"COMPLETE {KryonMatchesRequired} MATCHES"
-                : "STORE UNLOCK";
+            ? ArenaShopCatalog.NoxaraPrice+" SHARDS"
+            : "FREE";
 
         public static ArenaPurchaseResult Purchase(ArenaVariant variant)
         {
             ProfileTransaction.Recover();
-            if(variant==ArenaVariant.Moon)return ArenaPurchaseResult.AlreadyOwned;
-            if(variant==ArenaVariant.Noxara||variant==ArenaVariant.Kryon)return ArenaPurchaseResult.NotPurchasable;
-            string key=Key(variant);
-            if(string.IsNullOrEmpty(key))return ArenaPurchaseResult.NotPurchasable;
+            if(variant!=ArenaVariant.Noxara)return ArenaPurchaseResult.AlreadyOwned;
             if(Owned(variant))return ArenaPurchaseResult.AlreadyOwned;
-            if(!PlayerWallet.CanAfford(ArenaShopCatalog.PremiumArenaPrice))return ArenaPurchaseResult.InsufficientShards;
+            if(!PlayerWallet.CanAfford(ArenaShopCatalog.NoxaraPrice))return ArenaPurchaseResult.InsufficientShards;
 
-            // Wallet debit and ownership are journaled as one idempotent profile transaction.
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-ArenaShopCatalog.PremiumArenaPrice),
-                new ProfileTransaction.Write(key,1));
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-ArenaShopCatalog.NoxaraPrice),
+                new ProfileTransaction.Write(NoxaraOwnedKey,1));
 
             Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             return ArenaPurchaseResult.Purchased;
