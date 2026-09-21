@@ -149,9 +149,9 @@ namespace Alterverse.Multiplayer
                     PlayerProperties=BuildLocalPlayerProperties(false),
                     SessionProperties=new Dictionary<string,SessionProperty>
                     {
-                        {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                        {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                        {PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member)}
+                        {ArenaKey,new SessionProperty(((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {DifficultyKey,new SessionProperty(((int)BotDifficultySettings.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                        {PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member)}
                     }
                 }.WithRelayNetwork();
 
@@ -243,8 +243,8 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 session.CurrentPlayer.SetProperties(new Dictionary<string,PlayerProperty>
                 {
-                    {PlayerHeroKey,new PlayerProperty(((int)hero).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                    {PlayerReadyKey,new PlayerProperty("0",VisibilityOptions.Member)}
+                    {PlayerHeroKey,new PlayerProperty(((int)hero).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                    {PlayerReadyKey,new PlayerProperty("0",VisibilityPropertyOptions.Member)}
                 });
                 await session.SaveCurrentPlayerDataAsync();
                 PlayerHeroSelection.Select(hero);
@@ -269,7 +269,7 @@ namespace Alterverse.Multiplayer
             try
             {
                 busy=true;lastError="";
-                session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityOptions.Member));
+                session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member));
                 await session.SaveCurrentPlayerDataAsync();
                 SetStatus(ready?"READY • WAITING FOR TEAM":"NOT READY");
                 return true;
@@ -310,7 +310,7 @@ namespace Alterverse.Multiplayer
             {
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
-                host.SetProperty(key,new SessionProperty(value,VisibilityOptions.Member));
+                host.SetProperty(key,new SessionProperty(value,VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus(okStatus);
                 return true;
@@ -449,7 +449,7 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
                 host.IsLocked=true;
-                host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityOptions.Member));
+                host.SetProperty(PhaseKey,new SessionProperty("staging",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus($"MATCH STAGING • {PlayerCount} PLAYERS CONNECTED");
                 return true;
@@ -481,7 +481,7 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 CoopAuthority.Prepare(plan);
                 IHostSession host=session.AsHost();
-                host.SetProperty(PhaseKey,new SessionProperty("launching",VisibilityOptions.Member));
+                host.SetProperty(PhaseKey,new SessionProperty("launching",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus("LAUNCHING CO-OP MATCH");
                 return true;
@@ -498,7 +498,7 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 IHostSession host=session.AsHost();
                 host.IsLocked=false;
-                host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member));
+                host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus("BACK IN CO-OP LOBBY");
                 return true;
@@ -514,7 +514,7 @@ namespace Alterverse.Multiplayer
             {
                 IHostSession host=session.AsHost();
                 host.IsLocked=true;
-                host.SetProperty(PhaseKey,new SessionProperty("postmatch",VisibilityOptions.Member));
+                host.SetProperty(PhaseKey,new SessionProperty("postmatch",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
                 SetStatus("MATCH COMPLETE • RETURNING TO CO-OP LOBBY");
                 return true;
@@ -536,7 +536,7 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 if(session.CurrentPlayer!=null)
                 {
-                    session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty("0",VisibilityOptions.Member));
+                    session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty("0",VisibilityPropertyOptions.Member));
                     await session.SaveCurrentPlayerDataAsync();
                 }
 
@@ -544,7 +544,7 @@ namespace Alterverse.Multiplayer
                 {
                     IHostSession host=session.AsHost();
                     host.IsLocked=false;
-                    host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityOptions.Member));
+                    host.SetProperty(PhaseKey,new SessionProperty("lobby",VisibilityPropertyOptions.Member));
                     await host.SavePropertiesAsync();
                 }
 
@@ -568,7 +568,7 @@ namespace Alterverse.Multiplayer
             {
                 IHostSession host=session.AsHost();
                 host.IsLocked=false;
-                host.SetProperty(PhaseKey,new SessionProperty("aborted",VisibilityOptions.Member));
+                host.SetProperty(PhaseKey,new SessionProperty("aborted",VisibilityPropertyOptions.Member));
                 await host.SavePropertiesAsync();
             }
             catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT CO-OP: failed to publish aborted match state: "+ex.Message);}
@@ -613,9 +613,9 @@ namespace Alterverse.Multiplayer
             string name=SanitizeDisplayName(PlayerProfile.PlayerName);
             return new Dictionary<string,PlayerProperty>
             {
-                {PlayerNameKey,new PlayerProperty(name,VisibilityOptions.Member)},
-                {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityOptions.Member)},
-                {PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityOptions.Member)}
+                {PlayerNameKey,new PlayerProperty(name,VisibilityPropertyOptions.Member)},
+                {PlayerHeroKey,new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture),VisibilityPropertyOptions.Member)},
+                {PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member)}
             };
         }
 
