@@ -68,6 +68,7 @@ return;
 }
 new GameObject("DF_CoopHeroStateSync").AddComponent<CoopHeroStateSync>();
 new GameObject("DF_CoopMatchStateSync").AddComponent<CoopMatchStateSync>();
+new GameObject("DF_CoopWorldEventSync").AddComponent<CoopWorldEventSync>();
 }
 else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
 
