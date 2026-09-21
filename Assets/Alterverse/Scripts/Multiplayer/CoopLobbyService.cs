@@ -15,9 +15,8 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Phase-one private co-op lobby owner.
-    /// This intentionally stops at lobby/session state. Gameplay networking is enabled in a later phase
-    /// so the existing offline match cannot accidentally execute on two machines at once.
+    /// Private 2-5 player co-op session owner. Sessions use Relay-backed NGO networking while
+    /// preserving the existing local-vs-AI mode as an independent path.
     /// </summary>
     public sealed class CoopLobbyService : MonoBehaviour, IMultiplayerProvider
     {
@@ -831,7 +830,11 @@ namespace Alterverse.Multiplayer
         private async void OnApplicationQuit()
         {
             if(session==null)return;
-            try{await session.LeaveAsync();}
+            try
+            {
+                if(session.IsHost)await session.AsHost().DeleteAsync();
+                else await session.LeaveAsync();
+            }
             catch{}
         }
 
