@@ -175,7 +175,13 @@ namespace Alterverse.Combat
 
             if(disengaging)
             {
-                target=null;
+                // Retreat with the group, but do not become a harmless target. If an enemy is
+                // already within rifle range, return fire while continuing toward formation.
+                if(target!=null)
+                {
+                    Vector3 retreatThreat=target.transform.position-transform.position;retreatThreat.y=0;
+                    if(retreatThreat.sqrMagnitude<=AttackRange*AttackRange&&Time.time>=nextAttack)Fire(target);
+                }
                 MoveToward(formation,.75f,1f);
                 return;
             }
