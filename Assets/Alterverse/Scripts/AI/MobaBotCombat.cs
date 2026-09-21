@@ -32,17 +32,23 @@ namespace Alterverse.AI
             Health target=sensor.CurrentTarget;
             if(target==null||target.IsDead){observedTarget=null;return;}
 
-            // Retreat/Recover normally suppresses combat, but never disables local self-defence
-            // against a visible enemy inside our own base/healing area.
+            // Retreating bots should not become harmless targets. They keep moving toward safety,
+            // but may return basic attacks against a visible hero that is actively pressuring them.
             bool recovering=brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover;
-            if(recovering&&!brain.IsLocalBaseThreat(target))return;
+            bool heroThreat=target.GetComponent<HeroIdentity>()!=null;
+            float range=AttackRange;
+            float targetDistance=HeroCombatRules.BasicDistance(transform.position,target);
+            bool counterFire=recovering&&heroThreat&&
+                (sensor.IsRecentAttacker(target)||targetDistance<=range*.92f);
+            if(recovering&&!brain.IsLocalBaseThreat(target)&&!counterFire)return;
             if(target!=observedTarget)
             {
                 observedTarget=target;
-                targetReadyAt=Time.time+Mathf.Clamp(brain.Difficulty.ReactionDelay*.65f*brain.DecisionRhythm,.06f,.55f);
+                float reactionScale=counterFire?.28f:.65f;
+                targetReadyAt=Time.time+Mathf.Clamp(brain.Difficulty.ReactionDelay*reactionScale*brain.DecisionRhythm,
+                    counterFire?.025f:.06f,counterFire?.18f:.55f);
             }
-            float range=AttackRange;
-            if(HeroCombatRules.BasicDistance(transform.position,target)>range)return;
+            if(targetDistance>range)return;
             Vector3 delta=sensor.ObservedTargetPosition-transform.position;delta.y=0;
             if(delta.sqrMagnitude>.01f)locomotion.FaceAction(delta,.1f);
             if(Time.time<targetReadyAt||Time.time<nextAttackTime||Time.time<nextSightCheck)return;
