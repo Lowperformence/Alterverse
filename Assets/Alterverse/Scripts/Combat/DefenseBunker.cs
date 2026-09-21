@@ -92,6 +92,7 @@ namespace Alterverse.Combat
 
         private void Update()
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if (Time.timeScale <= 0f) return;
 
             if (currentTarget != null && !IsValidTarget(currentTarget)) currentTarget = null;
