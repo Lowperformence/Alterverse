@@ -407,7 +407,21 @@ namespace Alterverse.UI
                 GUIUtility.systemCopyBuffer=coop.JoinCode;
                 joinCodeInput=coop.JoinCode;
             }
-            theme.Label(new Rect(Left+500,246,ContentWidth-690,22),$"PLAYERS  {coop.PlayerCount} / {coop.MaxPlayers}",theme.Small,true);
+            theme.Label(new Rect(Left+500,246,150,22),$"PLAYERS  {coop.PlayerCount} / {coop.MaxPlayers}",theme.Small,true);
+
+            CoopVoiceChatService voice=CoopVoiceChatService.Instance;
+            string micLabel=voice==null?"VOICE...":
+                voice.PermissionDenied||!voice.HasMicrophonePermission?"ENABLE MIC":
+                voice.IsMuted?"MIC OFF":"MIC ON";
+            bool micSelected=voice!=null&&voice.IsConnected&&!voice.IsMuted;
+            if(theme.Action(new Rect(Right-322,244,142,44),micLabel,selected:micSelected,
+                enabled:voice!=null&&!voice.Busy))
+            {
+                if(voice.PermissionDenied||!voice.HasMicrophonePermission||!voice.IsConnected)
+                    voice.RequestMicrophoneAndJoin();
+                else voice.ToggleMute();
+            }
+
             if(theme.Action(new Rect(Right-170,244,170,44),coop.Busy?"PLEASE WAIT":"LEAVE LOBBY",enabled:!coop.Busy))
                 _=coop.LeaveLobbyAsync();
 
@@ -500,11 +514,14 @@ namespace Alterverse.UI
             string state=!string.IsNullOrEmpty(launchMessage)?launchMessage:
                 coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
                 !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
+            string voiceState=CoopVoiceChatService.Instance!=null
+                ?CoopVoiceChatService.Instance.Status
+                :"VOICE INITIALIZING";
             theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+coop.NetworkLinkState,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
-                coop.IsStaging
+                (coop.IsStaging
                     ?$"PLAN SYNC  /  {CoopPlanHandshake.HandshakeStatus}"
-                    :"PRIVATE SESSION + RELAY ACTIVE • HOST CAN START WITH 2–5 READY PLAYERS.",theme.Small,true);
+                    :"PRIVATE SESSION + RELAY ACTIVE")+"  •  "+voiceState,theme.Small,true);
         }
 
         private void DrawHeroes()
