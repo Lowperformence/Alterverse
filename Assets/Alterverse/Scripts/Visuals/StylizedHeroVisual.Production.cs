@@ -21,6 +21,12 @@ namespace Alterverse.Visuals
                 CreateSignature();
                 return;
             }
+            if(h==HeroId.Elyra)
+            {
+                BuildIoneVoidMage();
+                CreateSignature();
+                return;
+            }
             if(h==HeroId.Nyra)
             {
                 BuildNyraEliteMarksman();
