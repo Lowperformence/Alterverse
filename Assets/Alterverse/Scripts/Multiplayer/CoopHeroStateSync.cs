@@ -213,6 +213,11 @@ namespace Alterverse.Multiplayer
                 HeroRespawn respawn=slot.GetComponent<HeroRespawn>();
                 writer.WriteValueSafe(respawn!=null&&respawn.IsRespawning);
                 writer.WriteValueSafe(respawn!=null?respawn.RemainingSeconds:0f);
+                BasicAttack basic=slot.GetComponent<BasicAttack>();
+                PlayerHeroAbilities abilities=slot.GetComponent<PlayerHeroAbilities>();
+                writer.WriteValueSafe(basic!=null?basic.RemainingCooldown:0f);
+                for(int ability=0;ability<4;ability++)
+                    writer.WriteValueSafe(abilities!=null?abilities.RemainingFor(ability):0f);
             }
 
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -241,6 +246,9 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float moveMultiplier);
                 reader.ReadValueSafe(out bool respawning);
                 reader.ReadValueSafe(out float respawnRemaining);
+                reader.ReadValueSafe(out float basicRemaining);
+                float[] abilityRemaining=new float[4];
+                for(int ability=0;ability<4;ability++)reader.ReadValueSafe(out abilityRemaining[ability]);
 
                 if(rosterSlot<0||rosterSlot>=slots.Length)continue;
                 CoopHeroSlot actor=slots[rosterSlot];if(actor==null)continue;
@@ -259,6 +267,13 @@ namespace Alterverse.Multiplayer
                 HeroCombatStatus status=actor.GetComponent<HeroCombatStatus>()??actor.gameObject.AddComponent<HeroCombatStatus>();
                 status.ApplyNetworkSnapshot(stunned,moveMultiplier);
                 actor.GetComponent<CoopRespawnReplica>()?.Apply(respawning,respawnRemaining);
+                if(actor.IsLocalHuman)
+                {
+                    actor.GetComponent<BasicAttack>()?.ApplyNetworkCooldown(basicRemaining);
+                    PlayerHeroAbilities localAbilities=actor.GetComponent<PlayerHeroAbilities>();
+                    if(localAbilities!=null)for(int ability=0;ability<4;ability++)
+                        localAbilities.ApplyNetworkCooldown(ability,abilityRemaining[ability]);
+                }
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);
             }
         }
