@@ -1,4 +1,5 @@
 using Alterverse.Characters;
+using Alterverse.Shop;
 using UnityEngine;
 
 namespace Alterverse.Visuals
