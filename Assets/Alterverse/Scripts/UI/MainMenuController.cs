@@ -28,7 +28,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
         private Page page;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponShopTier=3;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
@@ -665,43 +665,109 @@ namespace Alterverse.UI
         private void DrawWeaponSkinShop()
         {
             HeroId hero=(HeroId)selectedHero;
-            WeaponSkinItem item=WeaponSkinCatalog.For(hero);
-            bool owned=WeaponSkinInventory.Owned(hero);
-            bool equipped=WeaponSkinInventory.Equipped(hero);
-            float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
+            bool zhaevCollection=hero==HeroId.Veyr;
+            WeaponSkinTier tier=zhaevCollection
+                ?(WeaponSkinTier)Mathf.Clamp(weaponShopTier,1,3)
+                :WeaponSkinTier.Legendary;
+            WeaponSkinItem item=zhaevCollection?WeaponSkinCatalog.For(hero,tier):WeaponSkinCatalog.For(hero);
+            bool owned=zhaevCollection?WeaponSkinInventory.Owned(hero,tier):WeaponSkinInventory.Owned(hero);
+            bool equipped=zhaevCollection
+                ?WeaponSkinInventory.EquippedTier(hero)==tier
+                :WeaponSkinInventory.Equipped(hero);
+            int price=zhaevCollection?item.Price:WeaponSkinCatalog.Price;
 
+            // Force the portrait to the selected assassin tier, not merely "weapon preview on".
+            showcase.Present(hero,true,false,true,null,zhaevCollection?(int)tier:-1);
+
+            float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
             DrawPortrait(new Rect(Left,270,w,340));
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
-            theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON OVERDRIVE PREVIEW",theme.Small,true);
-            if(theme.Action(new Rect(Left,614,64,54),"<")){ChangeHero((selectedHero+5)%6);shopMessage="";}
+            theme.Label(new Rect(Left+42,282,w-84,28),
+                zhaevCollection?"ZHAEV NULL / SHADOW BLADE COLLECTION":"WEAPON OVERDRIVE PREVIEW",theme.Small,true);
+
+            if(theme.Action(new Rect(Left,614,64,54),"<"))
+            {
+                ChangeHero((selectedHero+5)%6);shopMessage="";weaponShopTier=3;
+            }
             theme.Center(new Rect(Left+72,614,w-144,54),$"{HeroName}  /  {item.WeaponName}");
-            if(theme.Action(new Rect(Left+w-64,614,64,54),">")){ChangeHero((selectedHero+1)%6);shopMessage="";}
+            if(theme.Action(new Rect(Left+w-64,614,64,54),">"))
+            {
+                ChangeHero((selectedHero+1)%6);shopMessage="";weaponShopTier=3;
+            }
 
             theme.Label(new Rect(x,282,rw,62),item.Name,theme.Title);
-            theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
-            theme.Label(new Rect(x,400,rw,90),"Visual only — no damage, range or hitbox advantage.",theme.Body,true);
-            theme.Label(new Rect(x,506,rw,34),owned?"OWNED":WeaponSkinCatalog.Price+" SHARDS",theme.Heading);
-            FrontEndTheme.Fill(new Rect(x,548,rw,3),item.Glow);
+            theme.Label(new Rect(x,350,rw,28),
+                zhaevCollection?$"{tier.ToString().ToUpperInvariant()}  /  TWIN VOID BLADES":
+                    item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",
+                theme.Small,true);
 
-            string action=equipped?"USE ORIGINAL":owned?"EQUIP":PlayerWallet.CanAfford(WeaponSkinCatalog.Price)?"BUY & EQUIP":"NEED 500 SHARDS";
-            bool enabled=owned||PlayerWallet.CanAfford(WeaponSkinCatalog.Price);
+            float descriptionY=400f;
+            if(zhaevCollection)
+            {
+                float gap=8f;
+                float bw=(rw-gap*2)/3f;
+                WeaponSkinTier[] tiers={WeaponSkinTier.Rare,WeaponSkinTier.Epic,WeaponSkinTier.Legendary};
+                for(int i=0;i<tiers.Length;i++)
+                {
+                    WeaponSkinTier option=tiers[i];
+                    if(theme.Action(new Rect(x+i*(bw+gap),386,bw,38),option.ToString().ToUpperInvariant(),
+                        selected:tier==option))
+                    {
+                        weaponShopTier=(int)option;
+                        tier=option;
+                        item=WeaponSkinCatalog.For(hero,tier);
+                        shopMessage="";
+                        showcase.Present(hero,true,false,true,null,(int)tier);
+                    }
+                }
+                descriptionY=434f;
+            }
+
+            string description=string.IsNullOrEmpty(item.Description)
+                ?"Visual only — no damage, range or hitbox advantage."
+                :item.Description+"  Visual only — no gameplay advantage.";
+            theme.Label(new Rect(x,descriptionY,rw,66),description,theme.Body,true);
+
+            bool currentOwned=zhaevCollection?WeaponSkinInventory.Owned(hero,tier):owned;
+            bool currentEquipped=zhaevCollection?WeaponSkinInventory.EquippedTier(hero)==tier:equipped;
+            int currentPrice=zhaevCollection?WeaponSkinCatalog.For(hero,tier).Price:price;
+            WeaponSkinItem currentItem=zhaevCollection?WeaponSkinCatalog.For(hero,tier):item;
+
+            theme.Label(new Rect(x,506,rw,34),currentOwned?"OWNED":currentPrice+" SHARDS",theme.Heading);
+            FrontEndTheme.Fill(new Rect(x,548,rw,3),currentItem.Glow);
+
+            string action=currentEquipped?"USE SHADOW STEEL":currentOwned?"EQUIP":
+                PlayerWallet.CanAfford(currentPrice)?"BUY & EQUIP":$"NEED {currentPrice} SHARDS";
+            bool enabled=currentOwned||PlayerWallet.CanAfford(currentPrice);
             if(theme.Action(new Rect(x,570,rw,60),action,true,enabled:enabled))
             {
-                if(owned)
+                if(currentOwned)
                 {
-                    WeaponSkinInventory.Equip(hero,!equipped);
-                    shopMessage=equipped?"Original weapon equipped.":item.Name+" equipped.";
+                    if(zhaevCollection)
+                    {
+                        if(currentEquipped)WeaponSkinInventory.Equip(hero,WeaponSkinTier.Original);
+                        else WeaponSkinInventory.Equip(hero,tier);
+                    }
+                    else WeaponSkinInventory.Equip(hero,!currentEquipped);
+
+                    shopMessage=currentEquipped?"Shadow Steel equipped.":currentItem.Name+" equipped.";
                 }
                 else
                 {
-                    AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero);
-                    shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
+                    AvatarPurchaseResult result=zhaevCollection
+                        ?WeaponSkinInventory.Purchase(hero,tier)
+                        :WeaponSkinInventory.Purchase(hero);
+                    shopMessage=result==AvatarPurchaseResult.Purchased?currentItem.Name+" unlocked and equipped.":
                         result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
                 }
-                showcase.Present(hero,true,false,true);
+                showcase.InvalidateLoadout();
+                showcase.Present(hero,true,false,true,null,zhaevCollection?(int)tier:-1);
             }
-            theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:
-                $"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
+
+            string footer=zhaevCollection
+                ?$"SHARDS {PlayerWallet.Balance}  •  BASE: SHADOW STEEL  •  RARE / EPIC / LEGENDARY"
+                :$"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}";
+            theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:footer,theme.Small,true);
         }
 
         private void DrawMapShop()
