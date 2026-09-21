@@ -1,0 +1,206 @@
+using System.Text;
+using Unity.Collections;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace Alterverse.Multiplayer
+{
+    /// <summary>
+    /// Verifies that host and client produced the same staged 10-slot match plan before
+    /// any gameplay world is allowed to launch. Uses NGO named messages over the Relay link.
+    /// </summary>
+    public sealed class CoopPlanHandshake : MonoBehaviour
+    {
+        private const string ProbeMessage="DF_COOP_PLAN_PROBE_V1";
+        private const string AckMessage="DF_COOP_PLAN_ACK_V1";
+        private const int ProtocolVersion=1;
+
+        public static CoopPlanHandshake Instance { get; private set; }
+        public static bool PlanHandshakeReady=>Instance!=null&&Instance.planHandshakeReady;
+        public static string HandshakeStatus=>Instance==null?"PLAN SYNC OFFLINE":Instance.status;
+
+        private CustomMessagingManager registeredMessaging;
+        private bool planHandshakeReady;
+        private string status="WAITING FOR STAGED PLAN";
+        private float nextProbeAt;
+        private uint lastFingerprint;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Ensure()
+        {
+            if(Instance==null)new GameObject("DF_CoopPlanHandshake").AddComponent<CoopPlanHandshake>();
+        }
+
+        private void Awake()
+        {
+            if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}
+            Instance=this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void Update()
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            CoopLobbyService lobby=CoopLobbyService.Instance;
+
+            if(manager==null||!manager.IsListening||lobby==null||!lobby.InLobby)
+            {
+                Detach();
+                ResetHandshake("WAITING FOR RELAY");
+                return;
+            }
+
+            Attach(manager.CustomMessagingManager);
+
+            if(!lobby.IsStaging||CoopAuthority.PreparedPlan==null||lobby.PlayerCount!=2)
+            {
+                ResetHandshake(lobby.IsStaging?"WAITING FOR MATCH PLAN":"WAITING FOR MATCH STAGING");
+                return;
+            }
+
+            uint fingerprint=Fingerprint(CoopAuthority.PreparedPlan);
+            if(fingerprint!=lastFingerprint)
+            {
+                lastFingerprint=fingerprint;
+                planHandshakeReady=false;
+                nextProbeAt=0f;
+            }
+
+            if(manager.IsHost)
+            {
+                if(!planHandshakeReady)status="HOST WAITING FOR CLIENT PLAN";
+                return;
+            }
+
+            if(planHandshakeReady)return;
+            status="CLIENT VERIFYING MATCH PLAN";
+            if(Time.unscaledTime<nextProbeAt)return;
+            nextProbeAt=Time.unscaledTime+.75f;
+            SendProbe(manager,fingerprint);
+        }
+
+        private void Attach(CustomMessagingManager messaging)
+        {
+            if(messaging==null||registeredMessaging==messaging)return;
+            Detach();
+            registeredMessaging=messaging;
+            registeredMessaging.RegisterNamedMessageHandler(ProbeMessage,OnPlanProbe);
+            registeredMessaging.RegisterNamedMessageHandler(AckMessage,OnPlanAck);
+        }
+
+        private void Detach()
+        {
+            if(registeredMessaging==null)return;
+            registeredMessaging.UnregisterNamedMessageHandler(ProbeMessage);
+            registeredMessaging.UnregisterNamedMessageHandler(AckMessage);
+            registeredMessaging=null;
+        }
+
+        private void SendProbe(NetworkManager manager,uint fingerprint)
+        {
+            if(manager==null||manager.IsHost||registeredMessaging==null)return;
+            using FastBufferWriter writer=new(16,Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(fingerprint);
+            registeredMessaging.SendNamedMessage(
+                ProbeMessage,
+                NetworkManager.ServerClientId,
+                writer,
+                NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnPlanProbe(ulong senderClientId,FastBufferReader reader)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            CoopLobbyService lobby=CoopLobbyService.Instance;
+            if(manager==null||!manager.IsHost||lobby==null||!lobby.IsStaging||CoopAuthority.PreparedPlan==null)return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out uint clientFingerprint);
+
+            uint hostFingerprint=Fingerprint(CoopAuthority.PreparedPlan);
+            bool valid=protocol==ProtocolVersion&&clientFingerprint==hostFingerprint&&lobby.PlayerCount==2;
+            planHandshakeReady=valid;
+            lastFingerprint=hostFingerprint;
+            status=valid?"MATCH PLAN SYNCED":"MATCH PLAN MISMATCH";
+
+            using FastBufferWriter writer=new(20,Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(valid);
+            writer.WriteValueSafe(hostFingerprint);
+            registeredMessaging?.SendNamedMessage(
+                AckMessage,
+                senderClientId,
+                writer,
+                NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnPlanAck(ulong senderClientId,FastBufferReader reader)
+        {
+            NetworkManager manager=NetworkManager.Singleton;
+            CoopLobbyService lobby=CoopLobbyService.Instance;
+            if(manager==null||manager.IsHost||lobby==null||!lobby.IsStaging||CoopAuthority.PreparedPlan==null)return;
+            if(senderClientId!=NetworkManager.ServerClientId)return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out bool accepted);
+            reader.ReadValueSafe(out uint hostFingerprint);
+
+            uint localFingerprint=Fingerprint(CoopAuthority.PreparedPlan);
+            planHandshakeReady=protocol==ProtocolVersion&&accepted&&hostFingerprint==localFingerprint;
+            lastFingerprint=localFingerprint;
+            status=planHandshakeReady?"MATCH PLAN SYNCED":"MATCH PLAN MISMATCH";
+            if(!planHandshakeReady)nextProbeAt=Time.unscaledTime+.75f;
+        }
+
+        private void ResetHandshake(string nextStatus)
+        {
+            planHandshakeReady=false;
+            lastFingerprint=0;
+            nextProbeAt=0f;
+            status=nextStatus;
+        }
+
+        public static uint Fingerprint(CoopMatchPlan plan)
+        {
+            if(plan==null||plan.Session==null)return 0;
+
+            StringBuilder builder=new(256);
+            builder.Append(plan.MatchId??"").Append('|')
+                .Append((int)plan.Arena).Append('|')
+                .Append((int)plan.Difficulty);
+
+            for(int i=0;i<plan.Session.Slots.Length;i++)
+            {
+                MatchPlayerSlot slot=plan.Session.Slots[i];
+                builder.Append('|').Append(i).Append(':');
+                if(slot==null){builder.Append("null");continue;}
+                builder.Append(slot.PlayerId??"").Append(',')
+                    .Append(slot.DisplayName??"").Append(',')
+                    .Append(slot.Team).Append(',')
+                    .Append((int)slot.Hero).Append(',')
+                    .Append(slot.IsBot?'1':'0').Append(',')
+                    .Append(slot.IsHost?'1':'0');
+            }
+
+            // Stable FNV-1a over UTF-16 code units; deterministic across both peers.
+            const uint offset=2166136261u;
+            const uint prime=16777619u;
+            uint hash=offset;
+            string text=builder.ToString();
+            for(int i=0;i<text.Length;i++)
+            {
+                char ch=text[i];
+                hash^=(byte)(ch&0xFF);hash*=prime;
+                hash^=(byte)(ch>>8);hash*=prime;
+            }
+            return hash==0?1u:hash;
+        }
+
+        private void OnDestroy()
+        {
+            Detach();
+            if(Instance==this)Instance=null;
+        }
+    }
+}
