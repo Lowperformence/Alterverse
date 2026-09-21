@@ -176,12 +176,7 @@ namespace Alterverse.Multiplayer
             MatchPlayerSlot slot=plan.Session.Slots[rosterSlot];
             if(slot==null||slot.IsBot||slot.IsHost||slot.PlayerId!=playerId)return false;
 
-            if(senderOwners.TryGetValue(senderClientId,out string known))
-                return known==playerId;
-
-            foreach(KeyValuePair<ulong,string> pair in senderOwners)
-                if(pair.Value==playerId&&pair.Key!=senderClientId)return false;
-
+            if(!CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId))return false;
             senderOwners[senderClientId]=playerId;
             return true;
         }
