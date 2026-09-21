@@ -25,11 +25,13 @@ namespace Alterverse.EditorChecks
                 Vector3 spawn=LaneWaveSpawner.SoldierSpawnPoint(team,laneZ,i);
                 Check(Mathf.Abs(spawn.x)<centreSideEdge,
                     $"team {team} soldier {i} is not fully in front of trench line: x={spawn.x}");
-                Check(Mathf.Abs(spawn.z-laneZ)<.001f,
-                    $"team {team} soldier {i} changed lane Z");
+                Check(Mathf.Abs(spawn.z-laneZ)<=1f,
+                    $"team {team} soldier {i} left its compact lane formation: z={spawn.z}");
+                Check(Mathf.Abs(Mathf.Abs(spawn.x)-LaneWaveSpawner.SoldierSpawnFrontX)<.001f,
+                    $"team {team} soldier {i} is trailing another soldier instead of spawning abreast");
             }
 
-            Debug.Log("DIMENSIONS FRONT: soldier spawn regression passed; all regular wave soldiers start on the arena-centre side of the trenches.");
+            Debug.Log("DIMENSIONS FRONT: soldier spawn regression passed; regular soldiers spawn abreast in front of the trenches and use wave regrouping to catch their squad.");
         }
     }
 }
