@@ -505,6 +505,49 @@ namespace Alterverse.Combat
             return true;
         }
 
+        public static bool TryGetMonsterAnchor(int team,Vector3 from,out Health leader,out Vector3 anchor)
+        {
+            leader=null;anchor=Vector3.zero;
+
+            // Hot Zone rewards behave like heavy members of the infantry group first.
+            // If no living soldier is reasonably close, they immediately fall back to the
+            // hero group so the reward never wanders around the map by itself.
+            const float soldierJoinRadius=15f;
+            float joinSqr=soldierJoinRadius*soldierJoinRadius;
+            TrenchSoldier closest=null;
+            float closestSqr=float.MaxValue;
+
+            IReadOnlyList<TrenchSoldier> soldiers=TrenchSoldier.Active;
+            for(int i=0;i<soldiers.Count;i++)
+            {
+                TrenchSoldier soldier=soldiers[i];
+                if(soldier==null||soldier.Team!=team||soldier.Vitals==null||soldier.Vitals.IsDead)continue;
+                Vector3 d=soldier.transform.position-from;d.y=0;
+                float sqr=d.sqrMagnitude;
+                if(sqr>joinSqr||sqr>=closestSqr)continue;
+                closest=soldier;closestSqr=sqr;
+            }
+
+            if(closest!=null)
+            {
+                Vector3 sum=Vector3.zero;int count=0;
+                for(int i=0;i<soldiers.Count;i++)
+                {
+                    TrenchSoldier soldier=soldiers[i];
+                    if(soldier==null||soldier.Team!=team||soldier.Vitals==null||soldier.Vitals.IsDead)continue;
+                    Vector3 d=soldier.transform.position-closest.transform.position;d.y=0;
+                    if(d.sqrMagnitude>8f*8f)continue;
+                    sum+=soldier.transform.position;count++;
+                }
+
+                leader=closest.Vitals;
+                anchor=count>0?sum/count:closest.transform.position;
+                return true;
+            }
+
+            return TryGetAnchor(team,from,out leader,out anchor);
+        }
+
         public static Health FocusFor(int team)
         {
             BotTeamCoordinator coordinator=BotTeamCoordinator.ForTeam(team);
