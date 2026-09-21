@@ -23,6 +23,8 @@ namespace Alterverse.Multiplayer
         private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V1";
         private const string PlanetBuffMessage="DF_COOP_PLANET_BUFF_V1";
         private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V1";
+        private const string FractureSpawnMessage="DF_COOP_FRACTURE_SPAWN_V1";
+        private const string FractureClaimMessage="DF_COOP_FRACTURE_CLAIM_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -53,6 +55,8 @@ namespace Alterverse.Multiplayer
             CentralHealingPickup.NetworkAvailabilityChanged+=OnHostCentralHealChanged;
             DimensionPlanet.NetworkBuffGranted+=OnHostPlanetBuffGranted;
             LaneWaveSpawner.NetworkUnitSpawned+=OnHostLaneUnitSpawned;
+            FractureCorePickup.NetworkSpawned+=OnHostFractureSpawned;
+            FractureCorePickup.NetworkClaimed+=OnHostFractureClaimed;
             eventsBound=true;
         }
 
@@ -70,6 +74,8 @@ namespace Alterverse.Multiplayer
             CentralHealingPickup.NetworkAvailabilityChanged-=OnHostCentralHealChanged;
             DimensionPlanet.NetworkBuffGranted-=OnHostPlanetBuffGranted;
             LaneWaveSpawner.NetworkUnitSpawned-=OnHostLaneUnitSpawned;
+            FractureCorePickup.NetworkSpawned-=OnHostFractureSpawned;
+            FractureCorePickup.NetworkClaimed-=OnHostFractureClaimed;
             eventsBound=false;
         }
 
@@ -169,6 +175,23 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(destination.x);writer.WriteValueSafe(destination.y);writer.WriteValueSafe(destination.z);
             writer.WriteValueSafe(siege);
             SendAll(LaneUnitMessage,writer);
+        }
+
+        private void OnHostFractureSpawned(int id,Vector3 position)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(24,Allocator.Temp);
+            writer.WriteValueSafe(id);
+            writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
+            SendAll(FractureSpawnMessage,writer);
+        }
+
+        private void OnHostFractureClaimed(int id)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(8,Allocator.Temp);
+            writer.WriteValueSafe(id);
+            SendAll(FractureClaimMessage,writer);
         }
 
         private bool CanBroadcast()
@@ -278,6 +301,21 @@ namespace Alterverse.Multiplayer
                 fixedKey.ToString(),team,new Vector3(sx,sy,sz),new Vector3(dx,dy,dz),siege);
         }
 
+        private void OnFractureSpawn(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out int id);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            FractureCorePickup.ApplyNetworkSpawn(id,new Vector3(x,y,z));
+        }
+
+        private void OnFractureClaim(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out int id);
+            FractureCorePickup.ApplyNetworkClaim(id);
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -300,6 +338,8 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(CentralHealMessage,OnCentralHeal);
             messaging.RegisterNamedMessageHandler(PlanetBuffMessage,OnPlanetBuff);
             messaging.RegisterNamedMessageHandler(LaneUnitMessage,OnLaneUnit);
+            messaging.RegisterNamedMessageHandler(FractureSpawnMessage,OnFractureSpawn);
+            messaging.RegisterNamedMessageHandler(FractureClaimMessage,OnFractureClaim);
             attached=true;
         }
 
@@ -317,6 +357,8 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(CentralHealMessage);
             messaging.UnregisterNamedMessageHandler(PlanetBuffMessage);
             messaging.UnregisterNamedMessageHandler(LaneUnitMessage);
+            messaging.UnregisterNamedMessageHandler(FractureSpawnMessage);
+            messaging.UnregisterNamedMessageHandler(FractureClaimMessage);
             messaging=null;attached=false;
         }
     }
