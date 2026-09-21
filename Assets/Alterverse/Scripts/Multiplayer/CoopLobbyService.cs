@@ -31,7 +31,9 @@ namespace Alterverse.Multiplayer
             public bool IsLocal;
         }
 
-        private const string SessionType="df-private-coop-v1";
+        public const int MinHumanPlayers=2;
+        public const int MaxHumanPlayers=5;
+        private const string SessionType="df-private-coop-v2";
         private const string PlayerNameKey="displayName";
         private const string PlayerHeroKey="hero";
         private const string PlayerReadyKey="ready";
@@ -45,7 +47,7 @@ namespace Alterverse.Multiplayer
         private bool servicesInitialized,busy;
         private string status="CO-OP READY";
         private string lastError="";
-        private readonly List<MemberView> memberBuffer=new(2);
+        private readonly List<MemberView> memberBuffer=new(MaxHumanPlayers);
 
         public event Action Changed;
 
@@ -59,10 +61,10 @@ namespace Alterverse.Multiplayer
         public string Status=>status;
         public string LastError=>lastError;
         public int PlayerCount=>session?.PlayerCount??0;
-        public int MaxPlayers=>session?.MaxPlayers??2;
+        public int MaxPlayers=>session?.MaxPlayers??MaxHumanPlayers;
         public bool RelayConnected=>InLobby&&CoopNetworkBootstrap.IsListening;
-        public bool TwoPlayerLinkReady=>InLobby&&CoopNetworkBootstrap.IsTwoPlayerLinkReady;
-        public string NetworkLinkState=>CoopNetworkBootstrap.LinkState;
+        public bool PlayerLinkReady=>InLobby&&CoopNetworkBootstrap.IsLinkReadyForPlayers(PlayerCount);
+        public string NetworkLinkState=>CoopNetworkBootstrap.LinkStateForPlayers(Mathf.Max(MinHumanPlayers,PlayerCount));
         public string LobbyPhase=>ReadSession(PhaseKey,"lobby");
         public bool IsStaging=>string.Equals(LobbyPhase,"staging",StringComparison.Ordinal);
 
@@ -137,7 +139,7 @@ namespace Alterverse.Multiplayer
                 {
                     Type=SessionType,
                     Name="DIMENSIONS FRONT CO-OP",
-                    MaxPlayers=2,
+                    MaxPlayers=MaxHumanPlayers,
                     IsPrivate=true,
                     IsLocked=false,
                     PlayerProperties=BuildLocalPlayerProperties(false),
@@ -254,7 +256,7 @@ namespace Alterverse.Multiplayer
             if(session==null||busy)return false;
             if(ready&&HeroUsedByOther(LocalHero))
             {
-                lastError="Both players must use different heroes.";
+                lastError="Every co-op player must use a different hero.";
                 SetStatus("CHOOSE A DIFFERENT HERO");
                 RaiseChanged();
                 return false;
@@ -373,7 +375,20 @@ namespace Alterverse.Multiplayer
             get
             {
                 IReadOnlyList<MemberView> members=Members;
-                return members.Count>=2&&members[0].Hero==members[1].Hero;
+                HashSet<HeroId> heroes=new();
+                for(int i=0;i<members.Count;i++)if(!heroes.Add(members[i].Hero))return true;
+                return false;
+            }
+        }
+
+        public bool AllPresentPlayersReady
+        {
+            get
+            {
+                IReadOnlyList<MemberView> members=Members;
+                if(members.Count<PlayerCount)return false;
+                for(int i=0;i<members.Count;i++)if(!members[i].Ready)return false;
+                return true;
             }
         }
 
@@ -381,20 +396,20 @@ namespace Alterverse.Multiplayer
         {
             get
             {
-                if(session==null||!IsHost||session.PlayerCount!=2||HasHeroConflict||IsStaging)return false;
-                IReadOnlyList<MemberView> members=Members;
-                return members.Count==2&&members[0].Ready&&members[1].Ready;
+                if(session==null||!IsHost||IsStaging||HasHeroConflict)return false;
+                if(session.PlayerCount<MinHumanPlayers||session.PlayerCount>MaxHumanPlayers)return false;
+                return AllPresentPlayersReady;
             }
         }
 
-        public bool CanStageMatch=>CanStartLobby&&TwoPlayerLinkReady;
+        public bool CanStageMatch=>CanStartLobby&&PlayerLinkReady;
 
         public bool TryBuildMatchPlan(out CoopMatchPlan plan)
         {
             plan=null;
-            if(session==null||session.PlayerCount!=2||HasHeroConflict)return false;
+            if(session==null||session.PlayerCount<MinHumanPlayers||session.PlayerCount>MaxHumanPlayers||HasHeroConflict)return false;
             IReadOnlyList<MemberView> members=Members;
-            if(members.Count!=2)return false;
+            if(members.Count!=session.PlayerCount)return false;
             try
             {
                 plan=CoopMatchPlan.Build(session.Id,LobbyArena,LobbyDifficulty,members);
@@ -412,7 +427,7 @@ namespace Alterverse.Multiplayer
             if(session==null||!IsHost||busy)return false;
             if(!CanStageMatch)
             {
-                lastError=!TwoPlayerLinkReady?"Relay link is not ready on both players.":"Both players must be connected, use different heroes, and be ready.";
+                lastError=!PlayerLinkReady?"Relay link is not ready for every player.":"All present players must be connected, use different heroes, and be ready.";
                 SetStatus("CO-OP MATCH NOT READY");
                 RaiseChanged();
                 return false;
