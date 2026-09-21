@@ -20,6 +20,7 @@ namespace Alterverse.Multiplayer
         private const string NoxaraMeteorMessage="DF_COOP_NOXARA_METEOR_V1";
         private const string PlanetPulseStartMessage="DF_COOP_PLANET_PULSE_START_V1";
         private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V1";
+        private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V1";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -47,6 +48,7 @@ namespace Alterverse.Multiplayer
             NoxaraSpiderMeteorShower.NetworkMeteorSpawned+=OnHostNoxaraMeteor;
             PlanetPulseAttack.NetworkPulseStarted+=OnHostPlanetPulseStart;
             PlanetPulseAttack.NetworkPulseDetonated+=OnHostPlanetPulseDetonate;
+            CentralHealingPickup.NetworkAvailabilityChanged+=OnHostCentralHealChanged;
             eventsBound=true;
         }
 
@@ -61,6 +63,7 @@ namespace Alterverse.Multiplayer
             NoxaraSpiderMeteorShower.NetworkMeteorSpawned-=OnHostNoxaraMeteor;
             PlanetPulseAttack.NetworkPulseStarted-=OnHostPlanetPulseStart;
             PlanetPulseAttack.NetworkPulseDetonated-=OnHostPlanetPulseDetonate;
+            CentralHealingPickup.NetworkAvailabilityChanged-=OnHostCentralHealChanged;
             eventsBound=false;
         }
 
@@ -132,6 +135,14 @@ namespace Alterverse.Multiplayer
             using FastBufferWriter writer=new(160,Allocator.Temp);
             writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
             SendAll(PlanetPulseDetonateMessage,writer);
+        }
+
+        private void OnHostCentralHealChanged(bool available,float readyIn)
+        {
+            if(!CanBroadcast())return;
+            using FastBufferWriter writer=new(16,Allocator.Temp);
+            writer.WriteValueSafe(available);writer.WriteValueSafe(readyIn);
+            SendAll(CentralHealMessage,writer);
         }
 
         private bool CanBroadcast()
@@ -214,6 +225,13 @@ namespace Alterverse.Multiplayer
             PlanetPulseAttack.ApplyNetworkPulseDetonate(owner.ToString());
         }
 
+        private void OnCentralHeal(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender))return;
+            reader.ReadValueSafe(out bool available);reader.ReadValueSafe(out float readyIn);
+            FindAnyObjectByType<CentralHealingPickup>()?.ApplyNetworkAvailability(available,readyIn);
+        }
+
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
@@ -233,6 +251,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(NoxaraMeteorMessage,OnNoxaraMeteor);
             messaging.RegisterNamedMessageHandler(PlanetPulseStartMessage,OnPlanetPulseStart);
             messaging.RegisterNamedMessageHandler(PlanetPulseDetonateMessage,OnPlanetPulseDetonate);
+            messaging.RegisterNamedMessageHandler(CentralHealMessage,OnCentralHeal);
             attached=true;
         }
 
@@ -247,6 +266,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(NoxaraMeteorMessage);
             messaging.UnregisterNamedMessageHandler(PlanetPulseStartMessage);
             messaging.UnregisterNamedMessageHandler(PlanetPulseDetonateMessage);
+            messaging.UnregisterNamedMessageHandler(CentralHealMessage);
             messaging=null;attached=false;
         }
     }
