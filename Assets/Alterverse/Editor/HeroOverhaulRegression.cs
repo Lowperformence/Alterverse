@@ -35,7 +35,7 @@ namespace Alterverse.EditorChecks
         {
             try
             {
-                for (int i = 0; i < 6; i++)
+                for (int i = 0; i < HeroIdentity.HeroCount; i++)
                 {
                     Vector3 p = new(1000+i*30,1,1000);
                     GameObject actor = Hero((HeroId)i,0,p), enemy = Hero(HeroId.Kaelon,1,p+Vector3.right*2);
@@ -91,7 +91,7 @@ namespace Alterverse.EditorChecks
                 Assert(heal.TryCast(1,null,Vector3.zero),"Support can heal without an enemy.");
                 Assert(Mathf.Abs(ally.Current-(ally.Max-28))<.01f && distant.Current==distant.Max-100,"Healing amount and range are exact.");
                 Assert(heal.TryCast(2,null,Vector3.zero)&&ally.Shield==50,"Support E grants a real shield.");
-                for(int i=0;i<6;i++)
+                for(int i=0;i<HeroIdentity.HeroCount;i++)
                 {
                     GameObject visual=Hero((HeroId)i,i%2,new Vector3(3000+i*10,1,3000));
                     visual.AddComponent<StylizedHeroVisual>().Build();
