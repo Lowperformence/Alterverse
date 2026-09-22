@@ -216,32 +216,6 @@ namespace Alterverse.Visuals
                         Fx(HeroFxShape.Shard,p+actor.transform.right*.06f,new Color(red.r,red.g,red.b,.78f),size*.42f,.12f,HeroFxMotion.Contract,actor:actor);
                         break;
                     }
-                case HeroId.Traveler:
-                    {
-                        Color light=Color.Lerp(c,Color.white,.68f);
-                        Color red=new(1f,.035f,.025f);
-                        Ring(actor,p,radius,slot==3?.44f:.32f,true);
-                        Fx(HeroFxShape.Rift,p+Vector3.up*.40f,DarkCore,slot==3?1.05f:.58f,aftermath,HeroFxMotion.Contract);
-                        Fx(HeroFxShape.Ring,p+Vector3.up*.42f,light,radius*(slot==3?.62f:.42f),aftermath,HeroFxMotion.Contract,Quaternion.Euler(28,0,24));
-                        if(slot==3)
-                        {
-                            HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.80f,radius),
-                                new Color(light.r,light.g,light.b,.48f),.34f,HeroFxMotion.Contract);
-                            Fx(HeroFxShape.Burst,p+Vector3.up*.18f,light,radius*.48f,.18f);
-                            for(int i=0;i<4;i++)Fx(HeroFxShape.Shard,p+Vector3.up*.22f,new Color(red.r,red.g,red.b,.72f),radius*.18f,.20f,HeroFxMotion.Orbit,Quaternion.Euler(20,i*90,45));
-                        }
-                        break;
-                    }
-                case HeroId.Traveler:
-                    {
-                        Color light=Color.Lerp(c,Color.white,.70f);
-                        Color red=new(1f,.035f,.025f,.78f);
-                        Fx(HeroFxShape.Halo,p,light,strength*1.55f,.13f,HeroFxMotion.Contract,actor:actor);
-                        Fx(HeroFxShape.Ring,p,c,strength*1.35f,.16f,HeroFxMotion.Contract,Face(actor.transform.position,p)*Quaternion.Euler(90,0,0),actor);
-                        Fx(HeroFxShape.Rift,p,DarkCore,strength*.85f,.13f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
-                        if(slot>=0)Fx(HeroFxShape.Shard,p,red,strength*.65f,.12f,HeroFxMotion.Contract,actor:actor);
-                        break;
-                    }
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -340,6 +314,22 @@ namespace Alterverse.Visuals
                     Ring(actor,p,radius,.42f,slot==2,true);
                     if(slot==3)HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(radius,.65f,radius),new Color(c.r,c.g,c.b,.60f),.40f,HeroFxMotion.Expand);
                     else Fx(HeroFxShape.Shard,p+Vector3.up*.25f,c,.5f,.2f);break;
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.68f);
+                        Color red=new(1f,.035f,.025f);
+                        Ring(actor,p,radius,slot==3?.44f:.32f,true);
+                        Fx(HeroFxShape.Rift,p+Vector3.up*.40f,DarkCore,slot==3?1.05f:.58f,aftermath,HeroFxMotion.Contract);
+                        Fx(HeroFxShape.Ring,p+Vector3.up*.42f,light,radius*(slot==3?.62f:.42f),aftermath,HeroFxMotion.Contract,Quaternion.Euler(28,0,24));
+                        if(slot==3)
+                        {
+                            HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.80f,radius),
+                                new Color(light.r,light.g,light.b,.48f),.34f,HeroFxMotion.Contract);
+                            Fx(HeroFxShape.Burst,p+Vector3.up*.18f,light,radius*.48f,.18f);
+                            for(int i=0;i<4;i++)Fx(HeroFxShape.Shard,p+Vector3.up*.22f,new Color(red.r,red.g,red.b,.72f),radius*.18f,.20f,HeroFxMotion.Orbit,Quaternion.Euler(20,i*90,45));
+                        }
+                        break;
+                    }
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -423,6 +413,16 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));
                     if(slot<0)Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.40f),strength*.92f,.13f,HeroFxMotion.Contract,actor:actor);
                     break;
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.70f);
+                        Color red=new(1f,.035f,.025f,.78f);
+                        Fx(HeroFxShape.Halo,p,light,strength*1.55f,.13f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Ring,p,c,strength*1.35f,.16f,HeroFxMotion.Contract,Face(actor.transform.position,p)*Quaternion.Euler(90,0,0),actor);
+                        Fx(HeroFxShape.Rift,p,DarkCore,strength*.85f,.13f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
+                        if(slot>=0)Fx(HeroFxShape.Shard,p,red,strength*.65f,.12f,HeroFxMotion.Contract,actor:actor);
+                        break;
+                    }
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
