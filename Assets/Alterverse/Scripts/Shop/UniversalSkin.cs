@@ -31,7 +31,7 @@ namespace Alterverse.Shop
             if(CosmeticCatalog.Find(legacy)==null)legacy=UniversalHeroCosmetic.Original;
             var writes=new System.Collections.Generic.List<ProfileTransaction.Write>(7);
             // Preserve any already-existing per-hero slot, including a deliberate Original choice.
-            for(int i=0;i<6;i++)
+            for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
                 var hero=(HeroId)i;string key=HeroKey(hero);
                 if(!CosmeticProfile.HasKey(key))writes.Add(new ProfileTransaction.Write(key,hero==selectedHero?(int)legacy:0));
@@ -49,7 +49,7 @@ namespace Alterverse.Shop
         public static bool EquipFor(HeroId hero,UniversalHeroCosmetic cosmetic)
         {
             EnsureMigrated(PlayerHeroSelection.Selected);
-            if((int)hero<0||(int)hero>=6||!IsOwned(cosmetic))return false;
+            if((int)hero<0||(int)hero>=HeroIdentity.HeroCount||!IsOwned(cosmetic))return false;
             CosmeticProfile.Commit(new ProfileTransaction.Write(HeroKey(hero),(int)cosmetic));
             return true;
         }
