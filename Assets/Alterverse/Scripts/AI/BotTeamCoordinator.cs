@@ -348,7 +348,7 @@ namespace Alterverse.AI
             Vector3 forward=objective-centroid;forward.y=0;
             if(forward.sqrMagnitude<.1f)forward=Forward;else forward.Normalize();
             Vector3 side=Vector3.Cross(Vector3.up,forward);
-            float offset=role==HeroId.Veyr?2.2f:role==HeroId.Rook?-1.2f:role==HeroId.Elyra?1.1f:role==HeroId.Mira?-1.1f:0;
+            float offset=role==HeroId.Veyr?2.2f:role==HeroId.Rook?-1.2f:role==HeroId.Elyra?1.1f:role==HeroId.Mira?-1.1f:role==HeroId.Traveler?.55f:0;
             offset+=(SlotFor(bot)%3-1)*.32f;
             Vector3 point=objective+side*offset;
             if(combat)
@@ -399,7 +399,7 @@ namespace Alterverse.AI
             best.y=position.y;return best;
         }
 
-        public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira;
+        public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira||role==HeroId.Traveler;
         private static float RolePower(HeroId role)=>role==HeroId.Mira?.78f:role==HeroId.Kaelon?1.1f:1f;
         private static float FlatSqr(Vector3 value){value.y=0;return value.sqrMagnitude;}
     }
