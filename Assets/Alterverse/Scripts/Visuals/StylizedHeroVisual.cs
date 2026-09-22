@@ -133,7 +133,7 @@ mesh=limbMesh;
 }
 else if(type==PrimitiveType.Sphere)
 {
-if(helmetMesh==null)helmetMesh=BuildProfile("DF_FacetedHelmet",new float[]{-.5f,-.28f,.27f,.5f},new float[]{.25f,.48f,.46f,.24f});
+if(helmetMesh==null)helmetMesh=BuildProfile("DF_FacetedHelmet",new float[]{-.5f,-.42f,-.24f,0f,.24f,.42f,.5f},new float[]{.015f,.29f,.445f,.48f,.445f,.29f,.015f});
 mesh=helmetMesh;
 }
 else
@@ -737,8 +737,16 @@ foreach(GameObject part in remove){part.SetActive(false);Destroy(part);}
 private static Mesh BuildProfile(string name,float[] heights,float[] radii)
 {
 var vertices=new System.Collections.Generic.List<Vector3>();
+var normals=new System.Collections.Generic.List<Vector3>();
 var triangles=new System.Collections.Generic.List<int>();
-const int sides=8;
+const int sides=16;
+Vector3 SurfaceNormal(float angle,int ring)
+{
+int previous=Mathf.Max(0,ring-1),next=Mathf.Min(heights.Length-1,ring+1);
+float rise=Mathf.Max(.001f,heights[next]-heights[previous]);
+float slope=(radii[next]-radii[previous])/rise;
+return new Vector3(Mathf.Cos(angle),-slope,Mathf.Sin(angle)).normalized;
+}
 for(int ring=0;ring<heights.Length-1;ring++)
 for(int i=0;i<sides;i++)
 {
@@ -747,16 +755,33 @@ Vector3 lowA=new Vector3(Mathf.Cos(a)*radii[ring],heights[ring],Mathf.Sin(a)*rad
 Vector3 lowB=new Vector3(Mathf.Cos(b)*radii[ring],heights[ring],Mathf.Sin(b)*radii[ring]);
 Vector3 highA=new Vector3(Mathf.Cos(a)*radii[ring+1],heights[ring+1],Mathf.Sin(a)*radii[ring+1]);
 Vector3 highB=new Vector3(Mathf.Cos(b)*radii[ring+1],heights[ring+1],Mathf.Sin(b)*radii[ring+1]);
-AddFace(vertices,triangles,new[]{lowA,highA,highB,lowB});
+int first=vertices.Count;
+vertices.Add(lowA);vertices.Add(highA);vertices.Add(highB);vertices.Add(lowB);
+normals.Add(SurfaceNormal(a,ring));normals.Add(SurfaceNormal(a,ring+1));
+normals.Add(SurfaceNormal(b,ring+1));normals.Add(SurfaceNormal(b,ring));
+triangles.Add(first);triangles.Add(first+1);triangles.Add(first+2);
+triangles.Add(first);triangles.Add(first+2);triangles.Add(first+3);
 }
 for(int cap=0;cap<2;cap++)
 {
 int ring=cap==0?0:heights.Length-1;
 var face=new Vector3[sides];
-for(int i=0;i<sides;i++){float angle=((cap==0?i:sides-1-i)+.5f)*Mathf.PI*2/sides;face[i]=new Vector3(Mathf.Cos(angle)*radii[ring],heights[ring],Mathf.Sin(angle)*radii[ring]);}
-AddFace(vertices,triangles,face);
+for(int i=0;i<sides;i++)
+{
+int index=cap==0?i:sides-1-i;
+float angle=(index+.5f)*Mathf.PI*2/sides;
+face[i]=new Vector3(Mathf.Cos(angle)*radii[ring],heights[ring],Mathf.Sin(angle)*radii[ring]);
 }
-Mesh mesh=new Mesh{name=name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
+int first=vertices.Count;vertices.AddRange(face);
+Vector3 capNormal=cap==0?Vector3.down:Vector3.up;
+for(int i=0;i<sides;i++)normals.Add(capNormal);
+for(int i=1;i<sides-1;i++)
+{
+triangles.Add(first);triangles.Add(first+i);triangles.Add(first+i+1);
+}
+}
+Mesh mesh=new Mesh{name=name};
+mesh.SetVertices(vertices);mesh.SetNormals(normals);mesh.SetTriangles(triangles,0);mesh.RecalculateBounds();return mesh;
 }
 private static Mesh BuildBeveledArmor()
 {
