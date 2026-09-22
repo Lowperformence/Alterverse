@@ -705,11 +705,12 @@ namespace Alterverse.Visuals
             Mesh cape=HeroMeshLibrary.Ribbon("DF_VeyrCape",
                 new[]{new Vector3(-.17f,.13f,-.16f),new Vector3(-.23f,-.18f,-.22f),new Vector3(-.31f,-.52f,-.29f),new Vector3(-.43f,-.90f,-.35f)},
                 new[]{.13f,.18f,.17f,.055f},.022f);
-            Sculpt("Cape",cape,Vector3.zero,Vector3.one,shadow);
+            // Both outer mantle tails use the exact same neon violet as Zhaev's eyes.
+            Sculpt("Cape",cape,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh tailR=HeroMeshLibrary.Ribbon("DF_VeyrTailR",
                 new[]{new Vector3(.15f,.10f,-.16f),new Vector3(.22f,-.22f,-.23f),new Vector3(.35f,-.50f,-.29f),new Vector3(.47f,-.78f,-.34f)},
                 new[]{.11f,.16f,.14f,.045f},.020f);
-            Sculpt("CoatTailR",tailR,Vector3.zero,Vector3.one,Color.Lerp(shadow,violet,.20f));
+            Sculpt("CoatTailR",tailR,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh centerTail=HeroMeshLibrary.Ribbon("DF_VeyrCenterTail",
                 new[]{new Vector3(.00f,.05f,-.18f),new Vector3(.04f,-.28f,-.24f),new Vector3(-.02f,-.58f,-.30f),new Vector3(.08f,-.83f,-.35f)},
                 new[]{.09f,.12f,.10f,.025f},.018f);
