@@ -167,19 +167,53 @@ namespace Alterverse.Visuals
 
         Mesh CreateAccessoryBox()
         {
-            Vector3[] v={
-                new(-.5f,-.5f,-.5f),new(.5f,-.5f,-.5f),new(.5f,.5f,-.5f),new(-.5f,.5f,-.5f),
-                new(.5f,-.5f,.5f),new(-.5f,-.5f,.5f),new(-.5f,.5f,.5f),new(.5f,.5f,.5f),
-                new(-.5f,-.5f,.5f),new(-.5f,-.5f,-.5f),new(-.5f,.5f,-.5f),new(-.5f,.5f,.5f),
-                new(.5f,-.5f,-.5f),new(.5f,-.5f,.5f),new(.5f,.5f,.5f),new(.5f,.5f,-.5f),
-                new(-.5f,.5f,-.5f),new(.5f,.5f,-.5f),new(.5f,.5f,.5f),new(-.5f,.5f,.5f),
-                new(-.5f,-.5f,.5f),new(.5f,-.5f,.5f),new(.5f,-.5f,-.5f),new(-.5f,-.5f,-.5f)
+            // Rounded, shared box mesh gives the arena machinery real edge highlights and
+            // softer silhouettes while keeping the same colliders, placements and materials.
+            const int segments=4;
+            const float bevel=.12f;
+            Vector3[] normals={Vector3.right,Vector3.left,Vector3.up,Vector3.down,Vector3.forward,Vector3.back};
+            Vector3[] axisU={
+                new(0,0,-1),new(0,0,1),Vector3.right,Vector3.right,Vector3.right,Vector3.left
             };
-            int[] t={
-                0,2,1,0,3,2,4,6,5,4,7,6,8,10,9,8,11,10,
-                12,14,13,12,15,14,16,18,17,16,19,18,20,22,21,20,23,22
+            Vector3[] axisV={
+                Vector3.up,Vector3.up,new(0,0,-1),new(0,0,1),Vector3.up,Vector3.up
             };
-            Mesh m=new(){name="DF_AccessoryBox",vertices=v,triangles=t};m.RecalculateNormals();m.RecalculateBounds();return m;
+            int faceVertices=(segments+1)*(segments+1);
+            Vector3[] vertices=new Vector3[faceVertices*6];
+            Vector3[] vertexNormals=new Vector3[vertices.Length];
+            Vector2[] uv=new Vector2[vertices.Length];
+            int[] triangles=new int[segments*segments*6*6];
+            int ti=0;
+            for(int face=0;face<6;face++)
+            {
+                int offset=face*faceVertices;
+                for(int y=0;y<=segments;y++)
+                for(int x=0;x<=segments;x++)
+                {
+                    float u=x/(float)segments-.5f,v=y/(float)segments-.5f;
+                    Vector3 p=normals[face]*.5f+axisU[face]*u+axisV[face]*v;
+                    Vector3 core=new(
+                        Mathf.Clamp(p.x,-.5f+bevel,.5f-bevel),
+                        Mathf.Clamp(p.y,-.5f+bevel,.5f-bevel),
+                        Mathf.Clamp(p.z,-.5f+bevel,.5f-bevel));
+                    Vector3 outward=(p-core).normalized;
+                    int index=offset+y*(segments+1)+x;
+                    vertices[index]=core+outward*bevel;
+                    vertexNormals[index]=outward;
+                    uv[index]=new Vector2(x/(float)segments,y/(float)segments);
+                }
+                for(int y=0;y<segments;y++)
+                for(int x=0;x<segments;x++)
+                {
+                    int a=offset+y*(segments+1)+x;
+                    int b=a+1,c=a+segments+1,d=c+1;
+                    triangles[ti++]=a;triangles[ti++]=b;triangles[ti++]=c;
+                    triangles[ti++]=b;triangles[ti++]=d;triangles[ti++]=c;
+                }
+            }
+            Mesh mesh=new(){name="DF_SoftBevelAccessoryBox",vertices=vertices,normals=vertexNormals,uv=uv,triangles=triangles};
+            mesh.RecalculateBounds();
+            return mesh;
         }
     }
 }
