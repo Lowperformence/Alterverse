@@ -274,7 +274,7 @@ namespace Alterverse.UI
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  CHRONOLUX FOCUS":"WEAPON  /  ORIGINAL",theme.Small,true);
 
             theme.Label(new Rect(Left+28,446,w-56,20),"DIFFICULTY",theme.Small,true);
             var difficulty=BotDifficultySettings.Selected;
@@ -750,6 +750,7 @@ namespace Alterverse.UI
         {
             HeroId hero=(HeroId)selectedHero;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero);
+            bool heroAvailable=HeroUnlockInventory.Owned(hero);
             bool owned=WeaponSkinInventory.Owned(hero);
             bool equipped=WeaponSkinInventory.Equipped(hero);
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
@@ -773,9 +774,9 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(x,548,rw,3),item.Glow);
 
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
-            string action=equipped?$"USE {originalName}":owned?"EQUIP":
+            string action=!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
                 PlayerWallet.CanAfford(WeaponSkinCatalog.Price)?"BUY & EQUIP":"NEED 500 SHARDS";
-            bool enabled=owned||PlayerWallet.CanAfford(WeaponSkinCatalog.Price);
+            bool enabled=heroAvailable&&(owned||PlayerWallet.CanAfford(WeaponSkinCatalog.Price));
             if(theme.Action(new Rect(x,570,rw,60),action,true,enabled:enabled))
             {
                 if(owned)
