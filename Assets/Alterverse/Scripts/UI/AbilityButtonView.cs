@@ -44,11 +44,10 @@ namespace Alterverse.UI
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
                 var image=go.GetComponent<RawImage>();
-                bool traveler=hero==HeroId.Traveler;
-                image.texture=traveler?TravelerAbilityIcons.Get(i):atlas;
+                image.texture=atlas;
                 image.raycastTarget=false;
                 materials[i]=new Material(template){name="Ability HUD material "+i};
-                materials[i].SetVector(CellId,traveler?new Vector4(0,0,1,1):AtlasCell(hero,i));
+                materials[i].SetVector(CellId,AtlasCell(hero,i));
                 materials[i].SetColor(AccentId,Accent(hero));
                 materials[i].SetFloat(UltimateId,i==3?1:0);
                 image.material=materials[i];
@@ -79,18 +78,19 @@ namespace Alterverse.UI
         }
 
         // Pixel-calibrated crops: generated source has nonuniform spacing. Do not assume a uniform grid.
-        // Source remains unmodified, and all cropping/masking happens in the shader.
+        // Original six rows are preserved; Traveler occupies the appended seventh row.
+        // Atlas dimensions: 1145 x 1616. Cropping/masking uses the same shader for every hero.
         internal static Vector4 AtlasCell(HeroId hero,int slot)
         {
-            int row=hero switch {HeroId.Veyr=>0,HeroId.Kaelon=>1,HeroId.Nyra=>2,HeroId.Elyra=>3,HeroId.Mira=>4,_=>5};
+            int row=hero switch {HeroId.Veyr=>0,HeroId.Kaelon=>1,HeroId.Nyra=>2,HeroId.Elyra=>3,HeroId.Mira=>4,HeroId.Traveler=>6,_=>5};
             int column=slot==4?0:slot+1;
-            float centerY=row switch {0=>113,1=>324,2=>535,3=>746,4=>958,_=>1181};
+            float centerY=row switch {0=>113,1=>324,2=>535,3=>746,4=>958,6=>1500,_=>1181};
             float centerX=column switch {0=>111,1=>332,2=>552,3=>770,_=>1008};
             float side=212;
-            if(column==4)centerY=row==5?1185:centerY+1;
+            if(column==4&&row!=6)centerY=row==5?1185:centerY+1;
             // Ultimates sample only their interior artwork; the shader supplies a complete, uncropped frame.
             float x=centerX-side*.5f,y=centerY-side*.5f;
-            return new Vector4(x/1145f,1-(y+side)/1374f,side/1145f,side/1374f);
+            return new Vector4(x/1145f,1-(y+side)/1616f,side/1145f,side/1616f);
         }
 
         internal static Color Accent(HeroId hero)=>hero switch
@@ -152,3 +152,4 @@ namespace Alterverse.UI
         }
     }
 }
+
