@@ -161,9 +161,9 @@ namespace Alterverse.UI
         private static bool Matches(Card card,int filter)=>filter==0||card.Definition.Category==(filter==1?CosmeticCategory.Wings:CosmeticCategory.Skins);
         private void HeroSelector(FrontEndTheme theme,Rect rect,Action<int> changeHero)
         {
-            if(theme.Action(new Rect(rect.x,rect.y,52,rect.height),"<")){changeHero(((int)hero+5)%6);dirty=true;}
+            if(theme.Action(new Rect(rect.x,rect.y,52,rect.height),"<")){changeHero(((int)hero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);dirty=true;}
             theme.FitLabel(new Rect(rect.x+64,rect.y,rect.width-128,rect.height),heroLabel,theme.Body);
-            if(theme.Action(new Rect(rect.xMax-52,rect.y,52,rect.height),">")){changeHero(((int)hero+1)%6);dirty=true;}
+            if(theme.Action(new Rect(rect.xMax-52,rect.y,52,rect.height),">")){changeHero(((int)hero+1)%HeroIdentity.HeroCount);dirty=true;}
         }
         private void DrawDetail(FrontEndTheme theme,Rect rect,ViewState state,bool ownedOnly,MenuHeroShowcase showcase)
         {
