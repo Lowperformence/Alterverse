@@ -4,12 +4,30 @@ namespace Alterverse.Prototype
 {
 public sealed class PrototypeBootstrap:MonoBehaviour
 {
+private static readonly Color GameplayVoidColor=new(.004f,.006f,.012f,1f);
+private const int MenuShowcaseLayer=31;
+
+/// <summary>
+/// Prevents the scene camera from exposing the underlying scene/default clear color while
+/// the menu is being hidden and the procedural battlefield is constructed.
+/// </summary>
+public static void PrepareTransitionFrame()
+{
+foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude))
+{
+if(camera==null||camera.cameraType!=CameraType.Game||camera.targetTexture!=null)continue;
+camera.clearFlags=CameraClearFlags.SolidColor;
+camera.backgroundColor=GameplayVoidColor;
+camera.cullingMask=0;
+}
+}
 [SerializeField]private bool buildOnStart=true;[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]private static void AutoCreate(){if(FindAnyObjectByType<PrototypeBootstrap>()==null)new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();}private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yield return null;while(MainMenuController.IsVisible)yield return null;BuildPrototype();}
 public System.Collections.IEnumerator RestartPrototype()
 {
 MatchClock.Set(PauseReason.Transition,true);
 try
 {
+PrepareTransitionFrame();
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
@@ -52,7 +70,8 @@ if(lumenZone!=null)lumenZone.InitializeTeam(1);
 
 UnityEngine.Camera cam=UnityEngine.Camera.main;
 if(cam==null){GameObject cameraObject=new("Main Camera");cameraObject.tag="MainCamera";cam=cameraObject.AddComponent<UnityEngine.Camera>();}
-cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=new Color(.004f,.006f,.012f,1f);
+cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=GameplayVoidColor;
+cam.cullingMask=~(1<<MenuShowcaseLayer);
 MobaCamera mc=cam.GetComponent<MobaCamera>()??cam.gameObject.AddComponent<MobaCamera>();mc.SetTarget(player.transform);
 
 new GameObject("AV_HUD").AddComponent<PrototypeHUD>().Initialize(ph,null,null);
