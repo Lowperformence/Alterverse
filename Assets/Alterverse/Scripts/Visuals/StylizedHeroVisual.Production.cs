@@ -39,6 +39,12 @@ namespace Alterverse.Visuals
                 CreateSignature();
                 return;
             }
+            if(h==HeroId.Traveler)
+            {
+                BuildTravelerTimeSkirmisher();
+                CreateSignature();
+                return;
+            }
             bool tank=h==HeroId.Kaelon,bruiser=h==HeroId.Rook,heavy=tank||bruiser;
             float breadth=tank?1.60f:bruiser?1.32f:h==HeroId.Mira?.91f:.86f;
             // Kaelon follows the supplied heavy-hammer reference: pale worn plate over a warm dark undersuit.
