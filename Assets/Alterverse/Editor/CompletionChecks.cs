@@ -52,8 +52,8 @@ namespace Alterverse.EditorChecks
             Check(loadout.W.Name=="Rift Step","Traveler W identity changed");
             Check(loadout.E.Name=="Chrono Snare","Traveler E identity changed");
             Check(loadout.Ultimate.Name=="Paradox Collapse","Traveler ultimate identity changed");
-            Check(WeaponSkinCatalog.For(HeroId.Traveler).Name=="CHRONOLUX SCEPTER // LEGENDARY","Traveler legendary weapon skin missing");
-            Debug.Log("DIMENSIONS FRONT: Traveler definition, price, abilities and legendary weapon catalog passed.");
+            Check(WeaponSkinCatalog.For(HeroId.Traveler).Name=="PLANET FLUX // EPIC","Traveler epic Planet Flux weapon skin missing");
+            Debug.Log("DIMENSIONS FRONT: Traveler definition, price, abilities and Planet Flux epic weapon catalog passed.");
         }
 
         [MenuItem("DIMENSIONS FRONT/Checks/All hero skin previews (Play mode)")]
