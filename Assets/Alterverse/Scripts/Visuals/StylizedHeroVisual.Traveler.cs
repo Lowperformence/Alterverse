@@ -103,39 +103,39 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
                 Plate("TravelerHoodWing"+side,headPos+new Vector3(side*.19f,.08f,-.025f),.13f,.42f,.16f,charcoal,side*-12);
 
-            // Full floor-length hooded mantle based on the latest reference:
-            // broad shoulders, heavy side drape and a clean central opening around the legs.
+            // Full floor-length hooded mantle based on the latest reference.
+            // Width reduced by 40% while preserving the long vertical drape and open front.
             Mesh mantleBack=HeroMeshLibrary.Ribbon("DF_TravelerMantleBack",
                 new[]{new Vector3(0,.50f,-.10f),new Vector3(0,.22f,-.18f),
                     new Vector3(0,-.18f,-.27f),new Vector3(0,-.62f,-.35f),
                     new Vector3(0,-1.02f,-.40f)},
-                new[]{.34f,.46f,.52f,.56f,.48f},.032f);
+                new[]{.204f,.276f,.312f,.336f,.288f},.032f);
             Sculpt("TravelerMantleBack",mantleBack,Vector3.zero,Vector3.one,voidBlack);
 
             Mesh mantleL=HeroMeshLibrary.Ribbon("DF_TravelerMantleL",
-                new[]{new Vector3(-.23f,.48f,-.05f),new Vector3(-.34f,.20f,-.14f),
-                    new Vector3(-.42f,-.18f,-.22f),new Vector3(-.54f,-.60f,-.29f),
-                    new Vector3(-.63f,-1.00f,-.34f)},
-                new[]{.20f,.28f,.34f,.38f,.30f},.030f);
+                new[]{new Vector3(-.138f,.48f,-.05f),new Vector3(-.204f,.20f,-.14f),
+                    new Vector3(-.252f,-.18f,-.22f),new Vector3(-.324f,-.60f,-.29f),
+                    new Vector3(-.378f,-1.00f,-.34f)},
+                new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleL",mantleL,Vector3.zero,Vector3.one,voidBlack);
 
             Mesh mantleR=HeroMeshLibrary.Ribbon("DF_TravelerMantleR",
-                new[]{new Vector3(.23f,.48f,-.05f),new Vector3(.34f,.20f,-.14f),
-                    new Vector3(.42f,-.18f,-.22f),new Vector3(.54f,-.60f,-.29f),
-                    new Vector3(.63f,-1.00f,-.34f)},
-                new[]{.20f,.28f,.34f,.38f,.30f},.030f);
+                new[]{new Vector3(.138f,.48f,-.05f),new Vector3(.204f,.20f,-.14f),
+                    new Vector3(.252f,-.18f,-.22f),new Vector3(.324f,-.60f,-.29f),
+                    new Vector3(.378f,-1.00f,-.34f)},
+                new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleR",mantleR,Vector3.zero,Vector3.one,voidBlack);
 
             Mesh innerFoldL=HeroMeshLibrary.Ribbon("DF_TravelerMantleFoldL",
-                new[]{new Vector3(-.11f,.38f,-.02f),new Vector3(-.18f,.02f,-.10f),
-                    new Vector3(-.23f,-.40f,-.18f),new Vector3(-.27f,-.90f,-.25f)},
-                new[]{.055f,.070f,.075f,.045f},.014f);
+                new[]{new Vector3(-.066f,.38f,-.02f),new Vector3(-.108f,.02f,-.10f),
+                    new Vector3(-.138f,-.40f,-.18f),new Vector3(-.162f,-.90f,-.25f)},
+                new[]{.033f,.042f,.045f,.027f},.014f);
             Sculpt("TravelerMantleFoldL",innerFoldL,Vector3.zero,Vector3.one,charcoal);
 
             Mesh innerFoldR=HeroMeshLibrary.Ribbon("DF_TravelerMantleFoldR",
-                new[]{new Vector3(.11f,.38f,-.02f),new Vector3(.18f,.02f,-.10f),
-                    new Vector3(.23f,-.40f,-.18f),new Vector3(.27f,-.90f,-.25f)},
-                new[]{.055f,.070f,.075f,.045f},.014f);
+                new[]{new Vector3(.066f,.38f,-.02f),new Vector3(.108f,.02f,-.10f),
+                    new Vector3(.138f,-.40f,-.18f),new Vector3(.162f,-.90f,-.25f)},
+                new[]{.033f,.042f,.045f,.027f},.014f);
             Sculpt("TravelerMantleFoldR",innerFoldR,Vector3.zero,Vector3.one,charcoal);
 
             BuildTravelerPlanetFlux(voidBlack,chronosteel,paleGold,lightCore,paradoxRed);
