@@ -154,15 +154,15 @@ namespace Alterverse.AI
                 destination=sensor.LastKnownEnemyPosition;stopDistance=.75f;
             }
             else if(ShouldPursueHotZone(brain.State,target!=null,hotZone!=null&&hotZone.IsActive)&&ShouldContestHotZone())
-            { destination=hotZone.transform.position;stopDistance=3.4f; }
+            { destination=SpreadSharedDestination(hotZone.transform.position,2.4f);stopDistance=2.2f; }
             else if(brain.State==MobaBotBrain.BotState.Roam&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
-            { destination=sensor.RallyPosition;stopDistance=3f; }
+            { destination=SpreadSharedDestination(sensor.RallyPosition,1.75f);stopDistance=1.55f; }
             else if (brain.State == MobaBotBrain.BotState.Roam && objective != null && objective.Available && ShouldRotate())
-            { destination = objective.transform.position; stopDistance = 2.2f; }
+            { destination = SpreadSharedDestination(objective.transform.position,1.35f); stopDistance = 1.65f; }
 
             if(brain.State==MobaBotBrain.BotState.Fight&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0
                 &&sensor.NearbyEnemies>sensor.NearbyAllies+1&&profile!=null&&profile.AttackRange>4f)
-            {destination=sensor.RallyPosition;stopDistance=3f;}
+            {destination=SpreadSharedDestination(sensor.RallyPosition,1.9f);stopDistance=1.65f;}
 
             if(brain.Difficulty.Coordinated&&brain.Tactics.HasPlan)
             {
@@ -480,17 +480,41 @@ namespace Alterverse.AI
         private Vector3 SeparationVelocity()
         {
             Vector3 push = Vector3.zero;
-            const float spacing = 1.15f;
             foreach (MobaBotMover other in ActiveBots)
             {
                 if (other == null || other == this || other.health == null || other.health.IsDead) continue;
+
+                bool sameTeam=brain!=null&&other.brain!=null&&brain.Team==other.brain.Team;
+                float spacing=sameTeam?1.68f:1.08f;
                 Vector3 away = transform.position - other.transform.position; away.y = 0;
                 float distance = away.magnitude;
                 if (distance >= spacing) continue;
-                if (distance < .001f) away = separationOrder < other.separationOrder ? Vector3.left : Vector3.right;
-                push += away.normalized * (1f - distance / spacing);
+
+                if (distance < .001f)
+                    away = separationOrder < other.separationOrder ? Vector3.left : Vector3.right;
+
+                float depth=1f-Mathf.Clamp01(distance/spacing);
+                // Allied bots get a broad, soft personal bubble. Enemy separation stays small so
+                // melee combat still closes naturally instead of creating an invisible force field.
+                float strength=sameTeam?2.15f:.85f;
+                push += away.normalized * depth * strength;
             }
-            return Vector3.ClampMagnitude(push, 1f) * 1.5f;
+            return Vector3.ClampMagnitude(push, 2.3f);
+        }
+
+        private Vector3 SpreadSharedDestination(Vector3 center,float radius)
+        {
+            if(radius<=.05f)return center;
+
+            // Stable golden-angle slots make several bots approach the same rally/objective from
+            // different directions. The offset does not jitter because rotationSlot is persistent.
+            float angle=(rotationSlot*137.5f+(brain!=null&&brain.Team==0?18f:-18f))*Mathf.Deg2Rad;
+            float roleScale=profile!=null&&BotTeamCoordinator.IsBackline(profile.Hero)?1.12f:
+                profile!=null&&(profile.Hero==HeroId.Kaelon||profile.Hero==HeroId.Rook)?.82f:1f;
+            Vector3 offset=new Vector3(Mathf.Cos(angle),0f,Mathf.Sin(angle))*radius*roleScale;
+            Vector3 result=center+offset;
+            result.y=transform.position.y;
+            return GameplayCollision.ClampToRoundedArena(result,ArenaHalfWidth,ArenaHalfHeight,.35f);
         }
 
         private Vector3 GuardAgainstDefenses(Vector3 next)
