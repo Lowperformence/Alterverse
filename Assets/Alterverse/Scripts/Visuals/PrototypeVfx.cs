@@ -5,10 +5,41 @@ namespace Alterverse.Visuals
 public static class PrototypeVfx
 {
 private static readonly int BaseColor=Shader.PropertyToID("_BaseColor"),ColorId=Shader.PropertyToID("_Color");
-private static MaterialPropertyBlock colorBlock;
+private static MaterialPropertyBlock colorBlock;private static Mesh ringMesh;private static Material ringMaterial;
 public static void RadialBurst(Vector3 position,Color color,float radius){Shockwave(position,color,radius);}
 public static void Burst(Vector3 position,Color color,float size=1f,int pieces=7){for(int i=0;i<pieces;i++){float angle=360f/pieces*i;Vector3 direction=Quaternion.Euler(0,angle,0)*Vector3.forward;GameObject shard=Create(PrimitiveType.Cube,"DF_VFX_Burst",position+Vector3.up*.8f+direction*.2f,color);shard.transform.rotation=Quaternion.LookRotation(direction,Vector3.up);shard.AddComponent<TransientScaleVfx>().Configure(new Vector3(.10f,.10f,.35f)*size,new Vector3(.02f,.02f,1.65f)*size,.24f,220f);}}
-public static void Ring(Vector3 position,Color color,float radius=1.5f,float duration=.35f){GameObject ring=Create(PrimitiveType.Cylinder,"DF_VFX_Ring",position+Vector3.up*.06f,color);ring.AddComponent<TransientScaleVfx>().Configure(new Vector3(.25f,.025f,.25f),new Vector3(radius,.015f,radius),duration,90f);}
+public static void Ring(Vector3 position,Color color,float radius=1.5f,float duration=.35f)
+{
+    // A Cylinder is a filled disc. At large radii (Hot Zone / objective bursts) it could cover
+    // most of the visible battlefield for a few frames and read as a completely blue floor.
+    // Use a true torus ring instead so the center never paints over the arena surface.
+    if(ringMesh==null)
+    {
+        ringMesh=ProductionMeshFactory.Ring(1f,.055f,48,4);
+        ringMesh.name="DF_TransientVfxRingMesh";
+        ringMesh.hideFlags=HideFlags.DontSave;
+    }
+    if(ringMaterial==null)
+    {
+        Shader shader=Shader.Find("Universal Render Pipeline/Unlit");
+        if(shader==null)shader=Shader.Find("Unlit/Color");
+        if(shader!=null)
+        {
+            ringMaterial=new Material(shader){name="DF_TransientVfxRingMaterial",hideFlags=HideFlags.DontSave};
+            ringMaterial.color=Color.white;
+            if(ringMaterial.HasProperty("_BaseColor"))ringMaterial.SetColor("_BaseColor",Color.white);
+        }
+    }
+    GameObject ring=new("DF_VFX_Ring");
+    ring.transform.position=position+Vector3.up*.065f;
+    ring.AddComponent<MeshFilter>().sharedMesh=ringMesh;
+    MeshRenderer renderer=ring.AddComponent<MeshRenderer>();
+    renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+    if(ringMaterial!=null)renderer.sharedMaterial=ringMaterial;
+    colorBlock??=new MaterialPropertyBlock();colorBlock.Clear();
+    colorBlock.SetColor(BaseColor,color);colorBlock.SetColor(ColorId,color);renderer.SetPropertyBlock(colorBlock);
+    ring.AddComponent<TransientScaleVfx>().Configure(Vector3.one*.25f,Vector3.one*Mathf.Max(.01f,radius),duration,90f);
+}
 public static void Slash(Transform source,Color color,float length=1.7f){GameObject slash=Create(PrimitiveType.Cube,"DF_VFX_Slash",source.position+Vector3.up*.75f+source.forward,color);slash.transform.rotation=source.rotation*Quaternion.Euler(0,25,-25);slash.AddComponent<TransientScaleVfx>().Configure(new Vector3(.12f,.7f,length),new Vector3(.025f,.08f,length*1.2f),.18f,320f);}
 public static void ShadowTrail(Vector3 from,Vector3 to,Color color){Beam(from+Vector3.up*.45f,to+Vector3.up*.45f,color,.65f,.28f,"DF_VFX_ShadowTrail");}
 public static void SoulLink(Vector3 from,Vector3 to,Color color){Beam(from+Vector3.up*.8f,to+Vector3.up*.8f,color,.08f,.32f,"DF_VFX_SoulLink");}
