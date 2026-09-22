@@ -215,7 +215,7 @@ else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMateri
 else if(identity.Hero==HeroId.Elyra)ApplyAstralOrbitOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
 else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Traveler)ApplyChronoluxLegendary(shader,weaponMaterial);
+else if(identity.Hero==HeroId.Traveler)ApplyPlanetFluxEpic(shader,weaponMaterial);
 else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
 }
 
