@@ -698,7 +698,7 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(x,536,rw,3),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
 
             string action=owned?"SELECT THE TRAVELER":
-                PlayerWallet.CanAfford(price)?"UNLOCK 10,000 SHARDS":"NEED 10,000 SHARDS";
+                PlayerWallet.CanAfford(price)?$"UNLOCK {price:N0} SHARDS":$"NEED {price:N0} SHARDS";
             bool enabled=owned||PlayerWallet.CanAfford(price);
             if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled))
             {
