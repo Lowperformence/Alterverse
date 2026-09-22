@@ -103,139 +103,135 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
                 Plate("TravelerHoodWing"+side,headPos+new Vector3(side*.19f,.08f,-.025f),.13f,.42f,.16f,charcoal,side*-12);
 
-            // Long split mantle that keeps the reference's dark mysterious read from the gameplay camera.
-            Mesh cloakL=HeroMeshLibrary.Ribbon("DF_TravelerCloakL",
-                new[]{new Vector3(-.16f,.14f,-.13f),new Vector3(-.21f,-.15f,-.20f),
-                    new Vector3(-.28f,-.48f,-.28f),new Vector3(-.43f,-.88f,-.36f)},
-                new[]{.15f,.19f,.17f,.045f},.026f);
-            Sculpt("TravelerCloakL",cloakL,Vector3.zero,Vector3.one,voidBlack);
-            Mesh cloakR=HeroMeshLibrary.Ribbon("DF_TravelerCloakR",
-                new[]{new Vector3(.16f,.14f,-.13f),new Vector3(.21f,-.15f,-.20f),
-                    new Vector3(.28f,-.48f,-.28f),new Vector3(.43f,-.88f,-.36f)},
-                new[]{.15f,.19f,.17f,.045f},.026f);
-            Sculpt("TravelerCloakR",cloakR,Vector3.zero,Vector3.one,charcoal);
-            Mesh center=HeroMeshLibrary.Ribbon("DF_TravelerCloakCenter",
-                new[]{new Vector3(0,.08f,-.16f),new Vector3(0,-.26f,-.23f),
-                    new Vector3(.01f,-.57f,-.31f),new Vector3(0,-.84f,-.35f)},
-                new[]{.09f,.12f,.10f,.025f},.020f);
-            Sculpt("TravelerCloakCenter",center,Vector3.zero,Vector3.one,chronosteel);
+            // Full floor-length hooded mantle based on the latest reference:
+            // broad shoulders, heavy side drape and a clean central opening around the legs.
+            Mesh mantleBack=HeroMeshLibrary.Ribbon("DF_TravelerMantleBack",
+                new[]{new Vector3(0,.50f,-.10f),new Vector3(0,.22f,-.18f),
+                    new Vector3(0,-.18f,-.27f),new Vector3(0,-.62f,-.35f),
+                    new Vector3(0,-1.02f,-.40f)},
+                new[]{.34f,.46f,.52f,.56f,.48f},.032f);
+            Sculpt("TravelerMantleBack",mantleBack,Vector3.zero,Vector3.one,voidBlack);
 
-            BuildTravelerChronoluxBase(voidBlack,chronosteel,paleGold,lightCore,paradoxRed);
+            Mesh mantleL=HeroMeshLibrary.Ribbon("DF_TravelerMantleL",
+                new[]{new Vector3(-.23f,.48f,-.05f),new Vector3(-.34f,.20f,-.14f),
+                    new Vector3(-.42f,-.18f,-.22f),new Vector3(-.54f,-.60f,-.29f),
+                    new Vector3(-.63f,-1.00f,-.34f)},
+                new[]{.20f,.28f,.34f,.38f,.30f},.030f);
+            Sculpt("TravelerMantleL",mantleL,Vector3.zero,Vector3.one,voidBlack);
+
+            Mesh mantleR=HeroMeshLibrary.Ribbon("DF_TravelerMantleR",
+                new[]{new Vector3(.23f,.48f,-.05f),new Vector3(.34f,.20f,-.14f),
+                    new Vector3(.42f,-.18f,-.22f),new Vector3(.54f,-.60f,-.29f),
+                    new Vector3(.63f,-1.00f,-.34f)},
+                new[]{.20f,.28f,.34f,.38f,.30f},.030f);
+            Sculpt("TravelerMantleR",mantleR,Vector3.zero,Vector3.one,voidBlack);
+
+            Mesh innerFoldL=HeroMeshLibrary.Ribbon("DF_TravelerMantleFoldL",
+                new[]{new Vector3(-.11f,.38f,-.02f),new Vector3(-.18f,.02f,-.10f),
+                    new Vector3(-.23f,-.40f,-.18f),new Vector3(-.27f,-.90f,-.25f)},
+                new[]{.055f,.070f,.075f,.045f},.014f);
+            Sculpt("TravelerMantleFoldL",innerFoldL,Vector3.zero,Vector3.one,charcoal);
+
+            Mesh innerFoldR=HeroMeshLibrary.Ribbon("DF_TravelerMantleFoldR",
+                new[]{new Vector3(.11f,.38f,-.02f),new Vector3(.18f,.02f,-.10f),
+                    new Vector3(.23f,-.40f,-.18f),new Vector3(.27f,-.90f,-.25f)},
+                new[]{.055f,.070f,.075f,.045f},.014f);
+            Sculpt("TravelerMantleFoldR",innerFoldR,Vector3.zero,Vector3.one,charcoal);
+
+            BuildTravelerPlanetFlux(voidBlack,chronosteel,paleGold,lightCore,paradoxRed);
             Detail("IdentityCore",new Vector3(0,.27f,.325f),new Vector3(.048f,.048f,.016f),
                 lightCore,new Vector3(0,0,45),null,true);
         }
 
-        private void BuildTravelerChronoluxBase(Color voidBlack,Color chronosteel,Color paleGold,Color lightCore,Color paradoxRed)
+        private void BuildTravelerPlanetFlux(Color voidBlack,Color chronosteel,Color paleGold,Color lightCore,Color paradoxRed)
         {
-            Transform weapon=WeaponPivot("R",new Vector3(.48f,-.10f,.17f));
-            weapon.localRotation=Quaternion.Euler(0,-5f,-8f);
+            // The Traveler no longer carries a staff. His weapon is a miniature Planet Flux:
+            // a floating fractured world held just beyond the right hand.
+            Transform weapon=WeaponPivot("R",new Vector3(.48f,-.10f,.18f));
+            weapon.localRotation=Quaternion.Euler(8f,-8f,-6f);
 
-            Mesh shaft=HeroMeshLibrary.Loft("DF_ChronoluxShaft",
-                new[]{-.90f,-.66f,.08f,.66f,.88f},
-                new[]{.022f,.033f,.030f,.035f,.018f},
-                new[]{.023f,.034f,.031f,.036f,.019f},
-                new[]{0f,.006f,.010f,.028f,.045f});
-            Sculpt("TravelerStaffShaft",shaft,Vector3.zero,Vector3.one,voidBlack,weapon);
-            Create("TravelerStaffGrip",PrimitiveType.Cube,new Vector3(0,-.16f,.01f),
-                new Vector3(.068f,.27f,.068f),chronosteel,default,weapon);
-            Create("TravelerStaffLowerCap",PrimitiveType.Cube,new Vector3(0,-.85f,.01f),
-                new Vector3(.085f,.12f,.085f),paleGold,new Vector3(0,0,45),weapon);
+            Mesh planet=HeroMeshLibrary.Loft("DF_TravelerPlanetFluxCore",
+                new[]{-.15f,-.11f,-.04f,.04f,.11f,.15f},
+                new[]{.020f,.095f,.140f,.140f,.095f,.020f},
+                new[]{.020f,.090f,.132f,.132f,.090f,.020f},
+                new[]{0f,.005f,.010f,.010f,.005f,0f},20);
+            Sculpt("Orb",planet,new Vector3(0,-.34f,.28f),Vector3.one,chronosteel,weapon,false);
 
-            // Named Orb so the shared projectile delivery automatically uses the time-core as its release point.
-            Mesh core=HeroMeshLibrary.Loft("DF_ChronoluxCore",
-                new[]{-.19f,-.07f,.07f,.21f},
-                new[]{.005f,.105f,.115f,.004f},
-                new[]{.005f,.090f,.100f,.004f});
-            Sculpt("Orb",core,new Vector3(0,.80f,.065f),Vector3.one,lightCore,weapon,true);
+            GameObject ring0=Sculpt("PlanetFluxRing0",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxRing0",.205f,.014f),
+                new Vector3(0,-.34f,.28f),Vector3.one,paleGold,weapon,true);
+            ring0.transform.localRotation=Quaternion.Euler(70f,0,16f);
+            GameObject ring1=Sculpt("PlanetFluxRing1",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxRing1",.255f,.011f),
+                new Vector3(0,-.34f,.28f),Vector3.one,lightCore,weapon,true);
+            ring1.transform.localRotation=Quaternion.Euler(28f,62f,-18f);
+            GameObject ring2=Sculpt("PlanetFluxRing2",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxRing2",.305f,.009f),
+                new Vector3(0,-.34f,.28f),Vector3.one,paleGold,weapon,true);
+            ring2.transform.localRotation=Quaternion.Euler(82f,44f,38f);
 
-            GameObject ringA=Sculpt("ChronoluxRingA",HeroMeshLibrary.Ring("DF_ChronoluxRingA",.235f,.019f),
-                new Vector3(0,.80f,.065f),Vector3.one,paleGold,weapon,true);
-            ringA.transform.localRotation=Quaternion.Euler(72f,0,22f);
-            GameObject ringB=Sculpt("ChronoluxRingB",HeroMeshLibrary.Ring("DF_ChronoluxRingB",.175f,.014f),
-                new Vector3(0,.80f,.065f),Vector3.one,lightCore,weapon,true);
-            ringB.transform.localRotation=Quaternion.Euler(28f,62f,-18f);
-
-            for(int side=-1;side<=1;side+=2)
+            for(int i=0;i<4;i++)
             {
-                Create("TravelerStaffProng"+side,PrimitiveType.Cube,new Vector3(side*.18f,.83f,.035f),
-                    new Vector3(.052f,.27f,.060f),chronosteel,new Vector3(0,0,side*-30f),weapon);
-                Create("TravelerParadoxGem"+side,PrimitiveType.Cube,new Vector3(side*.25f,.76f,.052f),
-                    new Vector3(.046f,.080f,.034f),paradoxRed,new Vector3(0,0,45),weapon);
+                float a=i*Mathf.PI*.5f+.35f;
+                Vector3 pos=new(Mathf.Cos(a)*.33f,-.34f+Mathf.Sin(a*1.7f)*.055f,.28f+Mathf.Sin(a)*.20f);
+                Create("PlanetFluxShard"+i,PrimitiveType.Cube,pos,
+                    new Vector3(.038f,.060f,.038f),i%2==0?paradoxRed:chronosteel,
+                    new Vector3(18f,i*47f,34f),weapon);
             }
+
+            Detail("PlanetFluxHandGlow",new Vector3(0,-.51f,.17f),new Vector3(.060f,.030f,.060f),
+                paleGold,new Vector3(0,0,45),"WeaponR",true);
             Bind("WeaponR","ArmR");
         }
 
-        private void ApplyChronoluxLegendary(Shader shader,Material energyMaterial)
+        private void ApplyPlanetFluxEpic(Shader shader,Material energyMaterial)
         {
             Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
-            weapon.localScale*=1.12f;
 
-            Color blackSteel=new(.018f,.022f,.032f,1f);
-            Material steel=new Material(shader){name="DF_ChronoluxBlackSteel",color=blackSteel};
-            if(steel.HasProperty("_BaseColor"))steel.SetColor("_BaseColor",blackSteel);
-            if(steel.HasProperty("_Metallic"))steel.SetFloat("_Metallic",.88f);
-            if(steel.HasProperty("_Smoothness"))steel.SetFloat("_Smoothness",.46f);
-            ownedMaterials.Add(steel);
-
-            Color silver=new(.50f,.54f,.62f,1f);
-            Material silverMat=new Material(shader){name="DF_ChronoluxSilver",color=silver};
-            if(silverMat.HasProperty("_BaseColor"))silverMat.SetColor("_BaseColor",silver);
-            if(silverMat.HasProperty("_Metallic"))silverMat.SetFloat("_Metallic",.94f);
-            if(silverMat.HasProperty("_Smoothness"))silverMat.SetFloat("_Smoothness",.62f);
-            ownedMaterials.Add(silverMat);
-
-            Color red=new(1f,.028f,.018f,1f);
-            Material redMat=new Material(shader){name="DF_ChronoluxParadoxRed",color=red};
-            if(redMat.HasProperty("_BaseColor"))redMat.SetColor("_BaseColor",red);
-            if(redMat.HasProperty("_Smoothness"))redMat.SetFloat("_Smoothness",.94f);
-            if(redMat.HasProperty("_EmissionColor"))
+            Color white=new(1f,.99f,.94f,1f);
+            Material whiteGlow=new Material(shader){name="DF_PlanetFluxEpicWhite",color=white};
+            if(whiteGlow.HasProperty("_BaseColor"))whiteGlow.SetColor("_BaseColor",white);
+            if(whiteGlow.HasProperty("_Metallic"))whiteGlow.SetFloat("_Metallic",.08f);
+            if(whiteGlow.HasProperty("_Smoothness"))whiteGlow.SetFloat("_Smoothness",.96f);
+            if(whiteGlow.HasProperty("_EmissionColor"))
             {
-                redMat.EnableKeyword("_EMISSION");
-                redMat.SetColor("_EmissionColor",red*3.6f);
+                whiteGlow.EnableKeyword("_EMISSION");
+                whiteGlow.SetColor("_EmissionColor",white*4.8f);
             }
-            ownedMaterials.Add(redMat);
+            ownedMaterials.Add(whiteGlow);
 
-            Transform shaft=FindVisual("TravelerStaffShaft");if(shaft!=null)ApplyGlow(shaft,steel);
-            Transform grip=FindVisual("TravelerStaffGrip");if(grip!=null)ApplyGlow(grip,silverMat);
-            Transform cap=FindVisual("TravelerStaffLowerCap");if(cap!=null)ApplyGlow(cap,silverMat);
-            Transform orb=FindVisual("Orb");if(orb!=null){orb.localScale*=1.24f;ApplyGlow(orb,energyMaterial);}
-            Transform ringA=FindVisual("ChronoluxRingA");if(ringA!=null){ringA.localScale*=1.18f;ApplyGlow(ringA,energyMaterial);}
-            Transform ringB=FindVisual("ChronoluxRingB");if(ringB!=null){ringB.localScale*=1.20f;ApplyGlow(ringB,silverMat);}
-
-            for(int side=-1;side<=1;side+=2)
+            Color softWhite=new(.88f,.94f,1f,1f);
+            Material orbitGlow=new Material(shader){name="DF_PlanetFluxEpicOrbit",color=softWhite};
+            if(orbitGlow.HasProperty("_BaseColor"))orbitGlow.SetColor("_BaseColor",softWhite);
+            if(orbitGlow.HasProperty("_Smoothness"))orbitGlow.SetFloat("_Smoothness",.92f);
+            if(orbitGlow.HasProperty("_EmissionColor"))
             {
-                Transform prong=FindVisual("TravelerStaffProng"+side);if(prong!=null)ApplyGlow(prong,steel);
-                Transform gem=FindVisual("TravelerParadoxGem"+side);if(gem!=null){gem.localScale*=1.18f;ApplyGlow(gem,redMat);}
+                orbitGlow.EnableKeyword("_EMISSION");
+                orbitGlow.SetColor("_EmissionColor",softWhite*3.8f);
             }
+            ownedMaterials.Add(orbitGlow);
 
-            GameObject haloOuter=Sculpt("ChronoluxLegendaryHaloOuter",
-                HeroMeshLibrary.Ring("DF_ChronoluxLegendaryHaloOuterMesh",.34f,.018f),
-                new Vector3(0,.80f,.065f),Vector3.one,WeaponSkinCatalog.For(identity.Hero).Glow,weapon,true);
-            haloOuter.transform.localRotation=Quaternion.Euler(76,0,38);
-            MeshRenderer outerRenderer=haloOuter.GetComponent<MeshRenderer>();if(outerRenderer!=null)outerRenderer.sharedMaterial=energyMaterial;
+            Transform orb=FindVisual("Orb");if(orb!=null){orb.localScale*=1.10f;ApplyGlow(orb,whiteGlow);}
+            for(int i=0;i<3;i++)
+            {
+                Transform ring=FindVisual("PlanetFluxRing"+i);
+                if(ring!=null){ring.localScale*=1.08f+i*.025f;ApplyGlow(ring,i==1?whiteGlow:orbitGlow);}
+            }
+            for(int i=0;i<4;i++)
+            {
+                Transform shard=FindVisual("PlanetFluxShard"+i);
+                if(shard!=null){shard.localScale*=1.10f;ApplyGlow(shard,whiteGlow);}
+            }
+            Transform handGlow=FindVisual("PlanetFluxHandGlow");if(handGlow!=null)ApplyGlow(handGlow,whiteGlow);
 
-            GameObject haloInner=Sculpt("ChronoluxLegendaryHaloInner",
-                HeroMeshLibrary.Ring("DF_ChronoluxLegendaryHaloInnerMesh",.285f,.013f),
-                new Vector3(0,.80f,.065f),Vector3.one,silver,weapon,true);
-            haloInner.transform.localRotation=Quaternion.Euler(24,70,-26);
-            MeshRenderer innerRenderer=haloInner.GetComponent<MeshRenderer>();if(innerRenderer!=null)innerRenderer.sharedMaterial=silverMat;
+            GameObject halo=Sculpt("PlanetFluxEpicHalo",
+                HeroMeshLibrary.Ring("DF_PlanetFluxEpicHaloMesh",.355f,.012f),
+                new Vector3(0,-.34f,.28f),Vector3.one,Color.white,weapon,true);
+            halo.transform.localRotation=Quaternion.Euler(38f,24f,68f);
+            MeshRenderer haloRenderer=halo.GetComponent<MeshRenderer>();if(haloRenderer!=null)haloRenderer.sharedMaterial=whiteGlow;
 
-            CreateChronoluxPart("ChronoluxRedShardL",weapon,new Vector3(-.36f,.80f,.060f),
-                new Vector3(.040f,.14f,.030f),new Vector3(0,0,48),redMat);
-            CreateChronoluxPart("ChronoluxRedShardR",weapon,new Vector3(.36f,.80f,.060f),
-                new Vector3(.040f,.14f,.030f),new Vector3(0,0,48),redMat);
-            CreateChronoluxPart("ChronoluxCrownL",weapon,new Vector3(-.25f,.94f,.035f),
-                new Vector3(.052f,.31f,.060f),new Vector3(0,0,34),silverMat);
-            CreateChronoluxPart("ChronoluxCrownR",weapon,new Vector3(.25f,.94f,.035f),
-                new Vector3(.052f,.31f,.060f),new Vector3(0,0,-34),silverMat);
-        }
-
-        private GameObject CreateChronoluxPart(string name,Transform parent,Vector3 localPosition,
-            Vector3 localScale,Vector3 localRotation,Material material)
-        {
-            GameObject part=Create(name,PrimitiveType.Cube,localPosition,localScale,Color.white,localRotation,parent);
-            MeshRenderer renderer=part.GetComponent<MeshRenderer>();if(renderer!=null)renderer.sharedMaterial=material;
-            return part;
+            GameObject inner=Sculpt("PlanetFluxEpicInnerOrbit",
+                HeroMeshLibrary.Ring("DF_PlanetFluxEpicInnerOrbitMesh",.165f,.010f),
+                new Vector3(0,-.34f,.28f),Vector3.one,Color.white,weapon,true);
+            inner.transform.localRotation=Quaternion.Euler(76f,65f,-24f);
+            MeshRenderer innerRenderer=inner.GetComponent<MeshRenderer>();if(innerRenderer!=null)innerRenderer.sharedMaterial=orbitGlow;
         }
     }
 }
