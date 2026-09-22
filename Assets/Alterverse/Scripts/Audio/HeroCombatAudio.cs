@@ -2,7 +2,8 @@ using Alterverse.Characters;
 using UnityEngine;
 namespace Alterverse.Audio
 {
-    // 6 heroes x (Basic,Q,W,E,R) x (Cast,Impact). No runtime synthesis or generic fallback.
+    // Six authored production banks x (Basic,Q,W,E,R) x (Cast,Impact).
+    // Traveler temporarily shares the Elyra source bank with a dedicated pitch/gain identity until its own recordings are imported.
     public static class HeroCombatAudio
     {
         public const int CueCount=60;
@@ -30,7 +31,9 @@ namespace Alterverse.Audio
             var identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
             Camera camera=Camera.main;if(camera==null)return;Vector3 p=camera.WorldToViewportPoint(position);
             if(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f)return;
-            int hero=(int)identity.Hero;if(hero<0||hero>=6||impact&&!HasImpact(hero,action))return;
+            int hero=(int)identity.Hero;
+            int audioHero=identity.Hero==HeroId.Traveler?(int)HeroId.Elyra:hero;
+            if(audioHero<0||audioHero>=6||impact&&!HasImpact(audioHero,action))return;
             bool ultimate=action==4;
             CombatSoundIdentity identityTone=CombatSoundPalette.For(identity.Hero);
             float actionPitch=action switch{0=>1f,1=>1.015f,2=>.985f,3=>1.03f,4=>.94f,_=>1f};
@@ -49,7 +52,7 @@ namespace Alterverse.Audio
             float pan=Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f);
             // Four real volley releases .18s apart must not be swallowed by the generic .3s limiter.
             float cooldown=ultimate&&identity.Hero==HeroId.Nyra?.08f:ultimate?(impact?.22f:.3f):(impact?.09f:.12f);
-            DimensionAudio.PlayHero(hero*10+action*2+(impact?1:0),gain*attenuation,ultimate?2:action==0?0:1,cooldown,pan,pitch);
+            DimensionAudio.PlayHero(audioHero*10+action*2+(impact?1:0),gain*attenuation,ultimate?2:action==0?0:1,cooldown,pan,pitch);
         }
         public static void Cast(GameObject actor,int slot)=>Play(actor,slot+1,false,actor.transform.position);
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
