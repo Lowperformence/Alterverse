@@ -1298,8 +1298,11 @@ namespace Alterverse.UI
                 return;
             }
 
+            bool restarting=GameObject.Find("DF_MatchWorld")!=null;
+            Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
-            if(GameObject.Find("DF_MatchWorld")!=null)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+            if(restarting)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+            else bootstrap.BuildPrototype();
             gameObject.SetActive(false);
         }
     }
