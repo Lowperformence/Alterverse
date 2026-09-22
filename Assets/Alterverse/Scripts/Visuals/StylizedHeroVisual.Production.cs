@@ -669,13 +669,14 @@ namespace Alterverse.Visuals
                 new Vector3(0,.55f,0),Vector3.one,faceBlack);
             Plate("VeyrMask",hp+new Vector3(0,-.065f,.137f),.30f,.22f,.055f,faceBlack);
 
-            // The face is intentionally featureless black. Only two narrow violet eyes remain visible.
+            // The face is intentionally featureless black. The violet eyes now cant upward
+            // toward the outer corners and are slightly thicker for a sharper top-down read.
             // No glowing mouth seam or facial stripe.
             for(int side=-1;side<=1;side+=2)
             {
-                Detail("EyeGlow"+side,hp+new Vector3(side*.073f,.042f,.160f),
-                    new Vector3(.104f,.016f,.012f),violetHot,
-                    new Vector3(0,0,side*-8f),null,true);
+                Detail("EyeGlow"+side,hp+new Vector3(side*.073f,.045f,.160f),
+                    new Vector3(.108f,.024f,.013f),violetHot,
+                    new Vector3(0,0,side*12f),null,true);
             }
 
             Mesh cap=HeroMeshLibrary.Loft("DF_VeyrHairCap",
