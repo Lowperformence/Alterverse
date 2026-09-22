@@ -28,13 +28,13 @@ namespace Alterverse.Combat
         private bool hasPending;
         private void Awake(){self=GetComponent<Health>();identity=GetComponent<HeroIdentity>();}
         private void OnEnable(){self.Died-=Cancel;self.Died+=Cancel;}
-        public static bool IsRanged(HeroId hero)=>hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira;
+        public static bool IsRanged(HeroId hero)=>hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
         public static float Windup(HeroId hero,int slot=-1)
         {
             float basic=hero switch
             {
                 HeroId.Veyr=>.09f,HeroId.Kaelon=>.16f,HeroId.Nyra=>.08f,
-                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,_=>.13f
+                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,HeroId.Rook=>.13f,HeroId.Traveler=>.10f,_=>.13f
             };
             return slot<0?basic:hero==HeroId.Nyra&&slot==3?.22f:basic+.04f;
         }
@@ -48,7 +48,7 @@ namespace Alterverse.Combat
         public static float Flight(HeroId hero,Vector3 from,Vector3 to)
         {
             if(!IsRanged(hero))return 0;
-            float speed=hero==HeroId.Nyra?38:hero==HeroId.Elyra?23:27;
+            float speed=hero==HeroId.Nyra?38:hero==HeroId.Traveler?32:hero==HeroId.Elyra?23:27;
             // A minimum readable flight even at point blank; no speed or hitbox physics changed.
             return Mathf.Clamp(Vector3.Distance(from,to)/speed,.07f,.32f);
         }
