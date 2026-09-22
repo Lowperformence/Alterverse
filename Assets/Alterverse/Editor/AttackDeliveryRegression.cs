@@ -44,7 +44,7 @@ namespace Alterverse.EditorChecks
         {
             if(!Application.isPlaying||Time.timeScale<=0)
             {Debug.LogWarning("Run attack delivery checks in a disposable, unpaused Play Mode match.");return;}
-            for(int hero=0;hero<6;hero++)
+            for(int hero=0;hero<HeroIdentity.HeroCount;hero++)
             {
                 GameObject source=Actor((HeroId)hero,0,new Vector3(0,80,0));
                 GameObject victim=Actor(HeroId.Kaelon,1,new Vector3(1,80,0));
@@ -122,7 +122,7 @@ namespace Alterverse.EditorChecks
                     UnityEngine.Object.Destroy(source);UnityEngine.Object.Destroy(victim);
                 }
             }
-            Debug.Log("DIMENSIONS FRONT: six-hero delivery, single application, shields, range, stun, disable, death, gate and targeted-Q checks passed. Visual/audio/device tests remain separate.");
+            Debug.Log("DIMENSIONS FRONT: all-hero delivery, single application, shields, range, stun, disable, death, gate and targeted-Q checks passed. Visual/audio/device tests remain separate.");
         }
     }
 }
