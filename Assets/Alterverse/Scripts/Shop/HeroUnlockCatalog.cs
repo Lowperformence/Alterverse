@@ -11,17 +11,9 @@ namespace Alterverse.Shop
         public const int TravelerPrice=10000;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
 
-        public static bool TravelerFreeTestAccess
-        {
-            get
-            {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-                return true;
-#else
-                return false;
-#endif
-            }
-        }
+        // TEMPORARY TEST ACCESS: keep true while The Traveler is being tested.
+        // Set to false before the paid public release; the configured production price remains 10,000 shards.
+        public const bool TravelerFreeTestAccess=true;
 
         public static int Price(HeroId hero)=>hero==HeroId.Traveler?TravelerPrice:0;
         public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler;
