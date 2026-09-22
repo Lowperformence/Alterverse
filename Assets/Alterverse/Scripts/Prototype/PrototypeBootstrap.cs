@@ -116,7 +116,7 @@ private static GameObject CreateLocalPlayer(HeroId selected,Vector3 spawn,bool a
 {
 GameObject player=new GameObject("AV_Player");
 player.transform.position=spawn;
-CharacterController cc=player.AddComponent<CharacterController>();cc.height=2;cc.radius=.5f;
+CharacterController cc=player.AddComponent<CharacterController>();cc.height=HeroIdentity.HeroCollisionHeight;cc.radius=HeroIdentity.HeroCollisionRadius;
 player.AddComponent<HeroIdentity>().Configure(selected);
 HeroCombatProfile profile=player.AddComponent<HeroCombatProfile>();profile.Configure(selected);
 player.AddComponent<HeroAbilityKit>().Configure(selected);
