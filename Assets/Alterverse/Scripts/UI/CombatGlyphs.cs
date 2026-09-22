@@ -5,7 +5,7 @@ namespace Alterverse.UI
     {
         Blade,NullCut,Rift,Dash,Execute,Heavy,Impact,Shield,Gravity,Citadel,
         Rifle,PrismShot,Snare,Volley,Orb,OrbitFracture,Invert,Phase,Singularity,
-        SupportShot,Seed,Heal,Shelter,Wildsurge,Gauntlet,Swing,Armor,Slam,Overdrive
+        SupportShot,Seed,Heal,Shelter,Wildsurge,Gauntlet,Swing,Armor,Slam,Overdrive,ChronoBeam,TimeStep,ChronoField,Paradox
     }
     // Lightweight vector-style combat icons. No textures, materials or extra GameObjects.
     internal static class CombatGlyphs
@@ -86,6 +86,19 @@ namespace Alterverse.UI
                 case CombatGlyph.Armor: Fist(c,s*.62f,col);ShieldShape(c,s,col);break;
                 case CombatGlyph.Slam: Fist(c+new Vector2(0,-s*.35f),s*.58f,col);for(int i=-2;i<=2;i++)Line(c+new Vector2(i*s*.2f,s*.2f),c+new Vector2(i*s*.45f,s),3,col);break;
                 case CombatGlyph.Overdrive: Fist(c+new Vector2(-s*.38f,0),s*.52f,col);Fist(c+new Vector2(s*.38f,0),s*.52f,col);Ring(c,s,3,col,22);break;
+                case CombatGlyph.ChronoBeam:
+                    Ring(c-new Vector2(s*.38f,0),s*.34f,3,col,18);
+                    Line(c-new Vector2(s*.12f,0),c+new Vector2(s,.0f),5,col);break;
+                case CombatGlyph.TimeStep:
+                    Ring(c-new Vector2(s*.48f,0),s*.42f,3,col,20);Ring(c+new Vector2(s*.48f,0),s*.42f,3,col,20);
+                    Line(c-new Vector2(s*.15f,0),c+new Vector2(s*.15f,0),3,col);break;
+                case CombatGlyph.ChronoField:
+                    Ring(c,s,3,col,24);Ring(c,s*.58f,2,col,20);
+                    for(int i=0;i<8;i++){float a=i*Mathf.PI*.25f;Vector2 d=new(Mathf.Cos(a),Mathf.Sin(a));Line(c+d*s*.62f,c+d*s*.92f,2,col);}break;
+                case CombatGlyph.Paradox:
+                    Ring(c,s,4,col,24);Ring(c,s*.45f,3,col,20);
+                    Line(c-new Vector2(s,.15f*s),c+new Vector2(s,.30f*s),3,col);
+                    Line(c-new Vector2(.20f*s,s),c+new Vector2(.12f*s,s),3,col);break;
             }
         }
     }
