@@ -43,9 +43,12 @@ namespace Alterverse.UI
                 faces[i]=go.GetComponent<RectTransform>();
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
-                var image=go.GetComponent<RawImage>();image.texture=atlas;image.raycastTarget=false;
+                var image=go.GetComponent<RawImage>();
+                bool traveler=hero==HeroId.Traveler;
+                image.texture=traveler?TravelerAbilityIcons.Get(i):atlas;
+                image.raycastTarget=false;
                 materials[i]=new Material(template){name="Ability HUD material "+i};
-                materials[i].SetVector(CellId,AtlasCell(hero,i));
+                materials[i].SetVector(CellId,traveler?new Vector4(0,0,1,1):AtlasCell(hero,i));
                 materials[i].SetColor(AccentId,Accent(hero));
                 materials[i].SetFloat(UltimateId,i==3?1:0);
                 image.material=materials[i];
@@ -94,7 +97,8 @@ namespace Alterverse.UI
         {
             HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
             HeroId.Nyra=>new Color(.12f,.78f,1),HeroId.Elyra=>new Color(.53f,.34f,1),
-            HeroId.Mira=>new Color(.14f,1,.57f),_=>new Color(1,.3f,.08f)
+            HeroId.Mira=>new Color(.14f,1,.57f),HeroId.Rook=>new Color(1,.3f,.08f),
+            HeroId.Traveler=>new Color(.96f,.82f,.52f),_=>Color.white
         };
 
         public void SetVisible(bool visible){if(canvas!=null&&canvas.enabled!=visible)canvas.enabled=visible;}
