@@ -707,11 +707,11 @@ namespace Alterverse.Visuals
                 Sculpt("VeyrHairLock"+(side<0?"L":"R"),lockMesh,Vector3.zero,Vector3.one,hair);
             }
 
-            // Layered asymmetrical cloth tails keep her readable in motion and from the top-down camera.
+            // Symmetrical outer mantle tails: identical length, width and curve on both sides,
+            // mirrored around the character centerline. "Cape" name is preserved for existing motion.
             Mesh cape=HeroMeshLibrary.Ribbon("DF_VeyrCape",
-                new[]{new Vector3(-.17f,.13f,-.16f),new Vector3(-.23f,-.18f,-.22f),new Vector3(-.31f,-.52f,-.29f),new Vector3(-.43f,-.90f,-.35f)},
-                new[]{.13f,.18f,.17f,.055f},.022f);
-            // Both outer mantle tails use the exact same neon violet as Zhaev's eyes.
+                new[]{new Vector3(-.15f,.10f,-.16f),new Vector3(-.22f,-.22f,-.23f),new Vector3(-.35f,-.50f,-.29f),new Vector3(-.47f,-.78f,-.34f)},
+                new[]{.11f,.16f,.14f,.045f},.020f);
             Sculpt("Cape",cape,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh tailR=HeroMeshLibrary.Ribbon("DF_VeyrTailR",
                 new[]{new Vector3(.15f,.10f,-.16f),new Vector3(.22f,-.22f,-.23f),new Vector3(.35f,-.50f,-.29f),new Vector3(.47f,-.78f,-.34f)},
