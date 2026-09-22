@@ -126,7 +126,7 @@ namespace Alterverse.AI
                 if(!controlled&&!group&&!sensor.HasSteadyMotion&&target.Current>spec.Power)return false;
             }
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
-            if ((identity.Hero == HeroId.Veyr || identity.Hero==HeroId.Traveler) && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
+            if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
             bool cast=execution.TryCast(slot,target,direction);
             if(cast&&slot==1&&identity.Hero==HeroId.Veyr&&brain!=null&&brain.Difficulty.Coordinated&&
                 execution.Remaining(0)>0&&!brain.Tactics.CanFinish(target,transform.position))brain.RequestCombatReset();
