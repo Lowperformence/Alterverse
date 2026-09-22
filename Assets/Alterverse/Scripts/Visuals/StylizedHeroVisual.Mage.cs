@@ -78,13 +78,13 @@ namespace Alterverse.Visuals
                     new[]{.055f,.068f,.076f,.052f}),
                     new Vector3(0,-.59f,.055f),Vector3.one,voidDark,arm);
 
-                // Blade-like pauldrons mirror the supplied Void Mage reference.
-                Plate("MageShoulder"+s,new Vector3(side*.47f,.48f,.005f),.48f,.32f,.44f,silver,side*-17);
+                // Blade-like pauldrons reduced by 30% for a cleaner mage silhouette.
+                Plate("MageShoulder"+s,new Vector3(side*.47f,.48f,.005f),.336f,.224f,.308f,silver,side*-17);
                 Bind("MageShoulder"+s,"Arm"+s);
-                Plate("MageShoulderWing"+s,new Vector3(side*.60f,.58f,-.02f),.20f,.50f,.17f,indigo,side*-31);
+                Plate("MageShoulderWing"+s,new Vector3(side*.60f,.58f,-.02f),.14f,.35f,.119f,indigo,side*-31);
                 Bind("MageShoulderWing"+s,"Arm"+s);
-                Detail("MageShoulderGem"+s,new Vector3(side*.48f,.52f,.245f),
-                    new Vector3(.085f,.12f,.025f),violetHot,new Vector3(0,0,45),"Arm"+s,true);
+                Detail("MageShoulderGem"+s,new Vector3(side*.48f,.52f,.175f),
+                    new Vector3(.0595f,.084f,.0175f),violetHot,new Vector3(0,0,45),"Arm"+s,true);
             }
 
             // Closed crown-mask: no exposed face, only a narrow violet eye slit and a central crystal.
