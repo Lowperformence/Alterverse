@@ -98,7 +98,7 @@ namespace Alterverse.UI
             HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
             HeroId.Nyra=>new Color(.12f,.78f,1),HeroId.Elyra=>new Color(.53f,.34f,1),
             HeroId.Mira=>new Color(.14f,1,.57f),HeroId.Rook=>new Color(1,.3f,.08f),
-            HeroId.Traveler=>new Color(.96f,.82f,.52f),_=>Color.white
+            HeroId.Traveler=>new Color(.16f,.82f,1f),_=>Color.white
         };
 
         public void SetVisible(bool visible){if(canvas!=null&&canvas.enabled!=visible)canvas.enabled=visible;}
