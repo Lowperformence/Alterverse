@@ -233,7 +233,7 @@ namespace Alterverse.Multiplayer
             {
                 int next=Mod((int)current+Math.Sign(direction)*step,count);
                 HeroId candidate=(HeroId)next;
-                if(!HeroUsedByOther(candidate))
+                if(Alterverse.Shop.HeroUnlockInventory.Owned(candidate)&&!HeroUsedByOther(candidate))
                     return await SetLocalHeroAsync(candidate);
             }
             return false;
@@ -241,7 +241,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalHeroAsync(HeroId hero)
         {
-            if(session==null||busy||HeroUsedByOther(hero))return false;
+            if(session==null||busy||!Alterverse.Shop.HeroUnlockInventory.Owned(hero)||HeroUsedByOther(hero))return false;
             try
             {
                 busy=true;lastError="";
