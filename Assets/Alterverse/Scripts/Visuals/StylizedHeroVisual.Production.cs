@@ -72,7 +72,7 @@ namespace Alterverse.Visuals
                 Sculpt("Glove"+s,glove,new Vector3(0,-.59f,.06f),Vector3.one,dark,arm);
                 arm.localRotation=Quaternion.Euler(h==HeroId.Nyra?-48:h==HeroId.Elyra?-18:0,0,h==HeroId.Nyra?(side<0?55:-8):side*(heavy?-8:-10));
                 Plate("Shoulder"+s,new Vector3(side*(tank?.58f:heavy?.53f:.36f),tank?.46f:.43f,0),
-                    tank?.528f:heavy?.52f:.29f,tank?.368f:heavy?.38f:.24f,tank?.496f:heavy?.50f:.31f,
+                    tank?.3696f:heavy?.52f:.29f,tank?.2576f:heavy?.38f:.24f,tank?.3472f:heavy?.50f:.31f,
                     tank?metal:(side<0?identityPanel:trim),side*(tank?-11:-16));
                 Plate("Tasset"+s,new Vector3(side*.20f*breadth,-.31f,.15f),.20f*breadth,.30f,.08f,metal,side*9);
             }
@@ -341,17 +341,17 @@ namespace Alterverse.Visuals
 
                 arm.localRotation=Quaternion.Euler(side<0?-42f:-48f,0,side<0?42f:-10f);
 
-                // Huge asymmetric shoulder plates inspired by the supplied elite-sniper reference.
+                // Compact asymmetric shoulder plates: 30% smaller while preserving the elite-sniper silhouette.
                 float shoulderX=side*.50f;
                 Plate("NyraShoulder"+s,new Vector3(shoulderX,.45f,.005f),
-                    side<0?.62f:.55f,side<0?.49f:.43f,side<0?.48f:.43f,
+                    side<0?.434f:.385f,side<0?.343f:.301f,side<0?.336f:.301f,
                     side<0?charcoal:black,side*-12f);
                 Bind("NyraShoulder"+s,"Arm"+s);
                 if(side<0)
                 {
-                    Plate("NyraShoulderBadge",new Vector3(shoulderX,.45f,.263f),.28f,.29f,.035f,black,-8,"Arm"+s);
-                    Detail("NyraShoulderMark",new Vector3(shoulderX,.45f,.286f),
-                        new Vector3(.055f,.18f,.018f),tabard,new Vector3(0,0,-22),"Arm"+s);
+                    Plate("NyraShoulderBadge",new Vector3(shoulderX,.45f,.188f),.196f,.203f,.0245f,black,-8,"Arm"+s);
+                    Detail("NyraShoulderMark",new Vector3(shoulderX,.45f,.206f),
+                        new Vector3(.0385f,.126f,.0126f),tabard,new Vector3(0,0,-22),"Arm"+s);
                 }
             }
 
@@ -847,9 +847,9 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.36f,.416f,.536f,metal,side*-7);
-                Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.312f,.16f,.472f,steelLight,side*-9);
-                Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.276f),new Vector3(.144f,.08f,.020f),steelDark,default,null,false);
+                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.252f,.2912f,.3752f,metal,side*-7);
+                Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.2184f,.112f,.3304f,steelLight,side*-9);
+                Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.198f),new Vector3(.1008f,.056f,.014f),steelDark,default,null,false);
 
                 // Root-space detail is bound after creation so it follows the arm rig.
                 Plate("KaelonForearmPlate"+s,new Vector3(side*.51f,.04f,.19f),.36f,.49f,.30f,metal,side*6,"Arm"+s);
