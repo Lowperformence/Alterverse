@@ -37,6 +37,11 @@ namespace Alterverse.Visuals
         {
             HeroId h=Hero(actor);Color c=h==HeroId.Nyra?new Color(1f,.045f,.025f):Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
+            if(h==HeroId.Traveler)
+            {
+                TravelerProjectile(actor,start,end,slot,travel,target,strength);
+                return;
+            }
             if(travel<=0)
             {
                 InstantTrace(actor,start,end,slot,strength);
@@ -55,6 +60,33 @@ namespace Alterverse.Visuals
             if(h==HeroId.Elyra)Ring(actor,start,.28f*strength,.15f);
             if(h==HeroId.Mira)Fx(HeroFxShape.Shard,start,c,.22f,.12f,rotation:Quaternion.Euler(35,0,25));
         }
+        private static void TravelerProjectile(GameObject actor,Vector3 start,Vector3 end,int slot,float travel,Transform target,float strength)
+        {
+            Color gold=Accent(actor);
+            Color light=Color.Lerp(gold,Color.white,.62f);
+            Color red=new(1f,.035f,.025f,.72f);
+            Quaternion face=Face(start,end);
+            if(travel<=0)
+            {
+                Vector3 delta=end-start;
+                float distance=Mathf.Max(.01f,delta.magnitude);
+                HeroVfxPool.Emit(HeroFxShape.Bolt,start,end,new Vector3(.15f,.15f,distance*.56f)*strength,
+                    light,.11f,HeroFxMotion.Hold,face,actor);
+                HeroVfxPool.Emit(HeroFxShape.Halo,start,end,new Vector3(.23f,.23f,distance*.62f)*strength,
+                    new Color(gold.r,gold.g,gold.b,.40f),.13f,HeroFxMotion.Hold,face,actor);
+                Fx(HeroFxShape.Ring,start,gold,.30f*strength,.13f,HeroFxMotion.Contract,face*Quaternion.Euler(90,0,0),actor);
+                return;
+            }
+
+            HeroVfxPool.Emit(HeroFxShape.Bolt,start,end,new Vector3(.22f,.22f,.76f)*strength,
+                light,travel,HeroFxMotion.Travel,face,actor,endFollow:target);
+            HeroVfxPool.Emit(HeroFxShape.Halo,start,end,new Vector3(.34f,.34f,.95f)*strength,
+                new Color(gold.r,gold.g,gold.b,.38f),travel,HeroFxMotion.Travel,face,actor,endFollow:target);
+            Fx(HeroFxShape.Ring,start,gold,.30f*strength,.14f,HeroFxMotion.Contract,face*Quaternion.Euler(90,0,0),actor);
+            Fx(HeroFxShape.Rift,start,DarkCore,.22f*strength,.12f,HeroFxMotion.Contract,face,actor);
+            Fx(HeroFxShape.Shard,start+actor.transform.right*.08f,red,.15f,.11f,HeroFxMotion.Contract,actor:actor);
+        }
+
         // Immediate gameplay hits need immediate visual contact, not a projectile arriving later.
         private static void InstantTrace(GameObject actor,Vector3 start,Vector3 end,int slot,float strength)
         {
@@ -174,6 +206,42 @@ namespace Alterverse.Visuals
                         }
                         break;
                     }
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.66f);
+                        Color red=new(1f,.035f,.025f);
+                        Fx(HeroFxShape.Ring,p,c,size*(slot==3?1.45f:1.05f),slot==3?.24f:.15f,HeroFxMotion.Contract,facing*Quaternion.Euler(90,0,0),actor);
+                        Fx(HeroFxShape.Rift,p,DarkCore,size*(slot==3?1.25f:.82f),.16f,HeroFxMotion.Contract,facing,actor);
+                        Fx(HeroFxShape.Burst,p,light,size*(slot==3?1.15f:.68f),.10f,rotation:facing,actor:actor);
+                        Fx(HeroFxShape.Shard,p+actor.transform.right*.06f,new Color(red.r,red.g,red.b,.78f),size*.42f,.12f,HeroFxMotion.Contract,actor:actor);
+                        break;
+                    }
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.68f);
+                        Color red=new(1f,.035f,.025f);
+                        Ring(actor,p,radius,slot==3?.44f:.32f,true);
+                        Fx(HeroFxShape.Rift,p+Vector3.up*.40f,DarkCore,slot==3?1.05f:.58f,aftermath,HeroFxMotion.Contract);
+                        Fx(HeroFxShape.Ring,p+Vector3.up*.42f,light,radius*(slot==3?.62f:.42f),aftermath,HeroFxMotion.Contract,Quaternion.Euler(28,0,24));
+                        if(slot==3)
+                        {
+                            HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.80f,radius),
+                                new Color(light.r,light.g,light.b,.48f),.34f,HeroFxMotion.Contract);
+                            Fx(HeroFxShape.Burst,p+Vector3.up*.18f,light,radius*.48f,.18f);
+                            for(int i=0;i<4;i++)Fx(HeroFxShape.Shard,p+Vector3.up*.22f,new Color(red.r,red.g,red.b,.72f),radius*.18f,.20f,HeroFxMotion.Orbit,Quaternion.Euler(20,i*90,45));
+                        }
+                        break;
+                    }
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.70f);
+                        Color red=new(1f,.035f,.025f,.78f);
+                        Fx(HeroFxShape.Halo,p,light,strength*1.55f,.13f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Ring,p,c,strength*1.35f,.16f,HeroFxMotion.Contract,Face(actor.transform.position,p)*Quaternion.Euler(90,0,0),actor);
+                        Fx(HeroFxShape.Rift,p,DarkCore,strength*.85f,.13f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
+                        if(slot>=0)Fx(HeroFxShape.Shard,p,red,strength*.65f,.12f,HeroFxMotion.Contract,actor:actor);
+                        break;
+                    }
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -191,6 +259,11 @@ namespace Alterverse.Visuals
             {
                 if(h==HeroId.Rook||h==HeroId.Kaelon)Ring(actor,Chest(actor),.65f,.22f,true,h==HeroId.Kaelon);
                 else if(h==HeroId.Elyra)Fx(HeroFxShape.Ring,Chest(actor),c,.72f,.22f,HeroFxMotion.Contract,Quaternion.Euler(28,0,0),actor);
+                else if(h==HeroId.Traveler)
+                {
+                    Fx(HeroFxShape.Halo,Chest(actor),Color.Lerp(c,Color.white,.55f),.86f,.26f,HeroFxMotion.Contract,actor:actor);
+                    Fx(HeroFxShape.Rift,Chest(actor),DarkCore,.68f,.24f,HeroFxMotion.Contract,actor:actor);
+                }
                 else if(h==HeroId.Veyr)Fx(HeroFxShape.Halo,Chest(actor),new Color(c.r,c.g,c.b,.42f),.68f,.18f,HeroFxMotion.Contract,actor:actor);
             }
         }
@@ -216,6 +289,12 @@ namespace Alterverse.Visuals
                 }
                 else if(h==HeroId.Kaelon&&slot==2)
                 {Fx(HeroFxShape.Shard,p+Vector3.up*.35f,c,.55f,life,HeroFxMotion.Hold,actor:actor,warning:true);Ring(actor,p,radius*.78f,life,true);}
+                else if(h==HeroId.Traveler)
+                {
+                    Fx(HeroFxShape.Runes,p+Vector3.up*.025f,new Color(c.r,c.g,c.b,.60f),radius*.72f,life,HeroFxMotion.Orbit,actor:actor,warning:true);
+                    Fx(HeroFxShape.Rift,p+Vector3.up*.34f,DarkCore,slot==3?.82f:.52f,life,HeroFxMotion.Contract,actor:actor,warning:true);
+                    Fx(HeroFxShape.Ring,p+Vector3.up*.34f,Color.Lerp(c,Color.white,.48f),radius*.40f,life,HeroFxMotion.Contract,Quaternion.Euler(28,0,18),actor,warning:true);
+                }
                 return;
             }
             float aftermath=slot==3?.48f:.30f;
@@ -226,6 +305,11 @@ namespace Alterverse.Visuals
             {
                 Fx(HeroFxShape.Runes,p+Vector3.up*.03f,c,radius*.9f,aftermath,HeroFxMotion.Orbit);
                 if(slot==3)Fx(HeroFxShape.Halo,p+Vector3.up*.06f,new Color(c.r,c.g,c.b,.6f),radius*.7f,.22f,HeroFxMotion.Contract);
+            }
+            else if(h==HeroId.Traveler)
+            {
+                Fx(HeroFxShape.Runes,p+Vector3.up*.025f,c,radius*.86f,aftermath,HeroFxMotion.Orbit);
+                Fx(HeroFxShape.Halo,p+Vector3.up*.08f,Color.Lerp(c,Color.white,.55f),radius*(slot==3?.72f:.52f),aftermath,HeroFxMotion.Contract);
             }
             else if(h==HeroId.Kaelon||h==HeroId.Rook)
                 HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,slot==3?1.2f:.55f,radius),
@@ -296,6 +380,9 @@ namespace Alterverse.Visuals
                     if(slot==3)actor.GetComponent<HeroVisualMotion>()?.PulseAbility(3,0);
                     break;
                 case HeroId.Mira:Projectile(actor,impact,slot,travelTime,target);break;
+                case HeroId.Traveler:
+                    if(slot==0)Projectile(actor,impact,slot,travelTime,target);
+                    break;
             }
         }
         public static void Ultimate(GameObject actor,Vector3 target)
@@ -428,6 +515,25 @@ namespace Alterverse.Visuals
         {
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
+            if(h==HeroId.Traveler)
+            {
+                Color light=Color.Lerp(c,Color.white,.58f);
+                Color red=new(1f,.035f,.025f,.72f);
+                Quaternion portal=face*Quaternion.Euler(90,0,0);
+                Fx(HeroFxShape.Ring,from,c,.72f,.22f,HeroFxMotion.Contract,portal,actor);
+                Fx(HeroFxShape.Rift,from,DarkCore,.62f,.20f,HeroFxMotion.Contract,face,actor);
+                Fx(HeroFxShape.Ring,to,light,.76f,.23f,HeroFxMotion.Expand,portal,actor);
+                Fx(HeroFxShape.Rift,to,DarkCore,.66f,.21f,HeroFxMotion.Contract,face,actor);
+                for(int i=0;i<4;i++)
+                {
+                    Vector3 pos=Vector3.Lerp(from,to,(i+.5f)/4f);
+                    HeroVfxPool.Emit(HeroFxShape.Rift,pos,pos,new Vector3(.13f,.34f,Mathf.Min(.55f,distance*.18f)),
+                        i%2==0?new Color(c.r,c.g,c.b,.42f):red,.15f,HeroFxMotion.Contract,face,actor,delay:i*.025f);
+                }
+                Fx(HeroFxShape.Burst,to,light,.34f,.11f,rotation:face,actor:actor);
+                actor.GetComponent<HeroVisualMotion>()?.PulseDash();
+                return;
+            }
             if(h!=HeroId.Nyra)
             {
                 Fx(HeroFxShape.Runes,from,c,.72f,.17f,HeroFxMotion.Contract,face*Quaternion.Euler(70,0,0));
