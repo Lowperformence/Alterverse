@@ -66,12 +66,20 @@ namespace Alterverse.Characters
                     new("Growth Veil",9,42,6.5f),
                     new("Venn Shelter",13,50,6.5f),
                     new("Wildsurge",58,58,0,5f,.4f)),
-                _=>new HeroAbilityLoadout(
+                HeroId.Rook=>new HeroAbilityLoadout(
                     new("Scrap recovery",0,.12f,0),
                     new("Wreck Swing",7,34,2.9f),
                     new("Armor Grip",13,30,0),
                     new("Wreckstorm",10,28,0,2.8f,.30f),
-                    new("Orun Overdrive",52,48,0,3.2f,.50f))
+                    new("Orun Overdrive",52,48,0,3.2f,.50f)),
+                HeroId.Traveler=>new HeroAbilityLoadout(
+                    new("Between seconds",0,0,0),
+                    new("Temporal Beam",8,30,7.2f),
+                    new("Rift Step",13,0,3.6f),
+                    new("Chrono Snare",12,22,6.5f,2.2f,.38f),
+                    new("Paradox Collapse",56,60,6.8f,3.2f,.68f)),
+                _=>new HeroAbilityLoadout(
+                    new("Unknown",0,0,0),new("Unknown",8,20,5f),new("Unknown",12,0,0),new("Unknown",12,20,5f),new("Unknown",55,50,5f))
             };
         }
 
