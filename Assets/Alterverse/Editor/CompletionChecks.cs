@@ -41,17 +41,32 @@ namespace Alterverse.EditorChecks
                 if(Resources.Load<AudioClip>("Audio/SFX/"+sound)==null){Debug.LogWarning("FINAL SFX ASSET REQUIRED: "+sound);missing++;}
             Debug.Log("DIMENSIONS FRONT audio asset audit: "+missing+" missing clips. Listening/device verification is separate.");
         }
-        [MenuItem("DIMENSIONS FRONT/Checks/Six hero skin previews (Play mode)")]
+        [MenuItem("DIMENSIONS FRONT/Checks/Traveler premium hero definition")]
+        public static void TravelerDefinition()
+        {
+            Check(HeroIdentity.HeroCount==7,"hero count must include The Traveler");
+            Check(HeroUnlockCatalog.Price(HeroId.Traveler)==10000,"Traveler price must stay at 10,000 shards");
+            Check(HeroUnlockCatalog.Purchasable(HeroId.Traveler),"Traveler must be purchasable");
+            HeroAbilityLoadout loadout=HeroAbilityKit.LoadoutFor(HeroId.Traveler);
+            Check(loadout.Q.Name=="Temporal Beam","Traveler Q identity changed");
+            Check(loadout.W.Name=="Rift Step","Traveler W identity changed");
+            Check(loadout.E.Name=="Chrono Snare","Traveler E identity changed");
+            Check(loadout.Ultimate.Name=="Paradox Collapse","Traveler ultimate identity changed");
+            Check(WeaponSkinCatalog.For(HeroId.Traveler).Name=="CHRONOLUX SCEPTER // LEGENDARY","Traveler legendary weapon skin missing");
+            Debug.Log("DIMENSIONS FRONT: Traveler definition, price, abilities and legendary weapon catalog passed.");
+        }
+
+        [MenuItem("DIMENSIONS FRONT/Checks/All hero skin previews (Play mode)")]
         public static void SkinPreviews()
         {
             if(!Application.isPlaying){Debug.LogWarning("Enter Play mode to check skin meshes.");return;}
-            for(int i=0;i<6;i++)
+            for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
                 CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.Voidfall);
                 CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.BetaSupporterWings);
                 CheckSkinPreview((HeroId)i,UniversalHeroCosmetic.PlagueWings);
             }
-            Debug.Log("DIMENSIONS FRONT: VOIDFALL, BETA SUPPORTER WINGS and PLAGUE WINGS preview construction passed for all six heroes. Purchase/restart and visual approval still require device testing.");
+            Debug.Log("DIMENSIONS FRONT: VOIDFALL, BETA SUPPORTER WINGS and PLAGUE WINGS preview construction passed for all heroes. Purchase/restart and visual approval still require device testing.");
         }
 
         private static void CheckSkinPreview(HeroId hero,UniversalHeroCosmetic cosmetic)
