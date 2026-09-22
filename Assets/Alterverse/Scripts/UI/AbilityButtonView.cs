@@ -47,6 +47,8 @@ namespace Alterverse.UI
                 image.texture=atlas;
                 image.raycastTarget=false;
                 materials[i]=new Material(template){name="Ability HUD material "+i};
+                // Keep RawImage and shader material explicitly bound to the same atlas texture.
+                materials[i].mainTexture=atlas;
                 materials[i].SetVector(CellId,AtlasCell(hero,i));
                 materials[i].SetColor(AccentId,Accent(hero));
                 materials[i].SetFloat(UltimateId,i==3?1:0);
