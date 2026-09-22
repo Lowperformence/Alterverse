@@ -66,7 +66,7 @@ namespace Alterverse.Characters
             if (slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
-            bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2);
+            bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
             if (mobility)
             {
                 movement.y = 0; if (movement.sqrMagnitude < .01f) movement = transform.forward;
@@ -239,10 +239,11 @@ namespace Alterverse.Characters
                 case HeroId.Elyra: if (slot == 1 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .55f : .65f, 2f); break;
                 case HeroId.Mira: HeroCombatStatus.Apply(target, .75f, 1.5f); break;
                 case HeroId.Rook: if (slot == 0) HeroCombatStatus.Apply(target, .8f, 1f); break;
+                case HeroId.Traveler: if (slot == 2 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .62f : .72f, slot == 3 ? 1.8f : 1.5f); break;
             }
             if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
             if(damaged&&(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Mira||identity.Hero==HeroId.Veyr&&slot==1||
-                identity.Hero==HeroId.Nyra&&slot==2||identity.Hero==HeroId.Elyra&&(slot==1||slot==3)||identity.Hero==HeroId.Rook&&slot==0))
+                identity.Hero==HeroId.Nyra&&slot==2||identity.Hero==HeroId.Elyra&&(slot==1||slot==3)||identity.Hero==HeroId.Rook&&slot==0||identity.Hero==HeroId.Traveler&&(slot==2||slot==3)))
                 HeroSkillVfx.Debuff(gameObject,target);
         }
     }
