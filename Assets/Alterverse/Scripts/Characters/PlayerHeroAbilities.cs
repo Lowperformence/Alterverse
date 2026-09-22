@@ -44,7 +44,7 @@ namespace Alterverse.Characters
         public string Describe(int slot)
         {
             AbilitySpec s = kit.Spec(slot); HeroId h = identity.Hero;
-            if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2)) return $"Move {s.Range:0.#}m. Uses movement direction; otherwise evade/face direction.";
+            if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2) || (h == HeroId.Traveler && slot == 1)) return h==HeroId.Traveler?$"Time-skip {s.Range:0.#}m through paired rifts. Uses movement direction.":$"Move {s.Range:0.#}m. Uses movement direction; otherwise evade/face direction.";
             if (h == HeroId.Mira && slot == 1) return $"Heal the weakest nearby hero for {s.Power:0} HP.";
             if (h == HeroId.Mira && slot == 2) return $"Protect a wounded nearby hero with {s.Power:0} shield for 4s.";
             if (h == HeroId.Mira && slot == 3) return $"After {s.Windup:0.#}s: heal allied heroes in {s.Radius:0.#}m for {s.Power:0} and grant 25 shield.";
@@ -53,7 +53,7 @@ namespace Alterverse.Characters
             if (h == HeroId.Kaelon && slot == 0) return $"{s.Power:0} damage and a 0.55s stun. Brief stun immunity follows.";
             if (h == HeroId.Nyra && slot == 3) return $"Four shots, {s.Power:0} total damage. Leaving range or stunning interrupts the volley.";
             if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after 0.4s, up to 35% more against wounded heroes. Target can leave range.";
-            if (s.Radius > 0) return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." + (h == HeroId.Kaelon ? " Slows enemies; ultimate shields allies." : h == HeroId.Elyra && slot != 0 ? " Slows enemies for 2s." : h == HeroId.Rook && slot == 3 ? " Gain 65 shield for 4s." : "");
+            if (s.Radius > 0) return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." + (h == HeroId.Kaelon ? " Slows enemies; ultimate shields allies." : h == HeroId.Elyra && slot != 0 ? " Slows enemies for 2s." : h == HeroId.Traveler ? (slot==3?" Paradox field slows enemies for 1.8s.":" Chrono field slows enemies for 1.5s.") : h == HeroId.Rook && slot == 3 ? " Gain 65 shield for 4s." : "");
             return $"{s.Power:0} damage to one enemy." + (slot == 1 || slot == 2 || h == HeroId.Mira || h == HeroId.Rook ? " Briefly slows the target." : "");
         }
         public bool CastQ() => Cast(0);
@@ -97,7 +97,7 @@ namespace Alterverse.Characters
         private bool UsesMovementDirection(int slot)
         {
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
-            return (hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2);
+            return (hero==HeroId.Veyr&&slot==2)||(hero==HeroId.Nyra&&slot==1)||(hero==HeroId.Elyra&&slot==2)||(hero==HeroId.Traveler&&slot==1);
         }
 
         private bool CastAuthoritative(int slot,Health target,Vector3 direction)
