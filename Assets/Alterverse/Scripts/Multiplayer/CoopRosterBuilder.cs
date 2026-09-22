@@ -64,7 +64,7 @@ namespace Alterverse.Multiplayer
             if(local&&controller==null)
             {
                 controller=hero.AddComponent<CharacterController>();
-                controller.height=2f;controller.radius=.5f;
+                controller.height=HeroIdentity.HeroCollisionHeight;controller.radius=HeroIdentity.HeroCollisionRadius;
             }
             if(!local&&controller!=null)Object.Destroy(controller);
 
@@ -123,7 +123,7 @@ namespace Alterverse.Multiplayer
             GameObject hero=new($"AV_CoopHuman_{slot}_{data.Hero}");
             hero.transform.position=SafeSpawn(0,slot);
             CapsuleCollider hitbox=hero.AddComponent<CapsuleCollider>();
-            hitbox.height=2f;hitbox.radius=.5f;
+            hitbox.height=HeroIdentity.HeroCollisionHeight;hitbox.radius=HeroIdentity.HeroCollisionRadius;
             ParentToWorld(hero);
             ConfigureHuman(hero,data,slot,false,hero.transform.position);
             return hero;
@@ -134,7 +134,7 @@ namespace Alterverse.Multiplayer
             GameObject bot=new($"AV_{(data.Team==0?"Zero":"Lumen")}_{data.Hero}_Slot{slot}");
             bot.transform.position=SafeSpawn(data.Team,slot);
             CapsuleCollider hitbox=bot.AddComponent<CapsuleCollider>();
-            hitbox.height=2f;hitbox.radius=.5f;
+            hitbox.height=HeroIdentity.HeroCollisionHeight;hitbox.radius=HeroIdentity.HeroCollisionRadius;
             ParentToWorld(bot);
 
             HeroIdentity identity=bot.AddComponent<HeroIdentity>();identity.Configure(data.Hero);
