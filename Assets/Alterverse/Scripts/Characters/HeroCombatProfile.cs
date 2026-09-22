@@ -28,7 +28,9 @@ namespace Alterverse.Characters
             HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,6.2f,.3f,.05f),
             HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
             HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
-            _=>new HeroCombatStats(2.5f,.9f,6.15f,.45f,.7f)
+            HeroId.Rook=>new HeroCombatStats(2.5f,.9f,6.15f,.45f,.7f),
+            HeroId.Traveler=>new HeroCombatStats(6.2f,.92f,6.3f,.62f,.10f),
+            _=>new HeroCombatStats(5.5f,1f,6f,.4f,.1f)
         };
 
         public void Configure(HeroId id)
