@@ -75,7 +75,7 @@ namespace Alterverse.UI
             HeroId.Elyra=>"Ranged dimensional basic attack.",
             HeroId.Mira=>"Ranged support basic attack.",
             HeroId.Rook=>"Melee strike. Below 60% HP, hero hits restore 12% of damage dealt.",
-            HeroId.Traveler=>"Lumen Bolt: compressed chronolight with a clean temporal trail.",
+            HeroId.Traveler=>"Flux Bolt: Planet Flux fires compressed chronolight with a clean temporal trail.",
             _=>"Standard attack."
         };
 
