@@ -1073,7 +1073,7 @@ namespace Alterverse.UI
                 if(theme.Action(avatar,"",selected:PlayerProfile.Avatar==avatarId)) PlayerProfile.Avatar=avatarId;
                 AvatarBadgeRenderer.Draw(new Rect(avatar.x+5,avatar.y+5,42,44),avatarId,Texture2D.whiteTexture,Time.unscaledTime);
             }
-            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;SetPage(Page.Shop);}
+            if (theme.Action(new Rect(Left+identityWidth-112,592,88,54),"MORE")){skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;SetPage(Page.Shop);}
             float x=Left+identityWidth+32,w=ContentWidth-identityWidth-32;
             ProfileStats stats=ProfileStatsSummary.Current;
             theme.Label(new Rect(x,230,w,36),"Lifetime record",theme.Heading);
