@@ -348,15 +348,44 @@ namespace Alterverse.AI
             Vector3 forward=objective-centroid;forward.y=0;
             if(forward.sqrMagnitude<.1f)forward=Forward;else forward.Normalize();
             Vector3 side=Vector3.Cross(Vector3.up,forward);
-            float offset=role==HeroId.Veyr?2.2f:role==HeroId.Rook?-1.2f:role==HeroId.Elyra?1.1f:role==HeroId.Mira?-1.1f:role==HeroId.Traveler?.55f:0;
-            offset+=(SlotFor(bot)%3-1)*.32f;
-            Vector3 point=objective+side*offset;
+
+            // Wider role lanes and a small stable per-bot stagger keep coordinated teams readable
+            // without turning them into a rigid parade formation or a single overlapping clump.
+            int slot=SlotFor(bot);
+            float roleSide=role switch
+            {
+                HeroId.Veyr=>2.75f,
+                HeroId.Kaelon=>-.35f,
+                HeroId.Nyra=>2.05f,
+                HeroId.Elyra=>.75f,
+                HeroId.Mira=>-2.35f,
+                HeroId.Rook=>-1.45f,
+                HeroId.Traveler=>1.35f,
+                _=>0f
+            };
+            float slotSide=slot%5 switch{0=>-.34f,1=>.28f,2=>-.12f,3=>.42f,_=>-.24f};
+            float slotDepth=slot%5 switch{0=>.18f,1=>-.24f,2=>.34f,3=>-.10f,_=>.06f};
+            Vector3 point=objective+side*(roleSide+slotSide);
+
             if(combat)
             {
-                float range=role==HeroId.Kaelon?1.45f:role==HeroId.Rook?1.65f:role==HeroId.Veyr?1.4f:role==HeroId.Mira?5f:5.5f;
-                // Assassin gets a side approach inside melee reach, not a remote orbit.
-                if(role==HeroId.Veyr)point=objective+side*.85f*(SlotFor(bot)%2==0?1:-1);
+                float range=role switch
+                {
+                    HeroId.Kaelon=>1.50f,
+                    HeroId.Rook=>1.80f,
+                    HeroId.Veyr=>1.45f,
+                    HeroId.Mira=>5.35f,
+                    HeroId.Nyra=>5.75f,
+                    HeroId.Elyra=>5.20f,
+                    HeroId.Traveler=>4.75f,
+                    _=>5.25f
+                };
+                range=Mathf.Max(.9f,range+slotDepth);
+
+                // Assassin attacks from a flank rather than stacking directly behind the frontline.
+                if(role==HeroId.Veyr)point=objective+side*1.35f*(slot%2==0?1:-1);
                 point-=forward*range;
+
                 if(IsBackline(role))
                 {
                     for(int i=0;i<allyCount;i++)
@@ -364,13 +393,18 @@ namespace Alterverse.AI
                         if(allies[i].Role!=HeroId.Kaelon&&allies[i].Role!=HeroId.Rook)continue;
                         if(FlatSqr(allies[i].Position-objective)>12f*12f)continue;
                         // Never walk ahead of the nearby frontline to acquire range.
-                        float ahead=Vector3.Dot(point-(allies[i].Position-forward*1.7f),forward);
+                        float ahead=Vector3.Dot(point-(allies[i].Position-forward*1.9f),forward);
                         if(ahead>0)point-=forward*ahead;
                         break;
                     }
                 }
             }
-            else point-=forward*(IsBackline(role)?2.5f:role==HeroId.Rook?1f:0f);
+            else
+            {
+                float depth=role==HeroId.Mira?3.35f:IsBackline(role)?2.9f:role==HeroId.Rook?.9f:role==HeroId.Kaelon?.25f:1.15f;
+                point-=forward*Mathf.Max(.15f,depth+slotDepth);
+            }
+
             point.y=bot.transform.position.y;return point;
         }
         public Vector3 SupportPosition(MobaBotBrain bot,Vector3 fallback)
@@ -382,7 +416,11 @@ namespace Alterverse.AI
                 if(ally.Health==null||ally.Health==bot.Vitals||FlatSqr(ally.Position-bot.transform.position)>12f*12f)continue;
                 float need=ally.Health.Normalized*(IsBackline(ally.Role)?.8f:1f);
                 if(need>=best)continue;
-                best=need;result=ally.Position-Forward*2f;result.y=bot.transform.position.y;
+                best=need;
+                Vector3 side=Vector3.Cross(Vector3.up,Forward);
+                float supportSide=SlotFor(bot)%2==0?.85f:-.85f;
+                result=ally.Position-Forward*2.45f+side*supportSide;
+                result.y=bot.transform.position.y;
             }
             return result;
         }
