@@ -22,7 +22,7 @@ namespace Alterverse.UI
 
         private static HeroAttackCard[][] BuildAll()
         {
-            HeroAttackCard[][] all=new HeroAttackCard[6][];
+            HeroAttackCard[][] all=new HeroAttackCard[HeroIdentity.HeroCount][];
             for(int i=0;i<all.Length;i++)all[i]=Build((HeroId)i);
             return all;
         }
@@ -74,7 +74,9 @@ namespace Alterverse.UI
             HeroId.Nyra=>"Rapid long-range rifle fire.",
             HeroId.Elyra=>"Ranged dimensional basic attack.",
             HeroId.Mira=>"Ranged support basic attack.",
-            _=>"Melee strike. Below 60% HP, hero hits restore 12% of damage dealt."
+            HeroId.Rook=>"Melee strike. Below 60% HP, hero hits restore 12% of damage dealt.",
+            HeroId.Traveler=>"Lumen Bolt: compressed chronolight with a clean temporal trail.",
+            _=>"Standard attack."
         };
 
         private static string Effect(HeroId hero,int slot)=>hero switch
@@ -114,13 +116,21 @@ namespace Alterverse.UI
                 2=>"Shields a wounded ally for 4s.",
                 _=>"Large support field: heals allies for 58 and grants 25 shield for 3s."
             },
-            _=>slot switch
+            HeroId.Rook=>slot switch
             {
                 0=>"Heavy melee hit that slows 20% for 1s.",
                 1=>"Restores 30 HP and grants 20 shield for 3s.",
                 2=>"Short-windup 2.8m area smash.",
                 _=>"3.2m area burst; Brakk also gains 65 shield for 4s."
-            }
+            },
+            HeroId.Traveler=>slot switch
+            {
+                0=>"Temporal Beam: precise long-range chronolight strike.",
+                1=>"Rift Step: time-skip 3.6m through an entry and exit portal.",
+                2=>"Chrono Snare: delayed 2.2m field that slows enemies for 1.5s.",
+                _=>"Paradox Collapse: large delayed time-rift burst that slows enemies for 1.8s."
+            },
+            _=>"Unknown effect."
         };
     }
 }
