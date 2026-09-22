@@ -42,9 +42,9 @@ namespace Alterverse.Shop
             new(HeroId.Rook,"REACTOR BREAKER // EPIC","Reactor Breaker Gauntlets",
                 "Reinforced yellow-black impact gauntlets with a dominant right-hand rack of four glowing red reactor claws, inspired by the supplied reference.",
                 new Color(1f,.035f,.02f)),
-            new(HeroId.Traveler,"CHRONOLUX SCEPTER // LEGENDARY","Chronolux Scepter",
-                "Black chronosteel focus with a suspended white-gold time core, orbital rings and restrained red paradox accents.",
-                new Color(.96f,.82f,.52f))
+            new(HeroId.Traveler,"PLANET FLUX // EPIC","Planet Flux",
+                "A miniature dimensional planet surrounded by orbital rings and fragments. The EPIC form burns almost completely white with compressed time-light.",
+                new Color(1f,.98f,.90f))
         };
 
         public static WeaponSkinItem For(HeroId hero)=>Items[Mathf.Clamp((int)hero,0,Items.Length-1)];
