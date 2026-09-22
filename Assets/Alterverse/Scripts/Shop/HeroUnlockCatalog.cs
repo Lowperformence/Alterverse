@@ -11,6 +11,18 @@ namespace Alterverse.Shop
         public const int TravelerPrice=10000;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
 
+        public static bool TravelerFreeTestAccess
+        {
+            get
+            {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         public static int Price(HeroId hero)=>hero==HeroId.Traveler?TravelerPrice:0;
         public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler;
     }
@@ -18,7 +30,8 @@ namespace Alterverse.Shop
     public static class HeroUnlockInventory
     {
         public static bool Owned(HeroId hero)
-            =>hero!=HeroId.Traveler||PlayerPrefs.GetInt(HeroUnlockCatalog.TravelerOwnedKey,0)==1;
+            =>hero!=HeroId.Traveler||HeroUnlockCatalog.TravelerFreeTestAccess||
+              PlayerPrefs.GetInt(HeroUnlockCatalog.TravelerOwnedKey,0)==1;
 
         public static HeroUnlockResult Purchase(HeroId hero)
         {
