@@ -496,11 +496,72 @@ namespace Alterverse.AI
         private Vector3 GuardAgainstDefenses(Vector3 next)
         {
             if(brain==null)return next;
+
+            // Physical bodies remain hard obstacles.
             foreach(DefenseBunker bunker in DefenseBunker.Active)
                 if(bunker!=null)next=SkirtStructureBody(bunker.transform,bunker.GetComponent<Collider>(),next);
             foreach(DefenseTrench trench in DefenseTrench.Active)
                 if(trench!=null)next=SkirtStructureBody(trench.transform,trench.GetComponent<Collider>(),next);
+
+            // Their chip-damage zones are only a LOW-priority tactical concern. Bots know that
+            // hostile bunkers/trenches hurt, but this never becomes a hard no-go area and never
+            // overrides a fight, objective call or emergency escape.
+            return ApplyLowPriorityDefenseAwareness(next);
+        }
+
+        private Vector3 ApplyLowPriorityDefenseAwareness(Vector3 next)
+        {
+            if(brain==null||health==null)return next;
+
+            float awareness=brain.State==MobaBotBrain.BotState.Fight?.10f:
+                (brain.State==MobaBotBrain.BotState.Retreat||brain.State==MobaBotBrain.BotState.Recover)?.30f:.20f;
+            if(health.Normalized<.45f)awareness=Mathf.Max(awareness,.32f);
+
+            foreach(DefenseBunker bunker in DefenseBunker.Active)
+            {
+                if(bunker==null||bunker.Team==brain.Team)continue;
+                next=SteerFromDefenseDamageZone(next,bunker.transform.position,bunker.AttackRange,awareness);
+            }
+            foreach(DefenseTrench trench in DefenseTrench.Active)
+            {
+                if(trench==null||trench.Team==brain.Team)continue;
+                next=SteerFromDefenseDamageZone(next,trench.transform.position,trench.DamageRadius,awareness);
+            }
             return next;
+        }
+
+        private Vector3 SteerFromDefenseDamageZone(Vector3 next,Vector3 center,float radius,float awareness)
+        {
+            if(radius<=.1f||awareness<=0f)return next;
+
+            Vector3 current=transform.position;
+            Vector3 intended=next-current;intended.y=0f;
+            float stepLength=intended.magnitude;
+            if(stepLength<.0001f)return next;
+
+            Vector3 from=current-center;from.y=0f;
+            Vector3 to=next-center;to.y=0f;
+            float currentDistance=from.magnitude,nextDistance=to.magnitude;
+
+            // Only resist movement that enters or moves deeper into an enemy damage zone.
+            // Moving out of danger is never opposed.
+            if(nextDistance>=radius||nextDistance>=currentDistance-.005f)return next;
+
+            float depth=Mathf.Clamp01(1f-nextDistance/radius);
+            Vector3 outward=to.sqrMagnitude>.001f?to.normalized:
+                (from.sqrMagnitude>.001f?from.normalized:(brain.Team==0?Vector3.left:Vector3.right));
+            Vector3 desired=intended/stepLength;
+            Vector3 tangent=Vector3.Cross(Vector3.up,outward).normalized;
+            if(Vector3.Dot(tangent,desired)<0f)tangent=-tangent;
+
+            // Mostly slide around the danger field, with a small outward bias. The maximum blend
+            // deliberately stays weak so a worthwhile chase or team objective can still cross it.
+            Vector3 safer=(tangent*.68f+outward*.32f).normalized;
+            float weight=awareness*Mathf.Lerp(.35f,1f,depth);
+            Vector3 steered=Vector3.Lerp(desired,safer,weight).normalized;
+            Vector3 result=current+steered*stepLength;
+            result.y=next.y;
+            return result;
         }
 
         private float StructureBodyClearance(Collider body)
