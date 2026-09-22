@@ -14,6 +14,14 @@ namespace Alterverse.Combat
         public const int SightMask=(1<<0)|(1<<Structures);
         public const float ArenaCornerRadius=3f;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ConfigureUnitCollision()
+        {
+            // Hero/unit hitboxes stay queryable for combat, but mobile characters must not become
+            // hard physics walls for one another. Spacing is handled by movement/AI steering.
+            Physics.IgnoreLayerCollision(Units,Units,true);
+        }
+
         public static Vector3 ClampToRoundedArena(Vector3 point,float halfWidth,float halfHeight,float inset=0f)
         {
             halfWidth=Mathf.Max(.2f,halfWidth-Mathf.Max(0f,inset));
