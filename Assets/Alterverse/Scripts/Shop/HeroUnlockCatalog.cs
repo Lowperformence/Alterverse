@@ -8,12 +8,11 @@ namespace Alterverse.Shop
 
     public static class HeroUnlockCatalog
     {
-        public const int TravelerPrice=10000;
+        public const int TravelerPrice=1000;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
 
-        // TEMPORARY TEST ACCESS: keep true while The Traveler is being tested.
-        // Set to false before the paid public release; the configured production price remains 10,000 shards.
-        public const bool TravelerFreeTestAccess=true;
+        // The Traveler is a paid shard unlock in normal play.
+        public const bool TravelerFreeTestAccess=false;
 
         public static int Price(HeroId hero)=>hero==HeroId.Traveler?TravelerPrice:0;
         public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler;
