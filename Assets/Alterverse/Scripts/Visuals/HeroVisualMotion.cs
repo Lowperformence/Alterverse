@@ -251,8 +251,13 @@ namespace Alterverse.Visuals
                     break;
                 case HeroId.Elyra:
                 case HeroId.Mira:
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-45*preparation-42*kick,0,-18*(preparation+kick));
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-25*preparation-25*kick,0,20*kick);
+                case HeroId.Traveler:
+                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(
+                        identity!=null&&identity.Hero==HeroId.Traveler?-34*preparation-36*kick:-45*preparation-42*kick,
+                        0,-18*(preparation+kick));
+                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(
+                        identity!=null&&identity.Hero==HeroId.Traveler?-18*preparation-20*kick:-25*preparation-25*kick,
+                        0,20*kick);
                     break;
                 case HeroId.Rook:
                     if(abilitySlot==1)
