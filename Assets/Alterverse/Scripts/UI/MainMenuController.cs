@@ -17,21 +17,22 @@ namespace Alterverse.UI
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
         private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
-        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
             "Hold the front. Shield your team and interrupt enemies at close range.",
             "Keep your distance. Deliver sustained fire while allies protect your position.",
             "Control the fight. Place powerful area attacks where enemies want to move.",
             "Keep allies fighting. Heal, shield and slow enemies from the backline.",
-            "Win the long fight. Trade at close range with heavy strikes and sustain." };
-        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE" };
+            "Win the long fight. Trade at close range with heavy strikes and sustain.",
+            "Slip between seconds. Reposition through rifts, control space and strike with chronolight." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
         private Page page;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
-        private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,cosmeticBusy;
+        private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private string profileName, profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
         private FrontEndTheme theme;
@@ -56,7 +57,7 @@ namespace Alterverse.UI
         {
             if (instance != null && instance != this) { Destroy(gameObject); return; }
             instance = this;
-            selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,5);
+            selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,HeroIdentity.HeroCount-1);
             playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
             mapShopPageStart=Mathf.Max(0,playArenaBrowseIndex-1);
             profileName = PlayerProfile.PlayerName;
@@ -129,11 +130,13 @@ namespace Alterverse.UI
             CoopLobbyService coop=CoopLobbyService.Instance;
             if(!launching&&page==Page.Coop&&coop!=null&&coop.InLobby&&coop.IsLaunching)
                 BeginCoopLaunch(coop);
-            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
+            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
             bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
-            showcase.Present((HeroId)selectedHero,
-                !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory),
+            bool previewPremiumHero=page==Page.Shop&&heroShop;
+            HeroId previewHero=previewPremiumHero?HeroId.Traveler:(HeroId)selectedHero;
+            showcase.Present(previewHero,
+                !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory||previewPremiumHero),
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
                 previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
@@ -534,19 +537,23 @@ namespace Alterverse.UI
 
         private void DrawHeroes()
         {
-            Heading("Heroes","Six roles. Choose how you fight.");
+            Heading("Heroes","Seven heroes. Choose how you fight.");
             const float rosterWidth=244f;
-            for(int i=0;i<6;i++)
+            for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
-                Rect row=new Rect(Left,216+i*74,rosterWidth,64);
+                Rect row=new Rect(Left,216+i*62,rosterWidth,56);
+                HeroId rowHero=(HeroId)i;
                 bool chosen=i==selectedHero;
+                bool owned=HeroUnlockInventory.Owned(rowHero);
                 if(theme.Action(row,"",selected:chosen))ChangeHero(i);
-                FrontEndTheme.Fill(new Rect(row.x+5,row.y+12,3,row.height-24),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)i));
-                theme.Label(new Rect(row.x+18,row.y+8,row.width-32,26),HeroIdentity.NameFor((HeroId)i),theme.Body);
-                theme.Label(new Rect(row.x+18,row.y+35,row.width-32,22),Roles[i],theme.Small,true);
+                FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
+                theme.Label(new Rect(row.x+18,row.y+5,row.width-32,24),HeroIdentity.NameFor(rowHero),theme.Body);
+                string subtitle=owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
+                theme.Label(new Rect(row.x+18,row.y+31,row.width-32,18),subtitle,theme.Small,true);
             }
 
             HeroId heroId=(HeroId)selectedHero;
+            bool heroOwned=HeroUnlockInventory.Owned(heroId);
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent(heroId);
             float portraitX=Left+rosterWidth+16;
             float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
@@ -557,12 +564,26 @@ namespace Alterverse.UI
             theme.Label(new Rect(portraitX,250,portraitWidth,22),Roles[selectedHero]+"  •  "+Strengths[selectedHero],theme.Small,true);
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
             theme.Label(new Rect(portraitX,566,portraitWidth,46),RoleDescriptions[selectedHero],theme.Small,true);
-            string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:heroId==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL WEAPON";
-            theme.Label(new Rect(portraitX,616,portraitWidth,24),"EQUIPMENT  /  "+weaponStatus,theme.Small,true);
-            if(theme.Action(new Rect(portraitX,646,portraitWidth,38),"DEPLOY",true))SetPage(Page.Play);
+            string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:
+                heroId==HeroId.Veyr?"SHADOW STEEL":heroId==HeroId.Traveler?"CHRONOLUX FOCUS":"ORIGINAL WEAPON";
+            theme.Label(new Rect(portraitX,616,portraitWidth,24),
+                heroOwned?"EQUIPMENT  /  "+weaponStatus:$"PREMIUM HERO  /  {HeroUnlockCatalog.Price(heroId):N0} SHARDS",theme.Small,true);
+
+            string heroAction=heroOwned?"DEPLOY":"VIEW IN STORE";
+            if(theme.Action(new Rect(portraitX,646,portraitWidth,38),heroAction,true))
+            {
+                if(heroOwned)SetPage(Page.Play);
+                else
+                {
+                    heroShop=true;skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=false;
+                    SetPage(Page.Shop);
+                }
+            }
 
             theme.Label(new Rect(attacksX,212,attacksWidth,28),"COMBAT LOADOUT",theme.Heading);
-            theme.Label(new Rect(attacksX,240,attacksWidth,20),"Mobile combat loadout • damage / range / cooldown / effects",theme.Small,true);
+            theme.Label(new Rect(attacksX,240,attacksWidth,20),
+                heroId==HeroId.Traveler?"Premium presentation • same fair combat budget":"Mobile combat loadout • damage / range / cooldown / effects",
+                theme.Small,true);
             HeroAttackCard[] attacks=HeroAttackCatalog.For(heroId);
             const float cardHeight=82f,gap=5f;
             for(int i=0;i<attacks.Length;i++)
@@ -586,29 +607,42 @@ namespace Alterverse.UI
         private void ChangeHero(int index)
         {
             if (index==selectedHero) return;
-            selectedHero=Mathf.Clamp(index,0,5);
-            PlayerHeroSelection.Select((HeroId)selectedHero);
-            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop;
+            selectedHero=Mathf.Clamp(index,0,HeroIdentity.HeroCount-1);
+            HeroId hero=(HeroId)selectedHero;
+            if(HeroUnlockInventory.Owned(hero))PlayerHeroSelection.Select(hero);
+            bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
             bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
-            showcase.Present((HeroId)selectedHero,true,
+            showcase.Present(hero,true,
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
                 previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
         }
         private void DrawShop()
         {
-            Heading("Store","Cosmetics, arenas, shards, battle supply and seasonal progression.");
-            float tabW=112f,tabGap=8f;
-            if(theme.Action(new Rect(Left,204,tabW,52),"COSMETICS",selected:skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop)){skinShop=true;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:!skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
+            Heading("Store","Cosmetics, premium heroes, arenas, shards, battle supply and seasonal progression.");
+            float tabW=104f,tabGap=7f;
+            bool avatarShop=!skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
+            if(theme.Action(new Rect(Left,204,tabW,52),"COSMETICS",selected:skinShop))
+            {skinShop=true;shardShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap),204,tabW,52),"AVATARS",selected:avatarShop))
+            {skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shopMessage="";}
             theme.Label(new Rect(Right-264,116,264,42),collection.BalanceText((HeroId)selectedHero),theme.Small);
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop)){skinShop=false;shardShop=true;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=true;mapShop=false;battlePassShop=false;shopMessage="";}
-            if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"MAPS",selected:mapShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=true;battlePassShop=false;shopMessage="";}
-            float wideX=Left+(tabW+tabGap)*5;
-            if(theme.Action(new Rect(wideX,204,150,52),"BATTLE ITEM",selected:itemShop)){skinShop=false;shardShop=false;itemShop=true;weaponShop=false;mapShop=false;battlePassShop=false;shopMessage="";}
-            if(theme.Action(new Rect(wideX+158,204,150,52),"BATTLE PASS",selected:battlePassShop)){skinShop=false;shardShop=false;itemShop=false;weaponShop=false;mapShop=false;battlePassShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*2,204,tabW,52),"SHARDS",selected:shardShop))
+            {skinShop=itemShop=weaponShop=mapShop=battlePassShop=heroShop=false;shardShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*3,204,tabW,52),"WEAPONS",selected:weaponShop))
+            {skinShop=shardShop=itemShop=mapShop=battlePassShop=heroShop=false;weaponShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*4,204,tabW,52),"HERO",selected:heroShop))
+            {skinShop=shardShop=itemShop=weaponShop=mapShop=battlePassShop=false;heroShop=true;shopMessage="";}
+            if(theme.Action(new Rect(Left+(tabW+tabGap)*5,204,tabW,52),"MAPS",selected:mapShop))
+            {skinShop=shardShop=itemShop=weaponShop=battlePassShop=heroShop=false;mapShop=true;shopMessage="";}
+            float wideX=Left+(tabW+tabGap)*6;
+            if(theme.Action(new Rect(wideX,204,138,52),"BATTLE ITEM",selected:itemShop))
+            {skinShop=shardShop=weaponShop=mapShop=battlePassShop=heroShop=false;itemShop=true;shopMessage="";}
+            if(theme.Action(new Rect(wideX+145,204,138,52),"BATTLE PASS",selected:battlePassShop))
+            {skinShop=shardShop=itemShop=weaponShop=mapShop=heroShop=false;battlePassShop=true;shopMessage="";}
+
+            if(heroShop){DrawPremiumHeroShop();return;}
             if(battlePassShop){DrawBattlePassShop();return;}
             if(itemShop){DrawBattleItemShop();return;}
             if(mapShop){DrawMapShop();return;}
@@ -642,6 +676,56 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,518,w,62),FounderEntitlement.Owned?"First Traveler status active.\nYour owned cosmetics remain available.":"The real-money store is not available yet.",theme.Body,true);
             if(RecallCosmeticEntitlement.Owned) theme.Label(new Rect(x,600,w,48),RecallCosmeticCatalog.DisplayName+" / OWNED",theme.Small,true);
         }
+        private void DrawPremiumHeroShop()
+        {
+            HeroId hero=HeroId.Traveler;
+            bool owned=HeroUnlockInventory.Owned(hero);
+            int price=HeroUnlockCatalog.Price(hero);
+            showcase.Present(hero,true,false,false,null);
+
+            float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
+            theme.Panel(new Rect(Left,270,w,394));
+            FrontEndTheme.Fill(new Rect(Left,270,5,394),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
+            DrawPortrait(new Rect(Left+22,286,w-44,320));
+            theme.Center(new Rect(Left+22,614,w-44,34),"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
+
+            theme.Label(new Rect(x,276,rw,58),"THE TRAVELER",theme.Title);
+            theme.Label(new Rect(x,342,rw,28),"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
+            theme.Label(new Rect(x,384,rw,92),
+                "A shadow moving between seconds. Bend chronolight, open paired rifts and control space with temporal fields. Premium presentation; balanced by the same combat budget as every hero.",
+                theme.Body,true);
+            theme.Label(new Rect(x,494,rw,34),owned?"OWNED":$"{price:N0} SHARDS",theme.Heading);
+            FrontEndTheme.Fill(new Rect(x,536,rw,3),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
+
+            string action=owned?"SELECT THE TRAVELER":
+                PlayerWallet.CanAfford(price)?"UNLOCK 10,000 SHARDS":"NEED 10,000 SHARDS";
+            bool enabled=owned||PlayerWallet.CanAfford(price);
+            if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled))
+            {
+                if(owned)
+                {
+                    selectedHero=(int)hero;
+                    PlayerHeroSelection.Select(hero);
+                    SetPage(Page.Heroes);
+                }
+                else
+                {
+                    HeroUnlockResult result=HeroUnlockInventory.Purchase(hero);
+                    shopMessage=result==HeroUnlockResult.Purchased?
+                        "THE TRAVELER UNLOCKED  •  PREMIUM STYLE, STANDARD BALANCE":
+                        result==HeroUnlockResult.InsufficientShards?"Not enough shards.":"Hero could not be unlocked.";
+                    if(result==HeroUnlockResult.Purchased)
+                    {
+                        selectedHero=(int)hero;
+                        PlayerHeroSelection.Select(hero);
+                        showcase.InvalidateLoadout();
+                    }
+                }
+            }
+            theme.Label(new Rect(x,636,rw,38),shopMessage.Length>0?shopMessage:
+                $"SHARDS {PlayerWallet.Balance:N0}  •  PRICE {price:N0}",theme.Small,true);
+        }
+
         private void DrawShardShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Shard Packs",theme.Heading);
@@ -675,9 +759,9 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
             theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON SKIN PREVIEW",theme.Small,true);
 
-            if(theme.Action(new Rect(Left,614,64,54),"<")){ChangeHero((selectedHero+5)%6);shopMessage="";}
+            if(theme.Action(new Rect(Left,614,64,54),"<")){ChangeHero((selectedHero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);shopMessage="";}
             theme.Center(new Rect(Left+72,614,w-144,54),$"{HeroName}  /  {item.WeaponName}");
-            if(theme.Action(new Rect(Left+w-64,614,64,54),">")){ChangeHero((selectedHero+1)%6);shopMessage="";}
+            if(theme.Action(new Rect(Left+w-64,614,64,54),">")){ChangeHero((selectedHero+1)%HeroIdentity.HeroCount);shopMessage="";}
 
             theme.Label(new Rect(x,282,rw,62),item.Name,theme.Title);
             theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
@@ -1120,7 +1204,18 @@ namespace Alterverse.UI
                 launchMessage="Selected arena is locked.";
                 return;
             }
-            PlayerHeroSelection.Select((HeroId)selectedHero); FlushAudio();
+            HeroId requestedHero=(HeroId)selectedHero;
+            if(!HeroUnlockInventory.Owned(requestedHero))
+            {
+                launchMessage="THE TRAVELER LOCKED  •  UNLOCK IN STORE FOR 10,000 SHARDS";
+                return;
+            }
+            if(!PlayerHeroSelection.Select(requestedHero))
+            {
+                launchMessage="Selected hero is unavailable.";
+                return;
+            }
+            FlushAudio();
             launchMessage=""; launching=true; launchAt=Time.unscaledTime; GUI.FocusControl(null);
             showcase.Present((HeroId)selectedHero,false);
         }
