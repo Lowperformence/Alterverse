@@ -72,6 +72,7 @@ namespace Alterverse.UI
             combatHudWasEnabled = combatHud != null && combatHud.enabled;
             if (combatHudWasEnabled) combatHud.enabled = false;
 
+            // Offline play can be paused locally. A co-op client must never pause the shared match.
             if (!CoopAuthority.Active)
             {
                 ownsPause = true;
@@ -110,6 +111,7 @@ namespace Alterverse.UI
         {
             PlayerProfile.SetAudioVolumes(master, music, sfx, false);
             PlayerProfile.SetVoiceChatVolume(voice, false);
+            // This changes incoming Vivox playback only. It never changes microphone gain.
             CoopVoiceChatService.Instance?.RefreshOutputVolume();
             audioDirty = true;
         }
@@ -132,16 +134,20 @@ namespace Alterverse.UI
 
             if (!coop)
             {
+                // Leaving an unfinished local match intentionally grants no result reward.
                 if (world != null) Destroy(world);
                 MainMenuController.ShowHome();
                 leaving = false;
                 return;
             }
 
-            // A running co-op match is shared state. Leaving the session is the safe universal
-            // behavior: guests cannot force the host back to lobby, and a host leaving closes the
-            // active room so every other participant receives the existing disconnect/abort flow.
-            if (lobby != null) await lobby.LeaveLobbyAsync();
+            // A running co-op match is shared state. Leave the session through the existing lobby
+            // service so Relay/NGO and Vivox can unwind through their normal disconnect paths.
+            if (lobby != null)
+                await lobby.LeaveLobbyAsync();
+            else
+                CoopNetworkBootstrap.ShutdownLocalNetwork();
+
             CoopAuthority.EndMatch();
             if (world != null) Destroy(world);
             MainMenuController.ShowHome();
@@ -189,74 +195,95 @@ namespace Alterverse.UI
         {
             FrontEndTheme.Fill(new Rect(0, 0, layout.Width, layout.Height), new Color(.008f, .012f, .02f, .82f));
 
-            float width = Mathf.Min(700f, layout.Width - 36f);
-            float height = Mathf.Min(486f, layout.Height - 28f);
+            // Fit all four audio controls and the leave/resume actions inside a 16:9 mobile safe area.
+            float width = Mathf.Min(720f, layout.Width - 28f);
+            float height = Mathf.Min(520f, layout.Height - 16f);
             Rect panel = new Rect((layout.Width - width) * .5f, (layout.Height - height) * .5f, width, height);
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 16, panel.width - 48, 38), "MATCH SETTINGS", theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH SETTINGS", theme.Heading);
             string state = CoopAuthority.Active
                 ? "CO-OP MATCH CONTINUES WHILE SETTINGS ARE OPEN"
                 : "MATCH PAUSED";
-            theme.Label(new Rect(panel.x + 24, panel.y + 54, panel.width - 48, 24), state, theme.Small, true);
+            theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), state, theme.Small, true);
 
             float previousMaster = master, previousMusic = music, previousSfx = sfx, previousVoice = voice;
-            DrawVolume(new Rect(panel.x + 24, panel.y + 82, panel.width - 48, 72), "Master volume", ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + 156, panel.width - 48, 72), "Music", ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + 230, panel.width - 48, 72), "Sound effects", ref sfx);
-            DrawVolume(new Rect(panel.x + 24, panel.y + 304, panel.width - 48, 72), "Voice chat", ref voice);
+            const float rowStart = 78f;
+            const float rowStep = 64f;
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Master volume", ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Music", ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Sound effects", ref sfx);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Voice chat volume", ref voice);
+            theme.Label(new Rect(panel.x + 88, panel.y + rowStart + rowStep * 4f - 3f, panel.width - 176, 20),
+                "Incoming co-op voices only • microphone level is unchanged", theme.Small, true);
+
             if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
                 ApplyAudioLive();
 
             if (!confirmLeave)
             {
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 122, panel.width - 48, 48), "RESUME MATCH", true))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "RESUME MATCH", true))
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
                     ? "LEAVE CO-OP  •  MAIN MENU"
                     : "LEAVE MATCH  •  MAIN MENU";
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 64, panel.width - 48, 40), destination))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, panel.width - 48, 34), destination))
                     confirmLeave = true;
             }
             else
             {
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 138, panel.width - 48, 34), "LEAVE THE CURRENT MATCH?", theme.Heading);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "LEAVE THE CURRENT MATCH?", theme.Heading);
                 string warning = CoopAuthority.Active
                     ? "You leave the current co-op session. The match reward is not granted."
                     : "The current match ends without a match reward.";
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 103, panel.width - 48, 28), warning, theme.Small, true);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 22), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 64, buttonWidth, 40), "CANCEL"))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "CANCEL"))
                     confirmLeave = false;
-                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 64, buttonWidth, 40), "CONFIRM LEAVE", true))
+                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "CONFIRM LEAVE", true))
                     LeaveMatchNow();
             }
         }
 
         private void DrawVolume(Rect r, string label, ref float value)
         {
-            theme.Label(new Rect(r.x, r.y, r.width - 90, 28), label, theme.Body);
-            theme.Label(new Rect(r.xMax - 82, r.y, 82, 28), $"{Mathf.RoundToInt(value * 100)}%", theme.Small);
+            theme.Label(new Rect(r.x, r.y, r.width - 90, 24), label, theme.Body);
+            theme.Label(new Rect(r.xMax - 82, r.y, 82, 24), $"{Mathf.RoundToInt(value * 100)}%", theme.Small);
 
-            if (theme.Action(new Rect(r.x, r.y + 35, 48, 36), "−"))
+            if (theme.Action(new Rect(r.x, r.y + 27, 48, 30), "−"))
                 value = Mathf.Clamp01(value - .1f);
 
-            Rect track = new Rect(r.x + 64, r.y + 48, r.width - 128, 10);
+            Rect track = new Rect(r.x + 64, r.y + 39, r.width - 128, 8);
             FrontEndTheme.Fill(track, FrontEndTheme.Raised);
             FrontEndTheme.Fill(new Rect(track.x, track.y, track.width * value, track.height), FrontEndTheme.Accent);
 
+            // Use a generous touch lane around the thin visual track for phones/tablets.
+            Rect touchTrack = new Rect(track.x, r.y + 25, track.width, 34);
+            int id = GUIUtility.GetControlID(FocusType.Passive, touchTrack);
             Event e = Event.current;
-            if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && track.Contains(e.mousePosition))
+            if (e.type == EventType.MouseDown && touchTrack.Contains(e.mousePosition))
+            {
+                GUIUtility.hotControl = id;
+                value = Mathf.Clamp01((e.mousePosition.x - track.x) / track.width);
+                e.Use();
+            }
+            if (GUIUtility.hotControl == id && e.type == EventType.MouseDrag)
             {
                 value = Mathf.Clamp01((e.mousePosition.x - track.x) / track.width);
                 e.Use();
             }
+            if (GUIUtility.hotControl == id && e.type == EventType.MouseUp)
+            {
+                value = Mathf.Clamp01((e.mousePosition.x - track.x) / track.width);
+                GUIUtility.hotControl = 0;
+                e.Use();
+            }
 
-            FrontEndTheme.Fill(new Rect(track.x + track.width * value - 5, track.center.y - 10, 10, 20), FrontEndTheme.Text);
+            FrontEndTheme.Fill(new Rect(track.x + track.width * value - 5, track.center.y - 9, 10, 18), FrontEndTheme.Text);
 
-            if (theme.Action(new Rect(r.xMax - 48, r.y + 35, 48, 36), "+"))
+            if (theme.Action(new Rect(r.xMax - 48, r.y + 27, 48, 30), "+"))
                 value = Mathf.Clamp01(value + .1f);
         }
     }
