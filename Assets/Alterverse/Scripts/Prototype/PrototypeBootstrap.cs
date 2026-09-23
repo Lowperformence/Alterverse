@@ -75,6 +75,7 @@ cam.cullingMask=~(1<<MenuShowcaseLayer);
 MobaCamera mc=cam.GetComponent<MobaCamera>()??cam.gameObject.AddComponent<MobaCamera>();mc.SetTarget(player.transform);
 
 new GameObject("AV_HUD").AddComponent<PrototypeHUD>().Initialize(ph,null,null);
+if(FindAnyObjectByType<InMatchSettingsMenu>()==null)new GameObject("DF_InMatchSettings").AddComponent<InMatchSettingsMenu>();
 new GameObject("DF_TargetIndicator").AddComponent<TargetIndicatorHUD>();
 new GameObject("DF_HeroTeamMarkers").AddComponent<HeroTeamMarkers>();
 
