@@ -3,7 +3,7 @@ using UnityEngine;
 namespace Alterverse.Match
 {
     [Flags]
-    public enum PauseReason { Menu=1, Opening=2, Result=4, Transition=8, Background=16 }
+    public enum PauseReason { Menu=1, Opening=2, Result=4, Transition=8, Background=16, Settings=32 }
     /// <summary>One owner for scaled match time. Releasing one pause cannot release another.</summary>
     public static class MatchClock
     {
