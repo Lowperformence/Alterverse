@@ -19,9 +19,16 @@ Shards=shards;Xp=xp;BaseShards=baseShards;ShardBonus=shardBonus;BaseXp=baseXp;Xp
 }
 public static class MatchRewardService
 {
+private static int grantSequence;
+public static int GrantSequence=>grantSequence;
+
+[UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+private static void ResetSequence(){grantSequence=0;}
+
 public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null)
 {
 var reward=Alterverse.Profile.MatchRewardService.GrantMatchReward(won,kills,assists,objectives,matchId);
+grantSequence++;
 return new MatchRewardResult(reward.Shards,reward.Xp,reward.BaseShards,reward.ShardBonus,reward.BaseXp,reward.XpBonus,reward.BonusCosmetic,reward.BonusPercent);
 }
 }
