@@ -34,11 +34,18 @@ namespace Alterverse.Visuals
 
         private Material Mat(Color color,bool unlit=true)
         {
-            Shader shader=Shader.Find(unlit?"Universal Render Pipeline/Unlit":"Universal Render Pipeline/Lit");
-            if(shader==null)shader=Shader.Find(unlit?"Unlit/Color":"Standard");
-            if(shader==null)return null;
-            Material m=new Material(shader){color=color};
-            materials.Add(m);return m;
+            // These visuals exist only at runtime, so use the project-owned Resources shaders
+            // instead of Shader.Find. This guarantees an Android build dependency and avoids
+            // falling back to Built-in Standard/Unlit shaders under URP (magenta materials).
+            Material m=RuntimeShaderLibrary.Create(color,unlit,unlit?0f:.02f,unlit?0f:.18f);
+            if(m==null)
+            {
+                Debug.LogError("DIMENSIONS FRONT: failed to create build-safe cosmic backdrop material.");
+                return null;
+            }
+            m.name=unlit?"DF_CosmicRuntimeUnlit":"DF_CosmicRuntimeLit";
+            materials.Add(m);
+            return m;
         }
 
         private void BuildVoidFloor()
