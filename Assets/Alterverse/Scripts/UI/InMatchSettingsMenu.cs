@@ -23,6 +23,7 @@ namespace Alterverse.UI
         private bool leaving;
         private bool audioDirty;
         private float master, music, sfx, voice;
+        private Texture2D settingsGearIcon;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Ensure()
@@ -55,6 +56,8 @@ namespace Alterverse.UI
         private void OnDestroy()
         {
             if (IsOpen) CloseOverlay();
+            if (settingsGearIcon != null)
+                Destroy(settingsGearIcon);
         }
 
         private void OpenOverlay()
@@ -198,26 +201,90 @@ namespace Alterverse.UI
             }
         }
 
-        private static void DrawSettingsGear(Rect rect)
+        private void DrawSettingsGear(Rect rect)
         {
-            Vector2 center = rect.center;
-            Color color = FrontEndTheme.Text;
-            Matrix4x4 originalMatrix = GUI.matrix;
+            settingsGearIcon ??= CreateSettingsGearIcon();
+            if (settingsGearIcon == null) return;
 
-            // Eight broad rectangular teeth create an unmistakable cog silhouette instead of
-            // the previous sun-like radial strokes. Keep everything vector-drawn for crisp mobile UI.
-            Rect tooth = new Rect(center.x - 3.25f, center.y - 18f, 6.5f, 7f);
-            for (int i = 0; i < 8; i++)
+            const float iconSize = 30f;
+            Rect iconRect = new Rect(
+                rect.center.x - iconSize * .5f,
+                rect.center.y - iconSize * .5f,
+                iconSize,
+                iconSize);
+
+            Color previous = GUI.color;
+            GUI.color = FrontEndTheme.Text;
+            GUI.DrawTexture(iconRect, settingsGearIcon, ScaleMode.StretchToFill, true);
+            GUI.color = previous;
+        }
+
+        private static Texture2D CreateSettingsGearIcon()
+        {
+            // Build the icon as pixels once. This avoids RotateAroundPivot entirely, which can distort
+            // IMGUI shapes when the combat HUD already has a non-identity scaling matrix.
+            const int size = 64;
+            const int samples = 2;
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false, true)
             {
-                GUI.matrix = originalMatrix;
-                GUIUtility.RotateAroundPivot(i * 45f, center);
-                FrontEndTheme.Fill(tooth, color);
+                name = "DF_SettingsGearIcon",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.HideAndDontSave
+            };
+
+            Color[] pixels = new Color[size * size];
+            float center = (size - 1) * .5f;
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int covered = 0;
+                    for (int sy = 0; sy < samples; sy++)
+                    {
+                        for (int sx = 0; sx < samples; sx++)
+                        {
+                            float px = ((x + (sx + .5f) / samples) - center) / (size * .5f);
+                            float py = ((y + (sy + .5f) / samples) - center) / (size * .5f);
+                            if (InsideGear(px, py)) covered++;
+                        }
+                    }
+
+                    float alpha = covered / (float)(samples * samples);
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
+                }
             }
 
-            GUI.matrix = originalMatrix;
-            // Thick body ring + clearly separated center bore reads like a conventional settings gear.
-            CombatGlyphs.Ring(center, 11f, 5f, color, 32);
-            CombatGlyphs.Ring(center, 3.4f, 2.2f, color, 20);
+            texture.SetPixels(pixels);
+            texture.Apply(false, true);
+            return texture;
+        }
+
+        private static bool InsideGear(float x, float y)
+        {
+            float radius = Mathf.Sqrt(x * x + y * y);
+            const float holeRadius = .22f;
+            const float bodyRadius = .66f;
+            const float outerRadius = .92f;
+            const float toothHalfWidth = .14f;
+
+            if (radius < holeRadius) return false;
+            if (radius <= bodyRadius) return true;
+
+            // Union of eight broad radial rectangles gives a conventional cog silhouette.
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = i * Mathf.PI * .25f;
+                float cos = Mathf.Cos(angle);
+                float sin = Mathf.Sin(angle);
+                float radial = x * cos + y * sin;
+                float tangent = -x * sin + y * cos;
+
+                if (radial >= bodyRadius * .78f && radial <= outerRadius && Mathf.Abs(tangent) <= toothHalfWidth)
+                    return true;
+            }
+
+            return false;
         }
 
         private void DrawOverlay(CombatHudLayout layout)
