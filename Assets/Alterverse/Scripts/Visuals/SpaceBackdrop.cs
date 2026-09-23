@@ -59,14 +59,14 @@ namespace Alterverse.Visuals
 
         private Material MakeUnlit(Color color)
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Unlit");if(shader==null)shader=Shader.Find("Unlit/Color");if(shader==null)return null;
-            Material m=new Material(shader){color=color};materials.Add(m);return m;
+            Material m=RuntimeShaderLibrary.Create(color,true);if(m==null)return null;
+            m.name="DF_BackdropUnlit";materials.Add(m);return m;
         }
 
         private Material MakeLit(Color color)
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");if(shader==null)return null;
-            Material m=new Material(shader){color=color};if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",.12f);materials.Add(m);return m;
+            Material m=RuntimeShaderLibrary.Create(color,false,Color.black,0f,.12f);if(m==null)return null;
+            m.name="DF_BackdropLit";materials.Add(m);return m;
         }
 
         private void OnDestroy(){foreach(Material m in materials)if(m!=null)Destroy(m);}
