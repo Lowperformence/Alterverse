@@ -30,8 +30,10 @@ namespace Alterverse.Visuals
 
         private void Awake()
         {
-            litShader=Shader.Find("Universal Render Pipeline/Lit");
-            unlitShader=Shader.Find("Universal Render Pipeline/Unlit");
+            // Resources-backed project shaders are guaranteed to be present in release players.
+            // Do not depend on Shader.Find here: the guard must also work when URP variants were stripped.
+            litShader=RuntimeShaderLibrary.Lit;
+            unlitShader=RuntimeShaderLibrary.Unlit;
             RepairAll();
             nextRepair=Time.unscaledTime+.35f;
         }
@@ -47,8 +49,8 @@ namespace Alterverse.Visuals
 
         private static void RepairAll()
         {
-            if(litShader==null)litShader=Shader.Find("Universal Render Pipeline/Lit");
-            if(unlitShader==null)unlitShader=Shader.Find("Universal Render Pipeline/Unlit");
+            if(litShader==null)litShader=RuntimeShaderLibrary.Lit;
+            if(unlitShader==null)unlitShader=RuntimeShaderLibrary.Unlit;
             if(litShader==null||unlitShader==null)return;
 
             Renderer[] renderers=FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
