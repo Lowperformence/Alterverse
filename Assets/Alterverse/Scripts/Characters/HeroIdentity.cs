@@ -18,6 +18,10 @@ CharacterController controller=GetComponent<CharacterController>();
 if(controller!=null){controller.height=HeroCollisionHeight;controller.radius=HeroCollisionRadius;}
 CapsuleCollider capsule=GetComponent<CapsuleCollider>();
 if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisionRadius;}
+// Zhaev's presentation-only sword polish reshapes the visible strike after HeroVisualMotion.
+// It never changes damage, range, cooldowns or hit timing.
+if(id==HeroId.Veyr&&GetComponent<Alterverse.Visuals.VeyrAttackPresentation>()==null)
+gameObject.AddComponent<Alterverse.Visuals.VeyrAttackPresentation>();
 }
 public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",_=>"Unknown Hero"};
 public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,_=>HeroRole.Skirmisher};
