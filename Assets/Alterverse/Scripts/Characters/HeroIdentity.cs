@@ -18,6 +18,10 @@ CharacterController controller=GetComponent<CharacterController>();
 if(controller!=null){controller.height=HeroCollisionHeight;controller.radius=HeroCollisionRadius;}
 CapsuleCollider capsule=GetComponent<CapsuleCollider>();
 if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisionRadius;}
+// Every hero receives the shared presentation-only attack readability layer. It observes existing
+// combat cooldowns and only reshapes the render rig / pooled VFX; balance and gameplay remain unchanged.
+if(GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()==null)
+gameObject.AddComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>();
 // Zhaev's presentation-only sword polish reshapes the visible strike after HeroVisualMotion.
 // It never changes damage, range, cooldowns or hit timing.
 if(id==HeroId.Veyr&&GetComponent<Alterverse.Visuals.VeyrAttackPresentation>()==null)
