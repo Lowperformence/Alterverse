@@ -1,6 +1,7 @@
 using UnityEngine;
 using Alterverse.Combat;
 using Alterverse.Characters;
+using Alterverse.Match;
 
 namespace Alterverse.AI
 {
@@ -23,6 +24,8 @@ namespace Alterverse.AI
         private int observedCall=-1;
         private float callReadyAt;
         private HeroIdentity identity;
+        private DimensionsFront match;
+        private float nextMatchScan;
         public Health Vitals=>health;
         public BotTargetSensor Sensor=>targetSensor!=null?targetSensor:(targetSensor=GetComponent<BotTargetSensor>());
         public BotTeamCoordinator Tactics=>BotTeamCoordinator.ForTeam(team);
@@ -121,6 +124,44 @@ namespace Alterverse.AI
             decisionInterval = personality.ReactionDelay;
             lowHealthThreshold = Mathf.Lerp(.22f, .42f, caution);
         }
+
+        // Score/time are public match information. The bot does not gain hidden enemy data; it only
+        // changes how much risk it accepts near the end of a close or losing/winning match.
+        private float MatchRiskAdjustment()
+        {
+            if(Time.time>=nextMatchScan)
+            {
+                nextMatchScan=Time.time+2f;
+                if(match==null)match=FindAnyObjectByType<DimensionsFront>();
+            }
+            if(match==null||match.HasEnded)return 0f;
+            bool late=match.IsOvertime||match.IsSuddenDeath||match.TimeRemaining<=120f;
+            if(!late)return 0f;
+            float own=team==0?match.ZeroControl:match.LumenControl;
+            float enemy=team==0?match.LumenControl:match.ZeroControl;
+            float gap=own-enemy;
+            if(gap>=8f)return .025f;   // protect a late lead a little more carefully
+            if(gap<=-8f)return -.020f; // a trailing team cannot spend the final minute endlessly disengaging
+            return match.IsSuddenDeath?-.010f:0f;
+        }
+
+        // Visible hero profile/status are legal local information and were previously ignored by the
+        // retreat evaluator. Ranged/control/sustain threats now slightly raise danger while wounded or
+        // controlled opponents are treated as less dangerous. This affects decisions, never combat stats.
+        private float VisibleThreatAdjustment(Health target)
+        {
+            if(target==null||target.IsDead||target.GetComponent<HeroIdentity>()==null)return 0f;
+            HeroCombatProfile enemy=target.GetComponent<HeroCombatProfile>();
+            if(enemy==null)return 0f;
+            float threat=0f;
+            if(enemy.AttackRange>4f)threat+=.012f;
+            threat+=(enemy.Control*.020f+enemy.Sustain*.010f)*Difficulty.ThreatAwareness;
+            if(target.Normalized<.30f)threat*=.55f;
+            HeroCombatStatus status=target.GetComponent<HeroCombatStatus>();
+            if(status!=null&&(status.Stunned||status.MoveMultiplier<.8f))threat*=.40f;
+            return threat;
+        }
+
         private void Decide()
         {
             if(Difficulty.Coordinated)
@@ -150,9 +191,10 @@ namespace Alterverse.AI
                 groupDecisionUntil=Time.time+groupHold;
             }
 
-            float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger,.18f,.58f);
-            float outnumberedRetreat=Mathf.Lerp(.34f,.70f,Difficulty.TeamDiscipline);
             Health visibleEnemy=targetSensor!=null?targetSensor.CurrentTarget:null;
+            danger+=VisibleThreatAdjustment(visibleEnemy);
+            float retreat=Mathf.Clamp(lowHealthThreshold+Difficulty.RetreatAdjustment+danger+MatchRiskAdjustment(),.18f,.58f);
+            float outnumberedRetreat=Mathf.Lerp(.34f,.70f,Difficulty.TeamDiscipline);
             bool coordinated=Difficulty.Coordinated&&Tactics.HasPlan;
             bool winningFinish=coordinated&&hp>.27f&&Tactics.CanFinish(visibleEnemy,transform.position);
             bool localBaseThreat=IsLocalBaseThreat(visibleEnemy)||(coordinated&&Tactics.CoreEmergency);
@@ -238,11 +280,12 @@ namespace Alterverse.AI
                 return;
             }
 
-            if(state==BotState.Fight&&recentMemory)return;
+            // fightCommitUntil used to be written but never read. Keep the intent briefly after a
+            // contact disappears so one missed perception tick cannot make the bot instantly change jobs.
+            if(state==BotState.Fight&&(recentMemory||Time.time<fightCommitUntil))return;
             fightCommitUntil=0;
             state=BotState.Roam;
         }
     }
 }
-
 
