@@ -257,10 +257,16 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
 
     Material Mat(Color c,float metallic,float smooth,bool emission=false)
     {
-        Shader sh=Shader.Find("Universal Render Pipeline/Lit");if(sh==null)sh=Shader.Find("Standard");
-        Material m=new(sh){color=c};materials.Add(m);if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",c);
-        if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smooth);
-        if(emission&&m.HasProperty("_EmissionColor")){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",c*1.25f);}return m;
+        Color glow=emission?c*1.25f:Color.black;
+        Material m=RuntimeShaderLibrary.Create(c,false,glow,metallic,smooth);
+        if(m==null)
+        {
+            Debug.LogError("DIMENSIONS FRONT: could not create Android-safe lunar material.");
+            return null;
+        }
+        m.name="DF_LunarRuntimeMaterial";
+        materials.Add(m);
+        return m;
     }
 
     void OnDestroy(){if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
