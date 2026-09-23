@@ -89,6 +89,41 @@ namespace Alterverse.Visuals
             for(int i=0;i<3;i++)LandmarkRock("DF_LumenStabilizationRemnant",lumen+new Vector2((i-1)*.46f,i*.18f),
                 new Vector3(.2f,.48f+i*.16f,.23f),i*41,0,rimMat);
             LandmarkSeam(lumen+new Vector2(-.7f,-.23f),lumen+new Vector2(.35f,-.08f),.035f,lumenEnergy);
+
+            BuildSatelliteDebris();
+        }
+
+        void BuildSatelliteDebris()
+        {
+            // Tiny destroyed-satellite remnants shared by every arena variant. MeshObject adds only a
+            // MeshFilter/MeshRenderer, so these pieces are deliberately collider-free and never affect
+            // hero movement, bot pathing or navigation. They are also folded into the static batches below.
+            Material satelliteMetal=Mat(new Color(.18f,.195f,.215f,1),.68f,.24f);
+            Material scorchedMetal=Mat(new Color(.065f,.072f,.082f,1),.52f,.13f);
+            Material deadPanel=Mat(new Color(.055f,.075f,.105f,1),.34f,.17f);
+            Vector2[] sites={
+                new(-35,20),new(-31,-18),new(-24,26),new(-19,-24),
+                new(-12,19),new(-8,-28),new(9,27),new(14,-20),
+                new(22,24),new(28,-18),new(34,12),new(36,-8)
+            };
+            for(int i=0;i<sites.Length;i++)
+            {
+                Vector2 s=sites[i];Vector3 p=LunarSurfaceField.Surface(s.x,s.y);p.y+=.025f;
+                Mesh shape=i%2==0?rockMeshB:rockMeshC;
+                Material mat=i%3==0?scorchedMetal:satelliteMetal;
+                GameObject shard=MeshObject("DF_SatelliteScrap",shape,mat,p);
+                float length=.22f+(i%4)*.035f;
+                shard.transform.localScale=i%3==0?new Vector3(length,.035f,.11f):new Vector3(.11f,.04f,length);
+                shard.transform.localRotation=Quaternion.Euler(6+(i%3)*5,i*61f,4+(i%2)*11f);
+
+                // A few sites get one additional tiny panel or antenna fragment, keeping the motif subtle.
+                if(i%3!=1)continue;
+                Vector2 o=new Vector2(((i&1)==0?.22f:-.18f),((i%4)<2?.14f:-.16f));
+                Vector3 q=LunarSurfaceField.Surface(s.x+o.x,s.y+o.y);q.y+=.018f;
+                GameObject panel=MeshObject("DF_SatellitePanelFragment",rockMeshC,deadPanel,q);
+                panel.transform.localScale=new Vector3(.16f+(i%2)*.04f,.022f,.105f);
+                panel.transform.localRotation=Quaternion.Euler(3,i*47f+23f,i%2==0?7f:-8f);
+            }
         }
         void LandmarkRock(string name,Vector2 site,Vector3 scale,float yaw,float lift,Material material)
         {
