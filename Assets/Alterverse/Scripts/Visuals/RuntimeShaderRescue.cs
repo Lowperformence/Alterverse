@@ -56,8 +56,15 @@ namespace Alterverse.Visuals
             {
                 Material material=source[i];
                 if(!NeedsRepair(material))continue;
-                repaired??=(Material[])source.Clone();
-                repaired[i]=CreateReplacement(material,renderer);
+
+                if(material==null)
+                {
+                    repaired??=(Material[])source.Clone();
+                    repaired[i]=RuntimeShaderLibrary.Create(Color.white,IsUnlit(renderer));
+                    continue;
+                }
+
+                RepairInPlace(material,renderer);
             }
             if(repaired!=null)renderer.sharedMaterials=repaired;
         }
@@ -75,27 +82,31 @@ namespace Alterverse.Visuals
             return name=="Standard"||name=="Unlit/Color";
         }
 
-        private static Material CreateReplacement(Material source,Renderer renderer)
+        private static void RepairInPlace(Material material,Renderer renderer)
         {
             Color color=Color.white;
             Color emission=Color.black;
             float metallic=0f,smoothness=.2f;
 
-            if(source!=null)
-            {
-                if(source.HasProperty("_BaseColor"))color=source.GetColor("_BaseColor");
-                else if(source.HasProperty("_Color"))color=source.GetColor("_Color");
-                else color=source.color;
-                if(source.HasProperty("_EmissionColor"))emission=source.GetColor("_EmissionColor");
-                if(source.HasProperty("_Metallic"))metallic=source.GetFloat("_Metallic");
-                if(source.HasProperty("_Smoothness"))smoothness=source.GetFloat("_Smoothness");
-                else if(source.HasProperty("_Glossiness"))smoothness=source.GetFloat("_Glossiness");
-            }
+            if(material.HasProperty("_BaseColor"))color=material.GetColor("_BaseColor");
+            else if(material.HasProperty("_Color"))color=material.GetColor("_Color");
+            else color=material.color;
+            if(material.HasProperty("_EmissionColor"))emission=material.GetColor("_EmissionColor");
+            if(material.HasProperty("_Metallic"))metallic=material.GetFloat("_Metallic");
+            if(material.HasProperty("_Smoothness"))smoothness=material.GetFloat("_Smoothness");
+            else if(material.HasProperty("_Glossiness"))smoothness=material.GetFloat("_Glossiness");
 
-            bool unlit=renderer.shadowCastingMode==ShadowCastingMode.Off&&!renderer.receiveShadows;
-            Material replacement=RuntimeShaderLibrary.Create(color,unlit,metallic,smoothness,emission);
-            if(replacement!=null)replacement.name="DF_RuntimeSafe_"+(source!=null?source.name:"MissingMaterial");
-            return replacement;
+            Shader safe=IsUnlit(renderer)?RuntimeShaderLibrary.Unlit:RuntimeShaderLibrary.Lit;
+            if(safe==null)return;
+            material.shader=safe;
+
+            if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
+            if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
+            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Clamp01(metallic));
+            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Clamp01(smoothness));
         }
+
+        private static bool IsUnlit(Renderer renderer)
+            =>renderer.shadowCastingMode==ShadowCastingMode.Off&&!renderer.receiveShadows;
     }
 }
