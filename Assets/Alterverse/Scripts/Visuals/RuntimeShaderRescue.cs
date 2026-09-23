@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
     /// The rescue pass only touches missing/unsupported/built-in fallback shaders and preserves
     /// the authored color/emission while swapping to project-owned Resources shaders.
     /// </summary>
+    [DefaultExecutionOrder(10000)]
     public sealed class RuntimeShaderRescue : MonoBehaviour
     {
         private float nextScan;
@@ -32,9 +33,9 @@ namespace Alterverse.Visuals
         private void Update()
         {
             if(Time.unscaledTime<nextScan)return;
-            // Most procedural arena/mech visuals are built during the first frames. Scan quickly
-            // during that window, then keep a cheap low-frequency safety pass for later events.
-            nextScan=Time.unscaledTime+(Time.unscaledTime<intensiveScanUntil?.35f:2.5f);
+            // Every frame during the initial build window prevents a one-frame magenta flash.
+            // Afterwards this becomes a cheap low-frequency safety pass for later spawned events.
+            nextScan=Time.unscaledTime+(Time.unscaledTime<intensiveScanUntil ? 0f : 2.5f);
             RepairAll();
         }
 
