@@ -1,3 +1,4 @@
+using Alterverse.AI;
 using Alterverse.Match;
 using Alterverse.Multiplayer;
 using Alterverse.Profile;
@@ -131,6 +132,9 @@ namespace Alterverse.UI
             if (world != null) world.SetActive(false);
             MatchClock.Set(PauseReason.Result, false);
             MatchClock.Set(PauseReason.Settings, false);
+            // Co-op difficulty is a match-scoped override. Clear it on an aborted/left match so
+            // the next local match always starts from the player's selected difficulty.
+            BotDifficultySettings.EndMatchOverride();
 
             if (!coop)
             {
@@ -176,7 +180,7 @@ namespace Alterverse.UI
 
                 if (!IsOpen)
                 {
-                    if (theme.Action(new Rect(layout.Width - 166, 16, 150, 46), "SETTINGS"))
+                    if (theme.Action(new Rect(layout.Width - 166, 16, 150, 46), "OPTIONEN"))
                         OpenOverlay();
                     return;
                 }
@@ -202,47 +206,47 @@ namespace Alterverse.UI
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH SETTINGS", theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH-OPTIONEN", theme.Heading);
             string state = CoopAuthority.Active
-                ? "CO-OP MATCH CONTINUES WHILE SETTINGS ARE OPEN"
-                : "MATCH PAUSED";
+                ? "CO-OP-MATCH LÄUFT WEITER, WÄHREND DIE OPTIONEN GEÖFFNET SIND"
+                : "MATCH PAUSIERT";
             theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), state, theme.Small, true);
 
             float previousMaster = master, previousMusic = music, previousSfx = sfx, previousVoice = voice;
             const float rowStart = 78f;
             const float rowStep = 64f;
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Master volume", ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Music", ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Sound effects", ref sfx);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Voice chat volume", ref voice);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Spiellautstärke", ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Musik", ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Soundeffekte", ref sfx);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Sprachchat-Lautstärke", ref voice);
             theme.Label(new Rect(panel.x + 88, panel.y + rowStart + rowStep * 4f - 3f, panel.width - 176, 20),
-                "Incoming co-op voices only • microphone level is unchanged", theme.Small, true);
+                "Nur empfangene Co-op-Stimmen • Mikrofonpegel bleibt unverändert", theme.Small, true);
 
             if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
                 ApplyAudioLive();
 
             if (!confirmLeave)
             {
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "RESUME MATCH", true))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "MATCH FORTSETZEN", true))
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
-                    ? "LEAVE CO-OP  •  MAIN MENU"
-                    : "LEAVE MATCH  •  MAIN MENU";
+                    ? "CO-OP VERLASSEN  •  HAUPTMENÜ"
+                    : "MATCH VERLASSEN  •  HAUPTMENÜ";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, panel.width - 48, 34), destination))
                     confirmLeave = true;
             }
             else
             {
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "LEAVE THE CURRENT MATCH?", theme.Heading);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "AKTUELLEN MATCH VERLASSEN?", theme.Heading);
                 string warning = CoopAuthority.Active
-                    ? "You leave the current co-op session. The match reward is not granted."
-                    : "The current match ends without a match reward.";
+                    ? "Du verlässt die aktuelle Co-op-Sitzung. Es gibt keine Match-Belohnung."
+                    : "Der aktuelle Match endet ohne Match-Belohnung.";
                 theme.Label(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 22), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "CANCEL"))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "ABBRECHEN"))
                     confirmLeave = false;
-                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "CONFIRM LEAVE", true))
+                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "MATCH VERLASSEN", true))
                     LeaveMatchNow();
             }
         }
