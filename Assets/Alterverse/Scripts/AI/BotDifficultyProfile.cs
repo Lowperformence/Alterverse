@@ -12,11 +12,13 @@ namespace Alterverse.AI
         public readonly float ThreatAwareness, TeamDiscipline, ObjectiveAwareness, DodgeAwareness;
         public readonly float ChaseDiscipline, AbilityDiscipline;
         public readonly float DamageTakenMultiplier;
-        // Architecture gates: existing Hard/Expert discipline profiles opt into shared calls.
-        public bool Coordinated => TeamDiscipline >= .8f;
+
+        // MEDIUM is the default player-facing difficulty, so it must understand basic team play.
+        // EASY remains deliberately individual. HARD/EXPERT still coordinate faster and more reliably.
+        public bool Coordinated => TeamDiscipline >= .58f;
         public bool FullTeamCalls => TeamDiscipline >= .95f;
-        public float TeamCallDelay => FullTeamCalls ? .18f : .32f;
-        public float FollowUpDelay => FullTeamCalls ? .12f : .28f;
+        public float TeamCallDelay => FullTeamCalls ? .18f : TeamDiscipline >= .8f ? .32f : .48f;
+        public float FollowUpDelay => FullTeamCalls ? .12f : TeamDiscipline >= .8f ? .28f : .42f;
 
         private BotDifficultyProfile(
             float reaction,float decision,float objective,float accuracy,float retreat,float grouping,
@@ -41,8 +43,8 @@ namespace Alterverse.AI
             BotDifficulty.Expert=>new(.11f,.50f,.28f,.98f,.075f,.98f,6.00f,.015f,.98f,1.00f,.98f,1.00f,.98f,.98f,.99f,.96f),
 
             // Internal enum stays Normal for save compatibility; player-facing label is MEDIUM.
+            // MEDIUM now participates in shared tactical calls, but with slower reaction/follow-up timings.
             _=>new(.38f,1.00f,1.10f,.60f,0f,.58f,2.50f,.18f,.58f,.58f,.58f,.60f,.62f,.58f,.60f,1f)
         };
     }
 }
-
