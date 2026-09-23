@@ -202,15 +202,22 @@ namespace Alterverse.UI
         {
             Vector2 center = rect.center;
             Color color = FrontEndTheme.Text;
+            Matrix4x4 originalMatrix = GUI.matrix;
 
-            CombatGlyphs.Ring(center, 10f, 3f, color, 20);
+            // Eight broad rectangular teeth create an unmistakable cog silhouette instead of
+            // the previous sun-like radial strokes. Keep everything vector-drawn for crisp mobile UI.
+            Rect tooth = new Rect(center.x - 3.25f, center.y - 18f, 6.5f, 7f);
             for (int i = 0; i < 8; i++)
             {
-                float angle = i * Mathf.PI * .25f;
-                Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
-                CombatGlyphs.Line(center + direction * 11.5f, center + direction * 16f, 4.5f, color);
+                GUI.matrix = originalMatrix;
+                GUIUtility.RotateAroundPivot(i * 45f, center);
+                FrontEndTheme.Fill(tooth, color);
             }
-            CombatGlyphs.Ring(center, 3.5f, 2.4f, color, 14);
+
+            GUI.matrix = originalMatrix;
+            // Thick body ring + clearly separated center bore reads like a conventional settings gear.
+            CombatGlyphs.Ring(center, 11f, 5f, color, 32);
+            CombatGlyphs.Ring(center, 3.4f, 2.2f, color, 20);
         }
 
         private void DrawOverlay(CombatHudLayout layout)
