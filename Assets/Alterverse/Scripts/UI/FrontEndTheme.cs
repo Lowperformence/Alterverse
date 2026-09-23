@@ -5,17 +5,19 @@ namespace Alterverse.UI
     /// <summary>Shared frontend surfaces. No global GUI.skin mutation or generated textures.</summary>
     internal sealed class FrontEndTheme
     {
-        public static readonly Color Background = new(.027f, .035f, .049f);
-        public static readonly Color Surface = new(.061f, .075f, .095f);
-        public static readonly Color Raised = new(.096f, .117f, .145f);
-        public static readonly Color Text = new(.93f, .95f, .97f);
-        public static readonly Color Muted = new(.61f, .68f, .75f);
-        public static readonly Color Accent = new(.39f, .82f, .80f);
-        public static readonly Color Zero = new(.51f, .38f, .69f);
+        public static readonly Color Background = new(.020f, .028f, .041f);
+        public static readonly Color Surface = new(.050f, .067f, .089f);
+        public static readonly Color Raised = new(.085f, .112f, .148f);
+        public static readonly Color Text = new(.96f, .975f, .99f);
+        public static readonly Color Muted = new(.63f, .71f, .79f);
+        public static readonly Color Accent = new(.32f, .88f, .86f);
+        public static readonly Color Zero = new(.60f, .39f, .82f);
+        private static readonly Color Edge = new(.17f,.22f,.29f);
+        private static readonly Color Recess = new(.018f,.024f,.035f);
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered;
         private readonly GUIContent measuredText=new GUIContent();
-        // Compact labels cannot wrap into neighbouring controls. Shared styles are restored.
+
         public void FitLabel(Rect rect,string text,GUIStyle style,bool muted=false)
         {
             int size=style.fontSize;bool wrap=style.wordWrap;TextClipping clip=style.clipping;
@@ -52,8 +54,10 @@ namespace Alterverse.UI
         public void Panel(Rect rect)
         {
             Fill(rect, Surface);
-            Fill(new Rect(rect.x, rect.y, rect.width, 1), new Color(.17f,.21f,.26f));
-            Fill(new Rect(rect.x, rect.yMax-1, rect.width, 1), new Color(.035f,.045f,.065f));
+            Fill(new Rect(rect.x,rect.y,rect.width,1),Edge);
+            Fill(new Rect(rect.x,rect.y,1,rect.height),new Color(.12f,.16f,.21f));
+            Fill(new Rect(rect.xMax-1,rect.y,1,rect.height),Recess);
+            Fill(new Rect(rect.x,rect.yMax-1,rect.width,1),Recess);
         }
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
         {
@@ -65,15 +69,23 @@ namespace Alterverse.UI
             bool previous = GUI.enabled; GUI.enabled = previous && enabled;
             Color surface = primary ? Accent : selected ? Raised : Surface;
             Fill(rect, enabled ? surface : Surface);
+            if(!primary)
+            {
+                Fill(new Rect(rect.x,rect.y,rect.width,1),selected?new Color(.23f,.31f,.40f):Edge);
+                Fill(new Rect(rect.x,rect.yMax-1,rect.width,1),Recess);
+            }
             if (selected) Fill(new Rect(rect.x, rect.y, 3, rect.height), Accent);
-            if (primary) Fill(new Rect(rect.x+1,rect.y+1,rect.width-2,1),new Color(1,1,1,.24f));
+            if (primary)
+            {
+                Fill(new Rect(rect.x+1,rect.y+1,rect.width-2,1),new Color(1,1,1,.30f));
+                Fill(new Rect(rect.x,rect.yMax-1,rect.width,1),new Color(.025f,.12f,.13f,.38f));
+            }
             bool clicked = GUI.Button(rect, GUIContent.none, GUIStyle.none);
             Color before = GUI.color;
-            GUI.color *= !enabled ? Muted : primary ? new Color(.045f,.095f,.11f) : Text;
+            GUI.color *= !enabled ? Muted : primary ? new Color(.035f,.085f,.10f) : Text;
             GUI.Label(rect, text, Button); GUI.color = before;
-            // Press feedback also works for touch; no hover is required.
             if (GUI.enabled && rect.Contains(Event.current.mousePosition) && GUIUtility.hotControl != 0)
-                Fill(rect, new Color(1,1,1,.07f));
+                Fill(rect, new Color(1,1,1,.09f));
             GUI.enabled = previous;
             if(clicked)Alterverse.Audio.UiSoundRouter.Confirm();
             return clicked;
@@ -86,4 +98,3 @@ namespace Alterverse.UI
         public void Center(Rect rect, string text) => Label(rect, text, centered, true);
     }
 }
-
