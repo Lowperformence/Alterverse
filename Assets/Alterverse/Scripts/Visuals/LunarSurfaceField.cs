@@ -5,9 +5,8 @@ namespace Alterverse.Visuals
     /// <summary>Deterministic visual geology shared by every arena variant. No physics, navigation or global random state.</summary>
     public static class LunarSurfaceField
     {
-        // Shared impact field for ALL maps. Every arena variant uses these same crater positions and
-        // relief before its own surface palette is applied, so Moon, Mars, Green Planet, Noxara and Kryon
-        // all retain visible impact geology without changing gameplay collision/pathing.
+        // Shared impact anchors. The Moon uses a stronger crater profile while the other arena
+        // variants keep the same placements with their existing restrained relief.
         private static readonly Vector3[] craters={
             new(-18,1.65f,5),new(-11,1.1f,-7),new(17,1.45f,-6),new(10,.9f,7),
             new(-8,2.1f,29),new(9,1.8f,-29),new(-34,1.55f,27),new(34,1.65f,-27),
@@ -38,48 +37,112 @@ namespace Alterverse.Visuals
 
             // Central micro impacts keep the objective court geological without obscuring it.
             new(-9,.46f,2),new(-7,.58f,-3),new(-3,.42f,6),new(2,.5f,-5),
-            new(6,.44f,3),new(8,.6f,-2),new(-1,.38f,9),new(3,.42f,-9)
+            new(6,.44f,3),new(8,.6f,-2),new(-1,.38f,9),new(3,.42f,-9),
+
+            // Reference-inspired crater families. These cluster around major outer impacts instead of
+            // being evenly distributed, producing overlapping bowls and secondary impacts like the photo.
+            new(-27,2.7f,30),new(-31,1.15f,31.5f),new(-25,.72f,32.4f),
+            new(27,2.55f,-30),new(31,1.05f,-31.3f),new(24.7f,.66f,-32.2f),
+            new(-37,2.25f,8),new(-39.2f,.82f,10.1f),new(-34.7f,.62f,9.9f),
+            new(37,2.15f,-8),new(39.1f,.76f,-10.2f),new(34.8f,.58f,-9.7f),
+            new(-18,2.35f,-30),new(-20.4f,.86f,-32),new(-15.7f,.62f,-31.8f),
+            new(18,2.25f,30),new(20.1f,.82f,31.7f),new(15.8f,.58f,32.1f)
         };
+
+        private static bool IsMoon=>!ArenaVariantRuntime.IsMars&&!ArenaVariantRuntime.IsGreenPlanet&&
+                                   !ArenaVariantRuntime.IsNoxara&&!ArenaVariantRuntime.IsKryon;
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
+
         // Kept only as a compatibility hook for callers from older content. The current game has
         // no lane corridors, so terrain receives no lane-specific flattening or tint.
         public static float LaneWeight(float x,float z)=>0f;
+
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
+            bool moon=IsMoon;
             float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
-            relief=(macro-.5f)*.19f+(medium-.5f)*.085f;
-            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.018f;
+            relief=(macro-.5f)*(moon?.16f:.19f)+(medium-.5f)*(moon?.07f:.085f);
+            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*(moon?.028f:.018f);
             dust=0f;
             float craterWear=0f;
-            // This crater pass is deliberately variant-agnostic: every map receives the same bowl/rim
-            // structure, while the later Bake palette makes it read as rock, rust, alien mineral or ice.
+
+            // The Moon gets flatter crater floors, steeper walls and brighter broken rims. Actual gameplay
+            // collision remains unchanged: this is presentation geometry only. Relief near the active centre
+            // is deliberately restrained while outer landmark craters can read much deeper from the MOBA camera.
+            float outer=Mathf.Clamp01(Mathf.Max((Mathf.Abs(x)-22f)/17f,(Mathf.Abs(z)-17f)/16f));
             for(int i=0;i<craters.Length;i++)
             {
                 Vector3 c=craters[i];float dx=x-c.x,dz=z-c.z,r=c.y;
-                if(Mathf.Abs(dx)>r*1.6f||Mathf.Abs(dz)>r*1.6f)continue;
+                if(Mathf.Abs(dx)>r*1.65f||Mathf.Abs(dz)>r*1.65f)continue;
                 float angle=Mathf.Atan2(dz,dx);
-                float wobble=1+.08f*Mathf.Sin(angle*(3+i%3)+i*.71f)+.035f*Mathf.Sin(angle*7+i);
+                float wobble=1+.09f*Mathf.Sin(angle*(3+i%4)+i*.71f)+.04f*Mathf.Sin(angle*(7+i%3)+i*.37f);
                 float q=Mathf.Sqrt(dx*dx+dz*dz)/(r*wobble);
-                if(q>1.6f)continue;
-                float bowl=Mathf.Clamp01(1-q*q),rim=Mathf.Exp(-Mathf.Pow((q-.96f)/.14f,2));
-                float eroded=.58f+.42f*Noise(x,z,.8f,19+i);
+                if(q>1.62f)continue;
+
+                float wallT=Mathf.InverseLerp(.36f,.98f,q);
+                float bowl=q<=.36f?1f:1f-Mathf.SmoothStep(0f,1f,wallT);
+                float rimWidth=moon?.105f:.14f;
+                float rim=Mathf.Exp(-Mathf.Pow((q-1.0f)/rimWidth,2));
+                float eroded=.60f+.40f*Noise(x,z,moon?.95f:.8f,19+i);
                 float basinScale=Mathf.Lerp(.72f,1.2f,Mathf.InverseLerp(.4f,5.5f,r));
-                relief+=(-bowl*.205f+rim*.102f)*eroded*basinScale;
-                float shadow=bowl*(.07f+.075f*Mathf.Clamp01((dx-dz)/r+.5f));
-                tone+=rim*.075f*eroded-shadow*.95f;
-                craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.78f+rim*.42f));
-                if(q>1&&q<1.6f)tone+=.014f*(1-(q-1)/.6f)*Mathf.Max(0,Mathf.Sin(angle*11+i)*.5f+.5f);
+
+                float depth;
+                float rimHeight;
+                if(moon)
+                {
+                    float sizeWeight=Mathf.InverseLerp(.38f,5.5f,r);
+                    depth=Mathf.Lerp(.105f,.38f,sizeWeight)*Mathf.Lerp(.78f,1.18f,outer);
+                    rimHeight=Mathf.Lerp(.055f,.17f,sizeWeight)*Mathf.Lerp(.86f,1.16f,outer);
+                }
+                else
+                {
+                    depth=.205f*basinScale;
+                    rimHeight=.102f*basinScale;
+                }
+
+                // Small floor roughness prevents perfect circular cookie-cutter bowls while preserving
+                // the broad flat-bottomed impact character visible in the reference image.
+                float floorVariation=moon&&q<.5f?(Noise(x,z,1.35f,67+i)-.5f)*.022f:0f;
+                relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
+
+                float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
+                float interiorShadow=bowl*(moon?.095f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.85f);
+                float litRim=rim*(moon?.105f:.075f)*(1f+Mathf.Max(0f,lightSide)*.5f);
+                tone+=litRim*eroded-interiorShadow;
+                craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.82f+rim*.46f));
+
+                // Sparse ejecta rays outside rims break the otherwise circular silhouette.
+                if(q>1f&&q<1.62f)
+                {
+                    float ejecta=1f-(q-1f)/.62f;
+                    float ray=Mathf.Max(0f,Mathf.Sin(angle*(9+i%5)+i*.63f)*.5f+.5f);
+                    tone+=(moon?.026f:.014f)*ejecta*ray*eroded;
+                }
             }
-            // A subtle shared darkening keeps craters legible even on the brighter Kryon/Green palettes.
-            tone-=craterWear*.026f;
-            dust=Mathf.Max(dust,craterWear*.28f);
+
+            tone-=craterWear*(moon?.048f:.026f);
+            dust=Mathf.Max(dust,craterWear*(moon?.42f:.28f));
+
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
             float broken=Mathf.Clamp01(.35f+Mathf.Sin(a0*3+.8f));
             tone-=frontRing*.045f*broken;
             relief-=frontRing*.025f*broken;
-            relief=Mathf.Clamp(relief,-.245f,.115f);tone=Mathf.Clamp(tone,.28f,.66f);
+
+            if(moon)
+            {
+                float minRelief=Mathf.Lerp(-.27f,-.46f,outer);
+                float maxRelief=Mathf.Lerp(.15f,.22f,outer);
+                relief=Mathf.Clamp(relief,minRelief,maxRelief);
+                tone=Mathf.Clamp(tone,.20f,.70f);
+            }
+            else
+            {
+                relief=Mathf.Clamp(relief,-.245f,.115f);
+                tone=Mathf.Clamp(tone,.28f,.66f);
+            }
         }
+
         public static Vector3 Surface(float x,float z)
         {
             float wx=Mathf.Pow(Mathf.Abs(x)/42f,14),wz=Mathf.Pow(Mathf.Abs(z)/36f,14);
@@ -87,51 +150,56 @@ namespace Alterverse.Visuals
             z+=Mathf.Sign(z)*wz*(.4f+Noise(x,z,.29f,63)*2.1f);
             Sample(x,z,out float relief,out _,out _);return new Vector3(x,.015f+relief,z);
         }
+
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
             const int size=512;const float spanX=96,spanZ=84;
+            bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 Sample(-48+spanX*x/(size-1),-42+spanZ*z/(size-1),out float h,out float tone,out float dust);
                 int i=z*size+x;heights[i]=h;
-                // The shared crater wear slightly lowers local value on every variant, then each map
-                // applies its own palette so the crater remains native to that world rather than pasted on.
-                float value=Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
-                value*=1f-dust*.055f;
+                float value=moon
+                    ?Mathf.Lerp(.18f,.50f,Mathf.InverseLerp(.20f,.70f,tone))
+                    :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
+                value*=1f-dust*(moon?.085f:.055f);
                 if(ArenaVariantRuntime.IsMars)
                 {
-                    // Iron-rich, dusty Mars palette: muted rust rather than saturated comic red.
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.28f,.66f,tone));
                     pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f,1);
                 }
                 else if(ArenaVariantRuntime.IsGreenPlanet)
                 {
-                    // Mineral alien regolith: olive/moss/grey-green.
                     float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
                     pixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
                 }
                 else if(ArenaVariantRuntime.IsNoxara)
                 {
-                    // Noxara reuses the exact shared relief while shifting the regolith into a
-                    // deep cobalt/navy range. Keep values restrained so heroes remain readable.
                     float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
                     pixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
                 }
                 else if(ArenaVariantRuntime.IsKryon)
                 {
-                    // Kryon uses the same crater geometry but reads as compacted ice and frozen dust.
                     float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.28f,.66f,tone));
                     frost*=1f-dust*.025f;
                     pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
                 }
-                else pixels[i]=new Color(value*.94f,value*.98f,value*1.055f,1);
+                else
+                {
+                    // Neutral, slightly cold regolith. Strong value separation in bowls/rims is what makes
+                    // the surface read as dense lunar geology instead of a flat grey game board.
+                    pixels[i]=new Color(value*.94f,value*.965f,value,1);
+                }
             }
+
+            float normalStrength=moon?2.55f:1.8f;
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));
                 float dz=(heights[Mathf.Min(size-1,z+1)*size+x]-heights[Mathf.Max(0,z-1)*size+x])/(2*spanZ/(size-1));
-                Vector3 n=new Vector3(-dx*1.8f,-dz*1.8f,1).normalized;normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
+                Vector3 n=new Vector3(-dx*normalStrength,-dz*normalStrength,1).normalized;
+                normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
             albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
             normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
