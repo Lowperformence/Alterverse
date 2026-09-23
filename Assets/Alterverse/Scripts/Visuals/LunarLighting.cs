@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
-    // One directional key; no added point lights or post-process volumes. Restore scene state on teardown.
+    // One directional key and tuned ambient fill: mobile-friendly depth without extra lights or fullscreen post FX.
     public sealed class LunarLighting:MonoBehaviour
     {
         private Light key;private bool created,applied;
@@ -17,11 +17,20 @@ namespace Alterverse.Visuals
             {key=null;foreach(Light light in FindObjectsByType<Light>())if(light.type==LightType.Directional&&light.enabled){key=light;break;}}
             if(key==null){GameObject obj=new("DF_LunarKey");obj.transform.SetParent(transform,false);key=obj.AddComponent<Light>();key.type=LightType.Directional;created=true;}
             rotation=key.transform.rotation;intensity=key.intensity;shadowStrength=key.shadowStrength;lightColor=key.color;mask=key.cullingMask;
-            key.transform.rotation=Quaternion.Euler(39,-38,0);key.intensity=1.12f;key.shadowStrength=Mathf.Min(shadowStrength,.78f);key.color=new Color(.93f,.96f,1f);
+
+            key.transform.rotation=Quaternion.Euler(42f,-36f,0f);
+            key.intensity=1.18f;
+            key.shadowStrength=Mathf.Min(shadowStrength,.82f);
+            key.color=new Color(.92f,.955f,1f);
             key.cullingMask&=~(1<<31); // Menu showcase has its own isolated studio lights.
-            RenderSettings.ambientMode=AmbientMode.Trilight;RenderSettings.ambientSkyColor=new Color(.27f,.30f,.36f);
-            RenderSettings.ambientEquatorColor=new Color(.125f,.14f,.165f);RenderSettings.ambientGroundColor=new Color(.070f,.080f,.095f);
-            RenderSettings.reflectionIntensity=.25f;RenderSettings.fog=false;applied=true;
+
+            RenderSettings.ambientMode=AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor=new Color(.24f,.27f,.33f);
+            RenderSettings.ambientEquatorColor=new Color(.105f,.125f,.155f);
+            RenderSettings.ambientGroundColor=new Color(.052f,.062f,.078f);
+            RenderSettings.reflectionIntensity=.31f;
+            RenderSettings.fog=false;
+            applied=true;
         }
         private void OnDisable()
         {
@@ -33,4 +42,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
