@@ -21,7 +21,7 @@ namespace Alterverse.UI
         private bool confirmLeave;
         private bool leaving;
         private bool audioDirty;
-        private float master, music, sfx;
+        private float master, music, sfx, voice;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Ensure()
@@ -35,6 +35,7 @@ namespace Alterverse.UI
             master = PlayerProfile.MasterVolume;
             music = PlayerProfile.MusicVolume;
             sfx = PlayerProfile.SfxVolume;
+            voice = PlayerProfile.VoiceChatVolume;
         }
 
         private void Update()
@@ -62,6 +63,7 @@ namespace Alterverse.UI
             master = PlayerProfile.MasterVolume;
             music = PlayerProfile.MusicVolume;
             sfx = PlayerProfile.SfxVolume;
+            voice = PlayerProfile.VoiceChatVolume;
             audioDirty = false;
             confirmLeave = false;
             IsOpen = true;
@@ -98,13 +100,17 @@ namespace Alterverse.UI
         private void FlushAudio()
         {
             if (!audioDirty) return;
-            PlayerProfile.SetAudioVolumes(master, music, sfx, true);
+            // Saving either preference group flushes all current PlayerPrefs, so persist once here.
+            PlayerProfile.SetAudioVolumes(master, music, sfx, false);
+            PlayerProfile.SetVoiceChatVolume(voice, true);
             audioDirty = false;
         }
 
         private void ApplyAudioLive()
         {
             PlayerProfile.SetAudioVolumes(master, music, sfx, false);
+            PlayerProfile.SetVoiceChatVolume(voice, false);
+            CoopVoiceChatService.Instance?.RefreshOutputVolume();
             audioDirty = true;
         }
 
@@ -195,11 +201,12 @@ namespace Alterverse.UI
                 : "MATCH PAUSED";
             theme.Label(new Rect(panel.x + 24, panel.y + 54, panel.width - 48, 24), state, theme.Small, true);
 
-            float previousMaster = master, previousMusic = music, previousSfx = sfx;
-            DrawVolume(new Rect(panel.x + 24, panel.y + 88, panel.width - 48, 78), "Master volume", ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + 174, panel.width - 48, 78), "Music", ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + 260, panel.width - 48, 78), "Sound effects", ref sfx);
-            if (previousMaster != master || previousMusic != music || previousSfx != sfx)
+            float previousMaster = master, previousMusic = music, previousSfx = sfx, previousVoice = voice;
+            DrawVolume(new Rect(panel.x + 24, panel.y + 82, panel.width - 48, 72), "Master volume", ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + 156, panel.width - 48, 72), "Music", ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + 230, panel.width - 48, 72), "Sound effects", ref sfx);
+            DrawVolume(new Rect(panel.x + 24, panel.y + 304, panel.width - 48, 72), "Voice chat", ref voice);
+            if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
                 ApplyAudioLive();
 
             if (!confirmLeave)
