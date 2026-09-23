@@ -180,7 +180,10 @@ namespace Alterverse.UI
 
                 if (!IsOpen)
                 {
-                    if (theme.Action(new Rect(layout.Width - 166, 16, 150, 46), "OPTIONEN"))
+                    Rect settingsButton = new Rect(layout.Width - 62, 16, 46, 46);
+                    bool openSettings = theme.Action(settingsButton, string.Empty);
+                    DrawSettingsGear(settingsButton);
+                    if (openSettings)
                         OpenOverlay();
                     return;
                 }
@@ -193,6 +196,21 @@ namespace Alterverse.UI
                 GUI.matrix = matrix;
                 GUI.color = color;
             }
+        }
+
+        private static void DrawSettingsGear(Rect rect)
+        {
+            Vector2 center = rect.center;
+            Color color = FrontEndTheme.Text;
+
+            CombatGlyphs.Ring(center, 10f, 3f, color, 20);
+            for (int i = 0; i < 8; i++)
+            {
+                float angle = i * Mathf.PI * .25f;
+                Vector2 direction = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                CombatGlyphs.Line(center + direction * 11.5f, center + direction * 16f, 4.5f, color);
+            }
+            CombatGlyphs.Ring(center, 3.5f, 2.4f, color, 14);
         }
 
         private void DrawOverlay(CombatHudLayout layout)
