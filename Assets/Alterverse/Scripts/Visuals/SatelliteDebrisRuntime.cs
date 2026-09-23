@@ -6,7 +6,7 @@ using Alterverse.Match;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Adds tiny, purely decorative satellite wreckage to every arena variant.
+    /// Adds purely decorative satellite wreckage to the arena.
     /// The debris is rendered as one lightweight mesh and deliberately has no
     /// Collider, Rigidbody or NavMeshObstacle, so gameplay movement/pathing is untouched.
     /// </summary>
@@ -44,9 +44,9 @@ namespace Alterverse.Visuals
 
         void BuildDebris(Transform parent)
         {
-            // Small authored pockets stay away from bases, heal stations and the central objective.
-            // Each pocket contains only 2-3 fragments so the result reads as old orbital wreckage,
-            // not as a second gameplay obstacle layer.
+            // Authored pockets stay away from bases, heal stations and the central objective.
+            // On the Moon a few pieces are large enough to read as a crashed satellite from
+            // the normal gameplay camera. They remain visual-only and use one combined mesh.
             Vector2[] pockets =
             {
                 new(-31f, 22f), new(-25f, -23f), new(-15f, 27f), new(-10f, -24f),
@@ -54,41 +54,43 @@ namespace Alterverse.Visuals
                 new(-35f, -12f), new(35f, 13f), new(-20f, 15f), new(21f, -14f)
             };
 
-            var vertices = new List<Vector3>(pockets.Length * 24);
-            var triangles = new List<int>(pockets.Length * 108);
+            bool moon = !ArenaVariantRuntime.IsMars && !ArenaVariantRuntime.IsGreenPlanet &&
+                        !ArenaVariantRuntime.IsNoxara && !ArenaVariantRuntime.IsKryon;
+            var vertices = new List<Vector3>(pockets.Length * 32);
+            var triangles = new List<int>(pockets.Length * 144);
 
             for (int pocket = 0; pocket < pockets.Length; pocket++)
             {
-                int pieces = pocket % 3 == 0 ? 3 : 2;
+                int pieces = moon && pocket % 4 == 0 ? 4 : (pocket % 3 == 0 ? 3 : 2);
                 for (int piece = 0; piece < pieces; piece++)
                 {
                     float phase = pocket * 1.731f + piece * 2.417f;
-                    Vector2 offset = new(Mathf.Sin(phase) * (.22f + piece * .07f),
-                                         Mathf.Cos(phase * 1.19f) * (.18f + piece * .06f));
+                    float spread = moon ? .46f : .28f;
+                    Vector2 offset = new(Mathf.Sin(phase) * (spread + piece * .09f),
+                                         Mathf.Cos(phase * 1.19f) * (spread * .8f + piece * .07f));
                     Vector2 site = pockets[pocket] + offset;
                     Vector3 surface = LunarSurfaceField.Surface(site.x, site.y);
 
-                    // Three tiny silhouettes: broken solar-panel plate, antenna strut and housing shard.
                     int type = (pocket + piece) % 3;
-                    Vector3 size = type == 0 ? new Vector3(.28f, .025f, .12f) :
-                                   type == 1 ? new Vector3(.035f, .035f, .31f) :
-                                               new Vector3(.15f, .055f, .11f);
+                    float lunarScale = moon ? 1.45f : 1f;
+                    Vector3 size = type == 0 ? new Vector3(.42f, .028f, .18f) * lunarScale :
+                                   type == 1 ? new Vector3(.045f, .045f, .43f) * lunarScale :
+                                               new Vector3(.22f, .075f, .16f) * lunarScale;
+                    if (moon && piece == 3) size = new Vector3(.64f, .055f, .30f);
+
                     float yaw = pocket * 37f + piece * 113f;
-                    float pitch = type == 1 ? 8f : (pocket % 2 == 0 ? 3f : -4f);
-                    Quaternion rotation = Quaternion.Euler(pitch, yaw, type == 0 ? 6f : -3f);
-                    Vector3 center = surface + Vector3.up * (size.y * .5f + .012f);
+                    float pitch = type == 1 ? 11f : (pocket % 2 == 0 ? 5f : -6f);
+                    Quaternion rotation = Quaternion.Euler(pitch, yaw, type == 0 ? 8f : -4f);
+                    Vector3 center = surface + Vector3.up * (size.y * .5f + .014f);
                     AddBox(vertices, triangles, center, size, rotation);
                 }
             }
 
-            debrisMesh = new Mesh { name = "DF_MicroSatelliteDebrisMesh" };
+            debrisMesh = new Mesh { name = "DF_SatelliteDebrisMesh" };
             debrisMesh.SetVertices(vertices);
             debrisMesh.SetTriangles(triangles, 0);
             debrisMesh.RecalculateNormals();
             debrisMesh.RecalculateBounds();
-
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
 
             Color steel = new(.29f, .31f, .33f, 1f);
             if (ArenaVariantRuntime.IsMars) steel = Color.Lerp(steel, new Color(.35f, .17f, .10f, 1f), .42f);
@@ -96,12 +98,15 @@ namespace Alterverse.Visuals
             else if (ArenaVariantRuntime.IsNoxara) steel = Color.Lerp(steel, new Color(.07f, .11f, .24f, 1f), .38f);
             else if (ArenaVariantRuntime.IsKryon) steel = Color.Lerp(steel, new Color(.48f, .60f, .66f, 1f), .36f);
 
-            debrisMaterial = new Material(shader) { name = "DF_MicroSatelliteDebrisMaterial", color = steel };
-            if (debrisMaterial.HasProperty("_BaseColor")) debrisMaterial.SetColor("_BaseColor", steel);
-            if (debrisMaterial.HasProperty("_Metallic")) debrisMaterial.SetFloat("_Metallic", .72f);
-            if (debrisMaterial.HasProperty("_Smoothness")) debrisMaterial.SetFloat("_Smoothness", .18f);
+            debrisMaterial = RuntimeShaderLibrary.Create(steel, false, Color.black, .72f, .18f);
+            if (debrisMaterial == null)
+            {
+                Debug.LogError("DIMENSIONS FRONT: could not create Android-safe satellite debris material.");
+                return;
+            }
+            debrisMaterial.name = "DF_SatelliteDebrisMaterial";
 
-            debrisRoot = new GameObject("DF_MicroSatelliteDebris");
+            debrisRoot = new GameObject("DF_SatelliteDebris");
             debrisRoot.transform.SetParent(parent, false);
             debrisRoot.isStatic = true;
             debrisRoot.AddComponent<MeshFilter>().sharedMesh = debrisMesh;
