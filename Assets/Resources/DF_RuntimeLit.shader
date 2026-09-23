@@ -67,7 +67,7 @@ Shader "Alterverse/RuntimeLit"
             {
                 Varyings output;
                 output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.uv = input.uv * _BaseMap_ST.xy + _BaseMap_ST.zw;
                 output.normalWS = normalize(TransformObjectToWorldNormal(input.normalOS));
                 output.tangentWS = half4(normalize(TransformObjectToWorldDir(input.tangentOS.xyz)), input.tangentOS.w);
                 output.fogFactor = ComputeFogFactor(output.positionHCS.z);
