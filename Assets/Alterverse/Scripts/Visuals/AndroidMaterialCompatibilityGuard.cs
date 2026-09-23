@@ -85,6 +85,8 @@ namespace Alterverse.Visuals
         private static bool PreferUnlit(Renderer renderer,Material material)
         {
             string name=(renderer.name+" "+(material!=null?material.name:string.Empty)).ToLowerInvariant();
+            if(name.Contains("ground")||name.Contains("regolith")||name.Contains("surface")||
+               name.Contains("rock")||name.Contains("debris")||name.Contains("planet"))return false;
             if(renderer.shadowCastingMode==ShadowCastingMode.Off)return true;
             return name.Contains("backdrop")||name.Contains("star")||name.Contains("cosmic")||
                    name.Contains("void")||name.Contains("ring")||name.Contains("energy")||
@@ -108,11 +110,17 @@ namespace Alterverse.Visuals
             if(replacement.HasProperty("_BaseColor"))replacement.SetColor("_BaseColor",color);
             if(replacement.HasProperty("_Color"))replacement.SetColor("_Color",color);
 
+            if(source!=null&&source.HasProperty("_BaseMap")&&replacement.HasProperty("_BaseMap"))
+                replacement.SetTexture("_BaseMap",source.GetTexture("_BaseMap"));
+            if(source!=null&&source.HasProperty("_BumpMap")&&replacement.HasProperty("_BumpMap"))
+                replacement.SetTexture("_BumpMap",source.GetTexture("_BumpMap"));
+            if(source!=null&&source.HasProperty("_BumpScale")&&replacement.HasProperty("_BumpScale"))
+                replacement.SetFloat("_BumpScale",source.GetFloat("_BumpScale"));
+
             if(source!=null&&source.HasProperty("_EmissionColor")&&replacement.HasProperty("_EmissionColor"))
             {
                 Color emission=source.GetColor("_EmissionColor");
                 replacement.SetColor("_EmissionColor",emission);
-                if(emission.maxColorComponent>0f)replacement.EnableKeyword("_EMISSION");
             }
             if(source!=null&&source.HasProperty("_Metallic")&&replacement.HasProperty("_Metallic"))
                 replacement.SetFloat("_Metallic",source.GetFloat("_Metallic"));
