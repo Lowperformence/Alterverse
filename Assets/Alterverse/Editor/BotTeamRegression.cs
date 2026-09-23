@@ -116,14 +116,15 @@ namespace Alterverse.EditorChecks
                 var bot=Bot(HeroId.Kaelon,new Vector3(0,1,0),difficulty);
                 for(int i=0;i<3;i++)Unit("Threat",1,new Vector3(3,1,i-1),HeroId.Rook);
                 Think(difficulty);
-                if(level>=2)Assert(bot.State==MobaBotBrain.BotState.Retreat,"Hard/Expert must disengage from a healthy 1v3.");
-                else Assert(!bot.FollowTeamCall,"Easy/Medium must not receive coordinated focus calls.");
+                if(level>=1)Assert(bot.State==MobaBotBrain.BotState.Retreat,"Medium/Hard/Expert must disengage from a healthy 1v3.");
+                else Assert(!bot.FollowTeamCall,"Easy must not receive coordinated focus calls.");
                 Cleanup();
             }
             var easy=BotDifficultyProfile.For(BotDifficulty.Easy);var medium=BotDifficultyProfile.For(BotDifficulty.Normal);
             var hard=BotDifficultyProfile.For(BotDifficulty.Hard);var expert=BotDifficultyProfile.For(BotDifficulty.Expert);
             Assert(easy.ReactionDelay>medium.ReactionDelay&&medium.ReactionDelay>hard.ReactionDelay&&hard.ReactionDelay>expert.ReactionDelay,"Reaction tiers must remain distinct.");
-            Assert(!easy.Coordinated&&!medium.Coordinated&&hard.Coordinated&&!hard.FullTeamCalls&&expert.FullTeamCalls,"Only Hard/Expert use shared tactics; Expert follows as a full team.");
+            Assert(!easy.Coordinated&&medium.Coordinated&&hard.Coordinated&&!hard.FullTeamCalls&&expert.FullTeamCalls,"Medium and above use shared tactics; only Expert follows as a full team.");
+            Assert(medium.TeamCallDelay>hard.TeamCallDelay&&hard.TeamCallDelay>expert.TeamCallDelay,"Team-call reactions must remain slower on Medium than Hard/Expert.");
         }
         private static void CheckFocusAndFormation()
         {
