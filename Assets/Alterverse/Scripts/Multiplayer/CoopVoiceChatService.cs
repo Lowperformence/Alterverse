@@ -33,6 +33,8 @@ namespace Alterverse.Multiplayer
         private bool busy;
         private bool permissionDenied;
         private bool muted;
+        private bool volumeBusy;
+        private bool volumePending;
 
         public string Status=>status;
         public string LastError=>lastError;
@@ -112,6 +114,13 @@ namespace Alterverse.Multiplayer
             }
         }
 
+        /// <summary>Re-applies the local player's saved voice-chat playback volume.</summary>
+        public void RefreshOutputVolume()
+        {
+            volumePending=true;
+            if(!volumeBusy)_=ApplyOutputVolumeAsync();
+        }
+
         private async Task JoinLobbyVoiceAsync(string channel,bool userInitiated)
         {
             if(busy)return;
@@ -160,6 +169,7 @@ namespace Alterverse.Multiplayer
                 // Open microphone is the default for private co-op after the player has explicitly
                 // granted microphone permission. Players can still mute at any time in lobby or match.
                 VivoxService.Instance.UnmuteInputDevice();
+                await VivoxService.Instance.SetChannelVolumeAsync(activeChannel,VoiceVolumeAdjustment());
                 status="VOICE CONNECTED • MIC OPEN";
             }
             catch(Exception ex)
@@ -171,6 +181,38 @@ namespace Alterverse.Multiplayer
                 Debug.LogWarning("DIMENSIONS FRONT VOICE: "+ex);
             }
             finally{busy=false;}
+        }
+
+        private async Task ApplyOutputVolumeAsync()
+        {
+            if(volumeBusy)return;
+            volumeBusy=true;
+            try
+            {
+                do
+                {
+                    volumePending=false;
+                    if(IsConnected)
+                        await VivoxService.Instance.SetChannelVolumeAsync(activeChannel,VoiceVolumeAdjustment());
+                }
+                while(volumePending);
+            }
+            catch(Exception ex)
+            {
+                Debug.LogWarning("DIMENSIONS FRONT VOICE: could not apply playback volume. "+ex.Message);
+            }
+            finally
+            {
+                volumeBusy=false;
+                if(volumePending)_=ApplyOutputVolumeAsync();
+            }
+        }
+
+        private static int VoiceVolumeAdjustment()
+        {
+            // Vivox uses -50..50 with 0 as the normal level. The player slider intentionally
+            // only attenuates (0..100% => -50..0) so voice chat can never be boosted to unsafe levels.
+            return Mathf.RoundToInt(Mathf.Lerp(-50f,0f,PlayerProfile.VoiceChatVolume));
         }
 
         private async Task LeaveVoiceAsync()
