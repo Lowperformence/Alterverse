@@ -104,7 +104,8 @@ namespace Alterverse.Visuals
             Vector2[] sites={
                 new(-35,20),new(-31,-18),new(-24,26),new(-19,-24),
                 new(-12,19),new(-8,-28),new(9,27),new(14,-20),
-                new(22,24),new(28,-18),new(34,12),new(36,-8)
+                new(22,24),new(28,-18),new(34,12),new(36,-8),
+                new(-30,5),new(30,-5),new(-4,22),new(5,-22)
             };
             for(int i=0;i<sites.Length;i++)
             {

@@ -14,22 +14,24 @@ namespace Alterverse.Visuals
             new(-2,1.25f,31),new(3,1.05f,-31),new(-36,.48f,12),new(-34,.64f,-7),
             new(-25,.8f,5),new(-15,.96f,31),new(-4,.48f,-31),new(35,.64f,-11),
             new(33,.8f,8),new(24,.96f,-5),new(15,.48f,-31),new(5,.64f,31),
-            new(-23,4.3f,27),new(22,3.8f,-27),new(-24,1.25f,-8),new(-22.5f,.55f,-7.2f),
+            new(-23,5.3f,27),new(22,4.8f,-27),new(-24,1.25f,-8),new(-22.5f,.55f,-7.2f),
             new(-16,.85f,7),new(24,1.5f,8),new(25.2f,.6f,7.3f),new(17,1.1f,-7),
             new(-29,1.8f,26),new(-27.5f,.7f,27),new(-15,1.3f,-27),new(28,1.65f,-26),
             new(16,1.2f,28),new(17.2f,.55f,27.4f),
 
-            // Broad arena coverage: mostly sub-1.2m impacts so every map surface reads as weathered.
-            new(-39,.72f,20),new(-38,.52f,-18),new(-31,.92f,17),new(-30,.58f,-19),
-            new(-27,.66f,12),new(-26,.88f,-15),new(-21,.54f,19),new(-20,.74f,-20),
-            new(-14,.62f,13),new(-13,.82f,-15),new(-8,.56f,18),new(-7,.72f,-20),
-            new(-2,.68f,12),new(-1,.9f,-13),new(5,.58f,19),new(6,.76f,-18),
-            new(11,.64f,12),new(12,.86f,-14),new(18,.56f,19),new(19,.78f,-21),
-            new(26,.68f,13),new(27,.92f,-16),new(32,.58f,18),new(33,.76f,-19),
-            new(38,.7f,22),new(39,.54f,-21),
+            // Broad arena coverage mixes shallow small impacts with larger edge-field basins.
+            new(-39,1.55f,20),new(-38,.95f,-18),new(-31,1.45f,17),new(-30,.86f,-19),
+            new(-27,1.25f,12),new(-26,1.4f,-15),new(-21,.9f,19),new(-20,1.3f,-20),
+            new(-14,1.15f,13),new(-13,1.3f,-15),new(-8,.95f,18),new(-7,1.2f,-20),
+            new(-2,1.2f,12),new(-1,1.4f,-13),new(5,.95f,19),new(6,1.25f,-18),
+            new(11,1.1f,12),new(12,1.3f,-14),new(18,.9f,19),new(19,1.25f,-21),
+            new(26,1.25f,13),new(27,1.45f,-16),new(32,.95f,18),new(33,1.2f,-19),
+            new(38,1.5f,22),new(39,.9f,-21),
 
-            // Small secondary impacts fill otherwise clean gaps without cluttering combat readability.
+            // Larger isolated basins add landmarks in the outer lanes; neighboring craters overlap lightly.
             new(-35,.44f,4),new(-32,.58f,-25),new(-23,.5f,22),new(-18,.46f,-12),
+            new(-36,3.1f,-30),new(36,3.25f,30),new(-32,2.55f,-2),new(32,2.7f,2),
+            new(-5,2.75f,34),new(7,2.9f,-34),
             new(-12,.54f,24),new(-6,.42f,-25),new(1,.48f,23),new(7,.56f,-26),
             new(14,.46f,23),new(21,.54f,-24),new(29,.48f,22),new(35,.58f,-4),
             new(-28,.42f,-2),new(-20,.5f,2),new(20,.5f,-2),new(28,.42f,2),
@@ -45,8 +47,8 @@ namespace Alterverse.Visuals
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
             float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
-            relief=(macro-.5f)*.17f+(medium-.5f)*.07f;
-            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.010f;
+            relief=(macro-.5f)*.19f+(medium-.5f)*.085f;
+            tone=.48f+(macro-.5f)*.2f+(medium-.5f)*.075f+(fine-.5f)*.018f;
             dust=0f;
             float craterWear=0f;
             // This crater pass is deliberately variant-agnostic: every map receives the same bowl/rim
@@ -60,22 +62,23 @@ namespace Alterverse.Visuals
                 float q=Mathf.Sqrt(dx*dx+dz*dz)/(r*wobble);
                 if(q>1.6f)continue;
                 float bowl=Mathf.Clamp01(1-q*q),rim=Mathf.Exp(-Mathf.Pow((q-.96f)/.14f,2));
-                float eroded=.65f+.35f*Noise(x,z,.8f,19+i);
-                relief+=(-bowl*.135f+rim*.068f)*eroded;
-                float shadow=bowl*(.06f+.06f*Mathf.Clamp01((dx-dz)/r+.5f));
-                tone+=rim*.055f*eroded-shadow*.9f;
+                float eroded=.58f+.42f*Noise(x,z,.8f,19+i);
+                float basinScale=Mathf.Lerp(.72f,1.2f,Mathf.InverseLerp(.4f,5.5f,r));
+                relief+=(-bowl*.205f+rim*.102f)*eroded*basinScale;
+                float shadow=bowl*(.07f+.075f*Mathf.Clamp01((dx-dz)/r+.5f));
+                tone+=rim*.075f*eroded-shadow*.95f;
                 craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.78f+rim*.42f));
                 if(q>1&&q<1.6f)tone+=.014f*(1-(q-1)/.6f)*Mathf.Max(0,Mathf.Sin(angle*11+i)*.5f+.5f);
             }
             // A subtle shared darkening keeps craters legible even on the brighter Kryon/Green palettes.
-            tone-=craterWear*.018f;
+            tone-=craterWear*.026f;
             dust=Mathf.Max(dust,craterWear*.28f);
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
             float broken=Mathf.Clamp01(.35f+Mathf.Sin(a0*3+.8f));
             tone-=frontRing*.045f*broken;
             relief-=frontRing*.025f*broken;
-            relief=Mathf.Clamp(relief,-.145f,.075f);tone=Mathf.Clamp(tone,.28f,.66f);
+            relief=Mathf.Clamp(relief,-.245f,.115f);tone=Mathf.Clamp(tone,.28f,.66f);
         }
         public static Vector3 Surface(float x,float z)
         {
