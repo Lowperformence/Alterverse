@@ -260,6 +260,16 @@ namespace Alterverse.Visuals
                 {
                     Fx(HeroFxShape.Orb,p+Vector3.up*.5f,slot==3?DarkCore:c,slot==3?.85f:.45f,life,HeroFxMotion.Contract,actor:actor,warning:true);
                     Fx(HeroFxShape.Ring,p+Vector3.up*.5f,c,radius*.48f,life,HeroFxMotion.Contract,Quaternion.Euler(32,0,0),actor,warning:true);
+                    if(slot==3)
+                    {
+                        // A meteor descends over the marked target during the existing ultimate wind-up.
+                        Vector3 sky=p+Vector3.up*7.5f,impact=p+Vector3.up*.34f;
+                        Color ember=new(1f,.34f,.10f,.96f),hotCore=new(1f,.78f,.36f,.90f);
+                        HeroVfxPool.Emit(HeroFxShape.Orb,sky,impact,new Vector3(.92f,.78f,.92f),ember,life,HeroFxMotion.Travel,
+                            Quaternion.identity,actor,true);
+                        HeroVfxPool.Emit(HeroFxShape.Halo,sky+Vector3.up*.32f,impact+Vector3.up*.45f,new Vector3(1.25f,.32f,1.25f),
+                            hotCore,Mathf.Max(.06f,life-life*.06f),HeroFxMotion.Travel,Quaternion.identity,actor,true,delay:life*.06f);
+                    }
                 }
                 else if(h==HeroId.Kaelon&&slot==2)
                 {Fx(HeroFxShape.Shard,p+Vector3.up*.35f,c,.55f,life,HeroFxMotion.Hold,actor:actor,warning:true);Ring(actor,p,radius*.78f,life,true);}
@@ -278,7 +288,15 @@ namespace Alterverse.Visuals
             else if(h==HeroId.Elyra)
             {
                 Fx(HeroFxShape.Runes,p+Vector3.up*.03f,c,radius*.9f,aftermath,HeroFxMotion.Orbit);
-                if(slot==3)Fx(HeroFxShape.Halo,p+Vector3.up*.06f,new Color(c.r,c.g,c.b,.6f),radius*.7f,.22f,HeroFxMotion.Contract);
+                if(slot==3)
+                {
+                    Fx(HeroFxShape.Halo,p+Vector3.up*.06f,new Color(c.r,c.g,c.b,.6f),radius*.7f,.22f,HeroFxMotion.Contract);
+                    Color ember=new(1f,.30f,.08f,.72f);
+                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.48f,radius),ember,.32f,HeroFxMotion.Expand);
+                    Fx(HeroFxShape.Ring,Ground(center),Color.Lerp(ember,Color.white,.32f),radius*.94f,.42f);
+                    Fx(HeroFxShape.Cracks,p+Vector3.up*.012f,Color.Lerp(ember,c,.4f),radius*.82f,.40f);
+                    Shards(actor,p+Vector3.up*.08f,radius*.55f,7);
+                }
             }
             else if(h==HeroId.Traveler)
             {

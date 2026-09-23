@@ -16,7 +16,7 @@ namespace Alterverse.Visuals
         private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean;
         private bool wasDead;
         private int abilitySlot=-1,attackSerial;
-        private float windupUntil,empowerUntil,dashUntil,attackStarted;
+        private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
         private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -57,18 +57,18 @@ namespace Alterverse.Visuals
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
             attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
-            attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;
+            attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;windupDuration=0;
             attackStarted=Time.time;
         }
         public void PulseBasic(float windup)
         {
             PulseAttack(false);
-            windupUntil=Time.time+windup;attackUntil=windupUntil+attackDuration;
+            windupUntil=Time.time+windup;windupDuration=Mathf.Max(0,windup);attackUntil=windupUntil+attackDuration;
         }
         public void PulseAbility(int slot,float windup)
         {
             PulseAttack(slot==3);abilitySlot=slot;
-            windupUntil=Time.time+Mathf.Max(0,windup);attackUntil=windupUntil+attackDuration;
+            windupDuration=Mathf.Max(0,windup);windupUntil=Time.time+windupDuration;attackUntil=windupUntil+attackDuration;
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
         }
         public void Empower(float seconds)=>empowerUntil=Time.time+Mathf.Max(0,seconds);
@@ -159,9 +159,15 @@ namespace Alterverse.Visuals
             float idle=Mathf.Sin(t*1.8f)*.012f*(1-strideWeight);
             float bob=(1-Mathf.Cos(phase*2))*.018f*strideWeight*(heavy?.7f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
-            root.localPosition=basePosition+Vector3.up*(idle+bob);
-            if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=0;}
+            if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
+            float windupProgress=windupDuration>.001f?Mathf.Clamp01((Time.time-attackStarted)/windupDuration):1f;
+            // Kaelon's Gravity Anchor sweeps the hammer through a full circle; Rook's Wreckstorm spins through its full area hit.
+            bool fullSpin=(hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot==2;
+            float spinYaw=fullSpin&&preparation>0?360f*Mathf.SmoothStep(0,1,windupProgress):0f;
+            // Orun Overdrive lifts the rendered hero and brings him down exactly as its warning resolves.
+            float leap=hero==HeroId.Rook&&abilitySlot==3&&preparation>0?Mathf.Sin(windupProgress*Mathf.PI)*.82f:0f;
+            root.localPosition=basePosition+Vector3.up*(idle+bob+leap);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
             ApplyAttackPose(hero,kick,preparation,progress);
@@ -171,7 +177,7 @@ namespace Alterverse.Visuals
             // Compress the render rig only; collider and movement are untouched.
             root.localScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
             float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
-            root.localRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,0,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
+            root.localRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,spinYaw,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
