@@ -45,5 +45,9 @@ namespace Alterverse.Visuals
             if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
             return material;
         }
+
+        // Readable call form for visual builders that think in color/emission/material response order.
+        public static Material Create(Color color,bool useUnlit,Color emission,float metallic,float smoothness)
+            =>Create(color,useUnlit,metallic,smoothness,emission);
     }
 }
