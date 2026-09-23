@@ -115,7 +115,6 @@ namespace Alterverse.UI
 
             bool coop = CoopAuthority.Active;
             CoopLobbyService lobby = coop ? CoopLobbyService.Instance : null;
-            bool host = lobby != null && lobby.IsHost;
 
             FlushAudio();
             CloseOverlay();
@@ -133,23 +132,13 @@ namespace Alterverse.UI
                 return;
             }
 
-            if (host)
-            {
-                if (lobby != null) await lobby.FinishMatchAndReturnToLobbyAsync();
-                else CoopAuthority.EndMatch();
-                if (world != null) Destroy(world);
-                MainMenuController.ShowCoopAfterMatch("MATCH LEFT");
-            }
-            else
-            {
-                // A guest cannot safely force the host's running match back into lobby state.
-                // Leaving the co-op session avoids immediately being launched back into that match.
-                if (lobby != null) await lobby.LeaveLobbyAsync();
-                CoopAuthority.EndMatch();
-                if (world != null) Destroy(world);
-                MainMenuController.ShowHome();
-            }
-
+            // A running co-op match is shared state. Leaving the session is the safe universal
+            // behavior: guests cannot force the host back to lobby, and a host leaving closes the
+            // active room so every other participant receives the existing disconnect/abort flow.
+            if (lobby != null) await lobby.LeaveLobbyAsync();
+            CoopAuthority.EndMatch();
+            if (world != null) Destroy(world);
+            MainMenuController.ShowHome();
             leaving = false;
         }
 
@@ -218,18 +207,19 @@ namespace Alterverse.UI
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 122, panel.width - 48, 48), "RESUME MATCH", true))
                     CloseOverlay();
 
-                string destination;
-                if (!CoopAuthority.Active) destination = "LEAVE MATCH  •  MAIN MENU";
-                else if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.IsHost) destination = "LEAVE MATCH  •  CO-OP LOBBY";
-                else destination = "LEAVE MATCH  •  MAIN MENU";
-
+                string destination = CoopAuthority.Active
+                    ? "LEAVE CO-OP  •  MAIN MENU"
+                    : "LEAVE MATCH  •  MAIN MENU";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 64, panel.width - 48, 40), destination))
                     confirmLeave = true;
             }
             else
             {
                 theme.Label(new Rect(panel.x + 24, panel.yMax - 138, panel.width - 48, 34), "LEAVE THE CURRENT MATCH?", theme.Heading);
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 103, panel.width - 48, 28), "The current match ends without a match reward.", theme.Small, true);
+                string warning = CoopAuthority.Active
+                    ? "You leave the current co-op session. The match reward is not granted."
+                    : "The current match ends without a match reward.";
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 103, panel.width - 48, 28), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 64, buttonWidth, 40), "CANCEL"))
                     confirmLeave = false;
