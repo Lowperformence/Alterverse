@@ -326,7 +326,18 @@ namespace Alterverse.Combat
             GameObject part=GameObject.CreatePrimitive(type);
             part.name=name;part.transform.SetParent(parent,false);part.transform.localPosition=pos;part.transform.localRotation=rotation;part.transform.localScale=scale;
             Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
-            Renderer renderer=part.GetComponent<Renderer>();if(renderer!=null){renderer.material.color=color;renderer.shadowCastingMode=ShadowCastingMode.On;}
+            Renderer renderer=part.GetComponent<Renderer>();
+            if(renderer!=null)
+            {
+                Material material=RuntimeShaderLibrary.Create(color,false,.04f,.22f);
+                if(material!=null)
+                {
+                    material.name=name+"_RuntimeLit";
+                    renderer.sharedMaterial=material;
+                }
+                renderer.shadowCastingMode=ShadowCastingMode.On;
+                renderer.receiveShadows=true;
+            }
         }
 
         private static void CreateEnergyPart(Transform parent,string name,PrimitiveType type,Vector3 pos,Vector3 scale,Color color,Quaternion rotation)
@@ -337,8 +348,14 @@ namespace Alterverse.Combat
             Renderer renderer=part.GetComponent<Renderer>();
             if(renderer!=null)
             {
-                renderer.material.color=color;renderer.shadowCastingMode=ShadowCastingMode.Off;
-                if(renderer.material.HasProperty("_EmissionColor")){renderer.material.EnableKeyword("_EMISSION");renderer.material.SetColor("_EmissionColor",color*2.6f);}
+                Material material=RuntimeShaderLibrary.Create(color,true,0f,0f,color*2.6f);
+                if(material!=null)
+                {
+                    material.name=name+"_RuntimeUnlit";
+                    renderer.sharedMaterial=material;
+                }
+                renderer.shadowCastingMode=ShadowCastingMode.Off;
+                renderer.receiveShadows=false;
             }
         }
     }
