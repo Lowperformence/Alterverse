@@ -6,14 +6,15 @@ namespace Alterverse.UI
     internal sealed class FrontEndTheme
     {
         public static readonly Color Background = new(.020f, .028f, .041f);
-        public static readonly Color Surface = new(.050f, .067f, .089f);
-        public static readonly Color Raised = new(.085f, .112f, .148f);
+        // Frontend cards stay dark enough for legibility, but now let the cosmic backdrop breathe through.
+        public static readonly Color Surface = new(.050f, .067f, .089f, .72f);
+        public static readonly Color Raised = new(.085f, .112f, .148f, .82f);
         public static readonly Color Text = new(.96f, .975f, .99f);
         public static readonly Color Muted = new(.63f, .71f, .79f);
         public static readonly Color Accent = new(.32f, .88f, .86f);
         public static readonly Color Zero = new(.60f, .39f, .82f);
-        private static readonly Color Edge = new(.17f,.22f,.29f);
-        private static readonly Color Recess = new(.018f,.024f,.035f);
+        private static readonly Color Edge = new(.17f,.22f,.29f,.86f);
+        private static readonly Color Recess = new(.018f,.024f,.035f,.84f);
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered;
         private readonly GUIContent measuredText=new GUIContent();
@@ -55,7 +56,7 @@ namespace Alterverse.UI
         {
             Fill(rect, Surface);
             Fill(new Rect(rect.x,rect.y,rect.width,1),Edge);
-            Fill(new Rect(rect.x,rect.y,1,rect.height),new Color(.12f,.16f,.21f));
+            Fill(new Rect(rect.x,rect.y,1,rect.height),new Color(.12f,.16f,.21f,.88f));
             Fill(new Rect(rect.xMax-1,rect.y,1,rect.height),Recess);
             Fill(new Rect(rect.x,rect.yMax-1,rect.width,1),Recess);
         }
@@ -71,7 +72,7 @@ namespace Alterverse.UI
             Fill(rect, enabled ? surface : Surface);
             if(!primary)
             {
-                Fill(new Rect(rect.x,rect.y,rect.width,1),selected?new Color(.23f,.31f,.40f):Edge);
+                Fill(new Rect(rect.x,rect.y,rect.width,1),selected?new Color(.23f,.31f,.40f,.90f):Edge);
                 Fill(new Rect(rect.x,rect.yMax-1,rect.width,1),Recess);
             }
             if (selected) Fill(new Rect(rect.x, rect.y, 3, rect.height), Accent);
