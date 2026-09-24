@@ -18,6 +18,8 @@ namespace Alterverse.UI
         private bool loadoutDirty=true,cachedWeapon;
         private HeroId cachedHero;
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
+        private HeroOriginBackdrop originBackdrop;
+        private SpriteRenderer originWorld;
         public void InvalidateLoadout()=>loadoutDirty=true;
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
@@ -50,6 +52,7 @@ namespace Alterverse.UI
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
+            UpdateOriginWorld(hero);
             actor = new GameObject("DF_MenuHero");
             actor.transform.SetParent(stage.transform, false);
             actor.AddComponent<HeroIdentity>().Configure(hero);
@@ -70,6 +73,12 @@ namespace Alterverse.UI
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
             }
+        }
+        private void UpdateOriginWorld(HeroId hero)
+        {
+            if(originWorld==null)return;
+            originBackdrop??=new HeroOriginBackdrop();
+            originWorld.sprite=originBackdrop.SpriteFor(hero);
         }
         private void FitPreviewBounds()
         {
@@ -94,6 +103,18 @@ namespace Alterverse.UI
             stage = new GameObject("DF_MenuPortraitStage");
             stage.transform.SetParent(transform, false);
             stage.transform.position = new Vector3(12000,12000,12000);
+
+            // A single cached SpriteRenderer sits behind the real hero preview. Swapping heroes only swaps
+            // the cached origin-world sprite; there are no particles, extra cameras or gameplay objects.
+            var worldObject=new GameObject("DF_HeroOriginWorld");
+            worldObject.transform.SetParent(stage.transform,false);
+            worldObject.transform.localPosition=new Vector3(0,.20f,-2.2f);
+            worldObject.layer=PreviewLayer;
+            originWorld=worldObject.AddComponent<SpriteRenderer>();
+            originWorld.sortingOrder=-100;
+            originWorld.color=new Color(1,1,1,.96f);
+            originBackdrop=new HeroOriginBackdrop();
+
             texture = new RenderTexture(640,720,24,RenderTextureFormat.ARGB32)
             { name = "DF_HeroPortrait", antiAliasing = Application.isMobilePlatform ? 2 : 1, useMipMap = false };
             texture.Create();
@@ -140,10 +161,11 @@ namespace Alterverse.UI
         {
             if (previewCamera != null) previewCamera.targetTexture = null;
             if (texture != null) { texture.Release(); Destroy(texture); }
+            originBackdrop?.Dispose();
+            originBackdrop=null;
             if (stage != null) Destroy(stage);
         }
     }
 }
-
 
 
