@@ -1,22 +1,22 @@
 {
   "packs": [
     {
-      "id": "df_shards_small",
+      "id": "dimensions_shards_500",
       "name": "SMALL",
       "amount": 500
     },
     {
-      "id": "df_shards_medium",
+      "id": "dimensions_shards_1200",
       "name": "MEDIUM",
       "amount": 1200
     },
     {
-      "id": "df_shards_large",
+      "id": "dimensions_shards_2500",
       "name": "LARGE",
-      "amount": 2600
+      "amount": 2500
     },
     {
-      "id": "df_shards_premium",
+      "id": "dimensions_shards_5500",
       "name": "PREMIUM",
       "amount": 5500
     }
