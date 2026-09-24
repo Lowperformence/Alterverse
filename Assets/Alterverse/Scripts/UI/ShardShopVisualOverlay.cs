@@ -5,11 +5,10 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Visual-only pass for the Google Play shard packs.
-    /// It deliberately does not create controls or touch the store callbacks/product ids.
-    /// The existing MainMenuController keeps owning the price buttons and purchases.
+    /// Visual-only shard pack artwork. Purchase buttons remain owned by MainMenuController.
+    /// This component never consumes input, so Google Play purchase callbacks are untouched.
     /// </summary>
-    [DefaultExecutionOrder(10000)]
+    [DefaultExecutionOrder(32000)]
     public sealed class ShardShopVisualOverlay : MonoBehaviour
     {
         private const float MenuHeight = 720f;
@@ -17,15 +16,16 @@ namespace Alterverse.UI
         private static FieldInfo pageField;
         private static FieldInfo shardShopField;
 
-        private readonly Texture2D[] crystalArt = new Texture2D[4];
-        private GUIStyle packNameStyle;
+        private Texture2D crystal;
+        private Texture2D glow;
         private GUIStyle amountStyle;
+        private GUIStyle packStyle;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void AutoCreate()
+        private static void Create()
         {
             if (FindAnyObjectByType<ShardShopVisualOverlay>() == null)
-                new GameObject("DF_ShardShopVisualOverlay").AddComponent<ShardShopVisualOverlay>();
+                new GameObject("DF_ShardShopVisuals").AddComponent<ShardShopVisualOverlay>();
         }
 
         private void Awake()
@@ -35,42 +35,53 @@ namespace Alterverse.UI
                 Destroy(gameObject);
                 return;
             }
+
             instance = this;
             DontDestroyOnLoad(gameObject);
+            crystal = BuildCrystalTexture();
+            glow = BuildGlowTexture();
         }
 
         private void OnDestroy()
         {
-            for (int i = 0; i < crystalArt.Length; i++)
-                if (crystalArt[i] != null) Destroy(crystalArt[i]);
+            if (crystal != null) Destroy(crystal);
+            if (glow != null) Destroy(glow);
             if (instance == this) instance = null;
         }
 
-        private bool IsShardStoreVisible()
+        private bool ShouldDraw()
         {
             if (!MainMenuController.IsVisible) return false;
             MainMenuController menu = FindAnyObjectByType<MainMenuController>();
             if (menu == null) return false;
 
-            if (pageField == null)
-                pageField = typeof(MainMenuController).GetField("page", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (shardShopField == null)
-                shardShopField = typeof(MainMenuController).GetField("shardShop", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (pageField == null || shardShopField == null) return false;
+            try
+            {
+                pageField ??= typeof(MainMenuController).GetField("page", BindingFlags.Instance | BindingFlags.NonPublic);
+                shardShopField ??= typeof(MainMenuController).GetField("shardShop", BindingFlags.Instance | BindingFlags.NonPublic);
+                if (pageField == null || shardShopField == null) return false;
 
-            object page = pageField.GetValue(menu);
-            object shard = shardShopField.GetValue(menu);
-            return page != null && page.ToString() == "Shop" && shard is bool && (bool)shard;
+                object page = pageField.GetValue(menu);
+                object shard = shardShopField.GetValue(menu);
+                return page != null && page.ToString() == "Shop" && shard is bool value && value;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private void OnGUI()
         {
-            if (!IsShardStoreVisible()) return;
+            if (!ShouldDraw()) return;
+            if (Event.current.type != EventType.Repaint) return;
+
             Rect safe = Screen.safeArea;
             if (safe.width <= 0f || safe.height <= 0f) return;
 
             float scale = Mathf.Min(safe.height / MenuHeight, safe.width / 1200f);
             if (scale <= 0f) return;
+
             float menuWidth = safe.width / scale;
             float contentWidth = Mathf.Min(1360f, menuWidth - 64f);
             float left = (menuWidth - contentWidth) * .5f;
@@ -79,14 +90,14 @@ namespace Alterverse.UI
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
             int oldDepth = GUI.depth;
+
             try
             {
-                // Lower IMGUI depth renders in front of the base menu. No controls are
-                // created here, so the existing purchase buttons keep receiving clicks.
-                GUI.depth = -2000;
+                // Extremely low depth keeps this artwork above the old flat card contents.
+                GUI.depth = -100000;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x, y, 0f), Quaternion.identity, Vector3.one * scale);
                 GUI.color = Color.white;
-                DrawShardCards(left, contentWidth);
+                DrawCards(left, contentWidth);
             }
             finally
             {
@@ -96,227 +107,158 @@ namespace Alterverse.UI
             }
         }
 
-        private void DrawShardCards(float left, float contentWidth)
+        private void DrawCards(float left, float contentWidth)
         {
             ShardPack[] packs = ShardPacks.All;
             if (packs == null || packs.Length == 0) return;
-            EnsureStyles();
 
-            float cardWidth = (contentWidth - 48f) / 4f;
+            EnsureStyles();
+            float w = (contentWidth - 48f) / 4f;
+
             for (int i = 0; i < packs.Length; i++)
             {
                 ShardPack pack = packs[i];
-                float x = left + i * (cardWidth + 16f);
-                int tier = TierFor(pack.Amount, i);
+                float x = left + i * (w + 16f);
+                int tier = Mathf.Clamp(i, 0, 3);
 
-                Rect upper = new Rect(x + 1f, 369f, cardWidth - 2f, 136f);
-                Fill(upper, new Color(.018f, .025f, .070f, .985f));
+                // Replace the old empty upper half with a high-contrast dimensional card.
+                Fill(new Rect(x + 2f, 370f, w - 4f, 136f), new Color(.008f, .016f, .055f, .99f));
+                Fill(new Rect(x + 2f, 370f, w - 4f, 3f), new Color(.10f, .76f, 1f, .95f));
+                Fill(new Rect(x + 2f, 503f, w - 4f, 2f), new Color(.32f, .28f, 1f, .72f));
 
-                // Subtle dimensional glow and separators keep the card premium without
-                // competing with the localized Google Play price button below it.
-                Fill(new Rect(x + 1f, 369f, cardWidth - 2f, 2f), new Color(.22f, .72f, 1f, .85f));
-                Fill(new Rect(x + 1f, 503f, cardWidth - 2f, 2f), new Color(.18f, .50f, .95f, .42f));
-                Fill(new Rect(x + 1f, 371f, 1f, 132f), new Color(.22f, .55f, 1f, .28f));
-                Fill(new Rect(x + cardWidth - 2f, 371f, 1f, 132f), new Color(.22f, .55f, 1f, .28f));
+                GUI.Label(new Rect(x + 12f, 376f, w - 24f, 21f), pack.Name, packStyle);
 
-                Color tierGlow = TierGlow(tier);
-                Fill(new Rect(x + cardWidth * .18f, 400f, cardWidth * .64f, 1f),
-                    new Color(tierGlow.r, tierGlow.g, tierGlow.b, .22f));
+                float artScale = 0.76f + tier * .10f;
+                float artW = Mathf.Min(w - 24f, 126f * artScale);
+                float artH = 92f * artScale;
+                Rect art = new Rect(x + (w - artW) * .5f, 393f - tier * 2f, artW, artH);
+                Rect halo = new Rect(art.center.x - art.width * .72f, art.center.y - art.height * .68f,
+                    art.width * 1.44f, art.height * 1.36f);
 
-                GUI.Label(new Rect(x + 14f, 376f, cardWidth - 28f, 22f), pack.Name, packNameStyle);
+                Color old = GUI.color;
+                GUI.color = tier >= 3 ? new Color(.62f, .50f, 1f, .88f) : new Color(.20f, .74f, 1f, .82f);
+                GUI.DrawTexture(halo, glow, ScaleMode.StretchToFill, true);
+                GUI.color = Color.white;
 
-                Texture2D art = GetCrystalArt(tier);
-                if (art != null)
+                // More crystals for larger packs so package size is visible at a glance.
+                if (tier >= 1)
+                    GUI.DrawTexture(new Rect(art.x - 22f, art.y + 18f, art.width * .62f, art.height * .72f), crystal, ScaleMode.ScaleToFit, true);
+                if (tier >= 2)
+                    GUI.DrawTexture(new Rect(art.xMax - art.width * .47f, art.y + 22f, art.width * .58f, art.height * .68f), crystal, ScaleMode.ScaleToFit, true);
+                if (tier >= 3)
                 {
-                    Color tint = GUI.color;
-                    GUI.color = Color.white;
-                    GUI.DrawTexture(new Rect(x + 12f, 397f, cardWidth - 24f, 88f), art, ScaleMode.ScaleToFit, true);
-                    GUI.color = tint;
+                    GUI.DrawTexture(new Rect(art.x - 34f, art.y + 36f, art.width * .50f, art.height * .56f), crystal, ScaleMode.ScaleToFit, true);
+                    GUI.DrawTexture(new Rect(art.xMax - 18f, art.y + 38f, art.width * .46f, art.height * .52f), crystal, ScaleMode.ScaleToFit, true);
                 }
 
-                GUI.Label(new Rect(x + 12f, 476f, cardWidth - 24f, 28f), pack.Amount.ToString("N0") + " SHARDS", amountStyle);
+                GUI.DrawTexture(art, crystal, ScaleMode.ScaleToFit, true);
+                GUI.color = old;
+
+                // Strong amount label immediately above the untouched Google Play price button.
+                GUI.Label(new Rect(x + 10f, 474f, w - 20f, 29f), pack.Amount.ToString("N0") + " SHARDS", amountStyle);
+
+                // Accent around the real purchase button; no control is created here.
+                Fill(new Rect(x + 18f, 506f, w - 36f, 2f), new Color(.15f, .70f, 1f, .72f));
+                Fill(new Rect(x + 18f, 566f, w - 36f, 2f), new Color(.36f, .30f, 1f, .52f));
             }
         }
 
         private void EnsureStyles()
         {
-            if (packNameStyle == null)
+            packStyle ??= new GUIStyle(GUI.skin.label)
             {
-                packNameStyle = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 12,
-                    fontStyle = FontStyle.Bold,
-                    clipping = TextClipping.Clip
-                };
-                packNameStyle.normal.textColor = new Color(.68f, .84f, 1f, 1f);
-            }
-            if (amountStyle == null)
-            {
-                amountStyle = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontSize = 19,
-                    fontStyle = FontStyle.Bold,
-                    clipping = TextClipping.Clip
-                };
-                amountStyle.normal.textColor = Color.white;
-            }
-        }
-
-        private Texture2D GetCrystalArt(int tier)
-        {
-            tier = Mathf.Clamp(tier, 0, crystalArt.Length - 1);
-            if (crystalArt[tier] == null) crystalArt[tier] = BuildCrystalArt(tier);
-            return crystalArt[tier];
-        }
-
-        private static int TierFor(int amount, int index)
-        {
-            if (amount <= 500) return 0;
-            if (amount <= 1300) return 1;
-            if (amount <= 3000) return 2;
-            if (amount >= 5000) return 3;
-            return Mathf.Clamp(index, 0, 3);
-        }
-
-        private static Color TierGlow(int tier)
-        {
-            switch (tier)
-            {
-                case 0: return new Color(.20f, .66f, 1f, 1f);
-                case 1: return new Color(.27f, .75f, 1f, 1f);
-                case 2: return new Color(.36f, .62f, 1f, 1f);
-                default: return new Color(.50f, .43f, 1f, 1f);
-            }
-        }
-
-        private static Texture2D BuildCrystalArt(int tier)
-        {
-            const int width = 320;
-            const int height = 180;
-            Color32[] pixels = new Color32[width * height];
-
-            // Blue-violet bloom behind the shards.
-            float glowW = 115f + tier * 10f;
-            float glowH = 66f + tier * 5f;
-            for (int py = 0; py < height; py++)
-            {
-                for (int px = 0; px < width; px++)
-                {
-                    float dx = (px - 160f) / glowW;
-                    float dy = (py - 82f) / glowH;
-                    float d = Mathf.Sqrt(dx * dx + dy * dy);
-                    if (d >= 1f) continue;
-                    float strength = (1f - d) * (1f - d);
-                    byte alpha = (byte)Mathf.Clamp(Mathf.RoundToInt((48f + tier * 8f) * strength), 0, 255);
-                    Blend(ref pixels[py * width + px], new Color32(58, 92, 255, alpha));
-                }
-            }
-
-            if (tier >= 3)
-            {
-                DrawCrystal(pixels, width, height, 76f, 64f, 31f, 68f, -8f, .72f);
-                DrawCrystal(pixels, width, height, 247f, 62f, 34f, 72f, 8f, .76f);
-            }
-            if (tier >= 1)
-                DrawCrystal(pixels, width, height, 111f, 70f, 40f, 86f, -7f, .84f);
-            if (tier >= 2)
-                DrawCrystal(pixels, width, height, 214f, 70f, 43f, 92f, 8f, .88f);
-
-            float mainWidth = 66f + tier * 5f;
-            float mainHeight = 126f + tier * 6f;
-            DrawCrystal(pixels, width, height, 160f, 85f, mainWidth, mainHeight, tier == 3 ? 5f : 0f, 1f);
-
-            // Deterministic star/spark accents. Higher tiers get a richer cluster.
-            Vector2[] sparks =
-            {
-                new Vector2(54,126),new Vector2(267,124),new Vector2(83,157),new Vector2(239,151),
-                new Vector2(36,82),new Vector2(286,80),new Vector2(105,132),new Vector2(221,137)
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                clipping = TextClipping.Clip
             };
-            int sparkCount = 2 + tier * 2;
-            for (int i = 0; i < sparkCount && i < sparks.Length; i++)
-                DrawSpark(pixels, width, height, sparks[i], 2 + (i % 2), tier);
+            packStyle.normal.textColor = new Color(.64f, .86f, 1f, 1f);
 
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false, true)
+            amountStyle ??= new GUIStyle(GUI.skin.label)
             {
-                name = "DF_ShardCrystal_Tier" + tier,
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 20,
+                fontStyle = FontStyle.Bold,
+                clipping = TextClipping.Clip
+            };
+            amountStyle.normal.textColor = Color.white;
+        }
+
+        private static Texture2D BuildCrystalTexture()
+        {
+            const int size = 128;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false, true)
+            {
+                name = "DF_ShardCrystal",
                 filterMode = FilterMode.Bilinear,
                 wrapMode = TextureWrapMode.Clamp,
                 hideFlags = HideFlags.DontSave
             };
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            return texture;
+
+            Color32[] p = new Color32[size * size];
+            Vector2 a = new Vector2(64, 119);
+            Vector2 b = new Vector2(104, 72);
+            Vector2 c = new Vector2(79, 9);
+            Vector2 d = new Vector2(32, 60);
+            Vector2 m = new Vector2(65, 58);
+
+            Triangle(p, size, a, b, m, new Color32(92, 235, 255, 255));
+            Triangle(p, size, b, c, m, new Color32(34, 151, 255, 255));
+            Triangle(p, size, c, d, m, new Color32(91, 82, 236, 255));
+            Triangle(p, size, d, a, m, new Color32(171, 247, 255, 255));
+            Line(p, size, a, b, new Color32(224, 255, 255, 255));
+            Line(p, size, b, c, new Color32(184, 244, 255, 255));
+            Line(p, size, c, d, new Color32(155, 172, 255, 255));
+            Line(p, size, d, a, new Color32(219, 255, 255, 255));
+            Line(p, size, a, m, new Color32(220, 255, 255, 190));
+            Line(p, size, c, m, new Color32(206, 225, 255, 180));
+
+            tex.SetPixels32(p);
+            tex.Apply(false, true);
+            return tex;
         }
 
-        private static void DrawCrystal(Color32[] pixels, int width, int height, float cx, float cy, float shardWidth, float shardHeight, float lean, float brightness)
+        private static Texture2D BuildGlowTexture()
         {
-            Vector2 top = new Vector2(cx + lean, cy + shardHeight * .50f);
-            Vector2 right = new Vector2(cx + shardWidth * .50f, cy + shardHeight * .06f);
-            Vector2 bottom = new Vector2(cx - lean * .18f, cy - shardHeight * .50f);
-            Vector2 left = new Vector2(cx - shardWidth * .50f, cy + shardHeight * .05f);
-            Vector2 center = new Vector2(cx + lean * .16f, cy - shardHeight * .02f);
-
-            Color32 highlight = Scale(new Color32(185, 249, 255, 250), brightness);
-            Color32 cyan = Scale(new Color32(72, 220, 255, 248), brightness);
-            Color32 blue = Scale(new Color32(28, 145, 241, 248), brightness);
-            Color32 violet = Scale(new Color32(73, 81, 210, 245), brightness);
-            Color32 edge = Scale(new Color32(171, 245, 255, 220), brightness);
-
-            FillTriangle(pixels, width, height, top, center, left, highlight);
-            FillTriangle(pixels, width, height, top, right, center, cyan);
-            FillTriangle(pixels, width, height, left, center, bottom, blue);
-            FillTriangle(pixels, width, height, center, right, bottom, violet);
-
-            DrawLine(pixels, width, height, top, right, edge);
-            DrawLine(pixels, width, height, right, bottom, edge);
-            DrawLine(pixels, width, height, bottom, left, edge);
-            DrawLine(pixels, width, height, left, top, edge);
-            DrawLine(pixels, width, height, top, center, new Color32(220, 255, 255, 170));
-            DrawLine(pixels, width, height, center, bottom, new Color32(120, 219, 255, 150));
+            const int size = 64;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false, true)
+            {
+                name = "DF_ShardGlow",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+                hideFlags = HideFlags.DontSave
+            };
+            Color32[] p = new Color32[size * size];
+            Vector2 center = new Vector2(31.5f, 31.5f);
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float d = Vector2.Distance(new Vector2(x, y), center) / 31.5f;
+                if (d >= 1f) continue;
+                float a = Mathf.Pow(1f - d, 2.2f);
+                p[y * size + x] = new Color32(90, 90, 255, (byte)(a * 150f));
+            }
+            tex.SetPixels32(p);
+            tex.Apply(false, true);
+            return tex;
         }
 
-        private static void DrawSpark(Color32[] pixels, int width, int height, Vector2 center, int radius, int tier)
+        private static void Triangle(Color32[] pixels, int size, Vector2 a, Vector2 b, Vector2 c, Color32 color)
         {
-            Color32 color = tier >= 3 ? new Color32(178, 190, 255, 210) : new Color32(153, 239, 255, 210);
-            Vector2 top = center + Vector2.up * (radius + 2);
-            Vector2 right = center + Vector2.right * radius;
-            Vector2 bottom = center + Vector2.down * (radius + 2);
-            Vector2 left = center + Vector2.left * radius;
-            FillTriangle(pixels, width, height, top, right, bottom, color);
-            FillTriangle(pixels, width, height, top, bottom, left, color);
-        }
-
-        private static Color32 Scale(Color32 color, float brightness)
-        {
-            return new Color32(
-                (byte)Mathf.Clamp(Mathf.RoundToInt(color.r * brightness), 0, 255),
-                (byte)Mathf.Clamp(Mathf.RoundToInt(color.g * brightness), 0, 255),
-                (byte)Mathf.Clamp(Mathf.RoundToInt(color.b * brightness), 0, 255),
-                color.a);
-        }
-
-        private static void FillTriangle(Color32[] pixels, int width, int height, Vector2 a, Vector2 b, Vector2 c, Color32 color)
-        {
-            int minX = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))), 0, width - 1);
-            int maxX = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))), 0, width - 1);
-            int minY = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.y, Mathf.Min(b.y, c.y))), 0, height - 1);
-            int maxY = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.y, Mathf.Max(b.y, c.y))), 0, height - 1);
+            int minX = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.x, Mathf.Min(b.x, c.x))), 0, size - 1);
+            int maxX = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.x, Mathf.Max(b.x, c.x))), 0, size - 1);
+            int minY = Mathf.Clamp(Mathf.FloorToInt(Mathf.Min(a.y, Mathf.Min(b.y, c.y))), 0, size - 1);
+            int maxY = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(a.y, Mathf.Max(b.y, c.y))), 0, size - 1);
             float area = Edge(a, b, c);
             if (Mathf.Abs(area) < .001f) return;
 
             for (int y = minY; y <= maxY; y++)
+            for (int x = minX; x <= maxX; x++)
             {
-                for (int x = minX; x <= maxX; x++)
-                {
-                    Vector2 p = new Vector2(x + .5f, y + .5f);
-                    float w0 = Edge(b, c, p);
-                    float w1 = Edge(c, a, p);
-                    float w2 = Edge(a, b, p);
-                    bool inside = area > 0f ? w0 >= 0f && w1 >= 0f && w2 >= 0f : w0 <= 0f && w1 <= 0f && w2 <= 0f;
-                    if (inside) Blend(ref pixels[y * width + x], color);
-                }
+                Vector2 q = new Vector2(x + .5f, y + .5f);
+                float w0 = Edge(b, c, q), w1 = Edge(c, a, q), w2 = Edge(a, b, q);
+                bool inside = area > 0 ? w0 >= 0 && w1 >= 0 && w2 >= 0 : w0 <= 0 && w1 <= 0 && w2 <= 0;
+                if (inside) pixels[y * size + x] = color;
             }
         }
 
@@ -325,39 +267,16 @@ namespace Alterverse.UI
             return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);
         }
 
-        private static void DrawLine(Color32[] pixels, int width, int height, Vector2 from, Vector2 to, Color32 color)
+        private static void Line(Color32[] pixels, int size, Vector2 a, Vector2 b, Color32 color)
         {
-            int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(from, to)));
+            int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(a, b)));
             for (int i = 0; i <= steps; i++)
             {
                 float t = i / (float)steps;
-                int x = Mathf.RoundToInt(Mathf.Lerp(from.x, to.x, t));
-                int y = Mathf.RoundToInt(Mathf.Lerp(from.y, to.y, t));
-                for (int oy = -1; oy <= 1; oy++)
-                {
-                    for (int ox = -1; ox <= 1; ox++)
-                    {
-                        int px = x + ox, py = y + oy;
-                        if (px < 0 || py < 0 || px >= width || py >= height) continue;
-                        byte alpha = (byte)(ox == 0 && oy == 0 ? color.a : color.a / 3);
-                        Blend(ref pixels[py * width + px], new Color32(color.r, color.g, color.b, alpha));
-                    }
-                }
+                int x = Mathf.RoundToInt(Mathf.Lerp(a.x, b.x, t));
+                int y = Mathf.RoundToInt(Mathf.Lerp(a.y, b.y, t));
+                if (x >= 0 && y >= 0 && x < size && y < size) pixels[y * size + x] = color;
             }
-        }
-
-        private static void Blend(ref Color32 destination, Color32 source)
-        {
-            float sa = source.a / 255f;
-            if (sa <= 0f) return;
-            float da = destination.a / 255f;
-            float oa = sa + da * (1f - sa);
-            if (oa <= .0001f) return;
-            destination = new Color32(
-                (byte)Mathf.Clamp(Mathf.RoundToInt((source.r * sa + destination.r * da * (1f - sa)) / oa), 0, 255),
-                (byte)Mathf.Clamp(Mathf.RoundToInt((source.g * sa + destination.g * da * (1f - sa)) / oa), 0, 255),
-                (byte)Mathf.Clamp(Mathf.RoundToInt((source.b * sa + destination.b * da * (1f - sa)) / oa), 0, 255),
-                (byte)Mathf.Clamp(Mathf.RoundToInt(oa * 255f), 0, 255));
         }
 
         private static void Fill(Rect rect, Color color)
