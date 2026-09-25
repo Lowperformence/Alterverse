@@ -20,7 +20,7 @@ namespace Alterverse.Visuals
             rotation=key.transform.rotation;intensity=key.intensity;shadowStrength=key.shadowStrength;lightColor=key.color;mask=key.cullingMask;
 
             key.transform.rotation=Quaternion.Euler(42f,-36f,0f);
-            key.intensity=1.18f;
+            key.intensity=1.40f;
             key.shadowStrength=Mathf.Min(shadowStrength,.82f);
             key.color=ArenaVariantRuntime.IsMars?new Color(1f,.82f,.68f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.86f,1f,.78f):
@@ -29,11 +29,11 @@ namespace Alterverse.Visuals
             key.cullingMask&=~(1<<31); // Menu showcase has its own isolated studio lights.
 
             RenderSettings.ambientMode=AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsMars?new Color(.30f,.25f,.24f):
-                ArenaVariantRuntime.IsGreenPlanet?new Color(.22f,.30f,.25f):
-                ArenaVariantRuntime.IsNoxara?new Color(.20f,.23f,.34f):new Color(.24f,.27f,.33f);
-            RenderSettings.ambientEquatorColor=new Color(.105f,.125f,.155f);
-            RenderSettings.ambientGroundColor=new Color(.052f,.062f,.078f);
+            RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsMars?new Color(.36f,.30f,.28f):
+                ArenaVariantRuntime.IsGreenPlanet?new Color(.27f,.36f,.30f):
+                ArenaVariantRuntime.IsNoxara?new Color(.26f,.29f,.40f):new Color(.32f,.35f,.41f);
+            RenderSettings.ambientEquatorColor=new Color(.17f,.19f,.22f);
+            RenderSettings.ambientGroundColor=new Color(.09f,.10f,.12f);
             RenderSettings.reflectionIntensity=.31f;
             RenderSettings.fog=false;
             applied=true;
