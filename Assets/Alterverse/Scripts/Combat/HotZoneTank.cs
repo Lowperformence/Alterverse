@@ -441,6 +441,7 @@ namespace Alterverse.Combat
             Part("MoonGuardChestInset",PrimitiveType.Cube,turretPivot,new Vector3(0,-.12f,.57f),new Vector3(.54f,.18f,.055f),jointMat,Quaternion.identity);
             Part("MoonGuardChestLightL",PrimitiveType.Cube,turretPivot,new Vector3(-.23f,-.11f,.61f),new Vector3(.16f,.065f,.035f),energyMat,Quaternion.identity);
             Part("MoonGuardChestLightR",PrimitiveType.Cube,turretPivot,new Vector3(.23f,-.11f,.61f),new Vector3(.16f,.065f,.035f),energyMat,Quaternion.identity);
+            Part("MoonGuardPowerCore",PrimitiveType.Cube,turretPivot,new Vector3(0,-.10f,.615f),new Vector3(.12f,.11f,.035f),energyMat,Quaternion.Euler(0,0,45));
 
             // Compact sensor head recessed into the torso.
             Transform head=Pivot("DF_MoonGuardHead",turretPivot,new Vector3(0,.64f,.12f),Quaternion.Euler(-3,0,0));
@@ -566,6 +567,8 @@ namespace Alterverse.Combat
             Part("TitanEyeL",PrimitiveType.Sphere,skull,new Vector3(-.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
             Part("TitanEyeR",PrimitiveType.Sphere,skull,new Vector3(.28f,.08f,.72f),new Vector3(.16f,.12f,.10f),energyMat,Quaternion.identity);
             Part("TitanChestRift",PrimitiveType.Cube,transform,new Vector3(0,1.25f,.27f),new Vector3(.12f,.82f,.08f),energyMat,Quaternion.Euler(0,0,-18));
+            Part("TitanRibRunesL",PrimitiveType.Cube,transform,new Vector3(-.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,-32));
+            Part("TitanRibRunesR",PrimitiveType.Cube,transform,new Vector3(.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,32));
         }
 
         private void AnimateSkeleton()
@@ -596,6 +599,7 @@ namespace Alterverse.Combat
             Part("SpiderAbdomenArmor",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.54f,-.50f),new Vector3(1.02f,.18f,1.10f),armorMat,Quaternion.Euler(4,0,0));
             Part("SpiderThorax",PrimitiveType.Sphere,spiderBodyRoot,new Vector3(0,.34f,.36f),new Vector3(1.18f,.58f,1.02f),armorMat,Quaternion.identity);
             Part("SpiderThoraxPlate",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.57f,.37f),new Vector3(.88f,.16f,.74f),jointMat,Quaternion.Euler(-5,0,0));
+            Part("SpiderAbdomenRidge",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.65f,-.52f),new Vector3(.12f,.055f,.92f),energyMat,Quaternion.Euler(4,0,0));
 
             turretPivot=Pivot("DF_NoxaraSpiderHeadPivot",spiderBodyRoot,new Vector3(0,.52f,.86f),Quaternion.identity);
             Part("SpiderHead",PrimitiveType.Cube,turretPivot,new Vector3(0,0,.16f),new Vector3(.88f,.46f,.70f),armorMat,Quaternion.Euler(-4,0,0));
@@ -887,6 +891,7 @@ namespace Alterverse.Combat
 
             Part("KryonBearChestCore",PrimitiveType.Sphere,bearBodyRoot,new Vector3(0,.43f,1.05f),new Vector3(.24f,.21f,.16f),energyMat,Quaternion.identity);
             Part("KryonBearTeamMark",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,.98f,-.12f),new Vector3(.30f,.035f,.22f),teamMat,Quaternion.identity);
+            Part("KryonBearSpineLight",PrimitiveType.Cube,bearBodyRoot,new Vector3(0,1.01f,-.56f),new Vector3(.075f,.035f,.56f),energyMat,Quaternion.Euler(5,0,0));
 
             // Lower, angular head with cheek armor, mechanical jaw and visible fangs.
             turretPivot=Pivot("DF_KryonBearHeadPivot",bearBodyRoot,new Vector3(0,.66f,.92f),Quaternion.Euler(-4,0,0));
