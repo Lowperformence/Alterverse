@@ -49,11 +49,11 @@ namespace Alterverse.Visuals
             }
             float flight=travel;
             HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Orb;
-            Vector3 size=h==HeroId.Nyra?new Vector3(.48f,.48f,.66f)*strength:Vector3.one*.36f*strength;
+            Vector3 size=h==HeroId.Nyra?new Vector3(.62f,.62f,.82f)*strength:Vector3.one*.56f*strength;
             HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A second cached mesh adds a feathered halo or a long narrow tracer tail.
             HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
-                h==HeroId.Nyra?new Vector3(.26f,.26f,1.25f)*strength:Vector3.one*.42f*strength,
+                h==HeroId.Nyra?new Vector3(.35f,.35f,1.40f)*strength:Vector3.one*.62f*strength,
                 new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // Short physical muzzle core, rather than a full-distance beam.
             Fx(HeroFxShape.Burst,start,Color.Lerp(c,Color.white,.65f),.32f*strength,.09f,rotation:Face(start,end),actor:actor);
@@ -399,12 +399,12 @@ namespace Alterverse.Visuals
         {
             if(actor==null||target==null)return;
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
-            float strength=slot<0?.26f:slot==3?.58f:.40f;
+            float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
             // Contact core is deliberately small. The hero-specific silhouette below is what
             // communicates who hit you, instead of one generic white explosion for every attack.
             Fx(slot<0&&hero==HeroId.Nyra?HeroFxShape.Burst:HeroFxShape.Halo,p,
-                Color.Lerp(c,Color.white,.68f),strength*(slot<0?1.35f:1.8f),.10f);
+                Color.Lerp(c,Color.white,.68f),strength*(slot<0?1.35f:1.8f),.18f);
 
             switch(hero)
             {
@@ -566,4 +566,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
