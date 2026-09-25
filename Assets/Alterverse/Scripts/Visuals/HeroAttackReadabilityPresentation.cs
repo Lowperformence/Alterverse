@@ -303,7 +303,7 @@ namespace Alterverse.Visuals
             Vector3 ground=target;ground.y=Mathf.Max(.08f,target.y+.08f);
             float impactDelay=Mathf.Max(.02f,attackWindup);
 
-            if(slot>=0)EmitAbilitySignature(slot,ground,impactDelay,spec,color);
+            if(slot>=0)EmitAbilitySignature(hero,slot,ground,impactDelay,spec,color);
 
             if(slot<0)
             {
@@ -408,30 +408,42 @@ namespace Alterverse.Visuals
             }
         }
 
-        // A stable silhouette for each button survives the distant match camera and dark terrain.
-        // These are presentation-only marks; existing gameplay warnings remain authoritative.
-        private void EmitAbilitySignature(int slot,Vector3 ground,float impactDelay,AbilitySpec spec,Color accent)
+        // Readable at match-camera distance: the slot has a clear scale/timing, while each hero
+        // has a distinct ground motif. This presentation never changes damage or targeting.
+        private void EmitAbilitySignature(HeroId hero,int slot,Vector3 ground,float impactDelay,AbilitySpec spec,Color accent)
         {
             Vector3 caster=transform.position+Vector3.up*.11f;
-            Color bright=Color.Lerp(accent,Color.white,.48f);bright.a=1f;
+            Color bright=Color.Lerp(accent,Color.white,.55f);bright.a=1f;
             float radius=Mathf.Clamp(spec.Radius>0f?spec.Radius:1.5f,1.4f,3.5f);
+            HeroFxShape motif=hero switch
+            {
+                HeroId.Veyr=>HeroFxShape.Slash,
+                HeroId.Kaelon=>HeroFxShape.Cracks,
+                HeroId.Rook=>HeroFxShape.Burst,
+                HeroId.Elyra=>HeroFxShape.Runes,
+                HeroId.Mira=>HeroFxShape.Petals,
+                HeroId.Nyra=>HeroFxShape.Hex,
+                HeroId.Traveler=>HeroFxShape.Halo,
+                _=>HeroFxShape.Ring
+            };
+            Quaternion facing=Quaternion.LookRotation(transform.forward);
             switch(slot)
             {
-                case 0: // Fast strike: a directional slash and a compact impact spark.
-                    HeroVfxPool.Emit(HeroFxShape.Slash,caster,Vector3.zero,new Vector3(2.4f,.08f,2.4f),bright,.38f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*.92f,bright,.32f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                case 0: // Distinct hero-colored impact, immediate and compact.
+                    HeroVfxPool.Emit(motif,caster+Vector3.up*.15f,Vector3.zero,new Vector3(2.5f,.16f,2.5f),bright,.42f,HeroFxMotion.Expand,facing,gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*1.12f,bright,.34f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
                     break;
-                case 1: // Utility: angular hexagonal field stays visible through the cast.
-                    HeroVfxPool.Emit(HeroFxShape.Hex,caster,Vector3.zero,new Vector3(2.4f,.05f,2.4f),bright,.55f,HeroFxMotion.Expand,owner:gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.Hex,ground,Vector3.zero,new Vector3(radius*1.7f,.05f,radius*1.7f),bright,.45f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                case 1: // Utility: crisp outer ring with the hero motif inside it.
+                    HeroVfxPool.Emit(HeroFxShape.Hex,caster,Vector3.zero,new Vector3(2.6f,.05f,2.6f),bright,.62f,HeroFxMotion.Expand,owner:gameObject);
+                    HeroVfxPool.Emit(motif,ground+Vector3.up*.05f,Vector3.zero,new Vector3(radius*1.8f,.20f,radius*1.8f),bright,.54f,HeroFxMotion.Expand,facing,gameObject,delay:impactDelay);
                     break;
-                case 2: // Area/control: rotating runes identify the affected location.
-                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2f,.06f,radius*2f),bright,Mathf.Max(.65f,impactDelay+.25f),HeroFxMotion.Orbit,owner:gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.Ring,ground+Vector3.up*.035f,Vector3.zero,new Vector3(radius*2f,.05f,radius*2f),accent,.44f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                case 2: // Control: persistent rune outline with a contrasting hero-shaped center.
+                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2.2f,.06f,radius*2.2f),bright,Mathf.Max(.78f,impactDelay+.32f),HeroFxMotion.Orbit,owner:gameObject);
+                    HeroVfxPool.Emit(motif,ground+Vector3.up*.055f,Vector3.zero,new Vector3(radius*1.5f,.20f,radius*1.5f),accent,.55f,HeroFxMotion.Expand,facing,gameObject,delay:impactDelay);
                     break;
-                case 3: // Ultimate: broad warning and a vertical energy dome on release.
-                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2.3f,.06f,radius*2.3f),bright,Mathf.Max(.75f,impactDelay+.30f),HeroFxMotion.Orbit,owner:gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.ShockDome,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.2f,1.4f,radius*2.2f),bright,.50f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                case 3: // Ultimate: long lead-in, hero mark, then a tall shock dome.
+                    HeroVfxPool.Emit(motif,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.4f,.22f,radius*2.4f),bright,Mathf.Max(.90f,impactDelay+.4f),HeroFxMotion.Orbit,facing,gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.ShockDome,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.4f,1.65f,radius*2.4f),bright,.58f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
                     break;
             }
         }
