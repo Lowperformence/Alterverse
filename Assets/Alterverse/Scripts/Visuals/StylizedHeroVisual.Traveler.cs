@@ -156,6 +156,9 @@ namespace Alterverse.Visuals
                 new[]{.020f,.090f,.132f,.132f,.090f,.020f},
                 new[]{0f,.005f,.010f,.010f,.005f,0f},20);
             Sculpt("Orb",planet,new Vector3(0,-.34f,.28f),Vector3.one,chronosteel,weapon,false);
+            GameObject fracture=Sculpt("PlanetFluxEquator",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxEquator",.145f,.012f),
+                new Vector3(0,-.34f,.28f),Vector3.one,paradoxRed,weapon,true);
+            fracture.transform.localRotation=Quaternion.Euler(77f,0f,12f);
 
             GameObject ring0=Sculpt("PlanetFluxRing0",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxRing0",.205f,.014f),
                 new Vector3(0,-.34f,.28f),Vector3.one,paleGold,weapon,true);
