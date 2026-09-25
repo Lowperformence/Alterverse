@@ -14,7 +14,7 @@ namespace Alterverse.Characters
         private HeroIdentity identity;
         private HeroAbilityKit kit;
         private readonly float[] ready = new float[4];
-        private const int ScanBufferSize=64;private readonly Collider[] scanBuffer=new Collider[ScanBufferSize];private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
+        private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
         private int life;
         private readonly RaycastHit[] sightHits=new RaycastHit[16];
         private void Awake()
@@ -198,20 +198,25 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(spec.Windup);
             if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject)) yield break;
             TeamMember own = GetComponent<TeamMember>();
-            int hits=Physics.OverlapSphereNonAlloc(center,spec.Radius,scanBuffer,GameplayCollision.TargetMask,QueryTriggerInteraction.Collide);
+            // Health.Active is the combat target registry. Visual and movement colliders are
+            // optional for heroes, so physics overlap cannot be the source of truth here.
             resolvedTargets.Clear();
-            for(int i=0;i<hits;i++)
+            float radiusSqr=spec.Radius*spec.Radius;
+            for(int i=Health.Active.Count-1;i>=0;i--)
             {
-                Collider c=scanBuffer[i];if(c==null)continue;Health h=c.GetComponentInParent<Health>();
-                if(h==null||!resolvedTargets.Add(h)||h.IsDead||!h.isActiveAndEnabled)continue;
-                TeamMember member = h.GetComponent<TeamMember>();
-                bool ally = own != null && member != null && member.Team == own.Team && h.GetComponent<HeroIdentity>() != null;
-                if (identity.Hero == HeroId.Mira)
-                { if (ally) { h.Heal(spec.Power,false); h.AddShield(25, 3,false); HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3); } }
+                Health h=Health.Active[i];
+                if(h==null||h.IsDead||!h.isActiveAndEnabled||!resolvedTargets.Add(h))continue;
+                if((h.transform.position-center).sqrMagnitude>radiusSqr)continue;
+                TeamMember member=h.GetComponent<TeamMember>();
+                bool ally=own!=null&&member!=null&&member.Team==own.Team&&h.GetComponent<HeroIdentity>()!=null;
+                if(identity.Hero==HeroId.Mira)
+                {
+                    if(ally){h.Heal(spec.Power,false);h.AddShield(25,3,false);HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
+                }
                 else
                 {
-                    if (identity.Hero == HeroId.Kaelon && slot == 3 && ally) { h.AddShield(60, 3,false);HeroSkillVfx.Support(gameObject,h,true,3); }
-                    if (HeroCombatRules.Enemy(gameObject, h)) Hit(slot, h, false);
+                    if(identity.Hero==HeroId.Kaelon&&slot==3&&ally){h.AddShield(60,3,false);HeroSkillVfx.Support(gameObject,h,true,3);}
+                    if(HeroCombatRules.Enemy(gameObject,h))Hit(slot,h,false);
                 }
             }
             if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
