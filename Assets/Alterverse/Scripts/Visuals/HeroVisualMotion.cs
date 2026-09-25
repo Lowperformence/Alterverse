@@ -227,6 +227,21 @@ namespace Alterverse.Visuals
                 if(rest.Length==0){Destroy(mesh);continue;}
                 float top=float.NegativeInfinity,bottom=float.PositiveInfinity;
                 foreach(Vector3 vertex in rest){top=Mathf.Max(top,vertex.y);bottom=Mathf.Min(bottom,vertex.y);}
+                // Bring the hem inward and shorten it while leaving the shoulder attachment in place.
+                // Every seam receives the same taper as its panel, so the pieces still meet.
+                float height=Mathf.Max(.001f,top-bottom);
+                for(int v=0;v<rest.Length;v++)
+                {
+                    Vector3 point=rest[v];
+                    float loose=Mathf.Clamp01((top-point.y)/height);
+                    point.x*=Mathf.Lerp(1f,.72f,loose);
+                    point.y=top-(top-point.y)*.84f;
+                    point.z*=Mathf.Lerp(1f,.82f,loose);
+                    rest[v]=point;
+                }
+                mesh.vertices=rest;
+                bottom=top-height*.84f;
+                mesh.RecalculateBounds();
                 Bounds bounds=mesh.bounds;bounds.Expand(.9f);mesh.bounds=bounds;
                 filter.sharedMesh=mesh;
                 clothPanels.Add(new ClothPanel{mesh=mesh,rest=rest,vertices=(Vector3[])rest.Clone(),
