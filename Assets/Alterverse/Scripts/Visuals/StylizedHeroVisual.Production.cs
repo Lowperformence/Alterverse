@@ -593,6 +593,8 @@ namespace Alterverse.Visuals
                     new Vector3(.32f,.13f,.045f),yellow,default,"Gauntlet"+s);
                 Detail("BrakkFistSide"+s,p+new Vector3(side*.17f,.02f,.15f),
                     new Vector3(.065f,.22f,.16f),blackMetal,new Vector3(0,0,side*8),"Gauntlet"+s);
+                Detail("BrakkImpactEdge"+s,p+new Vector3(0,-.08f,.328f),
+                    new Vector3(.25f,.035f,.022f),reactorHot,default,"Gauntlet"+s,true);
             }
 
             Detail("IdentityCore",new Vector3(0,.20f,.407f),new Vector3(.065f,.065f,.018f),reactorHot,
