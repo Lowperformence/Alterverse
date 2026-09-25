@@ -707,6 +707,15 @@ private void Bind(string childName,string parentName)
 Transform child=root.Find("DF_"+childName),parent=root.Find("DF_"+parentName);
 if(child!=null&&parent!=null)child.SetParent(parent,true);
 }
+internal static bool IsFlowingFabric(string name)
+{
+    return name=="DF_Cape"||name=="DF_CoatTailR"||
+        name=="DF_TravelerMantleBack"||name=="DF_TravelerMantleL"||name=="DF_TravelerMantleR"||
+        name=="DF_TravelerMantleSpine"||name.StartsWith("DF_TravelerMantleSeam")||
+        name.StartsWith("DF_TravelerMantleFold")||name.StartsWith("DF_TravelerFront")||
+        name=="DF_TahlaRobeFront"||name=="DF_TahlaRobeBack"||
+        name=="DF_TahlaRobeSideL"||name=="DF_TahlaRobeSideR";
+}
 private void CombineStaticPanels()
 {
 var groups=new System.Collections.Generic.Dictionary<Material,System.Collections.Generic.List<CombineInstance>>();
@@ -714,7 +723,7 @@ var remove=new System.Collections.Generic.List<GameObject>();
 var animated=new System.Collections.Generic.HashSet<string>{"DF_LegL","DF_LegR","DF_BootL","DF_BootR","DF_ArmL","DF_ArmR","DF_GauntletL","DF_GauntletR","DF_OrbitL","DF_OrbitR","DF_WingL","DF_WingR","DF_Cape","DF_BladeR","DF_WeaponR","DF_WeaponL","DF_Orb"};
 foreach(Transform part in root)
 {
-if(animated.Contains(part.name))continue;
+if(animated.Contains(part.name)||IsFlowingFabric(part.name))continue;
 MeshFilter filter=part.GetComponent<MeshFilter>();MeshRenderer renderer=part.GetComponent<MeshRenderer>();
 if(filter==null||renderer==null||renderer.sharedMaterial==null)continue;
 Material material=renderer.sharedMaterial;if(!groups.TryGetValue(material,out var list)){list=new System.Collections.Generic.List<CombineInstance>();groups.Add(material,list);}
