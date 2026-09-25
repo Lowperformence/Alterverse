@@ -13,9 +13,9 @@ namespace Alterverse.Visuals
         public void Build(Transform visual,bool isPreview)
         {
             if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=false;
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
-            core=new Material(shader){name="DF_VoidObsidian",color=new Color(.035f,.018f,.065f)};
-            edge=new Material(shader){name="DF_VoidFractureEnergy",color=new Color(.43f,.08f,.75f)};
+            Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
+            core=CreateWingMaterial(coreShader,"DF_VoidObsidian",new Color(.035f,.018f,.065f));
+            edge=CreateWingMaterial(edgeShader,"DF_VoidFractureEnergy",new Color(.43f,.08f,.75f));
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.6f);
             energyColor=new Color(.52f,.08f,1f);
             edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.5f);
@@ -42,9 +42,9 @@ namespace Alterverse.Visuals
         public void BuildBetaSupporter(Transform visual,bool isPreview,HeroId hero)
         {
             if(mesh!=null)return;preview=isPreview;betaSupporter=true;plague=false;
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
-            core=new Material(shader){name="DF_BetaSupporterWingCore",color=new Color(.055f,.008f,.012f)};
-            edge=new Material(shader){name="DF_BetaSupporterWingEnergy",color=new Color(.72f,.015f,.02f)};
+            Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
+            core=CreateWingMaterial(coreShader,"DF_BetaSupporterWingCore",new Color(.055f,.008f,.012f));
+            edge=CreateWingMaterial(edgeShader,"DF_BetaSupporterWingEnergy",new Color(.72f,.015f,.02f));
             if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.26f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.54f);
             energyColor=new Color(1f,.018f,.025f);
@@ -85,12 +85,12 @@ namespace Alterverse.Visuals
         public void BuildPlague(Transform visual,bool isPreview,HeroId hero)
         {
             if(mesh!=null)return;preview=isPreview;betaSupporter=false;plague=true;
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
+            Shader coreShader=WingCoreShader(),edgeShader=WingEnergyShader();if(coreShader==null||edgeShader==null)return;
 
             // Intentionally simpler and less prestigious than the Beta Supporter wings:
             // moss-green diseased plates with restrained toxic seams, tied to Green Planet.
-            core=new Material(shader){name="DF_PlagueWingCore",color=new Color(.13f,.24f,.065f)};
-            edge=new Material(shader){name="DF_PlagueWingToxin",color=new Color(.34f,.72f,.10f)};
+            core=CreateWingMaterial(coreShader,"DF_PlagueWingCore",new Color(.13f,.24f,.065f));
+            edge=CreateWingMaterial(edgeShader,"DF_PlagueWingToxin",new Color(.34f,.72f,.10f));
             if(core.HasProperty("_Metallic"))core.SetFloat("_Metallic",.04f);
             if(core.HasProperty("_Smoothness"))core.SetFloat("_Smoothness",.22f);
             energyColor=new Color(.43f,.90f,.09f);
@@ -137,6 +137,36 @@ namespace Alterverse.Visuals
                 var nr=toxicNode.GetComponent<MeshRenderer>();nr.sharedMaterial=edge;nr.shadowCastingMode=ShadowCastingMode.Off;nr.receiveShadows=false;
             }
             lastPosition=transform.position;
+        }
+
+        private static Shader WingCoreShader()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Resources-backed shader is guaranteed into release builds; Shader.Find variants can be stripped.
+            return RuntimeShaderLibrary.Lit;
+#else
+            return Shader.Find("Universal Render Pipeline/Lit")??RuntimeShaderLibrary.Lit??Shader.Find("Standard");
+#endif
+        }
+
+        private static Shader WingEnergyShader()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // Energy seams must stay bright even without scene lighting on mobile.
+            return RuntimeShaderLibrary.Unlit;
+#else
+            return Shader.Find("Universal Render Pipeline/Lit")??RuntimeShaderLibrary.Unlit??Shader.Find("Standard");
+#endif
+        }
+
+        private static Material CreateWingMaterial(Shader shader,string name,Color color)
+        {
+            if(shader==null)return null;
+            var material=new Material(shader){name=name};
+            if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
+            if(material.HasProperty("_Color"))material.SetColor("_Color",color);
+            else if(!material.HasProperty("_BaseColor"))material.color=color;
+            return material;
         }
 
         private static float HeroScale(HeroId hero,float standard,float marksman,float support,float mage,float tank,float bruiser)
