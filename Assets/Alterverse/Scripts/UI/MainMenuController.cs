@@ -736,7 +736,9 @@ namespace Alterverse.UI
                 var pack=ShardPacks.All[i];float x=Left+i*(w+16);theme.Panel(new Rect(x,368,w,220));
                 theme.Label(new Rect(x+18,384,w-36,28),pack.Name,theme.Small,true);
                 theme.Label(new Rect(x+18,424,w-36,48),pack.Amount+" SHARDS",theme.Heading);
+                ShardShopVisualOverlay.DrawPackCard(x,w,pack,i);
                 if(theme.Action(new Rect(x+18,508,w-36,60),store!=null?store.Price(pack.Id):"Unavailable",true,enabled:store!=null&&store.CanBuy(pack.Id)))store.Buy(pack.Id);
+                ShardShopVisualOverlay.DrawPurchaseIcon(x,w,i);
             }
             theme.Label(new Rect(Left,608,ContentWidth-190,64),store!=null?store.Status:"Store unavailable.",theme.Body,true);
             if(theme.Action(new Rect(Right-170,614,170,54),"RECONNECT",enabled:store!=null&&!store.Busy))store.Reconnect();
