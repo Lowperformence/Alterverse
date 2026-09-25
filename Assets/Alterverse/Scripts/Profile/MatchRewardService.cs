@@ -99,7 +99,6 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ReceiptXpBonus,xpBonus),
                 new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic)
             };
-            writes.AddRange(DailyQuestProgress.MatchWrites(kills,objectives));
             ProfileTransaction.Commit(writes.ToArray());
 
             // Wing bonuses accelerate account progression only, never Battle Pass progression.
