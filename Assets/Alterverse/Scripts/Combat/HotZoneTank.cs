@@ -1188,8 +1188,8 @@ namespace Alterverse.Combat
         {
             Material m=new(shader){color=color};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
-            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);
-            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smoothness);
+            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",Mathf.Max(metallic,.08f));
+            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",Mathf.Max(smoothness,emission.maxColorComponent>0?.58f:.32f));
             if(emission.maxColorComponent>0&&m.HasProperty("_EmissionColor")){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",emission);}
             return m;
         }
@@ -1198,6 +1198,7 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);part.name="DF_HotZoneTank_"+name;part.transform.SetParent(parent,false);
             part.transform.localPosition=localPosition;part.transform.localScale=localScale;part.transform.localRotation=rotation;
+            if(type==PrimitiveType.Cube)part.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             Collider c=part.GetComponent<Collider>();if(c!=null){c.enabled=false;Object.Destroy(c);}
             Renderer r=part.GetComponent<Renderer>();if(r!=null){r.sharedMaterial=material;r.shadowCastingMode=ShadowCastingMode.On;r.receiveShadows=true;}
             return part.transform;

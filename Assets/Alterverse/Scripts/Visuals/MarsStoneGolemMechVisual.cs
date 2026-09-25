@@ -191,6 +191,7 @@ namespace Alterverse.Visuals
             GameObject part=GameObject.CreatePrimitive(type);
             part.name="DF_MarsStoneGolem_"+name;
             part.transform.SetParent(parent,false);
+            if(type==PrimitiveType.Cube)part.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             part.transform.localPosition=localPosition;
             part.transform.localScale=localScale;
             part.transform.localRotation=rotation;
