@@ -55,6 +55,15 @@ namespace Alterverse.Visuals
             HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
                 h==HeroId.Nyra?new Vector3(.35f,.35f,1.40f)*strength:Vector3.one*.62f*strength,
                 new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+            // A narrow, bright core and staggered fragments make the projectile read as motion.
+            HeroVfxPool.Emit(h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Bolt,start,end,
+                new Vector3(.16f,.16f,.46f)*strength,Color.Lerp(c,Color.white,.72f),
+                flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+            for(int streak=0;streak<2;streak++)
+                HeroVfxPool.Emit(HeroFxShape.Shard,start,end,
+                    new Vector3(.075f,.14f,.09f)*strength,new Color(c.r,c.g,c.b,.62f),
+                    flight*.85f,HeroFxMotion.Travel,Face(start,end)*Quaternion.Euler(0,0,streak==0?36:-36),
+                    actor,endFollow:target,delay:(streak+1)*.045f);
             // Short physical muzzle core, rather than a full-distance beam.
             Fx(HeroFxShape.Burst,start,Color.Lerp(c,Color.white,.65f),.32f*strength,.09f,rotation:Face(start,end),actor:actor);
             if(h==HeroId.Elyra)Ring(actor,start,.28f*strength,.15f);
@@ -293,6 +302,12 @@ namespace Alterverse.Visuals
                 boundary.a=.70f;
                 Fx(HeroFxShape.Ring,ground,boundary,radius,Mathf.Max(.06f,duration),
                     HeroFxMotion.Hold,actor:actor,warning:true);
+                // A small elevated emblem identifies the caster while the boundary alone marks damage radius.
+                HeroFxShape emblem=hero==HeroId.Elyra?HeroFxShape.Runes:
+                    hero==HeroId.Mira?HeroFxShape.Petals:hero==HeroId.Kaelon?HeroFxShape.Hex:
+                    hero==HeroId.Rook?HeroFxShape.Shard:hero==HeroId.Traveler?HeroFxShape.Rift:HeroFxShape.Burst;
+                Fx(emblem,center+Vector3.up*.55f,accent,.43f,
+                    Mathf.Min(.42f,Mathf.Max(.18f,duration)),HeroFxMotion.Contract,actor:actor);
                 if(hero==HeroId.Elyra&&slot==3)
                 {
                     // The falling meteor is the unique cast cue, above the ground warning.
@@ -535,15 +550,27 @@ namespace Alterverse.Visuals
                 actor.GetComponent<HeroVisualMotion>()?.PulseDash();
                 return;
             }
-            if(h!=HeroId.Nyra)
+            if(h==HeroId.Veyr)
             {
-                Fx(HeroFxShape.Runes,from,c,.72f,.17f,HeroFxMotion.Contract,face*Quaternion.Euler(70,0,0));
-                Fx(HeroFxShape.Ring,from,c,.64f,.17f,HeroFxMotion.Expand,face*Quaternion.Euler(90,0,0),actor,actor.transform,delay:.12f);
+                Rift(actor,from,.62f,.23f);
+                Fx(HeroFxShape.Slash,to+Vector3.up*.4f,c,.84f,.23f,HeroFxMotion.Sweep,face,actor);
+            }
+            else if(h==HeroId.Elyra)
+            {
+                Fx(HeroFxShape.Runes,from+Vector3.up*.4f,c,.78f,.24f,HeroFxMotion.Contract,face,actor);
+                Fx(HeroFxShape.Orb,to+Vector3.up*.45f,DarkCore,.63f,.24f,HeroFxMotion.Contract,face,actor);
+            }
+            else if(h==HeroId.Nyra)
+            {
+                Fx(HeroFxShape.Burst,from+Vector3.up*.42f,new Color(1f,.045f,.025f),.62f,.16f,rotation:face,actor:actor);
+                Fx(HeroFxShape.Bolt,to+Vector3.up*.42f,Color.Lerp(c,Color.white,.65f),.48f,.16f,HeroFxMotion.Contract,face,actor);
             }
             for(int i=0;i<3;i++)
             {
-                Vector3 p=Vector3.Lerp(from,to,(i+.5f)/3);
-                HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Rift,p,p,new Vector3(.18f,.48f,Mathf.Min(.7f,distance*.25f)),new Color(c.r,c.g,c.b,.48f),.16f,HeroFxMotion.Contract,face,actor,delay:i*.035f);
+                Vector3 p=Vector3.Lerp(from,to,(i+.5f)/3)+Vector3.up*.30f;
+                HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Elyra?HeroFxShape.Runes:HeroFxShape.Rift,
+                    p,p,new Vector3(.18f,.48f,Mathf.Min(.7f,distance*.25f)),
+                    new Color(c.r,c.g,c.b,.48f),.16f,HeroFxMotion.Contract,face,actor,delay:i*.035f);
             }
             actor.GetComponent<HeroVisualMotion>()?.PulseDash();
         }
