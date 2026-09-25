@@ -4,9 +4,11 @@ namespace Alterverse.Match
 public sealed class MatchOpening:MonoBehaviour
 {
 [SerializeField]private float messageSeconds=2.2f;
+private const string Rules="SCORE KILLS TO WIN\nCAPTURE THE HOT ZONE FOR MECH SUPPORT\nCAPTURE PLANETS FOR +1 MINUTE";
+private const string BomberWarning="WARNING: SPACE BOMBERS DAMAGE EVERY PLAYER";
 private string display="";
 private bool visible,ownsPause;
-private GUIStyle title,shadow;
+private GUIStyle title,shadow,rules,rulesShadow,warning,warningShadow;
 private float phaseElapsed,phaseDuration;
 
 private IEnumerator Start()
@@ -23,7 +25,7 @@ private IEnumerator Start()
         yield return WaitForeground(.72f);
     }
 
-    SetPhase("LOS",.55f);
+    SetPhase("GO",.55f);
     yield return WaitForeground(.55f);
     visible=false;
     RestoreTimeScale();
@@ -61,7 +63,7 @@ private void OnGUI()
     EnsureStyles(uiScale);
 
     bool headline=display=="REALITY COLLIDE";
-    bool go=display=="LOS";
+    bool go=display=="GO";
     int phaseSize=Mathf.RoundToInt((headline?58f:go?86f:104f)*uiScale);
     title.fontSize=phaseSize;
     shadow.fontSize=phaseSize;
@@ -72,15 +74,15 @@ private void OnGUI()
     float alpha=Mathf.Clamp01(fadeIn*fadeOut);
     float punch=1f+(.105f*(1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(progress/.32f))));
 
-    float width=Mathf.Min(Screen.width*.82f,headline?980f*uiScale:520f*uiScale);
+    float width=Mathf.Min(Screen.width*.88f,headline?980f*uiScale:620f*uiScale);
     float height=(headline?112f:150f)*uiScale;
-    Rect rect=new((Screen.width-width)*.5f,(Screen.height-height)*.47f,width,height);
+    Rect rect=new((Screen.width-width)*.5f,(Screen.height-height)*.40f,width,height);
 
     Color before=GUI.color;
     Matrix4x4 matrix=GUI.matrix;
 
-    // Quiet cinematic veil: no panel, no frame, no secondary copy.
-    GUI.color=new Color(.008f,.012f,.025f,.38f*alpha);
+    // Quiet cinematic veil keeps the rules readable without bringing back a heavy UI panel.
+    GUI.color=new Color(.008f,.012f,.025f,.46f*alpha);
     GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);
 
     // Thin ZERO/LUMEN energy accents replace the old grey box.
@@ -103,8 +105,29 @@ private void OnGUI()
     GUI.color=textColor;
     GUI.Label(rect,display,title);
 
-    // Small controlled energy sheen, only at the lower edge of the glyph area.
     GUI.matrix=matrix;
+
+    // Show the core match rules throughout the opening countdown. GO stays clean and immediate.
+    if(!go)
+    {
+        float rulesWidth=Mathf.Min(Screen.width*.90f,820f*uiScale);
+        float rulesHeight=118f*uiScale;
+        float rulesY=rect.yMax+18f*uiScale;
+        Rect rulesRect=new((Screen.width-rulesWidth)*.5f,rulesY,rulesWidth,rulesHeight);
+
+        GUI.color=new Color(0f,0f,0f,.74f*alpha);
+        GUI.Label(new Rect(rulesRect.x+1.5f*uiScale,rulesRect.y+2f*uiScale,rulesRect.width,rulesRect.height),Rules,rulesShadow);
+        GUI.color=new Color(.90f,.95f,1f,.94f*alpha);
+        GUI.Label(rulesRect,Rules,rules);
+
+        Rect warningRect=new(rulesRect.x,rulesRect.yMax+3f*uiScale,rulesRect.width,32f*uiScale);
+        GUI.color=new Color(0f,0f,0f,.78f*alpha);
+        GUI.Label(new Rect(warningRect.x+1.5f*uiScale,warningRect.y+2f*uiScale,warningRect.width,warningRect.height),BomberWarning,warningShadow);
+        GUI.color=new Color(1f,.66f,.30f,.98f*alpha);
+        GUI.Label(warningRect,BomberWarning,warning);
+    }
+
+    // Small controlled energy sheen, only at the lower edge of the glyph area.
     float sheenWidth=(headline?160f:72f)*uiScale;
     float sheenX=Mathf.Lerp(rect.center.x-sheenWidth,rect.center.x,Mathf.SmoothStep(0f,1f,progress));
     GUI.color=new Color(.42f,.88f,1f,.22f*alpha);
@@ -144,6 +167,32 @@ private void EnsureStyles(float scale)
         fontStyle=FontStyle.Bold
     };
     shadow.normal.textColor=Color.black;
+
+    rules=new GUIStyle(GUI.skin.label)
+    {
+        fontSize=Mathf.RoundToInt(20f*scale),
+        fontStyle=FontStyle.Bold,
+        alignment=TextAnchor.MiddleCenter,
+        wordWrap=false,
+        richText=false
+    };
+    rules.normal.textColor=Color.white;
+
+    rulesShadow=new GUIStyle(rules);
+    rulesShadow.normal.textColor=Color.black;
+
+    warning=new GUIStyle(GUI.skin.label)
+    {
+        fontSize=Mathf.RoundToInt(21f*scale),
+        fontStyle=FontStyle.Bold,
+        alignment=TextAnchor.MiddleCenter,
+        wordWrap=false,
+        richText=false
+    };
+    warning.normal.textColor=Color.white;
+
+    warningShadow=new GUIStyle(warning);
+    warningShadow.normal.textColor=Color.black;
 }
 }
 }
