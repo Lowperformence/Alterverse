@@ -468,6 +468,8 @@ namespace Alterverse.Combat
             Part("HelmetCrown",PrimitiveType.Cube,visualRoot,new Vector3(0,2.06f,-.02f),new Vector3(.38f,.16f,.40f),suitMat,Quaternion.Euler(-5,0,0));
             Part("Visor",PrimitiveType.Sphere,visualRoot,new Vector3(0,1.86f,.27f),new Vector3(.46f,.36f,.16f),visorMat,Quaternion.identity);
             Part("HelmetLight",PrimitiveType.Cube,visualRoot,new Vector3(.27f,1.89f,.29f),new Vector3(.08f,.07f,.025f),energyMat,Quaternion.identity);
+            Part("HelmetBrow",PrimitiveType.Cube,visualRoot,new Vector3(0,2.04f,.25f),new Vector3(.50f,.07f,.11f),darkMat,Quaternion.Euler(-5,0,0));
+            Part("HelmetVisorTrace",PrimitiveType.Cube,visualRoot,new Vector3(0,1.79f,.419f),new Vector3(.32f,.026f,.016f),energyMat,Quaternion.identity);
 
             leftLeg=Pivot("LegL",visualRoot,new Vector3(-.20f,.68f,0),Quaternion.Euler(0,0,-2));
             rightLeg=Pivot("LegR",visualRoot,new Vector3(.20f,.68f,0),Quaternion.Euler(0,0,2));
@@ -496,6 +498,7 @@ namespace Alterverse.Combat
             Part("RifleForeGrip",PrimitiveType.Cube,rifle,new Vector3(-.16f,-.09f,.50f),new Vector3(.12f,.22f,.14f),darkMat,Quaternion.Euler(8,0,0));
             Part("RifleBarrel",PrimitiveType.Cylinder,rifle,new Vector3(0,0,.82f),new Vector3(.055f,.30f,.055f),darkMat,Quaternion.Euler(90,0,0));
             Part("RifleMuzzleBrake",PrimitiveType.Cube,rifle,new Vector3(0,0,1.13f),new Vector3(.13f,.11f,.14f),weaponMat,Quaternion.identity);
+            Part("RifleMuzzleEmitter",PrimitiveType.Cube,rifle,new Vector3(0,0,1.207f),new Vector3(.065f,.06f,.012f),energyMat,Quaternion.identity);
             muzzle=Pivot("Muzzle",rifle,new Vector3(0,0,1.22f),Quaternion.identity);
         }
 
