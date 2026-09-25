@@ -298,7 +298,7 @@ namespace Alterverse.Visuals
 
         private void EmitPresentationVfx(HeroId hero,int slot,Vector3 target,float attackWindup,AbilitySpec spec)
         {
-            Color color=StylizedArtDirection.HeroAccent(hero);
+            Color color=hero==HeroId.Mira?new Color(1f,.72f,.28f):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
             Vector3 origin=ReleasePoint();
             if(slot>=0)
             {
@@ -333,17 +333,42 @@ namespace Alterverse.Visuals
             HeroFxMotion motion=HeroFxMotion.Expand;
             switch(hero)
             {
-                case HeroId.Veyr: shape=slot==2?HeroFxShape.Rift:HeroFxShape.Slash;point=hand;motion=HeroFxMotion.Sweep;break;
-                case HeroId.Kaelon: shape=slot==1?HeroFxShape.Shield:HeroFxShape.Hex;point=slot==1?chest:feet;break;
-                case HeroId.Nyra: shape=slot==1?HeroFxShape.Burst:HeroFxShape.Bolt;point=hand;break;
-                case HeroId.Elyra: shape=HeroFxShape.Runes;point=chest;motion=HeroFxMotion.Orbit;break;
-                case HeroId.Mira: shape=slot==2?HeroFxShape.Shield:HeroFxShape.Petals;point=chest;motion=HeroFxMotion.Orbit;break;
-                case HeroId.Rook: shape=slot==1?HeroFxShape.Shield:HeroFxShape.Burst;point=chest;break;
-                case HeroId.Traveler: shape=slot==1?HeroFxShape.Rift:HeroFxShape.Halo;point=hand;motion=HeroFxMotion.Contract;break;
+                case HeroId.Veyr:
+                    shape=slot==0?HeroFxShape.Slash:slot==1?HeroFxShape.Rift:
+                        slot==2?HeroFxShape.Halo:HeroFxShape.Shard;
+                    point=hand;motion=slot==0||slot==3?HeroFxMotion.Sweep:HeroFxMotion.Contract;break;
+                case HeroId.Kaelon:
+                    shape=slot==0?HeroFxShape.Hex:slot==1?HeroFxShape.Shield:
+                        slot==2?HeroFxShape.Cracks:HeroFxShape.ShockDome;
+                    point=slot==1?chest:slot==0?hand:chest;break;
+                case HeroId.Nyra:
+                    shape=slot==0?HeroFxShape.Bolt:slot==1?HeroFxShape.Burst:
+                        slot==2?HeroFxShape.Ring:HeroFxShape.Shard;
+                    point=hand;break;
+                case HeroId.Elyra:
+                    shape=slot==0?HeroFxShape.Orb:slot==1?HeroFxShape.Runes:
+                        slot==2?HeroFxShape.Rift:HeroFxShape.ShockDome;
+                    point=chest;motion=slot==1?HeroFxMotion.Orbit:HeroFxMotion.Contract;break;
+                case HeroId.Mira:
+                    shape=slot==0?HeroFxShape.Seed:slot==1?HeroFxShape.Plus:
+                        slot==2?HeroFxShape.Shield:HeroFxShape.Petals;
+                    point=chest;motion=slot==3?HeroFxMotion.Orbit:HeroFxMotion.Expand;break;
+                case HeroId.Rook:
+                    shape=slot==0?HeroFxShape.Slash:slot==1?HeroFxShape.Shield:
+                        slot==2?HeroFxShape.Cracks:HeroFxShape.Burst;
+                    point=chest;break;
+                case HeroId.Traveler:
+                    shape=slot==0?HeroFxShape.Bolt:slot==1?HeroFxShape.Rift:
+                        slot==2?HeroFxShape.Runes:HeroFxShape.Halo;
+                    point=hand;motion=HeroFxMotion.Contract;break;
                 default: shape=HeroFxShape.Burst;point=hand;break;
             }
             HeroVfxPool.Emit(shape,point,point,
                 new Vector3(scale,scale*.52f,scale),bright,life,motion,facing,gameObject);
+            if(slot==3)
+                HeroVfxPool.Emit(HeroFxShape.Halo,chest,chest,
+                    Vector3.one*.70f,new Color(bright.r,bright.g,bright.b,.72f),
+                    .28f,HeroFxMotion.Contract,facing,gameObject);
         }
 
         private Vector3 ReleasePoint()
