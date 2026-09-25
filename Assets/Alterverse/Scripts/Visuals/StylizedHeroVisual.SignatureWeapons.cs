@@ -62,7 +62,7 @@ namespace Alterverse.Visuals
                 case HeroId.Elyra:
                 {
                     HideSignatureNamed("Orb");HideSignatureNamed("OrbitL");HideSignatureNamed("OrbitR");
-                    Transform w=FindVisual("WeaponR");if(w==null)w=WeaponPivot("R",new Vector3(.48f,.15f,.30f));
+                    Transform w=FindVisual("WeaponR");if(w==null){w=WeaponPivot("R",new Vector3(.48f,.15f,.30f));Bind("WeaponR","ArmR");}
                     SignatureBlock("PrismHandle",w,new Vector3(0,-.32f,0),new Vector3(.10f,.55f,.10f),shell);
                     SignatureBlock("PrismRoot",w,new Vector3(0,.02f,0),new Vector3(.27f,.18f,.16f),edge,45f);
                     SignatureRibbon("PrismSpire",w,new[]{new Vector3(0,.01f,0),new Vector3(0,.19f,.03f),new Vector3(0,.43f,.05f),new Vector3(0,.69f,.07f)},new[]{.13f,.19f,.12f,.001f},.095f,edge);
