@@ -408,44 +408,34 @@ namespace Alterverse.Visuals
             }
         }
 
-        // Readable at match-camera distance: the slot has a clear scale/timing, while each hero
-        // has a distinct ground motif. This presentation never changes damage or targeting.
+        // A short cast mark confirms the button press; the hero-specific effect above owns the
+        // target and impact. This avoids covering every ability with the same giant dome/rune.
         private void EmitAbilitySignature(HeroId hero,int slot,Vector3 ground,float impactDelay,AbilitySpec spec,Color accent)
         {
-            Vector3 caster=transform.position+Vector3.up*.11f;
-            Color bright=Color.Lerp(accent,Color.white,.55f);bright.a=1f;
-            float radius=Mathf.Clamp(spec.Radius>0f?spec.Radius:1.5f,1.4f,3.5f);
-            HeroFxShape motif=hero switch
-            {
-                HeroId.Veyr=>HeroFxShape.Slash,
-                HeroId.Kaelon=>HeroFxShape.Cracks,
-                HeroId.Rook=>HeroFxShape.Burst,
-                HeroId.Elyra=>HeroFxShape.Runes,
-                HeroId.Mira=>HeroFxShape.Petals,
-                HeroId.Nyra=>HeroFxShape.Hex,
-                HeroId.Traveler=>HeroFxShape.Halo,
-                _=>HeroFxShape.Ring
-            };
+            Vector3 hand=ReleasePoint();
+            Vector3 chest=transform.position+Vector3.up*.58f;
+            Vector3 feet=transform.position+Vector3.up*.09f;
+            Color bright=Color.Lerp(accent,Color.white,.48f);
+            bright.a=1f;
+            float scale=slot==3?1.35f:slot==2?1.08f:slot==1?.92f:.82f;
+            float life=slot==3?.34f:.22f;
             Quaternion facing=Quaternion.LookRotation(transform.forward);
-            switch(slot)
+            HeroFxShape shape;
+            Vector3 point;
+            HeroFxMotion motion=HeroFxMotion.Expand;
+            switch(hero)
             {
-                case 0: // Distinct hero-colored impact, immediate and compact.
-                    HeroVfxPool.Emit(motif,caster+Vector3.up*.15f,Vector3.zero,new Vector3(2.5f,.16f,2.5f),bright,.42f,HeroFxMotion.Expand,facing,gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*1.12f,bright,.34f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    break;
-                case 1: // Utility: crisp outer ring with the hero motif inside it.
-                    HeroVfxPool.Emit(HeroFxShape.Hex,caster,Vector3.zero,new Vector3(2.6f,.05f,2.6f),bright,.62f,HeroFxMotion.Expand,owner:gameObject);
-                    HeroVfxPool.Emit(motif,ground+Vector3.up*.05f,Vector3.zero,new Vector3(radius*1.8f,.20f,radius*1.8f),bright,.54f,HeroFxMotion.Expand,facing,gameObject,delay:impactDelay);
-                    break;
-                case 2: // Control: persistent rune outline with a contrasting hero-shaped center.
-                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2.2f,.06f,radius*2.2f),bright,Mathf.Max(.78f,impactDelay+.32f),HeroFxMotion.Orbit,owner:gameObject);
-                    HeroVfxPool.Emit(motif,ground+Vector3.up*.055f,Vector3.zero,new Vector3(radius*1.5f,.20f,radius*1.5f),accent,.55f,HeroFxMotion.Expand,facing,gameObject,delay:impactDelay);
-                    break;
-                case 3: // Ultimate: long lead-in, hero mark, then a tall shock dome.
-                    HeroVfxPool.Emit(motif,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.4f,.22f,radius*2.4f),bright,Mathf.Max(.90f,impactDelay+.4f),HeroFxMotion.Orbit,facing,gameObject);
-                    HeroVfxPool.Emit(HeroFxShape.ShockDome,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.4f,1.65f,radius*2.4f),bright,.58f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    break;
+                case HeroId.Veyr: shape=slot==2?HeroFxShape.Rift:HeroFxShape.Slash;point=hand;motion=HeroFxMotion.Sweep;break;
+                case HeroId.Kaelon: shape=slot==1?HeroFxShape.Shield:HeroFxShape.Hex;point=slot==1?chest:feet;break;
+                case HeroId.Nyra: shape=slot==1?HeroFxShape.Burst:HeroFxShape.Bolt;point=hand;break;
+                case HeroId.Elyra: shape=HeroFxShape.Runes;point=chest;motion=HeroFxMotion.Orbit;break;
+                case HeroId.Mira: shape=slot==2?HeroFxShape.Shield:HeroFxShape.Petals;point=chest;motion=HeroFxMotion.Orbit;break;
+                case HeroId.Rook: shape=slot==1?HeroFxShape.Shield:HeroFxShape.Burst;point=chest;break;
+                case HeroId.Traveler: shape=slot==1?HeroFxShape.Rift:HeroFxShape.Halo;point=hand;motion=HeroFxMotion.Contract;break;
+                default: shape=HeroFxShape.Burst;point=hand;break;
             }
+            HeroVfxPool.Emit(shape,point,point,
+                new Vector3(scale,scale*.52f,scale),bright,life,motion,facing,gameObject);
         }
 
         private Vector3 ReleasePoint()
