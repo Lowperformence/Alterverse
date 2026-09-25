@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using UnityEngine;
@@ -6,6 +7,14 @@ namespace Alterverse.Visuals
     /// <summary>Distance-driven presentation. Does not write the actor's movement or balance values.</summary>
     public sealed class HeroVisualMotion : MonoBehaviour
     {
+        private sealed class ClothPanel
+        {
+            public Mesh mesh;
+            public Vector3[] rest,vertices;
+            public float top,bottom,phase;
+            public Vector2 offset,velocity;
+        }
+        private readonly List<ClothPanel> clothPanels=new();
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
@@ -85,6 +94,7 @@ namespace Alterverse.Visuals
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
             root=transform.Find("DF_VisualRoot");if(root==null)return;
+            SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;lastPosition=transform.position;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
@@ -101,7 +111,7 @@ namespace Alterverse.Visuals
         }
         private void OnHealthChanged(float current,float max)
         {if(current<previousHealth-.01f)hitUntil=Time.time+.12f;previousHealth=current;}
-        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;}
+        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private static void PoseLeg(Transform leg,Transform foot,float side)
@@ -127,11 +137,11 @@ namespace Alterverse.Visuals
         }
         private void LateUpdate()
         {
-            if(root==null||health==null)return;
+            if(root==null)return;
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
-            if(Time.timeScale<=0){previousSpeed=0;return;}
+            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousSpeed=0;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
-            if(health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;SetEnergy(0);return;}
+            if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
             {wasDead=false;phase=0;strideWeight=previousSpeed=lean=0;root.localPosition=basePosition;root.localRotation=Quaternion.identity;delta=Vector3.zero;}
@@ -183,9 +193,63 @@ namespace Alterverse.Visuals
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
             if(wingL!=null)wingL.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2.1f)*4);
             if(wingR!=null)wingR.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2.1f)*4);
-            if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Min(PlanarSpeed,8)*1.6f,0,8+Mathf.Sin(t*2)*2);
+            if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
+            UpdateCloth(dt,t,delta/dt);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
         }
+        private void SetupCloth()
+        {
+            // Clone only fabric meshes for this hero. Armor and collision geometry stay shared.
+            foreach(Transform part in root)
+            {
+                if(!StylizedHeroVisual.IsFlowingFabric(part.name))continue;
+                MeshFilter filter=part.GetComponent<MeshFilter>();
+                MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+                if(filter==null||renderer==null||!renderer.enabled||filter.sharedMesh==null)continue;
+                Mesh mesh=Instantiate(filter.sharedMesh);
+                mesh.name=filter.sharedMesh.name+"_Flow";
+                mesh.MarkDynamic();
+                Vector3[] rest=mesh.vertices;
+                if(rest.Length==0){Destroy(mesh);continue;}
+                float top=float.NegativeInfinity,bottom=float.PositiveInfinity;
+                foreach(Vector3 vertex in rest){top=Mathf.Max(top,vertex.y);bottom=Mathf.Min(bottom,vertex.y);}
+                Bounds bounds=mesh.bounds;bounds.Expand(.9f);mesh.bounds=bounds;
+                filter.sharedMesh=mesh;
+                clothPanels.Add(new ClothPanel{mesh=mesh,rest=rest,vertices=(Vector3[])rest.Clone(),
+                    top=top,bottom=bottom,phase=clothPanels.Count*1.31f});
+            }
+        }
+        private void UpdateCloth(float deltaTime,float time,Vector3 worldVelocity)
+        {
+            if(clothPanels.Count==0)return;
+            float dt=Mathf.Clamp(deltaTime,0f,.05f);
+            if(dt<=0f)return;
+            Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);
+            float speed=Mathf.Min(9f,new Vector2(localVelocity.x,localVelocity.z).magnitude);
+            Vector2 travel=new Vector2(Mathf.Clamp(-localVelocity.x*.045f,-.20f,.20f),
+                Mathf.Clamp(-localVelocity.z*.055f,-.28f,.28f));
+            for(int i=0;i<clothPanels.Count;i++)
+            {
+                ClothPanel panel=clothPanels[i];
+                float flutter=Mathf.Sin(time*2.7f+panel.phase);
+                Vector2 target=travel+new Vector2(flutter*.035f,Mathf.Sin(time*2.1f+panel.phase)*.024f);
+                panel.velocity+=(target-panel.offset)*(26f*dt);
+                panel.velocity*=Mathf.Exp(-7f*dt);
+                panel.offset+=panel.velocity*dt;
+                float height=Mathf.Max(.001f,panel.top-panel.bottom);
+                for(int v=0;v<panel.rest.Length;v++)
+                {
+                    Vector3 point=panel.rest[v];
+                    float loose=Mathf.Clamp01((panel.top-point.y)/height);
+                    float bend=loose*loose;
+                    float fold=Mathf.Sin(time*3.5f-loose*3.2f+panel.phase)*(.016f+speed*.002f);
+                    panel.vertices[v]=point+new Vector3((panel.offset.x+fold)*bend,
+                        0f,(panel.offset.y+fold*.7f)*bend);
+                }
+                panel.mesh.vertices=panel.vertices;
+            }
+        }
+
         private void SetEnergy(float energy)
         {
             if(energyRenderers==null||energyBlock==null)return;
