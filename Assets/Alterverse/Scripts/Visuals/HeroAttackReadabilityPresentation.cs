@@ -303,6 +303,8 @@ namespace Alterverse.Visuals
             Vector3 ground=target;ground.y=Mathf.Max(.08f,target.y+.08f);
             float impactDelay=Mathf.Max(.02f,attackWindup);
 
+            if(slot>=0)EmitAbilitySignature(slot,ground,impactDelay,spec,color);
+
             if(slot<0)
             {
                 // Existing HeroSkillVfx owns projectile travel; this layer adds only readable release/impact accents.
@@ -406,6 +408,34 @@ namespace Alterverse.Visuals
             }
         }
 
+        // A stable silhouette for each button survives the distant match camera and dark terrain.
+        // These are presentation-only marks; existing gameplay warnings remain authoritative.
+        private void EmitAbilitySignature(int slot,Vector3 ground,float impactDelay,AbilitySpec spec,Color accent)
+        {
+            Vector3 caster=transform.position+Vector3.up*.11f;
+            Color bright=Color.Lerp(accent,Color.white,.48f);bright.a=1f;
+            float radius=Mathf.Clamp(spec.Radius>0f?spec.Radius:1.5f,1.4f,3.5f);
+            switch(slot)
+            {
+                case 0: // Fast strike: a directional slash and a compact impact spark.
+                    HeroVfxPool.Emit(HeroFxShape.Slash,caster,Vector3.zero,new Vector3(2.4f,.08f,2.4f),bright,.38f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*.92f,bright,.32f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                    break;
+                case 1: // Utility: angular hexagonal field stays visible through the cast.
+                    HeroVfxPool.Emit(HeroFxShape.Hex,caster,Vector3.zero,new Vector3(2.4f,.05f,2.4f),bright,.55f,HeroFxMotion.Expand,owner:gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.Hex,ground,Vector3.zero,new Vector3(radius*1.7f,.05f,radius*1.7f),bright,.45f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                    break;
+                case 2: // Area/control: rotating runes identify the affected location.
+                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2f,.06f,radius*2f),bright,Mathf.Max(.65f,impactDelay+.25f),HeroFxMotion.Orbit,owner:gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.Ring,ground+Vector3.up*.035f,Vector3.zero,new Vector3(radius*2f,.05f,radius*2f),accent,.44f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                    break;
+                case 3: // Ultimate: broad warning and a vertical energy dome on release.
+                    HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(radius*2.3f,.06f,radius*2.3f),bright,Mathf.Max(.75f,impactDelay+.30f),HeroFxMotion.Orbit,owner:gameObject);
+                    HeroVfxPool.Emit(HeroFxShape.ShockDome,ground+Vector3.up*.06f,Vector3.zero,new Vector3(radius*2.2f,1.4f,radius*2.2f),bright,.50f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
+                    break;
+            }
+        }
+
         private Vector3 ReleasePoint()
         {
             if(motion!=null)return motion.ReleasePoint;
@@ -433,3 +463,4 @@ namespace Alterverse.Visuals
         };
     }
 }
+
