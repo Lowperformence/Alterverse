@@ -8,7 +8,7 @@ private const int OpeningMatchLimit=15;
 private const string Rules="SCORE KILLS TO WIN\nCAPTURE THE HOT ZONE FOR MECH SUPPORT\nCAPTURE PLANETS FOR +1 MINUTE";
 private const string BomberWarning="WARNING: SPACE BOMBERS DAMAGE EVERY PLAYER";
 private string display="";
-private bool visible,ownsPause;
+private bool visible,ownsPause,showRules;
 private GUIStyle title,shadow,rules,rulesShadow,warning,warningShadow;
 private float phaseElapsed,phaseDuration;
 
@@ -16,10 +16,9 @@ private IEnumerator Start()
 {
     while(Alterverse.UI.MainMenuController.IsVisible)yield return null;
 
-    // The opening is onboarding: show it for the player's first 15 completed-match slots only.
-    // MatchesCompleted is already persisted by the profile reward service, so this survives restarts
-    // without introducing a second round counter.
-    if(Alterverse.Profile.MatchRewardService.MatchesCompleted>=OpeningMatchLimit)yield break;
+    // The countdown is a permanent match-start signal. Only the onboarding rules
+    // are limited to the player's first 15 completed matches.
+    showRules=Alterverse.Profile.MatchRewardService.MatchesCompleted<OpeningMatchLimit;
 
     MatchClock.Set(PauseReason.Opening,true);ownsPause=true;visible=true;
 
@@ -115,8 +114,8 @@ private void OnGUI()
 
     GUI.matrix=matrix;
 
-    // Keep the instructions focused on the requested 3-2-1 countdown.
-    if(countdown)
+    // Rules are onboarding only; the 3-2-1 countdown itself is shown in every match.
+    if(showRules&&countdown)
     {
         float rulesWidth=Mathf.Min(Screen.width*.90f,820f*uiScale);
         float rulesHeight=118f*uiScale;
