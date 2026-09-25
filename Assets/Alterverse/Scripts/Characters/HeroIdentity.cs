@@ -30,6 +30,14 @@ private void Start()
 // BasicAttack, HeroAbilityExecution and HeroVisualMotion immediately and track the real cast targets cleanly.
 if(GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()==null)
 gameObject.AddComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>();
+// A second lightweight layer guarantees a large, unmistakable cast confirmation for every ability.
+// It observes cooldown state only and never changes gameplay numbers or hit timing.
+if(GetComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>()==null)
+gameObject.AddComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>();
+// Only player-controlled heroes need the hold-to-preview overlay. It observes touch/mouse input
+// without consuming it; PrototypeHUD remains the sole owner of actually casting abilities.
+if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)
+gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
 }
 public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",_=>"Unknown Hero"};
 public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,_=>HeroRole.Skirmisher};
