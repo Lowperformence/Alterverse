@@ -164,7 +164,12 @@ namespace Alterverse.Visuals
                 Mesh mesh=new(){name="DF_MoonStratum_"+layer};mesh.SetVertices(vertices);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();meshes.Add(mesh);
                 Material mat=layer==0?rimMat:layer==1?regolith:darkRegolith;
                 // The surface atlas is not stretched vertically across a cliff: strata use their own neutral rock material.
-                if(layer==1)mat=Mat(new Color(.125f,.137f,.153f),0,.08f);
+                if(layer==1)
+                    mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
+                        Alterverse.Match.ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
+                        Alterverse.Match.ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
+                        Alterverse.Match.ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):
+                        new Color(.125f,.137f,.153f),0,.08f);
                 MeshObject("DF_FracturedMoonStratum",mesh,mat,Vector3.zero);
                 upper=lower;
             }
