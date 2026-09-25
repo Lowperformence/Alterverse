@@ -16,7 +16,8 @@ namespace Alterverse.UI
         private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings, Coop }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "HOME", "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
+        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
+        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.Profile, Page.Leaderboard, Page.Settings };
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -27,7 +28,7 @@ namespace Alterverse.UI
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
             "Slip between seconds. Reposition through rifts, control space and strike with chronolight." };
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
-        private Page page;
+        private Page page = Page.Play;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
@@ -72,7 +73,7 @@ namespace Alterverse.UI
         public static void ShowHome()
         {
             if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
-            instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Home;
+            instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Play;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
             instance.collection?.Invalidate();
@@ -151,7 +152,7 @@ namespace Alterverse.UI
             {
                 if (editingName) CancelName();
                 else if (launching) launching = false;
-                else SetPage(Page.Home);
+                else SetPage(Page.Play);
             }
             if (launching && Time.unscaledTime-launchAt >= .55f) EnterMatch();
         }
@@ -192,27 +193,26 @@ namespace Alterverse.UI
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
                     case Page.Coop: DrawCoop(); break;
-                    default: DrawHome(); break;
+                    default: DrawPlay(); break;
                 }
             }
             finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.enabled = oldEnabled; }
         }
         private void DrawNavigation()
         {
-            theme.FitLabel(new Rect(Left,20,Mathf.Max(120,ContentWidth-970),48),"DIMENSIONS FRONT",theme.Small);
-
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={82f,82f,94f,82f,126f,92f,108f,126f};
+            float[] widths={82f,94f,82f,126f,92f,108f,126f};
             const float gap=8f;
             float total=gap*(widths.Length-1);
             for(int i=0;i<widths.Length;i++)total+=widths[i];
+            theme.FitLabel(new Rect(Left,20,Mathf.Max(120,ContentWidth-total-24),48),"DIMENSIONS FRONT",theme.Small);
             float x=Right-total;
 
             for(int i=0;i<NavigationLabels.Length;i++)
             {
-                if(theme.Action(new Rect(x,20,widths[i],48),NavigationLabels[i],selected:(int)page==i))
-                    SetPage((Page)i);
+                if(theme.Action(new Rect(x,20,widths[i],48),NavigationLabels[i],selected:page==NavigationPages[i]))
+                    SetPage(NavigationPages[i]);
                 x+=widths[i]+gap;
             }
 
