@@ -44,7 +44,11 @@ namespace Alterverse.EditorChecks
             bool hasOpenGles3=false;
             if(graphicsApis!=null)foreach(GraphicsDeviceType api in graphicsApis)if(api==GraphicsDeviceType.OpenGLES3){hasOpenGles3=true;break;}
             if(!hasOpenGles3)errors.Add("Android release must include OpenGLES3 as a fallback so Vulkan support is not a Play Store device requirement.");
-            if(PlayerSettings.openGLRequireES31)errors.Add("Require ES3.1 must stay disabled; it would filter otherwise compatible Android devices.");
+
+            // Unity 6.6 no longer exposes a standalone Require ES3.1 toggle in the Android Player UI,
+            // and PlayerSettings.openGLRequireES31 can report a legacy value that cannot be cleared reliably.
+            // Device compatibility is guarded by requiring an OpenGLES3 fallback and by rejecting the
+            // still-exposed higher requirements below. The generated manifest guard remains authoritative.
             if(PlayerSettings.openGLRequireES31AEP)errors.Add("Require ES3.1+AEP must stay disabled; it would filter otherwise compatible Android devices.");
             if(PlayerSettings.openGLRequireES32)errors.Add("Require ES3.2 must stay disabled; it would filter otherwise compatible Android devices.");
 
@@ -90,10 +94,9 @@ namespace Alterverse.EditorChecks
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{GraphicsDeviceType.Vulkan,GraphicsDeviceType.OpenGLES3});
-            PlayerSettings.openGLRequireES31=false;
             PlayerSettings.openGLRequireES31AEP=false;
             PlayerSettings.openGLRequireES32=false;
-            Debug.Log("DIMENSIONS FRONT: Android compatibility baseline applied: Vulkan + OpenGLES3 fallback, no ES3.1/AEP/ES3.2 requirement.");
+            Debug.Log("DIMENSIONS FRONT: Android compatibility baseline applied: Vulkan + OpenGLES3 fallback, no ES3.1+AEP/ES3.2 requirement.");
         }
 
         [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
