@@ -9,7 +9,7 @@ namespace Alterverse.Visuals
     {
         private static readonly Color DarkCore=new Color(.018f,.009f,.035f,.96f);
         private static HeroId Hero(GameObject actor)=>actor!=null&&actor.TryGetComponent(out HeroIdentity id)?id.Hero:HeroId.Veyr;
-        private static Color Accent(GameObject actor)=>StylizedArtDirection.HeroAccent(Hero(actor));
+        private static Color Accent(GameObject actor)=>Hero(actor)==HeroId.Mira?new Color(1f,.72f,.28f,1f):StylizedArtDirection.HeroAccent(Hero(actor));
         private static Vector3 Chest(GameObject actor)=>actor.transform.position+Vector3.up*.25f;
         private static Vector3 Ground(Vector3 p)=>new Vector3(p.x,.20f,p.z);
         private static Quaternion Face(Vector3 from,Vector3 to)
