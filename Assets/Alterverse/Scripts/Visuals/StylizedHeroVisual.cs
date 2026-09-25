@@ -208,15 +208,8 @@ if(weaponMaterial.HasProperty("_Smoothness"))weaponMaterial.SetFloat("_Smoothnes
 if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_EMISSION");weaponMaterial.SetColor("_EmissionColor",glow*3.4f);}
 ownedMaterials.Add(weaponMaterial);
 
-// Keep cosmetic weapons attached to their animated hand pivots.
-if(identity.Hero==HeroId.Veyr)ApplyNullEdgeOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Elyra)ApplyAstralOrbitOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Traveler)ApplyPlanetFluxEpic(shader,weaponMaterial);
-else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+// Build an exclusive silhouette on the existing animation pivots.
+BuildSignatureWeapon(shader,weaponMaterial);
 }
 
 private void ApplyNullEdgeOverdrive(Shader shader,Material voidMaterial)
