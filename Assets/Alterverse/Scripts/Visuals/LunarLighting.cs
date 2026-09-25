@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
     {
         private Light key;private bool created,applied;
         private Color sky,equator,ground,lightColor;private AmbientMode mode;private bool fog;
-        private float intensity,reflection,shadowStrength;private Quaternion rotation;private int mask;
+        private float intensity,reflection,shadowStrength;private Quaternion rotation;private int mask;private LightShadows shadowMode;
         private void OnEnable()
         {
             sky=RenderSettings.ambientSkyColor;equator=RenderSettings.ambientEquatorColor;ground=RenderSettings.ambientGroundColor;
@@ -17,11 +17,12 @@ namespace Alterverse.Visuals
             if(key==null||!key.enabled||key.type!=LightType.Directional)
             {key=null;foreach(Light light in FindObjectsByType<Light>())if(light.type==LightType.Directional&&light.enabled){key=light;break;}}
             if(key==null){GameObject obj=new("DF_LunarKey");obj.transform.SetParent(transform,false);key=obj.AddComponent<Light>();key.type=LightType.Directional;created=true;}
-            rotation=key.transform.rotation;intensity=key.intensity;shadowStrength=key.shadowStrength;lightColor=key.color;mask=key.cullingMask;
+            rotation=key.transform.rotation;intensity=key.intensity;shadowStrength=key.shadowStrength;lightColor=key.color;mask=key.cullingMask;shadowMode=key.shadows;
 
             key.transform.rotation=Quaternion.Euler(42f,-36f,0f);
             key.intensity=1.40f;
-            key.shadowStrength=Mathf.Min(shadowStrength,.82f);
+            key.shadowStrength=.70f;
+            if(QualitySettings.shadows!=ShadowQuality.Disable)key.shadows=LightShadows.Soft;
             key.color=ArenaVariantRuntime.IsMars?new Color(1f,.82f,.68f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.86f,1f,.78f):
                 ArenaVariantRuntime.IsNoxara?new Color(.78f,.86f,1f):
@@ -43,7 +44,7 @@ namespace Alterverse.Visuals
             if(!applied)return;applied=false;
             RenderSettings.ambientMode=mode;RenderSettings.ambientSkyColor=sky;RenderSettings.ambientEquatorColor=equator;RenderSettings.ambientGroundColor=ground;
             RenderSettings.reflectionIntensity=reflection;RenderSettings.fog=fog;
-            if(key!=null){if(created)Destroy(key.gameObject);else{key.transform.rotation=rotation;key.intensity=intensity;key.shadowStrength=shadowStrength;key.color=lightColor;key.cullingMask=mask;}}
+            if(key!=null){if(created)Destroy(key.gameObject);else{key.transform.rotation=rotation;key.intensity=intensity;key.shadowStrength=shadowStrength;key.shadows=shadowMode;key.color=lightColor;key.cullingMask=mask;}}
             key=null;created=false;
         }
     }
