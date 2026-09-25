@@ -88,6 +88,8 @@ namespace Alterverse.Visuals
             Crack("ChestCrackB",torso,new Vector3(.10f,-.23f,.68f),new Vector3(.030f,.24f,.023f),magmaMat,new Vector3(0,0,19));
             Crack("ChestCrackC",torso,new Vector3(.22f,.04f,.67f),new Vector3(.028f,.18f,.021f),magmaMat,new Vector3(0,0,57));
             MeshPart("TeamRune",teamRune,torso,new Vector3(0,.34f,.69f),new Vector3(.72f,.72f,.72f),teamMat,Quaternion.identity);
+            Crack("HeartFractureL",torso,new Vector3(-.31f,-.10f,.61f),new Vector3(.024f,.28f,.018f),magmaMat,new Vector3(0,0,-36));
+            Crack("HeartFractureR",torso,new Vector3(.32f,-.12f,.61f),new Vector3(.024f,.26f,.018f),magmaMat,new Vector3(0,0,33));
 
             // Small primitive stone head with a heavy brow and two magma eyes.
             Transform head=Pivot("DF_MarsGolemHead",torso,new Vector3(0,.96f,.03f),Quaternion.Euler(-7,0,0));
@@ -96,6 +98,7 @@ namespace Alterverse.Visuals
             Rock("JawRock",head,new Vector3(0,-.24f,.24f),new Vector3(.51f,.22f,.34f),darkStoneMat,new Vector3(-6,0,0));
             Part("EyeL",PrimitiveType.Sphere,head,new Vector3(-.17f,.02f,.46f),new Vector3(.090f,.060f,.050f),magmaHotMat,Quaternion.identity,true);
             Part("EyeR",PrimitiveType.Sphere,head,new Vector3(.17f,.02f,.46f),new Vector3(.090f,.060f,.050f),magmaHotMat,Quaternion.identity,true);
+            Crack("MouthMagma",head,new Vector3(0,-.23f,.425f),new Vector3(.24f,.024f,.020f),magmaMat,new Vector3(0,0,4));
 
             BuildArm(visualRoot,-1f,guardian,shoulderPlate,forearmPlate,stoneMat,lightStoneMat,darkStoneMat,seamMat,magmaMat);
             BuildArm(visualRoot,1f,guardian,shoulderPlate,forearmPlate,stoneMat,lightStoneMat,darkStoneMat,seamMat,magmaMat);
