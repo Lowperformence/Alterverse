@@ -84,9 +84,6 @@ namespace Alterverse.Visuals
             // It is intentionally compact so the hero/slot-specific cue below remains the dominant silhouette.
             HeroVfxPool.Emit(HeroFxShape.Halo, muzzle, muzzle, Vector3.one * (.54f * strength), hot,
                 ultimate ? .28f : .20f, HeroFxMotion.Expand, facing, gameObject);
-            HeroVfxPool.Emit(HeroFxShape.Ring, ground, ground,
-                new Vector3(.78f * strength, .045f, .78f * strength), new Color(accent.r, accent.g, accent.b, .88f),
-                ultimate ? .34f : .24f, HeroFxMotion.Expand, Quaternion.identity, gameObject);
 
             switch (hero)
             {
