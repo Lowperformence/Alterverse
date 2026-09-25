@@ -4,21 +4,20 @@ using Alterverse.Profile;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
-// Temporary compatibility bridge until the Google Play Games plugin is connected.
-#pragma warning disable CS0618 // Unity Social API is deprecated, but remains the compile-time fallback here.
+// Google Play Games compatibility bridge. The project currently imports the
+// Google Play Games plugin as Assets, so reflection keeps this source compiling
+// even when that optional plugin is temporarily absent in another checkout.
+#pragma warning disable CS0618 // Unity Social API is deprecated, but remains the fallback here.
 
 namespace Alterverse.Online
 {
     /// <summary>
     /// Google Play Games global leaderboard bridge for the player's account level.
-    /// The concrete leaderboard ID is supplied by the Google Play Console.
-    /// Uses Unity's Social API so the project still compiles before the Google Play
-    /// Games Unity plugin is imported/configured.
     /// </summary>
     public static class GooglePlayLevelLeaderboard
     {
-        // Replace this after the GLOBAL LEVEL leaderboard is created in Play Console.
-        public const string GlobalLevelLeaderboardId="REPLACE_WITH_GOOGLE_PLAY_LEVEL_LEADERBOARD_ID";
+        // GLOBAL LEVEL leaderboard from Google Play Console / generated GPGSIds.cs.
+        public const string GlobalLevelLeaderboardId="CgkI57GLjPsdEAIQAg";
 
         public enum ConnectionState
         {
@@ -70,8 +69,11 @@ namespace Alterverse.Online
                 Fail("Google Play Games provider is unavailable.");
                 return;
             }
+
             if(Social.localUser.authenticated)
             {
+                state=ConnectionState.Ready;
+                status="Google Play Games connected.";
                 SubmitCurrentLevel();
                 return;
             }
@@ -85,6 +87,7 @@ namespace Alterverse.Online
                     Fail("Google Play Games sign-in failed.");
                     return;
                 }
+
                 state=ConnectionState.Ready;
                 status="Google Play Games connected.";
                 SubmitCurrentLevel();
@@ -116,6 +119,7 @@ namespace Alterverse.Online
                     Fail("Level sync failed. Check your connection and Play Games setup.");
                     return;
                 }
+
                 lastSubmittedLevel=level;
                 state=ConnectionState.Ready;
                 status="Level "+level+" synced to the global ranking.";
@@ -135,6 +139,12 @@ namespace Alterverse.Online
             }
 #if UNITY_ANDROID && !UNITY_EDITOR
             ActivateGooglePlayProviderIfPresent();
+            if(Social.localUser==null)
+            {
+                Fail("Google Play Games provider is unavailable.");
+                return;
+            }
+
             if(!IsAuthenticated)
             {
                 state=ConnectionState.Authenticating;
@@ -146,18 +156,61 @@ namespace Alterverse.Online
                         Fail("Google Play Games sign-in failed.");
                         return;
                     }
+
+                    state=ConnectionState.Ready;
+                    status="Google Play Games connected.";
                     SubmitCurrentLevel();
-                    Social.ShowLeaderboardUI();
+                    ShowNativeLeaderboardUi();
                 });
                 return;
             }
 
             SubmitCurrentLevel();
-            Social.ShowLeaderboardUI();
+            ShowNativeLeaderboardUi();
 #else
             state=ConnectionState.Unsupported;
             status="Google Play leaderboard is available in the Android build.";
 #endif
+        }
+
+        /// <summary>
+        /// Opens this specific Google Play leaderboard through PlayGamesPlatform.Instance.
+        /// This bypasses cases where Unity's generic Social.ShowLeaderboardUI() silently
+        /// does nothing even though Google Play Games authentication succeeded.
+        /// </summary>
+        private static void ShowNativeLeaderboardUi()
+        {
+            try
+            {
+                Type type=ResolvePlayGamesPlatformType();
+                if(type!=null)
+                {
+                    PropertyInfo instanceProperty=type.GetProperty("Instance",BindingFlags.Public|BindingFlags.Static);
+                    object instance=instanceProperty?.GetValue(null,null);
+                    if(instance!=null)
+                    {
+                        MethodInfo showSpecific=type.GetMethod(
+                            "ShowLeaderboardUI",
+                            BindingFlags.Public|BindingFlags.Instance,
+                            null,
+                            new[]{typeof(string)},
+                            null);
+
+                        if(showSpecific!=null)
+                        {
+                            showSpecific.Invoke(instance,new object[]{GlobalLevelLeaderboardId});
+                            return;
+                        }
+                    }
+                }
+            }
+            catch(Exception exception)
+            {
+                Debug.LogWarning("DIMENSIONS FRONT: direct Google Play leaderboard UI failed: "+exception.Message);
+            }
+
+            // Fallback for plugin versions where the one-argument extension is unavailable.
+            Social.ShowLeaderboardUI();
         }
 
         private static void ActivateGooglePlayProviderIfPresent()
@@ -165,17 +218,23 @@ namespace Alterverse.Online
             if(activationAttempted)return;
             activationAttempted=true;
 
-            // Reflection keeps this source independent from the optional Google Play Games
-            // Unity plugin while still activating it automatically once installed.
             try
             {
-                // Resolve the optional provider directly by its known assembly name.
-                // This avoids enumerating Unity assemblies that may already be unloaded.
-                Type type=Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
-                    ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
-                if(type==null)return;
+                Type type=ResolvePlayGamesPlatformType();
+                if(type==null)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT: Google Play Games PlayGamesPlatform type was not found.");
+                    return;
+                }
+
                 MethodInfo activate=type.GetMethod("Activate",BindingFlags.Public|BindingFlags.Static);
-                if(activate!=null)activate.Invoke(null,null);
+                if(activate==null)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT: Google Play Games Activate() method was not found.");
+                    return;
+                }
+
+                activate.Invoke(null,null);
             }
             catch(Exception exception)
             {
@@ -183,10 +242,17 @@ namespace Alterverse.Online
             }
         }
 
+        private static Type ResolvePlayGamesPlatformType()
+        {
+            return Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
+                ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
+        }
+
         private static void Fail(string message)
         {
             state=ConnectionState.Error;
             status=message;
+            Debug.LogWarning("DIMENSIONS FRONT: "+message);
         }
     }
 }
