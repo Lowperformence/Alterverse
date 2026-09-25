@@ -157,10 +157,27 @@ namespace Alterverse.UI
                 // Strong amount label immediately above the untouched Google Play price button.
                 GUI.Label(new Rect(x + 10f, 474f, w - 20f, 29f), pack.Amount.ToString("N0") + " SHARDS", amountStyle);
 
-                // Accent around the real purchase button; no control is created here.
+                // Artwork inside the existing price button. IMGUI events other than Repaint never
+                // enter this component, so the button still receives clicks and owns store.Buy.
+                DrawButtonCrystal(x, w, tier);
                 Fill(new Rect(x + 18f, 506f, w - 36f, 2f), new Color(.15f, .70f, 1f, .72f));
                 Fill(new Rect(x + 18f, 566f, w - 36f, 2f), new Color(.36f, .30f, 1f, .52f));
             }
+        }
+
+        private void DrawButtonCrystal(float x, float width, int tier)
+        {
+            Color previous = GUI.color;
+            float iconX = x + 28f;
+            float iconY = 519f;
+            Color tint = tier >= 2
+                ? new Color(.58f, .43f, 1f, .70f)
+                : new Color(.20f, .76f, 1f, .68f);
+            GUI.color = tint;
+            GUI.DrawTexture(new Rect(iconX - 9f, iconY - 9f, 52f, 52f), glow, ScaleMode.StretchToFill, true);
+            GUI.color = Color.white;
+            GUI.DrawTexture(new Rect(iconX, iconY, 34f, 34f), crystal, ScaleMode.ScaleToFit, true);
+            GUI.color = previous;
         }
 
         private void EnsureStyles()
