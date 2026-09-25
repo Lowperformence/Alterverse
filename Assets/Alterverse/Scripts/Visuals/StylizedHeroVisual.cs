@@ -148,7 +148,7 @@ MeshRenderer renderer=part.AddComponent<MeshRenderer>();
 renderer.sharedMaterial=MaterialFor(color, IsEnergySurface(n));
 return part;
 }
-private static bool IsEnergySurface(string name) => name=="Eye"||name=="Visor"||name=="Core"||name=="ChestGem"||name=="ChestLeaf"||name=="Reactor"||name=="ShieldLine"||name=="TeamInsignia"||name=="ProjectorL"||name=="ProjectorR"||name=="ChestSlash";
+private static bool IsEnergySurface(string name) => name=="Eye"||name=="Visor"||name=="Core"||name=="ChestGem"||name=="ChestLeaf"||name=="Reactor"||name=="ShieldLine"||name=="TeamInsignia"||name=="ProjectorL"||name=="ProjectorR"||name=="ChestSlash"||name=="HammerPowerSpine"||name=="HammerStrikeLens"||name=="MuzzleCrown";
 private Material MaterialFor(Color color, bool energy=false)
 {
 if(palette.TryGetValue((color,energy),out Material cached))return cached;
