@@ -100,15 +100,15 @@ namespace Alterverse.Visuals
         {
             // Reference-driven ascendant healer: luminous white/silver robe, cyan holy energy,
             // elegant proportions, a halo language and a long ceremonial healing staff.
-            Color white=new(.88f,.91f,.92f,1f);
-            Color pearl=new(.72f,.80f,.82f,1f);
-            Color silver=new(.52f,.60f,.64f,1f);
-            Color cyan=new(.42f,.92f,1f,1f);
-            Color cyanHot=new(.78f,.98f,1f,1f);
-            Color gold=new(.72f,.58f,.24f,1f);
-            Color shadow=new(.105f,.13f,.15f,1f);
-            Color hair=new(.82f,.86f,.88f,1f);
-            Color skin=new(.70f,.56f,.50f,1f);
+            Color white=new(.80f,.74f,.64f,1f);
+            Color pearl=new(.48f,.35f,.30f,1f);
+            Color silver=new(.41f,.28f,.27f,1f);
+            Color cyan=new(1f,.68f,.22f,1f);
+            Color cyanHot=new(1f,.91f,.58f,1f);
+            Color gold=new(.90f,.60f,.21f,1f);
+            Color shadow=new(.12f,.085f,.11f,1f);
+            Color hair=new(.36f,.19f,.15f,1f);
+            Color skin=new(.62f,.50f,.59f,1f);
 
             Mesh torso=HeroMeshLibrary.Loft("DF_TahlaAscendantTorso",
                 new[]{-.38f,-.24f,-.05f,.17f,.35f,.49f},
@@ -118,6 +118,14 @@ namespace Alterverse.Visuals
             Sculpt("Torso",torso,new Vector3(0,.05f,0),new Vector3(.94f,1f,.94f),pearl);
             Plate("TahlaChest",new Vector3(0,.23f,.195f),.56f,.43f,.095f,white);
             Plate("TahlaChestInset",new Vector3(0,.22f,.252f),.34f,.29f,.030f,silver);
+            Plate("TahlaHeartFrame",new Vector3(0,.23f,.288f),.22f,.27f,.034f,gold);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Plate("TahlaCorsetRib"+side,new Vector3(side*.19f,-.05f,.20f),
+                    .19f,.34f,.07f,pearl,side*17);
+                Detail("TahlaCorsetTrim"+side,new Vector3(side*.23f,-.05f,.246f),
+                    new Vector3(.024f,.29f,.018f),gold,new Vector3(0,0,side*15),null,true);
+            }
             Detail("TahlaChestLight",new Vector3(0,.25f,.279f),new Vector3(.075f,.16f,.020f),cyanHot,new Vector3(0,0,45),null,true);
             Plate("TahlaWaist",new Vector3(0,-.12f,.145f),.40f,.22f,.075f,silver);
             Detail("TahlaWaistGem",new Vector3(0,-.21f,.196f),new Vector3(.075f,.085f,.022f),cyanHot,new Vector3(0,0,45),null,true);
@@ -169,6 +177,15 @@ namespace Alterverse.Visuals
 
                 Plate("TahlaShoulder"+s,new Vector3(side*.35f,.43f,.01f),.24f,.20f,.24f,white,side*-14);
                 Bind("TahlaShoulder"+s,"Arm"+s);
+                Plate("TahlaShoulderGold"+s,new Vector3(side*.43f,.53f,.035f),
+                    .34f,.19f,.32f,gold,side*-24);
+                Bind("TahlaShoulderGold"+s,"Arm"+s);
+                Plate("TahlaShoulderWing"+s,new Vector3(side*.55f,.45f,-.035f),
+                    .19f,.37f,.11f,gold,side*-26);
+                Bind("TahlaShoulderWing"+s,"Arm"+s);
+                Detail("TahlaShoulderGem"+s,new Vector3(side*.41f,.54f,.217f),
+                    new Vector3(.072f,.105f,.022f),cyanHot,new Vector3(0,0,45),null,true);
+                Bind("TahlaShoulderGem"+s,"Arm"+s);
                 Detail("TahlaWristLight"+s,new Vector3(0,-.39f,.105f),new Vector3(.055f,.12f,.020f),cyanHot,
                     new Vector3(0,0,side*8),"Arm"+s,true);
             }
@@ -182,6 +199,20 @@ namespace Alterverse.Visuals
                 new[]{new Vector3(0,-.14f,-.11f),new Vector3(0,-.42f,-.16f),new Vector3(0,-.73f,-.20f),new Vector3(0,-1.02f,-.22f)},
                 new[]{.20f,.29f,.32f,.23f},.025f);
             Sculpt("TahlaRobeBack",robeBack,Vector3.zero,Vector3.one,pearl);
+            // Wide translucent-looking ceremonial panels give her a visible sweep without particles.
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh veil=HeroMeshLibrary.Ribbon("DF_TahlaGoldenVeil"+side,
+                    new[]{new Vector3(side*.22f,.40f,-.11f),new Vector3(side*.43f,.02f,-.22f),
+                        new Vector3(side*.62f,-.53f,-.32f),new Vector3(side*.83f,-.96f,-.38f)},
+                    new[]{.12f,.22f,.29f,.30f},.022f);
+                Sculpt("TahlaGoldenVeil"+side,veil,Vector3.zero,Vector3.one,white);
+                Mesh veilEdge=HeroMeshLibrary.Ribbon("DF_TahlaVeilEdge"+side,
+                    new[]{new Vector3(side*.32f,.31f,-.10f),new Vector3(side*.54f,-.04f,-.23f),
+                        new Vector3(side*.78f,-.55f,-.33f),new Vector3(side*1.00f,-.96f,-.39f)},
+                    new[]{.016f,.020f,.023f,.021f},.008f);
+                Sculpt("TahlaVeilEdge"+side,veilEdge,Vector3.zero,Vector3.one,gold,null,true);
+            }
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh sideRobe=HeroMeshLibrary.Ribbon("DF_TahlaRobeSide"+side,
@@ -190,7 +221,9 @@ namespace Alterverse.Visuals
                     new[]{.09f,.13f,.14f,.08f},.022f);
                 Sculpt("TahlaRobeSide"+(side<0?"L":"R"),sideRobe,Vector3.zero,Vector3.one,silver);
             }
-            Detail("TahlaRobeLine",new Vector3(0,-.61f,.205f),new Vector3(.060f,.50f,.018f),cyan,default,null,true);
+            Detail("TahlaRobeLine",new Vector3(0,-.61f,.205f),new Vector3(.060f,.50f,.018f),gold,default,null,true);
+            Plate("TahlaHipGuardL",new Vector3(-.27f,-.28f,.16f),.21f,.30f,.10f,gold,-16);
+            Plate("TahlaHipGuardR",new Vector3(.27f,-.28f,.16f),.21f,.30f,.10f,gold,16);
             Detail("TahlaRobeGold",new Vector3(0,-.91f,.205f),new Vector3(.34f,.035f,.018f),gold);
 
             // Calm uncovered face framed by a small silver halo and pale hair.
@@ -212,6 +245,11 @@ namespace Alterverse.Visuals
                 new[]{.01f,.12f,.21f,.28f},new[]{.17f,.18f,.145f,.03f},
                 new[]{.14f,.15f,.13f,.04f},new[]{-.055f,-.043f,-.020f,-.014f});
             Sculpt("Hair",cap,hp,Vector3.one,hair);
+            Mesh hairSweep=HeroMeshLibrary.Ribbon("DF_TahlaHairSweep",
+                new[]{new Vector3(-.12f,1.02f,-.06f),new Vector3(.08f,.91f,-.13f),
+                    new Vector3(.36f,.79f,-.18f),new Vector3(.66f,.71f,-.25f)},
+                new[]{.10f,.13f,.13f,.045f},.032f);
+            Sculpt("TahlaHairSweep",hairSweep,Vector3.zero,Vector3.one,hair);
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh strand=HeroMeshLibrary.Ribbon("DF_TahlaHairLock"+side,
@@ -224,12 +262,15 @@ namespace Alterverse.Visuals
                 hp+new Vector3(0,.15f,-.10f),Vector3.one,cyan,null,true);
             halo.transform.localRotation=Quaternion.Euler(76f,0f,0f);
 
-            // Subtle permanent floor aura sells the floating/lightborne read from top-down view.
-            GameObject groundHalo=Sculpt("TahlaGroundHalo",HeroMeshLibrary.Ring("DF_TahlaGroundHaloMesh",.42f,.018f),
-                new Vector3(0,-1.04f,0),Vector3.one,new Color(.55f,.96f,1f,1f),null,true);
-            groundHalo.transform.localRotation=Quaternion.Euler(90f,0f,0f);
+            // No permanent floor ring: spells remain legible against the map.
 
             BuildTahlaLightStaff(silver,white,gold,cyan,cyanHot);
+            GameObject spellFocus=Sculpt("TahlaSpellFocus",
+                HeroMeshLibrary.Ring("DF_TahlaSpellFocusMesh",.22f,.024f),
+                new Vector3(-.60f,-.04f,.37f),Vector3.one,cyan,null,true);
+            spellFocus.transform.localRotation=Quaternion.Euler(68f,0,-20f);
+            Detail("TahlaSpellCore",new Vector3(-.60f,-.04f,.39f),
+                new Vector3(.10f,.10f,.032f),cyanHot,new Vector3(0,0,45),null,true);
             Detail("IdentityCore",new Vector3(0,.25f,.284f),new Vector3(.065f,.13f,.022f),cyanHot,new Vector3(0,0,45),null,true);
         }
 
