@@ -141,6 +141,9 @@ namespace Alterverse.Visuals
             Vector3 p=impact+Vector3.up*.20f;Quaternion direction=Face(Muzzle(actor),p);
             if(tank)
             {
+                Vector3 arc=Vector3.Lerp(Muzzle(actor),p,.62f);
+                Fx(HeroFxShape.Slash,arc,Color.Lerp(Accent(actor),Color.white,.42f),
+                    .90f*strength,.22f,HeroFxMotion.Sweep,direction*Quaternion.Euler(0,0,32),actor);
                 Fx(HeroFxShape.Hex,p,Accent(actor),.48f*strength,.20f,HeroFxMotion.Contract,Quaternion.Euler(25,0,0),actor);
                 Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.36f*strength,.20f,actor:actor);
             }
@@ -148,7 +151,9 @@ namespace Alterverse.Visuals
             {
                 Vector3 start=Muzzle(actor),center=Vector3.Lerp(start,p,.70f);
                 HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.34f,.30f,.38f)*strength,
-                    Accent(actor),.11f,HeroFxMotion.Contract,direction,actor);
+                    Accent(actor),.14f,HeroFxMotion.Contract,direction,actor);
+                Fx(HeroFxShape.Slash,center,Color.Lerp(Accent(actor),Color.white,.48f),
+                    .75f*strength,.20f,HeroFxMotion.Sweep,direction*Quaternion.Euler(0,0,-32),actor);
                 Ring(actor,p,.42f*strength,.18f);
                 // Brakk's gauntlet contact reads through a short ground fracture rather than
                 // Auren's geometric shield/hex language.
@@ -162,8 +167,8 @@ namespace Alterverse.Visuals
             Quaternion facing=Face(actor.transform.position,point);
             // Span from the weapon side toward contact instead of drawing a detached arc behind the victim.
             Vector3 p=Vector3.Lerp(Muzzle(actor),point+Vector3.up*.16f,.62f);
-            HeroVfxPool.Emit(HeroFxShape.Slash,p,p,new Vector3(size,1,size*(heavy?.75f:1)),c,heavy?.26f:.16f,HeroFxMotion.Sweep,facing,actor);
-            if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.7f),size*.78f,.09f,HeroFxMotion.Sweep,facing,actor);
+            HeroVfxPool.Emit(HeroFxShape.Slash,p,p,new Vector3(size,1,size*(heavy?.75f:1)),c,heavy?.30f:.22f,HeroFxMotion.Sweep,facing,actor);
+            if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.7f),size*.78f,.15f,HeroFxMotion.Sweep,facing,actor);
             if(heavy)Fx(HeroFxShape.Burst,point+Vector3.up*.15f,c,size*.7f,.17f,rotation:facing);
             Shards(actor,p,size,slot<0?2:3);
         }
