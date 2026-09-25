@@ -251,113 +251,53 @@ namespace Alterverse.Visuals
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
             if(actor==null)return;
-            HeroId h=Hero(actor);Color c=Accent(actor);Vector3 p=Ground(center);float life=Mathf.Max(.06f,duration);
+            HeroId hero=Hero(actor);
+            Color accent=Accent(actor);
+            Vector3 ground=Ground(center);
             if(warning)
             {
-                // Exactly the authoritative area radius, never a growing fake hit zone.
-                Fx(HeroFxShape.Ring,p,beneficial?c:new Color(1,.48f,.16f),radius,life,HeroFxMotion.Hold,actor:actor,warning:true);
-                if(h==HeroId.Elyra)
+                // Keep the real hit radius legible. Decorative rings must never imply another hit zone.
+                Color boundary=beneficial?accent:new Color(1f,.48f,.16f);
+                boundary.a=.70f;
+                Fx(HeroFxShape.Ring,ground,boundary,radius,Mathf.Max(.06f,duration),
+                    HeroFxMotion.Hold,actor:actor,warning:true);
+                if(hero==HeroId.Elyra&&slot==3)
                 {
-                    Fx(HeroFxShape.Orb,p+Vector3.up*.5f,slot==3?DarkCore:c,slot==3?.85f:.45f,life,HeroFxMotion.Contract,actor:actor,warning:true);
-                    Fx(HeroFxShape.Ring,p+Vector3.up*.5f,c,radius*.48f,life,HeroFxMotion.Contract,Quaternion.Euler(32,0,0),actor,warning:true);
-                    if(slot==3)
-                    {
-                        // A meteor descends over the marked target during the existing ultimate wind-up.
-                        Vector3 sky=p+Vector3.up*7.5f,impact=p+Vector3.up*.34f;
-                        Color ember=new(1f,.34f,.10f,.96f),hotCore=new(1f,.78f,.36f,.90f);
-                        HeroVfxPool.Emit(HeroFxShape.Orb,sky,impact,new Vector3(.92f,.78f,.92f),ember,life,HeroFxMotion.Travel,
-                            Quaternion.identity,actor,true);
-                        HeroVfxPool.Emit(HeroFxShape.Halo,sky+Vector3.up*.32f,impact+Vector3.up*.45f,new Vector3(1.25f,.32f,1.25f),
-                            hotCore,Mathf.Max(.06f,life-life*.06f),HeroFxMotion.Travel,Quaternion.identity,actor,true,delay:life*.06f);
-                    }
-                }
-                else if(h==HeroId.Kaelon&&slot==2)
-                {Fx(HeroFxShape.Shard,p+Vector3.up*.35f,c,.55f,life,HeroFxMotion.Hold,actor:actor,warning:true);Ring(actor,p,radius*.78f,life,true);}
-                else if(h==HeroId.Traveler)
-                {
-                    Fx(HeroFxShape.Runes,p+Vector3.up*.025f,new Color(c.r,c.g,c.b,.60f),radius*.72f,life,HeroFxMotion.Orbit,actor:actor,warning:true);
-                    Fx(HeroFxShape.Rift,p+Vector3.up*.34f,DarkCore,slot==3?.82f:.52f,life,HeroFxMotion.Contract,actor:actor,warning:true);
-                    Fx(HeroFxShape.Ring,p+Vector3.up*.34f,Color.Lerp(c,Color.white,.48f),radius*.40f,life,HeroFxMotion.Contract,Quaternion.Euler(28,0,18),actor,warning:true);
+                    // The falling meteor is the unique cast cue, above the ground warning.
+                    Vector3 sky=ground+Vector3.up*7.5f;
+                    HeroVfxPool.Emit(HeroFxShape.Orb,sky,ground+Vector3.up*.34f,
+                        new Vector3(.72f,.72f,.72f),new Color(1f,.34f,.10f,.84f),
+                        Mathf.Max(.06f,duration),HeroFxMotion.Travel,Quaternion.identity,actor,true);
                 }
                 return;
             }
-            float aftermath=slot==3?.48f:.30f;
-            // Inner decoration never replaces or enlarges the authoritative warning boundary.
-            if(h==HeroId.Mira)
-                Fx(HeroFxShape.Petals,p+Vector3.up*.04f,c,radius*.85f,.6f,HeroFxMotion.Expand);
-            else if(h==HeroId.Elyra)
-            {
-                Fx(HeroFxShape.Runes,p+Vector3.up*.03f,c,radius*.9f,aftermath,HeroFxMotion.Orbit);
-                if(slot==3)
-                {
-                    Fx(HeroFxShape.Halo,p+Vector3.up*.06f,new Color(c.r,c.g,c.b,.6f),radius*.7f,.22f,HeroFxMotion.Contract);
-                    Color ember=new(1f,.30f,.08f,.72f);
-                    HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.48f,radius),ember,.32f,HeroFxMotion.Expand);
-                    Fx(HeroFxShape.Ring,Ground(center),Color.Lerp(ember,Color.white,.32f),radius*.94f,.42f);
-                    Fx(HeroFxShape.Cracks,p+Vector3.up*.012f,Color.Lerp(ember,c,.4f),radius*.82f,.40f);
-                    Shards(actor,p+Vector3.up*.08f,radius*.55f,7);
-                }
-            }
-            else if(h==HeroId.Traveler)
-            {
-                Fx(HeroFxShape.Runes,p+Vector3.up*.025f,c,radius*.86f,aftermath,HeroFxMotion.Orbit);
-                Fx(HeroFxShape.Halo,p+Vector3.up*.08f,Color.Lerp(c,Color.white,.55f),radius*(slot==3?.72f:.52f),aftermath,HeroFxMotion.Contract);
-            }
-            else if(h==HeroId.Kaelon||h==HeroId.Rook)
-                HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,slot==3?1.2f:.55f,radius),
-                    new Color(c.r,c.g,c.b,.65f),slot==3?.4f:.26f,HeroFxMotion.Expand);
-            if(slot==3)Fx(HeroFxShape.Burst,p+Vector3.up*.08f,Color.Lerp(c,Color.white,.35f),radius*.72f,.20f);
-            switch(h)
+
+            // The gameplay warning has ended. A compact contact accent replaces the old full-radius
+            // stack of rings, runes, cracks and shock domes that covered the battlefield.
+            float size=Mathf.Min(radius*.34f,slot==3?1.05f:.70f);
+            float life=slot==3?.30f:.20f;
+            Vector3 contact=ground+Vector3.up*.12f;
+            switch(hero)
             {
                 case HeroId.Elyra:
-                    if(slot==0){Ring(actor,p,radius,aftermath);Shards(actor,p+Vector3.up*.2f,radius*.55f,4);}
-                    else
-                    {
-                        Fx(HeroFxShape.Orb,p+Vector3.up*.45f,DarkCore,slot==3?1.25f:.60f,aftermath,HeroFxMotion.Contract);
-                        Ring(actor,p,radius,aftermath,true);
-                        Fx(HeroFxShape.Ring,p+Vector3.up*.45f,c,radius*.7f,aftermath,HeroFxMotion.Contract,Quaternion.Euler(30,0,20));
-                        if(slot==3)Ring(actor,p,radius,.16f);
-                    }break;
+                    Fx(HeroFxShape.Runes,contact,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                    if(slot==3)Fx(HeroFxShape.Orb,contact+Vector3.up*.35f,DarkCore,.55f,.24f,HeroFxMotion.Contract,actor:actor);
+                    break;
                 case HeroId.Mira:
-                    {
-                        Color holy=Color.Lerp(c,Color.white,.42f);
-                        Ring(actor,p,radius,.55f);
-                        Fx(HeroFxShape.Plus,p+Vector3.up*.12f,holy,.82f,.45f);
-                        Fx(HeroFxShape.Petals,p+Vector3.up*.05f,new Color(c.r,c.g,c.b,.58f),radius*.72f,.42f,HeroFxMotion.Orbit);
-                        Fx(HeroFxShape.Runes,p+Vector3.up*.02f,new Color(holy.r,holy.g,holy.b,.45f),radius*.62f,.34f,HeroFxMotion.Contract);
-                        if(slot==3)Fx(HeroFxShape.Halo,p+Vector3.up*.10f,holy,radius*.52f,.30f,HeroFxMotion.Expand);
-                        break;
-                    }
+                    Fx(HeroFxShape.Petals,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    break;
                 case HeroId.Kaelon:
-                    Ring(actor,p,radius,.42f,slot==2,true);
-                    if(slot==3)HeroVfxPool.Emit(HeroFxShape.Shield,p,p,new Vector3(radius,.65f,radius),new Color(c.r,c.g,c.b,.60f),.40f,HeroFxMotion.Expand);
-                    else Fx(HeroFxShape.Shard,p+Vector3.up*.25f,c,.5f,.2f);break;
-                case HeroId.Traveler:
-                    {
-                        Color light=Color.Lerp(c,Color.white,.68f);
-                        Color red=new(1f,.035f,.025f);
-                        Ring(actor,p,radius,slot==3?.44f:.32f,true);
-                        Fx(HeroFxShape.Rift,p+Vector3.up*.40f,DarkCore,slot==3?1.05f:.58f,aftermath,HeroFxMotion.Contract);
-                        Fx(HeroFxShape.Ring,p+Vector3.up*.42f,light,radius*(slot==3?.62f:.42f),aftermath,HeroFxMotion.Contract,Quaternion.Euler(28,0,24));
-                        if(slot==3)
-                        {
-                            HeroVfxPool.Emit(HeroFxShape.ShockDome,p,p,new Vector3(radius,.80f,radius),
-                                new Color(light.r,light.g,light.b,.48f),.34f,HeroFxMotion.Contract);
-                            Fx(HeroFxShape.Burst,p+Vector3.up*.18f,light,radius*.48f,.18f);
-                            for(int i=0;i<4;i++)Fx(HeroFxShape.Shard,p+Vector3.up*.22f,new Color(red.r,red.g,red.b,.72f),radius*.18f,.20f,HeroFxMotion.Orbit,Quaternion.Euler(20,i*90,45));
-                        }
-                        break;
-                    }
+                    Fx(HeroFxShape.Hex,contact,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                    break;
                 case HeroId.Rook:
-                    {
-                        Color hot=new(1f,.34f,.035f);
-                        Ring(actor,p,radius,.28f);
-                        Fx(HeroFxShape.Burst,p+Vector3.up*.08f,hot,radius*.34f,.16f);
-                        Fx(HeroFxShape.Cracks,p+Vector3.up*.012f,c,radius*.90f,.38f);
-                        Shards(actor,p,radius*.65f,4);
-                        break;
-                    }
-                default:Ring(actor,p,radius,.3f);break;
+                    Fx(HeroFxShape.Cracks,ground+Vector3.up*.015f,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    break;
+                case HeroId.Traveler:
+                    Fx(HeroFxShape.Rift,contact+Vector3.up*.22f,DarkCore,size,.24f,HeroFxMotion.Contract,actor:actor);
+                    break;
+                default:
+                    Fx(HeroFxShape.Burst,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    break;
             }
         }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
