@@ -446,8 +446,8 @@ namespace Alterverse.Combat
             Color visor=new(.045f,.075f,.105f,1f);
             Color weapon=new(.06f,.28f,.52f,1f);
 
-            suitMat=MakeMaterial(shader,suit,.12f,.34f,Color.black);
-            darkMat=MakeMaterial(shader,suitDark,.45f,.22f,Color.black);
+            suitMat=MakeMaterial(shader,suit,.18f,.46f,Color.black);
+            darkMat=MakeMaterial(shader,suitDark,.45f,.38f,Color.black);
             visorMat=MakeMaterial(shader,visor,.34f,.72f,new Color(.02f,.10f,.16f)*.35f);
             weaponMat=MakeMaterial(shader,weapon,.58f,.40f,Color.black);
             energyMat=MakeMaterial(shader,teamEnergy,.08f,.74f,teamEnergy*2.2f);
@@ -526,6 +526,7 @@ namespace Alterverse.Combat
         private static Transform Part(string name,PrimitiveType type,Transform parent,Vector3 position,Vector3 scale,Material material,Quaternion rotation)
         {
             GameObject go=GameObject.CreatePrimitive(type);
+            if(type==PrimitiveType.Cube)go.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             go.name="DF_TrenchSoldier_"+name;
             go.transform.SetParent(parent,false);
             go.transform.localPosition=position;go.transform.localScale=scale;go.transform.localRotation=rotation;
