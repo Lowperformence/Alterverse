@@ -142,7 +142,7 @@ if(armorMesh==null)armorMesh=BuildBeveledArmor();
 mesh=armorMesh;
 }
 Mesh colored=Instantiate(mesh);colored.name=mesh.name+"_HeroColor";detailMeshes.Add(colored);
-HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n));
+HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n),color==cloth||color==dark?0:1);
 part.AddComponent<MeshFilter>().sharedMesh=colored;
 MeshRenderer renderer=part.AddComponent<MeshRenderer>();
 renderer.sharedMaterial=MaterialFor(color, IsEnergySurface(n));
@@ -192,7 +192,7 @@ AddFace(vertices,triangles,new[]{fa,a,b,fb});
 AddFace(vertices,triangles,new[]{b,a,ba,bb});
 AddFace(vertices,triangles,new[]{bb,ba,new Vector3(fa.x,fa.y,-fa.z),new Vector3(fb.x,fb.y,-fb.z)});
 }
-Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false);detailMeshes.Add(mesh);
+Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false,color==cloth||color==dark?0:1);detailMeshes.Add(mesh);
 GameObject part=new GameObject("DF_"+name);part.transform.SetParent(root,false);part.transform.localPosition=position;
 part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color);
 }
@@ -828,6 +828,7 @@ foreach(Material material in ownedMaterials)if(material!=null)Destroy(material);
 }
 }
 }
+
 
 
 

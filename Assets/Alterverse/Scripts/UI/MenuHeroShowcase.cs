@@ -63,7 +63,7 @@ namespace Alterverse.UI
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
             wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
-            float facing=hero==HeroId.Nyra?-42:hero==HeroId.Kaelon?-24:-16;
+            float facing=hero==HeroId.Nyra?-24:hero==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
             FitPreviewBounds();
             // No health, colliders, input, abilities, team membership or game-world registration.
@@ -72,6 +72,11 @@ namespace Alterverse.UI
             {
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 renderer.receiveShadows = false;
+                if(renderer.sharedMaterial!=null&&renderer.sharedMaterial.HasProperty("_ShowcaseLighting"))
+                {
+                    var block=new MaterialPropertyBlock();renderer.GetPropertyBlock(block);
+                    block.SetFloat("_ShowcaseLighting",1f);renderer.SetPropertyBlock(block);
+                }
             }
         }
         private void UpdateOriginWorld(HeroId hero)
@@ -116,7 +121,7 @@ namespace Alterverse.UI
             originBackdrop=new HeroOriginBackdrop();
 
             texture = new RenderTexture(640,720,24,RenderTextureFormat.ARGB32)
-            { name = "DF_HeroPortrait", antiAliasing = Application.isMobilePlatform ? 2 : 1, useMipMap = false };
+            { name = "DF_HeroPortrait", antiAliasing = 2, useMipMap = false };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();
@@ -124,7 +129,7 @@ namespace Alterverse.UI
             previewCamera.backgroundColor = Color.clear;
             previewCamera.orthographic = true; previewCamera.orthographicSize = 1.65f;
             previewCamera.nearClipPlane = .1f; previewCamera.farClipPlane = 12;
-            previewCamera.allowHDR = false; previewCamera.allowMSAA = Application.isMobilePlatform;
+            previewCamera.allowHDR = false; previewCamera.allowMSAA = true;
             previewCamera.useOcclusionCulling = false; previewCamera.cullingMask = 1 << PreviewLayer;
             previewCamera.targetTexture = texture; previewCamera.depth = -20;
             var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
@@ -148,7 +153,7 @@ namespace Alterverse.UI
             if (actor == null || stage == null || !stage.activeSelf) return;
             float t = Time.unscaledTime - selectedAt;
             float settle = 1-Mathf.Exp(-t*7);
-            float facing=selected==HeroId.Nyra?-42: selected==HeroId.Kaelon?-24:-16;
+            float facing=selected==HeroId.Nyra?-24: selected==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation = Quaternion.Euler(0,Mathf.Lerp(facing-16,facing,settle)+Mathf.Sin(t*.55f)*4,0);
             actor.transform.localPosition = new Vector3(0,Mathf.Lerp(-.10f,0,settle)+Mathf.Sin(t*1.7f)*.015f,0);
             if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.06f,.03f);
@@ -167,5 +172,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

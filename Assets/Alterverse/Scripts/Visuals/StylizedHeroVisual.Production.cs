@@ -29,7 +29,7 @@ namespace Alterverse.Visuals
             }
             if(h==HeroId.Nyra)
             {
-                BuildNyraEliteMarksman();
+                BuildNyraPolishedScout();
                 CreateSignature();
                 return;
             }
@@ -731,7 +731,7 @@ namespace Alterverse.Visuals
         {
             var go=new GameObject("DF_"+name);go.transform.SetParent(parent!=null?parent:root,false);
             go.transform.localPosition=position;go.transform.localScale=scale;
-            go.AddComponent<MeshFilter>().sharedMesh=HeroMeshLibrary.Painted(mesh,FinishedColor(color,energy),energy);go.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color,energy);return go;
+            go.AddComponent<MeshFilter>().sharedMesh=HeroMeshLibrary.Painted(mesh,FinishedColor(color,energy),energy,color==cloth||color==dark?0:1);go.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color,energy);return go;
         }
         private void BuildProductionHead(HeroId h,Color metal,Color trim)
         {
@@ -960,3 +960,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

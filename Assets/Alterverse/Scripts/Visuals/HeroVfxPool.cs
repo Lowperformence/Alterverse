@@ -24,9 +24,11 @@ namespace Alterverse.Visuals
         private static HeroVfxPool instance;
         private readonly Slot[] slots=new Slot[Capacity];
         private readonly Mesh[] shapes=new Mesh[(int)HeroFxShape.Count];
+        private readonly Mesh[] warningShapes=new Mesh[(int)HeroFxShape.Count];
         private Material material;
         private bool ownsMaterial;
         private int cursor;
+        private static readonly int Polish=Shader.PropertyToID("_Polish");
         private static readonly int Tint=Shader.PropertyToID("_Tint"),BaseColor=Shader.PropertyToID("_BaseColor");
         public static void Warm()
         {if(instance==null)new GameObject("DF_HeroVfxPool").AddComponent<HeroVfxPool>();}
@@ -40,7 +42,12 @@ namespace Alterverse.Visuals
                 material=new Material(shader){name="DF_VfxFallback"};ownsMaterial=true;
                 Debug.LogWarning("DF: HeroEnergy material missing; reimport CombatVfx assets.");
             }
-            for(int i=0;i<shapes.Length;i++)shapes[i]=BuildShape((HeroFxShape)i);
+            for(int i=0;i<shapes.Length;i++)
+            {
+                HeroFxShape shape=(HeroFxShape)i;shapes[i]=BuildShape(shape);
+                warningShapes[i]=shape==HeroFxShape.Orb||shape==HeroFxShape.Bolt||shape==HeroFxShape.Burst
+                    ?BuildShape(shape,false):shapes[i];
+            }
             for(int i=0;i<Capacity;i++)
             {
                 var go=new GameObject("Hero effect");go.transform.SetParent(transform,false);
@@ -78,7 +85,7 @@ namespace Alterverse.Visuals
             slot.From=from;slot.To=to;slot.Size=size;slot.Color=color;slot.Motion=motion;
             slot.Rotation=rotation==default?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
-            slot.Filter.sharedMesh=shapes[(int)shape];slot.Renderer.enabled=false;
+            slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
             Draw(slot,0);if(delay>0)slot.Renderer.enabled=false;
         }
         public static void CancelWarnings(GameObject actor)
@@ -126,18 +133,22 @@ namespace Alterverse.Visuals
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=s.Size*scale;
             float fade=s.Warning?1:Mathf.Clamp01((1-t)*3);
             Color color=s.Color;color.a*=fade;
-            s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
+            s.Block.SetFloat(Polish,s.Warning?0f:1f);s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
         private void OnDestroy()
         {
             if(instance==this)instance=null;
-            foreach(Mesh m in shapes)if(m!=null)Destroy(m);
+            for(int i=0;i<shapes.Length;i++)
+            {
+                if(warningShapes[i]!=null&&warningShapes[i]!=shapes[i])Destroy(warningShapes[i]);
+                if(shapes[i]!=null)Destroy(shapes[i]);
+            }
             if(ownsMaterial&&material!=null)Destroy(material);
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset(){instance=null;}
 
-        private static Mesh BuildShape(HeroFxShape shape)
+        private static Mesh BuildShape(HeroFxShape shape,bool polished=true)
         {
             var v=new List<Vector3>();var colors=new List<Color>();var triangles=new List<int>();
             void Tri(Vector3 a,Vector3 b,Vector3 c,float alpha=1)
@@ -171,6 +182,18 @@ namespace Alterverse.Visuals
                 SoftQuad(-width,Vector3.zero,end,end-width*.12f,clear,hot);
                 SoftQuad(Vector3.zero,width,end+width*.12f,end,hot,clear);
             }
+            void Corona(Vector3 right,Vector3 up,float radius,float opacity)
+            {
+                if(!polished)return;
+                Color core=new Color(1.45f,1.45f,1.45f,opacity);
+                for(int i=0;i<24;i++)
+                {
+                    float a=i*Mathf.PI/12,b=(i+1)*Mathf.PI/12;
+                    Vector3 x=(right*Mathf.Cos(a)+up*Mathf.Sin(a))*radius;
+                    Vector3 y=(right*Mathf.Cos(b)+up*Mathf.Sin(b))*radius;
+                    SoftQuad(x*.42f,x,y,y*.42f,core,clear);
+                }
+            }
             void Band(float start,float end,float inner,float outer,int count,float y=0)
             {
                 for(int i=0;i<count;i++)
@@ -199,7 +222,8 @@ namespace Alterverse.Visuals
                     SoftQuad(new Vector3(-.16f,0,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(-.025f,0,.55f),clear,hot);
                     SoftQuad(new Vector3(0,0,-1.4f),new Vector3(.16f,0,-1.4f),new Vector3(.025f,0,.55f),new Vector3(0,0,.55f),hot,clear);
                     SoftQuad(new Vector3(0,-.12f,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(0,-.02f,.55f),clear,hot);
-                    SoftQuad(new Vector3(0,0,-1.4f),new Vector3(0,.12f,-1.4f),new Vector3(0,.02f,.55f),new Vector3(0,0,.55f),hot,clear);break;
+                    SoftQuad(new Vector3(0,0,-1.4f),new Vector3(0,.12f,-1.4f),new Vector3(0,.02f,.55f),new Vector3(0,0,.55f),hot,clear);
+                    Corona(Vector3.right,Vector3.up,.23f,.52f);break;
                 case HeroFxShape.Seed:
                     // Pointed leaf in two planes: offensive seed, deliberately not a healing flower.
                     SoftQuad(new Vector3(0,0,-.60f),new Vector3(-.22f,0,-.08f),new Vector3(0,0,.62f),new Vector3(.22f,0,-.08f),soft,hot);
@@ -216,7 +240,8 @@ namespace Alterverse.Visuals
                     {
                         float a=i*Mathf.PI*2/9;Vector3 d=new Vector3(Mathf.Cos(a),.12f,Mathf.Sin(a));
                         Ray(d*(i%2==0?1:.65f),Vector3.Cross(Vector3.up,d)*.09f);
-                    }break;
+                    }
+                    Corona(Vector3.right,Vector3.forward,.40f,.65f);break;
                 case HeroFxShape.Petals:
                     for(int i=0;i<6;i++)
                     {
@@ -243,10 +268,10 @@ namespace Alterverse.Visuals
                     }break;
                 case HeroFxShape.Orb:
                     // Rounded volume with a baked luminous upper hemisphere, no texture or dynamic light.
-                    for(int j=0;j<8;j++)for(int i=0;i<16;i++)
+                    for(int j=0;j<12;j++)for(int i=0;i<24;i++)
                     {
-                        float a=i*Mathf.PI/8,b=(i+1)*Mathf.PI/8;
-                        float lat0=-Mathf.PI*.5f+j*Mathf.PI/8,lat1=lat0+Mathf.PI/8;
+                        float a=i*Mathf.PI/12,b=(i+1)*Mathf.PI/12;
+                        float lat0=-Mathf.PI*.5f+j*Mathf.PI/12,lat1=lat0+Mathf.PI/12;
                         Vector3 d=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),e=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
                         float light0=.45f+1.05f*(Mathf.Sin(lat0)*.5f+.5f),light1=.45f+1.05f*(Mathf.Sin(lat1)*.5f+.5f);
                         SoftQuad((d*Mathf.Cos(lat0)+Vector3.up*Mathf.Sin(lat0))*.5f,
@@ -254,7 +279,10 @@ namespace Alterverse.Visuals
                             (e*Mathf.Cos(lat1)+Vector3.up*Mathf.Sin(lat1))*.5f,
                             (e*Mathf.Cos(lat0)+Vector3.up*Mathf.Sin(lat0))*.5f,
                             new Color(light0,light0,light0,1),new Color(light1,light1,light1,1));
-                    }break;
+                    }
+                    Corona(Vector3.right,Vector3.up,.66f,.32f);
+                    Corona(Vector3.right,Vector3.forward,.66f,.32f);
+                    Corona(Vector3.forward,Vector3.up,.66f,.32f);break;
                 case HeroFxShape.Shard:
                     for(int i=0;i<8;i++)
                     {
@@ -286,5 +314,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
