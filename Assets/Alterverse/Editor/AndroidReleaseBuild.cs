@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
+using UnityEngine.Rendering;
 namespace Alterverse.EditorChecks
 {
     /// <summary>Reproducible build entry point, not a claim of store approval.</summary>
@@ -36,6 +37,17 @@ namespace Alterverse.EditorChecks
             if(string.IsNullOrWhiteSpace(PlayerSettings.bundleVersion))errors.Add("Set a visible app version before uploading.");
             if(PlayerSettings.Android.bundleVersionCode<1)errors.Add("Set a positive, unused version code before uploading.");
             if((int)PlayerSettings.Android.minSdkVersion<26)errors.Add("Minimum Android SDK must remain API 26 or newer for this release profile.");
+
+            if(PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android))
+                errors.Add("Disable automatic Android Graphics APIs so the release always keeps the OpenGL ES 3 fallback.");
+            GraphicsDeviceType[] graphicsApis=PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
+            bool hasOpenGles3=false;
+            if(graphicsApis!=null)foreach(GraphicsDeviceType api in graphicsApis)if(api==GraphicsDeviceType.OpenGLES3){hasOpenGles3=true;break;}
+            if(!hasOpenGles3)errors.Add("Android release must include OpenGLES3 as a fallback so Vulkan support is not a Play Store device requirement.");
+            if(PlayerSettings.openGLRequireES31)errors.Add("Require ES3.1 must stay disabled; it would filter otherwise compatible Android devices.");
+            if(PlayerSettings.openGLRequireES31AEP)errors.Add("Require ES3.1+AEP must stay disabled; it would filter otherwise compatible Android devices.");
+            if(PlayerSettings.openGLRequireES32)errors.Add("Require ES3.2 must stay disabled; it would filter otherwise compatible Android devices.");
+
             Texture2D[] icons=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
             bool hasIcon=false;if(icons!=null)foreach(Texture2D icon in icons)if(icon!=null){hasIcon=true;break;}
             if(!hasIcon)errors.Add("Android launcher icon is not assigned. Run Prepare Android upload; it assigns "+AppIconPath+".");
@@ -54,7 +66,7 @@ namespace Alterverse.EditorChecks
             }
             if(!scene)errors.Add("No existing enabled scene in Build Settings.");
             if(errors.Count>0)throw new BuildFailedException(string.Join("\n",errors));
-            Debug.Log("DIMENSIONS FRONT: static Android settings gate passed. Device, manifest, asset and Play Console checks still required.");
+            Debug.Log("DIMENSIONS FRONT: Android release gate passed, including device-compatibility graphics checks. Generated manifest guard will run during the Gradle build.");
         }
         private static void EnsureLauncherIcon()
         {
@@ -74,6 +86,16 @@ namespace Alterverse.EditorChecks
             }
         }
 
+        private static void ApplyDeviceCompatibilitySettings()
+        {
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{GraphicsDeviceType.Vulkan,GraphicsDeviceType.OpenGLES3});
+            PlayerSettings.openGLRequireES31=false;
+            PlayerSettings.openGLRequireES31AEP=false;
+            PlayerSettings.openGLRequireES32=false;
+            Debug.Log("DIMENSIONS FRONT: Android compatibility baseline applied: Vulkan + OpenGLES3 fallback, no ES3.1/AEP/ES3.2 requirement.");
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
         public static void Prepare()
         {
@@ -85,6 +107,8 @@ namespace Alterverse.EditorChecks
             EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARM64;
+            ApplyDeviceCompatibilitySettings();
+            AssetDatabase.SaveAssets();
             Debug.Log("DIMENSIONS FRONT: release-safe Android build flags applied. Running upload preflight...");
             Validate();
         }
@@ -98,6 +122,8 @@ namespace Alterverse.EditorChecks
             EditorUserBuildSettings.allowDebugging=false;
             EditorUserBuildSettings.connectProfiler=false;
             EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
+            ApplyDeviceCompatibilitySettings();
+            AssetDatabase.SaveAssets();
             Validate();
             var scenes=new List<string>();foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)scenes.Add(scene.path);
             Directory.CreateDirectory("Builds/Android");
@@ -108,7 +134,7 @@ namespace Alterverse.EditorChecks
             });
             if(report.summary.result!=BuildResult.Succeeded)throw new BuildFailedException("DIMENSIONS FRONT Android build failed. Inspect the Unity build log.");
             string output=Path.GetFullPath(report.summary.outputPath);
-            Debug.Log("DIMENSIONS FRONT: signed Android bundle created at "+output);
+            Debug.Log("DIMENSIONS FRONT: signed Android bundle created at "+output+". Compatibility manifest snapshots are in Builds/Android.");
             EditorUtility.RevealInFinder(output);
         }
 
