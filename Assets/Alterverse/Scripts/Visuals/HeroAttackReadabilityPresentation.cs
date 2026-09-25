@@ -308,7 +308,10 @@ namespace Alterverse.Visuals
             if(slot<0)
             {
                 // Existing HeroSkillVfx owns projectile travel; this layer adds only readable release/impact accents.
-                HeroVfxPool.Emit(HeroFxShape.Halo,origin,origin,Vector3.one*.30f,color,.16f,HeroFxMotion.Expand,owner:gameObject);
+                HeroFxShape release=hero==HeroId.Nyra||hero==HeroId.Traveler?HeroFxShape.Bolt:
+                    hero==HeroId.Mira?HeroFxShape.Seed:hero==HeroId.Elyra?HeroFxShape.Runes:
+                    hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Burst;
+                HeroVfxPool.Emit(release,origin,origin,Vector3.one*.34f,color,.14f,HeroFxMotion.Expand,owner:gameObject);
                 if(hero==HeroId.Veyr||hero==HeroId.Kaelon)
                     HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.42f,Vector3.zero,new Vector3(2.25f,.16f,2.25f),color,.24f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject,delay:attackWindup*.55f);
                 else if(hero==HeroId.Rook)
