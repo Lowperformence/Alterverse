@@ -37,11 +37,11 @@ namespace Alterverse.Visuals
             Color joint=new(.035f,.055f,.038f,1f);
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
 
-            Material armorMat=MakeMaterial(shader,armor,.10f,.31f,Color.black);
-            Material hideMat=MakeMaterial(shader,hide,.02f,.12f,Color.black);
+            Material armorMat=MakeMaterial(shader,armor,.42f,.48f,Color.black);
+            Material hideMat=MakeMaterial(shader,hide,.04f,.24f,Color.black);
             Material jointMat=MakeMaterial(shader,joint,.03f,.09f,Color.black);
-            Material energyMat=MakeMaterial(shader,bioEnergy,.04f,.56f,bioEnergy*2.0f);
-            Material teamMat=MakeMaterial(shader,teamEnergy,.10f,.46f,teamEnergy*1.45f);
+            Material energyMat=MakeMaterial(shader,bioEnergy,.08f,.68f,bioEnergy*2.3f);
+            Material teamMat=MakeMaterial(shader,teamEnergy,.22f,.60f,teamEnergy*1.65f);
 
             Mesh chest=Track(XenoTitanMeshFactory.Plate("DF_GreenMechChest",new[]{
                 new Vector2(-.48f,-.52f),new Vector2(.48f,-.52f),new Vector2(.62f,.04f),

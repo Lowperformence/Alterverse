@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using Alterverse.Match;
 namespace Alterverse.Visuals
 {
     // One directional key and tuned ambient fill: mobile-friendly depth without extra lights or fullscreen post FX.
@@ -21,11 +22,16 @@ namespace Alterverse.Visuals
             key.transform.rotation=Quaternion.Euler(42f,-36f,0f);
             key.intensity=1.18f;
             key.shadowStrength=Mathf.Min(shadowStrength,.82f);
-            key.color=new Color(.92f,.955f,1f);
+            key.color=ArenaVariantRuntime.IsMars?new Color(1f,.82f,.68f):
+                ArenaVariantRuntime.IsGreenPlanet?new Color(.86f,1f,.78f):
+                ArenaVariantRuntime.IsNoxara?new Color(.78f,.86f,1f):
+                ArenaVariantRuntime.IsKryon?new Color(.82f,.94f,1f):new Color(.92f,.955f,1f);
             key.cullingMask&=~(1<<31); // Menu showcase has its own isolated studio lights.
 
             RenderSettings.ambientMode=AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor=new Color(.24f,.27f,.33f);
+            RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsMars?new Color(.30f,.25f,.24f):
+                ArenaVariantRuntime.IsGreenPlanet?new Color(.22f,.30f,.25f):
+                ArenaVariantRuntime.IsNoxara?new Color(.20f,.23f,.34f):new Color(.24f,.27f,.33f);
             RenderSettings.ambientEquatorColor=new Color(.105f,.125f,.155f);
             RenderSettings.ambientGroundColor=new Color(.052f,.062f,.078f);
             RenderSettings.reflectionIntensity=.31f;

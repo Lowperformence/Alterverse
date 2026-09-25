@@ -56,8 +56,8 @@ namespace Alterverse.Visuals
         void EnsureAccessoryAssets()
         {
             if(accessoryBox!=null)return;
-            machineMetal=Mat(new Color(.17f,.19f,.22f,1),.58f,.24f);
-            machineDark=Mat(new Color(.07f,.08f,.095f,1),.42f,.16f);
+            machineMetal=Mat(new Color(.20f,.23f,.28f,1),.65f,.43f);
+            machineDark=Mat(new Color(.075f,.09f,.12f,1),.47f,.28f);
             accessoryBox=CreateAccessoryBox();
             accessoryCylinder=ProductionMeshFactory.Disc(.5f,.5f,8);
             accessoryRing=ProductionMeshFactory.Ring(.55f,.065f,16,6);

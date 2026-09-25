@@ -172,6 +172,15 @@ namespace Alterverse.Visuals
                     ?Mathf.Lerp(.12f,.54f,Mathf.InverseLerp(.16f,.74f,tone))
                     :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
                 value*=1f-dust*(moon?.105f:.055f);
+                // Fine mineral grain and broad, broken strata add material depth at gameplay scale.
+                // The modulation stays below the silhouette/height field, so collision and lanes are unchanged.
+                float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
+                float grain=Mathf.PerlinNoise(wx*2.7f+91f,wz*2.7f+47f)-.5f;
+                float strata=Mathf.PerlinNoise(wx*.34f+wz*.12f+13f,wz*.34f-wx*.08f+29f)-.5f;
+                float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.48f+201f,wz*.48f+78f)-.5f);
+                value*=1f+grain*.12f+strata*.15f;
+                value+=Mathf.SmoothStep(.39f,.49f,vein)*(moon?.024f:.015f);
+                value=Mathf.Clamp01(value);
                 if(ArenaVariantRuntime.IsMars)
                 {
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.28f,.66f,tone));

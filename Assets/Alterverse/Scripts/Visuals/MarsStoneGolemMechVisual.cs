@@ -38,13 +38,13 @@ namespace Alterverse.Visuals
             Color magmaHot=new(1f,.48f,.055f,1f);
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
 
-            Material stoneMat=MakeMaterial(shader,stone,.03f,.19f,Color.black);
-            Material lightStoneMat=MakeMaterial(shader,stoneLight,.025f,.16f,Color.black);
+            Material stoneMat=MakeMaterial(shader,stone,.10f,.28f,Color.black);
+            Material lightStoneMat=MakeMaterial(shader,stoneLight,.12f,.32f,Color.black);
             Material darkStoneMat=MakeMaterial(shader,stoneDark,.02f,.10f,Color.black);
             Material seamMat=MakeMaterial(shader,seam,.01f,.07f,Color.black);
-            Material magmaMat=MakeMaterial(shader,magma,.02f,.43f,magma*3.15f);
-            Material magmaHotMat=MakeMaterial(shader,magmaHot,.02f,.50f,magmaHot*3.6f);
-            Material teamMat=MakeMaterial(shader,teamEnergy,.06f,.36f,teamEnergy*1.25f);
+            Material magmaMat=MakeMaterial(shader,magma,.05f,.56f,magma*3.15f);
+            Material magmaHotMat=MakeMaterial(shader,magmaHot,.06f,.65f,magmaHot*3.6f);
+            Material teamMat=MakeMaterial(shader,teamEnergy,.18f,.58f,teamEnergy*1.55f);
 
             Mesh chestPlate=Track(XenoTitanMeshFactory.Plate("DF_MarsGolemChest",new[]{
                 new Vector2(-.56f,-.50f),new Vector2(.50f,-.55f),new Vector2(.67f,-.04f),

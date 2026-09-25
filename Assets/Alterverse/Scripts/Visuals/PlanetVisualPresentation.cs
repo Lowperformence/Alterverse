@@ -9,7 +9,7 @@ namespace Alterverse.Visuals
         private readonly List<Material> materials=new();
         public void Build(Color color,int variant)
         {
-            Material stone=Mat(new Color(.7f,.73f,.78f),false),energy=Mat(Color.Lerp(color,Color.white,.15f),true),debris=Mat(new Color(.12f,.14f,.17f),false);
+            Material stone=Mat(new Color(.7f,.73f,.78f),false),energy=Mat(Color.Lerp(color,Color.white,.15f),true),debris=Mat(new Color(.18f,.21f,.26f),false);
             var lunar=FindAnyObjectByType<ProductionLunarGround>();
             if(lunar!=null&&lunar.SurfaceAlbedo!=null){stone.SetTexture("_BaseMap",lunar.SurfaceAlbedo);stone.SetTexture("_MainTex",lunar.SurfaceAlbedo);}
             GetComponent<Renderer>().sharedMaterial=stone;
@@ -46,7 +46,7 @@ namespace Alterverse.Visuals
         private Material Mat(Color color,bool emission)
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            Material material=new(shader){name="DF_PlanetSurface",color=color};material.SetColor("_BaseColor",color);material.SetFloat("_Smoothness",emission?.25f:.09f);material.SetFloat("_Metallic",0);
+            Material material=new(shader){name="DF_PlanetSurface",color=color};material.SetColor("_BaseColor",color);material.SetFloat("_Smoothness",emission?.55f:.22f);material.SetFloat("_Metallic",emission?.20f:.07f);
             if(emission){material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",color*.75f);}materials.Add(material);return material;
         }
         private void OnDestroy(){foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(Material material in materials)if(material!=null)Destroy(material);}
