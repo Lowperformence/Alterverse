@@ -9,9 +9,9 @@ using ETouch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Read-only mobile range preview. It observes the same ability hit areas as PrototypeHUD but
-    /// never consumes input and never casts anything. Holding Q/W/E/Ultimate therefore reveals the
-    /// authoritative range/radius while PrototypeHUD remains the sole owner of combat input.
+    /// Presentation-only mobile range preview. PrototypeHUD remains the sole owner of combat input.
+    /// This overlay observes the same held ability button and makes the real range/radius readable on
+    /// a small screen with strong contrast, while never casting an ability or changing gameplay values.
     /// </summary>
     [DefaultExecutionOrder(-160)]
     public sealed class AbilityRangePreviewOverlay : MonoBehaviour
@@ -22,6 +22,8 @@ namespace Alterverse.UI
         private SoftTargeting targeting;
         private Camera view;
         private CombatHudLayout layout;
+        private GUIStyle tagStyle;
+        private GUIStyle tagShadowStyle;
         private int heldSlot = -1;
         private int touchId = -1;
         private bool mouseHeld;
@@ -53,7 +55,7 @@ namespace Alterverse.UI
             if (layout.Safe.width <= 0f || layout.Safe.height <= 0f) { Clear(); return; }
 
             HandleTouchObservation();
-            // Touch owns the mobile gesture. Mouse is only an editor/desktop preview path.
+            // Touch exclusively owns the mobile gesture. Mouse exists only for editor/desktop testing.
             if (touchId < 0 && (!EnhancedTouchSupport.enabled || ETouch.activeTouches.Count == 0))
                 HandleMouseObservation();
         }
@@ -137,20 +139,24 @@ namespace Alterverse.UI
             if (layout.Safe.width <= 0f || layout.Safe.height <= 0f) return;
 
             Matrix4x4 before = GUI.matrix;
+            Color beforeColor = GUI.color;
             try
             {
                 GUI.matrix = layout.Matrix;
                 DrawAbilityPreview(heldSlot);
             }
-            finally { GUI.matrix = before; }
+            finally
+            {
+                GUI.matrix = before;
+                GUI.color = beforeColor;
+            }
         }
 
         private void DrawAbilityPreview(int slot)
         {
             AbilitySpec spec = abilities.SpecFor(slot);
-            Vector3 origin = transform.position;
-            origin.y = .18f;
-            Color core = new Color(accent.r, accent.g, accent.b, .98f);
+            Vector3 origin = transform.position; origin.y = .18f;
+            Color core = PreviewColor(slot);
             Color glow = Color.Lerp(core, Color.white, .42f); glow.a = .92f;
             float pulse = .5f + .5f * Mathf.Sin(Time.unscaledTime * 6f);
 
@@ -162,36 +168,62 @@ namespace Alterverse.UI
 
             if (spec.Range > .01f)
             {
-                DrawWorldCircle(origin, spec.Range, core, glow, pulse, true);
+                // Outer ring: authoritative maximum cast/auto-target range.
+                DrawWorldCircle(origin, spec.Range, core, glow, pulse, true, 1f);
                 DrawRangeTicks(origin, spec.Range, core);
+                DrawWorldTag(origin + FlatForward() * spec.Range, $"RANGE {spec.Range:0.#}m", core);
 
-                // Targeted AoE abilities show both pieces of information at once: the outer circle is
-                // maximum cast range, while the second circle is the real damage/control radius.
-                if (spec.Radius > .01f && identity != null && identity.Hero != HeroId.Mira)
+                if (spec.Radius > .01f)
                 {
+                    // Targeted AoE needs both values to be understandable. If SoftTargeting already has a
+                    // valid sticky target, show the area on that exact target without mutating targeting.
+                    // Otherwise show an explicitly labelled AREA SIZE sample inside the cast range.
                     targeting ??= GetComponent<SoftTargeting>();
-                    Health target = targeting != null ? targeting.Acquire(spec.Range, transform.forward, true) : null;
-                    if (target != null)
+                    Health current = targeting != null ? targeting.Current : null;
+                    Vector3 center;
+                    bool exactTarget = current != null;
+                    if (exactTarget)
                     {
-                        Vector3 center = target.transform.position; center.y = .18f;
-                        DrawWorldCircle(center, spec.Radius, core, Color.white, pulse, false);
-                        DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .48f), 2f);
+                        center = current.transform.position;
+                        center.y = .18f;
                     }
+                    else
+                    {
+                        float offset = Mathf.Clamp(spec.Range * .64f, Mathf.Max(.9f, spec.Radius + .25f), spec.Range);
+                        center = origin + FlatForward() * offset;
+                    }
+
+                    DrawProjectedLine(origin, center, new Color(0f, 0f, 0f, .62f), 5f);
+                    DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .46f), 2f);
+                    DrawWorldCircle(center, spec.Radius, core, Color.white, pulse, false, exactTarget ? .90f : .72f);
+                    DrawWorldTag(center + Vector3.right * spec.Radius,
+                        exactTarget ? $"AREA {spec.Radius:0.#}m" : $"AREA SIZE {spec.Radius:0.#}m", core);
                 }
                 return;
             }
 
             if (spec.Radius > .01f)
             {
-                // Self-centered AoE: radius itself is the authoritative reach.
-                DrawWorldCircle(origin, spec.Radius, core, glow, pulse, true);
+                // Self-centered AoE: the radius itself is the authoritative reach.
+                DrawWorldCircle(origin, spec.Radius, core, glow, pulse, true, 1f);
                 DrawRangeTicks(origin, spec.Radius, core);
+                DrawWorldTag(origin + FlatForward() * spec.Radius, $"AREA {spec.Radius:0.#}m", core);
                 return;
             }
 
-            // Pure self buffs have no gameplay range. Show a compact self marker instead of inventing
-            // a false metre value, so holding the button still gives immediate visual confirmation.
-            DrawWorldCircle(origin, .72f, core, glow, pulse, false);
+            // Pure self buffs have no gameplay range. Never invent a metre value.
+            DrawWorldCircle(origin, .72f, core, glow, pulse, false, .90f);
+            DrawWorldTag(origin + FlatForward() * .76f, "SELF", core);
+        }
+
+        private Color PreviewColor(int slot)
+        {
+            HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
+            // Support/protection ranges read as friendly at a glance; everything else keeps hero identity.
+            if (hero == HeroId.Mira && slot > 0) return new Color(.42f, .96f, .68f, .98f);
+            if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
+                return Color.Lerp(accent, new Color(.46f, .84f, 1f), .55f);
+            return new Color(accent.r, accent.g, accent.b, .98f);
         }
 
         private bool UsesMovementDirection(int slot)
@@ -203,35 +235,46 @@ namespace Alterverse.UI
                    (hero == HeroId.Traveler && slot == 1);
         }
 
+        private Vector3 FlatForward()
+        {
+            Vector3 direction = transform.forward; direction.y = 0f;
+            if (direction.sqrMagnitude < .001f) direction = Vector3.forward;
+            return direction.normalized;
+        }
+
         private void DrawDashPreview(Vector3 origin, Vector3 direction, float range, Color core, Color glow, float pulse)
         {
             direction.y = 0f;
-            if (direction.sqrMagnitude < .001f) direction = transform.forward;
+            if (direction.sqrMagnitude < .001f) direction = FlatForward();
             direction.Normalize();
             Vector3 end = origin + direction * Mathf.Max(.01f, range);
             Vector3 side = Vector3.Cross(Vector3.up, direction);
 
-            DrawProjectedLine(origin, end, new Color(0f, 0f, 0f, .78f), 9f);
-            DrawProjectedLine(origin, end, glow, 5f + pulse);
-            DrawProjectedLine(origin, end, core, 3f);
+            // Black underlay + bright glow + core keeps the direction legible over every planet surface.
+            DrawProjectedLine(origin, end, new Color(0f, 0f, 0f, .82f), 10f);
+            DrawProjectedLine(origin, end, glow, 6f + pulse);
+            DrawProjectedLine(origin, end, core, 3.25f);
 
-            float arrow = Mathf.Clamp(range * .13f, .48f, .78f);
+            float arrow = Mathf.Clamp(range * .13f, .48f, .80f);
             Vector3 left = end - direction * arrow + side * arrow * .62f;
             Vector3 right = end - direction * arrow - side * arrow * .62f;
-            DrawProjectedLine(end, left, new Color(0f, 0f, 0f, .78f), 9f);
-            DrawProjectedLine(end, right, new Color(0f, 0f, 0f, .78f), 9f);
-            DrawProjectedLine(end, left, glow, 5f);
-            DrawProjectedLine(end, right, glow, 5f);
-            DrawWorldCircle(end, .34f + pulse * .05f, core, glow, pulse, false);
+            DrawProjectedLine(end, left, new Color(0f, 0f, 0f, .82f), 10f);
+            DrawProjectedLine(end, right, new Color(0f, 0f, 0f, .82f), 10f);
+            DrawProjectedLine(end, left, glow, 5.5f);
+            DrawProjectedLine(end, right, glow, 5.5f);
+            DrawWorldCircle(end, .34f + pulse * .05f, core, glow, pulse, false, 1f);
+            DrawWorldTag(end + side * .46f, $"MOVE {range:0.#}m", core);
         }
 
-        private void DrawWorldCircle(Vector3 center, float radius, Color core, Color glow, float pulse, bool breathe)
+        private void DrawWorldCircle(Vector3 center, float radius, Color core, Color glow, float pulse, bool breathe, float alpha)
         {
             if (radius <= .01f) return;
-            const int Segments = 64;
+            // 48 segments is smooth from the match camera but materially cheaper than 64 on mobile.
+            const int Segments = 48;
             float displayedRadius = breathe ? radius * (1f - .006f + pulse * .012f) : radius;
-            Color shadow = new Color(0f, 0f, 0f, .72f);
-            Color soft = new Color(glow.r, glow.g, glow.b, .34f + pulse * .12f);
+            Color shadow = new Color(0f, 0f, 0f, .74f * alpha);
+            Color soft = new Color(glow.r, glow.g, glow.b, (.32f + pulse * .11f) * alpha);
+            Color line = new Color(core.r, core.g, core.b, core.a * alpha);
 
             for (int i = 0; i < Segments; i++)
             {
@@ -239,9 +282,9 @@ namespace Alterverse.UI
                 float b = (i + 1) * Mathf.PI * 2f / Segments;
                 Vector3 p = center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * displayedRadius;
                 Vector3 q = center + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * displayedRadius;
-                DrawProjectedLine(p, q, shadow, 8f);
+                DrawProjectedLine(p, q, shadow, 8.5f);
                 DrawProjectedLine(p, q, soft, 6f);
-                DrawProjectedLine(p, q, core, 3.25f);
+                DrawProjectedLine(p, q, line, 3.25f);
             }
         }
 
@@ -255,9 +298,36 @@ namespace Alterverse.UI
                 Vector3 dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
                 Vector3 from = center + dir * Mathf.Max(.05f, radius - tick);
                 Vector3 to = center + dir * (radius + tick);
-                DrawProjectedLine(from, to, new Color(0f, 0f, 0f, .80f), 8f);
+                DrawProjectedLine(from, to, new Color(0f, 0f, 0f, .82f), 8f);
                 DrawProjectedLine(from, to, color, 4f);
             }
+        }
+
+        private void DrawWorldTag(Vector3 world, string text, Color color)
+        {
+            Vector3 screen = view.WorldToScreenPoint(world);
+            if (screen.z <= 0f) return;
+            Vector2 point = layout.Point(new Vector2(screen.x, screen.y));
+            EnsureTagStyles();
+            Rect rect = new Rect(point.x - 68f, point.y - 13f, 136f, 26f);
+            Rect shadowRect = new Rect(rect.x + 1.5f, rect.y + 1.5f, rect.width, rect.height);
+            tagShadowStyle.normal.textColor = new Color(0f, 0f, 0f, .95f);
+            tagStyle.normal.textColor = new Color(color.r, color.g, color.b, 1f);
+            GUI.Label(shadowRect, text, tagShadowStyle);
+            GUI.Label(rect, text, tagStyle);
+        }
+
+        private void EnsureTagStyles()
+        {
+            if (tagStyle != null) return;
+            tagStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                clipping = TextClipping.Clip
+            };
+            tagShadowStyle = new GUIStyle(tagStyle);
         }
 
         private void DrawProjectedLine(Vector3 from, Vector3 to, Color color, float width)
