@@ -103,6 +103,7 @@ namespace Alterverse.Visuals
             Along("RifleReceiver",new Vector3(0,.024f,.25f),new Vector3(.112f,.36f,.07f),pearl);
             Along("RifleBarrel",new Vector3(0,.015f,.93f),new Vector3(.033f,.36f,.033f),steel);
             Along("MuzzleBrake",new Vector3(0,.015f,1.28f),new Vector3(.065f,.10f,.065f),pearl);
+            Along("MuzzleEmitter",new Vector3(0,.015f,1.365f),new Vector3(.038f,.025f,.038f),hot,true);
             Along("Scope",new Vector3(0,.18f,.17f),new Vector3(.058f,.20f,.055f),dark);
             Along("ScopeLens",new Vector3(0,.18f,.366f),new Vector3(.041f,.013f,.041f),hot,true);
             Along("ScopeBridge",new Vector3(0,.105f,.17f),new Vector3(.036f,.12f,.034f),steel);
