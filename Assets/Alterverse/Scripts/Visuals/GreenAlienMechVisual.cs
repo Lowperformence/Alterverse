@@ -79,6 +79,8 @@ namespace Alterverse.Visuals
             MeshPart("ChestRight",sidePlate,torso,new Vector3(.48f,0,.40f),new Vector3(.76f,.70f,.86f),armorMat,Quaternion.Euler(-2,10,5));
             Part("BioCore",PrimitiveType.Sphere,torso,new Vector3(0,-.05f,.64f),new Vector3(.20f,.17f,.13f),energyMat,Quaternion.identity,true);
             MeshPart("TeamMark",teamMark,torso,new Vector3(0,.30f,.64f),new Vector3(.72f,.72f,.72f),teamMat,Quaternion.identity);
+            MeshPart("BioVeinL",sidePlate,torso,new Vector3(-.29f,-.18f,.55f),new Vector3(.14f,.34f,.12f),energyMat,Quaternion.Euler(0,0,-18));
+            MeshPart("BioVeinR",sidePlate,torso,new Vector3(.29f,-.18f,.55f),new Vector3(.14f,.34f,.12f),energyMat,Quaternion.Euler(0,0,18));
 
             // Narrow alien skull and jaw replace the robot sensor head.
             Transform headPivot=Pivot("DF_GreenMechHeadPivot",torso,new Vector3(0,.92f,.02f),Quaternion.Euler(-9,0,0));
