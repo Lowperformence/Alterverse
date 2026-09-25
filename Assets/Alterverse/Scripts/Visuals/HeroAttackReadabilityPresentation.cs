@@ -298,112 +298,77 @@ namespace Alterverse.Visuals
 
         private void EmitPresentationVfx(HeroId hero,int slot,Vector3 target,float attackWindup,AbilitySpec spec)
         {
-            Color color=StylizedArtDirection.HeroAccent(hero);
+            Color color=hero==HeroId.Mira?new Color(1f,.72f,.28f):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
             Vector3 origin=ReleasePoint();
-            Vector3 ground=target;ground.y=Mathf.Max(.08f,target.y+.08f);
-            float impactDelay=Mathf.Max(.02f,attackWindup);
-
-            if(slot<0)
+            if(slot>=0)
             {
-                // Existing HeroSkillVfx owns projectile travel; this layer adds only readable release/impact accents.
-                HeroVfxPool.Emit(HeroFxShape.Halo,origin,origin,Vector3.one*.30f,color,.16f,HeroFxMotion.Expand,owner:gameObject);
-                if(hero==HeroId.Veyr||hero==HeroId.Kaelon)
-                    HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.42f,Vector3.zero,new Vector3(2.25f,.16f,2.25f),color,.24f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject,delay:attackWindup*.55f);
-                else if(hero==HeroId.Rook)
-                    HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*.58f,color,.18f,HeroFxMotion.Expand,owner:gameObject,delay:attackWindup);
+                // Gameplay VFX already draw the real target, impact and warning. This animation
+                // layer only confirms the cast close to the character, avoiding duplicate floor art.
+                EmitAbilitySignature(hero,slot,target,attackWindup,spec,color);
                 return;
             }
 
+            // Basic attacks get one short weapon-side flash. HeroSkillVfx owns the hit.
+            HeroFxShape release=hero==HeroId.Nyra||hero==HeroId.Traveler?HeroFxShape.Bolt:
+                hero==HeroId.Mira?HeroFxShape.Seed:hero==HeroId.Elyra?HeroFxShape.Runes:
+                hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Burst;
+            HeroVfxPool.Emit(release,origin,origin,Vector3.one*.30f,color,.12f,
+                HeroFxMotion.Expand,owner:gameObject);
+        }
+
+        // A short cast mark confirms the button press; the hero-specific effect above owns the
+        // target and impact. This avoids covering every ability with the same giant dome/rune.
+        private void EmitAbilitySignature(HeroId hero,int slot,Vector3 ground,float impactDelay,AbilitySpec spec,Color accent)
+        {
+            Vector3 hand=ReleasePoint();
+            Vector3 chest=transform.position+Vector3.up*.58f;
+            Vector3 feet=transform.position+Vector3.up*.09f;
+            Color bright=Color.Lerp(accent,Color.white,.48f);
+            bright.a=1f;
+            float scale=slot==3?1.35f:slot==2?1.08f:slot==1?.92f:.82f;
+            float life=slot==3?.34f:.22f;
+            Quaternion facing=Quaternion.LookRotation(transform.forward);
+            HeroFxShape shape;
+            Vector3 point;
+            HeroFxMotion motion=HeroFxMotion.Expand;
             switch(hero)
             {
-                case HeroId.Kaelon:
-                    if(slot==2)
-                    {
-                        // Multiple weapon arcs around the real rotating hammer make the 360-degree strike readable.
-                        for(int i=0;i<4;i++)
-                            HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.45f,Vector3.zero,new Vector3(3.0f,.18f,3.0f),color,.18f,HeroFxMotion.Sweep,Quaternion.Euler(0,i*90f,0),gameObject,delay:attackWindup*i/4f);
-                        HeroVfxPool.Emit(HeroFxShape.Burst,transform.position+Vector3.up*.14f,Vector3.zero,Vector3.one*1.25f,color,.22f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    }
-                    else if(slot==3)
-                    {
-                        HeroVfxPool.Emit(HeroFxShape.Cracks,ground,Vector3.zero,new Vector3(3.6f,.10f,3.6f),color,.34f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                        HeroVfxPool.Emit(HeroFxShape.ShockDome,ground,Vector3.zero,new Vector3(3.8f,1.25f,3.8f),color,.32f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    }
-                    else
-                        HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.48f,Vector3.zero,new Vector3(2.9f,.18f,2.9f),color,.25f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject,delay:attackWindup*.55f);
-                    break;
-
-                case HeroId.Rook:
-                    if(slot==2)
-                    {
-                        for(int i=0;i<3;i++)HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.40f,Vector3.zero,new Vector3(2.8f,.17f,2.8f),color,.18f,HeroFxMotion.Sweep,Quaternion.Euler(0,i*120f,0),gameObject,delay:attackWindup*i/3f);
-                        HeroVfxPool.Emit(HeroFxShape.Burst,transform.position+Vector3.up*.12f,Vector3.zero,Vector3.one*1.15f,color,.20f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    }
-                    else if(slot==3)
-                    {
-                        HeroVfxPool.Emit(HeroFxShape.Cracks,transform.position+Vector3.up*.08f,Vector3.zero,new Vector3(3.2f,.08f,3.2f),color,.35f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                        HeroVfxPool.Emit(HeroFxShape.ShockDome,transform.position+Vector3.up*.08f,Vector3.zero,new Vector3(3.25f,1.05f,3.25f),color,.32f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    }
-                    else if(slot==0)
-                        HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.22f,Vector3.zero,Vector3.one*.72f,color,.20f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    else
-                        HeroVfxPool.Emit(HeroFxShape.Halo,transform.position+Vector3.up*.65f,Vector3.zero,Vector3.one*.75f,color,.26f,HeroFxMotion.Expand,owner:gameObject);
-                    break;
-
-                case HeroId.Elyra:
-                    if(slot==0||slot==3)
-                    {
-                        // Visible skyfall: the orb reaches the warning center exactly as gameplay windup resolves.
-                        float height=slot==3?8.5f:5.7f;
-                        float fall=Mathf.Clamp(attackWindup*.82f,.28f,.62f);
-                        float delay=Mathf.Max(0f,attackWindup-fall);
-                        Vector3 sky=ground+Vector3.up*height;
-                        float size=slot==3?.92f:.58f;
-                        HeroVfxPool.Emit(HeroFxShape.Orb,sky,ground+Vector3.up*.22f,Vector3.one*size,color,fall,HeroFxMotion.Travel,Quaternion.identity,gameObject,delay:delay);
-                        HeroVfxPool.Emit(HeroFxShape.Halo,sky,ground+Vector3.up*.24f,Vector3.one*(size*1.45f),color,fall,HeroFxMotion.Travel,Quaternion.identity,gameObject,delay:delay);
-                        HeroVfxPool.Emit(HeroFxShape.Burst,ground+Vector3.up*.20f,Vector3.zero,Vector3.one*(slot==3?1.75f:1.15f),color,.22f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                        HeroVfxPool.Emit(HeroFxShape.ShockDome,ground,Vector3.zero,new Vector3(spec.Radius>0?spec.Radius:2f,.95f,spec.Radius>0?spec.Radius:2f),color,.30f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                        HeroVfxPool.Emit(HeroFxShape.Cracks,ground,Vector3.zero,new Vector3(spec.Radius>0?spec.Radius:2f,.06f,spec.Radius>0?spec.Radius:2f),color,.32f,HeroFxMotion.Expand,owner:gameObject,delay:impactDelay);
-                    }
-                    else if(slot==1)
-                    {
-                        HeroVfxPool.Emit(HeroFxShape.Rift,ground+Vector3.up*.9f,Vector3.zero,new Vector3(1.0f,2.4f,1f),color,.34f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay*.55f);
-                        HeroVfxPool.Emit(HeroFxShape.ShockDome,ground,Vector3.zero,new Vector3(2.5f,.75f,2.5f),color,.28f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay);
-                    }
-                    else HeroVfxPool.Emit(HeroFxShape.Rift,transform.position+Vector3.up*.65f,Vector3.zero,new Vector3(.65f,1.25f,.65f),color,.20f,HeroFxMotion.Contract,owner:gameObject);
-                    break;
-
                 case HeroId.Veyr:
-                    if(slot==2)HeroVfxPool.Emit(HeroFxShape.Rift,transform.position+Vector3.up*.55f,visualTarget+Vector3.up*.55f,new Vector3(.72f,1.15f,.72f),color,.20f,HeroFxMotion.Travel,Quaternion.LookRotation(transform.forward),gameObject);
-                    else
-                    {
-                        HeroVfxPool.Emit(HeroFxShape.Slash,transform.position+Vector3.up*.55f,Vector3.zero,new Vector3(slot==3?3.3f:2.6f,.16f,slot==3?3.3f:2.6f),color,.23f,HeroFxMotion.Sweep,Quaternion.LookRotation(transform.forward),gameObject,delay:attackWindup*.55f);
-                        if(slot==3)HeroVfxPool.Emit(HeroFxShape.Rift,ground+Vector3.up*.65f,Vector3.zero,new Vector3(.95f,1.7f,.95f),color,.34f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay);
-                    }
-                    break;
-
+                    shape=slot==0?HeroFxShape.Slash:slot==1?HeroFxShape.Rift:
+                        slot==2?HeroFxShape.Halo:HeroFxShape.Shard;
+                    point=hand;motion=slot==0||slot==3?HeroFxMotion.Sweep:HeroFxMotion.Contract;break;
+                case HeroId.Kaelon:
+                    shape=slot==0?HeroFxShape.Hex:slot==1?HeroFxShape.Shield:
+                        slot==2?HeroFxShape.Cracks:HeroFxShape.ShockDome;
+                    point=slot==1?chest:slot==0?hand:chest;break;
                 case HeroId.Nyra:
-                    HeroVfxPool.Emit(HeroFxShape.Halo,origin,Vector3.zero,Vector3.one*(slot==3?.62f:.38f),color,.18f,HeroFxMotion.Expand,owner:gameObject);
-                    if(slot==2)HeroVfxPool.Emit(HeroFxShape.Hex,ground,Vector3.zero,new Vector3(1.45f,.05f,1.45f),color,.28f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay);
-                    else if(slot==3)for(int i=0;i<4;i++)HeroVfxPool.Emit(HeroFxShape.Bolt,origin,ground+Vector3.up*.35f,new Vector3(.16f,.16f,.75f),color,.18f,HeroFxMotion.Travel,Quaternion.LookRotation((ground+Vector3.up*.35f)-origin),gameObject,delay:attackWindup+i*.18f);
-                    break;
-
+                    shape=slot==0?HeroFxShape.Bolt:slot==1?HeroFxShape.Burst:
+                        slot==2?HeroFxShape.Ring:HeroFxShape.Shard;
+                    point=hand;break;
+                case HeroId.Elyra:
+                    shape=slot==0?HeroFxShape.Orb:slot==1?HeroFxShape.Runes:
+                        slot==2?HeroFxShape.Rift:HeroFxShape.ShockDome;
+                    point=chest;motion=slot==1?HeroFxMotion.Orbit:HeroFxMotion.Contract;break;
                 case HeroId.Mira:
-                    HeroVfxPool.Emit(HeroFxShape.Petals,slot==3?transform.position:ground+Vector3.up*.15f,Vector3.zero,Vector3.one*(slot==3?2.7f:.85f),color,.34f,HeroFxMotion.Expand,owner:gameObject,delay:slot==3?impactDelay:attackWindup*.35f);
-                    HeroVfxPool.Emit(HeroFxShape.Halo,origin,Vector3.zero,Vector3.one*.52f,color,.22f,HeroFxMotion.Expand,owner:gameObject);
-                    break;
-
+                    shape=slot==0?HeroFxShape.Seed:slot==1?HeroFxShape.Plus:
+                        slot==2?HeroFxShape.Shield:HeroFxShape.Petals;
+                    point=chest;motion=slot==3?HeroFxMotion.Orbit:HeroFxMotion.Expand;break;
+                case HeroId.Rook:
+                    shape=slot==0?HeroFxShape.Slash:slot==1?HeroFxShape.Shield:
+                        slot==2?HeroFxShape.Cracks:HeroFxShape.Burst;
+                    point=chest;break;
                 case HeroId.Traveler:
-                    if(slot==0)HeroVfxPool.Emit(HeroFxShape.Bolt,origin,ground+Vector3.up*.35f,new Vector3(.22f,.22f,1.0f),color,.24f,HeroFxMotion.Travel,Quaternion.LookRotation((ground+Vector3.up*.35f)-origin),gameObject,delay:attackWindup*.35f);
-                    else if(slot==1)HeroVfxPool.Emit(HeroFxShape.Rift,transform.position+Vector3.up*.6f,visualTarget+Vector3.up*.6f,new Vector3(.75f,1.25f,.75f),color,.22f,HeroFxMotion.Travel,Quaternion.LookRotation(transform.forward),gameObject);
-                    else
-                    {
-                        HeroVfxPool.Emit(HeroFxShape.Runes,ground,Vector3.zero,new Vector3(spec.Radius>0?spec.Radius:2.1f,.05f,spec.Radius>0?spec.Radius:2.1f),color,.36f,HeroFxMotion.Orbit,owner:gameObject);
-                        HeroVfxPool.Emit(HeroFxShape.Rift,ground+Vector3.up*.75f,Vector3.zero,new Vector3(.85f,1.55f,.85f),color,.30f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay);
-                        if(slot==3)HeroVfxPool.Emit(HeroFxShape.ShockDome,ground,Vector3.zero,new Vector3(3.2f,.95f,3.2f),color,.32f,HeroFxMotion.Contract,owner:gameObject,delay:impactDelay);
-                    }
-                    break;
+                    shape=slot==0?HeroFxShape.Bolt:slot==1?HeroFxShape.Rift:
+                        slot==2?HeroFxShape.Runes:HeroFxShape.Halo;
+                    point=hand;motion=HeroFxMotion.Contract;break;
+                default: shape=HeroFxShape.Burst;point=hand;break;
             }
+            HeroVfxPool.Emit(shape,point,point,
+                new Vector3(scale,scale*.52f,scale),bright,life,motion,facing,gameObject);
+            if(slot==3)
+                HeroVfxPool.Emit(HeroFxShape.Halo,chest,chest,
+                    Vector3.one*.70f,new Color(bright.r,bright.g,bright.b,.72f),
+                    .28f,HeroFxMotion.Contract,facing,gameObject);
         }
 
         private Vector3 ReleasePoint()
@@ -433,3 +398,4 @@ namespace Alterverse.Visuals
         };
     }
 }
+

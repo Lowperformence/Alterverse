@@ -13,11 +13,15 @@ namespace Alterverse.Visuals
             float beltWidth=heavy?.82f:.56f;
             Detail("Belt",new Vector3(0,-.29f,.04f),new Vector3(beltWidth,.12f,.46f),cloth);
             Detail("Buckle",new Vector3(0,-.29f,.29f),new Vector3(.17f,.14f,.075f),armorLight);
+            // A shared armor language makes every playable hero read as part of the same roster.
+            Plate("CollarTrim",new Vector3(0,.46f,.18f),heavy?.62f:.46f,.12f,.12f,armorLight);
+            Detail("ChestEnergySeal",new Vector3(0,.23f,.30f),new Vector3(.10f,.16f,.045f),teamEdge,default,null,true);
             for(int side=-1;side<=1;side+=2)
             {
                 string suffix=side<0?"L":"R";
                 Plate("Shin"+suffix,new Vector3(side*legWidth,-.70f,.11f),heavy?.23f:.17f,.33f,.10f,dark);
                 Bind("Shin"+suffix,"Leg"+suffix);
+                Plate("VambraceTrim"+suffix,new Vector3(side*(heavy?.52f:.39f),-.12f,.15f),heavy?.19f:.14f,.25f,.07f,armorLight,side*8,"Arm"+suffix);
                 Detail("Toe"+suffix,new Vector3(side*legWidth,-.865f,.19f),new Vector3(.21f,.055f,.20f),armorLight);
                 Bind("Toe"+suffix,"Boot"+suffix);
             }

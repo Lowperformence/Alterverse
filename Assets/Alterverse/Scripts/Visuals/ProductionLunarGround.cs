@@ -73,7 +73,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         LunarSurfaceField.Bake(out surfaceAlbedo,out surfaceNormals);
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
-        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
+        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",1.05f);regolith.EnableKeyword("_NORMALMAP");
         string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
             ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":

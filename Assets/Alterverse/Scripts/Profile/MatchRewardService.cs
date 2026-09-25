@@ -81,7 +81,8 @@ namespace Alterverse.Profile
             int xpBonus=Math.Max(0,xp-baseXp);
 
             int wins=ProfileTransaction.Add(MatchesWon,won?1:0);
-            ProfileTransaction.Commit(
+            var writes=new System.Collections.Generic.List<ProfileTransaction.Write>
+            {
                 new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,shards)),
                 new ProfileTransaction.Write("DF_AccountXP",next.ToString()),
                 new ProfileTransaction.Write(MatchesKey,ProfileTransaction.Add(MatchesCompleted,1)),
@@ -96,7 +97,9 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ReceiptShardBonus,shardBonus),
                 new ProfileTransaction.Write(ReceiptBaseXp,baseXp),
                 new ProfileTransaction.Write(ReceiptXpBonus,xpBonus),
-                new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic));
+                new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic)
+            };
+            ProfileTransaction.Commit(writes.ToArray());
 
             // Wing bonuses accelerate account progression only, never Battle Pass progression.
             BattlePassProgress.GrantMatchXp(baseXp,matchId);

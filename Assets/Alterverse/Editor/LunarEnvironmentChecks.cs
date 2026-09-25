@@ -34,7 +34,7 @@ namespace Alterverse.EditorChecks
                     if(Mathf.Abs(a.y-.2f)<.001f&&Mathf.Abs(b.y-.2f)<.001f&&Mathf.Abs(c.y-.2f)<.001f)Check(n.y>0,"top cap winding");
                     if(Mathf.Abs(a.y+.2f)<.001f&&Mathf.Abs(b.y+.2f)<.001f&&Mathf.Abs(c.y+.2f)<.001f)Check(n.y<0,"bottom cap winding");
                 }
-                Check(fragment.vertexCount==162&&fragment.triangles.Length==162,"fragment geometry budget changed");
+                Check(fragment.vertexCount==264&&fragment.triangles.Length==264,"fragment geometry budget changed");
             }
             finally{Object.DestroyImmediate(disc);Object.DestroyImmediate(fragment);}
             Debug.Log("DIMENSIONS FRONT lunar numeric checks passed. Visual/device acceptance still required.");

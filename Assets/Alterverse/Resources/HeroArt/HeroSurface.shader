@@ -1,6 +1,11 @@
 Shader "DimensionsFront/HeroSurface"
 {
- Properties { _BaseColor("Hit flash override",Color)=(1,1,1,0) _EnergyBoost("Attack energy",Float)=0 }
+ Properties
+ {
+  _BaseColor("Hit flash override",Color)=(1,1,1,0)
+  _EnergyBoost("Attack energy",Float)=0
+  _ShowcaseLighting("Portrait studio lighting",Range(0,1))=0
+ }
  SubShader
  {
   Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
@@ -13,40 +18,54 @@ Shader "DimensionsFront/HeroSurface"
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
-   struct A { float4 position:POSITION; float3 normal:NORMAL; half4 color:COLOR; };
-   struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; };
+   struct A { float4 position:POSITION; float3 normal:NORMAL; half4 color:COLOR; half2 finish:TEXCOORD1; };
+   struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; };
    CBUFFER_START(UnityPerMaterial)
    half4 _BaseColor;
    half _EnergyBoost;
+   half _ShowcaseLighting;
    CBUFFER_END
-   V vert(A i) { V o;o.position=TransformObjectToHClip(i.position.xyz);o.world=TransformObjectToWorld(i.position.xyz);o.normal=TransformObjectToWorldNormal(i.normal);o.color=i.color;return o; }
+   V vert(A i)
+   {
+    V o;o.position=TransformObjectToHClip(i.position.xyz);o.world=TransformObjectToWorld(i.position.xyz);
+    o.normal=TransformObjectToWorldNormal(i.normal);o.color=i.color;o.finish=i.finish;return o;
+   }
+   half3 Lobe(half3 n,half3 view,half3 direction,half3 lightColor,half3 albedo,half metal,half smoothness)
+   {
+    half ndl=saturate(dot(n,direction));
+    half diffuse=smoothstep(-.18h,.88h,dot(n,direction));
+    half power=lerp(12.0h,96.0h,smoothness);
+    half spec=pow(saturate(dot(n,SafeNormalize(direction+view))),power)*ndl;
+    half3 specColor=lerp(half3(.16h,.18h,.21h),lerp(albedo,1.0h,.52h),metal);
+    half broad=pow(saturate(dot(n,SafeNormalize(direction+view))),lerp(5.0h,18.0h,smoothness))*ndl;
+    return (albedo*diffuse*(1.0h-metal*.28h)+specColor*(spec*(.65h+smoothness*.7h)+broad*.12h*smoothness))*lightColor;
+   }
    half4 frag(V i):SV_Target
    {
-    half3 n=normalize(i.normal);Light key=GetMainLight();half3 view=SafeNormalize(GetWorldSpaceViewDir(i.world));
-
-    // Global hero saturation pass. Keep each authored hue/palette intact and only increase
-    // chroma uniformly so pale character surfaces read more clearly in combat.
-    half3 authoredColor=i.color.rgb;
-    half authoredLuma=dot(authoredColor,half3(.2126h,.7152h,.0722h));
-    authoredColor=saturate(lerp(authoredLuma.xxx,authoredColor,1.15h));
-    half3 albedo=lerp(authoredColor,_BaseColor.rgb,_BaseColor.a);
-
-    half diffuse=.25h+.75h*saturate(dot(n,key.direction));
-    half3 ambient=max(SampleSH(n),half3(.20h,.22h,.26h));
-    half rim=pow(1-saturate(dot(n,view)),3)*.13h;
-    half spec=pow(saturate(dot(n,SafeNormalize(key.direction+view))),20)*.09h;
-
-    // Contrast pass remains independent from the saturation pass above:
-    // only LIGHTING luminance is expanded here, preserving scene-light chromaticity.
-    // The previous per-channel 0.48 floor lifted shadows into pale midtones and made bright
-    // heroes look washed out. This curve restores darker shade separation and clearer highlights.
-    half3 rawIllumination=ambient*.45h+key.color*diffuse;
-    half rawLuma=max(dot(rawIllumination,half3(.2126h,.7152h,.0722h)),.001h);
-    half contrastLuma=lerp(.36h,1.12h,smoothstep(.34h,.96h,rawLuma));
-    half3 illumination=rawIllumination*(contrastLuma/rawLuma);
-
-    half3 lit=albedo*illumination+spec*min(key.color,1.0h)*.4h+rim*albedo;
-    return half4(lerp(lit,albedo*(1.35h+_EnergyBoost*.55h),saturate(i.color.a)),1);
+    half3 n=normalize(i.normal),view=SafeNormalize(GetWorldSpaceViewDir(i.world));
+    half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,saturate(_BaseColor.a));
+    half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
+    Light key=GetMainLight();
+    half3 ambient=max(SampleSH(n),half3(.16h,.19h,.24h));
+    half3 worldLight=albedo*ambient*.65h+Lobe(n,view,key.direction,min(key.color,1.6h),albedo,metal,smoothness);
+    // Camera-space studio rig is isolated per portrait renderer with a property block.
+    // It stays stable across planets and doesn't need extra per-pixel lights on Android.
+    half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));
+    half3 vv=normalize(mul((float3x3)UNITY_MATRIX_V,view));
+    half3 studio=albedo*half3(.15h,.18h,.24h);
+    studio+=Lobe(nv,vv,normalize(half3(-.45h,.65h,.80h)),half3(.98h,.96h,.92h),albedo,metal,smoothness);
+    studio+=Lobe(nv,vv,normalize(half3(.75h,.10h,.55h)),half3(.18h,.28h,.40h),albedo,metal,smoothness);
+    half fresnel=pow(1.0h-saturate(dot(n,view)),3.5h);
+    half rimSide=smoothstep(-.35h,.75h,nv.x);
+    half3 rimColor=lerp(half3(.30h,.42h,.65h),half3(.38h,.72h,.95h),rimSide);
+    half upper=saturate(n.y*.5h+.5h);
+    half3 bounce=albedo*half3(.08h,.11h,.16h)*(1.0h-upper);
+    half silhouette=pow(1.0h-saturate(dot(n,view)),2.4h);
+    half3 lit=lerp(worldLight,studio,_ShowcaseLighting)+bounce;
+    lit+=rimColor*silhouette*lerp(.22h,.48h,_ShowcaseLighting)*(1.0h-metal*.18h);
+    lit+=albedo*fresnel*metal*.13h;
+    half3 energy=albedo*(1.42h+_EnergyBoost*.60h)+rimColor*fresnel*.30h;
+    return half4(lerp(lit,energy,saturate(i.color.a)),1);
    }
    ENDHLSL
   }
@@ -54,4 +73,3 @@ Shader "DimensionsFront/HeroSurface"
   UsePass "Universal Render Pipeline/Lit/DepthOnly"
  }
 }
-

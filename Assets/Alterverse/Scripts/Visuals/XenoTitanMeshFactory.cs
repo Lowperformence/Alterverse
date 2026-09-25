@@ -7,28 +7,49 @@ namespace Alterverse.Visuals
     {
         public static Mesh Plate(string name,Vector2[] profile,float depth)
         {
+            // Three contour rings form a broad face, a narrow light-catching bevel and a side wall.
+            // The same mesh language applies to titans, guardians and planet-specific mechs.
             int n=profile.Length;
-            Vector3[] v=new Vector3[n*2];
+            Vector2 center=Vector2.zero;
+            float area=0f;
             for(int i=0;i<n;i++)
             {
-                v[i]=new Vector3(profile[i].x,profile[i].y,-depth*.5f);
-                v[i+n]=new Vector3(profile[i].x,profile[i].y,depth*.5f);
+                center+=profile[i];
+                Vector2 a=profile[i],b=profile[(i+1)%n];
+                area+=a.x*b.y-b.x*a.y;
             }
-            int[] t=new int[(n-2)*6+n*6];
+            center/=n;
+            bool ccw=area>=0f;
+            float lip=Mathf.Min(.045f,depth*.28f);
+            Vector3[] vertices=new Vector3[n*3];
+            for(int i=0;i<n;i++)
+            {
+                Vector2 p=profile[i];
+                Vector2 inset=Vector2.Lerp(p,center,.085f);
+                vertices[i]=new Vector3(p.x,p.y,-depth*.5f);
+                vertices[i+n]=new Vector3(p.x,p.y,depth*.5f-lip);
+                vertices[i+n*2]=new Vector3(inset.x,inset.y,depth*.5f);
+            }
+            int[] triangles=new int[((n-2)*2+n*4)*3];
             int q=0;
+            void Tri(int a,int b,int c,bool front)
+            {
+                if(ccw==front){triangles[q++]=a;triangles[q++]=b;triangles[q++]=c;}
+                else {triangles[q++]=a;triangles[q++]=c;triangles[q++]=b;}
+            }
             for(int i=1;i<n-1;i++)
             {
-                t[q++]=0;t[q++]=i+1;t[q++]=i;
-                t[q++]=n;t[q++]=n+i;t[q++]=n+i+1;
+                Tri(0,i,i+1,false);
+                Tri(n*2,n*2+i,n*2+i+1,true);
             }
             for(int i=0;i<n;i++)
             {
                 int j=(i+1)%n;
-                t[q++]=i;t[q++]=j;t[q++]=n+j;
-                t[q++]=i;t[q++]=n+j;t[q++]=n+i;
+                Tri(i,j,n+j,true);Tri(i,n+j,n+i,true);
+                Tri(n+i,n+j,n*2+j,true);Tri(n+i,n*2+j,n*2+i,true);
             }
-            Mesh m=new(){name=name,vertices=v,triangles=t};
-            m.RecalculateNormals();m.RecalculateBounds();return m;
+            Mesh mesh=new(){name=name,vertices=vertices,triangles=triangles};
+            mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
 
         public static Mesh HeadShell(string name)

@@ -3,7 +3,7 @@ namespace Alterverse.Visuals
 {
 public sealed partial class StylizedHeroVisual:MonoBehaviour
 {
-private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();HeroVfxPool.Warm();}}
+private bool voidfall,betaSupporterWings,plagueWings,weaponOverdrive;private HeroIdentity identity;private TeamMember team;private bool built;private Color accent,dark,teamEdge;private Transform root;private void Awake(){Build();}private void Start(){Build();}public void Build(){if(built)return;identity=GetComponent<HeroIdentity>();team=GetComponent<TeamMember>();if(identity==null)return;built=true;var skinPreview=GetComponent<Alterverse.Shop.SkinPreviewSelection>();Alterverse.Shop.UniversalHeroCosmetic cosmetic=skinPreview!=null?skinPreview.UniversalCosmetic:GetComponent<HeroRespawn>()!=null?Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(identity.Hero):Alterverse.Shop.UniversalHeroCosmetic.Original;voidfall=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.Voidfall;betaSupporterWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings;plagueWings=cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings;weaponOverdrive=skinPreview!=null?skinPreview.WeaponOverdrive:GetComponent<HeroRespawn>()!=null&&Alterverse.Shop.WeaponSkinInventory.Equipped(identity.Hero);accent=StylizedArtDirection.HeroAccent(identity.Hero);dark=Color.Lerp(accent,new Color(.13f,.16f,.21f),.85f);teamEdge=team!=null&&team.Team==1?StylizedArtDirection.LumenEnergy:StylizedArtDirection.ZeroEnergy;Renderer baseRenderer=GetComponent<Renderer>();if(baseRenderer!=null)baseRenderer.enabled=false;root=new GameObject("DF_VisualRoot").transform;root.SetParent(transform,false);BuildProductionHero();BindArmor();if(weaponOverdrive)ApplyWeaponOverdrive();CombineMovingPanels();CombineStaticPanels();if(voidfall)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).Build(root,skinPreview!=null);else if(betaSupporterWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildBetaSupporter(root,skinPreview!=null,identity.Hero);else if(plagueWings)(GetComponent<VoidWingPresentation>()??gameObject.AddComponent<VoidWingPresentation>()).BuildPlague(root,skinPreview!=null,identity.Hero);if(GetComponent<HeroVisualMotion>()==null)gameObject.AddComponent<HeroVisualMotion>();if(GetComponent<FounderHeroVisual>()==null)gameObject.AddComponent<FounderHeroVisual>();if(GetComponent<Health>()!=null){if(GetComponent<LunarFootprintTrail>()==null)gameObject.AddComponent<LunarFootprintTrail>();if(GetComponent<HeroAttackReadabilityPresentation>()==null)gameObject.AddComponent<HeroAttackReadabilityPresentation>();HeroVfxPool.Warm();}}
 private void CreateLegs(float width){Create("LegL",PrimitiveType.Capsule,new Vector3(-width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("LegR",PrimitiveType.Capsule,new Vector3(width,-.62f,0),new Vector3(.18f,.45f,.18f),dark);Create("BootL",PrimitiveType.Cube,new Vector3(-width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);Create("BootR",PrimitiveType.Cube,new Vector3(width,-.91f,.08f),new Vector3(.24f,.14f,.36f),accent);}
 private void CompleteArmor(float width)
 {
@@ -142,13 +142,13 @@ if(armorMesh==null)armorMesh=BuildBeveledArmor();
 mesh=armorMesh;
 }
 Mesh colored=Instantiate(mesh);colored.name=mesh.name+"_HeroColor";detailMeshes.Add(colored);
-HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n));
+HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n),color==cloth||color==dark?0:1);
 part.AddComponent<MeshFilter>().sharedMesh=colored;
 MeshRenderer renderer=part.AddComponent<MeshRenderer>();
 renderer.sharedMaterial=MaterialFor(color, IsEnergySurface(n));
 return part;
 }
-private static bool IsEnergySurface(string name) => name=="Eye"||name=="Visor"||name=="Core"||name=="ChestGem"||name=="ChestLeaf"||name=="Reactor"||name=="ShieldLine"||name=="TeamInsignia"||name=="ProjectorL"||name=="ProjectorR"||name=="ChestSlash";
+private static bool IsEnergySurface(string name) => name=="Eye"||name=="Visor"||name=="Core"||name=="ChestGem"||name=="ChestLeaf"||name=="Reactor"||name=="ShieldLine"||name=="TeamInsignia"||name=="ProjectorL"||name=="ProjectorR"||name=="ChestSlash"||name=="HammerPowerSpine"||name=="HammerStrikeLens"||name=="MuzzleCrown";
 private Material MaterialFor(Color color, bool energy=false)
 {
 if(palette.TryGetValue((color,energy),out Material cached))return cached;
@@ -192,7 +192,7 @@ AddFace(vertices,triangles,new[]{fa,a,b,fb});
 AddFace(vertices,triangles,new[]{b,a,ba,bb});
 AddFace(vertices,triangles,new[]{bb,ba,new Vector3(fa.x,fa.y,-fa.z),new Vector3(fb.x,fb.y,-fb.z)});
 }
-Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false);detailMeshes.Add(mesh);
+Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false,color==cloth||color==dark?0:1);detailMeshes.Add(mesh);
 GameObject part=new GameObject("DF_"+name);part.transform.SetParent(root,false);part.transform.localPosition=position;
 part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color);
 }
@@ -208,15 +208,8 @@ if(weaponMaterial.HasProperty("_Smoothness"))weaponMaterial.SetFloat("_Smoothnes
 if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_EMISSION");weaponMaterial.SetColor("_EmissionColor",glow*3.4f);}
 ownedMaterials.Add(weaponMaterial);
 
-// Keep cosmetic weapons attached to their animated hand pivots.
-if(identity.Hero==HeroId.Veyr)ApplyNullEdgeOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Kaelon)ApplyAnchorHammerOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Rook)ApplyBreakerFistOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Elyra)ApplyAstralOrbitOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Mira)ApplyLifeweaveOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Nyra)ApplyStarlineOverdrive(shader,weaponMaterial);
-else if(identity.Hero==HeroId.Traveler)ApplyPlanetFluxEpic(shader,weaponMaterial);
-else ScaleAndGlow("WeaponR",1.25f,weaponMaterial);
+// Build an exclusive silhouette on the existing animation pivots.
+BuildSignatureWeapon(shader,weaponMaterial);
 }
 
 private void ApplyNullEdgeOverdrive(Shader shader,Material voidMaterial)
@@ -714,6 +707,15 @@ private void Bind(string childName,string parentName)
 Transform child=root.Find("DF_"+childName),parent=root.Find("DF_"+parentName);
 if(child!=null&&parent!=null)child.SetParent(parent,true);
 }
+internal static bool IsFlowingFabric(string name)
+{
+    return name=="DF_Cape"||name=="DF_CoatTailR"||
+        name=="DF_TravelerMantleBack"||name=="DF_TravelerMantleL"||name=="DF_TravelerMantleR"||
+        name=="DF_TravelerMantleSpine"||name.StartsWith("DF_TravelerMantleSeam")||
+        name.StartsWith("DF_TravelerMantleFold")||name.StartsWith("DF_TravelerFront")||
+        name=="DF_TahlaRobeFront"||name=="DF_TahlaRobeBack"||
+        name=="DF_TahlaRobeSideL"||name=="DF_TahlaRobeSideR";
+}
 private void CombineStaticPanels()
 {
 var groups=new System.Collections.Generic.Dictionary<Material,System.Collections.Generic.List<CombineInstance>>();
@@ -721,7 +723,7 @@ var remove=new System.Collections.Generic.List<GameObject>();
 var animated=new System.Collections.Generic.HashSet<string>{"DF_LegL","DF_LegR","DF_BootL","DF_BootR","DF_ArmL","DF_ArmR","DF_GauntletL","DF_GauntletR","DF_OrbitL","DF_OrbitR","DF_WingL","DF_WingR","DF_Cape","DF_BladeR","DF_WeaponR","DF_WeaponL","DF_Orb"};
 foreach(Transform part in root)
 {
-if(animated.Contains(part.name))continue;
+if(animated.Contains(part.name)||IsFlowingFabric(part.name))continue;
 MeshFilter filter=part.GetComponent<MeshFilter>();MeshRenderer renderer=part.GetComponent<MeshRenderer>();
 if(filter==null||renderer==null||renderer.sharedMaterial==null)continue;
 Material material=renderer.sharedMaterial;if(!groups.TryGetValue(material,out var list)){list=new System.Collections.Generic.List<CombineInstance>();groups.Add(material,list);}
@@ -828,6 +830,7 @@ foreach(Material material in ownedMaterials)if(material!=null)Destroy(material);
 }
 }
 }
+
 
 
 

@@ -9,38 +9,56 @@ namespace Alterverse.Visuals
     {
         private static readonly Dictionary<string,Mesh> meshes=new();
         private static readonly Dictionary<(Color,int),Material> materials=new();
-        private static readonly Dictionary<(Mesh,Color,bool),Mesh> painted=new();
+        private static readonly Dictionary<(Mesh,Color,bool,int),Mesh> painted=new();
         private static Material heroSurface;
-        internal static Mesh Painted(Mesh mesh,Color color,bool energy)
+        internal static Mesh Painted(Mesh mesh,Color color,bool energy,int finish=1)
         {
-            var key=(mesh,color,energy);if(painted.TryGetValue(key,out Mesh result)&&result!=null)return result;
+            var key=(mesh,color,energy,finish);if(painted.TryGetValue(key,out Mesh result)&&result!=null)return result;
             result=UnityEngine.Object.Instantiate(mesh);result.name=mesh.name+"_Palette";
-            Paint(result,color,energy);painted[key]=result;return result;
+            Paint(result,color,energy,finish);painted[key]=result;return result;
         }
-        internal static void Paint(Mesh mesh,Color color,bool energy)
+        internal static void Paint(Mesh mesh,Color color,bool energy,int finish=1)
         {
             var colors=new Color[mesh.vertexCount];color.a=energy?1:0;
-            for(int i=0;i<colors.Length;i++)colors[i]=color;mesh.colors=colors;
+            var surface=new Vector2[mesh.vertexCount];
+            Vector2 response=finish==0?new Vector2(0,.22f):new Vector2(.62f,.66f);
+            for(int i=0;i<colors.Length;i++){colors[i]=color;surface[i]=response;}
+            mesh.colors=colors;mesh.uv2=surface;
         }
-        internal static Mesh Loft(string key,float[] y,float[] width,float[] depth,float[] forward=null,int sides=12)
+        internal static Mesh Loft(string key,float[] y,float[] width,float[] depth,float[] forward=null,int sides=16)
         {
             if(meshes.TryGetValue(key,out Mesh cached)&&cached!=null)return cached;
-            var v=new List<Vector3>();var t=new List<int>();
+            var v=new List<Vector3>();var normals=new List<Vector3>();var t=new List<int>();
             Vector3 Point(int ring,int side)
             {
                 float angle=(side+.5f)*Mathf.PI*2/sides;
                 return new Vector3(Mathf.Cos(angle)*width[ring],y[ring],Mathf.Sin(angle)*depth[ring]+(forward==null?0:forward[ring]));
             }
-            for(int ring=0;ring<y.Length-1;ring++)for(int s=0;s<sides;s++)
-                Face(v,t,Point(ring,s),Point(ring+1,s),Point(ring+1,(s+1)%sides),Point(ring,(s+1)%sides));
+            // Shared rings and analytic elliptical normals remove the old per-quad facets.
+            // Caps get their own vertices so their edges stay crisp. No geometry is rebuilt in Update.
+            for(int ring=0;ring<y.Length;ring++)for(int side=0;side<sides;side++)
+            {
+                int lo=Mathf.Max(0,ring-1),hi=Mathf.Min(y.Length-1,ring+1);
+                float angle=(side+.5f)*Mathf.PI*2/sides,c=Mathf.Cos(angle),sn=Mathf.Sin(angle);
+                Vector3 rise=new Vector3(c*(width[hi]-width[lo]),y[hi]-y[lo],
+                    sn*(depth[hi]-depth[lo])+(forward==null?0:forward[hi]-forward[lo]));
+                Vector3 around=new Vector3(-sn*width[ring],0,c*depth[ring]);
+                v.Add(Point(ring,side));normals.Add(Vector3.Cross(rise,around).normalized);
+            }
+            for(int ring=0;ring<y.Length-1;ring++)for(int side=0;side<sides;side++)
+            {
+                int next=(side+1)%sides,a=ring*sides+side,b=(ring+1)*sides+side;
+                int c=(ring+1)*sides+next,d=ring*sides+next;
+                t.Add(a);t.Add(b);t.Add(c);t.Add(a);t.Add(c);t.Add(d);
+            }
             for(int cap=0;cap<2;cap++)
             {
-                int ring=cap==0?0:y.Length-1;
-                for(int s=1;s<sides-1;s++)
-                    if(cap==0)Face(v,t,Point(ring,0),Point(ring,s),Point(ring,s+1));
-                    else Face(v,t,Point(ring,0),Point(ring,s+1),Point(ring,s));
+                int ring=cap==0?0:y.Length-1,start=v.Count;
+                for(int side=0;side<sides;side++){v.Add(Point(ring,side));normals.Add(cap==0?Vector3.down:Vector3.up);}
+                for(int side=1;side<sides-1;side++)
+                {t.Add(start);t.Add(start+(cap==0?side:side+1));t.Add(start+(cap==0?side+1:side));}
             }
-            Mesh mesh=new Mesh{name=key};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            Mesh mesh=new Mesh{name=key};mesh.SetVertices(v);mesh.SetNormals(normals);mesh.SetTriangles(t,0);mesh.RecalculateBounds();
             meshes[key]=mesh;return mesh;
         }
         internal static Mesh Ribbon(string key,Vector3[] centers,float[] widths,float thickness)
@@ -87,3 +105,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

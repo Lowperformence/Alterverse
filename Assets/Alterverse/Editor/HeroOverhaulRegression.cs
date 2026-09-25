@@ -91,6 +91,8 @@ namespace Alterverse.EditorChecks
                 Assert(heal.TryCast(1,null,Vector3.zero),"Support can heal without an enemy.");
                 Assert(Mathf.Abs(ally.Current-(ally.Max-28))<.01f && distant.Current==distant.Max-100,"Healing amount and range are exact.");
                 Assert(heal.TryCast(2,null,Vector3.zero)&&ally.Shield==50,"Support E grants a real shield.");
+                ally.RestoreFull();Unlock(heal);
+                Assert(heal.TryCast(2,null,Vector3.zero)&&ally.Shield==50,"Support E protects a full-health ally without a collider.");
                 for(int i=0;i<HeroIdentity.HeroCount;i++)
                 {
                     GameObject visual=Hero((HeroId)i,i%2,new Vector3(3000+i*10,1,3000));
