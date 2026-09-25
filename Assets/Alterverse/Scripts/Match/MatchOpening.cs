@@ -4,6 +4,7 @@ namespace Alterverse.Match
 public sealed class MatchOpening:MonoBehaviour
 {
 [SerializeField]private float messageSeconds=2.2f;
+private const int OpeningMatchLimit=15;
 private const string Rules="SCORE KILLS TO WIN\nCAPTURE THE HOT ZONE FOR MECH SUPPORT\nCAPTURE PLANETS FOR +1 MINUTE";
 private const string BomberWarning="WARNING: SPACE BOMBERS DAMAGE EVERY PLAYER";
 private string display="";
@@ -14,6 +15,12 @@ private float phaseElapsed,phaseDuration;
 private IEnumerator Start()
 {
     while(Alterverse.UI.MainMenuController.IsVisible)yield return null;
+
+    // The opening is onboarding: show it for the player's first 15 completed-match slots only.
+    // MatchesCompleted is already persisted by the profile reward service, so this survives restarts
+    // without introducing a second round counter.
+    if(Alterverse.Profile.MatchRewardService.MatchesCompleted>=OpeningMatchLimit)yield break;
+
     MatchClock.Set(PauseReason.Opening,true);ownsPause=true;visible=true;
 
     SetPhase("REALITY COLLIDE",messageSeconds);
