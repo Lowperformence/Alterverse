@@ -209,11 +209,30 @@ namespace Alterverse.Visuals
                 case HeroId.Traveler:
                     {
                         Color light=Color.Lerp(c,Color.white,.66f);
-                        Color red=new(1f,.035f,.025f);
-                        Fx(HeroFxShape.Ring,p,c,size*(slot==3?1.45f:1.05f),slot==3?.24f:.15f,HeroFxMotion.Contract,facing*Quaternion.Euler(90,0,0),actor);
-                        Fx(HeroFxShape.Rift,p,DarkCore,size*(slot==3?1.25f:.82f),.16f,HeroFxMotion.Contract,facing,actor);
-                        Fx(HeroFxShape.Burst,p,light,size*(slot==3?1.15f:.68f),.10f,rotation:facing,actor:actor);
-                        Fx(HeroFxShape.Shard,p+actor.transform.right*.06f,new Color(red.r,red.g,red.b,.78f),size*.42f,.12f,HeroFxMotion.Contract,actor:actor);
+                        Color red=new(1f,.035f,.025f,.82f);
+                        // Each slot reads at the hand and chest, without painting another floor ring.
+                        if(slot==0)
+                        {
+                            Fx(HeroFxShape.Bolt,p,light,.42f,.14f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Ring,p,c,.34f,.17f,HeroFxMotion.Contract,facing*Quaternion.Euler(90,0,0),actor);
+                        }
+                        else if(slot==1)
+                        {
+                            Fx(HeroFxShape.Rift,Chest(actor),DarkCore,.59f,.24f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Shard,p,red,.37f,.19f,HeroFxMotion.Contract,facing,actor);
+                        }
+                        else if(slot==2)
+                        {
+                            Fx(HeroFxShape.Rift,p,DarkCore,.68f,.26f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Runes,p,red,.47f,.24f,HeroFxMotion.Orbit,facing,actor);
+                        }
+                        else
+                        {
+                            Fx(HeroFxShape.Ring,p,light,.83f,.30f,HeroFxMotion.Contract,facing*Quaternion.Euler(90,0,0),actor);
+                            Fx(HeroFxShape.Rift,p,DarkCore,.72f,.30f,HeroFxMotion.Contract,facing,actor);
+                            Fx(HeroFxShape.Shard,p+actor.transform.right*.18f,red,.47f,.26f,HeroFxMotion.Orbit,facing,actor);
+                            Fx(HeroFxShape.Shard,p-actor.transform.right*.18f,red,.47f,.26f,HeroFxMotion.Orbit,facing,actor);
+                        }
                         break;
                     }
                 case HeroId.Rook:
@@ -330,6 +349,19 @@ namespace Alterverse.Visuals
                 case HeroId.Mira:Projectile(actor,impact,slot,travelTime,target);break;
                 case HeroId.Traveler:
                     if(slot==0)Projectile(actor,impact,slot,travelTime,target);
+                    else if(slot==2)
+                    {
+                        Vector3 seal=impact+Vector3.up*.38f;
+                        Fx(HeroFxShape.Rift,seal,DarkCore,.73f,.30f,HeroFxMotion.Contract,Face(actor.transform.position,impact),actor);
+                        Fx(HeroFxShape.Runes,seal,new Color(1f,.08f,.055f,.84f),.62f,.28f,HeroFxMotion.Orbit,actor:actor);
+                    }
+                    else if(slot==3)
+                    {
+                        Vector3 rupture=impact+Vector3.up*.55f;
+                        Fx(HeroFxShape.Rift,rupture,DarkCore,1.14f,.36f,HeroFxMotion.Contract,Face(actor.transform.position,impact),actor);
+                        Fx(HeroFxShape.Halo,rupture,Color.Lerp(Accent(actor),Color.white,.65f),.90f,.26f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Shard,rupture+Vector3.up*.32f,new Color(1f,.045f,.03f),.69f,.24f,HeroFxMotion.Contract,actor:actor);
+                    }
                     break;
             }
         }
