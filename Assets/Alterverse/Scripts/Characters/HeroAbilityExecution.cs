@@ -45,7 +45,7 @@ namespace Alterverse.Characters
         public Health WoundedAlly(float range, bool shield = false)
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
-            Health best = null; float lowest = shield ? .98f : .95f;
+            Health best = null; float lowest = shield ? 1.01f : .95f;
             float rangeSqr=range*range;
             // Support targeting must not depend on a physics collider. Heroes are valid combat
             // targets through Health/TeamMember even while a collider is absent or temporarily disabled.
