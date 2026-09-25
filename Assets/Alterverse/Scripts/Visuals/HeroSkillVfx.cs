@@ -59,7 +59,7 @@ namespace Alterverse.Visuals
             HeroVfxPool.Emit(h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Bolt,start,end,
                 new Vector3(.16f,.16f,.46f)*strength,Color.Lerp(c,Color.white,.72f),
                 flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
-            for(int streak=0;streak<2;streak++)
+            for(int streak=0;streak<(slot<0?1:2);streak++)
                 HeroVfxPool.Emit(HeroFxShape.Shard,start,end,
                     new Vector3(.075f,.14f,.09f)*strength,new Color(c.r,c.g,c.b,.62f),
                     flight*.85f,HeroFxMotion.Travel,Face(start,end)*Quaternion.Euler(0,0,streak==0?36:-36),
@@ -332,20 +332,34 @@ namespace Alterverse.Visuals
             switch(hero)
             {
                 case HeroId.Elyra:
-                    Fx(HeroFxShape.Runes,contact,accent,size,life,HeroFxMotion.Contract,actor:actor);
-                    if(slot==3)Fx(HeroFxShape.Orb,contact+Vector3.up*.35f,DarkCore,.55f,.24f,HeroFxMotion.Contract,actor:actor);
+                    Fx(HeroFxShape.Runes,contact+Vector3.up*.24f,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                    if(slot==3)
+                    {
+                        Fx(HeroFxShape.Orb,contact+Vector3.up*.58f,DarkCore,.88f,.32f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Halo,contact+Vector3.up*.58f,Color.Lerp(accent,Color.white,.52f),.82f,.28f,HeroFxMotion.Contract,actor:actor);
+                    }
                     break;
                 case HeroId.Mira:
-                    Fx(HeroFxShape.Petals,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    Fx(HeroFxShape.Petals,contact+Vector3.up*.25f,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    if(slot==3)
+                    {
+                        Fx(HeroFxShape.Plus,contact+Vector3.up*.75f,Color.Lerp(accent,Color.white,.70f),
+                            .92f,.34f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Halo,contact+Vector3.up*.62f,accent,.87f,.34f,HeroFxMotion.Contract,actor:actor);
+                    }
                     break;
                 case HeroId.Kaelon:
-                    Fx(HeroFxShape.Hex,contact,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                    Fx(HeroFxShape.Hex,contact+Vector3.up*.18f,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                    if(slot==3)Fx(HeroFxShape.Shield,contact+Vector3.up*.70f,
+                        Color.Lerp(accent,Color.white,.48f),.86f,.31f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Rook:
                     Fx(HeroFxShape.Cracks,ground+Vector3.up*.015f,accent,size,life,HeroFxMotion.Expand,actor:actor);
+                    if(slot==3)Fx(HeroFxShape.Burst,contact+Vector3.up*.45f,
+                        new Color(1f,.38f,.06f),.84f,.27f,HeroFxMotion.Contract,actor:actor);
                     break;
                 case HeroId.Traveler:
-                    Fx(HeroFxShape.Rift,contact+Vector3.up*.22f,DarkCore,size,.24f,HeroFxMotion.Contract,actor:actor);
+                    TravelerPortal(actor,contact+Vector3.up*.56f,slot==3?1.0f:.63f,.30f,true);
                     break;
                 default:
                     Fx(HeroFxShape.Burst,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
@@ -424,8 +438,11 @@ namespace Alterverse.Visuals
                 case HeroId.Nyra:
                     {
                         Color sniperRed=new(1f,.045f,.025f);
-                        Fx(HeroFxShape.Burst,p,sniperRed,strength*2.15f,.13f,rotation:Face(actor.transform.position,p));
-                        Fx(HeroFxShape.Halo,p,Color.Lerp(sniperRed,Color.white,.35f),strength*.92f,.11f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Burst,p,sniperRed,strength*2.15f,.16f,rotation:Face(actor.transform.position,p));
+                        Fx(HeroFxShape.Halo,p,Color.Lerp(sniperRed,Color.white,.35f),strength*.92f,.17f,HeroFxMotion.Contract,actor:actor);
+                        if(slot==2)Fx(HeroFxShape.Runes,p,sniperRed,strength*1.5f,.24f,HeroFxMotion.Contract,actor:actor);
+                        if(slot==3)Fx(HeroFxShape.Shard,p+Vector3.up*.20f,
+                            Color.Lerp(sniperRed,Color.white,.62f),strength*1.7f,.18f,HeroFxMotion.Contract,actor:actor);
                         break;
                     }
                 case HeroId.Elyra:
@@ -439,7 +456,7 @@ namespace Alterverse.Visuals
                 case HeroId.Traveler:
                     {
                         Color light=Color.Lerp(c,Color.white,.70f);
-                        Color red=new(1f,.035f,.025f,.78f);
+                        Color red=new(.74f,.30f,1f,.86f);
                         Fx(HeroFxShape.Halo,p,light,strength*1.55f,.13f,HeroFxMotion.Contract,actor:actor);
                         Fx(HeroFxShape.Ring,p,c,strength*1.35f,.16f,HeroFxMotion.Contract,Face(actor.transform.position,p)*Quaternion.Euler(90,0,0),actor);
                         Fx(HeroFxShape.Rift,p,DarkCore,strength*.85f,.13f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
