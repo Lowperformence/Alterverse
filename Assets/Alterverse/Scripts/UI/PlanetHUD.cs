@@ -34,7 +34,7 @@ namespace Alterverse.UI
                 if(playerBuff!=null&&playerBuff.ActiveRemaining>0)
                 {
                     Rect r=new Rect(16,126,218,64);theme.Panel(r);
-                    string effect=playerBuff.FluxActive&&playerBuff.GuardActive?"-18% CD · +8% MOVE · -18% DAMAGE TAKEN\n+45% MINION DAMAGE":playerBuff.FluxActive?"-18% CD · +8% MOVE\n+30% MINION DAMAGE":"-18% DAMAGE TAKEN\n+15% MINION DAMAGE";
+                    string effect=playerBuff.FluxActive&&playerBuff.GuardActive?"-18% CD · +10% MOVE · -18% DAMAGE TAKEN\n+30% MINION DAMAGE":playerBuff.FluxActive?"-18% CD · +10% MOVE\n+15% MINION DAMAGE":"-18% DAMAGE TAKEN\n+15% MINION DAMAGE";
                     string name=playerBuff.FluxActive&&playerBuff.GuardActive?"FLUX + GUARD":playerBuff.FluxActive?"FLUX":"GUARD";
                     theme.Label(new Rect(r.x+10,r.y+4,198,20),$"{name}   {Mathf.CeilToInt(playerBuff.ActiveRemaining)}s",small);
                     theme.Label(new Rect(r.x+10,r.y+25,198,36),effect,small,true);
