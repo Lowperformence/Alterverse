@@ -166,6 +166,9 @@ namespace Alterverse.Visuals
                 new[]{.005f,.15f,.17f,.005f},
                 new[]{.005f,.13f,.15f,.005f});
             Sculpt("Orb",crystal,new Vector3(0,.86f,.06f),Vector3.one,violetHot,weapon,true);
+            GameObject coreRim=Sculpt("MageCrystalGuard",HeroMeshLibrary.Ring("DF_IoneCrystalGuard",.175f,.012f),
+                new Vector3(0,.86f,.072f),Vector3.one,silver,weapon);
+            coreRim.transform.localRotation=Quaternion.Euler(82f,0f,-12f);
 
             GameObject ringA=Sculpt("MageOrbitRingA",HeroMeshLibrary.Ring("DF_IoneStaffRingA",.28f,.021f),
                 new Vector3(0,.86f,.06f),Vector3.one,silver,weapon);
