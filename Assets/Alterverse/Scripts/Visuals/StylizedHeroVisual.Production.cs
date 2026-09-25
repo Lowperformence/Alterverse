@@ -261,6 +261,9 @@ namespace Alterverse.Visuals
                 new[]{.010f,.085f,.060f,.004f},
                 new[]{.010f,.068f,.052f,.004f});
             Sculpt("EmitterLens",crystal,new Vector3(0,.77f,.065f),new Vector3(1.15f,1.20f,1.10f),cyanHot,weapon,true);
+            GameObject halo=Sculpt("StaffCrownOuter",HeroMeshLibrary.Ring("DF_TahlaStaffOuter",.31f,.014f),
+                new Vector3(0,.77f,.055f),Vector3.one,gold,weapon);
+            halo.transform.localRotation=Quaternion.Euler(70f,0f,-23f);
 
             for(int side=-1;side<=1;side+=2)
             {
@@ -418,6 +421,8 @@ namespace Alterverse.Visuals
                 new Vector3(.060f,.52f,.060f),steel,new Vector3(90,0,0),weapon);
             Create("MuzzleBrake",PrimitiveType.Cube,new Vector3(0,.015f,1.28f),
                 new Vector3(.16f,.14f,.22f),black,default,weapon);
+            Create("MuzzleCrown",PrimitiveType.Cube,new Vector3(0,.015f,1.345f),
+                new Vector3(.085f,.075f,.085f),redHot,default,weapon);
             Create("RifleMagazine",PrimitiveType.Cube,new Vector3(0,-.18f,.10f),
                 new Vector3(.15f,.27f,.24f),black,new Vector3(-12,0,0),weapon);
 
@@ -828,6 +833,11 @@ namespace Alterverse.Visuals
                         new Vector3(side*.125f,-.63f,1.255f)},
                     new[]{.014f,.019f,.016f,.011f,.001f},.014f);
                 Sculpt("BladeEdge"+s,energyEdge,Vector3.zero,Vector3.one,edge,weapon,true);
+                Mesh fuller=HeroMeshLibrary.Ribbon("DF_ShadowSteelFuller"+s,
+                    new[]{new Vector3(0,-.15f,.09f),new Vector3(side*.041f,-.29f,.35f),
+                        new Vector3(side*.088f,-.45f,.72f),new Vector3(side*.14f,-.57f,1.05f)},
+                    new[]{.013f,.018f,.013f,.002f},.006f);
+                Sculpt("BladeFuller"+s,fuller,new Vector3(0,0,.027f),Vector3.one,bladeSpine,weapon);
 
                 Detail("Hilt"+s,new Vector3(0,-.015f,-.035f),new Vector3(.105f,.235f,.105f),bladeSpine,default,"Weapon"+s);
                 Detail("Guard"+s,new Vector3(0,-.115f,.060f),new Vector3(.28f,.050f,.12f),bladeMetal,new Vector3(0,0,side*8f),"Weapon"+s);
@@ -893,6 +903,8 @@ namespace Alterverse.Visuals
             Create("AnchorHead",PrimitiveType.Cube,new Vector3(0,.54f,.03f),new Vector3(.86f,.43f,.48f),metal,default,weapon);
             Create("HammerFace",PrimitiveType.Cube,new Vector3(0,.54f,.285f),new Vector3(.60f,.30f,.055f),new Color(.31f,.32f,.32f),default,weapon);
             Create("HammerTopPlate",PrimitiveType.Cube,new Vector3(0,.79f,.02f),new Vector3(.64f,.09f,.40f),new Color(.69f,.69f,.67f),default,weapon);
+            Create("HammerPowerSpine",PrimitiveType.Cube,new Vector3(0,.82f,.03f),new Vector3(.11f,.035f,.35f),accent,default,weapon);
+            Create("HammerStrikeLens",PrimitiveType.Cube,new Vector3(0,.54f,.326f),new Vector3(.34f,.12f,.024f),teamEdge,default,weapon);
             for(int side=-1;side<=1;side+=2)
             {
                 Create("HammerCheek"+side,PrimitiveType.Cube,new Vector3(side*.47f,.54f,.01f),new Vector3(.12f,.34f,.40f),trim,
