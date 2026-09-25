@@ -11,10 +11,10 @@ namespace Alterverse.Visuals
         {
             Color voidBlack=new(.012f,.014f,.024f,1f);
             Color charcoal=new(.045f,.050f,.065f,1f);
-            Color chronosteel=new(.23f,.26f,.31f,1f);
-            Color paleGold=new(.94f,.82f,.54f,1f);
-            Color lightCore=new(.96f,.95f,.84f,1f);
-            Color paradoxRed=new(1f,.035f,.025f,1f);
+            Color chronosteel=new(.105f,.095f,.16f,1f);
+            Color paleGold=new(.50f,.28f,.78f,1f);
+            Color lightCore=new(.93f,.56f,1f,1f);
+            Color paradoxRed=new(.70f,.17f,.93f,1f);
 
             Mesh torso=HeroMeshLibrary.Loft("DF_TravelerTorso",
                 new[]{-.40f,-.24f,-.04f,.18f,.37f,.50f},
@@ -94,6 +94,15 @@ namespace Alterverse.Visuals
                 Plate("TravelerShoulderCrown"+suffix,new Vector3(side*.43f,.53f,.025f),
                     .22f,.11f,.29f,paleGold,side*-16);
                 Bind("TravelerShoulderCrown"+suffix,"Arm"+suffix);
+                Mesh sleeve=HeroMeshLibrary.Ribbon("DF_TravelerSleeve"+suffix,
+                    new[]{new Vector3(0,.10f,-.11f),new Vector3(side*.045f,-.23f,-.16f),
+                        new Vector3(side*.11f,-.51f,-.19f),new Vector3(side*.17f,-.69f,-.20f)},
+                    new[]{.13f,.18f,.23f,.25f},.038f);
+                Sculpt("TravelerSleeve"+suffix,sleeve,Vector3.zero,Vector3.one,voidBlack,arm);
+                Mesh cuff=HeroMeshLibrary.Ring("DF_TravelerCuff"+suffix,.16f,.020f);
+                GameObject cuffPart=Sculpt("TravelerCuff"+suffix,cuff,
+                    new Vector3(0,-.47f,-.06f),Vector3.one,paleGold,arm,true);
+                cuffPart.transform.localRotation=Quaternion.Euler(85f,0,0);
                 Plate("TravelerVambraceShell"+suffix,new Vector3(0,-.33f,.078f),
                     .17f,.24f,.095f,charcoal,side*8,"Arm"+suffix);
                 Detail("TravelerWristChronometer"+suffix,new Vector3(0,-.47f,.132f),
@@ -112,12 +121,14 @@ namespace Alterverse.Visuals
             Sculpt("Head",hood,headPos,new Vector3(1.08f,1.07f,1.06f),voidBlack);
             Sculpt("Neck",HeroMeshLibrary.Loft("DF_TravelerNeck",new[]{-.09f,.08f},new[]{.070f,.078f},new[]{.066f,.073f}),
                 new Vector3(0,.55f,0),Vector3.one,voidBlack);
-            Plate("TravelerFaceMask",headPos+new Vector3(0,-.025f,.166f),.33f,.30f,.062f,charcoal);
-            Detail("TravelerEyeL",headPos+new Vector3(-.072f,.055f,.205f),new Vector3(.095f,.022f,.014f),
-                paradoxRed,new Vector3(0,0,-7),null,true);
-            Detail("TravelerEyeR",headPos+new Vector3(.072f,.055f,.205f),new Vector3(.095f,.022f,.014f),
-                paradoxRed,new Vector3(0,0,7),null,true);
-            Plate("TravelerHoodBrow",headPos+new Vector3(0,.145f,.090f),.40f,.20f,.18f,voidBlack);
+            // Recess the face into the hood; a void and one energy lens replace the robot visor.
+            Plate("TravelerFaceMask",headPos+new Vector3(0,-.025f,.153f),.34f,.32f,.044f,voidBlack);
+            Detail("TravelerVoidLens",headPos+new Vector3(0,.055f,.187f),
+                new Vector3(.105f,.105f,.020f),lightCore,new Vector3(0,0,45),null,true);
+
+            Plate("TravelerHoodBrow",headPos+new Vector3(0,.16f,.19f),.53f,.23f,.24f,voidBlack);
+            Plate("TravelerHoodRidgeL",headPos+new Vector3(-.19f,.11f,.16f),.12f,.42f,.15f,charcoal,-20);
+            Plate("TravelerHoodRidgeR",headPos+new Vector3(.19f,.11f,.16f),.12f,.42f,.15f,charcoal,20);
             Plate("TravelerHoodCrest",headPos+new Vector3(0,.229f,.098f),.21f,.13f,.16f,chronosteel);
             Detail("TravelerHoodSigil",headPos+new Vector3(0,.227f,.189f),
                 new Vector3(.045f,.070f,.018f),paleGold,new Vector3(0,0,45),null,true);
@@ -146,6 +157,11 @@ namespace Alterverse.Visuals
                     new Vector3(-.378f,-1.00f,-.34f)},
                 new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleL",mantleL,Vector3.zero,Vector3.one,voidBlack);
+            Mesh robeFrontL=HeroMeshLibrary.Ribbon("DF_TravelerFrontL",
+                new[]{new Vector3(-.24f,.37f,.17f),new Vector3(-.30f,-.04f,.17f),
+                    new Vector3(-.35f,-.50f,.14f),new Vector3(-.42f,-1.00f,.12f)},
+                new[]{.12f,.16f,.21f,.24f},.035f);
+            Sculpt("TravelerFrontL",robeFrontL,Vector3.zero,Vector3.one,voidBlack);
 
             Mesh mantleR=HeroMeshLibrary.Ribbon("DF_TravelerMantleR",
                 new[]{new Vector3(.138f,.48f,-.05f),new Vector3(.204f,.20f,-.14f),
@@ -153,6 +169,11 @@ namespace Alterverse.Visuals
                     new Vector3(.378f,-1.00f,-.34f)},
                 new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleR",mantleR,Vector3.zero,Vector3.one,voidBlack);
+            Mesh robeFrontR=HeroMeshLibrary.Ribbon("DF_TravelerFrontR",
+                new[]{new Vector3(.24f,.37f,.17f),new Vector3(.30f,-.04f,.17f),
+                    new Vector3(.35f,-.50f,.14f),new Vector3(.42f,-1.00f,.12f)},
+                new[]{.12f,.16f,.21f,.24f},.035f);
+            Sculpt("TravelerFrontR",robeFrontR,Vector3.zero,Vector3.one,voidBlack);
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh seam=HeroMeshLibrary.Ribbon("DF_TravelerMantleSeam"+side,
@@ -234,7 +255,7 @@ namespace Alterverse.Visuals
         {
             Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
 
-            Color white=new(1f,.99f,.94f,1f);
+            Color white=new(.87f,.55f,1f,1f);
             Material whiteGlow=new Material(shader){name="DF_PlanetFluxEpicWhite",color=white};
             if(whiteGlow.HasProperty("_BaseColor"))whiteGlow.SetColor("_BaseColor",white);
             if(whiteGlow.HasProperty("_Metallic"))whiteGlow.SetFloat("_Metallic",.08f);
@@ -246,7 +267,7 @@ namespace Alterverse.Visuals
             }
             ownedMaterials.Add(whiteGlow);
 
-            Color softWhite=new(.88f,.94f,1f,1f);
+            Color softWhite=new(.48f,.30f,.89f,1f);
             Material orbitGlow=new Material(shader){name="DF_PlanetFluxEpicOrbit",color=softWhite};
             if(orbitGlow.HasProperty("_BaseColor"))orbitGlow.SetColor("_BaseColor",softWhite);
             if(orbitGlow.HasProperty("_Smoothness"))orbitGlow.SetFloat("_Smoothness",.92f);
