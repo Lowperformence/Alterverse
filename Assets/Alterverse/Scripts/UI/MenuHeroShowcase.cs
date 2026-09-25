@@ -101,7 +101,7 @@ namespace Alterverse.UI
             Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
             float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
             float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
-            previewCamera.orthographicSize=Mathf.Max(1.65f,Mathf.Max(vertical,horizontal/(640f/720f))*1.2f);
+            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(640f/720f))*1.12f);
         }
         private void CreateStage()
         {
@@ -139,6 +139,7 @@ namespace Alterverse.UI
             cameraObject.transform.LookAt(stage.transform.position + Vector3.up*.08f);
             AddLight("Key",new Vector3(-2,3,3),new Color(.91f,.95f,1),3.5f);
             AddLight("Fill",new Vector3(2,1,2),new Color(.51f,.72f,.78f),1.8f);
+            AddLight("Rim",new Vector3(1.8f,2.7f,-2.5f),new Color(.33f,.82f,1f),2.2f);
         }
         private void AddLight(string label, Vector3 position, Color color, float intensity)
         {
