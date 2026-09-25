@@ -1,204 +1,81 @@
-using System.Reflection;
 using Alterverse.Shop;
 using UnityEngine;
 
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Visual-only shard pack artwork. Purchase buttons remain owned by MainMenuController.
-    /// This component never consumes input, so Google Play purchase callbacks are untouched.
+    /// Shard artwork drawn by the real shop UI. These methods create no GUI controls
+    /// and never handle input; MainMenuController retains the Google Play purchase action.
     /// </summary>
-    [DefaultExecutionOrder(32000)]
-    public sealed class ShardShopVisualOverlay : MonoBehaviour
+    public static class ShardShopVisualOverlay
     {
-        private const float MenuHeight = 720f;
-        private static ShardShopVisualOverlay instance;
-        private static FieldInfo pageField;
-        private static FieldInfo shardShopField;
+        private static Texture2D crystal;
+        private static Texture2D glow;
+        private static GUIStyle amountStyle;
+        private static GUIStyle packStyle;
 
-        private Texture2D crystal;
-        private Texture2D glow;
-        private GUIStyle amountStyle;
-        private GUIStyle packStyle;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Create()
+        public static void DrawPackCard(float x,float width,ShardPack pack,int tier)
         {
-            if (FindAnyObjectByType<ShardShopVisualOverlay>() == null)
-                new GameObject("DF_ShardShopVisuals").AddComponent<ShardShopVisualOverlay>();
-        }
+            if(Event.current.type!=EventType.Repaint)return;
+            EnsureArtwork();
+            tier=Mathf.Clamp(tier,0,3);
 
-        private void Awake()
-        {
-            if (instance != null && instance != this)
+            Fill(new Rect(x+2f,370f,width-4f,136f),new Color(.008f,.016f,.055f,.99f));
+            Fill(new Rect(x+2f,370f,width-4f,3f),new Color(.10f,.76f,1f,.95f));
+            Fill(new Rect(x+2f,503f,width-4f,2f),new Color(.32f,.28f,1f,.72f));
+            GUI.Label(new Rect(x+12f,376f,width-24f,21f),pack.Name,packStyle);
+
+            float artScale=.76f+tier*.10f;
+            float artW=Mathf.Min(width-24f,126f*artScale);
+            float artH=92f*artScale;
+            Rect art=new Rect(x+(width-artW)*.5f,393f-tier*2f,artW,artH);
+            Rect halo=new Rect(art.center.x-art.width*.72f,art.center.y-art.height*.68f,
+                art.width*1.44f,art.height*1.36f);
+            Color previous=GUI.color;
+            GUI.color=tier>=3?new Color(.62f,.50f,1f,.88f):new Color(.20f,.74f,1f,.82f);
+            GUI.DrawTexture(halo,glow,ScaleMode.StretchToFill,true);
+            GUI.color=Color.white;
+            if(tier>=1)GUI.DrawTexture(new Rect(art.x-22f,art.y+18f,art.width*.62f,art.height*.72f),crystal,ScaleMode.ScaleToFit,true);
+            if(tier>=2)GUI.DrawTexture(new Rect(art.xMax-art.width*.47f,art.y+22f,art.width*.58f,art.height*.68f),crystal,ScaleMode.ScaleToFit,true);
+            if(tier>=3)
             {
-                Destroy(gameObject);
-                return;
+                GUI.DrawTexture(new Rect(art.x-34f,art.y+36f,art.width*.50f,art.height*.56f),crystal,ScaleMode.ScaleToFit,true);
+                GUI.DrawTexture(new Rect(art.xMax-18f,art.y+38f,art.width*.46f,art.height*.52f),crystal,ScaleMode.ScaleToFit,true);
             }
-
-            instance = this;
-            DontDestroyOnLoad(gameObject);
-            crystal = BuildCrystalTexture();
-            glow = BuildGlowTexture();
+            GUI.DrawTexture(art,crystal,ScaleMode.ScaleToFit,true);
+            GUI.color=previous;
+            GUI.Label(new Rect(x+10f,474f,width-20f,29f),pack.Amount.ToString("N0")+" SHARDS",amountStyle);
         }
 
-        private void OnDestroy()
+        public static void DrawPurchaseIcon(float x,float width,int tier)
         {
-            if (crystal != null) Destroy(crystal);
-            if (glow != null) Destroy(glow);
-            if (instance == this) instance = null;
+            if(Event.current.type!=EventType.Repaint)return;
+            EnsureArtwork();
+            Color previous=GUI.color;
+            float iconX=x+28f,iconY=519f;
+            GUI.color=tier>=2?new Color(.58f,.43f,1f,.70f):new Color(.20f,.76f,1f,.68f);
+            GUI.DrawTexture(new Rect(iconX-9f,iconY-9f,52f,52f),glow,ScaleMode.StretchToFill,true);
+            GUI.color=Color.white;
+            GUI.DrawTexture(new Rect(iconX,iconY,34f,34f),crystal,ScaleMode.ScaleToFit,true);
+            GUI.color=previous;
         }
 
-        private bool ShouldDraw()
+        private static void EnsureArtwork()
         {
-            if (!MainMenuController.IsVisible) return false;
-            MainMenuController menu = FindAnyObjectByType<MainMenuController>();
-            if (menu == null) return false;
-
-            try
+            if(crystal==null)crystal=BuildCrystalTexture();
+            if(glow==null)glow=BuildGlowTexture();
+            if(packStyle==null)
             {
-                pageField ??= typeof(MainMenuController).GetField("page", BindingFlags.Instance | BindingFlags.NonPublic);
-                shardShopField ??= typeof(MainMenuController).GetField("shardShop", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (pageField == null || shardShopField == null) return false;
-
-                object page = pageField.GetValue(menu);
-                object shard = shardShopField.GetValue(menu);
-                return page != null && page.ToString() == "Shop" && shard is bool value && value;
+                packStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontSize=12,
+                    fontStyle=FontStyle.Bold,clipping=TextClipping.Clip};
+                packStyle.normal.textColor=new Color(.64f,.86f,1f,1f);
             }
-            catch
+            if(amountStyle==null)
             {
-                return false;
+                amountStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontSize=20,
+                    fontStyle=FontStyle.Bold,clipping=TextClipping.Clip};
+                amountStyle.normal.textColor=Color.white;
             }
-        }
-
-        private void OnGUI()
-        {
-            if (!ShouldDraw()) return;
-            if (Event.current.type != EventType.Repaint) return;
-
-            Rect safe = Screen.safeArea;
-            if (safe.width <= 0f || safe.height <= 0f) return;
-
-            float scale = Mathf.Min(safe.height / MenuHeight, safe.width / 1200f);
-            if (scale <= 0f) return;
-
-            float menuWidth = safe.width / scale;
-            float contentWidth = Mathf.Min(1360f, menuWidth - 64f);
-            float left = (menuWidth - contentWidth) * .5f;
-            float y = Screen.height - safe.yMax + (safe.height - MenuHeight * scale) * .5f;
-
-            Matrix4x4 oldMatrix = GUI.matrix;
-            Color oldColor = GUI.color;
-            int oldDepth = GUI.depth;
-
-            try
-            {
-                // Extremely low depth keeps this artwork above the old flat card contents.
-                GUI.depth = -100000;
-                GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x, y, 0f), Quaternion.identity, Vector3.one * scale);
-                GUI.color = Color.white;
-                DrawCards(left, contentWidth);
-            }
-            finally
-            {
-                GUI.matrix = oldMatrix;
-                GUI.color = oldColor;
-                GUI.depth = oldDepth;
-            }
-        }
-
-        private void DrawCards(float left, float contentWidth)
-        {
-            ShardPack[] packs = ShardPacks.All;
-            if (packs == null || packs.Length == 0) return;
-
-            EnsureStyles();
-            float w = (contentWidth - 48f) / 4f;
-
-            for (int i = 0; i < packs.Length; i++)
-            {
-                ShardPack pack = packs[i];
-                float x = left + i * (w + 16f);
-                int tier = Mathf.Clamp(i, 0, 3);
-
-                // Replace the old empty upper half with a high-contrast dimensional card.
-                Fill(new Rect(x + 2f, 370f, w - 4f, 136f), new Color(.008f, .016f, .055f, .99f));
-                Fill(new Rect(x + 2f, 370f, w - 4f, 3f), new Color(.10f, .76f, 1f, .95f));
-                Fill(new Rect(x + 2f, 503f, w - 4f, 2f), new Color(.32f, .28f, 1f, .72f));
-
-                GUI.Label(new Rect(x + 12f, 376f, w - 24f, 21f), pack.Name, packStyle);
-
-                float artScale = 0.76f + tier * .10f;
-                float artW = Mathf.Min(w - 24f, 126f * artScale);
-                float artH = 92f * artScale;
-                Rect art = new Rect(x + (w - artW) * .5f, 393f - tier * 2f, artW, artH);
-                Rect halo = new Rect(art.center.x - art.width * .72f, art.center.y - art.height * .68f,
-                    art.width * 1.44f, art.height * 1.36f);
-
-                Color old = GUI.color;
-                GUI.color = tier >= 3 ? new Color(.62f, .50f, 1f, .88f) : new Color(.20f, .74f, 1f, .82f);
-                GUI.DrawTexture(halo, glow, ScaleMode.StretchToFill, true);
-                GUI.color = Color.white;
-
-                // More crystals for larger packs so package size is visible at a glance.
-                if (tier >= 1)
-                    GUI.DrawTexture(new Rect(art.x - 22f, art.y + 18f, art.width * .62f, art.height * .72f), crystal, ScaleMode.ScaleToFit, true);
-                if (tier >= 2)
-                    GUI.DrawTexture(new Rect(art.xMax - art.width * .47f, art.y + 22f, art.width * .58f, art.height * .68f), crystal, ScaleMode.ScaleToFit, true);
-                if (tier >= 3)
-                {
-                    GUI.DrawTexture(new Rect(art.x - 34f, art.y + 36f, art.width * .50f, art.height * .56f), crystal, ScaleMode.ScaleToFit, true);
-                    GUI.DrawTexture(new Rect(art.xMax - 18f, art.y + 38f, art.width * .46f, art.height * .52f), crystal, ScaleMode.ScaleToFit, true);
-                }
-
-                GUI.DrawTexture(art, crystal, ScaleMode.ScaleToFit, true);
-                GUI.color = old;
-
-                // Strong amount label immediately above the untouched Google Play price button.
-                GUI.Label(new Rect(x + 10f, 474f, w - 20f, 29f), pack.Amount.ToString("N0") + " SHARDS", amountStyle);
-
-                // Artwork inside the existing price button. IMGUI events other than Repaint never
-                // enter this component, so the button still receives clicks and owns store.Buy.
-                DrawButtonCrystal(x, w, tier);
-                Fill(new Rect(x + 18f, 506f, w - 36f, 2f), new Color(.15f, .70f, 1f, .72f));
-                Fill(new Rect(x + 18f, 566f, w - 36f, 2f), new Color(.36f, .30f, 1f, .52f));
-            }
-        }
-
-        private void DrawButtonCrystal(float x, float width, int tier)
-        {
-            Color previous = GUI.color;
-            float iconX = x + 28f;
-            float iconY = 519f;
-            Color tint = tier >= 2
-                ? new Color(.58f, .43f, 1f, .70f)
-                : new Color(.20f, .76f, 1f, .68f);
-            GUI.color = tint;
-            GUI.DrawTexture(new Rect(iconX - 9f, iconY - 9f, 52f, 52f), glow, ScaleMode.StretchToFill, true);
-            GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(iconX, iconY, 34f, 34f), crystal, ScaleMode.ScaleToFit, true);
-            GUI.color = previous;
-        }
-
-        private void EnsureStyles()
-        {
-            packStyle ??= new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 12,
-                fontStyle = FontStyle.Bold,
-                clipping = TextClipping.Clip
-            };
-            packStyle.normal.textColor = new Color(.64f, .86f, 1f, 1f);
-
-            amountStyle ??= new GUIStyle(GUI.skin.label)
-            {
-                alignment = TextAnchor.MiddleCenter,
-                fontSize = 20,
-                fontStyle = FontStyle.Bold,
-                clipping = TextClipping.Clip
-            };
-            amountStyle.normal.textColor = Color.white;
         }
 
         private static Texture2D BuildCrystalTexture()
