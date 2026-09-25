@@ -30,9 +30,9 @@ private void Start()
 // BasicAttack, HeroAbilityExecution and HeroVisualMotion immediately and track the real cast targets cleanly.
 if(GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()==null)
 gameObject.AddComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>();
-// A second lightweight layer guarantees a large, unmistakable cast confirmation for every ability.
-// It observes cooldown state only and never changes gameplay numbers or hit timing.
-if(GetComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>()==null)
+// Only actors that actually own the ability execution runtime need the extra mobile-readable cast cue.
+// This keeps non-combat replicas/lightweight presentation actors free of an unnecessary Update loop.
+if(GetComponent<HeroAbilityExecution>()!=null&&GetComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>()==null)
 gameObject.AddComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>();
 // Only player-controlled heroes need the hold-to-preview overlay. It observes touch/mouse input
 // without consuming it; PrototypeHUD remains the sole owner of actually casting abilities.
