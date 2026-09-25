@@ -64,6 +64,7 @@ private void OnGUI()
 
     bool headline=display=="REALITY COLLIDE";
     bool go=display=="GO";
+    bool countdown=display=="3"||display=="2"||display=="1";
     int phaseSize=Mathf.RoundToInt((headline?58f:go?86f:104f)*uiScale);
     title.fontSize=phaseSize;
     shadow.fontSize=phaseSize;
@@ -107,8 +108,8 @@ private void OnGUI()
 
     GUI.matrix=matrix;
 
-    // Show the core match rules throughout the opening countdown. GO stays clean and immediate.
-    if(!go)
+    // Keep the instructions focused on the requested 3-2-1 countdown.
+    if(countdown)
     {
         float rulesWidth=Mathf.Min(Screen.width*.90f,820f*uiScale);
         float rulesHeight=118f*uiScale;
