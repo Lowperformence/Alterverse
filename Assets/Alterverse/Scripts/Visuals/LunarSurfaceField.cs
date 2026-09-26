@@ -68,9 +68,21 @@ namespace Alterverse.Visuals
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
             bool moon=IsMoon;
-            float macro=Noise(x,z,.055f,12),medium=Noise(x,z,.24f,31),fine=Noise(x,z,1.9f,7);
-            relief=(macro-.5f)*(moon?.20f:.19f)+(medium-.5f)*(moon?.09f:.085f);
-            tone=.48f+(macro-.5f)*.22f+(medium-.5f)*.085f+(fine-.5f)*(moon?.040f:.018f);
+            bool mars=ArenaVariantRuntime.IsMars;
+            // Mars has broad, readable dune fields. Keep their wavelength independent of mesh
+            // resolution so a sharper surface does not turn into a dense ripple pattern.
+            float macro=Noise(x,z,mars?.032f:.055f,12);
+            float medium=Noise(x,z,mars?.105f:.24f,31);
+            float fine=Noise(x,z,mars?.62f:1.9f,7);
+            relief=(macro-.5f)*(mars?.27f:moon?.20f:.19f)
+                  +(medium-.5f)*(mars?.055f:moon?.09f:.085f);
+            if(mars)
+            {
+                float dunePhase=z*.30f+x*.075f+(macro-.5f)*2.2f;
+                relief+=Mathf.Sin(dunePhase)*(.075f+.035f*macro);
+            }
+            tone=.48f+(macro-.5f)*.22f+(medium-.5f)*(mars?.055f:.085f)
+                 +(fine-.5f)*(mars?.012f:moon?.040f:.018f);
             dust=0f;
             float craterWear=0f;
 
@@ -147,7 +159,7 @@ namespace Alterverse.Visuals
             }
             else
             {
-                relief=Mathf.Clamp(relief,-.245f,.115f);
+                relief=Mathf.Clamp(relief,mars?-.30f:-.245f,mars?.18f:.115f);
                 tone=Mathf.Clamp(tone,ArenaVariantRuntime.IsGreenPlanet?.34f:.30f,.68f);
             }
         }
@@ -162,7 +174,10 @@ namespace Alterverse.Visuals
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            const int size=1536;const float spanX=96,spanZ=84;
+            // 2048 px for Mars on devices with enough graphics memory; retain the mobile
+            // budget on smaller devices. Other arena variants keep their established atlas.
+            int size=ArenaVariantRuntime.IsMars && SystemInfo.graphicsMemorySize>=4096?2048:1536;
+            const float spanX=96,spanZ=84;
             bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
@@ -178,7 +193,7 @@ namespace Alterverse.Visuals
                 // Broad mineral variation supplies material depth without the former high-frequency
                 // speckle that read as pixel noise from the gameplay camera.
                 float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
-                float grain=Mathf.PerlinNoise(wx*1.15f+91f,wz*1.15f+47f)-.5f;
+                float grain=Mathf.PerlinNoise(wx*(ArenaVariantRuntime.IsMars?.58f:1.15f)+91f,wz*(ArenaVariantRuntime.IsMars?.58f:1.15f)+47f)-.5f;
                 float strata=Mathf.PerlinNoise(wx*.30f+wz*.10f+13f,wz*.30f-wx*.07f+29f)-.5f;
                 float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.42f+201f,wz*.42f+78f)-.5f);
                 value*=1f+grain*.055f+strata*.10f;
