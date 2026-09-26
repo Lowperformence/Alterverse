@@ -22,7 +22,7 @@ namespace Alterverse.Visuals
             var colors=new Color[mesh.vertexCount];color.a=energy?1:0;
             var surface=new Vector2[mesh.vertexCount];
             // Coated armor gets a tighter, brighter highlight; undersuit fabric stays softer.
-            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.50f,.78f);
+            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.52f,.82f);
             Vector3[] vertices=mesh.vertices,normals=mesh.normals;
             Bounds bounds=mesh.bounds;
             float heightRange=Mathf.Max(.001f,bounds.max.y-bounds.min.y);
@@ -35,7 +35,7 @@ namespace Alterverse.Visuals
                     float contour=normals.Length==colors.Length
                         ? .94f+.10f*Mathf.Max(0,normals[i].z)+.035f*Mathf.Abs(normals[i].x)
                         :1f;
-                    float sculptShade=Mathf.Lerp(.92f,1.06f,height)*contour;
+                    float sculptShade=Mathf.Lerp(.88f,1.09f,height)*contour;
                     Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
                 }
                 surface[i]=response;
@@ -148,7 +148,7 @@ namespace Alterverse.Visuals
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return null;
             Material m=new Material(shader){name="DF_SharedHeroSurface",color=color,enableInstancing=true};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
-            m.SetFloat("_Metallic",finish==1?.65f:0);m.SetFloat("_Smoothness",finish==1?.42f:finish==2?.5f:.16f);
+            m.SetFloat("_Metallic",finish==1?.68f:0);m.SetFloat("_Smoothness",finish==1?.50f:finish==2?.58f:.16f);
             if(finish==2){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",color*.85f);}
             materials[key]=m;return m;
         }
