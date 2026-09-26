@@ -298,47 +298,47 @@ namespace Alterverse.UI
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
 
-            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH-OPTIONEN", theme.Heading);
+            theme.Label(new Rect(panel.x + 24, panel.y + 14, panel.width - 48, 36), "MATCH OPTIONS", theme.Heading);
             string state = CoopAuthority.Active
-                ? "CO-OP-MATCH LÄUFT WEITER, WÄHREND DIE OPTIONEN GEÖFFNET SIND"
-                : "MATCH PAUSIERT";
+                ? "CO-OP MATCH CONTINUES WHILE OPTIONS ARE OPEN"
+                : "MATCH PAUSED";
             theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), state, theme.Small, true);
 
             float previousMaster = master, previousMusic = music, previousSfx = sfx, previousVoice = voice;
             const float rowStart = 78f;
             const float rowStep = 64f;
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Spiellautstärke", ref master);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Musik", ref music);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Soundeffekte", ref sfx);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Sprachchat-Lautstärke", ref voice);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Master Volume", ref master);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Music", ref music);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Sound Effects", ref sfx);
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Voice Chat Volume", ref voice);
             theme.Label(new Rect(panel.x + 88, panel.y + rowStart + rowStep * 4f - 3f, panel.width - 176, 20),
-                "Nur empfangene Co-op-Stimmen • Mikrofonpegel bleibt unverändert", theme.Small, true);
+                "Incoming co-op voices only • microphone level remains unchanged", theme.Small, true);
 
             if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
                 ApplyAudioLive();
 
             if (!confirmLeave)
             {
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "MATCH FORTSETZEN", true))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 100, panel.width - 48, 42), "RESUME MATCH", true))
                     CloseOverlay();
 
                 string destination = CoopAuthority.Active
-                    ? "CO-OP VERLASSEN  •  HAUPTMENÜ"
-                    : "MATCH VERLASSEN  •  HAUPTMENÜ";
+                    ? "LEAVE CO-OP  •  MAIN MENU"
+                    : "LEAVE MATCH  •  MAIN MENU";
                 if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, panel.width - 48, 34), destination))
                     confirmLeave = true;
             }
             else
             {
-                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "AKTUELLEN MATCH VERLASSEN?", theme.Heading);
+                theme.Label(new Rect(panel.x + 24, panel.yMax - 116, panel.width - 48, 28), "LEAVE CURRENT MATCH?", theme.Heading);
                 string warning = CoopAuthority.Active
-                    ? "Du verlässt die aktuelle Co-op-Sitzung. Es gibt keine Match-Belohnung."
-                    : "Der aktuelle Match endet ohne Match-Belohnung.";
+                    ? "You will leave the current co-op session. No match reward will be granted."
+                    : "The current match will end without a match reward.";
                 theme.Label(new Rect(panel.x + 24, panel.yMax - 86, panel.width - 48, 22), warning, theme.Small, true);
                 float gap = 12f, buttonWidth = (panel.width - 48 - gap) * .5f;
-                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "ABBRECHEN"))
+                if (theme.Action(new Rect(panel.x + 24, panel.yMax - 50, buttonWidth, 34), "CANCEL"))
                     confirmLeave = false;
-                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "MATCH VERLASSEN", true))
+                if (theme.Action(new Rect(panel.x + 24 + buttonWidth + gap, panel.yMax - 50, buttonWidth, 34), "LEAVE MATCH", true))
                     LeaveMatchNow();
             }
         }
