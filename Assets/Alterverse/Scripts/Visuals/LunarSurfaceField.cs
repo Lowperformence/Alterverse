@@ -161,7 +161,7 @@ namespace Alterverse.Visuals
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            const int size=1024;const float spanX=96,spanZ=84;
+            const int size=1536;const float spanX=96,spanZ=84;
             bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
