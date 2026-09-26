@@ -17,6 +17,7 @@ namespace Alterverse.Combat
             if(target.GetComponent<HeroIdentity>()!=null||target.GetComponent<LaneMinion>()!=null)
                 return Distance(origin,target.transform.position);
             Collider body=target.GetComponent<Collider>();
+            if(body==null||!body.enabled)body=target.GetComponentInChildren<Collider>();
             if(body==null||!body.enabled)return Distance(origin,target.transform.position);
             Vector3 point=origin;point.y=body.bounds.center.y;
             return Distance(origin,body.ClosestPoint(point));
