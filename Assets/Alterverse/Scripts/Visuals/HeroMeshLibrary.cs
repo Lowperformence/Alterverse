@@ -35,7 +35,7 @@ namespace Alterverse.Visuals
                     float contour=normals.Length==colors.Length
                         ? .94f+.10f*Mathf.Max(0,normals[i].z)+.035f*Mathf.Abs(normals[i].x)
                         :1f;
-                    float sculptShade=Mathf.Lerp(.88f,1.09f,height)*contour;
+                    float sculptShade=Mathf.Lerp(.82f,1.15f,height)*contour;
                     Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
                 }
                 surface[i]=response;
