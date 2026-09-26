@@ -327,31 +327,88 @@ namespace Alterverse.UI
             theme.Label(new Rect(r.x+12,r.y+80,r.width-24,18),detail,small,true);
             theme.Label(new Rect(r.x+12,r.y+103,r.width-24,20),combatInside?"RELEASE TO CAST · DRAG OUT TO CANCEL":"RELEASE TO CANCEL",small);
         }
-        private void ProjectLine(Vector3 from,Vector3 to,Color color)
+        private void ProjectLine(Vector3 from, Vector3 to, Color color, float width)
         {
-            Vector3 a=view.WorldToScreenPoint(from),b=view.WorldToScreenPoint(to);
-            if(a.z>0&&b.z>0)CombatGlyphs.Line(layout.Point(new Vector2(a.x,a.y)),layout.Point(new Vector2(b.x,b.y)),3,color);
+            Vector3 a = view.WorldToScreenPoint(from);
+            Vector3 b = view.WorldToScreenPoint(to);
+            if (a.z <= 0f || b.z <= 0f)
+                return;
+
+            CombatGlyphs.Line(layout.Point(new Vector2(a.x, a.y)),
+                layout.Point(new Vector2(b.x, b.y)), width, color);
         }
+
         private void DrawPreview()
         {
-            if(inspectedSlot<0||!combatInside||abilities==null)return;
-            if(view==null)view=Camera.main;if(view==null)return;
-            float range=abilities.PreviewRange(inspectedSlot);if(range<=0)return;
-            Vector3 center=health.transform.position;center.y=.18f;
-            Color tint=(glyphs[inspectedSlot]==CombatGlyph.Heal||glyphs[inspectedSlot]==CombatGlyph.Shelter||glyphs[inspectedSlot]==CombatGlyph.Wildsurge)?new Color(.45f,.87f,.66f):FrontEndTheme.Accent;
-            if(glyphs[inspectedSlot]==CombatGlyph.Dash)
+            if (inspectedSlot < 0 || !combatInside || abilities == null)
+                return;
+            if (view == null)
+                view = Camera.main;
+            if (view == null)
+                return;
+
+            float range = abilities.PreviewRange(inspectedSlot);
+            if (range <= 0f)
+                return;
+
+            Vector3 center = health.transform.position;
+            center.y = .18f;
+            Color tint = (glyphs[inspectedSlot] == CombatGlyph.Heal ||
+                glyphs[inspectedSlot] == CombatGlyph.Shelter ||
+                glyphs[inspectedSlot] == CombatGlyph.Wildsurge)
+                ? new Color(.45f, .87f, .66f)
+                : FrontEndTheme.Accent;
+
+            if (glyphs[inspectedSlot] == CombatGlyph.Dash)
             {
-                Vector3 direction=abilities.PreviewDirection(inspectedSlot);direction.y=0;direction.Normalize();
-                Vector3 end=center+direction*range,side=Vector3.Cross(Vector3.up,direction)*.35f;
-                ProjectLine(center,end,tint);ProjectLine(end,end-direction*.6f+side,tint);ProjectLine(end,end-direction*.6f-side,tint);
+                Vector3 direction = abilities.PreviewDirection(inspectedSlot);
+                direction.y = 0f;
+                direction.Normalize();
+                Vector3 end = center + direction * range;
+                Vector3 side = Vector3.Cross(Vector3.up, direction) * .42f;
+                Color glow = new Color(tint.r, tint.g, tint.b, .18f);
+                Color core = new Color(tint.r, tint.g, tint.b, .92f);
+                ProjectLine(center, end, glow, 10f);
+                ProjectLine(end, end - direction * .72f + side, glow, 10f);
+                ProjectLine(end, end - direction * .72f - side, glow, 10f);
+                ProjectLine(center, end, core, 3f);
+                ProjectLine(end, end - direction * .72f + side, core, 3f);
+                ProjectLine(end, end - direction * .72f - side, core, 3f);
                 return;
             }
-            for(int i=0;i<48;i++)
+
+            float pulse = .5f + .5f * Mathf.Sin(Time.unscaledTime * 5.5f);
+            Color outer = new Color(tint.r, tint.g, tint.b, .13f + pulse * .05f);
+            Color inner = new Color(tint.r, tint.g, tint.b, .84f);
+            const int segments = 40;
+            for (int i = 0; i < segments; i++)
             {
-                float a=i*Mathf.PI*2/48,b=(i+1)*Mathf.PI*2/48;
-                Vector3 p=view.WorldToScreenPoint(center+new Vector3(Mathf.Cos(a),0,Mathf.Sin(a))*range);
-                Vector3 q=view.WorldToScreenPoint(center+new Vector3(Mathf.Cos(b),0,Mathf.Sin(b))*range);
-                if(p.z>0&&q.z>0)CombatGlyphs.Line(layout.Point(new Vector2(p.x,p.y)),layout.Point(new Vector2(q.x,q.y)),2,tint);
+                float a = i * Mathf.PI * 2f / segments;
+                float b = (i + 1) * Mathf.PI * 2f / segments;
+                Vector3 p = center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * range;
+                Vector3 q = center + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * range;
+                ProjectLine(p, q, outer, 9f);
+                ProjectLine(p, q, inner, 2.5f);
+            }
+
+            AbilitySpec spec = abilities.SpecFor(inspectedSlot);
+            if (spec.Radius > .01f)
+            {
+                Health target = GetComponent<SoftTargeting>()?.Current;
+                Vector3 areaCenter = target != null
+                    ? target.transform.position
+                    : center + transform.forward * Mathf.Min(range * .65f, range - spec.Radius);
+                areaCenter.y = .20f;
+                Color areaTint = new Color(tint.r, tint.g, tint.b, .75f);
+                for (int i = 0; i < 32; i++)
+                {
+                    float a = i * Mathf.PI * 2f / 32f;
+                    float b = (i + 1) * Mathf.PI * 2f / 32f;
+                    Vector3 p = areaCenter + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * spec.Radius;
+                    Vector3 q = areaCenter + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * spec.Radius;
+                    ProjectLine(p, q, new Color(tint.r, tint.g, tint.b, .12f), 7f);
+                    ProjectLine(p, q, areaTint, 2f);
+                }
             }
         }
     }
