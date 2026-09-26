@@ -21,7 +21,7 @@ namespace Alterverse.Visuals
 
             key.transform.rotation=Quaternion.Euler(42f,-36f,0f);
             key.intensity=1.40f;
-            key.shadowStrength=.70f;
+            key.shadowStrength=.56f;
             if(QualitySettings.shadows!=ShadowQuality.Disable)key.shadows=LightShadows.Soft;
             key.color=ArenaVariantRuntime.IsMars?new Color(1f,.82f,.68f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.86f,1f,.78f):
@@ -32,10 +32,10 @@ namespace Alterverse.Visuals
             RenderSettings.ambientMode=AmbientMode.Trilight;
             RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsMars?new Color(.36f,.30f,.28f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.27f,.36f,.30f):
-                ArenaVariantRuntime.IsNoxara?new Color(.26f,.29f,.40f):new Color(.32f,.35f,.41f);
-            RenderSettings.ambientEquatorColor=new Color(.17f,.19f,.22f);
-            RenderSettings.ambientGroundColor=new Color(.09f,.10f,.12f);
-            RenderSettings.reflectionIntensity=.31f;
+                ArenaVariantRuntime.IsNoxara?new Color(.26f,.29f,.40f):new Color(.40f,.43f,.49f);
+            RenderSettings.ambientEquatorColor=new Color(.24f,.26f,.30f);
+            RenderSettings.ambientGroundColor=new Color(.14f,.15f,.18f);
+            RenderSettings.reflectionIntensity=.38f;
             RenderSettings.fog=false;
             applied=true;
         }
