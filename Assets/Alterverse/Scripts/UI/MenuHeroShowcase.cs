@@ -8,6 +8,8 @@ namespace Alterverse.UI
     public sealed class MenuHeroShowcase : MonoBehaviour
     {
         private const int PreviewLayer = 31;
+        private const int PreviewWidth = 1024;
+        private const int PreviewHeight = 1152;
         private GameObject stage, actor;
         private Camera previewCamera;
         private RenderTexture texture;
@@ -101,7 +103,7 @@ namespace Alterverse.UI
             Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
             float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
             float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
-            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(640f/720f))*1.12f);
+            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(PreviewWidth/(float)PreviewHeight))*1.12f);
         }
         private void CreateStage()
         {
@@ -120,7 +122,7 @@ namespace Alterverse.UI
             originWorld.color=new Color(1,1,1,.96f);
             originBackdrop=new HeroOriginBackdrop();
 
-            texture = new RenderTexture(640,720,24,RenderTextureFormat.ARGB32)
+            texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32)
             { name = "DF_HeroPortrait", antiAliasing = 2, useMipMap = false };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
