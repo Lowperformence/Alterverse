@@ -278,8 +278,7 @@ namespace Alterverse.Visuals
             }
 
             if (partName.StartsWith("DF_TahlaGoldenVeil") ||
-                partName.StartsWith("DF_TahlaVeilEdge") ||
-                partName.StartsWith("DF_TahlaRobeSide"))
+                partName.StartsWith("DF_TahlaVeilEdge"))
             {
                 TahlaHealerVisualPolish.RemoveSideMantle(renderer);
                 return;
