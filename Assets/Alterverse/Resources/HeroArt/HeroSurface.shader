@@ -44,10 +44,13 @@ Shader "DimensionsFront/HeroSurface"
    {
     half3 n=normalize(i.normal),view=SafeNormalize(GetWorldSpaceViewDir(i.world));
     half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,saturate(_BaseColor.a));
+    // Keep each hero's authored hue distinct under the neutral arena key light.
+    half luminance=dot(albedo,half3(.2126h,.7152h,.0722h));
+    albedo=max(0.0h,lerp(half3(luminance,luminance,luminance),albedo,1.22h));
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
     Light key=GetMainLight();
     half3 ambient=max(SampleSH(n),half3(.16h,.19h,.24h));
-    half3 worldLight=albedo*ambient*.65h+Lobe(n,view,key.direction,min(key.color,1.6h),albedo,metal,smoothness);
+    half3 worldLight=albedo*ambient*.72h+Lobe(n,view,key.direction,min(key.color,1.4h),albedo,metal,smoothness);
     // Camera-space studio rig is isolated per portrait renderer with a property block.
     // It stays stable across planets and doesn't need extra per-pixel lights on Android.
     half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));
