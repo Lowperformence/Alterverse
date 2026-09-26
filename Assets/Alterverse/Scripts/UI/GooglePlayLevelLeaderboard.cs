@@ -12,12 +12,12 @@ using UnityEngine.SocialPlatforms;
 namespace Alterverse.Online
 {
     /// <summary>
-    /// Google Play Games global leaderboard bridge for the player's account level.
+    /// Google Play Games global leaderboard bridge for lifetime match wins.
     /// </summary>
     public static class GooglePlayLevelLeaderboard
     {
-        // GLOBAL LEVEL leaderboard from Google Play Console / generated GPGSIds.cs.
-        public const string GlobalLevelLeaderboardId="CgkI57GLjPsdEAIQAg";
+        // MOST WINS leaderboard configured in Google Play Console.
+        public const string MostWinsLeaderboardId="CgkI57GIjPsdEAIQAA";
 
         public enum ConnectionState
         {
@@ -31,19 +31,19 @@ namespace Alterverse.Online
         }
 
         private static bool activationAttempted;
-        private static int lastSubmittedLevel=-1;
+        private static int lastSubmittedScore=-1;
         private static ConnectionState state=ConnectionState.Idle;
         private static string status="Google Play Games is not connected.";
 
         public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
-        public static string Status=>IsConfigured?status:"Create the GLOBAL LEVEL leaderboard in Google Play Console, then add its leaderboard ID.";
+        public static string Status=>IsConfigured?status:"Create the MOST WINS leaderboard in Google Play Console, then add its leaderboard ID.";
         public static bool IsConfigured=>!string.IsNullOrWhiteSpace(GlobalLevelLeaderboardId)&&
             !GlobalLevelLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
         public static bool IsAuthenticated=>Social.localUser!=null&&Social.localUser.authenticated;
         public static string PlayerName=>IsAuthenticated&&!string.IsNullOrWhiteSpace(Social.localUser.userName)
             ?Social.localUser.userName:"Not signed in";
-        public static int CurrentLevel=>Mathf.Max(1,PlayerExperience.Level);
-        public static int LastSubmittedLevel=>lastSubmittedLevel;
+        public static int CurrentScore=>Mathf.Max(0,MatchRewardService.MatchesWon);
+        public static int LastSubmittedScore=>lastSubmittedLevel;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
@@ -74,7 +74,7 @@ namespace Alterverse.Online
             {
                 state=ConnectionState.Ready;
                 status="Google Play Games connected.";
-                SubmitCurrentLevel();
+                SubmitCurrentScore();
                 return;
             }
 
@@ -111,12 +111,12 @@ namespace Alterverse.Online
 
             int level=CurrentLevel;
             state=ConnectionState.Submitting;
-            status="Syncing level "+level+"...";
+            status="Syncing wins "+level+"...";
             Social.ReportScore(level,GlobalLevelLeaderboardId,success=>
             {
                 if(!success)
                 {
-                    Fail("Level sync failed. Check your connection and Play Games setup.");
+                    Fail("Win sync failed. Check your connection and Play Games setup.");
                     return;
                 }
 
