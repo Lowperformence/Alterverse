@@ -477,8 +477,10 @@ namespace Alterverse.Combat
             {
                 warning=new GameObject("DF_BombWarning");warning.transform.SetParent(world,false);
                 warningLine=warning.AddComponent<LineRenderer>();warningLine.sharedMaterial=warningMaterial;warningLine.loop=true;
-                warningLine.useWorldSpace=true;warningLine.positionCount=36;warningLine.widthMultiplier=.065f;
-                Color warningColor=ArenaVariantRuntime.IsKryon?new Color(.34f,.95f,1f,.98f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.98f):new Color(1f,.22f,.07f,.95f);
+                warningLine.useWorldSpace=true;warningLine.positionCount=36;
+                bool redWarning=!ArenaVariantRuntime.IsKryon&&!ArenaVariantRuntime.IsNoxara;
+                warningLine.widthMultiplier=redWarning?.035f:.065f;
+                Color warningColor=ArenaVariantRuntime.IsKryon?new Color(.34f,.95f,1f,.98f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.98f):new Color(1f,.22f,.07f,.72f);
                 warningLine.startColor=warningLine.endColor=warningColor;
                 warningLine.shadowCastingMode=ShadowCastingMode.Off;warningLine.receiveShadows=false;
                 for(int i=0;i<36;i++)
@@ -541,7 +543,9 @@ namespace Alterverse.Combat
                     float p=.82f+Mathf.Sin(Time.time*17f)*.18f;
                     blink.localScale=new Vector3(.285f*p,.045f,.285f*p);
                 }
-                if(warningLine!=null)warningLine.widthMultiplier=.055f+.035f*t;
+                if(warningLine!=null)
+                    warningLine.widthMultiplier=(!ArenaVariantRuntime.IsKryon&&!ArenaVariantRuntime.IsNoxara)
+                        ?.028f+.014f*t:.055f+.035f*t;
                 return;
             }
 
