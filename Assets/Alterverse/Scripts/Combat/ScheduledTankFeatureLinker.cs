@@ -1,17 +1,23 @@
+using Alterverse.Match;
+using Alterverse.Multiplayer;
 using UnityEngine;
 
 namespace Alterverse.Combat
 {
     /// <summary>
-    /// Connects optional scheduled-tank presentation/formation behaviour without changing the
-    /// network lane-unit message. Both host and clients receive the same spawned tank object, so
-    /// tracks are added locally while only the authoritative LaneMinion simulates movement/combat.
+    /// Match-scoped scheduler and safety linker for the 04:00 / 08:00 team tanks.
+    /// It is independent from individual lane-spawner lifetimes, so destroying/recreating
+    /// a LaneWaveSpawner cannot silently cancel the scheduled reinforcement.
     /// </summary>
     public sealed class ScheduledTankFeatureLinker : MonoBehaviour
     {
-        private const float ScanInterval=.35f;
+        private const float ScanInterval=.25f;
         private static ScheduledTankFeatureLinker instance;
+
+        private DimensionsFront activeFront;
         private float nextScan;
+        private float matchElapsed;
+        private int nextOccurrence;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntime()=>instance=null;
@@ -20,29 +26,54 @@ namespace Alterverse.Combat
         private static void Install()
         {
             if(instance!=null)return;
-            GameObject go=new("DF_ScheduledTankFeatureLinker");
+            GameObject go=new("DF_ScheduledTankDirector");
             DontDestroyOnLoad(go);
             instance=go.AddComponent<ScheduledTankFeatureLinker>();
         }
 
         private void Update()
         {
-            if(Time.unscaledTime<nextScan)return;
-            nextScan=Time.unscaledTime+ScanInterval;
+            if(Time.unscaledTime>=nextScan)
+            {
+                nextScan=Time.unscaledTime+ScanInterval;
+                RefreshMatch();
+                EnsureTankFeatures();
+            }
 
-            // Unity 6.6-safe overload: the previous call used FindObjectsInactive.Exclude as the
-            // only argument, which is not a valid overload on the project API and could stop the
-            // new tank scripts from compiling at all.
+            if(activeFront==null||activeFront.HasEnded||!CoopAuthority.CanSimulateHostGameplay||Time.timeScale<=0f)return;
+
+            // Time.deltaTime is deliberately used so countdown/menu pauses do not advance the
+            // schedule and the tank really arrives after four/eight minutes of active match time.
+            matchElapsed+=Time.deltaTime;
+            while(nextOccurrence<LaneWaveSpawner.ScheduledTankCount&&
+                  matchElapsed>=LaneWaveSpawner.ScheduledTankTime(nextOccurrence))
+            {
+                LaneWaveSpawner.TrySpawnScheduledTanks(nextOccurrence);
+                nextOccurrence++;
+            }
+        }
+
+        private void RefreshMatch()
+        {
+            DimensionsFront found=FindAnyObjectByType<DimensionsFront>();
+            if(found==activeFront)return;
+
+            activeFront=found;
+            matchElapsed=0f;
+            nextOccurrence=0;
+            if(activeFront!=null)LaneWaveSpawner.ResetScheduledTanksForMatch();
+        }
+
+        private static void EnsureTankFeatures()
+        {
             LaneMinion[] units=FindObjectsByType<LaneMinion>(FindObjectsSortMode.None);
             for(int i=0;i<units.Length;i++)
             {
                 LaneMinion unit=units[i];
                 if(unit==null||!IsScheduledTank(unit.gameObject))continue;
 
-                // The track component doubles as the one-time marker that this tank has already
-                // been linked, avoiding repeated formation resets on every scan.
-                if(unit.GetComponent<TankTrackEmitter>()!=null)continue;
-                unit.gameObject.AddComponent<TankTrackEmitter>();
+                if(unit.GetComponent<TankTrackEmitter>()==null)
+                    unit.gameObject.AddComponent<TankTrackEmitter>();
                 unit.ConfigureTeamSupport();
             }
         }
