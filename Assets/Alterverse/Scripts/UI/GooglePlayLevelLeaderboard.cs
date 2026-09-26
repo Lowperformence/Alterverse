@@ -90,7 +90,7 @@ namespace Alterverse.Online
             {
                 if(!success)
                 {
-                    Fail("Google Play Games sign-in failed.");
+                    Fail("Google Play Games sign-in failed. Check Play Console resources, signing credentials and tester access.");
                     return;
                 }
 
