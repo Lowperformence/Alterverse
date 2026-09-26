@@ -25,6 +25,7 @@ namespace Alterverse.Match
         private const float ArenaHalfHeight=36f;
         private const float CentralWidthFraction=.60f;
         private const float SpawnPadX=27.5f;
+        private static readonly Color HotZoneGreen=new(.38f,.96f,.28f,1f);
 
         private enum State { Waiting, Active, Finished }
         private State state;
@@ -34,9 +35,9 @@ namespace Alterverse.Match
         private float elapsed,nextOpenAt=SpawnInterval,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
-        private Transform pulseRing,innerRing;
-        private Renderer[] markerRenderers=System.Array.Empty<Renderer>();
-        private Material neutralMat,zeroMat,lumenMat;
+        private Transform zoneDisc;
+        private Renderer zoneRenderer;
+        private Material zoneMaterial;
         private DimensionsFront front;
         private System.Random rng;
         private Vector3 lastSpawnPosition;
@@ -67,6 +68,7 @@ namespace Alterverse.Match
             rng=new System.Random(unchecked(System.Environment.TickCount^GetHashCode()));
             nextOpenAt=SpawnInterval;
         }
+
         private void OnDisable(){if(owner==this)owner=null;}
 
         private void Update()
@@ -96,8 +98,6 @@ namespace Alterverse.Match
             activeElapsed+=Time.deltaTime;
             if(Time.time>=nextScan){nextScan=Time.time+.10f;ScanHeroes();}
 
-            // Every hero contributes one point per second to their own team.
-            // Opposing heroes do not cancel scoring: both teams can score simultaneously.
             Vector2 scoreDelta=ScoreDelta(zeroInside,lumenInside,Time.deltaTime);
             zeroTime+=scoreDelta.x;
             lumenTime+=scoreDelta.y;
@@ -141,7 +141,6 @@ namespace Alterverse.Match
                 return candidate;
             }
 
-            // Deterministic safe fallback in the central arena if random rejection is exhausted.
             float fallbackZ=(occurrence&1)==0?12f:-12f;
             fallback=LunarSurfaceField.Surface(0f,fallbackZ);
             lastSpawnPosition=fallback;hasLastSpawn=true;
@@ -150,7 +149,6 @@ namespace Alterverse.Match
 
         private bool IsSpawnPositionSafe(Vector3 candidate)
         {
-            // Keep the enlarged circle away from both base healing/spawn pads.
             float baseClearance=Radius+2.25f;
             Vector3 left=new(-SpawnPadX,candidate.y,0);
             Vector3 right=new(SpawnPadX,candidate.y,0);
@@ -158,8 +156,6 @@ namespace Alterverse.Match
             Vector3 dr=candidate-right;dr.y=0;
             if(dl.sqrMagnitude<baseClearance*baseClearance||dr.sqrMagnitude<baseClearance*baseClearance)return false;
 
-            // Spawn-time-only structure check: never place the zone centre directly on a large
-            // gameplay structure. This is intentionally not a per-frame physics cost.
             int count=Physics.OverlapSphereNonAlloc(candidate,2.2f,spawnBlockers,1<<GameplayCollision.Structures,QueryTriggerInteraction.Ignore);
             return count==0;
         }
@@ -204,8 +200,7 @@ namespace Alterverse.Match
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
             if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkZoneResolved?.Invoke(winner,zeroTime,lumenTime,occurrence);
-            if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
-            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
+            DestroyZoneVisual(1.2f);
 
             occurrence++;
             openingAnnounced=false;
@@ -242,8 +237,7 @@ namespace Alterverse.Match
             PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
 
-            if(zoneRoot!=null){Destroy(zoneRoot,1.2f);zoneRoot=null;}
-            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
+            DestroyZoneVisual(1.2f);
             zeroInside=lumenInside=0;
             occurrence++;
             state=State.Waiting;
@@ -252,81 +246,68 @@ namespace Alterverse.Match
         private void ResolveNoReward()
         {
             state=State.Finished;rewardIssued=true;
-            if(zoneRoot!=null){Destroy(zoneRoot);zoneRoot=null;}
-            pulseRing=innerRing=null;markerRenderers=System.Array.Empty<Renderer>();
+            DestroyZoneVisual(0f);
         }
 
         private void BuildZoneVisual()
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(shader==null)return;
+            if(zoneMaterial==null)
+                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,.115f,.72f,.045f);
+            if(zoneMaterial==null)return;
 
-            // Reuse the same three materials across recurring Hot Zones to avoid allocations.
-            neutralMat??=CreateMaterial(shader,new Color(.42f,.44f,.52f,1),1.1f);
-            zeroMat??=CreateMaterial(shader,StylizedArtDirection.ZeroEnergy,2.1f);
-            lumenMat??=CreateMaterial(shader,StylizedArtDirection.LumenEnergy,2.1f);
-
-            if(zoneRoot!=null)Destroy(zoneRoot);
+            DestroyZoneVisual(0f);
             zoneRoot=new GameObject($"DF_HotZoneVisual_{occurrence+1}");
             zoneRoot.transform.position=transform.position;
-            Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)zoneRoot.transform.SetParent(world,true);
+            Transform world=GameObject.Find("DF_MatchWorld")?.transform;
+            if(world!=null)zoneRoot.transform.SetParent(world,true);
 
-            pulseRing=CreateRing(zoneRoot.transform,"DF_HotZoneOuter",Radius,.14f,neutralMat,64);
-            innerRing=CreateRing(zoneRoot.transform,"DF_HotZoneInner",Radius*.72f,.075f,neutralMat,48);
-            CreateRing(zoneRoot.transform,"DF_HotZoneCoreRing",Radius*.34f,.055f,neutralMat,32);
-            GameObject center=GameObject.CreatePrimitive(PrimitiveType.Cylinder);center.name="DF_HotZoneCenter";
-            center.transform.SetParent(zoneRoot.transform,false);center.transform.localPosition=Vector3.up*.045f;center.transform.localScale=new Vector3(2.1f,.018f,2.1f);
-            Collider centerCollider=center.GetComponent<Collider>();if(centerCollider!=null)centerCollider.enabled=false;
-            Renderer centerRenderer=center.GetComponent<Renderer>();if(centerRenderer!=null){centerRenderer.sharedMaterial=neutralMat;centerRenderer.shadowCastingMode=ShadowCastingMode.Off;centerRenderer.receiveShadows=false;}
-            markerRenderers=new Renderer[8];
-            for(int i=0;i<8;i++)
+            GameObject disc=GameObject.CreatePrimitive(PrimitiveType.Quad);
+            disc.name="DF_HotZoneGroundDisc";
+            disc.transform.SetParent(zoneRoot.transform,false);
+            disc.transform.localPosition=Vector3.up*.095f;
+            disc.transform.localRotation=Quaternion.Euler(90f,0f,0f);
+            disc.transform.localScale=new Vector3(Radius*2f,Radius*2f,1f);
+            Collider col=disc.GetComponent<Collider>();if(col!=null)col.enabled=false;
+            zoneRenderer=disc.GetComponent<Renderer>();
+            if(zoneRenderer!=null)
             {
-                float a=i*Mathf.PI*2f/8f;
-                Vector3 p=new(Mathf.Cos(a)*(Radius-.45f),.18f,Mathf.Sin(a)*(Radius-.45f));
-                GameObject shard=GameObject.CreatePrimitive(PrimitiveType.Cube);shard.name="DF_HotZoneMarker";shard.transform.SetParent(zoneRoot.transform,false);
-                shard.transform.localPosition=p;shard.transform.localRotation=Quaternion.Euler(0,-a*Mathf.Rad2Deg,45);
-                shard.transform.localScale=new Vector3(.10f,.42f,.22f);
-                Collider col=shard.GetComponent<Collider>();if(col!=null)col.enabled=false;
-                Renderer r=shard.GetComponent<Renderer>();
-                if(r!=null){r.sharedMaterial=neutralMat;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;markerRenderers[i]=r;}
+                zoneRenderer.sharedMaterial=zoneMaterial;
+                zoneRenderer.shadowCastingMode=ShadowCastingMode.Off;
+                zoneRenderer.receiveShadows=false;
             }
+            zoneDisc=disc.transform;
         }
 
         private void AnimateZone()
         {
-            if(zoneRoot==null)return;
-            bool zero=zeroInside>0&&lumenInside==0,lumen=lumenInside>0&&zeroInside==0;
-            Material active=zero?zeroMat:lumen?lumenMat:neutralMat;
-            if(pulseRing!=null&&pulseRing.TryGetComponent(out LineRenderer a))a.sharedMaterial=active;
-            if(innerRing!=null&&innerRing.TryGetComponent(out LineRenderer b))b.sharedMaterial=active;
-            for(int i=0;i<markerRenderers.Length;i++)
-                if(markerRenderers[i]!=null)markerRenderers[i].sharedMaterial=active;
-            zoneRoot.transform.Rotate(0,9f*Time.deltaTime,0,Space.World);
-            float pulse=1f+Mathf.Sin(Time.time*4.2f)*.028f;
-            if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
+            if(zoneRoot==null||zoneMaterial==null)return;
+            bool occupied=zeroInside>0||lumenInside>0;
+            bool contested=zeroInside>0&&lumenInside>0;
+            float wave=.5f+.5f*Mathf.Sin(Time.time*(occupied?3.0f:2.0f));
+            float baseFill=contested?.145f:occupied?.135f:.105f;
+            float baseRing=contested?.78f:occupied?.82f:.67f;
+            zoneMaterial.SetFloat("_FillAlpha",baseFill+wave*.018f);
+            zoneMaterial.SetFloat("_RingAlpha",Mathf.Min(1f,baseRing+wave*.08f));
+            zoneMaterial.SetFloat("_RingWidth",occupied?.050f:.043f);
+            if(zoneDisc!=null)zoneDisc.localPosition=new Vector3(0f,.095f+wave*.008f,0f);
         }
 
-        private static Material CreateMaterial(Shader shader,Color color,float emission)
+        private void DestroyZoneVisual(float delay)
         {
-            Material m=new(shader){color=color};
-            if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
-            if(m.HasProperty("_EmissionColor")){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",color*emission);}
-            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",.35f);
-            return m;
-        }
-
-        private static Transform CreateRing(Transform parent,string name,float radius,float width,Material material,int segments)
-        {
-            GameObject go=new(name);go.transform.SetParent(parent,false);go.transform.localPosition=Vector3.up*.12f;
-            LineRenderer lr=go.AddComponent<LineRenderer>();lr.sharedMaterial=material;lr.loop=true;lr.useWorldSpace=false;lr.positionCount=segments;
-            lr.widthMultiplier=width;lr.shadowCastingMode=ShadowCastingMode.Off;lr.receiveShadows=false;
-            for(int i=0;i<segments;i++){float a=i*Mathf.PI*2f/segments;lr.SetPosition(i,new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius));}
-            return go.transform;
+            if(zoneRoot!=null)
+            {
+                if(delay>0f)Destroy(zoneRoot,delay);else Destroy(zoneRoot);
+                zoneRoot=null;
+            }
+            zoneDisc=null;
+            zoneRenderer=null;
         }
 
         private void OnDestroy()
         {
-            if(neutralMat!=null)Destroy(neutralMat);if(zeroMat!=null)Destroy(zeroMat);if(lumenMat!=null)Destroy(lumenMat);
+            if(owner==this)owner=null;
+            DestroyZoneVisual(0f);
+            if(zoneMaterial!=null)Destroy(zoneMaterial);
         }
     }
 }
