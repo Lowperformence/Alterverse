@@ -891,15 +891,19 @@ namespace Alterverse.Visuals
         }
         private void BuildKaelonReferenceArmor(Color metal,Color trim)
         {
-            Color under=new(.105f,.082f,.060f,1f);
-            Color steelLight=new(.68f,.69f,.68f,1f);
-            Color steelDark=new(.29f,.30f,.30f,1f);
+            Color under=new(.065f,.075f,.105f,1f);
+            Color steelLight=new(.76f,.76f,.70f,1f);
+            Color steelDark=new(.23f,.25f,.31f,1f);
+            Color regaliaGold=new(.82f,.54f,.15f,1f);
+            Color jade=new(.20f,.78f,.58f,1f);
 
             // Layered chest slab and high collar: big shapes first for mobile/top-down readability.
             Plate("KaelonChestSlab",new Vector3(0,.24f,.285f),.95f,.53f,.15f,steelLight);
             Plate("KaelonChestInset",new Vector3(0,.20f,.373f),.62f,.34f,.045f,steelDark);
-            Detail("KaelonChestBrace",new Vector3(0,.19f,.407f),new Vector3(.095f,.30f,.025f),trim,default,null,false);
-            Detail("KaelonChestCore",new Vector3(0,.29f,.430f),new Vector3(.075f,.13f,.024f),teamEdge,new Vector3(0,0,45),null,true);
+            Detail("KaelonChestBrace",new Vector3(0,.19f,.407f),new Vector3(.095f,.30f,.025f),regaliaGold,default,null,false);
+            Detail("KaelonChestCore",new Vector3(0,.29f,.430f),new Vector3(.075f,.13f,.024f),jade,new Vector3(0,0,45),null,true);
+            Detail("KaelonBreastSeal",new Vector3(0,.29f,.438f),new Vector3(.16f,.18f,.025f),regaliaGold,new Vector3(0,0,45));
+            Detail("KaelonSealLight",new Vector3(0,.29f,.456f),new Vector3(.065f,.09f,.018f),jade,new Vector3(0,0,45),null,true);
             Plate("KaelonCollarL",new Vector3(-.29f,.54f,.11f),.34f,.24f,.30f,metal,-13);
             Plate("KaelonCollarR",new Vector3(.29f,.54f,.11f),.34f,.24f,.30f,metal,13);
 
@@ -907,8 +911,9 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.252f,.2912f,.3752f,metal,side*-7);
+                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.252f,.2912f,.3752f,regaliaGold,side*-7);
                 Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.2184f,.112f,.3304f,steelLight,side*-9);
+                Detail("KaelonPauldronPin"+s,new Vector3(side*.69f,.49f,.201f),new Vector3(.09f,.09f,.025f),jade,new Vector3(0,0,45),null,true);
                 Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.198f),new Vector3(.1008f,.056f,.014f),steelDark,default,null,false);
 
                 // Root-space detail is bound after creation so it follows the arm rig.
@@ -930,9 +935,11 @@ namespace Alterverse.Visuals
             // It preserves the tank read while letting the hammer dominate the silhouette like the reference.
             var guard=WeaponPivot("L",new Vector3(-.53f,-.05f,.18f));
             guard.localRotation=Quaternion.Euler(0,0,8f);
-            Create("BreachGuard",PrimitiveType.Cube,new Vector3(0,.08f,.05f),new Vector3(.34f,.54f,.25f),metal,default,guard);
-            Create("BreachGuardInset",PrimitiveType.Cube,new Vector3(0,.08f,.19f),new Vector3(.20f,.31f,.035f),trim,default,guard);
-            Create("BreachGuardRail",PrimitiveType.Cube,new Vector3(0,.08f,.216f),new Vector3(.07f,.24f,.018f),teamEdge,default,guard);
+            Create("BreachGuard",PrimitiveType.Cube,new Vector3(0,.08f,.05f),new Vector3(.38f,.62f,.28f),metal,default,guard);
+            Create("BreachGuardGoldRim",PrimitiveType.Cube,new Vector3(0,.08f,.204f),new Vector3(.31f,.53f,.035f),new Color(.82f,.54f,.15f),default,guard);
+            Create("BreachGuardInset",PrimitiveType.Cube,new Vector3(0,.08f,.226f),new Vector3(.24f,.43f,.035f),trim,default,guard);
+            Create("BreachGuardRail",PrimitiveType.Cube,new Vector3(0,.08f,.249f),new Vector3(.065f,.28f,.018f),teamEdge,default,guard);
+            Create("BreachGuardCore",PrimitiveType.Cube,new Vector3(0,.08f,.264f),new Vector3(.12f,.12f,.018f),new Color(.20f,.78f,.58f),new Vector3(0,0,45),guard);
 
             var weapon=WeaponPivot("R",new Vector3(.57f,-.20f,.18f));
             weapon.localRotation=Quaternion.Euler(0,-5f,-16f);
