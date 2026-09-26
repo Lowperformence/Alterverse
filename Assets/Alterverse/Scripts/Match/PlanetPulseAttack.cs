@@ -1,5 +1,7 @@
 using Alterverse.Combat;
+using Alterverse.Visuals;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Alterverse.Match
 {
@@ -13,11 +15,12 @@ namespace Alterverse.Match
         private static void ResetRegistry()=>active.Clear();
 
         [SerializeField] private float interval = 5.5f, telegraphDuration = 1.15f, radius = 4.16f, damage = 60f;
-        private const int Segments = 64;
         private DimensionPlanet planet;
         private Health health;
-        private LineRenderer boundary, charge;
-        private Material ringMaterial;
+        private GameObject telegraphRoot;
+        private Transform telegraphDisc;
+        private Renderer telegraphRenderer;
+        private Material telegraphMaterial;
         private float nextPulse, telegraphStart, flashUntil;
         private bool telegraphing;
         public static System.Collections.Generic.IReadOnlyList<PlanetPulseAttack> Active=>active;
@@ -26,63 +29,69 @@ namespace Alterverse.Match
         public float BlastRadius => radius;
         public float TelegraphAge=>telegraphing?Mathf.Max(0f,Time.time-telegraphStart):0f;
         public float TimeRemaining=>telegraphing?Mathf.Max(0f,telegraphDuration-TelegraphAge):0f;
+
+        // Keep the authored warning colour unchanged. Only the target presentation is redesigned.
         private readonly Color warning = new Color(1f, .48f, .12f);
 
         private void Awake()
         {
             planet = GetComponent<DimensionPlanet>();
             health = GetComponent<Health>();
-            Shader shader = Shader.Find("Universal Render Pipeline/Unlit");
-            if (shader == null) shader = Shader.Find("Sprites/Default");
-            if (shader == null) shader = Shader.Find("Unlit/Color");
-            if (shader != null)
-            {
-                ringMaterial = new Material(shader);
-                ringMaterial.color = warning;
-                boundary = CreateRing("DF_PulseBoundary", .09f);
-                charge = CreateRing("DF_PulseCharge", .14f);
-            }
+            telegraphMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(warning,.08f,.72f,.045f);
+            BuildTelegraphVisual();
             nextPulse = Time.time + 2.5f;
         }
 
         private void OnEnable(){if(!active.Contains(this))active.Add(this);}
 
-        private LineRenderer CreateRing(string label, float width)
+        private void BuildTelegraphVisual()
         {
-            GameObject ring = new GameObject(label);
-            ring.transform.SetParent(transform, false);
-            LineRenderer line = ring.AddComponent<LineRenderer>();
-            line.sharedMaterial = ringMaterial;
-            line.useWorldSpace = true;
-            line.loop = true;
-            line.positionCount = Segments;
-            line.widthMultiplier = width;
-            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            line.receiveShadows = false;
-            line.enabled = false;
-            return line;
+            if(telegraphMaterial==null)return;
+            if(telegraphRoot!=null)Destroy(telegraphRoot);
+
+            telegraphRoot=new GameObject("DF_PulseGroundTarget");
+            Transform world=GameObject.Find("DF_MatchWorld")?.transform;
+            if(world!=null)telegraphRoot.transform.SetParent(world,true);
+
+            GameObject disc=GameObject.CreatePrimitive(PrimitiveType.Quad);
+            disc.name="DF_PulseGroundDisc";
+            disc.transform.SetParent(telegraphRoot.transform,false);
+            disc.transform.localRotation=Quaternion.Euler(90f,0f,0f);
+            disc.transform.localScale=new Vector3(radius*2f,radius*2f,1f);
+            Collider col=disc.GetComponent<Collider>();if(col!=null)col.enabled=false;
+
+            telegraphRenderer=disc.GetComponent<Renderer>();
+            if(telegraphRenderer!=null)
+            {
+                telegraphRenderer.sharedMaterial=telegraphMaterial;
+                telegraphRenderer.shadowCastingMode=ShadowCastingMode.Off;
+                telegraphRenderer.receiveShadows=false;
+                telegraphRenderer.enabled=false;
+            }
+            telegraphDisc=disc.transform;
+            UpdateTelegraphTransform();
         }
 
-        private void DrawRing(LineRenderer line, float worldRadius)
+        private void UpdateTelegraphTransform()
         {
-            if (line == null) return;
-            Vector3 center = transform.position;
-            center.y = .16f;
-            for (int i = 0; i < Segments; i++)
-            {
-                float angle = i * Mathf.PI * 2f / Segments;
-                line.SetPosition(i, center + new Vector3(Mathf.Cos(angle), 0, Mathf.Sin(angle)) * worldRadius);
-            }
+            if(telegraphRoot==null)return;
+            Vector3 p=transform.position;
+            // Match the old warning rings: this is a ground target, not a plane through the planet model.
+            telegraphRoot.transform.position=new Vector3(p.x,.105f,p.z);
+            telegraphRoot.transform.rotation=Quaternion.identity;
+            if(telegraphDisc!=null)telegraphDisc.localScale=new Vector3(radius*2f,radius*2f,1f);
         }
 
         private void Update()
         {
             if (planet == null || !planet.Available || health == null || health.IsDead)
             {
-                HideRings();
+                HideTelegraph();
                 return;
             }
             if (Time.timeScale <= 0f) return;
+
+            UpdateTelegraphTransform();
 
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
             {
@@ -93,7 +102,7 @@ namespace Alterverse.Match
             if (!telegraphing)
             {
                 if (Time.time < flashUntil) return;
-                HideRings();
+                HideTelegraph();
                 if (Time.time < nextPulse) return;
                 BeginTelegraph(true);
             }
@@ -108,9 +117,15 @@ namespace Alterverse.Match
         {
             telegraphing=true;
             telegraphStart=Time.time;
-            if (boundary != null) { boundary.enabled = true; boundary.widthMultiplier = .09f; }
-            if (charge != null) charge.enabled = true;
-            if (ringMaterial != null) ringMaterial.color = warning;
+            UpdateTelegraphTransform();
+            if(telegraphRenderer!=null)telegraphRenderer.enabled=true;
+            if(telegraphMaterial!=null)
+            {
+                telegraphMaterial.SetColor("_BaseColor",warning);
+                telegraphMaterial.SetFloat("_FillAlpha",.075f);
+                telegraphMaterial.SetFloat("_RingAlpha",.72f);
+                telegraphMaterial.SetFloat("_RingWidth",.042f);
+            }
             if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkPulseStarted?.Invoke(gameObject.name,telegraphDuration);
         }
@@ -118,8 +133,15 @@ namespace Alterverse.Match
         private float UpdateTelegraphVisual()
         {
             float progress=Mathf.Clamp01((Time.time-telegraphStart)/Mathf.Max(.1f,telegraphDuration));
-            DrawRing(boundary,radius);
-            DrawRing(charge,radius*progress);
+            if(telegraphMaterial!=null)
+            {
+                // Exact radius never moves. Urgency increases inward through opacity/ring thickness only.
+                float beat=.5f+.5f*Mathf.Sin(Time.time*(5.5f+progress*7f));
+                telegraphMaterial.SetColor("_BaseColor",warning);
+                telegraphMaterial.SetFloat("_FillAlpha",Mathf.Lerp(.075f,.19f,progress)+beat*.018f);
+                telegraphMaterial.SetFloat("_RingAlpha",Mathf.Lerp(.72f,.98f,progress));
+                telegraphMaterial.SetFloat("_RingWidth",Mathf.Lerp(.040f,.072f,progress));
+            }
             return progress;
         }
 
@@ -137,13 +159,19 @@ namespace Alterverse.Match
                 }
             }
 
-            Alterverse.Visuals.PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
+            PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
             telegraphing=false;
             flashUntil=Time.time+.18f;
             nextPulse=Time.time+Mathf.Max(.5f,interval);
-            if(charge!=null)charge.enabled=false;
-            if(boundary!=null)boundary.widthMultiplier=.24f;
-            if(ringMaterial!=null)ringMaterial.color=Color.white;
+            if(telegraphRenderer!=null)telegraphRenderer.enabled=true;
+            if(telegraphMaterial!=null)
+            {
+                // Keep the same programmed warning colour during the brief detonation flash.
+                telegraphMaterial.SetColor("_BaseColor",warning);
+                telegraphMaterial.SetFloat("_FillAlpha",.24f);
+                telegraphMaterial.SetFloat("_RingAlpha",1f);
+                telegraphMaterial.SetFloat("_RingWidth",.085f);
+            }
 
             if(authoritative&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkPulseDetonated?.Invoke(gameObject.name);
@@ -172,15 +200,19 @@ namespace Alterverse.Match
             }
         }
 
-        private void HideRings()
+        private void HideTelegraph()
         {
-            telegraphing = false;
-            if (boundary != null) boundary.enabled = false;
-            if (charge != null) charge.enabled = false;
+            telegraphing=false;
+            if(telegraphRenderer!=null)telegraphRenderer.enabled=false;
         }
 
-        private void OnDisable(){active.Remove(this);HideRings();}
-        private void OnDestroy(){active.Remove(this);if(ringMaterial!=null)Destroy(ringMaterial);}
+        private void OnDisable(){active.Remove(this);HideTelegraph();}
+
+        private void OnDestroy()
+        {
+            active.Remove(this);
+            if(telegraphRoot!=null)Destroy(telegraphRoot);
+            if(telegraphMaterial!=null)Destroy(telegraphMaterial);
+        }
     }
 }
-
