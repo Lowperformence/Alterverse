@@ -774,14 +774,13 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
             theme.Label(new Rect(x,396,rw,76),item.Description+"  Visual only — no gameplay advantage.",theme.Body,true);
 
-            int previous=(weaponSkinVariant+1)%2,next=(weaponSkinVariant+1)%2;
-            if(theme.Action(new Rect(x,480,54,44),"<"))weaponSkinVariant=previous;
+            bool variantChanged=false;
+            if(theme.Action(new Rect(x,480,54,44),"<")){weaponSkinVariant=(weaponSkinVariant+1)%2;variantChanged=true;}
             theme.Center(new Rect(x+62,480,rw-124,44),$"VARIANT {weaponSkinVariant+1} / 2");
-            if(theme.Action(new Rect(x+rw-54,480,54,44),">"))weaponSkinVariant=next;
-            if(GUI.changed)shopMessage="";
-            if(GUI.changed)
+            if(theme.Action(new Rect(x+rw-54,480,54,44),">")){weaponSkinVariant=(weaponSkinVariant+1)%2;variantChanged=true;}
+            if(variantChanged)
             {
-                GUI.changed=false;
+                shopMessage="";
                 showcase.Present(hero,true,false,true,null,weaponSkinVariant);
             }
 
