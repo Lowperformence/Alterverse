@@ -41,8 +41,9 @@ namespace Alterverse.Characters
             Hero=id;Health=HeroIdentity.BaseHealth(id);Attack=HeroIdentity.AttackDamage(id);
             HeroCombatStats stats=StatsFor(id);
             AttackRange=stats.AttackRange;AttackInterval=stats.AttackInterval;
-            // Global pacing remains shared by every hero. The authored role differences above are
-            // the only per-hero movement balance lever so player and bot movement stay identical.
+            // Keep the existing global pace. Slowing everyone further would lengthen rotations and,
+            // more importantly, increase the time melee heroes spend exposed before reaching ranged
+            // opponents. Duel duration is tuned through durability instead of sluggish movement.
             MoveSpeed=stats.MoveSpeed*GlobalMoveSpeedMultiplier;
             Control=stats.Control;Sustain=stats.Sustain;
         }
