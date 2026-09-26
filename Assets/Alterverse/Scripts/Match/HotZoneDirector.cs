@@ -36,8 +36,7 @@ namespace Alterverse.Match
         private float elapsed,nextOpenAt=SpawnInterval,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
-        private Transform zoneDisc;
-        private Renderer zoneRenderer;
+        private Mesh zoneRingMesh;
         private Material zoneMaterial;
         private DimensionsFront front;
         private System.Random rng;
@@ -281,7 +280,7 @@ namespace Alterverse.Match
         private void BuildZoneVisual()
         {
             if(zoneMaterial==null)
-                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,.115f,.72f,.045f);
+                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,0f,.82f,.25f);
             if(zoneMaterial==null)return;
 
             DestroyZoneVisual(0f);
@@ -290,21 +289,53 @@ namespace Alterverse.Match
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)zoneRoot.transform.SetParent(world,true);
 
-            GameObject disc=GameObject.CreatePrimitive(PrimitiveType.Quad);
-            disc.name="DF_HotZoneGroundDisc";
-            disc.transform.SetParent(zoneRoot.transform,false);
-            disc.transform.localPosition=Vector3.up*.095f;
-            disc.transform.localRotation=Quaternion.Euler(90f,0f,0f);
-            disc.transform.localScale=new Vector3(Radius*2f,Radius*2f,1f);
-            Collider col=disc.GetComponent<Collider>();if(col!=null)col.enabled=false;
-            zoneRenderer=disc.GetComponent<Renderer>();
-            if(zoneRenderer!=null)
+            GameObject rings=new GameObject("DF_HotZoneGroundRings");
+            rings.transform.SetParent(zoneRoot.transform,false);
+            zoneRingMesh=BuildGroundRings(transform.position);
+            rings.AddComponent<MeshFilter>().sharedMesh=zoneRingMesh;
+            MeshRenderer renderer=rings.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial=zoneMaterial;
+            renderer.shadowCastingMode=ShadowCastingMode.Off;
+            renderer.receiveShadows=false;
+        }
+
+        private static Mesh BuildGroundRings(Vector3 center)
+        {
+            const int segments=128;
+            const float outerWidth=.25f,innerWidth=.19f;
+            float[] radii={Radius,Radius*.72f};
+            float[] widths={outerWidth,innerWidth};
+            Vector3[] vertices=new Vector3[segments*4];
+            Vector2[] uv=new Vector2[vertices.Length];
+            int[] triangles=new int[segments*12];
+            for(int ring=0;ring<2;ring++)
             {
-                zoneRenderer.sharedMaterial=zoneMaterial;
-                zoneRenderer.shadowCastingMode=ShadowCastingMode.Off;
-                zoneRenderer.receiveShadows=false;
+                int start=ring*segments*2;
+                for(int i=0;i<segments;i++)
+                {
+                    float angle=i*Mathf.PI*2f/segments;
+                    float dx=Mathf.Cos(angle),dz=Mathf.Sin(angle);
+                    for(int side=0;side<2;side++)
+                    {
+                        float radius=radii[ring]+(side==0?-.5f:.5f)*widths[ring];
+                        float x=center.x+dx*radius,z=center.z+dz*radius;
+                        // Each vertex follows the arena relief, keeping both circles visible on dunes.
+                        vertices[start+i*2+side]=new Vector3(dx*radius,
+                            LunarSurfaceField.Surface(x,z).y-center.y+.13f,dz*radius);
+                        // The ground telegraph's bright ring band is used without its filled disc.
+                        uv[start+i*2+side]=new Vector2(.965f,.5f);
+                    }
+                    int next=(i+1)%segments;
+                    int t=(ring*segments+i)*6;
+                    int a=start+i*2,b=start+next*2;
+                    triangles[t]=a;triangles[t+1]=b;triangles[t+2]=a+1;
+                    triangles[t+3]=a+1;triangles[t+4]=b;triangles[t+5]=b+1;
+                }
             }
-            zoneDisc=disc.transform;
+            Mesh mesh=new Mesh{name="DF_HotZoneGroundRings"};
+            mesh.vertices=vertices;mesh.uv=uv;mesh.triangles=triangles;
+            mesh.RecalculateBounds();
+            return mesh;
         }
 
         private void AnimateZone()
@@ -313,12 +344,9 @@ namespace Alterverse.Match
             bool occupied=zeroInside>0||lumenInside>0;
             bool contested=zeroInside>0&&lumenInside>0;
             float wave=.5f+.5f*Mathf.Sin(Time.time*(occupied?3.0f:2.0f));
-            float baseFill=contested?.145f:occupied?.135f:.105f;
             float baseRing=contested?.78f:occupied?.82f:.67f;
-            zoneMaterial.SetFloat("_FillAlpha",baseFill+wave*.018f);
+            zoneMaterial.SetFloat("_FillAlpha",0f);
             zoneMaterial.SetFloat("_RingAlpha",Mathf.Min(1f,baseRing+wave*.08f));
-            zoneMaterial.SetFloat("_RingWidth",occupied?.050f:.043f);
-            if(zoneDisc!=null)zoneDisc.localPosition=new Vector3(0f,.095f+wave*.008f,0f);
         }
 
         private void DestroyZoneVisual(float delay)
@@ -328,8 +356,7 @@ namespace Alterverse.Match
                 if(delay>0f)Destroy(zoneRoot,delay);else Destroy(zoneRoot);
                 zoneRoot=null;
             }
-            zoneDisc=null;
-            zoneRenderer=null;
+            if(zoneRingMesh!=null){Destroy(zoneRingMesh);zoneRingMesh=null;}
         }
 
         private void OnDestroy()
