@@ -18,6 +18,11 @@ CharacterController controller=GetComponent<CharacterController>();
 if(controller!=null){controller.height=HeroCollisionHeight;controller.radius=HeroCollisionRadius;}
 CapsuleCollider capsule=GetComponent<CapsuleCollider>();
 if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisionRadius;}
+// Tahla/Mira is procedurally assembled by StylizedHeroVisual. Install her dedicated visual
+// interceptor before that component builds so side mantle panels can be omitted before batching
+// and the feminine face polish is applied consistently in matches and menu previews.
+if(id==HeroId.Mira&&GetComponent<Alterverse.Visuals.TahlaHealerVisualPolish>()==null)
+gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
 // Zhaev's presentation-only sword polish reshapes the visible strike after HeroVisualMotion.
 // It never changes damage, range, cooldowns or hit timing.
 if(id==HeroId.Veyr&&GetComponent<Alterverse.Visuals.VeyrAttackPresentation>()==null)
