@@ -109,10 +109,10 @@ namespace Alterverse.Online
                 return;
             }
 
-            int level=CurrentScore;
+            int wins=CurrentScore;
             state=ConnectionState.Submitting;
-            status="Syncing wins "+level+"...";
-            Social.ReportScore(level,MostWinsLeaderboardId,success=>
+            status="Syncing wins "+wins+"...";
+            Social.ReportScore(wins,MostWinsLeaderboardId,success=>
             {
                 if(!success)
                 {
@@ -120,9 +120,9 @@ namespace Alterverse.Online
                     return;
                 }
 
-                lastSubmittedScore=level;
+                lastSubmittedScore=wins;
                 state=ConnectionState.Ready;
-                status="Wins "+level+" synced to the global ranking.";
+                status="Wins "+wins+" synced to the global ranking.";
             });
 #else
             state=ConnectionState.Unsupported;
@@ -206,13 +206,29 @@ namespace Alterverse.Online
                             for (int parameter = 1; parameter < parameters.Length; parameter++)
                             {
                                 ParameterInfo info = parameters[parameter];
-                                if (!info.IsOptional && info.ParameterType.IsValueType &&
-                                    Nullable.GetUnderlyingType(info.ParameterType) == null)
+                                if (info.IsOptional)
+                                {
+                                    arguments[parameter] = info.DefaultValue;
+                                }
+                                else if (info.ParameterType.IsEnum)
+                                {
+                                    try
+                                    {
+                                        arguments[parameter] = Enum.Parse(info.ParameterType, "AllTime", true);
+                                    }
+                                    catch
+                                    {
+                                        supported = false;
+                                        break;
+                                    }
+                                }
+                                else if (!typeof(Delegate).IsAssignableFrom(info.ParameterType) &&
+                                         info.ParameterType.IsValueType &&
+                                         Nullable.GetUnderlyingType(info.ParameterType) == null)
                                 {
                                     supported = false;
                                     break;
                                 }
-                                arguments[parameter] = info.IsOptional ? info.DefaultValue : null;
                             }
                             if (!supported)
                                 continue;
@@ -228,7 +244,7 @@ namespace Alterverse.Online
                 Debug.LogWarning("DIMENSIONS FRONT: direct Google Play leaderboard UI failed: "+exception.Message);
             }
 
-            // Fallback for plugin versions where the one-argument extension is unavailable.
+            // Older plugin versions expose only the generic Unity Social UI.
             Social.ShowLeaderboardUI();
         }
 
