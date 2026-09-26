@@ -12,12 +12,12 @@ using UnityEngine.SocialPlatforms;
 namespace Alterverse.Online
 {
     /// <summary>
-    /// Google Play Games global leaderboard bridge for the player's account level.
+    /// Google Play Games global leaderboard bridge for lifetime match wins.
     /// </summary>
     public static class GooglePlayLevelLeaderboard
     {
-        // GLOBAL LEVEL leaderboard from Google Play Console / generated GPGSIds.cs.
-        public const string GlobalLevelLeaderboardId="CgkI57GLjPsdEAIQAg";
+        // MOST WINS leaderboard configured in Google Play Console.
+        public const string MostWinsLeaderboardId="CgkI57GIjPsdEAIQAA";
 
         public enum ConnectionState
         {
@@ -31,25 +31,25 @@ namespace Alterverse.Online
         }
 
         private static bool activationAttempted;
-        private static int lastSubmittedLevel=-1;
+        private static int lastSubmittedScore=-1;
         private static ConnectionState state=ConnectionState.Idle;
         private static string status="Google Play Games is not connected.";
 
         public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
-        public static string Status=>IsConfigured?status:"Create the GLOBAL LEVEL leaderboard in Google Play Console, then add its leaderboard ID.";
-        public static bool IsConfigured=>!string.IsNullOrWhiteSpace(GlobalLevelLeaderboardId)&&
-            !GlobalLevelLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
+        public static string Status=>IsConfigured?status:"Create the MOST WINS leaderboard in Google Play Console, then add its leaderboard ID.";
+        public static bool IsConfigured=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
+            !MostWinsLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
         public static bool IsAuthenticated=>Social.localUser!=null&&Social.localUser.authenticated;
         public static string PlayerName=>IsAuthenticated&&!string.IsNullOrWhiteSpace(Social.localUser.userName)
             ?Social.localUser.userName:"Not signed in";
-        public static int CurrentLevel=>Mathf.Max(1,PlayerExperience.Level);
-        public static int LastSubmittedLevel=>lastSubmittedLevel;
+        public static int CurrentScore=>Mathf.Max(0,MatchRewardService.MatchesWon);
+        public static int LastSubmittedScore=>lastSubmittedScore;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
         {
             activationAttempted=false;
-            lastSubmittedLevel=-1;
+            lastSubmittedScore=-1;
             state=ConnectionState.Idle;
             status="Google Play Games is not connected.";
         }
@@ -74,7 +74,7 @@ namespace Alterverse.Online
             {
                 state=ConnectionState.Ready;
                 status="Google Play Games connected.";
-                SubmitCurrentLevel();
+                SubmitCurrentScore();
                 return;
             }
 
@@ -90,7 +90,7 @@ namespace Alterverse.Online
 
                 state=ConnectionState.Ready;
                 status="Google Play Games connected.";
-                SubmitCurrentLevel();
+                SubmitCurrentScore();
             });
 #else
             state=ConnectionState.Unsupported;
@@ -98,7 +98,7 @@ namespace Alterverse.Online
 #endif
         }
 
-        public static void SubmitCurrentLevel()
+        public static void SubmitCurrentScore()
         {
             if(!IsConfigured)return;
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -109,20 +109,20 @@ namespace Alterverse.Online
                 return;
             }
 
-            int level=CurrentLevel;
+            int wins=CurrentScore;
             state=ConnectionState.Submitting;
-            status="Syncing level "+level+"...";
-            Social.ReportScore(level,GlobalLevelLeaderboardId,success=>
+            status="Syncing wins "+wins+"...";
+            Social.ReportScore(wins,MostWinsLeaderboardId,success=>
             {
                 if(!success)
                 {
-                    Fail("Level sync failed. Check your connection and Play Games setup.");
+                    Fail("Win sync failed. Check your connection and Play Games setup.");
                     return;
                 }
 
-                lastSubmittedLevel=level;
+                lastSubmittedScore=wins;
                 state=ConnectionState.Ready;
-                status="Level "+level+" synced to the global ranking.";
+                status="Wins "+wins+" synced to the global ranking.";
             });
 #else
             state=ConnectionState.Unsupported;
@@ -159,13 +159,13 @@ namespace Alterverse.Online
 
                     state=ConnectionState.Ready;
                     status="Google Play Games connected.";
-                    SubmitCurrentLevel();
+                    SubmitCurrentScore();
                     ShowNativeLeaderboardUi();
                 });
                 return;
             }
 
-            SubmitCurrentLevel();
+            SubmitCurrentScore();
             ShowNativeLeaderboardUi();
 #else
             state=ConnectionState.Unsupported;
@@ -189,16 +189,51 @@ namespace Alterverse.Online
                     object instance=instanceProperty?.GetValue(null,null);
                     if(instance!=null)
                     {
-                        MethodInfo showSpecific=type.GetMethod(
-                            "ShowLeaderboardUI",
-                            BindingFlags.Public|BindingFlags.Instance,
-                            null,
-                            new[]{typeof(string)},
-                            null);
-
-                        if(showSpecific!=null)
+                        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                        for (int i = 0; i < methods.Length; i++)
                         {
-                            showSpecific.Invoke(instance,new object[]{GlobalLevelLeaderboardId});
+                            MethodInfo showSpecific = methods[i];
+                            if (showSpecific.Name != "ShowLeaderboardUI")
+                                continue;
+
+                            ParameterInfo[] parameters = showSpecific.GetParameters();
+                            if (parameters.Length == 0 || parameters[0].ParameterType != typeof(string))
+                                continue;
+
+                            object[] arguments = new object[parameters.Length];
+                            arguments[0] = MostWinsLeaderboardId;
+                            bool supported = true;
+                            for (int parameter = 1; parameter < parameters.Length; parameter++)
+                            {
+                                ParameterInfo info = parameters[parameter];
+                                if (info.IsOptional)
+                                {
+                                    arguments[parameter] = info.DefaultValue;
+                                }
+                                else if (info.ParameterType.IsEnum)
+                                {
+                                    try
+                                    {
+                                        arguments[parameter] = Enum.Parse(info.ParameterType, "AllTime", true);
+                                    }
+                                    catch
+                                    {
+                                        supported = false;
+                                        break;
+                                    }
+                                }
+                                else if (!typeof(Delegate).IsAssignableFrom(info.ParameterType) &&
+                                         info.ParameterType.IsValueType &&
+                                         Nullable.GetUnderlyingType(info.ParameterType) == null)
+                                {
+                                    supported = false;
+                                    break;
+                                }
+                            }
+                            if (!supported)
+                                continue;
+
+                            showSpecific.Invoke(instance, arguments);
                             return;
                         }
                     }
@@ -209,7 +244,7 @@ namespace Alterverse.Online
                 Debug.LogWarning("DIMENSIONS FRONT: direct Google Play leaderboard UI failed: "+exception.Message);
             }
 
-            // Fallback for plugin versions where the one-argument extension is unavailable.
+            // Older plugin versions expose only the generic Unity Social UI.
             Social.ShowLeaderboardUI();
         }
 
@@ -244,8 +279,21 @@ namespace Alterverse.Online
 
         private static Type ResolvePlayGamesPlatformType()
         {
-            return Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
-                ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
+            const string typeName = "GooglePlayGames.PlayGamesPlatform";
+            Type resolved = Type.GetType(typeName + ", GooglePlayGames", false)
+                ?? Type.GetType(typeName + ", GooglePlayGames.Android", false)
+                ?? Type.GetType(typeName + ", Google.Play.Games", false);
+            if (resolved != null)
+                return resolved;
+
+            // The plugin assembly name differs between the legacy and current Unity packages.
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                resolved = assembly.GetType(typeName, false);
+                if (resolved != null)
+                    return resolved;
+            }
+            return null;
         }
 
         private static void Fail(string message)

@@ -7,8 +7,9 @@ namespace Alterverse.Visuals
     {
         // The paid set replaces the silhouette of each base weapon. The gameplay pivots,
         // muzzle marker, ownership and combat components remain untouched.
-        private void BuildSignatureWeapon(Shader shader, Material energy)
+        private void BuildSignatureWeapon(Shader shader, Material energy,int variant=0)
         {
+            if(variant==1){BuildAlternateSignatureWeapon(shader,energy);return;}
             Color shellColor = identity.Hero == HeroId.Mira ? new Color(.82f,.64f,.29f) :
                 identity.Hero == HeroId.Nyra ? new Color(.16f,.23f,.29f) : new Color(.10f,.13f,.20f);
             Material shell = SignatureMaterial(shader,"Shell",shellColor,.76f,.64f);
@@ -108,6 +109,110 @@ namespace Alterverse.Visuals
                     SignatureRibbon("ParadoxNeedle",w,new[]{new Vector3(0,-.72f,.28f),new Vector3(-.07f,-.49f,.30f),new Vector3(0,-.22f,.30f),new Vector3(.06f,.12f,.28f)},new[]{.001f,.075f,.11f,.001f},.058f,shell);
                     SignatureBlock("ParadoxCore",w,new Vector3(0,-.34f,.37f),new Vector3(.19f,.19f,.08f),energy,45f);
                     for(int s=-1;s<=1;s+=2)SignatureBlock("ParadoxSatellite"+s,w,new Vector3(s*.32f,-.34f,.30f),new Vector3(.08f,.18f,.075f),edge,s*-28f);
+                    break;
+                }
+            }
+        }
+
+        private void BuildAlternateSignatureWeapon(Shader shader,Material energy)
+        {
+            Color shellColor=identity.Hero==HeroId.Kaelon?new Color(.16f,.12f,.27f):
+                identity.Hero==HeroId.Nyra?new Color(.10f,.18f,.25f):
+                identity.Hero==HeroId.Mira?new Color(.74f,.82f,.84f):
+                identity.Hero==HeroId.Traveler?new Color(.82f,.72f,.48f):new Color(.12f,.10f,.22f);
+            Material shell=SignatureMaterial(shader,"AltShell",shellColor,.84f,.72f);
+            Material edge=SignatureMaterial(shader,"AltEdge",new Color(.66f,.74f,.84f),.90f,.78f);
+            switch(identity.Hero)
+            {
+                case HeroId.Veyr:
+                    for(int side=-1;side<=1;side+=2)
+                    {
+                        string suffix=side<0?"L":"R";Transform w=FindVisual("Weapon"+suffix);if(w==null)continue;HideSignatureBase(w);
+                        SignatureRibbon("DuskglassFang"+suffix,w,new[]{new Vector3(0,-.18f,.02f),new Vector3(side*.10f,-.28f,.29f),new Vector3(side*.24f,-.42f,.62f),new Vector3(side*.20f,-.62f,.88f)},new[]{.09f,.11f,.07f,.001f},.05f,shell);
+                        SignatureRibbon("DuskglassEdge"+suffix,w,new[]{new Vector3(side*.03f,-.17f,.07f),new Vector3(side*.13f,-.30f,.32f),new Vector3(side*.27f,-.43f,.65f),new Vector3(side*.22f,-.61f,.86f)},new[]{.012f,.019f,.012f,.001f},.014f,energy);
+                        SignatureBlock("DuskglassGrip"+suffix,w,new Vector3(0,0,-.03f),new Vector3(.085f,.28f,.09f),edge);
+                        SignatureBlock("DuskglassGuard"+suffix,w,new Vector3(side*.09f,-.10f,.07f),new Vector3(.26f,.045f,.11f),energy,side*20);
+                    }
+                    break;
+                case HeroId.Kaelon:
+                {
+                    Transform w=FindVisual("WeaponR");if(w==null)break;HideSignatureBase(w);
+                    SignatureBlock("AmethystHaft",w,new Vector3(0,-.02f,0),new Vector3(.105f,1.32f,.105f),shell);
+                    SignatureBlock("AmethystHeadCore",w,new Vector3(0,.57f,.02f),new Vector3(.58f,.48f,.43f),shell);
+                    for(int side=-1;side<=1;side+=2)
+                    {
+                        SignatureBlock("AmethystStrikeFace"+side,w,new Vector3(side*.34f,.57f,.23f),new Vector3(.22f,.34f,.075f),energy,side*-8);
+                        SignatureBlock("AmethystCheek"+side,w,new Vector3(side*.40f,.58f,-.02f),new Vector3(.16f,.56f,.39f),edge,side*-12);
+                        SignatureBlock("AmethystVent"+side,w,new Vector3(side*.15f,.57f,.27f),new Vector3(.045f,.28f,.025f),edge);
+                    }
+                    SignatureRing("AmethystReactor",w,new Vector3(0,.57f,.29f),.16f,energy,Quaternion.Euler(80,0,0));
+                    SignatureBlock("AmethystCap",w,new Vector3(0,.84f,.02f),new Vector3(.28f,.10f,.31f),shell);
+                    break;
+                }
+                case HeroId.Nyra:
+                {
+                    Transform w=FindVisual("WeaponR");if(w==null)break;HideSignatureBase(w);
+                    SignatureBlock("AfterburnReceiver",w,new Vector3(0,.01f,.08f),new Vector3(.25f,.24f,.62f),shell);
+                    SignatureBlock("AfterburnStock",w,new Vector3(0,-.08f,-.42f),new Vector3(.17f,.18f,.39f),edge);
+                    SignatureBlock("AfterburnBarrel",w,new Vector3(0,.02f,.72f),new Vector3(.075f,.075f,1.28f),edge);
+                    for(int side=-1;side<=1;side+=2)
+                    {
+                        SignatureBlock("AfterburnRail"+side,w,new Vector3(side*.13f,.015f,.67f),new Vector3(.035f,.055f,1.04f),energy);
+                        SignatureBlock("AfterburnFin"+side,w,new Vector3(side*.105f,.03f,1.27f),new Vector3(.10f,.20f,.27f),shell,side*-13);
+                    }
+                    SignatureBlock("AfterburnOptic",w,new Vector3(0,.20f,.10f),new Vector3(.13f,.12f,.30f),shell);
+                    SignatureBlock("AfterburnLens",w,new Vector3(0,.20f,.26f),new Vector3(.085f,.08f,.04f),energy);
+                    SignatureBlock("AfterburnCell",w,new Vector3(0,-.20f,.04f),new Vector3(.14f,.22f,.19f),energy);
+                    break;
+                }
+                case HeroId.Elyra:
+                {
+                    HideSignatureNamed("Orb");HideSignatureNamed("OrbitL");HideSignatureNamed("OrbitR");
+                    Transform w=FindVisual("WeaponR");if(w==null){w=WeaponPivot("R",new Vector3(.48f,.15f,.30f));Bind("WeaponR","ArmR");}
+                    HideSignatureBase(w);
+                    SignatureBlock("NullstarHandle",w,new Vector3(0,-.30f,0),new Vector3(.09f,.65f,.09f),shell);
+                    SignatureRibbon("NullstarSpire",w,new[]{new Vector3(0,-.01f,0),new Vector3(-.13f,.22f,.03f),new Vector3(.08f,.46f,.06f),new Vector3(0,.75f,.05f)},new[]{.09f,.15f,.13f,.001f},.08f,edge);
+                    SignatureRing("NullstarRingA",w,new Vector3(0,.34f,.04f),.32f,energy,Quaternion.Euler(65,0,28));
+                    SignatureRing("NullstarRingB",w,new Vector3(0,.34f,.04f),.25f,edge,Quaternion.Euler(24,58,-22));
+                    SignatureRing("NullstarRingC",w,new Vector3(0,.34f,.04f),.18f,energy,Quaternion.Euler(84,32,18));
+                    SignatureBlock("NullstarCore",w,new Vector3(0,.34f,.13f),new Vector3(.12f,.16f,.08f),energy,45);
+                    break;
+                }
+                case HeroId.Mira:
+                {
+                    Transform w=FindVisual("WeaponR");if(w==null)break;HideSignatureBase(w);
+                    SignatureBlock("TidelightShaft",w,new Vector3(0,.02f,0),new Vector3(.09f,1.60f,.09f),shell);
+                    SignatureRibbon("TidelightForkL",w,new[]{new Vector3(0,.52f,0),new Vector3(-.16f,.73f,.02f),new Vector3(-.25f,.98f,.03f),new Vector3(-.16f,1.17f,.02f)},new[]{.065f,.08f,.06f,.001f},.04f,edge);
+                    SignatureRibbon("TidelightForkR",w,new[]{new Vector3(0,.52f,0),new Vector3(.16f,.73f,.02f),new Vector3(.25f,.98f,.03f),new Vector3(.16f,1.17f,.02f)},new[]{.065f,.08f,.06f,.001f},.04f,edge);
+                    SignatureRing("TidelightLensFrame",w,new Vector3(0,.94f,.05f),.24f,energy,Quaternion.Euler(78,0,0));
+                    SignatureBlock("TidelightLens",w,new Vector3(0,.94f,.09f),new Vector3(.14f,.19f,.07f),energy,45);
+                    SignatureBlock("TidelightGrip",w,new Vector3(0,-.24f,.01f),new Vector3(.14f,.35f,.13f),edge);
+                    break;
+                }
+                case HeroId.Rook:
+                    for(int side=-1;side<=1;side+=2)
+                    {
+                        string suffix=side<0?"L":"R";Transform w=FindVisual("Gauntlet"+suffix);if(w==null)continue;HideSignatureBase(w);
+                        SignatureBlock("RiftbreakerShell"+suffix,w,new Vector3(0,-.02f,.12f),new Vector3(.39f,.43f,.40f),shell);
+                        SignatureBlock("RiftbreakerKnuckles"+suffix,w,new Vector3(0,-.16f,.38f),new Vector3(.34f,.18f,.12f),edge);
+                        for(int i=-1;i<=1;i++)
+                        {
+                            SignatureBlock("RiftbreakerPiston"+suffix+i,w,new Vector3(i*.13f,-.10f,.47f),new Vector3(.05f,.24f,.09f),energy);
+                            SignatureBlock("RiftbreakerRail"+suffix+i,w,new Vector3(i*.13f,-.30f,.42f),new Vector3(.055f,.28f,.14f),shell,i*8);
+                        }
+                        SignatureBlock("RiftbreakerCore"+suffix,w,new Vector3(0,.14f,.32f),new Vector3(.16f,.11f,.06f),energy);
+                    }
+                    break;
+                case HeroId.Traveler:
+                {
+                    Transform w=FindVisual("WeaponR");if(w==null)break;HideSignatureBase(w);
+                    SignatureBlock("ChronoluxShaft",w,new Vector3(0,-.02f,0),new Vector3(.10f,1.48f,.10f),shell);
+                    SignatureRing("ChronoluxOuter",w,new Vector3(0,.61f,.08f),.35f,edge,Quaternion.Euler(68,0,24));
+                    SignatureRing("ChronoluxInner",w,new Vector3(0,.61f,.09f),.23f,energy,Quaternion.Euler(22,64,-18));
+                    SignatureBlock("ChronoluxCore",w,new Vector3(0,.61f,.14f),new Vector3(.14f,.20f,.09f),energy,45);
+                    SignatureBlock("ChronoluxProngL",w,new Vector3(-.25f,.73f,.02f),new Vector3(.06f,.42f,.07f),edge,-24);
+                    SignatureBlock("ChronoluxProngR",w,new Vector3(.25f,.73f,.02f),new Vector3(.06f,.42f,.07f),edge,24);
+                    SignatureBlock("ChronoluxFoot",w,new Vector3(0,-.74f,.02f),new Vector3(.18f,.12f,.16f),edge);
                     break;
                 }
             }

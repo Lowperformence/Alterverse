@@ -21,13 +21,38 @@ namespace Alterverse.Visuals
         {
             var colors=new Color[mesh.vertexCount];color.a=energy?1:0;
             var surface=new Vector2[mesh.vertexCount];
-            Vector2 response=finish==0?new Vector2(0,.22f):new Vector2(.62f,.66f);
-            for(int i=0;i<colors.Length;i++){colors[i]=color;surface[i]=response;}
+            // Coated armor gets a tighter, brighter highlight; undersuit fabric stays softer.
+            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.52f,.82f);
+            Vector3[] vertices=mesh.vertices,normals=mesh.normals;
+            Bounds bounds=mesh.bounds;
+            float heightRange=Mathf.Max(.001f,bounds.max.y-bounds.min.y);
+            for(int i=0;i<colors.Length;i++)
+            {
+                if(energy)colors[i]=color;
+                else
+                {
+                    float height=Mathf.Clamp01((vertices[i].y-bounds.min.y)/heightRange);
+                    float contour=normals.Length==colors.Length
+                        ? .94f+.10f*Mathf.Max(0,normals[i].z)+.035f*Mathf.Abs(normals[i].x)
+                        :1f;
+                    float sculptShade=Mathf.Lerp(.82f,1.15f,height)*contour;
+                    Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
+                }
+                surface[i]=response;
+            }
             mesh.colors=colors;mesh.uv2=surface;
         }
         internal static Mesh Loft(string key,float[] y,float[] width,float[] depth,float[] forward=null,int sides=16)
         {
             if(meshes.TryGetValue(key,out Mesh cached)&&cached!=null)return cached;
+            // Spend extra geometry on the hero's silhouette. Small bolts and shell inlays
+            // keep their original budget, while heads, bodies and limbs get softer contours.
+            if(IsAnatomicalSurface(key))
+            {
+                y=RefineSections(y,false);width=RefineSections(width,true);depth=RefineSections(depth,true);
+                if(forward!=null)forward=RefineSections(forward,false);
+                sides=Mathf.Max(24,sides);
+            }
             var v=new List<Vector3>();var normals=new List<Vector3>();var t=new List<int>();
             Vector3 Point(int ring,int side)
             {
@@ -61,6 +86,38 @@ namespace Alterverse.Visuals
             Mesh mesh=new Mesh{name=key};mesh.SetVertices(v);mesh.SetNormals(normals);mesh.SetTriangles(t,0);mesh.RecalculateBounds();
             meshes[key]=mesh;return mesh;
         }
+        private static bool IsAnatomicalSurface(string key)
+        {
+            return key.IndexOf("Torso",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Pelvis",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Leg",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Boot",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("UpperArm",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Forearm",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Glove",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Head",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Helmet",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Face",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Neck",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Greave",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Hood",StringComparison.OrdinalIgnoreCase)>=0;
+        }
+        private static float[] RefineSections(float[] source,bool positive)
+        {
+            if(source==null||source.Length<2)return source;
+            var refined=new List<float>((source.Length-1)*2+1);
+            for(int i=0;i<source.Length-1;i++)
+            {
+                float p0=source[Mathf.Max(0,i-1)],p1=source[i];
+                float p2=source[i+1],p3=source[Mathf.Min(source.Length-1,i+2)];
+                float midpoint=.5f*(2f*p1+(-p0+p2)*.5f+(2f*p0-5f*p1+4f*p2-p3)*.25f+(-p0+3f*p1-3f*p2+p3)*.125f);
+                if(positive)midpoint=Mathf.Max(.002f,midpoint);
+                else midpoint=Mathf.Clamp(midpoint,Mathf.Min(p1,p2),Mathf.Max(p1,p2));
+                refined.Add(p1);refined.Add(midpoint);
+            }
+            refined.Add(source[source.Length-1]);
+            return refined.ToArray();
+        }
         internal static Mesh Ribbon(string key,Vector3[] centers,float[] widths,float thickness)
         {
             if(meshes.TryGetValue(key,out Mesh cached)&&cached!=null)return cached;
@@ -91,7 +148,7 @@ namespace Alterverse.Visuals
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return null;
             Material m=new Material(shader){name="DF_SharedHeroSurface",color=color,enableInstancing=true};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
-            m.SetFloat("_Metallic",finish==1?.65f:0);m.SetFloat("_Smoothness",finish==1?.42f:finish==2?.5f:.16f);
+            m.SetFloat("_Metallic",finish==1?.68f:0);m.SetFloat("_Smoothness",finish==1?.50f:finish==2?.58f:.16f);
             if(finish==2){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",color*.85f);}
             materials[key]=m;return m;
         }
@@ -105,4 +162,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

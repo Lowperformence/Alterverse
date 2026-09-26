@@ -8,6 +8,8 @@ namespace Alterverse.UI
     public sealed class MenuHeroShowcase : MonoBehaviour
     {
         private const int PreviewLayer = 31;
+        private const int PreviewWidth = 1024;
+        private const int PreviewHeight = 1152;
         private GameObject stage, actor;
         private Camera previewCamera;
         private RenderTexture texture;
@@ -16,6 +18,7 @@ namespace Alterverse.UI
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
         private bool loadoutDirty=true,cachedWeapon;
+        private int cachedWeaponVariant=-1,selectedWeaponVariant=-1;
         private HeroId cachedHero;
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
         private HeroOriginBackdrop originBackdrop;
@@ -24,9 +27,17 @@ namespace Alterverse.UI
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
         public Texture Image => texture;
+        public Texture BackgroundImage => originWorld != null && originWorld.sprite != null ? originWorld.sprite.texture : null;
+
+        public void DrawPreview(Rect rect)
+        {
+            // Fill the entire card independently of the portrait aspect, without stretching the hero.
+            if (BackgroundImage != null) GUI.DrawTexture(rect, BackgroundImage, ScaleMode.ScaleAndCrop, false);
+            if (Image != null) GUI.DrawTexture(rect, Image, ScaleMode.ScaleToFit, true);
+        }
 
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
-            Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null)
+            Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null,int? weaponVariantOverride=null)
         {
             if (!visible) { if (stage != null) stage.SetActive(false); return; }
             if (stage == null) CreateStage();
@@ -36,7 +47,8 @@ namespace Alterverse.UI
             {
                 cachedHero=hero;
                 cachedCosmetic=Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(hero);
-                cachedWeapon=Alterverse.Shop.WeaponSkinInventory.Equipped(hero);
+                cachedWeaponVariant=Alterverse.Shop.WeaponSkinInventory.EquippedVariant(hero);
+                cachedWeapon=cachedWeaponVariant>=0;
                 loadoutDirty=false;
             }
             Alterverse.Shop.UniversalHeroCosmetic cosmetic=cosmeticOverride ??
@@ -44,9 +56,11 @@ namespace Alterverse.UI
                     ? (skinOverride.Value?Alterverse.Shop.UniversalHeroCosmetic.Voidfall:Alterverse.Shop.UniversalHeroCosmetic.Original)
                     : cachedCosmetic);
             bool weapon=weaponOverride??cachedWeapon;
+            int weaponVariant=weaponVariantOverride??(weapon?(cachedWeaponVariant>=0?cachedWeaponVariant:0):-1);
+            weapon=weapon&&weaponVariant>=0;
 
-            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon) return;
-            selectedCosmetic=cosmetic;selectedWeapon=weapon;
+            if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
+            selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
             if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
@@ -59,6 +73,7 @@ namespace Alterverse.UI
             var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
             preview.UniversalCosmetic=cosmetic;
             preview.WeaponOverdrive=weapon;
+            preview.WeaponSkinVariant=weaponVariant;
             actor.AddComponent<StylizedHeroVisual>().Build();
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
@@ -101,7 +116,7 @@ namespace Alterverse.UI
             Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
             float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
             float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
-            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(640f/720f))*1.12f);
+            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(PreviewWidth/(float)PreviewHeight))*1.12f);
         }
         private void CreateStage()
         {
@@ -117,11 +132,13 @@ namespace Alterverse.UI
             worldObject.layer=PreviewLayer;
             originWorld=worldObject.AddComponent<SpriteRenderer>();
             originWorld.sortingOrder=-100;
+            // Background is composited at card resolution, never through the narrow hero camera.
+            originWorld.enabled=false;
             originWorld.color=new Color(1,1,1,.96f);
             originBackdrop=new HeroOriginBackdrop();
 
-            texture = new RenderTexture(640,720,24,RenderTextureFormat.ARGB32)
-            { name = "DF_HeroPortrait", antiAliasing = 2, useMipMap = false };
+            texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32)
+            { name = "DF_HeroPortrait", antiAliasing = 4, useMipMap = false, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();

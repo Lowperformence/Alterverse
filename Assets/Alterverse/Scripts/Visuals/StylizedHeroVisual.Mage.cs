@@ -13,6 +13,7 @@ namespace Alterverse.Visuals
             Color voidDark=new(.018f,.018f,.038f,1f);
             Color indigo=new(.085f,.070f,.175f,1f);
             Color silver=new(.46f,.51f,.62f,1f);
+            Color bone=new(.73f,.69f,.62f,1f);
             Color violetHot=new(.70f,.24f,1f,1f);
 
             // Tall, narrow arcane torso with layered armor instead of the old open-face caster silhouette.
@@ -24,7 +25,10 @@ namespace Alterverse.Visuals
             Sculpt("Torso",torso,new Vector3(0,.05f,0),new Vector3(.96f,1f,.98f),voidDark);
             Plate("MageChestL",new Vector3(-.16f,.23f,.22f),.40f,.47f,.13f,indigo,-7);
             Plate("MageChestR",new Vector3(.16f,.23f,.22f),.40f,.47f,.13f,indigo,7);
-            Plate("MageGorget",new Vector3(0,.49f,.08f),.58f,.19f,.23f,silver);
+            Plate("MageGorget",new Vector3(0,.49f,.08f),.58f,.19f,.23f,bone);
+            Plate("MageUnderGorget",new Vector3(0,.405f,.248f),.41f,.16f,.055f,silver);
+            Detail("MageGorgetRuneL",new Vector3(-.21f,.48f,.206f),new Vector3(.026f,.13f,.018f),violetHot,new Vector3(0,0,-18),null,true);
+            Detail("MageGorgetRuneR",new Vector3(.21f,.48f,.206f),new Vector3(.026f,.13f,.018f),violetHot,new Vector3(0,0,18),null,true);
             Plate("MageAbdomen",new Vector3(0,-.07f,.17f),.43f,.31f,.10f,voidDark);
 
             GameObject chestRing=Sculpt("MageChestRing",HeroMeshLibrary.Ring("DF_MageChestRingMesh",.145f,.027f),
@@ -32,6 +36,10 @@ namespace Alterverse.Visuals
             chestRing.transform.localRotation=Quaternion.Euler(90,0,0);
             Detail("MageChestCore",new Vector3(0,.24f,.344f),new Vector3(.095f,.095f,.028f),
                 violetHot,new Vector3(0,0,45),null,true);
+            // Fine reliquary inlays add material depth without borrowing another hero's insignia.
+            for(int i=-1;i<=1;i++)
+                Detail("MageChestInlay"+i,new Vector3(i*.115f,.06f,.278f),new Vector3(.024f,.24f,.018f),
+                    i==0?bone:silver,new Vector3(0,0,i*8),null,false);
 
             Mesh pelvis=HeroMeshLibrary.Loft("DF_IoneVoidPelvis",
                 new[]{-.44f,-.30f,-.18f},new[]{.21f,.28f,.23f},new[]{.13f,.16f,.13f});
@@ -85,6 +93,9 @@ namespace Alterverse.Visuals
                 Bind("MageShoulderWing"+s,"Arm"+s);
                 Detail("MageShoulderGem"+s,new Vector3(side*.48f,.52f,.175f),
                     new Vector3(.0595f,.084f,.0175f),violetHot,new Vector3(0,0,45),"Arm"+s,true);
+                Plate("MageShoulderOuter"+s,new Vector3(side*.48f,.50f,-.018f),.24f,.30f,.22f,indigo,side*-18);
+                Bind("MageShoulderOuter"+s,"Arm"+s);
+                Detail("MageShoulderInlay"+s,new Vector3(side*.48f,.49f,.183f),new Vector3(.035f,.20f,.018f),bone,new Vector3(0,0,side*11),"Arm"+s);
             }
 
             // Closed crown-mask: no exposed face, only a narrow violet eye slit and a central crystal.
@@ -128,6 +139,16 @@ namespace Alterverse.Visuals
                     new Vector3(.01f,-.58f,-.29f),new Vector3(0,-.86f,-.33f)},
                 new[]{.11f,.14f,.12f,.03f},.020f);
             Sculpt("MageCenterRobe",centerRobe,Vector3.zero,Vector3.one,silver);
+            Mesh cowlFoldL=HeroMeshLibrary.Ribbon("DF_IoneCowlFoldL",
+                new[]{new Vector3(-.29f,.53f,-.13f),new Vector3(-.36f,.36f,-.17f),new Vector3(-.31f,.16f,-.20f),new Vector3(-.20f,-.02f,-.20f)},
+                new[]{.09f,.11f,.09f,.025f},.022f);
+            Sculpt("MageCowlFoldL",cowlFoldL,Vector3.zero,Vector3.one,indigo);
+            Mesh cowlFoldR=HeroMeshLibrary.Ribbon("DF_IoneCowlFoldR",
+                new[]{new Vector3(.29f,.53f,-.13f),new Vector3(.36f,.36f,-.17f),new Vector3(.31f,.16f,-.20f),new Vector3(.20f,-.02f,-.20f)},
+                new[]{.09f,.11f,.09f,.025f},.022f);
+            Sculpt("MageCowlFoldR",cowlFoldR,Vector3.zero,Vector3.one,voidDark);
+            Detail("MageCowlStitchL",new Vector3(-.25f,.27f,-.17f),new Vector3(.025f,.30f,.018f),bone,new Vector3(0,0,-12));
+            Detail("MageCowlStitchR",new Vector3(.25f,.27f,-.17f),new Vector3(.025f,.30f,.018f),bone,new Vector3(0,0,12));
 
             // Small visual-only crystal focus in the free hand.
             Transform leftArm=root.Find("DF_ArmL");

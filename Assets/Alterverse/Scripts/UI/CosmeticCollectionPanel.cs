@@ -175,7 +175,7 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(rect.x+16,rect.y+12,rect.width-32,36),definition.Name,theme.Heading);
             float previewWidth=rect.width*.45f;
             Rect preview=new(rect.x+8,rect.y+56,previewWidth,rect.height-137);
-            if(showcase!=null&&showcase.Image!=null)GUI.DrawTexture(preview,showcase.Image,ScaleMode.ScaleToFit,true);
+            showcase?.DrawPreview(preview);
             float x=preview.xMax+8,w=rect.xMax-x-16,y=rect.y+58;
             theme.Label(new Rect(x,y,w,24),active?"EQUIPPED":owned?"OWNED":"ACCOUNT UNLOCK",theme.Small,true);
             theme.FitLabel(new Rect(x,y+30,w,30),definition.PriceLabel,theme.Body);

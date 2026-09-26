@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Visuals;
@@ -190,6 +191,8 @@ namespace Alterverse.Match
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
 
             int winner=zeroTime>lumenTime+.05f?0:lumenTime>zeroTime+.05f?1:-1;
+            RecordWinningParticipants(winner);
+
             if(winner>=0&&!rewardIssued)
                 rewardIssued=HotZoneTank.Spawn(winner);
 
@@ -207,6 +210,31 @@ namespace Alterverse.Match
             zeroInside=lumenInside=0;
             state=State.Waiting;
             do nextOpenAt+=SpawnInterval; while(nextOpenAt<=elapsed);
+        }
+
+        private void RecordWinningParticipants(int winner)
+        {
+            if (winner < 0)
+                return;
+
+            float radiusSquared = Radius * Radius;
+            IReadOnlyList<Health> heroes = Health.Active;
+            for (int i = 0; i < heroes.Count; i++)
+            {
+                Health hero = heroes[i];
+                if (hero == null || hero.IsDead || !hero.isActiveAndEnabled ||
+                    hero.GetComponent<HeroIdentity>() == null)
+                    continue;
+
+                TeamMember member = hero.GetComponent<TeamMember>();
+                if (member == null || member.Team != winner)
+                    continue;
+
+                Vector3 offset = hero.transform.position - transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude <= radiusSquared)
+                    MatchTelemetry.Instance?.RecordHotZoneCapture(hero);
+            }
         }
 
         public void ApplyNetworkOpen(Vector3 position,int occurrenceIndex)
@@ -229,6 +257,7 @@ namespace Alterverse.Match
             occurrence=Mathf.Max(0,occurrenceIndex);
             zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
             rewardIssued=winner>=0;
+            RecordWinningParticipants(winner);
             if(winner>=0)HotZoneTank.Spawn(winner);
 
             Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:

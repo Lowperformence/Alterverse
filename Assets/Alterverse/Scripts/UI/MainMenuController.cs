@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
+using Alterverse.Content;
 using Alterverse.Match;
 using Alterverse.Multiplayer;
 using Alterverse.Online;
@@ -13,11 +14,11 @@ namespace Alterverse.UI
 {
     public sealed class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings, Coop }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
-        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.Profile, Page.Leaderboard, Page.Settings };
+        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "DAILY", "RANKING", "SETTINGS" };
+        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.Profile, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -30,7 +31,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
         private Page page = Page.Play;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,cosmeticBusy;
@@ -140,7 +141,8 @@ namespace Alterverse.UI
                 !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory||previewPremiumHero),
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
-                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
+                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null,
+                previewWeapon?weaponSkinVariant:(int?)null);
             if (nameKeyboard != null)
             {
                 profileName = nameKeyboard.text;
@@ -190,6 +192,7 @@ namespace Alterverse.UI
                     case Page.Shop: DrawShop(); break;
                     case Page.Inventory: DrawInventory(); break;
                     case Page.Profile: DrawProfile(); break;
+                    case Page.Quests: DrawQuests(); break;
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
                     case Page.Coop: DrawCoop(); break;
@@ -202,7 +205,7 @@ namespace Alterverse.UI
         {
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={82f,94f,82f,126f,92f,108f,126f};
+            float[] widths={82f,94f,82f,126f,92f,82f,108f,126f};
             const float gap=8f;
             float total=gap*(widths.Length-1);
             for(int i=0;i<widths.Length;i++)total+=widths[i];
@@ -236,10 +239,8 @@ namespace Alterverse.UI
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
-            FrontEndTheme.Fill(rect,new Color(.025f,.034f,.05f,.62f));
+            showcase?.DrawPreview(rect);
             DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,accent);
-            if (showcase != null && showcase.Image != null)
-                GUI.DrawTexture(rect,showcase.Image,ScaleMode.ScaleToFit,true);
             FrontEndTheme.Fill(new Rect(rect.x+rect.width*.24f,rect.yMax-10,rect.width*.52f,2),new Color(accent.r,accent.g,accent.b,.50f));
         }
         private void DrawHome()
@@ -274,7 +275,7 @@ namespace Alterverse.UI
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero,WeaponSkinInventory.EquippedVariant(deploymentHero)).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
 
             theme.Label(new Rect(Left+28,446,w-56,20),"DIFFICULTY",theme.Small,true);
             var difficulty=BotDifficultySettings.Selected;
@@ -608,6 +609,7 @@ namespace Alterverse.UI
         {
             if (index==selectedHero) return;
             selectedHero=Mathf.Clamp(index,0,HeroIdentity.HeroCount-1);
+            weaponSkinVariant=0;
             HeroId hero=(HeroId)selectedHero;
             if(HeroUnlockInventory.Owned(hero))PlayerHeroSelection.Select(hero);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
@@ -751,13 +753,13 @@ namespace Alterverse.UI
         private void DrawWeaponSkinShop()
         {
             HeroId hero=(HeroId)selectedHero;
-            WeaponSkinItem item=WeaponSkinCatalog.For(hero);
+            WeaponSkinItem item=WeaponSkinCatalog.For(hero,weaponSkinVariant);
             bool heroAvailable=HeroUnlockInventory.Owned(hero);
-            bool owned=WeaponSkinInventory.Owned(hero);
-            bool equipped=WeaponSkinInventory.Equipped(hero);
+            bool owned=WeaponSkinInventory.Owned(hero,weaponSkinVariant);
+            bool equipped=WeaponSkinInventory.EquippedVariant(hero)==weaponSkinVariant;
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
 
-            showcase.Present(hero,true,false,true,null);
+            showcase.Present(hero,true,false,true,null,weaponSkinVariant);
             DrawPortrait(new Rect(Left,270,w,340));
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
             theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON SKIN PREVIEW",theme.Small,true);
@@ -768,36 +770,49 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(x,282,rw,62),item.Name,theme.Title);
             theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
-            string description=string.IsNullOrEmpty(item.Description)
-                ?"Visual only — no damage, range or hitbox advantage."
-                :item.Description+"  Visual only — no gameplay advantage.";
-            theme.Label(new Rect(x,400,rw,90),description,theme.Body,true);
-            theme.Label(new Rect(x,506,rw,34),owned?"OWNED":WeaponSkinCatalog.Price+" SHARDS",theme.Heading);
-            FrontEndTheme.Fill(new Rect(x,548,rw,3),item.Glow);
+            theme.Label(new Rect(x,396,rw,76),item.Description+"  Visual only — no gameplay advantage.",theme.Body,true);
+
+            bool variantChanged=false;
+            if(theme.Action(new Rect(x,480,54,44),"<")){weaponSkinVariant=(weaponSkinVariant+1)%2;variantChanged=true;}
+            theme.Center(new Rect(x+62,480,rw-124,44),$"VARIANT {weaponSkinVariant+1} / 2");
+            if(theme.Action(new Rect(x+rw-54,480,54,44),">")){weaponSkinVariant=(weaponSkinVariant+1)%2;variantChanged=true;}
+            if(variantChanged)
+            {
+                shopMessage="";
+                showcase.Present(hero,true,false,true,null,weaponSkinVariant);
+            }
+
+            theme.Label(new Rect(x,532,rw,32),owned?(equipped?"OWNED  •  EQUIPPED":"OWNED"):item.Price+" SHARDS",theme.Heading);
+            FrontEndTheme.Fill(new Rect(x,570,rw,3),item.Glow);
 
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
             string action=!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
-                PlayerWallet.CanAfford(WeaponSkinCatalog.Price)?"BUY & EQUIP":"NEED 500 SHARDS";
-            bool enabled=heroAvailable&&(owned||PlayerWallet.CanAfford(WeaponSkinCatalog.Price));
-            if(theme.Action(new Rect(x,570,rw,60),action,true,enabled:enabled))
+                PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
+            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price));
+            if(theme.Action(new Rect(x,588,rw,54),action,true,enabled:enabled))
             {
-                if(owned)
+                if(equipped)
                 {
-                    WeaponSkinInventory.Equip(hero,!equipped);
-                    shopMessage=equipped?originalName+" equipped.":item.Name+" equipped.";
+                    WeaponSkinInventory.EquipOriginal(hero);
+                    shopMessage=originalName+" equipped.";
+                }
+                else if(owned)
+                {
+                    WeaponSkinInventory.Equip(hero,weaponSkinVariant);
+                    shopMessage=item.Name+" equipped.";
                 }
                 else
                 {
-                    AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero);
+                    AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero,weaponSkinVariant);
                     shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
                         result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
                 }
                 showcase.InvalidateLoadout();
-                showcase.Present(hero,true,false,true,null);
+                showcase.Present(hero,true,false,true,null,weaponSkinVariant);
             }
 
-            theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:
-                $"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
+            theme.Label(new Rect(x,650,rw,42),shopMessage.Length>0?shopMessage:
+                $"SHARDS {PlayerWallet.Balance}  •  TWO DISTINCT SKINS PER HERO",theme.Small,true);
         }
 
         private void DrawMapShop()
@@ -1087,6 +1102,27 @@ namespace Alterverse.UI
             Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
             theme.Label(new Rect(x,626,w,48),"GLOBAL LEVEL RANKING  /  RANKING TAB\nAccount level grants no combat power.",theme.Small,true);
         }
+        private void DrawQuests()
+        {
+            Heading("Daily missions","Daily progress resets at 00:00 Europe/Berlin. Claim completed missions here.");
+            float width=Mathf.Min(780,ContentWidth);
+            float x=Left+(ContentWidth-width)*.5f;
+            for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
+            {
+                ChallengeDef quest=PlayerChallengeContent.Daily[i];
+                float y=220+i*142;
+                theme.Panel(new Rect(x,y,width,126));
+                theme.Label(new Rect(x+22,y+13,width-235,30),quest.Name,theme.Heading);
+                theme.Label(new Rect(x+22,y+48,width-235,30),quest.Description,theme.Body,true);
+                int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
+                theme.Progress(new Rect(x+22,y+91,width-260,8),progress/(float)target);
+                theme.Label(new Rect(x+width-213,y+18,190,24),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
+                bool claimed=DailyQuestProgress.Claimed(i);
+                if(theme.Action(new Rect(x+width-205,y+58,180,50),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&progress>=target))
+                    DailyQuestProgress.Claim(i);
+            }
+        }
+
         private void Stat(float x,float y,float w,string label,string value)
         {
             theme.Label(new Rect(x,y,w*.57f,40),label,theme.Small,true);
@@ -1110,36 +1146,43 @@ namespace Alterverse.UI
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawLeaderboard()
         {
-            Heading("Global Ranking","Worldwide account-level ranking powered by Google Play Games.");
+            Heading("Most Wins", "Worldwide lifetime win rankings powered by Google Play Games.");
 
-            float leftWidth=ContentWidth*.58f;
-            theme.Panel(new Rect(Left,220,leftWidth,430));
-            theme.Label(new Rect(Left+28,244,leftWidth-56,24),"GLOBAL LEVEL",theme.Small,true);
-            theme.Label(new Rect(Left+28,278,leftWidth-56,54),$"LEVEL {PlayerExperience.Level}",theme.Title);
-            theme.Progress(new Rect(Left+28,344,leftWidth-56,6),PlayerExperience.LevelProgress);
-            theme.Label(new Rect(Left+28,360,leftWidth-56,26),XpLabel(),theme.Small,true);
+            float leftWidth = ContentWidth * .58f;
+            theme.Panel(new Rect(Left, 220, leftWidth, 430));
+            theme.Label(new Rect(Left + 28, 244, leftWidth - 56, 24), "MOST WINS", theme.Small, true);
+            int wins = Alterverse.Profile.MatchRewardService.MatchesWon;
+            theme.Label(new Rect(Left + 28, 278, leftWidth - 56, 54), $"WINS {wins:N0}", theme.Title);
+            theme.Label(new Rect(Left + 28, 344, leftWidth - 56, 40),
+                "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
 
-            theme.Label(new Rect(Left+28,410,leftWidth-56,22),"GOOGLE PLAY GAMES ACCOUNT",theme.Small,true);
-            theme.Label(new Rect(Left+28,440,leftWidth-56,32),GooglePlayLevelLeaderboard.PlayerName,theme.Heading);
-            theme.Label(new Rect(Left+28,484,leftWidth-56,54),GooglePlayLevelLeaderboard.Status,theme.Small,true);
+            theme.Label(new Rect(Left + 28, 410, leftWidth - 56, 22), "GOOGLE PLAY GAMES ACCOUNT", theme.Small, true);
+            theme.Label(new Rect(Left + 28, 440, leftWidth - 56, 32), GooglePlayLevelLeaderboard.PlayerName, theme.Heading);
+            theme.Label(new Rect(Left + 28, 484, leftWidth - 56, 54), GooglePlayLevelLeaderboard.Status, theme.Small, true);
 
-            bool configured=GooglePlayLevelLeaderboard.IsConfigured;
-            string syncLabel=GooglePlayLevelLeaderboard.IsAuthenticated?"SYNC LEVEL":"CONNECT & SYNC";
-            if(theme.Action(new Rect(Left+28,558,(leftWidth-68)*.5f,58),syncLabel,true,enabled:configured))
+            bool configured = GooglePlayLevelLeaderboard.IsConfigured;
+            string syncLabel = GooglePlayLevelLeaderboard.IsAuthenticated ? "SYNC WINS" : "CONNECT & SYNC";
+            if (theme.Action(new Rect(Left + 28, 558, (leftWidth - 68) * .5f, 58), syncLabel, true, enabled: configured))
                 GooglePlayLevelLeaderboard.AuthenticateAndSync();
-            if(theme.Action(new Rect(Left+40+(leftWidth-68)*.5f,558,(leftWidth-68)*.5f,58),"OPEN GLOBAL RANKING",true,enabled:configured))
+            if (theme.Action(new Rect(Left + 40 + (leftWidth - 68) * .5f, 558, (leftWidth - 68) * .5f, 58),
+                "OPEN MOST WINS", true, enabled: configured))
                 GooglePlayLevelLeaderboard.ShowLeaderboard();
 
-            float x=Left+leftWidth+32,w=ContentWidth-leftWidth-32;
-            theme.Label(new Rect(x,230,w,36),"How ranking works",theme.Heading);
-            theme.Label(new Rect(x,282,w,112),
-                "Your current account level is submitted as your Google Play leaderboard score. Higher level means a higher global position.",theme.Body,true);
-            Stat(x,420,w,"YOUR LEVEL",PlayerExperience.Level.ToString());
-            Stat(x,476,w,"LAST SYNCED",GooglePlayLevelLeaderboard.LastSubmittedLevel>0?GooglePlayLevelLeaderboard.LastSubmittedLevel.ToString():"—");
-            Stat(x,532,w,"SCOPE","ALL-TIME / GLOBAL");
-            theme.Label(new Rect(x,604,w,56),
-                configured?"Google Play keeps the global leaderboard. No separate DIMENSIONS FRONT ranking server is required.":
-                "SETUP REQUIRED  /  Add the GLOBAL LEVEL leaderboard ID from Google Play Console.",theme.Small,true);
+            float x = Left + leftWidth + 32, w = ContentWidth - leftWidth - 32;
+            theme.Label(new Rect(x, 230, w, 36), "How ranking works", theme.Heading);
+            theme.Label(new Rect(x, 282, w, 112),
+                "Your lifetime match wins are submitted to Google Play. A higher win total ranks above lower totals.",
+                theme.Body, true);
+            Stat(x, 420, w, "YOUR WINS", wins.ToString("N0"));
+            Stat(x, 476, w, "LAST SYNCED",
+                GooglePlayLevelLeaderboard.LastSubmittedScore >= 0
+                    ? GooglePlayLevelLeaderboard.LastSubmittedScore.ToString("N0")
+                    : "—");
+            Stat(x, 532, w, "SCOPE", "ALL-TIME / GLOBAL");
+            theme.Label(new Rect(x, 604, w, 56),
+                configured ? "Google Play stores the global Most Wins leaderboard."
+                    : "SETUP REQUIRED  /  Add the MOST WINS leaderboard ID from Google Play Console.",
+                theme.Small, true);
         }
 
         private void DrawSettings()
