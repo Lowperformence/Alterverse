@@ -108,23 +108,26 @@ private void OnGUI()
 
     GUI.matrix=matrix;
 
-    // Keep the instructions focused on the requested 3-2-1 countdown.
+    // Keep the instructions readable for the entire 3-2-1 sequence.
+    // Their opacity is deliberately independent from the animated countdown phase alpha,
+    // so changing from 3 -> 2 -> 1 cannot fade the tutorial out and back in.
     if(countdown)
     {
+        const float tutorialAlpha=1f;
         float rulesWidth=Mathf.Min(Screen.width*.90f,820f*uiScale);
         float rulesHeight=118f*uiScale;
         float rulesY=rect.yMax+18f*uiScale;
         Rect rulesRect=new((Screen.width-rulesWidth)*.5f,rulesY,rulesWidth,rulesHeight);
 
-        GUI.color=new Color(0f,0f,0f,.74f*alpha);
+        GUI.color=new Color(0f,0f,0f,.74f*tutorialAlpha);
         GUI.Label(new Rect(rulesRect.x+1.5f*uiScale,rulesRect.y+2f*uiScale,rulesRect.width,rulesRect.height),Rules,rulesShadow);
-        GUI.color=new Color(.90f,.95f,1f,.94f*alpha);
+        GUI.color=new Color(.90f,.95f,1f,.94f*tutorialAlpha);
         GUI.Label(rulesRect,Rules,rules);
 
         Rect warningRect=new(rulesRect.x,rulesRect.yMax+3f*uiScale,rulesRect.width,32f*uiScale);
-        GUI.color=new Color(0f,0f,0f,.78f*alpha);
+        GUI.color=new Color(0f,0f,0f,.78f*tutorialAlpha);
         GUI.Label(new Rect(warningRect.x+1.5f*uiScale,warningRect.y+2f*uiScale,warningRect.width,warningRect.height),BomberWarning,warningShadow);
-        GUI.color=new Color(1f,.66f,.30f,.98f*alpha);
+        GUI.color=new Color(1f,.66f,.30f,.98f*tutorialAlpha);
         GUI.Label(warningRect,BomberWarning,warning);
     }
 
