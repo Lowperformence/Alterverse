@@ -58,7 +58,9 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
 
     void BuildSurface()
     {
-        const int xSeg=144,zSeg=128;
+        // Denser Mars silhouette supports the broad dunes without changing collision or pathing.
+        int xSeg=ArenaVariantRuntime.IsMars?192:144;
+        int zSeg=ArenaVariantRuntime.IsMars?160:128;
         Vector3[] v=new Vector3[(xSeg+1)*(zSeg+1)];Vector2[] uv=new Vector2[v.Length];
         int[] t=new int[xSeg*zSeg*6];
         for(int z=0;z<=zSeg;z++)for(int x=0;x<=xSeg;x++)
