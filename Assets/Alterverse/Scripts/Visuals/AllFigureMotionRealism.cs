@@ -67,8 +67,8 @@ namespace Alterverse.Visuals
         private void Awake()
         {
             ResolveKind();
-            int id=Mathf.Abs(GetInstanceID());
-            seed=(id%997)/997f;
+            int id=Mathf.Abs(GetEntityId().GetHashCode());
+            seed =(id%997)/997f;
             phase=seed*Mathf.PI*2f;
             cadenceScale=.94f+((id*37)%101)/100f*.12f;
             strideScale=.95f+((id*53)%101)/100f*.10f;
