@@ -30,7 +30,10 @@ namespace Alterverse.Combat
             if(Time.unscaledTime<nextScan)return;
             nextScan=Time.unscaledTime+ScanInterval;
 
-            LaneMinion[] units=FindObjectsByType<LaneMinion>(FindObjectsInactive.Exclude);
+            // Unity 6.6-safe overload: the previous call used FindObjectsInactive.Exclude as the
+            // only argument, which is not a valid overload on the project API and could stop the
+            // new tank scripts from compiling at all.
+            LaneMinion[] units=FindObjectsByType<LaneMinion>(FindObjectsSortMode.None);
             for(int i=0;i<units.Length;i++)
             {
                 LaneMinion unit=units[i];
