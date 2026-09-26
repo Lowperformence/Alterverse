@@ -6,6 +6,7 @@ namespace Alterverse.Shop
     {
         public UniversalHeroCosmetic UniversalCosmetic=UniversalHeroCosmetic.Original;
         public bool WeaponOverdrive;
+        public int WeaponSkinVariant=-1;
 
         // Compatibility for existing preview/regression code.
         public bool Voidfall
