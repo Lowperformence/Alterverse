@@ -198,7 +198,7 @@ part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>(
 }
 private void ApplyWeaponOverdrive()
 {
-Alterverse.Shop.WeaponSkinItem skin=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero);
+Alterverse.Shop.WeaponSkinItem skin=Alterverse.Shop.WeaponSkinCatalog.For(identity.Hero,weaponSkinVariant);
 Shader shader=Shader.Find("Universal Render Pipeline/Lit");if(shader==null)shader=Shader.Find("Standard");if(shader==null)return;
 Color glow=skin.Glow;
 Material weaponMaterial=new Material(shader){name="DF_WeaponOverdrive_"+identity.Hero,color=glow};
@@ -209,7 +209,7 @@ if(weaponMaterial.HasProperty("_EmissionColor")){weaponMaterial.EnableKeyword("_
 ownedMaterials.Add(weaponMaterial);
 
 // Build an exclusive silhouette on the existing animation pivots.
-BuildSignatureWeapon(shader,weaponMaterial);
+BuildSignatureWeapon(shader,weaponMaterial,weaponSkinVariant);
 }
 
 private void ApplyNullEdgeOverdrive(Shader shader,Material voidMaterial)
