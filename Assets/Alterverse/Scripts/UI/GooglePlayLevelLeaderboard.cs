@@ -189,16 +189,35 @@ namespace Alterverse.Online
                     object instance=instanceProperty?.GetValue(null,null);
                     if(instance!=null)
                     {
-                        MethodInfo showSpecific=type.GetMethod(
-                            "ShowLeaderboardUI",
-                            BindingFlags.Public|BindingFlags.Instance,
-                            null,
-                            new[]{typeof(string)},
-                            null);
-
-                        if(showSpecific!=null)
+                        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                        for (int i = 0; i < methods.Length; i++)
                         {
-                            showSpecific.Invoke(instance,new object[]{GlobalLevelLeaderboardId});
+                            MethodInfo showSpecific = methods[i];
+                            if (showSpecific.Name != "ShowLeaderboardUI")
+                                continue;
+
+                            ParameterInfo[] parameters = showSpecific.GetParameters();
+                            if (parameters.Length == 0 || parameters[0].ParameterType != typeof(string))
+                                continue;
+
+                            object[] arguments = new object[parameters.Length];
+                            arguments[0] = GlobalLevelLeaderboardId;
+                            bool supported = true;
+                            for (int parameter = 1; parameter < parameters.Length; parameter++)
+                            {
+                                ParameterInfo info = parameters[parameter];
+                                if (!info.IsOptional && info.ParameterType.IsValueType &&
+                                    Nullable.GetUnderlyingType(info.ParameterType) == null)
+                                {
+                                    supported = false;
+                                    break;
+                                }
+                                arguments[parameter] = info.IsOptional ? info.DefaultValue : null;
+                            }
+                            if (!supported)
+                                continue;
+
+                            showSpecific.Invoke(instance, arguments);
                             return;
                         }
                     }
@@ -244,8 +263,21 @@ namespace Alterverse.Online
 
         private static Type ResolvePlayGamesPlatformType()
         {
-            return Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
-                ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
+            const string typeName = "GooglePlayGames.PlayGamesPlatform";
+            Type resolved = Type.GetType(typeName + ", GooglePlayGames", false)
+                ?? Type.GetType(typeName + ", GooglePlayGames.Android", false)
+                ?? Type.GetType(typeName + ", Google.Play.Games", false);
+            if (resolved != null)
+                return resolved;
+
+            // The plugin assembly name differs between the legacy and current Unity packages.
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                resolved = assembly.GetType(typeName, false);
+                if (resolved != null)
+                    return resolved;
+            }
+            return null;
         }
 
         private static void Fail(string message)
