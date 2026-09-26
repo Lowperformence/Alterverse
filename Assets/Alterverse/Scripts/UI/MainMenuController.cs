@@ -1133,36 +1133,43 @@ namespace Alterverse.UI
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawLeaderboard()
         {
-            Heading("Global Ranking","Worldwide account-level ranking powered by Google Play Games.");
+            Heading("Most Wins", "Worldwide lifetime win rankings powered by Google Play Games.");
 
-            float leftWidth=ContentWidth*.58f;
-            theme.Panel(new Rect(Left,220,leftWidth,430));
-            theme.Label(new Rect(Left+28,244,leftWidth-56,24),"GLOBAL LEVEL",theme.Small,true);
-            theme.Label(new Rect(Left+28,278,leftWidth-56,54),$"LEVEL {PlayerExperience.Level}",theme.Title);
-            theme.Progress(new Rect(Left+28,344,leftWidth-56,6),PlayerExperience.LevelProgress);
-            theme.Label(new Rect(Left+28,360,leftWidth-56,26),XpLabel(),theme.Small,true);
+            float leftWidth = ContentWidth * .58f;
+            theme.Panel(new Rect(Left, 220, leftWidth, 430));
+            theme.Label(new Rect(Left + 28, 244, leftWidth - 56, 24), "MOST WINS", theme.Small, true);
+            int wins = Alterverse.Profile.MatchRewardService.MatchesWon;
+            theme.Label(new Rect(Left + 28, 278, leftWidth - 56, 54), $"WINS {wins:N0}", theme.Title);
+            theme.Label(new Rect(Left + 28, 344, leftWidth - 56, 40),
+                "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
 
-            theme.Label(new Rect(Left+28,410,leftWidth-56,22),"GOOGLE PLAY GAMES ACCOUNT",theme.Small,true);
-            theme.Label(new Rect(Left+28,440,leftWidth-56,32),GooglePlayLevelLeaderboard.PlayerName,theme.Heading);
-            theme.Label(new Rect(Left+28,484,leftWidth-56,54),GooglePlayLevelLeaderboard.Status,theme.Small,true);
+            theme.Label(new Rect(Left + 28, 410, leftWidth - 56, 22), "GOOGLE PLAY GAMES ACCOUNT", theme.Small, true);
+            theme.Label(new Rect(Left + 28, 440, leftWidth - 56, 32), GooglePlayLevelLeaderboard.PlayerName, theme.Heading);
+            theme.Label(new Rect(Left + 28, 484, leftWidth - 56, 54), GooglePlayLevelLeaderboard.Status, theme.Small, true);
 
-            bool configured=GooglePlayLevelLeaderboard.IsConfigured;
-            string syncLabel=GooglePlayLevelLeaderboard.IsAuthenticated?"SYNC LEVEL":"CONNECT & SYNC";
-            if(theme.Action(new Rect(Left+28,558,(leftWidth-68)*.5f,58),syncLabel,true,enabled:configured))
+            bool configured = GooglePlayLevelLeaderboard.IsConfigured;
+            string syncLabel = GooglePlayLevelLeaderboard.IsAuthenticated ? "SYNC WINS" : "CONNECT & SYNC";
+            if (theme.Action(new Rect(Left + 28, 558, (leftWidth - 68) * .5f, 58), syncLabel, true, enabled: configured))
                 GooglePlayLevelLeaderboard.AuthenticateAndSync();
-            if(theme.Action(new Rect(Left+40+(leftWidth-68)*.5f,558,(leftWidth-68)*.5f,58),"OPEN GLOBAL RANKING",true,enabled:configured))
+            if (theme.Action(new Rect(Left + 40 + (leftWidth - 68) * .5f, 558, (leftWidth - 68) * .5f, 58),
+                "OPEN MOST WINS", true, enabled: configured))
                 GooglePlayLevelLeaderboard.ShowLeaderboard();
 
-            float x=Left+leftWidth+32,w=ContentWidth-leftWidth-32;
-            theme.Label(new Rect(x,230,w,36),"How ranking works",theme.Heading);
-            theme.Label(new Rect(x,282,w,112),
-                "Your current account level is submitted as your Google Play leaderboard score. Higher level means a higher global position.",theme.Body,true);
-            Stat(x,420,w,"YOUR LEVEL",PlayerExperience.Level.ToString());
-            Stat(x,476,w,"LAST SYNCED",GooglePlayLevelLeaderboard.LastSubmittedLevel>0?GooglePlayLevelLeaderboard.LastSubmittedLevel.ToString():"—");
-            Stat(x,532,w,"SCOPE","ALL-TIME / GLOBAL");
-            theme.Label(new Rect(x,604,w,56),
-                configured?"Google Play keeps the global leaderboard. No separate DIMENSIONS FRONT ranking server is required.":
-                "SETUP REQUIRED  /  Add the GLOBAL LEVEL leaderboard ID from Google Play Console.",theme.Small,true);
+            float x = Left + leftWidth + 32, w = ContentWidth - leftWidth - 32;
+            theme.Label(new Rect(x, 230, w, 36), "How ranking works", theme.Heading);
+            theme.Label(new Rect(x, 282, w, 112),
+                "Your lifetime match wins are submitted to Google Play. A higher win total ranks above lower totals.",
+                theme.Body, true);
+            Stat(x, 420, w, "YOUR WINS", wins.ToString("N0"));
+            Stat(x, 476, w, "LAST SYNCED",
+                GooglePlayLevelLeaderboard.LastSubmittedScore >= 0
+                    ? GooglePlayLevelLeaderboard.LastSubmittedScore.ToString("N0")
+                    : "—");
+            Stat(x, 532, w, "SCOPE", "ALL-TIME / GLOBAL");
+            theme.Label(new Rect(x, 604, w, 56),
+                configured ? "Google Play stores the global Most Wins leaderboard."
+                    : "SETUP REQUIRED  /  Add the MOST WINS leaderboard ID from Google Play Console.",
+                theme.Small, true);
         }
 
         private void DrawSettings()
