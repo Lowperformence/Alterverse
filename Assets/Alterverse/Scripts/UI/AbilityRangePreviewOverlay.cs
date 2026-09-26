@@ -168,9 +168,8 @@ namespace Alterverse.UI
 
             if (spec.Range > .01f)
             {
-                // Outer ring: authoritative maximum cast/auto-target range.
+                // Clean, Hot-Zone-like outer ring: authoritative maximum cast/auto-target range.
                 DrawWorldCircle(origin, spec.Range, core, glow, pulse, true, 1f);
-                DrawRangeTicks(origin, spec.Range, core);
                 DrawWorldTag(origin + FlatForward() * spec.Range, $"RANGE {spec.Range:0.#}m", core);
 
                 if (spec.Radius > .01f)
@@ -193,8 +192,8 @@ namespace Alterverse.UI
                         center = origin + FlatForward() * offset;
                     }
 
-                    DrawProjectedLine(origin, center, new Color(0f, 0f, 0f, .62f), 5f);
-                    DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .46f), 2f);
+                    DrawProjectedLine(origin, center, new Color(0f, 0f, 0f, .42f), 4f);
+                    DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .32f), 1.75f);
                     DrawWorldCircle(center, spec.Radius, core, Color.white, pulse, false, exactTarget ? .90f : .72f);
                     DrawWorldTag(center + Vector3.right * spec.Radius,
                         exactTarget ? $"AREA {spec.Radius:0.#}m" : $"AREA SIZE {spec.Radius:0.#}m", core);
@@ -206,7 +205,6 @@ namespace Alterverse.UI
             {
                 // Self-centered AoE: the radius itself is the authoritative reach.
                 DrawWorldCircle(origin, spec.Radius, core, glow, pulse, true, 1f);
-                DrawRangeTicks(origin, spec.Radius, core);
                 DrawWorldTag(origin + FlatForward() * spec.Radius, $"AREA {spec.Radius:0.#}m", core);
                 return;
             }
@@ -269,12 +267,17 @@ namespace Alterverse.UI
         private void DrawWorldCircle(Vector3 center, float radius, Color core, Color glow, float pulse, bool breathe, float alpha)
         {
             if (radius <= .01f) return;
-            // 48 segments is smooth from the match camera but materially cheaper than 64 on mobile.
-            const int Segments = 48;
-            float displayedRadius = breathe ? radius * (1f - .006f + pulse * .012f) : radius;
-            Color shadow = new Color(0f, 0f, 0f, .74f * alpha);
-            Color soft = new Color(glow.r, glow.g, glow.b, (.32f + pulse * .11f) * alpha);
-            Color line = new Color(core.r, core.g, core.b, core.a * alpha);
+
+            // Match the Hot Zone's clean circular language, but keep the held-attack preview lighter.
+            // A fixed radius prevents the edge from wobbling while aiming; 96 segments keep it smooth
+            // even on large phone screens without introducing a texture or an extra world-space object.
+            const int Segments = 96;
+            float displayedRadius = radius;
+            float opacityPulse = breathe ? .94f + pulse * .06f : 1f;
+            float opacity = Mathf.Clamp01(alpha) * opacityPulse;
+            Color shadow = new Color(0f, 0f, 0f, .26f * opacity);
+            Color soft = new Color(glow.r, glow.g, glow.b, .10f * opacity);
+            Color line = new Color(core.r, core.g, core.b, .58f * opacity);
 
             for (int i = 0; i < Segments; i++)
             {
@@ -282,24 +285,9 @@ namespace Alterverse.UI
                 float b = (i + 1) * Mathf.PI * 2f / Segments;
                 Vector3 p = center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * displayedRadius;
                 Vector3 q = center + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * displayedRadius;
-                DrawProjectedLine(p, q, shadow, 8.5f);
-                DrawProjectedLine(p, q, soft, 6f);
-                DrawProjectedLine(p, q, line, 3.25f);
-            }
-        }
-
-        private void DrawRangeTicks(Vector3 center, float radius, Color color)
-        {
-            if (radius < .5f) return;
-            float tick = Mathf.Clamp(radius * .035f, .12f, .28f);
-            for (int i = 0; i < 8; i++)
-            {
-                float a = i * Mathf.PI * .25f;
-                Vector3 dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
-                Vector3 from = center + dir * Mathf.Max(.05f, radius - tick);
-                Vector3 to = center + dir * (radius + tick);
-                DrawProjectedLine(from, to, new Color(0f, 0f, 0f, .82f), 8f);
-                DrawProjectedLine(from, to, color, 4f);
+                DrawProjectedLine(p, q, shadow, 5f);
+                DrawProjectedLine(p, q, soft, 3.5f);
+                DrawProjectedLine(p, q, line, 2.25f);
             }
         }
 
