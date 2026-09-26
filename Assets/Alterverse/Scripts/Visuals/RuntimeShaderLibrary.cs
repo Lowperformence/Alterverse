@@ -11,6 +11,7 @@ namespace Alterverse.Visuals
     {
         private static Shader lit;
         private static Shader unlit;
+        private static Shader groundTelegraph;
 
         public static Shader Lit
         {
@@ -32,6 +33,15 @@ namespace Alterverse.Visuals
             }
         }
 
+        public static Shader GroundTelegraph
+        {
+            get
+            {
+                if(groundTelegraph==null)groundTelegraph=Resources.Load<Shader>("DF_RuntimeGroundTelegraph");
+                return groundTelegraph;
+            }
+        }
+
         public static Material Create(Color color,bool useUnlit=false,float metallic=0f,float smoothness=.2f,Color emission=default)
         {
             Shader shader=useUnlit?Unlit:Lit;
@@ -43,6 +53,18 @@ namespace Alterverse.Visuals
             if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Clamp01(metallic));
             if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Clamp01(smoothness));
             if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
+            return material;
+        }
+
+        public static Material CreateGroundTelegraph(Color color,float fillAlpha,float ringAlpha,float ringWidth)
+        {
+            Shader shader=GroundTelegraph;
+            if(shader==null)return null;
+            Material material=new(shader);
+            material.SetColor("_BaseColor",color);
+            material.SetFloat("_FillAlpha",Mathf.Clamp01(fillAlpha));
+            material.SetFloat("_RingAlpha",Mathf.Clamp01(ringAlpha));
+            material.SetFloat("_RingWidth",Mathf.Clamp(ringWidth,.005f,.25f));
             return material;
         }
 
