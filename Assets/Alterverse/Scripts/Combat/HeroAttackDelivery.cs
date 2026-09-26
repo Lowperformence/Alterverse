@@ -61,7 +61,7 @@ namespace Alterverse.Combat
         }
         public void Basic(Health target,float amount,float range)
         {
-            if(target==null||HeroCombatRules.BasicDistance(transform.position,target)>range)return;
+            if(target==null||HeroCombatRules.TargetDistance(transform.position,target)>range)return;
             int i=FreeSlot();if(i<0)return;
             float windup=Windup(identity.Hero);
             hasPending=true;
@@ -72,7 +72,7 @@ namespace Alterverse.Combat
         {
             int i=FreeSlot();if(i<0||target==null)return;
             float range=GetComponent<HeroAbilityKit>().Spec(slot).Range;
-            if(HeroCombatRules.Distance(transform.position,target.transform.position)>range)return;
+            if(HeroCombatRules.TargetDistance(transform.position,target)>range)return;
             hasPending=true;
             pending[i]=new Pending{Active=true,Slot=slot,Target=target,Execution=execution,Volley=volley,
                 Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
@@ -99,7 +99,7 @@ namespace Alterverse.Combat
                 {
                     if(Time.time<p.ReleaseAt)continue;
                     // Keep the originally selected target. Leaving the existing range can avoid contact.
-                    if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range+p.Grace)
+                    if(HeroCombatRules.TargetDistance(transform.position,p.Target)>p.Range+p.Grace)
                     {pending[i]=default;continue;}
                     Vector3 origin=GetComponent<HeroVisualMotion>()?.ReleasePoint??transform.position;
                     float flight=Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
@@ -119,7 +119,7 @@ namespace Alterverse.Combat
                 if(Time.time<p.HitAt)continue;
                 // Clear before callbacks (a hit can disable/destroy a component or trigger death).
                 pending[i]=default;
-                if((p.Basic?HeroCombatRules.BasicDistance(transform.position,p.Target):HeroCombatRules.Distance(transform.position,p.Target.transform.position))>p.Range+p.Grace)continue;
+                if(HeroCombatRules.TargetDistance(transform.position,p.Target)>p.Range+p.Grace)continue;
                 if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
                 else p.Execution.ResolvePresentedHit(p.Slot,p.Target,p.Volley);
             }
