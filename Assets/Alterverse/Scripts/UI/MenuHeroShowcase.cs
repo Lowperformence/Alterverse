@@ -27,6 +27,14 @@ namespace Alterverse.UI
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
         public Texture Image => texture;
+        public Texture BackgroundImage => originWorld != null && originWorld.sprite != null ? originWorld.sprite.texture : null;
+
+        public void DrawPreview(Rect rect)
+        {
+            // Fill the entire card independently of the portrait aspect, without stretching the hero.
+            if (BackgroundImage != null) GUI.DrawTexture(rect, BackgroundImage, ScaleMode.ScaleAndCrop, false);
+            if (Image != null) GUI.DrawTexture(rect, Image, ScaleMode.ScaleToFit, true);
+        }
 
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
             Alterverse.Shop.UniversalHeroCosmetic? cosmeticOverride=null,int? weaponVariantOverride=null)
@@ -124,11 +132,13 @@ namespace Alterverse.UI
             worldObject.layer=PreviewLayer;
             originWorld=worldObject.AddComponent<SpriteRenderer>();
             originWorld.sortingOrder=-100;
+            // Background is composited at card resolution, never through the narrow hero camera.
+            originWorld.enabled=false;
             originWorld.color=new Color(1,1,1,.96f);
             originBackdrop=new HeroOriginBackdrop();
 
             texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32)
-            { name = "DF_HeroPortrait", antiAliasing = 2, useMipMap = false };
+            { name = "DF_HeroPortrait", antiAliasing = 4, useMipMap = false, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();

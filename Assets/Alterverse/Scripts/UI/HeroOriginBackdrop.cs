@@ -10,7 +10,7 @@ namespace Alterverse.UI
     /// </summary>
     internal sealed class HeroOriginBackdrop : IDisposable
     {
-        private const int Width = 1024;
+        private const int Width = 2048;
         private const int Height = 1152;
         private const float PixelsPerUnit = 144f;
 
