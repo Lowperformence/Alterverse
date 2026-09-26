@@ -194,6 +194,29 @@ namespace Alterverse.Match
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
 
             int winner=zeroTime>lumenTime+.05f?0:lumenTime>zeroTime+.05f?1:-1;
+            if (winner >= 0 &&
+                (!Alterverse.Multiplayer.CoopAuthority.Active || Alterverse.Multiplayer.CoopAuthority.LocalIsHost))
+            {
+                float radiusSquared = Radius * Radius;
+                IReadOnlyList<Health> heroes = Health.Active;
+                for (int i = 0; i < heroes.Count; i++)
+                {
+                    Health hero = heroes[i];
+                    if (hero == null || hero.IsDead || !hero.isActiveAndEnabled ||
+                        hero.GetComponent<HeroIdentity>() == null)
+                        continue;
+
+                    TeamMember member = hero.GetComponent<TeamMember>();
+                    if (member == null || member.Team != winner)
+                        continue;
+
+                    Vector3 offset = hero.transform.position - transform.position;
+                    offset.y = 0f;
+                    if (offset.sqrMagnitude <= radiusSquared)
+                        MatchTelemetry.Instance?.RecordHotZoneCapture(hero);
+                }
+            }
+
             if(winner>=0&&!rewardIssued)
                 rewardIssued=HotZoneTank.Spawn(winner);
 
