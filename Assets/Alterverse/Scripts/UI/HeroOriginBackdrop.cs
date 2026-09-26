@@ -10,9 +10,9 @@ namespace Alterverse.UI
     /// </summary>
     internal sealed class HeroOriginBackdrop : IDisposable
     {
-        private const int Width = 640;
-        private const int Height = 720;
-        private const float PixelsPerUnit = 90f;
+        private const int Width = 1024;
+        private const int Height = 1152;
+        private const float PixelsPerUnit = 144f;
 
         private readonly Texture2D[] textures = new Texture2D[HeroIdentity.HeroCount];
         private readonly Sprite[] sprites = new Sprite[HeroIdentity.HeroCount];
