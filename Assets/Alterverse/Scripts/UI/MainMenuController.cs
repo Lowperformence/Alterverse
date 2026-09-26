@@ -1126,7 +1126,7 @@ namespace Alterverse.UI
                 theme.Progress(new Rect(x+22,y+91,width-260,8),progress/(float)target);
                 theme.Label(new Rect(x+width-213,y+18,190,24),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
                 bool claimed=DailyQuestProgress.Claimed(i);
-                if(theme.Action(new Rect(x+width-205,y+58,180,50),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&progress>=target))
+                if(theme.Action(new Rect(x+width-205,y+58,180,50),claimed?"ABGEHOLT":"CLAIM",true,enabled:!claimed&&progress>=target))
                     DailyQuestProgress.Claim(i);
             }
         }
