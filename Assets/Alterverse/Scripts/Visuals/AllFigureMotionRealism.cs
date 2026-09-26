@@ -1,62 +1,63 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Presentation-only locomotion pass shared by every moving combat figure.
-    /// It never moves the gameplay root/collider. Instead it adds torso/hip inertia,
-    /// individual distance-driven gait timing and heavy mech weight to the rendered body.
+    /// Presentation-only locomotion pass for moving combat figures.
+    /// Gameplay roots, colliders, AI and combat movement are never modified.
     /// </summary>
     [DefaultExecutionOrder(900)]
     public sealed class AllFigureMotionRealism : MonoBehaviour
     {
         private enum MotionKind { Hero, Soldier, Minion, Mech, Heavy }
 
-        private sealed class AdditivePart
+        private sealed class MotionPart
         {
             public readonly Transform Transform;
-            private Quaternion previousRotation=Quaternion.identity;
-            private Vector3 previousPosition;
+            private readonly Vector3 restPosition;
+            private readonly Quaternion restRotation;
 
-            public AdditivePart(Transform target){Transform=target;}
+            public MotionPart(Transform target)
+            {
+                Transform=target;
+                if(target!=null)
+                {
+                    restPosition=target.localPosition;
+                    restRotation=target.localRotation;
+                }
+            }
 
             public void Apply(Quaternion rotation,Vector3 position)
             {
                 if(Transform==null)return;
-                Transform.localRotation=Transform.localRotation*Quaternion.Inverse(previousRotation);
-                Transform.localPosition-=previousPosition;
-                Transform.localRotation=Transform.localRotation*rotation;
-                Transform.localPosition+=position;
-                previousRotation=rotation;
-                previousPosition=position;
+                Transform.localRotation=restRotation*rotation;
+                Transform.localPosition=restPosition+position;
             }
 
-            public void Clear()
+            public void Reset()
             {
                 if(Transform==null)return;
-                Transform.localRotation=Transform.localRotation*Quaternion.Inverse(previousRotation);
-                Transform.localPosition-=previousPosition;
-                previousRotation=Quaternion.identity;
-                previousPosition=Vector3.zero;
+                Transform.localRotation=restRotation;
+                Transform.localPosition=restPosition;
             }
         }
 
         private MotionKind kind;
         private float seed,phase,cadenceScale,strideScale;
-        private Vector3 lastPosition,smoothedVelocity;
+        private Vector3 lastPosition,smoothedVelocity,lastForward;
         private float lastSpeed,moveWeight,smoothedAcceleration,smoothedTurn;
-        private Vector3 lastForward;
+        private float nextHierarchyRetry;
 
         private Transform visualRoot,leftLeg,rightLeg,leftArm,rightArm;
         private Quaternion leftLegRest=Quaternion.identity,rightLegRest=Quaternion.identity;
         private Quaternion leftArmRest=Quaternion.identity,rightArmRest=Quaternion.identity;
         private bool overrideLegs,overrideArms;
 
-        private AdditivePart bodyPart,pelvisPart,headPart,minionBodyPart;
-        private readonly List<AdditivePart> heroTorsoParts=new();
-        private float nextHierarchyRetry;
+        private MotionPart bodyPart,pelvisPart,headPart,minionBodyPart;
+        private readonly List<MotionPart> heroTorsoParts=new List<MotionPart>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void InstallBootstrap()
@@ -67,8 +68,14 @@ namespace Alterverse.Visuals
         private void Awake()
         {
             ResolveKind();
-            int id=Mathf.Abs(GetEntityId().GetHashCode());
-            seed =(id%997)/997f;
+
+            // Unity 6.5+ removed GetInstanceID() from supported runtime use.
+            // Keep only a small per-instance randomization seed from the new EntityId API.
+            int id=GetEntityId().GetHashCode();
+            if(id==int.MinValue)id=0;
+            id=Mathf.Abs(id);
+
+            seed=(id%997)/997f;
             phase=seed*Mathf.PI*2f;
             cadenceScale=.94f+((id*37)%101)/100f*.12f;
             strideScale=.95f+((id*53)%101)/100f*.10f;
@@ -80,7 +87,7 @@ namespace Alterverse.Visuals
 
         private void OnDisable()
         {
-            ClearAdditives();
+            ResetVisuals();
         }
 
         private void LateUpdate()
@@ -88,14 +95,14 @@ namespace Alterverse.Visuals
             float dt=Time.deltaTime;
             if(dt<=.00001f)return;
 
-            if(bodyPart==null&&pelvisPart==null&&minionBodyPart==null&&heroTorsoParts.Count==0&&Time.unscaledTime>=nextHierarchyRetry)
+            if(!HasResolvedVisual()&&Time.unscaledTime>=nextHierarchyRetry)
             {
                 nextHierarchyRetry=Time.unscaledTime+.75f;
                 ResolveHierarchy();
             }
 
             UpdateKinematics(dt);
-            AnimatePresentation(dt);
+            AnimatePresentation();
         }
 
         private void ResolveKind()
@@ -117,19 +124,28 @@ namespace Alterverse.Visuals
             return false;
         }
 
+        private bool HasResolvedVisual()
+        {
+            return bodyPart!=null||pelvisPart!=null||headPart!=null||minionBodyPart!=null||heroTorsoParts.Count>0||
+                   leftLeg!=null||rightLeg!=null||leftArm!=null||rightArm!=null;
+        }
+
         private void ResolveHierarchy()
         {
-            ClearAdditives();
+            ResetVisuals();
             heroTorsoParts.Clear();
             bodyPart=pelvisPart=headPart=minionBodyPart=null;
-            leftLeg=rightLeg=leftArm=rightArm=null;
+            visualRoot=leftLeg=rightLeg=leftArm=rightArm=null;
             overrideLegs=overrideArms=false;
 
-            if(kind==MotionKind.Hero)SetupHero();
-            else if(kind==MotionKind.Soldier)SetupSoldier();
-            else if(kind==MotionKind.Minion)SetupMinion();
-            else if(kind==MotionKind.Mech)SetupMech();
-            else SetupHeavy();
+            switch(kind)
+            {
+                case MotionKind.Hero: SetupHero(); break;
+                case MotionKind.Soldier: SetupSoldier(); break;
+                case MotionKind.Minion: SetupMinion(); break;
+                case MotionKind.Mech: SetupMech(); break;
+                default: SetupHeavy(); break;
+            }
         }
 
         private void SetupHero()
@@ -143,11 +159,11 @@ namespace Alterverse.Visuals
                 Transform t=all[i];
                 if(t==visualRoot)continue;
                 string n=t.name.ToLowerInvariant();
-                if(IsHeroTorsoName(n))heroTorsoParts.Add(new AdditivePart(t));
+                if(IsHeroTorsoName(n))heroTorsoParts.Add(new MotionPart(t));
             }
 
             Transform head=FindBest(all,"head","helmet");
-            if(head!=null)headPart=new AdditivePart(head);
+            if(head!=null)headPart=new MotionPart(head);
         }
 
         private void SetupSoldier()
@@ -162,49 +178,45 @@ namespace Alterverse.Visuals
                 torsoPivot.SetParent(visualRoot,false);
                 torsoPivot.localPosition=new Vector3(0,1.15f,0);
 
-                List<Transform> toGroup=new();
+                List<Transform> upper=new List<Transform>();
                 for(int i=0;i<visualRoot.childCount;i++)
                 {
                     Transform child=visualRoot.GetChild(i);
                     if(child==torsoPivot)continue;
                     string n=child.name;
                     if(n=="DF_TrenchSoldier_LegL"||n=="DF_TrenchSoldier_LegR"||n=="DF_TrenchSoldier_Pelvis")continue;
-                    toGroup.Add(child);
+                    upper.Add(child);
                 }
-                for(int i=0;i<toGroup.Count;i++)toGroup[i].SetParent(torsoPivot,true);
+                for(int i=0;i<upper.Count;i++)upper[i].SetParent(torsoPivot,true);
             }
 
-            bodyPart=new AdditivePart(torsoPivot);
+            bodyPart=new MotionPart(torsoPivot);
             Transform pelvis=FindDescendant("DF_TrenchSoldier_Pelvis");
-            if(pelvis!=null)pelvisPart=new AdditivePart(pelvis);
+            if(pelvis!=null)pelvisPart=new MotionPart(pelvis);
 
             leftLeg=FindDescendant("DF_TrenchSoldier_LegL");
             rightLeg=FindDescendant("DF_TrenchSoldier_LegR");
             if(leftLeg!=null&&rightLeg!=null)
             {
-                leftLegRest=Quaternion.Euler(0,0,-2f);
-                rightLegRest=Quaternion.Euler(0,0,2f);
+                leftLegRest=leftLeg.localRotation;
+                rightLegRest=rightLeg.localRotation;
                 overrideLegs=true;
             }
         }
 
         private void SetupMinion()
         {
-            // Regular lane soldiers are currently a single capsule. Give the render mesh its own
-            // presentation transform so weight/bob can be animated without touching gameplay collision.
-            Renderer hostRenderer=GetComponent<Renderer>();
-            if(hostRenderer==null)return;
+            MeshFilter sourceFilter=GetComponent<MeshFilter>();
+            MeshRenderer sourceRenderer=GetComponent<MeshRenderer>();
+            if(sourceFilter==null||sourceRenderer==null)return;
 
             Transform motionBody=transform.Find("DF_MinionMotionBody");
             if(motionBody==null)
             {
-                MeshFilter sourceFilter=GetComponent<MeshFilter>();
-                MeshRenderer sourceRenderer=GetComponent<MeshRenderer>();
-                if(sourceFilter==null||sourceRenderer==null)return;
-
-                GameObject proxy=new("DF_MinionMotionBody");
+                GameObject proxy=new GameObject("DF_MinionMotionBody");
                 motionBody=proxy.transform;
                 motionBody.SetParent(transform,false);
+
                 MeshFilter filter=proxy.AddComponent<MeshFilter>();
                 filter.sharedMesh=sourceFilter.sharedMesh;
                 MeshRenderer renderer=proxy.AddComponent<MeshRenderer>();
@@ -213,21 +225,23 @@ namespace Alterverse.Visuals
                 renderer.receiveShadows=sourceRenderer.receiveShadows;
                 sourceRenderer.enabled=false;
 
-                List<Transform> accessories=new();
+                List<Transform> accessories=new List<Transform>();
                 for(int i=0;i<transform.childCount;i++)
                 {
                     Transform child=transform.GetChild(i);
-                    if(child!=motionBody&&child.name.StartsWith("DF_",StringComparison.Ordinal))
-                        accessories.Add(child);
+                    if(child!=motionBody&&child.name.StartsWith("DF_",StringComparison.Ordinal))accessories.Add(child);
                 }
                 for(int i=0;i<accessories.Count;i++)accessories[i].SetParent(motionBody,true);
             }
-            minionBodyPart=new AdditivePart(motionBody);
+
+            minionBodyPart=new MotionPart(motionBody);
         }
 
         private void SetupMech()
         {
-            visualRoot=FindDescendant("DF_GreenAlienMechVisual")??FindDescendant("DF_MarsStoneGolemVisual");
+            visualRoot=FindDescendant("DF_GreenAlienMechVisual");
+            if(visualRoot==null)visualRoot=FindDescendant("DF_MarsStoneGolemVisual");
+
             if(visualRoot!=null)
             {
                 Transform[] all=visualRoot.GetComponentsInChildren<Transform>(true);
@@ -239,10 +253,10 @@ namespace Alterverse.Visuals
                 leftArm=FindSidePivot(all,true,"mecharm","arm");
                 rightArm=FindSidePivot(all,false,"mecharm","arm");
 
-                if(torso!=null)bodyPart=new AdditivePart(torso);
-                if(pelvis!=null)pelvisPart=new AdditivePart(pelvis);
-                if(head!=null)headPart=new AdditivePart(head);
-                CacheMechLimbRests();
+                if(torso!=null)bodyPart=new MotionPart(torso);
+                if(pelvis!=null)pelvisPart=new MotionPart(pelvis);
+                if(head!=null)headPart=new MotionPart(head);
+                CacheLimbRests();
                 return;
             }
 
@@ -251,8 +265,7 @@ namespace Alterverse.Visuals
 
         private void SetupGuardRobot()
         {
-            Transform existingBody=transform.Find("DF_MotionGuardBody");
-            Transform body=existingBody;
+            Transform body=transform.Find("DF_MotionGuardBody");
             Transform pelvis=transform.Find("DF_MotionGuardPelvis");
             Transform armL=FindDescendant("DF_MotionGuardArmL");
             Transform armR=FindDescendant("DF_MotionGuardArmR");
@@ -261,7 +274,7 @@ namespace Alterverse.Visuals
 
             if(body==null)
             {
-                List<Transform> originals=new();
+                List<Transform> originals=new List<Transform>();
                 for(int i=0;i<transform.childCount;i++)
                 {
                     Transform child=transform.GetChild(i);
@@ -271,13 +284,10 @@ namespace Alterverse.Visuals
 
                 pelvis=CreatePivot("DF_MotionGuardPelvis",new Vector3(0,.08f,0),transform);
                 body=CreatePivot("DF_MotionGuardBody",new Vector3(0,.83f,0),transform);
-                armL=CreatePivot("DF_MotionGuardArmL",new Vector3(-1.02f,.96f,0),transform);
-                armR=CreatePivot("DF_MotionGuardArmR",new Vector3(1.02f,.96f,0),transform);
+                armL=CreatePivot("DF_MotionGuardArmL",new Vector3(-1.02f,.96f,0),body);
+                armR=CreatePivot("DF_MotionGuardArmR",new Vector3(1.02f,.96f,0),body);
                 legL=CreatePivot("DF_MotionGuardLegL",new Vector3(-.44f,-.06f,0),transform);
                 legR=CreatePivot("DF_MotionGuardLegR",new Vector3(.44f,-.06f,0),transform);
-
-                armL.SetParent(body,true);
-                armR.SetParent(body,true);
 
                 for(int i=0;i<originals.Count;i++)
                 {
@@ -292,21 +302,19 @@ namespace Alterverse.Visuals
                 }
             }
 
-            bodyPart=new AdditivePart(body);
-            pelvisPart=pelvis!=null?new AdditivePart(pelvis):null;
+            bodyPart=new MotionPart(body);
+            if(pelvis!=null)pelvisPart=new MotionPart(pelvis);
             leftArm=armL;rightArm=armR;leftLeg=legL;rightLeg=legR;
-            CacheMechLimbRests();
+            CacheLimbRests();
         }
 
         private void SetupHeavy()
         {
-            // Hot-zone creatures/tanks already own variant-specific limb animation.
-            // Add only a whole-body inertia layer through a visual pivot when one is available.
             Transform candidate=FindDescendantContains("Visual");
-            if(candidate!=null&&candidate!=transform)bodyPart=new AdditivePart(candidate);
+            if(candidate!=null&&candidate!=transform)bodyPart=new MotionPart(candidate);
         }
 
-        private void CacheMechLimbRests()
+        private void CacheLimbRests()
         {
             if(leftLeg!=null&&rightLeg!=null)
             {
@@ -354,7 +362,7 @@ namespace Alterverse.Visuals
             if(phase>Mathf.PI*200f)phase-=Mathf.PI*200f;
         }
 
-        private void AnimatePresentation(float dt)
+        private void AnimatePresentation()
         {
             float referenceSpeed=ReferenceSpeed();
             float speedN=Mathf.Clamp01(smoothedVelocity.magnitude/Mathf.Max(.1f,referenceSpeed));
@@ -362,35 +370,22 @@ namespace Alterverse.Visuals
             float step=GaitWave(phase)*moveWeight;
             float impact=Mathf.Pow(Mathf.Abs(Mathf.Sin(phase)),kind==MotionKind.Mech?10f:7f)*moveWeight;
 
-            switch(kind)
-            {
-                case MotionKind.Hero:
-                    AnimateHero(step,impact,speedN,lateral);
-                    break;
-                case MotionKind.Soldier:
-                    AnimateSoldier(step,impact,speedN,lateral);
-                    break;
-                case MotionKind.Minion:
-                    AnimateMinion(step,impact,speedN,lateral);
-                    break;
-                case MotionKind.Mech:
-                    AnimateMech(step,impact,speedN,lateral);
-                    break;
-                default:
-                    AnimateHeavy(step,impact,speedN,lateral);
-                    break;
-            }
+            if(kind==MotionKind.Hero)AnimateHero(step,speedN,lateral);
+            else if(kind==MotionKind.Soldier)AnimateSoldier(step,impact,speedN,lateral);
+            else if(kind==MotionKind.Minion)AnimateMinion(step,impact,speedN,lateral);
+            else if(kind==MotionKind.Mech)AnimateMech(step,impact,speedN,lateral);
+            else AnimateHeavy(impact,speedN,lateral);
         }
 
-        private void AnimateHero(float step,float impact,float speedN,float lateral)
+        private void AnimateHero(float step,float speedN,float lateral)
         {
-            float pitch=speedN*2.8f+smoothedAcceleration*2.2f;
-            float yaw=-step*3.4f-smoothedTurn*2.0f;
-            float roll=-smoothedTurn*4.2f-lateral*2.0f+step*.8f;
+            float pitch=speedN*2.6f+smoothedAcceleration*2.0f;
+            float yaw=-step*2.8f-smoothedTurn*1.6f;
+            float roll=-smoothedTurn*3.7f-lateral*1.6f+step*.7f;
             Quaternion torso=Quaternion.Euler(pitch,yaw,roll);
 
             for(int i=0;i<heroTorsoParts.Count;i++)heroTorsoParts[i].Apply(torso,Vector3.zero);
-            headPart?.Apply(Quaternion.Euler(-pitch*.35f,-yaw*.45f,-roll*.50f),Vector3.zero);
+            if(headPart!=null)headPart.Apply(Quaternion.Euler(-pitch*.32f,-yaw*.40f,-roll*.48f),Vector3.zero);
         }
 
         private void AnimateSoldier(float step,float impact,float speedN,float lateral)
@@ -406,8 +401,8 @@ namespace Alterverse.Visuals
             float pitch=speedN*4.2f+smoothedAcceleration*2.8f-impact*.9f;
             float yaw=-step*5.2f-smoothedTurn*2.5f;
             float roll=-smoothedTurn*5.5f-lateral*2.5f+step*1.3f;
-            bodyPart?.Apply(Quaternion.Euler(pitch,yaw,roll),Vector3.down*impact*.018f);
-            pelvisPart?.Apply(Quaternion.Euler(-pitch*.22f,-yaw*.72f,-roll*.35f),Vector3.zero);
+            if(bodyPart!=null)bodyPart.Apply(Quaternion.Euler(pitch,yaw,roll),Vector3.down*impact*.018f);
+            if(pelvisPart!=null)pelvisPart.Apply(Quaternion.Euler(-pitch*.22f,-yaw*.72f,-roll*.35f),Vector3.zero);
         }
 
         private void AnimateMinion(float step,float impact,float speedN,float lateral)
@@ -416,7 +411,7 @@ namespace Alterverse.Visuals
             float yaw=-step*2.5f;
             float roll=-smoothedTurn*7f-lateral*3f+step*1.2f;
             Vector3 bob=Vector3.up*((1f-impact)*.018f*moveWeight);
-            minionBodyPart?.Apply(Quaternion.Euler(pitch,yaw,roll),bob);
+            if(minionBodyPart!=null)minionBodyPart.Apply(Quaternion.Euler(pitch,yaw,roll),bob);
         }
 
         private void AnimateMech(float step,float impact,float speedN,float lateral)
@@ -438,57 +433,59 @@ namespace Alterverse.Visuals
             float pitch=speedN*2.8f+smoothedAcceleration*2.6f-impact*1.3f;
             float yaw=-step*2.7f-smoothedTurn*1.5f;
             float roll=-smoothedTurn*4.2f-lateral*1.8f+step*.7f;
-            bodyPart?.Apply(Quaternion.Euler(pitch,yaw,roll),Vector3.down*impact*.028f);
-            pelvisPart?.Apply(Quaternion.Euler(-pitch*.18f,-yaw*.82f,-roll*.46f),Vector3.down*impact*.012f);
-            headPart?.Apply(Quaternion.Euler(-pitch*.42f,-yaw*.70f,-roll*.62f),Vector3.zero);
+            if(bodyPart!=null)bodyPart.Apply(Quaternion.Euler(pitch,yaw,roll),Vector3.down*impact*.028f);
+            if(pelvisPart!=null)pelvisPart.Apply(Quaternion.Euler(-pitch*.18f,-yaw*.82f,-roll*.46f),Vector3.down*impact*.012f);
+            if(headPart!=null)headPart.Apply(Quaternion.Euler(-pitch*.42f,-yaw*.70f,-roll*.62f),Vector3.zero);
         }
 
-        private void AnimateHeavy(float step,float impact,float speedN,float lateral)
+        private void AnimateHeavy(float impact,float speedN,float lateral)
         {
             float pitch=speedN*2.2f+smoothedAcceleration*2.2f;
             float roll=-smoothedTurn*3.8f-lateral*1.5f;
-            bodyPart?.Apply(Quaternion.Euler(pitch,-smoothedTurn*1.2f,roll),Vector3.down*impact*.016f);
+            if(bodyPart!=null)bodyPart.Apply(Quaternion.Euler(pitch,-smoothedTurn*1.2f,roll),Vector3.down*impact*.016f);
         }
 
         private float GaitWave(float value)
         {
             float raw=Mathf.Sin(value);
-            float shaped=Mathf.Sign(raw)*Mathf.Pow(Mathf.Abs(raw),kind==MotionKind.Mech?.72f:.88f);
+            float exponent=kind==MotionKind.Mech?.72f:.88f;
+            float shaped=Mathf.Sign(raw)*Mathf.Pow(Mathf.Abs(raw),exponent);
             float asymmetry=Mathf.Sin(value*2f+seed*Mathf.PI*2f)*(kind==MotionKind.Mech?.06f:.10f);
             return Mathf.Clamp(shaped+asymmetry,-1f,1f);
         }
 
         private float ReferenceSpeed()
         {
-            return kind switch
+            switch(kind)
             {
-                MotionKind.Hero=>5.6f,
-                MotionKind.Soldier=>3.25f,
-                MotionKind.Minion=>2.8f,
-                MotionKind.Mech=>2.15f,
-                _=>2.5f
-            };
+                case MotionKind.Hero:return 5.6f;
+                case MotionKind.Soldier:return 3.25f;
+                case MotionKind.Minion:return 2.8f;
+                case MotionKind.Mech:return 2.15f;
+                default:return 2.5f;
+            }
         }
 
         private float StrideLength()
         {
-            return kind switch
+            switch(kind)
             {
-                MotionKind.Hero=>1.52f,
-                MotionKind.Soldier=>1.08f,
-                MotionKind.Minion=>.82f,
-                MotionKind.Mech=>1.34f,
-                _=>1.18f
-            };
+                case MotionKind.Hero:return 1.52f;
+                case MotionKind.Soldier:return 1.08f;
+                case MotionKind.Minion:return .82f;
+                case MotionKind.Mech:return 1.34f;
+                default:return 1.18f;
+            }
         }
 
-        private void ClearAdditives()
+        private void ResetVisuals()
         {
-            bodyPart?.Clear();
-            pelvisPart?.Clear();
-            headPart?.Clear();
-            minionBodyPart?.Clear();
-            for(int i=0;i<heroTorsoParts.Count;i++)heroTorsoParts[i]?.Clear();
+            if(bodyPart!=null)bodyPart.Reset();
+            if(pelvisPart!=null)pelvisPart.Reset();
+            if(headPart!=null)headPart.Reset();
+            if(minionBodyPart!=null)minionBodyPart.Reset();
+            for(int i=0;i<heroTorsoParts.Count;i++)heroTorsoParts[i].Reset();
+
             if(overrideLegs)
             {
                 if(leftLeg!=null)leftLeg.localRotation=leftLegRest;
@@ -550,26 +547,26 @@ namespace Alterverse.Visuals
         private static bool IsGuardArm(string n,bool left)
         {
             string side=left?"L":"R";
-            return n.Contains("Shoulder")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("UpperArm")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Elbow")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Forearm")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("ArmStatus")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Wrist")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Hand")&&n.EndsWith(side,StringComparison.Ordinal)||
+            return (n.Contains("Shoulder")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("UpperArm")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Elbow")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Forearm")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("ArmStatus")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Wrist")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Hand")&&n.EndsWith(side,StringComparison.Ordinal))||
                    n.Contains(left?"FingerL_":"FingerR_");
         }
 
         private static bool IsGuardLeg(string n,bool left)
         {
             string side=left?"L":"R";
-            return n.Contains("HipJoint")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Thigh")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Knee")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Shin")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Ankle")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Foot")&&n.EndsWith(side,StringComparison.Ordinal)||
-                   n.Contains("Heel")&&n.EndsWith(side,StringComparison.Ordinal);
+            return (n.Contains("HipJoint")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Thigh")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Knee")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Shin")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Ankle")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Foot")&&n.EndsWith(side,StringComparison.Ordinal))||
+                   (n.Contains("Heel")&&n.EndsWith(side,StringComparison.Ordinal));
         }
 
         private static bool IsGuardPelvis(string n)
@@ -585,10 +582,10 @@ namespace Alterverse.Visuals
             return pivot;
         }
 
-        private static Vector3 Flatten(Vector3 v)
+        private static Vector3 Flatten(Vector3 value)
         {
-            v.y=0;
-            return v.sqrMagnitude>.0001f?v.normalized:Vector3.zero;
+            value.y=0;
+            return value.sqrMagnitude>.0001f?value.normalized:Vector3.zero;
         }
     }
 
@@ -599,7 +596,7 @@ namespace Alterverse.Visuals
         public static void Ensure()
         {
             if(FindAnyObjectByType<FigureMotionBootstrap>()!=null)return;
-            GameObject go=new("DF_FigureMotionBootstrap");
+            GameObject go=new GameObject("DF_FigureMotionBootstrap");
             DontDestroyOnLoad(go);
             go.hideFlags=HideFlags.HideInHierarchy|HideFlags.DontSave;
             go.AddComponent<FigureMotionBootstrap>();
@@ -615,12 +612,10 @@ namespace Alterverse.Visuals
             {
                 MonoBehaviour behaviour=all[i];
                 if(behaviour==null)continue;
-                string n=behaviour.GetType().Name;
-                if(!IsMovingFigureType(n))continue;
+                if(!IsMovingFigureType(behaviour.GetType().Name))continue;
 
                 GameObject actor=behaviour.gameObject;
-                if(actor.GetComponent<AllFigureMotionRealism>()==null)
-                    actor.AddComponent<AllFigureMotionRealism>();
+                if(actor.GetComponent<AllFigureMotionRealism>()==null)actor.AddComponent<AllFigureMotionRealism>();
             }
         }
 
