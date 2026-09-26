@@ -5,6 +5,7 @@ namespace Alterverse.Combat
 {
     public static class HeroCombatRules
     {
+        public const float HeroVsHeroDamageMultiplier=.92f;
         public static float Distance(Vector3 a, Vector3 b) { a.y = b.y = 0; return Vector3.Distance(a, b); }
 
         // Heroes and minions intentionally use centre-to-centre combat ranges. Large objectives
@@ -39,6 +40,10 @@ namespace Alterverse.Combat
         public static float Damage(GameObject actor, Health target, float amount)
         {
             if (!Enemy(actor, target)) return 0;
+            // PvP only: slightly longer hero duels create room for counterplay and a second decision
+            // without slowing movement/rotations or making planets and lane clearing take longer.
+            if(actor.GetComponent<HeroIdentity>()!=null&&target.GetComponent<HeroIdentity>()!=null)
+                amount*=HeroVsHeroDamageMultiplier;
             PlanetBuffReceiver buff = actor.GetComponent<PlanetBuffReceiver>();
             if (target.GetComponent<LaneMinion>() != null && buff != null) amount *= buff.MinionDamageMultiplier;
             float before = target.Current;
