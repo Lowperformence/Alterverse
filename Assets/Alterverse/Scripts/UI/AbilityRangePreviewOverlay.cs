@@ -28,7 +28,6 @@ namespace Alterverse.UI
         private int touchId = -1;
         private bool mouseHeld;
         private bool inside;
-        private Color accent;
         private readonly GameObject[] rangeDiscs = new GameObject[2];
         private readonly Material[] rangeMaterials = new Material[2];
 
@@ -44,8 +43,12 @@ namespace Alterverse.UI
             if (UsesMovementDirection(heldSlot) || spec.Range <= .01f || spec.Radius <= .01f) return;
             targeting ??= GetComponent<SoftTargeting>();
             Health current = targeting != null ? targeting.Current : null;
-            Vector3 center = current != null ? current.transform.position :
-                origin + FlatForward() * Mathf.Clamp(spec.Range * .64f, Mathf.Max(.9f, spec.Radius + .25f), spec.Range);
+            // Only display an impact area for an actual target in casting range.
+            // A sample circle at an arbitrary position suggests an aim point that does not exist.
+            if (current == null) return;
+            Vector3 center = current.transform.position;
+            Vector3 offset = center - origin; offset.y = 0f;
+            if (offset.sqrMagnitude > spec.Range * spec.Range) return;
             center.y = .20f;
             ShowDisc(1, center, spec.Radius, new Color(color.r, color.g, color.b, .72f));
         }
@@ -99,7 +102,6 @@ namespace Alterverse.UI
             identity = GetComponent<HeroIdentity>();
             health = GetComponent<Health>();
             targeting = GetComponent<SoftTargeting>();
-            accent = identity != null ? StylizedArtDirection.HeroAccent(identity.Hero) : FrontEndTheme.Accent;
         }
 
         private void OnDisable() { Clear(); HideDiscs(); }
@@ -222,71 +224,19 @@ namespace Alterverse.UI
             AbilitySpec spec = abilities.SpecFor(slot);
             Vector3 origin = transform.position; origin.y = .18f;
             Color core = PreviewColor(slot);
-            Color glow = Color.Lerp(core, Color.white, .42f); glow.a = .92f;
-            float pulse = .5f + .5f * Mathf.Sin(Time.unscaledTime * 6f);
-
+            Color glow = new Color(.60f, .82f, 1f, .24f);
+            // The analytic world-space disc supplies the continuous boundary and subtle fill.
+            // Avoid text, ticks and a second GUI ring on top of the reference-style silhouette.
             if (UsesMovementDirection(slot))
-            {
-                DrawDashPreview(origin, abilities.PreviewDirection(slot), spec.Range, core, glow, pulse);
-                return;
-            }
-
-            if (spec.Range > .01f)
-            {
-                // Outer ring: authoritative maximum cast/auto-target range.
-
-                DrawWorldTag(origin + FlatForward() * spec.Range, $"RANGE {spec.Range:0.#}m", core);
-
-                if (spec.Radius > .01f)
-                {
-                    // Targeted AoE needs both values to be understandable. If SoftTargeting already has a
-                    // valid sticky target, show the area on that exact target without mutating targeting.
-                    // Otherwise show an explicitly labelled AREA SIZE sample inside the cast range.
-                    targeting ??= GetComponent<SoftTargeting>();
-                    Health current = targeting != null ? targeting.Current : null;
-                    Vector3 center;
-                    bool exactTarget = current != null;
-                    if (exactTarget)
-                    {
-                        center = current.transform.position;
-                        center.y = .18f;
-                    }
-                    else
-                    {
-                        float offset = Mathf.Clamp(spec.Range * .64f, Mathf.Max(.9f, spec.Radius + .25f), spec.Range);
-                        center = origin + FlatForward() * offset;
-                    }
-
-                    DrawProjectedLine(origin, center, new Color(0f, 0f, 0f, .62f), 5f);
-                    DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .46f), 2f);
-
-                    DrawWorldTag(center + Vector3.right * spec.Radius,
-                        exactTarget ? $"AREA {spec.Radius:0.#}m" : $"AREA SIZE {spec.Radius:0.#}m", core);
-                }
-                return;
-            }
-
-            if (spec.Radius > .01f)
-            {
-                // Self-centered AoE: the radius itself is the authoritative reach.
-
-                DrawWorldTag(origin + FlatForward() * spec.Radius, $"AREA {spec.Radius:0.#}m", core);
-                return;
-            }
-
-            // Pure self buffs have no gameplay range. Never invent a metre value.
-
-            DrawWorldTag(origin + FlatForward() * .76f, "SELF", core);
+                DrawDashPreview(origin, abilities.PreviewDirection(slot), spec.Range, core, glow);
+            else if (spec.Range <= .01f && spec.Radius <= .01f)
+                DrawWorldTag(origin + FlatForward() * .76f, "SELF", core);
         }
 
         private Color PreviewColor(int slot)
         {
-            HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
-            // Support/protection ranges read as friendly at a glance; everything else keeps hero identity.
-            if (hero == HeroId.Mira && slot > 0) return new Color(.42f, .96f, .68f, .98f);
-            if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
-                return Color.Lerp(accent, new Color(.46f, .84f, 1f), .55f);
-            return new Color(1f, .08f, .10f, .98f);
+            // Shared pale blue makes held attack previews consistent across the hero roster.
+            return new Color(.40f, .70f, 1f, .92f);
         }
 
         private bool UsesMovementDirection(int slot)
@@ -305,7 +255,7 @@ namespace Alterverse.UI
             return direction.normalized;
         }
 
-        private void DrawDashPreview(Vector3 origin, Vector3 direction, float range, Color core, Color glow, float pulse)
+        private void DrawDashPreview(Vector3 origin, Vector3 direction, float range, Color core, Color glow)
         {
             direction.y = 0f;
             if (direction.sqrMagnitude < .001f) direction = FlatForward();
@@ -313,20 +263,17 @@ namespace Alterverse.UI
             Vector3 end = origin + direction * Mathf.Max(.01f, range);
             Vector3 side = Vector3.Cross(Vector3.up, direction);
 
-            // Black underlay + bright glow + core keeps the direction legible over every planet surface.
-            DrawProjectedLine(origin, end, new Color(0f, 0f, 0f, .82f), 10f);
-            DrawProjectedLine(origin, end, glow, 6f + pulse);
-            DrawProjectedLine(origin, end, core, 3.25f);
+            // A restrained directional cue inside the range disc for movement abilities.
+            DrawProjectedLine(origin, end, glow, 4f);
+            DrawProjectedLine(origin, end, core, 1.5f);
 
             float arrow = Mathf.Clamp(range * .13f, .48f, .80f);
             Vector3 left = end - direction * arrow + side * arrow * .62f;
             Vector3 right = end - direction * arrow - side * arrow * .62f;
-            DrawProjectedLine(end, left, new Color(0f, 0f, 0f, .82f), 10f);
-            DrawProjectedLine(end, right, new Color(0f, 0f, 0f, .82f), 10f);
-            DrawProjectedLine(end, left, glow, 5.5f);
-            DrawProjectedLine(end, right, glow, 5.5f);
-
-            DrawWorldTag(end + side * .46f, $"MOVE {range:0.#}m", core);
+            DrawProjectedLine(end, left, glow, 4f);
+            DrawProjectedLine(end, right, glow, 4f);
+            DrawProjectedLine(end, left, core, 1.5f);
+            DrawProjectedLine(end, right, core, 1.5f);
         }
 
         private void DrawWorldTag(Vector3 world, string text, Color color)
