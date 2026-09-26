@@ -18,7 +18,8 @@ namespace Alterverse.EditorChecks
         private static readonly string[] RequiredShaders=
         {
             "Universal Render Pipeline/Lit",
-            "Universal Render Pipeline/Unlit"
+            "Universal Render Pipeline/Unlit",
+            "DimensionsFront/HeroEnergy"
         };
 
         public int callbackOrder=>-100;
@@ -27,6 +28,17 @@ namespace Alterverse.EditorChecks
         {
             if(report.summary.platform!=BuildTarget.Android)return;
             EnsureRequiredShaders(true);
+            ValidateCombatMaterial();
+            HeroPresentationChecks.CheckCombatLineTransforms();
+        }
+
+        private static void ValidateCombatMaterial()
+        {
+            Material material=Resources.Load<Material>("CombatVfx/HeroEnergy");
+            Shader shader=Resources.Load<Shader>("CombatVfx/HeroEnergy");
+            if(material==null||shader==null||material.shader!=shader||
+                shader.name!="DimensionsFront/HeroEnergy"||ShaderUtil.ShaderHasError(shader))
+                throw new BuildFailedException("HeroEnergy material/shader is missing, mismatched or has compiler errors. Android spell VFX cannot be validated.");
         }
 
         [InitializeOnLoadMethod]
@@ -89,7 +101,7 @@ namespace Alterverse.EditorChecks
             if(!changed)return;
             serialized.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
-            Debug.Log("DIMENSIONS FRONT: preserved URP Lit/Unlit shaders for procedural Android visuals.");
+            Debug.Log("DIMENSIONS FRONT: preserved URP Lit/Unlit and HeroEnergy shaders for procedural Android visuals.");
         }
     }
 }

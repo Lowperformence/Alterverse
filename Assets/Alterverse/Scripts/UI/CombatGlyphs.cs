@@ -12,9 +12,24 @@ namespace Alterverse.UI
     {
         public static void Line(Vector2 a,Vector2 b,float width,Color color)
         {
-            Vector2 d=b-a;Matrix4x4 matrix=GUI.matrix;
-            try{GUIUtility.RotateAroundPivot(Mathf.Atan2(d.y,d.x)*Mathf.Rad2Deg,a);FrontEndTheme.Fill(new Rect(a.x,a.y-width*.5f,d.magnitude,width),color);}
+            Vector2 d=b-a;
+            if(d.sqrMagnitude<.000001f||width<=0f)return;
+            Matrix4x4 matrix=GUI.matrix;
+            // Compose in HUD coordinates BEFORE safe-area translation/scaling. RotateAroundPivot
+            // pre-multiplies a screen-space rotation around an unscaled pivot: it scatters the
+            // segments whenever the mobile HUD scale is not 1 (and with display cutout offsets).
+            try
+            {
+                GUI.matrix=LineMatrix(matrix,a,b);
+                FrontEndTheme.Fill(new Rect(0,-width*.5f,d.magnitude,width),color);
+            }
             finally{GUI.matrix=matrix;}
+        }
+        internal static Matrix4x4 LineMatrix(Matrix4x4 hud,Vector2 a,Vector2 b)
+        {
+            Vector2 d=b-a;
+            return hud*Matrix4x4.TRS(new Vector3(a.x,a.y,0),
+                Quaternion.Euler(0,0,Mathf.Atan2(d.y,d.x)*Mathf.Rad2Deg),Vector3.one);
         }
         public static void Ring(Vector2 center,float radius,float width,Color color,int count=28)
         {

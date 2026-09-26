@@ -893,6 +893,10 @@ namespace Alterverse.Visuals
                 Detail("Guard"+s,new Vector3(0,-.115f,.060f),new Vector3(.28f,.050f,.12f),bladeMetal,new Vector3(0,0,side*8f),"Weapon"+s);
                 Detail("Pommel"+s,new Vector3(0,.13f,-.060f),new Vector3(.11f,.075f,.11f),edge,new Vector3(0,0,45),"Weapon"+s,true);
                 Bind("Weapon"+s,"Arm"+s);
+                // The former world-space pivot sat about 9 cm outside the knuckle and
+                // 9 cm forward of the glove. Place the grip at the hand's local rest point
+                // so the blade is visibly held, then let the existing arm animation carry it.
+                weapon.localPosition=new Vector3(0,-.59f,.055f);
             }
         }
         private void BuildKaelonReferenceArmor(Color metal,Color trim)
