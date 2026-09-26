@@ -129,13 +129,15 @@ namespace Alterverse.Visuals
         {
             if(foot==null)return;
             float cycle=Mathf.Repeat(gait/(Mathf.PI*2),1);
-            bool stance=cycle<.5f;
-            float progress=stance?cycle*2:(cycle-.5f)*2;
+            // Longer planted phase and a shorter lifted recovery keep feet from skating.
+            bool stance=cycle<.60f;
+            float progress=stance?cycle/.60f:(cycle-.60f)/.40f;
             // During stance the foot moves backward at the traveled-distance rate.
-            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.25f;
-            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.12f;
+            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.22f;
+            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.17f;
             foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
-            foot.localRotation=rotation*Quaternion.Euler(stance?0:-Mathf.Sin(progress*Mathf.PI)*12*strideWeight,0,0);
+            float toe=stance?Mathf.Sin(progress*Mathf.PI)*4f:-Mathf.Sin(progress*Mathf.PI)*15f;
+            foot.localRotation=rotation*Quaternion.Euler(toe*strideWeight,0,0);
         }
         private void LateUpdate()
         {
@@ -162,17 +164,18 @@ namespace Alterverse.Visuals
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?2.35f:hero==HeroId.Veyr?2.5f:2.1f;
             if(!Dashing)phase=Mathf.Repeat(phase+displayedSpeed*dt/strideLength*Mathf.PI*2,Mathf.PI*2);
-            float step=Mathf.Sin(phase)*(heavy?25:30)*strideWeight;
+            float step=Mathf.Sin(phase)*(heavy?27:33)*strideWeight;
             PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
             PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
             PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
-            Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.45f);Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.45f);
+            Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.57f);
+            Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.57f);
             float acceleration=Mathf.Clamp((displayedSpeed-previousSpeed)/dt,-18,18);previousSpeed=displayedSpeed;
             lean=Mathf.Lerp(lean,Mathf.Clamp(acceleration*.1f,-2.5f,3)+Mathf.Min(displayedSpeed,8)*.35f,1-Mathf.Exp(-16*dt));
             Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.012f*(1-strideWeight);
-            float bob=(1-Mathf.Cos(phase*2))*.018f*strideWeight*(heavy?.7f:1);
+            float bob=(1-Mathf.Cos(phase*2))*.026f*strideWeight*(heavy?.7f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
