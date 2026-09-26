@@ -114,8 +114,8 @@ namespace Alterverse.Visuals
                 relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
 
                 float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
-                float interiorShadow=bowl*(moon?.135f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.92f);
-                float litRim=rim*(moon?.145f:.075f)*(1f+Mathf.Max(0f,lightSide)*.58f);
+                float interiorShadow=bowl*(moon?.075f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.70f);
+                float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
                 tone+=litRim*eroded-interiorShadow;
                 craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
 
@@ -128,8 +128,8 @@ namespace Alterverse.Visuals
                 }
             }
 
-            tone-=craterWear*(moon?.065f:.026f);
-            dust=Mathf.Max(dust,craterWear*(moon?.48f:.28f));
+            tone-=craterWear*(moon?.025f:.026f);
+            dust=Mathf.Max(dust,craterWear*(moon?.36f:.28f));
 
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
@@ -142,7 +142,7 @@ namespace Alterverse.Visuals
                 float minRelief=Mathf.Lerp(-.30f,-.62f,outer);
                 float maxRelief=Mathf.Lerp(.17f,.28f,outer);
                 relief=Mathf.Clamp(relief,minRelief,maxRelief);
-                tone=Mathf.Clamp(tone,.16f,.74f);
+                tone=Mathf.Clamp(tone,.22f,.74f);
             }
             else
             {
@@ -169,9 +169,9 @@ namespace Alterverse.Visuals
                 Sample(-48+spanX*x/(size-1),-42+spanZ*z/(size-1),out float h,out float tone,out float dust);
                 int i=z*size+x;heights[i]=h;
                 float value=moon
-                    ?Mathf.Lerp(.12f,.54f,Mathf.InverseLerp(.16f,.74f,tone))
+                    ?Mathf.Lerp(.20f,.62f,Mathf.InverseLerp(.22f,.74f,tone))
                     :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
-                value*=1f-dust*(moon?.105f:.055f);
+                value*=1f-dust*(moon?.055f:.055f);
                 // Fine mineral grain and broad, broken strata add material depth at gameplay scale.
                 // The modulation stays below the silhouette/height field, so collision and lanes are unchanged.
                 float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
@@ -210,7 +210,7 @@ namespace Alterverse.Visuals
                 }
             }
 
-            float normalStrength=moon?3.25f:1.8f;
+            float normalStrength=moon?2.4f:1.8f;
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));
