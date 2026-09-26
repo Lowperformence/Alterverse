@@ -6,18 +6,24 @@ namespace Alterverse.Combat
     public static class HeroCombatRules
     {
         public static float Distance(Vector3 a, Vector3 b) { a.y = b.y = 0; return Vector3.Distance(a, b); }
-        // Basic attacks measure solid objectives at their surface. Hero/minion duels keep
-        // the authored centre-to-centre range. Reuse this at windup and impact, too.
-        public static float BasicDistance(Vector3 origin,Health target)
+
+        // Heroes and minions intentionally use centre-to-centre combat ranges. Large objectives
+        // use their physical surface instead, including trigger colliders such as dimension planets.
+        // This prevents short-range heroes from having to walk inside a planet/objective model
+        // before an otherwise valid melee attack or targeted ability can connect.
+        public static float TargetDistance(Vector3 origin,Health target)
         {
             if(target==null)return float.MaxValue;
             if(target.GetComponent<HeroIdentity>()!=null||target.GetComponent<LaneMinion>()!=null)
                 return Distance(origin,target.transform.position);
             Collider body=target.GetComponent<Collider>();
-            if(body==null||!body.enabled||body.isTrigger)return Distance(origin,target.transform.position);
+            if(body==null||!body.enabled)return Distance(origin,target.transform.position);
             Vector3 point=origin;point.y=body.bounds.center.y;
             return Distance(origin,body.ClosestPoint(point));
         }
+
+        public static float BasicDistance(Vector3 origin,Health target)=>TargetDistance(origin,target);
+
         public static bool Enemy(GameObject actor, Health target)
         {
             if (target == null || target.IsDead || !target.isActiveAndEnabled || target.gameObject == actor) return false;
@@ -43,7 +49,7 @@ namespace Alterverse.Combat
         public static void BasicHit(GameObject actor, Health target, float amount)
         {
             HeroCombatProfile profile=actor.GetComponent<HeroCombatProfile>();
-            HeroAttackDelivery.For(actor).Basic(target,amount,profile!=null?profile.AttackRange:Distance(actor.transform.position,target.transform.position)+.05f);
+            HeroAttackDelivery.For(actor).Basic(target,amount,profile!=null?profile.AttackRange:TargetDistance(actor.transform.position,target)+.05f);
         }
         internal static void ResolveBasicHit(GameObject actor,Health target,float amount)
         {
@@ -58,5 +64,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
-
