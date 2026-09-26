@@ -14,19 +14,11 @@ namespace Alterverse.Combat
         [SerializeField]private int unitsPerWave=3;
         [SerializeField]private float siegeMechTime=360f;
 
-        private const float TankHp=90f;
-        private const float TankDamage=5f;
-        private static readonly float[] TankSpawnTimes={240f,480f};
-        private static readonly float[] LaneZ={16,-16};
-
-        private static bool siegeMechsSpawned,siegeRoutineClaimed,tankRoutineClaimed;
-        private static readonly bool[] TankSpawned={false,false};
+        private static bool siegeMechsSpawned,siegeRoutineClaimed;
         private static int waveSerial;
         private static LaneWaveSpawner siegeOwner;
+        private static readonly float[] LaneZ={16,-16};
         private DimensionsFront cachedFront;
-
-        public static int ScheduledTankCount=>TankSpawnTimes.Length;
-        public static float ScheduledTankTime(int occurrence)=>occurrence>=0&&occurrence<TankSpawnTimes.Length?TankSpawnTimes[occurrence]:float.PositiveInfinity;
 
         public static event Action<string,int,Vector3,Vector3,bool> NetworkUnitSpawned;
 
@@ -36,30 +28,7 @@ namespace Alterverse.Combat
             siegeOwner=null;
             siegeMechsSpawned=false;
             siegeRoutineClaimed=false;
-            tankRoutineClaimed=false;
-            ResetScheduledTanksForMatch();
             waveSerial=0;
-        }
-
-        public static void ResetScheduledTanksForMatch()
-        {
-            for(int i=0;i<TankSpawned.Length;i++)TankSpawned[i]=false;
-        }
-
-        public static bool TrySpawnScheduledTanks(int occurrence)
-        {
-            if(!CoopAuthority.CanSimulateHostGameplay||occurrence<0||occurrence>=TankSpawnTimes.Length)return false;
-            if(TankSpawned[occurrence])return false;
-
-            DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
-            if(front==null||front.HasEnded)return false;
-
-            TankSpawned[occurrence]=true;
-            int laneIndex=occurrence%LaneZ.Length;
-            float laneZ=LaneZ[laneIndex];
-            CreateTank(0,laneZ,occurrence,laneIndex,true);
-            CreateTank(1,laneZ,occurrence,laneIndex,true);
-            return true;
         }
 
         private void OnDestroy()
@@ -69,12 +38,13 @@ namespace Alterverse.Combat
                 siegeOwner=null;
                 siegeMechsSpawned=false;
                 siegeRoutineClaimed=false;
-                tankRoutineClaimed=false;
             }
         }
 
         private IEnumerator Start()
         {
+            // Clients never create their own combat waves. They receive the host's exact
+            // spawn events and then follow host world-state snapshots.
             if(!CoopAuthority.CanSimulateHostGameplay)yield break;
 
             if(siegeOwner==null)
@@ -82,7 +52,6 @@ namespace Alterverse.Combat
                 siegeOwner=this;
                 siegeMechsSpawned=false;
                 siegeRoutineClaimed=false;
-                tankRoutineClaimed=false;
             }
 
             cachedFront=FindAnyObjectByType<DimensionsFront>();
@@ -90,11 +59,6 @@ namespace Alterverse.Combat
             {
                 siegeRoutineClaimed=true;
                 StartCoroutine(SiegeMechRoutine());
-            }
-            if(!tankRoutineClaimed)
-            {
-                tankRoutineClaimed=true;
-                StartCoroutine(ScheduledTankRoutine());
             }
 
             yield return WaitGameSeconds(firstWaveDelay);
@@ -116,19 +80,6 @@ namespace Alterverse.Combat
                 float laneZ=LaneZ[lane];
                 CreateSiegeMech(0,laneZ,$"SIEGE:T0:L{lane}",true);
                 CreateSiegeMech(1,laneZ,$"SIEGE:T1:L{lane}",true);
-            }
-        }
-
-        private IEnumerator ScheduledTankRoutine()
-        {
-            float previousTime=0f;
-            for(int occurrence=0;occurrence<TankSpawnTimes.Length;occurrence++)
-            {
-                float targetTime=TankSpawnTimes[occurrence];
-                yield return WaitGameSeconds(Mathf.Max(0f,targetTime-previousTime));
-                previousTime=targetTime;
-                if(MatchEnded())yield break;
-                TrySpawnScheduledTanks(occurrence);
             }
         }
 
@@ -162,6 +113,8 @@ namespace Alterverse.Combat
 
         private void SpawnWave(int team,float laneZ,int laneIndex,int serial)
         {
+            // Regular soldiers now spawn on the arena-centre side of the defensive trenches.
+            // This keeps the whole wave clear of the rear fortification area where units could bunch up.
             float destinationX=team==0?31:-31;
             for(int i=0;i<unitsPerWave;i++)
             {
@@ -183,8 +136,7 @@ namespace Alterverse.Combat
         {
             if(CoopAuthority.CanSimulateHostGameplay||string.IsNullOrEmpty(key))return;
             if(FindExisting(key)!=null)return;
-            if(key.StartsWith("TANK:",StringComparison.Ordinal))CreateTankAt(team,spawn,destination,key,false);
-            else if(siege)CreateSiegeMechAt(team,spawn,destination,key,false);
+            if(siege)CreateSiegeMechAt(team,spawn,destination,key,false);
             else CreateMinion(team,spawn,destination,0,key,false);
         }
 
@@ -229,94 +181,6 @@ namespace Alterverse.Combat
 
             if(announceNetwork&&CoopAuthority.Active&&CoopAuthority.LocalIsHost)
                 NetworkUnitSpawned?.Invoke(key,team,spawn,destination,false);
-        }
-
-        private static void CreateTank(int team,float laneZ,int occurrence,int laneIndex,bool announceNetwork)
-        {
-            float startX=team==0?-SoldierSpawnFrontX:SoldierSpawnFrontX;
-            float destinationX=team==0?31:-31;
-            Vector3 spawn=new(startX,.72f,laneZ);
-            Vector3 destination=new(destinationX,.72f,laneZ);
-            string key=$"TANK:S{occurrence+1}:T{team}:L{laneIndex}";
-            CreateTankAt(team,spawn,destination,key,announceNetwork);
-        }
-
-        private static void CreateTankAt(int team,Vector3 spawn,Vector3 destination,string key,bool announceNetwork)
-        {
-            GameObject tank=new(team==0?"DF_ZeroScheduledTank":"DF_LumenScheduledTank");
-            tank.transform.position=spawn;
-            tank.transform.rotation=Quaternion.LookRotation(team==0?Vector3.right:Vector3.left,Vector3.up);
-            GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world!=null)tank.transform.SetParent(world.transform,true);
-
-            BoxCollider collider=tank.AddComponent<BoxCollider>();
-            collider.center=new Vector3(0,.12f,0);
-            collider.size=new Vector3(1.85f,.95f,2.65f);
-
-            Health hp=tank.AddComponent<Health>();
-            hp.Configure(TankHp,true);
-            if(CoopAuthority.Active)tank.AddComponent<CoopWorldEntityKey>().Configure(key);
-
-            LaneMinion unit=tank.AddComponent<LaneMinion>();
-            unit.Initialize(team,destination);
-            unit.ConfigureSiegeRole();
-            unit.ConfigureTeamSupport();
-            unit.ConfigureCombat(2.25f,9f,5f,TankDamage,1.35f,1f);
-            if(tank.GetComponent<TankTrackEmitter>()==null)tank.AddComponent<TankTrackEmitter>();
-            BuildTankVisual(tank.transform,team);
-
-            if(announceNetwork&&CoopAuthority.Active&&CoopAuthority.LocalIsHost)
-                NetworkUnitSpawned?.Invoke(key,team,spawn,destination,true);
-        }
-
-        private static void BuildTankVisual(Transform root,int team)
-        {
-            Color armor=new(.24f,.26f,.29f,1f);
-            Color armorLight=new(.67f,.69f,.63f,1f);
-            Color dark=new(.075f,.085f,.10f,1f);
-            Color accent=new(.88f,.23f,.11f,1f);
-            Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-
-            CreateTankPart(root,"DF_TankLowerHull",new Vector3(0,-.08f,0),new Vector3(1.62f,.30f,2.42f),dark,false);
-            CreateTankPart(root,"DF_TankMainHull",new Vector3(0,.16f,.03f),new Vector3(1.78f,.46f,2.16f),armor,false);
-            CreateTankPart(root,"DF_TankFrontArmor",new Vector3(0,.19f,.98f),new Vector3(1.90f,.38f,.54f),armorLight,false);
-            CreateTankPart(root,"DF_TankRearDeck",new Vector3(0,.28f,-.80f),new Vector3(1.48f,.20f,.52f),armor,false);
-            CreateTankPart(root,"DF_TankLeftPod",new Vector3(-.98f,.02f,.02f),new Vector3(.30f,.46f,1.78f),accent,false);
-            CreateTankPart(root,"DF_TankRightPod",new Vector3(.98f,.02f,.02f),new Vector3(.30f,.46f,1.78f),accent,false);
-            CreateTankPart(root,"DF_TankLeftSkid",new Vector3(-.91f,-.24f,.05f),new Vector3(.36f,.22f,2.08f),dark,false);
-            CreateTankPart(root,"DF_TankRightSkid",new Vector3(.91f,-.24f,.05f),new Vector3(.36f,.22f,2.08f),dark,false);
-            CreateTankPart(root,"DF_TankTurretBase",new Vector3(0,.48f,-.05f),new Vector3(1.18f,.24f,1.05f),dark,false);
-            CreateTankPart(root,"DF_TankTurret",new Vector3(0,.67f,-.02f),new Vector3(1.02f,.42f,.84f),armorLight,false);
-            CreateTankPart(root,"DF_TankTurretPlate",new Vector3(0,.90f,-.08f),new Vector3(.72f,.10f,.62f),armor,false);
-            CreateTankPart(root,"DF_TankCannonMount",new Vector3(0,.71f,.50f),new Vector3(.48f,.34f,.34f),accent,false);
-            CreateTankPart(root,"DF_TankCannon",new Vector3(0,.73f,1.50f),new Vector3(.28f,.26f,2.00f),accent,false);
-            CreateTankPart(root,"DF_TankMuzzle",new Vector3(0,.73f,2.52f),new Vector3(.43f,.40f,.28f),armorLight,false);
-            CreateTankPart(root,"DF_TankMuzzleDark",new Vector3(0,.73f,2.68f),new Vector3(.28f,.27f,.08f),dark,false);
-            CreateTankPart(root,"DF_TankLeftVent",new Vector3(-.47f,.73f,-.34f),new Vector3(.24f,.17f,.42f),dark,false);
-            CreateTankPart(root,"DF_TankRightVent",new Vector3(.47f,.73f,-.34f),new Vector3(.24f,.17f,.42f),dark,false);
-            CreateTankPart(root,"DF_TankTopEnergy",new Vector3(0,.925f,.10f),new Vector3(.42f,.035f,.34f),energy,true);
-            CreateTankPart(root,"DF_TankLeftEnergy",new Vector3(-.995f,.18f,.22f),new Vector3(.035f,.10f,1.02f),energy,true);
-            CreateTankPart(root,"DF_TankRightEnergy",new Vector3(.995f,.18f,.22f),new Vector3(.035f,.10f,1.02f),energy,true);
-            CreateTankPart(root,"DF_TankFrontEnergy",new Vector3(0,.34f,1.265f),new Vector3(.62f,.08f,.035f),energy,true);
-        }
-
-        private static void CreateTankPart(Transform parent,string name,Vector3 pos,Vector3 scale,Color color,bool emissive)
-        {
-            GameObject part=GameObject.CreatePrimitive(PrimitiveType.Cube);
-            part.name=name;
-            part.transform.SetParent(parent,false);
-            part.transform.localPosition=pos;
-            part.transform.localScale=scale;
-            Collider c=part.GetComponent<Collider>();if(c!=null){c.enabled=false;Destroy(c);}
-            Renderer r=part.GetComponent<Renderer>();
-            if(r==null)return;
-            Material material=r.material;
-            material.color=color;
-            if(emissive&&material.HasProperty("_EmissionColor"))
-            {
-                material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor",color*2.2f);
-            }
         }
 
         private static void CreateSiegeMech(int team,float laneZ,string key,bool announceNetwork)
