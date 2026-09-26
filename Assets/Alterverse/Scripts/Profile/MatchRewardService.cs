@@ -43,7 +43,7 @@ namespace Alterverse.Profile
         public static int LifetimeAssists=>Mathf.Max(0,PlayerPrefs.GetInt(AssistsKey,0));
         public static int LifetimeObjectives=>Mathf.Max(0,PlayerPrefs.GetInt(ObjectivesKey,0));
 
-        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null)
+        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int soldierKills=0,int hotZoneWins=0)
         {
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
@@ -99,6 +99,7 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ReceiptXpBonus,xpBonus),
                 new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic)
             };
+            writes.AddRange(DailyQuestProgress.MatchWrites(kills,soldierKills,hotZoneWins));
             ProfileTransaction.Commit(writes.ToArray());
 
             // Wing bonuses accelerate account progression only, never Battle Pass progression.

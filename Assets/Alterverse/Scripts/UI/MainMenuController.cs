@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alterverse.AI;
+using Alterverse.Content;
 using Alterverse.Characters;
 using Alterverse.Match;
 using Alterverse.Multiplayer;
@@ -13,11 +14,11 @@ namespace Alterverse.UI
 {
     public sealed class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Leaderboard, Settings, Coop }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "RANKING", "SETTINGS" };
-        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.Profile, Page.Leaderboard, Page.Settings };
+        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "PROFILE", "DAILY", "RANKING", "SETTINGS" };
+        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.Profile, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
@@ -190,6 +191,7 @@ namespace Alterverse.UI
                     case Page.Shop: DrawShop(); break;
                     case Page.Inventory: DrawInventory(); break;
                     case Page.Profile: DrawProfile(); break;
+                    case Page.Quests: DrawQuests(); break;
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
                     case Page.Coop: DrawCoop(); break;
@@ -202,7 +204,7 @@ namespace Alterverse.UI
         {
             // INVENTORY needs more horizontal room than the short navigation labels.
             // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={82f,94f,82f,126f,92f,108f,126f};
+            float[] widths={82f,94f,82f,126f,92f,80f,108f,126f};
             const float gap=8f;
             float total=gap*(widths.Length-1);
             for(int i=0;i<widths.Length;i++)total+=widths[i];
@@ -1108,6 +1110,27 @@ namespace Alterverse.UI
         }
         private void CancelName() { CloseKeyboard(); editingName=false; profileName=PlayerProfile.PlayerName; }
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
+        private void DrawQuests()
+        {
+            Heading("Daily missions","Progress resets at 00:00 Europe/Berlin. Claim each reward once per day.");
+            float width=Mathf.Min(780,ContentWidth);
+            float x=Left+(ContentWidth-width)*.5f;
+            for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
+            {
+                ChallengeDef quest=PlayerChallengeContent.Daily[i];
+                float y=220+i*142;
+                theme.Panel(new Rect(x,y,width,126));
+                theme.Label(new Rect(x+22,y+13,width-235,30),quest.Name,theme.Heading);
+                theme.Label(new Rect(x+22,y+48,width-235,30),quest.Description,theme.Body,true);
+                int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
+                theme.Progress(new Rect(x+22,y+91,width-260,8),progress/(float)target);
+                theme.Label(new Rect(x+width-213,y+18,190,24),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
+                bool claimed=DailyQuestProgress.Claimed(i);
+                if(theme.Action(new Rect(x+width-205,y+58,180,50),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&progress>=target))
+                    DailyQuestProgress.Claim(i);
+            }
+        }
+
         private void DrawLeaderboard()
         {
             Heading("Global Ranking","Worldwide account-level ranking powered by Google Play Games.");
@@ -1125,9 +1148,9 @@ namespace Alterverse.UI
 
             bool configured=GooglePlayLevelLeaderboard.IsConfigured;
             string syncLabel=GooglePlayLevelLeaderboard.IsAuthenticated?"SYNC LEVEL":"CONNECT & SYNC";
-            if(theme.Action(new Rect(Left+28,558,(leftWidth-68)*.5f,58),syncLabel,true,enabled:configured))
+            if(theme.Action(new Rect(Left+28,558,(leftWidth-68)*.5f,58),syncLabel,true))
                 GooglePlayLevelLeaderboard.AuthenticateAndSync();
-            if(theme.Action(new Rect(Left+40+(leftWidth-68)*.5f,558,(leftWidth-68)*.5f,58),"OPEN GLOBAL RANKING",true,enabled:configured))
+            if(theme.Action(new Rect(Left+40+(leftWidth-68)*.5f,558,(leftWidth-68)*.5f,58),"OPEN GLOBAL RANKING",true))
                 GooglePlayLevelLeaderboard.ShowLeaderboard();
 
             float x=Left+leftWidth+32,w=ContentWidth-leftWidth-32;

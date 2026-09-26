@@ -39,7 +39,9 @@ namespace Alterverse.UI
         {
             health=player;if(player==null)return;
             attack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();
-            abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();view=Camera.main;
+            abilities=player.GetComponent<PlayerHeroAbilities>();
+            if(player.GetComponent<AbilityRangePreviewOverlay>()==null)player.gameObject.AddComponent<AbilityRangePreviewOverlay>();
+            identity=player.GetComponent<HeroIdentity>();view=Camera.main;
             heroName=identity!=null?identity.DisplayName.ToUpperInvariant():"HERO";
             accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):FrontEndTheme.Accent;
             damageTrail=health.Normalized;CacheAbilities();

@@ -80,9 +80,9 @@ namespace Alterverse.UI
                 GUI.depth = -4500;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x, y, 0f), Quaternion.identity, Vector3.one * scale);
 
-                theme.Label(new Rect(x, 558f, width, 22f), "APPLICATION", theme.Small, true);
+                theme.Label(new Rect(x, 658f, width, 20f), "APPLICATION", theme.Small, true);
                 string label = confirming ? "CONFIRM CLOSE GAME" : "CLOSE GAME";
-                if (theme.Action(new Rect(x, 586f, width, 54f), label, primary: confirming))
+                if (theme.Action(new Rect(x, 682f, width, 32f), label, primary: confirming))
                 {
                     if (!confirming)
                     {
@@ -96,8 +96,6 @@ namespace Alterverse.UI
                     }
                 }
 
-                if (confirming)
-                    theme.Label(new Rect(x, 644f, width, 24f), "Tap again to exit DIMENSIONS FRONT.", theme.Small, true);
             }
             finally
             {

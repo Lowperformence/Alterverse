@@ -23,6 +23,10 @@ namespace Alterverse.EditorChecks
             foreach(HeroIdentity hero in UnityEngine.Object.FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include))
             {
                 Transform root=hero.transform.Find("DF_VisualRoot");if(root==null)continue;
+                if(hero.GetComponent<Alterverse.Combat.Health>()!=null)
+                    Require(hero.GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()!=null,"Combat hero is missing attack release presentation: "+hero.DisplayName);
+                if(hero.GetComponent<HeroRespawn>()!=null)
+                    Require(hero.GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()!=null,"Local player is missing mobile ability range preview: "+hero.DisplayName);
                 Require(root.GetComponentsInChildren<Collider>(true).Length==0,"Visual rig contains a gameplay collider.");
                 var materials=new HashSet<Material>();int count=0;
                 foreach(MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true))
