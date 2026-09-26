@@ -24,6 +24,8 @@ namespace Alterverse.UI
         private const float CornerRadius = 12.5f;
         private const float OutlineThickness = 2.8f;
         private const int SliceBorder = 15;
+        private const float ActionHorizontalPadding = 36f;
+        private const float ActionSafeMargin = 8f;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
 
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
@@ -56,6 +58,10 @@ namespace Alterverse.UI
             Small = Label(16, FontStyle.Normal);
             Button = Label(19, FontStyle.Bold);
             Button.alignment = TextAnchor.MiddleCenter;
+            // Menu actions are always a single-line control. Action() grows the button horizontally
+            // when a localized/dynamic label needs more room instead of allowing a second line.
+            Button.wordWrap = false;
+            Button.clipping = TextClipping.Clip;
             centered = Label(16, FontStyle.Normal);
             centered.alignment = TextAnchor.MiddleCenter;
 
@@ -205,8 +211,38 @@ namespace Alterverse.UI
             GUI.color = before;
         }
 
+        private Rect FitActionRect(Rect rect, string text)
+        {
+            if (string.IsNullOrEmpty(text)) return rect;
+
+            measuredText.text = text;
+            float requiredWidth = Mathf.Ceil(Button.CalcSize(measuredText).x + ActionHorizontalPadding);
+            if (requiredWidth <= rect.width) return rect;
+
+            // OnGUI is drawn through a scaled/translated matrix. Convert the device safe area back into
+            // menu coordinates so an expanded button can never grow underneath a notch or off-screen.
+            Matrix4x4 inverse = GUI.matrix.inverse;
+            float safeLeft = inverse.MultiplyPoint3x4(new Vector3(Screen.safeArea.xMin, 0f, 0f)).x;
+            float safeRight = inverse.MultiplyPoint3x4(new Vector3(Screen.safeArea.xMax, 0f, 0f)).x;
+            float availableWidth = Mathf.Max(rect.width, safeRight - safeLeft - ActionSafeMargin * 2f);
+            float fittedWidth = Mathf.Min(requiredWidth, availableWidth);
+
+            // Grow around the authored center so the surrounding layout keeps its intended alignment.
+            float fittedX = rect.center.x - fittedWidth * .5f;
+            float minX = safeLeft + ActionSafeMargin;
+            float maxX = safeRight - ActionSafeMargin - fittedWidth;
+            if (maxX >= minX) fittedX = Mathf.Clamp(fittedX, minX, maxX);
+
+            return new Rect(fittedX, rect.y, fittedWidth, rect.height);
+        }
+
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
         {
+            // Buttons are menu actions, not paragraphs: normalize any legacy hard line break and then
+            // enlarge the control enough to keep the complete wording on one line.
+            text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
+            rect = FitActionRect(rect, text);
+
             bool previous = GUI.enabled;
             GUI.enabled = previous && enabled;
 
