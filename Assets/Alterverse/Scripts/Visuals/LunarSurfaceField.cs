@@ -114,7 +114,8 @@ namespace Alterverse.Visuals
                 relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
 
                 float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
-                float interiorShadow=bowl*(moon?.075f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.70f);
+                float shadowStrength=moon?.075f:ArenaVariantRuntime.IsGreenPlanet?.036f:.055f;
+                float interiorShadow=bowl*shadowStrength*(1f+Mathf.Max(0f,-lightSide)*.70f);
                 float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
                 tone+=litRim*eroded-interiorShadow;
                 craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
@@ -128,8 +129,8 @@ namespace Alterverse.Visuals
                 }
             }
 
-            tone-=craterWear*(moon?.025f:.026f);
-            dust=Mathf.Max(dust,craterWear*(moon?.36f:.28f));
+            tone-=craterWear*(moon?.025f:ArenaVariantRuntime.IsGreenPlanet?.012f:.022f);
+            dust=Mathf.Max(dust,craterWear*(moon?.36f:ArenaVariantRuntime.IsGreenPlanet?.19f:.26f));
 
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
@@ -147,7 +148,7 @@ namespace Alterverse.Visuals
             else
             {
                 relief=Mathf.Clamp(relief,-.245f,.115f);
-                tone=Mathf.Clamp(tone,.28f,.66f);
+                tone=Mathf.Clamp(tone,ArenaVariantRuntime.IsGreenPlanet?.34f:.30f,.68f);
             }
         }
 
@@ -170,35 +171,40 @@ namespace Alterverse.Visuals
                 int i=z*size+x;heights[i]=h;
                 float value=moon
                     ?Mathf.Lerp(.20f,.62f,Mathf.InverseLerp(.22f,.74f,tone))
-                    :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
-                value*=1f-dust*(moon?.055f:.055f);
-                // Fine mineral grain and broad, broken strata add material depth at gameplay scale.
-                // The modulation stays below the silhouette/height field, so collision and lanes are unchanged.
+                    :ArenaVariantRuntime.IsGreenPlanet
+                        ?Mathf.Lerp(.245f,.49f,Mathf.InverseLerp(.34f,.68f,tone))
+                        :Mathf.Lerp(.19f,.43f,Mathf.InverseLerp(.30f,.68f,tone));
+                value*=1f-dust*(moon?.055f:ArenaVariantRuntime.IsGreenPlanet?.025f:.045f);
+                // Broad mineral variation supplies material depth without the former high-frequency
+                // speckle that read as pixel noise from the gameplay camera.
                 float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
-                float grain=Mathf.PerlinNoise(wx*2.7f+91f,wz*2.7f+47f)-.5f;
-                float strata=Mathf.PerlinNoise(wx*.34f+wz*.12f+13f,wz*.34f-wx*.08f+29f)-.5f;
-                float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.48f+201f,wz*.48f+78f)-.5f);
-                value*=1f+grain*.12f+strata*.15f;
-                value+=Mathf.SmoothStep(.39f,.49f,vein)*(moon?.024f:.015f);
+                float grain=Mathf.PerlinNoise(wx*1.15f+91f,wz*1.15f+47f)-.5f;
+                float strata=Mathf.PerlinNoise(wx*.30f+wz*.10f+13f,wz*.30f-wx*.07f+29f)-.5f;
+                float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.42f+201f,wz*.42f+78f)-.5f);
+                value*=1f+grain*.055f+strata*.10f;
+                value+=Mathf.SmoothStep(.40f,.50f,vein)*(moon?.020f:.010f);
+                if(ArenaVariantRuntime.IsGreenPlanet)value=Mathf.Max(value,.235f);
                 value=Mathf.Clamp01(value);
                 if(ArenaVariantRuntime.IsMars)
                 {
-                    float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.28f,.66f,tone));
+                    float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.30f,.68f,tone));
                     pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f,1);
                 }
                 else if(ArenaVariantRuntime.IsGreenPlanet)
                 {
-                    float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
-                    pixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
+                    float mineral=Mathf.Lerp(.94f,1.05f,Mathf.InverseLerp(.34f,.68f,tone));
+                    // Mossy stone instead of near-black green: more neutral mids make craters read as
+                    // recessed terrain rather than flat black holes.
+                    pixels[i]=new Color(value*.74f,value*.95f*mineral,value*.66f,1);
                 }
                 else if(ArenaVariantRuntime.IsNoxara)
                 {
-                    float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
+                    float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.30f,.68f,tone));
                     pixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
                 }
                 else if(ArenaVariantRuntime.IsKryon)
                 {
-                    float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.28f,.66f,tone));
+                    float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.30f,.68f,tone));
                     frost*=1f-dust*.025f;
                     pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
                 }
@@ -218,8 +224,8 @@ namespace Alterverse.Visuals
                 Vector3 n=new Vector3(-dx*normalStrength,-dz*normalStrength,1).normalized;
                 normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
-            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
-            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
+            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=16};
+            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=16};
             albedo.SetPixels32(pixels);albedo.Apply(true,true);normals.SetPixels32(normalPixels);normals.Apply(true,true);
         }
     }
