@@ -35,12 +35,21 @@ namespace Alterverse.Visuals
         private void Awake()
         {
             instance=this;material=Resources.Load<Material>("CombatVfx/HeroEnergy");
-            if(material==null)
+            if(material==null||material.shader==null||!material.shader.isSupported||
+                material.shader.name!="DimensionsFront/HeroEnergy")
             {
-                Shader shader=Shader.Find("Universal Render Pipeline/Unlit");
-                if(shader==null){enabled=false;return;}
-                material=new Material(shader){name="DF_VfxFallback"};ownsMaterial=true;
-                Debug.LogWarning("DF: HeroEnergy material missing; reimport CombatVfx assets.");
+                // The generic Unlit fallback loses vertex alpha and defaults to opaque/back-face
+                // culling, so planar spell meshes can disappear or turn into solid tiles on Android.
+                // Load the authored shader directly from Resources, retaining its two-sided blend.
+                Shader shader=Resources.Load<Shader>("CombatVfx/HeroEnergy");
+                if(shader==null||!shader.isSupported)
+                {
+                    material=null;enabled=false;
+                    Debug.LogError("DF: HeroEnergy shader unavailable on this graphics device. Rebuild with the Android runtime shader check.");
+                    return;
+                }
+                material=new Material(shader){name="DF_HeroEnergyRecovered"};ownsMaterial=true;
+                Debug.LogWarning("DF: recovered HeroEnergy material from its Resources shader.");
             }
             for(int i=0;i<shapes.Length;i++)
             {

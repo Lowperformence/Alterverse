@@ -271,7 +271,8 @@ namespace Alterverse.UI
             if (radius <= .01f) return;
             // 48 segments is smooth from the match camera but materially cheaper than 64 on mobile.
             const int Segments = 48;
-            float displayedRadius = breathe ? radius * (1f - .006f + pulse * .012f) : radius;
+            // Pulse brightness only: the boundary must stay at the actual gameplay radius.
+            float displayedRadius = radius;
             Color shadow = new Color(0f, 0f, 0f, .74f * alpha);
             Color soft = new Color(glow.r, glow.g, glow.b, (.32f + pulse * .11f) * alpha);
             Color line = new Color(core.r, core.g, core.b, core.a * alpha);

@@ -335,6 +335,10 @@ namespace Alterverse.UI
         private void DrawPreview()
         {
             if(inspectedSlot<0||!combatInside||abilities==null)return;
+            // The player overlay owns the detailed boundary. Keep this path only as a fallback;
+            // drawing both stacked duplicate outlines and spent hundreds of mobile GUI draws.
+            AbilityRangePreviewOverlay overlay=abilities.GetComponent<AbilityRangePreviewOverlay>();
+            if(overlay!=null&&overlay.isActiveAndEnabled)return;
             if(view==null)view=Camera.main;if(view==null)return;
             float range=abilities.PreviewRange(inspectedSlot);if(range<=0)return;
             Vector3 center=health.transform.position;center.y=.18f;
