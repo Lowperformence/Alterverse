@@ -100,7 +100,7 @@ namespace Alterverse.Visuals
 
         private void ResolveKind()
         {
-            if(HasComponent("HeroIdentity"))kind=MotionKind.Hero;
+            if(HasComponent("HeroIdentity")||HasComponent("PrototypeEnemyBot"))kind=MotionKind.Hero;
             else if(HasComponent("TrenchSoldier"))kind=MotionKind.Soldier;
             else if(HasComponent("HealingGuardMech")||HasComponent("GreenAlienMechVisual")||
                     HasComponent("MarsStoneGolemMechVisual")||name.IndexOf("SiegeMech",StringComparison.OrdinalIgnoreCase)>=0)
