@@ -238,7 +238,7 @@ namespace Alterverse.UI
         private void DrawPortrait(Rect rect)
         {
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero);
-            FrontEndTheme.Fill(rect,new Color(.025f,.034f,.05f,.62f));
+            // Leave side gutters transparent so the menu's cosmic backdrop continues behind the fitted portrait.
             DimensionUiMotif.DrawCornerCuts(rect,Texture2D.whiteTexture,accent);
             if (showcase != null && showcase.Image != null)
                 GUI.DrawTexture(rect,showcase.Image,ScaleMode.ScaleToFit,true);
