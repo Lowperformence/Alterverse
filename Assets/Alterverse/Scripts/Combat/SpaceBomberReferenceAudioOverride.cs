@@ -4,12 +4,11 @@ namespace Alterverse.Combat
 {
     /// <summary>
     /// Replaces the procedural space-bomber engine tone with the approved reference fly-by
-    /// recording when available. If the reference clip is missing, the existing bomber audio
-    /// is left untouched so the event can continue normally.
+    /// recording while preserving the existing in-game distance/volume behaviour.
     /// </summary>
     public sealed class SpaceBomberReferenceAudioOverride : MonoBehaviour
     {
-        private const string ResourcePath = "Audio/BombJetFlyby";
+        private const string ResourcePath="Audio/BombJetFlyby";
 
         private AudioClip referenceClip;
         private SpaceBomberFlyover patchedFlyover;
@@ -17,56 +16,53 @@ namespace Alterverse.Combat
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-            if (Object.FindAnyObjectByType<SpaceBomberReferenceAudioOverride>() != null) return;
+            if(Object.FindAnyObjectByType<SpaceBomberReferenceAudioOverride>()!=null)return;
 
-            GameObject root = new("DF_BomberReferenceAudio");
+            GameObject root=new("DF_BomberReferenceAudio");
             Object.DontDestroyOnLoad(root);
             root.AddComponent<SpaceBomberReferenceAudioOverride>();
         }
 
         private void Awake()
         {
-            referenceClip = Resources.Load<AudioClip>(ResourcePath);
-            if (referenceClip != null) return;
+            referenceClip=Resources.Load<AudioClip>(ResourcePath);
+            if(referenceClip!=null)return;
 
-            Debug.LogWarning(
-                "DIMENSIONS FRONT: Optional bomb jet reference audio was not found at " +
-                "Resources/Audio/BombJetFlyby. Keeping the default bomber audio instead.");
-
-            enabled = false;
+            Debug.LogError("DIMENSIONS FRONT: Bomb jet reference audio could not be loaded from Resources/Audio/BombJetFlyby.");
+            enabled=false;
         }
 
         private void Update()
         {
-            if (referenceClip == null) return;
+            if(referenceClip==null)return;
 
-            SpaceBomberFlyover flyover = Object.FindAnyObjectByType<SpaceBomberFlyover>();
-            if (flyover == null)
+            SpaceBomberFlyover flyover=Object.FindAnyObjectByType<SpaceBomberFlyover>();
+            if(flyover==null)
             {
-                patchedFlyover = null;
+                patchedFlyover=null;
                 return;
             }
 
-            if (flyover == patchedFlyover) return;
+            if(flyover==patchedFlyover)return;
 
-            AudioSource source = flyover.GetComponent<AudioSource>();
-            if (source == null) return;
+            AudioSource source=flyover.GetComponent<AudioSource>();
+            if(source==null)return;
 
             source.Stop();
-            source.clip = referenceClip;
-            source.pitch = 1f;
-            source.dopplerLevel = 0f;
+            source.clip=referenceClip;
+            source.pitch=1f;
+            source.dopplerLevel=0f;
 
-            AudioHighPassFilter high = flyover.GetComponent<AudioHighPassFilter>();
-            if (high != null) high.enabled = false;
+            AudioHighPassFilter high=flyover.GetComponent<AudioHighPassFilter>();
+            if(high!=null)high.enabled=false;
 
-            AudioLowPassFilter low = flyover.GetComponent<AudioLowPassFilter>();
-            if (low != null) low.enabled = false;
+            AudioLowPassFilter low=flyover.GetComponent<AudioLowPassFilter>();
+            if(low!=null)low.enabled=false;
 
             source.Play();
-            if (Time.timeScale <= 0f) source.Pause();
+            if(Time.timeScale<=0f)source.Pause();
 
-            patchedFlyover = flyover;
+            patchedFlyover=flyover;
         }
     }
 }
