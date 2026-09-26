@@ -159,22 +159,73 @@ namespace Alterverse.Visuals
             Sample(x,z,out float relief,out _,out _);return new Vector3(x,.015f+relief,z);
         }
 
+        // One seamless reference-inspired sand tile is repeated 8x8 over the full 96x84 arena.
+        // It only contributes micro-height/normal detail plus neutral luminance variation, so every
+        // planet keeps its existing hue, atmosphere, props, gameplay geometry and collision unchanged.
+        private static void SandTemplate(float x,float z,out float height,out float shade)
+        {
+            const float tileX=12f,tileZ=10.5f;
+            float u=Mathf.Repeat(x+48f,tileX)/tileX*Mathf.PI*2f;
+            float v=Mathf.Repeat(z+42f,tileZ)/tileZ*Mathf.PI*2f;
+
+            // Long, almost horizontal wind ripples with the irregular lateral drift visible in the reference.
+            // All terms are periodic, so the duplicated tile has no visible seams at its boundaries.
+            float warp=.58f*Mathf.Sin(u)+.22f*Mathf.Sin(u*2f+1.15f)+.10f*Mathf.Sin(u*3f-v);
+            float phase=v*6f+warp+.10f*Mathf.Sin(u*4f+v*2f);
+            float wave=Mathf.Sin(phase);
+            float groove=Mathf.Pow(Mathf.Clamp01(1f-Mathf.Abs(wave)),4f);
+
+            float finePhase=v*12f+warp*1.38f+.34f*Mathf.Sin(u*2f+.65f);
+            float fineWave=Mathf.Sin(finePhase);
+            float fineGroove=Mathf.Pow(Mathf.Clamp01(1f-Mathf.Abs(fineWave)),5f);
+
+            float drift=Mathf.Sin(v*3f+.48f*Mathf.Sin(u*3f+1.7f));
+            height=wave*.018f-groove*.027f+fineWave*.0055f-fineGroove*.0065f+drift*.003f;
+            shade=Mathf.Clamp(wave*.18f-groove*.72f+fineWave*.07f-fineGroove*.12f,-1f,1f);
+        }
+
+        private static float BilinearHeight(float[] source,int sourceSize,float u,float v)
+        {
+            float fx=Mathf.Clamp01(u)*(sourceSize-1),fz=Mathf.Clamp01(v)*(sourceSize-1);
+            int x0=Mathf.FloorToInt(fx),z0=Mathf.FloorToInt(fz);
+            int x1=Mathf.Min(sourceSize-1,x0+1),z1=Mathf.Min(sourceSize-1,z0+1);
+            float tx=fx-x0,tz=fz-z0;
+            float a=Mathf.Lerp(source[z0*sourceSize+x0],source[z0*sourceSize+x1],tx);
+            float b=Mathf.Lerp(source[z1*sourceSize+x0],source[z1*sourceSize+x1],tx);
+            return Mathf.Lerp(a,b,tz);
+        }
+
+        private static Color BilinearColor(Color32[] source,int sourceSize,float u,float v)
+        {
+            float fx=Mathf.Clamp01(u)*(sourceSize-1),fz=Mathf.Clamp01(v)*(sourceSize-1);
+            int x0=Mathf.FloorToInt(fx),z0=Mathf.FloorToInt(fz);
+            int x1=Mathf.Min(sourceSize-1,x0+1),z1=Mathf.Min(sourceSize-1,z0+1);
+            float tx=fx-x0,tz=fz-z0;
+            Color a=Color.Lerp(source[z0*sourceSize+x0],source[z0*sourceSize+x1],tx);
+            Color b=Color.Lerp(source[z1*sourceSize+x0],source[z1*sourceSize+x1],tx);
+            return Color.Lerp(a,b,tz);
+        }
+
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            const int size=512;const float spanX=96,spanZ=84;
+            // Expensive crater/geology sampling stays at the proven 512 grid. The final material is then
+            // reconstructed at 1024 with the duplicated sand template, giving HD detail without a 4x mobile
+            // startup cost from re-running the full crater field at every high-resolution texel.
+            const int baseSize=512,size=1024;const float spanX=96,spanZ=84;
             bool moon=IsMoon;
-            Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
-            for(int z=0;z<size;z++)for(int x=0;x<size;x++)
+            Color32[] basePixels=new Color32[baseSize*baseSize];
+            float[] baseHeights=new float[basePixels.Length];
+
+            for(int z=0;z<baseSize;z++)for(int x=0;x<baseSize;x++)
             {
-                Sample(-48+spanX*x/(size-1),-42+spanZ*z/(size-1),out float h,out float tone,out float dust);
-                int i=z*size+x;heights[i]=h;
+                Sample(-48+spanX*x/(baseSize-1),-42+spanZ*z/(baseSize-1),out float h,out float tone,out float dust);
+                int i=z*baseSize+x;baseHeights[i]=h;
                 float value=moon
                     ?Mathf.Lerp(.12f,.54f,Mathf.InverseLerp(.16f,.74f,tone))
                     :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
                 value*=1f-dust*(moon?.105f:.055f);
-                // Fine mineral grain and broad, broken strata add material depth at gameplay scale.
-                // The modulation stays below the silhouette/height field, so collision and lanes are unchanged.
-                float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
+                // Existing geology stays intact; the sand template is layered later and does not replace it.
+                float wx=-48+spanX*x/(baseSize-1),wz=-42+spanZ*z/(baseSize-1);
                 float grain=Mathf.PerlinNoise(wx*2.7f+91f,wz*2.7f+47f)-.5f;
                 float strata=Mathf.PerlinNoise(wx*.34f+wz*.12f+13f,wz*.34f-wx*.08f+29f)-.5f;
                 float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.48f+201f,wz*.48f+78f)-.5f);
@@ -184,30 +235,49 @@ namespace Alterverse.Visuals
                 if(ArenaVariantRuntime.IsMars)
                 {
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.28f,.66f,tone));
-                    pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f,1);
+                    basePixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f,1);
                 }
                 else if(ArenaVariantRuntime.IsGreenPlanet)
                 {
                     float mineral=Mathf.Lerp(.88f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
-                    pixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
+                    basePixels[i]=new Color(value*.62f,value*1.03f*mineral,value*.54f,1);
                 }
                 else if(ArenaVariantRuntime.IsNoxara)
                 {
                     float cobalt=Mathf.Lerp(.92f,1.10f,Mathf.InverseLerp(.28f,.66f,tone));
-                    pixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
+                    basePixels[i]=new Color(value*.30f,value*.46f*cobalt,value*1.18f,1);
                 }
                 else if(ArenaVariantRuntime.IsKryon)
                 {
                     float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.28f,.66f,tone));
                     frost*=1f-dust*.025f;
-                    pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
+                    basePixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
                 }
                 else
                 {
                     // Neutral cold regolith with much stronger bowl/rim value separation, inspired by
                     // the supplied planetary-surface reference photograph.
-                    pixels[i]=new Color(value*.94f,value*.965f,value,1);
+                    basePixels[i]=new Color(value*.94f,value*.965f,value,1);
                 }
+            }
+
+            Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];
+            float[] heights=new float[pixels.Length];
+            for(int z=0;z<size;z++)for(int x=0;x<size;x++)
+            {
+                float u=x/(float)(size-1),v=z/(float)(size-1);
+                float wx=-48+spanX*u,wz=-42+spanZ*v;
+                SandTemplate(wx,wz,out float sandHeight,out float sandShade);
+
+                int i=z*size+x;
+                heights[i]=BilinearHeight(baseHeights,baseSize,u,v)+sandHeight;
+
+                // RGB channels are multiplied by the exact same neutral factor. Planet hues therefore remain
+                // unchanged; only the fine light/dark relief contained in the supplied sand look is introduced.
+                Color c=BilinearColor(basePixels,baseSize,u,v);
+                float neutral=Mathf.Clamp(1f+sandShade*.045f,.955f,1.045f);
+                c.r=Mathf.Clamp01(c.r*neutral);c.g=Mathf.Clamp01(c.g*neutral);c.b=Mathf.Clamp01(c.b*neutral);c.a=1f;
+                pixels[i]=c;
             }
 
             float normalStrength=moon?3.25f:1.8f;
@@ -218,8 +288,8 @@ namespace Alterverse.Visuals
                 Vector3 n=new Vector3(-dx*normalStrength,-dz*normalStrength,1).normalized;
                 normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
-            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
-            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
+            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_HD_SandTemplateAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
+            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_HD_SandTemplateNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
             albedo.SetPixels32(pixels);albedo.Apply(true,true);normals.SetPixels32(normalPixels);normals.Apply(true,true);
         }
     }
