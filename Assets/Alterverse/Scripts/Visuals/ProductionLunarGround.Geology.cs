@@ -10,6 +10,7 @@ namespace Alterverse.Visuals
             // Large silhouette groups stay at the broken perimeter, never in the combat corridors.
             Vector2[] sites={new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24)};
             Material fractureFace=Mat(Color.Lerp(rimMat.color,Color.white,.16f),.02f,.14f);
+            surfaceMaterials.Apply(fractureFace);
             for(int site=0;site<sites.Length;site++)
             {
                 bool zero=sites[site].x<0;
@@ -175,11 +176,14 @@ namespace Alterverse.Visuals
                 Material mat=layer==0?rimMat:layer==1?regolith:darkRegolith;
                 // The surface atlas is not stretched vertically across a cliff: strata use their own neutral rock material.
                 if(layer==1)
+                {
                     mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
                         Alterverse.Match.ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
                         Alterverse.Match.ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
                         Alterverse.Match.ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):
                         new Color(.125f,.137f,.153f),0,.08f);
+                    surfaceMaterials.Apply(mat);
+                }
                 MeshObject("DF_FracturedMoonStratum",mesh,mat,Vector3.zero);
                 upper=lower;
             }
@@ -201,7 +205,7 @@ namespace Alterverse.Visuals
             foreach(MeshRenderer renderer in renderers)
             {
                 MeshFilter filter=renderer.GetComponent<MeshFilter>();
-                if(filter==null||filter.sharedMesh==null||renderer.gameObject.name=="DF_LunarRegolith")continue;
+                if(filter==null||filter.sharedMesh==null||renderer.sharedMaterial==regolith)continue;
                 Vector3 center=renderer.bounds.center;
                 bool casts=renderer.gameObject.name.Contains("Rock")||
                     renderer.gameObject.name.Contains("Fragment")||
@@ -224,3 +228,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

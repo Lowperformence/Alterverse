@@ -13,6 +13,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     Material regolith,darkRegolith,rimMat,zeroEnergy,lumenEnergy,alienMineral,cryoIce;
     Mesh rockMesh,rockMeshB,rockMeshC;
     Texture2D surfaceAlbedo,surfaceNormals;
+    PlanetSurfaceMaterials surfaceMaterials;
+    public void ApplySurfaceMaterial(Material material,bool crater=false) => surfaceMaterials?.Apply(material,false,crater);
     public Texture2D SurfaceAlbedo=>surfaceAlbedo;
     Vector3[] perimeter;
 
@@ -71,9 +73,13 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         {int a=z*(xSeg+1)+x,b=a+1,c=a+xSeg+1,d=c+1;t[q++]=a;t[q++]=c;t[q++]=b;t[q++]=b;t[q++]=c;t[q++]=d;}
         Mesh m=new(){name="DF_ContinuousRegolith",vertices=v,uv=uv,triangles=t};m.RecalculateNormals();m.RecalculateTangents();m.RecalculateBounds();meshes.Add(m);
         LunarSurfaceField.Bake(out surfaceAlbedo,out surfaceNormals);
+        surfaceMaterials=new PlanetSurfaceMaterials(surfaceAlbedo);
+        surfaceMaterials.Apply(regolith,true);
+        surfaceMaterials.Apply(darkRegolith);
+        surfaceMaterials.Apply(rimMat);
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
-        regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
-        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",1.05f);regolith.EnableKeyword("_NORMALMAP");
+        regolith.SetTexture("_BaseMap",surfaceAlbedo);
+        regolith.SetTexture("_BumpMap",surfaceNormals);
         string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
             ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":
@@ -269,6 +275,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         return m;
     }
 
-    void OnDestroy(){if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
+    void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
+

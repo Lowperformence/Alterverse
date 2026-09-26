@@ -160,6 +160,8 @@ namespace Alterverse.Visuals
             }
             bowlMaterial.name="DF_CraterBowlMaterial";
             rimMaterial.name="DF_CraterRimMaterial";
+            currentGround.ApplySurfaceMaterial(bowlMaterial,true);
+            currentGround.ApplySurfaceMaterial(rimMaterial,true);
 
             detailRoot=new GameObject("DF_ReferenceCraterLandscape");
             detailRoot.transform.SetParent(parent,false);
@@ -179,7 +181,18 @@ namespace Alterverse.Visuals
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles,0);
             mesh.RecalculateNormals();
-            mesh.RecalculateTangents();
+            // No UV/tangent dependency: surface shader uses world-space detail.
+            var colors=new Color[vertices.Count];
+            bool rim=name=="DF_ReferenceCraterRims";
+            int cursor=0;
+            for(int crater=0;crater<Major.Length+Secondary.Length;crater++)
+            {
+                int segments=crater<Major.Length?48:22;
+                if(!rim)colors[cursor++]=new Color(1,1,1,.18f);
+                for(int ring=0;ring<3;ring++)for(int j=0;j<segments;j++)
+                    colors[cursor++]=new Color(1,1,1,rim?(ring==2?1f:ring==0?.45f:.10f):.18f);
+            }
+            mesh.colors=colors;
             mesh.RecalculateBounds();
             return mesh;
         }
