@@ -4,49 +4,106 @@ using UnityEngine;
 
 namespace Alterverse.Profile
 {
-    // Three repeatable UTC-day quests. Progress is committed with the match receipt,
-    // so retrying the same match cannot count it twice.
+    // Progress is committed with the match receipt so retrying that receipt cannot count twice.
+    // The reset follows the player's established Europe/Berlin daily boundary, including DST.
     public static class DailyQuestProgress
     {
-        private const string DayKey="DF_DailyQuestDay_v1";
-        private const string MatchesKey="DF_DailyQuestMatches_v1";
-        private const string KillsKey="DF_DailyQuestKills_v1";
-        private const string ObjectivesKey="DF_DailyQuestObjectives_v1";
-        private const string ClaimedKey="DF_DailyQuestClaimed_v1";
-        private static int Today=>int.Parse(DateTime.UtcNow.ToString("yyyyMMdd",System.Globalization.CultureInfo.InvariantCulture),System.Globalization.CultureInfo.InvariantCulture);
-        private static bool Current=>PlayerPrefs.GetInt(DayKey,0)==Today;
-        public static int Target(int index)=>index==0?2:index==1?10:5;
+        private const string DayKey = "DF_DailyQuestDay_v2";
+        private const string KillsKey = "DF_DailyQuestKills_v2";
+        private const string HotZonesKey = "DF_DailyQuestHotZones_v2";
+        private const string SoldierKillsKey = "DF_DailyQuestSoldierKills_v2";
+        private const string ClaimedKey = "DF_DailyQuestClaimed_v2";
+
+        private static DateTime BerlinNow
+        {
+            get
+            {
+                DateTime utc = DateTime.UtcNow;
+                int year = utc.Year;
+                DateTime dstStart = LastSunday(year, 3).AddHours(1);  // 01:00 UTC
+                DateTime dstEnd = LastSunday(year, 10).AddHours(1);   // 01:00 UTC
+                return utc.AddHours(utc >= dstStart && utc < dstEnd ? 2 : 1);
+            }
+        }
+
+        private static DateTime LastSunday(int year, int month)
+        {
+            DateTime last = new DateTime(year, month, DateTime.DaysInMonth(year, month));
+            return last.AddDays(-(int)last.DayOfWeek);
+        }
+
+        private static int Today
+        {
+            get
+            {
+                DateTime local = BerlinNow;
+                return local.Year * 10000 + local.Month * 100 + local.Day;
+            }
+        }
+
+        private static bool Current => PlayerPrefs.GetInt(DayKey, 0) == Today;
+
+        public static int Target(int index) => index switch
+        {
+            0 => 50,
+            1 => 20,
+            2 => 60,
+            _ => 0
+        };
+
         public static int Progress(int index)
         {
-            if(index<0||index>=PlayerChallengeContent.Daily.Length||!Current)return 0;
-            string key=index==0?MatchesKey:index==1?KillsKey:ObjectivesKey;
-            return Mathf.Clamp(PlayerPrefs.GetInt(key,0),0,Target(index));
+            if (index < 0 || index >= PlayerChallengeContent.Daily.Length || !Current)
+                return 0;
+
+            string key = index switch
+            {
+                0 => KillsKey,
+                1 => HotZonesKey,
+                _ => SoldierKillsKey
+            };
+            return Mathf.Clamp(PlayerPrefs.GetInt(key, 0), 0, Target(index));
         }
-        public static bool Claimed(int index)=>index>=0&&index<PlayerChallengeContent.Daily.Length&&Current&&
-            (PlayerPrefs.GetInt(ClaimedKey,0)&(1<<index))!=0;
-        public static ProfileTransaction.Write[] MatchWrites(int kills,int objectives)
+
+        public static bool Claimed(int index) =>
+            index >= 0 && index < PlayerChallengeContent.Daily.Length &&
+            Current && (PlayerPrefs.GetInt(ClaimedKey, 0) & (1 << index)) != 0;
+
+        public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills)
         {
-            int today=Today;
-            // Never move an existing day backward if a device clock is rolled back.
-            int stored=PlayerPrefs.GetInt(DayKey,0);
-            if(stored>today)return Array.Empty<ProfileTransaction.Write>();
-            bool same=stored==today;
+            int today = Today;
+            int stored = PlayerPrefs.GetInt(DayKey, 0);
+            if (stored > today)
+                return Array.Empty<ProfileTransaction.Write>();
+
+            bool sameDay = stored == today;
+            int priorKills = sameDay ? PlayerPrefs.GetInt(KillsKey, 0) : 0;
+            int priorHotZones = sameDay ? PlayerPrefs.GetInt(HotZonesKey, 0) : 0;
+            int priorSoldierKills = sameDay ? PlayerPrefs.GetInt(SoldierKillsKey, 0) : 0;
+            int claimed = sameDay ? PlayerPrefs.GetInt(ClaimedKey, 0) : 0;
+
             return new[]
             {
-                new ProfileTransaction.Write(DayKey,today),
-                new ProfileTransaction.Write(MatchesKey,Mathf.Min(2,(same?PlayerPrefs.GetInt(MatchesKey,0):0)+1)),
-                new ProfileTransaction.Write(KillsKey,Mathf.Min(10,(same?PlayerPrefs.GetInt(KillsKey,0):0)+Mathf.Max(0,kills))),
-                new ProfileTransaction.Write(ObjectivesKey,Mathf.Min(5,(same?PlayerPrefs.GetInt(ObjectivesKey,0):0)+Mathf.Max(0,objectives))),
-                new ProfileTransaction.Write(ClaimedKey,same?PlayerPrefs.GetInt(ClaimedKey,0):0)
+                new ProfileTransaction.Write(DayKey, today),
+                new ProfileTransaction.Write(KillsKey, Mathf.Min(Target(0), priorKills + Mathf.Max(0, kills))),
+                new ProfileTransaction.Write(HotZonesKey, Mathf.Min(Target(1), priorHotZones + Mathf.Max(0, hotZoneCaptures))),
+                new ProfileTransaction.Write(SoldierKillsKey, Mathf.Min(Target(2), priorSoldierKills + Mathf.Max(0, soldierKills))),
+                new ProfileTransaction.Write(ClaimedKey, claimed)
             };
         }
+
         public static bool Claim(int index)
         {
             ProfileTransaction.Recover();
-            if(index<0||index>=PlayerChallengeContent.Daily.Length||Progress(index)<Target(index)||Claimed(index))return false;
+            if (index < 0 || index >= PlayerChallengeContent.Daily.Length ||
+                Progress(index) < Target(index) || Claimed(index))
+                return false;
+
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,PlayerChallengeContent.Daily[index].Shards)),
-                new ProfileTransaction.Write(ClaimedKey,PlayerPrefs.GetInt(ClaimedKey,0)|(1<<index)));
+                new ProfileTransaction.Write("DF_Shards",
+                    ProfileTransaction.Add(PlayerWallet.Balance, PlayerChallengeContent.Daily[index].Shards)),
+                new ProfileTransaction.Write(ClaimedKey,
+                    PlayerPrefs.GetInt(ClaimedKey, 0) | (1 << index)));
             return true;
         }
     }
