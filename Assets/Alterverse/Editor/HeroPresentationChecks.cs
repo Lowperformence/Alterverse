@@ -44,6 +44,14 @@ namespace Alterverse.EditorChecks
                 {
                     Require(root.Find("DF_ArmL/DF_WeaponL")!=null,"Left weapon detached on "+hero.DisplayName);
                     Require(root.Find("DF_ArmR/DF_WeaponR")!=null,"Right weapon detached on "+hero.DisplayName);
+                    if(hero.Hero==HeroId.Veyr)
+                    {
+                        Vector3 expectedGrip=new(0,-.59f,.055f);
+                        Require(Vector3.Distance(root.Find("DF_ArmL/DF_WeaponL").localPosition,expectedGrip)<.01f,
+                            "Left assassin sword grip is detached from the hand.");
+                        Require(Vector3.Distance(root.Find("DF_ArmR/DF_WeaponR").localPosition,expectedGrip)<.01f,
+                            "Right assassin sword grip is detached from the hand.");
+                    }
                 }
                 if(hero.Hero==HeroId.Nyra||hero.Hero==HeroId.Elyra||hero.Hero==HeroId.Mira||hero.Hero==HeroId.Traveler)
                     Require(root.Find("DF_ArmR/DF_WeaponR")!=null,"Weapon detached on "+hero.DisplayName);
