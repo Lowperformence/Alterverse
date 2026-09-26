@@ -559,6 +559,9 @@ namespace Alterverse.Visuals
                 Plate("BrakkShin"+s,new Vector3(side*legX,-.74f,.12f),.31f,.33f,.12f,yellowDark,side*3,"Leg"+s);
                 Plate("BrakkThigh"+s,new Vector3(side*legX,-.39f,.13f),.34f,.35f,.12f,yellow,side*-7,"Leg"+s);
                 Detail("BrakkKneeHub"+s,new Vector3(side*legX,-.57f,.235f),new Vector3(.12f,.12f,.035f),jointMetal,default,"Leg"+s);
+                Detail("BrakkKneeBearing"+s,new Vector3(side*legX,-.57f,.258f),new Vector3(.075f,.075f,.022f),reactor,default,"Leg"+s,true);
+                Detail("BrakkAnkleServo"+s,new Vector3(side*legX,-.85f,.12f),new Vector3(.16f,.10f,.12f),jointMetal,default,"Leg"+s);
+                Detail("BrakkToeGuard"+s,new Vector3(side*legX,-.94f,.208f),new Vector3(.25f,.10f,.07f),yellow,default,"Boot"+s);
 
                 Transform arm=new GameObject("DF_Arm"+s).transform;
                 arm.SetParent(root,false);
@@ -581,6 +584,9 @@ namespace Alterverse.Visuals
                 // so the torso, head and gauntlets remain readable from the gameplay camera.
                 Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.34f,.23f,.26f,yellow,side*-10);
                 Bind("BrakkShoulder"+s,"Arm"+s);
+                Detail("BrakkShoulderBearing"+s,new Vector3(side*.58f,.41f,.16f),new Vector3(.17f,.17f,.09f),jointMetal,default,"Arm"+s);
+                Detail("BrakkShoulderBearingLight"+s,new Vector3(side*.58f,.41f,.212f),new Vector3(.07f,.07f,.025f),reactor,default,"Arm"+s,true);
+                Detail("BrakkElbowPiston"+s,new Vector3(side*.56f,.06f,.12f),new Vector3(.11f,.22f,.10f),edgeMetal,new Vector3(0,0,side*12),"Arm"+s);
                 Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.15f),new Vector3(.125f,.0225f,.015f),blackMetal,
                     new Vector3(0,0,side*-14),"Arm"+s);
             }
