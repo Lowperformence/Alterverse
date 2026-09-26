@@ -54,8 +54,6 @@ namespace Alterverse.Combat
             DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
             if(front==null||front.HasEnded)return false;
 
-            // Mark before creating either side so two schedulers reaching the same frame can never
-            // duplicate a reinforcement pair.
             TankSpawned[occurrence]=true;
             int laneIndex=occurrence%LaneZ.Length;
             float laneZ=LaneZ[laneIndex];
@@ -77,8 +75,6 @@ namespace Alterverse.Combat
 
         private IEnumerator Start()
         {
-            // Clients never create their own combat waves. They receive the host's exact
-            // spawn events and then follow host world-state snapshots.
             if(!CoopAuthority.CanSimulateHostGameplay)yield break;
 
             if(siegeOwner==null)
@@ -97,9 +93,6 @@ namespace Alterverse.Combat
             }
             if(!tankRoutineClaimed)
             {
-                // Keep the original coroutine as a redundant fallback. The persistent
-                // ScheduledTankFeatureLinker also schedules the same two events, and the
-                // TrySpawnScheduledTanks gate makes both paths safely idempotent.
                 tankRoutineClaimed=true;
                 StartCoroutine(ScheduledTankRoutine());
             }
@@ -134,7 +127,6 @@ namespace Alterverse.Combat
                 float targetTime=TankSpawnTimes[occurrence];
                 yield return WaitGameSeconds(Mathf.Max(0f,targetTime-previousTime));
                 previousTime=targetTime;
-
                 if(MatchEnded())yield break;
                 TrySpawnScheduledTanks(occurrence);
             }
@@ -170,8 +162,6 @@ namespace Alterverse.Combat
 
         private void SpawnWave(int team,float laneZ,int laneIndex,int serial)
         {
-            // Regular soldiers now spawn on the arena-centre side of the defensive trenches.
-            // This keeps the whole wave clear of the rear fortification area where units could bunch up.
             float destinationX=team==0?31:-31;
             for(int i=0;i<unitsPerWave;i++)
             {
@@ -200,7 +190,7 @@ namespace Alterverse.Combat
 
         private static CoopWorldEntityKey FindExisting(string key)
         {
-            CoopWorldEntityKey[] all=FindObjectsByType<CoopWorldEntityKey>(FindObjectsInactive.Exclude);
+            CoopWorldEntityKey[] all=FindObjectsByType<CoopWorldEntityKey>(FindObjectsSortMode.None);
             for(int i=0;i<all.Length;i++)if(all[i]!=null&&all[i].Key==key)return all[i];
             return null;
         }
@@ -272,10 +262,6 @@ namespace Alterverse.Combat
             unit.ConfigureSiegeRole();
             unit.ConfigureTeamSupport();
             unit.ConfigureCombat(2.25f,9f,5f,TankDamage,1.35f,1f);
-
-            // Attach requested presentation immediately at creation. The persistent linker still
-            // checks this as a safety net for old/network-created objects, but normal tanks no longer
-            // depend on a later scene scan before they can follow heroes or leave tracks.
             if(tank.GetComponent<TankTrackEmitter>()==null)tank.AddComponent<TankTrackEmitter>();
             BuildTankVisual(tank.transform,team);
 
@@ -291,17 +277,14 @@ namespace Alterverse.Combat
             Color accent=new(.88f,.23f,.11f,1f);
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
 
-            // Broad armored hover chassis matching the supplied grey/orange sci-fi tank reference.
             CreateTankPart(root,"DF_TankLowerHull",new Vector3(0,-.08f,0),new Vector3(1.62f,.30f,2.42f),dark,false);
             CreateTankPart(root,"DF_TankMainHull",new Vector3(0,.16f,.03f),new Vector3(1.78f,.46f,2.16f),armor,false);
             CreateTankPart(root,"DF_TankFrontArmor",new Vector3(0,.19f,.98f),new Vector3(1.90f,.38f,.54f),armorLight,false);
             CreateTankPart(root,"DF_TankRearDeck",new Vector3(0,.28f,-.80f),new Vector3(1.48f,.20f,.52f),armor,false);
-
             CreateTankPart(root,"DF_TankLeftPod",new Vector3(-.98f,.02f,.02f),new Vector3(.30f,.46f,1.78f),accent,false);
             CreateTankPart(root,"DF_TankRightPod",new Vector3(.98f,.02f,.02f),new Vector3(.30f,.46f,1.78f),accent,false);
             CreateTankPart(root,"DF_TankLeftSkid",new Vector3(-.91f,-.24f,.05f),new Vector3(.36f,.22f,2.08f),dark,false);
             CreateTankPart(root,"DF_TankRightSkid",new Vector3(.91f,-.24f,.05f),new Vector3(.36f,.22f,2.08f),dark,false);
-
             CreateTankPart(root,"DF_TankTurretBase",new Vector3(0,.48f,-.05f),new Vector3(1.18f,.24f,1.05f),dark,false);
             CreateTankPart(root,"DF_TankTurret",new Vector3(0,.67f,-.02f),new Vector3(1.02f,.42f,.84f),armorLight,false);
             CreateTankPart(root,"DF_TankTurretPlate",new Vector3(0,.90f,-.08f),new Vector3(.72f,.10f,.62f),armor,false);
@@ -309,7 +292,6 @@ namespace Alterverse.Combat
             CreateTankPart(root,"DF_TankCannon",new Vector3(0,.73f,1.50f),new Vector3(.28f,.26f,2.00f),accent,false);
             CreateTankPart(root,"DF_TankMuzzle",new Vector3(0,.73f,2.52f),new Vector3(.43f,.40f,.28f),armorLight,false);
             CreateTankPart(root,"DF_TankMuzzleDark",new Vector3(0,.73f,2.68f),new Vector3(.28f,.27f,.08f),dark,false);
-
             CreateTankPart(root,"DF_TankLeftVent",new Vector3(-.47f,.73f,-.34f),new Vector3(.24f,.17f,.42f),dark,false);
             CreateTankPart(root,"DF_TankRightVent",new Vector3(.47f,.73f,-.34f),new Vector3(.24f,.17f,.42f),dark,false);
             CreateTankPart(root,"DF_TankTopEnergy",new Vector3(0,.925f,.10f),new Vector3(.42f,.035f,.34f),energy,true);
