@@ -1,6 +1,6 @@
 Shader "DimensionsFront/AbilityRangeDisc"
 {
-    Properties { _Color("Color", Color) = (1, .08, .10, 1) }
+    Properties { _Color("Color", Color) = (.40, .70, 1, .92) }
     SubShader
     {
         Tags { "Queue"="Transparent+10" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
@@ -31,13 +31,17 @@ Shader "DimensionsFront/AbilityRangeDisc"
             half4 frag(Varyings input) : SV_Target
             {
                 float radius = length(input.uv * 2.0 - 1.0);
-                float aa = max(fwidth(radius), .001);
-                // Exact outer radius; antialiasing and the bright border extend inward.
-                float coverage = 1.0 - smoothstep(1.0 - aa * 1.5, 1.0, radius);
-                float border = smoothstep(.978 - aa, .978 + aa, radius);
-                float halo = smoothstep(.68, .97, radius);
-                float opacity = lerp(.065 + halo * .16, .94, border) * coverage;
-                return half4(_Color.rgb, opacity * _Color.a);
+                // Derivative-sized edge stays fine at different camera zooms and resolutions.
+                // All coverage is inside the authoritative radius; no expanding/pulsing boundary.
+                float aa = max(fwidth(radius), .0001);
+                float inward = 1.0 - radius;
+                float coverage = smoothstep(0.0, aa, inward);
+                float border = 1.0 - smoothstep(aa * 1.1, aa * 2.5, inward);
+                float glow = exp2(-max(inward, 0.0) / max(aa * 4.0, .008));
+                float interior = .035 + .025 * smoothstep(.55, 1.0, radius);
+                float opacity = (interior + glow * .16 + border * .68) * coverage;
+                half3 tint = lerp(_Color.rgb, half3(.78, .90, 1.0), border * .45);
+                return half4(tint, saturate(opacity) * _Color.a);
             }
             ENDHLSL
         }
