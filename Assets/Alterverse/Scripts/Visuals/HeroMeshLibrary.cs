@@ -96,8 +96,10 @@ namespace Alterverse.Visuals
                 ||key.IndexOf("Forearm",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Glove",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Head",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Helmet",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Face",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Neck",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Greave",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Hood",StringComparison.OrdinalIgnoreCase)>=0;
         }
         private static float[] RefineSections(float[] source,bool positive)
