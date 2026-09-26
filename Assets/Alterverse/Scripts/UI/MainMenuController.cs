@@ -31,7 +31,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
         private Page page = Page.Play;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
-        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1;
+        private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,cosmeticBusy;
@@ -141,7 +141,8 @@ namespace Alterverse.UI
                 !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory||previewPremiumHero),
                 previewSkin?null:previewWeapon?(bool?)false:null,
                 previewWeapon?(bool?)true:null,
-                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null);
+                previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null,
+                previewWeapon?weaponSkinVariant:(int?)null);
             if (nameKeyboard != null)
             {
                 profileName = nameKeyboard.text;
@@ -276,7 +277,7 @@ namespace Alterverse.UI
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
             HeroId deploymentHero=(HeroId)selectedHero;
-            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
+            theme.Label(new Rect(Left+28,418,w-56,18),WeaponSkinInventory.Equipped(deploymentHero)?$"WEAPON  /  {WeaponSkinCatalog.For(deploymentHero,WeaponSkinInventory.EquippedVariant(deploymentHero)).Name}":deploymentHero==HeroId.Veyr?"WEAPON  /  SHADOW STEEL":deploymentHero==HeroId.Traveler?"WEAPON  /  PLANET FLUX":"WEAPON  /  ORIGINAL",theme.Small,true);
 
             theme.Label(new Rect(Left+28,446,w-56,20),"DIFFICULTY",theme.Small,true);
             var difficulty=BotDifficultySettings.Selected;
@@ -610,6 +611,7 @@ namespace Alterverse.UI
         {
             if (index==selectedHero) return;
             selectedHero=Mathf.Clamp(index,0,HeroIdentity.HeroCount-1);
+            weaponSkinVariant=0;
             HeroId hero=(HeroId)selectedHero;
             if(HeroUnlockInventory.Owned(hero))PlayerHeroSelection.Select(hero);
             bool previewSkin=page==Page.Shop&&skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
@@ -753,13 +755,13 @@ namespace Alterverse.UI
         private void DrawWeaponSkinShop()
         {
             HeroId hero=(HeroId)selectedHero;
-            WeaponSkinItem item=WeaponSkinCatalog.For(hero);
+            WeaponSkinItem item=WeaponSkinCatalog.For(hero,weaponSkinVariant);
             bool heroAvailable=HeroUnlockInventory.Owned(hero);
-            bool owned=WeaponSkinInventory.Owned(hero);
-            bool equipped=WeaponSkinInventory.Equipped(hero);
+            bool owned=WeaponSkinInventory.Owned(hero,weaponSkinVariant);
+            bool equipped=WeaponSkinInventory.EquippedVariant(hero)==weaponSkinVariant;
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
 
-            showcase.Present(hero,true,false,true,null);
+            showcase.Present(hero,true,false,true,null,weaponSkinVariant);
             DrawPortrait(new Rect(Left,270,w,340));
             FrontEndTheme.Fill(new Rect(Left+24,286,5,290),item.Glow);
             theme.Label(new Rect(Left+42,282,w-84,28),"WEAPON SKIN PREVIEW",theme.Small,true);
@@ -770,36 +772,50 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(x,282,rw,62),item.Name,theme.Title);
             theme.Label(new Rect(x,350,rw,34),item.WeaponName.ToUpperInvariant()+"  /  COSMETIC WEAPON SKIN",theme.Small,true);
-            string description=string.IsNullOrEmpty(item.Description)
-                ?"Visual only — no damage, range or hitbox advantage."
-                :item.Description+"  Visual only — no gameplay advantage.";
-            theme.Label(new Rect(x,400,rw,90),description,theme.Body,true);
-            theme.Label(new Rect(x,506,rw,34),owned?"OWNED":WeaponSkinCatalog.Price+" SHARDS",theme.Heading);
-            FrontEndTheme.Fill(new Rect(x,548,rw,3),item.Glow);
+            theme.Label(new Rect(x,396,rw,76),item.Description+"  Visual only — no gameplay advantage.",theme.Body,true);
+
+            int previous=(weaponSkinVariant+1)%2,next=(weaponSkinVariant+1)%2;
+            if(theme.Action(new Rect(x,480,54,44),"<"))weaponSkinVariant=previous;
+            theme.Center(new Rect(x+62,480,rw-124,44),$"VARIANT {weaponSkinVariant+1} / 2");
+            if(theme.Action(new Rect(x+rw-54,480,54,44),">"))weaponSkinVariant=next;
+            if(GUI.changed)shopMessage="";
+            if(GUI.changed)
+            {
+                GUI.changed=false;
+                showcase.Present(hero,true,false,true,null,weaponSkinVariant);
+            }
+
+            theme.Label(new Rect(x,532,rw,32),owned?(equipped?"OWNED  •  EQUIPPED":"OWNED"):item.Price+" SHARDS",theme.Heading);
+            FrontEndTheme.Fill(new Rect(x,570,rw,3),item.Glow);
 
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
             string action=!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
-                PlayerWallet.CanAfford(WeaponSkinCatalog.Price)?"BUY & EQUIP":"NEED 500 SHARDS";
-            bool enabled=heroAvailable&&(owned||PlayerWallet.CanAfford(WeaponSkinCatalog.Price));
-            if(theme.Action(new Rect(x,570,rw,60),action,true,enabled:enabled))
+                PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
+            bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price));
+            if(theme.Action(new Rect(x,588,rw,54),action,true,enabled:enabled))
             {
-                if(owned)
+                if(equipped)
                 {
-                    WeaponSkinInventory.Equip(hero,!equipped);
-                    shopMessage=equipped?originalName+" equipped.":item.Name+" equipped.";
+                    WeaponSkinInventory.EquipOriginal(hero);
+                    shopMessage=originalName+" equipped.";
+                }
+                else if(owned)
+                {
+                    WeaponSkinInventory.Equip(hero,weaponSkinVariant);
+                    shopMessage=item.Name+" equipped.";
                 }
                 else
                 {
-                    AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero);
+                    AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero,weaponSkinVariant);
                     shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
                         result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
                 }
                 showcase.InvalidateLoadout();
-                showcase.Present(hero,true,false,true,null);
+                showcase.Present(hero,true,false,true,null,weaponSkinVariant);
             }
 
-            theme.Label(new Rect(x,642,rw,42),shopMessage.Length>0?shopMessage:
-                $"SHARDS {PlayerWallet.Balance}  •  ONE SKIN FOR {HeroIdentity.NameFor(hero).ToUpperInvariant()}",theme.Small,true);
+            theme.Label(new Rect(x,650,rw,42),shopMessage.Length>0?shopMessage:
+                $"SHARDS {PlayerWallet.Balance}  •  TWO DISTINCT SKINS PER HERO",theme.Small,true);
         }
 
         private void DrawMapShop()
