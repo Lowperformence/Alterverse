@@ -40,7 +40,10 @@ namespace Alterverse.Characters
                     new("Fractured edge",0,0,0),
                     new("Null Cut",7,38,3.1f),
                     new("Rift Scar",10,28,3.3f),
-                    new("Gapfold",12,0,4.2f),
+                    // Zhaev depends on Gapfold to enter ranged matchups at all. Eleven seconds keeps
+                    // a real punish window while avoiding long periods where a 2.25m assassin has
+                    // no viable way to cross 6-7m ranged pressure.
+                    new("Gapfold",11,0,4.2f),
                     new("Vacant Echo",48,58,3.5f,0,.32f)),
                 HeroId.Kaelon=>new HeroAbilityLoadout(
                     new("Frontline",0,0,0),
