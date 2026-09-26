@@ -25,6 +25,9 @@ namespace Alterverse.Combat
         private static LaneWaveSpawner siegeOwner;
         private DimensionsFront cachedFront;
 
+        public static int ScheduledTankCount=>TankSpawnTimes.Length;
+        public static float ScheduledTankTime(int occurrence)=>occurrence>=0&&occurrence<TankSpawnTimes.Length?TankSpawnTimes[occurrence]:float.PositiveInfinity;
+
         public static event Action<string,int,Vector3,Vector3,bool> NetworkUnitSpawned;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -34,8 +37,31 @@ namespace Alterverse.Combat
             siegeMechsSpawned=false;
             siegeRoutineClaimed=false;
             tankRoutineClaimed=false;
-            for(int i=0;i<TankSpawned.Length;i++)TankSpawned[i]=false;
+            ResetScheduledTanksForMatch();
             waveSerial=0;
+        }
+
+        public static void ResetScheduledTanksForMatch()
+        {
+            for(int i=0;i<TankSpawned.Length;i++)TankSpawned[i]=false;
+        }
+
+        public static bool TrySpawnScheduledTanks(int occurrence)
+        {
+            if(!CoopAuthority.CanSimulateHostGameplay||occurrence<0||occurrence>=TankSpawnTimes.Length)return false;
+            if(TankSpawned[occurrence])return false;
+
+            DimensionsFront front=FindAnyObjectByType<DimensionsFront>();
+            if(front==null||front.HasEnded)return false;
+
+            // Mark before creating either side so two schedulers reaching the same frame can never
+            // duplicate a reinforcement pair.
+            TankSpawned[occurrence]=true;
+            int laneIndex=occurrence%LaneZ.Length;
+            float laneZ=LaneZ[laneIndex];
+            CreateTank(0,laneZ,occurrence,laneIndex,true);
+            CreateTank(1,laneZ,occurrence,laneIndex,true);
+            return true;
         }
 
         private void OnDestroy()
@@ -71,6 +97,9 @@ namespace Alterverse.Combat
             }
             if(!tankRoutineClaimed)
             {
+                // Keep the original coroutine as a redundant fallback. The persistent
+                // ScheduledTankFeatureLinker also schedules the same two events, and the
+                // TrySpawnScheduledTanks gate makes both paths safely idempotent.
                 tankRoutineClaimed=true;
                 StartCoroutine(ScheduledTankRoutine());
             }
@@ -107,15 +136,7 @@ namespace Alterverse.Combat
                 previousTime=targetTime;
 
                 if(MatchEnded())yield break;
-                if(TankSpawned[occurrence])continue;
-                TankSpawned[occurrence]=true;
-
-                // One tank per team at 04:00 and 08:00. The two events alternate lanes so
-                // both lanes receive the reinforcement while both teams remain perfectly mirrored.
-                int laneIndex=occurrence%LaneZ.Length;
-                float laneZ=LaneZ[laneIndex];
-                CreateTank(0,laneZ,occurrence,laneIndex,true);
-                CreateTank(1,laneZ,occurrence,laneIndex,true);
+                TrySpawnScheduledTanks(occurrence);
             }
         }
 
@@ -249,8 +270,13 @@ namespace Alterverse.Combat
             LaneMinion unit=tank.AddComponent<LaneMinion>();
             unit.Initialize(team,destination);
             unit.ConfigureSiegeRole();
+            unit.ConfigureTeamSupport();
             unit.ConfigureCombat(2.25f,9f,5f,TankDamage,1.35f,1f);
 
+            // Attach requested presentation immediately at creation. The persistent linker still
+            // checks this as a safety net for old/network-created objects, but normal tanks no longer
+            // depend on a later scene scan before they can follow heroes or leave tracks.
+            if(tank.GetComponent<TankTrackEmitter>()==null)tank.AddComponent<TankTrackEmitter>();
             BuildTankVisual(tank.transform,team);
 
             if(announceNetwork&&CoopAuthority.Active&&CoopAuthority.LocalIsHost)
