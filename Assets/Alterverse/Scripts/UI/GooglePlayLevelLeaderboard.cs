@@ -63,6 +63,12 @@ namespace Alterverse.Online
             }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
+            if(ResolvePlayGamesPlatformType()==null)
+            {
+                state=ConnectionState.Unsupported;
+                status="Google Play Games plugin is missing from this build.";
+                return;
+            }
             ActivateGooglePlayProviderIfPresent();
             if(Social.localUser==null)
             {
@@ -138,6 +144,12 @@ namespace Alterverse.Online
                 return;
             }
 #if UNITY_ANDROID && !UNITY_EDITOR
+            if(ResolvePlayGamesPlatformType()==null)
+            {
+                state=ConnectionState.Unsupported;
+                status="Google Play Games plugin is missing from this build.";
+                return;
+            }
             ActivateGooglePlayProviderIfPresent();
             if(Social.localUser==null)
             {
