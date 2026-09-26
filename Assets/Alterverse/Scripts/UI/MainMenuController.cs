@@ -1091,7 +1091,7 @@ namespace Alterverse.UI
         }
         private void DrawQuests()
         {
-            Heading("Daily missions","New progress each day at 00:00 UTC. Claim completed missions here.");
+            Heading("Daily missions","Daily progress resets at 00:00 Europe/Berlin. Claim completed missions here.");
             float width=Mathf.Min(780,ContentWidth);
             float x=Left+(ContentWidth-width)*.5f;
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
