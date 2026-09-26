@@ -37,19 +37,19 @@ namespace Alterverse.Online
 
         public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
         public static string Status=>IsConfigured?status:"Create the MOST WINS leaderboard in Google Play Console, then add its leaderboard ID.";
-        public static bool IsConfigured=>!string.IsNullOrWhiteSpace(GlobalLevelLeaderboardId)&&
-            !GlobalLevelLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
+        public static bool IsConfigured=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
+            !MostWinsLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
         public static bool IsAuthenticated=>Social.localUser!=null&&Social.localUser.authenticated;
         public static string PlayerName=>IsAuthenticated&&!string.IsNullOrWhiteSpace(Social.localUser.userName)
             ?Social.localUser.userName:"Not signed in";
         public static int CurrentScore=>Mathf.Max(0,MatchRewardService.MatchesWon);
-        public static int LastSubmittedScore=>lastSubmittedLevel;
+        public static int LastSubmittedScore=>lastSubmittedScore;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
         {
             activationAttempted=false;
-            lastSubmittedLevel=-1;
+            lastSubmittedScore=-1;
             state=ConnectionState.Idle;
             status="Google Play Games is not connected.";
         }
@@ -90,7 +90,7 @@ namespace Alterverse.Online
 
                 state=ConnectionState.Ready;
                 status="Google Play Games connected.";
-                SubmitCurrentLevel();
+                SubmitCurrentScore();
             });
 #else
             state=ConnectionState.Unsupported;
@@ -98,7 +98,7 @@ namespace Alterverse.Online
 #endif
         }
 
-        public static void SubmitCurrentLevel()
+        public static void SubmitCurrentScore()
         {
             if(!IsConfigured)return;
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -109,10 +109,10 @@ namespace Alterverse.Online
                 return;
             }
 
-            int level=CurrentLevel;
+            int level=CurrentScore;
             state=ConnectionState.Submitting;
             status="Syncing wins "+level+"...";
-            Social.ReportScore(level,GlobalLevelLeaderboardId,success=>
+            Social.ReportScore(level,MostWinsLeaderboardId,success=>
             {
                 if(!success)
                 {
@@ -120,9 +120,9 @@ namespace Alterverse.Online
                     return;
                 }
 
-                lastSubmittedLevel=level;
+                lastSubmittedScore=level;
                 state=ConnectionState.Ready;
-                status="Level "+level+" synced to the global ranking.";
+                status="Wins "+level+" synced to the global ranking.";
             });
 #else
             state=ConnectionState.Unsupported;
@@ -159,13 +159,13 @@ namespace Alterverse.Online
 
                     state=ConnectionState.Ready;
                     status="Google Play Games connected.";
-                    SubmitCurrentLevel();
+                    SubmitCurrentScore();
                     ShowNativeLeaderboardUi();
                 });
                 return;
             }
 
-            SubmitCurrentLevel();
+            SubmitCurrentScore();
             ShowNativeLeaderboardUi();
 #else
             state=ConnectionState.Unsupported;
@@ -201,7 +201,7 @@ namespace Alterverse.Online
                                 continue;
 
                             object[] arguments = new object[parameters.Length];
-                            arguments[0] = GlobalLevelLeaderboardId;
+                            arguments[0] = MostWinsLeaderboardId;
                             bool supported = true;
                             for (int parameter = 1; parameter < parameters.Length; parameter++)
                             {
