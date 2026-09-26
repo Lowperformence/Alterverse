@@ -5,6 +5,8 @@ namespace Alterverse.Combat
 {
     public static class HeroCombatRules
     {
+        // Combined with the 1.08 hero-health pass this raises typical hero-vs-hero TTK by roughly
+        // 17% while leaving planet/minion clear speed untouched. Movement stays responsive.
         public const float HeroVsHeroDamageMultiplier=.92f;
         public static float Distance(Vector3 a, Vector3 b) { a.y = b.y = 0; return Vector3.Distance(a, b); }
 
