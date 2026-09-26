@@ -11,14 +11,12 @@ namespace Alterverse.UI
         private SoftTargeting targeting;
         private Health playerHealth;
         private Camera cachedCamera;
-        private Texture2D ringTexture;
         private GUIStyle label;
         private float nextResolve;
         private float lastScale = -1f;
 
         private void Start()
         {
-            ringTexture = BuildRingTexture();
             cachedCamera = Camera.main;
             ResolveTargeting();
         }
@@ -30,36 +28,6 @@ namespace Alterverse.UI
 
             if (cachedCamera == null)
                 cachedCamera = Camera.main;
-        }
-
-        private static Texture2D BuildRingTexture()
-        {
-            const int size = 128;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false, true)
-            {
-                name = "DF_TargetReticle",
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp,
-                hideFlags = HideFlags.DontSave
-            };
-            var pixels = new Color[size * size];
-            const float radius = .405f;
-            const float halfWidth = .020f;
-            const float feather = .014f;
-            for (int y = 0; y < size; y++)
-            for (int x = 0; x < size; x++)
-            {
-                float dx = (x + .5f) / size - .5f;
-                float dy = (y + .5f) / size - .5f;
-                float distance = Mathf.Sqrt(dx * dx + dy * dy);
-                float edge = Mathf.Abs(distance - radius);
-                float core = 1f - Mathf.SmoothStep(halfWidth - feather, halfWidth + feather, edge);
-                float glow = Mathf.Exp(-edge * 150f) * .16f;
-                pixels[y * size + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(Mathf.Max(core, glow)));
-            }
-            texture.SetPixels(pixels);
-            texture.Apply(false, true);
-            return texture;
         }
 
         private void ResolveTargeting()
@@ -77,7 +45,7 @@ namespace Alterverse.UI
         {
             Health target = targeting != null ? targeting.Current : null;
             if (target == null || playerHealth == null || playerHealth.IsDead || MainMenuController.IsVisible ||
-                cachedCamera == null || ringTexture == null)
+                cachedCamera == null)
                 return;
 
             Vector3 screen = cachedCamera.WorldToScreenPoint(target.transform.position + Vector3.up * 1.25f);
@@ -89,20 +57,31 @@ namespace Alterverse.UI
 
             screen.y = Screen.height - screen.y;
             bool objective = target.GetComponent<DimensionPlanet>() != null;
-            float pulse = 1f + Mathf.Sin(Time.unscaledTime * 3.6f) * .025f;
-            float diameter = (objective ? 70f : 54f) * scale * pulse;
+            float pulse = 1f + Mathf.Sin(Time.unscaledTime * 3.6f) * .018f;
+            float radius = (objective ? 31f : 24f) * scale * pulse;
             Color tint = objective
-                ? StylizedArtDirection.WarmAccent
-                : new Color(1f, .32f, .42f, .78f);
-            Color previous = GUI.color;
-            GUI.color = tint;
-            GUI.DrawTexture(new Rect(screen.x - diameter * .5f, screen.y - diameter * .5f, diameter, diameter),
-                ringTexture, ScaleMode.StretchToFill, true);
-            GUI.color = previous;
+                ? new Color(StylizedArtDirection.WarmAccent.r, StylizedArtDirection.WarmAccent.g, StylizedArtDirection.WarmAccent.b, .88f)
+                : new Color(1f, .50f, .56f, .88f);
 
+            Vector2 center = new Vector2(screen.x, screen.y);
+            // Vector-only marker: no runtime texture/quad, so there can never be an opaque red square.
+            CombatGlyphs.Ring(center, radius, Mathf.Max(1.4f, 1.8f * scale), tint, 32);
+            Color soft = new Color(tint.r, tint.g, tint.b, .28f);
+            CombatGlyphs.Ring(center, radius + 3.5f * scale, Mathf.Max(.8f, 1.0f * scale), soft, 32);
+
+            float tick = 7f * scale;
+            float gap = 3f * scale;
+            float width = Mathf.Max(1.4f, 1.8f * scale);
+            CombatGlyphs.Line(new Vector2(center.x - radius - tick, center.y), new Vector2(center.x - radius - gap, center.y), width, tint);
+            CombatGlyphs.Line(new Vector2(center.x + radius + gap, center.y), new Vector2(center.x + radius + tick, center.y), width, tint);
+            CombatGlyphs.Line(new Vector2(center.x, center.y - radius - tick), new Vector2(center.x, center.y - radius - gap), width, tint);
+            CombatGlyphs.Line(new Vector2(center.x, center.y + radius + gap), new Vector2(center.x, center.y + radius + tick), width, tint);
+
+            // Ordinary soft targets need only the reticle. Keep text for special dimension objectives.
+            if (!objective) return;
             EnsureStyle(scale);
-            GUI.Label(new Rect(screen.x - 76f * scale, screen.y - diameter * .5f - 22f * scale,
-                152f * scale, 19f * scale), objective ? "DIMENSION OBJECTIVE" : "SOFT TARGET", label);
+            GUI.Label(new Rect(screen.x - 88f * scale, screen.y - radius - 24f * scale,
+                176f * scale, 19f * scale), "DIMENSION OBJECTIVE", label);
         }
 
         private void EnsureStyle(float scale)
@@ -116,12 +95,7 @@ namespace Alterverse.UI
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter
             };
-        }
-
-        private void OnDestroy()
-        {
-            if (ringTexture != null)
-                Destroy(ringTexture);
+            label.normal.textColor = new Color(.94f, .97f, 1f, .94f);
         }
     }
 }
