@@ -256,7 +256,8 @@ namespace Alterverse.Online
 
         private static Type ResolvePlayGamesPlatformType()
         {
-            return Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
+            return Type.GetType("GooglePlayGames.PlayGamesPlatform, Google.Play.Games",false)
+                ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames",false)
                 ?? Type.GetType("GooglePlayGames.PlayGamesPlatform, GooglePlayGames.Android",false);
         }
 

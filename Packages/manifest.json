@@ -51,6 +51,17 @@
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0",
     "com.unity.purchasing": "5.4.3",
-    "com.unity.services.vivox": "16.12.1"
-  }
+    "com.unity.services.vivox": "16.12.1",
+    "com.google.external-dependency-manager": "1.2.182",
+    "com.google.play.games": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1"
+  },
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": [
+        "com.google.external-dependency-manager"
+      ]
+    }
+  ]
 }
