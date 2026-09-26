@@ -29,6 +29,69 @@ namespace Alterverse.UI
         private bool mouseHeld;
         private bool inside;
         private Color accent;
+        private readonly GameObject[] rangeDiscs = new GameObject[2];
+        private readonly Material[] rangeMaterials = new Material[2];
+
+        private void LateUpdate()
+        {
+            HideDiscs();
+            if (heldSlot < 0 || !inside || !CanPreview()) return;
+            AbilitySpec spec = abilities.SpecFor(heldSlot);
+            Vector3 origin = transform.position; origin.y = .18f;
+            Color color = PreviewColor(heldSlot);
+            float radius = spec.Range > .01f ? spec.Range : spec.Radius;
+            if (radius > .01f) ShowDisc(0, origin, radius, color);
+            if (UsesMovementDirection(heldSlot) || spec.Range <= .01f || spec.Radius <= .01f) return;
+            targeting ??= GetComponent<SoftTargeting>();
+            Health current = targeting != null ? targeting.Current : null;
+            Vector3 center = current != null ? current.transform.position :
+                origin + FlatForward() * Mathf.Clamp(spec.Range * .64f, Mathf.Max(.9f, spec.Radius + .25f), spec.Range);
+            center.y = .20f;
+            ShowDisc(1, center, spec.Radius, new Color(color.r, color.g, color.b, .72f));
+        }
+
+        private void ShowDisc(int index, Vector3 center, float radius, Color color)
+        {
+            if (rangeDiscs[index] == null)
+            {
+                // Resources reference retains the mobile shader in Android builds.
+                Shader shader = Resources.Load<Shader>("CombatVfx/AbilityRangeDisc");
+                if (shader == null) return;
+                GameObject disc = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                disc.name = "Ability range disc";
+                disc.layer = gameObject.layer;
+                Collider collider = disc.GetComponent<Collider>();
+                collider.enabled = false;
+                Destroy(collider);
+                Material material = new Material(shader);
+                MeshRenderer renderer = disc.GetComponent<MeshRenderer>();
+                renderer.sharedMaterial = material;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderer.receiveShadows = false;
+                rangeDiscs[index] = disc;
+                rangeMaterials[index] = material;
+            }
+            Transform discTransform = rangeDiscs[index].transform;
+            discTransform.SetPositionAndRotation(center, Quaternion.Euler(90f, 0f, 0f));
+            discTransform.localScale = Vector3.one * (radius * 2f);
+            rangeMaterials[index].SetColor("_Color", color);
+            rangeDiscs[index].SetActive(true);
+        }
+
+        private void HideDiscs()
+        {
+            for (int i = 0; i < rangeDiscs.Length; i++)
+                if (rangeDiscs[i] != null) rangeDiscs[i].SetActive(false);
+        }
+
+        private void OnDestroy()
+        {
+            for (int i = 0; i < rangeDiscs.Length; i++)
+            {
+                if (rangeDiscs[i] != null) Destroy(rangeDiscs[i]);
+                if (rangeMaterials[i] != null) Destroy(rangeMaterials[i]);
+            }
+        }
 
         private void Awake()
         {
@@ -39,7 +102,9 @@ namespace Alterverse.UI
             accent = identity != null ? StylizedArtDirection.HeroAccent(identity.Hero) : FrontEndTheme.Accent;
         }
 
-        private void OnDisable() => Clear();
+        private void OnDisable() { Clear(); HideDiscs(); }
+        private void OnApplicationFocus(bool focused) { if (!focused) { Clear(); HideDiscs(); } }
+        private void OnApplicationPause(bool paused) { if (paused) { Clear(); HideDiscs(); } }
 
         private bool CanPreview()
         {
@@ -169,8 +234,7 @@ namespace Alterverse.UI
             if (spec.Range > .01f)
             {
                 // Outer ring: authoritative maximum cast/auto-target range.
-                DrawWorldCircle(origin, spec.Range, core, glow, pulse, true, 1f);
-                DrawRangeTicks(origin, spec.Range, core);
+
                 DrawWorldTag(origin + FlatForward() * spec.Range, $"RANGE {spec.Range:0.#}m", core);
 
                 if (spec.Radius > .01f)
@@ -195,7 +259,7 @@ namespace Alterverse.UI
 
                     DrawProjectedLine(origin, center, new Color(0f, 0f, 0f, .62f), 5f);
                     DrawProjectedLine(origin, center, new Color(core.r, core.g, core.b, .46f), 2f);
-                    DrawWorldCircle(center, spec.Radius, core, Color.white, pulse, false, exactTarget ? .90f : .72f);
+
                     DrawWorldTag(center + Vector3.right * spec.Radius,
                         exactTarget ? $"AREA {spec.Radius:0.#}m" : $"AREA SIZE {spec.Radius:0.#}m", core);
                 }
@@ -205,14 +269,13 @@ namespace Alterverse.UI
             if (spec.Radius > .01f)
             {
                 // Self-centered AoE: the radius itself is the authoritative reach.
-                DrawWorldCircle(origin, spec.Radius, core, glow, pulse, true, 1f);
-                DrawRangeTicks(origin, spec.Radius, core);
+
                 DrawWorldTag(origin + FlatForward() * spec.Radius, $"AREA {spec.Radius:0.#}m", core);
                 return;
             }
 
             // Pure self buffs have no gameplay range. Never invent a metre value.
-            DrawWorldCircle(origin, .72f, core, glow, pulse, false, .90f);
+
             DrawWorldTag(origin + FlatForward() * .76f, "SELF", core);
         }
 
@@ -223,7 +286,7 @@ namespace Alterverse.UI
             if (hero == HeroId.Mira && slot > 0) return new Color(.42f, .96f, .68f, .98f);
             if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
                 return Color.Lerp(accent, new Color(.46f, .84f, 1f), .55f);
-            return new Color(accent.r, accent.g, accent.b, .98f);
+            return new Color(1f, .08f, .10f, .98f);
         }
 
         private bool UsesMovementDirection(int slot)
@@ -262,45 +325,8 @@ namespace Alterverse.UI
             DrawProjectedLine(end, right, new Color(0f, 0f, 0f, .82f), 10f);
             DrawProjectedLine(end, left, glow, 5.5f);
             DrawProjectedLine(end, right, glow, 5.5f);
-            DrawWorldCircle(end, .34f + pulse * .05f, core, glow, pulse, false, 1f);
+
             DrawWorldTag(end + side * .46f, $"MOVE {range:0.#}m", core);
-        }
-
-        private void DrawWorldCircle(Vector3 center, float radius, Color core, Color glow, float pulse, bool breathe, float alpha)
-        {
-            if (radius <= .01f) return;
-            // 48 segments is smooth from the match camera but materially cheaper than 64 on mobile.
-            const int Segments = 48;
-            float displayedRadius = breathe ? radius * (1f - .006f + pulse * .012f) : radius;
-            Color shadow = new Color(0f, 0f, 0f, .74f * alpha);
-            Color soft = new Color(glow.r, glow.g, glow.b, (.32f + pulse * .11f) * alpha);
-            Color line = new Color(core.r, core.g, core.b, core.a * alpha);
-
-            for (int i = 0; i < Segments; i++)
-            {
-                float a = i * Mathf.PI * 2f / Segments;
-                float b = (i + 1) * Mathf.PI * 2f / Segments;
-                Vector3 p = center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * displayedRadius;
-                Vector3 q = center + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * displayedRadius;
-                DrawProjectedLine(p, q, shadow, 8.5f);
-                DrawProjectedLine(p, q, soft, 6f);
-                DrawProjectedLine(p, q, line, 3.25f);
-            }
-        }
-
-        private void DrawRangeTicks(Vector3 center, float radius, Color color)
-        {
-            if (radius < .5f) return;
-            float tick = Mathf.Clamp(radius * .035f, .12f, .28f);
-            for (int i = 0; i < 8; i++)
-            {
-                float a = i * Mathf.PI * .25f;
-                Vector3 dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
-                Vector3 from = center + dir * Mathf.Max(.05f, radius - tick);
-                Vector3 to = center + dir * (radius + tick);
-                DrawProjectedLine(from, to, new Color(0f, 0f, 0f, .82f), 8f);
-                DrawProjectedLine(from, to, color, 4f);
-            }
         }
 
         private void DrawWorldTag(Vector3 world, string text, Color color)

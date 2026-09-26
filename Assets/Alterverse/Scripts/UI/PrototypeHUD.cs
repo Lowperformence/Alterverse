@@ -38,6 +38,8 @@ namespace Alterverse.UI
         public void Initialize(Health player,VeyrAbilities legacyAbilities,Health enemy)
         {
             health=player;if(player==null)return;
+            if (player.GetComponent<AbilityRangePreviewOverlay>() == null)
+                player.gameObject.AddComponent<AbilityRangePreviewOverlay>();
             attack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();
             abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();view=Camera.main;
             heroName=identity!=null?identity.DisplayName.ToUpperInvariant():"HERO";
@@ -340,6 +342,10 @@ namespace Alterverse.UI
 
         private void DrawPreview()
         {
+            // The smooth ground overlay owns range presentation; retain the legacy fallback only
+            // for scenes without that component, avoiding two superimposed range outlines.
+            AbilityRangePreviewOverlay overlay = health != null ? health.GetComponent<AbilityRangePreviewOverlay>() : null;
+            if (overlay != null && overlay.isActiveAndEnabled) return;
             if (inspectedSlot < 0 || !combatInside || abilities == null)
                 return;
             if (view == null)
