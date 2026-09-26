@@ -74,12 +74,19 @@ namespace Alterverse.Characters
                 // An assassin gap-close should not jump beyond its intended opponent.
                 MobaBotMover mover = GetComponent<MobaBotMover>();
                 if (mover != null && target != null && Vector3.Dot(movement, target.transform.position - from) > 0)
-                    end = from + movement.normalized * Mathf.Min(spec.Range, Mathf.Max(0, HeroCombatRules.Distance(from, target.transform.position) - 1.5f));
+                    end = from + movement.normalized * Mathf.Min(spec.Range, Mathf.Max(0, HeroCombatRules.TargetDistance(from, target) - 1.5f));
                 end = GameplayCollision.ClampToRoundedArena(end,40f,33f);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
                 if(!locomotion.BeginDash(end))return false;
                 HeroCombatAudio.Cast(gameObject,slot);
                 mover?.ResetSteering(); HeroSkillVfx.Dash(gameObject, from, locomotion.DashDestination);
+                // Zhaev is intentionally still a low-HP assassin. The short shield protects only
+                // the committed entry window instead of inflating his permanent durability.
+                if(hero==HeroId.Veyr&&slot==2)
+                {
+                    self.AddShield(30f,2.25f,false);
+                    HeroSkillVfx.Support(gameObject,self,true,2.25f);
+                }
             }
             else if (hero == HeroId.Mira && (slot == 1 || slot == 2))
             {
@@ -163,7 +170,7 @@ namespace Alterverse.Characters
             }
             return HeroAimPrediction.Point(transform.position,position,velocity,spec.Windup,quality,spec.Range);
         }
-        private bool ValidTarget(Health target, float range) => HeroCombatRules.Enemy(gameObject, target) && HeroCombatRules.Distance(transform.position, target.transform.position) <= range;
+        private bool ValidTarget(Health target, float range) => HeroCombatRules.Enemy(gameObject, target) && HeroCombatRules.TargetDistance(transform.position, target) <= range;
         private IEnumerator DelayedSingle(int slot, Health target, int castLife)
         {
             HeroSkillVfx.TargetWarning(gameObject,target,kit.Spec(slot).Windup);
@@ -253,5 +260,3 @@ namespace Alterverse.Characters
         }
     }
 }
-
-
