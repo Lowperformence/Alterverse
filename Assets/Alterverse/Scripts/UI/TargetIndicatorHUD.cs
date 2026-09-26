@@ -9,6 +9,7 @@ namespace Alterverse.UI
     public sealed class TargetIndicatorHUD : MonoBehaviour
     {
         private SoftTargeting targeting;
+        private Health playerHealth;
         private Camera cachedCamera;
         private Texture2D ringTexture;
         private GUIStyle label;
@@ -66,13 +67,17 @@ namespace Alterverse.UI
             nextResolve = Time.unscaledTime + .5f;
             PlayerHeroAbilities player = FindAnyObjectByType<PlayerHeroAbilities>();
             if (player != null)
+            {
                 targeting = player.GetComponent<SoftTargeting>();
+                playerHealth = player.GetComponent<Health>();
+            }
         }
 
         private void OnGUI()
         {
             Health target = targeting != null ? targeting.Current : null;
-            if (target == null || cachedCamera == null || ringTexture == null)
+            if (target == null || playerHealth == null || playerHealth.IsDead || MainMenuController.IsVisible ||
+                cachedCamera == null || ringTexture == null)
                 return;
 
             Vector3 screen = cachedCamera.WorldToScreenPoint(target.transform.position + Vector3.up * 1.25f);
