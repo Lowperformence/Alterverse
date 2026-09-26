@@ -860,7 +860,7 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Transform weapon=WeaponPivot(s,new Vector3(side*.43f,-.19f,.16f));
+                // Seat each hilt at its inward-canted wrist so the grip sits inside the glove.\n                Transform weapon=WeaponPivot(s,new Vector3(side*.235f,-.20f,.09f));
                 weapon.localRotation=Quaternion.Euler(6f,side*-7f,side*-10f);
 
                 Mesh blade=HeroMeshLibrary.Ribbon("DF_ShadowSteelBlade"+s,
