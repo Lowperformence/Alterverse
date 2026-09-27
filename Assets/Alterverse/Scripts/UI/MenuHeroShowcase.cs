@@ -8,8 +8,9 @@ namespace Alterverse.UI
     public sealed class MenuHeroShowcase : MonoBehaviour
     {
         private const int PreviewLayer = 31;
-        private const int PreviewWidth = 1024;
-        private const int PreviewHeight = 1152;
+        // Higher-resolution portrait target keeps the hero crisp when the UI card is scaled up.
+        private const int PreviewWidth = 1536;
+        private const int PreviewHeight = 1728;
         private GameObject stage, actor;
         private Camera previewCamera;
         private RenderTexture texture;
@@ -31,9 +32,31 @@ namespace Alterverse.UI
 
         public void DrawPreview(Rect rect)
         {
-            // Fill the entire card independently of the portrait aspect, without stretching the hero.
-            if (BackgroundImage != null) GUI.DrawTexture(rect, BackgroundImage, ScaleMode.ScaleAndCrop, false);
-            if (Image != null) GUI.DrawTexture(rect, Image, ScaleMode.ScaleToFit, true);
+            if(rect.width<=0f||rect.height<=0f)return;
+
+            // Clip everything to the authored card, then deliberately overscan the backdrop a little.
+            // This prevents thin uncovered borders on differently shaped hero cards while keeping the hero undistorted.
+            GUI.BeginGroup(rect);
+            Rect local=new Rect(0f,0f,rect.width,rect.height);
+            Color oldColor=GUI.color;
+            GUI.color=new Color(.010f,.014f,.024f,1f);
+            GUI.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
+            GUI.color=oldColor;
+
+            if(BackgroundImage!=null)
+            {
+                float bleed=Mathf.Max(2f,Mathf.Min(rect.width,rect.height)*.025f);
+                Rect backdropRect=new Rect(-bleed,-bleed,rect.width+bleed*2f,rect.height+bleed*2f);
+                GUI.DrawTexture(backdropRect,BackgroundImage,ScaleMode.ScaleAndCrop,false);
+            }
+
+            if(Image!=null)
+            {
+                float heroBleed=Mathf.Min(rect.width,rect.height)*.015f;
+                Rect heroRect=new Rect(-heroBleed,-heroBleed,rect.width+heroBleed*2f,rect.height+heroBleed*2f);
+                GUI.DrawTexture(heroRect,Image,ScaleMode.ScaleToFit,true);
+            }
+            GUI.EndGroup();
         }
 
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,
@@ -116,7 +139,8 @@ namespace Alterverse.UI
             Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
             float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
             float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
-            previewCamera.orthographicSize=Mathf.Max(1.43f,Mathf.Max(vertical,horizontal/(PreviewWidth/(float)PreviewHeight))*1.12f);
+            // Slightly tighter framing than before, while preserving the complete silhouette.
+            previewCamera.orthographicSize=Mathf.Max(1.40f,Mathf.Max(vertical,horizontal/(PreviewWidth/(float)PreviewHeight))*1.08f);
         }
         private void CreateStage()
         {
@@ -137,8 +161,8 @@ namespace Alterverse.UI
             originWorld.color=new Color(1,1,1,.96f);
             originBackdrop=new HeroOriginBackdrop();
 
-            texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32)
-            { name = "DF_HeroPortrait", antiAliasing = 4, useMipMap = false, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
+            texture = new RenderTexture(PreviewWidth,PreviewHeight,24,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB)
+            { name = "DF_HeroPortrait_HD", antiAliasing = 4, useMipMap = false, autoGenerateMips = false, filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             texture.Create();
             var cameraObject = new GameObject("DF_PortraitCamera"); cameraObject.transform.SetParent(stage.transform,false);
             previewCamera = cameraObject.AddComponent<Camera>();
@@ -147,6 +171,7 @@ namespace Alterverse.UI
             previewCamera.orthographic = true; previewCamera.orthographicSize = 1.65f;
             previewCamera.nearClipPlane = .1f; previewCamera.farClipPlane = 12;
             previewCamera.allowHDR = false; previewCamera.allowMSAA = true;
+            previewCamera.allowDynamicResolution = false;
             previewCamera.useOcclusionCulling = false; previewCamera.cullingMask = 1 << PreviewLayer;
             previewCamera.targetTexture = texture; previewCamera.depth = -20;
             var data = cameraObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
