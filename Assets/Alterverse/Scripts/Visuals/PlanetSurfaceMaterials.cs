@@ -32,11 +32,11 @@ namespace Alterverse.Visuals
             material.SetTexture("_StoneData",stone);
             material.SetTexture("_GroundMap",macro);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
-            material.SetFloat("_DetailScale",.23f); // ~4.35 m patch, ripples ~0.35–0.7 m.
-            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsMars?.29f:
-                ArenaVariantRuntime.IsKryon?.10f:ArenaVariantRuntime.IsGreenPlanet?.16f:.22f);
-            material.SetFloat("_RockStrength",.28f);
-            material.SetFloat("_BumpScale",ground?.38f:0f);
+            material.SetFloat("_DetailScale",.29f); // Finer world-space detail, shared by ground, craters and cliffs.
+            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsMars?.33f:
+                ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:.27f);
+            material.SetFloat("_RockStrength",.34f);
+            material.SetFloat("_BumpScale",ground?.44f:0f);
         }
 
         static Texture2D Bake(bool rock)
@@ -74,7 +74,7 @@ namespace Alterverse.Visuals
             }
             var texture=new Texture2D(size,size,TextureFormat.RGBA32,true,true)
             {name=rock?"DF_PackedStoneDetail":"DF_PackedSandRipples",wrapMode=TextureWrapMode.Repeat,
-                filterMode=FilterMode.Trilinear,anisoLevel=4};
+                filterMode=FilterMode.Trilinear,anisoLevel=8};
             texture.SetPixels32(pixels);texture.Apply(true,true);
             return texture;
         }
