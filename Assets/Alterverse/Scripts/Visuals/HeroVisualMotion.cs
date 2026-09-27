@@ -135,9 +135,9 @@ namespace Alterverse.Visuals
             float progress=stance?cycle*2:(cycle-.5f)*2;
             // During stance the foot moves backward at the traveled-distance rate.
             float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.25f;
-            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.14f;
+            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.34f;
             foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
-            foot.localRotation=rotation*Quaternion.Euler(stance?0:-Mathf.Sin(progress*Mathf.PI)*12*strideWeight,0,0);
+            foot.localRotation=rotation*Quaternion.Euler((stance?Mathf.Sin(progress*Mathf.PI)*8:-Mathf.Sin(progress*Mathf.PI)*24)*strideWeight,0,0);
         }
         private void LateUpdate()
         {
@@ -165,19 +165,20 @@ namespace Alterverse.Visuals
             if(Dashing)strideWeight=0;
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
-            float strideLength=heavy?(hero==HeroId.Kaelon?2.6f:2.45f):(hero==HeroId.Veyr||hero==HeroId.Nyra?1.9f:2.1f);
+            float strideLength=heavy?1.65f:1.45f;
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
-            float step=Mathf.Sin(phase)*(heavy?22:hero==HeroId.Veyr||hero==HeroId.Nyra?29:26)*strideWeight;
+            float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
+            float step=Mathf.Sin(phase)*Mathf.Lerp(30f,48f,runBlend)*strideWeight;
             PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
             PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
             PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
-            Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.45f);Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.45f);
+            Swing(armL,armRestL,-step*.85f);Swing(armR,armRestR,step*.85f);
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
-            float bob=(1-Mathf.Cos(phase*2))*.015f*strideWeight*(heavy?.65f:1);
+            float bob=(1-Mathf.Cos(phase*2))*Mathf.Lerp(.025f,.055f,runBlend)*strideWeight*(heavy?.8f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
@@ -204,13 +205,13 @@ namespace Alterverse.Visuals
             root.localScale=displayedScale;
             float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
-            float sway=Mathf.Sin(phase)*strideWeight*(heavy?.65f:1.05f)+idleShift*.45f;
+            float sway=Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
             Quaternion targetRotation=Quaternion.Euler((Dashing?9:lean)-7*kick-recoil,spinYaw,sway);
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
-            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.14f,0,-sway*.22f);
-            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.22f,0,-sway*.32f);
+            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,-Mathf.Sin(phase)*3f*strideWeight,-sway*.45f);
+            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);

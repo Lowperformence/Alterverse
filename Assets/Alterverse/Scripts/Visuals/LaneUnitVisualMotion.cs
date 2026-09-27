@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
         private Transform legL, legR, shinL, shinR, footL, footR, armL, armR, shoulderL, shoulderR, head;
         private Quaternion legRestL, legRestR, shinRestL, shinRestR, footRestL, footRestR;
         private Quaternion armRestL, armRestR, shoulderRestL, shoulderRestR, headRest;
+        private Vector3 footPositionL, footPositionR, legPositionL, legPositionR;
         private Vector3 lastPosition, previousVelocity;
         private float phase, gait, lean, attackUntil, attackDuration, attackWeight;
         private bool configured, robot;
@@ -165,6 +166,10 @@ namespace Alterverse.Visuals
 
         private void CaptureRestPose()
         {
+            if (footL != null) footPositionL = footL.localPosition;
+            if (footR != null) footPositionR = footR.localPosition;
+            if (legL != null) legPositionL = legL.localPosition;
+            if (legR != null) legPositionR = legR.localPosition;
             legRestL = Rest(legL); legRestR = Rest(legR);
             shinRestL = Rest(shinL); shinRestR = Rest(shinR);
             footRestL = Rest(footL); footRestR = Rest(footR);
@@ -197,20 +202,27 @@ namespace Alterverse.Visuals
             float acceleration = Mathf.Clamp(Vector3.Dot(velocity - previousVelocity, transform.forward) / dt, -18f, 18f);
             previousVelocity = velocity;
 
-            float stepLength = robot ? 2.1f : 1.25f;
+            float stepLength = robot ? 1.55f : 1.05f;
             phase = Mathf.Repeat(phase + delta.magnitude / stepLength * Mathf.PI * 2f, Mathf.PI * 2f);
-            float stride = Mathf.Sin(phase) * (robot ? 19f : 25f) * gait;
-            Pose(legL, legRestL, stride); Pose(legR, legRestR, -stride);
-            Pose(shinL, shinRestL, -Mathf.Max(0f, stride) * (robot ? .28f : 0f));
-            Pose(shinR, shinRestR, -Mathf.Max(0f, -stride) * (robot ? .28f : 0f));
-            Pose(footL, footRestL, -stride * .32f); Pose(footR, footRestR, stride * .32f);
-            Pose(armL, armRestL, -stride * .46f); Pose(armR, armRestR, stride * .46f);
+            float stride = Mathf.Sin(phase) * (robot ? 34f : 42f) * gait;
+            if (robot) { Pose(legL, legRestL, stride); Pose(legR, legRestR, -stride); }
+            else
+            {
+                StepInfantryFoot(footL, footPositionL, phase, gait);
+                StepInfantryFoot(footR, footPositionR, phase + Mathf.PI, gait);
+                AimInfantryLeg(legL, legPositionL, footL, legRestL);
+                AimInfantryLeg(legR, legPositionR, footR, legRestR);
+            }
+            Pose(shinL, shinRestL, -Mathf.Max(0f, stride) * .48f);
+            Pose(shinR, shinRestR, -Mathf.Max(0f, -stride) * .48f);
+            if (robot) { Pose(footL, footRestL, -stride * .45f); Pose(footR, footRestR, stride * .45f); }
+            Pose(armL, armRestL, -stride * .8f); Pose(armR, armRestR, stride * .8f);
 
             lean = Mathf.Lerp(lean, Mathf.Clamp(acceleration * .075f + velocity.magnitude * .18f, -1.5f, 3.8f), 1f - Mathf.Exp(-11f * dt));
             float idleBreath = Mathf.Sin(Time.time * (robot ? 1.2f : 1.8f)) * (robot ? .006f : .010f) * (1f - gait);
-            float bounce = (1f - Mathf.Cos(phase * 2f)) * (robot ? .014f : .018f) * gait;
+            float bounce = (1f - Mathf.Cos(phase * 2f)) * (robot ? .036f : .045f) * gait;
             visualRoot.localPosition = Vector3.up * (idleBreath + bounce);
-            float sway = Mathf.Sin(phase) * gait * (robot ? .65f : 1.2f);
+            float sway = Mathf.Sin(phase) * gait * (robot ? 1.5f : 2.4f);
             visualRoot.localRotation = Quaternion.Euler(lean, 0f, sway);
             Pose(shoulderL, shoulderRestL, -sway * .65f); Pose(shoulderR, shoulderRestR, -sway * .65f);
             Pose(head, headRest, -lean * .28f - sway * .2f);
@@ -220,11 +232,32 @@ namespace Alterverse.Visuals
                 float progress = 1f - (attackUntil - Time.time) / attackDuration;
                 float recoil = Mathf.Sin(progress * Mathf.PI) * attackWeight;
                 visualRoot.localRotation *= Quaternion.Euler(-8f * recoil, 0f, 0f);
-                Pose(armR, armRestR, stride * .46f - 30f * recoil);
+                Pose(armR, armRestR, stride * .8f - 30f * recoil);
             }
         }
 
         private static Quaternion Rest(Transform value) => value != null ? value.localRotation : Quaternion.identity;
+        private static void StepInfantryFoot(Transform foot, Vector3 rest, float angle, float weight)
+        {
+            if (foot == null) return;
+            float cycle = Mathf.Repeat(angle / (Mathf.PI * 2f), 1f);
+            bool planted = cycle < .52f;
+            float progress = planted ? cycle / .52f : (cycle - .52f) / .48f;
+            float forward = planted ? Mathf.Lerp(.23f, -.23f, progress) : Mathf.SmoothStep(-.23f, .23f, progress);
+            float lift = planted ? 0f : Mathf.Sin(progress * Mathf.PI) * .29f;
+            foot.localPosition = rest + new Vector3(0f, lift, forward) * weight;
+            foot.localRotation = Quaternion.Euler(planted ? 0f : -19f * Mathf.Sin(progress * Mathf.PI) * weight, 0f, 0f);
+        }
+        private static void AimInfantryLeg(Transform leg, Vector3 rest, Transform foot, Quaternion rotation)
+        {
+            if (leg == null || foot == null) return;
+            Vector3 hip = new Vector3(rest.x, -.35f, rest.z);
+            Vector3 ankle = foot.localPosition + Vector3.up * .07f;
+            Vector3 direction = ankle - hip;
+            leg.localPosition = (hip + ankle) * .5f;
+            leg.localRotation = Quaternion.FromToRotation(Vector3.down, direction) * rotation;
+            Vector3 scale = leg.localScale; scale.y = direction.magnitude; leg.localScale = scale;
+        }
         private static void Pose(Transform part, Quaternion rest, float xAngle)
         {
             if (part != null) part.localRotation = rest * Quaternion.Euler(xAngle, 0f, 0f);

@@ -521,15 +521,15 @@ namespace Alterverse.Combat
         {
             if(moonBodyRoot==null)return;
             float t=Time.time;
-            float stride=Mathf.Sin(t*5.2f)*moonMoveBlend;
-            float bob=Mathf.Abs(stride)*.030f*moonMoveBlend;
+            float stride=Mathf.Sin(t*7.2f)*moonMoveBlend;
+            float bob=(1f-Mathf.Cos(t*14.4f))*.032f*moonMoveBlend;
             moonBodyRoot.localPosition=moonBodyRest+Vector3.up*bob;
-            moonBodyRoot.localRotation=Quaternion.Euler(-1f+Mathf.Cos(t*5.2f)*.45f*moonMoveBlend,0,stride*.55f);
+            moonBodyRoot.localRotation=Quaternion.Euler(-3f+Mathf.Cos(t*14.4f)*1.4f*moonMoveBlend,0,stride*2f);
 
-            if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*17f,0,0);
-            if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*17f,0,0);
-            if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-stride*10f,0,0);
-            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*10f,0,0);
+            if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*34f,0,0);
+            if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*34f,0,0);
+            if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-stride*27f,0,0);
+            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*27f,0,0);
         }
 
         private void BuildSkeletonVisuals()
@@ -573,11 +573,11 @@ namespace Alterverse.Combat
 
         private void AnimateSkeleton()
         {
-            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(Time.time*5.8f)*skeletonMoveBlend;
-            if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*18f,0,idle*1.5f);
-            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*18f-(shotPending?18f:0f),0,-idle*1.5f);
-            if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*16f,0,0);
-            if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*16f,0,0);
+            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(Time.time*7.1f)*skeletonMoveBlend;
+            if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*30f,0,idle*1.5f);
+            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*30f-(shotPending?18f:0f),0,-idle*1.5f);
+            if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*32f,0,0);
+            if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*32f,0,0);
             if(skeletonSkull!=null)skeletonSkull.localRotation=skeletonSkullBase*Quaternion.Euler(idle*1.2f,idle*2.4f,0);
             if(skeletonPelvis!=null)skeletonPelvis.localScale=new Vector3(skeletonPelvisBaseScale.x,skeletonPelvisBaseScale.y*(1f+Mathf.Abs(stride)*.018f),skeletonPelvisBaseScale.z);
         }
@@ -945,8 +945,8 @@ namespace Alterverse.Combat
         {
             if(bearBodyRoot==null)return;
             float idle=Mathf.Sin(Time.time*1.55f);
-            float stride=Mathf.Sin(Time.time*4.65f)*bearMoveBlend;
-            float lift=Mathf.Abs(stride)*.035f*bearMoveBlend;
+            float stride=Mathf.Sin(Time.time*6.4f)*bearMoveBlend;
+            float lift=(1f-Mathf.Cos(Time.time*12.8f))*.035f*bearMoveBlend;
             bearBodyRoot.localPosition=bearBodyRest+Vector3.up*(lift+idle*.006f);
             bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(Time.time*4.65f)*.65f*bearMoveBlend,0,stride*.85f);
 
@@ -955,7 +955,7 @@ namespace Alterverse.Combat
                 Transform leg=bearLegRoots[i];if(leg==null)continue;
                 float phase=(i==0||i==3?1f:-1f)*stride;
                 float side=i%2==0?-1f:1f;
-                leg.localRotation=bearLegBase[i]*Quaternion.Euler(phase*23f,0,side*Mathf.Abs(phase)*3.5f);
+                leg.localRotation=bearLegBase[i]*Quaternion.Euler(phase*34f,0,side*Mathf.Abs(phase)*3.5f);
             }
 
             if(bearHeadPivot!=null)
@@ -1128,7 +1128,7 @@ namespace Alterverse.Combat
         {
             float t=Time.time;
             float idle=Mathf.Sin(t*1.55f);
-            float stride=Mathf.Sin(t*4.9f)*xenoMoveBlend;
+            float stride=Mathf.Sin(t*6.8f)*xenoMoveBlend;
             float strideAbs=Mathf.Abs(stride);
             float attackWindup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
             xenoAttackKick=Mathf.MoveTowards(xenoAttackKick,0f,Time.deltaTime*5.5f);
@@ -1151,10 +1151,10 @@ namespace Alterverse.Combat
             if(xenoLeftClaw!=null)xenoLeftClaw.localRotation=Quaternion.Euler(-7f+idle*1.2f,0,-4f);
             if(xenoRightClaw!=null)xenoRightClaw.localRotation=Quaternion.Euler(-7f-attackWindup*8f+xenoAttackKick*9f,0,4f);
 
-            if(xenoLeftHipPivot!=null)xenoLeftHipPivot.localRotation=Quaternion.Euler(5f-stride*20f,0,-5f);
-            if(xenoRightHipPivot!=null)xenoRightHipPivot.localRotation=Quaternion.Euler(5f+stride*20f,0,5f);
-            if(xenoLeftShinPivot!=null)xenoLeftShinPivot.localRotation=Quaternion.Euler(9f+stride*11f,0,-3f);
-            if(xenoRightShinPivot!=null)xenoRightShinPivot.localRotation=Quaternion.Euler(9f-stride*11f,0,3f);
+            if(xenoLeftHipPivot!=null)xenoLeftHipPivot.localRotation=Quaternion.Euler(5f-stride*34f,0,-5f);
+            if(xenoRightHipPivot!=null)xenoRightHipPivot.localRotation=Quaternion.Euler(5f+stride*34f,0,5f);
+            if(xenoLeftShinPivot!=null)xenoLeftShinPivot.localRotation=Quaternion.Euler(9f+Mathf.Max(0f,stride)*27f,0,-3f);
+            if(xenoRightShinPivot!=null)xenoRightShinPivot.localRotation=Quaternion.Euler(9f+Mathf.Max(0f,-stride)*27f,0,3f);
             if(xenoLeftFoot!=null)xenoLeftFoot.localRotation=Quaternion.Euler(Mathf.Max(0f,stride)*-8f,3f,0);
             if(xenoRightFoot!=null)xenoRightFoot.localRotation=Quaternion.Euler(Mathf.Max(0f,-stride)*-8f,-3f,0);
 
