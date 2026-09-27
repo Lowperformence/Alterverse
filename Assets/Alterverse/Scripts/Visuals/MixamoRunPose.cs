@@ -34,6 +34,7 @@ namespace Alterverse.Visuals
         private Transform leftUpLeg, rightUpLeg, leftLegBone, rightLegBone;
         private Quaternion bindLeftFoot, bindRightFoot, bindLeftForeArm, bindRightForeArm;
         private Quaternion bindLeftUpLeg, bindRightUpLeg, bindLeftLeg, bindRightLeg;
+        private float bindThighL, bindThighR, bindShinL, bindShinR;
         private PlayableGraph graph;
         private AnimationClipPlayable[] clipPlayables;
         private AnimationClip[] clips;
@@ -200,6 +201,10 @@ namespace Alterverse.Visuals
             bindRightFoot = LocalRotation(rightFoot);
             bindLeftForeArm = LocalRotation(leftForeArm);
             bindRightForeArm = LocalRotation(rightForeArm);
+            bindThighL = SegmentPitch(leftUpLeg, leftLegBone);
+            bindThighR = SegmentPitch(rightUpLeg, rightLegBone);
+            bindShinL = SegmentPitch(leftLegBone, leftFoot);
+            bindShinR = SegmentPitch(rightLegBone, rightFoot);
         }
 
         public void Apply(float phase, float weight, float turnRate, bool stopping,
@@ -231,11 +236,17 @@ namespace Alterverse.Visuals
 
             if (Articulated)
             {
-                Quaternion elbowL = Delta(leftForeArm, bindLeftForeArm);
-                Quaternion elbowR = Delta(rightForeArm, bindRightForeArm);
+                // Read segment directions in the source root's coordinates. Mixamo's local
+                // bone axes and the procedural presentation joints do not share a bind pose.
+                float thighL = SegmentPitch(leftUpLeg, leftLegBone) - bindThighL;
+                float thighR = SegmentPitch(rightUpLeg, rightLegBone) - bindThighR;
+                float shinL = SegmentPitch(leftLegBone, leftFoot) - bindShinL;
+                float shinR = SegmentPitch(rightLegBone, rightFoot) - bindShinR;
+                Quaternion elbowL = Quaternion.Euler(Mathf.Clamp(Mathf.DeltaAngle(0f, Delta(leftForeArm, bindLeftForeArm).eulerAngles.x), -65f, 65f), 0f, 0f);
+                Quaternion elbowR = Quaternion.Euler(Mathf.Clamp(Mathf.DeltaAngle(0f, Delta(rightForeArm, bindRightForeArm).eulerAngles.x), -65f, 65f), 0f, 0f);
                 articulatedRig.SetTemplatePose(weight,
-                    Delta(leftUpLeg, bindLeftUpLeg), Delta(leftLegBone, bindLeftLeg), Delta(leftFoot, bindLeftFoot),
-                    Delta(rightUpLeg, bindRightUpLeg), Delta(rightLegBone, bindRightLeg), Delta(rightFoot, bindRightFoot),
+                    Pitch(thighL, 48f), Pitch(shinL - thighL, 85f), Pitch(-shinL, 32f),
+                    Pitch(thighR, 48f), Pitch(shinR - thighR, 85f), Pitch(-shinR, 32f),
                     elbowL, Quaternion.Slerp(Quaternion.identity, elbowL, .24f),
                     elbowR, Quaternion.Slerp(Quaternion.identity, elbowR, .24f));
             }
@@ -296,6 +307,16 @@ namespace Alterverse.Visuals
         }
 
         private static Quaternion LocalRotation(Transform bone) => bone != null ? bone.localRotation : Quaternion.identity;
+
+        private float SegmentPitch(Transform upper, Transform lower)
+        {
+            if (upper == null || lower == null) return 0f;
+            Vector3 direction = source.transform.InverseTransformDirection(lower.position - upper.position);
+            return Mathf.Atan2(direction.z, -direction.y) * Mathf.Rad2Deg;
+        }
+
+        private static Quaternion Pitch(float degrees, float limit) =>
+            Quaternion.Euler(Mathf.Clamp(Mathf.DeltaAngle(0f, degrees), -limit, limit), 0f, 0f);
 
         private static Quaternion Delta(Transform bone, Quaternion bind)
         {
