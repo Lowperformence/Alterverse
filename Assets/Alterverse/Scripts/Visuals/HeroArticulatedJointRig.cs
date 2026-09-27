@@ -230,7 +230,7 @@ namespace Alterverse.Visuals
 
         private static Mesh SplitMesh(Mesh source, float splitY, bool upper)
         {
-            string key = source.GetInstanceID() + ":" + Mathf.RoundToInt(splitY * 1000f) + ":" + (upper ? "U" : "L");
+            string key = source.GetEntityId().GetHashCode() + ":" + Mathf.RoundToInt(splitY * 1000f) + ":" + (upper ? "U" : "L");
             if (SplitMeshCache.TryGetValue(key, out Mesh cached) && cached != null) return cached;
 
             Mesh result = new() { name = source.name + (upper ? "_Upper" : "_Lower"), indexFormat = source.indexFormat };
