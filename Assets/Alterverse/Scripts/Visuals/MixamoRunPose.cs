@@ -38,7 +38,8 @@ namespace Alterverse.Visuals
         private AnimationClipPlayable[] clipPlayables;
         private AnimationClip[] clips;
         private AnimationMixerPlayable mixer;
-        private int activeClip = -1;
+        private int activeClip = -1, fadingClip = -1;
+        private float blendStarted, blendDuration;
         private string activeTemplate = "DF_MixamoRun";
 
         private const int Run = 0, Stop = 1, TurnRight = 2, TurnLeft = 3,
@@ -216,18 +217,14 @@ namespace Alterverse.Visuals
                 : turnRate > 55f ? TurnRight : turnRate < -55f ? TurnLeft : Run;
 
             if (clips[selected] == null) selected = Run;
-            if (selected != activeClip)
-            {
-                if (activeClip >= 0) mixer.SetInputWeight(activeClip, 0f);
-                mixer.SetInputWeight(selected, 1f);
-                activeClip = selected;
-            }
+            BeginBlend(selected, attacking, stopping);
 
-            float time = Mathf.Repeat(phase / (Mathf.PI * 2f), 1f) * clips[selected].length;
+            float time = Mathf.Repeat(phase / (Mathf.PI * 2f), 1f) * clips[activeClip].length;
             if (attacking)
-                time = Mathf.Clamp01(attackProgress) * clips[selected].length;
+                time = Mathf.Clamp01(attackProgress) * clips[activeClip].length;
 
-            clipPlayables[selected].SetTime(time);
+            clipPlayables[activeClip].SetTime(time);
+            UpdateBlend();
             graph.Evaluate(0f);
 
             weight = attacking ? Mathf.Max(weight, .7f) : stopping ? Mathf.Max(weight, .55f) : weight;
@@ -263,12 +260,47 @@ namespace Alterverse.Visuals
             TransferArm(armR, armRestR, rightArm, rightForeArm, armWeight);
         }
 
+        private void BeginBlend(int selected, bool attacking, bool stopping)
+        {
+            if (selected == activeClip) return;
+
+            if (fadingClip >= 0)
+                mixer.SetInputWeight(fadingClip, 0f);
+
+            fadingClip = activeClip;
+            activeClip = selected;
+            blendStarted = Time.time;
+            blendDuration = attacking ? .065f : stopping ? .09f : .12f;
+
+            if (fadingClip >= 0) mixer.SetInputWeight(fadingClip, 1f);
+            mixer.SetInputWeight(activeClip, fadingClip >= 0 ? 0f : 1f);
+        }
+
+        private void UpdateBlend()
+        {
+            if (fadingClip < 0)
+            {
+                mixer.SetInputWeight(activeClip, 1f);
+                return;
+            }
+
+            float progress = Mathf.Clamp01((Time.time - blendStarted) / Mathf.Max(.01f, blendDuration));
+            float smooth = Mathf.SmoothStep(0f, 1f, progress);
+            mixer.SetInputWeight(fadingClip, 1f - smooth);
+            mixer.SetInputWeight(activeClip, smooth);
+            if (progress < 1f) return;
+
+            mixer.SetInputWeight(fadingClip, 0f);
+            mixer.SetInputWeight(activeClip, 1f);
+            fadingClip = -1;
+        }
+
         private static Quaternion LocalRotation(Transform bone) => bone != null ? bone.localRotation : Quaternion.identity;
 
         private static Quaternion Delta(Transform bone, Quaternion bind)
         {
             if (bone == null) return Quaternion.identity;
-            return bone.localRotation * Quaternion.Inverse(bind);
+            return Quaternion.Inverse(bind) * bone.localRotation;
         }
 
         private static void TransferFoot(Transform target, Vector3 rest, Quaternion rotation,
