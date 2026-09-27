@@ -711,6 +711,8 @@ if(child!=null&&parent!=null)child.SetParent(parent,true);
 internal static bool IsFlowingFabric(string name)
 {
     return name=="DF_Cape"||name=="DF_CoatTailR"||
+        name=="DF_VeyrBackMantle"||name=="DF_TahlaBackDrape"||
+        name.StartsWith("DF_TahlaGoldenVeil")||name.StartsWith("DF_TahlaVeilEdge")||
         name=="DF_TravelerMantleBack"||name=="DF_TravelerMantleL"||name=="DF_TravelerMantleR"||
         name=="DF_TravelerMantleSpine"||name.StartsWith("DF_TravelerMantleSeam")||
         name.StartsWith("DF_TravelerMantleFold")||name.StartsWith("DF_TravelerFront")||
