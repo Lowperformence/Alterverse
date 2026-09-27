@@ -245,7 +245,7 @@ namespace Alterverse.Visuals
     internal sealed class TahlaVisualBuildInterceptor : MonoBehaviour
     {
         private TahlaHealerVisualPolish owner;
-        private readonly HashSet<int> handled = new HashSet<int>();
+        private readonly HashSet<EntityId> handled = new HashSet<EntityId>();
 
         internal void Initialize(TahlaHealerVisualPolish newOwner)
         {
@@ -266,7 +266,7 @@ namespace Alterverse.Visuals
 
         private void Handle(Transform child)
         {
-            if (child == null || !handled.Add(child.GetInstanceID())) return;
+            if (child == null || !handled.Add(child.GetEntityId())) return;
 
             string partName = child.name;
             MeshRenderer renderer = child.GetComponent<MeshRenderer>();
