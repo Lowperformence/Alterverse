@@ -199,18 +199,24 @@ namespace Alterverse.Visuals
                 new[]{new Vector3(0,-.14f,-.11f),new Vector3(0,-.42f,-.16f),new Vector3(0,-.73f,-.20f),new Vector3(0,-1.02f,-.22f)},
                 new[]{.20f,.29f,.32f,.23f},.025f);
             Sculpt("TahlaRobeBack",robeBack,Vector3.zero,Vector3.one,pearl);
-            // Wide translucent-looking ceremonial panels give her a visible sweep without particles.
+            // A continuous back drape hangs from the shoulders like a robe, with a narrow hem.
+            Mesh healerCape=HeroMeshLibrary.Ribbon("DF_TahlaBackDrape",
+                new[]{new Vector3(0,.42f,-.19f),new Vector3(0,.02f,-.24f),
+                    new Vector3(0,-.48f,-.29f),new Vector3(0,-.99f,-.34f)},
+                new[]{.26f,.34f,.38f,.37f},.030f);
+            Sculpt("TahlaBackDrape",healerCape,Vector3.zero,Vector3.one,pearl);
+            // Seams stay close to the drape instead of projecting outward as wings.
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh veil=HeroMeshLibrary.Ribbon("DF_TahlaGoldenVeil"+side,
-                    new[]{new Vector3(side*.22f,.40f,-.11f),new Vector3(side*.43f,.02f,-.22f),
-                        new Vector3(side*.62f,-.53f,-.32f),new Vector3(side*.83f,-.96f,-.38f)},
-                    new[]{.12f,.22f,.29f,.30f},.022f);
+                    new[]{new Vector3(side*.23f,.40f,-.20f),new Vector3(side*.27f,.02f,-.255f),
+                        new Vector3(side*.31f,-.53f,-.305f),new Vector3(side*.30f,-.96f,-.355f)},
+                    new[]{.055f,.075f,.075f,.060f},.022f);
                 Sculpt("TahlaGoldenVeil"+side,veil,Vector3.zero,Vector3.one,white);
                 Mesh veilEdge=HeroMeshLibrary.Ribbon("DF_TahlaVeilEdge"+side,
-                    new[]{new Vector3(side*.32f,.31f,-.10f),new Vector3(side*.54f,-.04f,-.23f),
-                        new Vector3(side*.78f,-.55f,-.33f),new Vector3(side*1.00f,-.96f,-.39f)},
-                    new[]{.016f,.020f,.023f,.021f},.008f);
+                    new[]{new Vector3(side*.28f,.31f,-.22f),new Vector3(side*.34f,-.04f,-.27f),
+                        new Vector3(side*.38f,-.55f,-.32f),new Vector3(side*.37f,-.96f,-.37f)},
+                    new[]{.012f,.015f,.017f,.016f},.008f);
                 Sculpt("TahlaVeilEdge"+side,veilEdge,Vector3.zero,Vector3.one,gold,null,true);
             }
             for(int side=-1;side<=1;side+=2)
@@ -761,15 +767,19 @@ namespace Alterverse.Visuals
                 Sculpt("VeyrHairLock"+(side<0?"L":"R"),lockMesh,Vector3.zero,Vector3.one,hair);
             }
 
-            // Symmetrical outer mantle tails: identical length, width and curve on both sides,
-            // mirrored around the character centerline. "Cape" name is preserved for existing motion.
+            // The assassin's mantle falls as one narrow back panel with subtle edge folds.
+            Mesh backCape=HeroMeshLibrary.Ribbon("DF_VeyrBackMantle",
+                new[]{new Vector3(0,.18f,-.19f),new Vector3(0,-.18f,-.25f),new Vector3(0,-.51f,-.30f),new Vector3(0,-.86f,-.35f)},
+                new[]{.25f,.32f,.35f,.32f},.025f);
+            Sculpt("VeyrBackMantle",backCape,Vector3.zero,Vector3.one,leather);
+            // "Cape" name is preserved for the motion rig.
             Mesh cape=HeroMeshLibrary.Ribbon("DF_VeyrCape",
-                new[]{new Vector3(-.15f,.10f,-.16f),new Vector3(-.22f,-.22f,-.23f),new Vector3(-.35f,-.50f,-.29f),new Vector3(-.47f,-.78f,-.34f)},
-                new[]{.11f,.16f,.14f,.045f},.020f);
+                new[]{new Vector3(-.22f,.10f,-.20f),new Vector3(-.27f,-.22f,-.26f),new Vector3(-.31f,-.50f,-.31f),new Vector3(-.30f,-.82f,-.36f)},
+                new[]{.06f,.065f,.06f,.045f},.020f);
             Sculpt("Cape",cape,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh tailR=HeroMeshLibrary.Ribbon("DF_VeyrTailR",
-                new[]{new Vector3(.15f,.10f,-.16f),new Vector3(.22f,-.22f,-.23f),new Vector3(.35f,-.50f,-.29f),new Vector3(.47f,-.78f,-.34f)},
-                new[]{.11f,.16f,.14f,.045f},.020f);
+                new[]{new Vector3(.22f,.10f,-.20f),new Vector3(.27f,-.22f,-.26f),new Vector3(.31f,-.50f,-.31f),new Vector3(.30f,-.82f,-.36f)},
+                new[]{.06f,.065f,.06f,.045f},.020f);
             Sculpt("CoatTailR",tailR,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh centerTail=HeroMeshLibrary.Ribbon("DF_VeyrCenterTail",
                 new[]{new Vector3(.00f,.05f,-.18f),new Vector3(.04f,-.28f,-.24f),new Vector3(-.02f,-.58f,-.30f),new Vector3(.08f,-.83f,-.35f)},
