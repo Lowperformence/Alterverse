@@ -100,9 +100,11 @@ namespace Alterverse.Visuals
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
             root=transform.Find("DF_VisualRoot");
-            if(root==null||health==null)
+            // Menu previews use the same visual rig but do not participate in combat,
+            // so Health is optional. The gameplay visual root is still required for posing.
+            if(root==null)
             {
-                Debug.LogError("[Alterverse Movement] Hero movement failed to start on '"+name+"': DF_VisualRoot or Health is missing.",this);
+                Debug.LogError("[Alterverse Movement] Hero movement failed to start on '"+name+"': DF_VisualRoot is missing.",this);
                 enabled=false;return;
             }
             if(GetComponents<HeroVisualMotion>().Length!=1)
