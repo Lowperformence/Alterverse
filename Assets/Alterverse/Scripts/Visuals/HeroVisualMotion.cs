@@ -110,7 +110,7 @@ namespace Alterverse.Visuals
             if(weaponR!=null){weaponPositionR=weaponR.localPosition;weaponRestR=weaponR.localRotation;}
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
             if(orb!=null)orbRest=orb.localPosition;
-            legL=root.Find("DF_LegL");legR=root.Find("DF_LegR");bootL=root.Find("DF_BootL");bootR=root.Find("DF_BootR");
+            legL=FindPart("LegL");legR=FindPart("LegR");bootL=FindPart("BootL");bootR=FindPart("BootR");
             armL=root.Find("DF_ArmL")??root.Find("DF_GauntletL");armR=root.Find("DF_ArmR")??root.Find("DF_GauntletR");
             orbitL=root.Find("DF_OrbitL");orbitR=root.Find("DF_OrbitR");wingL=root.Find("DF_WingL");wingR=root.Find("DF_WingR");cape=root.Find("DF_Cape");blade=root.Find("DF_BladeR");
             if(bootL!=null)bootPositionL=bootL.localPosition;if(bootR!=null)bootPositionR=bootR.localPosition;
@@ -176,9 +176,14 @@ namespace Alterverse.Visuals
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
             float step=Mathf.Sin(phase)*Mathf.Lerp(30f,48f,runBlend)*strideWeight;
-            PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
-            PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
-            PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
+            // The articulated rig owns its feet and knees. Moving the legacy boot as well
+            // would apply each stride twice and detach it from the ankle joint.
+            if(runPose==null||!runPose.Articulated)
+            {
+                PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
+                PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
+                PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
+            }
             Swing(armL,armRestL,-step*.85f);Swing(armR,armRestR,step*.85f);
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
