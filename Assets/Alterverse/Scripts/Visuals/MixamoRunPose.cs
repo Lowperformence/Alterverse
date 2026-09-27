@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Samples the imported Mixamo motion clips on an invisible template-specific skeleton and
-    /// transfers the resulting pose to the existing rigid-part hero visuals. Gameplay movement,
+    /// transfers the resulting pose to the existing hero presentation. Gameplay movement,
     /// hitboxes and root motion remain authoritative on the real actor.
     /// </summary>
     public sealed class MixamoRunPose : MonoBehaviour
@@ -29,7 +29,11 @@ namespace Alterverse.Visuals
         private static readonly HashSet<string> MissingTemplateWarnings = new();
 
         private GameObject source;
+        private HeroArticulatedJointRig articulatedRig;
         private Transform hips, leftFoot, rightFoot, leftArm, rightArm, leftForeArm, rightForeArm;
+        private Transform leftUpLeg, rightUpLeg, leftLegBone, rightLegBone;
+        private Quaternion bindLeftFoot, bindRightFoot, bindLeftForeArm, bindRightForeArm;
+        private Quaternion bindLeftUpLeg, bindRightUpLeg, bindLeftLeg, bindRightLeg;
         private PlayableGraph graph;
         private AnimationClipPlayable[] clipPlayables;
         private AnimationClip[] clips;
@@ -50,9 +54,17 @@ namespace Alterverse.Visuals
 
         public string ActiveTemplate => activeTemplate;
         public bool Ready => ready;
+        public bool Articulated => articulatedRig != null && articulatedRig.Ready;
 
         private void Awake()
         {
+            Transform visualRoot = transform.Find("DF_VisualRoot");
+            if (visualRoot != null)
+            {
+                articulatedRig = GetComponent<HeroArticulatedJointRig>() ?? gameObject.AddComponent<HeroArticulatedJointRig>();
+                articulatedRig.Build(visualRoot);
+            }
+
             HeroIdentity identity = GetComponent<HeroIdentity>();
             GameObject templatePrefab = ResolveTemplatePrefab(identity);
 
@@ -114,6 +126,8 @@ namespace Alterverse.Visuals
                 return;
             }
 
+            CaptureBindPose();
+
             graph = PlayableGraph.Create("DF_MixamoPose_" + activeTemplate);
             graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
             mixer = AnimationMixerPlayable.Create(graph, ClipNames.Length);
@@ -148,8 +162,6 @@ namespace Alterverse.Visuals
                 return template;
             }
 
-            // The compact built-in skeleton data is already enough for runtime retargeting.
-            // An imported FBX simply upgrades that fallback to Unity's exact imported bind pose.
             if (MissingTemplateWarnings.Add(resourceName))
                 Debug.Log($"[Alterverse] Using embedded template skeleton for {identity.DisplayName} ({resourceName}).");
 
@@ -162,6 +174,10 @@ namespace Alterverse.Visuals
             {
                 string name = bone.name;
                 if (name.EndsWith("Hips")) hips = bone;
+                else if (name.EndsWith("LeftUpLeg")) leftUpLeg = bone;
+                else if (name.EndsWith("RightUpLeg")) rightUpLeg = bone;
+                else if (name.EndsWith("LeftLeg")) leftLegBone = bone;
+                else if (name.EndsWith("RightLeg")) rightLegBone = bone;
                 else if (name.EndsWith("LeftFoot")) leftFoot = bone;
                 else if (name.EndsWith("RightFoot")) rightFoot = bone;
                 else if (name.EndsWith("LeftArm")) leftArm = bone;
@@ -169,6 +185,18 @@ namespace Alterverse.Visuals
                 else if (name.EndsWith("LeftForeArm")) leftForeArm = bone;
                 else if (name.EndsWith("RightForeArm")) rightForeArm = bone;
             }
+        }
+
+        private void CaptureBindPose()
+        {
+            bindLeftUpLeg = LocalRotation(leftUpLeg);
+            bindRightUpLeg = LocalRotation(rightUpLeg);
+            bindLeftLeg = LocalRotation(leftLegBone);
+            bindRightLeg = LocalRotation(rightLegBone);
+            bindLeftFoot = LocalRotation(leftFoot);
+            bindRightFoot = LocalRotation(rightFoot);
+            bindLeftForeArm = LocalRotation(leftForeArm);
+            bindRightForeArm = LocalRotation(rightForeArm);
         }
 
         public void Apply(float phase, float weight, float turnRate, bool stopping,
@@ -202,22 +230,43 @@ namespace Alterverse.Visuals
 
             weight = attacking ? Mathf.Max(weight, .7f) : stopping ? Mathf.Max(weight, .55f) : weight;
 
-            Vector3 hip = source.transform.InverseTransformPoint(hips.position);
-            Vector3 footA = source.transform.InverseTransformPoint(leftFoot.position);
-            Vector3 footB = source.transform.InverseTransformPoint(rightFoot.position);
-            float sourceLeg = Mathf.Max(.1f, hip.y - (footA.y + footB.y) * .5f);
-            float scale = .72f / sourceLeg;
-            float centerZ = (footA.z + footB.z) * .5f;
-            float floor = Mathf.Min(footA.y, footB.y);
+            if (Articulated && leftUpLeg != null && rightUpLeg != null && leftLegBone != null && rightLegBone != null)
+            {
+                Quaternion elbowL = Delta(leftForeArm, bindLeftForeArm);
+                Quaternion elbowR = Delta(rightForeArm, bindRightForeArm);
+                articulatedRig.SetTemplatePose(weight,
+                    Delta(leftUpLeg, bindLeftUpLeg), Delta(leftLegBone, bindLeftLeg), Delta(leftFoot, bindLeftFoot),
+                    Delta(rightUpLeg, bindRightUpLeg), Delta(rightLegBone, bindRightLeg), Delta(rightFoot, bindRightFoot),
+                    elbowL, Quaternion.Slerp(Quaternion.identity, elbowL, .24f),
+                    elbowR, Quaternion.Slerp(Quaternion.identity, elbowR, .24f));
+            }
+            else
+            {
+                Vector3 hip = source.transform.InverseTransformPoint(hips.position);
+                Vector3 footA = source.transform.InverseTransformPoint(leftFoot.position);
+                Vector3 footB = source.transform.InverseTransformPoint(rightFoot.position);
+                float sourceLeg = Mathf.Max(.1f, hip.y - (footA.y + footB.y) * .5f);
+                float scale = .72f / sourceLeg;
+                float centerZ = (footA.z + footB.z) * .5f;
+                float floor = Mathf.Min(footA.y, footB.y);
 
-            TransferFoot(bootL, restL, rotationL, footA, centerZ, floor, scale, weight);
-            TransferFoot(bootR, restR, rotationR, footB, centerZ, floor, scale, weight);
-            PoseLeg(legL, bootL, restL.x);
-            PoseLeg(legR, bootR, restR.x);
+                TransferFoot(bootL, restL, rotationL, footA, centerZ, floor, scale, weight);
+                TransferFoot(bootR, restR, rotationR, footB, centerZ, floor, scale, weight);
+                PoseLeg(legL, bootL, restL.x);
+                PoseLeg(legR, bootR, restR.x);
+            }
 
             float armWeight = attacking ? weight * .48f : weight;
             TransferArm(armL, armRestL, leftArm, leftForeArm, armWeight);
             TransferArm(armR, armRestR, rightArm, rightForeArm, armWeight);
+        }
+
+        private static Quaternion LocalRotation(Transform bone) => bone != null ? bone.localRotation : Quaternion.identity;
+
+        private static Quaternion Delta(Transform bone, Quaternion bind)
+        {
+            if (bone == null) return Quaternion.identity;
+            return bone.localRotation * Quaternion.Inverse(bind);
         }
 
         private static void TransferFoot(Transform target, Vector3 rest, Quaternion rotation,
