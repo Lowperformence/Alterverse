@@ -32,12 +32,19 @@ namespace Alterverse.Visuals
 
             Transform root=transform.Find("DF_VisualRoot");
             if(root==null){enabled=false;return;}
-            bootL=root.Find("DF_BootL");
-            bootR=root.Find("DF_BootR");
+            bootL=FindDeep(root,"DF_BootL");
+            bootR=FindDeep(root,"DF_BootR");
             if(bootL==null||bootR==null){enabled=false;return;}
 
             pool=FootprintPool.GetOrCreate();
             lastPosition=transform.position;
+        }
+
+        private static Transform FindDeep(Transform root,string name)
+        {
+            foreach(Transform child in root.GetComponentsInChildren<Transform>(true))
+                if(child.name==name)return child;
+            return null;
         }
 
         private void LateUpdate()
