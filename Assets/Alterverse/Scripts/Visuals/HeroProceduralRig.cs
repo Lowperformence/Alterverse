@@ -9,8 +9,8 @@ namespace Alterverse.Visuals
     /// Adds presentation-only elbow, wrist, hip, knee and ankle joints to the procedural hero art.
     /// Gameplay roots, colliders, movement speed and combat timing are never modified.
     /// </summary>
-    [DefaultExecutionOrder(925)]
-    public sealed class HeroArticulatedJointRig : MonoBehaviour
+    [DefaultExecutionOrder(935)]
+    public sealed class HeroProceduralRig : MonoBehaviour
     {
         private static readonly Dictionary<string, Mesh> SplitMeshCache = new();
 
@@ -38,7 +38,7 @@ namespace Alterverse.Visuals
             // This keeps old/proxy hero builds on their proven fallback instead of half-converting them.
             if (!CanBuild())
             {
-                Debug.LogWarning("[Alterverse] Hero joint rig preflight failed; keeping the classic movement hierarchy intact.", this);
+                Debug.LogWarning("[Alterverse Movement] Procedural rig preflight failed; no legacy movement fallback will run.", this);
                 return;
             }
 
@@ -55,7 +55,7 @@ namespace Alterverse.Visuals
 
             Ready = leftLeg && rightLeg && leftArm && rightArm;
             if (!Ready)
-                Debug.LogWarning("[Alterverse] Hero articulated rig could not resolve every limb; the classic motion fallback stays active.", this);
+                Debug.LogWarning("[Alterverse Movement] Procedural joint construction failed; no legacy movement fallback will run.", this);
         }
 
         private bool CanBuild()
@@ -75,7 +75,7 @@ namespace Alterverse.Visuals
                    rightFilter != null && rightFilter.sharedMesh != null && rightLeg.GetComponent<MeshRenderer>() != null;
         }
 
-        public void SetTemplatePose(float weight,
+        public void SetProceduralPose(float weight,
             Quaternion leftHip, Quaternion leftKnee, Quaternion leftAnkle,
             Quaternion rightHip, Quaternion rightKnee, Quaternion rightAnkle,
             Quaternion leftElbow, Quaternion leftWrist,

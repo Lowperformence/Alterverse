@@ -67,6 +67,11 @@ namespace Alterverse.Visuals
 
         private void Awake()
         {
+            if(HasComponent("HeroIdentity"))
+            {
+                Debug.LogError("[Alterverse Movement] AllFigureMotionRealism conflicts with HeroVisualMotion on '"+name+"'; disabled.",this);
+                enabled=false;return;
+            }
             ResolveKind();
 
             // Unity 6.5+ removed GetInstanceID() from supported runtime use.
@@ -621,7 +626,7 @@ namespace Alterverse.Visuals
 
         private static bool IsMovingFigureType(string typeName)
         {
-            return typeName=="HeroIdentity"||typeName=="TrenchSoldier"||typeName=="LaneMinion"||
+            return typeName=="TrenchSoldier"||typeName=="LaneMinion"||
                    typeName=="HealingGuardMech"||typeName=="HotZoneTank"||
                    typeName=="GreenAlienMechVisual"||typeName=="MarsStoneGolemMechVisual"||
                    typeName=="PrototypeEnemyBot";

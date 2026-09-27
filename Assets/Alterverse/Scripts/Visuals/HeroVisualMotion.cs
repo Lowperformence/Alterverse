@@ -5,6 +5,7 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>Distance-driven presentation. Does not write the actor's movement or balance values.</summary>
+    [DefaultExecutionOrder(930)]
     public sealed class HeroVisualMotion : MonoBehaviour
     {
         private sealed class ClothPanel
@@ -18,7 +19,7 @@ namespace Alterverse.Visuals
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
-        private MixamoRunPose runPose;
+        private HeroProceduralRig articulatedRig;
         private Transform root,torso,head,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
         private Quaternion torsoRest,headRest,bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
@@ -27,10 +28,10 @@ namespace Alterverse.Visuals
         private Vector3 previousLocalVelocity;
         private Quaternion displayedRotation=Quaternion.identity;
         private Vector3 displayedScale;
-        private bool wasDead;
+        private bool wasDead,moving;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
-        private float previousHeading,stopUntil;
+        private float previousHeading;
         private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -98,8 +99,24 @@ namespace Alterverse.Visuals
             // Native Unity objects must be created in a lifecycle callback, not a field initializer.
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
-            root=transform.Find("DF_VisualRoot");if(root==null)return;
-            runPose=GetComponent<MixamoRunPose>()??gameObject.AddComponent<MixamoRunPose>();
+            root=transform.Find("DF_VisualRoot");
+            if(root==null||health==null)
+            {
+                Debug.LogError("[Alterverse Movement] Hero movement failed to start on '"+name+"': DF_VisualRoot or Health is missing.",this);
+                enabled=false;return;
+            }
+            if(GetComponents<HeroVisualMotion>().Length!=1)
+            {
+                Debug.LogError("[Alterverse Movement] Multiple HeroVisualMotion controllers on '"+name+"'.",this);
+                enabled=false;return;
+            }
+            if(GetComponent<AllFigureMotionRealism>()?.enabled==true)
+                Debug.LogError("[Alterverse Movement] Competing AllFigureMotionRealism on hero '"+name+"'.",this);
+            articulatedRig=GetComponent<HeroProceduralRig>()??gameObject.AddComponent<HeroProceduralRig>();
+            articulatedRig.Build(root);
+            if(!articulatedRig.Ready)
+                Debug.LogError("[Alterverse Movement] Procedural joints are incomplete on '"+name+"'; gait has been stopped instead of switching to another controller.",this);
+            Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+").",this);
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             previousHeading=transform.eulerAngles.y;
@@ -122,27 +139,6 @@ namespace Alterverse.Visuals
         private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
-        private static void PoseLeg(Transform leg,Transform foot,float side)
-        {
-            if(leg==null||foot==null)return;
-            Vector3 hip=new Vector3(side,-.26f,0),ankle=foot.localPosition+Vector3.up*.08f;
-            Vector3 axis=ankle-hip;
-            leg.localPosition=(hip+ankle)*.5f;
-            leg.localRotation=Quaternion.FromToRotation(Vector3.down,axis);
-            Vector3 scale=leg.localScale;scale.y=axis.magnitude*.5f;leg.localScale=scale;
-        }
-        private void PlantFoot(Transform foot,Vector3 rest,Quaternion rotation,float gait,float stride)
-        {
-            if(foot==null)return;
-            float cycle=Mathf.Repeat(gait/(Mathf.PI*2),1);
-            bool stance=cycle<.5f;
-            float progress=stance?cycle*2:(cycle-.5f)*2;
-            // During stance the foot moves backward at the traveled-distance rate.
-            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.25f;
-            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.34f;
-            foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
-            foot.localRotation=rotation*Quaternion.Euler((stance?Mathf.Sin(progress*Mathf.PI)*8:-Mathf.Sin(progress*Mathf.PI)*24)*strideWeight,0,0);
-        }
         private void LateUpdate()
         {
             if(root==null)return;
@@ -152,7 +148,7 @@ namespace Alterverse.Visuals
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
+            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
@@ -167,30 +163,28 @@ namespace Alterverse.Visuals
             float response=1-Mathf.Exp(-11f*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
-            float desired=Dashing?0:Mathf.InverseLerp(.15f,1.1f,displayedSpeed);
-            if(PlanarSpeed<.12f&&strideWeight>.5f)stopUntil=Time.time+.22f;
-            if(Dashing)strideWeight=0;
+            if(moving){if(PlanarSpeed<.10f)moving=false;}
+            else if(PlanarSpeed>.28f)moving=true;
+            if(Dashing)moving=false;
+            float desired=Dashing||!moving?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?1.65f:1.45f;
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
+            float turnRate=Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt;
+            previousHeading=transform.eulerAngles.y;
             float step=Mathf.Sin(phase)*Mathf.Lerp(30f,48f,runBlend)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
-            if(runPose==null||!runPose.Articulated)
-            {
-                PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
-                PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
-                PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
-            }
+            // The procedural joints own the legs and feet. No imported clip or secondary gait path.
             Swing(armL,armRestL,-step*.85f);Swing(armR,armRestR,step*.85f);
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
-            float bob=(1-Mathf.Cos(phase*2))*Mathf.Lerp(.025f,.055f,runBlend)*strideWeight*(heavy?.8f:1);
+            float bob=(1-Mathf.Cos(phase*2))*.012f*strideWeight*(heavy?.8f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
@@ -199,8 +193,7 @@ namespace Alterverse.Visuals
             bool fullSpin=(hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot==2;
             float spinYaw=fullSpin&&preparation>0?360f*Mathf.SmoothStep(0,1,windupProgress):0f;
             // Orun Overdrive lifts the rendered hero and brings him down exactly as its warning resolves.
-            float leap=hero==HeroId.Rook&&abilitySlot==3&&preparation>0?Mathf.Sin(windupProgress*Mathf.PI)*.82f:0f;
-            root.localPosition=basePosition+Vector3.up*(idle+bob+leap);
+            root.localPosition=basePosition+Vector3.up*(idle+bob);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
             ApplyAttackPose(hero,kick,preparation,progress);
@@ -222,8 +215,9 @@ namespace Alterverse.Visuals
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
-            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,-Mathf.Sin(phase)*3f*strideWeight,-sway*.45f);
-            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
+            float turnCounter=Mathf.Clamp(-turnRate*.025f,-12f,12f);
+            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,turnCounter-Mathf.Sin(phase)*3f*strideWeight,-sway*.45f);
+            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
@@ -232,16 +226,27 @@ namespace Alterverse.Visuals
             if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
             UpdateCloth(dt,t,delta/dt);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
-            // The imported run supplies actual keyframed foot and arm trajectories. Combat
-            // owns the shoulders during attacks, while the feet can keep running.
-            bool attackClip=Time.time<attackUntil && (preparation>0f||kick>0f);
-            bool magicClip=hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
-            bool jumpClip=abilitySlot==3 && (hero==HeroId.Rook||hero==HeroId.Kaelon);
-            float clipProgress=attackClip?Mathf.Clamp01((Time.time-attackStarted)/Mathf.Max(.01f,attackUntil-attackStarted)):0f;
-            if(runPose!=null)runPose.Apply(phase,runBlend,turnRate,Time.time<stopUntil,
-                attackClip,magicClip,jumpClip,clipProgress,root,
-                bootL,bootPositionL,bootRestL,bootR,bootPositionR,bootRestR,
-                legL,legR,armL,armRestL,armR,armRestR);
+            // One trajectory, driven by distance actually travelled by the gameplay root.
+            // Hip swing, knee flex and ankle counter-rotation form a simple articulated gait.
+            if(articulatedRig!=null&&articulatedRig.Ready)
+            {
+                float swingDegrees=Mathf.Lerp(16f,29f,runBlend)*strideWeight;
+                float leftSwing=Mathf.Sin(phase)*swingDegrees;
+                float rightSwing=Mathf.Sin(phase+Mathf.PI)*swingDegrees;
+                float leftFlex=Mathf.Max(0f,-Mathf.Sin(phase))*Mathf.Lerp(18f,38f,runBlend)*strideWeight;
+                float rightFlex=Mathf.Max(0f,-Mathf.Sin(phase+Mathf.PI))*Mathf.Lerp(18f,38f,runBlend)*strideWeight;
+                Quaternion leftHip=Quaternion.Euler(-leftSwing,0f,-Mathf.Sin(phase)*2f*strideWeight);
+                Quaternion rightHip=Quaternion.Euler(-rightSwing,0f,-Mathf.Sin(phase+Mathf.PI)*2f*strideWeight);
+                Quaternion leftKnee=Quaternion.Euler(leftFlex,0f,0f);
+                Quaternion rightKnee=Quaternion.Euler(rightFlex,0f,0f);
+                Quaternion leftAnkle=Quaternion.Euler(-leftSwing*.28f-leftFlex*.35f,0f,0f);
+                Quaternion rightAnkle=Quaternion.Euler(-rightSwing*.28f-rightFlex*.35f,0f,0f);
+                float armCounter=Mathf.Lerp(9f,18f,runBlend)*strideWeight;
+                articulatedRig.SetProceduralPose(1f,
+                    leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
+                    Quaternion.Euler(-Mathf.Sin(phase)*armCounter,0f,0f),Quaternion.identity,
+                    Quaternion.Euler(-Mathf.Sin(phase+Mathf.PI)*armCounter,0f,0f),Quaternion.identity);
+            }
         }
         private void SetupCloth()
         {
