@@ -34,6 +34,14 @@ namespace Alterverse.Visuals
             if (Ready || root == null) return;
             visualRoot = root;
 
+            // Do not touch the visible hierarchy unless both sides can be articulated completely.
+            // This keeps old/proxy hero builds on their proven fallback instead of half-converting them.
+            if (!CanBuild())
+            {
+                Debug.LogWarning("[Alterverse] Hero joint rig preflight failed; keeping the classic movement hierarchy intact.", this);
+                return;
+            }
+
             bool leftLeg = BuildLeg("L", out hipL, out kneeL, out ankleL);
             bool rightLeg = BuildLeg("R", out hipR, out kneeR, out ankleR);
             bool leftArm = BuildArm("L", out elbowL, out wristL);
@@ -48,6 +56,23 @@ namespace Alterverse.Visuals
             Ready = leftLeg && rightLeg && leftArm && rightArm;
             if (!Ready)
                 Debug.LogWarning("[Alterverse] Hero articulated rig could not resolve every limb; the classic motion fallback stays active.", this);
+        }
+
+        private bool CanBuild()
+        {
+            Transform leftLeg = FindDeep("DF_LegL");
+            Transform rightLeg = FindDeep("DF_LegR");
+            Transform leftBoot = FindDeep("DF_BootL");
+            Transform rightBoot = FindDeep("DF_BootR");
+            Transform leftArm = FindDeep("DF_ArmL");
+            Transform rightArm = FindDeep("DF_ArmR");
+            if (leftLeg == null || rightLeg == null || leftBoot == null || rightBoot == null ||
+                leftArm == null || rightArm == null) return false;
+
+            MeshFilter leftFilter = leftLeg.GetComponent<MeshFilter>();
+            MeshFilter rightFilter = rightLeg.GetComponent<MeshFilter>();
+            return leftFilter != null && leftFilter.sharedMesh != null && leftLeg.GetComponent<MeshRenderer>() != null &&
+                   rightFilter != null && rightFilter.sharedMesh != null && rightLeg.GetComponent<MeshRenderer>() != null;
         }
 
         public void SetTemplatePose(float weight,
@@ -205,7 +230,7 @@ namespace Alterverse.Visuals
 
         private static Mesh SplitMesh(Mesh source, float splitY, bool upper)
         {
-            string key = source.name + ":" + Mathf.RoundToInt(splitY * 1000f) + ":" + (upper ? "U" : "L");
+            string key = source.GetInstanceID() + ":" + Mathf.RoundToInt(splitY * 1000f) + ":" + (upper ? "U" : "L");
             if (SplitMeshCache.TryGetValue(key, out Mesh cached) && cached != null) return cached;
 
             Mesh result = new() { name = source.name + (upper ? "_Upper" : "_Lower"), indexFormat = source.indexFormat };
