@@ -67,21 +67,20 @@ Camera position still follows exponentially. Its angle is now determined by its 
 view offset, so following does not change input axes. Dash tracking tightens and large
 recall/respawn relocation snaps the camera instead of sweeping across the map.
 
-## Presentation (separate commit)
+## Presentation (procedural replacement)
 
-HeroVisualMotion samples actual planar displacement and advances gait by distance.
-Boot stance offsets counter forward travel; swing feet lift and procedural leg segments
-connect hips to ankles. Start/stop lean is visual-only. Heavy/light stride proportions,
-mage hover, support fins and assassin blade recovery remain separate from balance.
-Brakk's gauntlets remain separate animated surfaces; rifle/staff/shield arms retain
-their carrying pose. Cached transforms replace per-frame hierarchy searches; hit/attack/dash poses do not
-move the actor. Gait resets for respawn/large relocation. Public speed/phase/dash values
-provide an integration point for a future authored Animator rig.
+HeroVisualMotion is the only hero movement controller. It advances gait from actual
+planar displacement, with separate start/stop thresholds and smoothed weight. The helper
+HeroProceduralRig splits each existing leg mesh at its knee and applies hip, knee, ankle,
+elbow and wrist rotations from one procedural gait. There are no Mixamo clips, PlayableGraph,
+or alternate locomotion fallback. AllFigureMotionRealism continues to animate non-hero
+figures and refuses to run on HeroIdentity actors. Combat attack poses and cast timing remain
+in HeroVisualMotion and the gameplay combat systems; visual motion never moves the gameplay
+root or hitboxes. Large relocation and respawn reset the gait without a burst of steps.
 
-This remains procedural locomotion without authored skeletal clips or terrain foot IK.
-Perfect planted feet during turning and full death/respawn animation are not claimed:
-the existing respawn system immediately hides dead renderers and restores their saved
-visibility. That functional behavior is deliberately retained.
+This is a lightweight game-style gait, not motion capture or full terrain foot IK. It does
+not claim exact foot locking while turning. If procedural joint construction fails, a clear
+runtime error is logged and the controller does not switch to another gait.
 
 ## Validation
 
