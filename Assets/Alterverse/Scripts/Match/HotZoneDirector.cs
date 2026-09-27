@@ -37,6 +37,7 @@ namespace Alterverse.Match
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
         private Transform zoneDisc;
+        private Mesh zoneMesh;
         private Renderer zoneRenderer;
         private Material zoneMaterial;
         private DimensionsFront front;
@@ -290,14 +291,11 @@ namespace Alterverse.Match
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)zoneRoot.transform.SetParent(world,true);
 
-            GameObject disc=GameObject.CreatePrimitive(PrimitiveType.Quad);
-            disc.name="DF_HotZoneGroundDisc";
+            GameObject disc=new("DF_HotZoneGroundDisc");
             disc.transform.SetParent(zoneRoot.transform,false);
-            disc.transform.localPosition=Vector3.up*.095f;
-            disc.transform.localRotation=Quaternion.Euler(90f,0f,0f);
-            disc.transform.localScale=new Vector3(Radius*2f,Radius*2f,1f);
-            Collider col=disc.GetComponent<Collider>();if(col!=null)col.enabled=false;
-            zoneRenderer=disc.GetComponent<Renderer>();
+            zoneMesh=BuildSurfaceDisc(zoneRoot.transform);
+            disc.AddComponent<MeshFilter>().sharedMesh=zoneMesh;
+            zoneRenderer=disc.AddComponent<MeshRenderer>();
             if(zoneRenderer!=null)
             {
                 zoneRenderer.sharedMaterial=zoneMaterial;
@@ -305,6 +303,38 @@ namespace Alterverse.Match
                 zoneRenderer.receiveShadows=false;
             }
             zoneDisc=disc.transform;
+        }
+
+        private static Mesh BuildSurfaceDisc(Transform zone)
+        {
+            const int slices=96, bands=16;
+            Vector3[] vertices=new Vector3[(bands+1)*(slices+1)];
+            Vector2[] uv=new Vector2[vertices.Length];
+            int[] triangles=new int[bands*slices*6];
+            for(int band=0;band<=bands;band++)
+            {
+                float distance=Radius*band/bands;
+                for(int slice=0;slice<=slices;slice++)
+                {
+                    float angle=slice*Mathf.PI*2f/slices;
+                    float x=Mathf.Cos(angle)*distance,z=Mathf.Sin(angle)*distance;
+                    Vector3 world=zone.TransformPoint(new Vector3(x,0,z));
+                    float y=LunarSurfaceField.Surface(world.x,world.z).y+.24f;
+                    int index=band*(slices+1)+slice;
+                    vertices[index]=zone.InverseTransformPoint(new Vector3(world.x,y,world.z));
+                    uv[index]=new Vector2(.5f+x/(Radius*2f),.5f+z/(Radius*2f));
+                }
+            }
+            for(int band=0;band<bands;band++)
+                for(int slice=0;slice<slices;slice++)
+                {
+                    int a=band*(slices+1)+slice,b=a+slices+1,t=(band*slices+slice)*6;
+                    triangles[t]=a;triangles[t+1]=a+1;triangles[t+2]=b;
+                    triangles[t+3]=a+1;triangles[t+4]=b+1;triangles[t+5]=b;
+                }
+            Mesh mesh=new(){name="DF_HotZoneSurfaceDisc",vertices=vertices,uv=uv,triangles=triangles};
+            mesh.RecalculateNormals();
+            return mesh;
         }
 
         private void AnimateZone()
@@ -318,7 +348,6 @@ namespace Alterverse.Match
             zoneMaterial.SetFloat("_FillAlpha",baseFill+wave*.018f);
             zoneMaterial.SetFloat("_RingAlpha",Mathf.Min(1f,baseRing+wave*.08f));
             zoneMaterial.SetFloat("_RingWidth",occupied?.050f:.043f);
-            if(zoneDisc!=null)zoneDisc.localPosition=new Vector3(0f,.095f+wave*.008f,0f);
         }
 
         private void DestroyZoneVisual(float delay)
@@ -330,6 +359,7 @@ namespace Alterverse.Match
             }
             zoneDisc=null;
             zoneRenderer=null;
+            if(zoneMesh!=null){Destroy(zoneMesh);zoneMesh=null;}
         }
 
         private void OnDestroy()
