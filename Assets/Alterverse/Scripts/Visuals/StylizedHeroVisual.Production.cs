@@ -108,7 +108,10 @@ namespace Alterverse.Visuals
             Color gold=new(.90f,.60f,.21f,1f);
             Color shadow=new(.12f,.085f,.11f,1f);
             Color hair=new(.36f,.19f,.15f,1f);
-            Color skin=new(.62f,.50f,.59f,1f);
+            Color skin=new(.73f,.55f,.48f,1f);
+            Color skinShade=new(.58f,.39f,.37f,1f);
+            Color eyeWhite=new(.83f,.78f,.72f,1f);
+            Color iris=new(.34f,.44f,.42f,1f);
 
             Mesh torso=HeroMeshLibrary.Loft("DF_TahlaAscendantTorso",
                 new[]{-.38f,-.24f,-.05f,.17f,.35f,.49f},
@@ -232,21 +235,46 @@ namespace Alterverse.Visuals
             Plate("TahlaHipGuardR",new Vector3(.27f,-.28f,.16f),.21f,.30f,.10f,gold,16);
             Detail("TahlaRobeGold",new Vector3(0,-.91f,.205f),new Vector3(.34f,.035f,.018f),gold);
 
-            // Calm uncovered face framed by a small silver halo and pale hair.
+            // Rounded cheekbones, a tapered jaw and separate facial features make the
+            // portrait read as a person even at the smaller in-game camera distance.
             Vector3 hp=new(0,.80f,.015f);
             Mesh head=HeroMeshLibrary.Loft("DF_TahlaFace",
-                new[]{-.22f,-.15f,-.04f,.09f,.18f,.24f},
-                new[]{.052f,.112f,.158f,.164f,.140f,.060f},
-                new[]{.050f,.102f,.136f,.138f,.108f,.052f},
-                new[]{.048f,.033f,.016f,0f,-.004f,-.014f},16);
+                new[]{-.23f,-.20f,-.14f,-.05f,.05f,.14f,.21f,.25f},
+                new[]{.035f,.075f,.115f,.156f,.171f,.162f,.118f,.035f},
+                new[]{.040f,.078f,.108f,.139f,.142f,.132f,.095f,.030f},
+                new[]{.055f,.049f,.037f,.018f,.006f,-.012f,-.027f,-.035f},20);
             Sculpt("Head",head,hp,Vector3.one,skin);
             Sculpt("Neck",HeroMeshLibrary.Loft("DF_TahlaNeck",new[]{-.09f,.08f},new[]{.066f,.075f},new[]{.062f,.068f}),
                 new Vector3(0,.55f,0),Vector3.one,skin);
             for(int side=-1;side<=1;side+=2)
             {
-                Detail("TahlaEye"+side,hp+new Vector3(side*.071f,.038f,.156f),new Vector3(.036f,.021f,.012f),cyanHot,default,null,true);
-                Detail("TahlaBrow"+side,hp+new Vector3(side*.071f,.072f,.148f),new Vector3(.072f,.018f,.016f),hair,new Vector3(0,0,side*-8));
+                string s=side<0?"L":"R";
+                Create("TahlaEar"+s,PrimitiveType.Sphere,hp+new Vector3(side*.165f,-.025f,-.005f),
+                    new Vector3(.040f,.079f,.048f),skin);
+                // Non-emissive sclera, iris and pupil replace the bright square eye lights.
+                Create("TahlaEyeWhite"+s,PrimitiveType.Sphere,hp+new Vector3(side*.071f,.035f,.148f),
+                    new Vector3(.079f,.034f,.018f),eyeWhite);
+                Create("TahlaIris"+s,PrimitiveType.Sphere,hp+new Vector3(side*.071f,.035f,.164f),
+                    new Vector3(.030f,.031f,.011f),iris);
+                Create("TahlaPupil"+s,PrimitiveType.Sphere,hp+new Vector3(side*.071f,.035f,.173f),
+                    new Vector3(.013f,.020f,.007f),shadow);
+                Detail("TahlaUpperLid"+s,hp+new Vector3(side*.071f,.057f,.160f),
+                    new Vector3(.082f,.008f,.009f),skinShade,new Vector3(0,0,side*-5));
+                Detail("TahlaBrow"+s,hp+new Vector3(side*.072f,.091f,.140f),
+                    new Vector3(.080f,.012f,.012f),hair,new Vector3(0,0,side*-7));
             }
+            Sculpt("TahlaNose",HeroMeshLibrary.Loft("DF_TahlaNose",
+                new[]{-.055f,-.025f,.030f,.085f},
+                new[]{.023f,.027f,.018f,.012f},
+                new[]{.025f,.030f,.022f,.014f}),
+                hp+new Vector3(0,-.028f,.151f),Vector3.one,skin);
+            Create("TahlaNoseTip",PrimitiveType.Sphere,hp+new Vector3(0,-.078f,.181f),
+                new Vector3(.046f,.027f,.028f),skin);
+            Detail("TahlaMouth",hp+new Vector3(0,-.145f,.137f),
+                new Vector3(.082f,.008f,.011f),skinShade);
+            Create("TahlaLowerLip",PrimitiveType.Sphere,hp+new Vector3(0,-.158f,.140f),
+                new Vector3(.064f,.012f,.012f),skin);
+
             Mesh cap=HeroMeshLibrary.Loft("DF_TahlaHairCap",
                 new[]{.01f,.12f,.21f,.28f},new[]{.17f,.18f,.145f,.03f},
                 new[]{.14f,.15f,.13f,.04f},new[]{-.055f,-.043f,-.020f,-.014f});
