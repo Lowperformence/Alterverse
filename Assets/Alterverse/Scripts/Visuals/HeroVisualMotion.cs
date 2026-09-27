@@ -172,8 +172,6 @@ namespace Alterverse.Visuals
             float strideLength=heavy?1.65f:1.45f;
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
-            float turnRate=Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt;
-            previousHeading=transform.eulerAngles.y;
             float step=Mathf.Sin(phase)*Mathf.Lerp(30f,48f,runBlend)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
