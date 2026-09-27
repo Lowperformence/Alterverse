@@ -18,6 +18,7 @@ namespace Alterverse.Visuals
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
+        private MixamoRunPose runPose;
         private Transform root,torso,head,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
         private Quaternion torsoRest,headRest,bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
@@ -29,6 +30,7 @@ namespace Alterverse.Visuals
         private bool wasDead;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
+        private float previousHeading,stopUntil;
         private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -97,8 +99,10 @@ namespace Alterverse.Visuals
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
             root=transform.Find("DF_VisualRoot");if(root==null)return;
+            runPose=GetComponent<MixamoRunPose>()??gameObject.AddComponent<MixamoRunPose>();
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
+            previousHeading=transform.eulerAngles.y;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
             torso=FindPart("Torso");head=FindPart("Head");torsoRest=Rest(torso);headRest=Rest(head);
@@ -152,6 +156,8 @@ namespace Alterverse.Visuals
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
+            float turnRate=Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt;
+            previousHeading=transform.eulerAngles.y;
             PlanarSpeed=travel/dt;
             Vector3 localVelocity=transform.InverseTransformDirection(delta/dt);
             Vector3 localAcceleration=(localVelocity-previousLocalVelocity)/dt;
@@ -162,6 +168,7 @@ namespace Alterverse.Visuals
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
             float desired=Dashing?0:Mathf.InverseLerp(.15f,1.1f,displayedSpeed);
+            if(PlanarSpeed<.12f&&strideWeight>.5f)stopUntil=Time.time+.22f;
             if(Dashing)strideWeight=0;
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
@@ -220,6 +227,16 @@ namespace Alterverse.Visuals
             if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
             UpdateCloth(dt,t,delta/dt);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
+            // The imported run supplies actual keyframed foot and arm trajectories. Combat
+            // owns the shoulders during attacks, while the feet can keep running.
+            bool attackClip=Time.time<attackUntil && (preparation>0f||kick>0f);
+            bool magicClip=hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
+            bool jumpClip=abilitySlot==3 && (hero==HeroId.Rook||hero==HeroId.Kaelon);
+            float clipProgress=attackClip?Mathf.Clamp01((Time.time-attackStarted)/Mathf.Max(.01f,attackUntil-attackStarted)):0f;
+            if(runPose!=null)runPose.Apply(phase,runBlend,turnRate,Time.time<stopUntil,
+                attackClip,magicClip,jumpClip,clipProgress,root,
+                bootL,bootPositionL,bootRestL,bootR,bootPositionR,bootRestR,
+                legL,legR,armL,armRestL,armR,armRestR);
         }
         private void SetupCloth()
         {
