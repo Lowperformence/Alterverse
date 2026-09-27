@@ -333,6 +333,23 @@ namespace Alterverse.Match
             zoneRoot.transform.Rotate(0,9f*Time.deltaTime,0,Space.World);
             float pulse=1f+Mathf.Sin(Time.time*4.2f)*.028f;
             if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
+            // Keep each ring just above the uneven arena surface as the zone rotates.
+            RaiseRingAboveGround(pulseRing);
+            RaiseRingAboveGround(innerRing);
+            RaiseRingAboveGround(zoneRoot.transform.Find("DF_HotZoneCoreRing"));
+        }
+
+        private static void RaiseRingAboveGround(Transform ring)
+        {
+            if(ring==null||!ring.TryGetComponent(out LineRenderer line))return;
+            for(int i=0;i<line.positionCount;i++)
+            {
+                Vector3 point=line.GetPosition(i);
+                Vector3 world=ring.TransformPoint(new Vector3(point.x,0,point.z));
+                float height=LunarSurfaceField.Surface(world.x,world.z).y+.24f;
+                point.y=ring.InverseTransformPoint(new Vector3(world.x,height,world.z)).y;
+                line.SetPosition(i,point);
+            }
         }
 
         private static Material CreateMaterial(Shader shader,Color color,float emission)
