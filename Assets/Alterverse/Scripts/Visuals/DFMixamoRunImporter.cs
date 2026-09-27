@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
             importer.animationType = ModelImporterAnimationType.Generic;
             importer.importAnimation = true;
             importer.optimizeGameObjects = false;
-            importer.importMaterials = false;
+            importer.materialImportMode = ModelImporterMaterialImportMode.None;
             importer.importCameras = false;
             importer.importLights = false;
         }
