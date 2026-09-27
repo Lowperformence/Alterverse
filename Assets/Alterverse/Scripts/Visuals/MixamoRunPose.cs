@@ -59,12 +59,6 @@ namespace Alterverse.Visuals
         private void Awake()
         {
             Transform visualRoot = transform.Find("DF_VisualRoot");
-            if (visualRoot != null)
-            {
-                articulatedRig = GetComponent<HeroArticulatedJointRig>() ?? gameObject.AddComponent<HeroArticulatedJointRig>();
-                articulatedRig.Build(visualRoot);
-            }
-
             HeroIdentity identity = GetComponent<HeroIdentity>();
             GameObject templatePrefab = ResolveTemplatePrefab(identity);
 
@@ -127,6 +121,14 @@ namespace Alterverse.Visuals
             }
 
             CaptureBindPose();
+
+            // Only restructure the visible hero after a valid motion source exists. A missing
+            // FBX/clip therefore leaves the legacy presentation completely untouched.
+            if (visualRoot != null && leftUpLeg != null && rightUpLeg != null && leftLegBone != null && rightLegBone != null)
+            {
+                articulatedRig = GetComponent<HeroArticulatedJointRig>() ?? gameObject.AddComponent<HeroArticulatedJointRig>();
+                articulatedRig.Build(visualRoot);
+            }
 
             graph = PlayableGraph.Create("DF_MixamoPose_" + activeTemplate);
             graph.SetTimeUpdateMode(DirectorUpdateMode.Manual);
@@ -230,7 +232,7 @@ namespace Alterverse.Visuals
 
             weight = attacking ? Mathf.Max(weight, .7f) : stopping ? Mathf.Max(weight, .55f) : weight;
 
-            if (Articulated && leftUpLeg != null && rightUpLeg != null && leftLegBone != null && rightLegBone != null)
+            if (Articulated)
             {
                 Quaternion elbowL = Delta(leftForeArm, bindLeftForeArm);
                 Quaternion elbowR = Delta(rightForeArm, bindRightForeArm);
