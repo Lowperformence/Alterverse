@@ -53,9 +53,8 @@ namespace Alterverse.Visuals
 
         private void Awake()
         {
-            GameObject fallbackPrefab = Resources.Load<GameObject>("DF_MixamoRun");
-            GameObject sourcePrefab = ResolveTemplatePrefab() ?? fallbackPrefab;
-            if (sourcePrefab == null) return;
+            HeroIdentity identity = GetComponent<HeroIdentity>();
+            GameObject templatePrefab = ResolveTemplatePrefab(identity);
 
             clips = new AnimationClip[ClipNames.Length];
             for (int i = 0; i < clips.Length; i++)
@@ -71,7 +70,23 @@ namespace Alterverse.Visuals
 
             if (clips[Run] == null) return;
 
-            source = Instantiate(sourcePrefab, transform);
+            if (templatePrefab != null)
+            {
+                source = Instantiate(templatePrefab, transform);
+            }
+            else if (identity != null)
+            {
+                source = TemplateRigSkeletonData.BuildForHero(identity.Hero, transform, out activeTemplate);
+            }
+            else
+            {
+                GameObject fallbackPrefab = Resources.Load<GameObject>("DF_MixamoRun");
+                if (fallbackPrefab != null)
+                    source = Instantiate(fallbackPrefab, transform);
+            }
+
+            if (source == null) return;
+
             source.name = "DF_RunSource_" + activeTemplate;
             source.transform.localPosition = Vector3.zero;
             source.transform.localRotation = Quaternion.identity;
@@ -121,9 +136,8 @@ namespace Alterverse.Visuals
             ready = true;
         }
 
-        private GameObject ResolveTemplatePrefab()
+        private GameObject ResolveTemplatePrefab(HeroIdentity identity)
         {
-            HeroIdentity identity = GetComponent<HeroIdentity>();
             if (identity == null || !HeroTemplates.TryGetValue(identity.Hero, out string resourceName))
                 return null;
 
@@ -134,14 +148,11 @@ namespace Alterverse.Visuals
                 return template;
             }
 
+            // The compact built-in skeleton data is already enough for runtime retargeting.
+            // An imported FBX simply upgrades that fallback to Unity's exact imported bind pose.
             if (MissingTemplateWarnings.Add(resourceName))
-            {
-                Debug.LogWarning(
-                    $"[Alterverse] Movement template '{resourceName}' was not generated. " +
-                    "The generic DF_MixamoRun skeleton will be used until the matching template FBX is imported.");
-            }
+                Debug.Log($"[Alterverse] Using embedded template skeleton for {identity.DisplayName} ({resourceName}).");
 
-            activeTemplate = "DF_MixamoRun";
             return null;
         }
 
