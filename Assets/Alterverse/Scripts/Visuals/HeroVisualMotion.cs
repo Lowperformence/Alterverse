@@ -228,24 +228,50 @@ namespace Alterverse.Visuals
             // Hip swing, knee flex and ankle counter-rotation form a simple articulated gait.
             if(articulatedRig!=null&&articulatedRig.Ready)
             {
-                float swingDegrees=Mathf.Lerp(16f,29f,runBlend)*strideWeight;
-                float leftSwing=Mathf.Sin(phase)*swingDegrees;
-                float rightSwing=Mathf.Sin(phase+Mathf.PI)*swingDegrees;
-                float leftFlex=Mathf.Max(0f,-Mathf.Sin(phase))*Mathf.Lerp(18f,38f,runBlend)*strideWeight;
-                float rightFlex=Mathf.Max(0f,-Mathf.Sin(phase+Mathf.PI))*Mathf.Lerp(18f,38f,runBlend)*strideWeight;
-                Quaternion leftHip=Quaternion.Euler(-leftSwing,0f,-Mathf.Sin(phase)*2f*strideWeight);
-                Quaternion rightHip=Quaternion.Euler(-rightSwing,0f,-Mathf.Sin(phase+Mathf.PI)*2f*strideWeight);
-                Quaternion leftKnee=Quaternion.Euler(leftFlex,0f,0f);
-                Quaternion rightKnee=Quaternion.Euler(rightFlex,0f,0f);
-                Quaternion leftAnkle=Quaternion.Euler(-leftSwing*.28f-leftFlex*.35f,0f,0f);
-                Quaternion rightAnkle=Quaternion.Euler(-rightSwing*.28f-rightFlex*.35f,0f,0f);
-                float armCounter=Mathf.Lerp(9f,18f,runBlend)*strideWeight;
+                // Give each leg a grounded stance, toe-off and airborne recovery instead of
+                // rotating both limbs through a uniform sine wave. Phase still follows root travel.
+                float hipRange=Mathf.Lerp(22f,38f,runBlend)*strideWeight;
+                float kneeRange=Mathf.Lerp(30f,52f,runBlend)*strideWeight;
+                float leftCycle=Mathf.Repeat(phase/(Mathf.PI*2f),1f);
+                float rightCycle=Mathf.Repeat(leftCycle+.5f,1f);
+                EvaluateRunLeg(leftCycle,hipRange,kneeRange,out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
+                EvaluateRunLeg(rightCycle,hipRange,kneeRange,out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
+                Quaternion leftHip=Quaternion.Euler(leftHipAngle,0f,Mathf.Sin(phase)*2.5f*strideWeight);
+                Quaternion rightHip=Quaternion.Euler(rightHipAngle,0f,Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
+                Quaternion leftKnee=Quaternion.Euler(leftKneeAngle,0f,0f);
+                Quaternion rightKnee=Quaternion.Euler(rightKneeAngle,0f,0f);
+                Quaternion leftAnkle=Quaternion.Euler(leftAnkleAngle,0f,0f);
+                Quaternion rightAnkle=Quaternion.Euler(rightAnkleAngle,0f,0f);
+                float armCounter=Mathf.Lerp(12f,22f,runBlend)*strideWeight;
                 articulatedRig.SetProceduralPose(1f,
                     leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
                     Quaternion.Euler(-Mathf.Sin(phase)*armCounter,0f,0f),Quaternion.identity,
                     Quaternion.Euler(-Mathf.Sin(phase+Mathf.PI)*armCounter,0f,0f),Quaternion.identity);
             }
         }
+        private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,
+            out float hipAngle,out float kneeAngle,out float ankleAngle)
+        {
+            // About three fifths of the cycle keeps the foot planted while the body passes over it.
+            const float stance=.62f;
+            cycle=Mathf.Repeat(cycle,1f);
+            if(cycle<stance)
+            {
+                float u=Mathf.SmoothStep(0f,1f,cycle/stance);
+                hipAngle=Mathf.Lerp(hipRange,-hipRange,u);
+                kneeAngle=Mathf.Lerp(3f,7f,u);
+                ankleAngle=Mathf.Lerp(-6f,12f,u);
+                return;
+            }
+
+            float swing=Mathf.SmoothStep(0f,1f,(cycle-stance)/(1f-stance));
+            float arc=Mathf.Sin(Mathf.PI*swing);
+            hipAngle=Mathf.Lerp(-hipRange,hipRange,swing);
+            kneeAngle=kneeRange*arc;
+            // Toe-off points the foot down; recovery brings it back level before contact.
+            ankleAngle=Mathf.Lerp(13f,-8f,swing)+arc*5f;
+        }
+
         private void SetupCloth()
         {
             // Clone only fabric meshes for this hero. Armor and collision geometry stay shared.
