@@ -174,9 +174,9 @@ namespace Alterverse.Visuals
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            // 2048 px for Mars on devices with enough graphics memory; retain the mobile
-            // budget on smaller devices. Other arena variants keep their established atlas.
-            int size=ArenaVariantRuntime.IsMars && SystemInfo.graphicsMemorySize>=4096?2048:1536;
+            // Sharper colour and macro normals on desktop across every arena variant.
+            // Smaller GPUs keep the established memory budget.
+            int size=SystemInfo.graphicsMemorySize>=4096?2048:1536;
             const float spanX=96,spanZ=84;
             bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
@@ -196,8 +196,8 @@ namespace Alterverse.Visuals
                 float grain=Mathf.PerlinNoise(wx*(ArenaVariantRuntime.IsMars?.58f:1.15f)+91f,wz*(ArenaVariantRuntime.IsMars?.58f:1.15f)+47f)-.5f;
                 float strata=Mathf.PerlinNoise(wx*.30f+wz*.10f+13f,wz*.30f-wx*.07f+29f)-.5f;
                 float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.42f+201f,wz*.42f+78f)-.5f);
-                value*=1f+grain*.055f+strata*.10f;
-                value+=Mathf.SmoothStep(.40f,.50f,vein)*(moon?.020f:.010f);
+                value*=1f+grain*.095f+strata*.12f;
+                value+=Mathf.SmoothStep(.37f,.49f,vein)*(moon?.026f:.014f);
                 if(ArenaVariantRuntime.IsGreenPlanet)value=Mathf.Max(value,.235f);
                 value=Mathf.Clamp01(value);
                 if(ArenaVariantRuntime.IsMars)
