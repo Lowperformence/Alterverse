@@ -24,7 +24,7 @@ namespace Alterverse.Match
 
         private const float ArenaHalfWidth=42f;
         private const float ArenaHalfHeight=36f;
-        private const float CentralWidthFraction=.60f;
+        private const float ZoneEdgeMargin=1.25f;
         private const float SpawnPadX=27.5f;
         private static readonly Color HotZoneGreen=new(.38f,.96f,.28f,1f);
 
@@ -42,8 +42,8 @@ namespace Alterverse.Match
         private Material zoneMaterial;
         private DimensionsFront front;
         private System.Random rng;
-        private Vector3 lastSpawnPosition;
-        private bool hasLastSpawn;
+        private readonly Vector3[] recentSpawns=new Vector3[4];
+        private int recentSpawnCount,recentSpawnIndex;
         private readonly Collider[] spawnBlockers=new Collider[12];
 
         public static event System.Action HotZoneOpening;
@@ -124,29 +124,49 @@ namespace Alterverse.Match
 
         private Vector3 ChooseSpawnPosition()
         {
-            float xLimit=ArenaHalfWidth*CentralWidthFraction;
-            float zLimit=Mathf.Max(1f,ArenaHalfHeight-Radius-.75f);
-            Vector3 fallback=LunarSurfaceField.Surface(0f,0f);
+            // Keep the entire capture circle inside the arena while allowing more of
+            // the side lanes than the original central-only rectangle.
+            float xLimit=ArenaHalfWidth-Radius-ZoneEdgeMargin;
+            float zLimit=ArenaHalfHeight-Radius-ZoneEdgeMargin;
+            Vector3 best=default;
+            float bestScore=float.NegativeInfinity;
+            bool found=false;
 
-            for(int attempt=0;attempt<24;attempt++)
+            // Sample across the full usable area and favour the place farthest from
+            // the last four zones. Safety checks still guard bases and structures.
+            for(int attempt=0;attempt<72;attempt++)
             {
                 float x=Next(-xLimit,xLimit);
                 float z=Next(-zLimit,zLimit);
                 Vector3 candidate=LunarSurfaceField.Surface(x,z);
                 if(!IsSpawnPositionSafe(candidate))continue;
-                if(hasLastSpawn)
+
+                float separation=float.PositiveInfinity;
+                for(int i=0;i<recentSpawnCount;i++)
                 {
-                    Vector3 delta=candidate-lastSpawnPosition;delta.y=0;
-                    if(delta.sqrMagnitude<6.5f*6.5f)continue;
+                    Vector3 delta=candidate-recentSpawns[i];delta.y=0;
+                    separation=Mathf.Min(separation,delta.sqrMagnitude);
                 }
-                lastSpawnPosition=candidate;hasLastSpawn=true;
-                return candidate;
+                float score=recentSpawnCount==0?Next(0f,1f):separation+Next(0f,4f);
+                if(!found||score>bestScore){best=candidate;bestScore=score;found=true;}
             }
 
-            float fallbackZ=(occurrence&1)==0?12f:-12f;
-            fallback=LunarSurfaceField.Surface(0f,fallbackZ);
-            lastSpawnPosition=fallback;hasLastSpawn=true;
-            return fallback;
+            if(!found)
+            {
+                // Rare crowded arenas still get a valid deterministic fallback.
+                Vector3[] anchors={
+                    LunarSurfaceField.Surface(0f,0f),
+                    LunarSurfaceField.Surface(0f,12f),
+                    LunarSurfaceField.Surface(0f,-12f)};
+                foreach(Vector3 anchor in anchors)
+                    if(IsSpawnPositionSafe(anchor)){best=anchor;found=true;break;}
+                if(!found)best=anchors[0];
+            }
+
+            recentSpawns[recentSpawnIndex]=best;
+            recentSpawnIndex=(recentSpawnIndex+1)%recentSpawns.Length;
+            recentSpawnCount=Mathf.Min(recentSpawnCount+1,recentSpawns.Length);
+            return best;
         }
 
         private bool IsSpawnPositionSafe(Vector3 candidate)
