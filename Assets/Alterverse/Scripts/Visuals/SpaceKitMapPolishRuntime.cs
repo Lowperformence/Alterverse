@@ -11,8 +11,8 @@ using UnityEngine.SceneManagement;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Adds collider-free, low-poly scenery derived from Quaternius' Ultimate Space Kit (CC0 1.0).
-    /// The props deliberately live outside the usable Hot Zone area, so this changes presentation only.
+    /// Collider-free, low-poly scenery derived from Quaternius' Ultimate Space Kit (CC0 1.0).
+    /// Large silhouettes stay outside the usable Hot Zone rectangle, so this layer is presentation only.
     /// </summary>
     public sealed partial class SpaceKitMapPolishRuntime : MonoBehaviour
     {
@@ -26,6 +26,9 @@ namespace Alterverse.Visuals
         private Mesh domeMesh;
         private Mesh plantMesh;
         private Mesh spiralTreeMesh;
+        private Mesh radarMesh;
+        private Mesh antennaMesh;
+        private Mesh solarPanelMesh;
 
         private Material rockMaterial;
         private Material structureMaterial;
@@ -65,7 +68,7 @@ namespace Alterverse.Visuals
                 yield break;
             }
 
-            // Let ProductionLunarGround finish its own Start() pass first.
+            // Allow the arena's own Start() pass to finish before the decorative layer is attached.
             yield return null;
 
             Transform existing = ground.transform.Find(RootName);
@@ -86,11 +89,17 @@ namespace Alterverse.Visuals
             domeMesh = DecodeMesh("USK_GeodesicDome", GeodesicDomeData);
             plantMesh = DecodeMesh("USK_Plant_2", Plant2Data);
             spiralTreeMesh = DecodeMesh("USK_Tree_Spiral_1", TreeSpiral1Data);
+            radarMesh = DecodeMesh("USK_Roof_Radar", RadarData);
+            antennaMesh = DecodeMesh("USK_Roof_Antenna", AntennaData);
+            solarPanelMesh = DecodeMesh("USK_SolarPanel_Ground", SolarPanelData);
 
             runtimeMeshes.Add(rockMesh);
             runtimeMeshes.Add(domeMesh);
             runtimeMeshes.Add(plantMesh);
             runtimeMeshes.Add(spiralTreeMesh);
+            runtimeMeshes.Add(radarMesh);
+            runtimeMeshes.Add(antennaMesh);
+            runtimeMeshes.Add(solarPanelMesh);
 
             BuildPalette();
             BuildOuterRockField();
@@ -189,6 +198,15 @@ namespace Alterverse.Visuals
             Spawn("USK_MoonResearchDome_B", domeMesh, structureMaterial, new Vector2(37.0f, -28.8f),
                 new Vector3(.64f, .59f, .64f), 205f, -.03f, true);
 
+            Spawn("USK_MoonRadar", radarMesh, structureMaterial, new Vector2(-31.5f, 31.6f),
+                new Vector3(.72f, .72f, .72f), 32f, -.02f, true);
+            Spawn("USK_MoonAntenna", antennaMesh, accentMaterial, new Vector2(32.2f, 31.3f),
+                new Vector3(.58f, .58f, .58f), 212f, -.02f, true);
+            Spawn("USK_MoonSolar_A", solarPanelMesh, structureMaterial, new Vector2(-32.5f, -32.1f),
+                new Vector3(.78f, .78f, .78f), 28f, -.02f, true);
+            Spawn("USK_MoonSolar_B", solarPanelMesh, structureMaterial, new Vector2(32.8f, -31.8f),
+                new Vector3(.76f, .76f, .76f), 204f, -.02f, true);
+
             BuildPlantCluster(new Vector2(-35.7f, -29.2f), 6, .56f, accentMaterial, 14);
             BuildPlantCluster(new Vector2(35.8f, 29.0f), 6, .52f, accentMaterial, 41);
             BuildPlantCluster(new Vector2(-40.0f, 3.0f), 4, .43f, darkMaterial, 71);
@@ -199,6 +217,12 @@ namespace Alterverse.Visuals
         {
             Spawn("USK_MarsAbandonedDome", domeMesh, darkMaterial, new Vector2(-37.4f, -29.0f),
                 new Vector3(.66f, .54f, .72f), 31f, -.05f, true, 4f, -3f);
+            Spawn("USK_MarsRadarWreck", radarMesh, darkMaterial, new Vector2(-34.2f, 30.5f),
+                new Vector3(.60f, .60f, .60f), 17f, -.05f, true, 11f, -7f);
+            Spawn("USK_MarsSolarWreck", solarPanelMesh, structureMaterial, new Vector2(34.0f, -32.2f),
+                new Vector3(.70f, .70f, .70f), 197f, -.04f, true, -9f, 5f);
+            Spawn("USK_MarsAntenna", antennaMesh, structureMaterial, new Vector2(-40.0f, 6.0f),
+                new Vector3(.50f, .50f, .50f), 62f, -.04f, true, 6f, 4f);
 
             Vector2[] spires =
             {
@@ -241,6 +265,8 @@ namespace Alterverse.Visuals
 
             Spawn("USK_GreenResearchDome", domeMesh, structureMaterial, new Vector2(-37.0f, -27.8f),
                 new Vector3(.55f, .50f, .55f), 18f, -.03f, true);
+            Spawn("USK_GreenAntenna", antennaMesh, accentMaterial, new Vector2(34.0f, -31.0f),
+                new Vector3(.45f, .45f, .45f), 193f, -.02f, true);
         }
 
         private void BuildNoxaraSet()
@@ -267,6 +293,8 @@ namespace Alterverse.Visuals
 
             Spawn("USK_NoxaraRuinedDome", domeMesh, darkMaterial, new Vector2(37.4f, 27.7f),
                 new Vector3(.52f, .44f, .58f), 211f, -.06f, true, -5f, 4f);
+            Spawn("USK_NoxaraRadarWreck", radarMesh, darkMaterial, new Vector2(-35.0f, -30.8f),
+                new Vector3(.52f, .52f, .52f), 48f, -.05f, true, 13f, 8f);
         }
 
         private void BuildKryonSet()
@@ -275,6 +303,12 @@ namespace Alterverse.Visuals
                 new Vector3(.67f, .61f, .67f), 22f, -.04f, true);
             Spawn("USK_KryonDome_B", domeMesh, structureMaterial, new Vector2(37.2f, -28.8f),
                 new Vector3(.60f, .55f, .60f), 202f, -.04f, true);
+            Spawn("USK_KryonRadar", radarMesh, accentMaterial, new Vector2(-32.0f, 31.5f),
+                new Vector3(.56f, .56f, .56f), 29f, -.02f, true);
+            Spawn("USK_KryonSolar", solarPanelMesh, structureMaterial, new Vector2(32.0f, -31.7f),
+                new Vector3(.64f, .64f, .64f), 208f, -.02f, true);
+            Spawn("USK_KryonAntenna", antennaMesh, accentMaterial, new Vector2(40.0f, 1.0f),
+                new Vector3(.46f, .46f, .46f), 185f, -.02f, true);
 
             BuildPlantCluster(new Vector2(-40.0f, -5.0f), 8, .58f, accentMaterial, 31);
             BuildPlantCluster(new Vector2(-31.5f, -31.0f), 7, .54f, floraMaterial, 57);
