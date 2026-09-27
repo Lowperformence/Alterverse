@@ -359,7 +359,7 @@ namespace Alterverse.Match
             }
             zoneDisc=null;
             zoneRenderer=null;
-            if(zoneMesh!=null){Destroy(zoneMesh);zoneMesh=null;}
+            if(zoneMesh!=null){Destroy(zoneMesh,delay);zoneMesh=null;}
         }
 
         private void OnDestroy()
