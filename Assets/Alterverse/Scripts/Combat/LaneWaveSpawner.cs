@@ -177,6 +177,7 @@ namespace Alterverse.Combat
             CreatePart(minion.transform,"DF_Shoulder",PrimitiveType.Cube,new Vector3(0,.12f,0),new Vector3(.92f,.14f,.5f),energy);
             CreatePart(minion.transform,"DF_BackPlate",PrimitiveType.Cube,new Vector3(0,.1f,-.34f),new Vector3(.58f,.3f,.12f),dark);
             CreatePart(minion.transform,"DF_TeamFin",PrimitiveType.Cube,new Vector3(0,.72f,-.05f),new Vector3(.10f,.42f,.28f),energy);
+            minion.AddComponent<LaneUnitVisualMotion>().ConfigureInfantry(dark,energy);
             Destroy(minion,75);
 
             if(announceNetwork&&CoopAuthority.Active&&CoopAuthority.LocalIsHost)
@@ -216,6 +217,7 @@ namespace Alterverse.Combat
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,false);
             else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,false);
             else HealingGuardMech.BuildRobotVisual(mech.transform,team);
+            mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 
             Destroy(mech,100);
 

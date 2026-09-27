@@ -21,6 +21,7 @@ namespace Alterverse.Combat
         [SerializeField] private float scanInterval=.22f;
 
         private Health health,target;
+        private LaneUnitVisualMotion visualMotion;
         private int team;
         private Vector3 guardPost,healingPlate;
         private float nextAttack,nextScan;
@@ -58,6 +59,7 @@ namespace Alterverse.Combat
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,true);
             else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
+            mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 
             return mech;
         }
@@ -211,6 +213,7 @@ namespace Alterverse.Combat
         {
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)return;
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+            visualMotion??=GetComponent<LaneUnitVisualMotion>();
 
             Vector3 plateDelta=transform.position-healingPlate;plateDelta.y=0;
             if(plateDelta.sqrMagnitude>hardReturnRadius*hardReturnRadius)forcedReturn=true;
@@ -244,6 +247,7 @@ namespace Alterverse.Combat
                 if(Time.time>=nextAttack)
                 {
                     nextAttack=Time.time+attackCooldown;
+                    visualMotion?.PulseAttack();
                     target.TakeDamage(attackDamage,gameObject);
                     PrototypeVfx.ProjectileLine(transform.position+Vector3.up*.9f,target.transform.position+Vector3.up*.65f,energy,.12f);
                 }

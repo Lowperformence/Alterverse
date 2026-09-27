@@ -18,11 +18,12 @@ namespace Alterverse.Visuals
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
-        private Transform root,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
-        private Quaternion bootRestL,bootRestR,armRestL,armRestR,bladeRest;
+        private Transform root,torso,head,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
+        private Quaternion torsoRest,headRest,bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
         private float previousHealth,hitUntil;
-        private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean,displayedSpeed;
+        private float phase,strideWeight,attackUntil,attackDuration,attackWeight,lean,displayedSpeed;
+        private Vector3 previousLocalVelocity;
         private Quaternion displayedRotation=Quaternion.identity;
         private Vector3 displayedScale;
         private bool wasDead;
@@ -100,6 +101,7 @@ namespace Alterverse.Visuals
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
+            torso=FindPart("Torso");head=FindPart("Head");torsoRest=Rest(torso);headRest=Rest(head);
             muzzle=FindPart("Muzzle");weaponR=FindPart("WeaponR");weaponL=FindPart("WeaponL");orb=FindPart("Orb");
             if(weaponR!=null){weaponPositionR=weaponR.localPosition;weaponRestR=weaponR.localRotation;}
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
@@ -133,7 +135,7 @@ namespace Alterverse.Visuals
             float progress=stance?cycle*2:(cycle-.5f)*2;
             // During stance the foot moves backward at the traveled-distance rate.
             float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.25f;
-            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.12f;
+            float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.14f;
             foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
             foot.localRotation=rotation*Quaternion.Euler(stance?0:-Mathf.Sin(progress*Mathf.PI)*12*strideWeight,0,0);
         }
@@ -141,16 +143,19 @@ namespace Alterverse.Visuals
         {
             if(root==null)return;
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
-            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousSpeed=0;return;}
+            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousLocalVelocity=Vector3.zero;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;phase=0;strideWeight=previousSpeed=lean=displayedSpeed=0;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
+            {wasDead=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
             PlanarSpeed=travel/dt;
+            Vector3 localVelocity=transform.InverseTransformDirection(delta/dt);
+            Vector3 localAcceleration=(localVelocity-previousLocalVelocity)/dt;
+            previousLocalVelocity=localVelocity;
             // Ease the visible gait in and out while keeping collision and input immediate.
             displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?12f:9f)*dt));
             float response=1-Mathf.Exp(-11f*dt);
@@ -160,19 +165,19 @@ namespace Alterverse.Visuals
             if(Dashing)strideWeight=0;
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
-            float strideLength=heavy?2.35f:hero==HeroId.Veyr?2.5f:2.1f;
-            if(!Dashing)phase=Mathf.Repeat(phase+displayedSpeed*dt/strideLength*Mathf.PI*2,Mathf.PI*2);
-            float step=Mathf.Sin(phase)*(heavy?25:30)*strideWeight;
+            float strideLength=heavy?(hero==HeroId.Kaelon?2.6f:2.45f):(hero==HeroId.Veyr||hero==HeroId.Nyra?1.9f:2.1f);
+            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
+            float step=Mathf.Sin(phase)*(heavy?22:hero==HeroId.Veyr||hero==HeroId.Nyra?29:26)*strideWeight;
             PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
             PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
             PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
             Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.45f);Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.45f);
-            float acceleration=Mathf.Clamp((displayedSpeed-previousSpeed)/dt,-18,18);previousSpeed=displayedSpeed;
-            lean=Mathf.Lerp(lean,Mathf.Clamp(acceleration*.1f,-2.5f,3)+Mathf.Min(displayedSpeed,8)*.35f,1-Mathf.Exp(-16*dt));
+            float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
+            lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
-            float idle=Mathf.Sin(t*1.8f)*.012f*(1-strideWeight);
-            float bob=(1-Mathf.Cos(phase*2))*.018f*strideWeight*(heavy?.7f:1);
+            float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
+            float bob=(1-Mathf.Cos(phase*2))*.015f*strideWeight*(heavy?.65f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
@@ -198,10 +203,14 @@ namespace Alterverse.Visuals
             displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
             root.localScale=displayedScale;
             float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
-            Quaternion targetRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,spinYaw,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
+            float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
+            float sway=Mathf.Sin(phase)*strideWeight*(heavy?.65f:1.05f)+idleShift*.45f;
+            Quaternion targetRotation=Quaternion.Euler((Dashing?9:lean)-7*kick-recoil,spinYaw,sway);
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
+            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.14f,0,-sway*.22f);
+            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.22f,0,-sway*.32f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
@@ -378,4 +387,3 @@ namespace Alterverse.Visuals
 
     }
 }
-

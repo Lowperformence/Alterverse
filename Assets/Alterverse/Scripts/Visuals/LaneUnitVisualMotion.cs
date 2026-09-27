@@ -1,0 +1,233 @@
+using UnityEngine;
+
+namespace Alterverse.Visuals
+{
+    /// <summary>Articulates generated lane infantry and the modular siege/guard mechs.</summary>
+    public sealed class LaneUnitVisualMotion : MonoBehaviour
+    {
+        private Transform visualRoot, body;
+        private Transform legL, legR, shinL, shinR, footL, footR, armL, armR, shoulderL, shoulderR, head;
+        private Quaternion legRestL, legRestR, shinRestL, shinRestR, footRestL, footRestR;
+        private Quaternion armRestL, armRestR, shoulderRestL, shoulderRestR, headRest;
+        private Vector3 lastPosition, previousVelocity;
+        private float phase, gait, lean, attackUntil, attackDuration, attackWeight;
+        private bool configured, robot;
+
+        public void ConfigureInfantry(Color armor, Color accent) => Configure(false, armor, accent);
+        public void ConfigureRobot() => Configure(true, Color.gray, Color.white);
+
+        private void Configure(bool isRobot, Color armor, Color accent)
+        {
+            if (configured) return;
+            configured = true;
+            robot = isRobot;
+            visualRoot = new GameObject("DF_LocomotionPose").transform;
+            visualRoot.SetParent(transform, false);
+
+            Renderer sourceRenderer = GetComponent<Renderer>();
+            if (!robot && sourceRenderer != null)
+            {
+                MeshFilter sourceFilter = GetComponent<MeshFilter>();
+                body = new GameObject("DF_LocomotionBody").transform;
+                body.SetParent(visualRoot, false);
+                if (sourceFilter != null)
+                    body.gameObject.AddComponent<MeshFilter>().sharedMesh = sourceFilter.sharedMesh;
+                MeshRenderer bodyRenderer = body.gameObject.AddComponent<MeshRenderer>();
+                bodyRenderer.sharedMaterials = sourceRenderer.sharedMaterials;
+                bodyRenderer.shadowCastingMode = sourceRenderer.shadowCastingMode;
+                sourceRenderer.enabled = false;
+            }
+
+            // Keep the gameplay collider at the actor root and move only its visible parts.
+            for (int i = transform.childCount - 1; i >= 0; i--)
+            {
+                Transform child = transform.GetChild(i);
+                if (child != visualRoot) child.SetParent(visualRoot, true);
+            }
+
+            if (robot)
+                BindRobotParts();
+            else
+                BuildInfantryParts(armor, accent);
+            CaptureRestPose();
+            lastPosition = transform.position;
+        }
+
+        private void BindRobotParts()
+        {
+            if (FindDeep("DF_GreenMechLegL") != null)
+            {
+                legL = FindDeep("DF_GreenMechLegL"); legR = FindDeep("DF_GreenMechLegR");
+                footL = FindDeep("DF_GreenMechFootL"); footR = FindDeep("DF_GreenMechFootR");
+                armL = FindDeep("DF_GreenMechArmL"); armR = FindDeep("DF_GreenMechArmR");
+                head = FindDeep("DF_GreenMechHeadPivot");
+                return;
+            }
+            if (FindDeep("DF_MarsGolemLegL") != null)
+            {
+                legL = FindDeep("DF_MarsGolemLegL"); legR = FindDeep("DF_MarsGolemLegR");
+                footL = FindDeep("DF_MarsGolemFootL"); footR = FindDeep("DF_MarsGolemFootR");
+                armL = FindDeep("DF_MarsGolemArmL"); armR = FindDeep("DF_MarsGolemArmR");
+                head = FindDeep("DF_MarsGolemHead");
+                return;
+            }
+            BuildGuardPivots(-1f, out legL, out shinL, out footL, out armL, out shoulderL);
+            BuildGuardPivots(1f, out legR, out shinR, out footR, out armR, out shoulderR);
+            head = Group("DF_GuardHeadMotion", visualRoot, new Vector3(0f,1.49f,.05f),
+                "DF_GuardSensorHeadCore", "DF_GuardSensorHeadArmor", "DF_GuardVisor", "DF_GuardBrow",
+                "DF_GuardSensorEyeL", "DF_GuardSensorEyeR");
+        }
+
+        private Transform FindDeep(string name)
+        {
+            foreach (Transform part in visualRoot.GetComponentsInChildren<Transform>(true))
+                if (part.name == name) return part;
+            return null;
+        }
+
+        private Transform Group(string name, Transform parent, Vector3 position, params string[] partNames)
+        {
+            Transform pivot = new GameObject(name).transform;
+            pivot.SetParent(parent, false);
+            pivot.position = visualRoot.TransformPoint(position);
+            for (int i = 0; i < partNames.Length; i++)
+            {
+                Transform part = FindDeep(partNames[i]);
+                if (part != null && part != pivot) part.SetParent(pivot, true);
+            }
+            return pivot;
+        }
+
+        private void BuildGuardPivots(float side, out Transform leg, out Transform shin, out Transform foot,
+            out Transform arm, out Transform forearm)
+        {
+            string suffix = side < 0f ? "L" : "R";
+            leg = Group("DF_GuardHipMotion" + suffix, visualRoot, new Vector3(side*.44f,-.06f,0),
+                "DF_GuardThighCore" + suffix, "DF_GuardThighArmor" + suffix);
+            shin = Group("DF_GuardKneeMotion" + suffix, leg, new Vector3(side*.50f,-.69f,.10f),
+                "DF_GuardKnee" + suffix, "DF_GuardKneePlate" + suffix,
+                "DF_GuardShinCore" + suffix, "DF_GuardShinArmor" + suffix, "DF_GuardShinSide" + suffix);
+            foot = Group("DF_GuardAnkleMotion" + suffix, shin, new Vector3(side*.53f,-1.34f,.17f),
+                "DF_GuardAnkle" + suffix, "DF_GuardFootCore" + suffix,
+                "DF_GuardFootArmor" + suffix, "DF_GuardHeel" + suffix);
+            arm = Group("DF_GuardArmMotion" + suffix, visualRoot, new Vector3(side*1.02f,.96f,0),
+                "DF_GuardShoulderCore" + suffix, "DF_GuardShoulderArmor" + suffix,
+                "DF_GuardShoulderCap" + suffix, "DF_GuardUpperArm" + suffix);
+            forearm = Group("DF_GuardElbowMotion" + suffix, arm, new Vector3(side*1.25f,.20f,.08f),
+                "DF_GuardElbow" + suffix, "DF_GuardForearmCore" + suffix,
+                "DF_GuardForearmArmor" + suffix, "DF_GuardForearmPanel" + suffix,
+                "DF_GuardArmStatus" + suffix, "DF_GuardWrist" + suffix,
+                "DF_GuardHand" + suffix, "DF_GuardFinger" + suffix + "_-1",
+                "DF_GuardFinger" + suffix + "_0", "DF_GuardFinger" + suffix + "_1");
+        }
+
+        private void BuildInfantryParts(Color armor, Color accent)
+        {
+            Material armorMaterial = FindMaterial("DF_BackPlate", armor);
+            Material accentMaterial = FindMaterial("DF_Visor", accent);
+            legL = CreatePart("DF_LocomotionLegL", PrimitiveType.Cube, new Vector3(-.19f,-.67f,.02f), new Vector3(.20f,.62f,.22f), armorMaterial, armor);
+            legR = CreatePart("DF_LocomotionLegR", PrimitiveType.Cube, new Vector3(.19f,-.67f,.02f), new Vector3(.20f,.62f,.22f), armorMaterial, armor);
+            footL = CreatePart("DF_LocomotionBootL", PrimitiveType.Cube, new Vector3(-.19f,-.95f,.09f), new Vector3(.22f,.14f,.34f), accentMaterial, accent);
+            footR = CreatePart("DF_LocomotionBootR", PrimitiveType.Cube, new Vector3(.19f,-.95f,.09f), new Vector3(.22f,.14f,.34f), accentMaterial, accent);
+            armL = CreatePart("DF_LocomotionArmL", PrimitiveType.Cube, new Vector3(-.32f,.01f,.03f), new Vector3(.16f,.35f,.19f), armorMaterial, armor);
+            armR = CreatePart("DF_LocomotionArmR", PrimitiveType.Cube, new Vector3(.32f,.01f,.03f), new Vector3(.16f,.35f,.19f), armorMaterial, armor);
+            shoulderL = visualRoot.Find("DF_Shoulder");
+            head = visualRoot.Find("DF_Visor");
+        }
+
+        private Material FindMaterial(string partName, Color fallback)
+        {
+            Transform part = visualRoot.Find(partName);
+            Renderer renderer = part != null ? part.GetComponent<Renderer>() : null;
+            if (renderer != null) return renderer.sharedMaterial;
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            return shader == null ? null : new Material(shader) { color = fallback };
+        }
+
+        private Transform CreatePart(string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material, Color color)
+        {
+            GameObject part = GameObject.CreatePrimitive(type);
+            part.name = name;
+            part.transform.SetParent(visualRoot, false);
+            part.transform.localPosition = position;
+            part.transform.localScale = scale;
+            Collider collider = part.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            Renderer renderer = part.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                if (material != null) renderer.sharedMaterial = material;
+                else renderer.material.color = color;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            }
+            return part.transform;
+        }
+
+        private void CaptureRestPose()
+        {
+            legRestL = Rest(legL); legRestR = Rest(legR);
+            shinRestL = Rest(shinL); shinRestR = Rest(shinR);
+            footRestL = Rest(footL); footRestR = Rest(footR);
+            armRestL = Rest(armL); armRestR = Rest(armR);
+            shoulderRestL = Rest(shoulderL); shoulderRestR = Rest(shoulderR); headRest = Rest(head);
+        }
+
+        public void PulseAttack()
+        {
+            attackDuration = robot ? .30f : .20f;
+            attackUntil = Time.time + attackDuration;
+            attackWeight = robot ? 1f : .7f;
+        }
+
+        private void LateUpdate()
+        {
+            if (!configured || visualRoot == null) return;
+            float dt = Mathf.Max(Time.deltaTime, .0001f);
+            if (Time.timeScale <= 0f) { lastPosition = transform.position; return; }
+
+            Vector3 position = transform.position;
+            Vector3 delta = position - lastPosition;
+            lastPosition = position;
+            delta.y = 0f;
+            Vector3 velocity = delta / dt;
+            float maxSpeed = robot ? 5f : 4f;
+            velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
+            float moveAmount = Mathf.Clamp01(velocity.magnitude / (robot ? 1.1f : .75f));
+            gait = Mathf.Lerp(gait, moveAmount, 1f - Mathf.Exp(-16f * dt));
+            float acceleration = Mathf.Clamp(Vector3.Dot(velocity - previousVelocity, transform.forward) / dt, -18f, 18f);
+            previousVelocity = velocity;
+
+            float stepLength = robot ? 2.1f : 1.25f;
+            phase = Mathf.Repeat(phase + delta.magnitude / stepLength * Mathf.PI * 2f, Mathf.PI * 2f);
+            float stride = Mathf.Sin(phase) * (robot ? 19f : 25f) * gait;
+            Pose(legL, legRestL, stride); Pose(legR, legRestR, -stride);
+            Pose(shinL, shinRestL, -Mathf.Max(0f, stride) * (robot ? .28f : 0f));
+            Pose(shinR, shinRestR, -Mathf.Max(0f, -stride) * (robot ? .28f : 0f));
+            Pose(footL, footRestL, -stride * .32f); Pose(footR, footRestR, stride * .32f);
+            Pose(armL, armRestL, -stride * .46f); Pose(armR, armRestR, stride * .46f);
+
+            lean = Mathf.Lerp(lean, Mathf.Clamp(acceleration * .075f + velocity.magnitude * .18f, -1.5f, 3.8f), 1f - Mathf.Exp(-11f * dt));
+            float idleBreath = Mathf.Sin(Time.time * (robot ? 1.2f : 1.8f)) * (robot ? .006f : .010f) * (1f - gait);
+            float bounce = (1f - Mathf.Cos(phase * 2f)) * (robot ? .014f : .018f) * gait;
+            visualRoot.localPosition = Vector3.up * (idleBreath + bounce);
+            float sway = Mathf.Sin(phase) * gait * (robot ? .65f : 1.2f);
+            visualRoot.localRotation = Quaternion.Euler(lean, 0f, sway);
+            Pose(shoulderL, shoulderRestL, -sway * .65f); Pose(shoulderR, shoulderRestR, -sway * .65f);
+            Pose(head, headRest, -lean * .28f - sway * .2f);
+
+            if (Time.time < attackUntil)
+            {
+                float progress = 1f - (attackUntil - Time.time) / attackDuration;
+                float recoil = Mathf.Sin(progress * Mathf.PI) * attackWeight;
+                visualRoot.localRotation *= Quaternion.Euler(-8f * recoil, 0f, 0f);
+                Pose(armR, armRestR, stride * .46f - 30f * recoil);
+            }
+        }
+
+        private static Quaternion Rest(Transform value) => value != null ? value.localRotation : Quaternion.identity;
+        private static void Pose(Transform part, Quaternion rest, float xAngle)
+        {
+            if (part != null) part.localRotation = rest * Quaternion.Euler(xAngle, 0f, 0f);
+        }
+    }
+}
