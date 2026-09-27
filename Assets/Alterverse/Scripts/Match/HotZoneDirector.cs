@@ -197,10 +197,6 @@ namespace Alterverse.Match
             if(winner>=0&&!rewardIssued)
                 rewardIssued=HotZoneTank.Spawn(winner);
 
-            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
-                winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
-            PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
-            PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
             if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkZoneResolved?.Invoke(winner,zeroTime,lumenTime,occurrence);
@@ -261,10 +257,6 @@ namespace Alterverse.Match
             RecordWinningParticipants(winner);
             if(winner>=0)HotZoneTank.Spawn(winner);
 
-            Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
-                winner==1?StylizedArtDirection.LumenEnergy:new Color(.72f,.74f,.80f);
-            PrototypeVfx.RadialBurst(transform.position,resolutionColor,Radius);
-            PrototypeVfx.Burst(transform.position,resolutionColor,1.35f,12);
             HotZoneResolved?.Invoke(winner,zeroTime,lumenTime);
 
             DestroyZoneVisual(1.2f);
