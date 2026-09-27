@@ -24,6 +24,22 @@ namespace Alterverse.UI
         private Alterverse.Shop.UniversalHeroCosmetic cachedCosmetic;
         private HeroOriginBackdrop originBackdrop;
         private SpriteRenderer originWorld;
+        // Older local skin scripts expose only Equipped/WeaponOverdrive. Preserve the
+        // selected variant when the newer API is present without requiring it to compile.
+        private static int EquippedWeaponVariant(HeroId hero)
+        {
+            var method=typeof(Alterverse.Shop.WeaponSkinInventory).GetMethod("EquippedVariant",
+                System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Static);
+            if(method!=null&&method.ReturnType==typeof(int))
+                return (int)method.Invoke(null,new object[]{hero});
+            return Alterverse.Shop.WeaponSkinInventory.Equipped(hero)?0:-1;
+        }
+        private static void SetPreviewWeaponVariant(Alterverse.Shop.SkinPreviewSelection preview,int variant)
+        {
+            var field=typeof(Alterverse.Shop.SkinPreviewSelection).GetField("WeaponSkinVariant",
+                System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Instance);
+            if(field!=null&&field.FieldType==typeof(int))field.SetValue(preview,variant);
+        }
         public void InvalidateLoadout()=>loadoutDirty=true;
         private void OnEnable(){Alterverse.Profile.ProfileTransaction.Committed+=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged+=InvalidateLoadout;loadoutDirty=true;}
         private Transform orbitLeft, orbitRight, wingLeft, wingRight;
@@ -70,7 +86,7 @@ namespace Alterverse.UI
             {
                 cachedHero=hero;
                 cachedCosmetic=Alterverse.Shop.UniversalCosmeticSelection.EquippedFor(hero);
-                cachedWeaponVariant=Alterverse.Shop.WeaponSkinInventory.EquippedVariant(hero);
+                cachedWeaponVariant=EquippedWeaponVariant(hero);
                 cachedWeapon=cachedWeaponVariant>=0;
                 loadoutDirty=false;
             }
@@ -96,7 +112,7 @@ namespace Alterverse.UI
             var preview=actor.AddComponent<Alterverse.Shop.SkinPreviewSelection>();
             preview.UniversalCosmetic=cosmetic;
             preview.WeaponOverdrive=weapon;
-            preview.WeaponSkinVariant=weaponVariant;
+            SetPreviewWeaponVariant(preview,weaponVariant);
             actor.AddComponent<StylizedHeroVisual>().Build();
             Transform visual=actor.transform.Find("DF_VisualRoot");
             orbitLeft=visual.Find("DF_OrbitL"); orbitRight=visual.Find("DF_OrbitR");
