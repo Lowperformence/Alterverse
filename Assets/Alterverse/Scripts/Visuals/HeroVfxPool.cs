@@ -165,7 +165,9 @@ namespace Alterverse.Visuals
             // smoothly; exact warning outlines retain their original size and opacity.
             bool flight=s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.Spiral;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
-            Color color=s.Color;color.a*=fade;
+            Color color=s.Color;
+            if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
+            color.a*=fade;
             s.Block.SetFloat(Polish,s.Warning?0f:1f);s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
         private void OnDestroy()
