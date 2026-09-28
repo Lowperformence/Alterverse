@@ -688,11 +688,10 @@ namespace Alterverse.Combat
             float blendRate=movement01>spiderMoveBlend?7.5f:4.2f;
             spiderMoveBlend=Mathf.MoveTowards(spiderMoveBlend,movement01,Time.deltaTime*blendRate);
 
-            if(spiderMoveBlend>.015f)
-            {
-                float gaitHz=Mathf.Lerp(.92f,1.42f,movement01);
-                spiderGaitClock+=Time.deltaTime*gaitHz*Mathf.Lerp(.35f,1f,spiderMoveBlend);
-            }
+            // Keep phase bounded and advance only while the gameplay root actually travels.
+            // This prevents foot skating during braking and loss of phase precision in long matches.
+            if(displacement.sqrMagnitude>.0001f)
+                spiderGaitClock=Mathf.Repeat(spiderGaitClock+displacement.magnitude/2.45f,1f);
 
             float idle=Mathf.Sin(Time.time*1.65f);
             float support=Mathf.Sin(spiderGaitClock*Mathf.PI*2f);
