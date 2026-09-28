@@ -31,7 +31,7 @@ namespace Alterverse.Visuals
         private bool wasDead,moving;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
-        private float previousHeading;
+        private float previousHeading,smoothedTurnRate;
         private Transform muzzle,weaponR,weaponL,orb,gauntletR,gauntletL;
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
@@ -150,11 +150,13 @@ namespace Alterverse.Visuals
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
+            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;previousHeading=transform.eulerAngles.y;smoothedTurnRate=0f;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
-            float turnRate=Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt;
+            float rawTurnRate=Mathf.Clamp(Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt,-540f,540f);
+            smoothedTurnRate=Mathf.Lerp(smoothedTurnRate,rawTurnRate,1-Mathf.Exp(-12f*dt));
+            float turnRate=smoothedTurnRate;
             previousHeading=transform.eulerAngles.y;
             PlanarSpeed=travel/dt;
             Vector3 localVelocity=transform.InverseTransformDirection(delta/dt);
@@ -178,10 +180,11 @@ namespace Alterverse.Visuals
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
+            // Capture the displayed pose before writing this frame's gait/attack targets.
+            Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             Swing(armL,armRestL,-step*.85f);Swing(armR,armRestR,step*.85f);
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
-            Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
             float bob=(1-Mathf.Cos(phase*2))*.012f*strideWeight*(heavy?.8f:1);
@@ -236,8 +239,8 @@ namespace Alterverse.Visuals
                 float kneeRange=Mathf.Lerp(30f,52f,runBlend)*strideWeight;
                 float leftCycle=Mathf.Repeat(phase/(Mathf.PI*2f),1f);
                 float rightCycle=Mathf.Repeat(leftCycle+.5f,1f);
-                EvaluateRunLeg(leftCycle,hipRange,kneeRange,out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
-                EvaluateRunLeg(rightCycle,hipRange,kneeRange,out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
+                EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
+                EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
                 Quaternion leftHip=Quaternion.Euler(leftHipAngle,0f,Mathf.Sin(phase)*2.5f*strideWeight);
                 Quaternion rightHip=Quaternion.Euler(rightHipAngle,0f,Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
                 Quaternion leftKnee=Quaternion.Euler(leftKneeAngle,0f,0f);
@@ -309,7 +312,7 @@ namespace Alterverse.Visuals
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
         }
-        private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,
+        private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,float weight,
             out float hipAngle,out float kneeAngle,out float ankleAngle)
         {
             // About three fifths of the cycle keeps the foot planted while the body passes over it.
@@ -319,17 +322,17 @@ namespace Alterverse.Visuals
             {
                 float u=Mathf.SmoothStep(0f,1f,cycle/stance);
                 hipAngle=Mathf.Lerp(hipRange,-hipRange,u);
-                kneeAngle=Mathf.Lerp(3f,7f,u);
-                ankleAngle=Mathf.Lerp(-6f,12f,u);
+                kneeAngle=Mathf.Lerp(3f,7f,u)*weight;
+                ankleAngle=Mathf.Lerp(-6f,12f,u)*weight;
                 return;
             }
 
             float swing=Mathf.SmoothStep(0f,1f,(cycle-stance)/(1f-stance));
             float arc=Mathf.Sin(Mathf.PI*swing);
             hipAngle=Mathf.Lerp(-hipRange,hipRange,swing);
-            kneeAngle=kneeRange*arc;
+            kneeAngle=Mathf.Lerp(7f,3f,swing)*weight+kneeRange*arc;
             // Toe-off points the foot down; recovery brings it back level before contact.
-            ankleAngle=Mathf.Lerp(13f,-8f,swing)+arc*5f;
+            ankleAngle=(Mathf.Lerp(12f,-6f,swing)+arc*5f)*weight;
         }
 
         private void SetupCloth()
