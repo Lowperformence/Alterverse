@@ -286,7 +286,8 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        readyL=new Vector3(-28f,0f,-10f);readyR=new Vector3(-28f,0f,10f);break;
+                        // Sword-and-shield reference posture. The offhand blade fills the shield lane.
+                        readyL=new Vector3(-36f,0f,-14f);readyR=new Vector3(-36f,0f,14f);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
                     case HeroId.Kaelon:
@@ -302,8 +303,8 @@ namespace Alterverse.Visuals
                 readyL.x+=guardLift;readyR.x+=guardLift;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
-                // Veyr keeps both blades crossed in a compact guard; ApplyAttackPose resets
-                // weapon transforms each frame before attacks, so restore this only at rest.
+                // Keep both blades crossed: the offhand weapon takes the shield position.
+                // Weapon positions remain fixed through locomotion; only attacks pose them.
                 if(hero==HeroId.Veyr)
                 {
                     if(weaponL!=null)weaponL.localRotation=weaponRestL*Quaternion.Euler(4f,0f,-50f);
