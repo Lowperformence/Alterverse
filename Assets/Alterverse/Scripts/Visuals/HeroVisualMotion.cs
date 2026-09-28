@@ -747,7 +747,9 @@ namespace Alterverse.Visuals
             =>right?new Vector3(-42f,10f,24f):new Vector3(-18f,-12f,-32f);
 
         private static Quaternion VeyrGuardBlade(bool right)
-            =>right?Quaternion.Euler(-18f,22f,48f):Quaternion.Euler(16f,-24f,-48f);
+            // The blade axes face forward: positive yaw turns the left blade right, negative yaw turns the right blade left.
+            // Increase the previous 24/22-degree yaw magnitudes by 40% for the in-game X guard.
+            =>right?Quaternion.Euler(-18f,-30.8f,48f):Quaternion.Euler(16f,33.6f,-48f);
 
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress,float windupProgress,float attackWeight)
         {
