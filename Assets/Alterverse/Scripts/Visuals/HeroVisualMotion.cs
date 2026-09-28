@@ -74,7 +74,7 @@ namespace Alterverse.Visuals
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
             attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
-            attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:.62f;windupUntil=0;windupDuration=0;
+            attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:hero==HeroId.Veyr?1f:.62f;windupUntil=0;windupDuration=0;
             attackStarted=Time.time;
         }
         public void PulseBasic(float windup)
@@ -287,7 +287,7 @@ namespace Alterverse.Visuals
                 {
                     case HeroId.Veyr:
                         // Sword-and-shield reference posture. The offhand blade fills the shield lane.
-                        readyL=new Vector3(-36f,0f,-14f);readyR=new Vector3(-36f,0f,14f);break;
+                        readyL=new Vector3(-28f,0f,-10f);readyR=new Vector3(-28f,0f,10f);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
                     case HeroId.Kaelon:
@@ -444,10 +444,10 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        attackPitch=4f*anticipation-12f*kick;
-                        attackTwist=attackSide*(-17f*anticipation+25f*kick);
-                        hipTwist=attackSide*(-7f*anticipation+11f*kick);
-                        attackRoll=attackSide*(4f*anticipation-6f*kick);
+                        attackPitch=7f*anticipation-18f*kick;
+                        attackTwist=attackSide*(-30f*anticipation+42f*kick);
+                        hipTwist=attackSide*(-12f*anticipation+20f*kick);
+                        attackRoll=attackSide*(7f*anticipation-11f*kick);
                         break;
                     case HeroId.Kaelon:
                         attackPitch=8f*anticipation-16f*kick;
@@ -675,12 +675,12 @@ namespace Alterverse.Visuals
                     if(abilitySlot==2)break; // Dash has its own presentation.
                     bool right=attackSerial%2!=0;
                     bool dual=abilitySlot==3;
-                    PoseStrike(armR,armRestR,new Vector3(-30,-38,-40),new Vector3(-88,32,12),new Vector3(-48,58,25),
-                        preparation,progress,right||dual?1:.30f);
-                    PoseStrike(armL,armRestL,new Vector3(-30,38,40),new Vector3(-88,-32,-12),new Vector3(-48,-58,-25),
-                        preparation,progress,!right||dual?1:.30f);
-                    PoseStrike(weaponR,weaponRestR,new Vector3(12,-20,-20),new Vector3(32,20,15),new Vector3(48,32,25),preparation,progress,right||dual?1:.30f);
-                    PoseStrike(weaponL,weaponRestL,new Vector3(12,20,20),new Vector3(32,-20,-15),new Vector3(48,-32,-25),preparation,progress,!right||dual?1:.30f);
+                    PoseStrike(armR,armRestR,new Vector3(-36,-46,-62),new Vector3(-102,56,14),new Vector3(-64,92,34),
+                        preparation,progress,right||dual?1:.12f);
+                    PoseStrike(armL,armRestL,new Vector3(-36,46,62),new Vector3(-102,-56,-14),new Vector3(-64,-92,-34),
+                        preparation,progress,!right||dual?1:.12f);
+                    PoseStrike(weaponR,weaponRestR,new Vector3(-20,-26,-30),new Vector3(-15,62,22),new Vector3(-34,94,38),preparation,progress,right||dual?1:.12f);
+                    PoseStrike(weaponL,weaponRestL,new Vector3(-20,26,30),new Vector3(-15,-62,-22),new Vector3(-34,-94,-38),preparation,progress,!right||dual?1:.12f);
                     break;
                 case HeroId.Kaelon:
                     if(abilitySlot==1)
