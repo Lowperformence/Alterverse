@@ -73,6 +73,7 @@ namespace Alterverse.Combat
         private Vector3 bearBodyRest,bearBarrelRest;
         private float bearMoveBlend;
         private float moonGaitPhase,skeletonGaitPhase,xenoGaitPhase,bearGaitPhase;
+        private float skeletonAttackKick,spiderAttackKick,bearAttackKick;
         private Vector3 lastMovementSample;
         private bool movementSampleReady;
         private Color bearEnergyBase=new(.28f,.94f,1f,1f);
@@ -314,6 +315,9 @@ namespace Alterverse.Combat
         private void ResolveShot()
         {
             shotPending=false;
+            if(marsSkeleton)skeletonAttackKick=1f;
+            if(noxaraSpider)spiderAttackKick=1f;
+            if(kryonBear)bearAttackKick=1f;
             Health victim=shotTarget;shotTarget=null;
             if(victim==null||victim.IsDead)return;
             TeamMember victimTeam=victim.GetComponent<TeamMember>();
@@ -578,9 +582,10 @@ namespace Alterverse.Combat
 
         private void AnimateSkeleton()
         {
+            skeletonAttackKick=Mathf.MoveTowards(skeletonAttackKick,0f,Time.deltaTime*7f);
             float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(skeletonGaitPhase)*skeletonMoveBlend;
             if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*30f,0,idle*1.5f);
-            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*30f-(shotPending?18f:0f),0,-idle*1.5f);
+            if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*30f-(shotPending?18f:0f)+skeletonAttackKick*24f,0,-idle*1.5f);
             if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*32f,0,0);
             if(skeletonRightLeg!=null)skeletonRightLeg.localRotation=skeletonRightLegBase*Quaternion.Euler(stride*32f,0,0);
             if(skeletonSkull!=null)skeletonSkull.localRotation=skeletonSkullBase*Quaternion.Euler(idle*1.2f,idle*2.4f,0);
@@ -712,8 +717,10 @@ namespace Alterverse.Combat
             float gaitBob=Mathf.Abs(Mathf.Sin(spiderGaitClock*Mathf.PI*4f))*.025f*spiderMoveBlend;
             float roll=support*1.15f*spiderMoveBlend-spiderTurnLean*.45f;
             float pitch=Mathf.Cos(spiderGaitClock*Mathf.PI*2f)*.55f*spiderMoveBlend;
-            spiderBodyRoot.localPosition=spiderBodyRest+Vector3.up*(gaitBob+idle*.006f);
-            spiderBodyRoot.localRotation=Quaternion.Euler(pitch,spiderVisualYaw,roll);
+            spiderAttackKick=Mathf.MoveTowards(spiderAttackKick,0f,Time.deltaTime*7f);
+            float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
+            spiderBodyRoot.localPosition=spiderBodyRest+Vector3.up*(gaitBob+idle*.006f+windup*.025f);
+            spiderBodyRoot.localRotation=Quaternion.Euler(pitch+windup*2.2f-spiderAttackKick*7.5f,spiderVisualYaw,roll);
 
             if(!spiderFeetInitialized)
             {
@@ -774,6 +781,8 @@ namespace Alterverse.Combat
             {
                 float pulse=1f+(shotPending?.16f:0f)+Mathf.Max(0,idle)*.03f;
                 barrelPivot.localScale=Vector3.one*pulse;
+                barrelPivot.localPosition=spiderBarrelRest+Vector3.back*(windup*.045f+spiderAttackKick*.12f);
+                barrelPivot.localRotation=Quaternion.Euler(-windup*8f+spiderAttackKick*28f,0,0);
             }
         }
 
@@ -948,22 +957,25 @@ namespace Alterverse.Combat
         private void AnimateKryonBear()
         {
             if(bearBodyRoot==null)return;
+            bearAttackKick=Mathf.MoveTowards(bearAttackKick,0f,Time.deltaTime*6.5f);
             float idle=Mathf.Sin(Time.time*1.55f);
+            float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
             float stride=Mathf.Sin(bearGaitPhase)*bearMoveBlend;
             float lift=(1f-Mathf.Cos(bearGaitPhase*2f))*.035f*bearMoveBlend;
             bearBodyRoot.localPosition=bearBodyRest+Vector3.up*(lift+idle*.006f);
-            bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(bearGaitPhase*2f)*.65f*bearMoveBlend,0,stride*.85f);
+            bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(bearGaitPhase*2f)*.65f*bearMoveBlend+windup*4f-bearAttackKick*10f,0,stride*.85f);
 
             for(int i=0;i<bearLegRoots.Length;i++)
             {
                 Transform leg=bearLegRoots[i];if(leg==null)continue;
                 float phase=(i==0||i==3?1f:-1f)*stride;
+                float attackLift=i<2?windup*8f-bearAttackKick*13f:windup*2f-bearAttackKick*4f;
                 float side=i%2==0?-1f:1f;
-                leg.localRotation=bearLegBase[i]*Quaternion.Euler(phase*34f,0,side*Mathf.Abs(phase)*3.5f);
+                leg.localRotation=bearLegBase[i]*Quaternion.Euler(phase*34f+attackLift,0,side*Mathf.Abs(phase)*3.5f);
             }
 
             if(bearHeadPivot!=null)
-                bearHeadPivot.localRotation=Quaternion.Euler(idle*1.2f,-stride*2.2f,0);
+                bearHeadPivot.localRotation=Quaternion.Euler(idle*1.2f+windup*5f-bearAttackKick*12f,-stride*2.2f,0);
             if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))
             {
                 float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
