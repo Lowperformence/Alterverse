@@ -206,7 +206,7 @@ namespace Alterverse.Visuals
             Vector3 velocity = delta / dt;
             float maxSpeed = robot ? 5f : 4f;
             velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
-            float moveAmount = Mathf.Clamp01(velocity.magnitude / (robot ? 1.1f : .75f));
+            float moveAmount = Mathf.InverseLerp(.08f, robot ? 1.1f : .75f, velocity.magnitude);
             gait = Mathf.Lerp(gait, moveAmount, 1f - Mathf.Exp(-16f * dt));
             float acceleration = Mathf.Clamp(Vector3.Dot(velocity - previousVelocity, transform.forward) / dt, -18f, 18f);
             previousVelocity = velocity;
@@ -217,8 +217,8 @@ namespace Alterverse.Visuals
             if (robot) { Pose(legL, legRestL, stride); Pose(legR, legRestR, -stride); }
             else
             {
-                StepInfantryFoot(footL, footPositionL, phase, gait);
-                StepInfantryFoot(footR, footPositionR, phase + Mathf.PI, gait);
+                StepInfantryFoot(footL, footPositionL, footRestL, phase, gait);
+                StepInfantryFoot(footR, footPositionR, footRestR, phase + Mathf.PI, gait);
                 AimInfantryLeg(legL, legPositionL, footL, legRestL);
                 AimInfantryLeg(legR, legPositionR, footR, legRestR);
             }
@@ -264,16 +264,17 @@ namespace Alterverse.Visuals
         }
 
         private static Quaternion Rest(Transform value) => value != null ? value.localRotation : Quaternion.identity;
-        private static void StepInfantryFoot(Transform foot, Vector3 rest, float angle, float weight)
+        private static void StepInfantryFoot(Transform foot, Vector3 rest, Quaternion rotation, float angle, float weight)
         {
             if (foot == null) return;
             float cycle = Mathf.Repeat(angle / (Mathf.PI * 2f), 1f);
             bool planted = cycle < .52f;
             float progress = planted ? cycle / .52f : (cycle - .52f) / .48f;
             float forward = planted ? Mathf.Lerp(.23f, -.23f, progress) : Mathf.SmoothStep(-.23f, .23f, progress);
-            float lift = planted ? 0f : Mathf.Sin(progress * Mathf.PI) * .29f;
+            float arc = planted ? 0f : Mathf.Sin(progress * Mathf.PI);
+            float lift = arc * arc * .29f;
             foot.localPosition = rest + new Vector3(0f, lift, forward) * weight;
-            foot.localRotation = Quaternion.Euler(planted ? 0f : -19f * Mathf.Sin(progress * Mathf.PI) * weight, 0f, 0f);
+            foot.localRotation = rotation * Quaternion.Euler(-19f * arc * arc * weight, 0f, 0f);
         }
         private static void AimInfantryLeg(Transform leg, Vector3 rest, Transform foot, Quaternion rotation)
         {
