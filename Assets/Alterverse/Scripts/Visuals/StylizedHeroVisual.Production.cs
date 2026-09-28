@@ -100,15 +100,15 @@ namespace Alterverse.Visuals
         {
             // Reference-driven ascendant healer: luminous white/silver robe, cyan holy energy,
             // elegant proportions, a halo language and a long ceremonial healing staff.
-            Color white=new(.88f,.91f,.92f,1f);
-            Color pearl=new(.72f,.80f,.82f,1f);
-            Color silver=new(.52f,.60f,.64f,1f);
-            Color cyan=new(.42f,.92f,1f,1f);
-            Color cyanHot=new(.78f,.98f,1f,1f);
-            Color gold=new(.72f,.58f,.24f,1f);
-            Color shadow=new(.105f,.13f,.15f,1f);
-            Color hair=new(.82f,.86f,.88f,1f);
-            Color skin=new(.70f,.56f,.50f,1f);
+            Color white=new(.80f,.74f,.64f,1f);
+            Color pearl=new(.48f,.35f,.30f,1f);
+            Color silver=new(.41f,.28f,.27f,1f);
+            Color cyan=new(1f,.68f,.22f,1f);
+            Color cyanHot=new(1f,.91f,.58f,1f);
+            Color gold=new(.90f,.60f,.21f,1f);
+            Color shadow=new(.12f,.085f,.11f,1f);
+            Color hair=new(.36f,.19f,.15f,1f);
+            Color skin=new(.62f,.50f,.59f,1f);
 
             Mesh torso=HeroMeshLibrary.Loft("DF_TahlaAscendantTorso",
                 new[]{-.38f,-.24f,-.05f,.17f,.35f,.49f},
@@ -118,6 +118,14 @@ namespace Alterverse.Visuals
             Sculpt("Torso",torso,new Vector3(0,.05f,0),new Vector3(.94f,1f,.94f),pearl);
             Plate("TahlaChest",new Vector3(0,.23f,.195f),.56f,.43f,.095f,white);
             Plate("TahlaChestInset",new Vector3(0,.22f,.252f),.34f,.29f,.030f,silver);
+            Plate("TahlaHeartFrame",new Vector3(0,.23f,.288f),.22f,.27f,.034f,gold);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Plate("TahlaCorsetRib"+side,new Vector3(side*.19f,-.05f,.20f),
+                    .19f,.34f,.07f,pearl,side*17);
+                Detail("TahlaCorsetTrim"+side,new Vector3(side*.23f,-.05f,.246f),
+                    new Vector3(.024f,.29f,.018f),gold,new Vector3(0,0,side*15),null,true);
+            }
             Detail("TahlaChestLight",new Vector3(0,.25f,.279f),new Vector3(.075f,.16f,.020f),cyanHot,new Vector3(0,0,45),null,true);
             Plate("TahlaWaist",new Vector3(0,-.12f,.145f),.40f,.22f,.075f,silver);
             Detail("TahlaWaistGem",new Vector3(0,-.21f,.196f),new Vector3(.075f,.085f,.022f),cyanHot,new Vector3(0,0,45),null,true);
@@ -169,6 +177,15 @@ namespace Alterverse.Visuals
 
                 Plate("TahlaShoulder"+s,new Vector3(side*.35f,.43f,.01f),.24f,.20f,.24f,white,side*-14);
                 Bind("TahlaShoulder"+s,"Arm"+s);
+                Plate("TahlaShoulderGold"+s,new Vector3(side*.43f,.53f,.035f),
+                    .34f,.19f,.32f,gold,side*-24);
+                Bind("TahlaShoulderGold"+s,"Arm"+s);
+                Plate("TahlaShoulderWing"+s,new Vector3(side*.55f,.45f,-.035f),
+                    .19f,.37f,.11f,gold,side*-26);
+                Bind("TahlaShoulderWing"+s,"Arm"+s);
+                Detail("TahlaShoulderGem"+s,new Vector3(side*.41f,.54f,.217f),
+                    new Vector3(.072f,.105f,.022f),cyanHot,new Vector3(0,0,45),null,true);
+                Bind("TahlaShoulderGem"+s,"Arm"+s);
                 Detail("TahlaWristLight"+s,new Vector3(0,-.39f,.105f),new Vector3(.055f,.12f,.020f),cyanHot,
                     new Vector3(0,0,side*8),"Arm"+s,true);
             }
@@ -182,6 +199,26 @@ namespace Alterverse.Visuals
                 new[]{new Vector3(0,-.14f,-.11f),new Vector3(0,-.42f,-.16f),new Vector3(0,-.73f,-.20f),new Vector3(0,-1.02f,-.22f)},
                 new[]{.20f,.29f,.32f,.23f},.025f);
             Sculpt("TahlaRobeBack",robeBack,Vector3.zero,Vector3.one,pearl);
+            // A continuous back drape hangs from the shoulders like a robe, with a narrow hem.
+            Mesh healerCape=HeroMeshLibrary.Ribbon("DF_TahlaBackDrape",
+                new[]{new Vector3(0,.42f,-.19f),new Vector3(0,.02f,-.24f),
+                    new Vector3(0,-.48f,-.29f),new Vector3(0,-.99f,-.34f)},
+                new[]{.26f,.34f,.38f,.37f},.030f);
+            Sculpt("TahlaBackDrape",healerCape,Vector3.zero,Vector3.one,pearl);
+            // Seams stay close to the drape instead of projecting outward as wings.
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh veil=HeroMeshLibrary.Ribbon("DF_TahlaGoldenVeil"+side,
+                    new[]{new Vector3(side*.23f,.40f,-.20f),new Vector3(side*.27f,.02f,-.255f),
+                        new Vector3(side*.31f,-.53f,-.305f),new Vector3(side*.30f,-.96f,-.355f)},
+                    new[]{.055f,.075f,.075f,.060f},.022f);
+                Sculpt("TahlaGoldenVeil"+side,veil,Vector3.zero,Vector3.one,white);
+                Mesh veilEdge=HeroMeshLibrary.Ribbon("DF_TahlaVeilEdge"+side,
+                    new[]{new Vector3(side*.28f,.31f,-.22f),new Vector3(side*.34f,-.04f,-.27f),
+                        new Vector3(side*.38f,-.55f,-.32f),new Vector3(side*.37f,-.96f,-.37f)},
+                    new[]{.012f,.015f,.017f,.016f},.008f);
+                Sculpt("TahlaVeilEdge"+side,veilEdge,Vector3.zero,Vector3.one,gold,null,true);
+            }
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh sideRobe=HeroMeshLibrary.Ribbon("DF_TahlaRobeSide"+side,
@@ -190,7 +227,9 @@ namespace Alterverse.Visuals
                     new[]{.09f,.13f,.14f,.08f},.022f);
                 Sculpt("TahlaRobeSide"+(side<0?"L":"R"),sideRobe,Vector3.zero,Vector3.one,silver);
             }
-            Detail("TahlaRobeLine",new Vector3(0,-.61f,.205f),new Vector3(.060f,.50f,.018f),cyan,default,null,true);
+            Detail("TahlaRobeLine",new Vector3(0,-.61f,.205f),new Vector3(.060f,.50f,.018f),gold,default,null,true);
+            Plate("TahlaHipGuardL",new Vector3(-.27f,-.28f,.16f),.21f,.30f,.10f,gold,-16);
+            Plate("TahlaHipGuardR",new Vector3(.27f,-.28f,.16f),.21f,.30f,.10f,gold,16);
             Detail("TahlaRobeGold",new Vector3(0,-.91f,.205f),new Vector3(.34f,.035f,.018f),gold);
 
             // Calm uncovered face framed by a small silver halo and pale hair.
@@ -212,6 +251,11 @@ namespace Alterverse.Visuals
                 new[]{.01f,.12f,.21f,.28f},new[]{.17f,.18f,.145f,.03f},
                 new[]{.14f,.15f,.13f,.04f},new[]{-.055f,-.043f,-.020f,-.014f});
             Sculpt("Hair",cap,hp,Vector3.one,hair);
+            Mesh hairSweep=HeroMeshLibrary.Ribbon("DF_TahlaHairSweep",
+                new[]{new Vector3(-.12f,1.02f,-.06f),new Vector3(.08f,.91f,-.13f),
+                    new Vector3(.36f,.79f,-.18f),new Vector3(.66f,.71f,-.25f)},
+                new[]{.10f,.13f,.13f,.045f},.032f);
+            Sculpt("TahlaHairSweep",hairSweep,Vector3.zero,Vector3.one,hair);
             for(int side=-1;side<=1;side+=2)
             {
                 Mesh strand=HeroMeshLibrary.Ribbon("DF_TahlaHairLock"+side,
@@ -224,12 +268,15 @@ namespace Alterverse.Visuals
                 hp+new Vector3(0,.15f,-.10f),Vector3.one,cyan,null,true);
             halo.transform.localRotation=Quaternion.Euler(76f,0f,0f);
 
-            // Subtle permanent floor aura sells the floating/lightborne read from top-down view.
-            GameObject groundHalo=Sculpt("TahlaGroundHalo",HeroMeshLibrary.Ring("DF_TahlaGroundHaloMesh",.42f,.018f),
-                new Vector3(0,-1.04f,0),Vector3.one,new Color(.55f,.96f,1f,1f),null,true);
-            groundHalo.transform.localRotation=Quaternion.Euler(90f,0f,0f);
+            // No permanent floor ring: spells remain legible against the map.
 
             BuildTahlaLightStaff(silver,white,gold,cyan,cyanHot);
+            GameObject spellFocus=Sculpt("TahlaSpellFocus",
+                HeroMeshLibrary.Ring("DF_TahlaSpellFocusMesh",.22f,.024f),
+                new Vector3(-.60f,-.04f,.37f),Vector3.one,cyan,null,true);
+            spellFocus.transform.localRotation=Quaternion.Euler(68f,0,-20f);
+            Detail("TahlaSpellCore",new Vector3(-.60f,-.04f,.39f),
+                new Vector3(.10f,.10f,.032f),cyanHot,new Vector3(0,0,45),null,true);
             Detail("IdentityCore",new Vector3(0,.25f,.284f),new Vector3(.065f,.13f,.022f),cyanHot,new Vector3(0,0,45),null,true);
         }
 
@@ -261,6 +308,9 @@ namespace Alterverse.Visuals
                 new[]{.010f,.085f,.060f,.004f},
                 new[]{.010f,.068f,.052f,.004f});
             Sculpt("EmitterLens",crystal,new Vector3(0,.77f,.065f),new Vector3(1.15f,1.20f,1.10f),cyanHot,weapon,true);
+            GameObject halo=Sculpt("StaffCrownOuter",HeroMeshLibrary.Ring("DF_TahlaStaffOuter",.31f,.014f),
+                new Vector3(0,.77f,.055f),Vector3.one,gold,weapon);
+            halo.transform.localRotation=Quaternion.Euler(70f,0f,-23f);
 
             for(int side=-1;side<=1;side+=2)
             {
@@ -418,6 +468,8 @@ namespace Alterverse.Visuals
                 new Vector3(.060f,.52f,.060f),steel,new Vector3(90,0,0),weapon);
             Create("MuzzleBrake",PrimitiveType.Cube,new Vector3(0,.015f,1.28f),
                 new Vector3(.16f,.14f,.22f),black,default,weapon);
+            Create("MuzzleCrown",PrimitiveType.Cube,new Vector3(0,.015f,1.345f),
+                new Vector3(.085f,.075f,.085f),redHot,default,weapon);
             Create("RifleMagazine",PrimitiveType.Cube,new Vector3(0,-.18f,.10f),
                 new Vector3(.15f,.27f,.24f),black,new Vector3(-12,0,0),weapon);
 
@@ -513,6 +565,9 @@ namespace Alterverse.Visuals
                 Plate("BrakkShin"+s,new Vector3(side*legX,-.74f,.12f),.31f,.33f,.12f,yellowDark,side*3,"Leg"+s);
                 Plate("BrakkThigh"+s,new Vector3(side*legX,-.39f,.13f),.34f,.35f,.12f,yellow,side*-7,"Leg"+s);
                 Detail("BrakkKneeHub"+s,new Vector3(side*legX,-.57f,.235f),new Vector3(.12f,.12f,.035f),jointMetal,default,"Leg"+s);
+                Detail("BrakkKneeBearing"+s,new Vector3(side*legX,-.57f,.258f),new Vector3(.075f,.075f,.022f),reactor,default,"Leg"+s,true);
+                Detail("BrakkAnkleServo"+s,new Vector3(side*legX,-.85f,.12f),new Vector3(.16f,.10f,.12f),jointMetal,default,"Leg"+s);
+                Detail("BrakkToeGuard"+s,new Vector3(side*legX,-.94f,.208f),new Vector3(.25f,.10f,.07f),yellow,default,"Boot"+s);
 
                 Transform arm=new GameObject("DF_Arm"+s).transform;
                 arm.SetParent(root,false);
@@ -535,6 +590,9 @@ namespace Alterverse.Visuals
                 // so the torso, head and gauntlets remain readable from the gameplay camera.
                 Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.34f,.23f,.26f,yellow,side*-10);
                 Bind("BrakkShoulder"+s,"Arm"+s);
+                Detail("BrakkShoulderBearing"+s,new Vector3(side*.58f,.41f,.16f),new Vector3(.17f,.17f,.09f),jointMetal,default,"Arm"+s);
+                Detail("BrakkShoulderBearingLight"+s,new Vector3(side*.58f,.41f,.212f),new Vector3(.07f,.07f,.025f),reactor,default,"Arm"+s,true);
+                Detail("BrakkElbowPiston"+s,new Vector3(side*.56f,.06f,.12f),new Vector3(.11f,.22f,.10f),edgeMetal,new Vector3(0,0,side*12),"Arm"+s);
                 Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.15f),new Vector3(.125f,.0225f,.015f),blackMetal,
                     new Vector3(0,0,side*-14),"Arm"+s);
             }
@@ -588,6 +646,8 @@ namespace Alterverse.Visuals
                     new Vector3(.32f,.13f,.045f),yellow,default,"Gauntlet"+s);
                 Detail("BrakkFistSide"+s,p+new Vector3(side*.17f,.02f,.15f),
                     new Vector3(.065f,.22f,.16f),blackMetal,new Vector3(0,0,side*8),"Gauntlet"+s);
+                Detail("BrakkImpactEdge"+s,p+new Vector3(0,-.08f,.328f),
+                    new Vector3(.25f,.035f,.022f),reactorHot,default,"Gauntlet"+s,true);
             }
 
             Detail("IdentityCore",new Vector3(0,.20f,.407f),new Vector3(.065f,.065f,.018f),reactorHot,
@@ -707,15 +767,19 @@ namespace Alterverse.Visuals
                 Sculpt("VeyrHairLock"+(side<0?"L":"R"),lockMesh,Vector3.zero,Vector3.one,hair);
             }
 
-            // Symmetrical outer mantle tails: identical length, width and curve on both sides,
-            // mirrored around the character centerline. "Cape" name is preserved for existing motion.
+            // The assassin's mantle falls as one narrow back panel with subtle edge folds.
+            Mesh backCape=HeroMeshLibrary.Ribbon("DF_VeyrBackMantle",
+                new[]{new Vector3(0,.18f,-.19f),new Vector3(0,-.18f,-.25f),new Vector3(0,-.51f,-.30f),new Vector3(0,-.86f,-.35f)},
+                new[]{.25f,.32f,.35f,.32f},.025f);
+            Sculpt("VeyrBackMantle",backCape,Vector3.zero,Vector3.one,leather);
+            // "Cape" name is preserved for the motion rig.
             Mesh cape=HeroMeshLibrary.Ribbon("DF_VeyrCape",
-                new[]{new Vector3(-.15f,.10f,-.16f),new Vector3(-.22f,-.22f,-.23f),new Vector3(-.35f,-.50f,-.29f),new Vector3(-.47f,-.78f,-.34f)},
-                new[]{.11f,.16f,.14f,.045f},.020f);
+                new[]{new Vector3(-.22f,.10f,-.20f),new Vector3(-.27f,-.22f,-.26f),new Vector3(-.31f,-.50f,-.31f),new Vector3(-.30f,-.82f,-.36f)},
+                new[]{.06f,.065f,.06f,.045f},.020f);
             Sculpt("Cape",cape,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh tailR=HeroMeshLibrary.Ribbon("DF_VeyrTailR",
-                new[]{new Vector3(.15f,.10f,-.16f),new Vector3(.22f,-.22f,-.23f),new Vector3(.35f,-.50f,-.29f),new Vector3(.47f,-.78f,-.34f)},
-                new[]{.11f,.16f,.14f,.045f},.020f);
+                new[]{new Vector3(.22f,.10f,-.20f),new Vector3(.27f,-.22f,-.26f),new Vector3(.31f,-.50f,-.31f),new Vector3(.30f,-.82f,-.36f)},
+                new[]{.06f,.065f,.06f,.045f},.020f);
             Sculpt("CoatTailR",tailR,Vector3.zero,Vector3.one,violetHot,null,true);
             Mesh centerTail=HeroMeshLibrary.Ribbon("DF_VeyrCenterTail",
                 new[]{new Vector3(.00f,.05f,-.18f),new Vector3(.04f,-.28f,-.24f),new Vector3(-.02f,-.58f,-.30f),new Vector3(.08f,-.83f,-.35f)},
@@ -812,7 +876,8 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Transform weapon=WeaponPivot(s,new Vector3(side*.43f,-.19f,.16f));
+                // Seat each hilt at its inward-canted wrist so the grip sits inside the glove.
+                Transform weapon=WeaponPivot(s,new Vector3(side*.235f,-.20f,.09f));
                 weapon.localRotation=Quaternion.Euler(6f,side*-7f,side*-10f);
 
                 Mesh blade=HeroMeshLibrary.Ribbon("DF_ShadowSteelBlade"+s,
@@ -828,6 +893,11 @@ namespace Alterverse.Visuals
                         new Vector3(side*.125f,-.63f,1.255f)},
                     new[]{.014f,.019f,.016f,.011f,.001f},.014f);
                 Sculpt("BladeEdge"+s,energyEdge,Vector3.zero,Vector3.one,edge,weapon,true);
+                Mesh fuller=HeroMeshLibrary.Ribbon("DF_ShadowSteelFuller"+s,
+                    new[]{new Vector3(0,-.15f,.09f),new Vector3(side*.041f,-.29f,.35f),
+                        new Vector3(side*.088f,-.45f,.72f),new Vector3(side*.14f,-.57f,1.05f)},
+                    new[]{.013f,.018f,.013f,.002f},.006f);
+                Sculpt("BladeFuller"+s,fuller,new Vector3(0,0,.027f),Vector3.one,bladeSpine,weapon);
 
                 Detail("Hilt"+s,new Vector3(0,-.015f,-.035f),new Vector3(.105f,.235f,.105f),bladeSpine,default,"Weapon"+s);
                 Detail("Guard"+s,new Vector3(0,-.115f,.060f),new Vector3(.28f,.050f,.12f),bladeMetal,new Vector3(0,0,side*8f),"Weapon"+s);
@@ -837,15 +907,19 @@ namespace Alterverse.Visuals
         }
         private void BuildKaelonReferenceArmor(Color metal,Color trim)
         {
-            Color under=new(.105f,.082f,.060f,1f);
-            Color steelLight=new(.68f,.69f,.68f,1f);
-            Color steelDark=new(.29f,.30f,.30f,1f);
+            Color under=new(.065f,.075f,.105f,1f);
+            Color steelLight=new(.76f,.76f,.70f,1f);
+            Color steelDark=new(.23f,.25f,.31f,1f);
+            Color regaliaGold=new(.82f,.54f,.15f,1f);
+            Color jade=new(.20f,.78f,.58f,1f);
 
             // Layered chest slab and high collar: big shapes first for mobile/top-down readability.
             Plate("KaelonChestSlab",new Vector3(0,.24f,.285f),.95f,.53f,.15f,steelLight);
             Plate("KaelonChestInset",new Vector3(0,.20f,.373f),.62f,.34f,.045f,steelDark);
-            Detail("KaelonChestBrace",new Vector3(0,.19f,.407f),new Vector3(.095f,.30f,.025f),trim,default,null,false);
-            Detail("KaelonChestCore",new Vector3(0,.29f,.430f),new Vector3(.075f,.13f,.024f),teamEdge,new Vector3(0,0,45),null,true);
+            Detail("KaelonChestBrace",new Vector3(0,.19f,.407f),new Vector3(.095f,.30f,.025f),regaliaGold,default,null,false);
+            Detail("KaelonChestCore",new Vector3(0,.29f,.430f),new Vector3(.075f,.13f,.024f),jade,new Vector3(0,0,45),null,true);
+            Detail("KaelonBreastSeal",new Vector3(0,.29f,.438f),new Vector3(.16f,.18f,.025f),regaliaGold,new Vector3(0,0,45));
+            Detail("KaelonSealLight",new Vector3(0,.29f,.456f),new Vector3(.065f,.09f,.018f),jade,new Vector3(0,0,45),null,true);
             Plate("KaelonCollarL",new Vector3(-.29f,.54f,.11f),.34f,.24f,.30f,metal,-13);
             Plate("KaelonCollarR",new Vector3(.29f,.54f,.11f),.34f,.24f,.30f,metal,13);
 
@@ -853,8 +927,9 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.252f,.2912f,.3752f,metal,side*-7);
+                Plate("KaelonPauldronOuter"+s,new Vector3(side*.69f,.48f,.00f),.252f,.2912f,.3752f,regaliaGold,side*-7);
                 Plate("KaelonPauldronTop"+s,new Vector3(side*.63f,.69f,.00f),.2184f,.112f,.3304f,steelLight,side*-9);
+                Detail("KaelonPauldronPin"+s,new Vector3(side*.69f,.49f,.201f),new Vector3(.09f,.09f,.025f),jade,new Vector3(0,0,45),null,true);
                 Detail("KaelonShoulderVent"+s,new Vector3(side*.71f,.51f,.198f),new Vector3(.1008f,.056f,.014f),steelDark,default,null,false);
 
                 // Root-space detail is bound after creation so it follows the arm rig.
@@ -876,9 +951,11 @@ namespace Alterverse.Visuals
             // It preserves the tank read while letting the hammer dominate the silhouette like the reference.
             var guard=WeaponPivot("L",new Vector3(-.53f,-.05f,.18f));
             guard.localRotation=Quaternion.Euler(0,0,8f);
-            Create("BreachGuard",PrimitiveType.Cube,new Vector3(0,.08f,.05f),new Vector3(.34f,.54f,.25f),metal,default,guard);
-            Create("BreachGuardInset",PrimitiveType.Cube,new Vector3(0,.08f,.19f),new Vector3(.20f,.31f,.035f),trim,default,guard);
-            Create("BreachGuardRail",PrimitiveType.Cube,new Vector3(0,.08f,.216f),new Vector3(.07f,.24f,.018f),teamEdge,default,guard);
+            Create("BreachGuard",PrimitiveType.Cube,new Vector3(0,.08f,.05f),new Vector3(.38f,.62f,.28f),metal,default,guard);
+            Create("BreachGuardGoldRim",PrimitiveType.Cube,new Vector3(0,.08f,.204f),new Vector3(.31f,.53f,.035f),new Color(.82f,.54f,.15f),default,guard);
+            Create("BreachGuardInset",PrimitiveType.Cube,new Vector3(0,.08f,.226f),new Vector3(.24f,.43f,.035f),trim,default,guard);
+            Create("BreachGuardRail",PrimitiveType.Cube,new Vector3(0,.08f,.249f),new Vector3(.065f,.28f,.018f),teamEdge,default,guard);
+            Create("BreachGuardCore",PrimitiveType.Cube,new Vector3(0,.08f,.264f),new Vector3(.12f,.12f,.018f),new Color(.20f,.78f,.58f),new Vector3(0,0,45),guard);
 
             var weapon=WeaponPivot("R",new Vector3(.57f,-.20f,.18f));
             weapon.localRotation=Quaternion.Euler(0,-5f,-16f);
@@ -893,6 +970,8 @@ namespace Alterverse.Visuals
             Create("AnchorHead",PrimitiveType.Cube,new Vector3(0,.54f,.03f),new Vector3(.86f,.43f,.48f),metal,default,weapon);
             Create("HammerFace",PrimitiveType.Cube,new Vector3(0,.54f,.285f),new Vector3(.60f,.30f,.055f),new Color(.31f,.32f,.32f),default,weapon);
             Create("HammerTopPlate",PrimitiveType.Cube,new Vector3(0,.79f,.02f),new Vector3(.64f,.09f,.40f),new Color(.69f,.69f,.67f),default,weapon);
+            Create("HammerPowerSpine",PrimitiveType.Cube,new Vector3(0,.82f,.03f),new Vector3(.11f,.035f,.35f),accent,default,weapon);
+            Create("HammerStrikeLens",PrimitiveType.Cube,new Vector3(0,.54f,.326f),new Vector3(.34f,.12f,.024f),teamEdge,default,weapon);
             for(int side=-1;side<=1;side+=2)
             {
                 Create("HammerCheek"+side,PrimitiveType.Cube,new Vector3(side*.47f,.54f,.01f),new Vector3(.12f,.34f,.40f),trim,

@@ -56,12 +56,12 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
 
     void BuildSurface()
     {
-        const int xSeg=84,zSeg=72;
+        const int xSeg=144,zSeg=128;
         Vector3[] v=new Vector3[(xSeg+1)*(zSeg+1)];Vector2[] uv=new Vector2[v.Length];
         int[] t=new int[xSeg*zSeg*6];
         for(int z=0;z<=zSeg;z++)for(int x=0;x<=xSeg;x++)
         {
-            int i=z*(xSeg+1)+x;float px=-42+x,pz=-36+z;
+            int i=z*(xSeg+1)+x;float px=-42+84f*x/xSeg,pz=-36+72f*z/zSeg;
             // Small interior jitter breaks regular triangulation while boundary samples remain shared with the cliff.
             if(x>0&&x<xSeg&&z>0&&z<zSeg){px+=Mathf.Sin(x*13.1f+z*7.7f)*.16f;pz+=Mathf.Sin(x*5.3f-z*11.9f)*.16f;}
             v[i]=LunarSurfaceField.Surface(px,pz);uv[i]=new Vector2((v[i].x+48)/96,(v[i].z+42)/84);
@@ -73,7 +73,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         LunarSurfaceField.Bake(out surfaceAlbedo,out surfaceNormals);
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);regolith.SetTexture("_MainTex",surfaceAlbedo);
-        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",.8f);regolith.EnableKeyword("_NORMALMAP");
+        regolith.SetTexture("_BumpMap",surfaceNormals);regolith.SetFloat("_BumpScale",1.05f);regolith.EnableKeyword("_NORMALMAP");
         string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
             ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":

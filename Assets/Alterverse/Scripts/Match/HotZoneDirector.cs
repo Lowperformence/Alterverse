@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Visuals;
@@ -194,6 +195,8 @@ namespace Alterverse.Match
             if(front!=null&&front.HasEnded){ResolveNoReward();return;}
 
             int winner=zeroTime>lumenTime+.05f?0:lumenTime>zeroTime+.05f?1:-1;
+            RecordWinningParticipants(winner);
+
             if(winner>=0&&!rewardIssued)
                 rewardIssued=HotZoneTank.Spawn(winner);
 
@@ -212,6 +215,31 @@ namespace Alterverse.Match
             zeroInside=lumenInside=0;
             state=State.Waiting;
             do nextOpenAt+=SpawnInterval; while(nextOpenAt<=elapsed);
+        }
+
+        private void RecordWinningParticipants(int winner)
+        {
+            if (winner < 0)
+                return;
+
+            float radiusSquared = Radius * Radius;
+            IReadOnlyList<Health> heroes = Health.Active;
+            for (int i = 0; i < heroes.Count; i++)
+            {
+                Health hero = heroes[i];
+                if (hero == null || hero.IsDead || !hero.isActiveAndEnabled ||
+                    hero.GetComponent<HeroIdentity>() == null)
+                    continue;
+
+                TeamMember member = hero.GetComponent<TeamMember>();
+                if (member == null || member.Team != winner)
+                    continue;
+
+                Vector3 offset = hero.transform.position - transform.position;
+                offset.y = 0f;
+                if (offset.sqrMagnitude <= radiusSquared)
+                    MatchTelemetry.Instance?.RecordHotZoneCapture(hero);
+            }
         }
 
         public void ApplyNetworkOpen(Vector3 position,int occurrenceIndex)
@@ -234,6 +262,7 @@ namespace Alterverse.Match
             occurrence=Mathf.Max(0,occurrenceIndex);
             zeroTime=Mathf.Max(0,zeroScore);lumenTime=Mathf.Max(0,lumenScore);
             rewardIssued=winner>=0;
+            RecordWinningParticipants(winner);
             if(winner>=0)HotZoneTank.Spawn(winner);
 
             Color resolutionColor=winner==0?StylizedArtDirection.ZeroEnergy:
@@ -304,6 +333,23 @@ namespace Alterverse.Match
             zoneRoot.transform.Rotate(0,9f*Time.deltaTime,0,Space.World);
             float pulse=1f+Mathf.Sin(Time.time*4.2f)*.028f;
             if(pulseRing!=null)pulseRing.localScale=new Vector3(pulse,1,pulse);
+            // Keep each ring just above the uneven arena surface as the zone rotates.
+            RaiseRingAboveGround(pulseRing);
+            RaiseRingAboveGround(innerRing);
+            RaiseRingAboveGround(zoneRoot.transform.Find("DF_HotZoneCoreRing"));
+        }
+
+        private static void RaiseRingAboveGround(Transform ring)
+        {
+            if(ring==null||!ring.TryGetComponent(out LineRenderer line))return;
+            for(int i=0;i<line.positionCount;i++)
+            {
+                Vector3 point=line.GetPosition(i);
+                Vector3 world=ring.TransformPoint(new Vector3(point.x,0,point.z));
+                float height=LunarSurfaceField.Surface(world.x,world.z).y+.24f;
+                point.y=ring.InverseTransformPoint(new Vector3(world.x,height,world.z)).y;
+                line.SetPosition(i,point);
+            }
         }
 
         private static Material CreateMaterial(Shader shader,Color color,float emission)

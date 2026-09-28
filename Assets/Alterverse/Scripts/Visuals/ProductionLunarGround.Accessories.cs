@@ -56,8 +56,8 @@ namespace Alterverse.Visuals
         void EnsureAccessoryAssets()
         {
             if(accessoryBox!=null)return;
-            machineMetal=Mat(new Color(.17f,.19f,.22f,1),.58f,.24f);
-            machineDark=Mat(new Color(.07f,.08f,.095f,1),.42f,.16f);
+            machineMetal=Mat(new Color(.20f,.23f,.28f,1),.65f,.43f);
+            machineDark=Mat(new Color(.075f,.09f,.12f,1),.47f,.28f);
             accessoryBox=CreateAccessoryBox();
             accessoryCylinder=ProductionMeshFactory.Disc(.5f,.5f,8);
             accessoryRing=ProductionMeshFactory.Ring(.55f,.065f,16,6);
@@ -71,6 +71,8 @@ namespace Alterverse.Visuals
             Part("DF_MaintenanceBot_Body",accessoryBox,machineMetal,anchor,facing,new Vector3(0,.52f,0),new Vector3(.72f,.5f,.58f));
             Part("DF_MaintenanceBot_Head",accessoryBox,machineDark,anchor,facing,new Vector3(0,1.02f,.08f),new Vector3(.48f,.28f,.42f));
             Part("DF_MaintenanceBot_Sensor",accessoryCylinder,energy,anchor,facing*Quaternion.Euler(90,0,0),new Vector3(.18f,1.08f,.31f),new Vector3(.13f,.1f,.13f));
+            Part("DF_MaintenanceBot_Visor",accessoryBox,energy,anchor,facing,new Vector3(0,1.02f,.295f),new Vector3(.35f,.065f,.035f));
+            Part("DF_MaintenanceBot_Spine",accessoryBox,machineDark,anchor,facing,new Vector3(0,.80f,-.28f),new Vector3(.38f,.42f,.12f));
             Part("DF_MaintenanceBot_TrackL",accessoryBox,machineDark,anchor,facing,new Vector3(-.48f,.28f,0),new Vector3(.2f,.27f,.76f));
             Part("DF_MaintenanceBot_TrackR",accessoryBox,machineDark,anchor,facing,new Vector3(.48f,.28f,0),new Vector3(.2f,.27f,.76f));
             float armTilt=damaged?34f:-18f;
@@ -87,6 +89,8 @@ namespace Alterverse.Visuals
             Part("DF_Scanner_Mast",accessoryCylinder,machineMetal,anchor,facing,new Vector3(0,1.35f,0),new Vector3(.11f,2.5f,.11f));
             Part("DF_Scanner_Array",accessoryRing,machineMetal,anchor,facing*Quaternion.Euler(90,damaged?18f:0,0),new Vector3(0,2.45f,0),new Vector3(1.15f,1.15f,1.15f));
             Part("DF_Scanner_Core",accessoryCylinder,energy,anchor,facing,new Vector3(0,2.45f,0),new Vector3(.2f,.18f,.2f));
+            Part("DF_Scanner_InnerHalo",accessoryRing,energy,anchor,facing*Quaternion.Euler(90,damaged?18f:0,0),new Vector3(0,2.45f,0),new Vector3(.72f,.72f,.72f));
+            Part("DF_Scanner_MastCollar",accessoryCylinder,machineDark,anchor,facing,new Vector3(0,1.78f,0),new Vector3(.22f,.16f,.22f));
             Part("DF_Scanner_Panel",accessoryBox,machineDark,anchor,facing*Quaternion.Euler(damaged?26f:-12f,0,0),new Vector3(.82f,.78f,.08f),new Vector3(.7f,.07f,.46f));
         }
 
@@ -99,6 +103,9 @@ namespace Alterverse.Visuals
             Part("DF_FieldGenerator_CoilL",accessoryCylinder,machineDark,anchor,facing*Quaternion.Euler(90,0,0),new Vector3(-.56f,.72f,0),new Vector3(.24f,.56f,.24f));
             Part("DF_FieldGenerator_CoilR",accessoryCylinder,machineDark,anchor,facing*Quaternion.Euler(90,0,0),new Vector3(.56f,.72f,0),new Vector3(.24f,.56f,.24f));
             Part("DF_FieldGenerator_Core",accessoryCylinder,energy,anchor,facing,new Vector3(0,1.02f,0),new Vector3(.24f,.18f,.24f));
+            Part("DF_FieldGenerator_Containment",accessoryRing,energy,anchor,facing,new Vector3(0,1.035f,0),new Vector3(.80f,.80f,.80f));
+            Part("DF_FieldGenerator_ArmorL",accessoryBox,machineMetal,anchor,facing,new Vector3(-.48f,.68f,.38f),new Vector3(.22f,.38f,.10f));
+            Part("DF_FieldGenerator_ArmorR",accessoryBox,machineMetal,anchor,facing,new Vector3(.48f,.68f,.38f),new Vector3(.22f,.38f,.10f));
             if(damaged)
                 Part("DF_FieldGenerator_BrokenCover",accessoryBox,machineMetal,anchor,facing*Quaternion.Euler(15,-22,12),new Vector3(1.08f,.11f,.45f),new Vector3(.62f,.06f,.42f));
         }
@@ -115,6 +122,8 @@ namespace Alterverse.Visuals
                     new Vector3(side*.82f,.22f,axle*.53f),new Vector3(.32f,.18f,.32f));
             Part("DF_RoverWreck_Mast",accessoryCylinder,machineMetal,anchor,facing*Quaternion.Euler(0,0,42),new Vector3(-.42f,1.12f,.08f),new Vector3(.08f,.9f,.08f));
             Part("DF_RoverWreck_Beacon",accessoryCylinder,energy,anchor,facing,new Vector3(-.72f,1.42f,.08f),new Vector3(.13f,.1f,.13f));
+            Part("DF_RoverWreck_Armor",accessoryBox,machineMetal,anchor,facing,new Vector3(.12f,.66f,.43f),new Vector3(.92f,.09f,.12f));
+            Part("DF_RoverWreck_TailLight",accessoryBox,energy,anchor,facing,new Vector3(-.53f,.43f,-.405f),new Vector3(.32f,.065f,.035f));
         }
 
         void BuildSupplyCache(Vector2 site,float yaw,bool zero)
@@ -125,6 +134,8 @@ namespace Alterverse.Visuals
             Part("DF_SupplyCache_CrateA",accessoryBox,machineMetal,anchor,facing,new Vector3(-.34f,.43f,.05f),new Vector3(.46f,.32f,.42f));
             Part("DF_SupplyCache_CrateB",accessoryBox,machineMetal,anchor,facing*Quaternion.Euler(0,18f,0),new Vector3(.3f,.35f,-.12f),new Vector3(.4f,.25f,.36f));
             Part("DF_SupplyCache_Beacon",accessoryCylinder,energy,anchor,facing,new Vector3(.58f,.48f,.18f),new Vector3(.1f,.32f,.1f));
+            Part("DF_SupplyCache_SealA",accessoryBox,energy,anchor,facing,new Vector3(-.34f,.605f,.05f),new Vector3(.30f,.025f,.045f));
+            Part("DF_SupplyCache_SealB",accessoryBox,energy,anchor,facing*Quaternion.Euler(0,18f,0),new Vector3(.3f,.49f,-.12f),new Vector3(.26f,.025f,.045f));
         }
 
         void BuildDimensionalProbe(Vector2 site,float yaw,bool zero)
@@ -135,6 +146,7 @@ namespace Alterverse.Visuals
             Part("DF_DimensionProbe_Column",accessoryCylinder,machineMetal,anchor,facing,new Vector3(0,.88f,0),new Vector3(.13f,1.35f,.13f));
             Part("DF_DimensionProbe_Ring",accessoryRing,energy,anchor,facing,new Vector3(0,1.45f,0),new Vector3(.9f,.9f,.9f));
             Part("DF_DimensionProbe_Core",accessoryCylinder,energy,anchor,facing,new Vector3(0,1.45f,0),new Vector3(.18f,.32f,.18f));
+            Part("DF_DimensionProbe_Crown",accessoryRing,machineMetal,anchor,facing,new Vector3(0,1.78f,0),new Vector3(.55f,.55f,.55f));
             for(int i=0;i<3;i++)
             {
                 float angle=(yaw+i*120f)*Mathf.Deg2Rad;

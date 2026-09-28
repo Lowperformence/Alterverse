@@ -114,8 +114,8 @@ namespace Alterverse.Visuals
                 relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
 
                 float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
-                float interiorShadow=bowl*(moon?.135f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.92f);
-                float litRim=rim*(moon?.145f:.075f)*(1f+Mathf.Max(0f,lightSide)*.58f);
+                float interiorShadow=bowl*(moon?.075f:.07f)*(1f+Mathf.Max(0f,-lightSide)*.70f);
+                float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
                 tone+=litRim*eroded-interiorShadow;
                 craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
 
@@ -128,8 +128,8 @@ namespace Alterverse.Visuals
                 }
             }
 
-            tone-=craterWear*(moon?.065f:.026f);
-            dust=Mathf.Max(dust,craterWear*(moon?.48f:.28f));
+            tone-=craterWear*(moon?.025f:.026f);
+            dust=Mathf.Max(dust,craterWear*(moon?.36f:.28f));
 
             float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
             float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
@@ -142,7 +142,7 @@ namespace Alterverse.Visuals
                 float minRelief=Mathf.Lerp(-.30f,-.62f,outer);
                 float maxRelief=Mathf.Lerp(.17f,.28f,outer);
                 relief=Mathf.Clamp(relief,minRelief,maxRelief);
-                tone=Mathf.Clamp(tone,.16f,.74f);
+                tone=Mathf.Clamp(tone,.22f,.74f);
             }
             else
             {
@@ -161,7 +161,7 @@ namespace Alterverse.Visuals
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
         {
-            const int size=512;const float spanX=96,spanZ=84;
+            const int size=1536;const float spanX=96,spanZ=84;
             bool moon=IsMoon;
             Color32[] pixels=new Color32[size*size],normalPixels=new Color32[pixels.Length];float[] heights=new float[pixels.Length];
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
@@ -169,9 +169,18 @@ namespace Alterverse.Visuals
                 Sample(-48+spanX*x/(size-1),-42+spanZ*z/(size-1),out float h,out float tone,out float dust);
                 int i=z*size+x;heights[i]=h;
                 float value=moon
-                    ?Mathf.Lerp(.12f,.54f,Mathf.InverseLerp(.16f,.74f,tone))
+                    ?Mathf.Lerp(.20f,.62f,Mathf.InverseLerp(.22f,.74f,tone))
                     :Mathf.Lerp(.17f,.40f,Mathf.InverseLerp(.28f,.66f,tone));
-                value*=1f-dust*(moon?.105f:.055f);
+                value*=1f-dust*(moon?.055f:.055f);
+                // Fine mineral grain and broad, broken strata add material depth at gameplay scale.
+                // The modulation stays below the silhouette/height field, so collision and lanes are unchanged.
+                float wx=-48+spanX*x/(size-1),wz=-42+spanZ*z/(size-1);
+                float grain=Mathf.PerlinNoise(wx*2.7f+91f,wz*2.7f+47f)-.5f;
+                float strata=Mathf.PerlinNoise(wx*.34f+wz*.12f+13f,wz*.34f-wx*.08f+29f)-.5f;
+                float vein=Mathf.Abs(Mathf.PerlinNoise(wx*.48f+201f,wz*.48f+78f)-.5f);
+                value*=1f+grain*.12f+strata*.15f;
+                value+=Mathf.SmoothStep(.39f,.49f,vein)*(moon?.024f:.015f);
+                value=Mathf.Clamp01(value);
                 if(ArenaVariantRuntime.IsMars)
                 {
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.28f,.66f,tone));
@@ -201,7 +210,7 @@ namespace Alterverse.Visuals
                 }
             }
 
-            float normalStrength=moon?3.25f:1.8f;
+            float normalStrength=moon?2.4f:1.8f;
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));
@@ -209,8 +218,8 @@ namespace Alterverse.Visuals
                 Vector3 n=new Vector3(-dx*normalStrength,-dz*normalStrength,1).normalized;
                 normalPixels[z*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
             }
-            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
-            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=2};
+            albedo=new Texture2D(size,size,TextureFormat.RGBA32,true,false){name="DF_UniqueRegolithAlbedo",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
+            normals=new Texture2D(size,size,TextureFormat.RGBA32,true,true){name="DF_UniqueRegolithNormal",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear,anisoLevel=8};
             albedo.SetPixels32(pixels);albedo.Apply(true,true);normals.SetPixels32(normalPixels);normals.Apply(true,true);
         }
     }

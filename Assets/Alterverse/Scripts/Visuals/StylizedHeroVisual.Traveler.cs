@@ -11,10 +11,10 @@ namespace Alterverse.Visuals
         {
             Color voidBlack=new(.012f,.014f,.024f,1f);
             Color charcoal=new(.045f,.050f,.065f,1f);
-            Color chronosteel=new(.23f,.26f,.31f,1f);
-            Color paleGold=new(.94f,.82f,.54f,1f);
-            Color lightCore=new(.96f,.95f,.84f,1f);
-            Color paradoxRed=new(1f,.035f,.025f,1f);
+            Color chronosteel=new(.105f,.095f,.16f,1f);
+            Color paleGold=new(.50f,.28f,.78f,1f);
+            Color lightCore=new(.93f,.56f,1f,1f);
+            Color paradoxRed=new(.70f,.17f,.93f,1f);
 
             Mesh torso=HeroMeshLibrary.Loft("DF_TravelerTorso",
                 new[]{-.40f,-.24f,-.04f,.18f,.37f,.50f},
@@ -25,6 +25,15 @@ namespace Alterverse.Visuals
             Plate("TravelerChestL",new Vector3(-.15f,.23f,.205f),.37f,.43f,.105f,charcoal,-8);
             Plate("TravelerChestR",new Vector3(.15f,.23f,.205f),.37f,.43f,.105f,charcoal,8);
             Plate("TravelerGorget",new Vector3(0,.49f,.075f),.50f,.17f,.19f,chronosteel);
+            Plate("TravelerBreastKeel",new Vector3(0,.26f,.265f),.22f,.47f,.065f,chronosteel);
+            for(int side=-1;side<=1;side+=2)
+            {
+                string label=side<0?"L":"R";
+                Plate("TravelerRibArmor"+label,new Vector3(side*.18f,.08f,.225f),.27f,.16f,.065f,chronosteel,side*13);
+                Detail("TravelerRibCircuit"+label,new Vector3(side*.18f,.078f,.263f),
+                    new Vector3(.21f,.019f,.015f),paleGold,new Vector3(0,0,side*13),null,true);
+                Plate("TravelerWaistWing"+label,new Vector3(side*.26f,-.21f,.10f),.19f,.34f,.14f,charcoal,side*-13);
+            }
             Detail("TravelerChestLine",new Vector3(0,.24f,.292f),new Vector3(.040f,.30f,.018f),paleGold,default,null,true);
 
             GameObject chestOrbit=Sculpt("TravelerChestOrbit",HeroMeshLibrary.Ring("DF_TravelerChestOrbitMesh",.125f,.018f),
@@ -53,6 +62,8 @@ namespace Alterverse.Visuals
                 Sculpt("Boot"+suffix,boot,new Vector3(side*legX,-.94f,.024f),Vector3.one,chronosteel);
                 Plate("TravelerKnee"+suffix,new Vector3(side*legX,-.58f,.105f),.16f,.20f,.075f,chronosteel,side*-5,"Leg"+suffix);
                 Plate("TravelerShin"+suffix,new Vector3(side*legX,-.74f,.095f),.145f,.30f,.065f,charcoal,side*3,"Leg"+suffix);
+                Detail("TravelerGreaveEdge"+suffix,new Vector3(side*legX,-.76f,.138f),
+                    new Vector3(.024f,.22f,.018f),paleGold,default,"Leg"+suffix,true);
 
                 Transform arm=new GameObject("DF_Arm"+suffix).transform;
                 arm.SetParent(root,false);
@@ -80,6 +91,22 @@ namespace Alterverse.Visuals
                 Plate("TravelerShoulder"+suffix,new Vector3(side*.38f,.43f,0),.30f,.22f,.27f,
                     side<0?charcoal:chronosteel,side*-16);
                 Bind("TravelerShoulder"+suffix,"Arm"+suffix);
+                Plate("TravelerShoulderCrown"+suffix,new Vector3(side*.43f,.53f,.025f),
+                    .22f,.11f,.29f,paleGold,side*-16);
+                Bind("TravelerShoulderCrown"+suffix,"Arm"+suffix);
+                Mesh sleeve=HeroMeshLibrary.Ribbon("DF_TravelerSleeve"+suffix,
+                    new[]{new Vector3(0,.10f,-.11f),new Vector3(side*.045f,-.23f,-.16f),
+                        new Vector3(side*.11f,-.51f,-.19f),new Vector3(side*.17f,-.69f,-.20f)},
+                    new[]{.13f,.18f,.23f,.25f},.038f);
+                Sculpt("TravelerSleeve"+suffix,sleeve,Vector3.zero,Vector3.one,voidBlack,arm);
+                Mesh cuff=HeroMeshLibrary.Ring("DF_TravelerCuff"+suffix,.16f,.020f);
+                GameObject cuffPart=Sculpt("TravelerCuff"+suffix,cuff,
+                    new Vector3(0,-.47f,-.06f),Vector3.one,paleGold,arm,true);
+                cuffPart.transform.localRotation=Quaternion.Euler(85f,0,0);
+                Plate("TravelerVambraceShell"+suffix,new Vector3(0,-.33f,.078f),
+                    .17f,.24f,.095f,charcoal,side*8,"Arm"+suffix);
+                Detail("TravelerWristChronometer"+suffix,new Vector3(0,-.47f,.132f),
+                    new Vector3(.10f,.075f,.023f),lightCore,new Vector3(0,0,45),"Arm"+suffix,true);
                 Detail("TravelerArmChronoLine"+suffix,new Vector3(0,-.31f,.106f),
                     new Vector3(.026f,.19f,.015f),paleGold,new Vector3(0,0,side*7f),"Arm"+suffix,true);
             }
@@ -94,12 +121,17 @@ namespace Alterverse.Visuals
             Sculpt("Head",hood,headPos,new Vector3(1.08f,1.07f,1.06f),voidBlack);
             Sculpt("Neck",HeroMeshLibrary.Loft("DF_TravelerNeck",new[]{-.09f,.08f},new[]{.070f,.078f},new[]{.066f,.073f}),
                 new Vector3(0,.55f,0),Vector3.one,voidBlack);
-            Plate("TravelerFaceMask",headPos+new Vector3(0,-.025f,.166f),.33f,.30f,.062f,charcoal);
-            Detail("TravelerEyeL",headPos+new Vector3(-.072f,.055f,.205f),new Vector3(.095f,.022f,.014f),
-                paradoxRed,new Vector3(0,0,-7),null,true);
-            Detail("TravelerEyeR",headPos+new Vector3(.072f,.055f,.205f),new Vector3(.095f,.022f,.014f),
-                paradoxRed,new Vector3(0,0,7),null,true);
-            Plate("TravelerHoodBrow",headPos+new Vector3(0,.145f,.090f),.40f,.20f,.18f,voidBlack);
+            // Recess the face into the hood; a void and one energy lens replace the robot visor.
+            Plate("TravelerFaceMask",headPos+new Vector3(0,-.025f,.153f),.34f,.32f,.044f,voidBlack);
+            Detail("TravelerVoidLens",headPos+new Vector3(0,.055f,.187f),
+                new Vector3(.105f,.105f,.020f),lightCore,new Vector3(0,0,45),null,true);
+
+            Plate("TravelerHoodBrow",headPos+new Vector3(0,.16f,.19f),.53f,.23f,.24f,voidBlack);
+            Plate("TravelerHoodRidgeL",headPos+new Vector3(-.19f,.11f,.16f),.12f,.42f,.15f,charcoal,-20);
+            Plate("TravelerHoodRidgeR",headPos+new Vector3(.19f,.11f,.16f),.12f,.42f,.15f,charcoal,20);
+            Plate("TravelerHoodCrest",headPos+new Vector3(0,.229f,.098f),.21f,.13f,.16f,chronosteel);
+            Detail("TravelerHoodSigil",headPos+new Vector3(0,.227f,.189f),
+                new Vector3(.045f,.070f,.018f),paleGold,new Vector3(0,0,45),null,true);
             for(int side=-1;side<=1;side+=2)
                 Plate("TravelerHoodWing"+side,headPos+new Vector3(side*.19f,.08f,-.025f),.13f,.42f,.16f,charcoal,side*-12);
 
@@ -111,6 +143,13 @@ namespace Alterverse.Visuals
                     new Vector3(0,-1.02f,-.40f)},
                 new[]{.204f,.276f,.312f,.336f,.288f},.032f);
             Sculpt("TravelerMantleBack",mantleBack,Vector3.zero,Vector3.one,voidBlack);
+            Mesh mantleSpine=HeroMeshLibrary.Ribbon("DF_TravelerMantleSpine",
+                new[]{new Vector3(0,.32f,-.204f),new Vector3(0,-.12f,-.31f),
+                    new Vector3(0,-.61f,-.394f),new Vector3(0,-.98f,-.438f)},
+                new[]{.072f,.086f,.075f,.035f},.012f);
+            Sculpt("TravelerMantleSpine",mantleSpine,Vector3.zero,Vector3.one,chronosteel);
+            Detail("TravelerMantleSpineRune",new Vector3(0,-.31f,-.42f),
+                new Vector3(.044f,.24f,.018f),paleGold,default,null,true);
 
             Mesh mantleL=HeroMeshLibrary.Ribbon("DF_TravelerMantleL",
                 new[]{new Vector3(-.138f,.48f,-.05f),new Vector3(-.204f,.20f,-.14f),
@@ -118,6 +157,11 @@ namespace Alterverse.Visuals
                     new Vector3(-.378f,-1.00f,-.34f)},
                 new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleL",mantleL,Vector3.zero,Vector3.one,voidBlack);
+            Mesh robeFrontL=HeroMeshLibrary.Ribbon("DF_TravelerFrontL",
+                new[]{new Vector3(-.24f,.37f,.17f),new Vector3(-.30f,-.04f,.17f),
+                    new Vector3(-.35f,-.50f,.14f),new Vector3(-.42f,-1.00f,.12f)},
+                new[]{.12f,.16f,.21f,.24f},.035f);
+            Sculpt("TravelerFrontL",robeFrontL,Vector3.zero,Vector3.one,voidBlack);
 
             Mesh mantleR=HeroMeshLibrary.Ribbon("DF_TravelerMantleR",
                 new[]{new Vector3(.138f,.48f,-.05f),new Vector3(.204f,.20f,-.14f),
@@ -125,6 +169,23 @@ namespace Alterverse.Visuals
                     new Vector3(.378f,-1.00f,-.34f)},
                 new[]{.120f,.168f,.204f,.228f,.180f},.030f);
             Sculpt("TravelerMantleR",mantleR,Vector3.zero,Vector3.one,voidBlack);
+            Mesh robeFrontR=HeroMeshLibrary.Ribbon("DF_TravelerFrontR",
+                new[]{new Vector3(.24f,.37f,.17f),new Vector3(.30f,-.04f,.17f),
+                    new Vector3(.35f,-.50f,.14f),new Vector3(.42f,-1.00f,.12f)},
+                new[]{.12f,.16f,.21f,.24f},.035f);
+            Sculpt("TravelerFrontR",robeFrontR,Vector3.zero,Vector3.one,voidBlack);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh seam=HeroMeshLibrary.Ribbon("DF_TravelerMantleSeam"+side,
+                    new[]{new Vector3(side*.182f,.39f,-.060f),new Vector3(side*.254f,.02f,-.16f),
+                        new Vector3(side*.316f,-.46f,-.25f),new Vector3(side*.396f,-.96f,-.36f)},
+                    new[]{.016f,.019f,.022f,.019f},.008f);
+                Sculpt("TravelerMantleSeam"+side,seam,Vector3.zero,Vector3.one,paleGold,null,true);
+                Plate("TravelerMantleClasp"+side,new Vector3(side*.19f,.46f,.045f),
+                    .15f,.14f,.11f,chronosteel,side*-23);
+                Detail("TravelerMantleClaspLight"+side,new Vector3(side*.19f,.46f,.11f),
+                    new Vector3(.058f,.045f,.018f),lightCore,default,null,true);
+            }
 
             Mesh innerFoldL=HeroMeshLibrary.Ribbon("DF_TravelerMantleFoldL",
                 new[]{new Vector3(-.066f,.38f,-.02f),new Vector3(-.108f,.02f,-.10f),
@@ -155,7 +216,16 @@ namespace Alterverse.Visuals
                 new[]{.020f,.095f,.140f,.140f,.095f,.020f},
                 new[]{.020f,.090f,.132f,.132f,.090f,.020f},
                 new[]{0f,.005f,.010f,.010f,.005f,0f},20);
-            Sculpt("Orb",planet,new Vector3(0,-.34f,.28f),Vector3.one,chronosteel,weapon,false);
+            Sculpt("Orb",planet,new Vector3(0,-.34f,.28f),Vector3.one*1.20f,chronosteel,weapon,false);
+            GameObject fluxHeart=Sculpt("PlanetFluxHeart",
+                HeroMeshLibrary.Loft("DF_TravelerFluxHeart",
+                    new[]{-.105f,-.065f,.065f,.105f},
+                    new[]{.025f,.084f,.084f,.025f},new[]{.025f,.084f,.084f,.025f}),
+                new Vector3(0,-.34f,.31f),Vector3.one,voidBlack,weapon,false);
+            fluxHeart.transform.localRotation=Quaternion.Euler(0,0,24f);
+            GameObject fracture=Sculpt("PlanetFluxEquator",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxEquator",.145f,.012f),
+                new Vector3(0,-.34f,.28f),Vector3.one,paradoxRed,weapon,true);
+            fracture.transform.localRotation=Quaternion.Euler(77f,0f,12f);
 
             GameObject ring0=Sculpt("PlanetFluxRing0",HeroMeshLibrary.Ring("DF_TravelerPlanetFluxRing0",.205f,.014f),
                 new Vector3(0,-.34f,.28f),Vector3.one,paleGold,weapon,true);
@@ -167,9 +237,9 @@ namespace Alterverse.Visuals
                 new Vector3(0,-.34f,.28f),Vector3.one,paleGold,weapon,true);
             ring2.transform.localRotation=Quaternion.Euler(82f,44f,38f);
 
-            for(int i=0;i<4;i++)
+            for(int i=0;i<6;i++)
             {
-                float a=i*Mathf.PI*.5f+.35f;
+                float a=i*Mathf.PI/3f+.35f;
                 Vector3 pos=new(Mathf.Cos(a)*.33f,-.34f+Mathf.Sin(a*1.7f)*.055f,.28f+Mathf.Sin(a)*.20f);
                 Create("PlanetFluxShard"+i,PrimitiveType.Cube,pos,
                     new Vector3(.038f,.060f,.038f),i%2==0?paradoxRed:chronosteel,
@@ -185,7 +255,7 @@ namespace Alterverse.Visuals
         {
             Transform weapon=FindVisual("WeaponR");if(weapon==null)return;
 
-            Color white=new(1f,.99f,.94f,1f);
+            Color white=new(.87f,.55f,1f,1f);
             Material whiteGlow=new Material(shader){name="DF_PlanetFluxEpicWhite",color=white};
             if(whiteGlow.HasProperty("_BaseColor"))whiteGlow.SetColor("_BaseColor",white);
             if(whiteGlow.HasProperty("_Metallic"))whiteGlow.SetFloat("_Metallic",.08f);
@@ -197,7 +267,7 @@ namespace Alterverse.Visuals
             }
             ownedMaterials.Add(whiteGlow);
 
-            Color softWhite=new(.88f,.94f,1f,1f);
+            Color softWhite=new(.48f,.30f,.89f,1f);
             Material orbitGlow=new Material(shader){name="DF_PlanetFluxEpicOrbit",color=softWhite};
             if(orbitGlow.HasProperty("_BaseColor"))orbitGlow.SetColor("_BaseColor",softWhite);
             if(orbitGlow.HasProperty("_Smoothness"))orbitGlow.SetFloat("_Smoothness",.92f);
@@ -208,13 +278,15 @@ namespace Alterverse.Visuals
             }
             ownedMaterials.Add(orbitGlow);
 
-            Transform orb=FindVisual("Orb");if(orb!=null){orb.localScale*=1.10f;ApplyGlow(orb,whiteGlow);}
+            // Keep the fractured planet dark against the bright orbital machinery.
+            Transform orb=FindVisual("Orb");if(orb!=null)orb.localScale*=1.10f;
+            Transform heart=FindVisual("PlanetFluxHeart");if(heart!=null)ApplyGlow(heart,whiteGlow);
             for(int i=0;i<3;i++)
             {
                 Transform ring=FindVisual("PlanetFluxRing"+i);
                 if(ring!=null){ring.localScale*=1.08f+i*.025f;ApplyGlow(ring,i==1?whiteGlow:orbitGlow);}
             }
-            for(int i=0;i<4;i++)
+            for(int i=0;i<6;i++)
             {
                 Transform shard=FindVisual("PlanetFluxShard"+i);
                 if(shard!=null){shard.localScale*=1.10f;ApplyGlow(shard,whiteGlow);}

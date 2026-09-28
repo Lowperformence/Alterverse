@@ -62,16 +62,33 @@ namespace Alterverse.Visuals
                 ScoutShell("Glove"+suffix,new Vector3(0,-.605f,.042f),new Vector3(.062f,.083f,.070f),dark,arm);
                 arm.localRotation=Quaternion.Euler(side<0?-42f:-48f,0,side<0?42f:-10f);
             }
-            Mesh helmet=HeroMeshLibrary.Loft("DF_ScoutHelmetV1",
-                new[]{-.215f,-.18f,-.10f,0f,.09f,.165f,.21f,.225f},
-                new[]{.048f,.09f,.135f,.16f,.161f,.132f,.074f,.012f},
-                new[]{.045f,.09f,.126f,.139f,.131f,.11f,.059f,.012f},
-                new[]{.045f,.04f,.025f,.01f,0f,-.01f,-.014f,-.014f},24);
-            Sculpt("Head",helmet,new Vector3(0,.84f,0),Vector3.one,pearl);
-            ScoutShell("FaceMask",new Vector3(0,.80f,.128f),new Vector3(.12f,.12f,.037f),dark);
-            ScoutShell("Visor",new Vector3(0,.87f,.148f),new Vector3(.123f,.026f,.024f),red,null,true);
-            ScoutShell("Optic",new Vector3(-.098f,.884f,.158f),new Vector3(.026f,.033f,.025f),hot,null,true);
-            ScoutShell("Comms",new Vector3(-.161f,.86f,0),new Vector3(.037f,.079f,.082f),steel);
+            // Exposed face and compact hood make Nyra read as a person and a field ranger,
+            // while the single brow optic keeps the sci-fi identity distinct.
+            Vector3 facePos=new(0,.84f,.015f);
+            Mesh face=HeroMeshLibrary.Loft("DF_ScoutFaceV2",
+                new[]{-.21f,-.15f,-.06f,.04f,.13f,.20f,.24f},
+                new[]{.036f,.092f,.128f,.145f,.14f,.105f,.035f},
+                new[]{.035f,.083f,.115f,.128f,.12f,.09f,.03f},
+                new[]{.035f,.024f,.012f,0f,-.006f,-.012f,-.018f},24);
+            Color skin=new(.61f,.39f,.29f),hair=new(.035f,.050f,.078f);
+            Sculpt("Head",face,facePos,Vector3.one,skin);
+            ScoutShell("RangerHood",new Vector3(0,.91f,-.075f),new Vector3(.22f,.28f,.14f),dark);
+            ScoutShell("HoodCrown",new Vector3(0,1.075f,-.015f),new Vector3(.145f,.075f,.115f),steel);
+            ScoutShell("HairCap",new Vector3(0,1.015f,.005f),new Vector3(.135f,.09f,.12f),hair);
+            ScoutShell("CheekGuard",new Vector3(.105f,.79f,.105f),new Vector3(.055f,.095f,.035f),steel);
+            ScoutShell("BrowOptic",new Vector3(-.070f,.886f,.139f),new Vector3(.087f,.028f,.024f),red,null,true);
+            ScoutShell("OpticLens",new Vector3(-.108f,.886f,.16f),new Vector3(.027f,.026f,.018f),hot,null,true);
+            ScoutShell("EyeL",new Vector3(-.064f,.865f,.139f),new Vector3(.022f,.012f,.010f),dark);
+            ScoutShell("EyeR",new Vector3(.064f,.865f,.139f),new Vector3(.022f,.012f,.010f),dark);
+            ScoutShell("Comms",new Vector3(-.166f,.85f,-.005f),new Vector3(.040f,.073f,.076f),steel);
+            for(int side=-1;side<=1;side+=2)
+            {
+                Mesh hoodEdge=HeroMeshLibrary.Ribbon("DF_ScoutHoodEdge"+side,
+                    new[]{new Vector3(side*.15f,1.02f,-.05f),new Vector3(side*.20f,.91f,.015f),
+                        new Vector3(side*.19f,.74f,-.01f),new Vector3(side*.24f,.59f,-.12f)},
+                    new[]{.023f,.030f,.022f,.003f},.012f);
+                Sculpt("HoodEdge"+side,hoodEdge,Vector3.zero,Vector3.one,pearl);
+            }
             Mesh scarf=HeroMeshLibrary.Ribbon("DF_ScoutScarfV1",
                 new[]{new Vector3(-.16f,.45f,-.14f),new Vector3(-.22f,.12f,-.20f),
                     new Vector3(-.27f,-.21f,-.23f),new Vector3(-.34f,-.49f,-.27f),new Vector3(-.42f,-.70f,-.30f)},
@@ -103,6 +120,7 @@ namespace Alterverse.Visuals
             Along("RifleReceiver",new Vector3(0,.024f,.25f),new Vector3(.112f,.36f,.07f),pearl);
             Along("RifleBarrel",new Vector3(0,.015f,.93f),new Vector3(.033f,.36f,.033f),steel);
             Along("MuzzleBrake",new Vector3(0,.015f,1.28f),new Vector3(.065f,.10f,.065f),pearl);
+            Along("MuzzleEmitter",new Vector3(0,.015f,1.365f),new Vector3(.038f,.025f,.038f),hot,true);
             Along("Scope",new Vector3(0,.18f,.17f),new Vector3(.058f,.20f,.055f),dark);
             Along("ScopeLens",new Vector3(0,.18f,.366f),new Vector3(.041f,.013f,.041f),hot,true);
             Along("ScopeBridge",new Vector3(0,.105f,.17f),new Vector3(.036f,.12f,.034f),steel);

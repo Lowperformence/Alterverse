@@ -80,6 +80,7 @@ namespace Alterverse.UI
                 GUI.depth = -4500;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x, y, 0f), Quaternion.identity, Vector3.one * scale);
 
+                theme.Panel(new Rect(x - 14f, 544f, width + 28f, 120f));
                 theme.Label(new Rect(x, 558f, width, 22f), "APPLICATION", theme.Small, true);
                 string label = confirming ? "CONFIRM CLOSE GAME" : "CLOSE GAME";
                 if (theme.Action(new Rect(x, 586f, width, 54f), label, primary: confirming))

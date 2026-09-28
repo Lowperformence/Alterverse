@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using UnityEngine;
@@ -6,6 +7,14 @@ namespace Alterverse.Visuals
     /// <summary>Distance-driven presentation. Does not write the actor's movement or balance values.</summary>
     public sealed class HeroVisualMotion : MonoBehaviour
     {
+        private sealed class ClothPanel
+        {
+            public Mesh mesh;
+            public Vector3[] rest,vertices;
+            public float top,bottom,phase;
+            public Vector2 offset,velocity;
+        }
+        private readonly List<ClothPanel> clothPanels=new();
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
@@ -13,7 +22,9 @@ namespace Alterverse.Visuals
         private Quaternion bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
         private float previousHealth,hitUntil;
-        private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean;
+        private float phase,strideWeight,attackUntil,attackDuration,attackWeight,previousSpeed,lean,displayedSpeed;
+        private Quaternion displayedRotation=Quaternion.identity;
+        private Vector3 displayedScale;
         private bool wasDead;
         private int abilitySlot=-1,attackSerial;
         private float windupUntil,windupDuration,empowerUntil,dashUntil,attackStarted;
@@ -85,7 +96,8 @@ namespace Alterverse.Visuals
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
             root=transform.Find("DF_VisualRoot");if(root==null)return;
-            basePosition=root.localPosition;rootScale=root.localScale;lastPosition=transform.position;
+            SetupCloth();
+            basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
             muzzle=FindPart("Muzzle");weaponR=FindPart("WeaponR");weaponL=FindPart("WeaponL");orb=FindPart("Orb");
@@ -101,7 +113,7 @@ namespace Alterverse.Visuals
         }
         private void OnHealthChanged(float current,float max)
         {if(current<previousHealth-.01f)hitUntil=Time.time+.12f;previousHealth=current;}
-        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;}
+        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private static void PoseLeg(Transform leg,Transform foot,float side)
@@ -120,41 +132,44 @@ namespace Alterverse.Visuals
             bool stance=cycle<.5f;
             float progress=stance?cycle*2:(cycle-.5f)*2;
             // During stance the foot moves backward at the traveled-distance rate.
-            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.Lerp(-1,1,progress))*stride*.25f;
+            float z=(stance?Mathf.Lerp(1,-1,progress):Mathf.SmoothStep(-1,1,progress))*stride*.25f;
             float lift=stance?0:Mathf.Sin(progress*Mathf.PI)*.12f;
             foot.localPosition=rest+new Vector3(0,lift,z)*strideWeight;
             foot.localRotation=rotation*Quaternion.Euler(stance?0:-Mathf.Sin(progress*Mathf.PI)*12*strideWeight,0,0);
         }
         private void LateUpdate()
         {
-            if(root==null||health==null)return;
+            if(root==null)return;
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
-            if(Time.timeScale<=0){previousSpeed=0;return;}
+            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousSpeed=0;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
-            if(health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;SetEnergy(0);return;}
+            if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;phase=0;strideWeight=previousSpeed=lean=0;root.localPosition=basePosition;root.localRotation=Quaternion.identity;delta=Vector3.zero;}
+            {wasDead=false;phase=0;strideWeight=previousSpeed=lean=displayedSpeed=0;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
             PlanarSpeed=travel/dt;
-            float response=1-Mathf.Exp(-24*dt);
+            // Ease the visible gait in and out while keeping collision and input immediate.
+            displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?12f:9f)*dt));
+            float response=1-Mathf.Exp(-11f*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
-            float desired=Dashing?0:Mathf.InverseLerp(.10f,.80f,PlanarSpeed);
+            float desired=Dashing?0:Mathf.InverseLerp(.15f,1.1f,displayedSpeed);
             if(Dashing)strideWeight=0;
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?2.35f:hero==HeroId.Veyr?2.5f:2.1f;
-            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
+            if(!Dashing)phase=Mathf.Repeat(phase+displayedSpeed*dt/strideLength*Mathf.PI*2,Mathf.PI*2);
             float step=Mathf.Sin(phase)*(heavy?25:30)*strideWeight;
             PlantFoot(bootL,bootPositionL,bootRestL,phase,strideLength);
             PlantFoot(bootR,bootPositionR,bootRestR,phase+Mathf.PI,strideLength);
             PoseLeg(legL,bootL,bootPositionL.x);PoseLeg(legR,bootR,bootPositionR.x);
             Swing(armL,armRestL,hero==HeroId.Kaelon?0:-step*.45f);Swing(armR,armRestR,hero==HeroId.Nyra||hero==HeroId.Mira?0:step*.45f);
-            float acceleration=Mathf.Clamp((PlanarSpeed-previousSpeed)/dt,-30,30);previousSpeed=PlanarSpeed;
-            lean=Mathf.Lerp(lean,Mathf.Clamp(acceleration*.1f,-2.5f,3)+Mathf.Min(PlanarSpeed,8)*.35f,1-Mathf.Exp(-16*dt));
+            float acceleration=Mathf.Clamp((displayedSpeed-previousSpeed)/dt,-18,18);previousSpeed=displayedSpeed;
+            lean=Mathf.Lerp(lean,Mathf.Clamp(acceleration*.1f,-2.5f,3)+Mathf.Min(displayedSpeed,8)*.35f,1-Mathf.Exp(-16*dt));
+            Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.012f*(1-strideWeight);
             float bob=(1-Mathf.Cos(phase*2))*.018f*strideWeight*(heavy?.7f:1);
@@ -171,21 +186,84 @@ namespace Alterverse.Visuals
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
             ApplyAttackPose(hero,kick,preparation,progress);
+            // Blend shoulders across gait and spell changes; attack timing remains owned by combat.
+            float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:17f)*dt);
+            if(armL!=null)armL.localRotation=Quaternion.Slerp(armBeforeL,armL.localRotation,armBlend);
+            if(armR!=null)armR.localRotation=Quaternion.Slerp(armBeforeR,armR.localRotation,armBlend);
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
             SetEnergy(energy);
             bool phaseDash=(Dashing||Time.time<dashUntil)&&(hero==HeroId.Veyr||hero==HeroId.Elyra);
             // Compress the render rig only; collider and movement are untouched.
-            root.localScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
+            Vector3 targetScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
+            displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
+            root.localScale=displayedScale;
             float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
-            root.localRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,spinYaw,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
+            Quaternion targetRotation=Quaternion.Euler((Dashing?10:lean)-7*kick-recoil,spinYaw,Mathf.Sin(phase)*strideWeight*(heavy?.8f:1.3f));
+            // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
+            displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
+            root.localRotation=displayedRotation;
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
             if(wingL!=null)wingL.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2.1f)*4);
             if(wingR!=null)wingR.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2.1f)*4);
-            if(cape!=null)cape.localRotation=Quaternion.Euler(8+Mathf.Min(PlanarSpeed,8)*1.6f,0,8+Mathf.Sin(t*2)*2);
+            if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
+            UpdateCloth(dt,t,delta/dt);
             if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
         }
+        private void SetupCloth()
+        {
+            // Clone only fabric meshes for this hero. Armor and collision geometry stay shared.
+            foreach(Transform part in root)
+            {
+                if(!StylizedHeroVisual.IsFlowingFabric(part.name))continue;
+                MeshFilter filter=part.GetComponent<MeshFilter>();
+                MeshRenderer renderer=part.GetComponent<MeshRenderer>();
+                if(filter==null||renderer==null||!renderer.enabled||filter.sharedMesh==null)continue;
+                Mesh mesh=Instantiate(filter.sharedMesh);
+                mesh.name=filter.sharedMesh.name+"_Flow";
+                mesh.MarkDynamic();
+                Vector3[] rest=mesh.vertices;
+                if(rest.Length==0){Destroy(mesh);continue;}
+                float top=float.NegativeInfinity,bottom=float.PositiveInfinity;
+                foreach(Vector3 vertex in rest){top=Mathf.Max(top,vertex.y);bottom=Mathf.Min(bottom,vertex.y);}
+                Bounds bounds=mesh.bounds;bounds.Expand(.9f);mesh.bounds=bounds;
+                filter.sharedMesh=mesh;
+                clothPanels.Add(new ClothPanel{mesh=mesh,rest=rest,vertices=(Vector3[])rest.Clone(),
+                    top=top,bottom=bottom,phase=clothPanels.Count*1.31f});
+            }
+        }
+        private void UpdateCloth(float deltaTime,float time,Vector3 worldVelocity)
+        {
+            if(clothPanels.Count==0)return;
+            float dt=Mathf.Clamp(deltaTime,0f,.05f);
+            if(dt<=0f)return;
+            Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);
+            float speed=Mathf.Min(9f,new Vector2(localVelocity.x,localVelocity.z).magnitude);
+            Vector2 travel=new Vector2(Mathf.Clamp(-localVelocity.x*.045f,-.20f,.20f),
+                Mathf.Clamp(-localVelocity.z*.055f,-.28f,.28f));
+            for(int i=0;i<clothPanels.Count;i++)
+            {
+                ClothPanel panel=clothPanels[i];
+                float flutter=Mathf.Sin(time*2.7f+panel.phase);
+                Vector2 target=travel+new Vector2(flutter*.035f,Mathf.Sin(time*2.1f+panel.phase)*.024f);
+                panel.velocity+=(target-panel.offset)*(26f*dt);
+                panel.velocity*=Mathf.Exp(-7f*dt);
+                panel.offset+=panel.velocity*dt;
+                float height=Mathf.Max(.001f,panel.top-panel.bottom);
+                for(int v=0;v<panel.rest.Length;v++)
+                {
+                    Vector3 point=panel.rest[v];
+                    float loose=Mathf.Clamp01((panel.top-point.y)/height);
+                    float bend=loose*loose;
+                    float fold=Mathf.Sin(time*3.5f-loose*3.2f+panel.phase)*(.016f+speed*.002f);
+                    panel.vertices[v]=point+new Vector3((panel.offset.x+fold)*bend,
+                        0f,(panel.offset.y+fold*.7f)*bend);
+                }
+                panel.mesh.vertices=panel.vertices;
+            }
+        }
+
         private void SetEnergy(float energy)
         {
             if(energyRenderers==null||energyBlock==null)return;

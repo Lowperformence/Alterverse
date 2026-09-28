@@ -36,8 +36,9 @@ Shader "DimensionsFront/HeroSurface"
     half diffuse=smoothstep(-.18h,.88h,dot(n,direction));
     half power=lerp(12.0h,96.0h,smoothness);
     half spec=pow(saturate(dot(n,SafeNormalize(direction+view))),power)*ndl;
-    half3 specColor=lerp(half3(.12h,.12h,.12h),lerp(albedo,1.0h,.32h),metal);
-    return (albedo*diffuse*(1.0h-metal*.20h)+specColor*spec*(.45h+smoothness))*lightColor;
+    half3 specColor=lerp(half3(.16h,.18h,.21h),lerp(albedo,1.0h,.52h),metal);
+    half broad=pow(saturate(dot(n,SafeNormalize(direction+view))),lerp(5.0h,18.0h,smoothness))*ndl;
+    return (albedo*diffuse*(1.0h-metal*.28h)+specColor*(spec*(.65h+smoothness*.7h)+broad*.12h*smoothness))*lightColor;
    }
    half4 frag(V i):SV_Target
    {
@@ -57,8 +58,13 @@ Shader "DimensionsFront/HeroSurface"
     half fresnel=pow(1.0h-saturate(dot(n,view)),3.5h);
     half rimSide=smoothstep(-.35h,.75h,nv.x);
     half3 rimColor=lerp(half3(.30h,.42h,.65h),half3(.38h,.72h,.95h),rimSide);
-    half3 lit=lerp(worldLight,studio,_ShowcaseLighting)+rimColor*fresnel*lerp(.12h,.38h,_ShowcaseLighting);
-    half3 energy=albedo*(1.30h+_EnergyBoost*.55h)+albedo*fresnel*.35h;
+    half upper=saturate(n.y*.5h+.5h);
+    half3 bounce=albedo*half3(.08h,.11h,.16h)*(1.0h-upper);
+    half silhouette=pow(1.0h-saturate(dot(n,view)),2.4h);
+    half3 lit=lerp(worldLight,studio,_ShowcaseLighting)+bounce;
+    lit+=rimColor*silhouette*lerp(.22h,.48h,_ShowcaseLighting)*(1.0h-metal*.18h);
+    lit+=albedo*fresnel*metal*.13h;
+    half3 energy=albedo*(1.42h+_EnergyBoost*.60h)+rimColor*fresnel*.30h;
     return half4(lerp(lit,energy,saturate(i.color.a)),1);
    }
    ENDHLSL

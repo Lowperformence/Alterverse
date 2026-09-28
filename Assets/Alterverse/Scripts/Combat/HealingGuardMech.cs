@@ -325,11 +325,12 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);
             part.name=name;part.transform.SetParent(parent,false);part.transform.localPosition=pos;part.transform.localRotation=rotation;part.transform.localScale=scale;
+            if(type==PrimitiveType.Cube)part.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             Renderer renderer=part.GetComponent<Renderer>();
             if(renderer!=null)
             {
-                Material material=RuntimeShaderLibrary.Create(color,false,.04f,.22f);
+                Material material=RuntimeShaderLibrary.Create(color,false,.42f,.46f);
                 if(material!=null)
                 {
                     material.name=name+"_RuntimeLit";
@@ -344,6 +345,7 @@ namespace Alterverse.Combat
         {
             GameObject part=GameObject.CreatePrimitive(type);
             part.name=name;part.transform.SetParent(parent,false);part.transform.localPosition=pos;part.transform.localRotation=rotation;part.transform.localScale=scale;
+            if(type==PrimitiveType.Cube)part.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             Collider collider=part.GetComponent<Collider>();if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             Renderer renderer=part.GetComponent<Renderer>();
             if(renderer!=null)

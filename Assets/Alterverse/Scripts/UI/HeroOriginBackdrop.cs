@@ -10,9 +10,9 @@ namespace Alterverse.UI
     /// </summary>
     internal sealed class HeroOriginBackdrop : IDisposable
     {
-        private const int Width = 384;
-        private const int Height = 432;
-        private const float PixelsPerUnit = 54f;
+        private const int Width = 2048;
+        private const int Height = 1152;
+        private const float PixelsPerUnit = 144f;
 
         private readonly Texture2D[] textures = new Texture2D[HeroIdentity.HeroCount];
         private readonly Sprite[] sprites = new Sprite[HeroIdentity.HeroCount];
@@ -44,12 +44,18 @@ namespace Alterverse.UI
                 float v = y / (float)(Height - 1);
                 float n1 = Mathf.PerlinNoise(u * 3.2f + style.Seed * .013f, v * 3.8f + style.Seed * .019f);
                 float n2 = Mathf.PerlinNoise(u * 7.7f + 17f + style.Seed * .007f, v * 6.1f + 29f);
-                float cloud = Mathf.Clamp01((n1 - .38f) * 1.8f) * (.35f + n2 * .65f);
+                float n3 = Mathf.PerlinNoise(u * 15.3f + style.Seed * .17f,
+                    v * 13.7f + style.Seed * .11f);
+                float n4 = Mathf.PerlinNoise(u * 38f + 53f, v * 34f + style.Seed * .29f);
+                float cloud = Mathf.Clamp01((n1 * .62f + n2 * .28f + n3 * .10f - .43f) * 3.2f);
+                float filament = Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(n2 - .55f) * 9f),3f)
+                    * Mathf.Clamp01(n3 * 1.9f - .65f);
                 Color c = Color.Lerp(style.Bottom, style.Top, Mathf.SmoothStep(0, 1, v));
-                c += style.Haze * cloud * .22f;
-
-                float split = Mathf.SmoothStep(.15f, .85f, u);
-                c += style.SecondaryHaze * split * Mathf.Clamp01((n2 - .53f) * 1.4f) * .09f;
+                c += style.Haze * cloud * (.16f + n3 * .20f);
+                c += style.SecondaryHaze * filament * .20f;
+                c += style.Rim * Mathf.Clamp01(n4 - .66f) * cloud * .045f;
+                float edgeShade = Mathf.SmoothStep(0f,1f,Mathf.Min(Mathf.Min(u,1f-u),Mathf.Min(v,1f-v))*3.0f);
+                c *= .73f + edgeShade * .27f;
 
                 float heroClear = Mathf.Exp(-((u - .50f) * (u - .50f) * 13f + (v - .53f) * (v - .53f) * 8f));
                 c *= 1f - heroClear * .22f;
@@ -59,7 +65,7 @@ namespace Alterverse.UI
 
             // Deterministic stars. System.Random keeps this cosmetic generator isolated from Unity gameplay RNG.
             var random = new System.Random(5107 + style.Seed * 97);
-            int starCount = 105 + (style.Seed % 31);
+            int starCount = 300 + (style.Seed % 71);
             for (int i = 0; i < starCount; i++)
             {
                 int x = random.Next(3, Width - 3);
@@ -68,14 +74,18 @@ namespace Alterverse.UI
                 Color star = Color.Lerp(new Color(.66f, .78f, 1f), style.Rim, .18f) * brightness;
                 star.a = 1f;
                 pixels[y * Width + x] = Clamp(star);
-                if (i % 11 == 0)
+                if (i % 9 == 0)
                 {
-                    Color glow = star * .43f;
-                    glow.a = 1f;
-                    pixels[y * Width + x - 1] = Clamp(glow);
-                    pixels[y * Width + x + 1] = Clamp(glow);
-                    pixels[(y - 1) * Width + x] = Clamp(glow);
-                    pixels[(y + 1) * Width + x] = Clamp(glow);
+                    for(int oy=-2;oy<=2;oy++)
+                    for(int ox=-2;ox<=2;ox++)
+                    {
+                        if(ox==0&&oy==0)continue;
+                        float falloff=1f/(1f+ox*ox+oy*oy);
+                        int at=(y+oy)*Width+x+ox;
+                        Color halo=Color.Lerp(pixels[at],star,falloff*.45f);
+                        halo.a=1f;
+                        pixels[at]=Clamp(halo);
+                    }
                 }
             }
 
@@ -98,10 +108,11 @@ namespace Alterverse.UI
                     float rx = dx / (radius * 1.72f);
                     float ry = (dy + dx * .18f) / (radius * .28f);
                     float ringDistance = Mathf.Abs(Mathf.Sqrt(rx * rx + ry * ry) - 1f);
-                    if (ringDistance < .055f && r > .98f)
+                    if (ringDistance < .11f && r > .98f)
                     {
-                        float ringStrength = 1f - ringDistance / .055f;
-                        c += style.Rim * ringStrength * .34f;
+                        float ringStrength = Mathf.Pow(1f - ringDistance / .11f,1.5f);
+                        float grain = Mathf.PerlinNoise(u * 93f + style.Seed, v * 81f);
+                        c += style.Rim * ringStrength * (.11f + grain * .25f);
                     }
                 }
 
@@ -112,17 +123,23 @@ namespace Alterverse.UI
                     float bands = .5f + .5f * Mathf.Sin((v * (17f + style.Bands * 17f) +
                         Mathf.PerlinNoise(u * 8f + style.Seed, v * 9f) * 1.4f) * Mathf.PI * 2f);
                     float terrain = Mathf.PerlinNoise(u * 31f + style.Seed * .21f, v * 27f + style.Seed * .11f);
-                    float mix = Mathf.Clamp01(.20f + bands * style.Bands * .42f + terrain * .42f);
+                    float ridges = Mathf.PerlinNoise(u * 64f + style.Seed * .37f, v * 61f + 8f);
+                    float detail = Mathf.PerlinNoise(u * 127f + 13f, v * 119f + style.Seed * .43f);
+                    float plate = Mathf.Clamp01((terrain * .57f + ridges * .30f + detail * .13f - .36f) * 2.3f);
+                    float mix = Mathf.Clamp01(.12f + bands * style.Bands * .34f + plate * .58f);
                     Color surface = Color.Lerp(style.PlanetB, style.PlanetA, mix);
-                    surface *= .34f + light * .74f;
-                    surface += style.Haze * Mathf.Clamp01(terrain - .58f) * style.Storm * .35f;
+                    surface *= .30f + light * .81f;
+                    float fissure = Mathf.Pow(Mathf.Clamp01(1f-Mathf.Abs(ridges-.53f)*11f),3f)
+                        * Mathf.Clamp01(terrain-.49f);
+                    surface += style.Haze * fissure * style.Storm * .26f;
+                    surface += style.Rim * Mathf.Clamp01(detail-.70f) * .035f;
                     surface.a = 1f;
                     c = surface;
                 }
 
                 if (r > .91f && r < 1.075f)
                 {
-                    float rim = Mathf.Exp(-Mathf.Abs(r - 1f) * 39f);
+                    float rim = Mathf.Exp(-Mathf.Abs(r - 1f) * 52f);
                     c += style.Rim * rim * .50f;
                 }
 
@@ -179,24 +196,24 @@ namespace Alterverse.UI
                         new Color(.56f, .12f, .78f), new Color(.21f, .055f, .34f),
                         new Color(.34f, .075f, .48f), new Color(.095f, .025f, .18f),
                         new Color(.83f, .33f, 1f), new Vector2(.78f, .58f), .35f, 49, false, .32f, .95f);
-                case HeroId.Mira: // Tahla Venn — teal bioluminescent world
+                case HeroId.Mira: // Tahla Venn — jade world under a warm ascendant sky
                     return new WorldStyle(
                         new Color(.008f, .066f, .070f), new Color(.003f, .014f, .023f),
-                        new Color(.04f, .58f, .48f), new Color(.025f, .21f, .23f),
+                        new Color(.55f, .38f, .13f), new Color(.18f, .12f, .10f),
                         new Color(.085f, .43f, .34f), new Color(.018f, .13f, .14f),
-                        new Color(.28f, 1f, .76f), new Vector2(.80f, .60f), .36f, 61, true, .23f, .42f);
+                        new Color(1f, .78f, .35f), new Vector2(.80f, .60f), .36f, 61, true, .23f, .42f);
                 case HeroId.Rook: // Brakk Orun — volcanic ember world
                     return new WorldStyle(
                         new Color(.075f, .020f, .014f), new Color(.012f, .008f, .012f),
                         new Color(.78f, .16f, .025f), new Color(.30f, .055f, .018f),
                         new Color(.33f, .075f, .025f), new Color(.095f, .025f, .018f),
                         new Color(1f, .38f, .08f), new Vector2(.78f, .61f), .39f, 73, false, .12f, 1f);
-                default: // Traveler — temporal eclipse, carrying both cyan and magenta realities
+                default: // Traveler — violet temporal eclipse
                     return new WorldStyle(
                         new Color(.025f, .040f, .071f), new Color(.007f, .008f, .019f),
-                        new Color(.16f, .72f, .78f), new Color(.60f, .18f, .72f),
+                        new Color(.45f, .25f, .82f), new Color(.60f, .18f, .72f),
                         new Color(.12f, .15f, .20f), new Color(.025f, .025f, .045f),
-                        new Color(.82f, .75f, 1f), new Vector2(.78f, .58f), .35f, 89, true, .08f, .72f);
+                        new Color(.83f, .52f, 1f), new Vector2(.78f, .58f), .35f, 89, true, .08f, .72f);
             }
         }
 

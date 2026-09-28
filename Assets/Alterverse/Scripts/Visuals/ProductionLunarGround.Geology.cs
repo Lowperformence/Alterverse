@@ -9,9 +9,17 @@ namespace Alterverse.Visuals
         {
             // Large silhouette groups stay at the broken perimeter, never in the combat corridors.
             Vector2[] sites={new(-32,29),new(30,-30),new(-12,31),new(14,-32),new(-38,-24),new(37,24)};
+            Material fractureFace=Mat(Color.Lerp(rimMat.color,Color.white,.16f),.02f,.14f);
             for(int site=0;site<sites.Length;site++)
             {
                 bool zero=sites[site].x<0;
+                // Three overlapping masses per site read as a layered outcrop, not loose pebbles.
+                LandmarkRock("DF_PerimeterRockMass",sites[site]+new Vector2(-.68f,-.28f),
+                    new Vector3(1.65f,1.05f,1.28f),site*51f+13f,0,darkRegolith);
+                LandmarkRock("DF_PerimeterRockMass",sites[site]+new Vector2(.42f,.22f),
+                    new Vector3(1.40f,.83f,1.12f),site*61f+27f,.10f,rimMat);
+                LandmarkRock("DF_PerimeterRockCap",sites[site]+new Vector2(-.18f,.54f),
+                    new Vector3(.92f,.38f,.72f),site*43f+39f,.59f,fractureFace);
                 for(int i=0;i<6;i++)
                 {
                     Vector2 p=sites[site]+new Vector2((i%3-1)*1.15f,(i/3)*1.45f);
@@ -129,8 +137,10 @@ namespace Alterverse.Visuals
         void LandmarkRock(string name,Vector2 site,Vector3 scale,float yaw,float lift,Material material)
         {
             Vector3 position=LunarSurfaceField.Surface(site.x,site.y);position.y+=lift;
-            GameObject g=MeshObject(name,rockMeshB,material,position);
-            g.transform.localScale=scale;g.transform.localRotation=Quaternion.Euler(9,yaw,-12);
+            int variant=Mathf.Abs(Mathf.RoundToInt(yaw))%3;
+            GameObject g=MeshObject(name,variant==0?rockMesh:variant==1?rockMeshB:rockMeshC,material,position);
+            g.transform.localScale=scale;
+            g.transform.localRotation=Quaternion.Euler(5+variant*5,yaw,-8+variant*7);
         }
         void LandmarkSeam(Vector2 a,Vector2 b,float width,Material material)
         {
@@ -164,7 +174,12 @@ namespace Alterverse.Visuals
                 Mesh mesh=new(){name="DF_MoonStratum_"+layer};mesh.SetVertices(vertices);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();meshes.Add(mesh);
                 Material mat=layer==0?rimMat:layer==1?regolith:darkRegolith;
                 // The surface atlas is not stretched vertically across a cliff: strata use their own neutral rock material.
-                if(layer==1)mat=Mat(new Color(.125f,.137f,.153f),0,.08f);
+                if(layer==1)
+                    mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
+                        Alterverse.Match.ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
+                        Alterverse.Match.ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
+                        Alterverse.Match.ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):
+                        new Color(.125f,.137f,.153f),0,.08f);
                 MeshObject("DF_FracturedMoonStratum",mesh,mat,Vector3.zero);
                 upper=lower;
             }
@@ -180,7 +195,7 @@ namespace Alterverse.Visuals
         void BatchStaticDetails()
         {
             // Partition by material AND spatial cell, preserving useful camera culling.
-            var groups=new Dictionary<(Material,int,int),List<CombineInstance>>();
+            var groups=new Dictionary<(Material,int,int,bool),List<CombineInstance>>();
             var sources=new HashSet<Mesh>();
             var renderers=root.GetComponentsInChildren<MeshRenderer>();
             foreach(MeshRenderer renderer in renderers)
@@ -188,7 +203,11 @@ namespace Alterverse.Visuals
                 MeshFilter filter=renderer.GetComponent<MeshFilter>();
                 if(filter==null||filter.sharedMesh==null||renderer.gameObject.name=="DF_LunarRegolith")continue;
                 Vector3 center=renderer.bounds.center;
-                var key=(renderer.sharedMaterial,Mathf.FloorToInt(center.x/18),Mathf.FloorToInt(center.z/18));
+                bool casts=renderer.gameObject.name.Contains("Rock")||
+                    renderer.gameObject.name.Contains("Fragment")||
+                    renderer.gameObject.name.Contains("FractureSpire")||
+                    renderer.gameObject.name.Contains("Cliff");
+                var key=(renderer.sharedMaterial,Mathf.FloorToInt(center.x/18),Mathf.FloorToInt(center.z/18),casts);
                 if(!groups.TryGetValue(key,out var list)){list=new List<CombineInstance>();groups.Add(key,list);}
                 list.Add(new CombineInstance{mesh=filter.sharedMesh,transform=root.worldToLocalMatrix*filter.transform.localToWorldMatrix});
                 sources.Add(filter.sharedMesh);renderer.enabled=false;Destroy(renderer.gameObject);
@@ -198,7 +217,8 @@ namespace Alterverse.Visuals
                 Mesh mesh=new(){name="DF_GeologyBatch"};int count=0;foreach(var item in group.Value)count+=item.mesh.vertexCount;
                 if(count>65535)mesh.indexFormat=IndexFormat.UInt32;
                 mesh.CombineMeshes(group.Value.ToArray(),true,true);mesh.RecalculateBounds();meshes.Add(mesh);
-                MeshObject("DF_StaticGeology",mesh,group.Key.Item1,Vector3.zero);
+                GameObject batch=MeshObject("DF_StaticGeology",mesh,group.Key.Item1,Vector3.zero);
+                if(group.Key.Item4)batch.GetComponent<MeshRenderer>().shadowCastingMode=ShadowCastingMode.On;
             }
             foreach(Mesh source in sources)if(meshes.Remove(source))Destroy(source);
         }
