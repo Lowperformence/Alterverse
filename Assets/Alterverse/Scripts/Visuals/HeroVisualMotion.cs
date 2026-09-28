@@ -234,7 +234,11 @@ namespace Alterverse.Visuals
             // Orun Overdrive lifts the rendered hero and brings him down exactly as its warning resolves.
             root.localPosition=basePosition+Vector3.up*(idle+bob);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
-            float kick=Time.time<attackUntil&&preparation==0?Mathf.Cos(progress*Mathf.PI*.5f)*attackWeight:0;
+            bool meleeStrike=hero==HeroId.Veyr&&abilitySlot!=2||
+                (hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot!=1;
+            float delivery=meleeStrike&&preparation>0?StrikeDelivery(windupProgress):0f;
+            float kick=preparation>0?delivery*attackWeight:
+                Time.time<attackUntil?(1f-Mathf.SmoothStep(0f,1f,progress))*attackWeight:0f;
             ApplyAttackPose(hero,kick,preparation,progress);
             // Blend shoulders across gait and spell changes; attack timing remains owned by combat.
             float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:17f)*dt);
@@ -290,7 +294,7 @@ namespace Alterverse.Visuals
                 float wristL=0f,wristR=0f;
                 float actionBlend=preparation>0?Mathf.SmoothStep(0f,1f,windupProgress):
                     Mathf.Clamp01(kick/Mathf.Max(.01f,attackWeight));
-                float charge=preparation>0?1f:0f;
+                float charge=preparation>0?1f-delivery:0f;
                 switch(hero)
                 {
                     case HeroId.Rook:
@@ -328,10 +332,10 @@ namespace Alterverse.Visuals
             // attack and ability delivery still own the original combat timing.
             if(articulatedRig!=null)
             {
-                float anticipation=preparation>0f?Mathf.SmoothStep(0f,1f,windupProgress):0f;
+                float anticipation=preparation>0f?Mathf.SmoothStep(0f,1f,windupProgress)*(1f-delivery):0f;
                 float attackSide=attackSerial%2==0?-1f:1f;
                 float attackPitch=0f,attackTwist=0f,hipTwist=0f,attackRoll=0f;
-                float action=Mathf.Clamp01(Mathf.Max(anticipation,kick));
+                // Angles below already contain anticipation/contact weights; do not weight twice.
                 switch(hero)
                 {
                     case HeroId.Veyr:
@@ -369,16 +373,16 @@ namespace Alterverse.Visuals
                 float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
                 float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
                 float pelvisRoll=Mathf.Clamp(localAcceleration.x*.035f,-3f,3f)+attackRoll*.35f;
-                Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,turnCounter*.16f+gaitHipYaw+hipTwist*action*.55f,pelvisRoll);
+                Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,turnCounter*.16f+gaitHipYaw+hipTwist*.55f,pelvisRoll);
                 Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f,
-                    -turnCounter*.12f-gaitHipYaw*.5f+hipTwist*action*.35f,
-                    -sway*.24f-attackRoll*action*.30f);
+                    -turnCounter*.12f-gaitHipYaw*.5f+hipTwist*.35f,
+                    -sway*.24f-attackRoll*.30f);
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f,
-                    turnCounter*.22f+gaitSpineYaw+attackTwist*action,
-                    sway*.22f+attackRoll*action*.55f);
+                    turnCounter*.22f+gaitSpineYaw+attackTwist,
+                    sway*.22f+attackRoll*.55f);
                 Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f,
-                    -turnCounter*.20f-attackTwist*action*.35f,
-                    -sway*.10f-attackRoll*action*.35f);
+                    -turnCounter*.20f-attackTwist*.35f,
+                    -sway*.10f-attackRoll*.35f);
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
         }
@@ -486,6 +490,12 @@ namespace Alterverse.Visuals
 
         // Presentation-only keyframes; HeroAttackDelivery owns windup/flight damage timing.
         // The weapon is a child of the shoulder rig, so both arm and weapon follow the full strike arc.
+        private static float StrikeDelivery(float windupProgress)
+        {
+            // Preserve combat's release time: the last 45% is the forward strike, not a hold.
+            return Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.55f,1f,windupProgress));
+        }
+
         private void PoseStrike(Transform joint,Quaternion rest,Vector3 drawn,Vector3 contact,Vector3 through,
             float preparation,float progress,float weight=1)
         {
@@ -494,7 +504,11 @@ namespace Alterverse.Visuals
             if(preparation>0)
             {
                 float charge=Mathf.Clamp01((Time.time-attackStarted)/Mathf.Max(.001f,windupUntil-attackStarted));
-                pose=Quaternion.Slerp(Quaternion.identity,ready,Mathf.SmoothStep(0,1,Mathf.Min(1,charge*2)));
+                // Load the shoulder first, then accelerate through the existing windup.
+                // At release this converges to the same contact pose as progress == 0.
+                Quaternion loaded=Quaternion.Slerp(Quaternion.identity,ready,
+                    Mathf.SmoothStep(0f,1f,Mathf.Clamp01(charge/.55f)));
+                pose=Quaternion.Slerp(loaded,hit,StrikeDelivery(charge));
             }
             else
             {
@@ -573,3 +587,4 @@ namespace Alterverse.Visuals
 
     }
 }
+
