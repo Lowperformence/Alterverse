@@ -162,8 +162,8 @@ palette.Add((color,energy),material);return material;
 }
 private Color FinishedColor(Color color,bool energy)
 {
-if(!voidfall||energy||color==teamEdge)return color;
-return color==armorLight?new Color(.26f,.16f,.36f):color==dark||color==cloth?new Color(.027f,.018f,.045f):Color.Lerp(color,new Color(.24f,.20f,.32f),.55f);
+// Wing cosmetics only add their own geometry and materials; preserve the hero palette.
+return color;
 }
 private void Panel(string name,Vector2[] outline,float depth,Vector3 position,Color color)
 {
