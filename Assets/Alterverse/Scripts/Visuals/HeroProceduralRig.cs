@@ -233,34 +233,217 @@ namespace Alterverse.Visuals
             string key = source.GetEntityId().GetHashCode() + ":" + Mathf.RoundToInt(splitY * 1000f) + ":" + (upper ? "U" : "L");
             if (SplitMeshCache.TryGetValue(key, out Mesh cached) && cached != null) return cached;
 
-            Mesh result = new() { name = source.name + (upper ? "_Upper" : "_Lower"), indexFormat = source.indexFormat };
-            result.vertices = source.vertices;
-            if (source.normals != null && source.normals.Length == source.vertexCount) result.normals = source.normals;
-            if (source.tangents != null && source.tangents.Length == source.vertexCount) result.tangents = source.tangents;
-            if (source.uv != null && source.uv.Length == source.vertexCount) result.uv = source.uv;
-            if (source.uv2 != null && source.uv2.Length == source.vertexCount) result.uv2 = source.uv2;
-            if (source.colors != null && source.colors.Length == source.vertexCount) result.colors = source.colors;
-
-            Vector3[] vertices = source.vertices;
-            result.subMeshCount = source.subMeshCount;
-            for (int sub = 0; sub < source.subMeshCount; sub++)
-            {
-                int[] sourceTriangles = source.GetTriangles(sub);
-                List<int> triangles = new(sourceTriangles.Length);
-                for (int i = 0; i + 2 < sourceTriangles.Length; i += 3)
-                {
-                    int a = sourceTriangles[i], b = sourceTriangles[i + 1], c = sourceTriangles[i + 2];
-                    float center = (vertices[a].y + vertices[b].y + vertices[c].y) / 3f;
-                    if (upper ? center >= splitY : center < splitY)
-                    {
-                        triangles.Add(a); triangles.Add(b); triangles.Add(c);
-                    }
-                }
-                result.SetTriangles(triangles, sub, false);
-            }
-            result.RecalculateBounds();
+            MeshClipBuilder builder = new(source, splitY, upper);
+            Mesh result = builder.Build();
+            result.name = source.name + (upper ? "_UpperClosed" : "_LowerClosed");
             SplitMeshCache[key] = result;
             return result;
+        }
+
+        /// <summary>
+        /// Clips a closed loft mesh against a horizontal plane, interpolating its vertex data
+        /// and sealing the new joint surface. Triangle-centroid filtering leaves torn, open legs.
+        /// </summary>
+        private sealed class MeshClipBuilder
+        {
+            private readonly Mesh source;
+            private readonly float splitY;
+            private readonly bool keepUpper;
+            private readonly Vector3[] sourceVertices, sourceNormals;
+            private readonly Vector4[] sourceTangents;
+            private readonly Vector2[] sourceUv, sourceUv2;
+            private readonly Color[] sourceColors;
+            private readonly List<Vector3> vertices = new();
+            private readonly List<Vector3> normals = new();
+            private readonly List<Vector4> tangents = new();
+            private readonly List<Vector2> uv = new(), uv2 = new();
+            private readonly List<Color> colors = new();
+            private readonly List<int>[] triangles;
+            private readonly Dictionary<long, int> vertexMap = new();
+            private readonly HashSet<int> boundary = new();
+
+            private readonly struct ClipVertex
+            {
+                public readonly int A, B;
+                public readonly float T;
+                public ClipVertex(int index) { A = B = index; T = 0f; }
+                public ClipVertex(int a, int b, float t) { A = a; B = b; T = t; }
+            }
+
+            public MeshClipBuilder(Mesh mesh, float plane, bool upper)
+            {
+                source = mesh;
+                splitY = plane;
+                keepUpper = upper;
+                sourceVertices = mesh.vertices;
+                sourceNormals = mesh.normals;
+                sourceTangents = mesh.tangents;
+                sourceUv = mesh.uv;
+                sourceUv2 = mesh.uv2;
+                sourceColors = mesh.colors;
+                triangles = new List<int>[mesh.subMeshCount];
+                for (int i = 0; i < triangles.Length; i++) triangles[i] = new List<int>();
+            }
+
+            public Mesh Build()
+            {
+                for (int sub = 0; sub < source.subMeshCount; sub++)
+                {
+                    int[] indices = source.GetTriangles(sub);
+                    for (int i = 0; i + 2 < indices.Length; i += 3)
+                        ClipTriangle(sub, indices[i], indices[i + 1], indices[i + 2]);
+                }
+
+                SealCut();
+                Mesh mesh = new() { indexFormat = source.indexFormat, subMeshCount = source.subMeshCount };
+                mesh.SetVertices(vertices);
+                if (sourceNormals != null && sourceNormals.Length == source.vertexCount) mesh.SetNormals(normals);
+                if (sourceTangents != null && sourceTangents.Length == source.vertexCount) mesh.SetTangents(tangents);
+                if (sourceUv != null && sourceUv.Length == source.vertexCount) mesh.SetUVs(0, uv);
+                if (sourceUv2 != null && sourceUv2.Length == source.vertexCount) mesh.SetUVs(1, uv2);
+                if (sourceColors != null && sourceColors.Length == source.vertexCount) mesh.SetColors(colors);
+                for (int sub = 0; sub < triangles.Length; sub++) mesh.SetTriangles(triangles[sub], sub, false);
+                mesh.RecalculateBounds();
+                return mesh;
+            }
+
+            private void ClipTriangle(int sub, int a, int b, int c)
+            {
+                List<ClipVertex> polygon = new(4) { new(a), new(b), new(c) };
+                List<ClipVertex> clipped = new(4);
+                for (int i = 0; i < polygon.Count; i++)
+                {
+                    ClipVertex current = polygon[i];
+                    ClipVertex next = polygon[(i + 1) % polygon.Count];
+                    bool insideCurrent = Inside(current);
+                    bool insideNext = Inside(next);
+                    if (insideCurrent && insideNext) clipped.Add(next);
+                    else if (insideCurrent && !insideNext) clipped.Add(Intersection(current, next));
+                    else if (!insideCurrent && insideNext)
+                    {
+                        ClipVertex crossing = Intersection(current, next);
+                        clipped.Add(crossing);
+                        clipped.Add(next);
+                    }
+                }
+
+                if (clipped.Count < 3) return;
+                int first = AddVertex(clipped[0]);
+                for (int i = 1; i + 1 < clipped.Count; i++)
+                {
+                    int second = AddVertex(clipped[i]);
+                    int third = AddVertex(clipped[i + 1]);
+                    triangles[sub].Add(first);
+                    triangles[sub].Add(second);
+                    triangles[sub].Add(third);
+                }
+            }
+
+            private bool Inside(ClipVertex vertex)
+            {
+                float y = Position(vertex).y;
+                return keepUpper ? y >= splitY - .00001f : y <= splitY + .00001f;
+            }
+
+            private ClipVertex Intersection(ClipVertex from, ClipVertex to)
+            {
+                Vector3 a = Position(from), b = Position(to);
+                float t = Mathf.Clamp01((splitY - a.y) / (b.y - a.y));
+                ClipVertex result = Interpolate(from, to, t);
+                boundary.Add(AddVertex(result));
+                return result;
+            }
+
+            private static ClipVertex Interpolate(ClipVertex from, ClipVertex to, float t)
+            {
+                // The clipping polygon only references original vertices and plane-edge points.
+                // Normalize the pair key so adjacent triangles share the exact same cut vertex.
+                int fromIndex = from.A == from.B ? from.A : -1;
+                int toIndex = to.A == to.B ? to.A : -1;
+                if (fromIndex >= 0 && toIndex >= 0) return new ClipVertex(fromIndex, toIndex, t);
+
+                // A cut point lies on an original edge. Reconstruct a stable original-edge pair.
+                if (from.A == from.B) return new ClipVertex(from.A, to.A, t);
+                if (to.A == to.B) return new ClipVertex(from.A, to.A, t);
+                return new ClipVertex(from.A, to.B, t);
+            }
+
+            private Vector3 Position(ClipVertex vertex)
+            {
+                return Vector3.Lerp(sourceVertices[vertex.A], sourceVertices[vertex.B], vertex.T);
+            }
+
+            private int AddVertex(ClipVertex vertex)
+            {
+                int lo = Mathf.Min(vertex.A, vertex.B), hi = Mathf.Max(vertex.A, vertex.B);
+                long key = ((long)lo << 32) | (uint)hi;
+                if (vertexMap.TryGetValue(key, out int existing)) return existing;
+
+                int index = vertices.Count;
+                vertexMap.Add(key, index);
+                vertices.Add(Position(vertex));
+                if (sourceNormals != null && sourceNormals.Length == source.vertexCount)
+                    normals.Add(Vector3.Lerp(sourceNormals[vertex.A], sourceNormals[vertex.B], vertex.T).normalized);
+                if (sourceTangents != null && sourceTangents.Length == source.vertexCount)
+                    tangents.Add(Vector4.Lerp(sourceTangents[vertex.A], sourceTangents[vertex.B], vertex.T));
+                if (sourceUv != null && sourceUv.Length == source.vertexCount)
+                    uv.Add(Vector2.Lerp(sourceUv[vertex.A], sourceUv[vertex.B], vertex.T));
+                if (sourceUv2 != null && sourceUv2.Length == source.vertexCount)
+                    uv2.Add(Vector2.Lerp(sourceUv2[vertex.A], sourceUv2[vertex.B], vertex.T));
+                if (sourceColors != null && sourceColors.Length == source.vertexCount)
+                    colors.Add(Color.Lerp(sourceColors[vertex.A], sourceColors[vertex.B], vertex.T));
+                return index;
+            }
+
+            private void SealCut()
+            {
+                if (boundary.Count < 3) return;
+                Vector3 center = Vector3.zero;
+                foreach (int index in boundary) center += vertices[index];
+                center /= boundary.Count;
+                List<int> ring = new(boundary);
+                ring.Sort((a, b) =>
+                {
+                    Vector3 pa = vertices[a] - center, pb = vertices[b] - center;
+                    return Mathf.Atan2(pa.z, pa.x).CompareTo(Mathf.Atan2(pb.z, pb.x));
+                });
+
+                Vector3 capNormal = keepUpper ? Vector3.down : Vector3.up;
+                int capCenter = AddCapVertex(center, capNormal);
+                int[] capRing = new int[ring.Count];
+                for (int i = 0; i < ring.Count; i++) capRing[i] = AddCapVertex(vertices[ring[i]], capNormal);
+                List<int> cap = triangles[0];
+                for (int i = 0; i < capRing.Length; i++)
+                {
+                    int next = (i + 1) % capRing.Length;
+                    cap.Add(capCenter);
+                    if (keepUpper) { cap.Add(capRing[i]); cap.Add(capRing[next]); }
+                    else { cap.Add(capRing[next]); cap.Add(capRing[i]); }
+                }
+            }
+
+            private int AddCapVertex(Vector3 position, Vector3 normal)
+            {
+                int index = vertices.Count;
+                vertices.Add(position);
+                if (sourceNormals != null && sourceNormals.Length == source.vertexCount) normals.Add(normal);
+                if (sourceTangents != null && sourceTangents.Length == source.vertexCount) tangents.Add(new Vector4(1f, 0f, 0f, 1f));
+                if (sourceUv != null && sourceUv.Length == source.vertexCount) uv.Add(Vector2.zero);
+                if (sourceUv2 != null && sourceUv2.Length == source.vertexCount) uv2.Add(Vector2.zero);
+                if (sourceColors != null && sourceColors.Length == source.vertexCount)
+                {
+                    Color average = Color.white;
+                    if (boundary.Count > 0)
+                    {
+                        average = Color.clear;
+                        foreach (int boundaryIndex in boundary) average += colors[boundaryIndex];
+                        average /= boundary.Count;
+                    }
+                    colors.Add(average);
+                }
+                return index;
+            }
+
         }
 
         private Transform FindDeep(string name)
