@@ -72,6 +72,9 @@ namespace Alterverse.Combat
         private readonly Quaternion[] bearLegBase=new Quaternion[4];
         private Vector3 bearBodyRest,bearBarrelRest;
         private float bearMoveBlend;
+        private float moonGaitPhase,skeletonGaitPhase,xenoGaitPhase,bearGaitPhase;
+        private Vector3 lastMovementSample;
+        private bool movementSampleReady;
         private Color bearEnergyBase=new(.28f,.94f,1f,1f);
         private int movementRecoveryAttempt;
         private static readonly List<HotZoneTank> active=new();
@@ -159,12 +162,15 @@ namespace Alterverse.Combat
             else if(xenoAlien){BuildAlienVisuals();health.Damaged+=OnXenoDamaged;}
             else if(marsSkeleton)BuildSkeletonVisuals();
             else BuildVisuals();
+            lastMovementSample=transform.position;
+            movementSampleReady=true;
             SetNextPatrol();
         }
 
         private void Update()
         {
             if(Time.timeScale<=0f||health==null||health.IsDead)return;
+            TrackRootMovement(Time.deltaTime);
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
             {
                 if(xenoAlien)AnimateXeno();
@@ -174,11 +180,11 @@ namespace Alterverse.Combat
                 if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
                 return;
             }
-            if(xenoAlien){xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,0f,Time.deltaTime*3.4f);AnimateXeno();}
-            if(marsSkeleton){skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,0f,Time.deltaTime*3.4f);AnimateSkeleton();}
+            if(xenoAlien)AnimateXeno();
+            if(marsSkeleton)AnimateSkeleton();
             if(noxaraSpider)AnimateNoxaraSpider();
-            if(kryonBear){bearMoveBlend=Mathf.MoveTowards(bearMoveBlend,0f,Time.deltaTime*3.6f);AnimateKryonBear();}
-            if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear){moonMoveBlend=Mathf.MoveTowards(moonMoveBlend,0f,Time.deltaTime*4.2f);AnimateMoonGuard();}
+            if(kryonBear)AnimateKryonBear();
+            if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextSupportScan)
             {
@@ -350,7 +356,6 @@ namespace Alterverse.Combat
             if(moved.sqrMagnitude>.00001f)
             {
                 locomotion.FaceMovement(moved);
-                AnimateTracks(moved.magnitude);
             }
 
             bool blocked=requested.sqrMagnitude>.00001f&&moved.sqrMagnitude<requested.sqrMagnitude*.30f;
@@ -521,10 +526,10 @@ namespace Alterverse.Combat
         {
             if(moonBodyRoot==null)return;
             float t=Time.time;
-            float stride=Mathf.Sin(t*7.2f)*moonMoveBlend;
-            float bob=(1f-Mathf.Cos(t*14.4f))*.032f*moonMoveBlend;
+            float stride=Mathf.Sin(moonGaitPhase)*moonMoveBlend;
+            float bob=(1f-Mathf.Cos(moonGaitPhase*2f))*.032f*moonMoveBlend;
             moonBodyRoot.localPosition=moonBodyRest+Vector3.up*bob;
-            moonBodyRoot.localRotation=Quaternion.Euler(-3f+Mathf.Cos(t*14.4f)*1.4f*moonMoveBlend,0,stride*2f);
+            moonBodyRoot.localRotation=Quaternion.Euler(-3f+Mathf.Cos(moonGaitPhase*2f)*1.4f*moonMoveBlend,0,stride*2f);
 
             if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*34f,0,0);
             if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*34f,0,0);
@@ -573,7 +578,7 @@ namespace Alterverse.Combat
 
         private void AnimateSkeleton()
         {
-            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(Time.time*7.1f)*skeletonMoveBlend;
+            float idle=Mathf.Sin(Time.time*1.65f),stride=Mathf.Sin(skeletonGaitPhase)*skeletonMoveBlend;
             if(skeletonLeftArm!=null)skeletonLeftArm.localRotation=skeletonLeftArmBase*Quaternion.Euler(stride*30f,0,idle*1.5f);
             if(skeletonRightArm!=null)skeletonRightArm.localRotation=skeletonRightArmBase*Quaternion.Euler(-stride*30f-(shotPending?18f:0f),0,-idle*1.5f);
             if(skeletonLeftLeg!=null)skeletonLeftLeg.localRotation=skeletonLeftLegBase*Quaternion.Euler(-stride*32f,0,0);
@@ -945,10 +950,10 @@ namespace Alterverse.Combat
         {
             if(bearBodyRoot==null)return;
             float idle=Mathf.Sin(Time.time*1.55f);
-            float stride=Mathf.Sin(Time.time*6.4f)*bearMoveBlend;
-            float lift=(1f-Mathf.Cos(Time.time*12.8f))*.035f*bearMoveBlend;
+            float stride=Mathf.Sin(bearGaitPhase)*bearMoveBlend;
+            float lift=(1f-Mathf.Cos(bearGaitPhase*2f))*.035f*bearMoveBlend;
             bearBodyRoot.localPosition=bearBodyRest+Vector3.up*(lift+idle*.006f);
-            bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(Time.time*4.65f)*.65f*bearMoveBlend,0,stride*.85f);
+            bearBodyRoot.localRotation=Quaternion.Euler(-1.5f+Mathf.Cos(bearGaitPhase*2f)*.65f*bearMoveBlend,0,stride*.85f);
 
             for(int i=0;i<bearLegRoots.Length;i++)
             {
@@ -1128,7 +1133,7 @@ namespace Alterverse.Combat
         {
             float t=Time.time;
             float idle=Mathf.Sin(t*1.55f);
-            float stride=Mathf.Sin(t*6.8f)*xenoMoveBlend;
+            float stride=Mathf.Sin(xenoGaitPhase)*xenoMoveBlend;
             float strideAbs=Mathf.Abs(stride);
             float attackWindup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
             xenoAttackKick=Mathf.MoveTowards(xenoAttackKick,0f,Time.deltaTime*5.5f);
@@ -1245,13 +1250,51 @@ namespace Alterverse.Combat
             }
         }
 
-        private void AnimateTracks(float movement)
+        private void TrackRootMovement(float deltaTime)
         {
-            if(noxaraSpider)return;
-            if(kryonBear){bearMoveBlend=1f;return;}
-            if(xenoAlien){xenoMoveBlend=1f;return;}
-            if(marsSkeleton){skeletonMoveBlend=1f;return;}
-            moonMoveBlend=1f;
+            Vector3 position=transform.position;
+            if(!movementSampleReady)
+            {
+                lastMovementSample=position;
+                movementSampleReady=true;
+                return;
+            }
+
+            Vector3 displacement=position-lastMovementSample;
+            lastMovementSample=position;
+            displacement.y=0f;
+            float dt=Mathf.Max(deltaTime,.0001f);
+            if(displacement.magnitude>Mathf.Max(2f,dt*40f))
+            {
+                // Relocation resets every gait and the spider's planted-foot cache. It must not
+                // be interpreted as a sprint step or a reason to swing a leg across the arena.
+                moonMoveBlend=skeletonMoveBlend=xenoMoveBlend=bearMoveBlend=spiderMoveBlend=0f;
+                moonGaitPhase=skeletonGaitPhase=xenoGaitPhase=bearGaitPhase=spiderGaitClock=0f;
+                spiderTurnLean=spiderVisualYaw=0f;
+                spiderPreviousWorldPosition=position;
+                spiderPreviousForward=transform.forward;
+                spiderFeetInitialized=false;
+                return;
+            }
+
+            float speed=displacement.magnitude/dt;
+            float target=Mathf.InverseLerp(.10f,MoveSpeed*.68f,speed);
+            float rate=target>.01f?8f:5f;
+            moonMoveBlend=Mathf.MoveTowards(moonMoveBlend,target,dt*rate);
+            skeletonMoveBlend=Mathf.MoveTowards(skeletonMoveBlend,target,dt*rate);
+            xenoMoveBlend=Mathf.MoveTowards(xenoMoveBlend,target,dt*rate);
+            bearMoveBlend=Mathf.MoveTowards(bearMoveBlend,target,dt*rate);
+
+            // One gait cycle spans two steps. Phase advances by travelled distance, so stops,
+            // acceleration and collision blocking cannot make the legs run in place.
+            if(displacement.sqrMagnitude>.0001f)
+            {
+                float distance=displacement.magnitude;
+                moonGaitPhase=Mathf.Repeat(moonGaitPhase+distance/1.85f*Mathf.PI*2f,Mathf.PI*2f);
+                skeletonGaitPhase=Mathf.Repeat(skeletonGaitPhase+distance/2.35f*Mathf.PI*2f,Mathf.PI*2f);
+                xenoGaitPhase=Mathf.Repeat(xenoGaitPhase+distance/1.72f*Mathf.PI*2f,Mathf.PI*2f);
+                bearGaitPhase=Mathf.Repeat(bearGaitPhase+distance/2.45f*Mathf.PI*2f,Mathf.PI*2f);
+            }
         }
 
         private void OnDestroy()
