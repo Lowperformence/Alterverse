@@ -38,6 +38,7 @@ namespace Alterverse.Visuals
         private Quaternion weaponRestR,weaponRestL;
         private Quaternion attackArmR,attackArmL,attackWeaponR,attackWeaponL;
         private Quaternion displayedArmL=Quaternion.identity,displayedArmR=Quaternion.identity;
+        private TrailRenderer veyrTrailL,veyrTrailR;
         private Renderer[] energyRenderers;
         private MaterialPropertyBlock energyBlock;
         private static readonly int EnergyBoost=Shader.PropertyToID("_EnergyBoost");
@@ -73,14 +74,15 @@ namespace Alterverse.Visuals
             GetComponent<VoidWingPresentation>()?.Pulse();
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool melee=hero==HeroId.Veyr||hero==HeroId.Kaelon||hero==HeroId.Rook;
-            attackDuration=melee?(ultimate?.46f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
+            attackDuration=melee?(ultimate?.46f:hero==HeroId.Veyr?.70f:hero==HeroId.Kaelon?.40f:.34f):(ultimate?.32f:.22f);
             attackUntil=Time.time+attackDuration;attackWeight=ultimate?1f:hero==HeroId.Veyr?1f:.62f;windupUntil=0;windupDuration=0;
             attackStarted=Time.time;
+            if(hero==HeroId.Veyr){if(veyrTrailL!=null){veyrTrailL.emitting=false;veyrTrailL.Clear();}if(veyrTrailR!=null){veyrTrailR.emitting=false;veyrTrailR.Clear();}}
         }
         public void PulseBasic(float windup)
         {
             PulseAttack(false);
-            windupUntil=Time.time+windup;windupDuration=Mathf.Max(0,windup);attackUntil=windupUntil+attackDuration;
+            windupUntil=Time.time+windup;windupDuration=Mathf.Max(0,windup);attackUntil=identity!=null&&identity.Hero==HeroId.Veyr?attackStarted+.70f:windupUntil+attackDuration;
         }
         public void PulseAbility(int slot,float windup)
         {
@@ -145,6 +147,7 @@ namespace Alterverse.Visuals
             orb=FindPart("Orb");
             if(weaponR!=null){weaponPositionR=weaponR.localPosition;weaponRestR=weaponR.localRotation;}
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
+            if(riggedHero==HeroId.Veyr){veyrTrailL=CreateVeyrTrail(weaponL,false);veyrTrailR=CreateVeyrTrail(weaponR,true);}
             if(orb!=null)orbRest=orb.localPosition;
             legL=FindPart("LegL");legR=FindPart("LegR");bootL=FindPart("BootL");bootR=FindPart("BootR");
             armL=FindPart("ArmL")??FindPart("GauntletL");armR=FindPart("ArmR")??FindPart("GauntletR");
@@ -180,6 +183,8 @@ namespace Alterverse.Visuals
             previousHeading=transform.eulerAngles.y;
             attackUntil=windupUntil=dashUntil=empowerUntil=hitUntil=hitStarted=windupDuration=0f;hitFromSide=0f;
             abilitySlot=-1;
+            if(veyrTrailL!=null){veyrTrailL.emitting=false;veyrTrailL.Clear();}
+            if(veyrTrailR!=null){veyrTrailR.emitting=false;veyrTrailR.Clear();}
             root.localPosition=basePosition;
             root.localRotation=displayedRotation=Quaternion.identity;
             root.localScale=displayedScale=rootScale;
@@ -272,7 +277,8 @@ namespace Alterverse.Visuals
             ApplyAttackPose(hero,kick,preparation,progress,windupProgress,attackWeight);
             // Return to a readable guard between attacks. The rifle uses its authored shoulder
             // hold; melee heroes keep both fists forward instead of swinging them with the stride.
-            bool attacking=preparation>.001f||kick>.025f;
+            bool veyrBasic=hero==HeroId.Veyr&&abilitySlot==-1&&Time.time<attackUntil;
+            bool attacking=veyrBasic||preparation>.001f||kick>.025f;
             // Small synchronized breath and weight shift, without alternating arm pumping.
             // Keep the sight picture especially steady on Nyra's shoulder rifle.
             float guardBreath=Mathf.Sin(t*1.5f)*.30f*(1f-strideWeight);
@@ -316,7 +322,7 @@ namespace Alterverse.Visuals
             float recoil=hitWeight*(heavy?3f:4.5f);
             float hitTorso=hitWeight*(heavy?13f:17f);
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
-            float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
+            float armBlend=veyrBasic?1f:1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
             if(armL!=null)armL.localRotation=Quaternion.Slerp(armBeforeL,armL.localRotation,armBlend);
             if(armR!=null)armR.localRotation=Quaternion.Slerp(armBeforeR,armR.localRotation,armBlend);
             if(hitWeight>0f)
@@ -390,6 +396,7 @@ namespace Alterverse.Visuals
                 {
                     case HeroId.Rook:
                     case HeroId.Veyr:
+                        if(veyrBasic){elbowL=-48f;elbowR=-48f;break;}
                         bool both=abilitySlot==2||abilitySlot==3;
                         bool rightHand=attackSerial%2!=0;
                         float strikingElbow=Mathf.Lerp(-14f,-72f,charge);
@@ -444,10 +451,21 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        attackPitch=6f*anticipation-14f*kick;
-                        attackTwist=attackSide*(-22f*anticipation+34f*kick);
-                        hipTwist=attackSide*(-9f*anticipation+16f*kick);
-                        attackRoll=attackSide*(5f*anticipation-8f*kick);
+                        if(veyrBasic)
+                        {
+                            float strike=VeyrStrikeWeight(Time.time-attackStarted);
+                            attackPitch=-5f*strike;
+                            attackTwist=3f*strike;
+                            hipTwist=0f;
+                            attackRoll=0f;
+                        }
+                        else
+                        {
+                            attackPitch=6f*anticipation-14f*kick;
+                            attackTwist=attackSide*(-22f*anticipation+34f*kick);
+                            hipTwist=attackSide*(-9f*anticipation+16f*kick);
+                            attackRoll=attackSide*(5f*anticipation-8f*kick);
+                        }
                         break;
                     case HeroId.Kaelon:
                         attackPitch=8f*anticipation-16f*kick;
@@ -501,6 +519,7 @@ namespace Alterverse.Visuals
                     -sway*.10f-attackRoll*.35f);
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
+            UpdateVeyrTrails(veyrBasic);
         }
         private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,float weight,float stance,
             out float hipAngle,out float kneeAngle,out float ankleAngle)
@@ -627,6 +646,66 @@ namespace Alterverse.Visuals
             }
         }
 
+        private static float VeyrStrikeWeight(float seconds)
+        {
+            if(seconds<.14f)return 0f;
+            if(seconds<.35f)return Mathf.SmoothStep(0f,1f,(seconds-.14f)/.21f);
+            return 1f-Mathf.SmoothStep(0f,1f,(seconds-.35f)/.35f);
+        }
+
+        private void PoseVeyrBasic(float seconds)
+        {
+            // Both weapons retain their fixed grip rotation. The shoulder pivots drive the
+            // entire hand/forearm/sword chain across the center line in opposite directions.
+            float open=seconds<.14f?Mathf.SmoothStep(0f,1f,seconds/.14f):1f;
+            float cut=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.14f)/.21f));
+            float through=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.35f)/.11f));
+            float recover=Mathf.SmoothStep(0f,1f,Mathf.Clamp01((seconds-.46f)/.24f));
+            Quaternion left=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(false)),Quaternion.Euler(-44f,-30f,-72f),open);
+            Quaternion right=Quaternion.Slerp(Quaternion.Euler(VeyrGuardArm(true)),Quaternion.Euler(-44f,30f,72f),open);
+            left=Quaternion.Slerp(left,Quaternion.Euler(-68f,10f,42f),cut);
+            right=Quaternion.Slerp(right,Quaternion.Euler(-68f,-10f,-42f),cut);
+            left=Quaternion.Slerp(left,Quaternion.Euler(-61f,14f,54f),through);
+            right=Quaternion.Slerp(right,Quaternion.Euler(-61f,-14f,-54f),through);
+            left=Quaternion.Slerp(left,Quaternion.Euler(VeyrGuardArm(false)),recover);
+            right=Quaternion.Slerp(right,Quaternion.Euler(VeyrGuardArm(true)),recover);
+            if(armL!=null)armL.localRotation=armRestL*left;
+            if(armR!=null)armR.localRotation=armRestR*right;
+            if(weaponL!=null)weaponL.localRotation=weaponRestL*VeyrGuardBlade(false);
+            if(weaponR!=null)weaponR.localRotation=weaponRestR*VeyrGuardBlade(true);
+        }
+
+        private static TrailRenderer CreateVeyrTrail(Transform weapon,bool right)
+        {
+            if(weapon==null)return null;
+            var tip=new GameObject(right?"DF_VeyrSlashTipR":"DF_VeyrSlashTipL");
+            tip.transform.SetParent(weapon,false);
+            tip.transform.localPosition=new Vector3(right?.20f:-.20f,-.50f,1.02f);
+            var trail=tip.AddComponent<TrailRenderer>();
+            trail.time=.12f;
+            trail.startWidth=.105f;
+            trail.endWidth=0f;
+            trail.minVertexDistance=.015f;
+            trail.numCornerVertices=3;
+            trail.numCapVertices=3;
+            trail.alignment=LineAlignment.View;
+            Shader shader=Shader.Find("Sprites/Default");
+            if(shader!=null)trail.material=new Material(shader);
+            trail.startColor=new Color(.66f,.94f,1f,.85f);
+            trail.endColor=new Color(.31f,.69f,1f,0f);
+            trail.emitting=false;
+            return trail;
+        }
+
+        private void UpdateVeyrTrails(bool basic)
+        {
+            if(veyrTrailL==null&&veyrTrailR==null)return;
+            float age=Time.time-attackStarted;
+            bool emit=basic&&age>=.14f&&age<.47f&&health!=null&&!health.IsDead;
+            if(veyrTrailL!=null)veyrTrailL.emitting=emit;
+            if(veyrTrailR!=null)veyrTrailR.emitting=emit;
+        }
+
         // Presentation-only keyframes; HeroAttackDelivery owns windup/flight damage timing.
         // The weapon is a child of the shoulder rig, so both arm and weapon follow the full strike arc.
         private static float StrikeDelivery(float windupProgress)
@@ -674,6 +753,11 @@ namespace Alterverse.Visuals
         {
             if(weaponR!=null){weaponR.localPosition=weaponPositionR;weaponR.localRotation=weaponRestR;}
             if(weaponL!=null){weaponL.localPosition=weaponPositionL;weaponL.localRotation=weaponRestL;}
+            if(hero==HeroId.Veyr&&abilitySlot==-1&&Time.time<attackUntil)
+            {
+                PoseVeyrBasic(Time.time-attackStarted);
+                return;
+            }
             if(kick<=0&&preparation<=0&&Time.time>=empowerUntil)return;
             switch(hero)
             {
