@@ -695,7 +695,7 @@ namespace Alterverse.Combat
 
             // Keep phase bounded and advance only while the gameplay root actually travels.
             // This prevents foot skating during braking and loss of phase precision in long matches.
-            if(displacement.sqrMagnitude>.0001f)
+            if(displacement.sqrMagnitude>0f)
                 spiderGaitClock=Mathf.Repeat(spiderGaitClock+displacement.magnitude/2.45f,1f);
 
             float idle=Mathf.Sin(Time.time*1.65f);
@@ -724,7 +724,12 @@ namespace Alterverse.Combat
 
             if(!spiderFeetInitialized)
             {
-                for(int i=0;i<8;i++)spiderFootPlant[i]=SpiderDesiredFootWorld(i,Vector3.zero);
+                for(int i=0;i<8;i++)
+                {
+                    Vector3 rest=SpiderDesiredFootWorld(i,Vector3.zero);
+                    spiderFootPlant[i]=spiderSwingStart[i]=spiderSwingEnd[i]=rest;
+                    spiderWasSwing[i]=false;
+                }
                 spiderFeetInitialized=true;
             }
 
@@ -774,7 +779,6 @@ namespace Alterverse.Combat
 
             if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))
             {
-                float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
                 energyMat.SetColor("_EmissionColor",spiderEnergyBase*(2.7f+idle*.18f+windup*1.9f));
             }
             if(barrelPivot!=null)
@@ -978,7 +982,6 @@ namespace Alterverse.Combat
                 bearHeadPivot.localRotation=Quaternion.Euler(idle*1.2f+windup*5f-bearAttackKick*12f,-stride*2.2f,0);
             if(energyMat!=null&&energyMat.HasProperty("_EmissionColor"))
             {
-                float windup=shotPending?Mathf.Clamp01(1f-(shotAt-Time.time)/ShotWindup):0f;
                 energyMat.SetColor("_EmissionColor",bearEnergyBase*(2.8f+idle*.12f+windup*2.0f));
             }
         }
@@ -1282,6 +1285,7 @@ namespace Alterverse.Combat
                 moonMoveBlend=skeletonMoveBlend=xenoMoveBlend=bearMoveBlend=spiderMoveBlend=0f;
                 moonGaitPhase=skeletonGaitPhase=xenoGaitPhase=bearGaitPhase=spiderGaitClock=0f;
                 spiderTurnLean=spiderVisualYaw=0f;
+                skeletonAttackKick=spiderAttackKick=bearAttackKick=xenoAttackKick=0f;
                 spiderPreviousWorldPosition=position;
                 spiderPreviousForward=transform.forward;
                 spiderFeetInitialized=false;
@@ -1298,7 +1302,7 @@ namespace Alterverse.Combat
 
             // One gait cycle spans two steps. Phase advances by travelled distance, so stops,
             // acceleration and collision blocking cannot make the legs run in place.
-            if(displacement.sqrMagnitude>.0001f)
+            if(displacement.sqrMagnitude>0f)
             {
                 float distance=displacement.magnitude;
                 moonGaitPhase=Mathf.Repeat(moonGaitPhase+distance/1.85f*Mathf.PI*2f,Mathf.PI*2f);
