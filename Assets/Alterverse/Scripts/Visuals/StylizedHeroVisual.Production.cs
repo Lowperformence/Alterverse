@@ -322,6 +322,14 @@ namespace Alterverse.Visuals
 
             Create("StaffLowerCap",PrimitiveType.Cube,new Vector3(0,-.83f,.01f),new Vector3(.10f,.12f,.10f),gold,default,weapon);
             Create("StaffGrip",PrimitiveType.Cube,new Vector3(0,-.18f,.01f),new Vector3(.075f,.28f,.075f),white,default,weapon);
+            // Raised ferrules define the grip without covering the ceremonial staff head.
+            for(int band=0;band<3;band++)
+                Sculpt("StaffGripFerrule"+band,HeroMeshLibrary.Ring("DF_StaffGripFerrule",.043f,.007f),
+                    new Vector3(0,-.27f+band*.09f,.01f),Vector3.one,gold,weapon);
+            Sculpt("StaffCrownSocket",HeroMeshLibrary.Loft("DF_StaffCrownSocket",
+                new[]{-.07f,0f,.07f},new[]{.042f,.067f,.050f},new[]{.042f,.067f,.050f}),
+                new Vector3(0,.56f,.03f),Vector3.one,gold,weapon);
+
 
             GameObject crown=Sculpt("Emitter",HeroMeshLibrary.Ring("DF_TahlaStaffCrown",.23f,.028f),
                 new Vector3(0,.77f,.055f),Vector3.one,cyan,weapon,true);
@@ -1022,6 +1030,16 @@ namespace Alterverse.Visuals
                     new Vector3(0,0,side*8f),weapon);
                 Create("HammerEnergy"+side,PrimitiveType.Cube,new Vector3(side*.235f,.54f,.321f),new Vector3(.115f,.18f,.022f),accent,default,weapon);
             }
+
+            // Mechanical fasteners sit on the existing face, outside the central light strip.
+            for(int side=-1;side<=1;side+=2)
+                for(int row=-1;row<=1;row+=2)
+                    Create("HammerFaceBolt"+side+"_"+row,PrimitiveType.Cylinder,
+                        new Vector3(side*.25f,.54f+row*.11f,.319f),new Vector3(.040f,.009f,.040f),
+                        metal,new Vector3(90,0,0),weapon);
+            for(int band=0;band<3;band++)
+                Sculpt("HammerGripFerrule"+band,HeroMeshLibrary.Ring("DF_HammerGripFerrule",.059f,.008f),
+                    new Vector3(0,-.35f+band*.13f,0),Vector3.one,trim,weapon);
             // Vented strike face gives the head the same industrial language as the helmet.
             for(int i=-2;i<=2;i++)
                 Create("HammerVent"+(i+2),PrimitiveType.Cube,new Vector3(i*.105f,.57f,.322f),new Vector3(.055f,.025f,.018f),cloth,default,weapon);
