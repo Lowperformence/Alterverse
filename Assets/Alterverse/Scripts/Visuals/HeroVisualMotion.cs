@@ -286,7 +286,7 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        // A split high/low dual-blade guard: hands and blade silhouettes stay apart.
+                        // A crossed dual-blade guard: both swords angle inward into a clear X.
                         readyL=VeyrGuardArm(false);readyR=VeyrGuardArm(true);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
@@ -303,8 +303,8 @@ namespace Alterverse.Visuals
                 readyL.x+=guardLift;readyR.x+=guardLift;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
-                // Keep Veyr's paired blades in a split guard, one high and one low/outboard.
-                // Their hilts stay at the hand sockets; only the wrists change blade direction.
+                // Keep Veyr's paired blades tilted toward center so they cross in front of him.
+                // Their hilts stay at the hand sockets; only the wrist/blade direction changes.
                 if(hero==HeroId.Veyr)
                 {
                     if(weaponL!=null)weaponL.localRotation=weaponRestL*VeyrGuardBlade(false);
@@ -668,7 +668,7 @@ namespace Alterverse.Visuals
             =>right?new Vector3(-42f,10f,24f):new Vector3(-18f,-12f,-32f);
 
         private static Quaternion VeyrGuardBlade(bool right)
-            =>right?Quaternion.Euler(-18f,22f,14f):Quaternion.Euler(16f,-24f,-14f);
+            =>right?Quaternion.Euler(-18f,22f,48f):Quaternion.Euler(16f,-24f,-48f);
 
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress,float windupProgress,float attackWeight)
         {
