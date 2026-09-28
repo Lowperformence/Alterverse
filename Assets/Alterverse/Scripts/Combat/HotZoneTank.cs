@@ -578,6 +578,12 @@ namespace Alterverse.Combat
             Part("TitanChestRift",PrimitiveType.Cube,transform,new Vector3(0,1.25f,.27f),new Vector3(.12f,.82f,.08f),energyMat,Quaternion.Euler(0,0,-18));
             Part("TitanRibRunesL",PrimitiveType.Cube,transform,new Vector3(-.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,-32));
             Part("TitanRibRunesR",PrimitiveType.Cube,transform,new Vector3(.45f,1.15f,.18f),new Vector3(.045f,.42f,.025f),energyMat,Quaternion.Euler(0,0,32));
+        
+            // Bone-built wrist cuffs and brow plates sharpen the old Martian silhouette.
+            Part("TitanWristCuffL",PrimitiveType.Cube,transform,new Vector3(-1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,-8));
+            Part("TitanWristCuffR",PrimitiveType.Cube,transform,new Vector3(1.34f,.45f,.10f),new Vector3(.34f,.16f,.32f),jointMat,Quaternion.Euler(0,0,8));
+            Part("TitanBrowRidge",PrimitiveType.Cube,transform,new Vector3(0,2.49f,.39f),new Vector3(.78f,.14f,.20f),darkMat,Quaternion.Euler(0,0,-3));
+            Part("TitanJawRune",PrimitiveType.Cube,transform,new Vector3(0,1.93f,.43f),new Vector3(.34f,.045f,.04f),energyMat,Quaternion.Euler(0,0,2));
         }
 
         private void AnimateSkeleton()
@@ -678,6 +684,14 @@ namespace Alterverse.Combat
                 ApplyNoxaraSpiderLegIk(i,rest);
             }
             spiderFeetInitialized=true;
+        
+            // Small paired armor vents and venom sacs make the abdomen read in motion.
+            Part("SpiderAbdomenVentL",PrimitiveType.Cube,spiderBodyRoot,new Vector3(-.47f,.68f,-.55f),new Vector3(.20f,.035f,.46f),jointMat,Quaternion.Euler(7,0,-8));
+            Part("SpiderAbdomenVentR",PrimitiveType.Cube,spiderBodyRoot,new Vector3(.47f,.68f,-.55f),new Vector3(.20f,.035f,.46f),jointMat,Quaternion.Euler(7,0,8));
+            Part("SpiderVenomSackL",PrimitiveType.Sphere,spiderBodyRoot,new Vector3(-.51f,.28f,-.82f),new Vector3(.13f,.14f,.16f),energyMat,Quaternion.identity);
+            Part("SpiderVenomSackR",PrimitiveType.Sphere,spiderBodyRoot,new Vector3(.51f,.28f,-.82f),new Vector3(.13f,.14f,.16f),energyMat,Quaternion.identity);
+            Part("SpiderMandibleTipL",PrimitiveType.Capsule,turretPivot,new Vector3(-.28f,-.20f,.58f),new Vector3(.12f,.18f,.14f),teamMat,Quaternion.Euler(18,0,12));
+            Part("SpiderMandibleTipR",PrimitiveType.Capsule,turretPivot,new Vector3(.28f,-.20f,.58f),new Vector3(.12f,.18f,.14f),teamMat,Quaternion.Euler(18,0,-12));
         }
 
         private void AnimateNoxaraSpider()
@@ -956,6 +970,12 @@ namespace Alterverse.Combat
                     MeshPart("KryonBearClaw"+i+"_"+claw,clawBlade,leg,new Vector3(claw*.18f,-1.43f,.68f),
                         new Vector3(.78f,claw==0 ? .92f : .80f,claw==0 ? 1.08f : .94f),bearIceMat,Quaternion.Euler(-8,claw*5f,0));
             }
+        
+            // Broken ice ridges continue the back silhouette and catch the map lighting.
+            MeshPart("KryonBearDorsalShardL",iceFin,bearBodyRoot,new Vector3(-.30f,.98f,-.96f),new Vector3(.44f,.70f,.48f),bearIceMat,Quaternion.Euler(2,-12,-14));
+            MeshPart("KryonBearDorsalShardR",iceFin,bearBodyRoot,new Vector3(.30f,1.00f,-.94f),new Vector3(.40f,.62f,.44f),bearIceMat,Quaternion.Euler(-4,13,13));
+            Part("KryonBearEyeGuardL",PrimitiveType.Cube,bearHeadPivot,new Vector3(-.23f,.17f,.64f),new Vector3(.25f,.045f,.065f),jointMat,Quaternion.Euler(0,0,-10));
+            Part("KryonBearEyeGuardR",PrimitiveType.Cube,bearHeadPivot,new Vector3(.23f,.17f,.64f),new Vector3(.25f,.045f,.065f),jointMat,Quaternion.Euler(0,0,10));
         }
 
         private void AnimateKryonBear()
@@ -1081,6 +1101,12 @@ namespace Alterverse.Combat
             BuildXenoTendril("R2",new Vector3(.50f,-.08f,.07f),new Vector3(25,13,35),.82f,spineLong,spineShort);
             BuildXenoTendril("L3",new Vector3(-.65f,-.22f,.12f),new Vector3(34,-18,-52),.68f,spineShort,spineShort);
             BuildXenoTendril("R3",new Vector3(.63f,-.24f,.12f),new Vector3(33,18,50),.66f,spineShort,spineShort);
+        
+            // Raised rib ridges and paired amber nodes break up the broad front chest plate.
+            MeshPart("XenoRibL",chestSide,xenoTorsoPivot,new Vector3(-.48f,.02f,.53f),new Vector3(.36f,.50f,.34f),jointMat,Quaternion.Euler(0,0,-18));
+            MeshPart("XenoRibR",chestSide,xenoTorsoPivot,new Vector3(.48f,.02f,.53f),new Vector3(.36f,.50f,.34f),jointMat,Quaternion.Euler(0,0,18));
+            Part("XenoChestNodeL",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(-.39f,.06f,.72f),new Vector3(.075f,.075f,.055f),energyMat,Quaternion.identity);
+            Part("XenoChestNodeR",PrimitiveType.Sphere,xenoTorsoPivot,new Vector3(.39f,.06f,.72f),new Vector3(.075f,.075f,.055f),energyMat,Quaternion.identity);
         }
 
         private void BuildXenoTendril(string suffix,Vector3 rootPosition,Vector3 rotation,float scale,Mesh firstMesh,Mesh secondMesh)
