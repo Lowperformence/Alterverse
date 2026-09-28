@@ -381,7 +381,8 @@ namespace Alterverse.Visuals
 
             float strideLength=StrideLength()*strideScale;
             // Use measured travel for phase; smoothed velocity is only for body inertia.
-            phase=Mathf.Repeat(phase+instant.magnitude*dt/Mathf.Max(.15f,strideLength)*Mathf.PI*2f*cadenceScale,Mathf.PI*2f);
+            // Slow visible gait cycles for every figure without changing its world movement.
+            phase=Mathf.Repeat(phase+instant.magnitude*dt/Mathf.Max(.15f,strideLength)*Mathf.PI*2f*cadenceScale*.60f,Mathf.PI*2f);
         }
 
         private void AnimatePresentation()
