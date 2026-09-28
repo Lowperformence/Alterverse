@@ -117,7 +117,11 @@ namespace Alterverse.Visuals
             articulatedRig=GetComponent<HeroProceduralRig>()??gameObject.AddComponent<HeroProceduralRig>();
             articulatedRig.Build(root);
             if(!articulatedRig.Ready)
-                Debug.LogError("[Alterverse Movement] Procedural joints are incomplete on '"+name+"'; gait has been stopped instead of switching to another controller.",this);
+            {
+                Debug.LogError("[Alterverse Movement] Procedural joints are incomplete on '"+name+"'; HeroVisualMotion is disabled. Check the limb meshes and rig build errors.",this);
+                enabled=false;
+                return;
+            }
             Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+").",this);
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
@@ -250,11 +254,45 @@ namespace Alterverse.Visuals
                 Quaternion rightKnee=Quaternion.Euler(rightKneeAngle,0f,0f);
                 Quaternion leftAnkle=Quaternion.Euler(leftAnkleAngle,0f,0f);
                 Quaternion rightAnkle=Quaternion.Euler(rightAnkleAngle,0f,0f);
-                float armCounter=Mathf.Lerp(12f,22f,runBlend)*strideWeight;
+                // Elbows flex forward; they must not alternate into hyperextension, or
+                // continue their walking oscillation while the shoulders deliver an attack.
+                float elbowL=-Mathf.Lerp(8f,26f,strideWeight)-Mathf.Sin(phase)*6f*strideWeight;
+                float elbowR=-Mathf.Lerp(8f,26f,strideWeight)+Mathf.Sin(phase)*6f*strideWeight;
+                float wristL=0f,wristR=0f;
+                float actionBlend=preparation>0?Mathf.SmoothStep(0f,1f,windupProgress):
+                    Mathf.Clamp01(kick/Mathf.Max(.01f,attackWeight));
+                float charge=preparation>0?1f:0f;
+                switch(hero)
+                {
+                    case HeroId.Rook:
+                    case HeroId.Veyr:
+                        bool both=abilitySlot==2||abilitySlot==3;
+                        bool rightHand=attackSerial%2!=0;
+                        float strikingElbow=Mathf.Lerp(-14f,-72f,charge);
+                        elbowR=Mathf.Lerp(elbowR,both||rightHand?strikingElbow:-52f,actionBlend);
+                        elbowL=Mathf.Lerp(elbowL,both||!rightHand?strikingElbow:-52f,actionBlend);
+                        break;
+                    case HeroId.Kaelon:
+                        elbowR=Mathf.Lerp(elbowR,Mathf.Lerp(-20f,-68f,charge),actionBlend);
+                        elbowL=Mathf.Lerp(elbowL,-42f,actionBlend);
+                        wristR=Mathf.Lerp(6f,-12f,charge)*actionBlend;
+                        break;
+                    case HeroId.Nyra:
+                        // A carried rifle keeps its grip rather than pumping the elbows.
+                        elbowR=Mathf.Lerp(-18f,-24f,actionBlend);
+                        elbowL=Mathf.Lerp(-24f,-30f,actionBlend);
+                        break;
+                    default:
+                        elbowR=Mathf.Lerp(elbowR,Mathf.Lerp(-24f,-58f,charge),actionBlend);
+                        elbowL=Mathf.Lerp(elbowL,Mathf.Lerp(-36f,-62f,charge),actionBlend);
+                        wristR=-14f*actionBlend;
+                        wristL=-10f*actionBlend;
+                        break;
+                }
                 articulatedRig.SetProceduralPose(1f,
                     leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
-                    Quaternion.Euler(-Mathf.Sin(phase)*armCounter,0f,0f),Quaternion.identity,
-                    Quaternion.Euler(-Mathf.Sin(phase+Mathf.PI)*armCounter,0f,0f),Quaternion.identity);
+                    Quaternion.Euler(elbowL,0f,0f),Quaternion.Euler(wristL,0f,0f),
+                    Quaternion.Euler(elbowR,0f,0f),Quaternion.Euler(wristR,0f,0f));
             }
 
             // Full-body weight shift and counter-rotation. These are visual skeleton poses only;
