@@ -23,10 +23,7 @@ if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisio
 // and the feminine face polish is applied consistently in matches and menu previews.
 if(id==HeroId.Mira&&GetComponent<Alterverse.Visuals.TahlaHealerVisualPolish>()==null)
 gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
-// Zhaev's presentation-only sword polish reshapes the visible strike after HeroVisualMotion.
-// It never changes damage, range, cooldowns or hit timing.
-if(id==HeroId.Veyr&&GetComponent<Alterverse.Visuals.VeyrAttackPresentation>()==null)
-gameObject.AddComponent<Alterverse.Visuals.VeyrAttackPresentation>();
+// HeroVisualMotion is the only shoulder/weapon pose owner, including Zhaev's crossed guard.
 }
 private void Start()
 {

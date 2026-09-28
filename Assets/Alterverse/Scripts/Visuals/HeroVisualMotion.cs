@@ -37,6 +37,7 @@ namespace Alterverse.Visuals
         private Vector3 rootScale,weaponPositionR,weaponPositionL,orbRest;
         private Quaternion weaponRestR,weaponRestL;
         private Quaternion attackArmR,attackArmL,attackWeaponR,attackWeaponL;
+        private Quaternion displayedArmL=Quaternion.identity,displayedArmR=Quaternion.identity;
         private Renderer[] energyRenderers;
         private MaterialPropertyBlock energyBlock;
         private static readonly int EnergyBoost=Shader.PropertyToID("_EnergyBoost");
@@ -66,7 +67,7 @@ namespace Alterverse.Visuals
         public void PulseAttack(bool ultimate)
         {
             // Snapshot the visible pose before restarting a combo; never snap a raised weapon to rest.
-            attackArmR=Rest(armR);attackArmL=Rest(armL);
+            attackArmR=displayedArmR;attackArmL=displayedArmL;
             attackWeaponR=Rest(weaponR);attackWeaponL=Rest(weaponL);
             abilitySlot=ultimate?3:-1;attackSerial++;
             GetComponent<VoidWingPresentation>()?.Pulse();
@@ -123,7 +124,7 @@ namespace Alterverse.Visuals
                 enabled=false;
                 return;
             }
-            Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+").",this);
+            Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+"). Guard v2: one shoulder/weapon pose owner.",this);
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             previousHeading=transform.eulerAngles.y;
@@ -151,6 +152,7 @@ namespace Alterverse.Visuals
             if(bootL!=null)bootPositionL=bootL.localPosition;if(bootR!=null)bootPositionR=bootR.localPosition;
             if(health!=null)health.Damaged+=OnDamaged;
             bootRestL=Rest(bootL);bootRestR=Rest(bootR);armRestL=Rest(armL);armRestR=Rest(armR);bladeRest=Rest(blade);
+            displayedArmL=armRestL;displayedArmR=armRestR;
         }
         private void OnDamaged(float applied,float absorbed,GameObject source)
         {
@@ -183,6 +185,7 @@ namespace Alterverse.Visuals
             root.localScale=displayedScale=rootScale;
             if(armL!=null)armL.localRotation=armRestL;
             if(armR!=null)armR.localRotation=armRestR;
+            displayedArmL=armRestL;displayedArmR=armRestR;
             if(torso!=null)torso.localRotation=torsoRest;
             if(head!=null)head.localRotation=headRest;
             if(weaponL!=null){weaponL.localPosition=weaponPositionL;weaponL.localRotation=weaponRestL;}
@@ -239,7 +242,10 @@ namespace Alterverse.Visuals
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
             // Keep the upper body in a composed combat guard while the legs carry the gait.
             // Shoulder counter-swing made the weapon/fists wobble on every step.
-            Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
+            // Never feed a later presentation component's pose back into next frame's smoothing.
+            Quaternion armBeforeL=displayedArmL,armBeforeR=displayedArmR;
+            if(armL!=null)armL.localRotation=armBeforeL;
+            if(armR!=null)armR.localRotation=armBeforeR;
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             float t=Time.time;
@@ -269,8 +275,8 @@ namespace Alterverse.Visuals
             bool attacking=preparation>.001f||kick>.025f;
             // Small synchronized breath and weight shift, without alternating arm pumping.
             // Keep the sight picture especially steady on Nyra's shoulder rifle.
-            float guardBreath=Mathf.Sin(t*1.5f)*.55f*(1f-strideWeight);
-            float guardStep=Mathf.Sin(phase*2f)*1.1f*strideWeight;
+            float guardBreath=Mathf.Sin(t*1.5f)*.30f*(1f-strideWeight);
+            float guardStep=Mathf.Sin(phase*2f)*.45f*strideWeight;
             float guardLift=(guardBreath+guardStep)*(hero==HeroId.Nyra?.35f:1f);
             if(!attacking)
             {
@@ -314,13 +320,16 @@ namespace Alterverse.Visuals
             if(armR!=null)armR.localRotation=Quaternion.Slerp(armBeforeR,armR.localRotation,armBlend);
             if(hitWeight>0f)
             {
-                float leftBrace=hitFromSide<0f?.82f:.48f;
-                float rightBrace=hitFromSide>0f?.82f:.48f;
+                // A hit is absorbed chiefly by the torso. Keep the weapon grip composed.
+                float leftBrace=hero==HeroId.Nyra?0f:hitFromSide<0f?.12f:.06f;
+                float rightBrace=hero==HeroId.Nyra?0f:hitFromSide>0f?.12f:.06f;
                 Quaternion leftFlinch=armRestL*Quaternion.Euler(-34f,-hitFromSide*7f,hitFromSide<0f?-18f:12f);
                 Quaternion rightFlinch=armRestR*Quaternion.Euler(-34f,-hitFromSide*7f,hitFromSide>0f?18f:-12f);
                 if(armL!=null)armL.localRotation=Quaternion.Slerp(armL.localRotation,leftFlinch,hitWeight*leftBrace);
                 if(armR!=null)armR.localRotation=Quaternion.Slerp(armR.localRotation,rightFlinch,hitWeight*rightBrace);
             }
+            if(armL!=null)displayedArmL=armL.localRotation;
+            if(armR!=null)displayedArmR=armR.localRotation;
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
             SetEnergy(energy);
             bool phaseDash=(Dashing||Time.time<dashUntil)&&(hero==HeroId.Veyr||hero==HeroId.Elyra);
@@ -412,12 +421,11 @@ namespace Alterverse.Visuals
                     {elbowL=-34f;elbowR=-42f;}
                     else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
                     {elbowL=-26f;elbowR=-30f;}
-                    float subtleFlex=guardLift*(hero==HeroId.Nyra?.5f:.75f);
-                    elbowL+=subtleFlex;elbowR+=subtleFlex;
+                    // Elbows/wrists retain the grip. The shared shoulder lift supplies the small bob.
                 }
                 float hitGuard=Mathf.Clamp01(hitWeight);
-                elbowL-=hitGuard*(hitFromSide<0f?20f:8f);
-                elbowR-=hitGuard*(hitFromSide>0f?20f:8f);
+                elbowL-=hero==HeroId.Nyra?0f:hitGuard*(hitFromSide<0f?4f:2f);
+                elbowR-=hero==HeroId.Nyra?0f:hitGuard*(hitFromSide>0f?4f:2f);
                 articulatedRig.SetProceduralPose(1f,
                     leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
                     Quaternion.Euler(elbowL,0f,0f),Quaternion.Euler(wristL,0f,0f),
@@ -732,4 +740,3 @@ namespace Alterverse.Visuals
 
     }
 }
-

@@ -5,9 +5,9 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Presentation-only layer that makes every hero attack physically readable from the match camera.
+    /// VFX-only attack cues observed from the existing cooldown state.
     /// It observes existing cooldown state, never applies damage/status/movement, and reuses HeroVfxPool.
-    /// HeroVisualMotion remains the base animation owner; this component runs afterwards and adds pose/VFX emphasis.
+    /// HeroVisualMotion is the only pose owner. This component never writes to character transforms.
     /// </summary>
     [DefaultExecutionOrder(1500)]
     public sealed class HeroAttackReadabilityPresentation : MonoBehaviour
@@ -20,19 +20,11 @@ namespace Alterverse.Visuals
         private TeamMember team;
         private HeroVisualMotion motion;
 
-        private Transform root,armL,armR,weaponL,weaponR,gauntletL,gauntletR,orb,muzzle;
-        private Vector3 gauntletBaseL,gauntletBaseR;
-        private bool partsReady;
+        private Transform root,orb,muzzle;
 
         private float previousBasic;
         private readonly float[] previousAbility=new float[4];
         private bool cooldownsPrimed;
-
-        private bool active;
-        private int activeSlot=-1; // -1 = basic attack
-        private float started,windup,duration;
-        private Vector3 visualTarget;
-        private int attackSerial;
 
         private void Awake()
         {
@@ -99,43 +91,12 @@ namespace Alterverse.Visuals
         private void BeginPresentation(int slot,float attackWindup)
         {
             if(identity==null)return;
-            active=true;activeSlot=slot;started=Time.time;windup=Mathf.Max(.04f,attackWindup);
-            duration=windup+(slot<0?.24f:slot==3?.42f:.30f);
-            attackSerial++;
-
             AbilitySpec spec=slot>=0&&kit!=null?kit.Spec(slot):default;
             float range=slot>=0?spec.Range:BasicVisualRange(identity.Hero);
             float radius=slot>=0?spec.Radius:0f;
-            visualTarget=ResolveVisualTarget(slot,range,radius);
+            Vector3 visualTarget=ResolveVisualTarget(slot,range,radius);
 
-            EmitPresentationVfx(identity.Hero,slot,visualTarget,windup,spec);
-        }
-
-        private void LateUpdate()
-        {
-            if(!active||identity==null)return;
-            if(!partsReady)partsReady=TryCacheParts();
-            float elapsed=Time.time-started;
-            if(elapsed>=duration){active=false;RestoreTranslatedParts();return;}
-            if(!partsReady)return;
-
-            float charge=elapsed<windup?Mathf.SmoothStep(0f,1f,elapsed/Mathf.Max(.001f,windup)):1f;
-            float release=elapsed<windup?0f:Mathf.Clamp01((elapsed-windup)/Mathf.Max(.001f,duration-windup));
-            float contact=elapsed<windup?charge:1f-Mathf.SmoothStep(0f,1f,release);
-            ApplyBodyPresentation(identity.Hero,activeSlot,charge,contact,release);
-        }
-
-        private bool TryCacheParts()
-        {
-            root=transform.Find("DF_VisualRoot");
-            if(root==null)return false;
-            armL=FindPart("ArmL");armR=FindPart("ArmR");
-            weaponL=FindPart("WeaponL");weaponR=FindPart("WeaponR");
-            gauntletL=FindPart("GauntletL");gauntletR=FindPart("GauntletR");
-            orb=FindPart("Orb");muzzle=FindPart("Muzzle");
-            if(gauntletL!=null)gauntletBaseL=gauntletL.localPosition;
-            if(gauntletR!=null)gauntletBaseR=gauntletR.localPosition;
-            return true;
+            EmitPresentationVfx(identity.Hero,slot,visualTarget,Mathf.Max(.04f,attackWindup),spec);
         }
 
         private Transform FindPart(string shortName)
@@ -145,129 +106,6 @@ namespace Alterverse.Visuals
             Transform[] all=root.GetComponentsInChildren<Transform>(true);
             for(int i=0;i<all.Length;i++)if(all[i]!=null&&all[i].name==wanted)return all[i];
             return null;
-        }
-
-        private void ApplyBodyPresentation(HeroId hero,int slot,float charge,float contact,float release)
-        {
-            switch(hero)
-            {
-                case HeroId.Kaelon: PoseKaelon(slot,charge,contact,release);break;
-                case HeroId.Rook: PoseRook(slot,charge,contact,release);break;
-                case HeroId.Elyra: PoseCaster(slot,charge,contact,true);break;
-                case HeroId.Mira: PoseCaster(slot,charge,contact,false);break;
-                case HeroId.Nyra: PoseMarksman(slot,charge,contact);break;
-                case HeroId.Traveler: PoseTraveler(slot,charge,contact);break;
-                case HeroId.Veyr: PoseVeyr(slot,charge,contact);break;
-            }
-        }
-
-        private void PoseKaelon(int slot,float charge,float contact,float release)
-        {
-            // Gravity Anchor: the base animation rotates the body 360 degrees; keep the hammer visibly extended
-            // through the whole turn so the rotation reads as a real weapon sweep rather than an in-place spin.
-            if(slot==2)
-            {
-                AddRot(armR,-58f*contact,18f*contact,-66f*contact);
-                AddRot(weaponR,-22f*contact,0,38f*contact);
-                AddRot(armL,-18f*contact,0,28f*contact);
-                return;
-            }
-            // Citadel and Anchor Strike visibly load the hammer overhead/back, then drive it through the contact point.
-            float lift=slot==3?charge:charge*.72f;
-            AddRot(armR,-82f*lift+105f*(1f-contact),slot==3?0:18f*contact,-28f*lift);
-            AddRot(weaponR,-48f*lift+68f*(1f-contact),0,22f*contact);
-            if(root!=null&&slot==3)root.localRotation*=Quaternion.Euler(-10f*contact,0,0);
-        }
-
-        private void PoseRook(int slot,float charge,float contact,float release)
-        {
-            bool left=(attackSerial&1)==0;
-            Transform fist=left?gauntletL:gauntletR;
-            Transform arm=left?armL:armR;
-
-            if(slot==2)
-            {
-                // Wreckstorm: both fists stay wide while the existing body spin resolves.
-                AddRot(armL,-42f*contact,-28f*contact,56f*contact);
-                AddRot(armR,-42f*contact,28f*contact,-56f*contact);
-                SetGauntletExtension(gauntletL,gauntletBaseL,.24f*contact);
-                SetGauntletExtension(gauntletR,gauntletBaseR,.24f*contact);
-                return;
-            }
-            if(slot==3)
-            {
-                // Overdrive already lifts the render rig in HeroVisualMotion; fists rise during ascent and punch down on landing.
-                AddRot(armL,-105f*charge+132f*(1f-contact),0,18f);
-                AddRot(armR,-105f*charge+132f*(1f-contact),0,-18f);
-                return;
-            }
-            if(slot==1)
-            {
-                AddRot(armL,-35f*charge,0,20f*charge);AddRot(armR,-35f*charge,0,-20f*charge);
-                return;
-            }
-
-            // Basic / Wreck Swing: actual visible fist thrust and snap-back, alternating left/right.
-            AddRot(arm,-56f*charge+72f*(1f-contact),left?-12f:12f,left?28f:-28f);
-            float extension=.46f*contact;
-            if(fist!=null)SetGauntletExtension(fist,left?gauntletBaseL:gauntletBaseR,extension);
-            Transform other=left?gauntletR:gauntletL;
-            if(other!=null)SetGauntletExtension(other,left?gauntletBaseR:gauntletBaseL,0f);
-        }
-
-        private void PoseCaster(int slot,float charge,float contact,bool gravitational)
-        {
-            float raise=Mathf.Clamp01(charge*.9f+contact*.35f);
-            AddRot(armL,-58f*raise,-18f*raise,gravitational?-34f:-18f);
-            AddRot(armR,-58f*raise,18f*raise,gravitational?34f:18f);
-            if(orb!=null)
-            {
-                float pulse=Mathf.Sin(Mathf.Clamp01((Time.time-started)/duration)*Mathf.PI);
-                orb.localPosition+=Vector3.up*(.12f*raise+.08f*pulse);
-            }
-            if(root!=null&&slot==3)root.localRotation*=Quaternion.Euler(-8f*charge,0,0);
-        }
-
-        private void PoseMarksman(int slot,float charge,float contact)
-        {
-            // Shoulder locks into the shot, then a visible recoil follows release.
-            AddRot(armR,-18f*charge+20f*(1f-contact),0,-8f*charge);
-            AddRot(armL,-10f*charge,0,8f*charge);
-            AddRot(weaponR,slot==3?-7f*contact:-4f*contact,0,0);
-            if(root!=null)root.localRotation*=Quaternion.Euler(2f*(1f-contact),0,0);
-        }
-
-        private void PoseTraveler(int slot,float charge,float contact)
-        {
-            if(slot==1)return; // Rift Step movement already owns the silhouette.
-            AddRot(armL,-48f*charge,-16f*charge,-24f*charge);
-            AddRot(armR,-48f*charge,16f*charge,24f*charge);
-            if(root!=null&&slot==3)root.localRotation*=Quaternion.Euler(-6f*contact,0,0);
-        }
-
-        private void PoseVeyr(int slot,float charge,float contact)
-        {
-            // VeyrAttackPresentation owns the broad chest-height blade polish; this only emphasizes ability commitment.
-            if(slot==2)return;
-            AddRot(armL,-14f*charge,-22f*contact,-18f*contact);
-            AddRot(armR,-14f*charge,22f*contact,18f*contact);
-        }
-
-        private void RestoreTranslatedParts()
-        {
-            if(identity==null||identity.Hero!=HeroId.Rook)return;
-            if(gauntletL!=null)gauntletL.localPosition=gauntletBaseL;
-            if(gauntletR!=null)gauntletR.localPosition=gauntletBaseR;
-        }
-
-        private static void AddRot(Transform t,float x,float y,float z)
-        {
-            if(t!=null)t.localRotation*=Quaternion.Euler(x,y,z);
-        }
-
-        private static void SetGauntletExtension(Transform fist,Vector3 rest,float forward)
-        {
-            if(fist!=null)fist.localPosition=rest+Vector3.forward*forward;
         }
 
         private Vector3 ResolveVisualTarget(int slot,float range,float radius)
@@ -373,7 +211,11 @@ namespace Alterverse.Visuals
 
         private Vector3 ReleasePoint()
         {
+            if(motion==null)motion=GetComponent<HeroVisualMotion>();
             if(motion!=null)return motion.ReleasePoint;
+            if(root==null)root=transform.Find("DF_VisualRoot");
+            if(muzzle==null)muzzle=FindPart("Muzzle");
+            if(orb==null)orb=FindPart("Orb");
             if(muzzle!=null)return muzzle.position;
             if(orb!=null)return orb.position;
             return transform.position+Vector3.up*.75f+transform.forward*.35f;
