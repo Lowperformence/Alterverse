@@ -76,8 +76,18 @@ namespace Alterverse.Visuals
             }
             // Short physical muzzle core, rather than a full-distance beam.
             Fx(HeroFxShape.Burst,start,Color.Lerp(c,Color.white,.65f),.32f*strength,.09f,rotation:Face(start,end),actor:actor);
-            if(h==HeroId.Elyra)Ring(actor,start,.28f*strength,.15f);
-            if(h==HeroId.Mira)Fx(HeroFxShape.Shard,start,c,.22f,.12f,rotation:Quaternion.Euler(35,0,25));
+            if(h==HeroId.Elyra)
+            {
+                Ring(actor,start,.38f*strength,.16f);
+                if(slot>=0)HeroVfxPool.Emit(HeroFxShape.Runes,start,end,Vector3.one*.55f*strength,
+                    new Color(c.r,c.g,c.b,.82f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+            }
+            if(h==HeroId.Mira)
+            {
+                Fx(HeroFxShape.Shard,start,Color.Lerp(c,Color.white,.75f),.32f,.12f,rotation:Quaternion.Euler(35,0,25),actor:actor);
+                if(slot>=0)HeroVfxPool.Emit(HeroFxShape.Petals,start,end,Vector3.one*.52f*strength,
+                    new Color(c.r,c.g,c.b,.80f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+            }
         }
         // Vertical portals and light arcs stay above the battlefield rather than covering the floor.
         private static void TravelerPortal(GameObject actor,Vector3 center,float size,float life,bool arrival=false)
@@ -135,7 +145,9 @@ namespace Alterverse.Visuals
                 // Bolt mesh spans -1.4..+.55 on Z. Fit those ends exactly to muzzle/contact.
                 float length=delta.magnitude/1.95f;
                 Vector3 center=start+delta*(1.4f/1.95f);
-                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.25f*strength,.25f*strength,length),c,.09f,HeroFxMotion.Hold,direction,actor);
+                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.27f*strength,.27f*strength,length),c,.11f,HeroFxMotion.Hold,direction,actor);
+                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,new Vector3(.10f*strength,.10f*strength,length),
+                    Color.Lerp(c,Color.white,.92f),.075f,HeroFxMotion.Hold,direction,actor);
             }
             else
             {
@@ -175,6 +187,10 @@ namespace Alterverse.Visuals
                 // Auren's geometric shield/hex language.
                 Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.34f*strength,.18f,actor:actor);
             }
+            if(slot>=0)
+                Fx(tank?HeroFxShape.Shield:HeroFxShape.ShockDome,p+Vector3.up*.16f,
+                    Color.Lerp(Accent(actor),Color.white,.72f),.55f*strength,.12f,
+                    HeroFxMotion.Expand,actor:actor);
             Shards(actor,p,.58f*strength,2);
         }
         private static void Slash(GameObject actor,Vector3 point,int slot,bool heavy=false)
@@ -184,6 +200,9 @@ namespace Alterverse.Visuals
             // Span from the weapon side toward contact instead of drawing a detached arc behind the victim.
             Vector3 p=Vector3.Lerp(Muzzle(actor),point+Vector3.up*.16f,.62f);
             HeroVfxPool.Emit(HeroFxShape.Slash,p,p,new Vector3(size,1,size*(heavy?.75f:1)),c,heavy?.30f:.22f,HeroFxMotion.Sweep,facing,actor);
+            // A second opposed edge makes the assassin's slash identifiable even in a crowded fight.
+            if(slot>=0)Fx(HeroFxShape.Slash,p+Vector3.up*.10f,new Color(c.r,c.g,c.b,.82f),
+                size*.78f,.16f,HeroFxMotion.Sweep,facing*Quaternion.Euler(0,180,0),actor);
             if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.88f),size*.72f,.12f,HeroFxMotion.Sweep,facing,actor);
             if(heavy)Fx(HeroFxShape.Burst,point+Vector3.up*.15f,Color.Lerp(c,Color.white,.72f),size*.82f,.14f,rotation:facing);
             Shards(actor,p,size,slot<0?2:3);
@@ -441,6 +460,23 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Burst,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
                     break;
             }
+            if(slot>=0)AreaSignature(actor,hero,contact,Mathf.Min(radius*.56f,slot==3?2.2f:1.45f),slot,accent);
+        }
+        private static void AreaSignature(GameObject actor,HeroId hero,Vector3 contact,float size,int slot,Color accent)
+        {
+            // The exact-radius warning has already ended. These compact motifs stay at the contact center.
+            HeroFxShape motif=hero==HeroId.Veyr?HeroFxShape.Slash:
+                hero==HeroId.Kaelon?HeroFxShape.Hex:hero==HeroId.Nyra?HeroFxShape.Bolt:
+                hero==HeroId.Elyra?HeroFxShape.Runes:hero==HeroId.Mira?HeroFxShape.Petals:
+                hero==HeroId.Rook?HeroFxShape.Cracks:HeroFxShape.Rift;
+            Color rim=new Color(accent.r,accent.g,accent.b,.90f);
+            Fx(motif,contact+Vector3.up*.27f,rim,size,slot==3?.32f:.23f,
+                HeroFxMotion.Expand,actor:actor);
+            Fx(hero==HeroId.Veyr?HeroFxShape.Rift:hero==HeroId.Kaelon?HeroFxShape.Shield:
+                hero==HeroId.Nyra?HeroFxShape.Burst:hero==HeroId.Elyra?HeroFxShape.Orb:
+                hero==HeroId.Mira?HeroFxShape.Plus:hero==HeroId.Rook?HeroFxShape.Burst:HeroFxShape.Rift,
+                contact+Vector3.up*.42f,Color.Lerp(accent,Color.white,.89f),size*.42f,.10f,
+                HeroFxMotion.Contract,actor:actor);
         }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
@@ -590,6 +626,7 @@ namespace Alterverse.Visuals
                         break;
                     }
             }
+            if(slot>=0)SkillImpactSignature(actor,hero,p,c,strength,slot);
             ImpactAftermath(actor,p,hero,slot,strength);
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
@@ -599,6 +636,20 @@ namespace Alterverse.Visuals
             }
             else if(slot>=0&&Hero(actor)==HeroId.Kaelon)
                 Fx(HeroFxShape.Hex,p+Vector3.up*.6f,c,.34f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
+        }
+        private static void SkillImpactSignature(GameObject actor,HeroId hero,Vector3 point,Color accent,float strength,int slot)
+        {
+            // Short class silhouette around the contact core, stronger for an ultimate.
+            float size=strength*(slot==3?2.05f:1.45f);
+            HeroFxShape shape=hero==HeroId.Veyr?HeroFxShape.Slash:
+                hero==HeroId.Kaelon?HeroFxShape.Shield:hero==HeroId.Nyra?HeroFxShape.Bolt:
+                hero==HeroId.Elyra?HeroFxShape.Runes:hero==HeroId.Mira?HeroFxShape.Petals:
+                hero==HeroId.Rook?HeroFxShape.ShockDome:HeroFxShape.Rift;
+            Fx(shape,point+Vector3.up*.10f,new Color(accent.r,accent.g,accent.b,.84f),
+                size,slot==3?.27f:.19f,HeroFxMotion.Expand,
+                Face(actor.transform.position,point),actor);
+            if(slot==3)Fx(shape,point+Vector3.up*.25f,Color.Lerp(accent,Color.white,.77f),
+                size*.72f,.12f,HeroFxMotion.Contract,actor:actor);
         }
         public static void ShieldContact(GameObject victim,GameObject source)
         {
