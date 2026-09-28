@@ -143,7 +143,7 @@ namespace Alterverse.Visuals
         {
             // Elliptical, chamfered rib cage: broad clavicle, narrow waist, shallow abdomen.
             float[] y={-.90f,-.39f,.38f,.77f,1f};
-            float[] width={.30f,.38f,.51f,.47f,.24f};
+            float[] width={.30f,.38f,.51f,.47f,.39f,.24f};
             float[] depth={.32f,.44f,.47f,.39f,.26f};
             var vertices=new List<Vector3>();var triangles=new List<int>();
             Vector2[] contour={new(-.70f,-1),new(.70f,-1),new(1,-.45f),new(1,.45f),new(.70f,1),new(-.70f,1),new(-1,.45f),new(-1,-.45f)};
@@ -154,8 +154,51 @@ namespace Alterverse.Visuals
             {var cap=new Vector3[8];for(int i=0;i<8;i++)cap[i]=Point(ring,i);OutwardFace(vertices,triangles,cap);}
             var mesh=new Mesh{name="DF_SculptedCuirass"};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
+        private void AlignVeyrSwordAssemblies()
+        {
+            if(identity==null||identity.Hero!=HeroId.Veyr)return;
+            for(int side=-1;side<=1;side+=2)
+            {
+                string suffix=side<0?"L":"R";
+                Transform weapon=root.Find("DF_Weapon"+suffix);
+                if(weapon==null)continue;
+
+                // These pieces were authored in hero-root space and then reparented with worldPositionStays.
+                // Reassert their intended weapon-local transforms so grip, guard and blade form one rigid sword.
+                Transform hilt=weapon.Find("DF_Hilt"+suffix);
+                if(hilt!=null)
+                {
+                    hilt.localPosition=new Vector3(0,-.015f,.015f);
+                    hilt.localRotation=Quaternion.identity;
+                }
+                Transform guard=weapon.Find("DF_Guard"+suffix);
+                if(guard!=null)
+                {
+                    guard.localPosition=new Vector3(0,-.115f,.060f);
+                    guard.localRotation=Quaternion.Euler(0,0,side*8f);
+                }
+                Transform pommel=weapon.Find("DF_Pommel"+suffix);
+                if(pommel!=null)
+                {
+                    pommel.localPosition=new Vector3(0,.13f,0);
+                    pommel.localRotation=Quaternion.Euler(0,0,45f);
+                }
+
+                // Weapon skins use different blade roots; keep their handles physically touching those roots too.
+                Transform eclipseGrip=weapon.Find("DF_SignatureEclipseGrip"+suffix);
+                if(eclipseGrip!=null)eclipseGrip.localPosition=new Vector3(0,0,.015f);
+
+                Transform duskglassGrip=weapon.Find("DF_SignatureDuskglassGrip"+suffix);
+                if(duskglassGrip!=null)
+                {
+                    duskglassGrip.localPosition=new Vector3(0,-.02f,.015f);
+                    duskglassGrip.localScale=new Vector3(.085f,.32f,.09f);
+                }
+            }
+        }
         private void CombineMovingPanels()
         {
+            AlignVeyrSwordAssemblies();
             // Batch within each joint, never across a separately animated weapon pivot.
             Transform[] all=root.GetComponentsInChildren<Transform>(true);
             foreach(Transform pivot in all)
