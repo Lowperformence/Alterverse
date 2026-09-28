@@ -129,7 +129,18 @@ namespace Alterverse.Visuals
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
             torso=FindPart("Torso");head=FindPart("Head");torsoRest=Rest(torso);headRest=Rest(head);
-            muzzle=FindPart("Muzzle");weaponR=FindPart("WeaponR");weaponL=FindPart("WeaponL");orb=FindPart("Orb");
+            muzzle=FindPart("Muzzle");
+            HeroId riggedHero=identity!=null?identity.Hero:HeroId.Veyr;
+            weaponR=FindPart("WeaponR")??(riggedHero==HeroId.Veyr?FindPart("BladeR"):null);
+            weaponL=FindPart("WeaponL")??(riggedHero==HeroId.Veyr?FindPart("BladeL"):null);
+            if(riggedHero==HeroId.Veyr)
+            {
+                // The generated Veyr blades are separate meshes. Attach them to the wrist
+                // pivots so guard and attack poses visibly move the swords with the hands.
+                if(weaponR!=null&&articulatedRig.RightWrist!=null)weaponR.SetParent(articulatedRig.RightWrist,true);
+                if(weaponL!=null&&articulatedRig.LeftWrist!=null)weaponL.SetParent(articulatedRig.LeftWrist,true);
+            }
+            orb=FindPart("Orb");
             if(weaponR!=null){weaponPositionR=weaponR.localPosition;weaponRestR=weaponR.localRotation;}
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
             if(orb!=null)orbRest=orb.localPosition;
@@ -255,7 +266,7 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        readyL=new Vector3(-34f,0f,8f);readyR=new Vector3(-34f,0f,-8f);break;
+                        readyL=new Vector3(-28f,0f,-10f);readyR=new Vector3(-28f,0f,10f);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
                     case HeroId.Kaelon:
@@ -275,8 +286,8 @@ namespace Alterverse.Visuals
                 // weapon transforms each frame before attacks, so restore this only at rest.
                 if(hero==HeroId.Veyr)
                 {
-                    if(weaponL!=null)weaponL.localRotation=weaponRestL*Quaternion.Euler(8f,38f,18f);
-                    if(weaponR!=null)weaponR.localRotation=weaponRestR*Quaternion.Euler(8f,-38f,-18f);
+                    if(weaponL!=null)weaponL.localRotation=weaponRestL*Quaternion.Euler(4f,0f,-50f);
+                    if(weaponR!=null)weaponR.localRotation=weaponRestR*Quaternion.Euler(4f,0f,50f);
                 }
             }
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
@@ -307,7 +318,7 @@ namespace Alterverse.Visuals
             if(wingR!=null)wingR.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2.1f)*4);
             if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
             UpdateCloth(dt,t,delta/dt);
-            if(blade!=null)blade.localRotation=bladeRest*Quaternion.Euler(22*strideWeight,0,-12*strideWeight);
+            // Veyr's blades are held in a steady guard; do not make them bob with each step.
             // One trajectory, driven by distance actually travelled by the gameplay root.
             // Hip swing, knee flex and ankle counter-rotation form a simple articulated gait.
             if(articulatedRig!=null&&articulatedRig.Ready)
