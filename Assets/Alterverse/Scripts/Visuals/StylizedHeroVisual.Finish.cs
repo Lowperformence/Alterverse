@@ -143,7 +143,7 @@ namespace Alterverse.Visuals
         {
             // Elliptical, chamfered rib cage: broad clavicle, narrow waist, shallow abdomen.
             float[] y={-.90f,-.39f,.38f,.77f,1f};
-            float[] width={.30f,.38f,.51f,.47f,.39f,.24f};
+            float[] width={.30f,.38f,.51f,.47f,.24f};
             float[] depth={.32f,.44f,.47f,.39f,.26f};
             var vertices=new List<Vector3>();var triangles=new List<int>();
             Vector2[] contour={new(-.70f,-1),new(.70f,-1),new(1,-.45f),new(1,.45f),new(.70f,1),new(-.70f,1),new(-1,.45f),new(-1,-.45f)};
