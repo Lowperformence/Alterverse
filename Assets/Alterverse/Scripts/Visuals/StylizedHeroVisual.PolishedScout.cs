@@ -128,6 +128,19 @@ namespace Alterverse.Visuals
             Along("RifleSensorGlow",new Vector3(.105f,.027f,.33f),new Vector3(.014f,.39f,.018f),red,true);
             ScoutShell("RifleMagazine",new Vector3(0,-.14f,.08f),new Vector3(.066f,.14f,.075f),dark,weapon);
             ScoutShell("RifleForegrip",new Vector3(0,-.13f,.55f),new Vector3(.048f,.115f,.050f),dark,weapon);
+
+            // Compact controls follow the rifle, not the hero's torso or off-hand.
+            Create("ScopeAdjustmentDial",PrimitiveType.Cylinder,new Vector3(.067f,.18f,.12f),
+                new Vector3(.048f,.014f,.048f),steel,new Vector3(0,0,90),weapon);
+            Create("ScopeTopDial",PrimitiveType.Cylinder,new Vector3(0,.237f,.12f),
+                new Vector3(.049f,.012f,.049f),steel,default,weapon);
+            Create("RifleTriggerGuardBase",PrimitiveType.Cube,new Vector3(0,-.20f,-.13f),
+                new Vector3(.048f,.027f,.15f),steel,default,weapon);
+            Create("RifleTriggerGuardRear",PrimitiveType.Cube,new Vector3(0,-.15f,-.20f),
+                new Vector3(.048f,.12f,.025f),steel,default,weapon);
+            for(int rib=0;rib<3;rib++)
+                Create("RifleForegripRib"+rib,PrimitiveType.Cube,new Vector3(0,-.075f-rib*.055f,.59f),
+                    new Vector3(.083f,.012f,.018f),steel,default,weapon);
             Transform muzzle=new GameObject("DF_Muzzle").transform;
             muzzle.SetParent(weapon,false);muzzle.localPosition=new Vector3(0,.015f,1.41f);
             Bind("WeaponR","ArmR");
