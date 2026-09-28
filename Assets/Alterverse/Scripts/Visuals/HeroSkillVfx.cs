@@ -338,6 +338,16 @@ namespace Alterverse.Visuals
                     hero==HeroId.Rook?HeroFxShape.Shard:hero==HeroId.Traveler?HeroFxShape.Rift:HeroFxShape.Burst;
                 Fx(emblem,center+Vector3.up*.55f,accent,.43f,
                     Mathf.Min(.42f,Mathf.Max(.18f,duration)),HeroFxMotion.Contract,actor:actor);
+                if(hero==HeroId.Elyra&&slot==1)
+                {
+                    // Invert Field gets a visible vertical lens during its warning, not only a floor ring.
+                    Quaternion plane=Quaternion.LookRotation(actor.transform.forward)*Quaternion.Euler(90f,0f,0f);
+                    Color inverse=Color.Lerp(accent,new Color(.53f,.22f,1f,1f),.42f);
+                    Fx(HeroFxShape.Rift,center+Vector3.up*.48f,DarkCore,.62f,Mathf.Max(.18f,duration),
+                        HeroFxMotion.Contract,actor:actor,warning:true);
+                    Fx(HeroFxShape.Halo,center+Vector3.up*.50f,inverse,.92f,Mathf.Max(.18f,duration),
+                        HeroFxMotion.Orbit,plane,actor,warning:true);
+                }
                 if(hero==HeroId.Elyra&&slot==3)
                 {
                     // The falling meteor is the unique cast cue, above the ground warning.
@@ -357,11 +367,30 @@ namespace Alterverse.Visuals
             switch(hero)
             {
                 case HeroId.Elyra:
-                    Fx(HeroFxShape.Runes,contact+Vector3.up*.24f,accent,size,life,HeroFxMotion.Contract,actor:actor);
-                    if(slot==3)
+                    if(slot==1)
                     {
-                        Fx(HeroFxShape.Orb,contact+Vector3.up*.58f,DarkCore,.88f,.32f,HeroFxMotion.Contract,actor:actor);
-                        Fx(HeroFxShape.Halo,contact+Vector3.up*.58f,Color.Lerp(accent,Color.white,.52f),.82f,.28f,HeroFxMotion.Contract,actor:actor);
+                        // Invert Field resolves as a brief spatial inversion: a wide floor pulse,
+                        // rotating rune plane and a contracting lens above the contact point.
+                        Color inverse=Color.Lerp(accent,new Color(.53f,.22f,1f,1f),.42f);
+                        Quaternion plane=Quaternion.LookRotation(actor.transform.forward)*Quaternion.Euler(90f,0f,0f);
+                        Fx(HeroFxShape.Ring,ground+Vector3.up*.025f,inverse,radius*1.12f,.42f,
+                            HeroFxMotion.Expand,actor:actor);
+                        Fx(HeroFxShape.Runes,ground+Vector3.up*.045f,Color.Lerp(inverse,Color.white,.38f),radius*.82f,.40f,
+                            HeroFxMotion.Orbit,plane,actor);
+                        Fx(HeroFxShape.Rift,contact+Vector3.up*.58f,DarkCore,.92f,.40f,
+                            HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Halo,contact+Vector3.up*.58f,inverse,1.12f,.36f,
+                            HeroFxMotion.Expand,plane,actor);
+                        Shards(actor,contact+Vector3.up*.14f,radius*.48f,5);
+                    }
+                    else
+                    {
+                        Fx(HeroFxShape.Runes,contact+Vector3.up*.24f,accent,size,life,HeroFxMotion.Contract,actor:actor);
+                        if(slot==3)
+                        {
+                            Fx(HeroFxShape.Orb,contact+Vector3.up*.58f,DarkCore,.88f,.32f,HeroFxMotion.Contract,actor:actor);
+                            Fx(HeroFxShape.Halo,contact+Vector3.up*.58f,Color.Lerp(accent,Color.white,.52f),.82f,.28f,HeroFxMotion.Contract,actor:actor);
+                        }
                     }
                     break;
                 case HeroId.Mira:
