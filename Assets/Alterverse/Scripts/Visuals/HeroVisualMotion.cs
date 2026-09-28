@@ -304,6 +304,10 @@ namespace Alterverse.Visuals
                     if(weaponR!=null)weaponR.localRotation=weaponRestR*Quaternion.Euler(4f,0f,50f);
                 }
             }
+            float hitAge=Time.time-hitStarted;
+            float hitWeight=hitUntil>Time.time?Mathf.Sin(Mathf.Clamp01(hitAge/.46f)*Mathf.PI):0f;
+            float recoil=hitWeight*(heavy?3f:4.5f);
+            float hitTorso=hitWeight*(heavy?13f:17f);
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
             float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
             if(armL!=null)armL.localRotation=Quaternion.Slerp(armBeforeL,armL.localRotation,armBlend);
@@ -324,10 +328,6 @@ namespace Alterverse.Visuals
             Vector3 targetScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
             displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
             root.localScale=displayedScale;
-            float hitAge=Time.time-hitStarted;
-            float hitWeight=hitUntil>Time.time?Mathf.Sin(Mathf.Clamp01(hitAge/.46f)*Mathf.PI):0f;
-            float recoil=hitWeight*(heavy?3f:4.5f);
-            float hitTorso=hitWeight*(heavy?13f:17f);
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
             float sway=Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
             Quaternion targetRotation=Quaternion.Euler((Dashing?9:lean)-7*kick-recoil,spinYaw,sway);
