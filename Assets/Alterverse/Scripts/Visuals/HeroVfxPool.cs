@@ -96,7 +96,8 @@ namespace Alterverse.Visuals
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
-            slot.From=from;slot.To=to;slot.Size=size;slot.Color=color;slot.Motion=motion;
+            // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
+            slot.From=from;slot.To=to;slot.Size=size*(warning?1f:1.5f);slot.Color=color;slot.Motion=motion;
             slot.Rotation=rotation==default?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
