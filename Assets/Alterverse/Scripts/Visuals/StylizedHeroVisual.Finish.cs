@@ -160,7 +160,7 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string suffix=side<0?"L":"R";
-                Transform weapon=root.Find("DF_Weapon"+suffix);
+                Transform weapon=FindVisual("Weapon"+suffix);
                 if(weapon==null)continue;
 
                 // These pieces were authored in hero-root space and then reparented with worldPositionStays.
