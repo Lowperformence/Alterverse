@@ -240,7 +240,8 @@ namespace Alterverse.Visuals
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?1.65f:1.45f;
-            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
+            // All heroes complete 60% as many visible gait cycles over the same travel distance.
+            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2*.60f,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
@@ -748,8 +749,8 @@ namespace Alterverse.Visuals
 
         private static Quaternion VeyrGuardBlade(bool right)
             // The blade axes face forward: positive yaw turns the left blade right, negative yaw turns the right blade left.
-            // Increase the previous 24/22-degree yaw magnitudes by 40% for the in-game X guard.
-            =>right?Quaternion.Euler(-18f,-30.8f,48f):Quaternion.Euler(16f,33.6f,-48f);
+            // Turn each in-game guard blade another 20% toward the opposite side.
+            =>right?Quaternion.Euler(-18f,-36.96f,48f):Quaternion.Euler(16f,40.32f,-48f);
 
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress,float windupProgress,float attackWeight)
         {

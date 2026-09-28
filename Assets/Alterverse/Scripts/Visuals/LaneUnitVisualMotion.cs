@@ -212,7 +212,8 @@ namespace Alterverse.Visuals
             previousVelocity = velocity;
 
             float stepLength = robot ? 1.55f : 1.05f;
-            phase = Mathf.Repeat(phase + delta.magnitude / stepLength * Mathf.PI * 2f, Mathf.PI * 2f);
+            // Use 60% of the former visual step cadence at the same travel speed.
+            phase = Mathf.Repeat(phase + delta.magnitude / stepLength * Mathf.PI * 2f * .60f, Mathf.PI * 2f);
             float stride = Mathf.Sin(phase) * (robot ? 34f : 42f) * gait;
             if (robot) { Pose(legL, legRestL, stride); Pose(legR, legRestR, -stride); }
             else
