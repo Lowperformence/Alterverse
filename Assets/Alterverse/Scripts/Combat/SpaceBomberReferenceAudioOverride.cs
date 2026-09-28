@@ -1,3 +1,4 @@
+using System.Reflection;
 using UnityEngine;
 
 namespace Alterverse.Combat
@@ -11,7 +12,11 @@ namespace Alterverse.Combat
         private const string ResourcePath = "Audio/BombJetFlyby";
         private const string ClipName = "BombJetFlyby";
 
+        private static readonly FieldInfo EngineLoopField = typeof(SpaceBomberDirector).GetField(
+            "engineLoop", BindingFlags.Instance | BindingFlags.NonPublic);
+
         private AudioClip referenceClip;
+        private SpaceBomberDirector patchedDirector;
         private SpaceBomberFlyover patchedFlyover;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -47,7 +52,7 @@ namespace Alterverse.Combat
 
             Debug.LogWarning(
                 "DIMENSIONS FRONT: BombJetFlyby audio is not available in Resources/Audio. " +
-                "The bomber keeps its built-in fallback engine sound.");
+                "The bomber will remain silent instead of using the removed procedural jet sound.");
             enabled = false;
         }
 
@@ -55,6 +60,39 @@ namespace Alterverse.Combat
         {
             if (referenceClip == null) return;
 
+            PatchDirectorBeforeSpawn();
+            PatchActiveFlyover();
+        }
+
+        private void PatchDirectorBeforeSpawn()
+        {
+            SpaceBomberDirector director = Object.FindAnyObjectByType<SpaceBomberDirector>();
+            if (director == null)
+            {
+                patchedDirector = null;
+                return;
+            }
+
+            if (director == patchedDirector) return;
+
+            if (EngineLoopField == null)
+            {
+                Debug.LogError("DIMENSIONS FRONT: Could not access the bomber engine clip field.");
+                return;
+            }
+
+            // Replace the generated legacy jet clip before the first bomber can spawn. The generated
+            // clip is destroyed immediately and can therefore never be heard or overlap BombJetFlyby.
+            AudioClip legacyClip = EngineLoopField.GetValue(director) as AudioClip;
+            EngineLoopField.SetValue(director, referenceClip);
+            if (legacyClip != null && legacyClip != referenceClip)
+                Object.Destroy(legacyClip);
+
+            patchedDirector = director;
+        }
+
+        private void PatchActiveFlyover()
+        {
             SpaceBomberFlyover flyover = Object.FindAnyObjectByType<SpaceBomberFlyover>();
             if (flyover == null)
             {
@@ -67,9 +105,15 @@ namespace Alterverse.Combat
             AudioSource source = flyover.GetComponent<AudioSource>();
             if (source == null) return;
 
-            // Change only the audio clip. The actual bomber object and its gameplay stay intact.
-            source.Stop();
-            source.clip = referenceClip;
+            // Normally the flyover already receives BombJetFlyby directly from the director. Keep this
+            // as a safety net for scene-order edge cases, but never restart the clip unnecessarily.
+            bool clipAlreadyCorrect = source.clip == referenceClip;
+            if (!clipAlreadyCorrect)
+            {
+                source.Stop();
+                source.clip = referenceClip;
+            }
+
             source.loop = true;
             source.playOnAwake = false;
             source.dopplerLevel = 0f;
@@ -83,8 +127,10 @@ namespace Alterverse.Combat
             AudioLowPassFilter low = flyover.GetComponent<AudioLowPassFilter>();
             if (low != null) low.enabled = false;
 
-            source.Play();
-            if (Time.timeScale <= 0f) source.Pause();
+            if (!source.isPlaying)
+                source.Play();
+            if (Time.timeScale <= 0f)
+                source.Pause();
 
             patchedFlyover = flyover;
         }
