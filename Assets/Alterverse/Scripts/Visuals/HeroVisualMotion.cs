@@ -305,7 +305,7 @@ namespace Alterverse.Visuals
                 }
             }
             float hitAge=Time.time-hitStarted;
-            float hitWeight=hitUntil>Time.time?Mathf.Sin(Mathf.Clamp01(hitAge/.46f)*Mathf.PI):0f;
+            float hitWeight=hitUntil>Time.time?1f-Mathf.SmoothStep(0f,.46f,hitAge):0f;
             float recoil=hitWeight*(heavy?3f:4.5f);
             float hitTorso=hitWeight*(heavy?13f:17f);
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
@@ -403,9 +403,6 @@ namespace Alterverse.Visuals
                         wristL=-10f*actionBlend;
                         break;
                 }
-                float hitGuard=Mathf.Clamp01(hitWeight);
-                elbowL-=hitGuard*(hitFromSide<0f?20f:8f);
-                elbowR-=hitGuard*(hitFromSide>0f?20f:8f);
                 if(!attacking)
                 {
                     // Shoulder, forearm and wrist hold the class silhouette in every gait phase.
@@ -418,6 +415,9 @@ namespace Alterverse.Visuals
                     float subtleFlex=guardLift*(hero==HeroId.Nyra?.5f:.75f);
                     elbowL+=subtleFlex;elbowR+=subtleFlex;
                 }
+                float hitGuard=Mathf.Clamp01(hitWeight);
+                elbowL-=hitGuard*(hitFromSide<0f?20f:8f);
+                elbowR-=hitGuard*(hitFromSide>0f?20f:8f);
                 articulatedRig.SetProceduralPose(1f,
                     leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
                     Quaternion.Euler(elbowL,0f,0f),Quaternion.Euler(wristL,0f,0f),
