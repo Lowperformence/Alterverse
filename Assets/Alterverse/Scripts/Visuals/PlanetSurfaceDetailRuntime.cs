@@ -98,9 +98,19 @@ namespace Alterverse.Visuals
 
         private void Build(Transform parent)
         {
+            if(ArenaVariantRuntime.IsMars)
+            {
+                // The shared ground sampler now supplies Mars dunes and buried impacts.
+                // Keep a lifecycle marker so Update does not rebuild on every probe.
+                detailRoot=new GameObject("DF_MarsSandLandscape");
+                detailRoot.transform.SetParent(parent,false);
+                detailRoot.isStatic=true;
+                return;
+            }
             bool moon=IsMoon();
             float scale=moon?1f:.86f;
-            float heightScale=moon?1f:.70f;
+            // Lower raised overlays so wind-shaped ground remains legible between impacts.
+            float heightScale=moon?.65f:.45f;
 
             var bowlVertices=new List<Vector3>(7000);
             var bowlTriangles=new List<int>(12000);
