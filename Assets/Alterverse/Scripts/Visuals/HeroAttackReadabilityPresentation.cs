@@ -152,6 +152,7 @@ namespace Alterverse.Visuals
                 hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Burst;
             HeroVfxPool.Emit(release,origin,origin,Vector3.one*.30f,color,.12f,
                 HeroFxMotion.Expand,owner:gameObject);
+            EmitReleaseDetail(hero,-1,origin,color);
         }
 
         // A short cast mark confirms the button press; the hero-specific effect above owns the
@@ -203,10 +204,59 @@ namespace Alterverse.Visuals
             }
             HeroVfxPool.Emit(shape,point,point,
                 new Vector3(scale,scale*.52f,scale),bright,life,motion,facing,gameObject);
+            EmitReleaseDetail(hero,slot,hand,accent);
             if(slot==3)
                 HeroVfxPool.Emit(HeroFxShape.Halo,chest,chest,
                     Vector3.one*.70f,new Color(bright.r,bright.g,bright.b,.72f),
                     .28f,HeroFxMotion.Contract,facing,gameObject);
+        }
+
+        // Small secondary accents stay at the weapon or hand. Gameplay VFX own the real
+        // target, so this layer cannot paint a second, inaccurate impact zone.
+        private void EmitReleaseDetail(HeroId hero,int slot,Vector3 hand,Color accent)
+        {
+            Vector3 chest=transform.position+Vector3.up*.68f;
+            Quaternion facing=Quaternion.LookRotation(transform.forward);
+            Color core=Color.Lerp(accent,Color.white,.72f);
+            core.a=.86f;
+            float power=slot==3?1.25f:slot<0?.74f:1f;
+            switch(hero)
+            {
+                case HeroId.Veyr:
+                    // Twin blade cuts meet in front of the chest, independently of the sword rig.
+                    for(int side=0;side<2;side++)
+                        HeroVfxPool.Emit(HeroFxShape.Slash,chest+transform.forward*.48f,Vector3.zero,
+                            new Vector3(1.12f*power,.08f,1.12f*power),side==0?accent:core,.20f,
+                            HeroFxMotion.Sweep,facing*Quaternion.Euler(65f,0f,side==0?-38f:38f),gameObject,
+                            delay:side*.035f,decorative:true);
+                    break;
+                case HeroId.Kaelon:
+                    HeroVfxPool.Emit(HeroFxShape.Hex,hand,Vector3.zero,Vector3.one*.54f*power,core,.19f,
+                        HeroFxMotion.Contract,facing,gameObject,delay:.035f,decorative:true);
+                    break;
+                case HeroId.Rook:
+                    HeroVfxPool.Emit(HeroFxShape.Burst,hand,Vector3.zero,Vector3.one*.46f*power,core,.13f,
+                        HeroFxMotion.Expand,facing,gameObject,delay:.045f,decorative:true);
+                    break;
+                case HeroId.Elyra:
+                    HeroVfxPool.Emit(HeroFxShape.Runes,chest,Vector3.zero,Vector3.one*.56f*power,core,.27f,
+                        HeroFxMotion.Orbit,facing,gameObject,delay:.025f,decorative:true);
+                    break;
+                case HeroId.Nyra:
+                    HeroVfxPool.Emit(HeroFxShape.Ring,hand,Vector3.zero,Vector3.one*.42f*power,core,.16f,
+                        HeroFxMotion.Contract,facing*Quaternion.Euler(90f,0f,0f),gameObject,
+                        delay:.025f,decorative:true);
+                    break;
+                case HeroId.Mira:
+                    HeroVfxPool.Emit(HeroFxShape.Petals,hand,Vector3.zero,Vector3.one*.53f*power,core,.27f,
+                        HeroFxMotion.Orbit,facing,gameObject,delay:.04f,decorative:true);
+                    break;
+                case HeroId.Traveler:
+                    HeroVfxPool.Emit(HeroFxShape.Rift,hand+transform.forward*.14f,Vector3.zero,
+                        new Vector3(.40f*power,.72f*power,.35f*power),core,.25f,
+                        HeroFxMotion.Contract,facing,gameObject,delay:.025f,decorative:true);
+                    break;
+            }
         }
 
         private Vector3 ReleasePoint()
