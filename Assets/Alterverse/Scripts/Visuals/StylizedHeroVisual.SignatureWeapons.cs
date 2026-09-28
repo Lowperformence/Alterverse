@@ -92,12 +92,7 @@ namespace Alterverse.Visuals
                         string suffix=s<0?"L":"R";Transform w=FindVisual("Gauntlet"+suffix);if(w==null)continue;
                         HideSignatureBase(w);
                         SignatureBlock("RiftFist"+suffix,w,new Vector3(0,-.02f,.10f),new Vector3(.36f,.40f,.38f),shell);
-                        SignatureBlock("RiftKnuckle"+suffix,w,new Vector3(0,-.14f,.34f),new Vector3(.34f,.18f,.11f),edge);
-                        for(int i=-1;i<=1;i++)
-                        {
-                            SignatureBlock("RiftClaw"+suffix+i,w,new Vector3(i*.13f,-.27f,.42f),new Vector3(.09f,.38f,.13f),shell,i*8f);
-                            SignatureBlock("RiftClawEdge"+suffix+i,w,new Vector3(i*.13f,-.29f,.50f),new Vector3(.027f,.27f,.025f),energy,i*8f);
-                        }
+                        SignatureFistDetails(w,suffix,s,shell,edge,energy);
                         SignatureBlock("RiftCell"+suffix,w,new Vector3(0,.13f,.30f),new Vector3(.18f,.11f,.06f),energy);
                     }
                     break;
@@ -112,6 +107,7 @@ namespace Alterverse.Visuals
                     break;
                 }
             }
+            FinishSignatureHardware(shell,edge);
         }
 
         private void BuildAlternateSignatureWeapon(Shader shader,Material energy)
@@ -194,12 +190,7 @@ namespace Alterverse.Visuals
                     {
                         string suffix=side<0?"L":"R";Transform w=FindVisual("Gauntlet"+suffix);if(w==null)continue;HideSignatureBase(w);
                         SignatureBlock("RiftbreakerShell"+suffix,w,new Vector3(0,-.02f,.12f),new Vector3(.39f,.43f,.40f),shell);
-                        SignatureBlock("RiftbreakerKnuckles"+suffix,w,new Vector3(0,-.16f,.38f),new Vector3(.34f,.18f,.12f),edge);
-                        for(int i=-1;i<=1;i++)
-                        {
-                            SignatureBlock("RiftbreakerPiston"+suffix+i,w,new Vector3(i*.13f,-.10f,.47f),new Vector3(.05f,.24f,.09f),energy);
-                            SignatureBlock("RiftbreakerRail"+suffix+i,w,new Vector3(i*.13f,-.30f,.42f),new Vector3(.055f,.28f,.14f),shell,i*8);
-                        }
+                        SignatureFistDetails(w,suffix,side,shell,edge,energy);
                         SignatureBlock("RiftbreakerCore"+suffix,w,new Vector3(0,.14f,.32f),new Vector3(.16f,.11f,.06f),energy);
                     }
                     break;
@@ -215,6 +206,64 @@ namespace Alterverse.Visuals
                     SignatureBlock("ChronoluxFoot",w,new Vector3(0,-.74f,.02f),new Vector3(.18f,.12f,.16f),edge);
                     break;
                 }
+            }
+            FinishSignatureHardware(shell,edge);
+        }
+
+
+        // Local-space details stay inside the weapon hierarchy and follow its wrist.
+        // Reuse the weapon materials rather than allocating one material per small part.
+        private void SignatureFistDetails(Transform hand,string suffix,int side,Material shell,Material edge,Material energy)
+        {
+            for(int finger=0;finger<4;finger++)
+            {
+                float x=(finger-1.5f)*.086f;
+                float taper=finger==0||finger==3?.018f:0f;
+                SignatureBlock("FingerKnuckle"+suffix+finger,hand,new Vector3(x,-.14f,.35f-taper),
+                    new Vector3(.074f,.15f,.14f),edge);
+                SignatureBlock("CurledFinger"+suffix+finger,hand,new Vector3(x,-.25f,.30f-taper),
+                    new Vector3(.070f,.13f,.12f),shell);
+            }
+            SignatureBlock("ThumbBase"+suffix,hand,new Vector3(-side*.205f,-.07f,.19f),
+                new Vector3(.13f,.20f,.16f),edge,side*24f);
+            SignatureBlock("FoldedThumb"+suffix,hand,new Vector3(-side*.15f,-.21f,.25f),
+                new Vector3(.13f,.105f,.13f),shell,-side*28f);
+            for(int rail=-1;rail<=1;rail+=2)
+                SignatureBlock("FistDorsalRail"+suffix+rail,hand,new Vector3(rail*.105f,.035f,.305f),
+                    new Vector3(.030f,.16f,.018f),energy);
+        }
+
+        private void FinishSignatureHardware(Material shell,Material edge)
+        {
+            HeroId hero=identity.Hero;
+            if(hero==HeroId.Rook)return; // Anatomical fist contours are built above.
+            for(int side=-1;side<=1;side+=2)
+            {
+                if(side<0&&hero!=HeroId.Veyr)continue;
+                string suffix=side<0?"L":"R";
+                Transform weapon=FindVisual("Weapon"+suffix);
+                if(weapon==null)continue;
+                if(hero==HeroId.Nyra)
+                {
+                    // Recessed-looking side vents and a lower trigger guard.
+                    for(int vent=0;vent<3;vent++)
+                        for(int flank=-1;flank<=1;flank+=2)
+                            SignatureBlock("ReceiverVent"+flank+vent,weapon,
+                                new Vector3(flank*.128f,.035f,-.09f+vent*.10f),
+                                new Vector3(.012f,.085f,.026f),edge,-12f);
+                    SignatureBlock("TriggerGuardBase",weapon,new Vector3(0,-.245f,-.22f),
+                        new Vector3(.075f,.035f,.20f),shell);
+                    SignatureBlock("TriggerGuardFront",weapon,new Vector3(0,-.185f,-.13f),
+                        new Vector3(.075f,.14f,.035f),shell);
+                    continue;
+                }
+                if(hero==HeroId.Traveler&&weaponSkinVariant==0)continue; // Floating artifact has no grip.
+                float center=hero==HeroId.Veyr?0f:-.30f;
+                float z=hero==HeroId.Veyr?-.04f:0f;
+                for(int band=0;band<3;band++)
+                    SignatureBlock("GripBand"+suffix+band,weapon,
+                        new Vector3(0,center+(band-1)*.075f,z),
+                        new Vector3(.115f,.020f,.12f),edge,hero==HeroId.Veyr?side*8f:0f);
             }
         }
 
