@@ -212,7 +212,6 @@ namespace Alterverse.Visuals
             float strideLength=heavy?1.65f:1.45f;
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
-            float step=Mathf.Sin(phase)*Mathf.Lerp(30f,48f,runBlend)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
@@ -243,6 +242,11 @@ namespace Alterverse.Visuals
             // Return to a readable guard between attacks. The rifle uses its authored shoulder
             // hold; melee heroes keep both fists forward instead of swinging them with the stride.
             bool attacking=preparation>.001f||kick>.025f;
+            // Small synchronized breath and weight shift, without alternating arm pumping.
+            // Keep the sight picture especially steady on Nyra's shoulder rifle.
+            float guardBreath=Mathf.Sin(t*1.5f)*.55f*(1f-strideWeight);
+            float guardStep=Mathf.Sin(phase*2f)*1.1f*strideWeight;
+            float guardLift=(guardBreath+guardStep)*(hero==HeroId.Nyra?.35f:1f);
             if(!attacking)
             {
                 // A distinct ready pose for every class. Pivots stay on the existing shoulders,
@@ -264,18 +268,9 @@ namespace Alterverse.Visuals
                         readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
                     // Nyra keeps the rifle's authored two-handed shoulder aim.
                 }
-                if(hero!=HeroId.Nyra)
-                {
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
-                }
-                // Hold the hand shape as well as the shoulder silhouette.
-                if(hero==HeroId.Veyr||hero==HeroId.Rook)
-                {elbowL=-48f;elbowR=-48f;}
-                else if(hero==HeroId.Kaelon)
-                {elbowL=-34f;elbowR=-42f;}
-                else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
-                {elbowL=-26f;elbowR=-30f;}
+                readyL.x+=guardLift;readyR.x+=guardLift;
+                if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
+                if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
             }
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
             float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
@@ -360,6 +355,18 @@ namespace Alterverse.Visuals
                         wristR=-14f*actionBlend;
                         wristL=-10f*actionBlend;
                         break;
+                }
+                if(!attacking)
+                {
+                    // Shoulder, forearm and wrist hold the class silhouette in every gait phase.
+                    if(hero==HeroId.Veyr||hero==HeroId.Rook)
+                    {elbowL=-48f;elbowR=-48f;}
+                    else if(hero==HeroId.Kaelon)
+                    {elbowL=-34f;elbowR=-42f;}
+                    else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
+                    {elbowL=-26f;elbowR=-30f;}
+                    float subtleFlex=guardLift*(hero==HeroId.Nyra?.5f:.75f);
+                    elbowL+=subtleFlex;elbowR+=subtleFlex;
                 }
                 articulatedRig.SetProceduralPose(1f,
                     leftHip,leftKnee,leftAnkle,rightHip,rightKnee,rightAnkle,
