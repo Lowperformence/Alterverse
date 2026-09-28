@@ -31,6 +31,8 @@ namespace Alterverse.Visuals
         private int poseFrame = -1, bodyPoseFrame = -1;
 
         public bool Ready { get; private set; }
+        public Transform LeftWrist => wristL;
+        public Transform RightWrist => wristR;
 
         public void Build(Transform root)
         {
