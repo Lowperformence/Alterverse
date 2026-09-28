@@ -221,7 +221,7 @@ namespace Alterverse.Combat
             if(energyMaterial!=null)Destroy(energyMaterial);
             if(warningMaterial!=null)Destroy(warningMaterial);
             if(bombMaterial!=null)Destroy(bombMaterial);
-            if(engineLoop!=null)Destroy(engineLoop);
+            if(engineLoop!=null&&engineLoop.name=="DF_BomberHighIonShriek")Destroy(engineLoop);
         }
     }
 
