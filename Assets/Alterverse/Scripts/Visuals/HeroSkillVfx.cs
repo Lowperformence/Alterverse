@@ -54,15 +54,15 @@ namespace Alterverse.Visuals
             }
             float flight=travel;
             HeroFxShape shape=h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Orb;
-            Vector3 size=h==HeroId.Nyra?new Vector3(.62f,.62f,.82f)*strength:Vector3.one*.56f*strength;
+            Vector3 size=h==HeroId.Nyra?new Vector3(.55f,.55f,1.05f)*strength:Vector3.one*.72f*strength;
             HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A second cached mesh adds a feathered halo or a long narrow tracer tail.
             HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
-                h==HeroId.Nyra?new Vector3(.35f,.35f,1.40f)*strength:Vector3.one*.62f*strength,
-                new Color(c.r,c.g,c.b,.48f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+                h==HeroId.Nyra?new Vector3(.42f,.42f,1.75f)*strength:Vector3.one*.78f*strength,
+                new Color(c.r,c.g,c.b,.68f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A narrow, bright core and staggered fragments make the projectile read as motion.
             HeroVfxPool.Emit(h==HeroId.Mira?HeroFxShape.Seed:HeroFxShape.Bolt,start,end,
-                new Vector3(.16f,.16f,.46f)*strength,Color.Lerp(c,Color.white,.72f),
+                new Vector3(.21f,.21f,.58f)*strength,Color.Lerp(c,Color.white,.88f),
                 flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             for(int streak=0;streak<(slot<0?1:2);streak++)
             {
@@ -179,13 +179,13 @@ namespace Alterverse.Visuals
         }
         private static void Slash(GameObject actor,Vector3 point,int slot,bool heavy=false)
         {
-            float size=slot<0?.75f:slot==3?1.55f:1.12f;Color c=Accent(actor);
+            float size=slot<0?.84f:slot==3?2.05f:1.46f;Color c=Accent(actor);
             Quaternion facing=Face(actor.transform.position,point);
             // Span from the weapon side toward contact instead of drawing a detached arc behind the victim.
             Vector3 p=Vector3.Lerp(Muzzle(actor),point+Vector3.up*.16f,.62f);
             HeroVfxPool.Emit(HeroFxShape.Slash,p,p,new Vector3(size,1,size*(heavy?.75f:1)),c,heavy?.30f:.22f,HeroFxMotion.Sweep,facing,actor);
-            if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.7f),size*.78f,.15f,HeroFxMotion.Sweep,facing,actor);
-            if(heavy)Fx(HeroFxShape.Burst,point+Vector3.up*.15f,c,size*.7f,.17f,rotation:facing);
+            if(!heavy)Fx(HeroFxShape.Slash,p+Vector3.up*.025f,Color.Lerp(c,Color.white,.88f),size*.72f,.12f,HeroFxMotion.Sweep,facing,actor);
+            if(heavy)Fx(HeroFxShape.Burst,point+Vector3.up*.15f,Color.Lerp(c,Color.white,.72f),size*.82f,.14f,rotation:facing);
             Shards(actor,p,size,slot<0?2:3);
         }
         private static void Rift(GameObject actor,Vector3 p,float size,float life)
@@ -302,6 +302,7 @@ namespace Alterverse.Visuals
                 }
                 else if(h==HeroId.Veyr)Fx(HeroFxShape.Halo,Chest(actor),new Color(c.r,c.g,c.b,.42f),.68f,.18f,HeroFxMotion.Contract,actor:actor);
             }
+            if(slot>=0)CastSignature(actor,h,p,slot,c,facing);
             if(slot==3&&AdaptiveVfxBudget.AllowDecorative)
             {
                 // Two thin opposed arcs frame the release without adding another filled floor disc.
@@ -311,6 +312,27 @@ namespace Alterverse.Visuals
                 Fx(HeroFxShape.Slash,p,c,.54f,.28f,HeroFxMotion.Sweep,
                     upright*Quaternion.Euler(0f,180f,0f),actor,delay:.035f,decorative:true);
             }
+        }
+        // Two reused pool meshes per skill keep every hero recognizable without extra lights or emitters.
+        private static void CastSignature(GameObject actor,HeroId hero,Vector3 point,int slot,Color accent,Quaternion facing)
+        {
+            float size=slot==3?1.20f:.72f;
+            Color core=Color.Lerp(accent,Color.white,.87f);
+            HeroFxShape outer=hero==HeroId.Veyr?HeroFxShape.Slash:
+                hero==HeroId.Nyra?HeroFxShape.Bolt:hero==HeroId.Kaelon?HeroFxShape.Hex:
+                hero==HeroId.Rook?HeroFxShape.Burst:hero==HeroId.Elyra?HeroFxShape.Runes:
+                hero==HeroId.Mira?HeroFxShape.Petals:HeroFxShape.Rift;
+            HeroFxShape inner=hero==HeroId.Veyr?HeroFxShape.Rift:
+                hero==HeroId.Nyra?HeroFxShape.Burst:hero==HeroId.Kaelon?HeroFxShape.Shield:
+                hero==HeroId.Rook?HeroFxShape.ShockDome:hero==HeroId.Elyra?HeroFxShape.Orb:
+                hero==HeroId.Mira?HeroFxShape.Plus:HeroFxShape.Halo;
+            Fx(outer,point,accent,size,.24f,hero==HeroId.Elyra||hero==HeroId.Mira?
+                HeroFxMotion.Orbit:HeroFxMotion.Expand,facing,actor);
+            Fx(inner,point+Vector3.up*.08f,core,size*.46f,.11f,
+                HeroFxMotion.Contract,facing,actor);
+            if(slot==3)
+                Fx(outer,point+Vector3.up*.24f,Color.Lerp(accent,Color.white,.55f),
+                    size*1.38f,.28f,HeroFxMotion.Expand,facing,actor);
         }
         public static void TargetWarning(GameObject actor,Health target,float seconds)
         {
@@ -361,8 +383,8 @@ namespace Alterverse.Visuals
 
             // The gameplay warning has ended. A compact contact accent replaces the old full-radius
             // stack of rings, runes, cracks and shock domes that covered the battlefield.
-            float size=Mathf.Min(radius*.34f,slot==3?1.05f:.70f);
-            float life=slot==3?.30f:.20f;
+            float size=Mathf.Min(radius*.44f,slot==3?1.48f:.95f);
+            float life=slot==3?.34f:.22f;
             Vector3 contact=ground+Vector3.up*.12f;
             switch(hero)
             {
@@ -513,10 +535,12 @@ namespace Alterverse.Visuals
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
-            // Contact core is deliberately small. The hero-specific silhouette below is what
-            // communicates who hit you, instead of one generic white explosion for every attack.
-            Fx(slot<0&&hero==HeroId.Nyra?HeroFxShape.Burst:HeroFxShape.Halo,p,
-                Color.Lerp(c,Color.white,.68f),strength*(slot<0?1.35f:1.8f),.18f);
+            // Brief near-white contact flash; each hero's larger silhouette below identifies the source.
+            Fx(hero==HeroId.Nyra?HeroFxShape.Bolt:hero==HeroId.Kaelon?HeroFxShape.Hex:
+                hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Mira?HeroFxShape.Seed:
+                hero==HeroId.Elyra?HeroFxShape.Orb:hero==HeroId.Rook?HeroFxShape.Burst:HeroFxShape.Rift,
+                p,Color.Lerp(c,Color.white,.91f),strength*(slot<0?.95f:1.30f),.085f,
+                HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
 
             switch(hero)
             {
@@ -685,8 +709,8 @@ namespace Alterverse.Visuals
             {
                 Vector3 p=Vector3.Lerp(from,to,(i+.5f)/3)+Vector3.up*.30f;
                 HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:h==HeroId.Elyra?HeroFxShape.Runes:HeroFxShape.Rift,
-                    p,p,new Vector3(.18f,.48f,Mathf.Min(.7f,distance*.25f)),
-                    new Color(c.r,c.g,c.b,.48f),.16f,HeroFxMotion.Contract,face,actor,delay:i*.035f);
+                    p,p,new Vector3(.26f,.58f,Mathf.Min(.95f,distance*.30f)),
+                    new Color(c.r,c.g,c.b,.72f),.18f,HeroFxMotion.Contract,face,actor,delay:i*.035f);
             }
             actor.GetComponent<HeroVisualMotion>()?.PulseDash();
         }
