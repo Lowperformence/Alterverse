@@ -726,7 +726,7 @@ var remove=new System.Collections.Generic.List<GameObject>();
 var animated=new System.Collections.Generic.HashSet<string>{"DF_LegL","DF_LegR","DF_BootL","DF_BootR","DF_ArmL","DF_ArmR","DF_GauntletL","DF_GauntletR","DF_OrbitL","DF_OrbitR","DF_WingL","DF_WingR","DF_Cape","DF_BladeR","DF_WeaponR","DF_WeaponL","DF_Orb"};
 foreach(Transform part in root)
 {
-if(animated.Contains(part.name)||IsFlowingFabric(part.name))continue;
+if(animated.Contains(part.name)||IsFlowingFabric(part.name)||IsArticulatedBodyPart(part))continue;
 MeshFilter filter=part.GetComponent<MeshFilter>();MeshRenderer renderer=part.GetComponent<MeshRenderer>();
 if(filter==null||renderer==null||renderer.sharedMaterial==null)continue;
 Material material=renderer.sharedMaterial;if(!groups.TryGetValue(material,out var list)){list=new System.Collections.Generic.List<CombineInstance>();groups.Add(material,list);}
@@ -738,6 +738,26 @@ Mesh combined=new Mesh{name="DF_HeroBodyBatch"};combined.CombineMeshes(pair.Valu
 GameObject batch=new GameObject("DF_BodySurface");batch.transform.SetParent(root,false);batch.AddComponent<MeshFilter>().sharedMesh=combined;batch.AddComponent<MeshRenderer>().sharedMaterial=pair.Key;
 }
 foreach(GameObject part in remove){part.SetActive(false);Destroy(part);}
+}
+private static bool IsArticulatedBodyPart(Transform part)
+{
+if(part==null)return false;
+string n=part.name.ToLowerInvariant();
+if(n.Contains("torso")||n.Contains("pelvis")||n.Contains("head")||n.Contains("neck")||
+n.Contains("breastplate")||n.Contains("abdomen")||n.Contains("gorget")||n.Contains("belt")||
+n.Contains("buckle")||n.Contains("tasset")||n.Contains("hipguard")||n.Contains("clavicle")||
+n.Contains("chest")||n.Contains("visor")||n.Contains("brow")||n.Contains("face")||
+n.Contains("hair")||n.Contains("eye")||n.Contains("jaw")||n.Contains("mask"))return true;
+if(n.Contains("cape")||n.Contains("cloak")||n.Contains("mantle")||n.Contains("robe")||
+n.Contains("tabard")||n.Contains("veil")||n.Contains("drape")||n.Contains("stole")||
+n.Contains("coat")||n.Contains("orbit")||n.Contains("halo")||n.Contains("wing")||
+n.Contains("projector")||n.Contains("weapon")||n.Contains("staff")||n.Contains("rifle")||
+n.Contains("muzzle")||n.Contains("emitter")||n.Contains("blade")||n.Contains("gauntlet"))return false;
+Vector3 p=part.localPosition;
+bool torsoZone=Mathf.Abs(p.x)<=.32f&&p.y>=-.08f&&p.y<=.58f;
+bool pelvisZone=Mathf.Abs(p.x)<=.40f&&p.y>=-.43f&&p.y<-.15f;
+bool headZone=Mathf.Abs(p.x)<=.32f&&p.y>.69f;
+return torsoZone||pelvisZone||headZone;
 }
 private static Mesh BuildProfile(string name,float[] heights,float[] radii)
 {
