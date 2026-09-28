@@ -308,6 +308,15 @@ namespace Alterverse.Visuals
             float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
             if(armL!=null)armL.localRotation=Quaternion.Slerp(armBeforeL,armL.localRotation,armBlend);
             if(armR!=null)armR.localRotation=Quaternion.Slerp(armBeforeR,armR.localRotation,armBlend);
+            if(hitWeight>0f)
+            {
+                float leftBrace=hitFromSide<0f?.82f:.48f;
+                float rightBrace=hitFromSide>0f?.82f:.48f;
+                Quaternion leftFlinch=armRestL*Quaternion.Euler(-34f,-hitFromSide*7f,hitFromSide<0f?-18f:12f);
+                Quaternion rightFlinch=armRestR*Quaternion.Euler(-34f,-hitFromSide*7f,hitFromSide>0f?18f:-12f);
+                if(armL!=null)armL.localRotation=Quaternion.Slerp(armL.localRotation,leftFlinch,hitWeight*leftBrace);
+                if(armR!=null)armR.localRotation=Quaternion.Slerp(armR.localRotation,rightFlinch,hitWeight*rightBrace);
+            }
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
             SetEnergy(energy);
             bool phaseDash=(Dashing||Time.time<dashUntil)&&(hero==HeroId.Veyr||hero==HeroId.Elyra);
@@ -394,6 +403,9 @@ namespace Alterverse.Visuals
                         wristL=-10f*actionBlend;
                         break;
                 }
+                float hitGuard=Mathf.Clamp01(hitWeight);
+                elbowL-=hitGuard*(hitFromSide<0f?20f:8f);
+                elbowR-=hitGuard*(hitFromSide>0f?20f:8f);
                 if(!attacking)
                 {
                     // Shoulder, forearm and wrist hold the class silhouette in every gait phase.
