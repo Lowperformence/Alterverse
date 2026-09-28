@@ -271,6 +271,13 @@ namespace Alterverse.Visuals
                 readyL.x+=guardLift;readyR.x+=guardLift;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
+                // Veyr keeps both blades crossed in a compact guard; ApplyAttackPose resets
+                // weapon transforms each frame before attacks, so restore this only at rest.
+                if(hero==HeroId.Veyr)
+                {
+                    if(weaponL!=null)weaponL.localRotation=weaponRestL*Quaternion.Euler(8f,38f,18f);
+                    if(weaponR!=null)weaponR.localRotation=weaponRestR*Quaternion.Euler(8f,-38f,-18f);
+                }
             }
             // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
             float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
@@ -311,8 +318,8 @@ namespace Alterverse.Visuals
                 float kneeRange=Mathf.Lerp(30f,52f,runBlend)*strideWeight;
                 float leftCycle=Mathf.Repeat(phase/(Mathf.PI*2f),1f);
                 float rightCycle=Mathf.Repeat(leftCycle+.5f,1f);
-                EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
-                EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
+                EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
+                EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
                 Quaternion leftHip=Quaternion.Euler(leftHipAngle,0f,Mathf.Sin(phase)*2.5f*strideWeight);
                 Quaternion rightHip=Quaternion.Euler(rightHipAngle,0f,Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
                 Quaternion leftKnee=Quaternion.Euler(leftKneeAngle,0f,0f);
@@ -435,27 +442,42 @@ namespace Alterverse.Visuals
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
         }
-        private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,float weight,
+        private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,float weight,float stance,
             out float hipAngle,out float kneeAngle,out float ankleAngle)
         {
-            // About three fifths of the cycle keeps the foot planted while the body passes over it.
-            const float stance=.62f;
+            // A clear contact pattern: heel settles, the sole stays quiet under load, then
+            // the toes push off. Running shortens contact; it does not just swing the legs faster.
             cycle=Mathf.Repeat(cycle,1f);
+            stance=Mathf.Clamp(stance,.52f,.68f);
             if(cycle<stance)
             {
-                float u=Mathf.SmoothStep(0f,1f,cycle/stance);
-                hipAngle=Mathf.Lerp(hipRange,-hipRange,u);
-                kneeAngle=Mathf.Lerp(3f,7f,u)*weight;
-                ankleAngle=Mathf.Lerp(-6f,12f,u)*weight;
+                float u=cycle/stance;
+                float hipU=Mathf.SmoothStep(0f,1f,u);
+                hipAngle=Mathf.Lerp(hipRange,-hipRange,hipU);
+
+                float load=u<.14f?Mathf.Lerp(0f,1f,Mathf.SmoothStep(0f,1f,u/.14f)):
+                    u>.78f?Mathf.Lerp(1f,0f,Mathf.SmoothStep(.78f,1f,u)):1f;
+                kneeAngle=Mathf.Lerp(2f,8f,load)*weight;
+
+                float footPitch;
+                if(u<.12f) footPitch=Mathf.Lerp(-7f,0f,Mathf.SmoothStep(0f,1f,u/.12f));
+                else if(u<.76f) footPitch=0f; // quiet, planted sole
+                else footPitch=Mathf.Lerp(0f,18f,Mathf.SmoothStep(0f,1f,(u-.76f)/.24f));
+                // Counter-rotate against the thigh and shin so the foot stays planted;
+                // the last fifth releases into a visible toe-off instead of a pendulum arc.
+                ankleAngle=Mathf.Clamp(footPitch-hipAngle-kneeAngle,-48f,48f)*weight;
                 return;
             }
 
-            float swing=Mathf.SmoothStep(0f,1f,(cycle-stance)/(1f-stance));
-            float arc=Mathf.Sin(Mathf.PI*swing);
-            hipAngle=Mathf.Lerp(-hipRange,hipRange,swing);
-            kneeAngle=Mathf.Lerp(7f,3f,swing)*weight+kneeRange*arc;
-            // Toe-off points the foot down; recovery brings it back level before contact.
-            ankleAngle=(Mathf.Lerp(12f,-6f,swing)+arc*5f)*weight;
+            float swing=Mathf.Clamp01((cycle-stance)/(1f-stance));
+            float eased=Mathf.SmoothStep(0f,1f,swing);
+            hipAngle=Mathf.Lerp(-hipRange,hipRange,eased);
+            // Bend the knee after toe-off, clear the ground, then extend before heel contact.
+            float kneeLift=Mathf.Sin(Mathf.PI*swing);
+            kneeAngle=(Mathf.Lerp(5f,1f,eased)+kneeRange*kneeLift)*weight;
+            float toeRecovery=swing<.20f?Mathf.Lerp(16f,-9f,Mathf.SmoothStep(0f,1f,swing/.20f)):-9f;
+            float heelPrepare=swing>.78f?Mathf.Lerp(-9f,-5f,Mathf.SmoothStep(.78f,1f,(swing-.78f)/.22f)):toeRecovery;
+            ankleAngle=heelPrepare*weight;
         }
 
         private void SetupCloth()
