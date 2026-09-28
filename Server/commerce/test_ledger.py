@@ -24,7 +24,7 @@ class LedgerTests(unittest.TestCase):
         self.ledger.buy('account-a','voidfall');self.ledger.buy('account-a','voidfall')
         self.assertEqual(self.ledger.wallet('account-a')['balance'],3500)
         self.assertTrue(self.ledger.wallet('account-a')['voidfall'])
-        with self.assertRaises(ValueError):self.ledger.buy('account-a','avatar_10')
+        with self.assertRaises(ValueError):self.ledger.buy('account-a','beta_supporter_wings')
     def test_token_cannot_move_between_accounts(self):
         self.ledger.fulfill('account-a','dimensions_shards_500','token',self.valid)
         with self.assertRaises(ValueError):self.ledger.fulfill('account-b','dimensions_shards_500','token',dict(self.valid,obfuscatedExternalAccountId='account-b'))
