@@ -142,6 +142,32 @@ namespace Alterverse.Visuals
         }
         private void OnHealthChanged(float current,float max)
         {if(current<previousHealth-.01f)hitUntil=Time.time+.12f;previousHealth=current;}
+        private void OnEnable()
+        {
+            if(root==null||articulatedRig==null||!articulatedRig.Ready)return;
+            ResetPresentationAfterRelocation();
+            lastPosition=transform.position;
+        }
+        private void ResetPresentationAfterRelocation()
+        {
+            wasDead=moving=false;
+            phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=0f;
+            previousWorldVelocity=Vector3.zero;
+            previousHeading=transform.eulerAngles.y;
+            attackUntil=windupUntil=dashUntil=empowerUntil=hitUntil=windupDuration=0f;
+            abilitySlot=-1;
+            root.localPosition=basePosition;
+            root.localRotation=displayedRotation=Quaternion.identity;
+            root.localScale=displayedScale=rootScale;
+            if(armL!=null)armL.localRotation=armRestL;
+            if(armR!=null)armR.localRotation=armRestR;
+            if(torso!=null)torso.localRotation=torsoRest;
+            if(head!=null)head.localRotation=headRest;
+            if(weaponL!=null){weaponL.localPosition=weaponPositionL;weaponL.localRotation=weaponRestL;}
+            if(weaponR!=null){weaponR.localPosition=weaponPositionR;weaponR.localRotation=weaponRestR;}
+            foreach(ClothPanel panel in clothPanels){panel.offset=Vector2.zero;panel.velocity=Vector2.zero;}
+            articulatedRig?.ResetPose();
+        }
         private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
@@ -154,7 +180,10 @@ namespace Alterverse.Visuals
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousWorldVelocity=Vector3.zero;previousHeading=transform.eulerAngles.y;smoothedTurnRate=0f;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
+            {
+                ResetPresentationAfterRelocation();
+                delta=Vector3.zero;
+            }
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
