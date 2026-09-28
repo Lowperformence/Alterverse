@@ -192,8 +192,17 @@ namespace Alterverse.Visuals
 
             Vector3 position = transform.position;
             Vector3 delta = position - lastPosition;
-            lastPosition = position;
             delta.y = 0f;
+            if (delta.magnitude > Mathf.Max(2f, dt * 40f))
+            {
+                lastPosition = position;
+                previousVelocity = Vector3.zero;
+                phase = gait = lean = 0f;
+                attackUntil = attackDuration = attackWeight = 0f;
+                ResetPoseAfterRelocation();
+                return;
+            }
+            lastPosition = position;
             Vector3 velocity = delta / dt;
             float maxSpeed = robot ? 5f : 4f;
             velocity = Vector3.ClampMagnitude(velocity, maxSpeed);
@@ -234,6 +243,24 @@ namespace Alterverse.Visuals
                 visualRoot.localRotation *= Quaternion.Euler(-8f * recoil, 0f, 0f);
                 Pose(armR, armRestR, stride * .8f - 30f * recoil);
             }
+        }
+
+        private void ResetPoseAfterRelocation()
+        {
+            if (visualRoot == null) return;
+            visualRoot.localPosition = Vector3.zero;
+            visualRoot.localRotation = Quaternion.identity;
+            if (legL != null) { legL.localPosition = legPositionL; legL.localRotation = legRestL; }
+            if (legR != null) { legR.localPosition = legPositionR; legR.localRotation = legRestR; }
+            if (shinL != null) shinL.localRotation = shinRestL;
+            if (shinR != null) shinR.localRotation = shinRestR;
+            if (footL != null) { footL.localPosition = footPositionL; footL.localRotation = footRestL; }
+            if (footR != null) { footR.localPosition = footPositionR; footR.localRotation = footRestR; }
+            if (armL != null) armL.localRotation = armRestL;
+            if (armR != null) armR.localRotation = armRestR;
+            if (shoulderL != null) shoulderL.localRotation = shoulderRestL;
+            if (shoulderR != null) shoulderR.localRotation = shoulderRestR;
+            if (head != null) head.localRotation = headRest;
         }
 
         private static Quaternion Rest(Transform value) => value != null ? value.localRotation : Quaternion.identity;
