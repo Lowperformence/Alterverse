@@ -15,6 +15,7 @@ namespace Alterverse.Visuals
         private static readonly Dictionary<string, Mesh> SplitMeshCache = new();
 
         private Transform visualRoot;
+        private Transform pelvisJoint, spineLowerJoint, spineUpperJoint, neckJoint;
         private Transform hipL, hipR, kneeL, kneeR, ankleL, ankleR;
         private Transform elbowL, elbowR, wristL, wristR;
         private Quaternion hipRestL, hipRestR, kneeRestL, kneeRestR, ankleRestL, ankleRestR;
@@ -24,8 +25,10 @@ namespace Alterverse.Visuals
         private Quaternion targetAnkleL = Quaternion.identity, targetAnkleR = Quaternion.identity;
         private Quaternion targetElbowL = Quaternion.identity, targetElbowR = Quaternion.identity;
         private Quaternion targetWristL = Quaternion.identity, targetWristR = Quaternion.identity;
-        private float targetWeight, displayedWeight;
-        private int poseFrame = -1;
+        private Quaternion targetPelvis = Quaternion.identity, targetSpineLower = Quaternion.identity;
+        private Quaternion targetSpineUpper = Quaternion.identity, targetNeck = Quaternion.identity;
+        private float targetWeight, displayedWeight, targetBodyWeight, displayedBodyWeight;
+        private int poseFrame = -1, bodyPoseFrame = -1;
 
         public bool Ready { get; private set; }
 
@@ -46,6 +49,7 @@ namespace Alterverse.Visuals
             bool rightLeg = BuildLeg("R", out hipR, out kneeR, out ankleR);
             bool leftArm = BuildArm("L", out elbowL, out wristL);
             bool rightArm = BuildArm("R", out elbowR, out wristR);
+            bool body = BuildBodyHierarchy();
 
             hipRestL = Rest(hipL); hipRestR = Rest(hipR);
             kneeRestL = Rest(kneeL); kneeRestR = Rest(kneeR);
@@ -56,6 +60,132 @@ namespace Alterverse.Visuals
             Ready = leftLeg && rightLeg && leftArm && rightArm;
             if (!Ready)
                 Debug.LogWarning("[Alterverse Movement] Procedural joint construction failed; no legacy movement fallback will run.", this);
+            if (!body)
+                Debug.LogWarning("[Alterverse Movement] Full torso hierarchy could not be built on '" + name + "'; limb rig remains available.", this);
+        }
+
+        private bool BuildBodyHierarchy()
+        {
+            Transform torso = FindDeep("DF_Torso");
+            Transform pelvisMesh = FindDeep("DF_Pelvis");
+            Transform head = FindDeep("DF_Head");
+            Transform neck = FindDeep("DF_Neck");
+            Transform armLeft = FindDeep("DF_ArmL");
+            Transform armRight = FindDeep("DF_ArmR");
+            if (torso == null || pelvisMesh == null || head == null) return false;
+
+            // These pivots are presentation bones under DF_VisualRoot. They never become
+            // ancestors of the gameplay root, colliders or hitboxes.
+            Vector3 pelvisPosition = CenterOf(pelvisMesh);
+            Vector3 lowerPosition = visualRoot.TransformPoint(new Vector3(0f, -.13f, 0f));
+            Vector3 upperPosition = CenterOf(torso);
+            Vector3 neckPosition = neck != null ? CenterOf(neck) : head.position - head.up * .20f;
+            pelvisJoint = CreateJoint("DF_PelvisJoint", visualRoot, pelvisPosition, visualRoot.rotation);
+            spineLowerJoint = CreateJoint("DF_SpineLower", pelvisJoint, lowerPosition, visualRoot.rotation);
+            spineUpperJoint = CreateJoint("DF_SpineUpper", spineLowerJoint, upperPosition, visualRoot.rotation);
+            neckJoint = CreateJoint("DF_NeckJoint", spineUpperJoint, neckPosition, visualRoot.rotation);
+
+            List<Transform> originalRootParts = new();
+            for (int i = 0; i < visualRoot.childCount; i++)
+            {
+                Transform child = visualRoot.GetChild(i);
+                if (child != pelvisJoint && child != spineLowerJoint && child != spineUpperJoint && child != neckJoint)
+                    originalRootParts.Add(child);
+            }
+
+            pelvisMesh.SetParent(pelvisJoint, true);
+            torso.SetParent(spineUpperJoint, true);
+            head.SetParent(neckJoint, true);
+            if (neck != null) neck.SetParent(neckJoint, true);
+            if (armLeft != null) armLeft.SetParent(spineUpperJoint, true);
+            if (armRight != null) armRight.SetParent(spineUpperJoint, true);
+
+            foreach (Transform part in originalRootParts)
+            {
+                if (part == torso || part == pelvisMesh || part == head || part == neck ||
+                    part == armLeft || part == armRight || part == hipL || part == hipR ||
+                    part == kneeL || part == kneeR || part == ankleL || part == ankleR ||
+                    part == elbowL || part == elbowR || part == wristL || part == wristR) continue;
+                if (part == null || part.parent != visualRoot) continue;
+
+                string partName = part.name;
+                Vector3 localPosition = part.localPosition;
+                if (IsBodyCloth(partName))
+                {
+                    part.SetParent(localPosition.y < -.18f ? pelvisJoint : spineUpperJoint, true);
+                    continue;
+                }
+                if (IsHeadPart(partName, localPosition))
+                    part.SetParent(neckJoint, true);
+                else if (IsPelvisPart(partName, localPosition))
+                    part.SetParent(pelvisJoint, true);
+                else if (Mathf.Abs(localPosition.x) <= .32f &&
+                         localPosition.y >= -.08f && localPosition.y <= .58f &&
+                         !IsIndependentAccessory(partName))
+                    part.SetParent(spineUpperJoint, true);
+            }
+
+            return true;
+        }
+
+        private static bool IsBodyCloth(string partName)
+        {
+            string n = partName.ToLowerInvariant();
+            return n.Contains("cape") || n.Contains("cloak") || n.Contains("mantle") ||
+                   n.Contains("robe") || n.Contains("tabard") || n.Contains("veil") ||
+                   n.Contains("drape") || n.Contains("stole") || n.Contains("coattail");
+        }
+
+        private static bool IsHeadPart(string partName, Vector3 localPosition)
+        {
+            string n = partName.ToLowerInvariant();
+            if (n.Contains("orbit") || n.Contains("halo") || n.Contains("wing") ||
+                n.Contains("projector") || n.Contains("weapon") || n.Contains("staff") ||
+                n.Contains("rifle") || n.Contains("cape") || n.Contains("robe") ||
+                n.Contains("coat") || n.Contains("muzzle") || n.Contains("emitter")) return false;
+            return n.Contains("head") || n.Contains("neck") || n.Contains("hair") ||
+                   n.Contains("face") || n.Contains("eye") || n.Contains("visor") ||
+                   n.Contains("brow") || n.Contains("jaw") || n.Contains("mask") ||
+                   localPosition.y > .69f && Mathf.Abs(localPosition.x) < .32f;
+        }
+
+        private static bool IsPelvisPart(string partName, Vector3 localPosition)
+        {
+            string n = partName.ToLowerInvariant();
+            return n.Contains("pelvis") || n.Contains("belt") || n.Contains("buckle") ||
+                   n.Contains("tasset") || n.Contains("hipguard") ||
+                   localPosition.y >= -.43f && localPosition.y < -.15f;
+        }
+
+        private static bool IsIndependentAccessory(string partName)
+        {
+            string n = partName.ToLowerInvariant();
+            return n.Contains("orbit") || n.Contains("halo") || n.Contains("wing") ||
+                   n.Contains("projector") || n.Contains("weapon") || n.Contains("staff") ||
+                   n.Contains("rifle") || n.Contains("cape") || n.Contains("muzzle") ||
+                   n.Contains("emitter");
+        }
+
+        private static Vector3 CenterOf(Transform part)
+        {
+            if (part == null) return Vector3.zero;
+            MeshFilter filter = part.GetComponent<MeshFilter>();
+            if (filter != null && filter.sharedMesh != null)
+                return part.TransformPoint(filter.sharedMesh.bounds.center);
+            Renderer renderer = part.GetComponent<Renderer>();
+            return renderer != null ? renderer.bounds.center : part.position;
+        }
+
+        public void SetBodyPose(float weight, Quaternion pelvis, Quaternion lowerSpine,
+            Quaternion upperSpine, Quaternion neck)
+        {
+            if (pelvisJoint == null || spineLowerJoint == null || spineUpperJoint == null || neckJoint == null) return;
+            targetPelvis = pelvis;
+            targetSpineLower = lowerSpine;
+            targetSpineUpper = upperSpine;
+            targetNeck = neck;
+            targetBodyWeight = Mathf.Clamp01(weight);
+            bodyPoseFrame = Time.frameCount;
         }
 
         private bool CanBuild()
@@ -96,6 +226,7 @@ namespace Alterverse.Visuals
 
             float dt = Mathf.Max(Time.deltaTime, .0001f);
             if (poseFrame != Time.frameCount) targetWeight = 0f;
+            if (bodyPoseFrame != Time.frameCount) targetBodyWeight = 0f;
             float response = 1f - Mathf.Exp(-18f * dt);
             displayedWeight = Mathf.Lerp(displayedWeight, targetWeight, response);
 
@@ -109,6 +240,12 @@ namespace Alterverse.Visuals
             ApplyJoint(elbowR, elbowRestR, targetElbowR, displayedWeight, response);
             ApplyJoint(wristL, wristRestL, targetWristL, displayedWeight * .45f, response);
             ApplyJoint(wristR, wristRestR, targetWristR, displayedWeight * .45f, response);
+
+            displayedBodyWeight = Mathf.Lerp(displayedBodyWeight, targetBodyWeight, response);
+            ApplyJoint(pelvisJoint, Quaternion.identity, targetPelvis, displayedBodyWeight, response);
+            ApplyJoint(spineLowerJoint, Quaternion.identity, targetSpineLower, displayedBodyWeight, response);
+            ApplyJoint(spineUpperJoint, Quaternion.identity, targetSpineUpper, displayedBodyWeight, response);
+            ApplyJoint(neckJoint, Quaternion.identity, targetNeck, displayedBodyWeight, response);
         }
 
         private static void ApplyJoint(Transform joint, Quaternion rest, Quaternion delta, float weight, float response)
