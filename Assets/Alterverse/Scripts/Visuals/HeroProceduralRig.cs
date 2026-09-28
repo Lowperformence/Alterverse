@@ -220,9 +220,35 @@ namespace Alterverse.Visuals
             poseFrame = Time.frameCount;
         }
 
-        private void LateUpdate()
+        // Recall and respawn start from the authored rest pose, not an old interpolated punch.
+        public void ResetPose()
         {
             if (!Ready) return;
+            targetHipL=targetHipR=targetKneeL=targetKneeR=Quaternion.identity;
+            targetAnkleL=targetAnkleR=targetElbowL=targetElbowR=Quaternion.identity;
+            targetWristL=targetWristR=Quaternion.identity;
+            targetPelvis=targetSpineLower=targetSpineUpper=targetNeck=Quaternion.identity;
+            targetWeight=displayedWeight=targetBodyWeight=displayedBodyWeight=0f;
+            poseFrame=bodyPoseFrame=-1;
+            ApplyJoint(hipL,hipRestL,Quaternion.identity,0f,1f);
+            ApplyJoint(hipR,hipRestR,Quaternion.identity,0f,1f);
+            ApplyJoint(kneeL,kneeRestL,Quaternion.identity,0f,1f);
+            ApplyJoint(kneeR,kneeRestR,Quaternion.identity,0f,1f);
+            ApplyJoint(ankleL,ankleRestL,Quaternion.identity,0f,1f);
+            ApplyJoint(ankleR,ankleRestR,Quaternion.identity,0f,1f);
+            ApplyJoint(elbowL,elbowRestL,Quaternion.identity,0f,1f);
+            ApplyJoint(elbowR,elbowRestR,Quaternion.identity,0f,1f);
+            ApplyJoint(wristL,wristRestL,Quaternion.identity,0f,1f);
+            ApplyJoint(wristR,wristRestR,Quaternion.identity,0f,1f);
+            ApplyJoint(pelvisJoint,Quaternion.identity,Quaternion.identity,0f,1f);
+            ApplyJoint(spineLowerJoint,Quaternion.identity,Quaternion.identity,0f,1f);
+            ApplyJoint(spineUpperJoint,Quaternion.identity,Quaternion.identity,0f,1f);
+            ApplyJoint(neckJoint,Quaternion.identity,Quaternion.identity,0f,1f);
+        }
+
+        private void LateUpdate()
+        {
+            if (!Ready || Time.deltaTime<=0f) return;
 
             float dt = Mathf.Max(Time.deltaTime, .0001f);
             if (poseFrame != Time.frameCount) targetWeight = 0f;
