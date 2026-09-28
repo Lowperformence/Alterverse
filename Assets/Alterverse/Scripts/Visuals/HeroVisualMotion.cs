@@ -419,9 +419,12 @@ namespace Alterverse.Visuals
                 float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
                 float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
                 float pelvisRoll=Mathf.Clamp(localAcceleration.x*.035f,-3f,3f)+attackRoll*.35f;
-                Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,turnCounter*.16f+gaitHipYaw+hipTwist*.55f,pelvisRoll);
+                // Turn the visual pelvis into a corner and lead strikes from the hip.
+                // Clamp the combined turn so the anchored legs never see an extreme twist.
+                float pelvisYaw=Mathf.Clamp(turnCounter*.30f+gaitHipYaw+hipTwist*.72f,-12f,12f);
+                Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,pelvisYaw,pelvisRoll);
                 Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f,
-                    -turnCounter*.12f-gaitHipYaw*.5f+hipTwist*.35f,
+                    -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
                     -sway*.24f-attackRoll*.30f);
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f,
                     turnCounter*.22f+gaitSpineYaw+attackTwist,
