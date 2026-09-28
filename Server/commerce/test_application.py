@@ -36,13 +36,13 @@ class ApplicationTests(unittest.TestCase):
         return result
 
     def test_authentication_required_before_google_or_wallet_access(self):
-        result = self.request('/google-play/fulfill', {'productId': 'df_shards_small', 'purchaseToken': 'token'}, authorization='')
+        result = self.request('/google-play/fulfill', {'productId': 'dimensions_shards_500', 'purchaseToken': 'token'}, authorization='')
         self.assertEqual(result['status'], '401 Unauthorized')
         self.google.get.assert_not_called()
         self.assertEqual(self.app.ledger.wallet('account-a')['balance'], 0)
 
     def test_fulfillment_retry_returns_one_durable_credit(self):
-        data = {'productId': 'df_shards_medium', 'purchaseToken': 'token'}
+        data = {'productId': 'dimensions_shards_1200', 'purchaseToken': 'token'}
         first = self.request('/google-play/fulfill', data)
         second = self.request('/google-play/fulfill', data)
         self.assertEqual(first['status'], '200 OK')
@@ -50,18 +50,18 @@ class ApplicationTests(unittest.TestCase):
         self.assertEqual(second['body']['wallet']['balance'], 1200)
         self.assertEqual(second['headers']['Cache-Control'], 'no-store')
         self.google.get.assert_called_with(
-            'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.example.dimensionsfront/purchases/products/df_shards_medium/tokens/token', timeout=15)
+            'https://androidpublisher.googleapis.com/androidpublisher/v3/applications/com.example.dimensionsfront/purchases/products/dimensions_shards_1200/tokens/token', timeout=15)
 
     def test_client_amount_account_and_verified_payload_cannot_override_google(self):
         result = self.request('/google-play/fulfill', {
-            'productId': 'df_shards_small', 'purchaseToken': 'token', 'amount': 999999,
+            'productId': 'dimensions_shards_500', 'purchaseToken': 'token', 'amount': 999999,
             'account': 'attacker', 'verified': {'purchaseState': 0}})
         self.assertEqual(result['body']['wallet']['balance'], 500)
         self.assertEqual(self.app.ledger.wallet('attacker')['balance'], 0)
 
     def test_google_outage_is_retryable_and_never_grants(self):
         self.google.get.side_effect = RuntimeError('sensitive upstream details')
-        result = self.request('/google-play/fulfill', {'productId': 'df_shards_small', 'purchaseToken': 'secret-token'})
+        result = self.request('/google-play/fulfill', {'productId': 'dimensions_shards_500', 'purchaseToken': 'secret-token'})
         self.assertEqual(result['status'], '503 Service Unavailable')
         self.assertEqual(result['body'], {'fulfilled': False})
         self.assertEqual(self.app.ledger.wallet('account-a')['balance'], 0)
@@ -69,14 +69,21 @@ class ApplicationTests(unittest.TestCase):
     def test_invalid_payloads_are_rejected_before_google(self):
         for raw in (b'[]', b'null', b'"string"', b'{', b'{"productId":[],"purchaseToken":"x"}',
                     b'{"productId":"unknown","purchaseToken":"x"}',
-                    b'{"productId":"df_shards_small","purchaseToken":""}',
-                    b'{"productId":"df_shards_small","purchaseToken":42}'):
+                    b'{"productId":"dimensions_shards_500","purchaseToken":""}',
+                    b'{"productId":"dimensions_shards_500","purchaseToken":42}'):
             with self.subTest(raw=raw):
                 self.assertEqual(self.request('/google-play/fulfill', raw=raw)['status'], '400 Bad Request')
         self.google.get.assert_not_called()
 
+    def test_removed_2500_pack_is_rejected_before_google(self):
+        result = self.request('/google-play/fulfill', {
+            'productId': 'dimensions_shards_2500', 'purchaseToken': 'old-pack-token'})
+        self.assertEqual(result['status'], '400 Bad Request')
+        self.google.get.assert_not_called()
+        self.assertEqual(self.app.ledger.wallet('account-a')['balance'], 0)
+
     def test_verified_shards_claim_into_one_retry_safe_balance(self):
-        self.request('/google-play/fulfill', {'productId': 'df_shards_small', 'purchaseToken': 'claim-token'})
+        self.request('/google-play/fulfill', {'productId': 'dimensions_shards_500', 'purchaseToken': 'claim-token'})
         first = self.request('/wallet/claim')
         second = self.request('/wallet/claim')
         self.assertEqual(first['body']['wallet']['claimAmount'], 500)
@@ -90,12 +97,12 @@ class ApplicationTests(unittest.TestCase):
         self.assertEqual(empty['body']['wallet']['claimId'], '')
 
     def test_cosmetic_purchase_retry_and_wallet_refresh(self):
-        self.request('/google-play/fulfill', {'productId': 'df_shards_medium', 'purchaseToken': 'token'})
+        self.request('/google-play/fulfill', {'productId': 'dimensions_shards_5500', 'purchaseToken': 'token'})
         first = self.request('/cosmetics/buy', {'cosmeticId': 'voidfall'})
         second = self.request('/cosmetics/buy', {'cosmeticId': 'voidfall'})
         self.assertEqual(first['body'], second['body'])
         wallet = self.request('/wallet')['body']['wallet']
-        self.assertEqual(wallet['balance'], 0)
+        self.assertEqual(wallet['balance'], 3500)
         self.assertTrue(wallet['voidfall'])
 
 

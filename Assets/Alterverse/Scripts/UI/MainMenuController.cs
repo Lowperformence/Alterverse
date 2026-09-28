@@ -732,15 +732,17 @@ namespace Alterverse.UI
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Shard Packs",theme.Heading);
             theme.Label(new Rect(Left,316,ContentWidth,32),$"BALANCE: {PlayerWallet.Balance} SHARDS  •  Earned and purchased shards are identical.",theme.Small,true);
-            var store=GooglePlayShardStore.Instance;float w=(ContentWidth-48)/4;
+            var store=GooglePlayShardStore.Instance;
+            int packCount=ShardPacks.All.Length;
+            float w=packCount>0?(ContentWidth-16f*(packCount-1))/packCount:0f;
             for(int i=0;i<ShardPacks.All.Length;i++)
             {
                 var pack=ShardPacks.All[i];float x=Left+i*(w+16);theme.Panel(new Rect(x,368,w,220));
                 theme.Label(new Rect(x+18,384,w-36,28),pack.Name,theme.Small,true);
                 theme.Label(new Rect(x+18,424,w-36,48),pack.Amount+" SHARDS",theme.Heading);
-                ShardShopVisualOverlay.DrawPackCard(x,w,pack,i);
+                ShardShopVisualOverlay.DrawPackCard(x,w,pack,i==packCount-1?3:i);
                 if(theme.Action(new Rect(x+18,508,w-36,60),store!=null?store.Price(pack.Id):"Unavailable",true,enabled:store!=null&&store.CanBuy(pack.Id)))store.Buy(pack.Id);
-                ShardShopVisualOverlay.DrawPurchaseIcon(x,w,i);
+                ShardShopVisualOverlay.DrawPurchaseIcon(x,w,i==packCount-1?3:i);
             }
             theme.Label(new Rect(Left,608,ContentWidth-190,64),store!=null?store.Status:"Store unavailable.",theme.Body,true);
             if(theme.Action(new Rect(Right-170,614,170,54),"RECONNECT",enabled:store!=null&&!store.Busy))store.Reconnect();
