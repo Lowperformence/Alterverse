@@ -23,7 +23,8 @@ namespace Alterverse.Visuals
         private Transform root,torso,head,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
         private Quaternion torsoRest,headRest,bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
-        private float previousHealth,hitUntil;
+        private float hitUntil,hitStarted;
+        private float hitFromSide;
         private float phase,strideWeight,attackUntil,attackDuration,attackWeight,lean,displayedSpeed;
         private Vector3 previousWorldVelocity;
         private Quaternion displayedRotation=Quaternion.identity;
@@ -148,11 +149,21 @@ namespace Alterverse.Visuals
             armL=FindPart("ArmL")??FindPart("GauntletL");armR=FindPart("ArmR")??FindPart("GauntletR");
             orbitL=root.Find("DF_OrbitL");orbitR=root.Find("DF_OrbitR");wingL=root.Find("DF_WingL");wingR=root.Find("DF_WingR");cape=FindPart("Cape");blade=FindPart("BladeR");
             if(bootL!=null)bootPositionL=bootL.localPosition;if(bootR!=null)bootPositionR=bootR.localPosition;
-            if(health!=null){previousHealth=health.Current;health.Changed+=OnHealthChanged;}
+            if(health!=null)health.Damaged+=OnDamaged;
             bootRestL=Rest(bootL);bootRestR=Rest(bootR);armRestL=Rest(armL);armRestR=Rest(armR);bladeRest=Rest(blade);
         }
-        private void OnHealthChanged(float current,float max)
-        {if(current<previousHealth-.01f)hitUntil=Time.time+.12f;previousHealth=current;}
+        private void OnDamaged(float applied,float absorbed,GameObject source)
+        {
+            if(applied<=0f&&absorbed<=0f)return;
+            hitStarted=Time.time;
+            hitUntil=Time.time+.46f;
+            hitFromSide=0f;
+            if(source!=null)
+            {
+                Vector3 localSource=transform.InverseTransformPoint(source.transform.position);
+                hitFromSide=Mathf.Abs(localSource.x)<.05f?0f:Mathf.Sign(localSource.x);
+            }
+        }
         private void OnEnable()
         {
             if(root==null||articulatedRig==null||!articulatedRig.Ready)return;
@@ -165,7 +176,7 @@ namespace Alterverse.Visuals
             phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=0f;
             previousWorldVelocity=Vector3.zero;
             previousHeading=transform.eulerAngles.y;
-            attackUntil=windupUntil=dashUntil=empowerUntil=hitUntil=windupDuration=0f;
+            attackUntil=windupUntil=dashUntil=empowerUntil=hitUntil=hitStarted=windupDuration=0f;hitFromSide=0f;
             abilitySlot=-1;
             root.localPosition=basePosition;
             root.localRotation=displayedRotation=Quaternion.identity;
@@ -179,7 +190,7 @@ namespace Alterverse.Visuals
             foreach(ClothPanel panel in clothPanels){panel.offset=Vector2.zero;panel.velocity=Vector2.zero;}
             articulatedRig?.ResetPose();
         }
-        private void OnDestroy(){if(health!=null)health.Changed-=OnHealthChanged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
+        private void OnDestroy(){if(health!=null)health.Damaged-=OnDamaged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private void LateUpdate()
@@ -249,7 +260,10 @@ namespace Alterverse.Visuals
             float delivery=meleeStrike&&preparation>0?StrikeDelivery(windupProgress):0f;
             float kick=preparation>0?delivery*attackWeight:
                 Time.time<attackUntil?(1f-Mathf.SmoothStep(0f,1f,progress))*attackWeight:0f;
-            ApplyAttackPose(hero,kick,preparation,progress);
+            bool spellCaster=hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
+            float castCharge=spellCaster&&abilitySlot>=0&&preparation>0f?Mathf.SmoothStep(0f,1f,windupProgress):0f;
+            float castRelease=spellCaster&&abilitySlot>=0&&preparation<=0f?Mathf.Clamp01(kick/Mathf.Max(.01f,attackWeight)):0f;
+            ApplyAttackPose(hero,kick,preparation,progress,windupProgress,attackWeight);
             // Return to a readable guard between attacks. The rifle uses its authored shoulder
             // hold; melee heroes keep both fists forward instead of swinging them with the stride.
             bool attacking=preparation>.001f||kick>.025f;
@@ -301,7 +315,10 @@ namespace Alterverse.Visuals
             Vector3 targetScale=Vector3.Scale(rootScale,phaseDash?new Vector3(.55f,.94f,.88f):Vector3.one);
             displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
             root.localScale=displayedScale;
-            float recoil=Time.time<hitUntil?Mathf.Sin((hitUntil-Time.time)/.12f*Mathf.PI)*(heavy?1:2):0;
+            float hitAge=Time.time-hitStarted;
+            float hitWeight=hitUntil>Time.time?Mathf.Sin(Mathf.Clamp01(hitAge/.46f)*Mathf.PI):0f;
+            float recoil=hitWeight*(heavy?3f:4.5f);
+            float hitTorso=hitWeight*(heavy?13f:17f);
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
             float sway=Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
             Quaternion targetRotation=Quaternion.Euler((Dashing?9:lean)-7*kick-recoil,spinYaw,sway);
@@ -331,6 +348,9 @@ namespace Alterverse.Visuals
                 float rightCycle=Mathf.Repeat(leftCycle+.5f,1f);
                 EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
                 EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
+                float brace=Mathf.Max(hitWeight*.72f,Mathf.Max(castCharge,castRelease*.38f));
+                leftKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
+                rightKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
                 Quaternion leftHip=Quaternion.Euler(leftHipAngle,0f,Mathf.Sin(phase)*2.5f*strideWeight);
                 Quaternion rightHip=Quaternion.Euler(rightHipAngle,0f,Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
                 Quaternion leftKnee=Quaternion.Euler(leftKneeAngle,0f,0f);
@@ -433,21 +453,30 @@ namespace Alterverse.Visuals
                         break;
                 }
 
+                float attackSide=attackSerial%2==0?-1f:1f;
                 float gaitHipYaw=Mathf.Sin(phase)*2.2f*strideWeight;
                 float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
                 float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
                 float pelvisRoll=Mathf.Clamp(localAcceleration.x*.035f,-3f,3f)+attackRoll*.35f;
                 // Turn the visual pelvis into a corner and lead strikes from the hip.
                 // Clamp the combined turn so the anchored legs never see an extreme twist.
-                float pelvisYaw=Mathf.Clamp(turnCounter*.30f+gaitHipYaw+hipTwist*.72f,-12f,12f);
+                if(spellCaster&&abilitySlot>=0)
+                {
+                    // Gather power through the hips, then let the chest and casting hand lead the release.
+                    attackPitch+=7f*castCharge-10f*castRelease;
+                    attackTwist+=attackSide*(16f*castCharge-8f*castRelease);
+                    hipTwist+=attackSide*(-7f*castCharge+4f*castRelease);
+                    attackRoll+=attackSide*(3f*castCharge-2f*castRelease);
+                }
+                float pelvisYaw=Mathf.Clamp(turnCounter*.30f+gaitHipYaw+hipTwist*.72f-hitFromSide*hitWeight*5f,-16f,16f);
                 Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,pelvisYaw,pelvisRoll);
-                Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f,
+                Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f-hitTorso*.25f,
                     -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
-                    -sway*.24f-attackRoll*.30f);
-                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f,
-                    turnCounter*.22f+gaitSpineYaw+attackTwist,
-                    sway*.22f+attackRoll*.55f);
-                Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f,
+                    -sway*.24f-attackRoll*.30f+hitFromSide*hitWeight*3f);
+                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f,
+                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f,
+                    sway*.22f+attackRoll*.55f-hitFromSide*hitWeight*4f);
+                Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f+hitTorso*.32f,
                     -turnCounter*.20f-attackTwist*.35f,
                     -sway*.10f-attackRoll*.35f);
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
@@ -615,7 +644,7 @@ namespace Alterverse.Visuals
             joint.localRotation=Quaternion.Slerp(previous,target,entry);
         }
 
-        private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress)
+        private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress,float windupProgress,float attackWeight)
         {
             if(weaponR!=null){weaponR.localPosition=weaponPositionR;weaponR.localRotation=weaponRestR;}
             if(weaponL!=null){weaponL.localPosition=weaponPositionL;weaponL.localRotation=weaponRestL;}
@@ -650,12 +679,27 @@ namespace Alterverse.Visuals
                 case HeroId.Elyra:
                 case HeroId.Mira:
                 case HeroId.Traveler:
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(
-                        identity!=null&&identity.Hero==HeroId.Traveler?-34*preparation-36*kick:-45*preparation-42*kick,
-                        0,-18*(preparation+kick));
-                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(
-                        identity!=null&&identity.Hero==HeroId.Traveler?-18*preparation-20*kick:-25*preparation-25*kick,
-                        0,20*kick);
+                    if(abilitySlot>=0)
+                    {
+                        // Two-beat cast: hands gather near the chest, then the lead palm/weapon
+                        // drives forward while the support hand stays open and stabilizes.
+                        float charge=preparation>0f?Mathf.SmoothStep(0f,1f,windupProgress):0f;
+                        float release=preparation<=0f?Mathf.Clamp01(kick/Mathf.Max(.01f,attackWeight)):0f;
+                        float side=attackSerial%2==0?-1f:1f;
+                        if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-18f-30f*charge-76f*release,
+                            side*(8f*charge+5f*release),-14f-18f*charge-8f*release);
+                        if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(-22f-36f*charge-30f*release,
+                            -side*(10f*charge+3f*release),18f+24f*charge+8f*release);
+                    }
+                    else
+                    {
+                        if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(
+                            identity!=null&&identity.Hero==HeroId.Traveler?-34*preparation-36*kick:-45*preparation-42*kick,
+                            0,-18*(preparation+kick));
+                        if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(
+                            identity!=null&&identity.Hero==HeroId.Traveler?-18*preparation-20*kick:-25*preparation-25*kick,
+                            0,20*kick);
+                    }
                     break;
                 case HeroId.Rook:
                     if(abilitySlot==1)
