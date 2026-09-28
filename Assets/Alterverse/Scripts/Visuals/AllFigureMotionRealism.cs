@@ -67,7 +67,8 @@ namespace Alterverse.Visuals
 
         private void Awake()
         {
-            if(HasComponent("HeroIdentity")||HasComponent("HeroVisualMotion")||HasComponent("LaneUnitVisualMotion"))
+            if(HasComponent("HeroIdentity")||HasComponent("HeroVisualMotion")||HasComponent("LaneUnitVisualMotion")||
+               HasComponent("TrenchSoldier")||HasComponent("HotZoneTank"))
             {
                 Debug.LogError("[Alterverse Movement] AllFigureMotionRealism conflicts with another movement controller on '"+name+"'; disabled.",this);
                 enabled=false;return;
@@ -104,6 +105,22 @@ namespace Alterverse.Visuals
             {
                 nextHierarchyRetry=Time.unscaledTime+.75f;
                 ResolveHierarchy();
+            }
+
+            // Respawn/recall teleports are relocations, not a one-frame sprint.
+            if(HasResolvedVisual())
+            {
+                float relocation=(transform.position-lastPosition).magnitude;
+                if(relocation>Mathf.Max(2f,dt*40f))
+                {
+                    ResetVisuals();
+                    lastPosition=transform.position;
+                    smoothedVelocity=Vector3.zero;
+                    lastSpeed=moveWeight=smoothedAcceleration=smoothedTurn=0f;
+                    phase=seed*Mathf.PI*2f;
+                    lastForward=Flatten(transform.forward);
+                    if(lastForward.sqrMagnitude<.001f)lastForward=Vector3.forward;
+                }
             }
 
             UpdateKinematics(dt);
@@ -622,7 +639,8 @@ namespace Alterverse.Visuals
                 GameObject actor=behaviour.gameObject;
                 if(actor.GetComponent<AllFigureMotionRealism>()!=null)continue;
                 if(HasActorComponent(actor,"HeroIdentity")||HasActorComponent(actor,"HeroVisualMotion")||
-                   HasActorComponent(actor,"LaneUnitVisualMotion"))continue;
+                   HasActorComponent(actor,"LaneUnitVisualMotion")||HasActorComponent(actor,"TrenchSoldier")||
+                   HasActorComponent(actor,"HotZoneTank"))continue;
                 actor.AddComponent<AllFigureMotionRealism>();
             }
         }
@@ -637,8 +655,8 @@ namespace Alterverse.Visuals
 
         private static bool IsMovingFigureType(string typeName)
         {
-            return typeName=="TrenchSoldier"||typeName=="LaneMinion"||
-                   typeName=="HealingGuardMech"||typeName=="HotZoneTank"||
+            return typeName=="LaneMinion"||
+                   typeName=="HealingGuardMech"||
                    typeName=="GreenAlienMechVisual"||typeName=="MarsStoneGolemMechVisual"||
                    typeName=="PrototypeEnemyBot";
         }
