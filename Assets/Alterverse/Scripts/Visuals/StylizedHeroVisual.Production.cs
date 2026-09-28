@@ -653,29 +653,41 @@ namespace Alterverse.Visuals
 
             // Base melee weapons are integrated gauntlets: yellow armor, dark mechanics, orange reactor strip.
             Mesh gauntlet=HeroMeshLibrary.Loft("DF_BrakkImpactGauntlet",
-                new[]{-.28f,-.21f,.01f,.24f,.34f},
-                new[]{.20f,.29f,.31f,.25f,.15f},
-                new[]{.23f,.30f,.32f,.26f,.16f});
+                new[]{-.24f,-.18f,.12f,.23f,.29f},
+                new[]{.19f,.25f,.25f,.19f,.14f},
+                new[]{.12f,.17f,.17f,.13f,.10f},
+                new[]{0f,0f,0f,0f,0f},8);
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
                 Vector3 p=new(side*.61f,-.17f,.20f);
                 Sculpt("Gauntlet"+s,gauntlet,p,new Vector3(1.10f,1f,1.12f),yellowDark);
-                Bind("Gauntlet"+s,"Arm"+s);
-
-                for(int k=0;k<3;k++)
+                // Build every digit while the gauntlet is still a direct root child:
+                // Detail/Bind resolves direct children. Attach the completed hand last.
+                for(int k=0;k<4;k++)
                 {
-                    Detail("Knuckle"+s+k,p+new Vector3((k-1)*.135f,-.105f,.275f),
-                        new Vector3(.115f,.19f,.095f),edgeMetal,default,"Gauntlet"+s);
+                    float x=(k-1.5f)*.132f;
+                    float knuckleHeight=.025f-Mathf.Abs(k-1.5f)*.020f;
+                    Detail("Knuckle"+s+k,p+new Vector3(x,-.075f+knuckleHeight,.235f),
+                        new Vector3(.116f,.14f,.13f),edgeMetal,new Vector3(-8,0,0),"Gauntlet"+s);
+                    Detail("BrakkCurledFinger"+s+k,p+new Vector3(x,-.177f,.202f),
+                        new Vector3(.109f,.12f,.13f),yellowDark,new Vector3(-24,0,0),"Gauntlet"+s);
+                    Detail("BrakkFingerCrease"+s+k,p+new Vector3(x,-.137f,.271f),
+                        new Vector3(.091f,.016f,.012f),blackMetal,default,"Gauntlet"+s);
                 }
+                Detail("BrakkThumbBase"+s,p+new Vector3(-side*.275f,.015f,.09f),
+                    new Vector3(.13f,.20f,.14f),yellowDark,new Vector3(0,0,side*28f),"Gauntlet"+s);
+                Detail("BrakkThumbTip"+s,p+new Vector3(-side*.255f,-.10f,.18f),
+                    new Vector3(.14f,.13f,.15f),edgeMetal,new Vector3(-20,0,side*38f),"Gauntlet"+s);
                 Detail("GauntletReactor"+s,p+new Vector3(0,.12f,.285f),
                     new Vector3(.27f,.060f,.025f),reactor,default,"Gauntlet"+s,true);
                 Detail("BrakkFistPlate"+s,p+new Vector3(0,.02f,.255f),
                     new Vector3(.32f,.13f,.045f),yellow,default,"Gauntlet"+s);
                 Detail("BrakkFistSide"+s,p+new Vector3(side*.17f,.02f,.15f),
                     new Vector3(.065f,.22f,.16f),blackMetal,new Vector3(0,0,side*8),"Gauntlet"+s);
-                Detail("BrakkImpactEdge"+s,p+new Vector3(0,-.08f,.328f),
-                    new Vector3(.25f,.035f,.022f),reactorHot,default,"Gauntlet"+s,true);
+                Detail("BrakkImpactEdge"+s,p+new Vector3(0,.075f,.283f),
+                    new Vector3(.25f,.025f,.022f),reactorHot,default,"Gauntlet"+s,true);
+                Bind("Gauntlet"+s,"Arm"+s);
             }
 
             Detail("IdentityCore",new Vector3(0,.20f,.407f),new Vector3(.065f,.065f,.018f),reactorHot,
