@@ -67,9 +67,9 @@ namespace Alterverse.Visuals
 
         private void Awake()
         {
-            if(HasComponent("HeroIdentity"))
+            if(HasComponent("HeroIdentity")||HasComponent("HeroVisualMotion")||HasComponent("LaneUnitVisualMotion"))
             {
-                Debug.LogError("[Alterverse Movement] AllFigureMotionRealism conflicts with HeroVisualMotion on '"+name+"'; disabled.",this);
+                Debug.LogError("[Alterverse Movement] AllFigureMotionRealism conflicts with another movement controller on '"+name+"'; disabled.",this);
                 enabled=false;return;
             }
             ResolveKind();
@@ -620,8 +620,19 @@ namespace Alterverse.Visuals
                 if(!IsMovingFigureType(behaviour.GetType().Name))continue;
 
                 GameObject actor=behaviour.gameObject;
-                if(actor.GetComponent<AllFigureMotionRealism>()==null)actor.AddComponent<AllFigureMotionRealism>();
+                if(actor.GetComponent<AllFigureMotionRealism>()!=null)continue;
+                if(HasActorComponent(actor,"HeroIdentity")||HasActorComponent(actor,"HeroVisualMotion")||
+                   HasActorComponent(actor,"LaneUnitVisualMotion"))continue;
+                actor.AddComponent<AllFigureMotionRealism>();
             }
+        }
+
+        private static bool HasActorComponent(GameObject actor,string typeName)
+        {
+            MonoBehaviour[] behaviours=actor.GetComponents<MonoBehaviour>();
+            for(int i=0;i<behaviours.Length;i++)
+                if(behaviours[i]!=null&&behaviours[i].GetType().Name==typeName)return true;
+            return false;
         }
 
         private static bool IsMovingFigureType(string typeName)
