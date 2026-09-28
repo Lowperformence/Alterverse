@@ -275,7 +275,6 @@ namespace Alterverse.Combat
                 {
                     locomotion.FaceAction(delta,AttackCooldown*.70f);
                     if(Time.time>=nextAttack)Fire(target);
-                    moveBlend=Mathf.MoveTowards(moveBlend,0f,Time.deltaTime*5f);
                     AnimateVisual();
                     return;
                 }
@@ -375,7 +374,6 @@ namespace Alterverse.Combat
             Vector3 delta=destination-transform.position;delta.y=0;
             if(delta.sqrMagnitude<=stopDistance*stopDistance)
             {
-                moveBlend=Mathf.MoveTowards(moveBlend,0f,Time.deltaTime*5f);
                 AnimateVisual();
                 return;
             }
@@ -398,7 +396,6 @@ namespace Alterverse.Combat
             if(moved.sqrMagnitude>.00001f)locomotion.FaceMovement(moved);
             else locomotion.FaceMovement(desired);
 
-            moveBlend=Mathf.MoveTowards(moveBlend,moved.sqrMagnitude>.00001f?1f:0f,Time.deltaTime*6f);
             AnimateVisual();
         }
 
@@ -559,7 +556,7 @@ namespace Alterverse.Combat
             if(distance>.0001f)stridePhase=Mathf.Repeat(stridePhase+distance/1.42f*Mathf.PI*2f,Mathf.PI*2f);
 
             float stride=Mathf.Sin(stridePhase)*moveBlend;
-            float lift=Mathf.Abs(Mathf.Sin(stridePhase))*moveBlend;
+            float lift=(1f-Mathf.Cos(stridePhase*2f))*.5f*moveBlend;
             visualRoot.localPosition=visualRest+Vector3.up*(lift*.020f);
             if(leftLeg!=null)leftLeg.localRotation=leftLegBase*Quaternion.Euler(stride*27f,0,0);
             if(rightLeg!=null)rightLeg.localRotation=rightLegBase*Quaternion.Euler(-stride*27f,0,0);
@@ -583,7 +580,7 @@ namespace Alterverse.Combat
             if(armL!=null)armL.localRotation=armLBase*Quaternion.Euler(-stride*5f-attack*3f,bodyYaw*.20f,-attack*3f);
             if(armR!=null)
             {
-                float recoil=attack*(attackPrep>.85f?-2.5f:6.5f);
+                float recoil=attack*Mathf.Lerp(6.5f,-2.5f,Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.65f,1f,attackPrep)));
                 armR.localRotation=armRBase*Quaternion.Euler(stride*3f+recoil,bodyYaw+attack*3f,attack*2.5f);
             }
         }
