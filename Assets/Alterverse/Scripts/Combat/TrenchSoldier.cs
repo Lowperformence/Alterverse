@@ -460,8 +460,8 @@ namespace Alterverse.Combat
             Color visor=new(.045f,.075f,.105f,1f);
             Color weapon=new(.06f,.28f,.52f,1f);
 
-            suitMat=MakeMaterial(shader,suit,.12f,.34f,Color.black);
-            darkMat=MakeMaterial(shader,suitDark,.45f,.22f,Color.black);
+            suitMat=MakeMaterial(shader,suit,.18f,.46f,Color.black);
+            darkMat=MakeMaterial(shader,suitDark,.45f,.38f,Color.black);
             visorMat=MakeMaterial(shader,visor,.34f,.72f,new Color(.02f,.10f,.16f)*.35f);
             weaponMat=MakeMaterial(shader,weapon,.58f,.40f,Color.black);
             energyMat=MakeMaterial(shader,teamEnergy,.08f,.74f,teamEnergy*2.2f);
@@ -486,6 +486,8 @@ namespace Alterverse.Combat
             Part("HelmetCrown",PrimitiveType.Cube,headPivot,new Vector3(0,.20f,-.04f),new Vector3(.38f,.16f,.40f),suitMat,Quaternion.Euler(-5,0,0));
             Part("Visor",PrimitiveType.Sphere,headPivot,new Vector3(0,0,.25f),new Vector3(.46f,.36f,.16f),visorMat,Quaternion.identity);
             Part("HelmetLight",PrimitiveType.Cube,headPivot,new Vector3(.27f,.03f,.27f),new Vector3(.08f,.07f,.025f),energyMat,Quaternion.identity);
+            Part("HelmetBrow",PrimitiveType.Cube,headPivot,new Vector3(0,.18f,.23f),new Vector3(.50f,.07f,.11f),darkMat,Quaternion.Euler(-5,0,0));
+            Part("HelmetVisorTrace",PrimitiveType.Cube,headPivot,new Vector3(0,-.07f,.399f),new Vector3(.32f,.026f,.016f),energyMat,Quaternion.identity);
 
             leftLeg=Pivot("LegL",visualRoot,new Vector3(-.20f,.68f,0),Quaternion.Euler(0,0,-2));
             rightLeg=Pivot("LegR",visualRoot,new Vector3(.20f,.68f,0),Quaternion.Euler(0,0,2));
@@ -519,6 +521,7 @@ namespace Alterverse.Combat
             Part("RifleForeGrip",PrimitiveType.Cube,rifle,new Vector3(-.16f,-.09f,.50f),new Vector3(.12f,.22f,.14f),darkMat,Quaternion.Euler(8,0,0));
             Part("RifleBarrel",PrimitiveType.Cylinder,rifle,new Vector3(0,0,.82f),new Vector3(.055f,.30f,.055f),darkMat,Quaternion.Euler(90,0,0));
             Part("RifleMuzzleBrake",PrimitiveType.Cube,rifle,new Vector3(0,0,1.13f),new Vector3(.13f,.11f,.14f),weaponMat,Quaternion.identity);
+            Part("RifleMuzzleEmitter",PrimitiveType.Cube,rifle,new Vector3(0,0,1.207f),new Vector3(.065f,.06f,.012f),energyMat,Quaternion.identity);
             muzzle=Pivot("Muzzle",rifle,new Vector3(0,0,1.22f),Quaternion.identity);
             torsoBase=torsoPivot.localRotation;headBase=headPivot.localRotation;
             armLBase=armL.localRotation;armRBase=armR.localRotation;
