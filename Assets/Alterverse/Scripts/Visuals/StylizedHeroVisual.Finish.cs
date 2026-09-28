@@ -161,6 +161,11 @@ namespace Alterverse.Visuals
             foreach(Transform pivot in all)
             {
                 if(pivot==root||!MovingPivot(pivot.name))continue;
+                // Rig.Build runs after this art pass. Preserve the original limb filters,
+                // renderers and part boundaries for knee splitting and elbow/wrist parenting.
+                // Only rigid weapons and orbit props are safe to batch before rig construction.
+                if(pivot.name!="DF_WeaponL"&&pivot.name!="DF_WeaponR"&&
+                   pivot.name!="DF_OrbitL"&&pivot.name!="DF_OrbitR")continue;
                 var groups=new Dictionary<Material,List<CombineInstance>>();
                 foreach(var renderer in pivot.GetComponentsInChildren<MeshRenderer>())
                 {
