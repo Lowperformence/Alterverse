@@ -221,7 +221,17 @@ namespace Alterverse.Combat
             if(energyMaterial!=null)Destroy(energyMaterial);
             if(warningMaterial!=null)Destroy(warningMaterial);
             if(bombMaterial!=null)Destroy(bombMaterial);
-            if(engineLoop!=null)Destroy(engineLoop);
+            if(engineLoop!=null)
+            {
+#if UNITY_EDITOR
+                // Unity can treat the generated AudioClip as a persistent asset during Play Mode teardown.
+                // Destroying a persistent asset is forbidden and causes the Console error.
+                if(!UnityEditor.EditorUtility.IsPersistent(engineLoop))Destroy(engineLoop);
+#else
+                Destroy(engineLoop);
+#endif
+                engineLoop=null;
+            }
         }
     }
 
