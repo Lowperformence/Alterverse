@@ -130,8 +130,8 @@ namespace Alterverse.Visuals
             if(weaponL!=null){weaponPositionL=weaponL.localPosition;weaponRestL=weaponL.localRotation;}
             if(orb!=null)orbRest=orb.localPosition;
             legL=FindPart("LegL");legR=FindPart("LegR");bootL=FindPart("BootL");bootR=FindPart("BootR");
-            armL=root.Find("DF_ArmL")??root.Find("DF_GauntletL");armR=root.Find("DF_ArmR")??root.Find("DF_GauntletR");
-            orbitL=root.Find("DF_OrbitL");orbitR=root.Find("DF_OrbitR");wingL=root.Find("DF_WingL");wingR=root.Find("DF_WingR");cape=root.Find("DF_Cape");blade=root.Find("DF_BladeR");
+            armL=FindPart("ArmL")??FindPart("GauntletL");armR=FindPart("ArmR")??FindPart("GauntletR");
+            orbitL=root.Find("DF_OrbitL");orbitR=root.Find("DF_OrbitR");wingL=root.Find("DF_WingL");wingR=root.Find("DF_WingR");cape=FindPart("Cape");blade=FindPart("BladeR");
             if(bootL!=null)bootPositionL=bootL.localPosition;if(bootR!=null)bootPositionR=bootR.localPosition;
             if(health!=null){previousHealth=health.Current;health.Changed+=OnHealthChanged;}
             bootRestL=Rest(bootL);bootRestR=Rest(bootR);armRestL=Rest(armL);armRestR=Rest(armR);bladeRest=Rest(blade);
@@ -250,6 +250,64 @@ namespace Alterverse.Visuals
                     Quaternion.Euler(-Mathf.Sin(phase)*armCounter,0f,0f),Quaternion.identity,
                     Quaternion.Euler(-Mathf.Sin(phase+Mathf.PI)*armCounter,0f,0f),Quaternion.identity);
             }
+
+            // Full-body weight shift and counter-rotation. These are visual skeleton poses only;
+            // attack and ability delivery still own the original combat timing.
+            if(articulatedRig!=null)
+            {
+                float anticipation=preparation>0f?Mathf.SmoothStep(0f,1f,windupProgress):0f;
+                float attackSide=attackSerial%2==0?-1f:1f;
+                float attackPitch=0f,attackTwist=0f,hipTwist=0f,attackRoll=0f;
+                float action=Mathf.Clamp01(Mathf.Max(anticipation,kick));
+                switch(hero)
+                {
+                    case HeroId.Veyr:
+                        attackPitch=4f*anticipation-12f*kick;
+                        attackTwist=attackSide*(-17f*anticipation+25f*kick);
+                        hipTwist=attackSide*(-7f*anticipation+11f*kick);
+                        attackRoll=attackSide*(4f*anticipation-6f*kick);
+                        break;
+                    case HeroId.Kaelon:
+                        attackPitch=8f*anticipation-16f*kick;
+                        attackTwist=-10f*anticipation+13f*kick;
+                        hipTwist=-5f*anticipation+8f*kick;
+                        attackRoll=-3f*anticipation+4f*kick;
+                        break;
+                    case HeroId.Rook:
+                        attackPitch=10f*anticipation-17f*kick;
+                        attackTwist=attackSide*(-13f*anticipation+19f*kick);
+                        hipTwist=attackSide*(-8f*anticipation+12f*kick);
+                        attackRoll=attackSide*(4f*anticipation-5f*kick);
+                        break;
+                    case HeroId.Nyra:
+                        attackPitch=2f*anticipation-6f*kick;
+                        attackTwist=-4f*anticipation+5f*kick;
+                        hipTwist=-2f*anticipation+3f*kick;
+                        break;
+                    default:
+                        attackPitch=5f*anticipation-8f*kick;
+                        attackTwist=attackSide*(-5f*anticipation+7f*kick);
+                        hipTwist=attackSide*(-2f*anticipation+4f*kick);
+                        attackRoll=attackSide*2f*kick;
+                        break;
+                }
+
+                float gaitHipYaw=Mathf.Sin(phase)*2.2f*strideWeight;
+                float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
+                float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
+                float pelvisRoll=Mathf.Clamp(localAcceleration.x*.035f,-3f,3f)+attackRoll*.35f;
+                Quaternion pelvisPose=Quaternion.Euler(pelvisPitch,turnCounter*.16f+gaitHipYaw+hipTwist*action*.55f,pelvisRoll);
+                Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f,
+                    -turnCounter*.12f-gaitHipYaw*.5f+hipTwist*action*.35f,
+                    -sway*.24f-attackRoll*action*.30f);
+                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f,
+                    turnCounter*.22f+gaitSpineYaw+attackTwist*action,
+                    sway*.22f+attackRoll*action*.55f);
+                Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f,
+                    -turnCounter*.20f-attackTwist*action*.35f,
+                    -sway*.10f-attackRoll*action*.35f);
+                articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
+            }
         }
         private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,
             out float hipAngle,out float kneeAngle,out float ankleAngle)
@@ -277,9 +335,10 @@ namespace Alterverse.Visuals
         private void SetupCloth()
         {
             // Clone only fabric meshes for this hero. Armor and collision geometry stay shared.
-            foreach(Transform part in root)
+            Transform[] visualParts=root.GetComponentsInChildren<Transform>(true);
+            foreach(Transform part in visualParts)
             {
-                if(!StylizedHeroVisual.IsFlowingFabric(part.name))continue;
+                if(part==null||part==root||!StylizedHeroVisual.IsFlowingFabric(part.name))continue;
                 MeshFilter filter=part.GetComponent<MeshFilter>();
                 MeshRenderer renderer=part.GetComponent<MeshRenderer>();
                 if(filter==null||renderer==null||!renderer.enabled||filter.sharedMesh==null)continue;
