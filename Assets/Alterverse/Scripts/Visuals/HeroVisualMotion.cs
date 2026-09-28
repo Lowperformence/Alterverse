@@ -463,21 +463,29 @@ namespace Alterverse.Visuals
                 if(u<.12f) footPitch=Mathf.Lerp(-7f,0f,Mathf.SmoothStep(0f,1f,u/.12f));
                 else if(u<.76f) footPitch=0f; // quiet, planted sole
                 else footPitch=Mathf.Lerp(0f,18f,Mathf.SmoothStep(0f,1f,(u-.76f)/.24f));
-                // Counter-rotate against the thigh and shin so the foot stays planted;
-                // the last fifth releases into a visible toe-off instead of a pendulum arc.
-                ankleAngle=Mathf.Clamp(footPitch-hipAngle-kneeAngle,-48f,48f)*weight;
+                // Counter-rotate against thigh and shin so the sole stays planted; the final
+                // part releases into a distinct toe-off rather than drawing a pendulum arc.
+                ankleAngle=Mathf.Clamp(footPitch-hipAngle-kneeAngle,-60f,60f)*weight;
                 return;
             }
 
             float swing=Mathf.Clamp01((cycle-stance)/(1f-stance));
             float eased=Mathf.SmoothStep(0f,1f,swing);
             hipAngle=Mathf.Lerp(-hipRange,hipRange,eased);
-            // Bend the knee after toe-off, clear the ground, then extend before heel contact.
+            // Bend after push-off, clear the ground, then extend into a heel-first landing.
             float kneeLift=Mathf.Sin(Mathf.PI*swing);
             kneeAngle=(Mathf.Lerp(5f,1f,eased)+kneeRange*kneeLift)*weight;
-            float toeRecovery=swing<.20f?Mathf.Lerp(16f,-9f,Mathf.SmoothStep(0f,1f,swing/.20f)):-9f;
-            float heelPrepare=swing>.78f?Mathf.Lerp(-9f,-5f,Mathf.SmoothStep(.78f,1f,(swing-.78f)/.22f)):toeRecovery;
-            ankleAngle=heelPrepare*weight;
+
+            float toeOffAngle=Mathf.Clamp(18f+hipRange-5f,-60f,60f)*weight;
+            float recoveryAngle=-9f*weight;
+            ankleAngle=swing<.22f
+                ?Mathf.Lerp(toeOffAngle,recoveryAngle,Mathf.SmoothStep(0f,1f,swing/.22f))
+                :recoveryAngle;
+            if(swing>.78f)
+            {
+                float plantAngle=Mathf.Clamp(-7f-hipAngle-kneeAngle,-60f,60f)*weight;
+                ankleAngle=Mathf.Lerp(ankleAngle,plantAngle,Mathf.SmoothStep(.78f,1f,(swing-.78f)/.22f));
+            }
         }
 
         private void SetupCloth()
