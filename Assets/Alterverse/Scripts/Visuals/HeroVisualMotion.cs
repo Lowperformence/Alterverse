@@ -286,8 +286,8 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        // Sword-and-shield reference posture. The offhand blade fills the shield lane.
-                        readyL=new Vector3(-28f,0f,-10f);readyR=new Vector3(-28f,0f,10f);break;
+                        // A split high/low dual-blade guard: hands and blade silhouettes stay apart.
+                        readyL=VeyrGuardArm(false);readyR=VeyrGuardArm(true);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
                     case HeroId.Kaelon:
@@ -303,12 +303,12 @@ namespace Alterverse.Visuals
                 readyL.x+=guardLift;readyR.x+=guardLift;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
-                // Keep both blades crossed: the offhand weapon takes the shield position.
-                // Weapon positions remain fixed through locomotion; only attacks pose them.
+                // Keep Veyr's paired blades in a split guard, one high and one low/outboard.
+                // Their hilts stay at the hand sockets; only the wrists change blade direction.
                 if(hero==HeroId.Veyr)
                 {
-                    if(weaponL!=null)weaponL.localRotation=weaponRestL*Quaternion.Euler(4f,0f,-50f);
-                    if(weaponR!=null)weaponR.localRotation=weaponRestR*Quaternion.Euler(4f,0f,50f);
+                    if(weaponL!=null)weaponL.localRotation=weaponRestL*VeyrGuardBlade(false);
+                    if(weaponR!=null)weaponR.localRotation=weaponRestR*VeyrGuardBlade(true);
                 }
             }
             float hitAge=Time.time-hitStarted;
@@ -444,10 +444,10 @@ namespace Alterverse.Visuals
                 switch(hero)
                 {
                     case HeroId.Veyr:
-                        attackPitch=7f*anticipation-18f*kick;
-                        attackTwist=attackSide*(-30f*anticipation+42f*kick);
-                        hipTwist=attackSide*(-12f*anticipation+20f*kick);
-                        attackRoll=attackSide*(7f*anticipation-11f*kick);
+                        attackPitch=6f*anticipation-14f*kick;
+                        attackTwist=attackSide*(-22f*anticipation+34f*kick);
+                        hipTwist=attackSide*(-9f*anticipation+16f*kick);
+                        attackRoll=attackSide*(5f*anticipation-8f*kick);
                         break;
                     case HeroId.Kaelon:
                         attackPitch=8f*anticipation-16f*kick;
@@ -664,6 +664,12 @@ namespace Alterverse.Visuals
             joint.localRotation=Quaternion.Slerp(previous,target,entry);
         }
 
+        private static Vector3 VeyrGuardArm(bool right)
+            =>right?new Vector3(-42f,10f,24f):new Vector3(-18f,-12f,-32f);
+
+        private static Quaternion VeyrGuardBlade(bool right)
+            =>right?Quaternion.Euler(-18f,22f,14f):Quaternion.Euler(16f,-24f,-14f);
+
         private void ApplyAttackPose(HeroId hero,float kick,float preparation,float progress,float windupProgress,float attackWeight)
         {
             if(weaponR!=null){weaponR.localPosition=weaponPositionR;weaponR.localRotation=weaponRestR;}
@@ -675,12 +681,31 @@ namespace Alterverse.Visuals
                     if(abilitySlot==2)break; // Dash has its own presentation.
                     bool right=attackSerial%2!=0;
                     bool dual=abilitySlot==3;
-                    PoseStrike(armR,armRestR,new Vector3(-36,-46,-62),new Vector3(-102,56,14),new Vector3(-64,92,34),
-                        preparation,progress,right||dual?1:.12f);
-                    PoseStrike(armL,armRestL,new Vector3(-36,46,62),new Vector3(-102,-56,-14),new Vector3(-64,-92,-34),
-                        preparation,progress,!right||dual?1:.12f);
-                    PoseStrike(weaponR,weaponRestR,new Vector3(-20,-26,-30),new Vector3(-15,62,22),new Vector3(-34,94,38),preparation,progress,right||dual?1:.12f);
-                    PoseStrike(weaponL,weaponRestL,new Vector3(-20,26,30),new Vector3(-15,-62,-22),new Vector3(-34,-94,-38),preparation,progress,!right||dual?1:.12f);
+                    // One hand cuts diagonally across the body; the free hand keeps its guard.
+                    if(right||dual)
+                    {
+                        PoseStrike(armR,armRestR,new Vector3(-36,28,42),new Vector3(-94,-34,-8),new Vector3(-60,-58,-30),
+                            preparation,progress);
+                        PoseStrike(weaponR,weaponRestR,new Vector3(-24,24,18),new Vector3(30,-52,-26),new Vector3(52,-74,-44),
+                            preparation,progress);
+                    }
+                    else
+                    {
+                        if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(VeyrGuardArm(true));
+                        if(weaponR!=null)weaponR.localRotation=weaponRestR*VeyrGuardBlade(true);
+                    }
+                    if(!right||dual)
+                    {
+                        PoseStrike(armL,armRestL,new Vector3(-36,-28,-42),new Vector3(-94,34,8),new Vector3(-60,58,30),
+                            preparation,progress);
+                        PoseStrike(weaponL,weaponRestL,new Vector3(-24,-24,-18),new Vector3(30,52,26),new Vector3(52,74,44),
+                            preparation,progress);
+                    }
+                    else
+                    {
+                        if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(VeyrGuardArm(false));
+                        if(weaponL!=null)weaponL.localRotation=weaponRestL*VeyrGuardBlade(false);
+                    }
                     break;
                 case HeroId.Kaelon:
                     if(abilitySlot==1)
