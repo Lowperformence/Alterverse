@@ -570,7 +570,7 @@ if(gauntlet==null)continue;
 gauntlet.localScale*=1.24f;
 ApplyGlow(gauntlet,darkMaterial);
 
-for(int k=0;k<3;k++)
+for(int k=0;k<4;k++)
 {
 Transform knuckle=FindVisual("Knuckle"+suffix+k);
 if(knuckle!=null)
@@ -580,6 +580,14 @@ ApplyGlow(knuckle,yellowMaterial);
 }
 }
 
+// Keep the same anatomical silhouette on the epic power fist.
+ApplyGlow(FindVisual("BrakkThumbBase"+suffix),yellowMaterial);
+ApplyGlow(FindVisual("BrakkThumbTip"+suffix),yellowMaterial);
+for(int finger=0;finger<4;finger++)
+{
+ApplyGlow(FindVisual("BrakkCurledFinger"+suffix+finger),yellowMaterial);
+ApplyGlow(FindVisual("BrakkFingerCrease"+suffix+finger),darkMaterial);
+}
 Transform reactor=FindVisual("GauntletReactor"+suffix);
 if(reactor!=null)
 {
