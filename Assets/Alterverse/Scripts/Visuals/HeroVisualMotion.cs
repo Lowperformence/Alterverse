@@ -216,9 +216,9 @@ namespace Alterverse.Visuals
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
-            // Capture the displayed pose before writing this frame's gait/attack targets.
+            // Keep the upper body in a composed combat guard while the legs carry the gait.
+            // Shoulder counter-swing made the weapon/fists wobble on every step.
             Quaternion armBeforeL=Rest(armL),armBeforeR=Rest(armR);
-            Swing(armL,armRestL,-step*.85f);Swing(armR,armRestR,step*.85f);
             float forwardLean=Mathf.Clamp(localAcceleration.z*.055f+localVelocity.z*.11f,-2.5f,5f);
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             float t=Time.time;
@@ -240,8 +240,45 @@ namespace Alterverse.Visuals
             float kick=preparation>0?delivery*attackWeight:
                 Time.time<attackUntil?(1f-Mathf.SmoothStep(0f,1f,progress))*attackWeight:0f;
             ApplyAttackPose(hero,kick,preparation,progress);
-            // Blend shoulders across gait and spell changes; attack timing remains owned by combat.
-            float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:17f)*dt);
+            // Return to a readable guard between attacks. The rifle uses its authored shoulder
+            // hold; melee heroes keep both fists forward instead of swinging them with the stride.
+            bool attacking=preparation>.001f||kick>.025f;
+            if(!attacking)
+            {
+                // A distinct ready pose for every class. Pivots stay on the existing shoulders,
+                // and the authored weapon grip still moves with the forearm hierarchy.
+                Vector3 readyL=Vector3.zero,readyR=Vector3.zero;
+                switch(hero)
+                {
+                    case HeroId.Veyr:
+                        readyL=new Vector3(-34f,0f,8f);readyR=new Vector3(-34f,0f,-8f);break;
+                    case HeroId.Rook:
+                        readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
+                    case HeroId.Kaelon:
+                        readyL=new Vector3(-20f,0f,12f);readyR=new Vector3(-28f,0f,-12f);break;
+                    case HeroId.Elyra:
+                        readyL=new Vector3(-25f,0f,16f);readyR=new Vector3(-34f,0f,-12f);break;
+                    case HeroId.Mira:
+                        readyL=new Vector3(-30f,0f,14f);readyR=new Vector3(-20f,0f,-10f);break;
+                    case HeroId.Traveler:
+                        readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
+                    // Nyra keeps the rifle's authored two-handed shoulder aim.
+                }
+                if(hero!=HeroId.Nyra)
+                {
+                    if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
+                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
+                }
+                // Hold the hand shape as well as the shoulder silhouette.
+                if(hero==HeroId.Veyr||hero==HeroId.Rook)
+                {elbowL=-48f;elbowR=-48f;}
+                else if(hero==HeroId.Kaelon)
+                {elbowL=-34f;elbowR=-42f;}
+                else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
+                {elbowL=-26f;elbowR=-30f;}
+            }
+            // Blend into guard and attack poses smoothly; movement remains in the legs and torso.
+            float armBlend=1-Mathf.Exp(-(preparation>0||kick>0?28f:12f)*dt);
             if(armL!=null)armL.localRotation=Quaternion.Slerp(armBeforeL,armL.localRotation,armBlend);
             if(armR!=null)armR.localRotation=Quaternion.Slerp(armBeforeR,armR.localRotation,armBlend);
             float energy=Mathf.Max(kick,Mathf.Max(preparation*.65f,Time.time<empowerUntil?.85f:0));
@@ -289,8 +326,10 @@ namespace Alterverse.Visuals
                 Quaternion rightAnkle=Quaternion.Euler(rightAnkleAngle,0f,0f);
                 // Elbows flex forward; they must not alternate into hyperextension, or
                 // continue their walking oscillation while the shoulders deliver an attack.
-                float elbowL=-Mathf.Lerp(8f,26f,strideWeight)-Mathf.Sin(phase)*6f*strideWeight;
-                float elbowR=-Mathf.Lerp(8f,26f,strideWeight)+Mathf.Sin(phase)*6f*strideWeight;
+                // No gait-synchronous elbow pumping. Keep a small relaxed bend as a base;
+                // class guard and attack key poses below provide the visible action.
+                float elbowL=-12f;
+                float elbowR=-12f;
                 float wristL=0f,wristR=0f;
                 float actionBlend=preparation>0?Mathf.SmoothStep(0f,1f,windupProgress):
                     Mathf.Clamp01(kick/Mathf.Max(.01f,attackWeight));
