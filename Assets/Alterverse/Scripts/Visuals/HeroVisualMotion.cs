@@ -25,7 +25,7 @@ namespace Alterverse.Visuals
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
         private float previousHealth,hitUntil;
         private float phase,strideWeight,attackUntil,attackDuration,attackWeight,lean,displayedSpeed;
-        private Vector3 previousLocalVelocity;
+        private Vector3 previousWorldVelocity;
         private Quaternion displayedRotation=Quaternion.identity;
         private Vector3 displayedScale;
         private bool wasDead,moving;
@@ -145,12 +145,12 @@ namespace Alterverse.Visuals
         {
             if(root==null)return;
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
-            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousLocalVelocity=Vector3.zero;return;}
+            if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousWorldVelocity=Vector3.zero;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
             // Recall/respawn is a relocation, not a sprint across the arena.
             if(wasDead||delta.magnitude>Mathf.Max(3,dt*40))
-            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousLocalVelocity=Vector3.zero;previousHeading=transform.eulerAngles.y;smoothedTurnRate=0f;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
+            {wasDead=false;moving=false;phase=0;strideWeight=lean=displayedSpeed=0;previousWorldVelocity=Vector3.zero;previousHeading=transform.eulerAngles.y;smoothedTurnRate=0f;root.localPosition=basePosition;root.localRotation=displayedRotation=Quaternion.identity;displayedScale=rootScale;delta=Vector3.zero;}
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
@@ -159,16 +159,19 @@ namespace Alterverse.Visuals
             float turnRate=smoothedTurnRate;
             previousHeading=transform.eulerAngles.y;
             PlanarSpeed=travel/dt;
-            Vector3 localVelocity=transform.InverseTransformDirection(delta/dt);
-            Vector3 localAcceleration=(localVelocity-previousLocalVelocity)/dt;
-            previousLocalVelocity=localVelocity;
+            Vector3 worldVelocity=delta/dt;
+            Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);
+            // Subtract in the same coordinate frame: turning alone is not acceleration.
+            Vector3 localAcceleration=transform.InverseTransformDirection((worldVelocity-previousWorldVelocity)/dt);
+            localAcceleration=Vector3.ClampMagnitude(localAcceleration,45f);
+            previousWorldVelocity=worldVelocity;
             // Ease the visible gait in and out while keeping collision and input immediate.
             displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?12f:9f)*dt));
             float response=1-Mathf.Exp(-11f*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
-            if(moving){if(PlanarSpeed<.10f)moving=false;}
-            else if(PlanarSpeed>.28f)moving=true;
+            if(moving){if(displayedSpeed<.10f)moving=false;}
+            else if(displayedSpeed>.28f)moving=true;
             if(Dashing)moving=false;
             float desired=Dashing||!moving?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
