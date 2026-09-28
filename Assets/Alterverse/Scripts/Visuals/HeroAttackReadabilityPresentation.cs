@@ -146,6 +146,9 @@ namespace Alterverse.Visuals
                 return;
             }
 
+            // Veyr's basic strike draws two blade-bound trails in HeroVisualMotion.
+            if(hero==HeroId.Veyr)return;
+
             // Basic attacks get one short weapon-side flash. HeroSkillVfx owns the hit.
             HeroFxShape release=hero==HeroId.Nyra||hero==HeroId.Traveler?HeroFxShape.Bolt:
                 hero==HeroId.Mira?HeroFxShape.Seed:hero==HeroId.Elyra?HeroFxShape.Runes:
