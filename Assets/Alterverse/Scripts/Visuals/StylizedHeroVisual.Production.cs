@@ -754,8 +754,7 @@ namespace Alterverse.Visuals
                 Transform arm=new GameObject("DF_Arm"+s).transform;
                 arm.SetParent(root,false);
                 arm.localPosition=new Vector3(side*.345f,.39f,.015f);
-                // Bring both forearms forward and inward so the hands support the crossed guard.
-                arm.localRotation=Quaternion.Euler(-17f,0,side*-22f);
+                arm.localRotation=Quaternion.Euler(-5,0,side*-11f);
 
                 Mesh upper=HeroMeshLibrary.Loft("DF_VeyrUpperArm",
                     new[]{-.32f,-.24f,-.05f,.04f},new[]{.055f,.071f,.095f,.075f},new[]{.062f,.078f,.092f,.070f});
@@ -925,10 +924,9 @@ namespace Alterverse.Visuals
             for(int side=-1;side<=1;side+=2)
             {
                 string s=side<0?"L":"R";
-                // Seat each hilt at its inward-facing glove and point the blade across the torso.
-                // Left blade aims right, right blade aims left, forming an X ahead of the chest.
-                Transform weapon=WeaponPivot(s,new Vector3(side*.20f,-.19f,.24f));
-                weapon.localRotation=Quaternion.Euler(6f,side*-35f,side*-10f);
+                // Seat each hilt at its inward-canted wrist so the grip sits inside the glove.
+                Transform weapon=WeaponPivot(s,new Vector3(side*.235f,-.20f,.09f));
+                weapon.localRotation=Quaternion.Euler(6f,side*-7f,side*-10f);
 
                 Mesh blade=HeroMeshLibrary.Ribbon("DF_ShadowSteelBlade"+s,
                     new[]{new Vector3(0,-.09f,0),new Vector3(side*.028f,-.22f,.27f),
