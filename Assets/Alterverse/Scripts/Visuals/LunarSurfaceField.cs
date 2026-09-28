@@ -69,30 +69,20 @@ namespace Alterverse.Visuals
         {
             bool moon=IsMoon;
             bool mars=ArenaVariantRuntime.IsMars;
-            // Broad wind-shaped drifts share a wavelength across all planet palettes.
-            // Their spacing stays independent of mesh resolution.
+            // Mars has broad, readable dune fields. Keep their wavelength independent of mesh
+            // resolution so a sharper surface does not turn into a dense ripple pattern.
             float macro=Noise(x,z,mars?.032f:.055f,12);
             float medium=Noise(x,z,mars?.105f:.24f,31);
             float fine=Noise(x,z,mars?.62f:1.9f,7);
             relief=(macro-.5f)*(mars?.27f:moon?.20f:.19f)
                   +(medium-.5f)*(mars?.055f:moon?.09f:.085f);
-            float duneTone=0f,duneCover=0f;
+            if(mars)
             {
-                // Wind-aligned ridges meander across the map. Each crest has a long windward
-                // approach and a shorter lee face, rather than identical sinusoidal slopes.
-                float phase=z*.63f+x*.16f+Mathf.Sin(x*.17f)*.65f+(macro-.5f)*2.4f;
-                float cycle=Mathf.Repeat(phase/(Mathf.PI*2f),1f);
-                const float crest=.72f;
-                bool windward=cycle<crest;
-                float face=windward?cycle/crest:(cycle-crest)/(1f-crest);
-                float profile=windward?Mathf.SmoothStep(0f,1f,face):1f-Mathf.SmoothStep(0f,1f,face);
-                duneCover=profile;
-                relief+=(profile-.5f)*(mars?.21f+.045f*macro:.18f+.035f*macro);
-                float faceShade=Mathf.Sin(face*Mathf.PI);
-                duneTone=(profile-.5f)*.075f+faceShade*(windward?.035f:-.075f);
+                float dunePhase=z*.30f+x*.075f+(macro-.5f)*2.2f;
+                relief+=Mathf.Sin(dunePhase)*(.075f+.035f*macro);
             }
             tone=.48f+(macro-.5f)*.22f+(medium-.5f)*(mars?.055f:.085f)
-                 +(fine-.5f)*(mars?.012f:moon?.040f:.018f)+duneTone;
+                 +(fine-.5f)*(mars?.012f:moon?.040f:.018f);
             dust=0f;
             float craterWear=0f;
 
@@ -133,23 +123,21 @@ namespace Alterverse.Visuals
                 // Small floor roughness prevents perfect circular cookie-cutter bowls while preserving
                 // the broad flat-bottomed impact character visible in the reference image.
                 float floorVariation=moon&&q<.5f?(Noise(x,z,1.35f,67+i)-.5f)*.030f:0f;
-                // Drift crests soften the older impacts; troughs retain the planet's geology.
-                float exposure=mars?.18f:Mathf.Lerp(1f,.40f,duneCover);
-                relief+=((-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl)*exposure;
+                relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
 
                 float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
                 float shadowStrength=moon?.075f:ArenaVariantRuntime.IsGreenPlanet?.036f:.055f;
                 float interiorShadow=bowl*shadowStrength*(1f+Mathf.Max(0f,-lightSide)*.70f);
                 float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
-                tone+=(litRim*eroded-interiorShadow)*exposure;
-                craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f)*exposure);
+                tone+=litRim*eroded-interiorShadow;
+                craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
 
                 // Sparse ejecta rays outside rims break the otherwise circular silhouette.
                 if(q>1f&&q<1.62f)
                 {
                     float ejecta=1f-(q-1f)/.62f;
                     float ray=Mathf.Max(0f,Mathf.Sin(angle*(9+i%5)+i*.63f)*.5f+.5f);
-                    tone+=(moon?.036f:.014f)*ejecta*ray*eroded*exposure;
+                    tone+=(moon?.036f:.014f)*ejecta*ray*eroded;
                 }
             }
 
@@ -171,7 +159,7 @@ namespace Alterverse.Visuals
             }
             else
             {
-                relief=Mathf.Clamp(relief,-.30f,.18f);
+                relief=Mathf.Clamp(relief,mars?-.30f:-.245f,mars?.18f:.115f);
                 tone=Mathf.Clamp(tone,ArenaVariantRuntime.IsGreenPlanet?.34f:.30f,.68f);
             }
         }
