@@ -380,8 +380,8 @@ namespace Alterverse.Visuals
             smoothedTurn=Mathf.Lerp(smoothedTurn,Mathf.Clamp(turn/180f,-1f,1f),1f-Mathf.Exp(-dt*8f));
 
             float strideLength=StrideLength()*strideScale;
-            if(speed>.025f)phase+=speed*dt/Mathf.Max(.15f,strideLength)*Mathf.PI*2f*cadenceScale;
-            if(phase>Mathf.PI*200f)phase-=Mathf.PI*200f;
+            // Use measured travel for phase; smoothed velocity is only for body inertia.
+            phase=Mathf.Repeat(phase+instant.magnitude*dt/Mathf.Max(.15f,strideLength)*Mathf.PI*2f*cadenceScale,Mathf.PI*2f);
         }
 
         private void AnimatePresentation()
@@ -470,10 +470,10 @@ namespace Alterverse.Visuals
         private float GaitWave(float value)
         {
             float raw=Mathf.Sin(value);
-            float exponent=kind==MotionKind.Mech?.72f:.88f;
-            float shaped=Mathf.Sign(raw)*Mathf.Pow(Mathf.Abs(raw),exponent);
-            float asymmetry=Mathf.Sin(value*2f+seed*Mathf.PI*2f)*(kind==MotionKind.Mech?.06f:.10f);
-            return Mathf.Clamp(shaped+asymmetry,-1f,1f);
+            // Fractional powers have an unbounded slope at zero and jerk the limbs.
+            float harmonic=kind==MotionKind.Mech?.06f:.10f;
+            float asymmetry=Mathf.Sin(value*2f+seed*Mathf.PI*2f)*harmonic;
+            return (raw+asymmetry)/(1f+harmonic);
         }
 
         private float ReferenceSpeed()
