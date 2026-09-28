@@ -465,7 +465,6 @@ namespace Alterverse.Visuals
                         break;
                 }
 
-                float attackSide=attackSerial%2==0?-1f:1f;
                 float gaitHipYaw=Mathf.Sin(phase)*2.2f*strideWeight;
                 float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
                 float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
