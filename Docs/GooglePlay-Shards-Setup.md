@@ -4,14 +4,13 @@ Status: integration code and reference ledger delivered; **EXTERNAL GOOGLE PLAY 
 
 ## Products and authoritative prices
 
-Create four consumable one-time products in the Play Console for the actual signed Android application:
+Create three consumable one-time products in the Play Console for the actual signed Android application:
 
 | Product ID | Shards |
 |---|---:|
-| df_shards_small | 500 |
-| df_shards_medium | 1200 |
-| df_shards_large | 2600 |
-| df_shards_premium | 5500 |
+| dimensions_shards_500 | 500 |
+| dimensions_shards_1200 | 1200 |
+| dimensions_shards_5500 | 5500 |
 
 Configure local prices, regional availability, merchant/payment setup and activate products in Play Console. The UI displays Google Play metadata prices; no hardcoded currency amount or pretend checkout. Publish a signed internal-test build and configure license testers before testing. Unity must resolve `com.unity.purchasing` 5.4.3 and its dependencies from Packages/manifest.json; package resolution and generated lockfile changes require the Unity editor.
 
