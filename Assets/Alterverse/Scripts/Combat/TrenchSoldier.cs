@@ -144,10 +144,10 @@ namespace Alterverse.Combat
         private HeroLocomotion locomotion;
         private Vector3 groupAnchor;
         private float nextGroupScan,nextTargetScan,nextAttack;
-        private Transform visualRoot,leftLeg,rightLeg,muzzle;
-        private Quaternion leftLegBase,rightLegBase;
-        private Vector3 visualRest;
-        private float moveBlend;
+        private Transform visualRoot,pelvisPivot,torsoPivot,headPivot,leftLeg,rightLeg,leftKnee,rightKnee,armL,armR,muzzle;
+        private Quaternion leftLegBase,rightLegBase,leftKneeBase,rightKneeBase,torsoBase,headBase,armLBase,armRBase;
+        private Vector3 visualRest,lastVisualPosition;
+        private float moveBlend,stridePhase,attackStarted=-10f,attackLength=.46f,attackAimYaw,deathBlend;
 
         private Material suitMat,darkMat,visorMat,weaponMat,energyMat;
 
@@ -210,7 +210,14 @@ namespace Alterverse.Combat
 
         private void Update()
         {
-            if(health==null||health.IsDead||Time.timeScale<=0f)return;
+            if(health==null||Time.timeScale<=0f)return;
+            if(health.IsDead)
+            {
+                moveBlend=0f;
+                AnimateVisual();
+                AnimateDeathPose();
+                return;
+            }
 
             if(!CoopAuthority.CanSimulateHostGameplay)
             {
@@ -325,6 +332,13 @@ namespace Alterverse.Combat
         {
             if(victim==null||victim.IsDead)return;
             nextAttack=Time.time+AttackCooldown;
+            attackStarted=Time.time;
+            Vector3 aim=victim.transform.position-transform.position;aim.y=0f;
+            if(aim.sqrMagnitude>.001f)
+            {
+                Vector3 localAim=transform.InverseTransformDirection(aim.normalized);
+                attackAimYaw=Mathf.Clamp(Mathf.Atan2(localAim.x,localAim.z)*Mathf.Rad2Deg,-24f,24f);
+            }
             Vector3 origin=muzzle!=null?muzzle.position:transform.position+Vector3.up*.85f+transform.forward*.55f;
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
@@ -446,8 +460,8 @@ namespace Alterverse.Combat
             Color visor=new(.045f,.075f,.105f,1f);
             Color weapon=new(.06f,.28f,.52f,1f);
 
-            suitMat=MakeMaterial(shader,suit,.18f,.46f,Color.black);
-            darkMat=MakeMaterial(shader,suitDark,.45f,.38f,Color.black);
+            suitMat=MakeMaterial(shader,suit,.12f,.34f,Color.black);
+            darkMat=MakeMaterial(shader,suitDark,.45f,.22f,Color.black);
             visorMat=MakeMaterial(shader,visor,.34f,.72f,new Color(.02f,.10f,.16f)*.35f);
             weaponMat=MakeMaterial(shader,weapon,.58f,.40f,Color.black);
             energyMat=MakeMaterial(shader,teamEnergy,.08f,.74f,teamEnergy*2.2f);
@@ -457,34 +471,41 @@ namespace Alterverse.Combat
             visualRoot.localScale=Vector3.one*.36f;
             visualRest=visualRoot.localPosition;
 
-            // Compact astronaut infantry silhouette based on the supplied reference.
-            Part("Torso",PrimitiveType.Capsule,visualRoot,new Vector3(0,1.15f,0),new Vector3(.72f,.70f,.48f),suitMat,Quaternion.identity);
-            Part("ChestArmor",PrimitiveType.Cube,visualRoot,new Vector3(0,1.26f,.28f),new Vector3(.65f,.42f,.13f),suitMat,Quaternion.Euler(-4,0,0));
-            Part("ChestMark",PrimitiveType.Cube,visualRoot,new Vector3(-.18f,1.31f,.36f),new Vector3(.16f,.11f,.025f),energyMat,Quaternion.identity);
-            Part("Backpack",PrimitiveType.Cube,visualRoot,new Vector3(0,1.22f,-.34f),new Vector3(.52f,.55f,.24f),darkMat,Quaternion.identity);
-            Part("Pelvis",PrimitiveType.Cube,visualRoot,new Vector3(0,.73f,0),new Vector3(.58f,.28f,.40f),darkMat,Quaternion.identity);
+            // The visual rig stays under its own root, so body posing never alters gameplay
+            // movement, CharacterController dimensions, or weapon hit logic.
+            pelvisPivot=Pivot("PelvisJoint",visualRoot,new Vector3(0,.73f,0),Quaternion.identity);
+            torsoPivot=Pivot("SpineChestJoint",pelvisPivot,new Vector3(0,.42f,0),Quaternion.identity);
+            headPivot=Pivot("NeckHeadJoint",torsoPivot,new Vector3(0,.71f,.02f),Quaternion.identity);
+            Part("Torso",PrimitiveType.Capsule,torsoPivot,Vector3.zero,new Vector3(.72f,.70f,.48f),suitMat,Quaternion.identity);
+            Part("ChestArmor",PrimitiveType.Cube,torsoPivot,new Vector3(0,.11f,.28f),new Vector3(.65f,.42f,.13f),suitMat,Quaternion.Euler(-4,0,0));
+            Part("ChestMark",PrimitiveType.Cube,torsoPivot,new Vector3(-.18f,.16f,.36f),new Vector3(.16f,.11f,.025f),energyMat,Quaternion.identity);
+            Part("Backpack",PrimitiveType.Cube,torsoPivot,new Vector3(0,.07f,-.34f),new Vector3(.52f,.55f,.24f),darkMat,Quaternion.identity);
+            Part("Pelvis",PrimitiveType.Cube,pelvisPivot,Vector3.zero,new Vector3(.58f,.28f,.40f),darkMat,Quaternion.identity);
 
-            Part("Helmet",PrimitiveType.Sphere,visualRoot,new Vector3(0,1.86f,.02f),new Vector3(.58f,.58f,.55f),suitMat,Quaternion.identity);
-            Part("HelmetCrown",PrimitiveType.Cube,visualRoot,new Vector3(0,2.06f,-.02f),new Vector3(.38f,.16f,.40f),suitMat,Quaternion.Euler(-5,0,0));
-            Part("Visor",PrimitiveType.Sphere,visualRoot,new Vector3(0,1.86f,.27f),new Vector3(.46f,.36f,.16f),visorMat,Quaternion.identity);
-            Part("HelmetLight",PrimitiveType.Cube,visualRoot,new Vector3(.27f,1.89f,.29f),new Vector3(.08f,.07f,.025f),energyMat,Quaternion.identity);
-            Part("HelmetBrow",PrimitiveType.Cube,visualRoot,new Vector3(0,2.04f,.25f),new Vector3(.50f,.07f,.11f),darkMat,Quaternion.Euler(-5,0,0));
-            Part("HelmetVisorTrace",PrimitiveType.Cube,visualRoot,new Vector3(0,1.79f,.419f),new Vector3(.32f,.026f,.016f),energyMat,Quaternion.identity);
+            Part("Helmet",PrimitiveType.Sphere,headPivot,new Vector3(0,0,0),new Vector3(.58f,.58f,.55f),suitMat,Quaternion.identity);
+            Part("HelmetCrown",PrimitiveType.Cube,headPivot,new Vector3(0,.20f,-.04f),new Vector3(.38f,.16f,.40f),suitMat,Quaternion.Euler(-5,0,0));
+            Part("Visor",PrimitiveType.Sphere,headPivot,new Vector3(0,0,.25f),new Vector3(.46f,.36f,.16f),visorMat,Quaternion.identity);
+            Part("HelmetLight",PrimitiveType.Cube,headPivot,new Vector3(.27f,.03f,.27f),new Vector3(.08f,.07f,.025f),energyMat,Quaternion.identity);
 
             leftLeg=Pivot("LegL",visualRoot,new Vector3(-.20f,.68f,0),Quaternion.Euler(0,0,-2));
             rightLeg=Pivot("LegR",visualRoot,new Vector3(.20f,.68f,0),Quaternion.Euler(0,0,2));
             leftLegBase=leftLeg.localRotation;rightLegBase=rightLeg.localRotation;
-            BuildLeg(leftLeg,-1f);BuildLeg(rightLeg,1f);
+            leftKnee=BuildLeg(leftLeg,-1f);rightKnee=BuildLeg(rightLeg,1f);
+            leftKneeBase=leftKnee.localRotation;rightKneeBase=rightKnee.localRotation;
 
             // Both hands visibly grip the rifle. The weapon points along local +Z, matching
             // the soldier's facing direction instead of floating sideways across the chest.
-            Transform armL=Pivot("ArmL",visualRoot,new Vector3(-.40f,1.43f,.02f),Quaternion.Euler(18,0,-12));
-            Transform armR=Pivot("ArmR",visualRoot,new Vector3(.40f,1.43f,.02f),Quaternion.Euler(16,0,12));
+            armL=Pivot("ArmL",visualRoot,new Vector3(-.40f,1.43f,.02f),Quaternion.Euler(18,0,-12));
+            armR=Pivot("ArmR",visualRoot,new Vector3(.40f,1.43f,.02f),Quaternion.Euler(16,0,12));
             Part("UpperArmL",PrimitiveType.Capsule,armL,new Vector3(.04f,-.25f,.10f),new Vector3(.19f,.34f,.19f),suitMat,Quaternion.Euler(10,0,-8));
             Part("UpperArmR",PrimitiveType.Capsule,armR,new Vector3(-.04f,-.25f,.10f),new Vector3(.19f,.34f,.19f),suitMat,Quaternion.Euler(10,0,8));
 
             Transform leftHand=Pivot("LeftHand",visualRoot,new Vector3(-.16f,1.12f,.60f),Quaternion.Euler(-8,0,-8));
             Transform rightHand=Pivot("RightHand",visualRoot,new Vector3(.16f,1.18f,.43f),Quaternion.Euler(-6,0,6));
+            // Attach shoulders and hands to the articulated spine while preserving the authored
+            // rifle grip exactly. This makes torso lean and aim visibly carry both arms.
+            armL.SetParent(torsoPivot,true);armR.SetParent(torsoPivot,true);
+            leftHand.SetParent(armL,true);rightHand.SetParent(armR,true);
             Part("ForearmL",PrimitiveType.Capsule,armL,new Vector3(.16f,-.50f,.29f),new Vector3(.17f,.36f,.17f),darkMat,Quaternion.Euler(64,0,-18));
             Part("ForearmR",PrimitiveType.Capsule,armR,new Vector3(-.14f,-.48f,.24f),new Vector3(.17f,.34f,.17f),darkMat,Quaternion.Euler(60,0,16));
             Part("HandL",PrimitiveType.Cube,leftHand,Vector3.zero,new Vector3(.18f,.16f,.20f),darkMat,Quaternion.identity);
@@ -498,26 +519,82 @@ namespace Alterverse.Combat
             Part("RifleForeGrip",PrimitiveType.Cube,rifle,new Vector3(-.16f,-.09f,.50f),new Vector3(.12f,.22f,.14f),darkMat,Quaternion.Euler(8,0,0));
             Part("RifleBarrel",PrimitiveType.Cylinder,rifle,new Vector3(0,0,.82f),new Vector3(.055f,.30f,.055f),darkMat,Quaternion.Euler(90,0,0));
             Part("RifleMuzzleBrake",PrimitiveType.Cube,rifle,new Vector3(0,0,1.13f),new Vector3(.13f,.11f,.14f),weaponMat,Quaternion.identity);
-            Part("RifleMuzzleEmitter",PrimitiveType.Cube,rifle,new Vector3(0,0,1.207f),new Vector3(.065f,.06f,.012f),energyMat,Quaternion.identity);
             muzzle=Pivot("Muzzle",rifle,new Vector3(0,0,1.22f),Quaternion.identity);
+            torsoBase=torsoPivot.localRotation;headBase=headPivot.localRotation;
+            armLBase=armL.localRotation;armRBase=armR.localRotation;
+            lastVisualPosition=transform.position;
         }
 
-        private void BuildLeg(Transform leg,float side)
+        private Transform BuildLeg(Transform leg,float side)
         {
             Part(side<0?"ThighL":"ThighR",PrimitiveType.Capsule,leg,new Vector3(0,-.25f,0),new Vector3(.22f,.38f,.23f),suitMat,Quaternion.identity);
-            Part(side<0?"KneeL":"KneeR",PrimitiveType.Sphere,leg,new Vector3(0,-.51f,.06f),new Vector3(.20f,.17f,.20f),darkMat,Quaternion.identity);
-            Part(side<0?"ShinL":"ShinR",PrimitiveType.Capsule,leg,new Vector3(0,-.75f,.04f),new Vector3(.20f,.36f,.21f),suitMat,Quaternion.identity);
-            Part(side<0?"BootL":"BootR",PrimitiveType.Cube,leg,new Vector3(0,-1.00f,.13f),new Vector3(.28f,.18f,.42f),darkMat,Quaternion.Euler(-4,0,0));
+            Transform knee=Pivot(side<0?"KneeL":"KneeR",leg,new Vector3(0,-.51f,.06f),Quaternion.identity);
+            Part(side<0?"KneeCapL":"KneeCapR",PrimitiveType.Sphere,knee,Vector3.zero,new Vector3(.20f,.17f,.20f),darkMat,Quaternion.identity);
+            Part(side<0?"ShinL":"ShinR",PrimitiveType.Capsule,knee,new Vector3(0,-.24f,-.02f),new Vector3(.20f,.36f,.21f),suitMat,Quaternion.identity);
+            Part(side<0?"BootL":"BootR",PrimitiveType.Cube,knee,new Vector3(0,-.49f,.07f),new Vector3(.28f,.18f,.42f),darkMat,Quaternion.Euler(-4,0,0));
+            return knee;
         }
 
         private void AnimateVisual()
         {
             if(visualRoot==null)return;
-            float t=Time.time;
-            float stride=Mathf.Sin(t*7.2f)*moveBlend;
-            visualRoot.localPosition=visualRest+Vector3.up*(Mathf.Abs(stride)*.030f);
-            if(leftLeg!=null)leftLeg.localRotation=leftLegBase*Quaternion.Euler(stride*22f,0,0);
-            if(rightLeg!=null)rightLeg.localRotation=rightLegBase*Quaternion.Euler(-stride*22f,0,0);
+            Vector3 position=transform.position;
+            Vector3 travel=position-lastVisualPosition;travel.y=0f;
+            float dt=Mathf.Max(Time.deltaTime,.0001f);
+            lastVisualPosition=position;
+
+            // A respawn or teleport is a discontinuity, not a stride. Reset the gait at the new
+            // position so it cannot create a huge leg sweep or a one-frame launch/bob.
+            if(travel.sqrMagnitude>Mathf.Max(4f,dt*dt*1600f))
+            {
+                stridePhase=0f;moveBlend=0f;travel=Vector3.zero;
+            }
+            float distance=travel.magnitude;
+            float speed=distance/dt;
+            float runBlend=Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.22f,MoveSpeed*.62f,speed));
+            moveBlend=Mathf.MoveTowards(moveBlend,runBlend,dt*(runBlend>moveBlend?5f:7f));
+            if(distance>.0001f)stridePhase=Mathf.Repeat(stridePhase+distance/1.42f*Mathf.PI*2f,Mathf.PI*2f);
+
+            float stride=Mathf.Sin(stridePhase)*moveBlend;
+            float lift=Mathf.Abs(Mathf.Sin(stridePhase))*moveBlend;
+            visualRoot.localPosition=visualRest+Vector3.up*(lift*.020f);
+            if(leftLeg!=null)leftLeg.localRotation=leftLegBase*Quaternion.Euler(stride*27f,0,0);
+            if(rightLeg!=null)rightLeg.localRotation=rightLegBase*Quaternion.Euler(-stride*27f,0,0);
+            if(leftKnee!=null)leftKnee.localRotation=leftKneeBase*Quaternion.Euler(Mathf.Max(0f,stride)*34f*moveBlend,0,0);
+            if(rightKnee!=null)rightKnee.localRotation=rightKneeBase*Quaternion.Euler(Mathf.Max(0f,-stride)*34f*moveBlend,0,0);
+
+            float attack=0f,attackPrep=0f;
+            if(attackStarted>0f)
+            {
+                float u=(Time.time-attackStarted)/Mathf.Max(.1f,attackLength);
+                if(u>=1f)attackStarted=-10f;
+                else
+                {
+                    attack=Mathf.Sin(Mathf.Clamp01(u/.60f)*Mathf.PI)*Mathf.SmoothStep(1f,0f,Mathf.InverseLerp(.60f,1f,u));
+                    attackPrep=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(u/.20f));
+                }
+            }
+            float bodyYaw=attackAimYaw*attack*.32f;
+            if(torsoPivot!=null)torsoPivot.localRotation=torsoBase*Quaternion.Euler(-lift*1.7f-attack*5f,bodyYaw,0f);
+            if(headPivot!=null)headPivot.localRotation=headBase*Quaternion.Euler(attack*2f,-bodyYaw*.32f,0f);
+            if(armL!=null)armL.localRotation=armLBase*Quaternion.Euler(-stride*5f-attack*3f,bodyYaw*.20f,-attack*3f);
+            if(armR!=null)
+            {
+                float recoil=attack*(attackPrep>.85f?-2.5f:6.5f);
+                armR.localRotation=armRBase*Quaternion.Euler(stride*3f+recoil,bodyYaw+attack*3f,attack*2.5f);
+            }
+        }
+
+        private void AnimateDeathPose()
+        {
+            if(visualRoot==null)return;
+            deathBlend=Mathf.MoveTowards(deathBlend,1f,Time.deltaTime*1.8f);
+            float fall=deathBlend*deathBlend;
+            visualRoot.localPosition=visualRest+Vector3.down*(fall*.16f);
+            if(torsoPivot!=null)torsoPivot.localRotation=torsoBase*Quaternion.Euler(-62f*fall,0,0);
+            if(headPivot!=null)headPivot.localRotation=headBase*Quaternion.Euler(24f*fall,0,0);
+            if(leftLeg!=null)leftLeg.localRotation=leftLegBase*Quaternion.Euler(10f*fall,0,-8f*fall);
+            if(rightLeg!=null)rightLeg.localRotation=rightLegBase*Quaternion.Euler(-7f*fall,0,7f*fall);
         }
 
         private static Transform Pivot(string name,Transform parent,Vector3 position,Quaternion rotation)
@@ -529,7 +606,6 @@ namespace Alterverse.Combat
         private static Transform Part(string name,PrimitiveType type,Transform parent,Vector3 position,Vector3 scale,Material material,Quaternion rotation)
         {
             GameObject go=GameObject.CreatePrimitive(type);
-            if(type==PrimitiveType.Cube)go.GetComponent<MeshFilter>().sharedMesh=ProductionMeshFactory.BeveledBox();
             go.name="DF_TrenchSoldier_"+name;
             go.transform.SetParent(parent,false);
             go.transform.localPosition=position;go.transform.localScale=scale;go.transform.localRotation=rotation;
