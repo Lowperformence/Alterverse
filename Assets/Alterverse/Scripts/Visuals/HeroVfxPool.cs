@@ -1,16 +1,17 @@
 using System.Collections.Generic;
 using Alterverse.Combat;
+using Alterverse.Performance;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
     internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
-        private const int Capacity=192,WarningReserve=32;
+        private const int Capacity=192,WarningReserve=32,CoreReserve=32;
         private sealed class Slot
         {
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
@@ -68,15 +69,19 @@ namespace Alterverse.Visuals
         }
         internal static void Emit(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
-            bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null)
+            bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false)
         {
+            // Warnings are never decorative; flourishes cannot consume the last core slots.
+            if(warning)decorative=false;
+            if(decorative&&!AdaptiveVfxBudget.AllowDecorative)return;
             Warm();if(instance==null||instance.material==null)return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
-            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow)
+            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative)
         {
-            int begin=warning?Capacity-WarningReserve:0,end=warning?Capacity:Capacity-WarningReserve;
+            int begin=warning?Capacity-WarningReserve:0;
+            int end=warning?Capacity:Capacity-WarningReserve-(decorative?CoreReserve:0);
             Slot slot=null;
             for(int n=0;n<end-begin;n++)
             {
@@ -129,18 +134,37 @@ namespace Alterverse.Visuals
             float scale=1;Quaternion rotation=s.Rotation;
             switch(s.Motion)
             {
-                case HeroFxMotion.Expand:scale=Mathf.Lerp(.32f,1,t);break;
+                case HeroFxMotion.Expand:scale=Mathf.Lerp(.24f,1f,1f-Mathf.Pow(1f-t,3f));break;
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
                 case HeroFxMotion.Travel:
                     Vector3 end=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
                     point=Vector3.Lerp(s.From,end,t);
                     if(s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
                     break;
+                case HeroFxMotion.Scatter:
+                    // Ballistic-looking debris, entirely presentation-only and collision-free.
+                    point=Vector3.Lerp(s.From,s.To,t);
+                    point.y+=4f*t*(1f-t)*Mathf.Min(.42f,Vector3.Distance(s.From,s.To)*.32f);
+                    rotation*=Quaternion.Euler(t*140f,t*210f,t*85f);
+                    scale=Mathf.Lerp(1f,.35f,t);
+                    break;
+                case HeroFxMotion.Spiral:
+                    Vector3 destination=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 heading=destination-s.From;
+                    if(heading.sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(heading);
+                    float angle=t*Mathf.PI*3f+s.Rotation.eulerAngles.z*Mathf.Deg2Rad;
+                    float radius=Mathf.Sin(t*Mathf.PI)*Mathf.Min(.22f,s.Size.magnitude*.65f);
+                    point=Vector3.Lerp(s.From,destination,t)+
+                        rotation*new Vector3(Mathf.Cos(angle)*radius,Mathf.Sin(angle)*radius,0f);
+                    break;
                 case HeroFxMotion.Orbit:rotation*=Quaternion.Euler(0,t*180,0);scale=1-t*.22f;break;
-                case HeroFxMotion.Sweep:rotation*=Quaternion.Euler(0,Mathf.Lerp(-35,35,t),0);scale=.88f+.12f*Mathf.Sin(t*Mathf.PI);break;
+                case HeroFxMotion.Sweep:rotation*=Quaternion.Euler(0,Mathf.Lerp(-35,35,Mathf.SmoothStep(0f,1f,t)),0);scale=.88f+.12f*Mathf.Sin(t*Mathf.PI);break;
             }
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=s.Size*scale;
-            float fade=s.Warning?1:Mathf.Clamp01((1-t)*3);
+            // Projectile cores remain readable until contact. Decorative flashes die away
+            // smoothly; exact warning outlines retain their original size and opacity.
+            bool flight=s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.Spiral;
+            float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             Color color=s.Color;color.a*=fade;
             s.Block.SetFloat(Polish,s.Warning?0f:1f);s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
