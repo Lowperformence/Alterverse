@@ -25,26 +25,26 @@ namespace Alterverse.Shop
         public const int Price=500;
         public const int PremiumPrice=1100;
 
-        // Variants 0/1 are the existing collection. Variants 2/3 extend every hero with
-        // two additional silhouette-changing EPIC weapons. All new variants stay cosmetic
-        // and cost 500 shards; combat stats and ability logic are intentionally untouched.
+        // Variants 0/1 are the existing collection. Variant 1 is the premium LEGENDARY tier:
+        // each hero receives a prestige silhouette and animated presentation pass while gameplay
+        // remains unchanged. Variants 2/3 are 500-shard EPIC alternatives.
         public static readonly WeaponSkinItem[] Items=
         {
             new(HeroId.Veyr,"ECLIPSE CRESCENTS // EPIC","Eclipse Crescents","Paired black-steel crescent sickles with separated violet inner edges and luminous heart guards.",new Color(.72f,.16f,1f)),
             new(HeroId.Kaelon,"QUAKE CROWN // EPIC","Quake Crown","Twin-jawed impact hammer with a suspended amber reactor and reinforced strike crown.",new Color(1f,.72f,.12f)),
             new(HeroId.Nyra,"COMET LANCE // EPIC","Comet Lance Rifle","Long-range pulse rifle with separate red energy rails, a vented muzzle and charged optic.",new Color(1f,.04f,.025f)),
             new(HeroId.Elyra,"PRISM ASCENT // EPIC","Prism Ascent","An upright faceted prism focus held between two angled orbital frames.",new Color(.70f,.24f,1f)),
-            new(HeroId.Mira,"SOLAR BLOOM // LEGENDARY","Solar Bloom Scepter","Gold ceremonial scepter with unfolding sun petals, a floating halo and warm light core.",new Color(.58f,.96f,1f)),
+            new(HeroId.Mira,"SOLAR BLOOM // EPIC","Solar Bloom Scepter","Gold ceremonial scepter with unfolding sun petals, a floating halo and warm light core.",new Color(.58f,.96f,1f)),
             new(HeroId.Rook,"RIFT TALONS // EPIC","Rift Talons","Paired armored fists with three forward talons and energized cutting channels.",new Color(1f,.035f,.02f)),
             new(HeroId.Traveler,"PARADOX COMPASS // EPIC","Paradox Compass","A suspended temporal needle inside opposing orbital frames with a bright violet core.",new Color(1f,.98f,.90f)),
 
-            new(HeroId.Veyr,"DUSKGLASS FANGS // LEGENDARY","Duskglass Fangs","Twin hooked blades with dark mirror-steel shells and a narrow violet phase seam.",new Color(.80f,.30f,1f),1,PremiumPrice),
-            new(HeroId.Kaelon,"AMETHYST BREACHER // LEGENDARY","Amethyst Breacher","A gravity maul with offset impact plates around a contained violet reactor.",new Color(.72f,.22f,1f),1,PremiumPrice),
-            new(HeroId.Nyra,"AFTERBURN VECTOR // LEGENDARY","Afterburn Vector","A precision rifle with a split thermal barrel, recoil fins and a bright tracking optic.",new Color(1f,.20f,.08f),1,PremiumPrice),
-            new(HeroId.Elyra,"NULLSTAR RELIQUARY // LEGENDARY","Nullstar Reliquary","A rune-cut arcane focus suspended between a compact triad of orbital rings.",new Color(.55f,.24f,1f),1,PremiumPrice),
-            new(HeroId.Mira,"TIDELIGHT CONDUCTOR // LEGENDARY","Tidelight Conductor","A pearl-and-blue support staff with a forked wave crown and a suspended healing lens.",new Color(.18f,.78f,1f),1,PremiumPrice),
-            new(HeroId.Rook,"RIFTBREAKER // LEGENDARY","Riftbreaker","Paired impact gauntlets with piston knuckles and forward-projecting energy rails.",new Color(1f,.20f,.055f),1,PremiumPrice),
-            new(HeroId.Traveler,"CHRONOLUX SCEPTER // LEGENDARY","Chronolux Scepter","A white-gold time staff with a floating core and red-edged temporal rings.",new Color(1f,.58f,.28f),1,PremiumPrice),
+            new(HeroId.Veyr,"ECLIPSE SERAPH // LEGENDARY","Eclipse Seraph Twins","Twin celestial phase blades wrapped in broken rotating eclipse halos, floating phase shards and crown-metal guards.",new Color(.80f,.30f,1f),1,PremiumPrice),
+            new(HeroId.Kaelon,"WORLDCRUSHER // LEGENDARY","Worldcrusher","A colossal melee gravity maul with oversized strike faces, counter-rotating gravity cages and a suspended reactor heart.",new Color(.72f,.22f,1f),1,PremiumPrice),
+            new(HeroId.Nyra,"STARPIERCER // LEGENDARY","Starpiercer Rail Rifle","A prestige rail rifle with separated luminous rails, animated charge collars, a crown optic and an oversized energy muzzle halo.",new Color(1f,.20f,.08f),1,PremiumPrice),
+            new(HeroId.Elyra,"SINGULARITY CROWN // LEGENDARY","Singularity Crown Staff","A full-length mage staff crowned by three counter-rotating orbital frames around a contained black-hole core and royal rune prongs.",new Color(.55f,.24f,1f),1,PremiumPrice),
+            new(HeroId.Mira,"AURELIA SERAPH // LEGENDARY","Aurelia Seraph Staff","A ceremonial healing staff with a huge double halo, six pulsing light petals and a suspended radiant healing sun.",new Color(.18f,.78f,1f),1,PremiumPrice),
+            new(HeroId.Rook,"TITANFORGE // LEGENDARY","Titanforge Gauntlets","Paired powered gauntlets with enlarged armor, reactor knuckles, animated energy rings and floating pressure crowns.",new Color(1f,.20f,.055f),1,PremiumPrice),
+            new(HeroId.Traveler,"LAST HOUR // LEGENDARY","Last Hour Chronostaff","A royal temporal staff built around an hourglass core, three opposing clock rings and floating time shards.",new Color(1f,.58f,.28f),1,PremiumPrice),
 
             // New 500-shard EPIC collection. Each weapon has a unique silhouette/signature motion.
             new(HeroId.Veyr,"VOIDFANG TWINS // EPIC","Voidfang Twins","Asymmetric long-and-short phase blades with split guards and a violet dimensional seam that makes the pair readable at a glance.",new Color(.63f,.10f,1f),2),
