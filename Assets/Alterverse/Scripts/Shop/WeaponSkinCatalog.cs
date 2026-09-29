@@ -25,8 +25,9 @@ namespace Alterverse.Shop
         public const int Price=500;
         public const int PremiumPrice=1100;
 
-        // Variant zero keeps the original catalog entry and its existing 500 shard price.
-        // Variant one is a second, silhouette-changing cosmetic for each hero.
+        // Variants 0/1 are the existing collection. Variants 2/3 extend every hero with
+        // two additional silhouette-changing EPIC weapons. All new variants stay cosmetic
+        // and cost 500 shards; combat stats and ability logic are intentionally untouched.
         public static readonly WeaponSkinItem[] Items=
         {
             new(HeroId.Veyr,"ECLIPSE CRESCENTS // EPIC","Eclipse Crescents","Paired black-steel crescent sickles with separated violet inner edges and luminous heart guards.",new Color(.72f,.16f,1f)),
@@ -43,14 +44,45 @@ namespace Alterverse.Shop
             new(HeroId.Elyra,"NULLSTAR RELIQUARY // LEGENDARY","Nullstar Reliquary","A rune-cut arcane focus suspended between a compact triad of orbital rings.",new Color(.55f,.24f,1f),1,PremiumPrice),
             new(HeroId.Mira,"TIDELIGHT CONDUCTOR // LEGENDARY","Tidelight Conductor","A pearl-and-blue support staff with a forked wave crown and a suspended healing lens.",new Color(.18f,.78f,1f),1,PremiumPrice),
             new(HeroId.Rook,"RIFTBREAKER // LEGENDARY","Riftbreaker","Paired impact gauntlets with piston knuckles and forward-projecting energy rails.",new Color(1f,.20f,.055f),1,PremiumPrice),
-            new(HeroId.Traveler,"CHRONOLUX SCEPTER // LEGENDARY","Chronolux Scepter","A white-gold time staff with a floating core and red-edged temporal rings.",new Color(1f,.58f,.28f),1,PremiumPrice)
+            new(HeroId.Traveler,"CHRONOLUX SCEPTER // LEGENDARY","Chronolux Scepter","A white-gold time staff with a floating core and red-edged temporal rings.",new Color(1f,.58f,.28f),1,PremiumPrice),
+
+            // New 500-shard EPIC collection. Each weapon has a unique silhouette/signature motion.
+            new(HeroId.Veyr,"VOIDFANG TWINS // EPIC","Voidfang Twins","Asymmetric long-and-short phase blades with split guards and a violet dimensional seam that makes the pair readable at a glance.",new Color(.63f,.10f,1f),2),
+            new(HeroId.Kaelon,"SIEGEBREAKER // EPIC","Siegebreaker","A huge two-handed industrial melee hammer with a hydraulic strike cage, layered armor cheeks and a pressure-core crown.",new Color(1f,.43f,.08f),2),
+            new(HeroId.Nyra,"STORMCOIL // EPIC","Stormcoil Rifle","A long coil rifle built around separated electromagnetic rails, rotating charge collars and a bright storm capacitor.",new Color(.16f,.72f,1f),2),
+            new(HeroId.Elyra,"ASTRAL ORRERY // EPIC","Astral Orrery Staff","A full-length mage staff crowned by nested orbital rings, floating crystal planets and a luminous astral heart.",new Color(.36f,.54f,1f),2),
+            new(HeroId.Mira,"SERAPH HALO // EPIC","Seraph Halo","A ceremonial support staff whose open halo crown carries rotating light vanes around a suspended healing core.",new Color(1f,.90f,.48f),2),
+            new(HeroId.Rook,"TITAN BREAKERS // EPIC","Titan Breakers","Oversized mechanical fist armor with visible piston knuckles, reinforced impact plates and energized pressure rails.",new Color(1f,.54f,.10f),2),
+            new(HeroId.Traveler,"PARADOX ENGINE // EPIC","Paradox Engine","A modular temporal weapon whose armored segments appear suspended around a bright chronal core and opposing orbit frames.",new Color(.74f,.34f,1f),2),
+
+            new(HeroId.Veyr,"ECLIPSE CHAKRAMS // EPIC","Eclipse Chakrams","Paired open-ring sickle weapons with broken crescent blades, offset grips and razor-bright eclipse edges.",new Color(1f,.12f,.45f),3),
+            new(HeroId.Kaelon,"AEGIS CRUSHER // EPIC","Aegis Crusher","A massive close-range reactor maul with a shield-generator ring around the head and broad armored crushing faces.",new Color(.20f,.82f,1f),3),
+            new(HeroId.Nyra,"PREDATOR SPINE // EPIC","Predator Spine Rifle","A biomechanical marksman rifle built from a segmented spine, ribbed receiver and jaw-like muzzle plates.",new Color(.28f,1f,.38f),3),
+            new(HeroId.Elyra,"RIFT LANTERN // EPIC","Rift Lantern Staff","A long angular mage staff carrying a caged dimensional lantern whose split crown frames a pulsing void core.",new Color(.82f,.12f,1f),3),
+            new(HeroId.Mira,"LIFEWEAVER BLOOM // EPIC","Lifeweaver Bloom","An organic-mechanical healing staff with layered petals that frame a living light seed and branching luminous veins.",new Color(.38f,1f,.62f),3),
+            new(HeroId.Rook,"MAGMA KNUCKLES // EPIC","Magma Knuckles","Obsidian fist armor formed from broken volcanic plates with glowing magma fissures and brutal blocky strike faces.",new Color(1f,.22f,.025f),3),
+            new(HeroId.Traveler,"EVENT HORIZON // EPIC","Event Horizon","A black-hole weapon built around a dark central singularity, asymmetric gravity fins and two luminous lens rings.",new Color(.24f,.48f,1f),3)
         };
 
         public static WeaponSkinItem For(HeroId hero)=>For(hero,0);
         public static WeaponSkinItem For(HeroId hero,int variant)
         {
             for(int i=0;i<Items.Length;i++)if(Items[i].Hero==hero&&Items[i].Variant==variant)return Items[i];
+            for(int i=0;i<Items.Length;i++)if(Items[i].Hero==hero)return Items[i];
             return Items[0];
+        }
+
+        public static bool Contains(HeroId hero,int variant)
+        {
+            for(int i=0;i<Items.Length;i++)if(Items[i].Hero==hero&&Items[i].Variant==variant)return true;
+            return false;
+        }
+
+        public static int VariantCount(HeroId hero)
+        {
+            int count=0;
+            for(int i=0;i<Items.Length;i++)if(Items[i].Hero==hero)count++;
+            return count;
         }
     }
 
@@ -67,6 +99,7 @@ namespace Alterverse.Shop
 
         public static bool Owned(HeroId hero,int variant)
         {
+            if(!WeaponSkinCatalog.Contains(hero,variant))return false;
             if(variant==0&&PlayerPrefs.GetInt(OwnedKey(hero),0)==1)return true;
             if(PlayerPrefs.GetInt(VariantOwnedKey(hero,variant),0)==1)return true;
             if(hero==HeroId.Veyr&&variant==0)
@@ -76,7 +109,15 @@ namespace Alterverse.Shop
             return false;
         }
 
-        public static bool Owned(HeroId hero)=>Owned(hero,0)||Owned(hero,1);
+        public static bool Owned(HeroId hero)
+        {
+            for(int i=0;i<WeaponSkinCatalog.Items.Length;i++)
+            {
+                WeaponSkinItem item=WeaponSkinCatalog.Items[i];
+                if(item.Hero==hero&&Owned(hero,item.Variant))return true;
+            }
+            return false;
+        }
 
         public static int EquippedVariant(HeroId hero)
         {
@@ -100,6 +141,7 @@ namespace Alterverse.Shop
         public static AvatarPurchaseResult Purchase(HeroId hero,int variant)
         {
             ProfileTransaction.Recover();
+            if(!WeaponSkinCatalog.Contains(hero,variant))return AvatarPurchaseResult.AlreadyOwned;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
             if(Owned(hero,variant))return AvatarPurchaseResult.AlreadyOwned;
             if(!PlayerWallet.CanAfford(item.Price))return AvatarPurchaseResult.InsufficientShards;
