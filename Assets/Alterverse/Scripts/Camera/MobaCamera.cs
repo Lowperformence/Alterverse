@@ -1,4 +1,5 @@
 using UnityEngine;
+using Alterverse.Profile;
 
 namespace Alterverse.CameraSystem
 {
@@ -34,18 +35,20 @@ namespace Alterverse.CameraSystem
 
             if((target.position-lastTargetPosition).sqrMagnitude>144f){SnapToTarget();return;}
             lastTargetPosition=target.position;
-            Vector3 desiredPosition = target.position + offset;
+            Vector3 zoomOffset = offset * Mathf.Lerp(.75f, 1.4f, PlayerProfile.CameraZoom);
+            Vector3 desiredPosition = target.position + zoomOffset;
             float blend = 1f - Mathf.Exp(-(locomotion!=null&&locomotion.OwnsMovementFrame?Mathf.Max(24,followSharpness):followSharpness) * Time.deltaTime);
             transform.position = Vector3.Lerp(transform.position, desiredPosition, blend);
             // Following position must not steer camera-relative input by changing camera yaw.
-            transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
+            transform.rotation=Quaternion.LookRotation(lookOffset-zoomOffset,Vector3.up);
         }
 
         private void SnapToTarget()
         {
             if (target == null) return;
             lastTargetPosition=target.position;
-            transform.position = target.position + offset;
+            Vector3 zoomOffset = offset * Mathf.Lerp(.75f, 1.4f, PlayerProfile.CameraZoom);
+            transform.position = target.position + zoomOffset;
             // Following position must not steer camera-relative input by changing camera yaw.
             transform.rotation=Quaternion.LookRotation(lookOffset-offset,Vector3.up);
         }
