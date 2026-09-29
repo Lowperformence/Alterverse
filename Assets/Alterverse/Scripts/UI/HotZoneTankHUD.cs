@@ -41,14 +41,15 @@ namespace Alterverse.UI
             {
                 HotZoneTank tank=tanks[i];
                 if(tank==null||tank.TankHealth==null||tank.TankHealth.IsDead||!tank.isActiveAndEnabled)continue;
-                float markerHeight=ArenaVariantRuntime.IsNeptune?3.35f:ArenaVariantRuntime.IsPyraxis?2.85f:
+                float markerHeight=ArenaVariantRuntime.IsNeptune?3.35f:ArenaVariantRuntime.IsDark00?3.05f:ArenaVariantRuntime.IsPyraxis?2.85f:
                     tank.IsXenoTitan?3.35f:tank.IsKryonBear?3.05f:tank.IsNoxaraSpider?2.85f:2.55f;
                 Vector3 screen=cam.WorldToScreenPoint(tank.transform.position+Vector3.up*markerHeight);
                 if(screen.z<=0f)continue;
 
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
-                string unit=ArenaVariantRuntime.IsPyraxis?(tank.Team==0?"ZERO PYRAXIS SCORPION":"LUMEN PYRAXIS SCORPION"):
+                string unit=ArenaVariantRuntime.IsDark00?(tank.Team==0?"ZERO DARK 00 ORB":"LUMEN DARK 00 ORB"):
+                    ArenaVariantRuntime.IsPyraxis?(tank.Team==0?"ZERO PYRAXIS SCORPION":"LUMEN PYRAXIS SCORPION"):
                     ArenaVariantRuntime.IsNeptune?(tank.Team==0?"ZERO NEPTUNE OCTOPUS":"LUMEN NEPTUNE OCTOPUS"):
                     tank.IsKryonBear?(tank.Team==0?"ZERO KRYON FROST BEAR":"LUMEN KRYON FROST BEAR"):
                     tank.IsNoxaraSpider?(tank.Team==0?"ZERO NOXARA SPIDER":"LUMEN NOXARA SPIDER"):
