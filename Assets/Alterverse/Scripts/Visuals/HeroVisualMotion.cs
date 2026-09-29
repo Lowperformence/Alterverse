@@ -352,7 +352,7 @@ namespace Alterverse.Visuals
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
             float turnCounter=Mathf.Clamp(-turnRate*.025f,-12f,12f);
-            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,turnCounter-Mathf.Sin(phase)*3f*strideWeight,-sway*.45f);
+            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f+Mathf.Sin(t*1.2f)*5f*strideWeight*(attacking?0f:1f),turnCounter-Mathf.Sin(t*1.2f+Mathf.PI*.5f)*5f*strideWeight*(attacking?0f:1f),-sway*.45f);
             if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
@@ -430,7 +430,11 @@ namespace Alterverse.Visuals
                     {elbowL=-34f;elbowR=-42f;}
                     else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
                     {elbowL=-26f;elbowR=-30f;}
-                    // Elbows/wrists retain the grip. The shared shoulder lift supplies the small bob.
+                    // A small shared elbow lift gives the guard life without a walking arm pump.
+                    // Keep the rifle nearly steady and leave all attack poses untouched.
+                    float elbowLift=Mathf.Sin(t*1.2f)*5f*strideWeight*(hero==HeroId.Nyra?.4f:1f);
+                    elbowL+=elbowLift;
+                    elbowR+=elbowLift;
                 }
                 float hitGuard=Mathf.Clamp01(hitWeight);
                 elbowL-=hero==HeroId.Nyra?0f:hitGuard*(hitFromSide<0f?4f:2f);
