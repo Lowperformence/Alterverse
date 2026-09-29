@@ -35,7 +35,7 @@ namespace Alterverse.Shop
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
             new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",0,new Color(.88f,.28f,.12f)),
-            new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
+            new(ArenaVariant.GreenPlanet,"MOOR12C","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
             new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
             new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
             new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
