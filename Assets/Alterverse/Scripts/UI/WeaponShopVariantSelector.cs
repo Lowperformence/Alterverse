@@ -71,6 +71,14 @@ namespace Alterverse.UI
                 float contentWidth=Mathf.Min(1360f,menuWidth-64f);
                 float left=(menuWidth-contentWidth)*.5f;
                 float previewWidth=contentWidth*.54f;
+                float rightX=left+previewWidth+32f;
+                float rightWidth=contentWidth-previewWidth-32f;
+
+                // Replace only the hard-coded center text from the legacy 2-variant control.
+                // Arrow hit areas stay untouched while the count now truthfully reads / 4.
+                Rect countLabel=new Rect(rightX+62f,480f,Mathf.Max(80f,rightWidth-124f),44f);
+                FrontEndTheme.Fill(countLabel,new Color(FrontEndTheme.Background.r,FrontEndTheme.Background.g,FrontEndTheme.Background.b,.98f));
+                theme.Center(countLabel,$"VARIANT {current+1} / {count}");
 
                 // Keep the original 01/02 arrows untouched. The expansion lives on the preview
                 // card itself, where there are no competing IMGUI controls to steal the click.
