@@ -7,7 +7,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Pyraxis-specific presentation pass. Keeps the base/spawn structures free of molten markings,
-    /// concentrates true lava pools into the middle 50 percent of the arena, preserves the intended
+    /// concentrates true cow-shaped lava pools into the middle 50 percent of the arena, preserves the
     /// orange/black mottled volcanic ground, and presents both healing guards as lava golems derived
     /// from the existing Mars stone-golem visual. Visual only: no gameplay colliders, health, AI,
     /// damage or pathing are changed.
@@ -23,19 +23,19 @@ namespace Alterverse.Visuals
         private float nextScan;
 
         private static readonly Vector2[] PoolCenters={
-            new(-17f,26f),new(17f,-26f),
-            new(17f,19f),new(-17f,-19f),
-            new(-10f,12f),new(10f,-12f),
-            new(7f,27f),new(-7f,-27f),
-            new(-5f,-6f),new(5f,6f)
+            new(-16.0f,25.5f),new(16.0f,-25.5f),
+            new(15.0f,18.0f),new(-15.0f,-18.0f),
+            new(-9.0f,11.0f),new(9.0f,-11.0f),
+            new(6.0f,26.0f),new(-6.0f,-26.0f),
+            new(-4.5f,-5.5f),new(4.5f,5.5f)
         };
 
         private static readonly Vector2[] PoolRadii={
-            new(4.6f,2.8f),new(4.6f,2.8f),
-            new(3.9f,2.5f),new(3.9f,2.5f),
-            new(3.4f,2.2f),new(3.4f,2.2f),
-            new(3.1f,2.0f),new(3.1f,2.0f),
-            new(2.8f,1.8f),new(2.8f,1.8f)
+            new(5.4f,3.5f),new(5.4f,3.5f),
+            new(4.8f,3.1f),new(4.8f,3.1f),
+            new(4.2f,2.8f),new(4.2f,2.8f),
+            new(3.8f,2.5f),new(3.8f,2.5f),
+            new(3.5f,2.3f),new(3.5f,2.3f)
         };
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -99,10 +99,10 @@ namespace Alterverse.Visuals
                 if(t.name.StartsWith("DF_PyraxisCentralLava",System.StringComparison.Ordinal))continue;
 
                 Vector3 p=t.position;
-                bool zeroBase=new Vector2(p.x+36f,p.z).sqrMagnitude<8.0f*8.0f;
-                bool lumenBase=new Vector2(p.x-36f,p.z).sqrMagnitude<8.0f*8.0f;
-                bool zeroSpawn=new Vector2(p.x+27.5f,p.z).sqrMagnitude<6.0f*6.0f;
-                bool lumenSpawn=new Vector2(p.x-27.5f,p.z).sqrMagnitude<6.0f*6.0f;
+                bool zeroBase=new Vector2(p.x+36f,p.z).sqrMagnitude<11.8f*11.8f;
+                bool lumenBase=new Vector2(p.x-36f,p.z).sqrMagnitude<11.8f*11.8f;
+                bool zeroSpawn=new Vector2(p.x+27.5f,p.z).sqrMagnitude<9.8f*9.8f;
+                bool lumenSpawn=new Vector2(p.x-27.5f,p.z).sqrMagnitude<9.8f*9.8f;
                 if(zeroBase||lumenBase||zeroSpawn||lumenSpawn)Destroy(t.gameObject);
             }
         }
@@ -122,25 +122,53 @@ namespace Alterverse.Visuals
             {
                 Vector2 center=PoolCenters[i];
                 Vector2 radii=PoolRadii[i];
-                Vector3 p=LunarSurfaceField.Surface(center.x,center.y);
-                p.y+=.035f;
                 float rotation=(i*37f)%180f;
 
+                // Main body of each pool. The additional overlapping lobes below turn the ellipse into
+                // a broad irregular cow-spot silhouette with no stream-like direction.
+                Vector3 p=LunarSurfaceField.Surface(center.x,center.y);
+                p.y+=.035f;
                 Primitive(PrimitiveType.Cylinder,"CentralLavaPoolRim",poolRoot,p,
-                    new Vector3(radii.x+.58f,.025f,radii.y+.48f),Quaternion.Euler(0,rotation,0),rim);
+                    new Vector3(radii.x+.72f,.025f,radii.y+.62f),Quaternion.Euler(0,rotation,0),rim);
                 Primitive(PrimitiveType.Cylinder,"CentralLavaPool",poolRoot,p+Vector3.up*.018f,
                     new Vector3(radii.x,.022f,radii.y),Quaternion.Euler(0,rotation,0),lava);
 
-                float side=i%2==0?1f:-1f;
-                Vector3 lobe=LunarSurfaceField.Surface(center.x+side*radii.x*.42f,center.y-radii.y*.16f);
-                lobe.y+=.057f;
-                Primitive(PrimitiveType.Cylinder,"CentralLavaPoolLobe",poolRoot,lobe,
-                    new Vector3(radii.x*.50f,.018f,radii.y*.58f),Quaternion.Euler(0,rotation+28f,0),lava);
+                Vector2[] offsets={
+                    new(radii.x*.50f,-radii.y*.10f),
+                    new(-radii.x*.43f,radii.y*.17f),
+                    new(radii.x*.10f,radii.y*.47f),
+                    new(-radii.x*.16f,-radii.y*.43f)
+                };
+                Vector2[] scales={
+                    new(.48f,.45f),new(.44f,.50f),new(.40f,.42f),new(.42f,.39f)
+                };
 
-                Vector3 core=LunarSurfaceField.Surface(center.x-side*radii.x*.18f,center.y+radii.y*.10f);
-                core.y+=.060f;
-                Primitive(PrimitiveType.Cylinder,"CentralLavaPoolHotCore",poolRoot,core,
-                    new Vector3(radii.x*.36f,.014f,radii.y*.30f),Quaternion.Euler(0,rotation-18f,0),hot);
+                for(int l=0;l<offsets.Length;l++)
+                {
+                    Vector2 o=offsets[l];
+                    Vector2 s=scales[l];
+                    Vector3 lp=LunarSurfaceField.Surface(center.x+o.x,center.y+o.y);
+                    lp.y+=.050f+l*.002f;
+                    float lobeRotation=rotation+(l-1.5f)*27f;
+
+                    Primitive(PrimitiveType.Cylinder,"CentralLavaPoolRimLobe",poolRoot,lp,
+                        new Vector3(radii.x*s.x+.34f,.020f,radii.y*s.y+.30f),
+                        Quaternion.Euler(0,lobeRotation,0),rim);
+                    Primitive(PrimitiveType.Cylinder,"CentralLavaPoolLobe",poolRoot,lp+Vector3.up*.016f,
+                        new Vector3(radii.x*s.x,.016f,radii.y*s.y),
+                        Quaternion.Euler(0,lobeRotation,0),lava);
+                }
+
+                // A couple of hot cores inside each blob make the lava read as molten without creating lines.
+                Vector3 coreA=LunarSurfaceField.Surface(center.x-radii.x*.13f,center.y+radii.y*.08f);
+                coreA.y+=.064f;
+                Primitive(PrimitiveType.Cylinder,"CentralLavaPoolHotCore",poolRoot,coreA,
+                    new Vector3(radii.x*.30f,.014f,radii.y*.26f),Quaternion.Euler(0,rotation-18f,0),hot);
+
+                Vector3 coreB=LunarSurfaceField.Surface(center.x+radii.x*.24f,center.y-radii.y*.18f);
+                coreB.y+=.066f;
+                Primitive(PrimitiveType.Cylinder,"CentralLavaPoolHotCore",poolRoot,coreB,
+                    new Vector3(radii.x*.20f,.012f,radii.y*.18f),Quaternion.Euler(0,rotation+31f,0),hot);
             }
         }
 
@@ -162,7 +190,7 @@ namespace Alterverse.Visuals
             groundTexture=BuildGroundTexture(1024,896);
             Material source=target.sharedMaterial;
             if(source==null)return;
-            groundMaterial=new Material(source){name="DF_Pyraxis_OrangeBlackGround"};
+            groundMaterial=new Material(source){name="DF_Pyraxis_CowLavaGround"};
             if(groundMaterial.HasProperty("_BaseMap"))groundMaterial.SetTexture("_BaseMap",groundTexture);
             if(groundMaterial.HasProperty("_MainTex"))groundMaterial.SetTexture("_MainTex",groundTexture);
             if(groundMaterial.HasProperty("_BaseColor"))groundMaterial.SetColor("_BaseColor",Color.white);
@@ -174,7 +202,7 @@ namespace Alterverse.Visuals
         {
             Texture2D texture=new(width,height,TextureFormat.RGBA32,true,false)
             {
-                name="DF_PyraxisOrangeBlackMottledAlbedo",
+                name="DF_PyraxisCowLavaAlbedo",
                 wrapMode=TextureWrapMode.Clamp,
                 filterMode=FilterMode.Trilinear,
                 anisoLevel=8
@@ -187,56 +215,41 @@ namespace Alterverse.Visuals
                 {
                     float wx=Mathf.Lerp(-48f,48f,x/(float)(width-1));
 
-                    // Large low-frequency islands produce the requested orange/black cow-like volcanic pattern.
-                    // A second warped field prevents the spots from reading as round procedural dots.
-                    float macro=Mathf.PerlinNoise(wx*.036f+31f,wz*.041f+73f);
-                    float warp=Mathf.PerlinNoise(wx*.082f+9f,wz*.076f+47f);
-                    float cowField=macro*.76f+warp*.24f;
-                    float orangeSpot=Mathf.SmoothStep(.47f,.59f,cowField);
-                    float edgeBreak=Mathf.PerlinNoise(wx*.15f+91f,wz*.14f+17f);
-                    orangeSpot=Mathf.Clamp01(orangeSpot+(edgeBreak-.5f)*.15f);
+                    float blobA=Mathf.PerlinNoise(wx*.016f+21f,wz*.018f+77f);
+                    float blobB=Mathf.PerlinNoise(wx*.022f+91f,wz*.020f+13f);
+                    float blobC=Mathf.PerlinNoise(wx*.029f+143f,wz*.026f+51f);
+                    float cowField=blobA*.50f+blobB*.32f+blobC*.18f;
+                    float orangeSpot=Mathf.SmoothStep(.335f,.475f,cowField);
+                    float edgeBreak=Mathf.PerlinNoise(wx*.067f+44f,wz*.061f+99f);
+                    orangeSpot=Mathf.Clamp01(orangeSpot+(edgeBreak-.5f)*.075f);
 
-                    float rockDetail=Mathf.PerlinNoise(wx*.24f+11f,wz*.24f+53f);
-                    float darkValue=.74f+(rockDetail-.5f)*.15f;
-                    Color darkBasalt=new(.030f*darkValue,.017f*darkValue,.013f*darkValue,1f);
+                    float rockDetail=Mathf.PerlinNoise(wx*.18f+11f,wz*.18f+53f);
+                    float darkValue=.80f+(rockDetail-.5f)*.10f;
+                    Color darkBasalt=new(.026f*darkValue,.014f*darkValue,.010f*darkValue,1f);
                     Color orangeBasalt=Color.Lerp(
-                        new Color(.68f,.105f,.006f,1f),
-                        new Color(1f,.285f,.012f,1f),
-                        Mathf.Clamp01(.28f+rockDetail*.58f));
+                        new Color(.78f,.115f,.004f,1f),
+                        new Color(1f,.35f,.012f,1f),
+                        Mathf.Clamp01(.28f+rockDetail*.60f));
 
-                    // Keep the actual base decks, reactors and healing plates visually clean. The orange volcanic
-                    // pattern fades away before reaching them so no ground patch reads as lava painted on a base part.
-                    float zeroBase=1f-Mathf.SmoothStep(5.9f,8.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-36f,0f)));
-                    float lumenBase=1f-Mathf.SmoothStep(5.9f,8.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(36f,0f)));
-                    float zeroSpawn=1f-Mathf.SmoothStep(4.2f,6.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-27.5f,0f)));
-                    float lumenSpawn=1f-Mathf.SmoothStep(4.2f,6.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(27.5f,0f)));
+                    float zeroBase=1f-Mathf.SmoothStep(8.8f,11.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-36f,0f)));
+                    float lumenBase=1f-Mathf.SmoothStep(8.8f,11.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(36f,0f)));
+                    float zeroSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-27.5f,0f)));
+                    float lumenSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(27.5f,0f)));
                     float baseProtection=Mathf.Clamp01(Mathf.Max(Mathf.Max(zeroBase,lumenBase),Mathf.Max(zeroSpawn,lumenSpawn)));
                     orangeSpot*=1f-baseProtection;
 
-                    Color ground=Color.Lerp(darkBasalt,orangeBasalt,orangeSpot*.96f);
+                    Color ground=Color.Lerp(darkBasalt,orangeBasalt,orangeSpot*.98f);
 
-                    // True molten areas stay limited to the middle half of the arena. These texture masks sit
-                    // below the raised visual lava pools so the pools blend naturally into the orange/black ground.
-                    float lavaMask=0f;
-                    if(Mathf.Abs(wx)<=21f)
-                    {
-                        for(int p=0;p<PoolCenters.Length;p++)
-                        {
-                            Vector2 c=PoolCenters[p];
-                            Vector2 r=PoolRadii[p];
-                            float dx=(wx-c.x)/r.x;
-                            float dz=(wz-c.y)/r.y;
-                            float wobble=(Mathf.PerlinNoise(wx*.18f+17f+p*3.1f,wz*.18f+43f+p*2.3f)-.5f)*.30f;
-                            float d=Mathf.Sqrt(dx*dx+dz*dz)+wobble;
-                            lavaMask=Mathf.Max(lavaMask,1f-Mathf.SmoothStep(.72f,1.06f,d));
-                        }
-                        float centralBand=1f-Mathf.SmoothStep(18.5f,21f,Mathf.Abs(wx));
-                        lavaMask*=centralBand;
-                    }
-                    lavaMask*=1f-baseProtection;
+                    // The molten layer follows the same broad cow-spot language and is strictly central.
+                    float moltenA=Mathf.PerlinNoise(wx*.032f+201f,wz*.036f+37f);
+                    float moltenB=Mathf.PerlinNoise(wx*.049f+17f,wz*.043f+151f);
+                    float moltenField=moltenA*.70f+moltenB*.30f;
+                    float lavaMask=Mathf.SmoothStep(.535f,.665f,moltenField);
+                    float centralBand=1f-Mathf.SmoothStep(18.0f,21.0f,Mathf.Abs(wx));
+                    lavaMask*=centralBand*(1f-baseProtection);
 
-                    float hot=Mathf.SmoothStep(.38f,.92f,lavaMask);
-                    Color molten=Color.Lerp(new Color(.90f,.055f,.002f,1f),new Color(1f,.62f,.028f,1f),hot);
+                    float hot=Mathf.SmoothStep(.34f,.88f,lavaMask);
+                    Color molten=Color.Lerp(new Color(.94f,.055f,.002f,1f),new Color(1f,.63f,.025f,1f),hot);
                     pixels[y*width+x]=Color.Lerp(ground,molten,Mathf.Clamp01(lavaMask*.98f));
                 }
             }
