@@ -17,8 +17,8 @@ namespace Alterverse.Visuals
         private const float ScanInterval=.20f;
 
         private static bool installed;
-        private readonly Dictionary<int,SkeletonRig> rigs=new();
-        private readonly List<int> deadRigIds=new();
+        private readonly Dictionary<EntityId,SkeletonRig> rigs=new();
+        private readonly List<EntityId> deadRigIds=new();
         private float nextScan;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -44,7 +44,7 @@ namespace Alterverse.Visuals
             {
                 HotZoneTank tank=active[i];
                 if(tank==null||!tank.IsMarsSkeleton)continue;
-                int id=tank.GetInstanceID();
+                EntityId id=tank.GetEntityId();
                 if(rigs.ContainsKey(id))continue;
                 SkeletonRig rig=SkeletonRig.TryBuild(tank);
                 if(rig!=null)rigs.Add(id,rig);
@@ -55,7 +55,7 @@ namespace Alterverse.Visuals
         {
             if(rigs.Count==0)return;
             deadRigIds.Clear();
-            foreach(KeyValuePair<int,SkeletonRig> pair in rigs)
+            foreach(KeyValuePair<EntityId,SkeletonRig> pair in rigs)
             {
                 SkeletonRig rig=pair.Value;
                 if(rig==null||!rig.IsAlive){deadRigIds.Add(pair.Key);continue;}
