@@ -9,7 +9,7 @@ namespace Alterverse.Match
 {
     /// <summary>
     /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
-    /// stays active for 30 seconds, and relocates inside the central 60% of the arena.
+    /// stays active for 30 seconds, and can also relocate inside the central 30% of the arena.
     /// Every hero inside scores independently for their team, even while both teams occupy the zone.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
@@ -132,23 +132,31 @@ namespace Alterverse.Match
             float bestScore=float.NegativeInfinity;
             bool found=false;
 
-            // Sample across the full usable area and favour the place farthest from
-            // the last four zones. Safety checks still guard bases and structures.
-            for(int attempt=0;attempt<72;attempt++)
+            // Every other opening draws from the middle 30% of both map axes.
+            // Try the wider area only if arena structures block every central candidate.
+            float centerXLimit=ArenaHalfWidth*.30f;
+            float centerZLimit=ArenaHalfHeight*.30f;
+            bool preferCenter=(occurrence%2)==0;
+            for(int region=0;region<(preferCenter?2:1)&&!found;region++)
             {
-                float x=Next(-xLimit,xLimit);
-                float z=Next(-zLimit,zLimit);
-                Vector3 candidate=LunarSurfaceField.Surface(x,z);
-                if(!IsSpawnPositionSafe(candidate))continue;
-
-                float separation=float.PositiveInfinity;
-                for(int i=0;i<recentSpawnCount;i++)
+                float sampleXLimit=preferCenter&&region==0?centerXLimit:xLimit;
+                float sampleZLimit=preferCenter&&region==0?centerZLimit:zLimit;
+                for(int attempt=0;attempt<72;attempt++)
                 {
-                    Vector3 delta=candidate-recentSpawns[i];delta.y=0;
-                    separation=Mathf.Min(separation,delta.sqrMagnitude);
+                    float x=Next(-sampleXLimit,sampleXLimit);
+                    float z=Next(-sampleZLimit,sampleZLimit);
+                    Vector3 candidate=LunarSurfaceField.Surface(x,z);
+                    if(!IsSpawnPositionSafe(candidate))continue;
+
+                    float separation=float.PositiveInfinity;
+                    for(int i=0;i<recentSpawnCount;i++)
+                    {
+                        Vector3 delta=candidate-recentSpawns[i];delta.y=0;
+                        separation=Mathf.Min(separation,delta.sqrMagnitude);
+                    }
+                    float score=recentSpawnCount==0?Next(0f,1f):separation+Next(0f,4f);
+                    if(!found||score>bestScore){best=candidate;bestScore=score;found=true;}
                 }
-                float score=recentSpawnCount==0?Next(0f,1f):separation+Next(0f,4f);
-                if(!found||score>bestScore){best=candidate;bestScore=score;found=true;}
             }
 
             if(!found)
