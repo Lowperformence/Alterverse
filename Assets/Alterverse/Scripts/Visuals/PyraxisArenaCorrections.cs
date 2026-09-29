@@ -6,10 +6,11 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Pyraxis-specific presentation pass. Keeps the base/spawn areas free of molten markings,
-    /// concentrates lava into the middle 50 percent of the arena, and presents both healing guards
-    /// as lava golems derived from the existing Mars stone-golem visual. Visual only: no gameplay
-    /// colliders, health, AI, damage or pathing are changed.
+    /// Pyraxis-specific presentation pass. Keeps the base/spawn structures free of molten markings,
+    /// concentrates true lava pools into the middle 50 percent of the arena, preserves the intended
+    /// orange/black mottled volcanic ground, and presents both healing guards as lava golems derived
+    /// from the existing Mars stone-golem visual. Visual only: no gameplay colliders, health, AI,
+    /// damage or pathing are changed.
     /// </summary>
     public sealed class PyraxisArenaCorrections : MonoBehaviour
     {
@@ -66,6 +67,7 @@ namespace Alterverse.Visuals
                 ResetThemeState();
                 appliedTheme=themeObject.transform;
                 RemoveOldSpawnLava(appliedTheme);
+                RemoveLavaFromBaseStructures(world.transform);
                 BuildCentralLavaPools(appliedTheme);
             }
 
@@ -82,6 +84,26 @@ namespace Alterverse.Visuals
                 Transform t=all[i];
                 if(t==null||t==theme)continue;
                 if(t.name=="LavaVent"||t.name=="LavaStream")Destroy(t.gameObject);
+            }
+        }
+
+        private static void RemoveLavaFromBaseStructures(Transform world)
+        {
+            if(world==null)return;
+            Transform[] all=world.GetComponentsInChildren<Transform>(true);
+            for(int i=0;i<all.Length;i++)
+            {
+                Transform t=all[i];
+                if(t==null)continue;
+                if(t.name.IndexOf("Lava",System.StringComparison.OrdinalIgnoreCase)<0)continue;
+                if(t.name.StartsWith("DF_PyraxisCentralLava",System.StringComparison.Ordinal))continue;
+
+                Vector3 p=t.position;
+                bool zeroBase=new Vector2(p.x+36f,p.z).sqrMagnitude<8.0f*8.0f;
+                bool lumenBase=new Vector2(p.x-36f,p.z).sqrMagnitude<8.0f*8.0f;
+                bool zeroSpawn=new Vector2(p.x+27.5f,p.z).sqrMagnitude<6.0f*6.0f;
+                bool lumenSpawn=new Vector2(p.x-27.5f,p.z).sqrMagnitude<6.0f*6.0f;
+                if(zeroBase||lumenBase||zeroSpawn||lumenSpawn)Destroy(t.gameObject);
             }
         }
 
@@ -140,7 +162,7 @@ namespace Alterverse.Visuals
             groundTexture=BuildGroundTexture(1024,896);
             Material source=target.sharedMaterial;
             if(source==null)return;
-            groundMaterial=new Material(source){name="DF_Pyraxis_CentralLavaGround"};
+            groundMaterial=new Material(source){name="DF_Pyraxis_OrangeBlackGround"};
             if(groundMaterial.HasProperty("_BaseMap"))groundMaterial.SetTexture("_BaseMap",groundTexture);
             if(groundMaterial.HasProperty("_MainTex"))groundMaterial.SetTexture("_MainTex",groundTexture);
             if(groundMaterial.HasProperty("_BaseColor"))groundMaterial.SetColor("_BaseColor",Color.white);
@@ -152,7 +174,7 @@ namespace Alterverse.Visuals
         {
             Texture2D texture=new(width,height,TextureFormat.RGBA32,true,false)
             {
-                name="DF_PyraxisCentralLavaAlbedo",
+                name="DF_PyraxisOrangeBlackMottledAlbedo",
                 wrapMode=TextureWrapMode.Clamp,
                 filterMode=FilterMode.Trilinear,
                 anisoLevel=8
@@ -164,12 +186,38 @@ namespace Alterverse.Visuals
                 for(int x=0;x<width;x++)
                 {
                     float wx=Mathf.Lerp(-48f,48f,x/(float)(width-1));
-                    float macro=Mathf.PerlinNoise(wx*.055f+31f,wz*.055f+73f);
-                    float detail=Mathf.PerlinNoise(wx*.22f+11f,wz*.22f+47f);
-                    float basaltValue=.72f+macro*.19f+(detail-.5f)*.10f;
-                    Color basalt=new(.055f*basaltValue,.031f*basaltValue,.024f*basaltValue,1f);
 
-                    float mask=0f;
+                    // Large low-frequency islands produce the requested orange/black cow-like volcanic pattern.
+                    // A second warped field prevents the spots from reading as round procedural dots.
+                    float macro=Mathf.PerlinNoise(wx*.036f+31f,wz*.041f+73f);
+                    float warp=Mathf.PerlinNoise(wx*.082f+9f,wz*.076f+47f);
+                    float cowField=macro*.76f+warp*.24f;
+                    float orangeSpot=Mathf.SmoothStep(.47f,.59f,cowField);
+                    float edgeBreak=Mathf.PerlinNoise(wx*.15f+91f,wz*.14f+17f);
+                    orangeSpot=Mathf.Clamp01(orangeSpot+(edgeBreak-.5f)*.15f);
+
+                    float rockDetail=Mathf.PerlinNoise(wx*.24f+11f,wz*.24f+53f);
+                    float darkValue=.74f+(rockDetail-.5f)*.15f;
+                    Color darkBasalt=new(.030f*darkValue,.017f*darkValue,.013f*darkValue,1f);
+                    Color orangeBasalt=Color.Lerp(
+                        new Color(.68f,.105f,.006f,1f),
+                        new Color(1f,.285f,.012f,1f),
+                        Mathf.Clamp01(.28f+rockDetail*.58f));
+
+                    // Keep the actual base decks, reactors and healing plates visually clean. The orange volcanic
+                    // pattern fades away before reaching them so no ground patch reads as lava painted on a base part.
+                    float zeroBase=1f-Mathf.SmoothStep(5.9f,8.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-36f,0f)));
+                    float lumenBase=1f-Mathf.SmoothStep(5.9f,8.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(36f,0f)));
+                    float zeroSpawn=1f-Mathf.SmoothStep(4.2f,6.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-27.5f,0f)));
+                    float lumenSpawn=1f-Mathf.SmoothStep(4.2f,6.0f,Vector2.Distance(new Vector2(wx,wz),new Vector2(27.5f,0f)));
+                    float baseProtection=Mathf.Clamp01(Mathf.Max(Mathf.Max(zeroBase,lumenBase),Mathf.Max(zeroSpawn,lumenSpawn)));
+                    orangeSpot*=1f-baseProtection;
+
+                    Color ground=Color.Lerp(darkBasalt,orangeBasalt,orangeSpot*.96f);
+
+                    // True molten areas stay limited to the middle half of the arena. These texture masks sit
+                    // below the raised visual lava pools so the pools blend naturally into the orange/black ground.
+                    float lavaMask=0f;
                     if(Mathf.Abs(wx)<=21f)
                     {
                         for(int p=0;p<PoolCenters.Length;p++)
@@ -180,15 +228,16 @@ namespace Alterverse.Visuals
                             float dz=(wz-c.y)/r.y;
                             float wobble=(Mathf.PerlinNoise(wx*.18f+17f+p*3.1f,wz*.18f+43f+p*2.3f)-.5f)*.30f;
                             float d=Mathf.Sqrt(dx*dx+dz*dz)+wobble;
-                            mask=Mathf.Max(mask,1f-Mathf.SmoothStep(.72f,1.06f,d));
+                            lavaMask=Mathf.Max(lavaMask,1f-Mathf.SmoothStep(.72f,1.06f,d));
                         }
-                        float band=1f-Mathf.SmoothStep(18.5f,21f,Mathf.Abs(wx));
-                        mask*=band;
+                        float centralBand=1f-Mathf.SmoothStep(18.5f,21f,Mathf.Abs(wx));
+                        lavaMask*=centralBand;
                     }
+                    lavaMask*=1f-baseProtection;
 
-                    float hot=Mathf.SmoothStep(.38f,.92f,mask);
-                    Color molten=Color.Lerp(new Color(.78f,.055f,.004f,1f),new Color(1f,.56f,.025f,1f),hot);
-                    pixels[y*width+x]=Color.Lerp(basalt,molten,Mathf.Clamp01(mask*.96f));
+                    float hot=Mathf.SmoothStep(.38f,.92f,lavaMask);
+                    Color molten=Color.Lerp(new Color(.90f,.055f,.002f,1f),new Color(1f,.62f,.028f,1f),hot);
+                    pixels[y*width+x]=Color.Lerp(ground,molten,Mathf.Clamp01(lavaMask*.98f));
                 }
             }
             texture.SetPixels32(pixels);
