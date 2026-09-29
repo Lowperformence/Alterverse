@@ -522,7 +522,7 @@ namespace Alterverse.Visuals
                 float rockForward=Mathf.Sin(t*1.2f)*idleRock;
                 float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*8f,
-                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*9f,
+                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*4.5f,
                     sway*.22f+attackRoll*.55f-hitFromSide*hitWeight*4f);
                 Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f+hitTorso*.32f,
                     -turnCounter*.20f-attackTwist*.35f+rockForward*12f,
