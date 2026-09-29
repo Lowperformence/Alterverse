@@ -22,7 +22,8 @@ namespace Alterverse.UI
         private bool confirmLeave;
         private bool leaving;
         private bool audioDirty;
-        private float master, music, sfx, voice;
+        private float master, music, sfx, voice, cameraZoom;
+        private bool zoomDirty;
         private Texture2D settingsGearIcon;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -38,6 +39,7 @@ namespace Alterverse.UI
             music = PlayerProfile.MusicVolume;
             sfx = PlayerProfile.SfxVolume;
             voice = PlayerProfile.VoiceChatVolume;
+            cameraZoom = PlayerProfile.CameraZoom;
         }
 
         private void Update()
@@ -69,6 +71,7 @@ namespace Alterverse.UI
             sfx = PlayerProfile.SfxVolume;
             voice = PlayerProfile.VoiceChatVolume;
             audioDirty = false;
+            zoomDirty = false;
             confirmLeave = false;
             IsOpen = true;
 
@@ -87,6 +90,7 @@ namespace Alterverse.UI
         private void CloseOverlay()
         {
             FlushAudio();
+            FlushCameraZoom();
             confirmLeave = false;
             IsOpen = false;
 
@@ -109,6 +113,13 @@ namespace Alterverse.UI
             PlayerProfile.SetAudioVolumes(master, music, sfx, false);
             PlayerProfile.SetVoiceChatVolume(voice, true);
             audioDirty = false;
+        }
+
+        private void FlushCameraZoom()
+        {
+            if (!zoomDirty) return;
+            PlayerProfile.SetCameraZoom(cameraZoom, true);
+            zoomDirty = false;
         }
 
         private void ApplyAudioLive()
@@ -293,7 +304,7 @@ namespace Alterverse.UI
 
             // Fit all four audio controls and the leave/resume actions inside a 16:9 mobile safe area.
             float width = Mathf.Min(720f, layout.Width - 28f);
-            float height = Mathf.Min(520f, layout.Height - 16f);
+            float height = Mathf.Min(540f, layout.Height - 16f);
             Rect panel = new Rect((layout.Width - width) * .5f, (layout.Height - height) * .5f, width, height);
             theme.Panel(panel);
             FrontEndTheme.Fill(new Rect(panel.x, panel.y, panel.width, 2), FrontEndTheme.Accent);
@@ -313,6 +324,13 @@ namespace Alterverse.UI
             DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Voice Chat Volume", ref voice);
             theme.Label(new Rect(panel.x + 88, panel.y + rowStart + rowStep * 4f - 3f, panel.width - 176, 20),
                 "Incoming co-op voices only • microphone level remains unchanged", theme.Small, true);
+            float previousZoom = cameraZoom;
+            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 4f + 16f, panel.width - 48, 60), "Camera distance", ref cameraZoom);
+            if (previousZoom != cameraZoom)
+            {
+                PlayerProfile.SetCameraZoom(cameraZoom, false);
+                zoomDirty = true;
+            }
 
             if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
                 ApplyAudioLive();
