@@ -26,10 +26,11 @@ namespace Alterverse.Shop
         NotPurchasable
     }
 
-    /// <summary>All arenas are free except Noxara, which is a shard unlock.</summary>
+    /// <summary>Premium arenas are persistent shard unlocks; zero-price arenas remain immediately available.</summary>
     public static class ArenaShopCatalog
     {
         public const int NoxaraPrice=1000;
+        public const int EarthPrice=500;
         public static readonly ArenaShopItem[] Items=
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
@@ -37,7 +38,7 @@ namespace Alterverse.Shop
             new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
             new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
             new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
-            new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",0,new Color(.24f,.68f,.31f)),
+            new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
             new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",0,new Color(1f,.34f,.04f)),
             new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f))
         };
@@ -58,27 +59,39 @@ namespace Alterverse.Shop
     public static class ArenaUnlockInventory
     {
         internal const string NoxaraOwnedKey="DF_ArenaOwned_Noxara";
+        internal const string EarthOwnedKey="DF_ArenaOwned_Earth";
+
+        private static string OwnedKey(ArenaVariant variant)
+        {
+            if(variant==ArenaVariant.Noxara)return NoxaraOwnedKey;
+            if(variant==ArenaVariant.Earth)return EarthOwnedKey;
+            return null;
+        }
 
         public static bool Owned(ArenaVariant variant)
         {
-            if(variant!=ArenaVariant.Noxara)return true;
-            return PlayerPrefs.GetInt(NoxaraOwnedKey,0)==1;
+            string key=OwnedKey(variant);
+            return string.IsNullOrEmpty(key)||PlayerPrefs.GetInt(key,0)==1;
         }
 
-        public static string UnlockRequirement(ArenaVariant variant)=>variant==ArenaVariant.Noxara
-            ? ArenaShopCatalog.NoxaraPrice+" SHARDS"
-            : "FREE";
+        public static string UnlockRequirement(ArenaVariant variant)
+        {
+            int price=ArenaShopCatalog.For(variant).Price;
+            return price>0?price+" SHARDS":"FREE";
+        }
 
         public static ArenaPurchaseResult Purchase(ArenaVariant variant)
         {
             ProfileTransaction.Recover();
-            if(variant!=ArenaVariant.Noxara)return ArenaPurchaseResult.AlreadyOwned;
+            string ownedKey=OwnedKey(variant);
+            int price=ArenaShopCatalog.For(variant).Price;
+            if(price<=0||string.IsNullOrEmpty(ownedKey))return ArenaPurchaseResult.AlreadyOwned;
             if(Owned(variant))return ArenaPurchaseResult.AlreadyOwned;
-            if(!PlayerWallet.CanAfford(ArenaShopCatalog.NoxaraPrice))return ArenaPurchaseResult.InsufficientShards;
+            if(!PlayerWallet.CanAfford(price))return ArenaPurchaseResult.InsufficientShards;
 
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-ArenaShopCatalog.NoxaraPrice),
-                new ProfileTransaction.Write(NoxaraOwnedKey,1));
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-price),
+                new ProfileTransaction.Write(ownedKey,1));
 
             Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             return ArenaPurchaseResult.Purchased;
