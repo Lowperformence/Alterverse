@@ -78,7 +78,7 @@ namespace Alterverse.Shop
 
         public static readonly ArenaShopItem[] Items=
         {
-            new ArenaShopItem(ArenaVariant.Lunar,"Lunar Prime","Launch arena included for every Traveler.",0),
+            new ArenaShopItem(ArenaVariant.Moon,"Lunar Prime","Launch arena included for every Traveler.",0),
             new ArenaShopItem(ArenaVariant.Noxara,"Noxara","Void jungle battlefield. Unlock permanently with shards.",NoxaraPrice),
             new ArenaShopItem(ArenaVariant.Earth,"Earth","Grounded forest battlefield. Unlock permanently with shards.",EarthPrice),
             new ArenaShopItem(ArenaVariant.Mars,"Mars","Red frontier battlefield.",0),
