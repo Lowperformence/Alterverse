@@ -13,7 +13,8 @@ namespace Alterverse.Match
         internal const string ShuffleKey="DF_ArenaShuffle";
         internal const string LastShuffleKey="DF_LastShuffledArena";
         public static ArenaVariant Current { get; private set; }=ArenaVariant.Moon;
-        public static bool IsMoon=>Current==ArenaVariant.Moon;
+        // DARK 00 intentionally inherits Moon gameplay/geology defaults; IsDark00 remains available for its visual overrides.
+        public static bool IsMoon=>Current==ArenaVariant.Moon||Current==ArenaVariant.Dark00;
         public static bool IsMars=>Current==ArenaVariant.Mars;
         public static bool IsGreenPlanet=>Current==ArenaVariant.GreenPlanet;
         public static bool IsNoxara=>Current==ArenaVariant.Noxara;
