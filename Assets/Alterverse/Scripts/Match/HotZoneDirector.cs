@@ -302,7 +302,7 @@ namespace Alterverse.Match
         private void BuildZoneVisual()
         {
             if(zoneMaterial==null)
-                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,.115f,.72f,.045f);
+                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,.50f,.50f,.045f);
             if(zoneMaterial==null)return;
 
             DestroyZoneVisual(0f);
@@ -363,11 +363,11 @@ namespace Alterverse.Match
             bool occupied=zeroInside>0||lumenInside>0;
             bool contested=zeroInside>0&&lumenInside>0;
             float wave=.5f+.5f*Mathf.Sin(Time.time*(occupied?3.0f:2.0f));
-            float baseFill=contested?.145f:occupied?.135f:.105f;
-            float baseRing=contested?.78f:occupied?.82f:.67f;
-            zoneMaterial.SetFloat("_FillAlpha",baseFill+wave*.018f);
-            zoneMaterial.SetFloat("_RingAlpha",Mathf.Min(1f,baseRing+wave*.08f));
-            zoneMaterial.SetFloat("_RingWidth",occupied?.050f:.043f);
+            // Keep the whole capture area visibly green. Matching ring and fill alpha
+            // prevents the border from reading as two isolated circles.
+            float alpha=(contested?.60f:occupied?.55f:.48f)+wave*.025f;
+            zoneMaterial.SetFloat("_FillAlpha",alpha);
+            zoneMaterial.SetFloat("_RingAlpha",alpha);
         }
 
         private void DestroyZoneVisual(float delay)
