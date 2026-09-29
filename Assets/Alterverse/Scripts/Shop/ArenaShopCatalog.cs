@@ -44,6 +44,23 @@ namespace Alterverse.Shop
             new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",0,new Color(.92f,.08f,.08f))
         };
 
+        // The PLAY menu needs every arena, while the STORE must only list arenas that
+        // actually require a purchase. Keeping this as a derived list means future
+        // zero-price maps are automatically excluded and future paid maps are included.
+        public static readonly ArenaShopItem[] PurchasableItems=BuildPurchasableItems();
+
+        private static ArenaShopItem[] BuildPurchasableItems()
+        {
+            int count=0;
+            for(int i=0;i<Items.Length;i++)if(Items[i].Price>0)count++;
+
+            ArenaShopItem[] result=new ArenaShopItem[count];
+            int write=0;
+            for(int i=0;i<Items.Length;i++)
+                if(Items[i].Price>0)result[write++]=Items[i];
+            return result;
+        }
+
         public static ArenaShopItem For(ArenaVariant variant)
         {
             for(int i=0;i<Items.Length;i++)if(Items[i].Variant==variant)return Items[i];
