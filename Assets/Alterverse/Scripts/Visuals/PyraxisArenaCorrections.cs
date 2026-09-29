@@ -14,7 +14,7 @@ namespace Alterverse.Visuals
     public sealed class PyraxisArenaCorrections : MonoBehaviour
     {
         private readonly List<Material> ownedMaterials=new();
-        private readonly HashSet<int> convertedGuards=new();
+        private readonly HashSet<HealingGuardMech> convertedGuards=new();
         private Transform appliedTheme;
         private Transform poolRoot;
         private Texture2D groundTexture;
@@ -202,9 +202,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<guards.Length;i++)
             {
                 HealingGuardMech guard=guards[i];
-                if(guard==null)continue;
-                int id=guard.gameObject.GetEntityId();
-                if(convertedGuards.Contains(id))continue;
+                if(guard==null||convertedGuards.Contains(guard))continue;
 
                 // Hide the ordinary lunar guard shell only. The gameplay collider and all guard logic remain.
                 MeshRenderer[] existing=guard.GetComponentsInChildren<MeshRenderer>(true);
@@ -213,7 +211,7 @@ namespace Alterverse.Visuals
                 int team=guard.gameObject.name.Contains("Zero")?0:1;
                 MarsStoneGolemMechVisual.Build(guard.transform,team,true);
                 guard.gameObject.AddComponent<PyraxisLavaGolemMotion>();
-                convertedGuards.Add(id);
+                convertedGuards.Add(guard);
             }
         }
 
