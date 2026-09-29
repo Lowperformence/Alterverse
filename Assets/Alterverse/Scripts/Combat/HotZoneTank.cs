@@ -616,6 +616,34 @@ namespace Alterverse.Combat
             Part("SpiderThorax",PrimitiveType.Sphere,spiderBodyRoot,new Vector3(0,.34f,.36f),new Vector3(1.18f,.58f,1.02f),armorMat,Quaternion.identity);
             Part("SpiderThoraxPlate",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.57f,.37f),new Vector3(.88f,.16f,.74f),jointMat,Quaternion.Euler(-5,0,0));
             Part("SpiderAbdomenRidge",PrimitiveType.Cube,spiderBodyRoot,new Vector3(0,.65f,-.52f),new Vector3(.12f,.055f,.92f),energyMat,Quaternion.Euler(4,0,0));
+            // Segmented carapace and glowing cuts stay legible from the overhead camera.
+            for(int segment=0;segment<3;segment++)
+            {
+                float z=-.93f+segment*.40f;
+                for(int sideIndex=0;sideIndex<2;sideIndex++)
+                {
+                    float side=sideIndex==0?-1f:1f;
+                    Part($"SpiderCarapacePlate_{segment}_{sideIndex}",PrimitiveType.Cube,spiderBodyRoot,
+                        new Vector3(side*.32f,.665f,z),new Vector3(.43f,.075f,.29f),
+                        armorMat,Quaternion.Euler(5f,side*10f,side*-9f));
+                    Part($"SpiderCarapaceSeam_{segment}_{sideIndex}",PrimitiveType.Cube,spiderBodyRoot,
+                        new Vector3(side*.29f,.708f,z+.14f),new Vector3(.30f,.018f,.035f),
+                        jointMat,Quaternion.Euler(5f,side*10f,side*-9f));
+                }
+            }
+            Part("SpiderThoraxSpine",PrimitiveType.Cube,spiderBodyRoot,
+                new Vector3(0,.68f,.33f),new Vector3(.13f,.055f,.56f),energyMat,Quaternion.Euler(-5,0,0));
+            for(int sideIndex=0;sideIndex<2;sideIndex++)
+            {
+                float side=sideIndex==0?-1f:1f;
+                Part($"SpiderThoraxShoulder_{sideIndex}",PrimitiveType.Cube,spiderBodyRoot,
+                    new Vector3(side*.48f,.55f,.37f),new Vector3(.28f,.12f,.58f),
+                    armorMat,Quaternion.Euler(-5f,side*12f,side*-13f));
+                Part($"SpiderRearSpinneret_{sideIndex}",PrimitiveType.Capsule,spiderBodyRoot,
+                    new Vector3(side*.29f,.22f,-1.21f),new Vector3(.17f,.18f,.38f),
+                    jointMat,Quaternion.Euler(70f,side*12f,0));
+            }
+
 
             turretPivot=Pivot("DF_NoxaraSpiderHeadPivot",spiderBodyRoot,new Vector3(0,.52f,.86f),Quaternion.identity);
             Part("SpiderHead",PrimitiveType.Cube,turretPivot,new Vector3(0,0,.16f),new Vector3(.88f,.46f,.70f),armorMat,Quaternion.Euler(-4,0,0));
@@ -623,6 +651,20 @@ namespace Alterverse.Combat
             float[] eyeX={-.27f,-.09f,.09f,.27f};
             for(int i=0;i<eyeX.Length;i++)
                 Part("SpiderEye"+i,PrimitiveType.Sphere,turretPivot,new Vector3(eyeX[i],.06f,.56f),new Vector3(.105f,.085f,.075f),energyMat,Quaternion.identity);
+            for(int sideIndex=0;sideIndex<2;sideIndex++)
+            {
+                float side=sideIndex==0?-1f:1f;
+                Part($"SpiderBrow_{sideIndex}",PrimitiveType.Cube,turretPivot,
+                    new Vector3(side*.28f,.17f,.48f),new Vector3(.34f,.075f,.27f),
+                    jointMat,Quaternion.Euler(-10f,side*14f,side*-12f));
+                Part($"SpiderOuterEye_{sideIndex}",PrimitiveType.Sphere,turretPivot,
+                    new Vector3(side*.42f,.03f,.49f),new Vector3(.11f,.10f,.095f),
+                    energyMat,Quaternion.identity);
+                Part($"SpiderFang_{sideIndex}",PrimitiveType.Capsule,turretPivot,
+                    new Vector3(side*.24f,-.34f,.76f),new Vector3(.085f,.22f,.085f),
+                    armorMat,Quaternion.Euler(0,0,side*18f));
+            }
+
 
             barrelPivot=Pivot("DF_NoxaraSpiderMuzzle",turretPivot,new Vector3(0,-.18f,.56f),Quaternion.identity);
             spiderBarrelRest=barrelPivot.localPosition;
@@ -651,6 +693,13 @@ namespace Alterverse.Combat
                     Part("SpiderUpperLeg"+index,PrimitiveType.Cube,root,
                         new Vector3(SpiderUpperLength*.5f,0,0),
                         new Vector3(SpiderUpperLength,.13f,.17f),armorMat,Quaternion.identity);
+                     Part("SpiderUpperLegPlate"+index,PrimitiveType.Cube,root,
+                         new Vector3(SpiderUpperLength*.52f,.092f,0),
+                         new Vector3(.67f,.065f,.22f),jointMat,Quaternion.identity);
+                     Part("SpiderUpperLegVein"+index,PrimitiveType.Cube,root,
+                         new Vector3(SpiderUpperLength*.53f,.130f,0),
+                         new Vector3(.52f,.022f,.055f),energyMat,Quaternion.identity);
+
 
                     Transform knee=Pivot($"DF_NoxaraSpiderKnee_{index}",root,
                         new Vector3(SpiderUpperLength,0,0),Quaternion.identity);
@@ -661,6 +710,10 @@ namespace Alterverse.Combat
                     Part("SpiderLowerLeg"+index,PrimitiveType.Cube,knee,
                         new Vector3(SpiderLowerLength*.5f,0,0),
                         new Vector3(SpiderLowerLength,.11f,.145f),darkMat,Quaternion.identity);
+                     Part("SpiderShinArmor"+index,PrimitiveType.Cube,knee,
+                         new Vector3(SpiderLowerLength*.35f,.074f,0),
+                         new Vector3(.48f,.055f,.19f),armorMat,Quaternion.identity);
+
 
                     Transform foot=Pivot($"DF_NoxaraSpiderAnkle_{index}",knee,
                         new Vector3(SpiderLowerLength,0,0),Quaternion.identity);
