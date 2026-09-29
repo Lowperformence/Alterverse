@@ -6,9 +6,9 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Extends the existing weapon-store selector to four catalog entries without changing the
-    /// purchase/equip flow. The store still owns all transactions; this layer only exposes the
-    /// additional catalog variants in the same preview row.
+    /// Exposes the two additional EPIC entries beside the existing weapon-store variant control.
+    /// Purchase/equip logic remains owned by MainMenuController; this selector only changes the
+    /// previewed catalog variant, so the existing wallet and persistence path is reused verbatim.
     /// </summary>
     [DefaultExecutionOrder(1900)]
     internal sealed class WeaponShopVariantSelector : MonoBehaviour
@@ -50,7 +50,7 @@ namespace Alterverse.UI
             int selectedHero=Mathf.Clamp((int)heroField.GetValue(menu),0,HeroIdentity.HeroCount-1);
             HeroId hero=(HeroId)selectedHero;
             int count=WeaponSkinCatalog.VariantCount(hero);
-            if(count<=2)return;
+            if(count<4)return;
             int current=Mathf.Clamp((int)variantField.GetValue(menu),0,count-1);
 
             Rect safe=Screen.safeArea;
@@ -71,26 +71,27 @@ namespace Alterverse.UI
                 float contentWidth=Mathf.Min(1360f,menuWidth-64f);
                 float left=(menuWidth-contentWidth)*.5f;
                 float previewWidth=contentWidth*.54f;
-                float x=left+previewWidth+32f;
-                float rowWidth=contentWidth-previewWidth-32f;
-                Rect cover=new Rect(x-2f,476f,rowWidth+4f,52f);
-                FrontEndTheme.Fill(cover,new Color(FrontEndTheme.Background.r,FrontEndTheme.Background.g,FrontEndTheme.Background.b,.98f));
 
-                const float gap=6f;
-                float buttonWidth=(rowWidth-gap*(count-1))/count;
-                for(int i=0;i<count;i++)
+                // Keep the original 01/02 arrows untouched. The expansion lives on the preview
+                // card itself, where there are no competing IMGUI controls to steal the click.
+                Rect panel=new Rect(left+38f,538f,previewWidth-76f,64f);
+                FrontEndTheme.Fill(panel,new Color(FrontEndTheme.Background.r,FrontEndTheme.Background.g,FrontEndTheme.Background.b,.91f));
+                theme.Center(new Rect(panel.x+8f,panel.y+2f,panel.width-16f,18f),"NEW EPIC WEAPONS  •  500 SHARDS EACH");
+
+                const float gap=8f;
+                float buttonWidth=(panel.width-gap-16f)*.5f;
+                for(int i=2;i<=3;i++)
                 {
                     WeaponSkinItem item=WeaponSkinCatalog.For(hero,i);
-                    string label=i<2?$"{i+1:00}":$"EPIC {i+1:00}";
-                    Rect button=new Rect(x+i*(buttonWidth+gap),480f,buttonWidth,44f);
+                    Rect button=new Rect(panel.x+8f+(i-2)*(buttonWidth+gap),panel.y+23f,buttonWidth,35f);
+                    string label=i==2?"EPIC 03":"EPIC 04";
                     if(theme.Action(button,label,selected:i==current))
                     {
                         variantField.SetValue(menu,i);
                         if(messageField!=null)messageField.SetValue(menu,string.Empty);
                         current=i;
                     }
-                    if(i>=2)
-                        FrontEndTheme.Fill(new Rect(button.x+9f,button.yMax-5f,button.width-18f,2f),item.Glow);
+                    FrontEndTheme.Fill(new Rect(button.x+8f,button.yMax-4f,button.width-16f,2f),item.Glow);
                 }
             }
             finally
