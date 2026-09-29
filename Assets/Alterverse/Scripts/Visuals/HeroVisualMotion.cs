@@ -353,7 +353,7 @@ namespace Alterverse.Visuals
             root.localRotation=displayedRotation;
             float turnCounter=Mathf.Clamp(-turnRate*.025f,-12f,12f);
             if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f+Mathf.Sin(t*1.2f)*5f*(attacking||Dashing?0f:1f),turnCounter-Mathf.Sin(t*1.2f+Mathf.PI*.5f)*5f*(attacking||Dashing?0f:1f),-sway*.45f);
-            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
+            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight+Mathf.Sin(t*1.2f)*7f*(attacking||Dashing?0f:1f),-sway*.5f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
