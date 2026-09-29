@@ -256,7 +256,7 @@ namespace Alterverse.Visuals
             lean=Mathf.Lerp(lean,forwardLean,1-Mathf.Exp(-13f*dt));
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
-            float bob=(1-Mathf.Cos(phase*2))*.012f*strideWeight*(heavy?.8f:1);
+            float bob=(1-Mathf.Cos(phase*2))*.035f*strideWeight*(heavy?.8f:1);
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
