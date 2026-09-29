@@ -137,10 +137,13 @@ namespace Alterverse.Visuals
         {
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
             bool titanForgeBodyOnly=hero==HeroId.Rook&&variant==1;
-            Color glow=titanForgeBodyOnly?new Color(1f,.015f,.008f):item.Glow;
-            float tint=titanForgeBodyOnly?.94f:variant==1?.78f:variant==3?.72f:variant==2?.68f:.62f;
+            bool riftTalonsBodyOnly=hero==HeroId.Rook&&variant==0;
+            bool rookBodyOnly=titanForgeBodyOnly||riftTalonsBodyOnly;
+            Color glow=titanForgeBodyOnly?new Color(1f,.015f,.008f):
+                riftTalonsBodyOnly?new Color(.42f,.44f,.47f):item.Glow;
+            float tint=titanForgeBodyOnly?.94f:riftTalonsBodyOnly?.92f:variant==1?.78f:variant==3?.72f:variant==2?.68f:.62f;
             float emission=titanForgeBodyOnly?5.6f:variant==1?4.2f:variant==3?3.0f:variant==2?2.6f:2.15f;
-            float whiteMix=titanForgeBodyOnly?.015f:variant==1?.30f:variant==2?.10f:variant==3?.05f:.14f;
+            float whiteMix=titanForgeBodyOnly?.015f:riftTalonsBodyOnly?0f:variant==1?.30f:variant==2?.10f:variant==3?.05f:.14f;
             Color accent=Color.Lerp(glow,Color.white,whiteMix);
 
             for(int i=0;i<baseRenderers.Count;i++)
@@ -149,9 +152,9 @@ namespace Alterverse.Visuals
                 Renderer renderer=state.Renderer;
                 if(renderer==null)continue;
 
-                // TITANFORGE: recolor only the two authored gauntlet shells. Knuckles and every
-                // other detail renderer keep their original materials/colors exactly as authored.
-                if(titanForgeBodyOnly&&!IsTitanForgeBody(renderer.transform))continue;
+                // Rook paid variants: recolor only the two authored gauntlet shells. Knuckles and
+                // every other detail renderer keep their original materials/colors exactly as authored.
+                if(rookBodyOnly&&!IsRookGauntletBody(renderer.transform))continue;
 
                 Material[] styled=new Material[state.Original.Length];
                 for(int m=0;m<state.Original.Length;m++)
@@ -163,12 +166,20 @@ namespace Alterverse.Visuals
                     Color target=Color.Lerp(baseColor,accent,tint);
                     target.a=baseColor.a;
                     WriteColor(material,target);
-                    if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),titanForgeBodyOnly?.70f:variant==1?.78f:.55f));
-                    if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),titanForgeBodyOnly?.86f:variant==1?.90f:.76f));
+                    if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),titanForgeBodyOnly?.70f:riftTalonsBodyOnly?.68f:variant==1?.78f:.55f));
+                    if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),titanForgeBodyOnly?.86f:riftTalonsBodyOnly?.62f:variant==1?.90f:.76f));
                     if(material.HasProperty("_EmissionColor"))
                     {
-                        material.EnableKeyword("_EMISSION");
-                        material.SetColor("_EmissionColor",accent*emission);
+                        if(riftTalonsBodyOnly)
+                        {
+                            material.SetColor("_EmissionColor",Color.black);
+                            material.DisableKeyword("_EMISSION");
+                        }
+                        else
+                        {
+                            material.EnableKeyword("_EMISSION");
+                            material.SetColor("_EmissionColor",accent*emission);
+                        }
                     }
                     styled[m]=material;
                 }
@@ -177,7 +188,7 @@ namespace Alterverse.Visuals
             }
         }
 
-        private static bool IsTitanForgeBody(Transform t)
+        private static bool IsRookGauntletBody(Transform t)
         {
             if(t==null)return false;
             return t.name=="DF_GauntletL"||t.name=="DF_GauntletR";
