@@ -43,8 +43,8 @@ namespace Alterverse.UI
         private CosmeticCollectionPanel collection;
         private System.Action<int> changeCollectionHero;
         private TouchScreenKeyboard nameKeyboard;
-        private float master, music, sfx, cameraZoom;
-        private bool audioDirty, zoomDirty;
+        private float master, music, sfx;
+        private bool audioDirty;
         private const float MenuHeight = 720;
         private float Left => (menuWidth - ContentWidth)*.5f;
         private float ContentWidth => Mathf.Min(1360,menuWidth-64);
@@ -63,7 +63,7 @@ namespace Alterverse.UI
             playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
             mapShopPageStart=Mathf.Max(0,playArenaBrowseIndex-1);
             profileName = PlayerProfile.PlayerName;
-            master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume; cameraZoom = PlayerProfile.CameraZoom;
+            master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
             collection=new CosmeticCollectionPanel();
             changeCollectionHero=ChangeHero;
@@ -1192,7 +1192,7 @@ namespace Alterverse.UI
 
         private void DrawSettings()
         {
-            Heading("Settings","Adjust sound and camera distance.");
+            Heading("Settings","Make the sound your own.");
             float w=ContentWidth*.64f;
             theme.Panel(new Rect(Left,222,w,438));
             float previousMaster=master, previousMusic=music, previousSfx=sfx;
@@ -1206,9 +1206,6 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,306,rw,82),"Difficulty is selected directly before each match so you can change the challenge for every deployment.",theme.Body,true);
             theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
             theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
-            float previousZoom=cameraZoom;
-            DrawVolume(new Rect(x,548,rw,100),"Camera distance",ref cameraZoom);
-            if(previousZoom!=cameraZoom) { PlayerProfile.SetCameraZoom(cameraZoom,false); zoomDirty=true; }
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {
@@ -1229,8 +1226,8 @@ namespace Alterverse.UI
         }
         private void FlushAudio()
         {
-            if (audioDirty) { PlayerProfile.SetAudioVolumes(master,music,sfx,true); audioDirty=false; }
-            if (zoomDirty) { PlayerProfile.SetCameraZoom(cameraZoom,true); zoomDirty=false; }
+            if (!audioDirty) return;
+            PlayerProfile.SetAudioVolumes(master,music,sfx,true); audioDirty=false;
         }
         private void BeginLaunch()
         {
