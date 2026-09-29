@@ -433,7 +433,7 @@ namespace Alterverse.Visuals
                     {elbowL=-26f;elbowR=-30f;}
                     // A small shared elbow lift gives the guard life without a walking arm pump.
                     // Keep the rifle nearly steady and leave all attack poses untouched.
-                    float elbowLift=Mathf.Sin(t*1.2f)*7.5f*(Dashing?0f:1f)*(hero==HeroId.Nyra?.4f:1f);
+                    float elbowLift=Mathf.Sin(t*1.2f)*9.75f*(Dashing?0f:1f)*(hero==HeroId.Nyra?.4f:1f);
                     elbowL+=elbowLift;
                     elbowR+=elbowLift;
                 }
