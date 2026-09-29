@@ -40,7 +40,8 @@ namespace Alterverse.Shop
             new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
             new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
             new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",0,new Color(1f,.34f,.04f)),
-            new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f))
+            new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f)),
+            new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",0,new Color(.92f,.08f,.08f))
         };
 
         public static ArenaShopItem For(ArenaVariant variant)
