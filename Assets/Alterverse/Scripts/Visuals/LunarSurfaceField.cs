@@ -68,86 +68,102 @@ namespace Alterverse.Visuals
         {
             bool moon=IsMoon;
             bool mars=ArenaVariantRuntime.IsMars;
-            // Mars has broad, readable dune fields. Keep their wavelength independent of mesh
-            // resolution so a sharper surface does not turn into a dense ripple pattern.
-            float macro=Noise(x,z,mars?.032f:.055f,12);
-            float medium=Noise(x,z,mars?.105f:.24f,31);
-            float fine=Noise(x,z,mars?.62f:1.9f,7);
-            relief=(macro-.5f)*(mars?.27f:moon?.20f:.19f)
-                  +(medium-.5f)*(mars?.055f:moon?.09f:.085f);
-            if(mars)
+            bool earth=ArenaVariantRuntime.IsEarth;
+
+            // Earth deliberately uses very broad, low-amplitude undulation. It must read as natural
+            // ground rather than the dune/crater relief used by the planetary arenas.
+            float macro=Noise(x,z,mars?.032f:earth?.024f:.055f,12);
+            float medium=Noise(x,z,mars?.105f:earth?.075f:.24f,31);
+            float fine=Noise(x,z,mars?.62f:earth?.45f:1.9f,7);
+            if(earth)
             {
-                float dunePhase=z*.30f+x*.075f+(macro-.5f)*2.2f;
-                relief+=Mathf.Sin(dunePhase)*(.075f+.035f*macro);
+                relief=(macro-.5f)*.045f+(medium-.5f)*.012f;
             }
-            tone=.48f+(macro-.5f)*.22f+(medium-.5f)*(mars?.055f:.085f)
+            else
+            {
+                relief=(macro-.5f)*(mars?.27f:moon?.20f:.19f)
+                      +(medium-.5f)*(mars?.055f:moon?.09f:.085f);
+                if(mars)
+                {
+                    float dunePhase=z*.30f+x*.075f+(macro-.5f)*2.2f;
+                    relief+=Mathf.Sin(dunePhase)*(.075f+.035f*macro);
+                }
+            }
+
+            tone=earth
+                ?.50f+(macro-.5f)*.10f+(medium-.5f)*.028f+(fine-.5f)*.006f
+                :.48f+(macro-.5f)*.22f+(medium-.5f)*(mars?.055f:.085f)
                  +(fine-.5f)*(mars?.012f:moon?.040f:.018f);
             dust=0f;
             float craterWear=0f;
 
-            // The Moon gets flatter crater floors, steeper walls and brighter broken rims. Actual gameplay
-            // collision remains unchanged: this is presentation geometry only. Relief near the active centre
-            // is deliberately restrained while outer landmark craters can read much deeper from the MOBA camera.
+            // Earth intentionally skips the shared crater field so the map remains smooth.
             float outer=Mathf.Clamp01(Mathf.Max((Mathf.Abs(x)-20f)/18f,(Mathf.Abs(z)-15f)/18f));
-            for(int i=0;i<craters.Length;i++)
+            if(!earth)
             {
-                Vector3 c=craters[i];float dx=x-c.x,dz=z-c.z,r=c.y;
-                if(Mathf.Abs(dx)>r*1.65f||Mathf.Abs(dz)>r*1.65f)continue;
-                float angle=Mathf.Atan2(dz,dx);
-                float wobble=1+.10f*Mathf.Sin(angle*(3+i%4)+i*.71f)+.045f*Mathf.Sin(angle*(7+i%3)+i*.37f);
-                float q=Mathf.Sqrt(dx*dx+dz*dz)/(r*wobble);
-                if(q>1.62f)continue;
-
-                float wallT=Mathf.InverseLerp(.34f,.98f,q);
-                float bowl=q<=.34f?1f:1f-Mathf.SmoothStep(0f,1f,wallT);
-                float rimWidth=moon?.095f:.14f;
-                float rim=Mathf.Exp(-Mathf.Pow((q-1.0f)/rimWidth,2));
-                float eroded=.58f+.42f*Noise(x,z,moon?.92f:.8f,19+i);
-                float basinScale=Mathf.Lerp(.72f,1.30f,Mathf.InverseLerp(.4f,7.8f,r));
-
-                float depth;
-                float rimHeight;
-                if(moon)
+                // The Moon gets flatter crater floors, steeper walls and brighter broken rims. Actual gameplay
+                // collision remains unchanged: this is presentation geometry only. Relief near the active centre
+                // is deliberately restrained while outer landmark craters can read much deeper from the MOBA camera.
+                for(int i=0;i<craters.Length;i++)
                 {
-                    float sizeWeight=Mathf.InverseLerp(.38f,7.8f,r);
-                    depth=Mathf.Lerp(.12f,.54f,sizeWeight)*Mathf.Lerp(.80f,1.20f,outer);
-                    rimHeight=Mathf.Lerp(.060f,.235f,sizeWeight)*Mathf.Lerp(.86f,1.18f,outer);
-                }
-                else
-                {
-                    depth=.205f*basinScale;
-                    rimHeight=.102f*basinScale;
+                    Vector3 c=craters[i];float dx=x-c.x,dz=z-c.z,r=c.y;
+                    if(Mathf.Abs(dx)>r*1.65f||Mathf.Abs(dz)>r*1.65f)continue;
+                    float angle=Mathf.Atan2(dz,dx);
+                    float wobble=1+.10f*Mathf.Sin(angle*(3+i%4)+i*.71f)+.045f*Mathf.Sin(angle*(7+i%3)+i*.37f);
+                    float q=Mathf.Sqrt(dx*dx+dz*dz)/(r*wobble);
+                    if(q>1.62f)continue;
+
+                    float wallT=Mathf.InverseLerp(.34f,.98f,q);
+                    float bowl=q<=.34f?1f:1f-Mathf.SmoothStep(0f,1f,wallT);
+                    float rimWidth=moon?.095f:.14f;
+                    float rim=Mathf.Exp(-Mathf.Pow((q-1.0f)/rimWidth,2));
+                    float eroded=.58f+.42f*Noise(x,z,moon?.92f:.8f,19+i);
+                    float basinScale=Mathf.Lerp(.72f,1.30f,Mathf.InverseLerp(.4f,7.8f,r));
+
+                    float depth;
+                    float rimHeight;
+                    if(moon)
+                    {
+                        float sizeWeight=Mathf.InverseLerp(.38f,7.8f,r);
+                        depth=Mathf.Lerp(.12f,.54f,sizeWeight)*Mathf.Lerp(.80f,1.20f,outer);
+                        rimHeight=Mathf.Lerp(.060f,.235f,sizeWeight)*Mathf.Lerp(.86f,1.18f,outer);
+                    }
+                    else
+                    {
+                        depth=.205f*basinScale;
+                        rimHeight=.102f*basinScale;
+                    }
+
+                    // Small floor roughness prevents perfect circular cookie-cutter bowls while preserving
+                    // the broad flat-bottomed impact character visible in the reference image.
+                    float floorVariation=moon&&q<.5f?(Noise(x,z,1.35f,67+i)-.5f)*.030f:0f;
+                    relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
+
+                    float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
+                    float shadowStrength=moon?.075f:ArenaVariantRuntime.IsGreenPlanet?.036f:.055f;
+                    float interiorShadow=bowl*shadowStrength*(1f+Mathf.Max(0f,-lightSide)*.70f);
+                    float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
+                    tone+=litRim*eroded-interiorShadow;
+                    craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
+
+                    // Sparse ejecta rays outside rims break the otherwise circular silhouette.
+                    if(q>1f&&q<1.62f)
+                    {
+                        float ejecta=1f-(q-1f)/.62f;
+                        float ray=Mathf.Max(0f,Mathf.Sin(angle*(9+i%5)+i*.63f)*.5f+.5f);
+                        tone+=(moon?.036f:.014f)*ejecta*ray*eroded;
+                    }
                 }
 
-                // Small floor roughness prevents perfect circular cookie-cutter bowls while preserving
-                // the broad flat-bottomed impact character visible in the reference image.
-                float floorVariation=moon&&q<.5f?(Noise(x,z,1.35f,67+i)-.5f)*.030f:0f;
-                relief+=(-bowl*depth+rim*rimHeight)*eroded+floorVariation*bowl;
+                tone-=craterWear*(moon?.025f:ArenaVariantRuntime.IsGreenPlanet?.012f:.022f);
+                dust=Mathf.Max(dust,craterWear*(moon?.36f:ArenaVariantRuntime.IsGreenPlanet?.19f:.26f));
 
-                float lightSide=Mathf.Clamp((dx*.72f-dz*.46f)/Mathf.Max(.3f,r),-1f,1f);
-                float shadowStrength=moon?.075f:ArenaVariantRuntime.IsGreenPlanet?.036f:.055f;
-                float interiorShadow=bowl*shadowStrength*(1f+Mathf.Max(0f,-lightSide)*.70f);
-                float litRim=rim*(moon?.205f:.075f)*(1f+Mathf.Max(0f,lightSide)*.48f);
-                tone+=litRim*eroded-interiorShadow;
-                craterWear=Mathf.Max(craterWear,Mathf.Clamp01(bowl*.86f+rim*.50f));
-
-                // Sparse ejecta rays outside rims break the otherwise circular silhouette.
-                if(q>1f&&q<1.62f)
-                {
-                    float ejecta=1f-(q-1f)/.62f;
-                    float ray=Mathf.Max(0f,Mathf.Sin(angle*(9+i%5)+i*.63f)*.5f+.5f);
-                    tone+=(moon?.036f:.014f)*ejecta*ray*eroded;
-                }
+                float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
+                float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
+                float broken=Mathf.Clamp01(.35f+Mathf.Sin(a0*3+.8f));
+                tone-=frontRing*.045f*broken;
+                relief-=frontRing*.025f*broken;
             }
-
-            tone-=craterWear*(moon?.025f:ArenaVariantRuntime.IsGreenPlanet?.012f:.022f);
-            dust=Mathf.Max(dust,craterWear*(moon?.36f:ArenaVariantRuntime.IsGreenPlanet?.19f:.26f));
-
-            float radial=Mathf.Sqrt(x*x+z*z),a0=Mathf.Atan2(z,x);
-            float frontRing=Mathf.Exp(-Mathf.Pow((radial-(9.2f+.26f*Mathf.Sin(a0*5)))/.26f,2));
-            float broken=Mathf.Clamp01(.35f+Mathf.Sin(a0*3+.8f));
-            tone-=frontRing*.045f*broken;
-            relief-=frontRing*.025f*broken;
 
             if(moon)
             {
@@ -155,6 +171,14 @@ namespace Alterverse.Visuals
                 float maxRelief=Mathf.Lerp(.17f,.28f,outer);
                 relief=Mathf.Clamp(relief,minRelief,maxRelief);
                 tone=Mathf.Clamp(tone,.22f,.74f);
+            }
+            else if(earth)
+            {
+                // Keep the Earth map close to flat while preserving enough large-scale variation to
+                // avoid a synthetic plane. No crater bowls or dune ridges survive this clamp.
+                relief=Mathf.Clamp(relief,-.035f,.045f);
+                tone=Mathf.Clamp(tone,.38f,.62f);
+                dust=0f;
             }
             else
             {
@@ -259,7 +283,7 @@ namespace Alterverse.Visuals
                 }
             }
 
-            float normalStrength=moon?2.4f:1.8f;
+            float normalStrength=moon?2.4f:ArenaVariantRuntime.IsEarth?.85f:1.8f;
             for(int z=0;z<size;z++)for(int x=0;x<size;x++)
             {
                 float dx=(heights[z*size+Mathf.Min(size-1,x+1)]-heights[z*size+Mathf.Max(0,x-1)])/(2*spanX/(size-1));
