@@ -5,7 +5,7 @@ namespace Alterverse.Match
 {
     public sealed class DimensionsFrontVisual:MonoBehaviour
     {
-        [SerializeField]private float arenaHalfWidth=39f,frontLength=68f,smoothing=6f,waveAmplitude=.8f,waveSpeed=1.15f;
+        [SerializeField]private float arenaHalfWidth=39f,frontLength=72f,smoothing=6f,waveAmplitude=.8f,waveSpeed=1.15f;
         [SerializeField]private int segmentCount=25;
         private DimensionsFront front;
         private float targetX,impactZ,impactStrength,impactTime=-99;
