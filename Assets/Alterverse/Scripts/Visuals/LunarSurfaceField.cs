@@ -57,8 +57,7 @@ namespace Alterverse.Visuals
             new(18,2.25f,30),new(20.1f,.82f,31.7f),new(15.8f,.58f,32.1f)
         };
 
-        private static bool IsMoon=>!ArenaVariantRuntime.IsMars&&!ArenaVariantRuntime.IsGreenPlanet&&
-                                   !ArenaVariantRuntime.IsNoxara&&!ArenaVariantRuntime.IsKryon;
+        private static bool IsMoon=>ArenaVariantRuntime.IsMoon;
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
 
         // Kept only as a compatibility hook for callers from older content. The current game has
@@ -222,6 +221,35 @@ namespace Alterverse.Visuals
                     float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.30f,.68f,tone));
                     frost*=1f-dust*.025f;
                     pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
+                }
+                else if(ArenaVariantRuntime.IsEarth)
+                {
+                    float biome=Mathf.PerlinNoise(wx*.055f+18f,wz*.055f+53f);
+                    float vegetation=Mathf.SmoothStep(.35f,.68f,biome);
+                    float water=Mathf.Clamp01((.38f-biome)/.12f);
+                    Color soil=new Color(value*.88f,value*.60f,value*.33f,1f);
+                    Color grass=new Color(value*.43f,value*1.04f,value*.34f,1f);
+                    Color land=Color.Lerp(soil,grass,vegetation);
+                    Color waterColor=new Color(.025f+value*.10f,.18f+value*.18f,.43f+value*.38f,1f);
+                    pixels[i]=Color.Lerp(land,waterColor,water*.94f);
+                }
+                else if(ArenaVariantRuntime.IsPyraxis)
+                {
+                    float lavaNoise=Mathf.Abs(Mathf.PerlinNoise(wx*.085f+41f,wz*.085f+17f)-.5f);
+                    float lavaVein=1f-Mathf.SmoothStep(.025f,.115f,lavaNoise);
+                    float secondary=Mathf.Abs(Mathf.PerlinNoise(wx*.16f+9f,wz*.16f+71f)-.5f);
+                    lavaVein=Mathf.Max(lavaVein,(1f-Mathf.SmoothStep(.018f,.072f,secondary))*.55f);
+                    Color basalt=new Color(value*.17f,value*.105f,value*.085f,1f);
+                    Color molten=Color.Lerp(new Color(.92f,.10f,.008f,1f),new Color(1f,.58f,.035f,1f),lavaVein);
+                    pixels[i]=Color.Lerp(basalt,molten,Mathf.Clamp01(lavaVein*.92f));
+                }
+                else if(ArenaVariantRuntime.IsNeptune)
+                {
+                    float abyss=Mathf.PerlinNoise(wx*.075f+101f,wz*.075f+37f);
+                    float glow=Mathf.Pow(Mathf.Clamp01((abyss-.62f)/.38f),2f);
+                    Color deep=new Color(value*.055f,value*.13f,value*.34f,1f);
+                    Color blue=new Color(value*.12f,value*.31f,value*.72f,1f);
+                    pixels[i]=Color.Lerp(deep,blue,.22f+glow*.58f);
                 }
                 else
                 {
