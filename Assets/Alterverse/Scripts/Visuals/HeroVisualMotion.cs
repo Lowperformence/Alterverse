@@ -247,7 +247,7 @@ namespace Alterverse.Visuals
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
             // Keep the upper body in a composed combat guard while the legs carry the gait.
-            // Shoulder counter-swing made the weapon/fists wobble on every step.
+            // Keep the shoulder swing small and time-driven so weapons remain composed.
             // Never feed a later presentation component's pose back into next frame's smoothing.
             Quaternion armBeforeL=displayedArmL,armBeforeR=displayedArmR;
             if(armL!=null)armL.localRotation=armBeforeL;
@@ -307,7 +307,8 @@ namespace Alterverse.Visuals
                         readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
                     // Nyra keeps the rifle's authored two-handed shoulder aim.
                 }
-                readyL.x+=guardLift;readyR.x+=guardLift;
+                float shoulderSwing=Mathf.Sin(t*1.2f)*3f*strideWeight*(hero==HeroId.Nyra?.25f:hero==HeroId.Veyr?.4f:1f);
+                readyL.x+=guardLift+shoulderSwing;readyR.x+=guardLift-shoulderSwing;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
                 // Keep Veyr's paired blades tilted toward center so they cross in front of him.
