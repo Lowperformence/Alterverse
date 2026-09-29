@@ -15,7 +15,7 @@ namespace Alterverse.Visuals
         private static MeshRenderer groundRenderer;
         private static Material groundMaterial;
         private static Texture2D groundTexture;
-        private static int worldInstanceId;
+        private static GameObject activeWorld;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Install()
@@ -37,11 +37,10 @@ namespace Alterverse.Visuals
             GameObject world=GameObject.Find("DF_MatchWorld");
             if(world==null)return;
 
-            int currentWorld=world.GetInstanceID();
-            if(worldInstanceId!=currentWorld||groundRenderer==null)
+            if(activeWorld!=world||groundRenderer==null)
             {
                 Release();
-                worldInstanceId=currentWorld;
+                activeWorld=world;
                 groundRenderer=FindGroundRenderer(world.transform);
                 if(groundRenderer!=null)BuildGroundMaterial();
             }
@@ -176,9 +175,9 @@ namespace Alterverse.Visuals
 
         private static void ReleaseIfWorldChanged()
         {
-            if(worldInstanceId==0)return;
+            if(activeWorld==null)return;
             GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world==null||world.GetInstanceID()!=worldInstanceId)Release();
+            if(world==null||world!=activeWorld)Release();
         }
 
         private static void Release()
@@ -188,7 +187,7 @@ namespace Alterverse.Visuals
             groundRenderer=null;
             groundMaterial=null;
             groundTexture=null;
-            worldInstanceId=0;
+            activeWorld=null;
         }
     }
 }
