@@ -141,6 +141,13 @@ namespace Alterverse.Combat
                 (DamageGate != null && !DamageGate()))
                 return;
 
+            // Flux boosts all outgoing damage from a member of the capturing team, including
+            // abilities and minion attacks that bypass HeroCombatRules.Damage.
+            PlanetBuffReceiver attackerBuff = source != null
+                ? source.GetComponentInParent<PlanetBuffReceiver>() : null;
+            if (attackerBuff != null)
+                amount *= attackerBuff.OutgoingDamageMultiplier;
+
             Alterverse.AI.MobaBotBrain bot = GetComponent<Alterverse.AI.MobaBotBrain>();
             TeamMember team = GetComponent<TeamMember>();
             if (bot != null && team != null && team.Team == 1)
