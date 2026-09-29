@@ -136,10 +136,11 @@ namespace Alterverse.Visuals
         private void ApplyColorway(HeroId hero,int variant)
         {
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
-            Color glow=item.Glow;
-            float tint=variant==1?.78f:variant==3?.72f:variant==2?.68f:.62f;
-            float emission=variant==1?4.2f:variant==3?3.0f:variant==2?2.6f:2.15f;
-            float whiteMix=variant==1?.30f:variant==2?.10f:variant==3?.05f:.14f;
+            bool titanForgeBodyOnly=hero==HeroId.Rook&&variant==1;
+            Color glow=titanForgeBodyOnly?new Color(1f,.015f,.008f):item.Glow;
+            float tint=titanForgeBodyOnly?.94f:variant==1?.78f:variant==3?.72f:variant==2?.68f:.62f;
+            float emission=titanForgeBodyOnly?5.6f:variant==1?4.2f:variant==3?3.0f:variant==2?2.6f:2.15f;
+            float whiteMix=titanForgeBodyOnly?.015f:variant==1?.30f:variant==2?.10f:variant==3?.05f:.14f;
             Color accent=Color.Lerp(glow,Color.white,whiteMix);
 
             for(int i=0;i<baseRenderers.Count;i++)
@@ -147,6 +148,11 @@ namespace Alterverse.Visuals
                 RendererState state=baseRenderers[i];
                 Renderer renderer=state.Renderer;
                 if(renderer==null)continue;
+
+                // TITANFORGE: recolor only the two authored gauntlet shells. Knuckles and every
+                // other detail renderer keep their original materials/colors exactly as authored.
+                if(titanForgeBodyOnly&&!IsTitanForgeBody(renderer.transform))continue;
+
                 Material[] styled=new Material[state.Original.Length];
                 for(int m=0;m<state.Original.Length;m++)
                 {
@@ -157,8 +163,8 @@ namespace Alterverse.Visuals
                     Color target=Color.Lerp(baseColor,accent,tint);
                     target.a=baseColor.a;
                     WriteColor(material,target);
-                    if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),variant==1?.78f:.55f));
-                    if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),variant==1?.90f:.76f));
+                    if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),titanForgeBodyOnly?.70f:variant==1?.78f:.55f));
+                    if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),titanForgeBodyOnly?.86f:variant==1?.90f:.76f));
                     if(material.HasProperty("_EmissionColor"))
                     {
                         material.EnableKeyword("_EMISSION");
@@ -169,6 +175,12 @@ namespace Alterverse.Visuals
                 state.Styled=styled;
                 renderer.sharedMaterials=styled;
             }
+        }
+
+        private static bool IsTitanForgeBody(Transform t)
+        {
+            if(t==null)return false;
+            return t.name=="DF_GauntletL"||t.name=="DF_GauntletR";
         }
 
         private void RestoreMaterialsOnly()
