@@ -36,7 +36,10 @@ namespace Alterverse.Shop
             new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",0,new Color(.88f,.28f,.12f)),
             new(ArenaVariant.GreenPlanet,"GREEN PLANET","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
             new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
-            new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f))
+            new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
+            new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",0,new Color(.24f,.68f,.31f)),
+            new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",0,new Color(1f,.34f,.04f)),
+            new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f))
         };
 
         public static ArenaShopItem For(ArenaVariant variant)
