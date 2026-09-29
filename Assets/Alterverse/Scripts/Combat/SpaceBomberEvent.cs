@@ -41,7 +41,10 @@ namespace Alterverse.Combat
             // because this value is only used to decorrelate the local visual-event RNG seed.
             rng=new System.Random(unchecked(Environment.TickCount^GetHashCode()));
             BuildSharedMaterials();
-            engineLoop=BuildBomberEngineLoop();
+            // Load the same authored flyby for every arena at the point the bomber is created.
+            // Resources clips are shared Unity assets and must never be destroyed by a match.
+            engineLoop=Resources.Load<AudioClip>("Audio/BombJetFlyby");
+            if(engineLoop==null)Debug.LogWarning("DIMENSIONS FRONT: BombJetFlyby is missing from Resources/Audio.");
             if(!materialsReady)
             {
                 Debug.LogError("DIMENSIONS FRONT: Space Bomber disabled because required shaders are unavailable.");
@@ -163,56 +166,6 @@ namespace Alterverse.Combat
             return m;
         }
 
-        private static AudioClip BuildBomberEngineLoop()
-        {
-            const int rate=44100;
-            const float seconds=9.0f;
-            int length=Mathf.CeilToInt(rate*seconds);
-            float[] samples=new float[length];
-
-            uint noiseState=0xA511E9B3u;
-            float whinePhase=0f,harmonicPhase=0f,edgePhase=0f,airState=0f;
-
-            for(int i=0;i<length;i++)
-            {
-                float t=i/(float)rate;
-
-                noiseState^=noiseState<<13;
-                noiseState^=noiseState>>17;
-                noiseState^=noiseState<<5;
-                float white=((noiseState&0xFFFF)/32767.5f)-1f;
-
-                // High, narrow turbine/ion shriek: deliberately more "hiiiiii" than "huuuu".
-                // Keep modulation tiny so it never reads like a revving road vehicle.
-                float whineHz=1760f
-                    +Mathf.Sin(t*Mathf.PI*2f*.41f)*24f
-                    +Mathf.Sin(t*Mathf.PI*2f*1.12f)*8f;
-                whinePhase+=Mathf.PI*2f*whineHz/rate;
-
-                float harmonicHz=3180f+Mathf.Sin(t*Mathf.PI*2f*.63f)*34f;
-                harmonicPhase+=Mathf.PI*2f*harmonicHz/rate;
-
-                float edgeHz=2360f+Mathf.Sin(t*Mathf.PI*2f*.87f)*18f;
-                edgePhase+=Mathf.PI*2f*edgeHz/rate;
-
-                float carrier=Mathf.Sin(whinePhase)*.50f;
-                float overtone=Mathf.Sin(harmonicPhase+.08f*Mathf.Sin(whinePhase*.5f))*.23f;
-                float edge=Mathf.Sin(edgePhase)*.17f;
-
-                // Thin high-frequency airflow for an aggressive military fly-by, not a vacuum-cleaner bed.
-                airState+=(white-airState)*.10f;
-                float hiss=(white-airState)*.075f;
-
-                float breath=.985f+.015f*Mathf.Sin(t*Mathf.PI*2f*.52f);
-                float mixed=(carrier+overtone+edge+hiss)*breath;
-                samples[i]=Mathf.Clamp(mixed/(1f+Mathf.Abs(mixed)*.52f),-1f,1f);
-            }
-
-            AudioClip clip=AudioClip.Create("DF_BomberHighIonShriek",length,1,rate,false);
-            clip.SetData(samples,0);
-            return clip;
-        }
-
         private void OnDestroy()
         {
             if(owner==this)owner=null;
@@ -221,17 +174,8 @@ namespace Alterverse.Combat
             if(energyMaterial!=null)Destroy(energyMaterial);
             if(warningMaterial!=null)Destroy(warningMaterial);
             if(bombMaterial!=null)Destroy(bombMaterial);
-            if(engineLoop!=null)
-            {
-#if UNITY_EDITOR
-                // Unity can treat the generated AudioClip as a persistent asset during Play Mode teardown.
-                // Destroying a persistent asset is forbidden and causes the Console error.
-                if(!UnityEditor.EditorUtility.IsPersistent(engineLoop))Destroy(engineLoop);
-#else
-                Destroy(engineLoop);
-#endif
-                engineLoop=null;
-            }
+            // The flyby is a shared Resources asset; Unity owns its lifetime.
+            engineLoop=null;
         }
     }
 
@@ -324,7 +268,7 @@ namespace Alterverse.Combat
             if(clip==null)return;
             engineAudio=gameObject.AddComponent<AudioSource>();
             engineAudio.clip=clip;
-            engineAudio.loop=false;
+            engineAudio.loop=true;
             engineAudio.playOnAwake=false;
             // Distance is driven by the controlled hero, not by the elevated top-down camera/AudioListener.
             // This makes the fly-by audible only in the player's immediate battlefield area.
@@ -337,8 +281,6 @@ namespace Alterverse.Combat
             engineAudio.priority=108;
             engineAudio.volume=.154f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
             engineAudio.pitch=1.02f;
-            AudioHighPassFilter high=gameObject.AddComponent<AudioHighPassFilter>();high.cutoffFrequency=900f;high.highpassResonanceQ=1.18f;
-            AudioLowPassFilter low=gameObject.AddComponent<AudioLowPassFilter>();low.cutoffFrequency=6200f;low.lowpassResonanceQ=1.06f;
             engineAudio.Play();
         }
 
