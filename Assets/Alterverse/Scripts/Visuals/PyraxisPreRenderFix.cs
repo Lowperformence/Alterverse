@@ -69,7 +69,7 @@ namespace Alterverse.Visuals
         {
             if(groundRenderer==null||groundRenderer.sharedMaterial==null)return;
             groundTexture=BuildOrangeBlackTexture(1024,896);
-            groundMaterial=new Material(groundRenderer.sharedMaterial){name="DF_Pyraxis_FinalOrangeBlackGround"};
+            groundMaterial=new Material(groundRenderer.sharedMaterial){name="DF_Pyraxis_FinalCowLavaGround"};
             if(groundMaterial.HasProperty("_BaseMap"))groundMaterial.SetTexture("_BaseMap",groundTexture);
             if(groundMaterial.HasProperty("_MainTex"))groundMaterial.SetTexture("_MainTex",groundTexture);
             if(groundMaterial.HasProperty("_BaseColor"))groundMaterial.SetColor("_BaseColor",Color.white);
@@ -81,7 +81,7 @@ namespace Alterverse.Visuals
         {
             Texture2D texture=new(width,height,TextureFormat.RGBA32,true,false)
             {
-                name="DF_Pyraxis_FinalOrangeBlackAlbedo",
+                name="DF_Pyraxis_FinalCowLavaAlbedo",
                 wrapMode=TextureWrapMode.Clamp,
                 filterMode=FilterMode.Trilinear,
                 anisoLevel=8
@@ -95,38 +95,53 @@ namespace Alterverse.Visuals
                 {
                     float wx=Mathf.Lerp(-48f,48f,x/(float)(width-1));
 
-                    // Much larger and more numerous orange islands than the previous pass.
-                    // Very low-frequency fields create broad cow-like patches instead of little dots or veins.
-                    float macro=Mathf.PerlinNoise(wx*.021f+31f,wz*.023f+73f);
-                    float broadWarp=Mathf.PerlinNoise(wx*.043f+9f,wz*.039f+47f);
-                    float secondary=Mathf.PerlinNoise(wx*.028f+113f,wz*.031f+19f);
-                    float field=macro*.58f+broadWarp*.24f+secondary*.18f;
-                    float orange=Mathf.SmoothStep(.405f,.535f,field);
+                    // Very broad overlapping noise fields create large, rounded, irregular islands.
+                    // The low frequencies are intentional: Pyraxis should read like orange/black cow spots,
+                    // never like thin veins, cracks or little dots.
+                    float blobA=Mathf.PerlinNoise(wx*.016f+21f,wz*.018f+77f);
+                    float blobB=Mathf.PerlinNoise(wx*.022f+91f,wz*.020f+13f);
+                    float blobC=Mathf.PerlinNoise(wx*.029f+143f,wz*.026f+51f);
+                    float cowField=blobA*.50f+blobB*.32f+blobC*.18f;
+                    float orange=Mathf.SmoothStep(.335f,.475f,cowField);
 
-                    // Break only the edges, not the bodies of the patches, so individual orange fields stay large.
-                    float edge=Mathf.PerlinNoise(wx*.095f+91f,wz*.088f+17f);
-                    orange=Mathf.Clamp01(orange+(edge-.5f)*.10f);
+                    // Mild edge warp keeps the large bodies intact while preventing perfect round blobs.
+                    float edgeWarp=Mathf.PerlinNoise(wx*.067f+44f,wz*.061f+99f);
+                    orange=Mathf.Clamp01(orange+(edgeWarp-.5f)*.075f);
 
-                    float rock=Mathf.PerlinNoise(wx*.19f+11f,wz*.19f+53f);
-                    float darkValue=.78f+(rock-.5f)*.12f;
-                    Color basalt=new(.028f*darkValue,.015f*darkValue,.011f*darkValue,1f);
+                    float rock=Mathf.PerlinNoise(wx*.18f+11f,wz*.18f+53f);
+                    float darkValue=.80f+(rock-.5f)*.10f;
+                    Color basalt=new(.026f*darkValue,.014f*darkValue,.010f*darkValue,1f);
                     Color orangeBasalt=Color.Lerp(
-                        new Color(.74f,.105f,.004f,1f),
-                        new Color(1f,.315f,.010f,1f),
-                        Mathf.Clamp01(.25f+rock*.62f));
+                        new Color(.78f,.115f,.004f,1f),
+                        new Color(1f,.35f,.012f,1f),
+                        Mathf.Clamp01(.28f+rock*.60f));
 
-                    // The complete base / healing-spawn footprint is intentionally lava- and orange-free.
-                    // Larger radii also cover the station geometry around the exact spawn plate.
+                    // Keep the complete base and healing-spawn footprints clean on both sides.
                     float baseProtection=Mathf.Max(
-                        Protection(wx,wz,-36f,0f,8.4f,10.7f),
-                        Protection(wx,wz, 36f,0f,8.4f,10.7f));
+                        Protection(wx,wz,-36f,0f,8.8f,11.8f),
+                        Protection(wx,wz, 36f,0f,8.8f,11.8f));
                     float spawnProtection=Mathf.Max(
-                        Protection(wx,wz,-27.5f,0f,6.2f,8.6f),
-                        Protection(wx,wz, 27.5f,0f,6.2f,8.6f));
+                        Protection(wx,wz,-27.5f,0f,7.2f,9.8f),
+                        Protection(wx,wz, 27.5f,0f,7.2f,9.8f));
                     float protectedArea=Mathf.Clamp01(Mathf.Max(baseProtection,spawnProtection));
                     orange*=1f-protectedArea;
 
-                    pixels[y*width+x]=Color.Lerp(basalt,orangeBasalt,orange*.98f);
+                    Color ground=Color.Lerp(basalt,orangeBasalt,orange*.98f);
+
+                    // True molten lava is also cow-spotted. It exists only in the middle half of the map,
+                    // uses even broader blobs, and never reaches either protected spawn/base footprint.
+                    float moltenA=Mathf.PerlinNoise(wx*.032f+201f,wz*.036f+37f);
+                    float moltenB=Mathf.PerlinNoise(wx*.049f+17f,wz*.043f+151f);
+                    float moltenField=moltenA*.70f+moltenB*.30f;
+                    float moltenMask=Mathf.SmoothStep(.535f,.665f,moltenField);
+                    float centralBand=1f-Mathf.SmoothStep(18.0f,21.0f,Mathf.Abs(wx));
+                    moltenMask*=centralBand*(1f-protectedArea);
+
+                    float hot=Mathf.SmoothStep(.34f,.88f,moltenMask);
+                    Color molten=Color.Lerp(
+                        new Color(.94f,.055f,.002f,1f),
+                        new Color(1f,.63f,.025f,1f),hot);
+                    pixels[y*width+x]=Color.Lerp(ground,molten,Mathf.Clamp01(moltenMask*.98f));
                 }
             }
 
@@ -166,10 +181,10 @@ namespace Alterverse.Visuals
         private static bool IsBaseOrSpawn(Vector3 p)
         {
             Vector2 point=new(p.x,p.z);
-            if((point-new Vector2(-36f,0f)).sqrMagnitude<10.7f*10.7f)return true;
-            if((point-new Vector2( 36f,0f)).sqrMagnitude<10.7f*10.7f)return true;
-            if((point-new Vector2(-27.5f,0f)).sqrMagnitude<8.6f*8.6f)return true;
-            if((point-new Vector2( 27.5f,0f)).sqrMagnitude<8.6f*8.6f)return true;
+            if((point-new Vector2(-36f,0f)).sqrMagnitude<11.8f*11.8f)return true;
+            if((point-new Vector2( 36f,0f)).sqrMagnitude<11.8f*11.8f)return true;
+            if((point-new Vector2(-27.5f,0f)).sqrMagnitude<9.8f*9.8f)return true;
+            if((point-new Vector2( 27.5f,0f)).sqrMagnitude<9.8f*9.8f)return true;
             return false;
         }
 
