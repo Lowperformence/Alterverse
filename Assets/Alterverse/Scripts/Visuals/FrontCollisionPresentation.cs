@@ -33,6 +33,8 @@ namespace Alterverse.Visuals
             for(int i=0;i<Count;i++)
             {
                 fragments[i]=Part("DF_ZeroSuspendedFault",fracture,stone);
+                // Keep the transform as an effect anchor, but do not render decorative rocks on the moving team-progress front.
+                var fragmentRenderer=fragments[i].GetComponent<Renderer>();if(fragmentRenderer!=null)fragmentRenderer.enabled=false;
                 braces[i]=Part("DF_LumenStabilizer",brace,energy);
                 GameObject vein=new("DF_FrontGroundBranch");vein.transform.SetParent(transform,false);
                 veins[i]=vein.AddComponent<LineRenderer>();veins[i].sharedMaterial=energy;veins[i].useWorldSpace=true;
