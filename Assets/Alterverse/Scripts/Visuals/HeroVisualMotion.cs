@@ -307,7 +307,7 @@ namespace Alterverse.Visuals
                         readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
                     // Nyra keeps the rifle's authored two-handed shoulder aim.
                 }
-                float shoulderSwing=Mathf.Sin(t*1.2f)*3f*strideWeight*(hero==HeroId.Nyra?.25f:hero==HeroId.Veyr?.4f:1f);
+                float shoulderSwing=Mathf.Sin(t*1.2f)*9f*strideWeight*(hero==HeroId.Nyra?.25f:hero==HeroId.Veyr?.45f:1f);
                 readyL.x+=guardLift+shoulderSwing;readyR.x+=guardLift-shoulderSwing;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
@@ -353,8 +353,8 @@ namespace Alterverse.Visuals
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
             float turnCounter=Mathf.Clamp(-turnRate*.025f,-12f,12f);
-            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f+Mathf.Sin(t*1.2f)*5f*(attacking||Dashing?0f:1f),turnCounter-Mathf.Sin(t*1.2f+Mathf.PI*.5f)*5f*(attacking||Dashing?0f:1f),-sway*.45f);
-            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight+Mathf.Sin(t*1.2f)*7f*(attacking||Dashing?0f:1f),-sway*.5f);
+            if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,turnCounter,-sway*.45f);
+            if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
             if(orbitL!=null){orbitL.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.08f,.03f);orbitL.localRotation=Quaternion.Euler(38,t*35,-35);}
             if(orbitR!=null){orbitR.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.08f,.03f);orbitR.localRotation=Quaternion.Euler(38,-t*35,35);}
             if(orb!=null)orb.localPosition=orbRest+Vector3.up*(Mathf.Sin(t*2)*.025f+preparation*.08f);
@@ -517,11 +517,15 @@ namespace Alterverse.Visuals
                 Quaternion lowerSpinePose=Quaternion.Euler(-lean*.18f+attackPitch*.28f-recoil*.45f-hitTorso*.25f,
                     -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
                     -sway*.24f-attackRoll*.30f+hitFromSide*hitWeight*3f);
-                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f,
-                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f,
+                // Animate the shared joints so the chest, shoulders, neck and face move together.
+                float idleRock=attacking||Dashing?0f:1f;
+                float rockForward=Mathf.Sin(t*1.2f)*idleRock;
+                float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
+                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*8f,
+                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*9f,
                     sway*.22f+attackRoll*.55f-hitFromSide*hitWeight*4f);
                 Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f+hitTorso*.32f,
-                    -turnCounter*.20f-attackTwist*.35f,
+                    -turnCounter*.20f-attackTwist*.35f+rockForward*12f,
                     -sway*.10f-attackRoll*.35f);
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
