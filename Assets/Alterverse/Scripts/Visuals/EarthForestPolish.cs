@@ -6,13 +6,14 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Extra Earth-only visual dressing: denser mixed forest, pointed conifers in several sizes,
-    /// and a deliberately flat untextured material for the blue water pools.
-    /// All generated trees are collider-free and are rejected when they would overlap water.
+    /// deliberately flat blue water pools, and worn brown soil around gameplay structures.
+    /// All generated dressing is collider-free and presentation-only.
     /// </summary>
     public sealed class EarthForestPolish : MonoBehaviour
     {
         const string ManagerName="DF_EarthForestPolish";
         const string ForestRootName="DF_EarthForestExtra";
+        const string SoilRootName="DF_EarthBuildingSoil";
 
         static readonly Vector2[] WaterCenters=
         {
@@ -39,10 +40,14 @@ namespace Alterverse.Visuals
 
         static bool installed;
         Transform forestRoot;
+        Transform soilRoot;
         readonly List<Material> materials=new();
         readonly List<Mesh> meshes=new();
+        readonly HashSet<Vector2Int> soilSites=new();
         Material waterMaterial;
+        Material soilDark,soilMid,soilLight;
         float nextWaterRefresh;
+        float nextSoilRefresh;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics(){installed=false;}
@@ -75,6 +80,12 @@ namespace Alterverse.Visuals
                 nextWaterRefresh=Time.unscaledTime+.75f;
                 ApplyFlatWater(world.transform);
             }
+
+            if(soilRoot!=null&&Time.unscaledTime>=nextSoilRefresh)
+            {
+                nextSoilRefresh=Time.unscaledTime+.75f;
+                RefreshBuildingSoil(world.transform);
+            }
         }
 
         void BuildForest(Transform world)
@@ -84,6 +95,10 @@ namespace Alterverse.Visuals
             forestRoot=root.transform;
             forestRoot.SetParent(world,false);
 
+            GameObject soil=new(SoilRootName);
+            soilRoot=soil.transform;
+            soilRoot.SetParent(forestRoot,false);
+
             Material bark=Mat("DF_EarthExtra_Bark",new Color(.17f,.075f,.026f,1f),.04f,.18f);
             Material barkLight=Mat("DF_EarthExtra_BirchBark",new Color(.72f,.68f,.55f,1f),.02f,.24f);
             Material broadDark=Mat("DF_EarthExtra_BroadDark",new Color(.045f,.25f,.035f,1f),0f,.16f);
@@ -91,7 +106,12 @@ namespace Alterverse.Visuals
             Material pineDark=Mat("DF_EarthExtra_PineDark",new Color(.025f,.16f,.045f,1f),0f,.13f);
             Material pineLight=Mat("DF_EarthExtra_PineLight",new Color(.055f,.28f,.07f,1f),0f,.15f);
 
-            int built=0;
+            // Strong, visibly brown earth. Three close tones are layered so the ground reads as
+            // compacted/worn soil rather than one artificial-looking painted circle.
+            soilDark=Mat("DF_Earth_Soil_Dark",new Color(.22f,.070f,.020f,1f),0f,.08f);
+            soilMid=Mat("DF_Earth_Soil_Mid",new Color(.34f,.125f,.030f,1f),0f,.10f);
+            soilLight=Mat("DF_Earth_Soil_Worn",new Color(.44f,.205f,.055f,1f),0f,.12f);
+
             for(int i=0;i<TreeSites.Length;i++)
             {
                 Vector2 site=TreeSites[i];
@@ -106,7 +126,6 @@ namespace Alterverse.Visuals
                     case 3: BuildPine(p,size*.78f,bark,pineLight,pineDark); break;
                     default: BuildBroadleaf(p,size*1.12f,bark,broadLight,broadDark); break;
                 }
-                built++;
             }
 
             // Small forest groups add density without creating a uniform grid.
@@ -125,6 +144,67 @@ namespace Alterverse.Visuals
                     else BuildBroadleaf(p,size,bark,broadDark,broadLight);
                 }
             }
+
+            RefreshBuildingSoil(world);
+        }
+
+        void RefreshBuildingSoil(Transform world)
+        {
+            if(soilRoot==null||soilDark==null||soilMid==null||soilLight==null)return;
+
+            // Towers can be created after the environment pass, therefore this is refreshed at
+            // runtime and each world-space site is added only once.
+            TowerVisualShell[] towers=FindObjectsByType<TowerVisualShell>(FindObjectsSortMode.None);
+            for(int i=0;i<towers.Length;i++)
+            {
+                TowerVisualShell tower=towers[i];
+                if(tower==null||!IsUnderWorld(tower.transform,world))continue;
+                AddSoilSite(tower.transform.position,8.2f,7.2f,"Tower");
+            }
+
+            // Reality cores are the large team-base structures, so their worn soil area is wider.
+            RealityCoreShell[] cores=FindObjectsByType<RealityCoreShell>(FindObjectsSortMode.None);
+            for(int i=0;i<cores.Length;i++)
+            {
+                RealityCoreShell core=cores[i];
+                if(core==null||!IsUnderWorld(core.transform,world))continue;
+                AddSoilSite(core.transform.position,12.0f,10.2f,"Base");
+            }
+        }
+
+        static bool IsUnderWorld(Transform item,Transform world)
+        {
+            return item!=null&&world!=null&&(item==world||item.IsChildOf(world));
+        }
+
+        void AddSoilSite(Vector3 worldPosition,float width,float depth,string label)
+        {
+            Vector2Int key=new(Mathf.RoundToInt(worldPosition.x*2f),Mathf.RoundToInt(worldPosition.z*2f));
+            if(!soilSites.Add(key))return;
+
+            Vector3 surfaceWorld=LunarSurfaceField.Surface(worldPosition.x,worldPosition.z);
+            Vector3 center=soilRoot.InverseTransformPoint(surfaceWorld);
+            float angle=Mathf.Repeat(worldPosition.x*17.3f+worldPosition.z*9.7f,360f);
+            string suffix=key.x+"_"+key.y;
+
+            // Broad dark edge establishes a strong brown footprint around the structure.
+            GameObject outer=Primitive(PrimitiveType.Cylinder,label+"SoilOuter_"+suffix,soilRoot,
+                center+Vector3.up*.018f,new Vector3(width,.010f,depth),soilDark);
+            outer.transform.localRotation=Quaternion.Euler(0,angle,0);
+
+            // Offset lobes break the perfect ellipse and make the patch look organically worn.
+            GameObject lobeA=Primitive(PrimitiveType.Cylinder,label+"SoilLobeA_"+suffix,soilRoot,
+                center+new Vector3(width*.11f,.030f,depth*.055f),new Vector3(width*.76f,.009f,depth*.70f),soilMid);
+            lobeA.transform.localRotation=Quaternion.Euler(0,angle+23f,0);
+
+            GameObject lobeB=Primitive(PrimitiveType.Cylinder,label+"SoilLobeB_"+suffix,soilRoot,
+                center+new Vector3(-width*.12f,.034f,-depth*.07f),new Vector3(width*.67f,.008f,depth*.62f),soilMid);
+            lobeB.transform.localRotation=Quaternion.Euler(0,angle-31f,0);
+
+            // Brighter compacted center directly under the building gives the soil visual depth.
+            GameObject worn=Primitive(PrimitiveType.Cylinder,label+"SoilWorn_"+suffix,soilRoot,
+                center+Vector3.up*.043f,new Vector3(width*.48f,.007f,depth*.44f),soilLight);
+            worn.transform.localRotation=Quaternion.Euler(0,angle+11f,0);
         }
 
         bool OverWater(Vector2 p)
@@ -278,6 +358,9 @@ namespace Alterverse.Visuals
         {
             if(forestRoot!=null)Object.Destroy(forestRoot.gameObject);
             forestRoot=null;
+            soilRoot=null;
+            soilSites.Clear();
+            soilDark=null;soilMid=null;soilLight=null;
             for(int i=0;i<meshes.Count;i++)if(meshes[i]!=null)Object.Destroy(meshes[i]);
             meshes.Clear();
             for(int i=0;i<materials.Count;i++)if(materials[i]!=null)Object.Destroy(materials[i]);
