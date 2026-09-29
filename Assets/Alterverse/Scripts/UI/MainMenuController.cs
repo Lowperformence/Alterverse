@@ -821,7 +821,7 @@ namespace Alterverse.UI
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Arena Collection",theme.Heading);
             theme.Label(new Rect(Left,316,ContentWidth,28),"Unlock arenas here. Arena selection and shuffle are handled from PLAY.",theme.Small,true);
-            int count=ArenaShopCatalog.Items.Length;
+            int count=ArenaShopCatalog.PurchasableItems.Length;
             const int visible=3;
             int maxStart=Mathf.Max(0,count-visible);
             mapShopPageStart=Mathf.Clamp(mapShopPageStart,0,maxStart);
@@ -832,7 +832,7 @@ namespace Alterverse.UI
                 int index=mapShopPageStart+slot;
                 if(index>=count)break;
 
-                ArenaShopItem item=ArenaShopCatalog.Items[index];
+                ArenaShopItem item=ArenaShopCatalog.PurchasableItems[index];
                 ArenaVariant arena=item.Variant;
                 bool owned=ArenaUnlockInventory.Owned(arena);
                 float x=Left+slot*(cardW+gap);
@@ -1357,6 +1357,5 @@ namespace Alterverse.UI
         }
     }
 }
-
 
 
