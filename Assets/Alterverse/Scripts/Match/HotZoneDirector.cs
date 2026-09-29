@@ -9,8 +9,9 @@ namespace Alterverse.Match
 {
     /// <summary>
     /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
-    /// stays active for 30 seconds, and can also relocate inside the central 30% of the arena.
-    /// Every hero inside scores independently for their team, even while both teams occupy the zone.
+    /// stays active for 30 seconds, and relocates randomly with a strong bias toward
+    /// the middle third of the arena. Every hero inside scores independently for their
+    /// team, even while both teams occupy the zone.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
     {
@@ -26,6 +27,9 @@ namespace Alterverse.Match
         private const float ArenaHalfHeight=36f;
         private const float ZoneEdgeMargin=1.25f;
         private const float SpawnPadX=27.5f;
+        private const float MiddleThirdSpawnChance=.70f;
+        private const float InnerRingRadiusScale=.76f;
+        private const float RingAlpha=.42f;
         private static readonly Color HotZoneGreen=new(.38f,.96f,.28f,1f);
 
         private enum State { Waiting, Active, Finished }
@@ -36,9 +40,7 @@ namespace Alterverse.Match
         private float elapsed,nextOpenAt=SpawnInterval,activeElapsed,zeroTime,lumenTime,nextScan;
         private int zeroInside,lumenInside;
         private GameObject zoneRoot;
-        private Transform zoneDisc;
-        private Mesh zoneMesh;
-        private Renderer zoneRenderer;
+        private Mesh outerRingMesh,innerRingMesh;
         private Material zoneMaterial;
         private DimensionsFront front;
         private System.Random rng;
@@ -124,57 +126,73 @@ namespace Alterverse.Match
 
         private Vector3 ChooseSpawnPosition()
         {
-            // Keep the entire capture circle inside the arena while allowing more of
-            // the side lanes than the original central-only rectangle.
             float xLimit=ArenaHalfWidth-Radius-ZoneEdgeMargin;
             float zLimit=ArenaHalfHeight-Radius-ZoneEdgeMargin;
-            Vector3 best=default;
-            float bestScore=float.NegativeInfinity;
-            bool found=false;
 
-            // Every other opening draws from the middle 30% of both map axes.
-            // Try the wider area only if arena structures block every central candidate.
-            float centerXLimit=ArenaHalfWidth*.30f;
-            float centerZLimit=ArenaHalfHeight*.30f;
-            bool preferCenter=(occurrence%2)==0;
-            for(int region=0;region<(preferCenter?2:1)&&!found;region++)
+            // The middle third of a full axis spans one third of the arena width,
+            // so its half-extent is one third of the arena half-extent.
+            float centerXLimit=ArenaHalfWidth/3f;
+            float centerZLimit=ArenaHalfHeight/3f;
+            bool preferCenter=rng.NextDouble()<MiddleThirdSpawnChance;
+
+            Vector3 spawn;
+            if(preferCenter&&TryChooseRandomSpawn(centerXLimit,centerZLimit,true,out spawn))
+                return RememberSpawn(spawn);
+
+            if(TryChooseRandomSpawn(xLimit,zLimit,true,out spawn))
+                return RememberSpawn(spawn);
+
+            // If recent positions leave no room, relax only the repeat-avoidance rule.
+            if(preferCenter&&TryChooseRandomSpawn(centerXLimit,centerZLimit,false,out spawn))
+                return RememberSpawn(spawn);
+            if(TryChooseRandomSpawn(xLimit,zLimit,false,out spawn))
+                return RememberSpawn(spawn);
+
+            // Rare crowded arenas still get a deterministic safe fallback.
+            Vector3[] anchors={
+                LunarSurfaceField.Surface(0f,0f),
+                LunarSurfaceField.Surface(0f,12f),
+                LunarSurfaceField.Surface(0f,-12f)};
+            foreach(Vector3 anchor in anchors)
+                if(IsSpawnPositionSafe(anchor))return RememberSpawn(anchor);
+            return RememberSpawn(anchors[0]);
+        }
+
+        private bool TryChooseRandomSpawn(float xLimit,float zLimit,bool avoidRecent,out Vector3 spawn)
+        {
+            for(int attempt=0;attempt<72;attempt++)
             {
-                float sampleXLimit=preferCenter&&region==0?centerXLimit:xLimit;
-                float sampleZLimit=preferCenter&&region==0?centerZLimit:zLimit;
-                for(int attempt=0;attempt<72;attempt++)
-                {
-                    float x=Next(-sampleXLimit,sampleXLimit);
-                    float z=Next(-sampleZLimit,sampleZLimit);
-                    Vector3 candidate=LunarSurfaceField.Surface(x,z);
-                    if(!IsSpawnPositionSafe(candidate))continue;
-
-                    float separation=float.PositiveInfinity;
-                    for(int i=0;i<recentSpawnCount;i++)
-                    {
-                        Vector3 delta=candidate-recentSpawns[i];delta.y=0;
-                        separation=Mathf.Min(separation,delta.sqrMagnitude);
-                    }
-                    float score=recentSpawnCount==0?Next(0f,1f):separation+Next(0f,4f);
-                    if(!found||score>bestScore){best=candidate;bestScore=score;found=true;}
-                }
+                float x=Next(-xLimit,xLimit);
+                float z=Next(-zLimit,zLimit);
+                Vector3 candidate=LunarSurfaceField.Surface(x,z);
+                if(!IsSpawnPositionSafe(candidate))continue;
+                if(avoidRecent&&IsTooCloseToRecentSpawn(candidate))continue;
+                spawn=candidate;
+                return true;
             }
+            spawn=default;
+            return false;
+        }
 
-            if(!found)
+        private bool IsTooCloseToRecentSpawn(Vector3 candidate)
+        {
+            float minDistance=Radius*1.35f;
+            float minDistanceSqr=minDistance*minDistance;
+            for(int i=0;i<recentSpawnCount;i++)
             {
-                // Rare crowded arenas still get a valid deterministic fallback.
-                Vector3[] anchors={
-                    LunarSurfaceField.Surface(0f,0f),
-                    LunarSurfaceField.Surface(0f,12f),
-                    LunarSurfaceField.Surface(0f,-12f)};
-                foreach(Vector3 anchor in anchors)
-                    if(IsSpawnPositionSafe(anchor)){best=anchor;found=true;break;}
-                if(!found)best=anchors[0];
+                Vector3 delta=candidate-recentSpawns[i];
+                delta.y=0f;
+                if(delta.sqrMagnitude<minDistanceSqr)return true;
             }
+            return false;
+        }
 
-            recentSpawns[recentSpawnIndex]=best;
+        private Vector3 RememberSpawn(Vector3 spawn)
+        {
+            recentSpawns[recentSpawnIndex]=spawn;
             recentSpawnIndex=(recentSpawnIndex+1)%recentSpawns.Length;
             recentSpawnCount=Mathf.Min(recentSpawnCount+1,recentSpawns.Length);
-            return best;
+            return spawn;
         }
 
         private bool IsSpawnPositionSafe(Vector3 candidate)
@@ -302,7 +320,7 @@ namespace Alterverse.Match
         private void BuildZoneVisual()
         {
             if(zoneMaterial==null)
-                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,.50f,.50f,.045f);
+                zoneMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(HotZoneGreen,0f,RingAlpha,.055f);
             if(zoneMaterial==null)return;
 
             DestroyZoneVisual(0f);
@@ -311,38 +329,42 @@ namespace Alterverse.Match
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)zoneRoot.transform.SetParent(world,true);
 
-            GameObject disc=new("DF_HotZoneGroundDisc");
-            disc.transform.SetParent(zoneRoot.transform,false);
-            zoneMesh=BuildSurfaceDisc(zoneRoot.transform);
-            disc.AddComponent<MeshFilter>().sharedMesh=zoneMesh;
-            zoneRenderer=disc.AddComponent<MeshRenderer>();
-            if(zoneRenderer!=null)
-            {
-                zoneRenderer.sharedMaterial=zoneMaterial;
-                zoneRenderer.shadowCastingMode=ShadowCastingMode.Off;
-                zoneRenderer.receiveShadows=false;
-            }
-            zoneDisc=disc.transform;
+            outerRingMesh=BuildSurfaceDisc(zoneRoot.transform,Radius,.24f);
+            CreateRing("DF_HotZoneOuterRing",outerRingMesh);
+
+            innerRingMesh=BuildSurfaceDisc(zoneRoot.transform,Radius*InnerRingRadiusScale,.26f);
+            CreateRing("DF_HotZoneInnerRing",innerRingMesh);
         }
 
-        private static Mesh BuildSurfaceDisc(Transform zone)
+        private void CreateRing(string name,Mesh mesh)
         {
-            const int slices=96, bands=16;
+            GameObject ring=new(name);
+            ring.transform.SetParent(zoneRoot.transform,false);
+            ring.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer renderer=ring.AddComponent<MeshRenderer>();
+            renderer.sharedMaterial=zoneMaterial;
+            renderer.shadowCastingMode=ShadowCastingMode.Off;
+            renderer.receiveShadows=false;
+        }
+
+        private static Mesh BuildSurfaceDisc(Transform zone,float radius,float heightOffset)
+        {
+            const int slices=96,bands=16;
             Vector3[] vertices=new Vector3[(bands+1)*(slices+1)];
             Vector2[] uv=new Vector2[vertices.Length];
             int[] triangles=new int[bands*slices*6];
             for(int band=0;band<=bands;band++)
             {
-                float distance=Radius*band/bands;
+                float distance=radius*band/bands;
                 for(int slice=0;slice<=slices;slice++)
                 {
                     float angle=slice*Mathf.PI*2f/slices;
                     float x=Mathf.Cos(angle)*distance,z=Mathf.Sin(angle)*distance;
                     Vector3 world=zone.TransformPoint(new Vector3(x,0,z));
-                    float y=LunarSurfaceField.Surface(world.x,world.z).y+.24f;
+                    float y=LunarSurfaceField.Surface(world.x,world.z).y+heightOffset;
                     int index=band*(slices+1)+slice;
                     vertices[index]=zone.InverseTransformPoint(new Vector3(world.x,y,world.z));
-                    uv[index]=new Vector2(.5f+x/(Radius*2f),.5f+z/(Radius*2f));
+                    uv[index]=new Vector2(.5f+x/(radius*2f),.5f+z/(radius*2f));
                 }
             }
             for(int band=0;band<bands;band++)
@@ -352,7 +374,7 @@ namespace Alterverse.Match
                     triangles[t]=a;triangles[t+1]=a+1;triangles[t+2]=b;
                     triangles[t+3]=a+1;triangles[t+4]=b+1;triangles[t+5]=b;
                 }
-            Mesh mesh=new(){name="DF_HotZoneSurfaceDisc",vertices=vertices,uv=uv,triangles=triangles};
+            Mesh mesh=new(){name=$"DF_HotZoneSurfaceRing_{radius:0.00}",vertices=vertices,uv=uv,triangles=triangles};
             mesh.RecalculateNormals();
             return mesh;
         }
@@ -363,10 +385,8 @@ namespace Alterverse.Match
             bool occupied=zeroInside>0||lumenInside>0;
             bool contested=zeroInside>0&&lumenInside>0;
             float wave=.5f+.5f*Mathf.Sin(Time.time*(occupied?3.0f:2.0f));
-            // Keep the whole capture area visibly green. Matching ring and fill alpha
-            // prevents the border from reading as two isolated circles.
-            float alpha=(contested?.60f:occupied?.55f:.48f)+wave*.025f;
-            zoneMaterial.SetFloat("_FillAlpha",alpha);
+            float alpha=(contested?.50f:occupied?.46f:RingAlpha)+wave*.025f;
+            zoneMaterial.SetFloat("_FillAlpha",0f);
             zoneMaterial.SetFloat("_RingAlpha",alpha);
         }
 
@@ -377,9 +397,8 @@ namespace Alterverse.Match
                 if(delay>0f)Destroy(zoneRoot,delay);else Destroy(zoneRoot);
                 zoneRoot=null;
             }
-            zoneDisc=null;
-            zoneRenderer=null;
-            if(zoneMesh!=null){Destroy(zoneMesh,delay);zoneMesh=null;}
+            if(outerRingMesh!=null){Destroy(outerRingMesh,delay);outerRingMesh=null;}
+            if(innerRingMesh!=null){Destroy(innerRingMesh,delay);innerRingMesh=null;}
         }
 
         private void OnDestroy()
