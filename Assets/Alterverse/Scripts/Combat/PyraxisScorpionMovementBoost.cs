@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Match;
 using UnityEngine;
@@ -13,9 +14,6 @@ namespace Alterverse.Combat
     public sealed class PyraxisScorpionMovementBoost : MonoBehaviour
     {
         private const float ScanInterval=.20f;
-        private const float ExtraMovementMultiplier=2f;
-        private const float ArenaHalfWidth=39f;
-        private const float ArenaHalfHeight=32f;
         private const string ManagerName="DF_PyraxisScorpionMovementBoost";
 
         private static bool installed;
@@ -43,54 +41,58 @@ namespace Alterverse.Combat
             for(int i=0;i<active.Count;i++)
             {
                 HotZoneTank tank=active[i];
-                if(tank==null||tank.GetComponent<ScorpionSpeedDriver>()!=null)continue;
-                tank.gameObject.AddComponent<ScorpionSpeedDriver>();
+                if(tank==null||tank.GetComponent<PyraxisScorpionSpeedDriver>()!=null)continue;
+                tank.gameObject.AddComponent<PyraxisScorpionSpeedDriver>();
             }
         }
+    }
 
-        [DefaultExecutionOrder(1250)]
-        private sealed class ScorpionSpeedDriver : MonoBehaviour
+    [DefaultExecutionOrder(1250)]
+    internal sealed class PyraxisScorpionSpeedDriver : MonoBehaviour
+    {
+        private const float ExtraMovementMultiplier=2f;
+        private const float ArenaHalfWidth=39f;
+        private const float ArenaHalfHeight=32f;
+
+        private HeroLocomotion locomotion;
+        private Vector3 previousPosition;
+        private bool initialized;
+
+        private void OnEnable()
         {
-            private HeroLocomotion locomotion;
-            private Vector3 previousPosition;
-            private bool initialized;
+            locomotion=GetComponent<HeroLocomotion>();
+            previousPosition=transform.position;
+            initialized=true;
+        }
 
-            private void OnEnable()
+        private void LateUpdate()
+        {
+            Vector3 current=transform.position;
+            if(!initialized)
             {
-                locomotion=GetComponent<HeroLocomotion>();
-                previousPosition=transform.position;
+                previousPosition=current;
                 initialized=true;
+                return;
             }
 
-            private void LateUpdate()
+            if(!ArenaVariantRuntime.IsPyraxis||
+               !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||
+               locomotion==null)
             {
-                Vector3 current=transform.position;
-                if(!initialized)
-                {
-                    previousPosition=current;
-                    initialized=true;
-                    return;
-                }
-
-                if(!ArenaVariantRuntime.IsPyraxis||
-                   !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||
-                   locomotion==null)
-                {
-                    previousPosition=current;
-                    return;
-                }
-
-                Vector3 baseMovement=current-previousPosition;
-                baseMovement.y=0f;
-                if(baseMovement.sqrMagnitude>.000001f)
-                {
-                    // +200% means two additional copies of the normal movement, for 300% total.
-                    Vector3 extraRequested=baseMovement*ExtraMovementMultiplier;
-                    locomotion.Move(extraRequested,ArenaHalfWidth,ArenaHalfHeight);
-                }
-
-                previousPosition=transform.position;
+                previousPosition=current;
+                return;
             }
+
+            Vector3 baseMovement=current-previousPosition;
+            baseMovement.y=0f;
+            if(baseMovement.sqrMagnitude>.000001f)
+            {
+                // +200% means two additional copies of the normal movement, for 300% total.
+                Vector3 extraRequested=baseMovement*ExtraMovementMultiplier;
+                locomotion.Move(extraRequested,ArenaHalfWidth,ArenaHalfHeight);
+            }
+
+            previousPosition=transform.position;
         }
     }
 }
