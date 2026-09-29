@@ -1208,7 +1208,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
             float previousZoom=cameraZoom;
             DrawVolume(new Rect(x,548,rw,100),"Camera distance",ref cameraZoom);
-            if(previousZoom!=cameraZoom) PlayerProfile.SetCameraZoom(cameraZoom,false);
+            if(previousZoom!=cameraZoom) { PlayerProfile.SetCameraZoom(cameraZoom,false); zoomDirty=true; }
         }
         private void DrawVolume(Rect r,string label,ref float value)
         {
