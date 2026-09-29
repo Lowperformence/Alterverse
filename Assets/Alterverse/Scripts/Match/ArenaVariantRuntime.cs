@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Alterverse.Match
 {
-    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2, Noxara=3, Kryon=4 }
+    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2, Noxara=3, Kryon=4, Earth=5, Pyraxis=6, Neptune=7 }
 
     /// <summary>Persistent player-selected arena. Locked premium arenas always fall back to Moon.</summary>
     public static class ArenaVariantRuntime
@@ -13,18 +13,23 @@ namespace Alterverse.Match
         internal const string ShuffleKey="DF_ArenaShuffle";
         internal const string LastShuffleKey="DF_LastShuffledArena";
         public static ArenaVariant Current { get; private set; }=ArenaVariant.Moon;
+        public static bool IsMoon=>Current==ArenaVariant.Moon;
         public static bool IsMars=>Current==ArenaVariant.Mars;
         public static bool IsGreenPlanet=>Current==ArenaVariant.GreenPlanet;
         public static bool IsNoxara=>Current==ArenaVariant.Noxara;
         public static bool IsKryon=>Current==ArenaVariant.Kryon;
+        public static bool IsEarth=>Current==ArenaVariant.Earth;
+        public static bool IsPyraxis=>Current==ArenaVariant.Pyraxis;
+        public static bool IsNeptune=>Current==ArenaVariant.Neptune;
 
         public static ArenaVariant Selected
         {
             get
             {
                 int raw=PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon);
-                ArenaVariant selected=raw>=0&&raw<=4?(ArenaVariant)raw:ArenaVariant.Moon;
-                if(!ArenaUnlockInventory.Owned(selected)||raw<0||raw>4)
+                bool valid=System.Enum.IsDefined(typeof(ArenaVariant),raw);
+                ArenaVariant selected=valid?(ArenaVariant)raw:ArenaVariant.Moon;
+                if(!valid||!ArenaUnlockInventory.Owned(selected))
                 {
                     selected=ArenaVariant.Moon;
                     PlayerPrefs.SetInt(SelectedKey,(int)selected);
@@ -35,7 +40,8 @@ namespace Alterverse.Match
         }
 
         public static bool ShuffleEnabled=>PlayerPrefs.GetInt(ShuffleKey,0)==1;
-        public static bool CanSelect(ArenaVariant variant)=>variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant);
+        public static bool CanSelect(ArenaVariant variant)=>System.Enum.IsDefined(typeof(ArenaVariant),variant)&&
+            (variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant));
 
         public static bool Select(ArenaVariant variant)
         {
