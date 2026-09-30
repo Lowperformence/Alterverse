@@ -268,6 +268,10 @@ namespace Alterverse.UI
             if(IsRetiredWeaponStoreTab(rect,text))return false;
             rect=CollapseRetiredWeaponStoreTabGap(rect,text);
 
+            // Keep the Battle Item insufficient-funds button in sync with the actual purchase price.
+            if(string.Equals(text,"NEED 250 SHARDS",StringComparison.OrdinalIgnoreCase))
+                text=$"NEED {Alterverse.Profile.BattleItemInventory.ShieldShardPrice} SHARDS";
+
             // Adaptive bot difficulty is intentionally invisible and non-interactive. Keeping this
             // guard in the shared frontend also makes stale menu layouts harmless during migration.
             if(IsHiddenDifficultyText(text)||IsHiddenDifficultyArrow(rect,text))return false;
