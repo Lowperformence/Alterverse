@@ -57,11 +57,11 @@ namespace Alterverse.Visuals
         void BuildEye(Transform parent,float x)
         {
             GameObject eye=Part(PrimitiveType.Sphere,x<0?"OrangeEyeL":"OrangeEyeR",parent,
-                new Vector3(x,.98f,1.30f),new Vector3(.52f,.46f,.20f),orangeEye);
+                new Vector3(x,.98f,.55f),new Vector3(.52f,.46f,.20f),orangeEye);
             eye.transform.localRotation=Quaternion.identity;
 
             GameObject pupil=Part(PrimitiveType.Sphere,x<0?"PupilL":"PupilR",parent,
-                new Vector3(x,.98f,1.48f),new Vector3(.20f,.25f,.075f),darkPupil);
+                new Vector3(x,.98f,.66f),new Vector3(.20f,.25f,.075f),darkPupil);
             pupil.transform.localRotation=Quaternion.identity;
         }
 
