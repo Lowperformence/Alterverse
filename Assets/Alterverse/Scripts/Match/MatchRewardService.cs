@@ -1,3 +1,4 @@
+using Alterverse.Multiplayer;
 using Alterverse.Profile;
 using Alterverse.Shop;
 namespace Alterverse.Match
@@ -27,7 +28,7 @@ private static void ResetSequence(){grantSequence=0;}
 
 public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0)
 {
-var reward=Alterverse.Profile.MatchRewardService.GrantMatchReward(won,kills,assists,objectives,matchId,enemyKills,hotZoneCaptures,soldierKills);
+var reward=Alterverse.Profile.MatchRewardService.GrantMatchReward(won,kills,assists,objectives,matchId,enemyKills,hotZoneCaptures,soldierKills,!CoopAuthority.Active);
 grantSequence++;
 return new MatchRewardResult(reward.Shards,reward.Xp,reward.BaseShards,reward.ShardBonus,reward.BaseXp,reward.XpBonus,reward.BonusCosmetic,reward.BonusPercent);
 }
