@@ -41,7 +41,7 @@ namespace Alterverse.Match
             }
         }
 
-        public static bool ShuffleEnabled=>PlayerPrefs.GetInt(ShuffleKey,0)==1;
+        public static bool ShuffleEnabled=>PlayerPrefs.GetInt(ShuffleKey,1)==1;
         public static bool CanSelect(ArenaVariant variant)=>System.Enum.IsDefined(typeof(ArenaVariant),variant)&&
             (variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant));
 
