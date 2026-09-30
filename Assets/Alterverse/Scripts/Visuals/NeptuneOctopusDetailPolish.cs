@@ -62,20 +62,13 @@ namespace Alterverse.Visuals
         {
             Part(PrimitiveType.Sphere,"EyeSocketL",detailRoot,new Vector3(-.48f,.98f,.45f),new Vector3(.62f,.54f,.12f),Quaternion.identity,deepAccent);
             Part(PrimitiveType.Sphere,"EyeSocketR",detailRoot,new Vector3(.48f,.98f,.45f),new Vector3(.62f,.54f,.12f),Quaternion.identity,deepAccent);
-            Part(PrimitiveType.Sphere,"EyeAccentL",detailRoot,new Vector3(-.48f,1.18f,.49f),new Vector3(.34f,.08f,.06f),Quaternion.Euler(0,0,-8f),violetGlow);
-            Part(PrimitiveType.Sphere,"EyeAccentR",detailRoot,new Vector3(.48f,1.18f,.49f),new Vector3(.34f,.08f,.06f),Quaternion.Euler(0,0,8f),violetGlow);
         }
 
         void BuildMantleRidges()
         {
-            float[] xs={-.72f,-.36f,0f,.36f,.72f};
-            for(int i=0;i<xs.Length;i++)
-            {
-                float x=xs[i];
-                float height= i==2 ? .46f : .38f;
-                Part(PrimitiveType.Capsule,"MantleRidge",detailRoot,new Vector3(x,1.78f,.38f),
-                    new Vector3(.075f,height,.07f),Quaternion.Euler(8f,0,x*8f),i==2?cyanGlow:violetGlow);
-            }
+            // Keep one subtle cyan centre ridge; the former violet head stripes are intentionally removed.
+            Part(PrimitiveType.Capsule,"MantleRidgeCenter",detailRoot,new Vector3(0,1.78f,.38f),
+                new Vector3(.075f,.46f,.07f),Quaternion.Euler(8f,0,0),cyanGlow);
         }
 
         void BuildBioluminescentSpots()
