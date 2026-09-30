@@ -28,6 +28,7 @@ namespace Alterverse.Visuals
             BuildDistantGalaxies();
             BuildDistantPlanets();
             BuildDistantMoons();
+            BuildSmallDistantPlanets();
             BuildPlanetRings();
             BuildPlanetShadows();
             BuildEdgeFragments();
@@ -65,7 +66,7 @@ namespace Alterverse.Visuals
             Material m=Mat(new Color(.78f,.84f,.94f,1));
             if(m==null)return;starMaterial=m;
             stars=new GameObject("DF_StarField").transform;stars.SetParent(transform,false);starsStartRotation=stars.rotation;
-            const int count=220;var vertices=new Vector3[count];var indices=new int[count];
+            const int count=440;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
                 float a=i*2.39996323f;float radius=52f+(i*37%125);
@@ -82,7 +83,7 @@ namespace Alterverse.Visuals
         private void BuildDenseStarLayer()
         {
             Material m=Mat(new Color(.29f,.34f,.44f,1));if(m==null)return;
-            const int count=560;var vertices=new Vector3[count];var indices=new int[count];
+            const int count=1120;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
                 float a=i*2.173821f+.31f;float radius=58f+(i*47%154);
@@ -102,10 +103,10 @@ namespace Alterverse.Visuals
         {
             Material m=Mat(new Color(.55f,.59f,.68f,1));if(m==null)return;
             Vector3[] centers={new(-118,-2.6f,42),new(126,-2.6f,18),new(-58,-2.6f,-102)};
-            const int per=9;var vertices=new Vector3[centers.Length*per];var indices=new int[vertices.Length];int k=0;
+            const int per=18;var vertices=new Vector3[centers.Length*per];var indices=new int[vertices.Length];int k=0;
             for(int c=0;c<centers.Length;c++)for(int i=0;i<per;i++,k++)
             {
-                float a=i*2.18f+c*.7f,radius=2.2f+(i%4)*1.35f;vertices[k]=centers[c]+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius);indices[k]=k;
+                float a=i*2.18f+c*.7f,radius=2.2f+(i%6)*.9f;vertices[k]=centers[c]+new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius);indices[k]=k;
             }
             Mesh mesh=new Mesh{name="DF_StarClusters"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
             GameObject g=new GameObject("DF_StarClusters");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-100;
@@ -114,7 +115,7 @@ namespace Alterverse.Visuals
         private void BuildFarStarLayer()
         {
             Material m=Mat(new Color(.38f,.42f,.5f,1));if(m==null)return;
-            const int count=120;var vertices=new Vector3[count];var indices=new int[count];
+            const int count=240;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
                 float a=i*1.6180339f+.35f;float radius=110f+(i*43%105);
@@ -128,7 +129,7 @@ namespace Alterverse.Visuals
         private void BuildBrightStars()
         {
             Material m=Mat(new Color(.96f,.97f,1f,1));if(m==null)return;
-            const int count=32;var vertices=new Vector3[count];var indices=new int[count];
+            const int count=64;var vertices=new Vector3[count];var indices=new int[count];
             for(int i=0;i<count;i++)
             {
                 float a=(i*4.236f+.7f);float radius=63f+(i*29%103);
@@ -250,6 +251,17 @@ namespace Alterverse.Visuals
         {
             Planet(new Vector3(-82,-10,83),3.2f,new Color(.13f,.14f,.17f,1));
             Planet(new Vector3(96,-13,-86),4.1f,new Color(.10f,.115f,.14f,1));
+        }
+
+        private void BuildSmallDistantPlanets()
+        {
+            // Extra background bodies only: the original planets above remain untouched.
+            Planet(new Vector3(-132,-12,96),2.4f,new Color(.075f,.11f,.16f,1));
+            Planet(new Vector3(136,-16,118),3.1f,new Color(.12f,.075f,.145f,1));
+            Planet(new Vector3(-154,-18,-74),2.0f,new Color(.11f,.095f,.07f,1));
+            Planet(new Vector3(148,-11,-108),2.7f,new Color(.055f,.12f,.13f,1));
+            Planet(new Vector3(-34,-9,172),1.8f,new Color(.105f,.11f,.16f,1));
+            Planet(new Vector3(42,-14,-166),2.3f,new Color(.13f,.07f,.09f,1));
         }
 
         private void Planet(Vector3 p,float size,Color color)
