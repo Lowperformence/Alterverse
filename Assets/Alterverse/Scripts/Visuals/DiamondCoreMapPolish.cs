@@ -21,12 +21,12 @@ namespace Alterverse.Visuals
 
         static readonly Color[] CrystalPalette=
         {
-            new(.76f,.96f,1.00f,.22f), // clear ice
-            new(.08f,.84f,1.00f,.27f), // aqua
-            new(.08f,.38f,1.00f,.25f), // sapphire
-            new(.60f,.28f,.96f,.23f), // violet
-            new(1.00f,.24f,.67f,.21f), // pink
-            new(1.00f,.84f,.30f,.18f)  // pale gold
+            new(.76f,.96f,1.00f,.22f),
+            new(.08f,.84f,1.00f,.27f),
+            new(.08f,.38f,1.00f,.25f),
+            new(.60f,.28f,.96f,.23f),
+            new(1.00f,.24f,.67f,.21f),
+            new(1.00f,.84f,.30f,.18f)
         };
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -109,7 +109,6 @@ namespace Alterverse.Visuals
                 Vector3 c=Surface(x+step,z+step,.045f);
                 Vector3 d=Surface(x,z+step,.045f);
 
-                // Alternating diagonals keep the floor from reading as a regular checker grid.
                 if((cell&1)==0)
                 {
                     AddTriangle(vertices,normals,triangles[(cell*3+1)%triangles.Length],a,b,c);
@@ -290,10 +289,6 @@ namespace Alterverse.Visuals
         }
     }
 
-    /// <summary>
-    /// Replaces only the rendered body of a Diamond Core HotZoneTank. Its root transform,
-    /// colliders, AI, health, targeting and combat components are never modified.
-    /// </summary>
     public sealed class DiamondCoreCrystalGuardianVisualOverride : MonoBehaviour
     {
         readonly List<Renderer> hiddenOriginals=new();
@@ -322,7 +317,9 @@ namespace Alterverse.Visuals
                 skinned[i].enabled=false;
             }
 
-            phase=Mathf.Abs(GetInstanceID()%1000)*.00628f;
+            // Unity 6.6 deprecates Object.GetInstanceID. A name hash is sufficient here because
+            // it is used only to offset the cosmetic hover animation phase.
+            phase=Mathf.Abs(gameObject.name.GetHashCode()%1000)*.00628f;
             BuildVisual();
         }
 
@@ -343,8 +340,6 @@ namespace Alterverse.Visuals
             CreateGem("OuterFacetedShell",visualRoot,Vector3.zero,new Vector3(1.55f,1.48f,1.08f),Quaternion.Euler(0,22.5f,0),shell);
             CreateGem("FluorescentCore",visualRoot,new Vector3(0,-.12f,0),new Vector3(.72f,1.05f,.54f),Quaternion.Euler(0,0,180f),core);
 
-            // A faceted halo near the crown evokes the circular cut in the reference crystal without
-            // requiring expensive boolean geometry or changing the gameplay silhouette/collider.
             for(int i=0;i<10;i++)
             {
                 float a=i*Mathf.PI*2f/10f;
