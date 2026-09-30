@@ -39,7 +39,7 @@ namespace Alterverse.Visuals
             }
             if(!ArenaVariantRuntime.IsDiamondCore)return;
 
-            int worldId=world.GetInstanceID();
+            int worldId=world.GetEntityId();
             if(appliedWorldId!=worldId)
             {
                 ClearRuntime();
