@@ -1,4 +1,5 @@
 using System;
+using Alterverse.AI;
 using Alterverse.Match;
 using Alterverse.Shop;
 using UnityEngine;
@@ -43,7 +44,7 @@ namespace Alterverse.Profile
         public static int LifetimeAssists=>Mathf.Max(0,PlayerPrefs.GetInt(AssistsKey,0));
         public static int LifetimeObjectives=>Mathf.Max(0,PlayerPrefs.GetInt(ObjectivesKey,0));
 
-        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0)
+        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true)
         {
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
@@ -61,21 +62,31 @@ namespace Alterverse.Profile
 
                 // Battle Pass intentionally receives BASE account XP only; its own receipt keeps this idempotent.
                 BattlePassProgress.GrantMatchXp(storedBaseXp,matchId);
+                if(adaptiveDifficulty)BotDifficultySettings.RecordSoloResult(won,matchId);
                 return new MatchRewardResult(storedBaseShards,storedShardBonus,storedBaseXp,storedXpBonus,storedCosmetic);
             }
 
             kills=Mathf.Max(0,kills);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
 
+            // Freeze reward scaling to the difficulty that actually governed this match. In network
+            // matches Current is the authoritative lobby override; in solo it is the local hidden tier.
+            BotDifficulty rewardDifficulty=BotDifficultySettings.Current;
             UniversalHeroCosmetic cosmetic=WingMatchRewardBonus.MatchCosmetic;
             int baseShards=MatchShardRewards.Roll(won,kills,assists,objectives);
-            int shardBonus=WingMatchRewardBonus.CalculateBonus(baseShards,cosmetic);
+            int difficultyShardBonus=BotDifficultySettings.RewardBonusFor(baseShards,rewardDifficulty);
+            int wingShardBase=ProfileTransaction.Add(baseShards,difficultyShardBonus);
+            int wingShardBonus=WingMatchRewardBonus.CalculateBonus(wingShardBase,cosmetic);
+            int shardBonus=ProfileTransaction.Add(difficultyShardBonus,wingShardBonus);
             int shards=ProfileTransaction.Add(baseShards,shardBonus);
 
             long before=PlayerExperience.TotalXp;
             long cap=PlayerExperience.XpForLevel(PlayerExperience.MaxLevel);
             int calculatedBaseXp=PlayerExperience.CalculateMatchXp(won,kills,assists,objectives);
             int baseXp=(int)Math.Max(0L,Math.Min(calculatedBaseXp,cap-before));
-            int requestedXpBonus=WingMatchRewardBonus.CalculateBonus(baseXp,cosmetic);
+            int difficultyXpBonus=BotDifficultySettings.RewardBonusFor(baseXp,rewardDifficulty);
+            int wingXpBase=ProfileTransaction.Add(baseXp,difficultyXpBonus);
+            int wingXpBonus=WingMatchRewardBonus.CalculateBonus(wingXpBase,cosmetic);
+            int requestedXpBonus=ProfileTransaction.Add(difficultyXpBonus,wingXpBonus);
             long next=Math.Min(cap,before+(long)baseXp+requestedXpBonus);
             int xp=(int)Math.Max(0L,next-before);
             int xpBonus=Math.Max(0,xp-baseXp);
@@ -102,8 +113,10 @@ namespace Alterverse.Profile
             writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills));
             ProfileTransaction.Commit(writes.ToArray());
 
-            // Wing bonuses accelerate account progression only, never Battle Pass progression.
+            // Difficulty reward bonus accelerates account progression only. Battle Pass keeps its
+            // existing base-XP economy, and solo adaptive progression is receipt-safe.
             BattlePassProgress.GrantMatchXp(baseXp,matchId);
+            if(adaptiveDifficulty)BotDifficultySettings.RecordSoloResult(won,matchId);
             return new MatchRewardResult(baseShards,shardBonus,baseXp,xpBonus,cosmetic);
         }
     }
