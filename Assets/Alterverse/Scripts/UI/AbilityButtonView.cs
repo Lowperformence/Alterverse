@@ -34,7 +34,7 @@ namespace Alterverse.UI
             root=new GameObject("Ability art HUD",typeof(RectTransform),typeof(Canvas));
             root.transform.SetParent(owner,false);
             canvas=root.GetComponent<Canvas>();canvas.renderMode=RenderMode.ScreenSpaceOverlay;canvas.sortingOrder=30;
-            Font font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            Font font=FrontEndTypography.Display;
             for(int n=0;n<seconds.Length;n++)seconds[n]=n.ToString(System.Globalization.CultureInfo.InvariantCulture);
             for(int i=0;i<5;i++)
             {
@@ -154,4 +154,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

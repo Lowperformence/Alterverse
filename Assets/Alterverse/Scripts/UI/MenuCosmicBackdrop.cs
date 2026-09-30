@@ -6,8 +6,12 @@ namespace Alterverse.UI
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
         private readonly Texture2D texture;
+        private readonly bool ownsTexture;
         public MenuCosmicBackdrop()
         {
+            texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdrop");
+            if(texture!=null)return;
+            ownsTexture=true;
             const int width=768,height=384;
             var pixels=new Color32[width*height];
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)
@@ -52,7 +56,13 @@ namespace Alterverse.UI
             }
             return background+rim*(edge*.20f);
         }
-        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.StretchToFill,false);
-        public void Dispose(){if(texture!=null)Object.Destroy(texture);}
+        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+        public void DrawCard(Rect rect,int index)
+        {
+            // Different image windows provide artwork while preserving live clickable controls.
+            GUI.DrawTextureWithTexCoords(rect,texture,new Rect(.38f+(index%3)*.14f,.10f,.26f,.30f));
+        }
+        public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
     }
 }
+

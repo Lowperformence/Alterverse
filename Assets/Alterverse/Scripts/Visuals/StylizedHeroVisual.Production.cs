@@ -101,10 +101,10 @@ namespace Alterverse.Visuals
             // Reference-driven ascendant healer: luminous white/silver robe, cyan holy energy,
             // elegant proportions, a halo language and a long ceremonial healing staff.
             Color white=new(.80f,.74f,.64f,1f);
-            Color pearl=new(.48f,.35f,.30f,1f);
-            Color silver=new(.41f,.28f,.27f,1f);
-            Color cyan=new(1f,.68f,.22f,1f);
-            Color cyanHot=new(1f,.91f,.58f,1f);
+            Color pearl=new(.63f,.72f,.57f,1f);
+            Color silver=new(.34f,.48f,.29f,1f);
+            Color cyan=new(.32f,.86f,.18f,1f);
+            Color cyanHot=new(.75f,1f,.48f,1f);
             Color gold=new(.90f,.60f,.21f,1f);
             Color shadow=new(.12f,.085f,.11f,1f);
             Color hair=new(.36f,.19f,.15f,1f);
@@ -710,8 +710,8 @@ namespace Alterverse.Visuals
             Color leather=new(.055f,.045f,.075f,1f);
             Color graphite=new(.12f,.11f,.16f,1f);
             Color metal=new(.25f,.22f,.31f,1f);
-            Color violet=new(.58f,.12f,.92f,1f);
-            Color violetHot=new(.86f,.30f,1f,1f);
+            Color violet=new(.76f,.025f,.065f,1f);
+            Color violetHot=new(1f,.17f,.20f,1f);
             Color faceBlack=new(.004f,.003f,.008f,1f);
             Color hair=new(.018f,.014f,.028f,1f);
 
@@ -1101,4 +1101,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

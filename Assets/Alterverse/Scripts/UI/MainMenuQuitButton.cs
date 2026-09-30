@@ -60,12 +60,12 @@ namespace Alterverse.UI
             if (safe.width <= 0f || safe.height <= 0f) return;
 
             const float menuHeight = 720f;
-            float scale = Mathf.Min(safe.height / menuHeight, safe.width / 1200f);
+            float scale = Mathf.Min(safe.height / menuHeight, safe.width / 1500f);
             if (scale <= .001f) return;
 
             float menuWidth = safe.width / scale;
-            float contentWidth = Mathf.Min(1360f, menuWidth - 64f);
-            float left = (menuWidth - contentWidth) * .5f;
+            float contentWidth = Mathf.Min(1360f, menuWidth - 288f);
+            float left = (menuWidth - contentWidth + 240f) * .5f;
             float settingsWidth = contentWidth * .64f;
             float x = left + settingsWidth + 32f;
             float width = contentWidth - settingsWidth - 32f;
@@ -109,3 +109,4 @@ namespace Alterverse.UI
         }
     }
 }
+
