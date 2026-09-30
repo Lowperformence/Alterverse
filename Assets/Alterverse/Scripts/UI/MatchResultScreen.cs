@@ -41,7 +41,7 @@ namespace Alterverse.UI
             XpText=Ready?"+"+Number(Xp):"—";ShardsText=Ready?"+"+Number(Shards):"—";
             XpBreakdown=Number(BaseXp)+" BASE  +"+Number(XpBonus)+" BONUS";
             ShardBreakdown=Number(BaseShards)+" BASE  +"+Number(ShardBonus)+" BONUS";
-            BonusBadge=!Ready?"FINALIZING…":BonusPercent>0?"+"+BonusPercent+"% WING BONUS":"MATCH REWARD";
+            BonusBadge=!Ready?"FINALIZING…":BonusPercent>0?"+"+BonusPercent+"% WING BONUS":(XpBonus>0||ShardBonus>0)?"BONUS REWARD":"MATCH REWARD";
             if(Drops==null)Drops=Drop==BattleItemType.None?Array.Empty<DropReward>():new[]{new DropReward(Drop,1)};
             DropButton=Drops.Length==1?"DROP ×1":Drops.Length>1?"DROPS ×"+Drops.Length:"PROGRESS";
             DropName=Drop==BattleItemType.None?"NO BATTLE ITEM DROP":BattleItemInventory.Name(Drop);
@@ -150,14 +150,12 @@ namespace Alterverse.UI
             theme.Label(new Rect(r.x,r.y,layout.Stacked?r.width:r.width*.57f,48),data.Result,title);
             if(layout.Stacked)
             {
-                theme.Label(new Rect(r.x,r.y+48,r.width*.45f,24),data.Difficulty,label,true);
-                theme.Label(new Rect(r.x+r.width*.45f,r.y+48,r.width*.55f,24),data.ObjectivesText,small,true);
+                theme.Label(new Rect(r.x,r.y+48,r.width,24),data.ObjectivesText,small,true);
             }
             else
             {
                 float x=r.x+r.width*.59f,w=r.width*.41f;
-                theme.Label(new Rect(x,r.y,w,24),data.Difficulty,label,true);
-                theme.Label(new Rect(x,r.y+25,w,23),data.ObjectivesText,small,true);
+                theme.Label(new Rect(x,r.y+12,w,23),data.ObjectivesText,small,true);
             }
             FrontEndTheme.Fill(new Rect(r.x,r.yMax-2,r.width,2),accent);
         }
