@@ -8,7 +8,7 @@ namespace Alterverse.Profile
     {
         public static event System.Action Changed;
         public const float VictoryDropChance=.30f;
-        public const int ShieldShardPrice=250;
+        public const int ShieldShardPrice=100;
 
         private const string EquipKey="DF_BattleItemEquipped";
         private const string ReceiptKey="DF_LastBattleItemRewardReceipt";
