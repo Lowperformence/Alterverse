@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
+using Alterverse.Combat;
 using Alterverse.Shop;
 using UnityEngine;
 
@@ -72,7 +73,17 @@ namespace Alterverse.Visuals
 
             // Old builders are allowed to exist for save compatibility, but never win visually.
             SuppressReplacementGeometry();
-            EnsureOriginalVisible();
+
+            // HeroRespawn hides the complete hero on death. Never let this late-running colorway
+            // system re-enable the authored weapon while the hero is dead/awaiting respawn.
+            Health health=identity.GetComponent<Health>();
+            if(health!=null&&health.IsDead)
+            {
+                SetOriginalVisible(false);
+                return;
+            }
+
+            SetOriginalVisible(true);
 
             SkinPreviewSelection preview=identity.GetComponent<SkinPreviewSelection>();
             int variant=preview!=null
@@ -139,12 +150,12 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void EnsureOriginalVisible()
+        private void SetOriginalVisible(bool visible)
         {
             for(int i=0;i<baseRenderers.Count;i++)
             {
                 Renderer renderer=baseRenderers[i].Renderer;
-                if(renderer!=null)renderer.enabled=true;
+                if(renderer!=null)renderer.enabled=visible;
             }
         }
 
