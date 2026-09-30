@@ -271,9 +271,11 @@ namespace Alterverse.Visuals
                 {
                     float abyss=Mathf.PerlinNoise(wx*.075f+101f,wz*.075f+37f);
                     float glow=Mathf.Pow(Mathf.Clamp01((abyss-.62f)/.38f),2f);
-                    Color deep=new Color(value*.055f,value*.13f,value*.34f,1f);
-                    Color blue=new Color(value*.12f,value*.31f,value*.72f,1f);
-                    pixels[i]=Color.Lerp(deep,blue,.22f+glow*.58f);
+                    // Brighter royal/cobalt Neptune palette inspired by the supplied reference image,
+                    // while preserving the existing terrain variation and dark-to-light depth read.
+                    Color deep=new Color(.04f+value*.10f,.075f+value*.17f,.22f+value*.40f,1f);
+                    Color blue=new Color(.10f+value*.18f,.18f+value*.32f,.56f+value*.62f,1f);
+                    pixels[i]=Color.Lerp(deep,blue,.30f+glow*.56f);
                 }
                 else
                 {
