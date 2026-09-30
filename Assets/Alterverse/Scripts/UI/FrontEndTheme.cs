@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Alterverse.UI
@@ -29,9 +30,31 @@ namespace Alterverse.UI
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered;
         private readonly GUIContent measuredText = new GUIContent();
+        private Rect hiddenDifficultyCenter;
+        private bool hasHiddenDifficultyCenter;
+
+        private static bool IsHiddenDifficultyText(string text)
+        {
+            if(string.IsNullOrEmpty(text))return false;
+            if(text.IndexOf("difficulty",StringComparison.OrdinalIgnoreCase)>=0)return true;
+            return string.Equals(text,"EASY",StringComparison.OrdinalIgnoreCase)||
+                   string.Equals(text,"MEDIUM",StringComparison.OrdinalIgnoreCase)||
+                   string.Equals(text,"HARD",StringComparison.OrdinalIgnoreCase)||
+                   string.Equals(text,"EXPERT",StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool IsHiddenDifficultyArrow(Rect rect,string text)
+        {
+            if(!hasHiddenDifficultyCenter||(text!="<"&&text!=">"))return false;
+            if(Mathf.Abs(rect.y-hiddenDifficultyCenter.y)>1f||Mathf.Abs(rect.height-hiddenDifficultyCenter.height)>1f)return false;
+            bool left=Mathf.Abs(rect.xMax-(hiddenDifficultyCenter.x-6f))<=8f;
+            bool right=Mathf.Abs(rect.x-(hiddenDifficultyCenter.xMax+6f))<=8f;
+            return left||right;
+        }
 
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
+            if(IsHiddenDifficultyText(text))return;
             int size = style.fontSize;
             bool wrap = style.wordWrap;
             TextClipping clip = style.clipping;
@@ -204,6 +227,7 @@ namespace Alterverse.UI
 
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
         {
+            if(IsHiddenDifficultyText(text))return;
             Color before = GUI.color;
             if (muted) GUI.color *= Muted;
             GUI.Label(rect, text, style);
@@ -219,6 +243,10 @@ namespace Alterverse.UI
 
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
         {
+            // Adaptive bot difficulty is intentionally invisible and non-interactive. Keeping this
+            // guard in the shared frontend also makes stale menu layouts harmless during migration.
+            if(IsHiddenDifficultyText(text)||IsHiddenDifficultyArrow(rect,text))return false;
+
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
             text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
             rect = FitActionRect(rect, text);
@@ -284,6 +312,15 @@ namespace Alterverse.UI
             if (width > 0) Fill(new Rect(rail.x, rail.y, width, rail.height), Accent);
         }
 
-        public void Center(Rect rect, string text) => Label(rect, text, centered, true);
+        public void Center(Rect rect, string text)
+        {
+            if(IsHiddenDifficultyText(text))
+            {
+                hiddenDifficultyCenter=rect;
+                hasHiddenDifficultyCenter=true;
+                return;
+            }
+            Label(rect, text, centered, true);
+        }
     }
 }
