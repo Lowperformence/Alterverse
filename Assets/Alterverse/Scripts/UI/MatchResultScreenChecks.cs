@@ -20,7 +20,7 @@ namespace Alterverse.UI
                 data.Prepare();
                 Assert(data.XpText=="+123"&&data.ShardsText=="+321","Receipt totals must be displayed directly, not recomputed from cosmetic percent.");
                 Assert(data.PassXpGained==100,"Preparing a wing badge must not multiply Battle Pass XP.");
-                Assert(data.BonusPercent==0?data.BonusBadge=="MATCH REWARD":data.BonusBadge.Contains(data.BonusPercent+"%"),"Every cosmetic uses the supplied bonus badge.");
+                Assert(data.BonusPercent>0?data.BonusBadge.Contains(data.BonusPercent+"%"):data.BonusBadge=="BONUS REWARD","Non-wing reward bonuses stay generic so hidden difficulty is not exposed.");
             }
             var defeat=Fixture(4);defeat.Prepare();Assert(defeat.Result=="DEFEAT","Result is from the player's perspective.");
             var capped=Fixture(7);capped.Prepare();Assert(capped.AccountText=="MAX LEVEL"&&capped.XpText=="+1","Cap-limited actual XP must not be replaced with an estimated bonus.");
