@@ -153,7 +153,8 @@ namespace Alterverse.Visuals
             HeroFxShape release=hero==HeroId.Nyra||hero==HeroId.Traveler?HeroFxShape.Bolt:
                 hero==HeroId.Mira?HeroFxShape.Seed:hero==HeroId.Elyra?HeroFxShape.Runes:
                 hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Burst;
-            HeroVfxPool.Emit(release,origin,origin,Vector3.one*.30f,color,.12f,
+            float releaseScale=hero==HeroId.Rook?.42f:.30f;
+            HeroVfxPool.Emit(release,origin,origin,Vector3.one*releaseScale,color,.12f,
                 HeroFxMotion.Expand,owner:gameObject);
             EmitReleaseDetail(hero,-1,origin,color);
         }
@@ -238,7 +239,7 @@ namespace Alterverse.Visuals
                         HeroFxMotion.Contract,facing,gameObject,delay:.035f,decorative:true);
                     break;
                 case HeroId.Rook:
-                    HeroVfxPool.Emit(HeroFxShape.Burst,hand,Vector3.zero,Vector3.one*.46f*power,core,.13f,
+                    HeroVfxPool.Emit(HeroFxShape.Burst,hand,Vector3.zero,Vector3.one*.68f*power,core,.13f,
                         HeroFxMotion.Expand,facing,gameObject,delay:.045f,decorative:true);
                     break;
                 case HeroId.Elyra:
