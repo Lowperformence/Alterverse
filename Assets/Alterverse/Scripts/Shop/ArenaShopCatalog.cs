@@ -42,7 +42,8 @@ namespace Alterverse.Shop
             new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
             new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",0,new Color(1f,.34f,.04f)),
             new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f)),
-            new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",Dark00Price,new Color(.92f,.08f,.08f))
+            new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",Dark00Price,new Color(.92f,.08f,.08f)),
+            new(ArenaVariant.DiamondCore,"DIAMOND CORE","SHATTERED CRYSTAL WORLD",0,new Color(.62f,.90f,1f))
         };
 
         // The PLAY menu needs every arena, while the STORE must only list arenas that
