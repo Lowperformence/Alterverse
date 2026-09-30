@@ -6,9 +6,9 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Keeps every paid weapon for non-assassin heroes on the authored ORIGINAL weapon silhouette.
-    /// Existing EPIC/LEGENDARY geometry is suppressed presentation-only; ownership, price, equip state,
-    /// gameplay pivots, damage, range, timing and hit logic are untouched. Veyr/Assassin is excluded.
+    /// Weapon-shop variants are colorways of each hero's authored standard weapon only.
+    /// Legacy EPIC/LEGENDARY replacement geometry is hidden presentation-only; gameplay,
+    /// pivots, grip, animation, damage, range and timing remain untouched.
     /// </summary>
     [DefaultExecutionOrder(5000)]
     internal sealed class OriginalWeaponColorwayOverride : MonoBehaviour
@@ -29,11 +29,12 @@ namespace Alterverse.Visuals
         {
             if(Time.unscaledTime<nextScan)return;
             nextScan=Time.unscaledTime+.10f;
+
             HeroIdentity[] heroes=FindObjectsByType<HeroIdentity>(FindObjectsSortMode.None);
             for(int i=0;i<heroes.Length;i++)
             {
                 HeroIdentity hero=heroes[i];
-                if(hero==null||hero.Hero==HeroId.Veyr)continue; // Assassin remains exactly as authored.
+                if(hero==null)continue;
                 OriginalWeaponColorwayState state=hero.GetComponent<OriginalWeaponColorwayState>();
                 if(state==null)state=hero.gameObject.AddComponent<OriginalWeaponColorwayState>();
                 state.Sync(hero);
@@ -57,7 +58,7 @@ namespace Alterverse.Visuals
 
         public void Sync(HeroIdentity identity)
         {
-            if(identity==null||identity.Hero==HeroId.Veyr)return;
+            if(identity==null)return;
             Transform nextRoot=FindRecursive(identity.transform,"DF_VisualRoot");
             if(nextRoot==null)return;
 
@@ -69,18 +70,21 @@ namespace Alterverse.Visuals
                 appliedVariant=int.MinValue;
             }
 
-            // Older presentation systems may still exist for compatibility with Veyr. For all other
-            // heroes their replacement geometry is made invisible after those systems have updated.
+            // Old builders are allowed to exist for save compatibility, but never win visually.
             SuppressReplacementGeometry();
             EnsureOriginalVisible();
 
             SkinPreviewSelection preview=identity.GetComponent<SkinPreviewSelection>();
-            int variant=preview!=null?preview.WeaponSkinVariant:
-                identity.GetComponent<HeroRespawn>()!=null?WeaponSkinInventory.EquippedVariant(identity.Hero):-1;
+            int variant=preview!=null
+                ?preview.WeaponSkinVariant
+                :identity.GetComponent<HeroRespawn>()!=null
+                    ?WeaponSkinInventory.EquippedVariant(identity.Hero)
+                    :-1;
 
             if(variant==appliedVariant)return;
             RestoreMaterialsOnly();
             appliedVariant=variant;
+
             if(variant>=0&&WeaponSkinCatalog.Contains(identity.Hero,variant))
                 ApplyColorway(identity.Hero,variant);
         }
@@ -98,16 +102,29 @@ namespace Alterverse.Visuals
         {
             Transform root=FindRecursive(visualRoot,name);
             if(root==null)return;
+
             Renderer[] renderers=root.GetComponentsInChildren<Renderer>(true);
             for(int i=0;i<renderers.Length;i++)
             {
                 Renderer renderer=renderers[i];
                 if(renderer==null||IsReplacement(renderer.transform))continue;
+
                 bool duplicate=false;
-                for(int r=0;r<baseRenderers.Count;r++)if(baseRenderers[r].Renderer==renderer){duplicate=true;break;}
+                for(int r=0;r<baseRenderers.Count;r++)
+                {
+                    if(baseRenderers[r].Renderer==renderer)
+                    {
+                        duplicate=true;
+                        break;
+                    }
+                }
                 if(duplicate)continue;
-                Material[] original=(Material[])renderer.sharedMaterials.Clone();
-                baseRenderers.Add(new RendererState{Renderer=renderer,Original=original});
+
+                baseRenderers.Add(new RendererState
+                {
+                    Renderer=renderer,
+                    Original=(Material[])renderer.sharedMaterials.Clone()
+                });
             }
         }
 
@@ -124,8 +141,6 @@ namespace Alterverse.Visuals
 
         private void EnsureOriginalVisible()
         {
-            // Some legacy paid-weapon builders hide the base renderers. Re-enable only the captured
-            // authored weapon pieces, never arbitrary hero/body renderers.
             for(int i=0;i<baseRenderers.Count;i++)
             {
                 Renderer renderer=baseRenderers[i].Renderer;
@@ -136,15 +151,15 @@ namespace Alterverse.Visuals
         private void ApplyColorway(HeroId hero,int variant)
         {
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
-            bool titanForgeBodyOnly=hero==HeroId.Rook&&variant==1;
-            bool riftTalonsBodyOnly=hero==HeroId.Rook&&variant==0;
-            bool rookBodyOnly=titanForgeBodyOnly||riftTalonsBodyOnly;
-            Color glow=titanForgeBodyOnly?new Color(1f,.015f,.008f):
-                riftTalonsBodyOnly?new Color(.42f,.44f,.47f):item.Glow;
-            float tint=titanForgeBodyOnly?.94f:riftTalonsBodyOnly?.92f:variant==1?.78f:variant==3?.72f:variant==2?.68f:.62f;
-            float emission=titanForgeBodyOnly?5.6f:variant==1?4.2f:variant==3?3.0f:variant==2?2.6f:2.15f;
-            float whiteMix=titanForgeBodyOnly?.015f:riftTalonsBodyOnly?0f:variant==1?.30f:variant==2?.10f:variant==3?.05f:.14f;
-            Color accent=Color.Lerp(glow,Color.white,whiteMix);
+
+            // Variant 0 is the darker saturated treatment; variant 1 is the brighter polished treatment.
+            Color accent=variant==0
+                ?Color.Lerp(item.Glow,Color.black,.12f)
+                :Color.Lerp(item.Glow,Color.white,.24f);
+            float tint=variant==0?.62f:.72f;
+            float metallic=variant==0?.66f:.60f;
+            float smoothness=variant==0?.74f:.86f;
+            float emission=variant==0?2.15f:2.65f;
 
             for(int i=0;i<baseRenderers.Count;i++)
             {
@@ -152,46 +167,36 @@ namespace Alterverse.Visuals
                 Renderer renderer=state.Renderer;
                 if(renderer==null)continue;
 
-                // Rook paid variants: recolor only the two authored gauntlet shells. Knuckles and
-                // every other detail renderer keep their original materials/colors exactly as authored.
-                if(rookBodyOnly&&!IsRookGauntletBody(renderer.transform))continue;
-
                 Material[] styled=new Material[state.Original.Length];
                 for(int m=0;m<state.Original.Length;m++)
                 {
                     Material source=state.Original[m];
                     if(source==null)continue;
-                    Material material=new Material(source){name=source.name+"_DF_Colorway_"+variant};
+
+                    Material material=new Material(source)
+                    {
+                        name=source.name+"_DF_Colorway_"+variant
+                    };
                     Color baseColor=ReadColor(source);
                     Color target=Color.Lerp(baseColor,accent,tint);
                     target.a=baseColor.a;
                     WriteColor(material,target);
-                    if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),titanForgeBodyOnly?.70f:riftTalonsBodyOnly?.68f:variant==1?.78f:.55f));
-                    if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),titanForgeBodyOnly?.86f:riftTalonsBodyOnly?.62f:variant==1?.90f:.76f));
+
+                    if(material.HasProperty("_Metallic"))
+                        material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),metallic));
+                    if(material.HasProperty("_Smoothness"))
+                        material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),smoothness));
                     if(material.HasProperty("_EmissionColor"))
                     {
-                        if(riftTalonsBodyOnly)
-                        {
-                            material.SetColor("_EmissionColor",Color.black);
-                            material.DisableKeyword("_EMISSION");
-                        }
-                        else
-                        {
-                            material.EnableKeyword("_EMISSION");
-                            material.SetColor("_EmissionColor",accent*emission);
-                        }
+                        material.EnableKeyword("_EMISSION");
+                        material.SetColor("_EmissionColor",accent*emission);
                     }
                     styled[m]=material;
                 }
+
                 state.Styled=styled;
                 renderer.sharedMaterials=styled;
             }
-        }
-
-        private static bool IsRookGauntletBody(Transform t)
-        {
-            if(t==null)return false;
-            return t.name=="DF_GauntletL"||t.name=="DF_GauntletR";
         }
 
         private void RestoreMaterialsOnly()
@@ -199,7 +204,8 @@ namespace Alterverse.Visuals
             for(int i=0;i<baseRenderers.Count;i++)
             {
                 RendererState state=baseRenderers[i];
-                if(state.Renderer!=null&&state.Original!=null)state.Renderer.sharedMaterials=state.Original;
+                if(state.Renderer!=null&&state.Original!=null)
+                    state.Renderer.sharedMaterials=state.Original;
                 Release(state.Styled);
                 state.Styled=null;
             }
@@ -231,7 +237,8 @@ namespace Alterverse.Visuals
         private static void Release(Material[] materials)
         {
             if(materials==null)return;
-            for(int i=0;i<materials.Length;i++)if(materials[i]!=null)Destroy(materials[i]);
+            for(int i=0;i<materials.Length;i++)
+                if(materials[i]!=null)Destroy(materials[i]);
         }
 
         private bool IsReplacement(Transform t)
