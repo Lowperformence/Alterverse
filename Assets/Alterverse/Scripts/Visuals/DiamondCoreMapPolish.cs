@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Visual-only presentation layer for the Diamond Core arena (PSR J1719-1438 b).
-    /// The original arena geometry, colliders, navigation and HotZoneTank gameplay remain untouched.
+    /// Visual-only presentation layer for PSR J1719-1438 b.
+    /// Existing terrain, colliders, navigation and HotZoneTank gameplay remain untouched.
     /// </summary>
     public sealed class DiamondCoreMapPolish : MonoBehaviour
     {
@@ -19,14 +19,27 @@ namespace Alterverse.Visuals
         Mesh crystalMesh;
         float nextBossScan;
 
+        // Floor stays close to the arena's original colour. The small value/alpha differences
+        // make the polygon/prism structure readable without turning the map into a rainbow.
+        static readonly Color[] FloorPalette=
+        {
+            new(.58f,.63f,.66f,.060f),
+            new(.66f,.70f,.72f,.050f),
+            new(.52f,.58f,.62f,.070f),
+            new(.72f,.75f,.76f,.045f),
+            new(.61f,.66f,.69f,.055f),
+            new(.55f,.61f,.65f,.065f)
+        };
+
+        // Map crystals keep the supplied gemstone palette and transparent fluorescent look.
         static readonly Color[] CrystalPalette=
         {
-            new(.76f,.96f,1.00f,.22f),
-            new(.08f,.84f,1.00f,.27f),
-            new(.08f,.38f,1.00f,.25f),
-            new(.60f,.28f,.96f,.23f),
-            new(1.00f,.24f,.67f,.21f),
-            new(1.00f,.84f,.30f,.18f)
+            new(.82f,.95f,1.00f,.24f),
+            new(.08f,.78f,1.00f,.25f),
+            new(.12f,.40f,.95f,.23f),
+            new(.58f,.28f,.90f,.22f),
+            new(.94f,.32f,.66f,.20f),
+            new(1.00f,.82f,.36f,.18f)
         };
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -56,7 +69,7 @@ namespace Alterverse.Visuals
 
             if(Time.unscaledTime>=nextBossScan)
             {
-                nextBossScan=Time.unscaledTime+.30f;
+                nextBossScan=Time.unscaledTime+.25f;
                 ApplyGuardianOverrides();
             }
         }
@@ -70,13 +83,9 @@ namespace Alterverse.Visuals
             detailRoot=root.transform;
             detailRoot.SetParent(world,false);
 
-            Material[] floorMaterials=new Material[CrystalPalette.Length];
+            Material[] floorMaterials=new Material[FloorPalette.Length];
             for(int i=0;i<floorMaterials.Length;i++)
-            {
-                Color c=CrystalPalette[i];
-                c.a=Mathf.Min(c.a,.16f);
-                floorMaterials[i]=MakeCrystalMaterial("DF_PSRJ1719_FloorFacet_"+i,c,.92f,.18f);
-            }
+                floorMaterials[i]=MakeFloorFacetMaterial("DF_PSRJ1719_FloorFacet_"+i,FloorPalette[i],.86f);
 
             facetGroundMesh=BuildFacetGroundMesh();
             GameObject floor=new("FacetedCrystalGroundOverlay");
@@ -94,20 +103,24 @@ namespace Alterverse.Visuals
 
         Mesh BuildFacetGroundMesh()
         {
-            const float minX=-42f,maxX=42f,minZ=-36f,maxZ=36f,step=6f;
+            // Larger irregular facets make the prism structure visible from the gameplay camera
+            // while leaving the original ground colour clearly dominant underneath.
+            const float minX=-42f,maxX=42f,minZ=-36f,maxZ=36f,step=7.5f;
             List<Vector3> vertices=new();
             List<Vector3> normals=new();
-            List<int>[] triangles=new List<int>[CrystalPalette.Length];
+            List<int>[] triangles=new List<int>[FloorPalette.Length];
             for(int i=0;i<triangles.Length;i++)triangles[i]=new List<int>();
 
             int cell=0;
             for(float z=minZ;z<maxZ-.1f;z+=step)
             for(float x=minX;x<maxX-.1f;x+=step)
             {
-                Vector3 a=Surface(x,z,.045f);
-                Vector3 b=Surface(x+step,z,.045f);
-                Vector3 c=Surface(x+step,z+step,.045f);
-                Vector3 d=Surface(x,z+step,.045f);
+                float jitterX=((cell*37)%11-5)*.09f;
+                float jitterZ=((cell*53)%13-6)*.075f;
+                Vector3 a=Surface(x+jitterX,z+jitterZ,.035f);
+                Vector3 b=Surface(x+step+jitterZ,z-jitterX,.035f);
+                Vector3 c=Surface(x+step-jitterX,z+step+jitterZ,.035f);
+                Vector3 d=Surface(x-jitterZ,z+step-jitterX,.035f);
 
                 if((cell&1)==0)
                 {
@@ -145,7 +158,7 @@ namespace Alterverse.Visuals
         {
             Material[] palette=new Material[CrystalPalette.Length];
             for(int i=0;i<palette.Length;i++)
-                palette[i]=MakeCrystalMaterial("DF_PSRJ1719_Crystal_"+i,CrystalPalette[i],.96f,1.45f+(i%3)*.30f);
+                palette[i]=MakeCrystalMaterial("DF_PSRJ1719_Crystal_"+i,CrystalPalette[i],.96f,1.35f+(i%3)*.28f);
 
             const int count=34;
             for(int i=0;i<count;i++)
@@ -190,12 +203,21 @@ namespace Alterverse.Visuals
             for(int i=0;i<overrides.Length;i++)if(overrides[i]!=null)Object.Destroy(overrides[i]);
         }
 
+        Material MakeFloorFacetMaterial(string name,Color color,float smoothness)
+        {
+            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+            Material m=new(shader){name=name};
+            ownedMaterials.Add(m);
+            DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,0f,.015f);
+            return m;
+        }
+
         Material MakeCrystalMaterial(string name,Color color,float smoothness,float emission)
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             Material m=new(shader){name=name};
             ownedMaterials.Add(m);
-            DiamondCoreCrystalVisuals.ConfigureCrystalMaterial(m,color,smoothness,emission);
+            DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,emission,.08f);
             return m;
         }
 
@@ -289,37 +311,24 @@ namespace Alterverse.Visuals
         }
     }
 
+    /// <summary>
+    /// Replaces the visible Diamond Core HotZoneTank body with one large floating faceted gemstone.
+    /// Gameplay root, AI, health, attacks and colliders are untouched.
+    /// </summary>
     public sealed class DiamondCoreCrystalGuardianVisualOverride : MonoBehaviour
     {
         readonly List<Renderer> hiddenOriginals=new();
         readonly List<Material> ownedMaterials=new();
-        readonly List<Transform> shards=new();
         Transform visualRoot;
         Mesh gemMesh;
         float phase;
+        float nextHideScan;
 
         void Awake()
         {
             if(!ArenaVariantRuntime.IsDiamondCore){enabled=false;return;}
-
-            MeshRenderer[] meshes=GetComponentsInChildren<MeshRenderer>(true);
-            for(int i=0;i<meshes.Length;i++)
-            {
-                if(meshes[i]==null)continue;
-                hiddenOriginals.Add(meshes[i]);
-                meshes[i].enabled=false;
-            }
-            SkinnedMeshRenderer[] skinned=GetComponentsInChildren<SkinnedMeshRenderer>(true);
-            for(int i=0;i<skinned.Length;i++)
-            {
-                if(skinned[i]==null)continue;
-                hiddenOriginals.Add(skinned[i]);
-                skinned[i].enabled=false;
-            }
-
-            // Unity 6.6 deprecates Object.GetInstanceID. A name hash is sufficient here because
-            // it is used only to offset the cosmetic hover animation phase.
             phase=Mathf.Abs(gameObject.name.GetHashCode()%1000)*.00628f;
+            DisableOriginalRenderers();
             BuildVisual();
         }
 
@@ -328,67 +337,62 @@ namespace Alterverse.Visuals
             GameObject root=new("DF_PSRJ1719_CrystalGuardianVisual");
             visualRoot=root.transform;
             visualRoot.SetParent(transform,false);
-            visualRoot.localPosition=new Vector3(0f,2.72f,0f);
+            visualRoot.localPosition=new Vector3(0f,2.55f,0f);
 
             gemMesh=DiamondCoreCrystalVisuals.BuildGuardianGemMesh();
-            Material shell=NewMaterial("DF_PSRJ1719_GuardianShell",new Color(.72f,.97f,1f,.34f),.98f,1.75f);
-            Material core=NewMaterial("DF_PSRJ1719_GuardianCore",new Color(.02f,.67f,1f,.64f),.94f,4.4f);
-            Material violet=NewMaterial("DF_PSRJ1719_GuardianViolet",new Color(.66f,.20f,1f,.38f),.95f,2.9f);
-            Material pink=NewMaterial("DF_PSRJ1719_GuardianPink",new Color(1f,.20f,.68f,.34f),.93f,2.5f);
-            Material gold=NewMaterial("DF_PSRJ1719_GuardianGold",new Color(1f,.80f,.24f,.28f),.96f,2.2f);
 
-            CreateGem("OuterFacetedShell",visualRoot,Vector3.zero,new Vector3(1.55f,1.48f,1.08f),Quaternion.Euler(0,22.5f,0),shell);
-            CreateGem("FluorescentCore",visualRoot,new Vector3(0,-.12f,0),new Vector3(.72f,1.05f,.54f),Quaternion.Euler(0,0,180f),core);
+            // Smoky transparent outer stone inspired by the supplied hand-held gemstone reference.
+            Material smoky=NewMaterial("DF_PSRJ1719_GuardianSmokyShell",new Color(.24f,.20f,.23f,.58f),.94f,.35f,.07f);
+            Material clear=NewMaterial("DF_PSRJ1719_GuardianClearFacet",new Color(.78f,.88f,.96f,.22f),.98f,.80f,.05f);
+            Material core=NewMaterial("DF_PSRJ1719_GuardianCore",new Color(.08f,.72f,1f,.48f),.96f,3.6f,.04f);
 
-            for(int i=0;i<10;i++)
-            {
-                float a=i*Mathf.PI*2f/10f;
-                GameObject piece=GameObject.CreatePrimitive(PrimitiveType.Cube);
-                piece.name="CrownFacet_"+i;
-                piece.transform.SetParent(visualRoot,false);
-                piece.transform.localPosition=new Vector3(Mathf.Cos(a)*.46f,.91f,.73f+Mathf.Sin(a)*.045f);
-                piece.transform.localRotation=Quaternion.Euler(0,0,-a*Mathf.Rad2Deg);
-                piece.transform.localScale=new Vector3(.20f,.075f,.065f);
-                Collider col=piece.GetComponent<Collider>();if(col!=null)Destroy(col);
-                MeshRenderer mr=piece.GetComponent<MeshRenderer>();mr.sharedMaterial=i%2==0?core:shell;
-                mr.shadowCastingMode=ShadowCastingMode.Off;mr.receiveShadows=false;
-            }
+            // One unmistakable large diamond body. No arms, legs, head or tank pieces are created.
+            CreateGem("MainFloatingDiamond",visualRoot,Vector3.zero,new Vector3(2.25f,3.05f,1.72f),Quaternion.Euler(-3f,18f,4f),smoky);
 
-            for(int i=0;i<7;i++)
-            {
-                float a=i*Mathf.PI*2f/7f;
-                float radius=1.85f+(i%2)*.18f;
-                Vector3 p=new(Mathf.Cos(a)*radius,(i%3-.8f)*.22f,Mathf.Sin(a)*radius*.78f);
-                Material mat=i%4==0?pink:i%4==1?violet:i%4==2?core:gold;
-                GameObject shard=CreateGem("OrbitShard_"+i,visualRoot,p,
-                    new Vector3(.24f,.58f,.20f)*(1f+(i%3)*.10f),Quaternion.Euler(i*19f,i*47f,i*11f),mat);
-                shards.Add(shard.transform);
-            }
+            // A slightly offset transparent inner cut gives depth/refraction without changing silhouette.
+            CreateGem("InnerPrismaticFacet",visualRoot,new Vector3(.04f,.02f,.03f),new Vector3(1.72f,2.48f,1.28f),Quaternion.Euler(180f,-9f,2f),clear);
+            CreateGem("FluorescentCore",visualRoot,new Vector3(-.03f,-.10f,0f),new Vector3(.78f,1.62f,.58f),Quaternion.Euler(180f,14f,0f),core);
         }
 
-        void Update()
+        void LateUpdate()
         {
             if(visualRoot==null)return;
-            float t=Time.time+phase;
-            visualRoot.localPosition=new Vector3(0f,2.72f+Mathf.Sin(t*1.25f)*.13f,0f);
-            visualRoot.localRotation=Quaternion.Euler(0f,t*10f,Mathf.Sin(t*.72f)*1.8f);
 
-            for(int i=0;i<shards.Count;i++)
+            // Some legacy planet-specific visual scripts can create/render parts after Awake.
+            // Re-hide any such renderer so the guardian remains a pure diamond silhouette.
+            if(Time.unscaledTime>=nextHideScan)
             {
-                Transform s=shards[i];if(s==null)continue;
-                float a=t*(.34f+(i%2)*.06f)+i*Mathf.PI*2f/shards.Count;
-                float r=1.85f+(i%2)*.18f;
-                s.localPosition=new Vector3(Mathf.Cos(a)*r,Mathf.Sin(t*1.1f+i)*.24f,Mathf.Sin(a)*r*.78f);
-                s.localRotation=Quaternion.Euler(t*(12f+i),-t*(18f+i*2f),i*31f);
+                nextHideScan=Time.unscaledTime+.20f;
+                DisableOriginalRenderers();
+            }
+
+            float t=Time.time+phase;
+            visualRoot.localPosition=new Vector3(0f,2.55f+Mathf.Sin(t*.95f)*.17f,0f);
+            visualRoot.localRotation=Quaternion.Euler(
+                Mathf.Sin(t*.43f)*1.2f,
+                t*7.5f,
+                Mathf.Sin(t*.37f)*1.5f);
+        }
+
+        void DisableOriginalRenderers()
+        {
+            Renderer[] renderers=GetComponentsInChildren<Renderer>(true);
+            for(int i=0;i<renderers.Length;i++)
+            {
+                Renderer r=renderers[i];
+                if(r==null)continue;
+                if(visualRoot!=null&&(r.transform==visualRoot||r.transform.IsChildOf(visualRoot)))continue;
+                if(!hiddenOriginals.Contains(r))hiddenOriginals.Add(r);
+                r.enabled=false;
             }
         }
 
-        Material NewMaterial(string name,Color color,float smoothness,float emission)
+        Material NewMaterial(string name,Color color,float smoothness,float emission,float metallic)
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             Material m=new(shader){name=name};
             ownedMaterials.Add(m);
-            DiamondCoreCrystalVisuals.ConfigureCrystalMaterial(m,color,smoothness,emission);
+            DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,emission,metallic);
             return m;
         }
 
@@ -399,16 +403,21 @@ namespace Alterverse.Visuals
             go.transform.localPosition=position;
             go.transform.localScale=scale;
             go.transform.localRotation=rotation;
-            MeshFilter mf=go.AddComponent<MeshFilter>();mf.sharedMesh=gemMesh;
-            MeshRenderer mr=go.AddComponent<MeshRenderer>();mr.sharedMaterial=material;
-            mr.shadowCastingMode=ShadowCastingMode.Off;mr.receiveShadows=false;
+            MeshFilter mf=go.AddComponent<MeshFilter>();
+            mf.sharedMesh=gemMesh;
+            MeshRenderer mr=go.AddComponent<MeshRenderer>();
+            mr.sharedMaterial=material;
+            mr.shadowCastingMode=ShadowCastingMode.Off;
+            mr.receiveShadows=false;
             return go;
         }
 
         void OnDestroy()
         {
-            for(int i=0;i<hiddenOriginals.Count;i++)if(hiddenOriginals[i]!=null)hiddenOriginals[i].enabled=true;
+            for(int i=0;i<hiddenOriginals.Count;i++)
+                if(hiddenOriginals[i]!=null)hiddenOriginals[i].enabled=true;
             hiddenOriginals.Clear();
+
             if(visualRoot!=null)Destroy(visualRoot.gameObject);
             if(gemMesh!=null)Destroy(gemMesh);
             for(int i=0;i<ownedMaterials.Count;i++)if(ownedMaterials[i]!=null)Destroy(ownedMaterials[i]);
@@ -422,17 +431,25 @@ namespace Alterverse.Visuals
         static readonly int ColorId=Shader.PropertyToID("_Color");
         static readonly int EmissionColor=Shader.PropertyToID("_EmissionColor");
 
-        public static void ConfigureCrystalMaterial(Material m,Color color,float smoothness,float emission)
+        public static void ConfigureTransparentMaterial(Material m,Color color,float smoothness,float emission,float metallic)
         {
             if(m==null)return;
             if(m.HasProperty(BaseColor))m.SetColor(BaseColor,color);
             if(m.HasProperty(ColorId))m.SetColor(ColorId,color);
-            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",.08f);
+            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);
             if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smoothness);
 
-            m.EnableKeyword("_EMISSION");
-            Color emissionColor=new(color.r,color.g,color.b,1f);
-            if(m.HasProperty(EmissionColor))m.SetColor(EmissionColor,emissionColor*Mathf.Max(1f,emission));
+            if(emission>0f)
+            {
+                m.EnableKeyword("_EMISSION");
+                Color e=new(color.r,color.g,color.b,1f);
+                if(m.HasProperty(EmissionColor))m.SetColor(EmissionColor,e*emission);
+            }
+            else
+            {
+                m.DisableKeyword("_EMISSION");
+                if(m.HasProperty(EmissionColor))m.SetColor(EmissionColor,Color.black);
+            }
 
             m.SetOverrideTag("RenderType","Transparent");
             if(m.HasProperty("_Surface"))m.SetFloat("_Surface",1f);
@@ -451,9 +468,10 @@ namespace Alterverse.Visuals
 
         public static Mesh BuildGuardianGemMesh()
         {
-            float[] y={1.42f,.78f,-.14f,-.78f,-1.32f};
-            float[] r={.06f,.48f,.68f,.42f,.055f};
-            const int sides=8;
+            // Tall cut gemstone: pointed crown, broad faceted body and narrowed lower cut.
+            float[] y={1.58f,1.02f,.26f,-.62f,-1.25f,-1.48f};
+            float[] r={.055f,.54f,.76f,.67f,.31f,.10f};
+            const int sides=10;
             List<Vector3> vertices=new();
             List<Vector3> normals=new();
             List<int> indices=new();
@@ -465,23 +483,26 @@ namespace Alterverse.Visuals
                 for(int s=0;s<sides;s++)
                 {
                     int next=(s+1)%sides;
-                    Vector3 a=Point(y[ring],r[ring],s,offsetA);
-                    Vector3 b=Point(y[ring],r[ring],next,offsetA);
-                    Vector3 c=Point(y[ring+1],r[ring+1],next,offsetB);
-                    Vector3 d=Point(y[ring+1],r[ring+1],s,offsetB);
+                    Vector3 a=Point(y[ring],r[ring],s,sides,offsetA);
+                    Vector3 b=Point(y[ring],r[ring],next,sides,offsetA);
+                    Vector3 c=Point(y[ring+1],r[ring+1],next,sides,offsetB);
+                    Vector3 d=Point(y[ring+1],r[ring+1],s,sides,offsetB);
                     Triangle(vertices,normals,indices,a,b,c);
                     Triangle(vertices,normals,indices,a,c,d);
                 }
             }
 
-            Mesh mesh=new(){name="DF_PSRJ1719_GuardianGemMesh"};
-            mesh.SetVertices(vertices);mesh.SetNormals(normals);mesh.SetTriangles(indices,0);mesh.RecalculateBounds();
+            Mesh mesh=new(){name="DF_PSRJ1719_GuardianDiamondMesh"};
+            mesh.SetVertices(vertices);
+            mesh.SetNormals(normals);
+            mesh.SetTriangles(indices,0);
+            mesh.RecalculateBounds();
             return mesh;
         }
 
-        static Vector3 Point(float y,float radius,int side,float offset)
+        static Vector3 Point(float y,float radius,int side,int sides,float offset)
         {
-            float a=side*Mathf.PI*2f/8f+offset;
+            float a=side*Mathf.PI*2f/sides+offset;
             return new Vector3(Mathf.Cos(a)*radius,y,Mathf.Sin(a)*radius);
         }
 
