@@ -19,7 +19,7 @@ namespace Alterverse.Visuals
         private Material floorMaterial,seamMaterial,clearCrystal,blackCrystal,pulsarMaterial;
         private Renderer pulsarRenderer;
         private Light pulsarLight;
-        private int appliedWorldId;
+        private EntityId appliedWorldId;
         private float nextMonsterScan;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -34,12 +34,12 @@ namespace Alterverse.Visuals
             GameObject world=GameObject.Find("DF_MatchWorld");
             if(world==null)
             {
-                appliedWorldId=0;
+                appliedWorldId=default;
                 return;
             }
             if(!ArenaVariantRuntime.IsDiamondCore)return;
 
-            int worldId=world.GetEntityId();
+            EntityId worldId=world.GetEntityId();
             if(appliedWorldId!=worldId)
             {
                 ClearRuntime();
