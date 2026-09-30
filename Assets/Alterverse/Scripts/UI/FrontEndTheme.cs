@@ -7,23 +7,23 @@ namespace Alterverse.UI
     internal sealed class FrontEndTheme
     {
         public static readonly Color Background = new(.020f, .028f, .041f);
-        // Keep the space/origin-world art visible while controls remain easy to read.
-        public static readonly Color Surface = new(.045f, .061f, .083f, .80f);
-        public static readonly Color Raised = new(.078f, .108f, .146f, .90f);
+        // Dark glass and champagne highlights leave the orbital artwork visible.
+        public static readonly Color Surface = new(.025f, .038f, .055f, .76f);
+        public static readonly Color Raised = new(.14f, .12f, .09f, .88f);
         public static readonly Color Text = new(.96f, .975f, .99f);
         public static readonly Color Muted = new(.63f, .71f, .79f);
-        public static readonly Color Accent = new(.32f, .88f, .86f);
+        public static readonly Color Accent = new(.91f, .73f, .48f);
         public static readonly Color Zero = new(.60f, .39f, .82f);
 
         // Clearer outlines than the old flat IMGUI rectangles. The selected state stays cyan,
         // while ordinary controls use a cool steel-blue frame that remains visible over space art.
         private static readonly Color Outline = new(.36f, .49f, .63f, .98f);
         private static readonly Color OutlineSoft = new(.25f, .35f, .46f, .94f);
-        private static readonly Color OutlineSelected = new(.48f, .97f, .94f, 1f);
+        private static readonly Color OutlineSelected = new(1f, .84f, .60f, 1f);
 
         private const int RoundedTextureSize = 48;
-        private const float CornerRadius = 12.5f;
-        private const float OutlineThickness = 2.8f;
+        private const float CornerRadius = 5f;
+        private const float OutlineThickness = 1.2f;
         private const int SliceBorder = 15;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
 
@@ -109,6 +109,7 @@ namespace Alterverse.UI
 
             Field = new GUIStyle(GUI.skin.textField)
             {
+                font = FrontEndTypography.Body,
                 fontSize = 23,
                 padding = new RectOffset(14, 14, 10, 10),
                 border = new RectOffset(SliceBorder, SliceBorder, SliceBorder, SliceBorder)
@@ -188,6 +189,7 @@ namespace Alterverse.UI
         {
             var style = new GUIStyle(GUI.skin.label)
             {
+                font = weight == FontStyle.Bold ? FrontEndTypography.Display : FrontEndTypography.Body,
                 fontSize = size,
                 fontStyle = weight,
                 wordWrap = true,
@@ -283,13 +285,14 @@ namespace Alterverse.UI
             bool previous = GUI.enabled;
             GUI.enabled = previous && enabled;
 
-            Color surface = primary ? Accent : selected ? Raised : Surface;
+            bool hovered=enabled && rect.Contains(Event.current.mousePosition);
+            Color surface = primary ? new Color(.23f,.18f,.11f,.90f) : selected || hovered ? Raised : Surface;
             RoundedFill(rect, enabled ? surface : Surface);
 
             Color border = !enabled
                 ? new Color(OutlineSoft.r, OutlineSoft.g, OutlineSoft.b, .52f)
                 : primary
-                    ? new Color(.76f, 1f, .99f, 1f)
+                    ? new Color(1f, .85f, .63f, 1f)
                     : selected
                         ? OutlineSelected
                         : Outline;
@@ -313,7 +316,7 @@ namespace Alterverse.UI
             if (labelWidth > availableTextWidth)
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
-            GUI.color *= !enabled ? Muted : primary ? new Color(.035f, .085f, .10f) : Text;
+            GUI.color *= !enabled ? Muted : primary ? new Color(1f,.91f,.75f) : Text;
             GUI.Label(rect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;
@@ -353,3 +356,4 @@ namespace Alterverse.UI
         }
     }
 }
+

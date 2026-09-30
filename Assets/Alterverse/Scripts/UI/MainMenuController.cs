@@ -29,7 +29,7 @@ namespace Alterverse.UI
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
             "Slip between seconds. Reposition through rifts, control space and strike with chronolight." };
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
-        private Page page = Page.Play;
+        private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
@@ -46,8 +46,8 @@ namespace Alterverse.UI
         private float master, music, sfx;
         private bool audioDirty;
         private const float MenuHeight = 720;
-        private float Left => (menuWidth - ContentWidth)*.5f;
-        private float ContentWidth => Mathf.Min(1360,menuWidth-64);
+        private float Left => (menuWidth - ContentWidth + (page==Page.Home?0:240))*.5f;
+        private float ContentWidth => Mathf.Min(1360,menuWidth-(page==Page.Home?64:288));
         private float Right => Left+ContentWidth;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -74,7 +74,7 @@ namespace Alterverse.UI
         public static void ShowHome()
         {
             if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
-            instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Play;
+            instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Home;
             instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
             instance.collection?.Invalidate();
@@ -154,7 +154,7 @@ namespace Alterverse.UI
             {
                 if (editingName) CancelName();
                 else if (launching) launching = false;
-                else SetPage(Page.Play);
+                else SetPage(Page.Home);
             }
             if (launching && Time.unscaledTime-launchAt >= .55f) EnterMatch();
         }
@@ -176,17 +176,22 @@ namespace Alterverse.UI
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height));
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
-                float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1200f);
+                float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
                 menuWidth = safe.width/scale;
                 float y = Screen.height-safe.yMax+(safe.height-MenuHeight*scale)*.5f;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x,y,0),Quaternion.identity,Vector3.one*scale);
                 theme ??= new FrontEndTheme();
                 if (launching) { DrawLaunch(); return; }
-                DrawNavigation();
+                if(page != Page.Home)
+                {
+                    FrontEndTheme.Fill(new Rect(0,0,menuWidth,MenuHeight),new Color(.008f,.014f,.025f,.52f));
+                    DrawNavigation();
+                }
                 float reveal = Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.16f));
                 GUI.color = new Color(1,1,1,.65f+.35f*reveal);
                 switch (page)
                 {
+                    case Page.Home: DrawHome(); break;
                     case Page.Play: DrawPlay(); break;
                     case Page.Heroes: DrawHeroes(); break;
                     case Page.Shop: DrawShop(); break;
@@ -203,23 +208,17 @@ namespace Alterverse.UI
         }
         private void DrawNavigation()
         {
-            // INVENTORY needs more horizontal room than the short navigation labels.
-            // Use authored widths instead of equal buttons so every label stays on one line.
-            float[] widths={82f,94f,82f,126f,92f,82f,108f,126f};
-            const float gap=8f;
-            float total=gap*(widths.Length-1);
-            for(int i=0;i<widths.Length;i++)total+=widths[i];
-            theme.FitLabel(new Rect(Left,20,Mathf.Max(120,ContentWidth-total-24),48),"DIMENSIONS FRONT",theme.Small);
-            float x=Right-total;
-
+            float rail=Left-232;
+            theme.FitLabel(new Rect(rail,26,208,35),"DIMENSIONS",theme.Heading);
+            theme.Label(new Rect(rail,61,208,27),"F  R  O  N  T",theme.Small,true);
+            FrontEndTheme.Fill(new Rect(rail+218,26,1,660),new Color(.53f,.64f,.75f,.22f));
+            if(theme.Action(new Rect(rail,116,202,44),"HOME",selected:page==Page.Home))SetPage(Page.Home);
             for(int i=0;i<NavigationLabels.Length;i++)
-            {
-                if(theme.Action(new Rect(x,20,widths[i],48),NavigationLabels[i],selected:page==NavigationPages[i]))
-                    SetPage(NavigationPages[i]);
-                x+=widths[i]+gap;
-            }
-
-            DimensionUiMotif.DrawHeaderLine(new Rect(Left,86,ContentWidth,2),Texture2D.whiteTexture,FrontEndTheme.Zero,FrontEndTheme.Accent,0);
+                if(theme.Action(new Rect(rail,178+i*57,202,48),NavigationLabels[i],
+                    primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
+            theme.FitLabel(new Rect(Left,30,ContentWidth*.62f,34),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
+            theme.FitLabel(new Rect(Right-300,32,300,30),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Body,true);
+            FrontEndTheme.Fill(new Rect(Left,85,ContentWidth,1),new Color(.75f,.65f,.47f,.50f));
         }
         private void Heading(string title, string description)
         {
@@ -245,26 +244,64 @@ namespace Alterverse.UI
         }
         private void DrawHome()
         {
-            float split = Left+ContentWidth*.43f;
-            theme.Label(new Rect(Left,128,460,30),"TWO REALITIES. ONE FRONT.",theme.Small,true);
-            theme.Label(new Rect(Left,170,500,112),"Your reality.\nYour fight.",theme.Title);
-            theme.Label(new Rect(Left,300,440,66),"Choose your hero. Join your team.\nTake the Dimensions Front.",theme.Body,true);
-            AvatarBadgeRenderer.Draw(new Rect(Left,406,64,64),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
-            theme.Label(new Rect(Left+82,404,340,30),PlayerProfile.PlayerName,theme.Heading);
-            theme.Label(new Rect(Left+82,440,340,25),$"LEVEL {PlayerExperience.Level}    /    {PlayerWallet.Balance} SHARDS",theme.Small,true);
-            theme.Progress(new Rect(Left,492,420,5),PlayerExperience.LevelProgress);
-            theme.Label(new Rect(Left,506,420,28),XpLabel(),theme.Small,true);
-            if (theme.Action(new Rect(Left,568,420,72),"PLAY",true)) SetPage(Page.Play);
-            theme.Label(new Rect(Left,652,420,26),"MATCH 5v5  /  LOCAL PLAY",theme.Small,true);
-            DrawPortrait(new Rect(split,108,Right-split,444));
-            FrontEndTheme.Fill(new Rect(split+48,553,Right-split-96,2),Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero));
-            theme.Label(new Rect(split+48,570,Right-split-170,38),HeroName,theme.Heading);
-            theme.Label(new Rect(split+48,616,Right-split-180,28),Roles[selectedHero],theme.Small,true);
-            if (theme.Action(new Rect(Right-110,580,62,64),">")) SetPage(Page.Heroes);
+            float navWidth=252f;
+            float heroX=Left+ContentWidth*.62f;
+            // Render the actual selected loadout over the environment, without an opaque card.
+            if(showcase?.Image!=null)
+                GUI.DrawTexture(new Rect(heroX,142,Right-heroX,470),showcase.Image,ScaleMode.ScaleToFit,true);
+
+            var logo=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
+            theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"D I M E N S I O N S",logo);
+            var subtitle=new GUIStyle(theme.Heading);subtitle.normal.textColor=FrontEndTheme.Accent;
+            theme.Label(new Rect(Left+4,131,530,36),"F  R  O  N  T",subtitle);
+            theme.Label(new Rect(Left+4,174,600,26),"BEYOND BORDERS. HIGHER HORIZONS.",theme.Small,true);
+
+            Rect profile=new Rect(Right-280,24,280,70);
+            theme.Panel(profile);
+            AvatarBadgeRenderer.Draw(new Rect(profile.x+12,profile.y+12,44,44),PlayerProfile.Avatar,Texture2D.whiteTexture,Time.unscaledTime);
+            theme.FitLabel(new Rect(profile.x+68,profile.y+8,196,25),PlayerProfile.PlayerName,theme.Body);
+            theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Small,true);
+            theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
+            if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
+
+            FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
+            for(int i=0;i<5;i++)
+                if(theme.Action(new Rect(Left+10,246+i*56,navWidth-10,48),NavigationLabels[i]+(i==0?"     >":""),primary:i==0))
+                    SetPage(NavigationPages[i]);
+            float textX=Left+navWidth+38;
+            float textWidth=Mathf.Max(230,heroX-textX+30);
+            theme.FitLabel(new Rect(textX,267,textWidth,28),"CHOOSE. DEPLOY. CONQUER.",subtitle);
+            theme.Label(new Rect(textX,309,textWidth,94),"TWO REALITIES.\nONE FRONT.",theme.Title);
+            theme.Label(new Rect(textX,416,textWidth-12,76),"Choose your hero. Fight alongside your team. Claim the Hotzone and break the enemy core.",theme.Body,true);
+            FrontEndTheme.Fill(new Rect(textX,510,56,2),FrontEndTheme.Accent);
+            theme.FitLabel(new Rect(heroX+24,560,Right-heroX-48,35),HeroName,theme.Heading);
+            theme.FitLabel(new Rect(heroX+24,598,Right-heroX-48,24),Roles[selectedHero],theme.Small,true);
+
+            float cardWidth=Mathf.Min(232,(ContentWidth*.66f-24)/3f);
+            DrawHomeCard(new Rect(Left,560,cardWidth,105),"01  /  DEPLOYMENT","ENTER THE FRONT",Page.Play);
+            DrawHomeCard(new Rect(Left+cardWidth+12,560,cardWidth,105),"02  /  SEASON REWARDS","BATTLE PASS",Page.Shop);
+            DrawHomeCard(new Rect(Left+(cardWidth+12)*2,560,cardWidth,105),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
+            if(theme.Action(new Rect(Left,680,112,28),"RANKING"))SetPage(Page.Leaderboard);
+            if(theme.Action(new Rect(Left+124,680,112,28),"SETTINGS"))SetPage(Page.Settings);
+            theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
+        }
+        private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
+        {
+            backdrop.DrawCard(rect,(int)target);
+            theme.Panel(rect);
+            FrontEndTheme.Fill(new Rect(rect.x+14,rect.y+14,26,2),FrontEndTheme.Accent);
+            theme.FitLabel(new Rect(rect.x+14,rect.y+32,rect.width-28,24),eyebrow,theme.Small,true);
+            theme.FitLabel(new Rect(rect.x+14,rect.y+61,rect.width-28,32),title,theme.Heading);
+            if(GUI.Button(rect,GUIContent.none,GUIStyle.none))
+            {
+                Alterverse.Audio.UiSoundRouter.Confirm();
+                if(target==Page.Shop){battlePassShop=true;skinShop=shardShop=itemShop=weaponShop=mapShop=heroShop=false;}
+                SetPage(target);
+            }
         }
         private void DrawPlay()
         {
-            Heading("Deployment","Choose your hero, difficulty and arena before entering the Front.");
+            Heading("Deployment","Choose your hero and arena before entering the Front.");
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
             theme.Label(new Rect(Left+28,228,w-56,22),"AVAILABLE NOW",theme.Small,true);
@@ -1203,7 +1240,7 @@ namespace Alterverse.UI
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
             theme.Label(new Rect(x,250,rw,38),"MATCH OPTIONS",theme.Heading);
-            theme.Label(new Rect(x,306,rw,82),"Difficulty is selected directly before each match so you can change the challenge for every deployment.",theme.Body,true);
+            // Voice-chat controls occupy the right-column slot at y=306.
             theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
             theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
         }
@@ -1357,5 +1394,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

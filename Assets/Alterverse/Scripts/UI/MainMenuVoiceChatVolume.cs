@@ -74,11 +74,11 @@ namespace Alterverse.UI
 
             Rect safe=Screen.safeArea;
             if(safe.width<=0||safe.height<=0)return;
-            float scale=Mathf.Min(safe.height/MenuHeight,safe.width/1200f);
+            float scale=Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
             if(scale<=0)return;
             float menuWidth=safe.width/scale;
-            float contentWidth=Mathf.Min(1360f,menuWidth-64f);
-            float left=(menuWidth-contentWidth)*.5f;
+            float contentWidth=Mathf.Min(1360f,menuWidth-288f);
+            float left=(menuWidth-contentWidth+240f)*.5f;
             float audioWidth=contentWidth*.64f;
             float x=left+audioWidth+32f;
             float width=contentWidth-audioWidth-32f;
@@ -93,14 +93,14 @@ namespace Alterverse.UI
                 GUI.depth=-5500;
                 theme??=new FrontEndTheme();
 
-                theme.Label(new Rect(x,552,width-90,28),"Voice chat volume",theme.Body);
-                theme.Label(new Rect(x+width-82,552,82,28),$"{Mathf.RoundToInt(voice*100)}%",theme.Small);
+                theme.Label(new Rect(x,306,width-90,28),"Voice chat volume",theme.Body);
+                theme.Label(new Rect(x+width-82,306,82,28),$"{Mathf.RoundToInt(voice*100)}%",theme.Small);
 
                 float before=voice;
-                if(theme.Action(new Rect(x,590,46,36),"−"))voice=Mathf.Clamp01(voice-.1f);
-                if(theme.Action(new Rect(x+width-46,590,46,36),"+"))voice=Mathf.Clamp01(voice+.1f);
+                if(theme.Action(new Rect(x,344,46,36),"−"))voice=Mathf.Clamp01(voice-.1f);
+                if(theme.Action(new Rect(x+width-46,344,46,36),"+"))voice=Mathf.Clamp01(voice+.1f);
 
-                Rect track=new Rect(x+60,603,width-120,10);
+                Rect track=new Rect(x+60,357,width-120,10);
                 FrontEndTheme.Fill(track,FrontEndTheme.Raised);
                 FrontEndTheme.Fill(new Rect(track.x,track.y,track.width*voice,track.height),FrontEndTheme.Accent);
                 Event e=Event.current;
@@ -111,7 +111,7 @@ namespace Alterverse.UI
                 }
                 FrontEndTheme.Fill(new Rect(track.x+track.width*voice-5,track.center.y-10,10,20),FrontEndTheme.Text);
 
-                theme.Label(new Rect(x,636,width,22),"Controls incoming co-op voice only.",theme.Small,true);
+                theme.Label(new Rect(x,390,width,22),"Controls incoming co-op voice only.",theme.Small,true);
                 if(!Mathf.Approximately(before,voice))ApplyLive();
             }
             finally
@@ -123,3 +123,4 @@ namespace Alterverse.UI
         }
     }
 }
+

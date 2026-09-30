@@ -48,13 +48,18 @@ namespace Alterverse.Visuals
                 Tri(i,j,n+j,true);Tri(i,n+j,n+i,true);
                 Tri(n+i,n+j,n*2+j,true);Tri(n+i,n*2+j,n*2+i,true);
             }
-            Mesh mesh=new(){name=name,vertices=vertices,triangles=triangles};
+            // Split bevel boundaries so the broad armor face stays flat and its machined
+            // rim catches a separate highlight instead of melting into a rounded blob.
+            var hardVertices=new Vector3[triangles.Length];
+            var hardTriangles=new int[triangles.Length];
+            for(int i=0;i<triangles.Length;i++){hardVertices[i]=vertices[triangles[i]];hardTriangles[i]=i;}
+            Mesh mesh=new(){name=name,vertices=hardVertices,triangles=hardTriangles};
             mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
 
         public static Mesh HeadShell(string name)
         {
-            const int sides=8,sections=4;
+            const int sides=16,sections=4;
             Vector3[] v=new Vector3[sides*sections];
             float[] z={-.72f,-.18f,.38f,.82f};
             float[] rx={.72f,.82f,.62f,.38f};
@@ -119,3 +124,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

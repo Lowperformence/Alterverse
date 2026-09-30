@@ -22,7 +22,7 @@ namespace Alterverse.Visuals
             var colors=new Color[mesh.vertexCount];color.a=energy?1:0;
             var surface=new Vector2[mesh.vertexCount];
             // Coated armor gets a tighter, brighter highlight; undersuit fabric stays softer.
-            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.52f,.82f);
+            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.62f,.64f);
             Vector3[] vertices=mesh.vertices,normals=mesh.normals;
             Bounds bounds=mesh.bounds;
             float heightRange=Mathf.Max(.001f,bounds.max.y-bounds.min.y);
@@ -38,7 +38,9 @@ namespace Alterverse.Visuals
                     float sculptShade=Mathf.Lerp(.82f,1.15f,height)*contour;
                     Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
                 }
-                surface[i]=response;
+                // Baked low-frequency coating variation avoids a uniform plastic highlight.
+                float grain=Mathf.PerlinNoise(vertices[i].x*23f+17f,vertices[i].y*19f+vertices[i].z*11f);
+                surface[i]=new Vector2(response.x,Mathf.Clamp01(response.y+(grain-.5f)*.12f));
             }
             mesh.colors=colors;mesh.uv2=surface;
         }
@@ -162,3 +164,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
