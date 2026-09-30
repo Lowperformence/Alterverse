@@ -334,23 +334,28 @@ namespace Alterverse.Visuals
 
         private Material CreateTransparentCrystal(Color color,float metallic,float smoothness,Color emission)
         {
-            Material material=RuntimeShaderLibrary.Create(color,false,metallic,smoothness,emission);
-            if(material==null)return null;
-            if(material.HasProperty("_Surface"))material.SetFloat("_Surface",1f);
-            if(material.HasProperty("_Blend"))material.SetFloat("_Blend",0f);
-            if(material.HasProperty("_SrcBlend"))material.SetFloat("_SrcBlend",(float)BlendMode.SrcAlpha);
-            if(material.HasProperty("_DstBlend"))material.SetFloat("_DstBlend",(float)BlendMode.OneMinusSrcAlpha);
-            if(material.HasProperty("_ZWrite"))material.SetFloat("_ZWrite",0f);
+            Shader shader=Resources.Load<Shader>("DF_DiamondCrystal");
+            if(shader==null)
+            {
+                Debug.LogError("DIMENSIONS FRONT: Diamond Core crystal shader is missing from Resources.");
+                return null;
+            }
+            Material material=new(shader);
             if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
-            material.SetOverrideTag("RenderType","Transparent");material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");material.renderQueue=(int)RenderQueue.Transparent;
-            materials.Add(material);return material;
+            if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
+            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Clamp01(smoothness));
+            if(material.HasProperty("_FresnelPower"))material.SetFloat("_FresnelPower",Mathf.Lerp(2.4f,3.8f,Mathf.Clamp01(smoothness)));
+            if(material.HasProperty("_FresnelStrength"))material.SetFloat("_FresnelStrength",Mathf.Lerp(.52f,.82f,Mathf.Clamp01(metallic+smoothness*.5f)));
+            if(material.HasProperty("_CoreAlpha"))material.SetFloat("_CoreAlpha",Mathf.Clamp(color.a*.34f,.08f,.30f));
+            materials.Add(material);
+            return material;
         }
 
         internal static Mesh CreateCrystalMesh()
         {
             Vector3[] v={new(0,1.2f,0),new(0,-1f,0),new(.72f,.08f,0),new(0,.08f,.72f),new(-.72f,.08f,0),new(0,.08f,-.72f)};
             int[] t={0,2,3,0,3,4,0,4,5,0,5,2,1,3,2,1,4,3,1,5,4,1,2,5};
-            Mesh mesh=new(){name="DF_FacetedDiamond",vertices=v,triangles=t};mesh.RecalculateNormals();mesh.RecalculateTangents();mesh.RecalculateBounds();return mesh;
+            Mesh mesh=new(){name="DF_FacetedDiamond",vertices=v,triangles=t};mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
 
         private static void DisableCollider(GameObject go)
