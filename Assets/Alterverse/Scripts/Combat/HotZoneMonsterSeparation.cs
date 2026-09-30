@@ -64,9 +64,9 @@ namespace Alterverse.Combat
             Vector3 away;
             if(sqr<.0001f)
             {
-                // Deterministic emergency direction if both roots ever land on exactly the same point.
-                float sign=a.GetInstanceID()<b.GetInstanceID()?1f:-1f;
-                away=new Vector3(sign,0f,0f);
+                // Stable emergency direction if both roots ever land on exactly the same point.
+                // Pair ordering in HotZoneTank.Active supplies the opposite correction for B.
+                away=Vector3.right;
                 distance=0f;
             }
             else away=delta/distance;
@@ -74,7 +74,6 @@ namespace Alterverse.Combat
             // Both monsters take opposite sides around one another. This reads as avoidance rather
             // than as a physics shove and does not alter either monster's facing or combat target.
             Vector3 tangent=Vector3.Cross(Vector3.up,away).normalized;
-            if(a.GetInstanceID()>b.GetInstanceID())tangent=-tangent;
 
             float soft=Mathf.Clamp01((AvoidanceDistance-distance)/(AvoidanceDistance-PreferredDistance));
             float sideStep=SideStepSpeed*soft*Time.deltaTime;
