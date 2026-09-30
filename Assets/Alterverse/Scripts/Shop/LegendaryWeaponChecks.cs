@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Collections.Generic;
 using Alterverse.Characters;
 using UnityEditor;
 using UnityEngine;
@@ -9,32 +8,36 @@ namespace Alterverse.Shop
 {
     public static class LegendaryWeaponChecks
     {
-        [MenuItem("DIMENSIONS FRONT/Checks/Legendary weapons (non-destructive)")]
+        [MenuItem("DIMENSIONS FRONT/Checks/Weapon colorways (non-destructive)")]
         public static void Run()
         {
             HeroId[] heroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook,HeroId.Traveler};
-            var names=new HashSet<string>(StringComparer.Ordinal);
-            Assert(WeaponSkinCatalog.PremiumPrice==1100,"Premium legendary price must remain 1100 shards.");
-            Assert(WeaponSkinCatalog.PremiumPrice>WeaponSkinCatalog.Price,"Legendary tier must cost more than EPIC.");
+
+            Assert(WeaponSkinCatalog.Items!=null,"Weapon colorway catalog is missing.");
+            Assert(WeaponSkinCatalog.Items.Length==heroes.Length*2,"Weapon shop must contain exactly two purchasable colorways per hero.");
 
             for(int i=0;i<heroes.Length;i++)
             {
                 HeroId hero=heroes[i];
-                Assert(WeaponSkinCatalog.Contains(hero,1),hero+" is missing legendary variant 1.");
-                WeaponSkinItem item=WeaponSkinCatalog.For(hero,1);
-                Assert(item.Variant==1,hero+" legendary must use variant 1.");
-                Assert(item.Price==WeaponSkinCatalog.PremiumPrice,hero+" legendary must cost 1100 shards.");
-                Assert(item.Name.Contains("LEGENDARY"),hero+" legendary store card must be labelled LEGENDARY.");
-                Assert(!string.IsNullOrWhiteSpace(item.WeaponName)&&names.Add(item.WeaponName),hero+" legendary weapon name must be unique.");
-                Assert(!string.IsNullOrWhiteSpace(item.Description)&&item.Description.Length>=70,hero+" legendary needs a premium-detail store description.");
+                Assert(WeaponSkinCatalog.VariantCount(hero)==2,hero+" must have exactly two colorways.");
+                Assert(WeaponSkinCatalog.Contains(hero,0),hero+" is missing colorway 0.");
+                Assert(WeaponSkinCatalog.Contains(hero,1),hero+" is missing colorway 1.");
+
+                WeaponSkinItem first=WeaponSkinCatalog.For(hero,0);
+                WeaponSkinItem second=WeaponSkinCatalog.For(hero,1);
+                Assert(first.Variant==0&&second.Variant==1,hero+" has invalid colorway ids.");
+                Assert(first.Price==WeaponSkinCatalog.Price&&second.Price==WeaponSkinCatalog.Price,hero+" colorways must use the standard weapon-skin price.");
+                Assert(string.Equals(first.WeaponName,second.WeaponName,StringComparison.Ordinal),hero+" colorways must use the same authored standard weapon.");
+                Assert(!string.Equals(first.Name,second.Name,StringComparison.OrdinalIgnoreCase),hero+" colorway names must be distinct.");
+                Assert(first.Glow!=second.Glow,hero+" colorways must have visibly different colors.");
             }
 
-            Debug.Log("DIMENSIONS FRONT: all 7 legendary weapons have unique names, variant-1 ownership entries and the 1100-shard premium price. Visual motion remains an in-Unity presentation check.");
+            Debug.Log("DIMENSIONS FRONT: weapon shop contains exactly two cosmetic colorways per hero, both using the same authored standard weapon silhouette.");
         }
 
         private static void Assert(bool condition,string message)
         {
-            if(!condition)throw new InvalidOperationException("Legendary weapon regression: "+message);
+            if(!condition)throw new InvalidOperationException("Weapon colorway regression: "+message);
         }
     }
 }
