@@ -11,7 +11,7 @@ namespace Alterverse.Visuals
         const string VisualRootName="DF_NeptuneOctopusVisual";
         const string EyeRootName="DF_NeptuneOrangeEyes";
         Transform eyeRoot;
-        Material orangeEye,darkPupil;
+        Material orangeEye;
         float nextResolve;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -43,7 +43,6 @@ namespace Alterverse.Visuals
             DisableOldEye(visual,"EyePupil");
 
             orangeEye=MakeMaterial("DF_NeptuneOctopusOrangeEye",new Color(1f,.24f,.015f,1f),true,4.8f,.72f);
-            darkPupil=MakeMaterial("DF_NeptuneOctopusDarkPupil",new Color(.012f,.003f,.001f,1f),false,1f,.82f);
 
             eyeRoot=new GameObject(EyeRootName).transform;
             eyeRoot.SetParent(visual,false);
@@ -59,10 +58,6 @@ namespace Alterverse.Visuals
             GameObject eye=Part(PrimitiveType.Sphere,x<0?"OrangeEyeL":"OrangeEyeR",parent,
                 new Vector3(x,.98f,.55f),new Vector3(.52f,.46f,.20f),orangeEye);
             eye.transform.localRotation=Quaternion.identity;
-
-            GameObject pupil=Part(PrimitiveType.Sphere,x<0?"PupilL":"PupilR",parent,
-                new Vector3(x,.98f,.66f),new Vector3(.20f,.25f,.075f),darkPupil);
-            pupil.transform.localRotation=Quaternion.identity;
         }
 
         static void DisableOldEye(Transform root,string childName)
@@ -107,7 +102,6 @@ namespace Alterverse.Visuals
         void OnDestroy()
         {
             if(orangeEye!=null)Object.Destroy(orangeEye);
-            if(darkPupil!=null)Object.Destroy(darkPupil);
         }
     }
 
