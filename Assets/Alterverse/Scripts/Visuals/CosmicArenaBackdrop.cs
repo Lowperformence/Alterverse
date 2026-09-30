@@ -23,7 +23,9 @@ namespace Alterverse.Visuals
             BuildStars();
             BuildBrightStars();
             BuildFarStarLayer();
+            BuildDenseStarLayer();
             BuildStarClusters();
+            BuildDistantGalaxies();
             BuildDistantPlanets();
             BuildDistantMoons();
             BuildPlanetRings();
@@ -77,8 +79,24 @@ namespace Alterverse.Visuals
             r.sortingOrder=-100;
         }
 
-
-
+        private void BuildDenseStarLayer()
+        {
+            Material m=Mat(new Color(.29f,.34f,.44f,1));if(m==null)return;
+            const int count=560;var vertices=new Vector3[count];var indices=new int[count];
+            for(int i=0;i<count;i++)
+            {
+                float a=i*2.173821f+.31f;float radius=58f+(i*47%154);
+                float x=Mathf.Cos(a)*radius,z=Mathf.Sin(a)*radius*.74f;
+                if(Mathf.Abs(x)<48f&&Mathf.Abs(z)<41f)
+                {
+                    radius+=48f;x=Mathf.Cos(a)*radius;z=Mathf.Sin(a)*radius*.74f;
+                }
+                vertices[i]=new Vector3(x,-2.76f+(i%7)*.006f,z);indices[i]=i;
+            }
+            Mesh mesh=new Mesh{name="DF_DenseStars"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_DenseStars");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-102;
+        }
 
         private void BuildStarClusters()
         {
@@ -121,6 +139,44 @@ namespace Alterverse.Visuals
             MeshRenderer r=g.AddComponent<MeshRenderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;r.sortingOrder=-99;
         }
 
+        private void BuildDistantGalaxies()
+        {
+            BuildGalaxy(new Vector3(-142,-2.79f,-88),18f,.43f,.15f,new Color(.42f,.32f,.58f,1),17);
+            BuildGalaxy(new Vector3(148,-2.80f,70),16f,.48f,1.05f,new Color(.25f,.48f,.60f,1),29);
+            BuildGalaxy(new Vector3(-18,-2.81f,164),20f,.38f,2.10f,new Color(.39f,.43f,.66f,1),43);
+        }
+
+        private void BuildGalaxy(Vector3 center,float radius,float flatten,float rotation,Color color,int seed)
+        {
+            Material m=Mat(color);if(m==null)return;
+            const int armCount=3;
+            const int armPoints=150;
+            const int corePoints=42;
+            var vertices=new Vector3[armPoints+corePoints];var indices=new int[vertices.Length];
+
+            for(int i=0;i<armPoints;i++)
+            {
+                int arm=i%armCount;int step=i/armCount;
+                float t=step/49f;
+                float jitter=((i*seed)%19-9)*.018f;
+                float a=rotation+arm*Mathf.PI*2f/armCount+t*Mathf.PI*2.75f+jitter;
+                float r=1.1f+t*radius+((i*(seed+7))%13)*.035f;
+                vertices[i]=center+new Vector3(Mathf.Cos(a)*r,0,Mathf.Sin(a)*r*flatten);indices[i]=i;
+            }
+
+            for(int i=0;i<corePoints;i++)
+            {
+                float a=rotation+i*2.39996323f;
+                float r=Mathf.Sqrt((i+.5f)/corePoints)*radius*.24f;
+                int index=armPoints+i;
+                vertices[index]=center+new Vector3(Mathf.Cos(a)*r,0,Mathf.Sin(a)*r*flatten*.9f);indices[index]=index;
+            }
+
+            Mesh mesh=new Mesh{name="DF_DistantGalaxy"};mesh.vertices=vertices;mesh.SetIndices(indices,MeshTopology.Points,0);mesh.RecalculateBounds();meshes.Add(mesh);
+            GameObject g=new GameObject("DF_DistantGalaxy");g.transform.SetParent(stars,false);g.AddComponent<MeshFilter>().sharedMesh=mesh;
+            MeshRenderer renderer=g.AddComponent<MeshRenderer>();renderer.sharedMaterial=m;renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;renderer.sortingOrder=-103;
+        }
+
         private void BuildDistantPlanets()
         {
             distantBodies=new GameObject("DF_DistantBodies").transform;distantBodies.SetParent(transform,false);
@@ -128,11 +184,6 @@ namespace Alterverse.Visuals
             Planet(new Vector3(76,-21,-51),21f,new Color(.055f,.09f,.12f,1));
             Planet(new Vector3(72,-13,92),6f,new Color(.085f,.09f,.115f,1));
         }
-
-
-
-
-
 
         private void ConfigureCameraBackdrop()
         {
@@ -145,9 +196,6 @@ namespace Alterverse.Visuals
                 camera.backgroundColor=voidColor;
             }
         }
-
-
-
 
         private void BuildEdgeFragments()
         {
@@ -163,7 +211,6 @@ namespace Alterverse.Visuals
                 Renderer r=g.GetComponent<Renderer>();r.sharedMaterial=m;r.shadowCastingMode=ShadowCastingMode.Off;r.receiveShadows=false;
             }
         }
-
 
         private void BuildPlanetShadows()
         {
