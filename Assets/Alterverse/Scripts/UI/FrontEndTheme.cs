@@ -43,6 +43,26 @@ namespace Alterverse.UI
                    string.Equals(text,"EXPERT",StringComparison.OrdinalIgnoreCase);
         }
 
+        // The weapon-skins store entry is retired. Keep the underlying weapon cosmetic data intact,
+        // but remove its frontend tab and collapse the remaining store tabs into the freed slot.
+        private static bool IsRetiredWeaponStoreTab(Rect rect,string text)
+        {
+            return Mathf.Abs(rect.y-204f)<=1f&&Mathf.Abs(rect.height-52f)<=1f&&
+                   string.Equals(text,"WEAPONS",StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static Rect CollapseRetiredWeaponStoreTabGap(Rect rect,string text)
+        {
+            if(Mathf.Abs(rect.y-204f)>1f||Mathf.Abs(rect.height-52f)>1f)return rect;
+            bool followsWeaponTab=
+                string.Equals(text,"HERO",StringComparison.OrdinalIgnoreCase)||
+                string.Equals(text,"MAPS",StringComparison.OrdinalIgnoreCase)||
+                string.Equals(text,"BATTLE ITEM",StringComparison.OrdinalIgnoreCase)||
+                string.Equals(text,"BATTLE PASS",StringComparison.OrdinalIgnoreCase);
+            if(followsWeaponTab)rect.x-=111f; // 104px store tab + 7px authored gap.
+            return rect;
+        }
+
         private bool IsHiddenDifficultyArrow(Rect rect,string text)
         {
             if(!hasHiddenDifficultyCenter||(text!="<"&&text!=">"))return false;
@@ -243,6 +263,11 @@ namespace Alterverse.UI
 
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
         {
+            // Weapon skins are no longer exposed as a store category. Returning before hit-testing
+            // guarantees the retired tab is neither rendered nor clickable.
+            if(IsRetiredWeaponStoreTab(rect,text))return false;
+            rect=CollapseRetiredWeaponStoreTabGap(rect,text);
+
             // Adaptive bot difficulty is intentionally invisible and non-interactive. Keeping this
             // guard in the shared frontend also makes stale menu layouts harmless during migration.
             if(IsHiddenDifficultyText(text)||IsHiddenDifficultyArrow(rect,text))return false;
