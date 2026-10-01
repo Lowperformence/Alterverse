@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
     // Kept deliberately dark so gameplay silhouettes and faction colors remain dominant.
     public sealed class CosmicArenaBackdrop : MonoBehaviour
     {
+        private PhotoArenaPanorama photoPanorama;
         private readonly List<Material> materials=new List<Material>();
         private readonly List<Mesh> meshes=new List<Mesh>();
         private Transform stars;
@@ -20,6 +21,9 @@ namespace Alterverse.Visuals
         private void Start()
         {
             if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
+            photoPanorama=new PhotoArenaPanorama();
+            if(photoPanorama.Load())return;
+            photoPanorama=null;
             BuildVoidFloor();
             BuildStars();
             BuildBrightStars();
@@ -276,6 +280,7 @@ namespace Alterverse.Visuals
 
         private void Update()
         {
+            if(photoPanorama!=null){photoPanorama.RefreshCamera();return;}
             if(Time.time<nextBackdropUpdate)return;nextBackdropUpdate=Time.time+.1f;
             if(stars!=null){float drift=Mathf.Sin(Time.time*.018f)*.35f;stars.rotation=starsStartRotation*Quaternion.Euler(0,drift,0);}
             if(distantBodies!=null)distantBodies.rotation=Quaternion.Euler(0,Mathf.Sin(Time.time*.006f)*.12f,0);
@@ -287,11 +292,13 @@ namespace Alterverse.Visuals
             if(planetRingMaterial!=null){float shade=.92f+Mathf.Sin(Time.time*.035f)*.025f;planetRingMaterial.color=new Color(.12f*shade,.13f*shade,.16f*shade,1);}
         }
 
+        private void OnDisable(){photoPanorama?.RestoreCamera();}
+
         private void OnDestroy()
         {
+            photoPanorama?.Dispose();
             foreach(Material m in materials)if(m!=null)Destroy(m);
             foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);
         }
     }
 }
-
