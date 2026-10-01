@@ -28,7 +28,7 @@ namespace Alterverse.Characters
             // and therefore needs enough foot speed to eventually punish a perfectly kiting carry.
             HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f,.2f,.1f),
             HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,6.0f,1f,.8f),
-            HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,6.2f,.3f,.05f),
+            HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,5.58f,.3f,.05f),
             HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
             HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
             HeroId.Rook=>new HeroCombatStats(2.5f,.9f,6.9f,.45f,.7f),

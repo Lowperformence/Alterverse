@@ -66,6 +66,7 @@ namespace Alterverse.Visuals
         // Stable values can later drive an Animator blend tree without replacing movement logic.
         public float PlanarSpeed { get; private set; }
         public float GaitPhase=>phase;
+        public bool ArmActionActive=>Time.time<attackUntil||Time.time<windupUntil||Time.time<hitUntil||Dashing;
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
         {
@@ -247,7 +248,7 @@ namespace Alterverse.Visuals
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?1.65f:1.45f;
-            // All heroes complete 60% as many visible gait cycles over the same travel distance.
+            // All heroes complete 39% as many visible gait cycles over the same travel distance.
             if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2*.39f,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
@@ -380,8 +381,8 @@ namespace Alterverse.Visuals
                 float kneeRange=Mathf.Lerp(30f,52f,runBlend)*strideWeight;
                 float leftCycle=Mathf.Repeat(phase/(Mathf.PI*2f),1f);
                 float rightCycle=Mathf.Repeat(leftCycle+.5f,1f);
-                EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle);
-                EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle);
+                EvaluateRunLeg(leftCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float leftHipAngle,out float leftKneeAngle,out float leftAnkleAngle,authored!=null);
+                EvaluateRunLeg(rightCycle,hipRange,kneeRange,strideWeight,Mathf.Lerp(.66f,.56f,runBlend),out float rightHipAngle,out float rightKneeAngle,out float rightAnkleAngle,authored!=null);
                 float brace=Mathf.Max(hitWeight*.72f,Mathf.Max(castCharge,castRelease*.38f));
                 leftKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
                 rightKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
@@ -539,7 +540,7 @@ namespace Alterverse.Visuals
             UpdateVeyrTrails(veyrBasic);
         }
         private static void EvaluateRunLeg(float cycle,float hipRange,float kneeRange,float weight,float stance,
-            out float hipAngle,out float kneeAngle,out float ankleAngle)
+            out float hipAngle,out float kneeAngle,out float ankleAngle,bool imported=false)
         {
             // A clear contact pattern: heel settles, the sole stays quiet under load, then
             // the toes push off. Running shortens contact; it does not just swing the legs faster.
@@ -549,7 +550,7 @@ namespace Alterverse.Visuals
             {
                 float u=cycle/stance;
                 float hipU=Mathf.SmoothStep(0f,1f,u);
-                hipAngle=Mathf.Lerp(hipRange,-hipRange,hipU);
+                hipAngle=Mathf.Lerp(hipRange,-hipRange,hipU)*(imported?-1f:1f);
 
                 float load=u<.14f?Mathf.Lerp(0f,1f,Mathf.SmoothStep(0f,1f,u/.14f)):
                     u>.78f?Mathf.Lerp(1f,0f,Mathf.SmoothStep(.78f,1f,u)):1f;
@@ -567,12 +568,12 @@ namespace Alterverse.Visuals
 
             float swing=Mathf.Clamp01((cycle-stance)/(1f-stance));
             float eased=Mathf.SmoothStep(0f,1f,swing);
-            hipAngle=Mathf.Lerp(-hipRange,hipRange,eased);
+            hipAngle=Mathf.Lerp(-hipRange,hipRange,eased)*(imported?-1f:1f);
             // Bend after push-off, clear the ground, then extend into a heel-first landing.
             float kneeLift=Mathf.Sin(Mathf.PI*swing);
             kneeAngle=(Mathf.Lerp(5f,1f,eased)+kneeRange*kneeLift)*weight;
 
-            float toeOffAngle=Mathf.Clamp(18f+hipRange-5f,-60f,60f)*weight;
+            float toeOffAngle=Mathf.Clamp(18f+(imported?-hipRange:hipRange)-5f,-60f,60f)*weight;
             float recoveryAngle=-9f*weight;
             ankleAngle=swing<.22f
                 ?Mathf.Lerp(toeOffAngle,recoveryAngle,Mathf.SmoothStep(0f,1f,swing/.22f))

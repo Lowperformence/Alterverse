@@ -9,7 +9,7 @@ ROOT=str(next(p for p in Path(__file__).resolve().parents if (p/'Assets/Alterver
 SOURCE=os.environ.get('DF_HUMAN_BASE_MESH_SOURCE',os.path.join(ROOT,'Tools/HeroRebuild/source/base_meshes/human-base-meshes-bundle-v1.4.1/human_base_meshes_bundle.blend'))
 OUT=os.path.join(ROOT,'Assets/Alterverse/Resources/AuthoredHeroes'); os.makedirs(OUT,exist_ok=True)
 PREVIEW=os.path.join(ROOT,'ArtSource/Heroes/Preview');os.makedirs(PREVIEW,exist_ok=True)
-HEROES=[('Veyr',False,(.23,.065,.48),'ZHAEV NULL'),('Kaelon',False,(.035,.23,.30),'AUREN KEST'),('Nyra',True,(.025,.22,.30),'SIVRA QUELL'),('Elyra',True,(.24,.075,.42),'IONE VASKA'),('Mira',True,(.035,.30,.16),'TAHLA VENN'),('Rook',False,(.47,.095,.025),'BRAKK ORUN'),('Traveler',False,(.035,.19,.48),'THE TRAVELER')]
+HEROES=[('Veyr',False,(.23,.065,.48),'ZHAEV NULL'),('Kaelon',False,(.035,.23,.30),'AUREN KEST'),('Nyra',True,(.025,.22,.30),'SIVRA QUELL'),('Elyra',True,(.24,.075,.42),'IONE VASKA'),('Mira',True,(.035,.30,.16),'TAHLA VENN'),('Rook',False,(.47,.095,.025),'BRAKK ORUN'),('Traveler',False,(.035,.043,.055),'THE TRAVELER')]
 def mat(name,col,metal=0,rough=.4,emission=0):
  m=bpy.data.materials.new(name);m.diffuse_color=(*col,1);m.use_nodes=True
  bs=m.node_tree.nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(*col,1);bs.inputs['Metallic'].default_value=metal;bs.inputs['Roughness'].default_value=rough
@@ -111,12 +111,16 @@ def bind(o,arm,body=False):
  else:o.vertex_groups[o.get('bone','Chest')].add(list(range(len(o.data.vertices))),1,'REPLACE')
  mod=o.modifiers.new('DF_Skin','ARMATURE');mod.object=arm;o.parent=arm
 
-PROFILE={'Veyr':(.94,.94,1.02,.94),'Kaelon':(1.43,1.20,1.08,1.30),'Nyra':(.88,.94,1.02,.93),'Elyra':(.89,.96,1.09,.92),'Mira':(.96,1.02,1.00,1.0),'Rook':(1.60,1.32,1.04,1.40),'Traveler':(1.03,.96,1.07,.97)}
+PROFILE={'Veyr':(.94,.94,1.02,.94),'Kaelon':(1.43,1.20,1.08,1.30),'Nyra':(.88,.94,1.02,.93),'Elyra':(.89,.96,1.09,.92),'Mira':(.89,1.09,1.02,.96),'Rook':(1.60,1.32,1.04,1.40),'Traveler':(1.03,.96,1.07,.97)}
 def proportion(hero,point):
  x,y,z=point;chest,hip,height,depth=PROFILE[hero]
  if z>1.52:width=1.12 if hero=='Rook' else 1.0;d=1.07 if hero=='Rook' else 1.0
  elif z>1.10:width=chest;d=depth
  else:width=hip+(chest-hip)*max(0,min(1,(z-.92)/.18));d=1+(depth-1)*max(0,min(1,z/.9))
+ if hero=='Mira':
+  # A tailored waist transitions smoothly into fuller hips; the skeleton shares the deformation.
+  width*=1-.16*math.exp(-((z-1.09)/.085)**2)
+  if z>1.55:width*=.96;d*=.97
  return Vector((x*width,y*d,z*height))
 
 def animations(arm,hero):
@@ -215,6 +219,10 @@ def build(hero,female,color,label):
  body.data.materials.clear()
  skin=mat('Skin',(.52,.30,.20) if hero=='Rook' else (.68,.43,.31),rough=.46)
  cloth=mat('Obsidian fabric',(.018,.027,.048),rough=.75);accent=mat('Signature enamel',color,.45,.28);gold=mat('Champagne metal',(.64,.40,.16),.8,.25);steel=mat('Brushed silver',(.43,.53,.65),.82,.23);energy=mat('Energy',tuple(min(1,c*2+.15) for c in color),.15,.25,2);hair=mat('Hair',(.025,.018,.039) if hero!='Mira' else (.62,.49,.28),rough=.45);white=mat('Porcelain',(.69,.75,.69),.12,.38)
+ if hero=='Traveler':
+  gold=mat('Traveler engraved silver',(.38,.42,.46),.82,.34)
+  energy=mat('Traveler violet chronolight',(.30,.09,.48),.15,.30,2)
+  skin=mat('Traveler shadowed skin',(.28,.22,.19),rough=.62)
  for m in [skin,cloth]:body.data.materials.append(m)
  for p in body.data.polygons:
   z=sum(body.data.vertices[i].co.z for i in p.vertices)/len(p.vertices);x=sum(abs(body.data.vertices[i].co.x) for i in p.vertices)/len(p.vertices)
@@ -308,8 +316,6 @@ def build(hero,female,color,label):
    for j in range(6):tube('Beard strand',[(side*(.02+j*.008),-.14,1.607),(side*(.01+j*.006),-.15,1.57)],[.007,.001],hair,'Head',6)
   tube('Facial scar',[(.050,-.130,1.697),(.054,-.150,1.651)],.0025,gold,'Head',6)
  elif hero=='Traveler':
-  plate('Chronomancer faceguard',[(-.085,1.71),(.085,1.71),(.075,1.60),(0,1.57),(-.075,1.60)],-.161,.030,cloth,'Head')
-  tube('Chronomancer visor',[(-.068,-.200,1.678),(0,-.207,1.69),(.068,-.200,1.678)],.009,energy,'Head')
   for side in [-1,1]:tube('Raised cowl',[(side*.10,.035,1.47),(side*.14,.04,1.56),(side*.12,.09,1.72)],[.04,.045,.025],accent,'Head')
  # Waist belt and layered tassets. Metallic trims and seam detail remain modeled at game distance.
  ellipsoid('Waist sash',(0,0,1.025),(.16,.113,.04),gold,'Hips')
@@ -338,8 +344,13 @@ def build(hero,female,color,label):
   tube('Shield crest',[(-.45,-.27,.77),(-.45,-.27,1.21)],.014,energy,'HandL')
   tube('DF_WeaponR',[(.4,-.04,.70),(.4,-.04,1.08)],.026,gold,'HandR');ellipsoid('Hammer crown',(.4,-.04,1.16),(.13,.10,.14),steel,'HandR')
  elif hero=='Nyra':
-  tube('DF_WeaponR',[(.40,-.05,1.07),(.40,-.70,1.07)],.043,steel,'HandR');tube('Rifle casing',[(.40,-.13,1.07),(.40,-.38,1.07)],.076,accent,'HandR')
-  tube('Scope',[(.40,-.19,1.16),(.40,-.32,1.16)],.033,cloth,'HandR');ellipsoid('Scope lens',(.40,-.335,1.16),(.022,.006,.022),energy,'HandR')
+  tube('DF_WeaponR',[(.40,-.12,1.07),(.40,-.92,1.07)],.020,steel,'HandR');tube('Sniper receiver',[(.40,-.10,1.07),(.40,-.34,1.07)],.050,accent,'HandR')
+  box('Sniper shoulder stock',(.40,.10,1.06),(.085,.27,.10),cloth,'HandR',.012)
+  box('Sniper butt pad',(.40,.245,1.06),(.10,.035,.13),steel,'HandR',.008)
+  tube('Sniper muzzle brake',[(.40,-.88,1.07),(.40,-.98,1.07)],.033,cloth,'HandR')
+  tube('Sniper trigger grip',[(.40,-.16,1.04),(.40,-.12,.955)],.026,cloth,'HandR')
+  for side in [-1,1]:tube('Folded precision bipod',[(.40+side*.035,-.59,1.06),(.40+side*.047,-.73,1.025)],.008,steel,'HandR')
+  tube('Scope',[(.40,-.14,1.17),(.40,-.40,1.17)],.042,cloth,'HandR');ellipsoid('Scope lens',(.40,-.412,1.17),(.033,.006,.033),energy,'HandR')
  elif hero in ['Elyra','Mira']:
   tube('DF_WeaponR',[(.42,-.07,.11),(.42,-.07,1.61)],.017,gold,'HandR')
   for s in [-1,1]:tube('Relic prong',[(.42,-.07,1.37),(.42+s*.11,-.07,1.54),(.42+s*.07,-.07,1.72)],[.017,.020,.002],gold,'HandR')
@@ -381,8 +392,8 @@ def build(hero,female,color,label):
    plate('Recon goggle frame',[(side*.008,1.710),(side*.083,1.710),(side*.080,1.655),(side*.009,1.655)],-.166,.021,cloth,'Head')
    plate('Recon lens',[(side*.015,1.698),(side*.074,1.700),(side*.070,1.669),(side*.016,1.669)],-.204,.005,accent,'Head')
   tube('Recon antenna',[(.12,.02,1.68),(.14,.03,1.88)],.005,steel,'Head')
-  box('Rifle receiver',(.40,-.29,1.07),(.13,.34,.15),cloth,'HandR',.014)
-  box('Rifle magazine',(.40,-.27,.965),(.07,.095,.17),accent,'HandR',.008)
+  box('Rifle receiver',(.40,-.29,1.07),(.105,.27,.11),cloth,'HandR',.014)
+  box('Rifle magazine',(.40,-.27,.965),(.06,.075,.095),accent,'HandR',.008)
   for j in range(5):box('Rifle top rail',(.40,-.18-j*.039,1.16),(.075,.018,.026),steel,'HandR',.004)
   box('Rifle side emission',(.47,-.30,1.09),(.008,.19,.018),energy,'HandR',.003)
  elif hero=='Elyra':
@@ -402,6 +413,27 @@ def build(hero,female,color,label):
     plate('Laurel crown leaf',[(x,z),(x+side*.02,z+.035),(x+side*.03,z+.028),(x+side*.02,z-.004)],-.13+j*.017,.008,accent,'Head')
    tube('White healer shoulder shawl',[(side*.105,.06,1.43),(side*.24,.01,1.41),(side*.30,-.045,1.30)],[.06,.055,.035],white,'UpperArm'+('L' if side<0 else 'R'))
    for j in range(5):ellipsoid('Shawl green embroidery',(side*(.15+j*.027),-.067,1.435-j*.022),(.006,.005,.012),accent)
+  # Rounded face accents and a refined lip line over the detailed female base mesh.
+  lip=mat('Healer rose lips',(.48,.16,.15),rough=.52)
+  tube('Soft upper lip',[(-.023,-.145,1.625),(-.007,-.151,1.628),(0,-.152,1.625),(.007,-.151,1.628),(.023,-.145,1.625)],.003,lip,'Head')
+  tube('Soft lower lip',[(-.020,-.146,1.621),(0,-.151,1.619),(.020,-.146,1.621)],.0035,lip,'Head')
+  # Priestess reference: open blonde hair, white-gold armor and layered flowing vestments.
+  for side in [-1,1]:
+   for j in range(8):
+    x=side*(.075+j*.010)
+    tube('Priestess flowing blonde lock',[(x,.070,1.74),(x*1.24,.115,1.62),(x*1.45,.08,1.46),(x*1.20,.13,1.28),(x*1.48,.14,1.22)],[.016,.023,.021,.014,.002],hair,'Head',8)
+   plate('Priestess gold shoulder',[ (side*.13,1.425),(side*.23,1.49),(side*.34,1.48),(side*.33,1.36),(side*.20,1.32)],-.085,.042,gold,'UpperArm'+('L' if side<0 else 'R'))
+   plate('Priestess shoulder ivory inlay',[(side*.19,1.43),(side*.28,1.455),(side*.30,1.38),(side*.22,1.36)],-.134,.009,white,'UpperArm'+('L' if side<0 else 'R'))
+   tube('Priestess pointed shoulder crest',[(side*.19,-.08,1.43),(side*.28,-.07,1.55),(side*.35,-.045,1.51)],[.012,.010,.001],gold,'UpperArm'+('L' if side<0 else 'R'))
+   tube('Priestess waist gold scroll',[(side*.02,-.221,1.20),(side*.10,-.225,1.16),(side*.135,-.215,1.085),(side*.085,-.205,1.025),(side*.02,-.213,1.08)],.006,gold,'Hips')
+   plate('Priestess long ivory tabard',[(side*.015,1.01),(side*.13,1.02),(side*.21,.58),(side*.15,.23),(side*.025,.34)],-.18,.025,white,'Hips')
+   tube('Priestess tabard gold hem',[(side*.03,-.211,.95),(side*.12,-.214,.73),(side*.17,-.214,.48),(side*.13,-.214,.28),(side*.03,-.214,.37)],.005,gold,'Hips')
+   for j in range(5):
+    z=.41+j*.08
+    tube('Priestess embroidered scroll',[(side*.06,-.220,z),(side*.11,-.220,z+.025),(side*.085,-.220,z+.050)],.003,gold,'Hips')
+   tube('Priestess ornate staff crest',[(.42+side*.025,-.07,1.40),(.42+side*.12,-.07,1.51),(.42+side*.12,-.07,1.70),(.42+side*.045,-.07,1.82)],[.012,.020,.015,.001],gold,'HandR')
+  plate('Priestess gold waist crest',[(-.08,1.10),(0,1.16),(.08,1.10),(.055,1.02),(0,.97),(-.055,1.02)],-.245,.016,gold,'Hips')
+  ellipsoid('Priestess emerald brooch',(0,-.270,1.06),(.023,.010,.032),energy,'Hips')
   for j in range(4):tube('Staff vine',[(.42+.03*cos(t*pi/8+j),-.07+.03*sin(t*pi/8+j),.25+t*.065) for t in range(18)],.004,accent,'HandR')
  elif hero=='Rook':
   for side in [-1,1]:
@@ -412,11 +444,88 @@ def build(hero,female,color,label):
   plate('Steel jaw respirator',[(-.07,1.637),(.07,1.637),(.063,1.573),(-.063,1.573)],-.205,.03,steel,'Head')
   box('Cybernetic eye',(.048,-.155,1.678),(.045,.04,.025),energy,'Head',.006)
  elif hero=='Traveler':
-  ellipsoid('Chronomancer sealed hood',(0,.03,1.69),(.145,.16,.18),cloth,'Head',32,18)
-  plate('Chronomancer porcelain mask',[(-.083,1.75),(.083,1.75),(.10,1.64),(0,1.57),(-.10,1.64)],-.195,.035,white,'Head')
-  tube('Chronomancer eye slit',[(-.065,-.241,1.70),(.065,-.241,1.70)],.005,energy,'Head')
-  tube('Chronomancer vertical rune',[(0,-.245,1.735),(0,-.245,1.62)],.004,gold,'Head')
-  for side in [-1,1]:tube('Cowl gold rim',[(side*.11,-.07,1.56),(side*.14,-.09,1.72),(side*.08,-.04,1.84)],.009,gold,'Head')
+  hood=ellipsoid('Chronomancer open hood',(0,.04,1.69),(.16,.17,.19),cloth,'Head',32,18)
+  # An open fabric shell leaves the real face visible; no porcelain mask or eye slit.
+  bm=bmesh.new();bm.from_mesh(hood.data)
+  opening=[f for f in bm.faces if f.calc_center_median().y<-.035 and f.calc_center_median().z<1.805 and abs(f.calc_center_median().x)<.13]
+  bmesh.ops.delete(bm,geom=opening,context='FACES');bm.to_mesh(hood.data);bm.free()
+  for side in [-1,1]:
+   tube('Open hood stitched rim',[(side*.12,-.075,1.56),(side*.135,-.09,1.69),(side*.095,-.095,1.79),(0,-.09,1.82)],.010,gold,'Head')
+   tube('Hood fabric fold',[(side*.14,.02,1.59),(side*.155,.025,1.71),(side*.105,.045,1.82)],.014,accent,'Head')
+ if hero=='Traveler':
+  # Dark armored hooded traveler: chainmail, layered coat and restrained silver engraving.
+  removed=[o for o in parts if o.name.startswith(('DF_Torso','Breastplate rim','Cuirass engraving','Chest relic','Tasset','Armor rivet'))]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
+  plate('Traveler chainmail cuirass',[(-.18,1.39),(-.12,1.44),(.12,1.44),(.18,1.39),(.14,1.16),(0,1.11),(-.14,1.16)],-.174,.035,cloth)
+  mail=mat('Dark chainmail links',(.13,.15,.17),.72,.58)
+  for row in range(10):
+   z=1.18+row*.023
+   for column in range(13):
+    x=(column-6)*.022+(.011 if row%2 else 0)
+    if abs(x)<.148:
+     tube('Chainmail link',[(x-.007,-.211,z),(x,-.214,z+.008),(x+.007,-.211,z),(x,-.212,z-.008),(x-.007,-.211,z)],.0018,mail,'Chest',5)
+  for side in [-1,1]:
+   plate('Traveler shoulder plate',[(side*.16,1.41),(side*.25,1.445),(side*.32,1.39),(side*.28,1.29),(side*.19,1.31)],-.08,.055,cloth,'UpperArm'+('L' if side<0 else 'R'))
+   tube('Traveler shoulder silver border',[(side*.16,-.11,1.41),(side*.25,-.11,1.445),(side*.32,-.11,1.39),(side*.28,-.11,1.29)],.005,gold,'UpperArm'+('L' if side<0 else 'R'))
+   plate('Traveler long coat panel',[(side*.02,1.035),(side*.17,1.05),(side*.24,.64),(side*.19,.49),(side*.025,.57)],-.158,.026,cloth,'Hips')
+   tube('Traveler coat embroidery',[(side*.045,-.191,.97),(side*.13,-.191,.86),(side*.085,-.191,.74),(side*.16,-.191,.63),(side*.08,-.191,.59)],.004,gold,'Hips')
+   for j in range(4):
+    z=1.01+j*.034;x=side*(.34-j*.014)
+    tube('Traveler silver bracer etching',[(x-.027,-.083,z),(x,-.088,z+.014),(x+.027,-.083,z)],.004,gold,'Forearm'+('L' if side<0 else 'R'))
+   for j in range(4):
+    z=.20+j*.057
+    tube('Traveler greave engraving',[(side*.15-.032,-.083,z),(side*.15,-.093,z+.024),(side*.15+.032,-.083,z)],.004,gold,'Shin'+('L' if side<0 else 'R'))
+   ellipsoid('Traveler luminous eye',(side*.035,-.148,1.677),(.006,.004,.004),energy,'Head')
+  plate('Traveler waist armor',[(-.145,1.16),(-.12,1.06),(0,1.025),(.12,1.06),(.145,1.16),(0,1.20)],-.196,.026,cloth,'Hips')
+  for j in range(3):
+   z=1.08+j*.033;tube('Traveler waist filigree',[(-.11,-.232,z),(0,-.240,z+.029),(.11,-.232,z)],.005,gold,'Hips')
+ if hero=='Elyra':
+  # Reference direction: a sealed demonic helm, swept luminous horns and dark plate armor.
+  darkmetal=mat('Demon midnight armor',(.024,.035,.065),.82,.36)
+  edge=mat('Demon etched steel',(.10,.20,.27),.88,.29)
+  blue=mat('Demon horn chronoglow',(.04,.38,.72),.25,.30,1.25)
+  removed=[o for o in parts if o.name.startswith(('Demon','HairLock','Flowing hair','Astral diadem','Crown spire','Archmage crown spire','Sorceress silver','Chest relic'))]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
+  ellipsoid('Demon sealed helm',(0,.015,1.686),(.133,.128,.177),darkmetal,'Head',32,18)
+  plate('Demon long faceplate',[(-.075,1.80),(0,1.846),(.075,1.80),(.108,1.718),(.062,1.58),(0,1.545),(-.062,1.58),(-.108,1.718)],-.185,.042,darkmetal,'Head')
+  for side in [-1,1]:
+   tube('Demon faceplate silver ridge',[(side*.035,-.231,1.794),(side*.061,-.237,1.711),(side*.026,-.231,1.588)],.006,edge,'Head')
+   tube('Demon glowing eye slit',[(side*.013,-.235,1.723),(side*.060,-.230,1.739)],.005,blue,'Head')
+   tube('Demon great curved horn',[(side*.075,.005,1.75),(side*.16,.005,1.85),(side*.208,.005,2.03),(side*.175,.005,2.18),(side*.135,-.005,2.205),(side*.112,-.008,2.145)],[.036,.047,.041,.025,.014,.001],darkmetal,'Head',16)
+   tube('Demon horn luminous outer edge',[(side*.11,-.037,1.78),(side*.20,-.036,1.89),(side*.239,-.026,2.05),(side*.190,-.018,2.19),(side*.144,-.012,2.21)],[.009,.014,.014,.010,.001],blue,'Head',10)
+   for j in range(3):
+    x=side*(.23+j*.042);z=1.42-j*.027
+    plate('Demon layered shoulder plate',[(x-side*.065,z+.04),(x+side*.05,z+.055),(x+side*.09,z-.014),(x+side*.05,z-.067),(x-side*.055,z-.045)],-.072-j*.020,.050,darkmetal,'UpperArm'+('L' if side<0 else 'R'))
+    tube('Demon shoulder blade spike',[(x,-.032,z),(x+side*.09,.01,z+.04),(x+side*.13,.055,z+.155)],[.025,.023,.001],edge,'UpperArm'+('L' if side<0 else 'R'))
+   plate('Demon armored forearm',[(side*.29,1.18),(side*.39,1.16),(side*.43,.99),(side*.36,.97)],-.091,.028,darkmetal,'Forearm'+('L' if side<0 else 'R'))
+   tube('Demon forearm glowing seam',[(side*.32,-.123,1.15),(side*.385,-.125,1.01)],.004,blue,'Forearm'+('L' if side<0 else 'R'))
+   tube('Demon chest armor rib',[(side*.14,-.241,1.36),(side*.10,-.248,1.24),(side*.07,-.234,1.13)],.014,edge)
+  plate('Demon pointed chest emblem',[(-.055,1.42),(.055,1.42),(.067,1.32),(0,1.235),(-.067,1.32)],-.244,.022,darkmetal)
+  for j in [-1,0,1]:tube('Demon chest energy slit',[(j*.022,-.274,1.395),(j*.018,-.274,1.32)],[.005,.001],blue)
+  for o in parts:
+   if o.name.startswith(('Ceremonial robe','Silk upper mantle','Tasset','Front robe','Front silk panel')):
+    o.data.materials.clear();o.data.materials.append(darkmetal if 'Tasset' in o.name else cloth)
+   elif o.name.startswith('DF_Torso'):
+    o.data.materials.clear();o.data.materials.append(darkmetal)
+ if hero=='Nyra':
+  # Asymmetric cyborg face: retain the biological half rather than adding another mask.
+  plate('Cyborg facial armor',[(-.005,1.755),(.075,1.75),(.110,1.692),(.084,1.615),(.012,1.594),(-.006,1.660)],-.155,.025,steel,'Head')
+  ellipsoid('Cyborg sensor housing',(.045,-.203,1.692),(.035,.015,.029),cloth,'Head',18,10)
+  ellipsoid('Cyborg targeting lens',(.045,-.222,1.692),(.019,.008,.017),energy,'Head',18,10)
+  tube('Cyborg cheek circuitry',[(.055,-.206,1.662),(.082,-.193,1.64),(.063,-.187,1.615)],.004,energy,'Head')
+  box('Cyborg temple module',(.117,-.015,1.701),(.028,.07,.08),steel,'Head',.006)
+  tube('Cyborg data cable',[(.12,.006,1.73),(.13,.05,1.64),(.105,.068,1.57)],.008,cloth,'Head')
+  # Remove goggles that would cover the new sensor face.
+  removed=[o for o in parts if 'goggle' in o.name.lower()]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
+ if hero in ['Veyr','Nyra']:
+  # Slim boots without moving the ankle or reducing leg length.
+  for o in parts:
+   if o.get('bone','').startswith('Foot'):
+    side=-1 if o['bone'].endswith('L') else 1
+    pivot=Vector((side*.18,-.015,.08))
+    for v in o.data.vertices:
+     delta=v.co-pivot;v.co=pivot+Vector((delta.x*.80,delta.y*.80,delta.z*.90))
  # Remove the shared shoulder silhouette from robe and recon classes.
  if hero in ['Nyra','Elyra','Mira','Traveler']:
   removed=[o for o in parts if o.name.startswith('Layered pauldron')]
@@ -438,7 +547,7 @@ def build(hero,female,color,label):
  animations(arm,hero)
  # Explicit named VFX socket travels with the weapon hand.
  socket=bpy.data.objects.new('DF_Muzzle',None);bpy.context.collection.objects.link(socket);socket.parent=arm;socket.parent_type='BONE';socket.parent_bone='HandR';bpy.context.view_layer.update()
- muzzle_point={'Nyra':(.40,-.71,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.12),'Rook':(.39,-.16,.92),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
+ muzzle_point={'Nyra':(.40,-.99,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.12),'Rook':(.39,-.16,.92),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
  socket.matrix_world=Matrix.Translation(proportion(hero,muzzle_point))
  # Body and shop-addressable weapon renderers share one rig, but never one renderer.
  grouped={'DF_Anatomy':[]}
@@ -467,7 +576,7 @@ def build(hero,female,color,label):
  def aim(o,at):o.rotation_euler=(Vector(at)-o.location).to_track_quat('-Z','Y').to_euler()
  for n,loc,power,size,col in [('Key',(-3,-4,5),650,4,(1,.85,.68)),('Fill',(3,-2,3),400,3,(.55,.72,1)),('Rim',(1,3,4),850,2,(.5,.65,1))]:
   d=bpy.data.lights.new(n,'AREA');d.energy=power;d.shape='DISK';d.size=size;d.color=col;o=bpy.data.objects.new(n,d);bpy.context.collection.objects.link(o);o.location=loc;aim(o,(0,0,1))
- d=bpy.data.cameras.new('Portrait');camera=bpy.data.objects.new('Portrait',d);bpy.context.collection.objects.link(camera);camera.location=(2.7,-6,2.4);aim(camera,(0,-.03,.95));d.type='ORTHO';d.ortho_scale=2.60;scene.camera=camera
+ d=bpy.data.cameras.new('Portrait');camera=bpy.data.objects.new('Portrait',d);bpy.context.collection.objects.link(camera);camera.location=(2.7,-6,2.4);aim(camera,(0,-.03,.95));d.type='ORTHO';d.ortho_scale=2.95 if hero=='Elyra' else 2.60;scene.camera=camera
  scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=os.path.join(PREVIEW,hero+'.png')
  bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT,'ArtSource/Heroes',hero+'.blend'),compress=True)
  bpy.ops.render.render(write_still=True)

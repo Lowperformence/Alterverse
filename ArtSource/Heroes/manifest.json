@@ -18,24 +18,24 @@
   {
     "hero": "Nyra",
     "label": "SIVRA QUELL",
-    "vertices": 23252,
-    "triangles": 44946,
+    "vertices": 23960,
+    "triangles": 46258,
     "bones": 17,
     "animations": 9
   },
   {
     "hero": "Elyra",
     "label": "IONE VASKA",
-    "vertices": 28548,
-    "triangles": 55022,
+    "vertices": 29057,
+    "triangles": 56188,
     "bones": 17,
     "animations": 9
   },
   {
     "hero": "Mira",
     "label": "TAHLA VENN",
-    "vertices": 29278,
-    "triangles": 56538,
+    "vertices": 31907,
+    "triangles": 61576,
     "bones": 17,
     "animations": 9
   },
@@ -50,8 +50,8 @@
   {
     "hero": "Traveler",
     "label": "THE TRAVELER",
-    "vertices": 24990,
-    "triangles": 48400,
+    "vertices": 27051,
+    "triangles": 52140,
     "bones": 17,
     "animations": 9
   }
