@@ -16,10 +16,12 @@ Shader "DimensionsFront/HeroSurface"
    HLSLPROGRAM
    #pragma vertex vert
    #pragma fragment frag
+   #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+   #pragma multi_compile_fragment _ _SHADOWS_SOFT
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
    struct A { float4 position:POSITION; float3 normal:NORMAL; half4 color:COLOR; half2 finish:TEXCOORD1; };
-   struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; };
+   struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; float4 shadow:TEXCOORD3; };
    CBUFFER_START(UnityPerMaterial)
    half4 _BaseColor;
    half _EnergyBoost;
@@ -28,6 +30,7 @@ Shader "DimensionsFront/HeroSurface"
    V vert(A i)
    {
     V o;o.position=TransformObjectToHClip(i.position.xyz);o.world=TransformObjectToWorld(i.position.xyz);
+    o.shadow=GetShadowCoord(GetVertexPositionInputs(i.position.xyz));
     o.normal=TransformObjectToWorldNormal(i.normal);o.color=i.color;o.finish=i.finish;return o;
    }
    half3 Lobe(half3 n,half3 view,half3 direction,half3 lightColor,half3 albedo,half metal,half smoothness)
@@ -46,9 +49,11 @@ Shader "DimensionsFront/HeroSurface"
     half3 n=normalize(i.normal),view=SafeNormalize(GetWorldSpaceViewDir(i.world));
     half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,saturate(_BaseColor.a));
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
-    Light key=GetMainLight();
+    // Filter narrow highlights on small distant hero surfaces to avoid sparkling edges.
+    smoothness=saturate(smoothness-min(.20h,length(fwidth(n))*.18h));
+    Light key=GetMainLight(i.shadow);
     half3 ambient=max(SampleSH(n),half3(.16h,.19h,.24h));
-    half3 worldLight=albedo*ambient*.65h+Lobe(n,view,key.direction,min(key.color,1.6h),albedo,metal,smoothness);
+    half3 worldLight=albedo*ambient*.65h+Lobe(n,view,key.direction,min(key.color,1.6h)*key.distanceAttenuation*lerp(.30h,1.0h,key.shadowAttenuation),albedo,metal,smoothness);
     // Camera-space studio rig is isolated per portrait renderer with a property block.
     // It stays stable across planets and doesn't need extra per-pixel lights on Android.
     half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));
@@ -74,3 +79,4 @@ Shader "DimensionsFront/HeroSurface"
   UsePass "Universal Render Pipeline/Lit/DepthOnly"
  }
 }
+

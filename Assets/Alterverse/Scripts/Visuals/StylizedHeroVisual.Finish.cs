@@ -222,7 +222,7 @@ namespace Alterverse.Visuals
                 }
                 foreach(var group in groups)
                 {
-                    var mesh=new Mesh{name="DF_MovingArmorBatch"};mesh.CombineMeshes(group.Value.ToArray(),true,true);mesh.RecalculateBounds();detailMeshes.Add(mesh);
+                    var mesh=new Mesh{name="DF_MovingArmorBatch"};int vertexCount=0;foreach(var instance in group.Value)vertexCount+=instance.mesh.vertexCount;if(vertexCount>65535)mesh.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;mesh.CombineMeshes(group.Value.ToArray(),true,true);mesh.RecalculateBounds();detailMeshes.Add(mesh);
                     var go=new GameObject("DF_MovingSurface");go.transform.SetParent(pivot,false);
                     go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=group.Key;
                 }
@@ -231,3 +231,4 @@ namespace Alterverse.Visuals
         private static bool MovingPivot(string n)=>n=="DF_ArmL"||n=="DF_ArmR"||n=="DF_LegL"||n=="DF_LegR"||n=="DF_BootL"||n=="DF_BootR"||n=="DF_WeaponL"||n=="DF_WeaponR"||n=="DF_OrbitL"||n=="DF_OrbitR";
     }
 }
+

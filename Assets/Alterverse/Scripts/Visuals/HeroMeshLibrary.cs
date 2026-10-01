@@ -22,7 +22,7 @@ namespace Alterverse.Visuals
             var colors=new Color[mesh.vertexCount];color.a=energy?1:0;
             var surface=new Vector2[mesh.vertexCount];
             // Coated armor gets a tighter, brighter highlight; undersuit fabric stays softer.
-            Vector2 response=finish==0?new Vector2(.02f,.28f):new Vector2(.52f,.82f);
+            Vector2 response=finish==0?new Vector2(.015f,.24f):finish==3?new Vector2(0f,.38f):new Vector2(.58f,.62f);
             Vector3[] vertices=mesh.vertices,normals=mesh.normals;
             Bounds bounds=mesh.bounds;
             float heightRange=Mathf.Max(.001f,bounds.max.y-bounds.min.y);
@@ -33,9 +33,9 @@ namespace Alterverse.Visuals
                 {
                     float height=Mathf.Clamp01((vertices[i].y-bounds.min.y)/heightRange);
                     float contour=normals.Length==colors.Length
-                        ? .94f+.10f*Mathf.Max(0,normals[i].z)+.035f*Mathf.Abs(normals[i].x)
+                        ? .98f+.025f*Mathf.Max(0,normals[i].z)+.015f*Mathf.Abs(normals[i].x)
                         :1f;
-                    float sculptShade=Mathf.Lerp(.82f,1.15f,height)*contour;
+                    float sculptShade=Mathf.Lerp(.96f,1.04f,height)*contour;
                     Color shaded=color*sculptShade;shaded.a=0;colors[i]=shaded;
                 }
                 surface[i]=response;
@@ -51,7 +51,7 @@ namespace Alterverse.Visuals
             {
                 y=RefineSections(y,false);width=RefineSections(width,true);depth=RefineSections(depth,true);
                 if(forward!=null)forward=RefineSections(forward,false);
-                sides=Mathf.Max(24,sides);
+                sides=Mathf.Max(32,sides);
             }
             var v=new List<Vector3>();var normals=new List<Vector3>();var t=new List<int>();
             Vector3 Point(int ring,int side)
@@ -100,27 +100,58 @@ namespace Alterverse.Visuals
                 ||key.IndexOf("Face",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Neck",StringComparison.OrdinalIgnoreCase)>=0
                 ||key.IndexOf("Greave",StringComparison.OrdinalIgnoreCase)>=0
-                ||key.IndexOf("Hood",StringComparison.OrdinalIgnoreCase)>=0;
+                ||key.IndexOf("Hood",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Cuirass",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Chest",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Shoulder",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Gauntlet",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Shell",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Jaw",StringComparison.OrdinalIgnoreCase)>=0
+                ||key.IndexOf("Hair",StringComparison.OrdinalIgnoreCase)>=0;
+        }
+        internal static int FinishFor(string name,Color color)
+        {
+            string n=name.ToLowerInvariant();
+            bool skinPart=n.Contains("face")||n.Contains("head")||n.Contains("nose")||n.Contains("lip")||n.Contains("ear")||n.Contains("finger");
+            bool armor=n.Contains("guard")||n.Contains("helmet")||n.Contains("plate")||n.Contains("optic")||n.Contains("mask");
+            bool skinColor=color.r>.35f&&color.r>color.g*1.12f&&color.r>color.b*1.2f;
+            if(skinPart&&!armor&&skinColor)return 3;
+            if(n.Contains("robe")||n.Contains("cape")||n.Contains("coat")||n.Contains("hair")||
+               n.Contains("veil")||n.Contains("scarf")||n.Contains("hood")||n.Contains("leather")||
+               n.Contains("glove")||n.Contains("undersuit")||color.maxColorComponent<.17f)return 0;
+            return 1;
         }
         private static float[] RefineSections(float[] source,bool positive)
         {
             if(source==null||source.Length<2)return source;
-            var refined=new List<float>((source.Length-1)*2+1);
+            const int subdivisions=4;
+            var refined=new List<float>((source.Length-1)*subdivisions+1);
             for(int i=0;i<source.Length-1;i++)
             {
                 float p0=source[Mathf.Max(0,i-1)],p1=source[i];
                 float p2=source[i+1],p3=source[Mathf.Min(source.Length-1,i+2)];
-                float midpoint=.5f*(2f*p1+(-p0+p2)*.5f+(2f*p0-5f*p1+4f*p2-p3)*.25f+(-p0+3f*p1-3f*p2+p3)*.125f);
-                if(positive)midpoint=Mathf.Max(.002f,midpoint);
-                else midpoint=Mathf.Clamp(midpoint,Mathf.Min(p1,p2),Mathf.Max(p1,p2));
-                refined.Add(p1);refined.Add(midpoint);
+                for(int j=0;j<subdivisions;j++)
+                {
+                    float t=j/(float)subdivisions;
+                    float value=.5f*(2f*p1+(-p0+p2)*t+(2f*p0-5f*p1+4f*p2-p3)*t*t+(-p0+3f*p1-3f*p2+p3)*t*t*t);
+                    // Avoid anatomical overshoot and retain every original authored anchor.
+                    value=Mathf.Clamp(value,Mathf.Min(p1,p2),Mathf.Max(p1,p2));
+                    if(positive)value=Mathf.Max(.002f,value);
+                    refined.Add(value);
+                }
             }
-            refined.Add(source[source.Length-1]);
-            return refined.ToArray();
+            refined.Add(source[source.Length-1]);return refined.ToArray();
         }
         internal static Mesh Ribbon(string key,Vector3[] centers,float[] widths,float thickness)
         {
             if(meshes.TryGetValue(key,out Mesh cached)&&cached!=null)return cached;
+            string lower=key.ToLowerInvariant();
+            if(lower.Contains("cape")||lower.Contains("coat")||lower.Contains("robe")||lower.Contains("veil")||
+               lower.Contains("scarf")||lower.Contains("hair")||lower.Contains("hood")||lower.Contains("tail"))
+            {
+                Mesh cloth=HeroSculptGeometry.DrapedRibbon(key,centers,widths,thickness);
+                meshes[key]=cloth;return cloth;
+            }
             var v=new List<Vector3>();var t=new List<int>();
             for(int i=0;i<centers.Length-1;i++)
             {
@@ -136,7 +167,7 @@ namespace Alterverse.Visuals
         internal static Mesh Ring(string key,float radius,float tube)
         {
             if(meshes.TryGetValue(key,out Mesh m)&&m!=null)return m;
-            m=ProductionMeshFactory.Ring(radius,tube,24,5);m.name=key;meshes[key]=m;return m;
+            m=ProductionMeshFactory.Ring(radius,tube,40,8);m.name=key;meshes[key]=m;return m;
         }
         private static void Face(List<Vector3> v,List<int> t,params Vector3[] p)
         {int start=v.Count;v.AddRange(p);for(int i=1;i<p.Length-1;i++){t.Add(start);t.Add(start+i);t.Add(start+i+1);}}
@@ -148,7 +179,7 @@ namespace Alterverse.Visuals
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return null;
             Material m=new Material(shader){name="DF_SharedHeroSurface",color=color,enableInstancing=true};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
-            m.SetFloat("_Metallic",finish==1?.68f:0);m.SetFloat("_Smoothness",finish==1?.50f:finish==2?.58f:.16f);
+            m.SetFloat("_Metallic",finish==1?.58f:0);m.SetFloat("_Smoothness",finish==1?.62f:finish==2?.58f:finish==3?.38f:.24f);
             if(finish==2){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",color*.85f);}
             materials[key]=m;return m;
         }
@@ -162,3 +193,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

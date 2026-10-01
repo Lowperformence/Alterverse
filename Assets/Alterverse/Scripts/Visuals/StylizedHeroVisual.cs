@@ -139,11 +139,11 @@ mesh=helmetMesh;
 }
 else
 {
-if(armorMesh==null)armorMesh=BuildBeveledArmor();
+if(armorMesh==null)armorMesh=HeroSculptGeometry.RoundedBox();
 mesh=armorMesh;
 }
 Mesh colored=Instantiate(mesh);colored.name=mesh.name+"_HeroColor";detailMeshes.Add(colored);
-HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n),color==cloth||color==dark?0:1);
+HeroMeshLibrary.Paint(colored,FinishedColor(color,IsEnergySurface(n)),IsEnergySurface(n),HeroMeshLibrary.FinishFor(n,color));
 part.AddComponent<MeshFilter>().sharedMesh=colored;
 MeshRenderer renderer=part.AddComponent<MeshRenderer>();
 renderer.sharedMaterial=MaterialFor(color, IsEnergySurface(n));
@@ -167,33 +167,8 @@ return color;
 }
 private void Panel(string name,Vector2[] outline,float depth,Vector3 position,Color color)
 {
-var vertices=new System.Collections.Generic.List<Vector3>();var triangles=new System.Collections.Generic.List<int>();
-// Convex armor contours use a narrow bevel, so front planes catch light independently
-// from side walls. The silhouette and animated part names remain unchanged.
-var contour=(Vector2[])outline.Clone();
-if(Vector3.Cross((Vector3)(contour[1]-contour[0]),(Vector3)(contour[2]-contour[0])).z<0)System.Array.Reverse(contour);
-Vector2 center=Vector2.zero;foreach(Vector2 point in contour)center+=point;center/=contour.Length;
-float bevel=Mathf.Min(depth*.22f,.025f);
-var front=new Vector3[contour.Length];var back=new Vector3[contour.Length];
-for(int i=0;i<contour.Length;i++)
-{
-Vector2 inset=Vector2.Lerp(contour[i],center,.09f);
-front[i]=new Vector3(inset.x,inset.y,depth*.5f);
-back[contour.Length-1-i]=new Vector3(inset.x,inset.y,-depth*.5f);
-}
-AddFace(vertices,triangles,front);AddFace(vertices,triangles,back);
-for(int i=0;i<contour.Length;i++)
-{
-int next=(i+1)%contour.Length;
-Vector3 a=new Vector3(contour[i].x,contour[i].y,depth*.5f-bevel);
-Vector3 b=new Vector3(contour[next].x,contour[next].y,depth*.5f-bevel);
-Vector3 ba=new Vector3(a.x,a.y,-a.z),bb=new Vector3(b.x,b.y,-b.z);
-Vector3 fa=front[i],fb=front[next];
-AddFace(vertices,triangles,new[]{fa,a,b,fb});
-AddFace(vertices,triangles,new[]{b,a,ba,bb});
-AddFace(vertices,triangles,new[]{bb,ba,new Vector3(fa.x,fa.y,-fa.z),new Vector3(fb.x,fb.y,-fb.z)});
-}
-Mesh mesh=new Mesh{name="DF_Contour_"+name};mesh.SetVertices(vertices);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false,color==cloth||color==dark?0:1);detailMeshes.Add(mesh);
+Mesh mesh=HeroSculptGeometry.ArmorPanel(name,outline,depth);
+HeroMeshLibrary.Paint(mesh,FinishedColor(color,false),false,HeroMeshLibrary.FinishFor(name,color));detailMeshes.Add(mesh);
 GameObject part=new GameObject("DF_"+name);part.transform.SetParent(root,false);part.transform.localPosition=position;
 part.AddComponent<MeshFilter>().sharedMesh=mesh;part.AddComponent<MeshRenderer>().sharedMaterial=MaterialFor(color);
 }
@@ -742,7 +717,7 @@ list.Add(new CombineInstance{mesh=filter.sharedMesh,transform=root.worldToLocalM
 }
 foreach(var pair in groups)
 {
-Mesh combined=new Mesh{name="DF_HeroBodyBatch"};combined.CombineMeshes(pair.Value.ToArray(),true,true);combined.RecalculateBounds();detailMeshes.Add(combined);
+Mesh combined=new Mesh{name="DF_HeroBodyBatch"};int vertexCount=0;foreach(var instance in pair.Value)vertexCount+=instance.mesh.vertexCount;if(vertexCount>65535)combined.indexFormat=UnityEngine.Rendering.IndexFormat.UInt32;combined.CombineMeshes(pair.Value.ToArray(),true,true);combined.RecalculateBounds();detailMeshes.Add(combined);
 GameObject batch=new GameObject("DF_BodySurface");batch.transform.SetParent(root,false);batch.AddComponent<MeshFilter>().sharedMesh=combined;batch.AddComponent<MeshRenderer>().sharedMaterial=pair.Key;
 }
 foreach(GameObject part in remove){part.SetActive(false);Destroy(part);}
@@ -861,6 +836,7 @@ foreach(Material material in ownedMaterials)if(material!=null)Destroy(material);
 }
 }
 }
+
 
 
 
