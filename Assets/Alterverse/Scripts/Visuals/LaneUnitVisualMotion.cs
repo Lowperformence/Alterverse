@@ -56,6 +56,16 @@ namespace Alterverse.Visuals
 
         private void BindRobotParts()
         {
+            if (FindDeep("DF_NeptuneDiverLegL") != null)
+            {
+                legL = FindDeep("DF_NeptuneDiverLegL"); legR = FindDeep("DF_NeptuneDiverLegR");
+                shinL = FindDeep("DF_NeptuneDiverKneeL"); shinR = FindDeep("DF_NeptuneDiverKneeR");
+                footL = FindDeep("DF_NeptuneDiverFootL"); footR = FindDeep("DF_NeptuneDiverFootR");
+                armL = FindDeep("DF_NeptuneDiverArmL"); armR = FindDeep("DF_NeptuneDiverArmR");
+                shoulderL = FindDeep("DF_NeptuneDiverForearmL"); shoulderR = FindDeep("DF_NeptuneDiverForearmR");
+                head = FindDeep("DF_NeptuneDiverHead");
+                return;
+            }
             if (FindDeep("DF_GreenMechLegL") != null)
             {
                 legL = FindDeep("DF_GreenMechLegL"); legR = FindDeep("DF_GreenMechLegR");

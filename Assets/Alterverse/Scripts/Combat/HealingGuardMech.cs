@@ -59,6 +59,7 @@ namespace Alterverse.Combat
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,true);
             else if(FrontierPlanetLayout.Active)PlanetSentinelVisual.Build(mech.transform,team,false);
             else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
+            else if(ArenaVariantRuntime.IsNeptune)NeptuneDiverMechVisual.Build(mech.transform,team);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
             if(!FrontierPlanetLayout.Active)mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 

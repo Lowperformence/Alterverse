@@ -87,7 +87,7 @@ namespace Alterverse.Combat
             Color color=type==BattleItemType.Heal?new Color(.12f,1f,.34f):
                 type==BattleItemType.Shield?new Color(.18f,.82f,1f):
                 type==BattleItemType.Speed?new Color(1f,.72f,.18f):new Color(1f,.28f,.08f);
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+            Shader shader=RuntimeShaderLibrary.Lit;
             if(shader==null)return false;
             energyMat=new Material(shader){color=color};darkMat=new Material(shader){color=new Color(.10f,.12f,.16f)};
             teamMat=new Material(shader){color=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy};
@@ -131,7 +131,7 @@ namespace Alterverse.Combat
 
         private void BuildParachute()
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+            Shader shader=RuntimeShaderLibrary.Lit;
             chuteMat=new Material(shader){name="DF_TeamSupplyCanopy",color=team==0?new Color(.48f,.19f,.78f):new Color(.12f,.65f,.78f)};
             if(chuteMat.HasProperty("_BaseColor"))chuteMat.SetColor("_BaseColor",chuteMat.color);
             if(chuteMat.HasProperty("_Smoothness"))chuteMat.SetFloat("_Smoothness",.25f);
@@ -279,7 +279,7 @@ namespace Alterverse.Combat
             if(match==null||match.HasEnded||Time.timeScale<=0||MainMenuVisible())return;
             // Preserve the existing private co-op inventory restriction: no local-wallet
             // consumption on behalf of remote players without an inventory protocol.
-            if(Alterverse.Multiplayer.CoopAuthority.Active)return;
+            if(Alterverse.Multiplayer.CoopAuthority.Active){Status="SUPPLY UNAVAILABLE IN CO-OP";return;}
             if(!captured)
             {
                 if(Time.time<nextResolve)return;nextResolve=Time.time+.25f;
@@ -293,18 +293,23 @@ namespace Alterverse.Combat
                 Status=drop==null?null:drop.IsAirborne?"TEAM SUPPLY INCOMING":"TEAM SUPPLY READY";
                 return;
             }
-            if(item==BattleItemType.None)return;
+            if(item==BattleItemType.None){Status=null;return;}
             if(match.ElapsedSeconds<DropAtSeconds)
             {
                 Status="SUPPLY DROP  "+Mathf.CeilToInt(DropAtSeconds-match.ElapsedSeconds)+"s";
                 return;
             }
             if(Time.time<nextResolve)return;nextResolve=Time.time+1f;
-            if(!TryLandingPosition(team,out Vector3 position))return;
+            if(!TryLandingPosition(team,out Vector3 position)){Status="SUPPLY WAITING FOR CLEAR LANDING";return;}
+            if(BattleItemInventory.Equipped!=item)
+            {
+                issued=true;Status="SUPPLY CANCELLED: ITEM NOT EQUIPPED";return;
+            }
             if(!BattleItemRuntime.TryDropEquipped(item,team,position,out drop))
             {
-                // A cancelled loadout is not consumed; no repeated or free spawn.
-                issued=true;Status=null;return;
+                // A visual/spawn failure must not permanently cancel an unconsumed item.
+                // The inventory check above still stops cancelled or exhausted loadouts.
+                Status="SUPPLY RETRYING";return;
             }
             issued=true;Status="TEAM SUPPLY DELIVERED";
         }
