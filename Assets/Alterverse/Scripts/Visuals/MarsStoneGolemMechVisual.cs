@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Alterverse.Match;
 using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
@@ -36,6 +37,18 @@ namespace Alterverse.Visuals
             Color seam=new(.075f,.035f,.028f,1f);
             Color magma=new(1f,.22f,.035f,1f);
             Color magmaHot=new(1f,.48f,.055f,1f);
+            if(ArenaVariantRuntime.IsGJ504b)
+            {
+                stone=new Color(.48f,.10f,.34f);stoneLight=new Color(.75f,.24f,.53f);
+                stoneDark=new Color(.15f,.035f,.12f);seam=new Color(.07f,.018f,.055f);
+                magma=new Color(.95f,.30f,.65f);magmaHot=new Color(1f,.70f,.86f);
+            }
+            else if(ArenaVariantRuntime.IsDiamondCore)
+            {
+                stone=new Color(.36f,.65f,.77f);stoneLight=new Color(.75f,.93f,1f);
+                stoneDark=new Color(.045f,.08f,.13f);seam=new Color(.02f,.04f,.08f);
+                magma=new Color(.18f,.75f,1f);magmaHot=new Color(.70f,.94f,1f);
+            }
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
 
             Material stoneMat=MakeMaterial(shader,stone,.10f,.28f,Color.black);
@@ -99,6 +112,15 @@ namespace Alterverse.Visuals
             Part("EyeL",PrimitiveType.Sphere,head,new Vector3(-.17f,.02f,.46f),new Vector3(.090f,.060f,.050f),magmaHotMat,Quaternion.identity,true);
             Part("EyeR",PrimitiveType.Sphere,head,new Vector3(.17f,.02f,.46f),new Vector3(.090f,.060f,.050f),magmaHotMat,Quaternion.identity,true);
             Crack("MouthMagma",head,new Vector3(0,-.23f,.425f),new Vector3(.24f,.024f,.020f),magmaMat,new Vector3(0,0,4));
+
+            if(ArenaVariantRuntime.IsDiamondCore)
+            {
+                Mesh crystal=Track(DiamondCoreCrystalVisuals.BuildGuardianGemMesh());
+                MeshPart("DiamondHeart",crystal,torso,new Vector3(0,.10f,.77f),new Vector3(.27f,.46f,.23f),magmaHotMat,Quaternion.identity);
+                for(int side=-1;side<=1;side+=2)
+                    MeshPart("CrystalShoulder"+side,crystal,visualRoot,new Vector3(side*.96f,1.18f,.06f),
+                        new Vector3(.28f,.65f,.28f),lightStoneMat,Quaternion.Euler(0,side*18f,side*-20f));
+            }
 
             BuildArm(visualRoot,-1f,guardian,shoulderPlate,forearmPlate,stoneMat,lightStoneMat,darkStoneMat,seamMat,magmaMat);
             BuildArm(visualRoot,1f,guardian,shoulderPlate,forearmPlate,stoneMat,lightStoneMat,darkStoneMat,seamMat,magmaMat);

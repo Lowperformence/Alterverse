@@ -57,7 +57,7 @@ namespace Alterverse.Combat
             guard.Initialize(team,spawn,healingPlate,energy);
 
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,true);
-            else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
+            else if(ArenaVariantRuntime.IsMars||ArenaVariantRuntime.IsGJ504b||ArenaVariantRuntime.IsDiamondCore)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
             mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 

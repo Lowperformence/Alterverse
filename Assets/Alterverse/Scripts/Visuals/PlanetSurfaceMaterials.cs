@@ -33,10 +33,10 @@ namespace Alterverse.Visuals
             material.SetTexture("_GroundMap",macro);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
             material.SetFloat("_DetailScale",.29f); // Finer world-space detail, shared by ground, craters and cliffs.
-            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsMars?.33f:
+            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
                 ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:
                 ArenaVariantRuntime.IsEarth?.12f:ArenaVariantRuntime.IsPyraxis?.08f:ArenaVariantRuntime.IsNeptune?.10f:.27f);
-            material.SetFloat("_RockStrength",ArenaVariantRuntime.IsPyraxis?.48f:ArenaVariantRuntime.IsNeptune?.40f:.34f);
+            material.SetFloat("_RockStrength",ArenaVariantRuntime.IsGJ504b?.42f:ArenaVariantRuntime.IsPyraxis?.48f:ArenaVariantRuntime.IsNeptune?.40f:.34f);
             material.SetFloat("_BumpScale",ground?(ArenaVariantRuntime.IsEarth?.34f:ArenaVariantRuntime.IsNeptune?.38f:.44f):0f);
         }
 

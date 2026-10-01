@@ -130,7 +130,7 @@ namespace Alterverse.Combat
                 }
             }
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
+            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet||ArenaVariantRuntime.IsGJ504b,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
             go.name=bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
                 spider?(team==0?"DF_ZeroNoxaraSpider":"DF_LumenNoxaraSpider"):
                 alien?(team==0?"DF_ZeroXenoTitan":"DF_LumenXenoTitan"):
@@ -1068,9 +1068,10 @@ namespace Alterverse.Combat
             // Reference direction: glossy obsidian bio-mechanical predator with long limbs,
             // amber eyes and a crown of threatening back tendrils. Green remains only as a
             // subtle map-biome undertone instead of making the whole creature look toy-like.
-            xenoEnergyBase=new Color(1f,.54f,.07f,1f);
-            xenoArmorBase=new Color(.050f,.072f,.060f,1f);
-            Color hide=new(.017f,.027f,.024f,1f),joint=new(.025f,.040f,.035f,1f);
+            xenoEnergyBase=ArenaVariantRuntime.IsGJ504b?new Color(1f,.48f,.78f,1f):new Color(1f,.54f,.07f,1f);
+            xenoArmorBase=ArenaVariantRuntime.IsGJ504b?new Color(.38f,.065f,.26f,1f):new Color(.050f,.072f,.060f,1f);
+            Color hide=ArenaVariantRuntime.IsGJ504b?new Color(.11f,.025f,.08f,1f):new Color(.017f,.027f,.024f,1f);
+            Color joint=ArenaVariantRuntime.IsGJ504b?new Color(.21f,.055f,.15f,1f):new Color(.025f,.040f,.035f,1f);
             armorMat=MakeMaterial(shader,xenoArmorBase,.28f,.58f,Color.black);
             darkMat=MakeMaterial(shader,hide,.12f,.36f,Color.black);
             jointMat=MakeMaterial(shader,joint,.22f,.42f,Color.black);

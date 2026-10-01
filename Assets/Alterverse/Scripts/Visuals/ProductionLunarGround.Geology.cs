@@ -177,7 +177,8 @@ namespace Alterverse.Visuals
                 // The surface atlas is not stretched vertically across a cliff: strata use their own neutral rock material.
                 if(layer==1)
                 {
-                    mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
+                    mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsGJ504b?new Color(.32f,.07f,.24f):
+                        Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
                         Alterverse.Match.ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
                         Alterverse.Match.ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
                         Alterverse.Match.ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):

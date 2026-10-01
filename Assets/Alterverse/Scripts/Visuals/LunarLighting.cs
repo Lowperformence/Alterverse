@@ -23,7 +23,7 @@ namespace Alterverse.Visuals
             key.intensity=ArenaVariantRuntime.IsDark00?.075f:1.40f;
             key.shadowStrength=ArenaVariantRuntime.IsDark00?.18f:.56f;
             if(QualitySettings.shadows!=ShadowQuality.Disable)key.shadows=ArenaVariantRuntime.IsDark00?LightShadows.None:LightShadows.Soft;
-            key.color=ArenaVariantRuntime.IsDark00?new Color(.72f,.78f,.86f):
+            key.color=ArenaVariantRuntime.IsGJ504b?new Color(1f,.88f,.94f):ArenaVariantRuntime.IsDark00?new Color(.72f,.78f,.86f):
                 ArenaVariantRuntime.IsMars?new Color(1f,.82f,.68f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.86f,1f,.78f):
                 ArenaVariantRuntime.IsNoxara?new Color(.78f,.86f,1f):
@@ -31,7 +31,7 @@ namespace Alterverse.Visuals
             key.cullingMask&=~(1<<31); // Menu showcase has its own isolated studio lights.
 
             RenderSettings.ambientMode=AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsDark00?new Color(.006f,.007f,.009f):
+            RenderSettings.ambientSkyColor=ArenaVariantRuntime.IsGJ504b?new Color(.40f,.29f,.37f):ArenaVariantRuntime.IsDark00?new Color(.006f,.007f,.009f):
                 ArenaVariantRuntime.IsMars?new Color(.36f,.30f,.28f):
                 ArenaVariantRuntime.IsGreenPlanet?new Color(.27f,.36f,.30f):
                 ArenaVariantRuntime.IsNoxara?new Color(.26f,.29f,.40f):new Color(.40f,.43f,.49f);

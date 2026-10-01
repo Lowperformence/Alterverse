@@ -67,7 +67,7 @@ namespace Alterverse.Visuals
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
             bool moon=IsMoon;
-            bool mars=ArenaVariantRuntime.IsMars;
+            bool mars=ArenaVariantRuntime.IsMars||ArenaVariantRuntime.IsGJ504b;
             bool earth=ArenaVariantRuntime.IsEarth;
 
             // Earth deliberately uses very broad, low-amplitude undulation. It must read as natural
@@ -223,7 +223,14 @@ namespace Alterverse.Visuals
                 value+=Mathf.SmoothStep(.37f,.49f,vein)*(moon?.026f:.014f);
                 if(ArenaVariantRuntime.IsGreenPlanet)value=Mathf.Max(value,.235f);
                 value=Mathf.Clamp01(value);
-                if(ArenaVariantRuntime.IsMars)
+                if(ArenaVariantRuntime.IsGJ504b)
+                {
+                    float rock=Mathf.SmoothStep(.42f,.70f,Mathf.PerlinNoise(wx*.11f+71f,wz*.11f+19f));
+                    Color sand=new Color(value*1.65f,value*.40f,value*1.13f,1f);
+                    Color stone=new Color(value*.80f,value*.25f,value*.65f,1f);
+                    pixels[i]=Color.Lerp(sand,stone,rock*.62f);
+                }
+                else if(ArenaVariantRuntime.IsMars)
                 {
                     float warm=Mathf.Lerp(.88f,1.08f,Mathf.InverseLerp(.30f,.68f,tone));
                     pixels[i]=new Color(value*1.28f*warm,value*.58f,value*.39f,1);
