@@ -248,7 +248,7 @@ namespace Alterverse.Visuals
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?1.65f:1.45f;
             // All heroes complete 60% as many visible gait cycles over the same travel distance.
-            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2*.60f,Mathf.PI*2);
+            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2*.39f,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
