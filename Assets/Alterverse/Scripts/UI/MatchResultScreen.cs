@@ -135,11 +135,12 @@ namespace Alterverse.UI
         private void EnsureStyles()
         {
             if(theme!=null)return;theme=new FrontEndTheme();
-            title=Style(40,true);number=Style(32,true);label=Style(18,true);small=Style(17,false);
+            title=Style(40,true);title.font=FrontEndTypography.Brand;number=Style(32,true);label=Style(18,true);small=Style(17,false);
             button=Style(18,true);button.alignment=TextAnchor.MiddleCenter;
         }
         private static GUIStyle Style(int size,bool bold)=>new(GUI.skin.label)
         {
+            font=bold?FrontEndTypography.Display:FrontEndTypography.Body,
             fontSize=size,fontStyle=bold?FontStyle.Bold:FontStyle.Normal,wordWrap=false,clipping=TextClipping.Clip,
             alignment=TextAnchor.MiddleLeft,padding=new RectOffset(0,0,0,0),richText=false,
             normal={textColor=FrontEndTheme.Text}
@@ -255,13 +256,8 @@ namespace Alterverse.UI
         }
         private bool Action(Rect r,string text,bool primary,bool enabled)
         {
-            bool old=GUI.enabled;GUI.enabled=old&&enabled;
-            FrontEndTheme.Fill(r,primary&&enabled?FrontEndTheme.Accent:FrontEndTheme.Raised);
-            Color before=GUI.color;
-            if(primary&&enabled)GUI.color*=new Color(.04f,.09f,.11f);
-            GUI.Label(r,text,button);GUI.color=before;
-            bool clicked=GUI.Button(r,GUIContent.none,GUIStyle.none);GUI.enabled=old;
-            if(clicked)Alterverse.Audio.UiSoundRouter.Confirm();return clicked;
+            return theme.Action(r,text,primary:primary,enabled:enabled);
         }
     }
 }
+

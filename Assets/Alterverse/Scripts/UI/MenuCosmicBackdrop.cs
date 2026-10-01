@@ -6,8 +6,14 @@ namespace Alterverse.UI
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
         private readonly Texture2D texture;
+        private readonly bool ownsTexture;
+        private readonly Texture2D cards;
         public MenuCosmicBackdrop()
         {
+            cards=Resources.Load<Texture2D>("FrontEnd/MenuCardAtlas");
+            texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdrop");
+            if(texture!=null)return;
+            ownsTexture=true;
             const int width=768,height=384;
             var pixels=new Color32[width*height];
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)
@@ -52,7 +58,20 @@ namespace Alterverse.UI
             }
             return background+rim*(edge*.20f);
         }
-        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.StretchToFill,false);
-        public void Dispose(){if(texture!=null)Object.Destroy(texture);}
+        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+        public void DrawCard(Rect rect,int index)
+        {
+            Texture2D art=cards!=null?cards:texture;
+            float sourceAspect=art.width/(float)art.height/3f;
+            float targetAspect=rect.width/rect.height;
+            float height=Mathf.Min(1f,sourceAspect/targetAspect);
+            float width=Mathf.Min(1f,targetAspect/sourceAspect)/3f;
+            // Crop, never stretch. Focus on the subject in the upper-middle of each panel.
+            float u=Mathf.Clamp(index,0,2)/3f+(1f/3f-width)*.5f;
+            float v=Mathf.Clamp(.67f-height*.5f,0,1-height);
+            GUI.DrawTextureWithTexCoords(rect,art,new Rect(u,v,width,height));
+        }
+        public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
     }
 }
+

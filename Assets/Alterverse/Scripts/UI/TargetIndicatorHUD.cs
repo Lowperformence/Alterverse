@@ -91,6 +91,7 @@ namespace Alterverse.UI
             lastScale = scale;
             label = new GUIStyle(GUI.skin.label)
             {
+                font = FrontEndTypography.Display,
                 fontSize = Mathf.Max(9, Mathf.RoundToInt(10f * scale)),
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter
@@ -99,3 +100,4 @@ namespace Alterverse.UI
         }
     }
 }
+

@@ -237,9 +237,10 @@ namespace Alterverse.UI
         private void DrawHealth()
         {
             Rect r=new Rect(16,16,218,76);theme.Panel(r);
+            FrontEndTheme.Fill(new Rect(r.x+12,r.y+3,r.width-24,1),FrontEndTheme.Accent);
             theme.Label(new Rect(r.x+12,r.y+5,194,24),heroName,centered);
             Rect bar=new Rect(r.x+12,r.y+34,194,9);
-            FrontEndTheme.Fill(new Rect(bar.x-1,bar.y-1,bar.width+2,bar.height+2),new Color(.18f,.22f,.28f,.92f));
+            FrontEndTheme.Fill(new Rect(bar.x-1,bar.y-1,bar.width+2,bar.height+2),new Color(FrontEndTheme.Accent.r,FrontEndTheme.Accent.g,FrontEndTheme.Accent.b,.55f));
             FrontEndTheme.Fill(bar,FrontEndTheme.Background);
             FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*damageTrail,bar.height),new Color(.72f,.76f,.82f,.58f));
             FrontEndTheme.Fill(new Rect(bar.x,bar.y,bar.width*health.Normalized,bar.height),health.Normalized<.3f?new Color(.95f,.43f,.32f):accent);
@@ -319,11 +320,15 @@ namespace Alterverse.UI
         {
             if(inspectedSlot<0)
             {
-                if(Time.unscaledTime<feedbackUntil)theme.Label(new Rect(layout.Width-410,layout.Height-290,390,28),feedback,centered);
+                if(Time.unscaledTime<feedbackUntil)
+                {
+                    Rect message=new Rect(layout.Width-410,layout.Height-290,390,28);
+                    theme.Panel(message);theme.Label(message,feedback,centered);
+                }
                 return;
             }
             Rect r=new Rect(layout.Width-418,layout.Height-386,394,130);theme.Panel(r);
-            theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],centered);
+            theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],theme.Button);
             theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
             string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DIRECTION: MOVE / AUTO EVADE · COLLISION MAY SHORTEN":details[inspectedSlot];
             theme.Label(new Rect(r.x+12,r.y+80,r.width-24,18),detail,small,true);
@@ -419,4 +424,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

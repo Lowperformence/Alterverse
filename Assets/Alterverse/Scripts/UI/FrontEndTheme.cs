@@ -7,74 +7,30 @@ namespace Alterverse.UI
     internal sealed class FrontEndTheme
     {
         public static readonly Color Background = new(.020f, .028f, .041f);
-        // Keep the space/origin-world art visible while controls remain easy to read.
-        public static readonly Color Surface = new(.045f, .061f, .083f, .80f);
-        public static readonly Color Raised = new(.078f, .108f, .146f, .90f);
+        // Dark glass and champagne highlights leave the orbital artwork visible.
+        public static readonly Color Surface = new(.025f, .038f, .055f, .76f);
+        public static readonly Color Raised = new(.14f, .12f, .09f, .88f);
         public static readonly Color Text = new(.96f, .975f, .99f);
         public static readonly Color Muted = new(.63f, .71f, .79f);
-        public static readonly Color Accent = new(.32f, .88f, .86f);
+        public static readonly Color Accent = new(.91f, .73f, .48f);
         public static readonly Color Zero = new(.60f, .39f, .82f);
 
-        // Clearer outlines than the old flat IMGUI rectangles. The selected state stays cyan,
-        // while ordinary controls use a cool steel-blue frame that remains visible over space art.
+        // Thin steel frames and warm selected edges match the orbital artwork.
         private static readonly Color Outline = new(.36f, .49f, .63f, .98f);
         private static readonly Color OutlineSoft = new(.25f, .35f, .46f, .94f);
-        private static readonly Color OutlineSelected = new(.48f, .97f, .94f, 1f);
+        private static readonly Color OutlineSelected = new(1f, .84f, .60f, 1f);
 
         private const int RoundedTextureSize = 48;
-        private const float CornerRadius = 12.5f;
-        private const float OutlineThickness = 2.8f;
+        private const float CornerRadius = 5f;
+        private const float OutlineThickness = 1.2f;
         private const int SliceBorder = 15;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
 
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered;
         private readonly GUIContent measuredText = new GUIContent();
-        private Rect hiddenDifficultyCenter;
-        private bool hasHiddenDifficultyCenter;
-
-        private static bool IsHiddenDifficultyText(string text)
-        {
-            if(string.IsNullOrEmpty(text))return false;
-            if(text.IndexOf("difficulty",StringComparison.OrdinalIgnoreCase)>=0)return true;
-            return string.Equals(text,"EASY",StringComparison.OrdinalIgnoreCase)||
-                   string.Equals(text,"MEDIUM",StringComparison.OrdinalIgnoreCase)||
-                   string.Equals(text,"HARD",StringComparison.OrdinalIgnoreCase)||
-                   string.Equals(text,"EXPERT",StringComparison.OrdinalIgnoreCase);
-        }
-
-        // The weapon-skins store entry is retired. Keep the underlying weapon cosmetic data intact,
-        // but remove its frontend tab and collapse the remaining store tabs into the freed slot.
-        private static bool IsRetiredWeaponStoreTab(Rect rect,string text)
-        {
-            return Mathf.Abs(rect.y-204f)<=1f&&Mathf.Abs(rect.height-52f)<=1f&&
-                   string.Equals(text,"WEAPONS",StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static Rect CollapseRetiredWeaponStoreTabGap(Rect rect,string text)
-        {
-            if(Mathf.Abs(rect.y-204f)>1f||Mathf.Abs(rect.height-52f)>1f)return rect;
-            bool followsWeaponTab=
-                string.Equals(text,"HERO",StringComparison.OrdinalIgnoreCase)||
-                string.Equals(text,"MAPS",StringComparison.OrdinalIgnoreCase)||
-                string.Equals(text,"BATTLE ITEM",StringComparison.OrdinalIgnoreCase)||
-                string.Equals(text,"BATTLE PASS",StringComparison.OrdinalIgnoreCase);
-            if(followsWeaponTab)rect.x-=111f; // 104px store tab + 7px authored gap.
-            return rect;
-        }
-
-        private bool IsHiddenDifficultyArrow(Rect rect,string text)
-        {
-            if(!hasHiddenDifficultyCenter||(text!="<"&&text!=">"))return false;
-            if(Mathf.Abs(rect.y-hiddenDifficultyCenter.y)>1f||Mathf.Abs(rect.height-hiddenDifficultyCenter.height)>1f)return false;
-            bool left=Mathf.Abs(rect.xMax-(hiddenDifficultyCenter.x-6f))<=8f;
-            bool right=Mathf.Abs(rect.x-(hiddenDifficultyCenter.xMax+6f))<=8f;
-            return left||right;
-        }
-
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
-            if(IsHiddenDifficultyText(text))return;
             int size = style.fontSize;
             bool wrap = style.wordWrap;
             TextClipping clip = style.clipping;
@@ -94,7 +50,9 @@ namespace Alterverse.UI
         {
             EnsureRoundedStyles();
             Title = Label(42, FontStyle.Bold);
+            Title.font = FrontEndTypography.Brand;
             Heading = Label(26, FontStyle.Bold);
+            Heading.font = FrontEndTypography.Brand;
             Body = Label(19, FontStyle.Normal);
             Small = Label(16, FontStyle.Normal);
             Button = Label(19, FontStyle.Bold);
@@ -109,6 +67,7 @@ namespace Alterverse.UI
 
             Field = new GUIStyle(GUI.skin.textField)
             {
+                font = FrontEndTypography.Body,
                 fontSize = 23,
                 padding = new RectOffset(14, 14, 10, 10),
                 border = new RectOffset(SliceBorder, SliceBorder, SliceBorder, SliceBorder)
@@ -188,11 +147,13 @@ namespace Alterverse.UI
         {
             var style = new GUIStyle(GUI.skin.label)
             {
+                font = weight == FontStyle.Bold ? FrontEndTypography.Display : FrontEndTypography.Body,
                 fontSize = size,
                 fontStyle = weight,
                 wordWrap = true,
                 alignment = TextAnchor.MiddleLeft,
                 padding = new RectOffset(0, 0, 0, 0),
+                clipping = TextClipping.Clip,
                 richText = false
             };
             style.normal.textColor = Text;
@@ -235,6 +196,11 @@ namespace Alterverse.UI
             GUI.color = before;
         }
 
+        public void Frame(Rect rect,bool emphasized=false)
+        {
+            RoundedOutline(rect,emphasized?OutlineSelected:OutlineSoft);
+        }
+
         public void Panel(Rect rect)
         {
             RoundedFill(rect, Surface);
@@ -247,10 +213,15 @@ namespace Alterverse.UI
 
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
         {
-            if(IsHiddenDifficultyText(text))return;
             Color before = GUI.color;
             if (muted) GUI.color *= Muted;
+            int size=style.fontSize;
+            measuredText.text=text;
+            if(style.wordWrap&&rect.width>0&&rect.height>0)
+                while(style.fontSize>12&&style.CalcHeight(measuredText,rect.width)>rect.height+1)
+                    style.fontSize--;
             GUI.Label(rect, text, style);
+            style.fontSize=size;
             GUI.color = before;
         }
 
@@ -263,18 +234,10 @@ namespace Alterverse.UI
 
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
         {
-            // Weapon skins are no longer exposed as a store category. Returning before hit-testing
-            // guarantees the retired tab is neither rendered nor clickable.
-            if(IsRetiredWeaponStoreTab(rect,text))return false;
-            rect=CollapseRetiredWeaponStoreTabGap(rect,text);
 
             // Keep the Battle Item insufficient-funds button in sync with the actual purchase price.
             if(string.Equals(text,"NEED 250 SHARDS",StringComparison.OrdinalIgnoreCase))
                 text=$"NEED {Alterverse.Profile.BattleItemInventory.ShieldShardPrice} SHARDS";
-
-            // Adaptive bot difficulty is intentionally invisible and non-interactive. Keeping this
-            // guard in the shared frontend also makes stale menu layouts harmless during migration.
-            if(IsHiddenDifficultyText(text)||IsHiddenDifficultyArrow(rect,text))return false;
 
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
             text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
@@ -283,13 +246,14 @@ namespace Alterverse.UI
             bool previous = GUI.enabled;
             GUI.enabled = previous && enabled;
 
-            Color surface = primary ? Accent : selected ? Raised : Surface;
+            bool hovered=enabled && rect.Contains(Event.current.mousePosition);
+            Color surface = primary ? new Color(.23f,.18f,.11f,.90f) : selected || hovered ? Raised : Surface;
             RoundedFill(rect, enabled ? surface : Surface);
 
             Color border = !enabled
                 ? new Color(OutlineSoft.r, OutlineSoft.g, OutlineSoft.b, .52f)
                 : primary
-                    ? new Color(.76f, 1f, .99f, 1f)
+                    ? new Color(1f, .85f, .63f, 1f)
                     : selected
                         ? OutlineSelected
                         : Outline;
@@ -313,7 +277,7 @@ namespace Alterverse.UI
             if (labelWidth > availableTextWidth)
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
-            GUI.color *= !enabled ? Muted : primary ? new Color(.035f, .085f, .10f) : Text;
+            GUI.color *= !enabled ? Muted : primary ? new Color(1f,.91f,.75f) : Text;
             GUI.Label(rect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;
@@ -330,6 +294,19 @@ namespace Alterverse.UI
             return clicked;
         }
 
+        public bool Navigation(Rect rect,string text,int icon,bool primary=false,bool selected=false)
+        {
+            bool clicked=Action(rect,"",primary,selected);
+            Color tint=primary||selected?Accent:Muted;
+            FrontEndNavigation.DrawIcon(new Rect(rect.x+16,rect.y+12,26,26),icon,tint);
+            TextAnchor previousAlignment=Button.alignment;
+            Button.alignment=TextAnchor.MiddleLeft;
+            FitLabel(new Rect(rect.x+57,rect.y,rect.width-74,rect.height),text,Button);
+            Button.alignment=previousAlignment;
+            if(primary||selected)Fill(new Rect(rect.x+1,rect.y+9,2,rect.height-18),Accent);
+            return clicked;
+        }
+
         public void Progress(Rect rect, float fraction)
         {
             // Very thin progress bars do not benefit from a 9-sliced corner texture. Draw a clean framed rail
@@ -343,13 +320,8 @@ namespace Alterverse.UI
 
         public void Center(Rect rect, string text)
         {
-            if(IsHiddenDifficultyText(text))
-            {
-                hiddenDifficultyCenter=rect;
-                hasHiddenDifficultyCenter=true;
-                return;
-            }
             Label(rect, text, centered, true);
         }
     }
 }
+

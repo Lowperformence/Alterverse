@@ -31,7 +31,7 @@ Color old=GUI.color;
 Rect frame=new Rect(p.x-w*.5f,p.y,w,h);
 
 GUI.color=FrameColor;GUI.DrawTexture(frame,pixel);
-GUI.color=team;
+GUI.color=new Color(FrontEndTheme.Accent.r,FrontEndTheme.Accent.g,FrontEndTheme.Accent.b,.7f);
 GUI.DrawTexture(new Rect(frame.x,frame.y,frame.width,1f*scale),pixel);
 GUI.DrawTexture(new Rect(frame.x,frame.yMax-1f*scale,frame.width,1f*scale),pixel);
 
@@ -69,7 +69,8 @@ GUI.DrawTexture(new Rect(cx-inner*.5f,cy-inner*.5f,inner,inner),pixel);
 GUI.matrix=oldMatrix;
 GUI.color=oldColor;
 }
-private void EnsureStyle(float scale){int size=Mathf.RoundToInt(10*scale);if(style!=null&&style.fontSize==size)return;style=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=size,normal={textColor=Color.white}};}
+private void EnsureStyle(float scale){int size=Mathf.RoundToInt(10*scale);if(style!=null&&style.fontSize==size)return;style=new GUIStyle(GUI.skin.label){font=FrontEndTypography.Display,alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=size,normal={textColor=Color.white}};}
 private void OnDestroy(){if(pixel!=null)Destroy(pixel);}
 }
 }
+

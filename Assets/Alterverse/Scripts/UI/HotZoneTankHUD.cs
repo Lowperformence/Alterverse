@@ -31,7 +31,7 @@ namespace Alterverse.UI
 
             if(labelStyle==null)
             {
-                labelStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=12};
+                labelStyle=new GUIStyle(GUI.skin.label){font=FrontEndTypography.Display,alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=12};
                 labelStyle.normal.textColor=Color.white;
             }
             hpStyle??=new GUIStyle(labelStyle){fontSize=10};
@@ -65,7 +65,8 @@ namespace Alterverse.UI
                 if(enemyMonster)DrawEnemyCrystal(screen.x,y-12f,1f);
 
                 Rect back=new(x+8,y,100,8);
-                GUI.color=new Color(.035f,.04f,.055f,.92f);GUI.DrawTexture(back,pixel);
+                FrontEndTheme.Fill(new Rect(back.x-1,back.y-1,back.width+2,back.height+2),new Color(FrontEndTheme.Accent.r,FrontEndTheme.Accent.g,FrontEndTheme.Accent.b,.55f));
+                GUI.color=FrontEndTheme.Background;GUI.DrawTexture(back,pixel);
                 float normalized=Mathf.Clamp01(tank.TankHealth.Normalized);
                 Color teamColor=tank.Team==0?new Color(.72f,.25f,1f):new Color(.16f,.88f,1f);
                 Color barColor=enemyMonster?new Color(1f,.10f,.10f,.98f):teamColor;
@@ -92,3 +93,4 @@ namespace Alterverse.UI
         }
     }
 }
+

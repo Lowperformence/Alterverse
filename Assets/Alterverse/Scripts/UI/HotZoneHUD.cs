@@ -12,7 +12,7 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private GUIStyle centerStyle,rightStyle;
         private string banner="";
-        private Color bannerColor=new(.95f,.58f,.20f);
+        private Color bannerColor=FrontEndTheme.Accent;
         private float bannerUntil;
         private Transform player;
         private GameObject compassArrow;
@@ -38,7 +38,7 @@ namespace Alterverse.UI
             UpdateCompass();
         }
 
-        private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=new Color(.95f,.72f,.30f);bannerUntil=Time.time+4f;}
+        private void OnOpening(){banner="HOT ZONE OPENING · 10 SECONDS";bannerColor=FrontEndTheme.Accent;bannerUntil=Time.time+4f;}
         private void OnOpened(){banner="HOT ZONE ACTIVE";bannerColor=Color.white;bannerUntil=Time.time+2.5f;}
         private void UpdateCompass()
         {
@@ -160,7 +160,8 @@ namespace Alterverse.UI
                     if(!string.IsNullOrEmpty(state))headline+=$"  ·  {state}";
                     theme.Label(new Rect(p.x+12,p.y+5,p.width-24,20),headline,centerStyle);
                     Rect bar=new(p.x+24,p.y+34,p.width-48,8);
-                    FrontEndTheme.Fill(bar,FrontEndTheme.Raised);
+                    FrontEndTheme.Fill(new Rect(bar.x-1,bar.y-1,bar.width+2,bar.height+2),FrontEndTheme.Muted);
+                    FrontEndTheme.Fill(bar,FrontEndTheme.Background);
                     float half=bar.width*.5f;
                     float maxTeamScore=HotZoneDirector.ActiveDuration*HotZoneDirector.MaxScoringHeroesPerTeam;
                     float zeroFill=half*Mathf.Clamp01(zone.ZeroControlSeconds/maxTeamScore);
@@ -182,3 +183,4 @@ namespace Alterverse.UI
 
     }
 }
+

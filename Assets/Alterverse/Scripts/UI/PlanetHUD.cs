@@ -28,7 +28,7 @@ namespace Alterverse.UI
                 }
                 if(!string.IsNullOrEmpty(DimensionPlanetDirector.NextEventLabel))
                 {
-                    Rect next=new Rect(16,98,218,24);
+                    Rect next=new Rect(16,98,218,24);theme.Panel(next);
                     theme.Label(next,$"NEXT EVENT  •  {DimensionPlanetDirector.NextEventLabel}  {Mathf.CeilToInt(DimensionPlanetDirector.NextEventRemaining)}s",small,true);
                 }
                 if(playerBuff!=null&&playerBuff.ActiveRemaining>0)
@@ -44,3 +44,4 @@ namespace Alterverse.UI
         }
     }
 }
+
