@@ -48,3 +48,7 @@ FBX checks cover arm ratios and symmetry, normalized skin weights, bones, clips,
 ## Tahla Venn latest reference
 
 The healer now uses pale blue skin and exposed slender arms, blue gripping hands, swept white hair with a small pink flower, long elven ears, ivory vestments and pointed engraved gold shoulders. The healing staff remains attached to the original grip and retains green restoration effects. This is a stylized interpretation of the new priestess reference.
+
+## Assassin scout helmet reference
+
+Zhaev Null now wears an original closed dark gunmetal scout helmet with rounded crown, recessed black eye apertures, angular cheek and chin panels, layered jaw rims and a hinged side antenna. The previous masks, glowing eye strips and exposed hair are removed. Helmet geometry is rigidly weighted to the existing Head bone; weapon grips, body proportions and locomotion are unchanged.

@@ -2,8 +2,8 @@
   {
     "hero": "Veyr",
     "label": "ZHAEV NULL",
-    "vertices": 25380,
-    "triangles": 49018,
+    "vertices": 26527,
+    "triangles": 51756,
     "bones": 19,
     "animations": 9,
     "limbVolume": {

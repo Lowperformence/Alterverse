@@ -602,6 +602,42 @@ def build(hero,female,color,label):
   tube('Ione soft upper lip',[(-.022,-.145,1.625),(-.008,-.152,1.628),(0,-.153,1.625),(.008,-.152,1.628),(.022,-.145,1.625)],.0025,lip,'Head')
   tube('Ione soft lower lip',[(-.019,-.146,1.621),(0,-.152,1.620),(.019,-.146,1.621)],.003,lip,'Head')
   ellipsoid('Ione forehead moon jewel',(0,-.132,1.741),(.012,.005,.018),emerald,'Head',16,10)
+ if hero=='Veyr':
+  # Closed dark scout helmet inspired by the new reference, with oval apertures and antenna.
+  metal=mat('Null dark gunmetal helmet',(.072,.089,.078),.76,.42)
+  edge=mat('Null muted helmet panel seams',(.23,.27,.24),.72,.43)
+  visor=mat('Null recessed black eye visor',(.004,.008,.009),.16,.27)
+  removed=[o for o in parts if o.get('bone')=='Head' and o!=body]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
+  lining=ellipsoid('Null inner blackout helmet lining',(0,.012,1.700),(.137,.172,.171),visor,'Head',40,28)
+  shell=ellipsoid('Null closed scout helmet shell',(0,.014,1.704),(.150,.191,.191),metal,'Head',64,40)
+  for v in shell.data.vertices:
+   if v.co.z<1.59:v.co.z=1.547+(v.co.z-1.513)*.55
+  for item in [shell,lining]:
+   bm=bmesh.new();bm.from_mesh(item.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.000001);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+   if bm.calc_volume(signed=True)<0:bmesh.ops.reverse_faces(bm,faces=list(bm.faces))
+   bm.to_mesh(item.data);bm.free()
+  for side in [-1,1]:
+   cutter=ellipsoid('Temporary eye aperture cutter',(side*.060,-.185,1.716),(.036,.105,.025),visor,'Head',32,20)
+   bm=bmesh.new();bm.from_mesh(cutter.data);bmesh.ops.remove_doubles(bm,verts=list(bm.verts),dist=.000001);bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
+   if bm.calc_volume(signed=True)<0:bmesh.ops.reverse_faces(bm,faces=list(bm.faces))
+   bm.to_mesh(cutter.data);bm.free()
+   mod=shell.modifiers.new('Precise eye aperture','BOOLEAN');mod.operation='DIFFERENCE';mod.solver='EXACT';mod.object=cutter
+   bpy.context.view_layer.objects.active=shell;bpy.ops.object.modifier_apply(modifier=mod.name)
+   parts.remove(cutter);bpy.data.objects.remove(cutter,do_unlink=True)
+  for side in [-1,1]:
+   # Contour accents stay on the rounded shell, with a sharply defined cheek panel below.
+   tube('Null forehead panel seam',[(0,-.177,1.781),(side*.047,-.167,1.785),(side*.090,-.139,1.810),(side*.125,-.091,1.827)],.0025,edge,'Head',8)
+   tube('Null cheek panel seam',[(side*.023,-.179,1.660),(side*.078,-.153,1.650),(side*.128,-.093,1.678),(side*.145,-.028,1.706)],.0025,edge,'Head',8)
+   plate('Null angled cheek armor',[(side*.026,1.647),(side*.102,1.633),(side*.119,1.572),(side*.052,1.552),(side*.027,1.577)],-.140,.006,metal,'Head')
+   tube('Null layered jaw rim',[(0,-.186,1.561),(side*.049,-.177,1.571),(side*.100,-.143,1.591),(side*.133,-.095,1.621)],.0035,edge,'Head',8)
+   tube('Null lower chin rim',[(0,-.174,1.543),(side*.055,-.160,1.551),(side*.102,-.124,1.575),(side*.131,-.076,1.599)],.005,metal,'Head',8)
+   box('Null temple fastener',(side*.150,.017,1.729),(.017,.042,.032),edge,'Head',.004)
+  plate('Null central angular face plate',[(-.030,1.668),(0,1.687),(.030,1.668),(.031,1.573),(0,1.557),(-.031,1.573)],-.178,.009,metal,'Head')
+  for j in range(3):
+   tube('Null chin vent',[(-.024,-.205,1.560-j*.010),(.024,-.205,1.560-j*.010)],.002,visor,'Head',8)
+  box('Null antenna hinge',(-.155,.016,1.733),(.025,.045,.045),metal,'Head',.005)
+  tube('Null angular scout antenna',[(-.158,.024,1.735),(-.162,.024,2.005),(-.068,.024,1.990)],[.006,.006,.005],metal,'Head',6)
  if hero=='Mira':
   # Latest reference: pale blue elf priestess, swept white hair and ivory/gold vestments.
   frost=mat('Tahla white swept hair',(.77,.83,.87),.10,.43)

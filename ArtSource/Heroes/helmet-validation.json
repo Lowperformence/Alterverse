@@ -1,0 +1,10 @@
+{
+  "hero": "Veyr",
+  "headRigidHelmetVertices": 5196,
+  "helmetMaterials": [
+    "Null dark gunmetal helmet",
+    "Null muted helmet panel seams",
+    "Null recessed black eye visor"
+  ],
+  "attachmentValidation": "passed"
+}
