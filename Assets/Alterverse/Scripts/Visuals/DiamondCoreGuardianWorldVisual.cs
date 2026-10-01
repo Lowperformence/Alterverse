@@ -128,6 +128,7 @@ namespace Alterverse.Visuals
             CreateGem("FluorescentCore",state.root.transform,state.mesh,core,
                 new Vector3(-.02f,-.08f,0f),new Vector3(.76f,1.62f,.56f),Quaternion.Euler(180f,12f,0f));
 
+            AuthoredHotZoneArt.Apply(state.root.transform,"Crystal");
             return state;
         }
 

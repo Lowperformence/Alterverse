@@ -172,6 +172,8 @@ namespace Alterverse.Combat
             else if(marsSkeleton)BuildSkeletonVisuals();
             else BuildVisuals();
             if(!FrontierPlanetLayout.Active)BuildModernMonsterDetails();
+            AuthoredHotZoneArt.Apply(transform,ArenaVariantRuntime.IsGJ504b?"Sandstone":
+                kryonBear?"Ice":noxaraSpider?"Spider":xenoAlien?"Xeno":marsSkeleton?"Skeleton":"Machine");
             lastMovementSample=transform.position;
             movementSampleReady=true;
             SetNextPatrol();

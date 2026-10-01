@@ -1,0 +1,251 @@
+{
+  "parts": [
+    {
+      "part": "Machine_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Machine_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Machine_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Machine_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Machine_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Skeleton_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Skeleton_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Skeleton_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Skeleton_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Skeleton_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Xeno_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Xeno_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Xeno_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Xeno_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Xeno_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Spider_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Spider_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Spider_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Spider_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Spider_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Ice_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Ice_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Ice_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Ice_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Ice_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Sandstone_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Sandstone_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Sandstone_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Sandstone_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Sandstone_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Crystal_Box",
+      "triangles": 108,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Crystal_Sphere",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Crystal_Capsule",
+      "triangles": 440,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Crystal_Cylinder",
+      "triangles": 236,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    },
+    {
+      "part": "Crystal_Rock",
+      "triangles": 80,
+      "boundsFit": "passed",
+      "winding": "passed",
+      "uv": "passed"
+    }
+  ],
+  "customFacetTrials": 1000,
+  "result": "passed"
+}

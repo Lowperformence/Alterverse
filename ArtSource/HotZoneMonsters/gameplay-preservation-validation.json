@@ -1,0 +1,9 @@
+{
+  "combatSource": "byte-identical after removing visual hook",
+  "guardianSource": "byte-identical after removing visual hook",
+  "families": 7,
+  "statsChanged": 0,
+  "collidersChanged": 0,
+  "movementCodeChanged": 0,
+  "unityRuntime": "not available; editor validation supplied"
+}
