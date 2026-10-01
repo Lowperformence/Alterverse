@@ -116,8 +116,6 @@ namespace Alterverse.Visuals
                 Debug.LogError("[Alterverse Movement] Multiple HeroVisualMotion controllers on '"+name+"'.",this);
                 enabled=false;return;
             }
-            if(GetComponent<AllFigureMotionRealism>()?.enabled==true)
-                Debug.LogError("[Alterverse Movement] Competing AllFigureMotionRealism on hero '"+name+"'.",this);
             articulatedRig=GetComponent<HeroProceduralRig>()??gameObject.AddComponent<HeroProceduralRig>();
             articulatedRig.Build(root);
             if(!articulatedRig.Ready)

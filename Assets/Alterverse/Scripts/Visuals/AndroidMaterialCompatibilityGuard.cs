@@ -4,12 +4,13 @@ using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Android/URP safety net for procedural runtime materials.
+    /// Single URP safety net for procedural runtime materials on all platforms.
     /// Some DIMENSIONS FRONT visuals are created entirely from code. If a runtime-created
     /// material falls back to a Built-in/legacy shader in a player build, URP renders it
     /// magenta. This guard replaces only known incompatible/error shaders and leaves all
     /// valid URP/custom materials untouched.
     /// </summary>
+    [DefaultExecutionOrder(10000)]
     public sealed class AndroidMaterialCompatibilityGuard : MonoBehaviour
     {
         private static Shader litShader;
@@ -36,7 +37,7 @@ namespace Alterverse.Visuals
             nextRepair=Time.unscaledTime+.35f;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             // Runtime objects are created after the scene loads (menu, arena, mechs, VFX).
             // A low-frequency pass catches them without touching gameplay simulation.
@@ -52,27 +53,32 @@ namespace Alterverse.Visuals
             if(litShader==null||unlitShader==null)return;
 
             Renderer[] renderers=FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
-            foreach(Renderer renderer in renderers)
+            foreach(Renderer renderer in renderers)RepairRenderer(renderer);
+        }
+
+        private static void RepairRenderer(Renderer renderer)
+        {
+            if(renderer==null)return;
+            Material[] materials=renderer.sharedMaterials;
+            bool changed=false;
+            for(int i=0;i<materials.Length;i++)
             {
-                if(renderer==null)continue;
-                Material[] materials=renderer.sharedMaterials;
-                bool changed=false;
-                for(int i=0;i<materials.Length;i++)
-                {
-                    Material source=materials[i];
-                    if(!NeedsRepair(source))continue;
-                    bool unlit=PreferUnlit(renderer,source);
-                    materials[i]=Replacement(source,unlit?unlitShader:litShader);
-                    if(materials[i]!=source)RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(materials[i]);
-                    changed|=materials[i]!=source;
-                }
-                if(changed)renderer.sharedMaterials=materials;
+                Material source=materials[i];
+                if(!NeedsRepair(source))continue;
+                Shader shader=PreferUnlit(renderer,source)?RuntimeShaderLibrary.Unlit:RuntimeShaderLibrary.Lit;
+                Material replacement=Replacement(source,shader);
+                if(replacement==source)continue;
+                materials[i]=replacement;
+                RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(replacement);
+                changed=true;
             }
+            if(changed)renderer.sharedMaterials=materials;
         }
 
         private static bool NeedsRepair(Material material)
         {
             if(material==null||material.shader==null)return true;
+            if(!material.shader.isSupported)return true;
             string shader=material.shader.name;
             return shader=="Hidden/InternalErrorShader"||
                    shader=="Standard"||
@@ -95,7 +101,7 @@ namespace Alterverse.Visuals
 
         private static Material Replacement(Material source,Shader shader)
         {
-            if(shader==null)return source;
+            if(shader==null||!shader.isSupported)return source;
             Material replacement=new Material(shader)
             {
                 name=(source!=null?source.name:"DF_RuntimeMaterial")+" [Runtime URP]"
@@ -110,10 +116,16 @@ namespace Alterverse.Visuals
             if(replacement.HasProperty("_BaseColor"))replacement.SetColor("_BaseColor",color);
             if(replacement.HasProperty("_Color"))replacement.SetColor("_Color",color);
 
-            if(source!=null&&source.HasProperty("_BaseMap")&&replacement.HasProperty("_BaseMap"))
-                replacement.SetTexture("_BaseMap",source.GetTexture("_BaseMap"));
-            else if(source!=null&&source.HasProperty("_MainTex")&&replacement.HasProperty("_BaseMap"))
-                replacement.SetTexture("_BaseMap",source.GetTexture("_MainTex"));
+            if(source!=null&&replacement.HasProperty("_BaseMap"))
+            {
+                string map=source.HasProperty("_BaseMap")?"_BaseMap":source.HasProperty("_MainTex")?"_MainTex":null;
+                if(map!=null)
+                {
+                    replacement.SetTexture("_BaseMap",source.GetTexture(map));
+                    replacement.SetTextureScale("_BaseMap",source.GetTextureScale(map));
+                    replacement.SetTextureOffset("_BaseMap",source.GetTextureOffset(map));
+                }
+            }
             if(source!=null&&source.HasProperty("_BumpMap")&&replacement.HasProperty("_BumpMap"))
                 replacement.SetTexture("_BumpMap",source.GetTexture("_BumpMap"));
             if(source!=null&&source.HasProperty("_BumpScale")&&replacement.HasProperty("_BumpScale"))
@@ -128,6 +140,8 @@ namespace Alterverse.Visuals
                 replacement.SetFloat("_Metallic",source.GetFloat("_Metallic"));
             if(source!=null&&source.HasProperty("_Smoothness")&&replacement.HasProperty("_Smoothness"))
                 replacement.SetFloat("_Smoothness",source.GetFloat("_Smoothness"));
+            else if(source!=null&&source.HasProperty("_Glossiness")&&replacement.HasProperty("_Smoothness"))
+                replacement.SetFloat("_Smoothness",source.GetFloat("_Glossiness"));
 
             return replacement;
         }

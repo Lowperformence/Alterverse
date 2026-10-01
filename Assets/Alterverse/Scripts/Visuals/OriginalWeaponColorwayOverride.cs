@@ -8,8 +8,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Weapon-shop variants are colorways of each hero's authored standard weapon only.
-    /// Legacy EPIC/LEGENDARY replacement geometry is hidden presentation-only; gameplay,
-    /// pivots, grip, animation, damage, range and timing remain untouched.
+    /// Color is applied to the authored weapon materials without generating replacement geometry.
     /// </summary>
     [DefaultExecutionOrder(5000)]
     internal sealed class OriginalWeaponColorwayOverride : MonoBehaviour
@@ -71,9 +70,6 @@ namespace Alterverse.Visuals
                 appliedVariant=int.MinValue;
             }
 
-            // Old builders are allowed to exist for save compatibility, but never win visually.
-            SuppressReplacementGeometry();
-
             // HeroRespawn hides the complete hero on death. Never let this late-running colorway
             // system re-enable the authored weapon while the hero is dead/awaiting respawn.
             Health health=identity.GetComponent<Health>();
@@ -91,6 +87,7 @@ namespace Alterverse.Visuals
                 :identity.GetComponent<HeroRespawn>()!=null
                     ?WeaponSkinInventory.EquippedVariant(identity.Hero)
                     :-1;
+            if(preview!=null&&preview.WeaponOverdrive&&variant<0)variant=0;
 
             if(variant==appliedVariant)return;
             RestoreMaterialsOnly();
@@ -118,7 +115,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<renderers.Length;i++)
             {
                 Renderer renderer=renderers[i];
-                if(renderer==null||IsReplacement(renderer.transform))continue;
+                if(renderer==null)continue;
 
                 bool duplicate=false;
                 for(int r=0;r<baseRenderers.Count;r++)
@@ -136,17 +133,6 @@ namespace Alterverse.Visuals
                     Renderer=renderer,
                     Original=(Material[])renderer.sharedMaterials.Clone()
                 });
-            }
-        }
-
-        private void SuppressReplacementGeometry()
-        {
-            if(visualRoot==null)return;
-            Renderer[] all=visualRoot.GetComponentsInChildren<Renderer>(true);
-            for(int i=0;i<all.Length;i++)
-            {
-                Renderer renderer=all[i];
-                if(renderer!=null&&IsReplacement(renderer.transform))renderer.enabled=false;
             }
         }
 
@@ -188,10 +174,19 @@ namespace Alterverse.Visuals
                     {
                         name=source.name+"_DF_Colorway_"+variant
                     };
-                    Color baseColor=ReadColor(source);
-                    Color target=Color.Lerp(baseColor,accent,tint);
-                    target.a=baseColor.a;
-                    WriteColor(material,target);
+                    if(material.HasProperty("_WeaponTint"))
+                    {
+                        // HeroSurface uses _BaseColor.a for hit flashes, not persistent tint.
+                        // A separate channel keeps the vertex-painted shading and flash restoration intact.
+                        material.SetColor("_WeaponTint",new Color(accent.r,accent.g,accent.b,tint));
+                    }
+                    else
+                    {
+                        Color baseColor=ReadColor(source);
+                        Color target=Color.Lerp(baseColor,accent,tint);
+                        target.a=baseColor.a;
+                        WriteColor(material,target);
+                    }
 
                     if(material.HasProperty("_Metallic"))
                         material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),metallic));
@@ -250,24 +245,6 @@ namespace Alterverse.Visuals
             if(materials==null)return;
             for(int i=0;i<materials.Length;i++)
                 if(materials[i]!=null)Destroy(materials[i]);
-        }
-
-        private bool IsReplacement(Transform t)
-        {
-            Transform current=t;
-            while(current!=null&&current!=visualRoot.parent)
-            {
-                string n=current.name;
-                if(n.StartsWith("DF_Signature")||
-                   n.StartsWith("DF_EpicWeaponVariant_")||
-                   n.StartsWith("DF_EpicLuxuryDetailPass")||
-                   n.StartsWith("DF_Epic_")||
-                   n.StartsWith("DF_Legendary")||
-                   n.StartsWith("DF_LegendaryV2_"))return true;
-                if(current==visualRoot)break;
-                current=current.parent;
-            }
-            return false;
         }
 
         private static Transform FindRecursive(Transform root,string name)

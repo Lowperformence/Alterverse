@@ -184,16 +184,6 @@ namespace Alterverse.Visuals
                     pommel.localRotation=Quaternion.Euler(0,0,45f);
                 }
 
-                // Weapon skins use different blade roots; keep their handles physically touching those roots too.
-                Transform eclipseGrip=weapon.Find("DF_SignatureEclipseGrip"+suffix);
-                if(eclipseGrip!=null)eclipseGrip.localPosition=new Vector3(0,0,.015f);
-
-                Transform duskglassGrip=weapon.Find("DF_SignatureDuskglassGrip"+suffix);
-                if(duskglassGrip!=null)
-                {
-                    duskglassGrip.localPosition=new Vector3(0,-.02f,.015f);
-                    duskglassGrip.localScale=new Vector3(.085f,.32f,.09f);
-                }
             }
         }
         private void CombineMovingPanels()
@@ -231,4 +221,3 @@ namespace Alterverse.Visuals
         private static bool MovingPivot(string n)=>n=="DF_ArmL"||n=="DF_ArmR"||n=="DF_LegL"||n=="DF_LegR"||n=="DF_BootL"||n=="DF_BootR"||n=="DF_WeaponL"||n=="DF_WeaponR"||n=="DF_OrbitL"||n=="DF_OrbitR";
     }
 }
-

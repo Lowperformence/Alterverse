@@ -3,6 +3,7 @@ Shader "DimensionsFront/HeroSurface"
  Properties
  {
   _BaseColor("Hit flash override",Color)=(1,1,1,0)
+  _WeaponTint("Weapon colorway",Color)=(1,1,1,0)
   _EnergyBoost("Attack energy",Float)=0
   _ShowcaseLighting("Portrait studio lighting",Range(0,1))=0
  }
@@ -24,6 +25,7 @@ Shader "DimensionsFront/HeroSurface"
    struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; float4 shadow:TEXCOORD3; };
    CBUFFER_START(UnityPerMaterial)
    half4 _BaseColor;
+   half4 _WeaponTint;
    half _EnergyBoost;
    half _ShowcaseLighting;
    CBUFFER_END
@@ -47,7 +49,10 @@ Shader "DimensionsFront/HeroSurface"
    half4 frag(V i):SV_Target
    {
     half3 n=normalize(i.normal),view=SafeNormalize(GetWorldSpaceViewDir(i.world));
-    half3 albedo=lerp(i.color.rgb,_BaseColor.rgb,saturate(_BaseColor.a));
+    // Keep vertex-painted detail and energy masks. Hit flashes remain an independent override.
+    half value=max(i.color.r,max(i.color.g,i.color.b));
+    half3 painted=lerp(i.color.rgb,value*_WeaponTint.rgb,saturate(_WeaponTint.a));
+    half3 albedo=lerp(painted,_BaseColor.rgb,saturate(_BaseColor.a));
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
     // Filter narrow highlights on small distant hero surfaces to avoid sparkling edges.
     smoothness=saturate(smoothness-min(.20h,length(fwidth(n))*.18h));
@@ -79,4 +84,3 @@ Shader "DimensionsFront/HeroSurface"
   UsePass "Universal Render Pipeline/Lit/DepthOnly"
  }
 }
-
