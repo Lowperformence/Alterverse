@@ -1,0 +1,37 @@
+[
+  {
+    "hero": "Veyr",
+    "medianAnatomicalArmThicknessRatio": 1.2999999493201577,
+    "sampledVertices": 286
+  },
+  {
+    "hero": "Kaelon",
+    "medianAnatomicalArmThicknessRatio": 1.2999999432202,
+    "sampledVertices": 270
+  },
+  {
+    "hero": "Nyra",
+    "medianAnatomicalArmThicknessRatio": 1.2999999449109767,
+    "sampledVertices": 250
+  },
+  {
+    "hero": "Elyra",
+    "medianAnatomicalArmThicknessRatio": 1.300000169519885,
+    "sampledVertices": 251
+  },
+  {
+    "hero": "Mira",
+    "medianAnatomicalArmThicknessRatio": 1.3000003430196647,
+    "sampledVertices": 251
+  },
+  {
+    "hero": "Rook",
+    "medianAnatomicalArmThicknessRatio": 1.2999999233608903,
+    "sampledVertices": 236
+  },
+  {
+    "hero": "Traveler",
+    "medianAnatomicalArmThicknessRatio": 1.299999924669113,
+    "sampledVertices": 268
+  }
+]

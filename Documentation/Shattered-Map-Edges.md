@@ -9,3 +9,5 @@ All eleven maps share one connected fractured cliff design. The silhouette uses 
 The shared budget is at most 9,152 triangles for the densest boundary, seven static meshes without colliders or cast shadows. Desktop and Android use the same border shape. The gameplay rectangle, navigation and interior remain unchanged.
 
 Blender topology validation and the Python adaptation checks cover all eleven grids, continuous attachment, nondegenerate faces, outward coverage and zero detached fragments. Unity editor outline validation also loads and validates the profile. Unity compilation and in-game camera/device checks remain pending because Unity is unavailable in this environment.
+
+The revised border has much deeper missing sections between its outer rock shelves. Its top remains over the original gameplay rectangle. Blender now also authors branched ground cracks and 39 small rocks attached to the upper rim. `UniversalBorderDecor.json` transfers this geometry to all eleven maps; fissures and rocks follow the actual floor relief. No floating external debris is added.

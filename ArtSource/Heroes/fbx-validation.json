@@ -14,22 +14,22 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 23956,
+    "vertices": 24511,
     "bounds": [
       [
         -0.4318547546863556,
         0.42584821581840515
       ],
       [
-        -0.26065465807914734,
+        -0.23699186742305756,
         0.2514202892780304
       ],
       [
         0.02468400076031685,
-        1.8506804704666138
+        2.0471370220184326
       ]
     ],
-    "materials": 8,
+    "materials": 9,
     "weighted": true,
     "maxHandlePalmDistanceMeters": 2.497889789080651e-07,
     "rigidGripAcrossClips": true
@@ -49,15 +49,15 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 23966,
+    "vertices": 23374,
     "bounds": [
       [
-        -0.7038082480430603,
-        0.7038082480430603
+        -0.8077875971794128,
+        0.8077875971794128
       ],
       [
-        -0.3277547061443329,
-        0.29999297857284546
+        -0.35599061846733093,
+        0.38853490352630615
       ],
       [
         0.019439999014139175,
@@ -84,7 +84,7 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 22831,
+    "vertices": 22239,
     "bounds": [
       [
         -0.4298262894153595,
@@ -119,7 +119,7 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 24492,
+    "vertices": 23900,
     "bounds": [
       [
         -0.4386351406574249,
@@ -134,7 +134,7 @@
         2.2118396759033203
       ]
     ],
-    "materials": 12,
+    "materials": 13,
     "weighted": true,
     "maxHandlePalmDistanceMeters": 3.11145380404906e-07,
     "rigidGripAcrossClips": true
@@ -154,7 +154,7 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 31318,
+    "vertices": 21937,
     "bounds": [
       [
         -0.49339282512664795,
@@ -165,11 +165,11 @@
         0.25234130024909973
       ],
       [
-        0.018360000103712082,
-        1.8506804704666138
+        0.02468400076031685,
+        1.8706799745559692
       ]
     ],
-    "materials": 9,
+    "materials": 15,
     "weighted": true,
     "maxHandlePalmDistanceMeters": 3.6010283153040923e-07,
     "rigidGripAcrossClips": true
@@ -189,15 +189,15 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 22753,
+    "vertices": 22161,
     "bounds": [
       [
-        -0.9144256711006165,
-        0.9144256711006165
+        -0.6929541826248169,
+        0.692943274974823
       ],
       [
         -0.3529666066169739,
-        0.41716721653938293
+        0.2772253751754761
       ],
       [
         0.018719999119639397,
@@ -224,7 +224,7 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 25518,
+    "vertices": 24926,
     "bounds": [
       [
         -0.45474404096603394,

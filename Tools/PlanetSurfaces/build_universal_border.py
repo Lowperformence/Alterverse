@@ -28,7 +28,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 raw=[(-42+x,-36) for x in range(84)]+[(42,-36+z) for z in range(72)]+[(42-x,36) for x in range(84)]+[(-42,36-z) for z in range(72)]
 boundary=[]
 for x,z in raw:
- angle=(math.atan2(z,x)/(2*math.pi))%1;radius=math.hypot(x,z);extension=.45+angular(angle,24,19)*2.40+angular(angle,80,50)*.55
+ angle=(math.atan2(z,x)/(2*math.pi))%1;radius=math.hypot(x,z);slot=(angle*14+.17)%1;nt=max(0,min(1,(abs(slot-.5)-.065)/.135));notch=nt*nt*(3-2*nt);extension=.10+(2.4+angular(angle,24,19)*3+angular(angle,80,50)*.7)*notch
  boundary.append((x+x/radius*extension,z+z/radius*extension))
 vertices=[(x,-z,0) for x,z in boundary];faces=[];materials=[];count=len(boundary)
 for layer in range(len(depths)):
@@ -52,10 +52,47 @@ for poly in me.polygons:
   v=me.vertices[me.loops[li].vertex_index].co;uv.data[li].uv=((math.atan2(-v.y,v.x)/(2*math.pi))%1,-v.z/18.0)
 bpy.context.view_layer.objects.active=ob;ob.select_set(True)
 bpy.ops.export_scene.fbx(filepath=str(out/'UniversalBorder.fbx'),use_selection=True,object_types={'MESH'},axis_forward='-Z',axis_up='Y',bake_anim=False,path_mode='AUTO')
+# Additional surface geometry, designed in the same coordinate system as the universal cliff.
+import random
+rng=random.Random(417);decor={'cracks':[],'rocks':[],'rockVertices':[],'rockTriangles':[]}
+rockN=8
+for ring,z,radius in [(0,-.08,.45),(1,.25,.55),(2,.65,.25)]:
+ for j in range(rockN):
+  a=j*2*math.pi/rockN;radiusJ=radius*(.8+rng.random()*.35);decor['rockVertices'].extend([round(radiusJ*math.cos(a),5),round(z+rng.uniform(-.05,.05),5),round(radiusJ*math.sin(a),5)])
+for ring in range(2):
+ for j in range(rockN):
+  a=ring*rockN+j;b=ring*rockN+(j+1)%rockN;c=a+rockN;d=b+rockN;decor['rockTriangles'].extend([a,c,b,b,c,d])
+for j in range(1,rockN-1):decor['rockTriangles'].extend([2*rockN,2*rockN+j+1,2*rockN+j])
+for idx in range(7,len(raw),12):
+ x,z=raw[idx];v=Vector((x,z)).normalized();tangent=Vector((-v.y,v.x));length=rng.uniform(4.0,8.0);points=[]
+ for j in range(8):
+  point=Vector((x,z))-v*(j/7*length)+tangent*rng.uniform(-.52,.52);points.extend([round(point.x,5),round(point.y,5)])
+ decor['cracks'].append({'points':points,'width':round(rng.uniform(.19,.38),4)})
+ branch=points[6:12];px,pz=branch[0],branch[1];branchPoints=[px,pz,px+tangent.x*1.2-v.x*.5,pz+tangent.y*1.2-v.y*.5,px+tangent.x*2-v.x,pz+tangent.y*2-v.y]
+ decor['cracks'].append({'points':branchPoints,'width':.12})
+for idx in range(4,len(raw),8):
+ x,z=raw[idx];v=Vector((x,z)).normalized();distance=rng.uniform(.25,3.0);decor['rocks'].append({'x':round(x-v.x*distance,5),'z':round(z-v.y*distance,5),'size':round(rng.uniform(.5,1.5),4),'rotation':round(rng.uniform(0,360),3)})
+decorPath=root/'Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorderDecor.json';decorPath.write_text(json.dumps(decor,separators=(',',':')))
+Path(str(decorPath)+'.meta').write_text('fileFormatVersion: 2\nguid: '+uuid.uuid5(uuid.NAMESPACE_URL,'alterverse/PlanetSurfaces/UniversalBorderDecor').hex+'\nTextScriptImporter:\n  externalObjects: {}\n  userData:\n  assetBundleName:\n  assetBundleVariant:\n')
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.samples=8;scene.cycles.use_denoising=False;scene.render.resolution_x=1400;scene.render.resolution_y=900;scene.render.resolution_percentage=100
 scene.world=bpy.data.worlds.new('Border studio');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.035,.05,.08,1);scene.world.node_tree.nodes['Background'].inputs[1].default_value=.45
 # A preview top plane closes the sample only; it is not exported as border geometry.
 top=bpy.data.meshes.new('Preview ground');top.from_pydata(vertices[:count],[],[tuple(range(count-1,-1,-1))]);top.update();ground=bpy.data.objects.new('Preview ground only',top);bpy.context.collection.objects.link(ground);ground.data.materials.append(ob.data.materials[0])
+# Preview the authored fissures and rocks on the sample terrain, using the exact shared warp.
+def warpPreview(x,z):
+ r=math.hypot(x,z);a=(math.atan2(z,x)/(2*math.pi))%1;edge=max(abs(x)/42,abs(z)/36);t=max(0,min(1,(edge-.88)/.12));blend=t*t*(3-2*t);slot=(a*14+.17)%1;nt=max(0,min(1,(abs(slot-.5)-.065)/.135));notch=nt*nt*(3-2*nt);extension=.10+(2.4+angular(a,24,19)*3+angular(a,80,50)*.7)*notch
+ return Vector((x+x/max(r,.001)*extension*blend,-z-z/max(r,.001)*extension*blend,.06))
+crackV=[];crackF=[]
+for crack in decor['cracks']:
+ pts=[warpPreview(*crack['points'][i:i+2]) for i in range(0,len(crack['points']),2)]
+ for i in range(len(pts)-1):
+  tangent=(pts[i+1]-pts[i]).normalized().cross(Vector((0,0,1)))*crack['width'];a=len(crackV);crackV.extend([pts[i]-tangent,pts[i]+tangent,pts[i+1]+tangent,pts[i+1]-tangent]);crackF.append((a,a+1,a+2,a+3))
+me=bpy.data.meshes.new('Authored border fissures');me.from_pydata(crackV,[],crackF);me.update();cracks=bpy.data.objects.new('Border fissures preview',me);bpy.context.collection.objects.link(cracks);cracks.data.materials.append(ob.data.materials[2])
+for i,stone in enumerate(decor['rocks']):
+ p=warpPreview(stone['x'],stone['z']);size=stone['size'];a=math.radians(stone['rotation']);vs=[]
+ for j in range(0,len(decor['rockVertices']),3):
+  x,y,z=decor['rockVertices'][j:j+3];vs.append(p+Vector(((x*math.cos(a)-z*math.sin(a))*size,-(x*math.sin(a)+z*math.cos(a))*size,y*size)))
+ fs=[tuple(decor['rockTriangles'][j:j+3]) for j in range(0,len(decor['rockTriangles']),3)];me=bpy.data.meshes.new('Border rock');me.from_pydata(vs,[],fs);me.update();stoneOb=bpy.data.objects.new('Attached small rock '+str(i),me);bpy.context.collection.objects.link(stoneOb);stoneOb.data.materials.append(ob.data.materials[0])
 def aim(o,at):o.rotation_euler=(Vector(at)-o.location).to_track_quat('-Z','Y').to_euler()
 for name,loc,power,size,color in [('Key',(-40,-65,85),180000,65,(1,.88,.72)),('Fill',(65,-10,50),90000,60,(.65,.77,1)),('Rim',(0,60,65),140000,45,(.62,.72,1))]:
  d=bpy.data.lights.new(name,'AREA');d.energy=power;d.size=size;d.color=color;o=bpy.data.objects.new(name,d);bpy.context.collection.objects.link(o);o.location=loc;aim(o,(0,0,-3))

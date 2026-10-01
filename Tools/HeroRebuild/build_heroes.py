@@ -59,6 +59,23 @@ def box(name,center,size,material,bone='Chest',edge=.01):
  vs=[(center[0]+x*size[0]/2,center[1]+y*size[1]/2,center[2]+z*size[2]/2) for x,y,z in [(-1,-1,-1),(1,-1,-1),(1,1,-1),(-1,1,-1),(-1,-1,1),(1,-1,1),(1,1,1),(-1,1,1)]]
  return mesh(name,vs,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],material,bone,edge)
 
+def rounded_boot(side,cloth,capmaterial):
+ """Flat sole, rounded toe and tapered ankle: a shoe silhouette rather than a sphere."""
+ n=32;levels=[(.018,-.065,.078,.145),(.039,-.065,.080,.145),(.075,-.075,.077,.132),(.130,-.027,.069,.100),(.198,.012,.051,.056)]
+ vs=[];fs=[]
+ for z,y,rx,ry in levels:
+  for j in range(n):
+   angle=j*2*pi/n;vs.append((side*.18+rx*cos(angle),y+ry*sin(angle),z))
+ for row in range(len(levels)-1):
+  for j in range(n):a=row*n+j;b=row*n+(j+1)%n;fs.append((a,b,b+n,a+n))
+ fs.extend([tuple(reversed(range(n))),tuple((len(levels)-1)*n+j for j in range(n))])
+ ob=mesh('Rounded anatomical boot',vs,fs,cloth,'Foot'+('L' if side<0 else 'R'));ob.data.materials.append(capmaterial)
+ for poly in ob.data.polygons:
+  center=sum((ob.data.vertices[i].co for i in poly.vertices),Vector())/len(poly.vertices)
+  poly.material_index=1 if center.y<-.085 and .045<center.z<.13 else 0
+ tube('Rounded boot strap',[(side*.18-.053,-.078,.14),(side*.18,-.105,.152),(side*.18+.053,-.078,.14)],.005,capmaterial,'Foot'+('L' if side<0 else 'R'),8)
+ return ob
+
 def cape(name,z_top,length,width,material,bone='Chest',side=0):
  vs=[];fs=[];rows=22;cols=20
  for i in range(rows):
@@ -161,6 +178,18 @@ def shape_limb_volume(hero,obj,arm):
    center=bone.head_local+axis*t
    offset+=(original-center)*((factors[index]-1)*envelope*g.weight)
   v.co=original+offset
+  # Additional 30% transverse arm thickness; retain the old sex/class differences.
+ shoulderArmor=obj.name.startswith(('Layered pauldron','Industrial shoulder cage','Shoulder heat fin','Heavy exosuit shoulder'))
+ if shoulderArmor:return
+ for v in obj.data.vertices:
+  armGroups=[g for g in v.groups if names[g.group].startswith(('UpperArm','Forearm'))]
+  weight=sum(g.weight for g in armGroups)
+  if weight<.3:continue
+  group=max(armGroups,key=lambda g:g.weight);bone=arm.data.bones[names[group.group]]
+  axis=bone.tail_local-bone.head_local;t=(v.co-bone.head_local).dot(axis)/axis.length_squared
+  if t<0 or t>1:continue
+  taper=min(1,t/.10,(1-t)/.10);strength=min(1,(weight-.3)/.45)*max(0,taper)
+  center=bone.head_local+axis*t;v.co=center+(v.co-center)*(1+.30*strength)
 
 def proportion(hero,point):
  x,y,z=point;chest,hip,height,depth=PROFILE[hero]
@@ -316,11 +345,7 @@ def build(hero,female,color,label):
    x=s*(.30+j*.009);z=1.19-j*.045;ellipsoid('Articulated bracer',(x,-.008,z),(.069,.075,.032),gold if j==0 else accent,'Forearm'+('L' if s<0 else 'R'))
   ellipsoid('Sculpted greave',(s*.155,.008,.32),(.084,.076,.19),accent,'Shin'+('L' if s<0 else 'R'))
   plate('Knee guard',[(s*.14-.06,.53),(s*.14,.56),(s*.14+.06,.53),(s*.14+.04,.45),(s*.14-.04,.45)],-.086,.022,steel,'Shin'+('L' if s<0 else 'R'))
-  box('Boot sole',(s*.18,-.065,.035),(.16,.29,.034),cloth,'Foot'+('L' if s<0 else 'R'),.009)
-  box('Armored toe cap',(s*.18,-.145,.076),(.16,.13,.075),steel if hero in ['Kaelon','Rook'] else accent,'Foot'+('L' if s<0 else 'R'),.017)
-  box('Boot heel',(s*.18,.041,.060),(.14,.084,.075),cloth,'Foot'+('L' if s<0 else 'R'),.008)
-  box('Boot upper',(s*.18,-.025,.124),(.14,.17,.16),cloth,'Foot'+('L' if s<0 else 'R'),.017)
-  box('Boot buckle',(s*.18,-.115,.14),(.092,.019,.025),gold,'Foot'+('L' if s<0 else 'R'),.004)
+  rounded_boot(s,cloth,steel if hero in ['Kaelon','Rook'] else accent)
   tube('Greave trim',[(s*.17,-.080,.15),(s*.155,-.080,.30),(s*.14,-.080,.44)],.008,gold,'Shin'+('L' if s<0 else 'R'))
  # Tailored collar, cross-body strap, fasteners and segmented abdomen.
  tube('Tailored collar',[(.095*cos(t*2*pi/40),.082*sin(t*2*pi/40),1.485) for t in range(41)],.036,cloth)
@@ -729,6 +754,10 @@ def build(hero,female,color,label):
  for o in parts:
   shape_limb_volume(hero,o,arm)
   for v in o.data.vertices:v.co=weapon_point(hero,v.co) if o.get('bone','').startswith('Hand') and hero!='Rook' else proportion(hero,v.co)
+  if hero=='Rook' and o.name.startswith(('Layered pauldron','Industrial shoulder cage','Shoulder heat fin','Heavy exosuit shoulder')):
+   sign=-1 if o.get('bone','').endswith('L') else 1;anchor=proportion(hero,Vector((sign*.29,.03,1.40)))
+   for v in o.data.vertices:v.co=anchor+(v.co-anchor)*.50
+
  bpy.ops.object.select_all(action='DESELECT');arm.select_set(True);bpy.context.view_layer.objects.active=arm;bpy.ops.object.mode_set(mode='EDIT')
  for bone in arm.data.edit_bones:
   bone.head=proportion(hero,bone.head);bone.tail=proportion(hero,bone.tail)
@@ -818,7 +847,7 @@ def build(hero,female,color,label):
  scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=os.path.join(PREVIEW,hero+'.png')
  bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT,'ArtSource/Heroes',hero+'.blend'),compress=True)
  bpy.ops.render.render(write_still=True)
- stats={'hero':hero,'label':label,'vertices':sum(len(o.data.vertices) for o in parts),'triangles':sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in parts),'bones':len(arm.data.bones),'animations':9,'limbVolume':dict(zip(['upperArm','forearm','thigh','calf'],LIMB_VOLUME[hero]))}
+ stats={'hero':hero,'label':label,'vertices':sum(len(o.data.vertices) for o in parts),'triangles':sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in parts),'bones':len(arm.data.bones),'animations':9,'limbVolume':dict(zip(['upperArm','forearm','thigh','calf'],LIMB_VOLUME[hero])),'additionalArmThickness':1.30,'roundedBoots':True,'shoulderScale':.50 if hero=='Rook' else 1.0}
  print('HERO_COMPLETE',json.dumps(stats),flush=True)
  return stats
 selected=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []

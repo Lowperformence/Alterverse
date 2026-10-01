@@ -22,7 +22,9 @@ namespace Alterverse.Visuals
             if(angle<0f)angle+=1f;
             const int seed=19;
             float broad=Angular(angle,24,seed),chips=Angular(angle,80,seed+31);
-            float extension=.45f+broad*2.40f+chips*.55f;
+            float slot=Mathf.Repeat(angle*14f+.17f,1f);
+            float notch=Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.065f,.20f,Mathf.Abs(slot-.5f)));
+            float extension=.10f+(2.4f+broad*3f+chips*.7f)*notch;
             return p+p/radius*(extension*blend);
         }
 
@@ -61,7 +63,7 @@ namespace Alterverse.Visuals
             public float[] depth;
         }
         static BorderProfile profile;
-        public static void ValidateProfile()=>LoadProfile();
+        public static void ValidateProfile(){LoadProfile();LoadDecor();}
         static BorderProfile LoadProfile()
         {
             if(profile!=null)return profile;
@@ -114,6 +116,51 @@ namespace Alterverse.Visuals
             var bottomV=new List<Vector3>();var bottomT=new List<int>();
             for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-18f,0),upper[i],upper[(i+1)%upper.Length]);
             Emit(parent,"DF_UniversalPlanetUnderside",bottomV,bottomT,dark,owned);
+            BuildDecor(parent,crust,dark,owned);
+        }
+        [System.Serializable] sealed class Crack { public float[] points;public float width; }
+        [System.Serializable] sealed class Rock { public float x,z,size,rotation; }
+        [System.Serializable] sealed class BorderDecor
+        { public Crack[] cracks;public Rock[] rocks;public float[] rockVertices;public int[] rockTriangles; }
+        static BorderDecor decor;
+        static BorderDecor LoadDecor()
+        {
+            if(decor!=null)return decor;
+            var asset=Resources.Load<TextAsset>("PlanetSurfaces/UniversalBorderDecor");
+            if(asset==null)throw new System.InvalidOperationException("Missing authored border cracks and rocks.");
+            var data=JsonUtility.FromJson<BorderDecor>(asset.text);
+            if(data==null||data.cracks==null||data.rocks==null||data.rockVertices==null||data.rockVertices.Length%3!=0||data.rockTriangles==null||data.rockTriangles.Length%3!=0)
+                throw new System.InvalidOperationException("Invalid authored border decoration.");
+            return decor=data;
+        }
+        static Vector3 Floor(float x,float z)=>LunarSurfaceField.Surface(x,z)+Vector3.up*.045f;
+        static void BuildDecor(Transform parent,Material stone,Material dark,List<Mesh> owned)
+        {
+            var data=LoadDecor();var vertices=new List<Vector3>();var triangles=new List<int>();
+            foreach(var crack in data.cracks)
+            {
+                if(crack.points==null||crack.points.Length<4||crack.points.Length%2!=0)continue;
+                int count=crack.points.Length/2;
+                for(int j=0;j<count-1;j++)
+                {
+                    Vector2 a=new(crack.points[j*2],crack.points[j*2+1]),b=new(crack.points[j*2+2],crack.points[j*2+3]);
+                    Vector2 direction=(b-a).normalized;Vector2 side=new Vector2(-direction.y,direction.x)*crack.width;
+                    float taper=Mathf.Lerp(1f,.16f,(float)j/(count-1));
+                    Vector3 p=Floor(a.x+side.x*taper,a.y+side.y*taper),q=Floor(a.x-side.x*taper,a.y-side.y*taper);
+                    Vector3 r=Floor(b.x+side.x*taper,b.y+side.y*taper),t=Floor(b.x-side.x*taper,b.y-side.y*taper);
+                    Face(vertices,triangles,p,r,q);Face(vertices,triangles,q,r,t);
+                }
+            }
+            Emit(parent,"DF_UniversalBorderGroundCracks",vertices,triangles,dark,owned);
+            vertices=new List<Vector3>();triangles=new List<int>();
+            foreach(var rock in data.rocks)
+            {
+                int start=vertices.Count;Vector3 center=Floor(rock.x,rock.z);Quaternion rotation=Quaternion.Euler(0,rock.rotation,0);
+                for(int i=0;i<data.rockVertices.Length;i+=3)
+                    vertices.Add(center+rotation*(new Vector3(data.rockVertices[i],data.rockVertices[i+1],data.rockVertices[i+2])*rock.size));
+                for(int i=0;i<data.rockTriangles.Length;i++)triangles.Add(start+data.rockTriangles[i]);
+            }
+            Emit(parent,"DF_UniversalBorderAttachedRocks",vertices,triangles,stone,owned);
         }
         static void Face(List<Vector3> v,List<int> t,Vector3 a,Vector3 b,Vector3 c)
         {int start=v.Count;v.Add(a);v.Add(b);v.Add(c);t.Add(start);t.Add(start+1);t.Add(start+2);}

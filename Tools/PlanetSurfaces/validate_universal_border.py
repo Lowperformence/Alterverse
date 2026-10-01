@@ -26,3 +26,14 @@ for theme in range(1,11):
  other=warp(x,z,theme);assert all(np.array_equal(a,b) for a,b in zip(base,other))
 (root/'ArtSource/PlanetSurfaces/universal-adaptation-validation.json').write_text(json.dumps(rows,indent=2))
 print('Universal border passed on all eleven boundaries, three relief heights and identical variant silhouettes.')
+decor=json.loads((root/'Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorderDecor.json').read_text())
+assert len(decor['cracks'])==52 and len(decor['rocks'])==39
+for crack in decor['cracks']:
+ pts=np.array(crack['points']).reshape(-1,2);assert len(pts)>=3 and np.isfinite(pts).all() and .1<=crack['width']<=.4
+ assert (np.linalg.norm(np.diff(pts,axis=0),axis=1)>.01).all()
+for rock in decor['rocks']:
+ assert abs(rock['x'])<=42 and abs(rock['z'])<=36 and .4<rock['size']<1.6
+vertices=np.array(decor['rockVertices']).reshape(-1,3);indices=np.array(decor['rockTriangles']).reshape(-1,3)
+assert np.isfinite(vertices).all() and indices.min()>=0 and indices.max()<len(vertices)
+assert (np.linalg.norm(np.cross(vertices[indices[:,1]]-vertices[indices[:,0]],vertices[indices[:,2]]-vertices[indices[:,0]]),axis=1)>1e-7).all()
+print('52 crack strips and 39 grounded rocks validated; no detached edge debris.')

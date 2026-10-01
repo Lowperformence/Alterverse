@@ -52,3 +52,7 @@ The healer now uses pale blue skin and exposed slender arms, blue gripping hands
 ## Assassin scout helmet reference
 
 Zhaev Null now wears an original closed dark gunmetal scout helmet with rounded crown, recessed black eye apertures, angular cheek and chin panels, layered jaw rims and a hinged side antenna. The previous masks, glowing eye strips and exposed hair are removed. Helmet geometry is rigidly weighted to the existing Head bone; weapon grips, body proportions and locomotion are unchanged.
+
+## Final thickness, shoulders and rounded feet
+
+All seven anatomical arm cross-sections receive an additional 1.30 multiplier in their middle regions, tapering into shoulders and wrists. Bone lengths and grip positions are preserved. Brakk's shoulder plates, exosuit shells, cages and fins are reduced to half size around their mounting centers. Boots now use continuous rounded elliptical profiles with flat soles, curved toe caps and tapered ankles.

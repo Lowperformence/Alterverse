@@ -2,8 +2,8 @@
   {
     "hero": "Veyr",
     "label": "ZHAEV NULL",
-    "vertices": 26527,
-    "triangles": 51756,
+    "vertices": 25935,
+    "triangles": 50596,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -11,13 +11,16 @@
       "forearm": 1.24,
       "thigh": 1.12,
       "calf": 1.1
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   },
   {
     "hero": "Kaelon",
     "label": "AUREN KEST",
-    "vertices": 24892,
-    "triangles": 47886,
+    "vertices": 24300,
+    "triangles": 46726,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -25,13 +28,16 @@
       "forearm": 1.4,
       "thigh": 1.26,
       "calf": 1.22
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   },
   {
     "hero": "Nyra",
     "label": "SIVRA QUELL",
-    "vertices": 24291,
-    "triangles": 46826,
+    "vertices": 23699,
+    "triangles": 45666,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -39,13 +45,16 @@
       "forearm": 0.86,
       "thigh": 0.94,
       "calf": 0.9
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   },
   {
     "hero": "Elyra",
     "label": "IONE VASKA",
-    "vertices": 24752,
-    "triangles": 48214,
+    "vertices": 24160,
+    "triangles": 47054,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -53,13 +62,16 @@
       "forearm": 0.85,
       "thigh": 0.94,
       "calf": 0.9
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   },
   {
     "hero": "Mira",
     "label": "TAHLA VENN",
-    "vertices": 23449,
-    "triangles": 45530,
+    "vertices": 22857,
+    "triangles": 44370,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -67,13 +79,16 @@
       "forearm": 0.86,
       "thigh": 0.96,
       "calf": 0.92
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   },
   {
     "hero": "Rook",
     "label": "BRAKK ORUN",
-    "vertices": 27313,
-    "triangles": 52482,
+    "vertices": 26721,
+    "triangles": 51322,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -81,13 +96,16 @@
       "forearm": 1.48,
       "thigh": 1.3,
       "calf": 1.26
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 0.5
   },
   {
     "hero": "Traveler",
     "label": "THE TRAVELER",
-    "vertices": 27368,
-    "triangles": 52680,
+    "vertices": 26776,
+    "triangles": 51520,
     "bones": 19,
     "animations": 9,
     "limbVolume": {
@@ -95,6 +113,9 @@
       "forearm": 1.27,
       "thigh": 1.14,
       "calf": 1.12
-    }
+    },
+    "additionalArmThickness": 1.3,
+    "roundedBoots": true,
+    "shoulderScale": 1
   }
 ]
