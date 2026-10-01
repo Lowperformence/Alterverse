@@ -1,10 +1,9 @@
 using Alterverse.CameraSystem;
-using Alterverse.Match;
 using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Per-gameplay-camera panorama; never changes global lighting or portrait cameras.</summary>
+    /// <summary>Shared universe photograph, scoped to the gameplay camera.</summary>
     public sealed class PhotoArenaPanorama
     {
         private Texture2D texture;
@@ -17,7 +16,7 @@ namespace Alterverse.Visuals
 
         public bool Load()
         {
-            texture=Resources.Load<Texture2D>("MapPanoramas/"+ArenaVariantRuntime.Current);
+            texture=Resources.Load<Texture2D>("MapPanoramas/Universe");
             Shader shader=Resources.Load<Shader>("MapPanoramas/PhotoSkybox");
             if(texture==null||shader==null||!shader.isSupported)
             {
@@ -25,10 +24,10 @@ namespace Alterverse.Visuals
                 Debug.LogWarning("DIMENSIONS FRONT: panorama missing; using procedural backdrop.");
                 return false;
             }
-            material=new Material(shader){name="DF_"+ArenaVariantRuntime.Current+"_PhotoPanorama"};
+            material=new Material(shader){name="DF_UniverseBackdrop"};
             material.SetTexture("_Panorama",texture);
-            // Main camera looks toward +Z: align the lower-middle planet with that direction.
-            material.SetFloat("_Yaw",90f);
+            // The reference is a regular photograph, so preserve its aspect instead of stretching it over a sphere.
+            material.SetFloat("_ImageAspect",texture.width/(float)Mathf.Max(1,texture.height));
             RefreshCamera();
             return true;
         }
