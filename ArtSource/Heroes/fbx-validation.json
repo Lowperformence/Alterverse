@@ -14,11 +14,11 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 23326,
+    "vertices": 23956,
     "bounds": [
       [
-        -0.44118574261665344,
-        0.4410246014595032
+        -0.4410819411277771,
+        0.43386781215667725
       ],
       [
         -0.26065465807914734,
@@ -30,7 +30,9 @@
       ]
     ],
     "materials": 8,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 2.497889789080651e-07,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Kaelon",
@@ -47,7 +49,7 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 23336,
+    "vertices": 23966,
     "bounds": [
       [
         -0.5863000154495239,
@@ -63,7 +65,9 @@
       ]
     ],
     "materials": 8,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 3.816559456248789e-07,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Nyra",
@@ -80,11 +84,11 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 22500,
+    "vertices": 22831,
     "bounds": [
       [
         -0.4329438805580139,
-        0.43287596106529236
+        0.4454203248023987
       ],
       [
         -0.2357381135225296,
@@ -96,7 +100,9 @@
       ]
     ],
     "materials": 8,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 1.228781230931777e-07,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Elyra",
@@ -113,23 +119,25 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 28797,
+    "vertices": 23546,
     "bounds": [
       [
-        -0.44494450092315674,
-        0.44494450092315674
+        -0.4421302080154419,
+        0.4448814392089844
       ],
       [
         -0.30503159761428833,
         0.2501599192619324
       ],
       [
-        0.019619999453425407,
-        2.4167895317077637
+        0.026378000155091286,
+        1.9936177730560303
       ]
     ],
     "materials": 11,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 1.3657139822709083e-07,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Mira",
@@ -146,11 +154,11 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 30987,
+    "vertices": 31318,
     "bounds": [
       [
         -0.5020020008087158,
-        0.5019232630729675
+        0.4986317455768585
       ],
       [
         -0.30693432688713074,
@@ -162,7 +170,9 @@
       ]
     ],
     "materials": 9,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 2.2500259981366246e-07,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Rook",
@@ -195,7 +205,9 @@
       ]
     ],
     "materials": 8,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 0.0,
+    "rigidGripAcrossClips": true
   },
   {
     "hero": "Traveler",
@@ -212,11 +224,11 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 25201,
+    "vertices": 25518,
     "bounds": [
       [
         -0.450572669506073,
-        0.45040810108184814
+        0.44858869910240173
       ],
       [
         -0.24455542862415314,
@@ -228,6 +240,8 @@
       ]
     ],
     "materials": 9,
-    "weighted": true
+    "weighted": true,
+    "maxHandlePalmDistanceMeters": 1.6049041769309353e-07,
+    "rigidGripAcrossClips": true
   }
 ]

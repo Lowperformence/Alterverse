@@ -34,6 +34,27 @@ for hero in selected or ['Veyr','Kaelon','Nyra','Elyra','Mira','Rook','Traveler'
   deviation=min(angle,abs(math.tau-angle))
   assert deviation<.09,(hero,side,'bent idle wrist',deviation)
   assert (hand.head-grip.head).length<.005,(hero,side,'weapon grip detached')
+ # Sample exported actions, not only bind pose: a counter-rotated child loses its grip.
+ max_contact_error=0.0
+ for action in bpy.data.actions:
+  arm.animation_data.action=action
+  start,end=action.frame_range
+  for frame in [start,(start+end)/2,end]:
+   bpy.context.scene.frame_set(int(frame));bpy.context.view_layer.update()
+   for side in ['L','R']:
+    hand=arm.pose.bones['Hand'+side];grip=arm.pose.bones['WeaponGrip'+side]
+    rest=hand.bone.matrix_local.to_quaternion().inverted()@grip.bone.matrix_local.to_quaternion()
+    posed=hand.matrix.to_quaternion().inverted()@grip.matrix.to_quaternion()
+    angle=rest.rotation_difference(posed).angle
+    assert min(angle,abs(math.tau-angle))<.025,(hero,side,action.name,'weapon rotated away from hand')
+    contact=bpy.data.objects.get('DF_HandleContact'+side)
+    if contact:
+     palm=bpy.data.objects.get('DF_PalmGrip'+side);assert palm is not None
+     error=(contact.matrix_world.translation-palm.matrix_world.translation).length
+     max_contact_error=max(max_contact_error,error)
+     assert error<.002,(hero,side,action.name,'handle misses palm',error)
+ arm.animation_data.action=idle;bpy.context.scene.frame_set(1);bpy.context.view_layer.update()
+ if hero=='Nyra':assert bpy.data.objects.get('DF_SupportGrip'),(hero,'missing rifle support socket')
  for name in ['Idle','Run','Attack','Skill0','Skill1','Skill2','Ultimate','Hit','Death']:assert any(a.endswith('|'+name) or a==name for a in actions),(hero,'missing animation',name,actions)
  assert bpy.data.objects.get('DF_Muzzle'),(hero,'missing muzzle')
  m=bpy.data.objects['DF_Anatomy'];assert len(m.vertex_groups)>=16
@@ -42,6 +63,6 @@ for hero in selected or ['Veyr','Kaelon','Nyra','Elyra','Mira','Rook','Traveler'
   assert all(abs(sum(g.weight for g in v.groups)-1)<.002 for v in obj.data.vertices),(hero,'non-normalized weights')
  assert m.data.uv_layers,(hero,'no body UVs')
  bounds=[(min(v.co[i] for v in m.data.vertices),max(v.co[i] for v in m.data.vertices)) for i in range(3)]
- rows.append({'hero':hero,'meshCount':len(meshes),'bones':len(arms[0].data.bones),'animations':actions,'vertices':len(m.data.vertices),'bounds':bounds,'materials':len(m.data.materials),'weighted':True})
+ rows.append({'hero':hero,'meshCount':len(meshes),'bones':len(arms[0].data.bones),'animations':actions,'vertices':len(m.data.vertices),'bounds':bounds,'materials':len(m.data.materials),'weighted':True,'maxHandlePalmDistanceMeters':max_contact_error,'rigidGripAcrossClips':True})
  print('VALIDATED',hero,actions,flush=True)
 with open(os.path.join(root,'fbx-validation.'+selected[0]+'.json' if len(selected)==1 else 'fbx-validation.json'),'w') as f:json.dump(rows,f,indent=2)

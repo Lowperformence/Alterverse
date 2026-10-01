@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<string, Transform> controls = new Dictionary<string, Transform>();
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
-        private Transform model, muzzle, visualRoot;
+        private Transform model, muzzle, visualRoot, rifleSupport, leftPalm;
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
         private sealed class WeaponGrip
         {
             public Transform Bone, Control;
-            public Quaternion RestInVisual, ControlRest;
+            public Quaternion RestLocal;
         }
         private readonly List<WeaponGrip> grips = new List<WeaponGrip>();
         private ArmChain leftArm, rightArm;
@@ -64,7 +64,11 @@ namespace Alterverse.Visuals
             visualRoot = root;
             model = imported;
             foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+                {
                 if (bone.name == "DF_Muzzle") muzzle = bone;
+                if (bone.name == "DF_SupportGrip") rifleSupport = bone;
+                if (bone.name == "DF_PalmGripL") leftPalm = bone;
+            }
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                 if (renderer.name == "DF_WeaponL" || renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletL" || renderer.name == "DF_GauntletR")
                     weaponRenderers.Add(renderer);
@@ -201,8 +205,7 @@ namespace Alterverse.Visuals
                 return;
             }
             grips.Add(new WeaponGrip { Bone = target, Control = control,
-                RestInVisual = Quaternion.Inverse(visualRoot.rotation) * target.rotation,
-                ControlRest = control.localRotation });
+                RestLocal = target.localRotation });
         }
 
         private void ApplyWeaponGrips()
@@ -210,33 +213,69 @@ namespace Alterverse.Visuals
             foreach (WeaponGrip grip in grips)
             {
                 if (grip.Bone == null || grip.Control == null) continue;
-                Quaternion weaponAngle = Quaternion.Inverse(grip.ControlRest) * grip.Control.localRotation;
-                // Position remains inherited from the hand. Only the weapon gets its guard/cast angle.
-                grip.Bone.rotation = visualRoot.rotation * weaponAngle * grip.RestInVisual;
+                // The fitted handle and the palm share one rigid frame. Independent world
+                // rotation previously pulled the handle out of the fingers during movement.
+                grip.Bone.localRotation = grip.RestLocal;
             }
+        }
+
+        private Vector3 GuardHint(ArmChain arm)
+        {
+            if (arm == null) return Vector3.zero;
+            return model.InverseTransformPoint(arm.Upper.position)
+                + new Vector3(arm == leftArm ? -1f : 1f, -.40f, .10f);
         }
 
         private void ApplyModelGuard()
         {
-            if (hero != HeroId.Veyr && hero != HeroId.Traveler && hero != HeroId.Nyra) return;
             if (motion == null) motion = GetComponent<HeroVisualMotion>();
             // Rifle fire keeps both grips; melee/cast actions retain their established delivery.
             float targetWeight = hero == HeroId.Nyra || motion == null || !motion.ArmActionActive ? 1f : 0f;
             guardWeight = Mathf.MoveTowards(guardWeight, targetWeight, Time.deltaTime * 14f);
-            if (hero == HeroId.Nyra)
+            // Coordinates include each imported model's proportions. Elbows stay down and
+            // outside the torso; actions blend back into the established arm animation.
+            switch (hero)
             {
-                SolveGuard(rightArm, new Vector3(.12f, 1.30f, .18f), new Vector3(.36f, 1.04f, -.02f), guardWeight);
-                SolveGuard(leftArm, new Vector3(.15f, 1.31f, .32f), new Vector3(-.27f, 1.03f, .15f), guardWeight);
+                case HeroId.Nyra:
+                    SolveGuard(rightArm, new Vector3(.09f, 1.2648f, .23f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Veyr:
+                    SolveGuard(leftArm, new Vector3(-.2397f, 1.122f, .207f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.2397f, 1.122f, .207f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Kaelon:
+                    SolveGuard(leftArm, new Vector3(-.3192f, 1.134f, .257f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.349f, 1.1664f, .236f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Elyra:
+                    SolveGuard(leftArm, new Vector3(-.187f, 1.199f, .1932f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.292f, 1.199f, .1472f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Mira:
+                    SolveGuard(leftArm, new Vector3(-.192f, 1.1016f, .152f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.223f, 1.1016f, .171f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Rook:
+                    SolveGuard(leftArm, new Vector3(-.368f, 1.2376f, .364f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.368f, 1.2376f, .364f), GuardHint(rightArm), guardWeight);
+                    break;
+                case HeroId.Traveler:
+                    SolveGuard(leftArm, new Vector3(-.244f, 1.1342f, .155f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.2575f, 1.177f, .194f), GuardHint(rightArm), guardWeight);
+                    break;
             }
-            else if (hero == HeroId.Veyr)
+        }
+
+        private void ApplyRifleSupport()
+        {
+            if (hero != HeroId.Nyra || rifleSupport == null || leftArm == null || leftPalm == null) return;
+            // The support socket is on the rifle, so the left palm tracks its actual foregrip.
+            // Two short corrections account for the palm's offset from the wrist joint.
+            for (int i = 0; i < 2; i++)
             {
-                SolveGuard(leftArm, new Vector3(-.24f, 1.12f, .22f), new Vector3(-.38f, 1.06f, .02f), guardWeight);
-                SolveGuard(rightArm, new Vector3(.24f, 1.12f, .22f), new Vector3(.38f, 1.06f, .02f), guardWeight);
-            }
-            else
-            {
-                SolveGuard(leftArm, new Vector3(-.23f, 1.10f, .12f), new Vector3(-.35f, 1.06f, -.03f), guardWeight);
-                SolveGuard(rightArm, new Vector3(.22f, 1.16f, .22f), new Vector3(.35f, 1.08f, .02f), guardWeight);
+                Vector3 palmOffset = leftPalm.position - leftArm.Hand.position;
+                Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);
+                SolveGuard(leftArm, wrist, GuardHint(leftArm), guardWeight);
             }
         }
 
@@ -253,6 +292,7 @@ namespace Alterverse.Visuals
             }
             ApplyModelGuard();
             ApplyWeaponGrips();
+            ApplyRifleSupport();
         }
     }
 }

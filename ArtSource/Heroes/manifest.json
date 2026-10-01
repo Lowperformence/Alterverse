@@ -2,40 +2,40 @@
   {
     "hero": "Veyr",
     "label": "ZHAEV NULL",
-    "vertices": 24750,
-    "triangles": 47944,
+    "vertices": 25380,
+    "triangles": 49018,
     "bones": 19,
     "animations": 9
   },
   {
     "hero": "Kaelon",
     "label": "AUREN KEST",
-    "vertices": 24262,
-    "triangles": 46812,
+    "vertices": 24892,
+    "triangles": 47886,
     "bones": 19,
     "animations": 9
   },
   {
     "hero": "Nyra",
     "label": "SIVRA QUELL",
-    "vertices": 23960,
-    "triangles": 46258,
+    "vertices": 24291,
+    "triangles": 46826,
     "bones": 19,
     "animations": 9
   },
   {
     "hero": "Elyra",
     "label": "IONE VASKA",
-    "vertices": 29057,
-    "triangles": 56188,
+    "vertices": 23806,
+    "triangles": 46410,
     "bones": 19,
     "animations": 9
   },
   {
     "hero": "Mira",
     "label": "TAHLA VENN",
-    "vertices": 31907,
-    "triangles": 61576,
+    "vertices": 32238,
+    "triangles": 62144,
     "bones": 19,
     "animations": 9
   },
@@ -50,8 +50,8 @@
   {
     "hero": "Traveler",
     "label": "THE TRAVELER",
-    "vertices": 27051,
-    "triangles": 52140,
+    "vertices": 27368,
+    "triangles": 52680,
     "bones": 19,
     "animations": 9
   }

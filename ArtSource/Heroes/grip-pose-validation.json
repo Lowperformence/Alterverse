@@ -1,0 +1,51 @@
+[
+  {
+    "hero": "Veyr",
+    "handlePalmDistanceMeters": [
+      6.143906154658885e-08,
+      6.143906154658885e-08
+    ],
+    "rifleSupportDistanceMeters": 0
+  },
+  {
+    "hero": "Kaelon",
+    "handlePalmDistanceMeters": [
+      1.9314112360500873e-07,
+      1.7881393432617188e-07
+    ],
+    "rifleSupportDistanceMeters": 0
+  },
+  {
+    "hero": "Nyra",
+    "handlePalmDistanceMeters": [
+      5.587935447692871e-08
+    ],
+    "rifleSupportDistanceMeters": 0.004613584088420498
+  },
+  {
+    "hero": "Elyra",
+    "handlePalmDistanceMeters": [
+      1.6049041769309353e-07
+    ],
+    "rifleSupportDistanceMeters": 0
+  },
+  {
+    "hero": "Mira",
+    "handlePalmDistanceMeters": [
+      2.1073424255447017e-07
+    ],
+    "rifleSupportDistanceMeters": 0
+  },
+  {
+    "hero": "Rook",
+    "handlePalmDistanceMeters": [],
+    "rifleSupportDistanceMeters": 0
+  },
+  {
+    "hero": "Traveler",
+    "handlePalmDistanceMeters": [
+      8.429369702178807e-08
+    ],
+    "rifleSupportDistanceMeters": 0
+  }
+]
