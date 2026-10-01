@@ -6,8 +6,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
-            public Color Color;public float Start,Duration;public bool Active,Warning;
+            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning;
             public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
@@ -29,6 +29,7 @@ namespace Alterverse.Visuals
         private Material material;
         private bool ownsMaterial;
         private int cursor;
+        private static readonly int Life=Shader.PropertyToID("_Life"),SurfaceStyle=Shader.PropertyToID("_SurfaceStyle");
         private static readonly int Polish=Shader.PropertyToID("_Polish");
         private static readonly int Tint=Shader.PropertyToID("_Tint"),BaseColor=Shader.PropertyToID("_BaseColor");
         public static void Warm()
@@ -55,7 +56,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<shapes.Length;i++)
             {
                 HeroFxShape shape=(HeroFxShape)i;shapes[i]=BuildShape(shape);
-                warningShapes[i]=shape==HeroFxShape.Orb||shape==HeroFxShape.Bolt||shape==HeroFxShape.Burst
+                warningShapes[i]=shape==HeroFxShape.Orb||shape==HeroFxShape.Bolt||shape==HeroFxShape.Burst||shape==HeroFxShape.Ring||shape==HeroFxShape.Hex
                     ?BuildShape(shape,false):shapes[i];
             }
             for(int i=0;i<Capacity;i++)
@@ -98,6 +99,10 @@ namespace Alterverse.Visuals
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
             // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
             slot.From=from;slot.To=to;slot.Size=size*(warning?1f:1.5f);slot.Color=color;slot.Motion=motion;
+            // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
+            if(!warning&&shape==HeroFxShape.Bolt&&motion==HeroFxMotion.Hold)slot.Size.z=size.z;
+            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Orb||shape==HeroFxShape.Seed?1f:
+                shape==HeroFxShape.Shield||shape==HeroFxShape.Hex||shape==HeroFxShape.Runes?2f:3f;
             slot.Rotation=rotation==default?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
@@ -143,6 +148,12 @@ namespace Alterverse.Visuals
                     point=Vector3.Lerp(s.From,end,t);
                     if(s.Motion==HeroFxMotion.Travel&&s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
                     break;
+                case HeroFxMotion.Drift:
+                    // Sparks stretch along a fixed velocity heading instead of tumbling like debris.
+                    point=Vector3.Lerp(s.From,s.To,1f-Mathf.Pow(1f-t,2f));
+                    point.y+=Mathf.Sin(t*Mathf.PI)*.16f;
+                    scale=Mathf.Lerp(1f,.28f,t);
+                    break;
                 case HeroFxMotion.Scatter:
                     // Ballistic-looking debris, entirely presentation-only and collision-free.
                     point=Vector3.Lerp(s.From,s.To,t);
@@ -170,6 +181,7 @@ namespace Alterverse.Visuals
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
+            s.Block.SetFloat(Life,t);s.Block.SetFloat(SurfaceStyle,s.SurfaceStyle);
             s.Block.SetFloat(Polish,s.Warning?0f:1f);s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
         private void OnDestroy()
@@ -243,10 +255,34 @@ namespace Alterverse.Visuals
             }
             switch(shape)
             {
+                case HeroFxShape.ContactStar:
+                    // Camera-facing sharp star with feathered ray borders; twelve triangles pairs reused.
+                    for(int i=0;i<8;i++)
+                    {
+                        float a=i*Mathf.PI/4f;
+                        Vector3 d=new Vector3(Mathf.Cos(a),Mathf.Sin(a),0);
+                        Vector3 side=new Vector3(-d.y,d.x,0)*.08f;
+                        Vector3 tip=d*(i%2==0?1f:.56f);
+                        SoftQuad(side,Vector3.zero,tip,tip+side*.08f,clear,hot);
+                        SoftQuad(Vector3.zero,-side,tip-side*.08f,tip,hot,clear);
+                    }
+                    break;
+                case HeroFxShape.Spark:
+                    // Two crossed planes stay visible from oblique gameplay views.
+                    foreach(Vector3 side in new[]{Vector3.right*.065f,Vector3.up*.065f})
+                    {
+                        Vector3 tail=Vector3.back*.48f,tip=Vector3.forward*.48f;
+                        SoftQuad(tail-side,tail,tip,tip-side*.10f,clear,hot);
+                        SoftQuad(tail,tail+side,tip+side*.10f,tip,hot,clear);
+                    }
+                    break;
                 case HeroFxShape.Ring:
                     // Circumscribed polygon: the outer edge never falls inside a radius-1 circle.
-                    Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
-                case HeroFxShape.Hex:Band(0,Mathf.PI*2,.89f,1,6);break;
+                    if(polished)FeatherBand(0,Mathf.PI*2,.90f,.965f,1.025f,64);
+                    else Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
+                case HeroFxShape.Hex:
+                    if(polished)FeatherBand(0,Mathf.PI*2,.86f,.94f,1.02f,6);
+                    else Band(0,Mathf.PI*2,.89f,1,6);break;
                 case HeroFxShape.Slash:FeatherBand(-1.55f,1.55f,.48f,.87f,1,32,true);break;
                 case HeroFxShape.RiftCross:
                     // Two luminous diagonal blades form a literal X in the local XY plane.
@@ -264,7 +300,13 @@ namespace Alterverse.Visuals
                     for(int i=0;i<5;i++)
                     {
                         float y=-.8f+i*.32f,x=i%2==0?-.06f:.07f;
-                        Quad(new Vector3(x-.08f,y,0),new Vector3(x+.055f,y,0),new Vector3(-x+.09f,y+.33f,0),new Vector3(-x-.05f,y+.33f,0));
+                        if(polished)
+                        {
+                            Vector3 a=new Vector3(x,y,0),b=new Vector3(-x+.02f,y+.33f,0);
+                            SoftQuad(a-Vector3.right*.14f,a,b,b-Vector3.right*.14f,clear,hot);
+                            SoftQuad(a,a+Vector3.right*.14f,b+Vector3.right*.14f,b,hot,clear);
+                        }
+                        else Quad(new Vector3(x-.08f,y,0),new Vector3(x+.055f,y,0),new Vector3(-x+.09f,y+.33f,0),new Vector3(-x-.05f,y+.33f,0));
                     }break;
                 case HeroFxShape.Bolt:
                     // Crossed tapered luminous streaks remain visible from the gameplay camera.
@@ -363,6 +405,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

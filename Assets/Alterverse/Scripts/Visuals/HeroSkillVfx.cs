@@ -220,7 +220,7 @@ namespace Alterverse.Visuals
         public static void Cast(GameObject actor,int slot)
         {
             if(actor==null)return;
-            HeroId h=Hero(actor);Color c=Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
+            HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
             Quaternion facing=actor.transform.rotation;
             switch(h)
             {
@@ -364,7 +364,7 @@ namespace Alterverse.Visuals
         {
             if(actor==null)return;
             HeroId hero=Hero(actor);
-            Color accent=Accent(actor);
+            Color accent=hero==HeroId.Mira&&beneficial?new Color(.24f,1f,.42f):Accent(actor);
             Vector3 ground=Ground(center);
             if(warning)
             {
@@ -565,11 +565,11 @@ namespace Alterverse.Visuals
                 float fan=count>1?Mathf.Lerp(-65f,65f,(float)i/(count-1)):0f;
                 Vector3 direction=face*Quaternion.Euler(0f,fan,0f)*Vector3.forward;
                 Vector3 end=point+direction*(.28f+strength*(.45f+i*.10f))-Vector3.up*.06f;
-                HeroFxShape fragment=hero==HeroId.Veyr?HeroFxShape.Rift:
-                    hero==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Shard;
-                HeroVfxPool.Emit(fragment,point,end,new Vector3(.075f,.15f,.10f)*strength,
-                    tint,.24f+i*.025f,HeroFxMotion.Scatter,
-                    face*Quaternion.Euler(25f,fan,35f),actor,delay:i*.012f,decorative:true);
+                Vector3 velocity=end-point;
+                HeroVfxPool.Emit(HeroFxShape.Spark,point,end,new Vector3(.65f,.65f,.36f+i*.07f)*strength,
+                    Color.Lerp(tint,Color.white,.32f),.22f+i*.025f,HeroFxMotion.Drift,
+                    velocity.sqrMagnitude>.0001f?Quaternion.LookRotation(velocity):face,
+                    actor,delay:i*.012f,decorative:true);
             }
             if(slot>=0)
                 Fx(hero==HeroId.Kaelon?HeroFxShape.Hex:HeroFxShape.Slash,point,tint,
@@ -583,12 +583,12 @@ namespace Alterverse.Visuals
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
-            // Brief near-white contact flash; each hero's larger silhouette below identifies the source.
-            Fx(hero==HeroId.Nyra?HeroFxShape.Bolt:hero==HeroId.Kaelon?HeroFxShape.Hex:
-                hero==HeroId.Veyr?HeroFxShape.Slash:hero==HeroId.Mira?HeroFxShape.Seed:
-                hero==HeroId.Elyra?HeroFxShape.Orb:hero==HeroId.Rook?HeroFxShape.Burst:HeroFxShape.Rift,
+            // One camera-facing flash identifies the authoritative hit, followed by the class silhouette.
+            Camera view=Camera.main;
+            Quaternion contactFacing=view!=null?view.transform.rotation:Quaternion.Euler(55f,0f,0f);
+            Fx(HeroFxShape.ContactStar,
                 p,Color.Lerp(c,Color.white,.91f),strength*(slot<0?.95f:1.30f),.085f,
-                HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
+                HeroFxMotion.Contract,contactFacing,actor);
 
             switch(hero)
             {
@@ -779,5 +779,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
