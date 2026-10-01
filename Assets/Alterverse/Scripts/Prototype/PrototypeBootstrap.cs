@@ -128,7 +128,6 @@ if(authoritativeRespawn)player.AddComponent<HeroRespawn>();
 player.AddComponent<BasicAttack>();
 player.AddComponent<PlayerHeroAbilities>();
 player.AddComponent<AbilityRangePreviewOverlay>();
-player.AddComponent<AbilityRangePreviewOverlay>();
 player.AddComponent<CombatFeedbackComponent>();
 player.AddComponent<StylizedHeroVisual>().Build();
 return player;
