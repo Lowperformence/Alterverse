@@ -115,6 +115,30 @@ namespace Alterverse.Visuals
                 float size=.24f+(i%4)*.12f;
                 dark.Add(new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(new Vector3(x,FrontierPlanetLayout.Surface(x,z).y+size*.24f,z),Quaternion.Euler(4,i*41,12),new Vector3(size*1.5f,size*.72f,size))});
             }
+            // Fractured sandstone teeth break the old straight silhouette at the map edge.
+            // They are baked into the existing static batches and never alter the floor or collision.
+            for(int edge=0;edge<4;edge++)for(int i=1;i<=11;i++)
+            {
+                float t=-1f+i/6f;
+                float x,z;
+                switch(edge)
+                {
+                    case 0:x=t*39.5f;z=35.45f+(i%3)*.32f;break;
+                    case 1:x=t*39.5f;z=-35.45f-(i%3)*.32f;break;
+                    case 2:x=41.45f+(i%2)*.32f;z=t*33f;break;
+                    default:x=-41.45f-(i%2)*.32f;z=t*33f;break;
+                }
+                float h=1.05f+(i*3+edge)%5*.34f;
+                float width=.92f+(i+edge)%4*.24f;
+                Vector3 p=new(x,FrontierPlanetLayout.Surface(x,z).y+h*.30f,z);
+                var tooth=new CombineInstance
+                {
+                    mesh=fragment,
+                    transform=Matrix4x4.TRS(p,Quaternion.Euler(8+(i%3)*5,(i*47+edge*61)%360,(i%2==0?-1:1)*(7+(i%3)*3)),
+                        new Vector3(width,h,.82f+(i+edge)%3*.25f))
+                };
+                if((i+edge)%4==0)light.Add(tooth);else dark.Add(tooth);
+            }
             Batch("DF_GJ504bSandstoneMesas",dark,rock);
             Batch("DF_GJ504bSedimentaryLayers",light,strata);
             var geodes=new List<CombineInstance>();

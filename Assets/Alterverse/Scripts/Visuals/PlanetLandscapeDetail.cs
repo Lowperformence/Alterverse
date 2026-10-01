@@ -13,7 +13,7 @@ namespace Alterverse.Visuals
         readonly List<Mesh> ownedMeshes = new();
         readonly List<Material> ownedMaterials = new();
         readonly List<CombineInstance>[] batches = { new(), new(), new(), new() };
-        Mesh rock, column, crystal, leaf, beam;
+        Mesh rock, column, crystal, leaf, beam, canopy;
         Material[] palette;
         ArenaVariant variant;
         Vector3 center;
@@ -42,6 +42,9 @@ namespace Alterverse.Visuals
                 new Vector2(.18f,0), new Vector2(.43f,.20f), new Vector2(.35f,.78f), new Vector2(.025f,1) }));
             leaf = Own(Leaf());
             beam = Own(Revolved("SquareBeam", 4, new[] {new Vector2(.5f,0),new Vector2(.5f,1)}));
+            canopy = Own(Revolved("FacetedCanopy", 7, new[] {
+                new Vector2(.16f,0), new Vector2(.38f,.10f), new Vector2(.50f,.36f),
+                new Vector2(.37f,.72f), new Vector2(.16f,.94f), new Vector2(.015f,1f) }));
             palette = BuildPalette();
             foreach(Material material in palette)
                 if(material == null) { enabled = false; return; }
@@ -53,7 +56,7 @@ namespace Alterverse.Visuals
                 Flush(site);
             }
             // Input meshes are no longer needed after baking the regional batches.
-            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam})
+            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam,canopy})
             { ownedMeshes.Remove(input); Destroy(input); }
         }
 
@@ -185,15 +188,42 @@ namespace Alterverse.Visuals
 
         void EarthPocket(int seed)
         {
-            Add(rock,0,new Vector3(-.5f,.1f,.2f),new Vector3(1,.40f,.66f),Quaternion.Euler(0,seed*41,9));
-            Add(rock,3,new Vector3(-.5f,.30f,.2f),new Vector3(.82f,.15f,.55f),Quaternion.Euler(0,seed*41,9));
-            // Fern rosettes, individual curved leaflets and a fallen weathered trunk.
-            Add(column,0,new Vector3(-1.4f,.13f,-.7f),new Vector3(.28f,2.1f,.28f),Quaternion.Euler(0,78,85));
-            for(int plant=0;plant<3;plant++)for(int frond=0;frond<7;frond++)
+            // Compact forest pockets: tapered trunks, angled limbs and layered crowns read as
+            // Earth trees from the gameplay camera while leaving the lanes and bases open.
+            Add(rock,0,new Vector3(-.5f,.04f,.2f),new Vector3(1.3f,.12f,.8f),Quaternion.Euler(0,seed*41,4));
+            for(int tree=0;tree<3;tree++)
             {
-                Vector3 p=new((plant-1)*1.05f,.03f,plant%2==0?.75f:-.65f);
-                float angle=frond*51.4f+seed*25;
-                Add(leaf,frond%3==0?2:3,p,new Vector3(.32f,.65f,.55f),Quaternion.Euler(0,angle,0));
+                float x=(tree-1)*.92f;
+                float z=tree==1?.22f:-.22f;
+                float height=tree==1?2.45f:1.95f+(tree%2)*.16f;
+                float yaw=seed*29+tree*47;
+                Add(column,tree==1?1:0,new Vector3(x,.03f,z),new Vector3(.22f,height,.22f),Quaternion.Euler(0,yaw,tree==0?-2:2));
+
+                for(int branch=0;branch<3;branch++)
+                {
+                    float angle=(yaw+branch*120f)*Mathf.Deg2Rad;
+                    Vector3 direction=new(Mathf.Sin(angle)*.55f,.84f,Mathf.Cos(angle)*.55f);
+                    Vector3 pivot=new Vector3(x,.70f+height*.22f,z);
+                    Add(column,0,pivot,new Vector3(.085f,.72f,.085f),Quaternion.FromToRotation(Vector3.up,direction));
+                }
+
+                int foliage=tree==1?2:3;
+                Add(canopy,foliage,new Vector3(x,.91f+height*.12f,z),new Vector3(.78f,.84f,.73f),Quaternion.Euler(0,yaw,2));
+                Add(canopy,3,new Vector3(x-.18f,1.30f+height*.12f,z+.04f),new Vector3(.61f,.72f,.58f),Quaternion.Euler(0,yaw+53,-4));
+                Add(canopy,foliage,new Vector3(x+.18f,1.28f+height*.12f,z-.06f),new Vector3(.60f,.70f,.57f),Quaternion.Euler(0,yaw-61,4));
+
+                // A few broad, curved leaf sprays break up the crown silhouette at close range.
+                for(int frond=0;frond<4;frond++)
+                    Add(leaf,foliage,new Vector3(x,.96f+height*.12f,z),new Vector3(.23f,.54f,.48f),Quaternion.Euler(-10, yaw+frond*90f, (frond%2==0?1:-1)*24f));
+            }
+
+            // Low native shrubs blend the trunks into the existing Earth ground palette.
+            for(int shrub=0;shrub<5;shrub++)
+            {
+                float x=-1.65f+shrub*.82f;
+                if(shrub==2)continue;
+                Add(canopy,3,new Vector3(x,.02f,shrub%2==0?.96f:-.92f),
+                    new Vector3(.38f,.43f,.34f),Quaternion.Euler(0,seed*17+shrub*71,0));
             }
         }
 
