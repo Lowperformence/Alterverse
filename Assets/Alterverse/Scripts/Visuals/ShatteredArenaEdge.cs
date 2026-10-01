@@ -85,31 +85,6 @@ namespace Alterverse.Visuals
             for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-11.5f,0),upper[i],upper[(i+1)%upper.Length]);
             Emit(parent,"DF_ShatteredPlanetUnderside",bottomV,bottomT,dark,owned);
 
-            // Detached splinters are one batched mesh. All sit beyond the original play rectangle.
-            var chipsV=new List<Vector3>();var chipsT=new List<int>();
-            for(int i=3;i<boundary.Length;i+=9)
-            {
-                Vector3 p=boundary[i];Vector3 outward=new Vector3(p.x,0,p.z).normalized;
-                Vector3 tangent=Vector3.Cross(Vector3.up,outward);
-                float a=Hash(i,seed),b=Hash(i,seed+11);
-                Vector3 center=p+outward*(1.9f+a*2.8f)+Vector3.down*(.45f+b*2.7f);
-                float width=.30f+a*.85f,depth=.25f+b*.65f,height=.6f+Hash(i,seed+23)*1.9f;
-                Vector3[] piece={center-tangent*width-outward*depth,center+tangent*width-outward*depth,
-                    center+tangent*width*.6f+outward*depth+Vector3.up*.18f,
-                    center-tangent*width*.8f+outward*depth,
-                    center+outward*.15f-Vector3.up*height};
-                WedgeFace(chipsV,chipsT,piece,0,1,2);WedgeFace(chipsV,chipsT,piece,0,2,3);
-                WedgeFace(chipsV,chipsT,piece,0,4,1);WedgeFace(chipsV,chipsT,piece,1,4,2);
-                WedgeFace(chipsV,chipsT,piece,2,4,3);WedgeFace(chipsV,chipsT,piece,3,4,0);
-            }
-            Emit(parent,"DF_ShatteredPlanetSplinters",chipsV,chipsT,crust,owned);
-        }
-        static void WedgeFace(List<Vector3> v,List<int> t,Vector3[] p,int a,int b,int c)
-        {
-            Vector3 center=(p[0]+p[1]+p[2]+p[3]+p[4])/5;
-            if(Vector3.Dot(Vector3.Cross(p[b]-p[a],p[c]-p[a]),(p[a]+p[b]+p[c])/3-center)<0)
-                Face(v,t,p[a],p[c],p[b]);
-            else Face(v,t,p[a],p[b],p[c]);
         }
         static void Face(List<Vector3> v,List<int> t,Vector3 a,Vector3 b,Vector3 c)
         {int start=v.Count;v.Add(a);v.Add(b);v.Add(c);t.Add(start);t.Add(start+1);t.Add(start+2);}
