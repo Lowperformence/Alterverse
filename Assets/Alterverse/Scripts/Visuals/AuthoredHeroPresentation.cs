@@ -21,8 +21,14 @@ namespace Alterverse.Visuals
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
-            public Quaternion RestHandInModel;
+            public Quaternion RestHandLocal;
         }
+        private sealed class WeaponGrip
+        {
+            public Transform Bone, Control;
+            public Quaternion RestInVisual, ControlRest;
+        }
+        private readonly List<WeaponGrip> grips = new List<WeaponGrip>();
         private ArmChain leftArm, rightArm;
         private HeroId hero;
         private HeroVisualMotion motion;
@@ -73,7 +79,8 @@ namespace Alterverse.Visuals
             {
                 Bind("UpperArm" + side, "Arm" + side);
                 Bind("Forearm" + side, "ElbowJoint" + side);
-                Bind("Hand" + side, "WristJoint" + side, "Weapon" + side);
+                Bind("Hand" + side, "WristJoint" + side);
+                BindWeaponGrip(side);
                 Bind("Thigh" + side, "Leg" + side);
                 Bind("Shin" + side, "KneeJoint" + side);
                 Bind("Foot" + side, "AnkleJoint" + side);
@@ -145,7 +152,7 @@ namespace Alterverse.Visuals
             }
             return upper != null && elbow != null && hand != null
                 ? new ArmChain { Upper = upper, Elbow = elbow, Hand = hand,
-                    RestHandInModel = Quaternion.Inverse(model.rotation) * hand.rotation }
+                    RestHandLocal = hand.localRotation }
                 : null;
         }
 
@@ -172,14 +179,41 @@ namespace Alterverse.Visuals
             float height = Mathf.Sqrt(Mathf.Max(0f, upperLength * upperLength - along * along));
             Vector3 elbowTarget = shoulder + direction * along + bend * height;
             target = shoulder + direction * distance;
-            Quaternion upperBefore = arm.Upper.rotation, elbowBefore = arm.Elbow.rotation, handBefore = arm.Hand.rotation;
+            Quaternion upperBefore = arm.Upper.rotation, elbowBefore = arm.Elbow.rotation, handBefore = arm.Hand.localRotation;
             arm.Upper.rotation = Quaternion.FromToRotation(arm.Elbow.position - shoulder, elbowTarget - shoulder) * arm.Upper.rotation;
             arm.Elbow.rotation = Quaternion.FromToRotation(arm.Hand.position - arm.Elbow.position, target - arm.Elbow.position) * arm.Elbow.rotation;
             Quaternion solvedUpper = arm.Upper.rotation, solvedElbow = arm.Elbow.rotation;
             arm.Upper.rotation = Quaternion.Slerp(upperBefore, solvedUpper, weight);
             arm.Elbow.rotation = Quaternion.Slerp(elbowBefore, solvedElbow, weight);
-            // Preserve authored grip orientation instead of accumulating the old wrist twists.
-            arm.Hand.rotation = Quaternion.Slerp(handBefore, model.rotation * arm.RestHandInModel, weight);
+            // A neutral local wrist follows the forearm instead of bending back to a world-space pose.
+            arm.Hand.localRotation = Quaternion.Slerp(handBefore, arm.RestHandLocal, weight);
+        }
+
+        private void BindWeaponGrip(string side)
+        {
+            Transform target = null;
+            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+                if (bone.name == "WeaponGrip" + side) { target = bone; break; }
+            Transform control = Control("Weapon" + side);
+            if (target == null || control == null)
+            {
+                Debug.LogError("DF: weapon grip bone missing: WeaponGrip" + side, this);
+                return;
+            }
+            grips.Add(new WeaponGrip { Bone = target, Control = control,
+                RestInVisual = Quaternion.Inverse(visualRoot.rotation) * target.rotation,
+                ControlRest = control.localRotation });
+        }
+
+        private void ApplyWeaponGrips()
+        {
+            foreach (WeaponGrip grip in grips)
+            {
+                if (grip.Bone == null || grip.Control == null) continue;
+                Quaternion weaponAngle = Quaternion.Inverse(grip.ControlRest) * grip.Control.localRotation;
+                // Position remains inherited from the hand. Only the weapon gets its guard/cast angle.
+                grip.Bone.rotation = visualRoot.rotation * weaponAngle * grip.RestInVisual;
+            }
         }
 
         private void ApplyModelGuard()
@@ -218,6 +252,7 @@ namespace Alterverse.Visuals
                 binding.Bone.localRotation = binding.Rest * Quaternion.Inverse(binding.Basis) * delta * binding.Basis;
             }
             ApplyModelGuard();
+            ApplyWeaponGrips();
         }
     }
 }

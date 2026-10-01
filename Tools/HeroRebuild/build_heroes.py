@@ -90,6 +90,7 @@ def rig():
  b('Root',(0,0,0),(0,0,.15));b('Hips',(0,0,.90),(0,0,1.03),'Root');b('Spine',(0,0,1.03),(0,0,1.20),'Hips');b('Chest',(0,0,1.20),(0,0,1.42),'Spine');b('Head',(0,0,1.42),(0,0,1.75),'Chest')
  for s,k in [(-1,'L'),(1,'R')]:
   b('UpperArm'+k,(s*.18,0,1.39),(s*.31,0,1.16),'Chest');b('Forearm'+k,(s*.31,0,1.16),(s*.41,-.01,.95),'UpperArm'+k);b('Hand'+k,(s*.41,-.01,.95),(s*.43,-.03,.86),'Forearm'+k)
+  b('WeaponGrip'+k,(s*.41,-.01,.95),(s*.43,-.03,.86),'Hand'+k)
   b('Thigh'+k,(s*.13,0,.9),(s*.14,.01,.49),'Hips');b('Shin'+k,(s*.14,.01,.49),(s*.18,.02,.12),'Thigh'+k);b('Foot'+k,(s*.18,.02,.12),(s*.18,-.15,.06),'Shin'+k)
  bpy.ops.object.mode_set(mode='OBJECT');ob.select_set(False);return ob
 
@@ -98,7 +99,7 @@ def bind(o,arm,body=False):
  for n in names:o.vertex_groups.new(name=n)
  if body:
   # Smooth proximity weights across neighboring bones; plate weights remain rigid.
-  segments=[(b.name,b.head_local,b.tail_local) for b in arm.data.bones if b.name!='Root']
+  segments=[(b.name,b.head_local,b.tail_local) for b in arm.data.bones if b.name!='Root' and not b.name.startswith('WeaponGrip')]
   for v in o.data.vertices:
    distances=[]
    for name,head,tail in segments:
@@ -108,7 +109,11 @@ def bind(o,arm,body=False):
    distances.sort();closest=distances[:3]
    weights=[1/(distance+.018)**5 for distance,name in closest];total=sum(weights)
    for (distance,name),weight in zip(closest,weights):o.vertex_groups[name].add([v.index],weight/total,'REPLACE')
- else:o.vertex_groups[o.get('bone','Chest')].add(list(range(len(o.data.vertices))),1,'REPLACE')
+ else:
+  bone=o.get('bone','Chest')
+  # Weapons have independent grip bones. Armor gauntlets still follow the anatomical hand.
+  if bone.startswith('Hand') and arm.get('hero')!='Rook':bone='WeaponGrip'+bone[-1]
+  o.vertex_groups[bone].add(list(range(len(o.data.vertices))),1,'REPLACE')
  mod=o.modifiers.new('DF_Skin','ARMATURE');mod.object=arm;o.parent=arm
 
 PROFILE={'Veyr':(.94,.94,1.02,.94),'Kaelon':(1.43,1.20,1.08,1.30),'Nyra':(.88,.94,1.02,.93),'Elyra':(.89,.96,1.09,.92),'Mira':(.89,1.09,1.02,.96),'Rook':(1.60,1.32,1.04,1.40),'Traveler':(1.03,.96,1.07,.97)}
@@ -146,8 +151,16 @@ def animations(arm,hero):
    rotation=bone.bone.matrix_local.to_quaternion();axis=rotation@Vector((0,1,0));rotation=axis.rotation_difference((finish-start).normalized())@rotation
    bone.matrix=Matrix.LocRotScale(start,rotation,Vector((1,1,1)));bpy.context.view_layer.update()
   rotation=last.bone.matrix_local.to_quaternion()
-  if hand_rotation is not None:rotation=hand_rotation@rotation
+  if end.startswith('Hand'):
+   # Keep the hand aligned with the forearm; weapon orientation belongs to its child grip.
+   rotation=b.matrix.to_quaternion()@b.bone.matrix_local.to_quaternion().inverted()@rotation
+  elif hand_rotation is not None:rotation=hand_rotation@rotation
   last.matrix=Matrix.LocRotScale(tip,rotation,Vector((1,1,1)));bpy.context.view_layer.update()
+  if end.startswith('Hand'):
+   grip=arm.pose.bones['WeaponGrip'+end[-1]]
+   weapon_rotation=grip.bone.matrix_local.to_quaternion()
+   if hand_rotation is not None:weapon_rotation=hand_rotation@weapon_rotation
+   grip.matrix=Matrix.LocRotScale(tip,weapon_rotation,Vector((1,1,1)));bpy.context.view_layer.update()
  from mathutils import Quaternion
  frames=[('Idle',61),('Run',25),('Attack',25),('Skill0',31),('Skill1',34),('Skill2',37),('Ultimate',49),('Hit',16),('Death',40)]
  for name,length in frames:
@@ -530,7 +543,7 @@ def build(hero,female,color,label):
  if hero in ['Nyra','Elyra','Mira','Traveler']:
   removed=[o for o in parts if o.name.startswith('Layered pauldron')]
   for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
- arm=rig()
+ arm=rig();arm['hero']=hero
  for o in parts:
   if o.get('bone','').startswith('Hand'):
    side=-1 if o['bone'].endswith('L') else 1
@@ -546,7 +559,7 @@ def build(hero,female,color,label):
  bpy.ops.object.mode_set(mode='OBJECT')
  animations(arm,hero)
  # Explicit named VFX socket travels with the weapon hand.
- socket=bpy.data.objects.new('DF_Muzzle',None);bpy.context.collection.objects.link(socket);socket.parent=arm;socket.parent_type='BONE';socket.parent_bone='HandR';bpy.context.view_layer.update()
+ socket=bpy.data.objects.new('DF_Muzzle',None);bpy.context.collection.objects.link(socket);socket.parent=arm;socket.parent_type='BONE';socket.parent_bone='HandR' if hero=='Rook' else 'WeaponGripR';bpy.context.view_layer.update()
  muzzle_point={'Nyra':(.40,-.99,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.12),'Rook':(.39,-.16,.92),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
  socket.matrix_world=Matrix.Translation(proportion(hero,muzzle_point))
  # Body and shop-addressable weapon renderers share one rig, but never one renderer.
