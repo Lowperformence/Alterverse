@@ -478,13 +478,25 @@ namespace Alterverse.Visuals
                 contact+Vector3.up*.42f,Color.Lerp(accent,Color.white,.89f),size*.42f,.10f,
                 HeroFxMotion.Contract,actor:actor);
         }
+        private static void RiftScarProjectile(GameObject actor,Vector3 impact,float travelTime,Transform target)
+        {
+            Vector3 start=Muzzle(actor),end=impact+Vector3.up*.65f;
+            float flight=travelTime>0?travelTime:Mathf.Clamp(Vector3.Distance(start,end)/16f,.16f,.28f);
+            Camera camera=Camera.main;
+            Quaternion facing=camera!=null?camera.transform.rotation:Face(start,end);
+            Color violet=new Color(.66f,.16f,1f,1f);
+            // Presentation only: existing range, damage and hit timing stay unchanged.
+            HeroVfxPool.Emit(HeroFxShape.RiftCross,start,end,new Vector3(.88f,.88f,1),
+                violet,flight,HeroFxMotion.TravelFixedFrame,facing,actor,
+                endFollow:travelTime>0?target:null);
+        }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
             if(actor==null)return;HeroId h=Hero(actor);
             switch(h)
             {
                 case HeroId.Veyr:
-                    if(slot==1)Rift(actor,impact,1,.28f);
+                    if(slot==1)RiftScarProjectile(actor,impact,travelTime,target);
                     else if(slot==3)
                     {
                         Quaternion direction=Face(actor.transform.position,impact);

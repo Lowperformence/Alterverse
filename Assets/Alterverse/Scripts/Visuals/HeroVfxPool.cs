@@ -6,8 +6,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -137,10 +137,11 @@ namespace Alterverse.Visuals
             {
                 case HeroFxMotion.Expand:scale=Mathf.Lerp(.24f,1f,1f-Mathf.Pow(1f-t,3f));break;
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
+                case HeroFxMotion.TravelFixedFrame:
                 case HeroFxMotion.Travel:
                     Vector3 end=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
                     point=Vector3.Lerp(s.From,end,t);
-                    if(s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
+                    if(s.Motion==HeroFxMotion.Travel&&s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
                     break;
                 case HeroFxMotion.Scatter:
                     // Ballistic-looking debris, entirely presentation-only and collision-free.
@@ -164,7 +165,7 @@ namespace Alterverse.Visuals
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=s.Size*scale;
             // Projectile cores remain readable until contact. Decorative flashes die away
             // smoothly; exact warning outlines retain their original size and opacity.
-            bool flight=s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.Spiral;
+            bool flight=s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
@@ -247,6 +248,18 @@ namespace Alterverse.Visuals
                     Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
                 case HeroFxShape.Hex:Band(0,Mathf.PI*2,.89f,1,6);break;
                 case HeroFxShape.Slash:FeatherBand(-1.55f,1.55f,.48f,.87f,1,32,true);break;
+                case HeroFxShape.RiftCross:
+                    // Two luminous diagonal blades form a literal X in the local XY plane.
+                    // Feathered edges retain the silhouette without a solid square background.
+                    for(int sign=-1;sign<=1;sign+=2)
+                    {
+                        Vector3 a=new Vector3(-.68f,-.68f*sign,0);
+                        Vector3 b=new Vector3(.68f,.68f*sign,0);
+                        Vector3 side=new Vector3(-sign,1,0).normalized*.085f;
+                        SoftQuad(a-side*2,a,b,b-side*2,clear,hot);
+                        SoftQuad(a,a+side*2,b+side*2,b,hot,clear);
+                    }
+                    break;
                 case HeroFxShape.Rift:
                     for(int i=0;i<5;i++)
                     {
