@@ -44,7 +44,7 @@ namespace Alterverse.Visuals
             hot=MakeMaterial("DF_PyraxisScorpionAdvancedHot",new Color(1f,.34f,.012f,1f),true,4.2f,.58f,.02f);
             ember=MakeMaterial("DF_PyraxisScorpionAdvancedEmber",new Color(.82f,.055f,.004f,1f),true,2.4f,.45f,.02f);
             obsidian=MakeMaterial("DF_PyraxisScorpionAdvancedObsidian",new Color(.012f,.007f,.006f,1f),false,1f,.28f,.52f);
-            armor=MakeMaterial("DF_PyraxisScorpionAdvancedArmor",new Color(.16f,.034f,.009f,1f),false,1f,.34f,.36f);
+            armor=MakeMaterial("DF_PyraxisScorpionAdvancedArmor",new Color(.16f,.034f,.009f,1f),false,1f,.52f,.46f);
 
             detailRoot=new GameObject(DetailRootName).transform;
             detailRoot.SetParent(visual,false);
@@ -71,6 +71,12 @@ namespace Alterverse.Visuals
                     float y=.82f-i*.025f;
                     Part(PrimitiveType.Sphere,"SidePlate",detailRoot,new Vector3(side*(1.04f-i*.035f),y,z),
                         new Vector3(.34f,.16f,.38f),Quaternion.Euler(0,side*(18f+i*4f),side*8f),i%2==0?armor:obsidian);
+                    Part(PrimitiveType.Cube,"CarapaceRim",detailRoot,new Vector3(side*(1.04f-i*.035f),y+.09f,z),
+                        new Vector3(.27f,.028f,.30f),Quaternion.Euler(0,side*(18f+i*4f),side*8f),armor);
+                    for(int cut=0;cut<3;cut++)
+                        Part(PrimitiveType.Cube,"CarapaceScoring",detailRoot,
+                            new Vector3(side*(1.04f-i*.035f),y+.11f,z-.08f+cut*.07f),
+                            new Vector3(.17f,.012f,.015f),Quaternion.Euler(0,side*(18f+i*4f),0),obsidian);
                     Part(PrimitiveType.Cube,"SideHeatSlit",detailRoot,new Vector3(side*(1.13f-i*.03f),y+.015f,z+.05f),
                         new Vector3(.035f,.035f,.22f),Quaternion.Euler(0,side*(18f+i*4f),0),i%2==0?hot:ember);
                 }

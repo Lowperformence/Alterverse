@@ -163,6 +163,7 @@ namespace Alterverse.Combat
             else if(xenoAlien){BuildAlienVisuals();health.Damaged+=OnXenoDamaged;}
             else if(marsSkeleton)BuildSkeletonVisuals();
             else BuildVisuals();
+            BuildModernMonsterDetails();
             lastMovementSample=transform.position;
             movementSampleReady=true;
             SetNextPatrol();
@@ -545,9 +546,9 @@ namespace Alterverse.Combat
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color bone=new Color(.29f,.20f,.16f,1),deep=new Color(.10f,.045f,.035f,1);
-            armorMat=MakeMaterial(shader,bone,.08f,.20f,Color.black);darkMat=MakeMaterial(shader,deep,.05f,.12f,Color.black);
-            jointMat=MakeMaterial(shader,new Color(.18f,.10f,.075f,1),.06f,.16f,Color.black);
+            Color bone=new Color(.36f,.41f,.47f,1),deep=new Color(.045f,.055f,.075f,1);
+            armorMat=MakeMaterial(shader,bone,.76f,.56f,Color.black);darkMat=MakeMaterial(shader,deep,.64f,.34f,Color.black);
+            jointMat=MakeMaterial(shader,new Color(.16f,.19f,.23f,1),.84f,.48f,Color.black);
             energyMat=MakeMaterial(shader,energy,.10f,.55f,energy*2.3f);
 
             // Ancient Martian war skeleton: oversized readable bones, rib cage, skull and claws.
@@ -1287,12 +1288,46 @@ namespace Alterverse.Combat
             Part("IdlerWheel",PrimitiveType.Cylinder,track,new Vector3(side*1.25f,-.29f,1.20f),new Vector3(.34f,.17f,.34f),armor,Quaternion.Euler(0,0,90));
         }
 
+        private void BuildModernMonsterDetails()
+        {
+            // Small rigid details inherit their actual armor mount's animation.
+            // Existing shared materials and beveled box mesh keep the addition inexpensive.
+            string[] names=kryonBear?new[]{"KryonBearChestArmor","KryonBearShoulderArmorL","KryonBearShoulderArmorR"}:
+                xenoAlien?new[]{"XenoChestCenter","XenoChestLeft","XenoChestRight"}:
+                marsSkeleton?new[]{"TitanPelvis","TitanSkull"}:
+                noxaraSpider?new[]{"SpiderFace"}:new[]{"MoonGuardChestArmor","MoonGuardUpperChest"};
+            Transform[] mounts=GetComponentsInChildren<Transform>(true);
+            foreach(string name in names)
+            {
+                Transform mount=null;
+                foreach(Transform candidate in mounts)
+                    if(candidate.name=="DF_HotZoneTank_"+name){mount=candidate;break;}
+                MeshFilter filter=mount!=null?mount.GetComponent<MeshFilter>():null;
+                if(filter==null||filter.sharedMesh==null)continue;
+                Bounds b=filter.sharedMesh.bounds;
+                float width=b.size.x,height=b.size.y;
+                for(int side=-1;side<=1;side+=2)
+                {
+                    float x=b.center.x+side*width*.23f,z=b.max.z+.012f;
+                    Part("ModernEdge"+name+side,PrimitiveType.Cube,mount,
+                        new Vector3(x,b.center.y,z),new Vector3(width*.025f,height*.48f,.018f),
+                        jointMat,Quaternion.identity);
+                    // Living Xeno uses three segmented luminous growths rather than metal vents.
+                    for(int i=0;i<3;i++)
+                        Part("ModernInset"+name+side+i,PrimitiveType.Cube,mount,
+                            new Vector3(x,b.center.y+height*(.17f-i*.12f),z+.014f),
+                            new Vector3(width*.10f,height*.027f,.014f),
+                            xenoAlien||i==0?energyMat:darkMat,Quaternion.Euler(0,0,xenoAlien?side*22f:0));
+                }
+            }
+        }
+
         private Material MakeMaterial(Shader shader,Color color,float metallic,float smoothness,Color emission)
         {
             Material m=new(shader){color=color};
             if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",color);
             if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",Mathf.Max(metallic,.08f));
-            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",Mathf.Max(smoothness,emission.maxColorComponent>0?.58f:.32f));
+            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",Mathf.Clamp(smoothness+(emission.maxColorComponent<=0&&metallic>.5f?.09f:0f),.24f,.86f));
             if(emission.maxColorComponent>0&&m.HasProperty("_EmissionColor")){m.EnableKeyword("_EMISSION");m.SetColor("_EmissionColor",emission);}
             return m;
         }

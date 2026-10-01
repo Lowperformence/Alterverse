@@ -54,6 +54,7 @@ namespace Alterverse.Visuals
             BuildMantleRidges();
             BuildBioluminescentSpots();
             BuildSideFins();
+            BuildModernMantleDetail();
             BuildMouthDetail();
             BuildTentacleDetails(visual);
         }
@@ -93,6 +94,20 @@ namespace Alterverse.Visuals
             Part(PrimitiveType.Sphere,"SideFinR",detailRoot,new Vector3(1.06f,1.45f,-.08f),new Vector3(.58f,.26f,.18f),Quaternion.Euler(0,8f,24f),deepAccent);
             Part(PrimitiveType.Sphere,"SideFinGlowL",detailRoot,new Vector3(-1.12f,1.48f,-.01f),new Vector3(.31f,.07f,.05f),Quaternion.Euler(0,-8f,-24f),cyanGlow);
             Part(PrimitiveType.Sphere,"SideFinGlowR",detailRoot,new Vector3(1.12f,1.48f,-.01f),new Vector3(.31f,.07f,.05f),Quaternion.Euler(0,8f,24f),cyanGlow);
+        }
+
+        void BuildModernMantleDetail()
+        {
+            // Pearl-like skin folds and luminous nodules follow the existing mantle silhouette.
+            for(int side=-1;side<=1;side+=2)
+                for(int i=0;i<3;i++)
+                {
+                    Vector3 p=new Vector3(side*(.63f+i*.095f),1.85f-i*.20f,.39f-i*.012f);
+                    Part(PrimitiveType.Capsule,"MantleFold"+side+i,detailRoot,p,
+                        new Vector3(.042f,.20f,.035f),Quaternion.Euler(12,0,side*28f),suckerMaterial);
+                    Part(PrimitiveType.Sphere,"PearlNodule"+side+i,detailRoot,p+new Vector3(0,.10f,.025f),
+                        new Vector3(.052f,.052f,.035f),Quaternion.identity,cyanGlow);
+                }
         }
 
         void BuildMouthDetail()
