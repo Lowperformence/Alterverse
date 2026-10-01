@@ -17,6 +17,10 @@ for hero in selected or ['Veyr','Kaelon','Nyra','Elyra','Mira','Rook','Traveler'
  assert len(arm.data.bones)==19,(hero,'anatomical + independent weapon bones')
  for side in ['L','R']:
   assert arm.data.bones['WeaponGrip'+side].parent==arm.data.bones['Hand'+side]
+  upper=arm.data.bones['UpperArm'+side].length;lower=arm.data.bones['Forearm'+side].length
+  assert 1.0<upper/lower<1.30,(hero,side,'arm segment proportion',upper/lower)
+  other='R' if side=='L' else 'L'
+  assert abs(upper-arm.data.bones['UpperArm'+other].length)<.0001,(hero,'asymmetric arm length')
  for obj in meshes:
   for v in obj.data.vertices:
    used=[obj.vertex_groups[g.group].name for g in v.groups if g.weight>.00001]

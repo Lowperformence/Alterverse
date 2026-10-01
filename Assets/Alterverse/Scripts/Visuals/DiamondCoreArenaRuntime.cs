@@ -76,6 +76,9 @@ namespace Alterverse.Visuals
             blackCrystal=Mat(new Color(.018f,.025f,.045f,1f),false,.16f,.88f,new Color(.03f,.12f,.20f,1f)*.28f);
             pulsarMaterial=Mat(new Color(.93f,.98f,1f,1f),true,0f,.95f,new Color(.62f,.90f,1f,1f)*2.2f);
 
+            floorMaterial.SetTexture("_SurfaceData",Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground"));
+            floorMaterial.SetFloat("_SurfaceRelief",.22f);
+            floorMaterial.SetFloat("_SurfaceScale",.25f);
             BuildTransparentSurface();
             BuildFractureSeams();
             BuildPerimeterCrystalFields();

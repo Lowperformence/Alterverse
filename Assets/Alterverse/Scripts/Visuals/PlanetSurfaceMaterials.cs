@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
     {
         readonly Shader shader;
         readonly Texture2D sand, stone;
+        readonly bool ownsSand,ownsStone;
         readonly Texture macro;
         public PlanetSurfaceMaterials(Texture macro)
         {
@@ -19,7 +20,13 @@ namespace Alterverse.Visuals
                 shader=null;
                 return;
             }
-            sand=Bake(false);stone=Bake(true);
+            string profile=ArenaVariantRuntime.Current.ToString();
+            sand=Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/Ground");
+            stone=Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/Stone");
+            ownsSand=sand==null;ownsStone=stone==null;
+            if(ownsSand||ownsStone)Debug.LogWarning("DIMENSIONS FRONT: authored surface detail missing for "+profile+"; using generated detail.");
+            if(ownsSand)sand=Bake(false);
+            if(ownsStone)stone=Bake(true);
         }
 
         public void Apply(Material material,bool ground=false,bool crater=false)
@@ -94,8 +101,8 @@ namespace Alterverse.Visuals
 
         public void Dispose()
         {
-            if(sand!=null)Object.Destroy(sand);
-            if(stone!=null)Object.Destroy(stone);
+            if(ownsSand&&sand!=null)Object.Destroy(sand);
+            if(ownsStone&&stone!=null)Object.Destroy(stone);
         }
     }
 }

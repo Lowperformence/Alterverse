@@ -1,8 +1,8 @@
-import bpy,math,json
+import bpy,math,json,os
 from pathlib import Path
 from mathutils import Vector,Matrix
 root=next(p for p in Path(__file__).resolve().parents if (p/'Assets/Alterverse').is_dir())
-T={'Veyr':[(-.2397,1.122,.207),(.2397,1.122,.207)],'Kaelon':[(-.3192,1.134,.257),(.349,1.1664,.236)],'Nyra':[(.15,1.26,.48),(.09,1.2648,.23)],'Elyra':[(-.187,1.199,.1932),(.292,1.199,.1472)],'Mira':[(-.192,1.1016,.152),(.223,1.1016,.171)],'Rook':[(-.368,1.2376,.364),(.368,1.2376,.364)],'Traveler':[(-.244,1.1342,.155),(.2575,1.177,.194)]}
+T={'Veyr': [[-0.2397, 1.122, 0.20679999999999998], [0.2397, 1.122, 0.20679999999999998]], 'Kaelon': [[-0.3396615384615384, 1.1340000000000001, 0.26], [0.357008547008547, 1.1664, 0.23399999999999999]], 'Nyra': [[0.1408, 1.2444, 0.4464], [0.090024, 1.2648, 0.229989]], 'Elyra': [[-0.22250000000000003, 1.1990000000000003, 0.1932], [0.3471, 1.1990000000000003, 0.1472]], 'Mira': [[-0.22292735042735046, 1.1016000000000001, 0.1536], [0.2581, 1.1016000000000001, 0.17279999999999998]], 'Rook': [[-0.36800000000000005, 1.2376, 0.364], [0.36800000000000005, 1.2376, 0.364]], 'Traveler': [[-0.24633846153846153, 1.1342, 0.1552], [0.2575, 1.1770000000000003, 0.194]]}
 rows=[]
 for hero,targets in T.items():
  bpy.ops.wm.open_mainfile(filepath=str(root/'ArtSource/Heroes'/f'{hero}.blend'))
@@ -23,7 +23,7 @@ for hero,targets in T.items():
   if hero=='Nyra' and side=='L':continue
   solve(side,Vector((p[0],-p[2],p[1])))
  if hero=='Nyra':
-  for i in range(2):
+  for i in range(4):
    offset=bpy.data.objects['DF_PalmGripL'].matrix_world.translation-arm.pose.bones['HandL'].head
    solve('L',bpy.data.objects['DF_SupportGrip'].matrix_world.translation-offset)
   miss=(bpy.data.objects['DF_PalmGripL'].matrix_world.translation-bpy.data.objects['DF_SupportGrip'].matrix_world.translation).length
@@ -35,7 +35,8 @@ for hero,targets in T.items():
   if contact:
    error=(contact.matrix_world.translation-bpy.data.objects['DF_PalmGrip'+side].matrix_world.translation).length
    assert error<.002,(hero,side,error);errors.append(error)
- bpy.context.scene.cycles.samples=4;bpy.context.scene.cycles.use_denoising=False;bpy.context.scene.render.filepath=str(root/'ArtSource/Heroes/Preview'/f'{hero}-GripCheck.png');bpy.ops.render.render(write_still=True)
+ bpy.context.scene.cycles.samples=4;bpy.context.scene.cycles.use_denoising=False;bpy.context.scene.render.filepath=str(root/'ArtSource/Heroes/Preview'/f'{hero}-GripCheck.png');
+ if not os.environ.get('DF_SKIP_POSE_RENDER'):bpy.ops.render.render(write_still=True)
  rows.append({'hero':hero,'handlePalmDistanceMeters':errors,'rifleSupportDistanceMeters':miss})
  print('POSE_GRIP_CHECK',hero,errors,miss,flush=True)
 (root/'grip-pose-validation.json').write_text(json.dumps(rows,indent=2))

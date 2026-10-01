@@ -17,8 +17,8 @@
     "vertices": 23956,
     "bounds": [
       [
-        -0.4410819411277771,
-        0.43386781215667725
+        -0.4318547546863556,
+        0.42584821581840515
       ],
       [
         -0.26065465807914734,
@@ -52,8 +52,8 @@
     "vertices": 23966,
     "bounds": [
       [
-        -0.5863000154495239,
-        0.5863000154495239
+        -0.6431822776794434,
+        0.6323002576828003
       ],
       [
         -0.3277547061443329,
@@ -66,7 +66,7 @@
     ],
     "materials": 8,
     "weighted": true,
-    "maxHandlePalmDistanceMeters": 3.816559456248789e-07,
+    "maxHandlePalmDistanceMeters": 1.3555962342672538e-06,
     "rigidGripAcrossClips": true
   },
   {
@@ -87,8 +87,8 @@
     "vertices": 22831,
     "bounds": [
       [
-        -0.4329438805580139,
-        0.4454203248023987
+        -0.4298434555530548,
+        0.39103320240974426
       ],
       [
         -0.2357381135225296,
@@ -101,7 +101,7 @@
     ],
     "materials": 8,
     "weighted": true,
-    "maxHandlePalmDistanceMeters": 1.228781230931777e-07,
+    "maxHandlePalmDistanceMeters": 1.4919776018337002e-07,
     "rigidGripAcrossClips": true
   },
   {
@@ -119,24 +119,24 @@
       "DF_Skeleton|DF_Skeleton|Skill2",
       "DF_Skeleton|DF_Skeleton|Ultimate"
     ],
-    "vertices": 23546,
+    "vertices": 24492,
     "bounds": [
       [
-        -0.4421302080154419,
-        0.4448814392089844
+        -0.4386526346206665,
+        0.3886813521385193
       ],
       [
-        -0.30503159761428833,
+        -0.3121984004974365,
         0.2501599192619324
       ],
       [
         0.026378000155091286,
-        1.9936177730560303
+        2.2118396759033203
       ]
     ],
-    "materials": 11,
+    "materials": 12,
     "weighted": true,
-    "maxHandlePalmDistanceMeters": 1.3657139822709083e-07,
+    "maxHandlePalmDistanceMeters": 3.11145380404906e-07,
     "rigidGripAcrossClips": true
   },
   {
@@ -157,8 +157,8 @@
     "vertices": 31318,
     "bounds": [
       [
-        -0.5020020008087158,
-        0.4986317455768585
+        -0.4934057891368866,
+        0.42618998885154724
       ],
       [
         -0.30693432688713074,
@@ -171,7 +171,7 @@
     ],
     "materials": 9,
     "weighted": true,
-    "maxHandlePalmDistanceMeters": 2.2500259981366246e-07,
+    "maxHandlePalmDistanceMeters": 3.6010283153040923e-07,
     "rigidGripAcrossClips": true
   },
   {
@@ -192,8 +192,8 @@
     "vertices": 22753,
     "bounds": [
       [
-        -0.7283269762992859,
-        0.7281332612037659
+        -0.7199999690055847,
+        0.7199999690055847
       ],
       [
         -0.3529666066169739,
@@ -227,8 +227,8 @@
     "vertices": 25518,
     "bounds": [
       [
-        -0.450572669506073,
-        0.44858869910240173
+        -0.45471853017807007,
+        0.46742135286331177
       ],
       [
         -0.24455542862415314,
@@ -241,7 +241,7 @@
     ],
     "materials": 9,
     "weighted": true,
-    "maxHandlePalmDistanceMeters": 1.6049041769309353e-07,
+    "maxHandlePalmDistanceMeters": 4.3187668163148874e-07,
     "rigidGripAcrossClips": true
   }
 ]

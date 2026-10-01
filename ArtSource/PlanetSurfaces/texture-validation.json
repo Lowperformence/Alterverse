@@ -1,0 +1,178 @@
+[
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Ground.png",
+    "sha256": "773cd006d98e970462f4c9cb6d2ac918d6321d5148b7f6bb6b2f0adce07053fe",
+    "slopeHeightCorrelation": [
+      0.9672768483221271,
+      0.9670867979859569
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Stone.png",
+    "sha256": "0bc241646cbe316da0ae184c04f7722d76ac68e43539ff873b39e140329af88b",
+    "slopeHeightCorrelation": [
+      0.9850268751777391,
+      0.983821477578465
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Ground.png",
+    "sha256": "1143bc7b3f3ab7a93a3001e44129b88b499206632d541fc9c5ba1b43c2db99e9",
+    "slopeHeightCorrelation": [
+      0.9964236333647133,
+      0.9963941093597352
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Stone.png",
+    "sha256": "33a455a64867034b6e626f2b3e591b961c686d2a7630e9783de71eb7172645af",
+    "slopeHeightCorrelation": [
+      0.9942250841817837,
+      0.9942199852128031
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Ground.png",
+    "sha256": "9475c1535024bacd5bc05001d6c7f28f668195f5eab7630b94c2e894815be1f4",
+    "slopeHeightCorrelation": [
+      0.9798513801981644,
+      0.9804178079203804
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Stone.png",
+    "sha256": "9157fd0547fded9c78574e62920237504595ebcb175001ac9db5dc5e475b4001",
+    "slopeHeightCorrelation": [
+      0.9886471630285137,
+      0.9886821700176646
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Ground.png",
+    "sha256": "45d69d7edd9c46f78941c848c2c6b06e2d103e489e2c35b6b4309ae0623f4e65",
+    "slopeHeightCorrelation": [
+      0.9927756263892147,
+      0.972340072849613
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Stone.png",
+    "sha256": "ac7586afce4bf004ac54b959edb52deba368b25f2cf5f8ff1b48c9baf9655e9f",
+    "slopeHeightCorrelation": [
+      0.9947753287808982,
+      0.9889544160721558
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Ground.png",
+    "sha256": "7dddf9839cf7eab164cf2c5cbeace4875c89bf9a89cf4d474d16fc9f46decab6",
+    "slopeHeightCorrelation": [
+      0.9823653571518658,
+      0.9834768764638682
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Stone.png",
+    "sha256": "3a3ce7f688c05c5bb9207bbd0c5f98dcac713c9ebe6ed91bd8f732becbc7248a",
+    "slopeHeightCorrelation": [
+      0.9897942299170478,
+      0.990162182861533
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Ground.png",
+    "sha256": "ec3fc9d9807f17da4210768a6b7bd833b456bb30d8cbbe9487ea0028ce8603f3",
+    "slopeHeightCorrelation": [
+      0.9843206496827511,
+      0.9840076982017999
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Stone.png",
+    "sha256": "3275cc8a2bc25603611797e0797cd28c3607d905e836dd05e4115a744f36fa2a",
+    "slopeHeightCorrelation": [
+      0.9922116094581086,
+      0.9922606559432573
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Ground.png",
+    "sha256": "07a90d4110c87d331c92a665fed9586b0bb0f949f345ba32c38276613e69cda8",
+    "slopeHeightCorrelation": [
+      0.9874211481137393,
+      0.9620095542630712
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Stone.png",
+    "sha256": "510a7c5f0c7ffa44ad3f619e07f09beea0641ca3e9ddfe712f892fc884e8988f",
+    "slopeHeightCorrelation": [
+      0.9922546037659715,
+      0.9865306451437378
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Ground.png",
+    "sha256": "879a512580c4e64bb2855acba88bd78f4c2f67c22a4f0ee27cf3b39e53300da8",
+    "slopeHeightCorrelation": [
+      0.9715501206555892,
+      0.9719276674183837
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Stone.png",
+    "sha256": "cfb531b668f682e9ab97a0ff5ef1dcdc44d844c7d3622e9bab2e17c7cf2ea94f",
+    "slopeHeightCorrelation": [
+      0.9857565433473036,
+      0.9856794289790376
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Ground.png",
+    "sha256": "1431b9777dce80430f74a3c11cb14e527fd6509bcc1357e0a8aad790a8ab8549",
+    "slopeHeightCorrelation": [
+      0.9736654275776208,
+      0.9831322606691513
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Stone.png",
+    "sha256": "493bc8de29c5fa30cc4be0e6d6dbc501d0258561e8c0f72b54af6c89a84d5b48",
+    "slopeHeightCorrelation": [
+      0.9784899188017459,
+      0.9854201176135224
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Ground.png",
+    "sha256": "98f199ce0a33a89a12e0ad445b07648d952d58662888602c4b4a7a4b578abfc0",
+    "slopeHeightCorrelation": [
+      0.9941572645164836,
+      0.9941435346228757
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Stone.png",
+    "sha256": "ab1260572db4022ebcb114510cbb2cc960f6434b538560e131f7ce9374f24a6f",
+    "slopeHeightCorrelation": [
+      0.9940268689723243,
+      0.9940110822275605
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Ground.png",
+    "sha256": "0822e0384f7240b0bad7e0f2fed37341eca62ad6f681d6d346e56574fcbf525c",
+    "slopeHeightCorrelation": [
+      0.992920871843456,
+      0.9929655582964209
+    ]
+  },
+  {
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Stone.png",
+    "sha256": "46de5cf2686f8c20fa915fb4fcd1f45249e04a65ee8f54625af63cf3aeaf6792",
+    "slopeHeightCorrelation": [
+      0.99354633899766,
+      0.9938387200007953
+    ]
+  }
+]

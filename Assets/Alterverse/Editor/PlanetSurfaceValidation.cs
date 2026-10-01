@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using Alterverse.Visuals;
+using Alterverse.Match;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -20,13 +21,24 @@ namespace Alterverse.EditorChecks
         {
             ValidateShader();
             if(!Application.isPlaying)throw new InvalidOperationException("Start a real match before validating its planet.");
+            if(ArenaVariantRuntime.IsDiamondCore)
+            {
+                var floor=GameObject.Find("DF_DiamondCoreCrystalFloor");
+                var renderer=floor!=null?floor.GetComponent<MeshRenderer>():null;
+                var material=renderer!=null?renderer.sharedMaterial:null;
+                if(material==null||material.GetTexture("_SurfaceData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground")||material.GetFloat("_SurfaceRelief")<=0)
+                    throw new InvalidOperationException("Diamond Core ground detail is not bound to the live transparent floor.");
+                Debug.Log("DIMENSIONS FRONT: Diamond Core live surface detail binding passed.");return;
+            }
             var ground=UnityEngine.Object.FindAnyObjectByType<ProductionLunarGround>();
-            if(ground==null)throw new InvalidOperationException("No live ProductionLunarGround found.");
-            if(ground.GetComponentsInChildren<Collider>(true).Length!=0)
+            var gj=UnityEngine.Object.FindAnyObjectByType<GJ504bArenaLandscape>();
+            Transform root=ground!=null?ground.transform:gj!=null?gj.transform:null;
+            if(root==null)throw new InvalidOperationException("No live planet ground found.");
+            if(root.GetComponentsInChildren<Collider>(true).Length!=0)
                 throw new InvalidOperationException("Presentation ground unexpectedly contains colliders.");
             int renderers=0,craterMaterials=0;
             bool macro=false,stone=false;
-            foreach(var r in ground.GetComponentsInChildren<MeshRenderer>())
+            foreach(var r in root.GetComponentsInChildren<MeshRenderer>())
             {
                 if(!r.enabled)continue;
                 var m=r.sharedMaterial;
@@ -35,11 +47,11 @@ namespace Alterverse.EditorChecks
                 if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null)
                     throw new InvalidOperationException("Missing live detail data: "+r.name);
                 float mode=m.GetFloat("_SurfaceMode");
-                macro|=mode<.5f&&m.GetTexture("_BaseMap")==ground.SurfaceAlbedo;
+                macro|=mode<.5f&&m.GetTexture("_BaseMap")!=null&&(ground==null||m.GetTexture("_BaseMap")==ground.SurfaceAlbedo);
                 stone|=mode>1.5f;
                 if(mode>.5f&&mode<1.5f)craterMaterials++;
             }
-            if(!macro||!stone||craterMaterials<2)
+            if(!macro||!stone||(ground!=null&&!ArenaVariantRuntime.IsMars&&craterMaterials<2))
                 throw new InvalidOperationException("Ground, stone or crater material integration is missing. Wait for map initialization.");
             Debug.Log($"DIMENSIONS FRONT: active planet surface bindings passed ({renderers} renderers). Visual quality and Android frame time still require review.");
         }
@@ -76,6 +88,20 @@ namespace Alterverse.EditorChecks
 
         static void ValidateShader()
         {
+            foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
+            foreach(string kind in new[]{"Ground","Stone"})
+            {
+                string path="Assets/Alterverse/Resources/PlanetSurfaces/"+planet+"/"+kind+".png";
+                var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                var importer=AssetImporter.GetAtPath(path) as TextureImporter;
+                if(texture==null||importer==null||importer.sRGBTexture||!importer.mipmapEnabled||importer.alphaIsTransparency||importer.textureType!=TextureImporterType.Default)
+                    throw new BuildFailedException("Planet detail must be linear packed data with mipmaps: "+path);
+                var android=importer.GetPlatformTextureSettings("Android");
+                if(!android.overridden||android.format!=TextureImporterFormat.RGBA32)
+                    throw new BuildFailedException("Android planet detail must preserve the same RGBA numerical data: "+path);
+            }
+            var crystal=Resources.Load<Shader>("DF_DiamondCrystal");
+            if(crystal==null||ShaderUtil.ShaderHasError(crystal))throw new BuildFailedException("Diamond surface shader missing or has compiler errors.");
             var shader=Resources.Load<Shader>("DF_PlanetSurface");
             if(shader==null||ShaderUtil.ShaderHasError(shader))
                 throw new BuildFailedException("Planet surface shader missing or has compiler errors.");

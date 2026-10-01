@@ -237,31 +237,31 @@ namespace Alterverse.Visuals
             switch (hero)
             {
                 case HeroId.Nyra:
-                    SolveGuard(rightArm, new Vector3(.09f, 1.2648f, .23f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.090024f, 1.264800f, 0.229989f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Veyr:
-                    SolveGuard(leftArm, new Vector3(-.2397f, 1.122f, .207f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.2397f, 1.122f, .207f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.239700f, 1.122000f, 0.206800f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.239700f, 1.122000f, 0.206800f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Kaelon:
-                    SolveGuard(leftArm, new Vector3(-.3192f, 1.134f, .257f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.349f, 1.1664f, .236f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.339662f, 1.134000f, 0.260000f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.357009f, 1.166400f, 0.234000f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Elyra:
-                    SolveGuard(leftArm, new Vector3(-.187f, 1.199f, .1932f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.292f, 1.199f, .1472f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.222500f, 1.199000f, 0.193200f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.347100f, 1.199000f, 0.147200f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Mira:
-                    SolveGuard(leftArm, new Vector3(-.192f, 1.1016f, .152f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.223f, 1.1016f, .171f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.222927f, 1.101600f, 0.153600f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.258100f, 1.101600f, 0.172800f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Rook:
-                    SolveGuard(leftArm, new Vector3(-.368f, 1.2376f, .364f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.368f, 1.2376f, .364f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.368000f, 1.237600f, 0.364000f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.368000f, 1.237600f, 0.364000f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Traveler:
-                    SolveGuard(leftArm, new Vector3(-.244f, 1.1342f, .155f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.2575f, 1.177f, .194f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-0.246338f, 1.134200f, 0.155200f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(0.257500f, 1.177000f, 0.194000f), GuardHint(rightArm), guardWeight);
                     break;
             }
         }
@@ -270,8 +270,8 @@ namespace Alterverse.Visuals
         {
             if (hero != HeroId.Nyra || rifleSupport == null || leftArm == null || leftPalm == null) return;
             // The support socket is on the rifle, so the left palm tracks its actual foregrip.
-            // Two short corrections account for the palm's offset from the wrist joint.
-            for (int i = 0; i < 2; i++)
+            // Four short corrections account for the palm's offset from the wrist joint.
+            for (int i = 0; i < 4; i++)
             {
                 Vector3 palmOffset = leftPalm.position - leftArm.Hand.position;
                 Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);

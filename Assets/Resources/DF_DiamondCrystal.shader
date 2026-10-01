@@ -9,6 +9,9 @@ Shader "Alterverse/DiamondCrystal"
         _FresnelStrength("Fresnel Strength", Range(0,2)) = 0.68
         _CoreAlpha("Core Alpha", Range(0,1)) = 0.22
         _FacetDetail("Cut edge and glint detail", Range(0,1)) = 0
+        _SurfaceData("Linear surface slope roughness height", 2D) = "gray" {}
+        _SurfaceRelief("Surface micro relief", Range(0,1)) = 0
+        _SurfaceScale("Surface world frequency", Float) = .25
     }
 
     SubShader
@@ -42,7 +45,11 @@ Shader "Alterverse/DiamondCrystal"
                 half _FresnelStrength;
                 half _CoreAlpha;
                 half _FacetDetail;
+                half _SurfaceRelief;
+                float _SurfaceScale;
             CBUFFER_END
+
+            TEXTURE2D(_SurfaceData); SAMPLER(sampler_SurfaceData);
 
             struct Attributes
             {
@@ -58,6 +65,7 @@ Shader "Alterverse/DiamondCrystal"
                 half3 viewDirWS : TEXCOORD1;
                 float fogFactor : TEXCOORD2;
                 half3 cutCoordinates : TEXCOORD3;
+                float3 positionWS : TEXCOORD4;
             };
 
             Varyings Vert(Attributes input)
@@ -65,6 +73,7 @@ Shader "Alterverse/DiamondCrystal"
                 Varyings output;
                 VertexPositionInputs positions = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionHCS = positions.positionCS;
+                output.positionWS = positions.positionWS;
                 output.cutCoordinates = input.color.rgb;
                 output.normalWS = normalize(TransformObjectToWorldNormal(input.normalOS));
                 output.viewDirWS = GetWorldSpaceNormalizeViewDir(positions.positionWS);
@@ -75,6 +84,14 @@ Shader "Alterverse/DiamondCrystal"
             half4 Frag(Varyings input) : SV_Target
             {
                 half3 n = normalize(input.normalWS);
+                half surfaceSmoothness=_Smoothness;
+                if(_SurfaceRelief>.001h)
+                {
+                    half4 detail=SAMPLE_TEXTURE2D(_SurfaceData,sampler_SurfaceData,input.positionWS.xz*_SurfaceScale);
+                    half3 gradient=half3(detail.r-.5h,0,detail.g-.5h)*2*_SurfaceRelief;
+                    n=normalize(n-(gradient-n*dot(n,gradient)));
+                    surfaceSmoothness=saturate(_Smoothness-(detail.b-.5h)*.16h*_SurfaceRelief);
+                }
                 half3 v = normalize(input.viewDirWS);
                 half ndv = saturate(abs(dot(n,v)));
                 half fresnel = pow(1.0h-ndv,max(0.5h,_FresnelPower));
@@ -82,7 +99,7 @@ Shader "Alterverse/DiamondCrystal"
                 // Cheap prismatic variation: view/normal dependent RGB splitting without refraction textures.
                 half prism = saturate(n.x*0.5h+n.z*0.5h+0.5h);
                 half3 prismTint = lerp(half3(0.78h,0.94h,1.0h),half3(1.0h,0.72h,0.96h),prism);
-                half3 rgb = _BaseColor.rgb*lerp(0.72h,1.12h,_Smoothness);
+                half3 rgb = _BaseColor.rgb*lerp(0.72h,1.12h,surfaceSmoothness);
                 rgb = lerp(rgb,rgb*prismTint,saturate(fresnel*0.42h));
                 rgb += _EmissionColor.rgb;
                 rgb += fresnel*_FresnelStrength*half3(0.62h,0.88h,1.0h);
@@ -90,7 +107,7 @@ Shader "Alterverse/DiamondCrystal"
                 // Edge highlights use actual triangle boundaries and a fixed pixel width.
                 Light key=GetMainLight();
                 half3 halfway=SafeNormalize(key.direction+v);
-                half specular=pow(saturate(dot(n,halfway)),lerp(36.0h,140.0h,_Smoothness));
+                half specular=pow(saturate(dot(n,halfway)),lerp(36.0h,140.0h,surfaceSmoothness));
                 half facetShade=0.48h+0.52h*saturate(dot(n,key.direction));
                 float3 edgeWidth=max(fwidth(input.cutCoordinates)*1.15,0.0001);
                 half3 inside=smoothstep(0.0,edgeWidth,input.cutCoordinates);

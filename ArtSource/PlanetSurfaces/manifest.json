@@ -1,0 +1,222 @@
+[
+  {
+    "theme": "Moon",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 7.826584432629735e-19,
+    "seamMean": 0.0007856953014557342,
+    "interiorStepMean": 0.0013281747660462986,
+    "roughnessMean": 0.9399740331313189,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Ground.png"
+  },
+  {
+    "theme": "Moon",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 7.589415207398531e-19,
+    "seamMean": 0.0014614635252193772,
+    "interiorStepMean": 0.0019345146502627063,
+    "roughnessMean": 0.8597759770412071,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Stone.png"
+  },
+  {
+    "theme": "Mars",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": -2.710505431213761e-19,
+    "seamMean": 0.0018842726653823232,
+    "interiorStepMean": 0.0020552209072771796,
+    "roughnessMean": 0.9091412114162071,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Ground.png"
+  },
+  {
+    "theme": "Mars",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 0.0,
+    "seamMean": 0.0028206661286766556,
+    "interiorStepMean": 0.0027469844913444452,
+    "roughnessMean": 0.8009936463599111,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Stone.png"
+  },
+  {
+    "theme": "GreenPlanet",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 1.6263032587282567e-19,
+    "seamMean": 0.0004871865901365875,
+    "interiorStepMean": 0.001706536063211134,
+    "roughnessMean": 0.9174569672229244,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Ground.png"
+  },
+  {
+    "theme": "GreenPlanet",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 7.589415207398531e-19,
+    "seamMean": 0.001321265348848622,
+    "interiorStepMean": 0.002370297665055502,
+    "roughnessMean": 0.9215086245069317,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Stone.png"
+  },
+  {
+    "theme": "Noxara",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 5.095750210681871e-18,
+    "seamMean": 0.006584828266115003,
+    "interiorStepMean": 0.003755328622989395,
+    "roughnessMean": 0.7154410567938113,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Ground.png"
+  },
+  {
+    "theme": "Noxara",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 1.0408340855860843e-17,
+    "seamMean": 0.0034510532385574116,
+    "interiorStepMean": 0.00302008132071327,
+    "roughnessMean": 0.577104725557215,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Stone.png"
+  },
+  {
+    "theme": "Kryon",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": -1.2671612890924333e-18,
+    "seamMean": 0.0029634747313863046,
+    "interiorStepMean": 0.0017684008203583022,
+    "roughnessMean": 0.623631810206993,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Ground.png"
+  },
+  {
+    "theme": "Kryon",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 1.666960840196463e-18,
+    "seamMean": 0.004752211280872644,
+    "interiorStepMean": 0.0021400189082869075,
+    "roughnessMean": 0.3639762280034084,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Stone.png"
+  },
+  {
+    "theme": "Earth",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 6.505213034913027e-19,
+    "seamMean": 0.000436806431592956,
+    "interiorStepMean": 0.0015689248731399412,
+    "roughnessMean": 0.8589226217830882,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Ground.png"
+  },
+  {
+    "theme": "Earth",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": -6.505213034913027e-19,
+    "seamMean": 0.0015872291502474875,
+    "interiorStepMean": 0.0022262749629046543,
+    "roughnessMean": 0.8572591744217218,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Stone.png"
+  },
+  {
+    "theme": "Pyraxis",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 1.8973538018496328e-19,
+    "seamMean": 0.0032471535682330483,
+    "interiorStepMean": 0.003011325124734335,
+    "roughnessMean": 0.911688606411803,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Ground.png"
+  },
+  {
+    "theme": "Pyraxis",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": -3.0357660829594124e-18,
+    "seamMean": 0.0018485390357509393,
+    "interiorStepMean": 0.002921481403607112,
+    "roughnessMean": 0.9057255913229549,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Stone.png"
+  },
+  {
+    "theme": "Neptune",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": -1.6263032587282567e-19,
+    "seamMean": 0.0014615605888235374,
+    "interiorStepMean": 0.0017694830825876935,
+    "roughnessMean": 0.6466667474484911,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Ground.png"
+  },
+  {
+    "theme": "Neptune",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": -2.168404344971009e-19,
+    "seamMean": 0.0013561742628156672,
+    "interiorStepMean": 0.0018904613149052388,
+    "roughnessMean": 0.4002883462344899,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Stone.png"
+  },
+  {
+    "theme": "Dark00",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 4.336808689942018e-19,
+    "seamMean": 0.0006662699458688899,
+    "interiorStepMean": 0.0012491239269387003,
+    "roughnessMean": 0.9463177998860677,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Ground.png"
+  },
+  {
+    "theme": "Dark00",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": -1.6805133673525319e-18,
+    "seamMean": 0.0015208147850621434,
+    "interiorStepMean": 0.0018871140226896998,
+    "roughnessMean": 0.8658789989995022,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Stone.png"
+  },
+  {
+    "theme": "DiamondCore",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": 6.640738306473715e-19,
+    "seamMean": 0.006312786485283052,
+    "interiorStepMean": 0.0043638565803577395,
+    "roughnessMean": 0.4923462512446385,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Ground.png"
+  },
+  {
+    "theme": "DiamondCore",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": 1.6263032587282567e-19,
+    "seamMean": 0.004524489127821962,
+    "interiorStepMean": 0.0032918993828388757,
+    "roughnessMean": 0.2699066162109375,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Stone.png"
+  },
+  {
+    "theme": "GJ504b",
+    "surface": "Ground",
+    "size": 512,
+    "heightMean": -1.0842021724855044e-19,
+    "seamMean": 0.0022375896930700266,
+    "interiorStepMean": 0.0027700459336856237,
+    "roughnessMean": 0.9161452050302543,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Ground.png"
+  },
+  {
+    "theme": "GJ504b",
+    "surface": "Stone",
+    "size": 512,
+    "heightMean": -1.6263032587282567e-19,
+    "seamMean": 0.0038607860130173604,
+    "interiorStepMean": 0.0033409139014783057,
+    "roughnessMean": 0.8004820281384037,
+    "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Stone.png"
+  }
+]

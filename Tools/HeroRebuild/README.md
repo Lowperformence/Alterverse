@@ -30,3 +30,11 @@ Blender Human Base Meshes 1.4.1 README declares the provided anatomy assets CC0.
 Ione now follows the latest open-face elf reference: blonde layered hair, pointed ears, silver diadem, emerald eyes and fitted violet-gold garments. The sealed demon helm and horns are removed.
 
 Held weapons now use modeled curled fingers and an opposing thumb instead of folded base-mesh fingers. These hand meshes are skinned only to anatomical Hand bones and remain in the body renderer, so weapon colorways never recolor the hands. `validate_guard_poses.py` renders the seven neutral guard simulations and checks rifle support contact; it does not run Unity.
+
+## Anatomical arm and reference update
+
+Arm joints now use separate measured male/female base-mesh coordinates. Torso shaping no longer pinches the forearms, and armor follows the revised joints. Held weapons use uniform scaling, so broad bodies do not bend barrels or staffs. The existing locomotion path and 19-bone contract remain intact. Rifle support uses four correction passes.
+
+Ione's latest reference is reflected in blue-grey skin, dark auburn hair, luminous pale eyes, a tall split crown, layered gold breast armor and a pale center panel over violet robes. This is an original stylized interpretation, not an exact replica.
+
+FBX checks cover arm ratios and symmetry, normalized skin weights, bones, clips, weapon attachment and grip contact. The guard-pose check evaluates hand contact and rifle support. These Blender checks do not replace a Unity play-mode test.
