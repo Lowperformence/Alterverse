@@ -85,6 +85,7 @@ namespace Alterverse.Visuals
             BuildFloatingShards();
             BuildPulsar();
             BuildLighting();
+            BuildCrystalPlateaus();
         }
 
         private void BuildTransparentSurface()
@@ -104,8 +105,8 @@ namespace Alterverse.Visuals
                     px+=Mathf.Sin(x*8.91f+z*2.73f)*.22f;
                     pz+=Mathf.Sin(x*3.17f-z*7.21f)*.22f;
                 }
-                float relief=LunarSurfaceField.Surface(px,pz).y*.28f;
-                vertices[i]=new Vector3(px,.045f+relief,pz);
+                float relief=FrontierPlanetLayout.Surface(px,pz).y;
+                vertices[i]=new Vector3(px,.006f+relief,pz);
                 uv[i]=new Vector2((px+42f)/84f,(pz+36f)/72f);
             }
             int t=0;
@@ -131,6 +132,24 @@ namespace Alterverse.Visuals
             surface.AddComponent<MeshFilter>().sharedMesh=mesh;
             MeshRenderer renderer=surface.AddComponent<MeshRenderer>();renderer.sharedMaterial=floorMaterial;
             renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+        }
+
+        private void BuildCrystalPlateaus()
+        {
+            // Paired faceted terraces frame the central crystalline court.
+            for(int side=-1;side<=1;side+=2)for(int i=0;i<5;i++)
+            {
+                float x=side*(8f+i*6.4f),z=side*(29f+(i%2)*2.3f);
+                GameObject shelf=Crystal("DF_PSRJ1719_CrystalTerrace",new Vector3(x,-.8f,z),
+                    new Vector3(3.6f,1.4f,2.8f),blackCrystal);
+                shelf.transform.localRotation=Quaternion.Euler(0,i*27f,side*7f);
+                for(int j=0;j<3;j++)
+                {
+                    GameObject prism=Crystal("DF_PSRJ1719_TerracePrism",new Vector3(x+(j-1)*1.25f,.75f,z),
+                        new Vector3(.40f,1.6f+(j%2)*.65f,.40f),clearCrystal);
+                    prism.transform.localRotation=Quaternion.Euler(6f,i*33f+j*19f,side*(j-1)*9f);
+                }
+            }
         }
 
         private void BuildFractureSeams()
@@ -531,3 +550,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

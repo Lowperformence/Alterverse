@@ -94,7 +94,9 @@ namespace Alterverse.Visuals
                 // SyncGuardians already hides legacy meshes at the bounded scan interval.
                 // Repeated hierarchy-array allocations here previously happened every frame.
                 float t=Time.time+state.phase;
-                float hover=2.95f+Mathf.Sin(t*.92f)*.18f;
+                float cast=tank.AttackWindup?1f:0f;
+                float hover=2.95f+Mathf.Sin(t*.92f)*.18f+cast*.12f;
+                state.root.transform.localScale=Vector3.one*(1f+cast*.055f);
                 state.root.transform.position=tank.transform.position+Vector3.up*hover;
                 state.root.transform.rotation=Quaternion.Euler(
                     Mathf.Sin(t*.39f)*1.3f,
@@ -210,3 +212,4 @@ namespace Alterverse.Visuals
         void OnDestroy(){ClearAll();}
     }
 }
+

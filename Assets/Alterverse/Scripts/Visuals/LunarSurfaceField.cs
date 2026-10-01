@@ -66,6 +66,10 @@ namespace Alterverse.Visuals
 
         public static void Sample(float x,float z,out float relief,out float tone,out float dust)
         {
+            if(FrontierPlanetLayout.Active)
+            {
+                FrontierPlanetLayout.Sample(x,z,out relief,out tone,out dust);return;
+            }
             bool moon=IsMoon;
             bool mars=ArenaVariantRuntime.IsMars||ArenaVariantRuntime.IsGJ504b;
             bool earth=ArenaVariantRuntime.IsEarth;
@@ -189,6 +193,7 @@ namespace Alterverse.Visuals
 
         public static Vector3 Surface(float x,float z)
         {
+            if(FrontierPlanetLayout.Active)return FrontierPlanetLayout.Surface(x,z);
             float wx=Mathf.Pow(Mathf.Abs(x)/42f,14),wz=Mathf.Pow(Mathf.Abs(z)/36f,14);
             x+=Mathf.Sign(x)*wx*(.5f+Noise(x,z,.36f,81)*2.2f);
             z+=Mathf.Sign(z)*wz*(.4f+Noise(x,z,.29f,63)*2.1f);
@@ -306,3 +311,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

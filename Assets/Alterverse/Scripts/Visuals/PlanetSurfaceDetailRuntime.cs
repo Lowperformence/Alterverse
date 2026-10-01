@@ -98,7 +98,7 @@ namespace Alterverse.Visuals
 
         private void Build(Transform parent)
         {
-            if(ArenaVariantRuntime.IsMars||ArenaVariantRuntime.IsGJ504b)
+            if(ArenaVariantRuntime.IsMars)
             {
                 // The shared ground sampler now supplies Mars dunes and buried impacts.
                 // Keep a lifecycle marker so Update does not rebuild on every probe.
@@ -330,3 +330,4 @@ namespace Alterverse.Visuals
         private void OnDestroy()=>Clear();
     }
 }
+

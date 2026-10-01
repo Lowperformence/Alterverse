@@ -18,7 +18,7 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
-            if(FindAnyObjectByType<ProductionLunarGround>()!=null){enabled=false;return;}
+            if(FrontierPlanetLayout.Active||FindAnyObjectByType<ProductionLunarGround>()!=null){enabled=false;return;}
             int soil = Palette(StylizedArtDirection.ArenaVoid);
             int stone = Palette(StylizedArtDirection.ArenaStone);
             int lightStone = Palette(StylizedArtDirection.ArenaStoneLight);
@@ -205,3 +205,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

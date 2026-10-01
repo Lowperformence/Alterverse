@@ -57,9 +57,10 @@ namespace Alterverse.Combat
             guard.Initialize(team,spawn,healingPlate,energy);
 
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,true);
-            else if(ArenaVariantRuntime.IsMars||ArenaVariantRuntime.IsGJ504b||ArenaVariantRuntime.IsDiamondCore)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
+            else if(FrontierPlanetLayout.Active)PlanetSentinelVisual.Build(mech.transform,team,false);
+            else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
-            mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
+            if(!FrontierPlanetLayout.Active)mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 
             return mech;
         }
@@ -248,6 +249,7 @@ namespace Alterverse.Combat
                 {
                     nextAttack=Time.time+attackCooldown;
                     visualMotion?.PulseAttack();
+                    GetComponent<PlanetSentinelVisual>()?.PulseAttack();
                     target.TakeDamage(attackDamage,gameObject);
                     PrototypeVfx.ProjectileLine(transform.position+Vector3.up*.9f,target.transform.position+Vector3.up*.65f,energy,.12f);
                 }
@@ -366,3 +368,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

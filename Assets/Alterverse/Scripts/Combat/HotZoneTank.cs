@@ -37,6 +37,8 @@ namespace Alterverse.Combat
         private Quaternion moonLeftArmBase,moonRightArmBase,moonLeftLegBase,moonRightLegBase;
         private Vector3 moonBodyRest;
         private float moonMoveBlend;
+        private PlanetSentinelVisual planetVisual;
+        public bool AttackWindup=>shotPending;
         private Transform xenoVisualRoot,xenoTorsoPivot,xenoPelvisPivot,xenoHeadPivot,xenoBackRoot;
         private Transform xenoLeftShoulderPivot,xenoRightShoulderPivot,xenoLeftForearmPivot,xenoRightForearmPivot,xenoLeftClaw,xenoRightClaw;
         private Transform xenoLeftHipPivot,xenoRightHipPivot,xenoLeftShinPivot,xenoRightShinPivot,xenoLeftFoot,xenoRightFoot;
@@ -130,8 +132,8 @@ namespace Alterverse.Combat
                 }
             }
             GameObject go=GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet||ArenaVariantRuntime.IsGJ504b,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
-            go.name=bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
+            bool skeleton=ArenaVariantRuntime.IsMars,alien=ArenaVariantRuntime.IsGreenPlanet,spider=ArenaVariantRuntime.IsNoxara,bear=ArenaVariantRuntime.IsKryon;
+            go.name=ArenaVariantRuntime.IsGJ504b?(team==0?"DF_ZeroGJ504bSandBeast":"DF_LumenGJ504bSandBeast"):bear?(team==0?"DF_ZeroKryonFrostBear":"DF_LumenKryonFrostBear"):
                 spider?(team==0?"DF_ZeroNoxaraSpider":"DF_LumenNoxaraSpider"):
                 alien?(team==0?"DF_ZeroXenoTitan":"DF_LumenXenoTitan"):
                 skeleton?(team==0?"DF_ZeroMarsTitan":"DF_LumenMarsTitan"):
@@ -154,7 +156,13 @@ namespace Alterverse.Combat
             gameObject.layer=GameplayCollision.Units;
             team=assignedTeam;marsSkeleton=skeleton;xenoAlien=alien;noxaraSpider=spider;kryonBear=bear;home=spawn;health=GetComponent<Health>();
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
-            if(kryonBear)BuildKryonBearVisuals();
+            if(ArenaVariantRuntime.IsGJ504b)
+            {
+                planetVisual=PlanetSentinelVisual.Build(transform,team,true);
+                barrelPivot=planetVisual.Muzzle;
+            }
+            else if(ArenaVariantRuntime.IsDiamondCore) { /* Separate world-space crystal guardian supplies its own body. */ }
+            else if(kryonBear)BuildKryonBearVisuals();
             else if(noxaraSpider)
             {
                 BuildNoxaraSpiderVisuals();
@@ -163,7 +171,7 @@ namespace Alterverse.Combat
             else if(xenoAlien){BuildAlienVisuals();health.Damaged+=OnXenoDamaged;}
             else if(marsSkeleton)BuildSkeletonVisuals();
             else BuildVisuals();
-            BuildModernMonsterDetails();
+            if(!FrontierPlanetLayout.Active)BuildModernMonsterDetails();
             lastMovementSample=transform.position;
             movementSampleReady=true;
             SetNextPatrol();
@@ -179,14 +187,14 @@ namespace Alterverse.Combat
                 if(marsSkeleton)AnimateSkeleton();
                 if(noxaraSpider)AnimateNoxaraSpider();
                 if(kryonBear)AnimateKryonBear();
-                if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
+                if(!FrontierPlanetLayout.Active&&!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
                 return;
             }
             if(xenoAlien)AnimateXeno();
             if(marsSkeleton)AnimateSkeleton();
             if(noxaraSpider)AnimateNoxaraSpider();
             if(kryonBear)AnimateKryonBear();
-            if(!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
+            if(!FrontierPlanetLayout.Active&&!xenoAlien&&!marsSkeleton&&!noxaraSpider&&!kryonBear)AnimateMoonGuard();
             if(shotPending&&Time.time>=shotAt)ResolveShot();
             if(Time.time>=nextSupportScan)
             {
@@ -301,12 +309,13 @@ namespace Alterverse.Combat
         private void BeginFire()
         {
             if(target==null||target.IsDead)return;
+            planetVisual?.PulseAttack();
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
-            bool creature=marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            Color energy=planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            bool creature=FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
+            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             PrototypeVfx.Ring(muzzle,energy,kryonBear?.40f:noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
             if(kryonBear)PrototypeVfx.Burst(muzzle,Color.Lerp(energy,Color.white,.35f),.15f,4);
             else if(noxaraSpider)PrototypeVfx.Burst(muzzle,energy,.12f,3);
@@ -326,11 +335,11 @@ namespace Alterverse.Combat
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
-            bool creature=marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            bool creature=FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
+            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            Color energy=planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
             if(xenoAlien)
             {
                 PrototypeVfx.BioBolt(muzzle,hit,energy,teamEnergy);
@@ -1068,10 +1077,9 @@ namespace Alterverse.Combat
             // Reference direction: glossy obsidian bio-mechanical predator with long limbs,
             // amber eyes and a crown of threatening back tendrils. Green remains only as a
             // subtle map-biome undertone instead of making the whole creature look toy-like.
-            xenoEnergyBase=ArenaVariantRuntime.IsGJ504b?new Color(1f,.48f,.78f,1f):new Color(1f,.54f,.07f,1f);
-            xenoArmorBase=ArenaVariantRuntime.IsGJ504b?new Color(.38f,.065f,.26f,1f):new Color(.050f,.072f,.060f,1f);
-            Color hide=ArenaVariantRuntime.IsGJ504b?new Color(.11f,.025f,.08f,1f):new Color(.017f,.027f,.024f,1f);
-            Color joint=ArenaVariantRuntime.IsGJ504b?new Color(.21f,.055f,.15f,1f):new Color(.025f,.040f,.035f,1f);
+            xenoEnergyBase=new Color(1f,.54f,.07f,1f);
+            xenoArmorBase=new Color(.050f,.072f,.060f,1f);
+            Color hide=new(.017f,.027f,.024f,1f),joint=new(.025f,.040f,.035f,1f);
             armorMat=MakeMaterial(shader,xenoArmorBase,.28f,.58f,Color.black);
             darkMat=MakeMaterial(shader,hide,.12f,.36f,Color.black);
             jointMat=MakeMaterial(shader,joint,.22f,.42f,Color.black);
@@ -1441,3 +1449,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
