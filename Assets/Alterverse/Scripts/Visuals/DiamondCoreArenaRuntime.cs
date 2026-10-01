@@ -80,10 +80,9 @@ namespace Alterverse.Visuals
             floorMaterial.SetFloat("_SurfaceRelief",.22f);
             floorMaterial.SetFloat("_SurfaceScale",.25f);
             BuildTransparentSurface();
-            BuildFractureSeams();
             BuildPerimeterCrystalFields();
             BuildShatteredCanyon();
-            BuildUnderfloorDiamondHeart();
+            BuildUnderfloorOrbitShards();
             BuildUnderfloorCosmos();
             BuildFloatingShards();
             BuildPulsar();
@@ -155,20 +154,6 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void BuildFractureSeams()
-        {
-            Vector2[] starts={new(-39,-28),new(-34,15),new(-27,-8),new(-19,28),new(-12,-23),new(-5,11),new(4,-31),new(10,24),new(17,-14),new(24,31),new(31,-24),new(38,7)};
-            Vector2[] ends={new(-24,-16),new(-20,4),new(-10,-2),new(-4,17),new(4,-12),new(13,3),new(18,-18),new(25,12),new(33,-5),new(39,20),new(19,-15),new(24,15)};
-            for(int i=0;i<starts.Length;i++)
-            {
-                Beam("DF_DiamondFracture",starts[i],ends[i],i%3==0?.075f:.045f,seamMaterial,.12f);
-                Vector2 mid=Vector2.Lerp(starts[i],ends[i],.52f);
-                Vector2 direction=(ends[i]-starts[i]).normalized;
-                Vector2 normal=new(-direction.y,direction.x);
-                Beam("DF_DiamondFractureBranch",mid,mid+normal*(1.6f+(i%4)*.55f),.032f,seamMaterial,.125f);
-            }
-        }
-
         private void BuildPerimeterCrystalFields()
         {
             Color[] colors={
@@ -202,11 +187,9 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void BuildUnderfloorDiamondHeart()
+        private void BuildUnderfloorOrbitShards()
         {
             if(clearCrystal!=null)clearCrystal.SetFloat("_FacetDetail",1f);
-            GameObject heart=Crystal("DF_DiamondHeart",new Vector3(0,-7.6f,0),new Vector3(7.2f,8.7f,7.2f),clearCrystal);
-            heart.transform.rotation=Quaternion.Euler(18f,34f,12f);
             Color[] spectrum={new(.2f,.86f,1f),new(.73f,.24f,1f),new(.16f,1f,.62f),new(1f,.58f,.16f),new(.98f,.42f,.72f),new(.62f,.78f,1f)};
             for(int i=0;i<12;i++)
             {
@@ -294,8 +277,6 @@ namespace Alterverse.Visuals
         {
             GameObject key=new("DF_DiamondKeyLight");key.transform.SetParent(root,false);key.transform.rotation=Quaternion.Euler(48f,-32f,0f);
             Light light=key.AddComponent<Light>();light.type=LightType.Directional;light.color=new Color(.72f,.86f,1f);light.intensity=.58f;light.shadows=LightShadows.None;
-            GameObject core=new("DF_DiamondHeartGlow");core.transform.SetParent(root,false);core.transform.position=new Vector3(0,-4f,0);
-            Light coreLight=core.AddComponent<Light>();coreLight.type=LightType.Point;coreLight.color=new Color(.18f,.72f,1f);coreLight.intensity=.72f;coreLight.range=38f;coreLight.shadows=LightShadows.None;
         }
 
         private void AnimatePulsar()
@@ -323,14 +304,6 @@ namespace Alterverse.Visuals
                 if(tank==null||tank.GetComponent<DiamondCoreHotZoneSkin>()!=null)continue;
                 tank.gameObject.AddComponent<DiamondCoreHotZoneSkin>();
             }
-        }
-
-        private void Beam(string name,Vector2 a,Vector2 b,float width,Material material,float y)
-        {
-            Vector2 d=b-a;float length=d.magnitude;if(length<.01f)return;
-            Vector2 mid=(a+b)*.5f;
-            GameObject beam=GameObject.CreatePrimitive(PrimitiveType.Cube);beam.name=name;beam.transform.SetParent(root,false);beam.transform.position=new Vector3(mid.x,y,mid.y);beam.transform.localScale=new Vector3(width,.018f,length);
-            beam.transform.rotation=Quaternion.Euler(0,-Mathf.Atan2(d.x,d.y)*Mathf.Rad2Deg,0);DisableCollider(beam);Renderer renderer=beam.GetComponent<Renderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.Off;
         }
 
         private GameObject Crystal(string name,Vector3 position,Vector3 scale,Material material)
