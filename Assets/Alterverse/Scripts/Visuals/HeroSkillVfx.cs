@@ -678,7 +678,7 @@ namespace Alterverse.Visuals
             }
             else
             {
-                Color heal=hero==HeroId.Mira?new Color(.68f,.97f,1f):new Color(.22f,1,.52f);
+                Color heal=hero==HeroId.Mira?new Color(.22f,1f,.52f):new Color(.22f,1,.52f);
                 Fx(HeroFxShape.Plus,target.transform.position+Vector3.up*.45f,heal,.52f,.48f,actor:actor,follow:target.transform);
                 Fx(HeroFxShape.Petals,p+Vector3.up*.08f,new Color(heal.r,heal.g,heal.b,.68f),.86f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
                 HeroVfxPool.Emit(HeroFxShape.Ring,p,p+Vector3.up*.8f,Vector3.one*.62f,heal,.40f,HeroFxMotion.Travel,owner:actor);
@@ -690,7 +690,7 @@ namespace Alterverse.Visuals
         {
             if(actor==null||target==null)return;
             Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.3f;
-            Color link=Hero(actor)==HeroId.Mira?new Color(.68f,.97f,1f):new Color(.25f,1,.55f);
+            Color link=Hero(actor)==HeroId.Mira?new Color(.22f,1f,.52f):new Color(.25f,1,.55f);
             for(int i=0;i<3;i++)
                 HeroVfxPool.Emit(HeroFxShape.Petals,from,to,Vector3.one*.25f,link,.16f,HeroFxMotion.Travel,Face(from,to),actor,delay:i*.035f);
             if(Hero(actor)==HeroId.Mira)
