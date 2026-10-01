@@ -203,6 +203,9 @@ namespace Alterverse.Combat
                 if (GetComponent<Alterverse.Characters.HeroIdentity>() != null)
                 {
                     Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.HeroDeath, transform.position, .78f);
+                    var killer = source != null ? source.GetComponentInParent<Alterverse.Characters.HeroIdentity>() : null;
+                    if (killer != null && killer.gameObject != gameObject)
+                        Alterverse.Audio.HeroCombatAudio.ConfirmedKill(killer.gameObject);
                     FractureCorePickup.Spawn(transform.position);
                 }
 
@@ -277,4 +280,3 @@ namespace Alterverse.Combat
         }
     }
 }
-

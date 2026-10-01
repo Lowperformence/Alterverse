@@ -1,0 +1,20 @@
+{
+  "cue": "Kill",
+  "duration_seconds": 0.24,
+  "sources": [
+    {
+      "file": "ArtSource/Audio/Combat/impactPunch_heavy_002.ogg",
+      "sha256": "7993dd4c156b9979ad69f17be5ebe31850b16039a3857f8477141be54dfee1b3"
+    },
+    {
+      "file": "ArtSource/Audio/Combat/metalClick.ogg",
+      "sha256": "9851a69d0c613e13bceef08060ecc4148f098ef487927cbebe270d642398a3b3"
+    },
+    {
+      "file": "ArtSource/Audio/Combat/impactGlass_heavy_002.ogg",
+      "sha256": "4978654ac840ad519692d5d5ba48a8101cabce13b9a577be73ad589185e5e9ed"
+    }
+  ],
+  "design": "Dry impact, sharp crack and short glass tail; local killer only; host-confirmed reliable multiplayer event",
+  "combat_gain_multiplier": 0.7
+}

@@ -16,6 +16,7 @@ namespace Alterverse.Multiplayer
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
         private static CoopHeroStateSync audioRelay;
+        private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V1";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V1";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V1";
         private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V1";
@@ -97,6 +98,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(OwnerPoseMessage,OnOwnerPose);
             messaging.RegisterNamedMessageHandler(HeroSnapshotMessage,OnHeroSnapshot);
             messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
+            messaging.RegisterNamedMessageHandler(KillSoundMessage,OnKillSound);
             attached=true;
         }
 
@@ -106,6 +108,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(OwnerPoseMessage);
             messaging.UnregisterNamedMessageHandler(HeroSnapshotMessage);
             messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
+            messaging.UnregisterNamedMessageHandler(KillSoundMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
             senderLastPoseAt.Clear();
@@ -135,6 +138,25 @@ namespace Alterverse.Multiplayer
             if(slot<0||slot>=slots.Length||slots[slot]==null||action<0||action>4||phase<0||phase>2)return;
             if(float.IsNaN(x)||float.IsInfinity(x)||float.IsNaN(y)||float.IsInfinity(y)||float.IsNaN(z)||float.IsInfinity(z))return;
             Alterverse.Audio.HeroCombatAudio.Receive(slots[slot].gameObject,action,phase,new Vector3(x,y,z));
+        }
+
+        public static void BroadcastKillSound(GameObject killer)
+        {
+            var service=audioRelay;var manager=NetworkManager.Singleton;
+            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalIsHost||manager==null||!manager.IsHost)return;
+            var slot=killer.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
+            using FastBufferWriter writer=new(4,Allocator.Temp);
+            writer.WriteValueSafe(slot.Slot);
+            foreach(ulong id in manager.ConnectedClientsIds)
+                if(id!=NetworkManager.ServerClientId)
+                    service.messaging.SendNamedMessage(KillSoundMessage,id,writer,NetworkDelivery.ReliableSequenced);
+        }
+        private void OnKillSound(ulong sender,FastBufferReader reader)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(4))return;
+            reader.ReadValueSafe(out int slot);
+            if(slot>=0&&slot<slots.Length&&slots[slot]!=null)
+                Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
         }
 
         private void SendOwnerPose(NetworkManager manager)
@@ -311,4 +333,3 @@ namespace Alterverse.Multiplayer
         }
     }
 }
-

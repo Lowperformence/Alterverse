@@ -113,6 +113,19 @@ def render(hero,a,phase,v):
  target=-29 if phase=='Windup' else -24 if a==0 else -22 if a<4 else -21
  out*=min(10**(target/20)/max(np.sqrt(np.mean(out*out)),1e-8),10**(-22/20)/max(abs(out)))
  return out.astype(np.float32)
+def render_kill():
+ # Original short kill-confirmation: dry body, sharp crack, tiny glass tail.
+ # Uses the project's licensed recorded sources rather than a copied game sound.
+ out=np.zeros(int(.24*SR),np.float64)
+ mix_layer(out,'impactPunch_heavy_002',.9,rate=1.12)
+ mix_layer(out,'metalClick',.55,.004,1.35)
+ mix_layer(out,'impactGlass_heavy_002',.28,.018,1.4)
+ out=signal.sosfilt(signal.butter(2,[180,7600],fs=SR,btype='bandpass',output='sos'),out)
+ out*=np.exp(-np.arange(len(out))/SR*13)
+ out[:32]*=np.linspace(0,1,32);out[-960:]*=np.linspace(1,0,960)
+ out*=10**(-22/20)/max(abs(out))
+ return out.astype(np.float32)
+
 def meta(p):
  m=Path(str(p)+'.meta')
  if m.exists():return
@@ -136,9 +149,11 @@ def main():
  extras={'Shield':('Kaelon',2,'Cast'),'Heal':('Mira',2,'Cast'),'HitLight':('Rook',0,'Impact'),'HitHeavy':('Rook',4,'Impact'),'HeroDeath':('Traveler',4,'Impact'),'MinionDeath':('Rook',0,'Impact'),'TowerShot':('Kaelon',1,'Cast'),'TowerImpact':('Kaelon',1,'Impact'),'MeteorImpact':('Kaelon',4,'Impact'),'CoreHit':('Traveler',4,'Impact'),'AbilityCast':('Elyra',1,'Cast'),'AbilityImpact':('Elyra',1,'Impact'),'Attack':('Veyr',0,'Cast')}
  for cue,(hero,a,phase) in extras.items():
   used.clear();x=render(hero,a,phase,0);p=DEST/'SFX'/(cue+'.ogg');encode(x,p);manifest.append(dict(cue=cue,path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
+ used.clear();x=render_kill();p=DEST/'SFX/Kill.ogg';encode(x,p)
+ manifest.append(dict(cue='Kill',path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
  # Preserve warning identities; enforce a pool-safe peak ceiling, after decode, for every SFX.
  for p in (DEST/'SFX').glob('*.ogg'):
-  if p.stem not in extras:
+  if p.stem not in extras and p.stem!='Kill':
    source=SRC/'Warnings'/p.name
    x=decode(source);x*=min(1,10**(-22/20)/max(abs(x)));encode(x,p)
    manifest.append(dict(cue=p.stem,path=str(p.relative_to(ROOT)),sources=[dict(file=str(source.relative_to(ROOT)),sha256=sha(source),provenance='Docs/ThirdPartyAudioLicenses.md')],duration=len(x)/SR))
@@ -168,8 +183,8 @@ def main():
    chunks.extend([event,np.zeros(int(.16*SR))])
   block=np.concatenate(chunks+[np.zeros(int(.55*SR))]);audition.append(block);cursor+=len(block)/SR
  x=np.concatenate(audition).astype(np.float32)
- # Audition-only common gain; runtime files remain at their calibrated levels.
- x*=10**(-3/20)/max(abs(x))
+ # Audition normalization followed by the same 30% reduction as runtime PlayHero.
+ x*=.7*10**(-3/20)/max(abs(x))
  p=ROOT/'Docs/Combat-Audio-Audition.ogg';encode(x,p);Path(str(p)+'.meta').unlink()
  subprocess.run(['ffmpeg','-v','error','-y','-i',str(p),'-c:a','libmp3lame','-q:a','2',str(ROOT/'Docs/Combat-Audio-Audition.mp3')],check=True)
  (ROOT/'Docs/Combat-Audio-Audition.json').write_text(json.dumps(chapters,indent=2)+'\n')

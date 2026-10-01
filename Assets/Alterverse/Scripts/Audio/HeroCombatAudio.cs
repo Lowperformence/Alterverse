@@ -64,6 +64,13 @@ namespace Alterverse.Audio
             int cue=phase==2?70+hero*5+action:hero*10+action*2+phase;
             DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }
+        // A confirmed hero kill is feedback for its owner, independent of camera visibility.
+        public static void ConfirmedKill(GameObject killer,bool relay=true)
+        {
+            if(killer==null)return;
+            if(relay)CoopHeroStateSync.BroadcastKillSound(killer);
+            if(IsLocal(killer))DimensionAudio.Play(DimensionSound.Kill,.85f);
+        }
         public static void Receive(GameObject actor,int action,int phase,Vector3 position)
         {if(phase>=0&&phase<=2)PlayPhase(actor,action,phase,position,false);}
         public static void Windup(GameObject actor,int action)=>PlayPhase(actor,action,2,actor.transform.position);

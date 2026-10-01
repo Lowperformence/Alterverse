@@ -57,7 +57,7 @@ namespace Alterverse.Audio
             if(key<0){key=instance.actorCursor++%instance.actorKeys.Length;instance.actorKeys[key]=actorId;instance.cueKeys[key]=cue;}
             int variant=instance.heroVariation[cue]%bank.Length;
             if(bank[variant]==null)return;
-            if(PlayCue(bank[variant],instance.clips.Length+cue,gain,pitch,priority,0,pan,false))
+            if(PlayCue(bank[variant],instance.clips.Length+cue,gain*.7f,pitch,priority,0,pan,false))
             {instance.actorReady[key]=Time.unscaledTime+cooldown;instance.heroVariation[cue]=(variant+1)%bank.Length;}
         }
         static bool PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown,float pan=0,bool throttle=true)
@@ -92,8 +92,8 @@ namespace Alterverse.Audio
         {
             DimensionSound.TowerTarget or DimensionSound.CoreHit or DimensionSound.MeteorImpact or
             DimensionSound.RealityShatter or DimensionSound.Overtime or DimensionSound.SuddenDeath or
-            DimensionSound.HeroDeath or DimensionSound.Victory or DimensionSound.Defeat=>3,
-            DimensionSound.PlanetArrival or DimensionSound.SiegeArrival or DimensionSound.Kill or
+            DimensionSound.Kill or DimensionSound.HeroDeath or DimensionSound.Victory or DimensionSound.Defeat=>3,
+            DimensionSound.PlanetArrival or DimensionSound.SiegeArrival or
             DimensionSound.AbilityCast or DimensionSound.RecallComplete or DimensionSound.Purchase=>1,
             _=>0
         };
@@ -120,5 +120,3 @@ namespace Alterverse.Audio
         }
     }
 }
-
-
