@@ -6,7 +6,7 @@ namespace Alterverse.CameraSystem
     public sealed class MobaCamera : MonoBehaviour
     {
         [SerializeField] private Transform target;
-        [SerializeField] private Vector3 offset = new Vector3(0f, 14.4f, -10.8f);
+        [SerializeField] private Vector3 offset = new Vector3(0f, 12.24f, -9.18f);
         [SerializeField, Min(0.1f)] private float followSharpness = 12f;
         [SerializeField] private Vector3 lookOffset = new Vector3(0f, 0.8f, 0f);
         [SerializeField, Range(30f, 70f)] private float fieldOfView = 46f;
