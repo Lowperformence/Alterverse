@@ -62,8 +62,10 @@ namespace Alterverse.Visuals
 
         void BuildSandstoneRanges()
         {
-            Material rock=Mat("GJ504b_WeatheredSandstone",new Color(.42f,.09f,.29f));
-            Material strata=Mat("GJ504b_PaleSandstoneLayers",new Color(.64f,.22f,.43f));
+            Material rock=Mat("GJ504b_RoseQuartzBasalt",new Color(.49f,.055f,.31f));
+            Material strata=Mat("GJ504b_PinkSandstoneBands",new Color(.94f,.20f,.55f));
+            Material crystal=Mat("GJ504b_MagentaGeode",new Color(.86f,.035f,.42f));
+            crystal.EnableKeyword("_EMISSION");if(crystal.HasProperty("_EmissionColor"))crystal.SetColor("_EmissionColor",new Color(.30f,.008f,.12f));
             detail.Apply(rock);detail.Apply(strata);
             Mesh fragment=LunarFragmentGeometry.Create(83);meshes.Add(fragment);
             var dark=new List<CombineInstance>();var light=new List<CombineInstance>();
@@ -88,14 +90,44 @@ namespace Alterverse.Visuals
                     dark.Add(new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(p,Quaternion.Euler(5,i*43,12),new Vector3(size*1.5f,size*.65f,size))});
                 }
             }
-            for(int i=0;i<44;i++)
+            // A broken rose-quartz ridgeline fills the side shelves and distant perimeter.
+            // Keep the central hot zone and the broad north/south travel corridors clear.
+            for(int side=-1;side<=1;side+=2)
+            for(int row=0;row<3;row++)
+            for(int i=0;i<13;i++)
             {
-                float a=i*Mathf.PI*2f/44f;
-                Vector3 p=new(Mathf.Cos(a)*45f,-1.15f,Mathf.Sin(a)*39f);
-                dark.Add(new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(p,Quaternion.Euler(0,i*31,8),new Vector3(3.3f,1.4f+(i%3)*.35f,2.8f))});
+                float x=side*(12f+row*8f)+(i%2)*1.1f;
+                float z=side*(21f+row*5f)+(i-6)*1.55f;
+                if(Mathf.Abs(x)<13f&&Mathf.Abs(z)<13f)continue;
+                float h=1.1f+(i%5)*.42f+(row%2)*.25f;
+                float width=.75f+(i%4)*.28f;
+                Vector3 p=new(x,FrontierPlanetLayout.Surface(x,z).y+h*.34f,z);
+                Vector3 scale=new(width,h,.72f+(i%3)*.28f);
+                var ci=new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(p,Quaternion.Euler(0,(i*37+row*23)%360,side*5f),scale)};
+                if(i%4==0)light.Add(ci);else dark.Add(ci);
+            }
+            // Low pebble fans visually tie the larger formations into the sand.
+            for(int i=0;i<64;i++)
+            {
+                float a=i*2.399963f,r=13f+(i%7)*2.8f;
+                float x=Mathf.Cos(a)*r,z=Mathf.Sin(a)*r*.82f;
+                if(Mathf.Abs(x)<11f&&Mathf.Abs(z)<11f)continue;
+                float size=.24f+(i%4)*.12f;
+                dark.Add(new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(new Vector3(x,FrontierPlanetLayout.Surface(x,z).y+size*.24f,z),Quaternion.Euler(4,i*41,12),new Vector3(size*1.5f,size*.72f,size))});
             }
             Batch("DF_GJ504bSandstoneMesas",dark,rock);
             Batch("DF_GJ504bSedimentaryLayers",light,strata);
+            var geodes=new List<CombineInstance>();
+            for(int i=0;i<22;i++)
+            {
+                float a=i*2.399963f,r=17f+(i%3)*6.5f;
+                float x=Mathf.Cos(a)*r,z=Mathf.Sin(a)*r;
+                if(Mathf.Abs(x)<12f&&Mathf.Abs(z)<12f)continue;
+                float h=.45f+(i%4)*.22f;
+                Vector3 p=new(x,FrontierPlanetLayout.Surface(x,z).y+h*.24f,z);
+                geodes.Add(new CombineInstance{mesh=fragment,transform=Matrix4x4.TRS(p,Quaternion.Euler(0,i*29,8),new Vector3(h*.85f,h,h*.72f))});
+            }
+            Batch("DF_GJ504bMagentaGeodes",geodes,crystal);
         }
 
         void Batch(string name,List<CombineInstance> instances,Material material)

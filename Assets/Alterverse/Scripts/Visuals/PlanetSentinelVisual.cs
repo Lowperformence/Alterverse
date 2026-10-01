@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
         Material armor,pale,dark,energy,team;
         Vector3 previous;
         float phase,blend,attackUntil;
-        bool beast;
+        bool beast,magentaBeast;
         public Transform Muzzle { get; private set; }
         public Color EnergyColor { get; private set; }
 
@@ -30,11 +30,12 @@ namespace Alterverse.Visuals
         void BuildInternal(int assignedTeam,bool monster)
         {
             beast=monster;
+            magentaBeast=monster&&ArenaVariantRuntime.IsGJ504b;
             bool crystal=ArenaVariantRuntime.IsDiamondCore;
-            EnergyColor=crystal?new Color(.30f,.86f,1f):new Color(1f,.48f,.76f);
-            armor=Mat(crystal?new Color(.30f,.58f,.72f):new Color(.43f,.09f,.29f),crystal?.70f:.10f);
-            pale=Mat(crystal?new Color(.73f,.93f,1f):new Color(.68f,.23f,.44f),crystal?.88f:.16f);
-            dark=Mat(crystal?new Color(.025f,.055f,.095f):new Color(.12f,.027f,.085f),.20f);
+            EnergyColor=crystal?new Color(.30f,.86f,1f):magentaBeast?new Color(1f,.08f,.72f):new Color(1f,.48f,.76f);
+            armor=Mat(crystal?new Color(.30f,.58f,.72f):magentaBeast?new Color(.47f,.025f,.24f):new Color(.43f,.09f,.29f),crystal?.70f:magentaBeast?.38f:.10f);
+            pale=Mat(crystal?new Color(.73f,.93f,1f):magentaBeast?new Color(.96f,.22f,.57f):new Color(.68f,.23f,.44f),crystal?.88f:magentaBeast?.48f:.16f);
+            dark=Mat(crystal?new Color(.025f,.055f,.095f):magentaBeast?new Color(.095f,.008f,.065f):new Color(.12f,.027f,.085f),.20f);
             energy=Mat(EnergyColor,.65f,true);
             team=Mat(assignedTeam==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy,.50f,true);
             rock=Own(LunarFragmentGeometry.Create(127));
@@ -108,6 +109,18 @@ namespace Alterverse.Visuals
                 Part("ClawTip",plate,claw,new Vector3(side*.33f,-.06f,.91f),new Vector3(.32f,.61f,.6f),armor,Quaternion.Euler(90,side*12,0));
             }
             Part("TeamRune",plate,root,new Vector3(0,.65f,.3f),new Vector3(.26f,.24f,.12f),team,Quaternion.Euler(90,0,0));
+            if(magentaBeast)
+            {
+                // Bright geode ridges give the Hot Zone beast a readable magenta silhouette.
+                for(int i=0;i<7;i++)
+                {
+                    float x=(i-3)*.24f;
+                    float y=.70f+Mathf.Sin(i*.8f)*.11f;
+                    Part("MagentaGeodeSpine"+i,plate,root,new Vector3(x,y,-.18f),new Vector3(.17f,.52f-(i%3)*.07f,.20f),energy,Quaternion.Euler(0,0,(i-3)*8f));
+                }
+                Part("MagentaBrow",plate,head,new Vector3(0,.30f,.31f),new Vector3(.82f,.20f,.36f),pale,Quaternion.Euler(-20,0,0));
+                Part("CoreGlow",gem??plate,root,new Vector3(0,.28f,.52f),new Vector3(.24f,.30f,.16f),energy);
+            }
             Muzzle=Pivot("SandPulseMuzzle",head,new Vector3(0,.05f,.57f));
         }
 
