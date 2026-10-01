@@ -6,7 +6,7 @@ namespace Alterverse.Combat
 {
     public sealed class Health : MonoBehaviour
     {
-        private const float HeroBaseShieldCapacity = 30f;
+        private const float HeroBaseShieldCapacity = 50f;
         private const float HeroBaseShieldRechargeDelay = 15f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
@@ -39,7 +39,7 @@ namespace Alterverse.Combat
         private float shield;
         private float shieldUntil;
 
-        // Every hero gets this independent 30 HP base shield.
+        // Every hero gets this independent 50 HP base shield.
         private bool heroBaseShieldEnabled;
         private float heroBaseShield;
         private float heroBaseShieldRechargeAt = -1f;
@@ -280,3 +280,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
+

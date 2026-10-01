@@ -43,11 +43,11 @@ gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
 }
 public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",_=>"Unknown Hero"};
 public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,_=>HeroRole.Skirmisher};
-// 15% more base health creates noticeably longer hero fights while preserving displayed damage
-// values and keeping movement/rotations responsive. The existing universal 30 HP shield remains
-// unchanged, so this does not stack another new sustain system on top.
-public const float GlobalHealthMultiplier=1.15f;
+// Preserve the existing 15% durability adjustment and add 5% to current base HP.
+// The independent universal hero shield is configured by Health.
+public const float GlobalHealthMultiplier=1.15f*1.05f;
 public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f,_=>200f})*GlobalHealthMultiplier;
 public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>14f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,_=>17f};
 }
 }
+
