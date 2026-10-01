@@ -34,10 +34,15 @@ namespace Alterverse.Visuals
             GameObject world=GameObject.Find("DF_MatchWorld");
             if(world==null)
             {
+                if(root!=null||materials.Count>0||meshes.Count>0)ClearRuntime();
                 appliedWorldId=default;
                 return;
             }
-            if(!ArenaVariantRuntime.IsDiamondCore)return;
+            if(!ArenaVariantRuntime.IsDiamondCore)
+            {
+                if(root!=null||materials.Count>0||meshes.Count>0)ClearRuntime();
+                appliedWorldId=default;return;
+            }
 
             EntityId worldId=world.GetEntityId();
             if(appliedWorldId!=worldId)
@@ -286,6 +291,9 @@ namespace Alterverse.Visuals
 
         private void SkinHotZoneMonsters()
         {
+            // The world-space guardian is the active presentation. Avoid building a hidden giant.
+            DiamondCoreGuardianWorldVisual activeVisual=FindAnyObjectByType<DiamondCoreGuardianWorldVisual>();
+            if(activeVisual!=null&&activeVisual.isActiveAndEnabled)return;
             IReadOnlyList<HotZoneTank> active=HotZoneTank.Active;
             for(int i=0;i<active.Count;i++)
             {

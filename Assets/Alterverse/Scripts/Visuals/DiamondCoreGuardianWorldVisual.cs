@@ -91,8 +91,8 @@ namespace Alterverse.Visuals
                 VisualState state=pair.Value;
                 if(tank==null||state==null||state.root==null)continue;
 
-                HideLegacyMonsterMeshes(tank);
-
+                // SyncGuardians already hides legacy meshes at the bounded scan interval.
+                // Repeated hierarchy-array allocations here previously happened every frame.
                 float t=Time.time+state.phase;
                 float hover=2.95f+Mathf.Sin(t*.92f)*.18f;
                 state.root.transform.position=tank.transform.position+Vector3.up*hover;

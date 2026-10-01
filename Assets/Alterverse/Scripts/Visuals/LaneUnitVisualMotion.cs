@@ -142,7 +142,7 @@ namespace Alterverse.Visuals
             Renderer renderer = part != null ? part.GetComponent<Renderer>() : null;
             if (renderer != null) return renderer.sharedMaterial;
             Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-            return shader == null ? null : new Material(shader) { color = fallback };
+            return RuntimeMaterialPalette.For(gameObject).Fallback(shader,fallback);
         }
 
         private Transform CreatePart(string name, PrimitiveType type, Vector3 position, Vector3 scale, Material material, Color color)
@@ -158,7 +158,7 @@ namespace Alterverse.Visuals
             if (renderer != null)
             {
                 if (material != null) renderer.sharedMaterial = material;
-                else renderer.material.color = color;
+                else RuntimeMaterialPalette.Tint(gameObject,renderer,color);
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }
             return part.transform;

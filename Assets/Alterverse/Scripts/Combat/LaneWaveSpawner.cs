@@ -162,7 +162,7 @@ namespace Alterverse.Combat
             Renderer renderer=minion.GetComponent<Renderer>();
             if(renderer!=null)
             {
-                renderer.material.color=dark;
+                RuntimeMaterialPalette.Tint(minion,renderer,dark);
                 renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.On;
             }
 
@@ -230,7 +230,7 @@ namespace Alterverse.Combat
             GameObject p=GameObject.CreatePrimitive(type);
             p.name=name;p.transform.SetParent(parent,false);p.transform.localPosition=pos;p.transform.localScale=scale;
             Collider c=p.GetComponent<Collider>();if(c!=null){c.enabled=false;Destroy(c);}
-            Renderer r=p.GetComponent<Renderer>();if(r!=null)r.material.color=color;
+            Renderer r=p.GetComponent<Renderer>();if(r!=null)RuntimeMaterialPalette.Tint(parent.gameObject,r,color);
         }
     }
 }

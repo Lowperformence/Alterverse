@@ -83,19 +83,26 @@ namespace Alterverse.Visuals
             detailRoot=root.transform;
             detailRoot.SetParent(world,false);
 
-            Material[] floorMaterials=new Material[FloorPalette.Length];
-            for(int i=0;i<floorMaterials.Length;i++)
-                floorMaterials[i]=MakeFloorFacetMaterial("DF_PSRJ1719_FloorFacet_"+i,FloorPalette[i],.86f);
-
-            facetGroundMesh=BuildFacetGroundMesh();
-            GameObject floor=new("FacetedCrystalGroundOverlay");
-            floor.transform.SetParent(detailRoot,false);
-            MeshFilter floorFilter=floor.AddComponent<MeshFilter>();
-            MeshRenderer floorRenderer=floor.AddComponent<MeshRenderer>();
-            floorFilter.sharedMesh=facetGroundMesh;
-            floorRenderer.sharedMaterials=floorMaterials;
-            floorRenderer.shadowCastingMode=ShadowCastingMode.Off;
-            floorRenderer.receiveShadows=false;
+            // The seamless floor controller replaces this older overlay. Do not allocate
+            // six materials and a mesh that will immediately be hidden by that controller.
+            DiamondCoreFloorSeamFix seamless=FindAnyObjectByType<DiamondCoreFloorSeamFix>();
+            if(seamless==null||!seamless.isActiveAndEnabled)
+            {
+                Material[] floorMaterials=new Material[FloorPalette.Length];
+                for(int i=0;i<floorMaterials.Length;i++)
+                    floorMaterials[i]=MakeFloorFacetMaterial("DF_PSRJ1719_FloorFacet_"+i,FloorPalette[i],.86f);
+    
+                facetGroundMesh=BuildFacetGroundMesh();
+                GameObject floor=new("FacetedCrystalGroundOverlay");
+                floor.transform.SetParent(detailRoot,false);
+                MeshFilter floorFilter=floor.AddComponent<MeshFilter>();
+                MeshRenderer floorRenderer=floor.AddComponent<MeshRenderer>();
+                floorFilter.sharedMesh=facetGroundMesh;
+                floorRenderer.sharedMaterials=floorMaterials;
+                floorRenderer.shadowCastingMode=ShadowCastingMode.Off;
+                floorRenderer.receiveShadows=false;
+    
+            }
 
             crystalMesh=DiamondCoreArenaRuntime.CreateMapCrystalMesh();
             BuildPerimeterCrystals();
@@ -189,6 +196,8 @@ namespace Alterverse.Visuals
 
         void ApplyGuardianOverrides()
         {
+            DiamondCoreGuardianWorldVisual activeVisual=FindAnyObjectByType<DiamondCoreGuardianWorldVisual>();
+            if(activeVisual!=null&&activeVisual.isActiveAndEnabled)return;
             HotZoneTank[] tanks=Object.FindObjectsByType<HotZoneTank>(FindObjectsSortMode.None);
             for(int i=0;i<tanks.Length;i++)
             {

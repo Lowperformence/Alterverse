@@ -52,8 +52,10 @@ namespace Alterverse.Visuals
         void BuildSeamlessFloor()
         {
             GameObject world=GameObject.Find("DF_MatchWorld");
-            if(world==null)return;
+            if(world==null){Clear();return;}
 
+            // The previous match may have destroyed the root while native resources remain.
+            Clear();
             root=new GameObject("DF_PSRJ1719_SeamlessPrismFloor");
             root.transform.SetParent(world.transform,false);
 
@@ -62,7 +64,7 @@ namespace Alterverse.Visuals
             filter.sharedMesh=mesh;
 
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(shader==null)return;
+            if(shader==null){Clear();return;}
 
             material=new Material(shader){name="DF_PSRJ1719_SeamlessPrismFloorMat"};
             // Neutral silver-blue tint preserves the original floor colour. The geometry/normals,

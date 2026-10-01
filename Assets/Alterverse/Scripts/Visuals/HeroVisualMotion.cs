@@ -198,7 +198,7 @@ namespace Alterverse.Visuals
             foreach(ClothPanel panel in clothPanels){panel.offset=Vector2.zero;panel.velocity=Vector2.zero;}
             articulatedRig?.ResetPose();
         }
-        private void OnDestroy(){if(health!=null)health.Damaged-=OnDamaged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
+        private void OnDestroy(){if(veyrTrailMaterial!=null)Destroy(veyrTrailMaterial);if(health!=null)health.Damaged-=OnDamaged;foreach(ClothPanel panel in clothPanels)if(panel.mesh!=null)Destroy(panel.mesh);clothPanels.Clear();}
         private static Quaternion Rest(Transform t)=>t!=null?t.localRotation:Quaternion.identity;
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private void LateUpdate()
@@ -685,7 +685,8 @@ namespace Alterverse.Visuals
             if(weaponR!=null)weaponR.localRotation=weaponRestR*VeyrGuardBlade(true);
         }
 
-        private static TrailRenderer CreateVeyrTrail(Transform weapon,bool right)
+        private Material veyrTrailMaterial;
+        private TrailRenderer CreateVeyrTrail(Transform weapon,bool right)
         {
             if(weapon==null)return null;
             var tip=new GameObject(right?"DF_VeyrSlashTipR":"DF_VeyrSlashTipL");
@@ -700,7 +701,11 @@ namespace Alterverse.Visuals
             trail.numCapVertices=3;
             trail.alignment=LineAlignment.View;
             Shader shader=Shader.Find("Sprites/Default");
-            if(shader!=null)trail.material=new Material(shader);
+            if(shader!=null)
+            {
+                if(veyrTrailMaterial==null)veyrTrailMaterial=new Material(shader){name="DF_OwnedVeyrTrail"};
+                trail.sharedMaterial=veyrTrailMaterial;
+            }
             trail.startColor=new Color(.66f,.94f,1f,.85f);
             trail.endColor=new Color(.31f,.69f,1f,0f);
             trail.emitting=false;

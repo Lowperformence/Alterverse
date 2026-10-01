@@ -19,13 +19,11 @@ namespace Alterverse.Visuals
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
             if(GraphicsSettings.currentRenderPipeline==null)return;
             if(FindAnyObjectByType<AndroidMaterialCompatibilityGuard>()!=null)return;
             GameObject guard=new GameObject("DF_AndroidMaterialCompatibilityGuard");
             DontDestroyOnLoad(guard);
             guard.AddComponent<AndroidMaterialCompatibilityGuard>();
-#endif
         }
 
         private void Awake()
@@ -65,6 +63,7 @@ namespace Alterverse.Visuals
                     if(!NeedsRepair(source))continue;
                     bool unlit=PreferUnlit(renderer,source);
                     materials[i]=Replacement(source,unlit?unlitShader:litShader);
+                    if(materials[i]!=source)RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(materials[i]);
                     changed|=materials[i]!=source;
                 }
                 if(changed)renderer.sharedMaterials=materials;
@@ -84,6 +83,7 @@ namespace Alterverse.Visuals
 
         private static bool PreferUnlit(Renderer renderer,Material material)
         {
+            if(material!=null&&material.shader!=null&&material.shader.name.StartsWith("Unlit/"))return true;
             string name=(renderer.name+" "+(material!=null?material.name:string.Empty)).ToLowerInvariant();
             if(name.Contains("ground")||name.Contains("regolith")||name.Contains("surface")||
                name.Contains("rock")||name.Contains("debris")||name.Contains("planet"))return false;
@@ -98,7 +98,7 @@ namespace Alterverse.Visuals
             if(shader==null)return source;
             Material replacement=new Material(shader)
             {
-                name=(source!=null?source.name:"DF_RuntimeMaterial")+" [Android URP]"
+                name=(source!=null?source.name:"DF_RuntimeMaterial")+" [Runtime URP]"
             };
 
             Color color=Color.white;
@@ -112,6 +112,8 @@ namespace Alterverse.Visuals
 
             if(source!=null&&source.HasProperty("_BaseMap")&&replacement.HasProperty("_BaseMap"))
                 replacement.SetTexture("_BaseMap",source.GetTexture("_BaseMap"));
+            else if(source!=null&&source.HasProperty("_MainTex")&&replacement.HasProperty("_BaseMap"))
+                replacement.SetTexture("_BaseMap",source.GetTexture("_MainTex"));
             if(source!=null&&source.HasProperty("_BumpMap")&&replacement.HasProperty("_BumpMap"))
                 replacement.SetTexture("_BumpMap",source.GetTexture("_BumpMap"));
             if(source!=null&&source.HasProperty("_BumpScale")&&replacement.HasProperty("_BumpScale"))
