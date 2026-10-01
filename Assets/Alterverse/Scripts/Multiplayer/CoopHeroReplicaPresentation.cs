@@ -32,6 +32,7 @@ namespace Alterverse.Multiplayer
         {
             if(dead==hidden)return;
             hidden=dead;
+            if(dead)Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.HeroDeath,transform.position,.78f);
             if(renderers==null||renderers.Length==0)Refresh();
             for(int i=0;i<renderers.Length;i++)
             {
@@ -48,3 +49,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

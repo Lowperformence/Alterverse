@@ -15,6 +15,8 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
+        private static CoopHeroStateSync audioRelay;
+        private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V1";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V1";
         private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V1";
         private const float OwnerSendInterval=1f/20f;
@@ -30,8 +32,8 @@ namespace Alterverse.Multiplayer
         private string localPlayerId="";
         private bool attached;
 
-        private void OnEnable(){RefreshSlots(true);}
-        private void OnDisable(){Detach();}
+        private void OnEnable(){audioRelay=this;RefreshSlots(true);}
+        private void OnDisable(){if(audioRelay==this)audioRelay=null;Detach();}
 
         private void Update()
         {
@@ -94,6 +96,7 @@ namespace Alterverse.Multiplayer
             messaging=value;
             messaging.RegisterNamedMessageHandler(OwnerPoseMessage,OnOwnerPose);
             messaging.RegisterNamedMessageHandler(HeroSnapshotMessage,OnHeroSnapshot);
+            messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
             attached=true;
         }
 
@@ -102,9 +105,36 @@ namespace Alterverse.Multiplayer
             if(!attached||messaging==null){messaging=null;attached=false;return;}
             messaging.UnregisterNamedMessageHandler(OwnerPoseMessage);
             messaging.UnregisterNamedMessageHandler(HeroSnapshotMessage);
+            messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
             senderLastPoseAt.Clear();
+        }
+
+        // Presentation only: confirmed phases originate on the authoritative host. Sending before
+        // viewport culling lets a client hear its own hero even when it is outside the host's view.
+        public static void BroadcastCombatSound(GameObject actor,int action,int phase,Vector3 position)
+        {
+            var service=audioRelay;var manager=NetworkManager.Singleton;
+            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalIsHost||manager==null||!manager.IsHost)return;
+            var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
+            using FastBufferWriter writer=new(24,Allocator.Temp);
+            writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(action);writer.WriteValueSafe(phase);
+            writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
+            for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
+            {
+                ulong id=manager.ConnectedClientsIds[i];if(id==NetworkManager.ServerClientId)continue;
+                service.messaging.SendNamedMessage(CombatSoundMessage,id,writer,NetworkDelivery.UnreliableSequenced);
+            }
+        }
+        private void OnCombatSound(ulong sender,FastBufferReader reader)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(24))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int action);reader.ReadValueSafe(out int phase);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            if(slot<0||slot>=slots.Length||slots[slot]==null||action<0||action>4||phase<0||phase>2)return;
+            if(float.IsNaN(x)||float.IsInfinity(x)||float.IsNaN(y)||float.IsInfinity(y)||float.IsNaN(z)||float.IsInfinity(z))return;
+            Alterverse.Audio.HeroCombatAudio.Receive(slots[slot].gameObject,action,phase,new Vector3(x,y,z));
         }
 
         private void SendOwnerPose(NetworkManager manager)
@@ -281,3 +311,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

@@ -1,0 +1,374 @@
+[
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -3.9847185611724854,
+    "rms_dbfs": -21.024629592895508
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.4763505458831787,
+    "rms_dbfs": -18.6855411529541
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.894857168197632,
+    "rms_dbfs": -19.192432403564453
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast.ogg",
+    "seconds": 0.317125,
+    "peak_dbfs": -3.7702524662017822,
+    "rms_dbfs": -16.92751693725586
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -3.709420919418335,
+    "rms_dbfs": -18.49439811706543
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.9588472843170166,
+    "rms_dbfs": -19.56908416748047
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.41229772567749,
+    "rms_dbfs": -19.69734001159668
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -3.7163329124450684,
+    "rms_dbfs": -20.57646942138672
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -3.5964438915252686,
+    "rms_dbfs": -20.411169052124023
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -0.4540800452232361,
+    "rms_dbfs": -20.50969696044922
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -1.188568115234375,
+    "rms_dbfs": -15.915731430053711
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -1.1192994117736816,
+    "rms_dbfs": -16.503889083862305
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast.ogg",
+    "seconds": 0.317125,
+    "peak_dbfs": -1.5180597305297852,
+    "rms_dbfs": -14.168680191040039
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -1.6093837022781372,
+    "rms_dbfs": -18.20167350769043
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Impact.ogg",
+    "seconds": 0.6719375,
+    "peak_dbfs": -2.5257701873779297,
+    "rms_dbfs": -21.364233016967773
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -0.8765553832054138,
+    "rms_dbfs": -16.5380802154541
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -1.4122121334075928,
+    "rms_dbfs": -19.789430618286133
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -1.1916228532791138,
+    "rms_dbfs": -18.341602325439453
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -4.096869468688965,
+    "rms_dbfs": -22.769861221313477
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.3028879165649414,
+    "rms_dbfs": -21.376657485961914
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -5.467829704284668,
+    "rms_dbfs": -21.352731704711914
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast.ogg",
+    "seconds": 0.317125,
+    "peak_dbfs": -2.853048086166382,
+    "rms_dbfs": -20.29422378540039
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -4.493491172790527,
+    "rms_dbfs": -24.444759368896484
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.7928709983825684,
+    "rms_dbfs": -22.730026245117188
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.221160888671875,
+    "rms_dbfs": -23.360240936279297
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -3.782987594604492,
+    "rms_dbfs": -25.798656463623047
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -3.474821090698242,
+    "rms_dbfs": -21.891000747680664
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -4.409482002258301,
+    "rms_dbfs": -20.959558486938477
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.0963897705078125,
+    "rms_dbfs": -19.803375244140625
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.724945068359375,
+    "rms_dbfs": -19.23705291748047
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast.ogg",
+    "seconds": 0.3410625,
+    "peak_dbfs": -4.252120494842529,
+    "rms_dbfs": -17.52964210510254
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -4.575751304626465,
+    "rms_dbfs": -20.020198822021484
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.65640115737915,
+    "rms_dbfs": -19.904460906982422
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.360411643981934,
+    "rms_dbfs": -22.253782272338867
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -4.612605094909668,
+    "rms_dbfs": -20.001522064208984
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -4.322965621948242,
+    "rms_dbfs": -21.540180206298828
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.459430694580078,
+    "rms_dbfs": -20.1141357421875
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.7635815143585205,
+    "rms_dbfs": -19.727005004882812
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast.ogg",
+    "seconds": 0.3410625,
+    "peak_dbfs": -4.537720203399658,
+    "rms_dbfs": -18.285810470581055
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -4.163473606109619,
+    "rms_dbfs": -19.482648849487305
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.769343376159668,
+    "rms_dbfs": -20.62248992919922
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.412989139556885,
+    "rms_dbfs": -20.853729248046875
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -3.8228657245635986,
+    "rms_dbfs": -21.84160614013672
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -4.223328590393066,
+    "rms_dbfs": -20.870494842529297
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -4.092007637023926,
+    "rms_dbfs": -21.051380157470703
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.116302490234375,
+    "rms_dbfs": -20.419511795043945
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.485942840576172,
+    "rms_dbfs": -21.362857818603516
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast.ogg",
+    "seconds": 0.3410625,
+    "peak_dbfs": -3.912367820739746,
+    "rms_dbfs": -19.482107162475586
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact.ogg",
+    "seconds": 0.44265625,
+    "peak_dbfs": -3.9980127811431885,
+    "rms_dbfs": -20.734272003173828
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -3.5059127807617188,
+    "rms_dbfs": -20.761613845825195
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.325345039367676,
+    "rms_dbfs": -21.106430053710938
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -3.9282896518707275,
+    "rms_dbfs": -22.324316024780273
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -4.2373199462890625,
+    "rms_dbfs": -21.03868293762207
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Impact.ogg",
+    "seconds": 1.15,
+    "peak_dbfs": -4.342273235321045,
+    "rms_dbfs": -21.717147827148438
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.565874099731445,
+    "rms_dbfs": -19.475278854370117
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/W_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.867099761962891,
+    "rms_dbfs": -19.73130226135254
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast.ogg",
+    "seconds": 0.3410625,
+    "peak_dbfs": -4.458629608154297,
+    "rms_dbfs": -19.07923698425293
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact.ogg",
+    "seconds": 0.417125,
+    "peak_dbfs": -4.404326915740967,
+    "rms_dbfs": -19.316951751708984
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+    "seconds": 0.547125,
+    "peak_dbfs": -4.140203475952148,
+    "rms_dbfs": -20.30154800415039
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.385147571563721,
+    "rms_dbfs": -19.68199920654297
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Impact.ogg",
+    "seconds": 0.647125,
+    "peak_dbfs": -4.296653747558594,
+    "rms_dbfs": -21.738327026367188
+  },
+  {
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Cast.ogg",
+    "seconds": 1.05,
+    "peak_dbfs": -4.313958168029785,
+    "rms_dbfs": -21.070659637451172
+  }
+]

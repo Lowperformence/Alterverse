@@ -1,52 +1,36 @@
-# DIMENSIONS FRONT — individual hero audio
+# Combat audio — current seven-class matrix
 
-30 unique cast/release cues and 23 separate impact cues (53 OGG files, 278,743 bytes). Source recordings are layered, trimmed, filtered and rhythmically shaped offline; no oscillator/test-tone synthesis and no pitch-only duplicate identities. Original generic Attack/AbilityCast/AbilityImpact clips are no longer routed for hero actions. Generic non-hero hit/support effects remain for other systems. Music is unchanged.
+Replaces the older 53-file documentation and all 62 pre-overhaul hero audio files. There are now **121 hero clips**: 35 releases/activations, 27 confirmed impacts/support resolutions, 27 preparations, and 32 additional recorded variants. Resource names and all existing .meta GUIDs are retained.
 
-## Audit matrix
+| Hero | Sound character | Q / W / E / Ultimate | Audition start |
+|---|---|---|---:|
+| Zhaev Null / Veyr | Dry blades, knife draw, short cut contact | Null Cut / Rift Scar / Gapfold / Vacant Echo | 0:00 |
+| Auren Kest / Kaelon | Heavy metal and plate, low impact body | Anchor Strike / Lumen Wall / Gravity Anchor / Kest Citadel | 0:05.10 |
+| Sivra Quell / Nyra | Recorded bolt-action rifle shots, short outdoor tail, subtle mechanism | Prism Shot / Vector Shift / Light Snare / Sightline Break | 0:11.06 |
+| Ione Vaska / Elyra | Slowed creaking buildup, mineral fracture and dark discharge | Orbit Fracture / Invert Field / Phase Fold / Impossible Center | 0:17.29 |
+| Tahla Venn / Mira | Soft glass/bell layers, delicate movement, clear attack transient | Resonant Seed / Growth Veil / Venn Shelter / Wildsurge | 0:23.86 |
+| Brakk Orun / Rook | Cloth air movement, heavy punch and soft body contact | Wreck Swing / Armor Grip / Wreckstorm / Orun Overdrive | 0:29.56 |
+| The Traveler | Reversed medium glass, wood fracture, 47 ms temporal echoes | Temporal Beam / Rift Step / Chrono Snare / Paradox Collapse | 0:35.10 |
 
-All rows: new authored recording layers; no prototype tone; CC0 licensed. **Production listening approval pending** for every row. Distinct hashes prove distinct data, not perceptually successful identities. Travel loops are not applicable to the current instant-hit and one-shot-area mechanics. Support/dash activation cues play on accepted execution; Wildsurge has a distinct delayed resolution cue.
+`Combat-Audio-Audition.mp3` / `.ogg`: approximately 41 seconds. Each class: three basic takes, Q, W, E, R. Nyra R includes the four-shot .18-second cadence. Representative ranged flight is .14 seconds; actual game flight remains distance-dependent. The common audition gain is for browser playback, not a change to runtime master volume. Listening approval on real devices is still pending.
 
-| Hero | Action | Signature | Cast/release | Impact |
-|---|---|---|---|---|
-| Zhaev Null | Basic | cut | Veyr/Basic_Cast | Veyr/Basic_Impact |
-| Zhaev Null | Null Cut | double | Veyr/Q_Cast | Veyr/Q_Impact |
-| Zhaev Null | Rift Scar | tear | Veyr/W_Cast | Veyr/W_Impact |
-| Zhaev Null | Gapfold | reverse | Veyr/E_Cast | Activation only; no separate impact |
-| Zhaev Null | Vacant Echo | collapse | Veyr/R_Cast | Veyr/R_Impact |
-| Auren Kest | Basic | weight | Kaelon/Basic_Cast | Kaelon/Basic_Impact |
-| Auren Kest | Anchor Strike | slam | Kaelon/Q_Cast | Kaelon/Q_Impact |
-| Auren Kest | Lumen Wall | swell | Kaelon/W_Cast | Activation only; no separate impact |
-| Auren Kest | Gravity Anchor | anchor | Kaelon/E_Cast | Kaelon/E_Impact |
-| Auren Kest | Kest Citadel | citadel | Kaelon/R_Cast | Kaelon/R_Impact |
-| Sivra Quell | Basic | snap | Nyra/Basic_Cast | Nyra/Basic_Impact |
-| Sivra Quell | Prism Shot | prism | Nyra/Q_Cast | Nyra/Q_Impact |
-| Sivra Quell | Vector Shift | shift | Nyra/W_Cast | Activation only; no separate impact |
-| Sivra Quell | Light Snare | snare | Nyra/E_Cast | Nyra/E_Impact |
-| Sivra Quell | Sightline Break | volley | Nyra/R_Cast | Nyra/R_Impact |
-| Ione Vaska | Basic | pulse | Elyra/Basic_Cast | Elyra/Basic_Impact |
-| Ione Vaska | Orbit Fracture | orbit | Elyra/Q_Cast | Elyra/Q_Impact |
-| Ione Vaska | Invert Field | invert | Elyra/W_Cast | Elyra/W_Impact |
-| Ione Vaska | Phase Fold | fold | Elyra/E_Cast | Activation only; no separate impact |
-| Ione Vaska | Impossible Center | singularity | Elyra/R_Cast | Elyra/R_Impact |
-| Tahla Venn | Basic | seed | Mira/Basic_Cast | Mira/Basic_Impact |
-| Tahla Venn | Resonant Seed | resonate | Mira/Q_Cast | Mira/Q_Impact |
-| Tahla Venn | Growth Veil | heal | Mira/W_Cast | Activation only; no separate impact |
-| Tahla Venn | Venn Shelter | shelter | Mira/E_Cast | Activation only; no separate impact |
-| Tahla Venn | Wildsurge | surge | Mira/R_Cast | Mira/R_Impact |
-| Brakk Orun | Basic | crush | Rook/Basic_Cast | Rook/Basic_Impact |
-| Brakk Orun | Wreck Swing | swing | Rook/Q_Cast | Rook/Q_Impact |
-| Brakk Orun | Armor Grip | grip | Rook/W_Cast | Activation only; no separate impact |
-| Brakk Orun | Wreckstorm | storm | Rook/E_Cast | Rook/E_Impact |
-| Brakk Orun | Orun Overdrive | overdrive | Rook/R_Cast | Rook/R_Impact |
+## Trigger routing
 
-## Routing and budget
+- `HeroAttackDelivery`: preparation on accepted basic/targeted ability queue; release on the existing launch timestamp; confirmed contact via `HeroCombatRules.ResolveBasicHit` or `HeroAbilityExecution`.
+- Delayed single/area abilities: preparation at acceptance, release at the existing resolution timestamp. Area contact plays once only if damage/shield absorption occurred. Tahla's resolution requires actual healing/shield addition.
+- Dash, healing and shield activations stay on their accepted execution path. No fake impact bank for utility-only actions. Nyra R has one preparation and four individual releases.
+- Generic target-hit audio is suppressed for hero, tower and bunker sources that already emit authored contact audio. Tower/bunker contact checks actual HP/shield reduction. Reapplying an unchanged generic shield no longer produces a new shield sound.
+- Hero, tower, healing, shield, death and explosion recordings load once. The old runtime-synthesized hero death sound is removed. Shared warning/UI identities remain, with summing headroom.
+- Existing scene service uses 5/7/8 pooled voices by mobile quality. Per-actor cue cooldowns prevent another copy of a hero from silencing the player. Three separately recorded takes rotate for every basic phase and Nyra R; no gameplay Random consumption.
+- Local hero cues have priority 2, distant combat 0/1, important warnings 3. Warnings cannot be stolen by hero ultimates and briefly duck combat. World cues attenuate with ground-plane distance and use restrained stereo pan. Local cues remain centered.
+- Co-op presentation messages relay authoritative phases to clients before host camera culling. They carry only slot/action/phase/position, accept only the server, and never modify combat state. Client death snapshots trigger a single presentation sound. Networking and latency still require a real session test.
 
-All clips load once with the scene audio service and use the existing eight-voice stress-limited pool. No extra per-hero AudioSources or runtime audio synthesis. Unique cue IDs retain per-action/phase cooldowns; area impacts play once at the actual center, not once per victim. Basic impacts require real damage/absorption; blocked hits do not confirm. Generic hit sounds are suppressed for hero sources to avoid doubling authored impacts. Ability-only support calls suppress generic heal/shield sounds; existing public Health overloads remain compatible. Cast sounds follow validation, before execution; delayed impacts and volley hits use their existing resolution timing.
+## Validation boundary
 
-High-pass 75 Hz; broad -6 dB presence cut at 2.8 kHz; hero-family low-pass 2.1–2.9 kHz; soft onset/tail; controlled PCM RMS (-29 basic, -26 skill, -25 ultimate dBFS), pre-encode -7 dBFS peak ceiling. Runtime gain keeps basics below abilities and warning voices retain higher priority. Files use mono 32 kHz Vorbis and short durations; decoded float PCM totals approximately 1.78 MiB, excluding Unity overhead.
+`CombatAudioBefore.json`: decoded audit of all original 62 files. `CombatAudioValidation.json`: current output checks. Offline checks cover C# syntax, all 35 action resource mappings, every decoded file, non-silence, finite PCM, distinct frequent variants, GUID uniqueness/preservation, conservative eight-voice peak summing and repeated .18-second rifle volleys. Balance catalog and hero identity values are unchanged.
 
-## Verification
+**Not performed:** Unity compilation, Unity Console inspection, actual normal-attack/ability gameplay, 5v5 runtime profiling, multiplayer session, phone speaker/headphone listening. Unity is unavailable in this execution environment. Offline summing is not a runtime or subjective quality test and does not cover simultaneous music/bomber sources outside the combat pool.
 
-206 C# files passed syntax parsing. 30/30 action identities covered; 53 distinct decoded PCM hashes, all files non-silent, finite and decodable; highest measured peak approximately -7 dBFS. Existing ability specs unchanged. No Unity compilation, hearing test or 5v5/device playback performed. Subjective production quality and perceptual differentiation still require actual listening. Missing clips explicitly log FINAL PRODUCTION SFX REQUIRED, with no generic beep fallback.
+In a disposable Unity Play Mode match, verify all seven basics plus Q/W/E/R against a valid target, damage-gated target, empty area, shielded target and moving/out-of-range target; cancel windups by stun/death. Then use duplicate hero classes in 5v5 and test warning audibility, four-shot volleys, client/host perspectives and the 5-voice battery setting. Confirm a clean Console and audition on phone and headphones before a production release.
 
-Full recipe/source hashes: HeroAudioAssets.json. Rebuild: `python Tools/build_hero_audio.py /path/to/Kenney/Audio` (ffmpeg + numpy). The tool processes recorded assets only.
+Sources and licenses: `ThirdPartyAudioLicenses.md`, `ArtSource/Audio/Combat/sources.json`, and `CombatAudioAssets.json`. Rebuild: `python Tools/build_combat_audio.py`; offline checks: `python Tools/validate_combat_audio.py`.

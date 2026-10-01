@@ -57,8 +57,8 @@ namespace Alterverse.Combat
             flashing=true;flashUntil=Time.time+.065f;
             if(!shieldOnly)CombatImpactPool.Emit(point,tint,(damage+absorbed)/Mathf.Max(1,health.Max*.2f));
             bool heavy=damage>=Mathf.Max(45f,health.Max*.16f);AudioMixState.MarkCombat();
-            if((source==null||source.GetComponentInParent<HeroIdentity>()==null)&&AudioCuePolicy.Allow(heavy?"heavy-hit":"hit",heavy?AudioCuePriority.Critical:AudioCuePriority.Combat))
-                DimensionAudio.Play(heavy?DimensionSound.HitHeavy:DimensionSound.HitLight,shieldOnly?.28f:heavy?.72f:.48f,Random.Range(.96f,1.045f));
+            if((source==null||(source.GetComponentInParent<HeroIdentity>()==null&&source.GetComponentInParent<LaneTower>()==null&&source.GetComponentInParent<DefenseBunker>()==null))&&AudioCuePolicy.Allow(heavy?"heavy-hit":"hit",heavy?AudioCuePriority.Critical:AudioCuePriority.Combat))
+                DimensionAudio.PlayAt(heavy?DimensionSound.HitHeavy:DimensionSound.HitLight,transform.position,shieldOnly?.28f:heavy?.72f:.48f);
         }
         private static Color SourceColor(GameObject source)
         {HeroIdentity hero=source!=null?source.GetComponentInParent<HeroIdentity>():null;return hero!=null?StylizedArtDirection.HeroAccent(hero.Hero):new Color(.95f,.74f,.45f);}
@@ -81,4 +81,5 @@ namespace Alterverse.Combat
         private void Update(){age+=Time.deltaTime;transform.localScale+=Vector3.one*growSpeed*Time.deltaTime;if(age>=lifetime)Destroy(gameObject);}
     }
 }
+
 

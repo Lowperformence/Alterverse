@@ -111,8 +111,9 @@ namespace Alterverse.Combat
             if (shell != null) shell.Fire();
             nextAttackTime = Time.time + attackCooldown;
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerShot,transform.position,.55f);
+            float before=target.Current+target.Shield;
             target.TakeDamage(attackDamage, gameObject);
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact,target.transform.position,.5f);
+            if(target.Current+target.Shield<before)Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact,target.transform.position,.5f);
             SpawnShot(target.transform.position);
         }
 
@@ -138,3 +139,4 @@ namespace Alterverse.Combat
         private void SpawnShot(Vector3 target){Color c=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;DimensionTowerShell shell=GetComponent<DimensionTowerShell>();Vector3 origin=shell!=null?shell.MuzzlePosition:transform.position+Vector3.up*1.7f,direction=target-origin;float distance=direction.magnitude;if(distance<.01f)return;GameObject beam=GameObject.CreatePrimitive(PrimitiveType.Cube);beam.name="DF_TowerShot";beam.transform.position=origin+direction*.5f;beam.transform.rotation=Quaternion.LookRotation(direction);beam.transform.localScale=new Vector3(.11f,.11f,distance);Collider col=beam.GetComponent<Collider>();if(col!=null)col.enabled=false;Renderer r=beam.GetComponent<Renderer>();if(r!=null){r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;r.receiveShadows=false;shotBlock??=new MaterialPropertyBlock();shotBlock.Clear();shotBlock.SetColor(BaseColor,c);shotBlock.SetColor(ColorId,c);r.SetPropertyBlock(shotBlock);}PrototypeVfx.Ring(target,c,.65f,.18f);Destroy(beam,.1f);}
     }
 }
+

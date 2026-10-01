@@ -79,3 +79,17 @@ Rights: Kenney, https://kenney.nl/assets/sci-fi-sounds, CC0 1.0, commercial adap
 Creator of source recordings: Kenney. Source: https://kenney.nl/assets/sci-fi-sounds. License: CC0 1.0 Universal; commercial use and derivatives permitted; attribution not required. Source archive accessed 2026-09-18; original license retained in AudioLicenses/Kenney-SciFi-CC0.txt.
 
 Every new asset's name, hero/action/phase usage, exact source filenames and source SHA256 hashes are enumerated in **Docs/HeroAudioAssets.json**, incorporated as the per-asset provenance manifest. All listed sources have the same creator, URL, license, commercial-use and attribution status above. Rendering recipes are in Tools/build_hero_audio.py. These new recordings replace generic routing for hero attacks; they do not replace the music. Production listening approval is pending; see Hero-Audio-Matrix.md.
+
+
+## Combat audio overhaul — 2026-10-01 (current)
+
+The current 121 hero files and 29 generic cues supersede the earlier mixes above. Music is unchanged. Per-output source files and SHA-256 hashes: `CombatAudioAssets.json`. Recorded inputs, original-file hashes and rifle extraction offsets: `ArtSource/Audio/Combat/sources.json`. Rebuild with `python Tools/build_combat_audio.py` (ffmpeg, numpy, scipy). No runtime oscillators or procedural death sound remain.
+
+- Kenney, **Impact Sounds 1.0**: https://kenney.nl/assets/impact-sounds — CC0 1.0. Original license retained at `AudioLicenses/Kenney-Impact-CC0.txt`.
+- Kenney, **RPG Audio**: https://kenney.nl/assets/rpg-audio — CC0 1.0. Original license retained at `AudioLicenses/Kenney-RPG-CC0.txt`.
+- Ben Jaszczak, Brian Nelson, Kevin Heras and Matthew Nanney, **The Free Firearm Sound Library**: https://opengameart.org/content/the-free-firearm-sound-library — CC0 1.0. Archive: https://opengameart.org/sites/default/files/Prepared%20SFX%20Library.7z . Selected Savage 10 .300 Blackout T_17P/T_27P and Mosin Nagant M_21P recordings are extracted to 0.65-second mono WAV sources, with offsets and original hashes in the source manifest.
+- Preserved warning/UI source recordings in `ArtSource/Audio/Combat/Warnings` are the existing project cues documented above; only their peak level is adjusted.
+
+All three sources were retrieved and their CC0 declarations checked on 2026-10-01. Commercial adaptation and redistribution are permitted; attribution is optional. License: https://creativecommons.org/publicdomain/zero/1.0/ . No purchased, noncommercial, or unlicensed material is included.
+
+Processing: recorded transient layers, selected real takes, reverse textures, short offline echoes, 80 Hz high-pass, class-specific 5–8.2 kHz low-pass and moderate presence reduction. Mono 32 kHz Vorbis. A -22 dBFS pre-encode ceiling leaves summing and codec headroom; measured decoded true peaks and the eight-voice bound are in `CombatAudioValidation.json`. The audition has a common playback gain for browser listening and is not a captured game mix.

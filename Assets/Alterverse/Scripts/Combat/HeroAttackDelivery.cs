@@ -66,6 +66,7 @@ namespace Alterverse.Combat
             float windup=Windup(identity.Hero);
             hasPending=true;
             pending[i]=new Pending{Active=true,Basic=true,Slot=-1,Target=target,Damage=amount,Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+windup};
+            HeroCombatAudio.Windup(gameObject,0);
             GetComponent<HeroVisualMotion>()?.PulseBasic(windup);
         }
         public void Ability(HeroAbilityExecution execution,int slot,Health target,bool volley=false,float windup=-1)
@@ -74,6 +75,7 @@ namespace Alterverse.Combat
             float range=GetComponent<HeroAbilityKit>().Spec(slot).Range;
             if(HeroCombatRules.TargetDistance(transform.position,target)>range)return;
             hasPending=true;
+            if(!volley)HeroCombatAudio.Windup(gameObject,slot+1);
             pending[i]=new Pending{Active=true,Slot=slot,Target=target,Execution=execution,Volley=volley,
                 Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
         }
@@ -128,3 +130,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

@@ -63,9 +63,10 @@ namespace Alterverse.Combat
                 return;
 
             // Keep temporary shields independent from the permanent hero base shield.
+            float previousShield=TransientShield;
             shield = Mathf.Max(TransientShield, Mathf.Min(amount, maxHealth * .4f));
             shieldUntil = Mathf.Max(shieldUntil, Time.time + Mathf.Max(0, duration));
-            if (playAudio)
+            if (playAudio && shield > previousShield)
                 Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Shield, transform.position, .3f);
             Changed?.Invoke(Current, maxHealth);
         }
@@ -276,3 +277,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

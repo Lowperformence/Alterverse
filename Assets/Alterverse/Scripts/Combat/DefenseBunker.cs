@@ -177,13 +177,14 @@ namespace Alterverse.Combat
         {
             if (target == null || target.IsDead) return;
 
+            float before=target.Current+target.Shield;
             target.TakeDamage(attackDamage, gameObject);
             Vector3 origin = muzzle != null ? muzzle.position : transform.position + Vector3.up * 2.65f;
             PrototypeVfx.ProjectileLine(origin - Vector3.up * .65f, target.transform.position, energy, .105f);
             PrototypeVfx.Burst(origin, Color.Lerp(energy, Color.white, .28f), .20f, 3);
 
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerShot, origin, .34f);
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact, target.transform.position, .28f);
+            if(target.Current+target.Shield<before)Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.TowerImpact, target.transform.position, .28f);
         }
 
         private void BuildVisual(int variant)
@@ -537,3 +538,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

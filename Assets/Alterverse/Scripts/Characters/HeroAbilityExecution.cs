@@ -112,7 +112,7 @@ namespace Alterverse.Characters
                     center = PredictedAreaCenter(target,spec);
                 }
                 if (hero == HeroId.Mira && WoundedAlly(spec.Radius) == null) return false;
-                HeroCombatAudio.Cast(gameObject,slot);
+                HeroCombatAudio.Windup(gameObject,slot+1);
                 HeroSkillVfx.Area(gameObject, center, spec.Radius, spec.Windup, true, hero==HeroId.Mira,slot);
                 if(spec.Range>0)HeroSkillVfx.Spell(gameObject,center,slot,spec.Windup);
                 StartCoroutine(ResolveArea(slot, center, life));
@@ -120,7 +120,7 @@ namespace Alterverse.Characters
             else
             {
                 if (!ValidTarget(target, spec.Range)) return false;
-                if(spec.Windup>0)HeroCombatAudio.Cast(gameObject,slot);
+                if(spec.Windup>0||hero==HeroId.Nyra&&slot==3)HeroCombatAudio.Windup(gameObject,slot+1);
                 if (hero == HeroId.Nyra && slot == 3)
                 {
                     presentationWindup=HeroAttackDelivery.Windup(hero,slot);
@@ -175,7 +175,7 @@ namespace Alterverse.Characters
         {
             HeroSkillVfx.TargetWarning(gameObject,target,kit.Spec(slot).Windup);
             yield return new WaitForSeconds(kit.Spec(slot).Windup);
-            if (castLife == life && !self.IsDead && HeroCombatStatus.CanAct(gameObject) && ValidTarget(target, kit.Spec(slot).Range+.30f)) Hit(slot, target);
+            if (castLife == life && !self.IsDead && HeroCombatStatus.CanAct(gameObject) && ValidTarget(target, kit.Spec(slot).Range+.30f)) { HeroCombatAudio.Cast(gameObject,slot); Hit(slot, target); }
         }
         private IEnumerator Volley(Health target, int castLife)
         {
@@ -204,6 +204,8 @@ namespace Alterverse.Characters
             AbilitySpec spec = kit.Spec(slot);
             yield return new WaitForSeconds(spec.Windup);
             if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject)) yield break;
+            HeroCombatAudio.Cast(gameObject,slot);
+            bool confirmed=false;
             TeamMember own = GetComponent<TeamMember>();
             // Health.Active is the combat target registry. Visual and movement colliders are
             // optional for heroes, so physics overlap cannot be the source of truth here.
@@ -218,16 +220,16 @@ namespace Alterverse.Characters
                 bool ally=own!=null&&member!=null&&member.Team==own.Team&&h.GetComponent<HeroIdentity>()!=null;
                 if(identity.Hero==HeroId.Mira)
                 {
-                    if(ally){h.Heal(spec.Power,false);h.AddShield(25,3,false);HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
+                    if(ally){float supportBefore=h.Current+h.Shield;h.Heal(spec.Power,false);h.AddShield(25,3,false);confirmed|=h.Current+h.Shield>supportBefore;HeroSkillVfx.Support(gameObject,h,false,.45f);HeroSkillVfx.Support(gameObject,h,true,3);}
                 }
                 else
                 {
                     if(identity.Hero==HeroId.Kaelon&&slot==3&&ally){h.AddShield(60,3,false);HeroSkillVfx.Support(gameObject,h,true,3);}
-                    if(HeroCombatRules.Enemy(gameObject,h))Hit(slot,h,false);
+                    if(HeroCombatRules.Enemy(gameObject,h)){float before=h.Current+h.Shield;Hit(slot,h,false);confirmed|=h.Current+h.Shield<before;}
                 }
             }
             if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
-            HeroCombatAudio.Impact(gameObject,slot,center);
+            if(confirmed)HeroCombatAudio.Impact(gameObject,slot,center);
             HeroSkillVfx.Area(gameObject, center, spec.Radius, .3f, false,identity.Hero==HeroId.Mira,slot);
         }
         private void Hit(int slot, Health target, bool visual = true,bool launched=false)
@@ -260,3 +262,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

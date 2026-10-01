@@ -1,0 +1,30 @@
+[
+  {
+    "hero": "Veyr",
+    "start_seconds": 0
+  },
+  {
+    "hero": "Kaelon",
+    "start_seconds": 5.1
+  },
+  {
+    "hero": "Nyra",
+    "start_seconds": 11.064
+  },
+  {
+    "hero": "Elyra",
+    "start_seconds": 17.286
+  },
+  {
+    "hero": "Mira",
+    "start_seconds": 23.862
+  },
+  {
+    "hero": "Rook",
+    "start_seconds": 29.558
+  },
+  {
+    "hero": "Traveler",
+    "start_seconds": 35.1
+  }
+]
