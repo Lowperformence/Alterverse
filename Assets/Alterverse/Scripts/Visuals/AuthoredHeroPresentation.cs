@@ -1,122 +1,149 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
-using Alterverse.Combat;
 using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>One imported rig owns the visual pose. Movement and combat remain on the actor.</summary>
+    /// <summary>Retargets the existing hero movement onto the imported skeleton; owns no alternate animation state machine.</summary>
     [DisallowMultipleComponent]
     [DefaultExecutionOrder(940)]
     public sealed class AuthoredHeroPresentation : MonoBehaviour
     {
-        private Animator animator;
-        private Health health;
-        private Transform muzzle;
-        private Vector3 previousPosition;
-        private string currentState;
-        private float actionUntil;
-        private bool dead;
-        private readonly Dictionary<string, float> durations = new Dictionary<string, float>();
-        public float PlanarSpeed { get; private set; }
+        private sealed class Binding
+        {
+            public Transform Bone, Control, Extra;
+            public Quaternion Rest, Basis, ControlRest, ExtraRest, PoseOffset;
+        }
+        private readonly Dictionary<string, Transform> controls = new Dictionary<string, Transform>();
+        private readonly List<Binding> bindings = new List<Binding>();
+        private readonly List<Renderer> weaponRenderers = new List<Renderer>();
+        private Transform model, muzzle, visualRoot;
+        public IReadOnlyList<Renderer> WeaponRenderers => weaponRenderers;
         public Vector3 ReleasePoint => muzzle != null ? muzzle.position : transform.position + Vector3.up * .35f;
+        public Transform Control(string name) => controls.TryGetValue(name, out Transform part) ? part : null;
 
         public static bool TryCreate(GameObject actor, HeroId hero, out Transform root)
         {
             root = null;
-            GameObject model = Resources.Load<GameObject>("AuthoredHeroes/" + hero);
-            RuntimeAnimatorController controller = Resources.Load<RuntimeAnimatorController>("AuthoredHeroes/Controllers/" + hero);
-            // A missing or unfinished import must never replace a functioning hero with an invisible one.
-            if (model == null || controller == null) return false;
-            // Keep the established cosmetic coordinate frame; only the imported model uses feet-origin coordinates.
+            GameObject asset = Resources.Load<GameObject>("AuthoredHeroes/" + hero);
+            if (asset == null) return false;
             root = new GameObject("DF_VisualRoot").transform;
             root.SetParent(actor.transform, false);
             root.localPosition = new Vector3(0, .32f, 0);
             root.localScale = new Vector3(1.22f, 1.32f, 1.22f);
-            GameObject instance = Instantiate(model, root, false);
+            GameObject instance = Instantiate(asset, root, false);
             instance.name = "DF_AuthoredModel";
             instance.transform.localPosition = new Vector3(0, -.96f, 0);
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.10f, 1f, 1.10f);
-            // Unity can return a native-null wrapper for a missing component in the Editor.
-            // TryGetComponent checks the native object; C# ?? only checks the managed reference.
-            if (!instance.TryGetComponent<Animator>(out Animator animator))
-                animator = instance.AddComponent<Animator>();
-            animator.runtimeAnimatorController = controller;
-            animator.applyRootMotion = false;
-            animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            // The user chose the established movement. Never let imported clips compete with it.
+            foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
-            presentation.Initialize(animator);
+            presentation.Initialize(root, instance.transform);
             return true;
         }
 
-        private void Initialize(Animator rig)
+        private void Initialize(Transform root, Transform imported)
         {
-            animator = rig;
-            foreach (AnimationClip clip in rig.runtimeAnimatorController.animationClips)
+            visualRoot = root;
+            model = imported;
+            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+                if (bone.name == "DF_Muzzle") muzzle = bone;
+            foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
+                if (renderer.name == "DF_WeaponL" || renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletL" || renderer.name == "DF_GauntletR")
+                    weaponRenderers.Add(renderer);
+            BuildControls();
+            Bind("Hips", "PelvisJoint");
+            Bind("Spine", "SpineLower");
+            Bind("Chest", "SpineUpper", "Torso");
+            Bind("Head", "NeckJoint", "Head");
+            foreach (string side in new[] { "L", "R" })
             {
-                string name = ClipName(clip.name);
-                durations[name] = clip.length;
+                Bind("UpperArm" + side, "Arm" + side);
+                Bind("Forearm" + side, "ElbowJoint" + side);
+                Bind("Hand" + side, "WristJoint" + side, "Weapon" + side);
+                Bind("Thigh" + side, "Leg" + side);
+                Bind("Shin" + side, "KneeJoint" + side);
+                Bind("Foot" + side, "AnkleJoint" + side);
             }
-            foreach (Transform bone in rig.GetComponentsInChildren<Transform>(true))
-                if (bone.name == "DF_Muzzle") { muzzle = bone; break; }
-            previousPosition = transform.position;
-            health = GetComponent<Health>();
-            if (health != null) health.Damaged += OnDamaged;
-            Play("Idle", 0, .05f);
         }
 
-        private static string ClipName(string name)
+        private Transform Make(string name, Transform parent, Vector3 rootPosition)
         {
-            int separator = name.LastIndexOf('|');
-            if (separator >= 0) name = name.Substring(separator + 1);
-            return name;
+            Transform part = new GameObject("DF_" + name).transform;
+            part.SetParent(parent, false);
+            part.position = visualRoot.TransformPoint(rootPosition);
+            part.rotation = visualRoot.rotation;
+            controls.Add(name, part);
+            return part;
         }
 
-        private void OnEnable() { previousPosition = transform.position; }
-        private void OnDestroy() { if (health != null) health.Damaged -= OnDamaged; }
-        private void OnDamaged(float applied, float absorbed, GameObject source)
+        private void BuildControls()
         {
-            if (health == null || health.IsDead || applied + absorbed <= 0 || Time.time < actionUntil) return;
-            Play("Hit", .24f, .04f);
+            Transform host = new GameObject("DF_LegacyPoseControls").transform;
+            host.SetParent(visualRoot, false);
+            Transform pelvis = Make("PelvisJoint", host, new Vector3(0, -.35f, 0));
+            Make("Pelvis", pelvis, new Vector3(0, -.35f, 0));
+            Transform lower = Make("SpineLower", pelvis, new Vector3(0, -.13f, 0));
+            Transform upper = Make("SpineUpper", lower, new Vector3(0, .16f, 0));
+            Make("Torso", upper, new Vector3(0, .16f, 0));
+            Transform neck = Make("NeckJoint", upper, new Vector3(0, .61f, 0));
+            Make("Head", neck, new Vector3(0, .83f, 0));
+            foreach (string side in new[] { "L", "R" })
+            {
+                float sign = side == "L" ? -1 : 1;
+                Transform arm = Make("Arm" + side, upper, new Vector3(sign * .34f, .43f, .03f));
+                Transform elbow = Make("ElbowJoint" + side, arm, new Vector3(sign * .40f, .13f, .04f));
+                Transform wrist = Make("WristJoint" + side, elbow, new Vector3(sign * .42f, -.15f, .12f));
+                Make("Weapon" + side, wrist, new Vector3(sign * .42f, -.15f, .12f));
+                Make("Gauntlet" + side, wrist, new Vector3(sign * .42f, -.15f, .12f));
+                Transform hip = Make("Leg" + side, pelvis, new Vector3(sign * .18f, -.35f, 0));
+                Transform knee = Make("KneeJoint" + side, hip, new Vector3(sign * .18f, -.62f, 0));
+                Transform ankle = Make("AnkleJoint" + side, knee, new Vector3(sign * .18f, -.88f, .04f));
+                Make("Boot" + side, ankle, new Vector3(sign * .18f, -.91f, .09f));
+            }
         }
-        public void PulseAttack(bool ultimate) => Play(ultimate ? "Ultimate" : "Attack", ultimate ? .95f : .64f, .055f);
-        public void PulseBasic(float windup) => Play("Attack", Mathf.Max(.32f, windup + .32f), .045f);
-        public void PulseAbility(int slot, float windup) => Play(slot == 3 ? "Ultimate" : "Skill" + Mathf.Clamp(slot, 0, 2), Mathf.Max(.50f, windup + .45f), .06f);
-        public void PulseDash() => Play("Run", .20f, .025f);
-        public void Empower(float seconds) { GetComponent<VoidWingPresentation>()?.Pulse(); }
 
-        private void Play(string state, float duration, float blend)
+        private void Bind(string boneName, string controlName, string extraName = null)
         {
-            if (animator == null || !durations.ContainsKey(state) || (health != null && health.IsDead && state != "Death")) return;
-            animator.speed = duration > 0 ? durations[state] / duration : 1f;
-            animator.CrossFadeInFixedTime(state, blend, 0, 0);
-            currentState = state;
-            actionUntil = duration > 0 ? Time.time + duration : 0;
+            Transform target = null;
+            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+                if (bone.name == boneName) { target = bone; break; }
+            Transform control = Control(controlName);
+            if (target == null || control == null)
+            {
+                Debug.LogError("DF: imported hero retarget binding missing: " + boneName, this);
+                return;
+            }
+            Transform extra = extraName != null ? Control(extraName) : null;
+            Quaternion offset = Quaternion.identity;
+            HeroIdentity identity = GetComponent<HeroIdentity>();
+            if (identity != null && identity.Hero == HeroId.Nyra)
+            {
+                // The old ranger motion assumes a pre-authored shoulder carry. Recreate that
+                // bind-pose difference while retaining its existing recoil and small elbow movement.
+                if (boneName == "UpperArmL") offset = Quaternion.Euler(-58, 28, 0);
+                if (boneName == "UpperArmR") offset = Quaternion.Euler(-62, -8, 0);
+                if (boneName == "HandL") offset = Quaternion.Euler(82, -28, 0);
+                if (boneName == "HandR") offset = Quaternion.Euler(80, 8, 0);
+            }
+            bindings.Add(new Binding { Bone = target, Control = control, Extra = extra,
+                PoseOffset = offset, Rest = target.localRotation, Basis = Quaternion.Inverse(visualRoot.rotation) * target.rotation,
+                ControlRest = control.localRotation, ExtraRest = extra != null ? extra.localRotation : Quaternion.identity });
         }
 
         private void LateUpdate()
         {
-            if (animator == null) return;
-            Vector3 displacement = transform.position - previousPosition;
-            previousPosition = transform.position;
-            displacement.y = 0;
-            float dt = Time.deltaTime;
-            if (dt <= 0) return;
-            PlanarSpeed = displacement.magnitude > Mathf.Max(3, dt * 40) ? 0 : displacement.magnitude / dt;
-            bool nowDead = health != null && health.IsDead;
-            if (nowDead)
+            // HeroVisualMotion (930) -> HeroProceduralRig (935) -> this coordinate conversion (940).
+            // There are no old visible meshes and no independent Animator writing the same bones.
+            foreach (Binding binding in bindings)
             {
-                if (!dead) Play("Death", 1.2f, .1f);
-                dead = true;
-                return;
+                if (binding.Bone == null || binding.Control == null) continue;
+                Quaternion delta = binding.PoseOffset * Quaternion.Inverse(binding.ControlRest) * binding.Control.localRotation;
+                if (binding.Extra != null) delta *= Quaternion.Inverse(binding.ExtraRest) * binding.Extra.localRotation;
+                binding.Bone.localRotation = binding.Rest * Quaternion.Inverse(binding.Basis) * delta * binding.Basis;
             }
-            if (dead) { dead = false; actionUntil = 0; currentState = null; }
-            if (Time.time < actionUntil) return;
-            string desired = PlanarSpeed > .16f ? "Run" : "Idle";
-            if (currentState != desired) Play(desired, 0, .12f);
-            animator.speed = desired == "Run" ? Mathf.Clamp(PlanarSpeed / 4f, .65f, 1.6f) : 1f;
         }
     }
 }

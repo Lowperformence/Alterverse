@@ -1,35 +1,28 @@
-# Authored heroes — first Blender production pass
+# Individual hero bodies, original movement, authored weapon shop
 
-Seven original DIMENSIONS FRONT hero costumes over Blender's CC0 Human Base Meshes 1.4.1 anatomy. The models are a first authored pass; they have not been certified as matching the reference's final art quality.
+This revision supersedes the first all-in-one mesh pass.
 
-## Contents
+- Each hero has one body renderer and one or two separately weighted weapon renderers (`DF_WeaponL/R`, or `DF_GauntletL/R` for Brakk).
+- Weapon-shop colorways are applied only to those renderer references. Selecting Standard restores the original materials. Existing purchase ownership, prices and equipped-variant storage are unchanged.
+- The existing HeroVisualMotion and HeroProceduralRig movement calculations are retained, including gait, guard, attacks, casts, recoil, dash deformation and body turn/weight shifts. Renderer-free control pivots retarget their rotation deltas into the imported bones. Imported Animators are disabled so they cannot compete. The FBX clips remain source-authoring assets, not the active runtime movement.
+- Kaelon has a wider torso/hips and a closed helmet; Brakk has the broadest chest, reinforced gauntlets and industrial shoulder armor. Other heroes have distinct proportions and headgear. Veyr has a full-face mask and paired crescent blades.
+- All heroes have shaped boots with flat soles, heel blocks and toe caps. Anatomy and costume share normalized nearest-bone skin weights. Grip geometry and weapons stay on the same hand bones.
 
-- `Assets/Alterverse/Resources/AuthoredHeroes/*.fbx`: one weighted mesh per hero, 17 bones, nine baked animation clips (Idle, Run, Attack, Skill0–2, Ultimate, Hit, Death).
-- `ArtSource/Heroes/*.blend`: editable Blender 4.5 LTS sources, materials, rig, actions and reproducible studio scene.
-- `ArtSource/Heroes/Preview/`: actual Blender renders, not in-game screenshots.
-- `Tools/HeroRebuild/`: reproducible generation and FBX round-trip validation.
+## Files
 
-Unity's `AuthoredHeroImporter` imports Generic rigs, looping Idle/Run clips and URP materials, then generates resource controllers in `AuthoredHeroes/Controllers`. Open the project and let imports finish before making a player build. The presentation uses the existing HeroVisualMotion API as a bridge; the procedural pose controller does not run when an authored rig is loaded. Existing movement, combat, buttons and collision shapes are unchanged.
-
-The existing procedural assets remain a fallback if a model or controller is missing. The established visual-root coordinate frame is preserved for owned wings and founder cosmetics.
-
-## VFX
-
-Adds feathered projectile streaks, twin arc ribbons and rising green healing leaves through the shared pool and decorative budget. Uses actual authoritative hit callbacks for impacts. Rift Scar's purple traveling X remains unchanged. Attack readability cues use the authored weapon socket. Optional details never consume the pool's warning/core reserve.
+`Assets/Alterverse/Resources/AuthoredHeroes/*.fbx` are the Unity models. `ArtSource/Heroes/*.blend` are editable Blender 4.5 LTS sources. Preview images are Blender studio renders; they are not Unity screenshots and their authoring poses do not prove runtime retargeting.
 
 ## Rebuild
 
-Install free Blender 4.5 LTS. Download the Human Base Meshes 1.4.1 bundle from https://www.blender.org/download/demo-files/ and point `DF_HUMAN_BASE_MESH_SOURCE` at `human_base_meshes_bundle.blend`.
+Download the free Human Base Meshes 1.4.1 bundle from https://www.blender.org/download/demo-files/ and set DF_HUMAN_BASE_MESH_SOURCE to its human_base_meshes_bundle.blend file.
 
-```
-blender --background --python-exit-code 1 --python Tools/HeroRebuild/build_heroes.py
-blender --background --python-exit-code 1 --python Tools/HeroRebuild/validate_fbx.py
-```
+    blender --background --python-exit-code 1 --python Tools/HeroRebuild/build_heroes.py
+    blender --background --python-exit-code 1 --python Tools/HeroRebuild/validate_fbx.py
 
-## Validation and remaining review
+## Validation
 
-All seven FBXs were re-imported in Blender: one armature and mesh, 17 bones, nine animation clips, UV layer and all vertices weighted. C# syntax was checked with tree-sitter. Unity compilation, player rendering, controller import and Android GPU validation have not been run in this environment. Review animation posing, VFX timing, cosmetics, skin palettes and material colors in Unity before a release build. No claim of a Unity-tested or final AAA result is made.
+Seven FBX round trips check mesh counts, named shop weapon renderers, armature bindings, normalized skin weights, UVs and animation clips. C# syntax checks pass. The existing gait and attack calculations are preserved; only the imported-rig connection changes. Unity compilation, runtime posing/grips, shop preview/equip and Android rendering still require in-engine verification; Unity is unavailable in the execution environment.
 
-## Source license
+## License
 
-The Human Base Meshes bundle's included README states: “All provided assets are public domain under the CC0 license.” Anatomy contributors include Blender Studio/community; outfits, accessories, weapons, rig and generator modifications are original to this project. The bundle also contains an unrelated legacy Rain Rig attribution text; no Rain Rig is used here.
+Blender Human Base Meshes 1.4.1 README declares the provided anatomy assets CC0. Costumes, weapons, rigs and generator modifications are original project work. No Rain Rig is used.

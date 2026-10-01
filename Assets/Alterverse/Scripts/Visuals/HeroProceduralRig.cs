@@ -38,6 +38,25 @@ namespace Alterverse.Visuals
         {
             if (Ready || root == null) return;
             visualRoot = root;
+            AuthoredHeroPresentation authored = GetComponent<AuthoredHeroPresentation>();
+            if (authored != null)
+            {
+                // Reuse the exact existing pose calculations on renderer-free control pivots.
+                pelvisJoint = authored.Control("PelvisJoint");
+                spineLowerJoint = authored.Control("SpineLower"); spineUpperJoint = authored.Control("SpineUpper"); neckJoint = authored.Control("NeckJoint");
+                hipL = authored.Control("LegL"); hipR = authored.Control("LegR");
+                kneeL = authored.Control("KneeJointL"); kneeR = authored.Control("KneeJointR");
+                ankleL = authored.Control("AnkleJointL"); ankleR = authored.Control("AnkleJointR");
+                elbowL = authored.Control("ElbowJointL"); elbowR = authored.Control("ElbowJointR");
+                wristL = authored.Control("WristJointL"); wristR = authored.Control("WristJointR");
+                hipRestL = Rest(hipL); hipRestR = Rest(hipR); kneeRestL = Rest(kneeL); kneeRestR = Rest(kneeR);
+                ankleRestL = Rest(ankleL); ankleRestR = Rest(ankleR); elbowRestL = Rest(elbowL); elbowRestR = Rest(elbowR);
+                wristRestL = Rest(wristL); wristRestR = Rest(wristR);
+                Ready = pelvisJoint != null && spineLowerJoint != null && spineUpperJoint != null && neckJoint != null &&
+                    hipL != null && hipR != null && kneeL != null && kneeR != null && ankleL != null && ankleR != null &&
+                    elbowL != null && elbowR != null && wristL != null && wristR != null;
+                return;
+            }
 
             // Do not touch the visible hierarchy unless both sides can be articulated completely.
             // This keeps old/proxy hero builds on their proven fallback instead of half-converting them.

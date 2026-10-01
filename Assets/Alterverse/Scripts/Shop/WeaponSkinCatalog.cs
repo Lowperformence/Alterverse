@@ -38,8 +38,8 @@ namespace Alterverse.Shop
         // standard weapon model, pivot, animation, grip, range, damage and timing unchanged.
         public static readonly WeaponSkinItem[] Items=
         {
-            new(HeroId.Veyr,"VIOLET ECLIPSE","Shadow Steel Blades","The original Shadow Steel blades in a deep black-violet finish with restrained dimensional glow. Same weapon model and combat behavior.",new Color(.66f,.16f,1f),0),
-            new(HeroId.Veyr,"CRIMSON ECLIPSE","Shadow Steel Blades","The original Shadow Steel blades in a dark crimson-metal finish with a brighter red edge glow. Same weapon model and combat behavior.",new Color(1f,.10f,.20f),1),
+            new(HeroId.Veyr,"VIOLET ECLIPSE","Crescent Rift Blades","The authored crescent blades in a deep black-violet finish with restrained dimensional glow. Same weapon model and combat behavior.",new Color(.66f,.16f,1f),0),
+            new(HeroId.Veyr,"CRIMSON ECLIPSE","Crescent Rift Blades","The authored crescent blades in a dark crimson-metal finish with a brighter red edge glow. Same weapon model and combat behavior.",new Color(1f,.10f,.20f),1),
 
             new(HeroId.Kaelon,"EMBER FORGE","Anchor Hammer","Kaelon's original Anchor Hammer in forged charcoal metal with hot amber accents. Same weapon model and combat behavior.",new Color(1f,.48f,.08f),0),
             new(HeroId.Kaelon,"ION FORGE","Anchor Hammer","Kaelon's original Anchor Hammer in cold gunmetal with electric cyan accents. Same weapon model and combat behavior.",new Color(.12f,.78f,1f),1),

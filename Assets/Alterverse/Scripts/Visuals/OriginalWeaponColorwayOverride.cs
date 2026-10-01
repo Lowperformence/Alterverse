@@ -100,6 +100,13 @@ namespace Alterverse.Visuals
         private void CaptureOriginalWeaponRenderers()
         {
             baseRenderers.Clear();
+            AuthoredHeroPresentation authored = GetComponent<AuthoredHeroPresentation>();
+            if (authored != null)
+            {
+                foreach (Renderer renderer in authored.WeaponRenderers)
+                    if (renderer != null) baseRenderers.Add(new RendererState { Renderer = renderer, Original = (Material[])renderer.sharedMaterials.Clone() });
+                return;
+            }
             AddWeaponRoot("DF_WeaponL");
             AddWeaponRoot("DF_WeaponR");
             AddWeaponRoot("DF_GauntletL");

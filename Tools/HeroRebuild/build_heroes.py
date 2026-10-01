@@ -55,6 +55,10 @@ def plate(name,outline,y,depth,material,bone='Chest'):
  fs.append(tuple(n+i for i in reversed(range(n))))
  return mesh(name,vs,fs,material,bone,.009)
 
+def box(name,center,size,material,bone='Chest',edge=.01):
+ vs=[(center[0]+x*size[0]/2,center[1]+y*size[1]/2,center[2]+z*size[2]/2) for x,y,z in [(-1,-1,-1),(1,-1,-1),(1,1,-1),(-1,1,-1),(-1,-1,1),(1,-1,1),(1,1,1),(-1,1,1)]]
+ return mesh(name,vs,[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],material,bone,edge)
+
 def cape(name,z_top,length,width,material,bone='Chest',side=0):
  vs=[];fs=[];rows=22;cols=20
  for i in range(rows):
@@ -96,43 +100,102 @@ def bind(o,arm,body=False):
   # Smooth proximity weights across neighboring bones; plate weights remain rigid.
   segments=[(b.name,b.head_local,b.tail_local) for b in arm.data.bones if b.name!='Root']
   for v in o.data.vertices:
-   group=limb_bone(v.co); candidates=[(group,1.0)]
-   # Feather at elbows/knees/waist to avoid a hard seam.
-   x,y,z=v.co;s='L' if x<0 else 'R'
-   if abs(x)<.20 and .88<z<1.12:candidates=[('Hips',max(0,(1.08-z)/.20)),('Spine',max(0,1-abs(z-1.08)/.20)),('Chest',max(0,(z-1.06)/.20))]
-   elif z<.93 and .40<z<.58:t=(z-.4)/.18;candidates=[('Shin'+s,1-t),('Thigh'+s,t)]
-   total=sum(w for n,w in candidates)
-   for n,w in candidates:
-    if w>0:o.vertex_groups[n].add([v.index],w/total,'REPLACE')
+   distances=[]
+   for name,head,tail in segments:
+    direction=tail-head;t=max(0,min(1,(v.co-head).dot(direction)/direction.length_squared))
+    distance=(v.co-(head+direction*t)).length
+    distances.append((distance,name))
+   distances.sort();closest=distances[:3]
+   weights=[1/(distance+.018)**5 for distance,name in closest];total=sum(weights)
+   for (distance,name),weight in zip(closest,weights):o.vertex_groups[name].add([v.index],weight/total,'REPLACE')
  else:o.vertex_groups[o.get('bone','Chest')].add(list(range(len(o.data.vertices))),1,'REPLACE')
  mod=o.modifiers.new('DF_Skin','ARMATURE');mod.object=arm;o.parent=arm
 
+PROFILE={'Veyr':(.94,.94,1.02,.94),'Kaelon':(1.43,1.20,1.08,1.30),'Nyra':(.88,.94,1.02,.93),'Elyra':(.89,.96,1.09,.92),'Mira':(.96,1.02,1.00,1.0),'Rook':(1.60,1.32,1.04,1.40),'Traveler':(1.03,.96,1.07,.97)}
+def proportion(hero,point):
+ x,y,z=point;chest,hip,height,depth=PROFILE[hero]
+ if z>1.52:width=1.12 if hero=='Rook' else 1.0;d=1.07 if hero=='Rook' else 1.0
+ elif z>1.10:width=chest;d=depth
+ else:width=hip+(chest-hip)*max(0,min(1,(z-.92)/.18));d=1+(depth-1)*max(0,min(1,z/.9))
+ return Vector((x*width,y*d,z*height))
+
 def animations(arm,hero):
- for name,length in [('Idle',60),('Run',24),('Attack',24),('Skill0',30),('Skill1',30),('Skill2',36),('Ultimate',48),('Hit',14),('Death',36)]:
+ # Analytic two-bone posing is baked into ordinary FBX clips. No runtime procedural pose owner.
+ guard={
+ 'Veyr':{'L':(-.10,-.27,1.20),'R':(.14,-.27,1.30)},
+ 'Kaelon':{'L':(-.24,-.24,1.20),'R':(.31,-.16,1.20)},
+ 'Nyra':{'L':(.08,-.38,1.29),'R':(.19,-.18,1.34)},
+ 'Elyra':{'L':(-.25,-.19,1.22),'R':(.33,-.12,1.17)},
+ 'Mira':{'L':(-.22,-.17,1.17),'R':(.32,-.13,1.16)},
+ 'Rook':{'L':(-.20,-.25,1.32),'R':(.23,-.23,1.31)},
+ 'Traveler':{'L':(-.20,-.22,1.22),'R':(.27,-.20,1.22)}}[hero]
+ def chain(upper,lower,end,target,pole,hand_rotation=None):
+  bpy.context.view_layer.update();a=arm.pose.bones[upper];b=arm.pose.bones[lower];last=arm.pose.bones[end]
+  origin=a.head.copy();delta=Vector(target)-origin;distance=delta.length
+  if distance<.001:return
+  direction=delta.normalized();l1=a.bone.length;l2=b.bone.length;distance=min(distance,l1+l2-.001)
+  side=Vector(pole)-direction*Vector(pole).dot(direction)
+  if side.length<.001:side=direction.cross(Vector((1,0,0)))
+  side.normalize();along=(l1*l1-l2*l2+distance*distance)/(2*distance)
+  elbow=origin+direction*along+side*math.sqrt(max(.00001,l1*l1-along*along));tip=origin+direction*distance
+  for bone,start,finish in [(a,origin,elbow),(b,elbow,tip)]:
+   rotation=bone.bone.matrix_local.to_quaternion();axis=rotation@Vector((0,1,0));rotation=axis.rotation_difference((finish-start).normalized())@rotation
+   bone.matrix=Matrix.LocRotScale(start,rotation,Vector((1,1,1)));bpy.context.view_layer.update()
+  rotation=last.bone.matrix_local.to_quaternion()
+  if hand_rotation is not None:rotation=hand_rotation@rotation
+  last.matrix=Matrix.LocRotScale(tip,rotation,Vector((1,1,1)));bpy.context.view_layer.update()
+ from mathutils import Quaternion
+ frames=[('Idle',61),('Run',25),('Attack',25),('Skill0',31),('Skill1',34),('Skill2',37),('Ultimate',49),('Hit',16),('Death',40)]
+ for name,length in frames:
   action=bpy.data.actions.new(name);arm.animation_data_create();arm.animation_data.action=action
-  for f in list(range(1,length,3))+[length]:
-   t=(f-1)/(length-1);wave=sin(t*2*pi);attack=sin(t*pi)
-   for b in arm.pose.bones:b.rotation_mode='XYZ';b.rotation_euler=(0,0,0);b.location=(0,0,0)
-   if name=='Idle':arm.pose.bones['Chest'].rotation_euler.x=.018*wave;arm.pose.bones['Head'].rotation_euler.z=.025*wave
-   elif name=='Run':
-    for side,sgn in [('L',1),('R',-1)]:
-     arm.pose.bones['Thigh'+side].rotation_euler.x=.45*wave*sgn;arm.pose.bones['Shin'+side].rotation_euler.x=-.4*max(0,wave*sgn);arm.pose.bones['UpperArm'+side].rotation_euler.x=-.32*wave*sgn
-    arm.pose.bones['Hips'].location.z=.025*abs(wave);arm.pose.bones['Chest'].rotation_euler.x=.10
-   elif name=='Death':arm.pose.bones['Root'].rotation_euler.x=1.45*min(1,t*1.3);arm.pose.bones['Hips'].location.z=-.12*t
-   elif name=='Hit':arm.pose.bones['Chest'].rotation_euler.x=-.18*attack
-   else:
-    arm.pose.bones['Chest'].rotation_euler.z=.32*attack;arm.pose.bones['UpperArmR'].rotation_euler.x=-1.15*attack;arm.pose.bones['ForearmR'].rotation_euler.x=-.45*attack
-    if name=='Attack':
-     if hero=='Nyra':arm.pose.bones['Chest'].rotation_euler.z=.025*attack;arm.pose.bones['UpperArmR'].rotation_euler.x=-.15*attack;arm.pose.bones['ForearmR'].rotation_euler.x=-.09*attack
-     elif hero in ['Mira','Elyra','Traveler']:arm.pose.bones['UpperArmR'].rotation_euler.x=-.42*attack;arm.pose.bones['ForearmR'].rotation_euler.x=-.6*attack
-     elif hero=='Kaelon':arm.pose.bones['UpperArmL'].rotation_euler.x=-.70*attack;arm.pose.bones['Chest'].rotation_euler.z=.12*attack
-     elif hero=='Veyr':arm.pose.bones['UpperArmR'].rotation_euler.z=-.65*attack;arm.pose.bones['UpperArmL'].rotation_euler.z=.45*attack
-     elif hero=='Rook':arm.pose.bones['UpperArmR'].rotation_euler.x=-1.3*attack;arm.pose.bones['ForearmR'].rotation_euler.x=.55*attack
-    arm.pose.bones['UpperArmL'].rotation_euler.x=(-.8 if name in ['Ultimate','Skill1','Skill2'] else .2)*attack
-    if name=='Ultimate':arm.pose.bones['UpperArmR'].rotation_euler.z=-.7*attack;arm.pose.bones['UpperArmL'].rotation_euler.z=.7*attack
-   for b in arm.pose.bones:b.keyframe_insert('rotation_euler',frame=f,group=b.name);b.keyframe_insert('location',frame=f,group=b.name)
-  track=arm.animation_data.nla_tracks.new();track.name=name;strip=track.strips.new(name,1,action);track.mute=True
- arm.animation_data.action=bpy.data.actions.get('Idle');bpy.context.scene.frame_set(1)
+  for f in range(1,length+1):
+   t=(f-1)/(length-1);wave=sin(t*2*pi);pulse=sin(pi*t)**2
+   # Anticipation -> fast contact -> eased recovery; each class uses its own hand path.
+   impact=max(0,1-abs(t-.42)/.24);windup=max(0,1-abs(t-.16)/.16)
+   for bone in arm.pose.bones:bone.rotation_mode='XYZ';bone.rotation_euler=(0,0,0);bone.location=(0,0,0)
+   hips=arm.pose.bones['Hips'];chest=arm.pose.bones['Chest'];spine=arm.pose.bones['Spine'];head=arm.pose.bones['Head']
+   hips.location.z=-.028;chest.rotation_euler.x=.012*wave;head.rotation_euler.z=.010*wave
+   if name=='Run':
+    hips.location.z=-.10+.014*cos(t*4*pi);hips.rotation_euler.z=.035*wave;chest.rotation_euler.z=-.028*wave;chest.rotation_euler.x=.075
+   elif name=='Hit':chest.rotation_euler.x=-.22*pulse;spine.rotation_euler.z=.12*pulse
+   elif name=='Death':
+    arm.pose.bones['Root'].rotation_euler.x=1.45*min(1,t*1.25);hips.location.z=-.18*t
+   elif name not in ['Idle','Run']:
+    strength=1.25 if name=='Ultimate' else 1.0
+    hips.rotation_euler.z=(-.09*windup+.13*impact)*strength
+    chest.rotation_euler.z=(.18*windup-.33*impact)*strength
+    spine.rotation_euler.x=.08*impact;head.rotation_euler.z=-chest.rotation_euler.z*.35
+   bpy.context.view_layer.update()
+   if name!='Death':
+    for side,offset,sign in [('L',0,-1),('R',.5,1)]:
+     phase=(t+offset)%1;lift=0;forward=-.025;roll=0
+     if name=='Run':
+      if phase<.56:forward=-.36+.72*(phase/.56);roll=.10*max(0,(phase-.42)/.14)
+      else:
+       swing=(phase-.56)/.44;ease=swing*swing*(3-2*swing);forward=.36-.72*ease;lift=.16*sin(pi*swing);roll=-.20*sin(pi*swing)
+     foot=proportion(hero,(sign*.18,forward,.12+lift))
+     chain('Thigh'+side,'Shin'+side,'Foot'+side,foot,(0,-1,0),Quaternion((1,0,0),roll))
+    # Guard targets follow the torso; only a small vertical run bounce is permitted.
+    torso_matrix=chest.matrix@chest.bone.matrix_local.inverted()
+    for side,sign in [('L',-1),('R',1)]:
+     target=Vector(guard[side]);twist=0
+     if name=='Run':target.z+=.006*cos(t*4*pi)
+     elif name not in ['Idle','Hit']:
+      if hero=='Veyr':target.x+=sign*(.14*windup-.18*impact);target.y-=.16*impact;target.z+=(.12 if side=='R' else -.07)*impact;twist=sign*.75*impact
+      elif hero=='Rook':
+       if side=='R':target.y-=.23*impact;target.x-=.06*impact;target.z-=.05*impact
+       else:target.y-=.04*impact
+      elif hero=='Kaelon':target.y-=.13*impact;target.z+=(.24*windup-.14*impact) if side=='R' else .03*impact
+      elif hero=='Nyra':target.y+=.025*impact;chest.rotation_euler.z=.018*impact
+      else:
+       target.y-=.13*pulse;target.z+=(.27 if name=='Ultimate' else .13)*pulse;target.x+=sign*.055*pulse
+     if hero=='Veyr':twist+=sign*.52
+     handrot=Quaternion((0,1,0),twist)
+     point=torso_matrix@proportion(hero,target)
+     chain('UpperArm'+side,'Forearm'+side,'Hand'+side,point,(sign,-.10,-.40),handrot)
+   for bone in arm.pose.bones:bone.keyframe_insert('rotation_euler',frame=f,group=bone.name);bone.keyframe_insert('location',frame=f,group=bone.name)
+  track=arm.animation_data.nla_tracks.new();track.name=name;track.strips.new(name,1,action);track.mute=True
+ arm.animation_data.action=bpy.data.actions.get('Idle');bpy.context.scene.frame_set(1);bpy.context.view_layer.update()
 
 def build(hero,female,color,label):
  global parts;parts=[];random.seed(17)
@@ -143,7 +206,12 @@ def build(hero,female,color,label):
  for modifier in list(body.modifiers):body.modifiers.remove(modifier)
  # Normalize all heroes to one canonical deform skeleton; shape variation lives in anatomy.
  zmax=max(v.co.z for v in body.data.vertices);factor=1.795/zmax
- for v in body.data.vertices:v.co*=factor
+ for v in body.data.vertices:
+  v.co*=factor
+  if abs(v.co.x)>.34 and v.co.z<.89 and v.co.z>.64:
+   t=max(0,min(1,(.89-v.co.z)/.18))
+   v.co.z=.89-.045*sin(pi*t)
+   v.co.y-=.035*sin(pi*t)-.035*(1-cos(pi*t))
  body.data.materials.clear()
  skin=mat('Skin',(.52,.30,.20) if hero=='Rook' else (.68,.43,.31),rough=.46)
  cloth=mat('Obsidian fabric',(.018,.027,.048),rough=.75);accent=mat('Signature enamel',color,.45,.28);gold=mat('Champagne metal',(.64,.40,.16),.8,.25);steel=mat('Brushed silver',(.43,.53,.65),.82,.23);energy=mat('Energy',tuple(min(1,c*2+.15) for c in color),.15,.25,2);hair=mat('Hair',(.025,.018,.039) if hero!='Mira' else (.62,.49,.28),rough=.45);white=mat('Porcelain',(.69,.75,.69),.12,.38)
@@ -181,7 +249,11 @@ def build(hero,female,color,label):
    x=s*(.30+j*.009);z=1.19-j*.045;ellipsoid('Articulated bracer',(x,-.008,z),(.069,.075,.032),gold if j==0 else accent,'Forearm'+('L' if s<0 else 'R'))
   ellipsoid('Sculpted greave',(s*.155,.008,.32),(.084,.076,.19),accent,'Shin'+('L' if s<0 else 'R'))
   plate('Knee guard',[(s*.14-.06,.53),(s*.14,.56),(s*.14+.06,.53),(s*.14+.04,.45),(s*.14-.04,.45)],-.086,.022,steel,'Shin'+('L' if s<0 else 'R'))
-  ellipsoid('Boot toe',(s*.18,-.075,.075),(.087,.16,.085),cloth,'Foot'+('L' if s<0 else 'R'))
+  box('Boot sole',(s*.18,-.065,.035),(.16,.29,.034),cloth,'Foot'+('L' if s<0 else 'R'),.009)
+  box('Armored toe cap',(s*.18,-.145,.076),(.16,.13,.075),steel if hero in ['Kaelon','Rook'] else accent,'Foot'+('L' if s<0 else 'R'),.017)
+  box('Boot heel',(s*.18,.041,.060),(.14,.084,.075),cloth,'Foot'+('L' if s<0 else 'R'),.008)
+  box('Boot upper',(s*.18,-.025,.124),(.14,.17,.16),cloth,'Foot'+('L' if s<0 else 'R'),.017)
+  box('Boot buckle',(s*.18,-.115,.14),(.092,.019,.025),gold,'Foot'+('L' if s<0 else 'R'),.004)
   tube('Greave trim',[(s*.17,-.080,.15),(s*.155,-.080,.30),(s*.14,-.080,.44)],.008,gold,'Shin'+('L' if s<0 else 'R'))
  # Tailored collar, cross-body strap, fasteners and segmented abdomen.
  tube('Tailored collar',[(.095*cos(t*2*pi/40),.082*sin(t*2*pi/40),1.485) for t in range(41)],.036,cloth)
@@ -244,10 +316,22 @@ def build(hero,female,color,label):
  for s in [-1,1]:plate('Tasset',[(s*.035,1.0),(s*.14,1.02),(s*.20,.84),(s*.12,.78),(s*.045,.84)],-.17,.035,accent,'Hips')
  ellipsoid('Chest relic',(0,-.235,1.30),(.028,.014,.044),energy)
  if hero=='Veyr':
-  for s,k in [(-1,'L'),(1,'R')]:
-   tube('DF_Weapon'+k,[(s*.39,-.08,1.03),(s*.39,-.08,.90)],.017,gold,'Hand'+k)
-   plate('Rift blade',[(s*.39-.035,.91),(s*.39+.035,.91),(s*.39+.085,.36),(s*.39,.22),(s*.39-.03,.42)],-.08,.025,steel,'Hand'+k)
-   tube('Rift blade inlay',[(s*.39,-.094,.89),(s*.41,-.094,.48),(s*.39,-.094,.27)],.006,energy,'Hand'+k)
+  for side,k in [(-1,'L'),(1,'R')]:
+   tube('DF_Weapon'+k,[(side*.42,-.03,1.005),(side*.42,-.03,.865)],.015,cloth,'Hand'+k)
+   for j in range(6):tube('Grip wrap',[(side*.42-.016,-.045,.88+j*.020),(side*.42+.016,-.045,.887+j*.020)],.003,gold,'Hand'+k)
+   tube('Crescent crossguard',[(side*.34,-.03,.998),(side*.42,-.03,1.02),(side*.50,-.03,.998)],.012,gold,'Hand'+k)
+   # Two swept crescent blades, with a narrow inner cutting edge and pointed tips.
+   verts=[];faces=[]
+   for j in range(33):
+    a=-1.42+j*2.9/32;t=j/32;width=.075*sin(pi*t)
+    for y in [-.045,-.018]:
+     for inner in [False,True]:
+      verts.append((side*(.42+(.25-width if inner else .25)*sin(a)),y,.59+(.38-width if inner else .38)*cos(a)))
+   for j in range(32):
+    n=j*4;faces.extend([(n,n+4,n+5,n+1),(n+2,n+3,n+7,n+6),(n,n+2,n+6,n+4),(n+1,n+5,n+7,n+3)])
+   faces.extend([(0,1,3,2),(128,130,131,129)])
+   mesh('Moon sickle blade',verts,faces,steel,'Hand'+k)
+   tube('Violet crescent cutting edge',[(side*(.42+.25*sin(-1.42+j*2.9/40)),-.047,.59+.38*cos(-1.42+j*2.9/40)) for j in range(41)],.005,energy,'Hand'+k)
  elif hero=='Kaelon':
   plate('DF_WeaponL',[(-.45,1.30),(-.66,1.25),(-.69,.86),(-.45,.63),(-.22,.86),(-.24,1.25)],-.18,.06,steel,'HandL')
   plate('Shield enamel',[(-.45,1.25),(-.61,1.20),(-.62,.89),(-.45,.71),(-.29,.89),(-.29,1.20)],-.225,.025,accent,'HandL')
@@ -272,20 +356,105 @@ def build(hero,female,color,label):
   ellipsoid('Chronosphere',(.41,-.06,1.22),(.11,.08,.11),energy,'HandR')
   for j in range(3):
    a=j*pi/3;pts=[(.41+.145*cos(t*2*pi/48),-.06+.045*sin(t*2*pi/48+a),1.22+.145*sin(t*2*pi/48)) for t in range(49)];tube('Chronosphere orbit',pts,.007,gold,'HandR')
+ # Second art pass: deliberate head silhouettes, distinct armor construction and weapon detail.
+ if hero=='Veyr':
+  plate('Null full-face mask',[(-.090,1.733),(-.035,1.752),(.075,1.730),(.103,1.66),(.058,1.585),(0,1.566),(-.075,1.598),(-.103,1.667)],-.211,.035,cloth,'Head')
+  for side in [-1,1]:
+   tube('Mask violet eye',[(side*.018,-.255,1.696),(side*.068,-.248,1.709)],.006,energy,'Head')
+   tube('Mask cheek seam',[(side*.080,-.244,1.670),(side*.034,-.253,1.600)],.0035,steel,'Head')
+   plate('Assassin shoulder blade',[(side*.21,1.43),(side*.37,1.48),(side*.35,1.33),(side*.24,1.28)],-.06,.07,cloth,'UpperArm'+('L' if side<0 else 'R'))
+   box('Belt pouch',(side*.18,-.08,1.00),(.085,.12,.14),cloth,'Hips',.013)
+  for o in parts:
+   if o.name.startswith('DF_Torso'):o.data.materials[0]=cloth
+ elif hero=='Kaelon':
+  ellipsoid('Closed guardian helmet',(0,.005,1.695),(.135,.149,.173),steel,'Head',32,20)
+  plate('Guardian armored faceplate',[(-.112,1.75),(.112,1.75),(.12,1.65),(.065,1.566),(0,1.545),(-.065,1.566),(-.12,1.65)],-.189,.036,accent,'Head')
+  tube('Guardian visor',[(-.090,-.231,1.698),(0,-.244,1.690),(.090,-.231,1.698)],.008,energy,'Head')
+  tube('Helmet ridge',[(0,-.229,1.758),(0,-.12,1.87),(0,.08,1.875)],[.022,.029,.012],gold,'Head')
+  for side in [-1,1]:
+   for j in range(3):plate('Guardian shoulder lamella',[(side*.20,1.42-j*.036),(side*.38,1.40-j*.036),(side*.36,1.34-j*.036),(side*.22,1.35-j*.036)],-.11,.045,steel,'UpperArm'+('L' if side<0 else 'R'))
+   tube('Shield border',[(side*.19-.45,-.265,1.20),(side*.19-.45,-.265,.89),(-.45,-.265,.70)],.013,gold,'HandL')
+  box('Hammer striking block',(.4,-.04,1.16),(.28,.20,.17),steel,'HandR',.022)
+  box('Hammer energy inset',(.4,-.148,1.16),(.19,.013,.065),energy,'HandR',.009)
+ elif hero=='Nyra':
+  for side in [-1,1]:
+   plate('Recon goggle frame',[(side*.008,1.710),(side*.083,1.710),(side*.080,1.655),(side*.009,1.655)],-.166,.021,cloth,'Head')
+   plate('Recon lens',[(side*.015,1.698),(side*.074,1.700),(side*.070,1.669),(side*.016,1.669)],-.204,.005,accent,'Head')
+  tube('Recon antenna',[(.12,.02,1.68),(.14,.03,1.88)],.005,steel,'Head')
+  box('Rifle receiver',(.40,-.29,1.07),(.13,.34,.15),cloth,'HandR',.014)
+  box('Rifle magazine',(.40,-.27,.965),(.07,.095,.17),accent,'HandR',.008)
+  for j in range(5):box('Rifle top rail',(.40,-.18-j*.039,1.16),(.075,.018,.026),steel,'HandR',.004)
+  box('Rifle side emission',(.47,-.30,1.09),(.008,.19,.018),energy,'HandR',.003)
+ elif hero=='Elyra':
+  for side in [-1,1]:
+   tube('Archmage crown spire',[(side*.065,-.10,1.735),(side*.12,-.03,1.90),(side*.17,.01,1.96)],[.014,.018,.001],gold,'Head')
+   tube('Floating lunar shoulder',[(side*.19,-.04,1.40),(side*.34,.03,1.58),(side*.40,.08,1.48)],[.025,.019,.002],gold)
+   for j in range(4):ellipsoid('Suspended astral jewels',(side*(.25+j*.04),.07,1.43-j*.065),(.013,.014,.022),energy)
+  for o in parts:
+   if o.name.startswith(('HairLock','Flowing hair')):o.data.materials[0]=white
+  for j in range(7):
+   a=j*2*pi/7;tube('Staff orbit prong',[(.42+.09*cos(a),-.07,1.59+.09*sin(a)),(.42+.13*cos(a),-.07,1.59+.13*sin(a))],[.009,.002],gold,'HandR')
+ elif hero=='Mira':
+  for side in [-1,1]:
+   tube('Laurel leaf crown',[(side*.022,-.13,1.742),(side*.10,-.08,1.770),(side*.12,.015,1.738)],.009,gold,'Head')
+   for j in range(4):
+    x=side*(.035+j*.020);z=1.745+j*.003
+    plate('Laurel crown leaf',[(x,z),(x+side*.02,z+.035),(x+side*.03,z+.028),(x+side*.02,z-.004)],-.13+j*.017,.008,accent,'Head')
+   tube('White healer shoulder shawl',[(side*.105,.06,1.43),(side*.24,.01,1.41),(side*.30,-.045,1.30)],[.06,.055,.035],white,'UpperArm'+('L' if side<0 else 'R'))
+   for j in range(5):ellipsoid('Shawl green embroidery',(side*(.15+j*.027),-.067,1.435-j*.022),(.006,.005,.012),accent)
+  for j in range(4):tube('Staff vine',[(.42+.03*cos(t*pi/8+j),-.07+.03*sin(t*pi/8+j),.25+t*.065) for t in range(18)],.004,accent,'HandR')
+ elif hero=='Rook':
+  for side in [-1,1]:
+   box('Industrial shoulder cage',(side*.29,.03,1.40),(.30,.31,.18),cloth,'UpperArm'+('L' if side<0 else 'R'),.035)
+   for j in range(4):box('Shoulder heat fin',(side*.29,-.135,1.34+j*.027),(.19,.018,.012),steel,'UpperArm'+('L' if side<0 else 'R'),.003)
+   box('Gauntlet armor chassis',(side*.39,-.022,1.02),(.27,.30,.24),cloth,'Hand'+('L' if side<0 else 'R'),.035)
+   for j in range(4):box('Segmented knuckle',(side*.39+(j-1.5)*.055,-.19,1.04),(.048,.055,.10),accent,'Hand'+('L' if side<0 else 'R'),.012)
+  plate('Steel jaw respirator',[(-.07,1.637),(.07,1.637),(.063,1.573),(-.063,1.573)],-.205,.03,steel,'Head')
+  box('Cybernetic eye',(.048,-.155,1.678),(.045,.04,.025),energy,'Head',.006)
+ elif hero=='Traveler':
+  ellipsoid('Chronomancer sealed hood',(0,.03,1.69),(.145,.16,.18),cloth,'Head',32,18)
+  plate('Chronomancer porcelain mask',[(-.083,1.75),(.083,1.75),(.10,1.64),(0,1.57),(-.10,1.64)],-.195,.035,white,'Head')
+  tube('Chronomancer eye slit',[(-.065,-.241,1.70),(.065,-.241,1.70)],.005,energy,'Head')
+  tube('Chronomancer vertical rune',[(0,-.245,1.735),(0,-.245,1.62)],.004,gold,'Head')
+  for side in [-1,1]:tube('Cowl gold rim',[(side*.11,-.07,1.56),(side*.14,-.09,1.72),(side*.08,-.04,1.84)],.009,gold,'Head')
+ # Remove the shared shoulder silhouette from robe and recon classes.
+ if hero in ['Nyra','Elyra','Mira','Traveler']:
+  removed=[o for o in parts if o.name.startswith('Layered pauldron')]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
  arm=rig()
  for o in parts:
   if o.get('bone','').startswith('Hand'):
-   for v in o.data.vertices:v.co.z-=.10
+   side=-1 if o['bone'].endswith('L') else 1
+   shift=Vector((side*.005,0,-.035)) if hero=='Veyr' else Vector((side*.02,.035,-.10))
+   for v in o.data.vertices:v.co+=shift
   bind(o,arm,o==body)
+ # Proportions alter anatomy, costume, weapon positions and bind skeleton together.
+ for o in parts:
+  for v in o.data.vertices:v.co=proportion(hero,v.co)
+ bpy.ops.object.select_all(action='DESELECT');arm.select_set(True);bpy.context.view_layer.objects.active=arm;bpy.ops.object.mode_set(mode='EDIT')
+ for bone in arm.data.edit_bones:
+  bone.head=proportion(hero,bone.head);bone.tail=proportion(hero,bone.tail)
+ bpy.ops.object.mode_set(mode='OBJECT')
  animations(arm,hero)
  # Explicit named VFX socket travels with the weapon hand.
  socket=bpy.data.objects.new('DF_Muzzle',None);bpy.context.collection.objects.link(socket);socket.parent=arm;socket.parent_type='BONE';socket.parent_bone='HandR';bpy.context.view_layer.update()
  muzzle_point={'Nyra':(.40,-.71,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.12),'Rook':(.39,-.16,.92),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
- socket.matrix_world=Matrix.Translation(muzzle_point)
- # Merge costume sections into one weighted renderer with shared material slots.
- bpy.ops.object.select_all(action='DESELECT')
- for o in parts:o.select_set(True)
- bpy.context.view_layer.objects.active=body;bpy.ops.object.join();parts=[body]
+ socket.matrix_world=Matrix.Translation(proportion(hero,muzzle_point))
+ # Body and shop-addressable weapon renderers share one rig, but never one renderer.
+ grouped={'DF_Anatomy':[]}
+ for o in parts:
+  bone=o.get('bone','')
+  key=('DF_Gauntlet' if hero=='Rook' else 'DF_Weapon')+bone[-1] if bone in ['HandL','HandR'] else 'DF_Anatomy'
+  grouped.setdefault(key,[]).append(o)
+ merged=[]
+ for name,objects in grouped.items():
+  bpy.ops.object.select_all(action='DESELECT')
+  for o in objects:o.select_set(True)
+  active=body if name=='DF_Anatomy' else objects[0]
+  bpy.context.view_layer.objects.active=active
+  if len(objects)>1:bpy.ops.object.join()
+  active.name=name;active.data.name=name;merged.append(active)
+ parts=merged
  # FBX exports gameplay objects only; studio scene is saved independently for reproducible previews.
  bpy.ops.object.select_all(action='DESELECT')
  for o in parts+[arm,socket]:o.select_set(True)
@@ -298,7 +467,7 @@ def build(hero,female,color,label):
  def aim(o,at):o.rotation_euler=(Vector(at)-o.location).to_track_quat('-Z','Y').to_euler()
  for n,loc,power,size,col in [('Key',(-3,-4,5),650,4,(1,.85,.68)),('Fill',(3,-2,3),400,3,(.55,.72,1)),('Rim',(1,3,4),850,2,(.5,.65,1))]:
   d=bpy.data.lights.new(n,'AREA');d.energy=power;d.shape='DISK';d.size=size;d.color=col;o=bpy.data.objects.new(n,d);bpy.context.collection.objects.link(o);o.location=loc;aim(o,(0,0,1))
- d=bpy.data.cameras.new('Portrait');camera=bpy.data.objects.new('Portrait',d);bpy.context.collection.objects.link(camera);camera.location=(2.7,-6,2.4);aim(camera,(0,-.03,.95));d.type='ORTHO';d.ortho_scale=2.30;scene.camera=camera
+ d=bpy.data.cameras.new('Portrait');camera=bpy.data.objects.new('Portrait',d);bpy.context.collection.objects.link(camera);camera.location=(2.7,-6,2.4);aim(camera,(0,-.03,.95));d.type='ORTHO';d.ortho_scale=2.60;scene.camera=camera
  scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=os.path.join(PREVIEW,hero+'.png')
  bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT,'ArtSource/Heroes',hero+'.blend'),compress=True)
  bpy.ops.render.render(write_still=True)
