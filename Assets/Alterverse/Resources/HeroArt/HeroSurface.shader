@@ -36,9 +36,10 @@ Shader "DimensionsFront/HeroSurface"
     half diffuse=smoothstep(-.18h,.88h,dot(n,direction));
     half power=lerp(12.0h,96.0h,smoothness);
     half spec=pow(saturate(dot(n,SafeNormalize(direction+view))),power)*ndl;
+    half clearcoat=pow(saturate(dot(n,SafeNormalize(direction+view))),128.0h)*ndl*smoothness*.16h;
     half3 specColor=lerp(half3(.16h,.18h,.21h),lerp(albedo,1.0h,.52h),metal);
     half broad=pow(saturate(dot(n,SafeNormalize(direction+view))),lerp(5.0h,18.0h,smoothness))*ndl;
-    return (albedo*diffuse*(1.0h-metal*.28h)+specColor*(spec*(.65h+smoothness*.7h)+broad*.12h*smoothness))*lightColor;
+    return (albedo*diffuse*(1.0h-metal*.28h)+specColor*(spec*(.65h+smoothness*.7h)+broad*.12h*smoothness)+clearcoat*half3(.82h,.90h,1.0h))*lightColor;
    }
    half4 frag(V i):SV_Target
    {
