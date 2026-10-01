@@ -19,6 +19,7 @@ namespace Alterverse.Visuals
 
         private void Start()
         {
+            if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
             BuildVoidFloor();
             BuildStars();
             BuildBrightStars();
@@ -293,3 +294,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

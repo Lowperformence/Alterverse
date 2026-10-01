@@ -209,19 +209,10 @@ namespace Alterverse.Visuals
 
         Material MakeMaterial(string name,Color color,float metallic,float smoothness,bool emission=false,float emissionPower=1f)
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit");
-            if(shader==null)shader=Shader.Find("Standard");
-            if(shader==null)return null;
-            Material material=new(shader){name=name};
-            if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
-            if(material.HasProperty("_Color"))material.SetColor("_Color",color);
-            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",metallic);
-            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",smoothness);
-            if(emission)
-            {
-                material.EnableKeyword("_EMISSION");
-                if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",color*emissionPower);
-            }
+            Material material=RuntimeShaderLibrary.Create(color,false,metallic,smoothness,
+                emission?color*emissionPower:Color.black);
+            if(material==null)return null;
+            material.name=name;
             ownedMaterials.Add(material);
             return material;
         }
@@ -235,7 +226,7 @@ namespace Alterverse.Visuals
             go.transform.localRotation=rotation;
             go.transform.localScale=scale;
             Collider collider=go.GetComponent<Collider>();
-            if(collider!=null)Object.Destroy(collider);
+            if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             MeshRenderer renderer=go.GetComponent<MeshRenderer>();
             if(renderer!=null&&material!=null)renderer.sharedMaterial=material;
             return go;
@@ -267,19 +258,10 @@ namespace Alterverse.Visuals
 
         public static Material Material(List<Material> owned,string name,Color color,float metallic,float smoothness,bool emission=false,float power=1f)
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit");
-            if(shader==null)shader=Shader.Find("Standard");
-            if(shader==null)return null;
-            Material material=new(shader){name=name};
-            if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
-            if(material.HasProperty("_Color"))material.SetColor("_Color",color);
-            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",metallic);
-            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",smoothness);
-            if(emission)
-            {
-                material.EnableKeyword("_EMISSION");
-                if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",color*power);
-            }
+            Material material=RuntimeShaderLibrary.Create(color,false,metallic,smoothness,
+                emission?color*power:Color.black);
+            if(material==null)return null;
+            material.name=name;
             owned.Add(material);
             return material;
         }
@@ -293,7 +275,7 @@ namespace Alterverse.Visuals
             go.transform.localRotation=localRotation;
             go.transform.localScale=localScale;
             Collider collider=go.GetComponent<Collider>();
-            if(collider!=null)Object.Destroy(collider);
+            if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             MeshRenderer renderer=go.GetComponent<MeshRenderer>();
             if(renderer!=null&&material!=null)renderer.sharedMaterial=material;
             return go;
@@ -460,3 +442,4 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
+
