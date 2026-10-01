@@ -1,0 +1,233 @@
+[
+  {
+    "hero": "Veyr",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 22729,
+    "bounds": [
+      [
+        -0.4693465232849121,
+        0.47418519854545593
+      ],
+      [
+        -0.2521190047264099,
+        0.2545226514339447
+      ],
+      [
+        -0.009999999776482582,
+        1.8143925666809082
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Kaelon",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 22101,
+    "bounds": [
+      [
+        -0.6893097162246704,
+        0.5299999713897705
+      ],
+      [
+        -0.2833147943019867,
+        0.16500000655651093
+      ],
+      [
+        -0.009999999776482582,
+        1.8794796466827393
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Nyra",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 22048,
+    "bounds": [
+      [
+        -0.460578590631485,
+        0.4722802937030792
+      ],
+      [
+        -0.699999988079071,
+        0.2545226514339447
+      ],
+      [
+        -0.009999999776482582,
+        1.8143925666809082
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Elyra",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 25472,
+    "bounds": [
+      [
+        -0.460578590631485,
+        0.5496115684509277
+      ],
+      [
+        -0.3087534010410309,
+        0.2545226514339447
+      ],
+      [
+        -0.009999999776482582,
+        1.8508695363998413
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Mira",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 24262,
+    "bounds": [
+      [
+        -0.460578590631485,
+        0.5496115684509277
+      ],
+      [
+        -0.31074029207229614,
+        0.2545226514339447
+      ],
+      [
+        -0.009999999776482582,
+        1.8143925666809082
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Rook",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 24929,
+    "bounds": [
+      [
+        -0.5149999856948853,
+        0.5149999856948853
+      ],
+      [
+        -0.2521190047264099,
+        0.1980181336402893
+      ],
+      [
+        -0.009999999776482582,
+        1.8143925666809082
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  },
+  {
+    "hero": "Traveler",
+    "meshCount": 1,
+    "bones": 17,
+    "animations": [
+      "DF_Skeleton|DF_Skeleton|Attack",
+      "DF_Skeleton|DF_Skeleton|Death",
+      "DF_Skeleton|DF_Skeleton|Hit",
+      "DF_Skeleton|DF_Skeleton|Idle",
+      "DF_Skeleton|DF_Skeleton|Run",
+      "DF_Skeleton|DF_Skeleton|Skill0",
+      "DF_Skeleton|DF_Skeleton|Skill1",
+      "DF_Skeleton|DF_Skeleton|Skill2",
+      "DF_Skeleton|DF_Skeleton|Ultimate"
+    ],
+    "vertices": 24225,
+    "bounds": [
+      [
+        -0.4693465232849121,
+        0.5619850158691406
+      ],
+      [
+        -0.2521190047264099,
+        0.2545226514339447
+      ],
+      [
+        -0.009999999776482582,
+        1.8143925666809082
+      ]
+    ],
+    "materials": 8,
+    "weighted": true
+  }
+]

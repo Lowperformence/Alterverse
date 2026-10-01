@@ -57,7 +57,7 @@ namespace Alterverse.Visuals
             Vector3 size=h==HeroId.Nyra?new Vector3(.55f,.55f,1.05f)*strength:Vector3.one*.72f*strength;
             HeroVfxPool.Emit(shape,start,end,size,c,flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A second cached mesh adds a feathered halo or a long narrow tracer tail.
-            HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Bolt:HeroFxShape.Halo,start,end,
+            HeroVfxPool.Emit(h==HeroId.Nyra?HeroFxShape.Streak:HeroFxShape.Halo,start,end,
                 h==HeroId.Nyra?new Vector3(.42f,.42f,1.75f)*strength:Vector3.one*.78f*strength,
                 new Color(c.r,c.g,c.b,.68f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             // A narrow, bright core and staggered fragments make the projectile read as motion.
@@ -220,7 +220,7 @@ namespace Alterverse.Visuals
         public static void Cast(GameObject actor,int slot)
         {
             if(actor==null)return;
-            HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
+            HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
             Quaternion facing=actor.transform.rotation;
             switch(h)
             {
@@ -593,7 +593,7 @@ namespace Alterverse.Visuals
             switch(hero)
             {
                 case HeroId.Veyr:
-                    Fx(HeroFxShape.Slash,p,c,strength*2,.16f,HeroFxMotion.Sweep,Face(actor.transform.position,p)*Quaternion.Euler(25,0,30));
+                    Fx(HeroFxShape.ArcRibbon,p,c,strength*2,.16f,HeroFxMotion.Sweep,Face(actor.transform.position,p)*Quaternion.Euler(25,0,30));
                     if(slot<0)Fx(HeroFxShape.Rift,p,DarkCore,strength*1.15f,.12f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
                     break;
                 case HeroId.Kaelon:
@@ -675,7 +675,7 @@ namespace Alterverse.Visuals
         {
             if(actor==null||target==null)return;
             HeroId hero=Hero(actor);
-            Color c=Accent(actor);
+            Color c=hero==HeroId.Mira?new Color(.22f,1f,.52f):Accent(actor);
             Color holy=hero==HeroId.Mira?Color.Lerp(c,Color.white,.38f):c;
             Vector3 p=target.transform.position+Vector3.down*.70f;
             if(shield)
@@ -691,6 +691,19 @@ namespace Alterverse.Visuals
             else
             {
                 Color heal=hero==HeroId.Mira?new Color(.22f,1f,.52f):new Color(.22f,1,.52f);
+                if(hero==HeroId.Mira)
+                {
+                    for(int i=0;i<3;i++)
+                    {
+                        float angle=i*Mathf.PI*2f/3f;
+                        Vector3 offset=new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*.26f;
+                        Vector3 start=p+offset-Vector3.up*.18f;
+                        HeroVfxPool.Emit(HeroFxShape.Leaf,start,start+Vector3.up*.75f+offset*.35f,
+                            Vector3.one*.28f,heal,.46f,HeroFxMotion.Drift,
+                            Camera.main!=null?Camera.main.transform.rotation:Quaternion.identity,actor,
+                            delay:i*.035f,decorative:true);
+                    }
+                }
                 Fx(HeroFxShape.Plus,target.transform.position+Vector3.up*.45f,heal,.52f,.48f,actor:actor,follow:target.transform);
                 Fx(HeroFxShape.Petals,p+Vector3.up*.08f,new Color(heal.r,heal.g,heal.b,.68f),.86f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
                 HeroVfxPool.Emit(HeroFxShape.Ring,p,p+Vector3.up*.8f,Vector3.one*.62f,heal,.40f,HeroFxMotion.Travel,owner:actor);

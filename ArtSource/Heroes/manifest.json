@@ -1,0 +1,58 @@
+[
+  {
+    "hero": "Veyr",
+    "label": "ZHAEV NULL",
+    "vertices": 22729,
+    "triangles": 43938,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Kaelon",
+    "label": "AUREN KEST",
+    "vertices": 22101,
+    "triangles": 42550,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Nyra",
+    "label": "SIVRA QUELL",
+    "vertices": 22048,
+    "triangles": 42526,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Elyra",
+    "label": "IONE VASKA",
+    "vertices": 25472,
+    "triangles": 49234,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Mira",
+    "label": "TAHLA VENN",
+    "vertices": 24262,
+    "triangles": 46986,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Rook",
+    "label": "BRAKK ORUN",
+    "vertices": 24929,
+    "triangles": 47746,
+    "bones": 17,
+    "animations": 9
+  },
+  {
+    "hero": "Traveler",
+    "label": "THE TRAVELER",
+    "vertices": 24225,
+    "triangles": 46890,
+    "bones": 17,
+    "animations": 9
+  }
+]

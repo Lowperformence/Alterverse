@@ -16,6 +16,7 @@ namespace Alterverse.Visuals
             public Vector2 offset,velocity;
         }
         private readonly List<ClothPanel> clothPanels=new();
+        private AuthoredHeroPresentation authored;
         private HeroIdentity identity;
         private Health health;
         private HeroLocomotion locomotion;
@@ -46,6 +47,7 @@ namespace Alterverse.Visuals
         {
             get
             {
+                if(authored!=null)return authored.ReleasePoint;
                 if(muzzle!=null)return muzzle.position;
                 if(orb!=null)return orb.position;
                 HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
@@ -67,6 +69,7 @@ namespace Alterverse.Visuals
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
         {
+            if(authored!=null){authored.PulseAttack(ultimate);GetComponent<VoidWingPresentation>()?.Pulse();return;}
             // Snapshot the visible pose before restarting a combo; never snap a raised weapon to rest.
             attackArmR=displayedArmR;attackArmL=displayedArmL;
             attackWeaponR=Rest(weaponR);attackWeaponL=Rest(weaponL);
@@ -81,17 +84,19 @@ namespace Alterverse.Visuals
         }
         public void PulseBasic(float windup)
         {
+            if(authored!=null){authored.PulseBasic(windup);return;}
             PulseAttack(false);
             windupUntil=Time.time+windup;windupDuration=Mathf.Max(0,windup);attackUntil=identity!=null&&identity.Hero==HeroId.Veyr?attackStarted+.70f:windupUntil+attackDuration;
         }
         public void PulseAbility(int slot,float windup)
         {
+            if(authored!=null){authored.PulseAbility(slot,windup);GetComponent<VoidWingPresentation>()?.Pulse();return;}
             PulseAttack(slot==3);abilitySlot=slot;
             windupDuration=Mathf.Max(0,windup);windupUntil=Time.time+windupDuration;attackUntil=windupUntil+attackDuration;
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
         }
-        public void Empower(float seconds)=>empowerUntil=Time.time+Mathf.Max(0,seconds);
-        public void PulseDash()=>dashUntil=Time.time+.17f;
+        public void Empower(float seconds){if(authored!=null){authored.Empower(seconds);return;}empowerUntil=Time.time+Mathf.Max(0,seconds);}
+        public void PulseDash(){if(authored!=null){authored.PulseDash();return;}dashUntil=Time.time+.17f;}
         private Transform FindPart(string name)
         {
             if(root==null)return null;
@@ -100,6 +105,8 @@ namespace Alterverse.Visuals
         }
         private void Start()
         {
+            authored=GetComponent<AuthoredHeroPresentation>();
+            if(authored!=null){identity=GetComponent<HeroIdentity>();locomotion=GetComponent<HeroLocomotion>();return;}
             // Native Unity objects must be created in a lifecycle callback, not a field initializer.
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
@@ -201,6 +208,7 @@ namespace Alterverse.Visuals
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private void LateUpdate()
         {
+            if(authored!=null){PlanarSpeed=authored.PlanarSpeed;return;}
             if(root==null)return;
             Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
             if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousWorldVelocity=Vector3.zero;return;}

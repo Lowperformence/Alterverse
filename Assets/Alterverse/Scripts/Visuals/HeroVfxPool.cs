@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -255,6 +255,24 @@ namespace Alterverse.Visuals
             }
             switch(shape)
             {
+                case HeroFxShape.Streak:
+                    // Crossed feathered ribbons taper to the actual projectile head at local Z=0.
+                    foreach(Vector3 side in new[]{Vector3.right*.10f,Vector3.up*.10f})
+                    {
+                        Vector3 tail=Vector3.back*1.4f,shoulder=Vector3.back*.18f;
+                        SoftQuad(tail,shoulder-side,shoulder,Vector3.zero,clear,hot);
+                        SoftQuad(tail,shoulder,shoulder+side,Vector3.zero,hot,clear);
+                    }
+                    break;
+                case HeroFxShape.ArcRibbon:
+                    FeatherBand(-1.42f,1.42f,.70f,.84f,.92f,40,true);
+                    FeatherBand(-1.20f,1.28f,.96f,.99f,1.025f,32,true);
+                    break;
+                case HeroFxShape.Leaf:
+                    // An asymmetric luminous leaf, with a fine central vein and soft contour.
+                    SoftQuad(new Vector3(0,-.55f,0),new Vector3(-.22f,.05f,0),new Vector3(0,.10f,.035f),new Vector3(.055f,.50f,0),clear,hot);
+                    SoftQuad(new Vector3(0,-.55f,0),new Vector3(0,.10f,.035f),new Vector3(.22f,.09f,0),new Vector3(.055f,.50f,0),hot,clear);
+                    break;
                 case HeroFxShape.ContactStar:
                     // Camera-facing sharp star with feathered ray borders; twelve triangles pairs reused.
                     for(int i=0;i<8;i++)

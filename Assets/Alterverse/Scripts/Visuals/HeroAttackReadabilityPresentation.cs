@@ -136,7 +136,7 @@ namespace Alterverse.Visuals
 
         private void EmitPresentationVfx(HeroId hero,int slot,Vector3 target,float attackWindup,AbilitySpec spec)
         {
-            Color color=hero==HeroId.Mira?new Color(1f,.72f,.28f):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
+            Color color=hero==HeroId.Mira?(slot>=1?new Color(.22f,1f,.45f):new Color(1f,.72f,.28f)):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
             Vector3 origin=ReleasePoint();
             if(slot>=0)
             {
@@ -147,7 +147,7 @@ namespace Alterverse.Visuals
             }
 
             // Veyr's basic strike draws two blade-bound trails in HeroVisualMotion.
-            if(hero==HeroId.Veyr)return;
+            if(hero==HeroId.Veyr){if(GetComponent<AuthoredHeroPresentation>()!=null)EmitReleaseDetail(hero,-1,origin,color);return;}
 
             // Basic attacks get one short weapon-side flash. HeroSkillVfx owns the hit.
             HeroFxShape release=hero==HeroId.Nyra||hero==HeroId.Traveler?HeroFxShape.Bolt:
@@ -224,12 +224,15 @@ namespace Alterverse.Visuals
             Color core=Color.Lerp(accent,Color.white,.72f);
             core.a=.86f;
             float power=slot==3?1.25f:slot<0?.74f:1f;
+            Camera view=Camera.main;
+            HeroVfxPool.Emit(HeroFxShape.ContactStar,hand,hand,Vector3.one*.16f*power,core,.065f,
+                HeroFxMotion.Contract,view!=null?view.transform.rotation:facing,gameObject,decorative:true);
             switch(hero)
             {
                 case HeroId.Veyr:
                     // Twin blade cuts meet in front of the chest, independently of the sword rig.
                     for(int side=0;side<2;side++)
-                        HeroVfxPool.Emit(HeroFxShape.Slash,chest+transform.forward*.48f,Vector3.zero,
+                        HeroVfxPool.Emit(HeroFxShape.ArcRibbon,chest+transform.forward*.48f,Vector3.zero,
                             new Vector3(1.12f*power,.08f,1.12f*power),side==0?accent:core,.20f,
                             HeroFxMotion.Sweep,facing*Quaternion.Euler(65f,0f,side==0?-38f:38f),gameObject,
                             delay:side*.035f,decorative:true);
