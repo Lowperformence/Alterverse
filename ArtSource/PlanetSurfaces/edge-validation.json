@@ -6,7 +6,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.14445985710232578,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -18,7 +18,7 @@
       160
     ],
     "boundaryVertices": 704,
-    "minimumSignedTriangleArea": 0.09103559991820331,
+    "minimumSignedTriangleArea": 0.0917702401876712,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -30,7 +30,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.14640514872581978,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -42,7 +42,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.14940110291584377,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -54,7 +54,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.14457927422575648,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -66,7 +66,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.14907933930123426,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -78,7 +78,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.1566565858394484,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -90,7 +90,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.16317224755670748,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -102,7 +102,7 @@
       128
     ],
     "boundaryVertices": 544,
-    "minimumSignedTriangleArea": 0.1415500732868578,
+    "minimumSignedTriangleArea": 0.15523808366663117,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -114,7 +114,7 @@
       72
     ],
     "boundaryVertices": 312,
-    "minimumSignedTriangleArea": 0.5,
+    "minimumSignedTriangleArea": 0.467259712611935,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true
@@ -126,7 +126,7 @@
       144
     ],
     "boundaryVertices": 624,
-    "minimumSignedTriangleArea": 0.10927081670141524,
+    "minimumSignedTriangleArea": 0.11160928895052877,
     "interiorUnchanged": true,
     "outwardOnly": true,
     "sharedCliffTop": true

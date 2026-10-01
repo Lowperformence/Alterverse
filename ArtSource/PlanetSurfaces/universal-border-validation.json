@@ -1,0 +1,11 @@
+{
+  "vertices": 2185,
+  "triangles": 4056,
+  "rings": 6,
+  "openBoundaryEdges": 312,
+  "connectedComponents": 1,
+  "detachedFragments": 0,
+  "maxRuntimeTriangles": 9152,
+  "topologyValidation": "passed",
+  "unityPlayModeValidation": "pending"
+}

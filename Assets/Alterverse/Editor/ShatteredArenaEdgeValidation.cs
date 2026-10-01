@@ -11,6 +11,7 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Visuals/Validate all shattered map outlines")]
         public static void ValidateAll()
         {
+            ShatteredArenaEdge.ValidateProfile();
             foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
             {
                 int xs=planet==ArenaVariant.Mars?192:planet==ArenaVariant.GJ504b?168:planet==ArenaVariant.DiamondCore?84:144;

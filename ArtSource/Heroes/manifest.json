@@ -58,8 +58,8 @@
   {
     "hero": "Mira",
     "label": "TAHLA VENN",
-    "vertices": 32238,
-    "triangles": 62144,
+    "vertices": 23449,
+    "triangles": 45530,
     "bones": 19,
     "animations": 9,
     "limbVolume": {

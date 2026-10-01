@@ -20,10 +20,9 @@ namespace Alterverse.Visuals
             if(blend<=0f)return p;
             float angle=Mathf.Atan2(z,x)/(Mathf.PI*2f);
             if(angle<0f)angle+=1f;
-            int seed=(int)variant*73+19;
-            float broad=Angular(angle,32,seed),chips=Angular(angle,112,seed+31);
-            float extension=.45f+broad*2.25f+chips*.95f;
-            if(variant==ArenaVariant.Kryon||variant==ArenaVariant.DiamondCore)extension*=1.12f;
+            const int seed=19;
+            float broad=Angular(angle,24,seed),chips=Angular(angle,80,seed+31);
+            float extension=.45f+broad*2.40f+chips*.55f;
             return p+p/radius*(extension*blend);
         }
 
@@ -52,24 +51,55 @@ namespace Alterverse.Visuals
             return points.ToArray();
         }
 
+        [System.Serializable]
+        sealed class BorderProfile
+        {
+            public int version;
+            public int sampleCount;
+            public int ringCount;
+            public float[] radialScale;
+            public float[] depth;
+        }
+        static BorderProfile profile;
+        public static void ValidateProfile()=>LoadProfile();
+        static BorderProfile LoadProfile()
+        {
+            if(profile!=null)return profile;
+            var asset=Resources.Load<TextAsset>("PlanetSurfaces/UniversalBorder");
+            if(asset==null)throw new System.InvalidOperationException("Missing Blender-authored universal border profile.");
+            var data=JsonUtility.FromJson<BorderProfile>(asset.text);
+            if(data==null||data.version!=1||data.sampleCount<4||data.ringCount<1||data.radialScale==null||data.depth==null||
+                data.radialScale.Length!=data.sampleCount*data.ringCount||data.depth.Length!=data.radialScale.Length)
+                throw new System.InvalidOperationException("Invalid universal border profile dimensions.");
+            for(int ring=0;ring<data.ringCount;ring++)for(int i=0;i<data.sampleCount;i++)
+            {
+                int index=ring*data.sampleCount+i;
+                if(float.IsNaN(data.radialScale[index])||float.IsInfinity(data.radialScale[index])||data.radialScale[index]<.5f||data.radialScale[index]>1.04f||
+                    float.IsNaN(data.depth[index])||float.IsInfinity(data.depth[index])||
+                    data.depth[index]>-.15f||(ring>0&&data.depth[index]>=data.depth[index-data.sampleCount]))
+                    throw new System.InvalidOperationException("Invalid universal border profile geometry.");
+            }
+            return profile=data;
+        }
+        static float Sample(float[] values,int ring,int count,float angle)
+        {
+            float p=angle*count;int i=Mathf.FloorToInt(p);float blend=p-i;i%=count;
+            return Mathf.Lerp(values[ring*count+i],values[ring*count+(i+1)%count],blend);
+        }
         public static void Build(Transform parent,Vector3[] boundary,Material crust,Material middle,Material dark,List<Mesh> owned)
         {
             if(boundary==null||boundary.Length<4)return;
-            Vector3[] upper=boundary;
-            float[] depths={-.8f,-3.1f,-7.3f,-10.0f};
-            float[] scales={1.014f,.973f,.855f,.69f};
-            int seed=(int)ArenaVariantRuntime.Current*73+19;
-            for(int layer=0;layer<depths.Length;layer++)
+            var data=LoadProfile();Vector3[] upper=boundary;
+            for(int layer=0;layer<data.ringCount;layer++)
             {
                 var lower=new Vector3[boundary.Length];
                 for(int i=0;i<lower.Length;i++)
                 {
-                    Vector3 p=boundary[i];
-                    // Angular cuts and differently recessed strata create ledges, chips and undercuts.
-                    float a=Mathf.Atan2(p.z,p.x)/(Mathf.PI*2f);if(a<0)a+=1;
-                    float cut=Angular(a,48,seed+layer*13);
-                    float scale=scales[layer]+(cut-.5f)*.022f;
-                    lower[i]=new Vector3(p.x*scale,depths[layer]-(cut-.5f)*(.75f+layer*.55f),p.z*scale);
+                    Vector3 p=boundary[i];float angle=Mathf.Atan2(p.z,p.x)/(Mathf.PI*2f);if(angle<0)angle+=1;
+                    float scale=Sample(data.radialScale,layer,data.sampleCount,angle);
+                    float depth=Sample(data.depth,layer,data.sampleCount,angle);
+                    // Exact live upper boundary; terrain relief fades into the authored cliff depth.
+                    lower[i]=new Vector3(p.x*scale,depth+p.y*Mathf.Clamp01(1f+depth/12f),p.z*scale);
                 }
                 var vertices=new List<Vector3>(boundary.Length*6);var triangles=new List<int>(boundary.Length*6);
                 for(int i=0;i<upper.Length;i++)
@@ -78,13 +108,12 @@ namespace Alterverse.Visuals
                     Face(vertices,triangles,upper[i],upper[j],lower[i]);
                     Face(vertices,triangles,upper[j],lower[j],lower[i]);
                 }
-                Emit(parent,"DF_ShatteredPlanetCliff_"+layer,vertices,triangles,layer==0?crust:layer==1?middle:dark,owned);
+                Emit(parent,"DF_UniversalPlanetCliff_"+layer,vertices,triangles,layer<2?crust:layer<4?middle:dark,owned);
                 upper=lower;
             }
             var bottomV=new List<Vector3>();var bottomT=new List<int>();
-            for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-11.5f,0),upper[i],upper[(i+1)%upper.Length]);
-            Emit(parent,"DF_ShatteredPlanetUnderside",bottomV,bottomT,dark,owned);
-
+            for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-18f,0),upper[i],upper[(i+1)%upper.Length]);
+            Emit(parent,"DF_UniversalPlanetUnderside",bottomV,bottomT,dark,owned);
         }
         static void Face(List<Vector3> v,List<int> t,Vector3 a,Vector3 b,Vector3 c)
         {int start=v.Count;v.Add(a);v.Add(b);v.Add(c);t.Add(start);t.Add(start+1);t.Add(start+2);}

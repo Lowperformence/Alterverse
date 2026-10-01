@@ -1,0 +1,167 @@
+[
+  {
+    "planet": "Moon",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Mars",
+    "grid": [
+      192,
+      160
+    ],
+    "boundaryVertices": 704,
+    "minimumSignedTriangleArea": 0.0917702401876712,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 9152,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "GreenPlanet",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Noxara",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Kryon",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Earth",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Pyraxis",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Neptune",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "Dark00",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.15523808366663117,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 7072,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "DiamondCore",
+    "grid": [
+      84,
+      72
+    ],
+    "boundaryVertices": 312,
+    "minimumSignedTriangleArea": 0.467259712611935,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 4056,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  },
+  {
+    "planet": "GJ504b",
+    "grid": [
+      168,
+      144
+    ],
+    "boundaryVertices": 624,
+    "minimumSignedTriangleArea": 0.11160928895052877,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true,
+    "adaptiveBorderTriangles": 8112,
+    "universalProfile": "passed",
+    "detachedFragments": 0
+  }
+]

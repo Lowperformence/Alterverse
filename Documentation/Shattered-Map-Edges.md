@@ -1,7 +1,11 @@
-# Shattered borders across all eleven planets
+# Universal Blender-authored map border
 
-The shared surface and the independent GJ 504 b / Diamond Core floors now use one deterministic, outward-only angular outline. The complete original play rectangle remains covered. The interior below 88% of the half extents is unchanged. Gameplay colliders and navigation code are untouched.
+All eleven maps share one connected fractured cliff design. The silhouette uses the same deterministic outline across planets; only the existing map materials and upper-floor relief vary. There are no detached splinters.
 
-Four shared-boundary cliff bands form chipped ledges and a recessed underside. The border remains attached to the map; no loose fragments are generated outside it. Existing planet materials are reused, including magenta sandstone and Diamond Core's transparent/dark crystal materials. The Diamond Core overlay samples the same one-unit boundary grid as its base floor so a straight overlay cannot hide the new silhouette.
+`Tools/PlanetSurfaces/build_universal_border.py` creates `UniversalBorder.blend`, a static reference FBX, a rendered preview and the numerical ring profile in `Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorder.json`. Blender authors six stepped, faceted geological bands and a connected underside. Edit and regenerate through the source pipeline to keep the exported adaptive profile synchronized.
 
-`Tools/PlanetSurfaces/validate_edge_geometry.py` passed numeric checks for all eleven grids: no inverted top triangles, unchanged interior, outward-only coverage, exact perimeter counts. `DIMENSIONS FRONT/Visuals/Validate all shattered map outlines` runs the corresponding check against the actual C# implementation in Unity. C# syntax parsing passes; Unity compilation and in-game camera review remain pending because Unity is unavailable here.
+`ShatteredArenaEdge` reads that baked profile once and adapts its ring samples to the exact live boundary of each map. The first ring begins at the actual floor vertices, avoiding gaps at different map resolutions. Terrain relief fades into the cliff; the underside closes at -18 m. Existing planet materials provide the surface details. Diamond Core retains its crystal material.
+
+The shared budget is at most 9,152 triangles for the densest boundary, seven static meshes without colliders or cast shadows. Desktop and Android use the same border shape. The gameplay rectangle, navigation and interior remain unchanged.
+
+Blender topology validation and the Python adaptation checks cover all eleven grids, continuous attachment, nondegenerate faces, outward coverage and zero detached fragments. Unity editor outline validation also loads and validates the profile. Unity compilation and in-game camera/device checks remain pending because Unity is unavailable in this environment.

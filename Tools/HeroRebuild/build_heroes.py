@@ -602,6 +602,51 @@ def build(hero,female,color,label):
   tube('Ione soft upper lip',[(-.022,-.145,1.625),(-.008,-.152,1.628),(0,-.153,1.625),(.008,-.152,1.628),(.022,-.145,1.625)],.0025,lip,'Head')
   tube('Ione soft lower lip',[(-.019,-.146,1.621),(0,-.152,1.620),(.019,-.146,1.621)],.003,lip,'Head')
   ellipsoid('Ione forehead moon jewel',(0,-.132,1.741),(.012,.005,.018),emerald,'Head',16,10)
+ if hero=='Mira':
+  # Latest reference: pale blue elf priestess, swept white hair and ivory/gold vestments.
+  frost=mat('Tahla white swept hair',(.77,.83,.87),.10,.43)
+  blue=mat('Tahla blue elf skin',(.25,.44,.51),rough=.49)
+  ivory=mat('Tahla warm ivory silk',(.78,.76,.62),.05,.56)
+  goldleaf=mat('Tahla engraved warm gold',(.59,.40,.13),.76,.30)
+  eye=mat('Tahla luminous pearl eyes',(.65,.87,.87),.1,.32,.7)
+  pink=mat('Tahla pink flower',(.57,.11,.29),.05,.50)
+  skin.diffuse_color=blue.diffuse_color
+  skin.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=blue.diffuse_color
+  cloth.diffuse_color=ivory.diffuse_color
+  cloth.node_tree.nodes.get('Principled BSDF').inputs['Base Color'].default_value=ivory.diffuse_color
+  removed=[o for o in parts if o.name.startswith(('HairLock','Priestess flowing blonde lock','Laurel','White healer shoulder shawl','Shawl green embroidery','Priestess gold shoulder','Priestess shoulder ivory inlay','Priestess pointed shoulder crest','Articulated bracer','DF_Torso','Breastplate rim','Cuirass engraving','Diagonal leather strap','Tailored collar','Armor rivet','Abdomen segment'))]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
+  for o in parts:
+   if o.name.startswith(('Ceremonial robe','White front vestment','Silk upper mantle','Priestess long ivory tabard','Sculpted greave','Armored toe cap')):o.data.materials[0]=ivory
+   if o.name.startswith('Iris'):o.data.materials[0]=eye
+   if o.name.startswith('Eyebrow'):o.data.materials[0]=frost
+  for poly in body.data.polygons:
+   center=sum((body.data.vertices[i].co for i in poly.vertices),Vector())/len(poly.vertices)
+   if abs(center.x)>.19 and .90<center.z<1.48:poly.material_index=0
+  cap=ellipsoid('Tahla swept white hair cap',(0,.035,1.728),(.103,.113,.106),frost,'Head',32,20)
+  bm=bmesh.new();bm.from_mesh(cap.data)
+  bmesh.ops.delete(bm,geom=[f for f in bm.faces if f.calc_center_median().y<-.035 and f.calc_center_median().z<1.766],context='FACES');bm.to_mesh(cap.data);bm.free()
+  for side in [-1,1]:
+   mesh('Tahla long pointed elf ear',[(side*.084,-.015,1.690),(side*.108,-.007,1.720),(side*.242,.025,1.747),(side*.155,.016,1.680),(side*.090,-.011,1.651)],[(0,1,2),(0,2,3),(0,3,4)],skin,'Head')
+   tube('Tahla ear inner ridge',[(side*.103,-.019,1.685),(side*.16,.007,1.712),(side*.223,.021,1.740)],[.007,.005,.001],blue,'Head',8)
+   for j in range(10):
+    tube('Tahla swept silver hair strand',[(side*.012,.015,1.816),(side*(.062+j*.004),-.045,1.793),(side*.099,.012,1.745),(side*.088,.108,1.694)],[.011,.015,.012,.002],frost,'Head',8)
+   bone='UpperArm'+('L' if side<0 else 'R')
+   plate('Tahla ornate shoulder base',[(side*.13,1.44),(side*.22,1.52),(side*.32,1.50),(side*.34,1.36),(side*.21,1.34)],-.083,.046,goldleaf,bone)
+   for j in range(3):
+    x=side*(.20+j*.042);z=1.47-j*.015
+    plate('Tahla pointed shoulder petal',[(x-side*.030,z-.035),(x-side*.026,z+.045),(x+side*.004,z+.170-j*.012),(x+side*.022,z+.024),(x+side*.035,z-.050)],-.126,.019,goldleaf,bone)
+    tube('Tahla shoulder pearl engraving',[(x-side*.006,-.149,z),(x+side*.004,-.149,z+.095)],.003,ivory,bone)
+   tube('Tahla golden V neckline',[(side*.104,-.122,1.49),(side*.06,-.161,1.44),(0,-.183,1.41)],.011,goldleaf,'Chest')
+   tube('Tahla fitted gold bodice',[(side*.105,-.186,1.38),(side*.074,-.183,1.28),(side*.042,-.168,1.17),(0,-.183,1.11)],.015,goldleaf,'Chest')
+   tube('Tahla bodice filigree',[(side*.092,-.192,1.31),(side*.050,-.190,1.27),(side*.033,-.187,1.20)],.005,goldleaf,'Chest')
+  plate('Tahla ivory fitted breastplate',[(-.11,1.44),(0,1.40),(.11,1.44),(.095,1.26),(0,1.16),(-.095,1.26)],-.167,.025,ivory,'Chest')
+  plate('Tahla pale teal front medallion',[(-.06,1.03),(0,1.085),(.06,1.03),(.055,.90),(0,.84),(-.055,.90)],-.267,.010,white,'Hips')
+  ellipsoid('Tahla tucked white hair bun',(0,.118,1.724),(.055,.035,.061),frost,'Head',20,12)
+  for j in range(5):
+   angle=j*2*pi/5
+   ellipsoid('Tahla pink blossom petal',(-.070+.015*cos(angle),-.04,1.80+.015*sin(angle)),(.014,.007,.010),pink,'Head',12,8)
+  ellipsoid('Tahla flower gold center',(-.070,-.048,1.80),(.007,.004,.007),goldleaf,'Head',12,8)
  if hero=='Nyra':
   # Asymmetric cyborg face: retain the biological half rather than adding another mask.
   plate('Cyborg facial armor',[(-.005,1.755),(.075,1.75),(.110,1.692),(.084,1.615),(.012,1.594),(-.006,1.660)],-.155,.025,steel,'Head')
@@ -613,7 +658,7 @@ def build(hero,female,color,label):
   # Remove goggles that would cover the new sensor face.
   removed=[o for o in parts if 'goggle' in o.name.lower()]
   for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
- if hero in ['Veyr','Nyra','Elyra']:
+ if hero in ['Veyr','Nyra','Elyra','Mira']:
   # Slim boots without moving the ankle or reducing leg length.
   for o in parts:
    if o.get('bone','').startswith('Foot'):
@@ -675,7 +720,7 @@ def build(hero,female,color,label):
  for side,(orientation,palm,center) in fit.items():
   bone='Hand'+side
   radius={'Veyr':.023,'Kaelon':.034,'Nyra':.034,'Elyra':.024,'Mira':.024,'Traveler':.031}[hero]
-  glove=skin if hero=='Elyra' else cloth
+  glove=skin if hero in ['Elyra','Mira'] else cloth
   created=[]
   created.append(ellipsoid('Gripping palm'+side,tuple(palm+orientation@Vector((0,.027,0))),(.034,.027,.042),glove,bone,24,14))
   for j in range(4):

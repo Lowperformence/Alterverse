@@ -14,8 +14,7 @@ def angular(angle,count,seed):
 
 def warp(x,z,theme):
  x=np.asarray(x);z=np.asarray(z);r=np.sqrt(x*x+z*z);edge=np.maximum(np.abs(x)/42,np.abs(z)/36);t=np.clip((edge-.88)/.12,0,1);w=t*t*(3-2*t)
- a=(np.arctan2(z,x)/(2*math.pi))%1;seed=theme*73+19;extension=.45+angular(a,32,seed)*2.25+angular(a,112,seed+31)*.95
- if theme in [4,9]:extension*=1.12
+ a=(np.arctan2(z,x)/(2*math.pi))%1;seed=19;extension=.45+angular(a,24,seed)*2.40+angular(a,80,seed+31)*.55
  return x+x/np.maximum(r,.001)*extension*w,z+z/np.maximum(r,.001)*extension*w
 
 def perimeter(grid):return np.concatenate([grid[0,:-1],grid[:-1,-1],grid[-1,:0:-1],grid[:0:-1,0]])
