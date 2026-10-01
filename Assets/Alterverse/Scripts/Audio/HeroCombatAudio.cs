@@ -2,21 +2,20 @@ using Alterverse.Characters;
 using UnityEngine;
 namespace Alterverse.Audio
 {
-    // Six authored production banks x (Basic,Q,W,E,R) x (Cast,Impact).
-    // Traveler temporarily shares the Elyra source bank with a dedicated pitch/gain identity until its own recordings are imported.
+    // Seven independent class banks x (Basic,Q,W,E,R) x (Cast,Impact).
     public static class HeroCombatAudio
     {
-        public const int CueCount=60;
-        static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook"};
+        public const int CueCount=HeroIdentity.HeroCount*10;
+        static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler"};
         static readonly string[] Actions={"Basic","Q","W","E","R"};
         public static bool HasImpact(int hero,int action)=>action==0||(hero switch
         {
-            0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,_=>false
+            0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,_=>false
         });
         public static AudioClip[] Load()
         {
             var clips=new AudioClip[CueCount];
-            for(int h=0;h<6;h++)for(int a=0;a<5;a++)for(int phase=0;phase<2;phase++)
+            for(int h=0;h<Heroes.Length;h++)for(int a=0;a<5;a++)for(int phase=0;phase<2;phase++)
             {
                 if(phase==1&&!HasImpact(h,a))continue;
                 string path="Audio/Heroes/"+Heroes[h]+"/"+Actions[a]+(phase==0?"_Cast":"_Impact");
@@ -32,8 +31,8 @@ namespace Alterverse.Audio
             Camera camera=Camera.main;if(camera==null)return;Vector3 p=camera.WorldToViewportPoint(position);
             if(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f)return;
             int hero=(int)identity.Hero;
-            int audioHero=identity.Hero==HeroId.Traveler?(int)HeroId.Elyra:hero;
-            if(audioHero<0||audioHero>=6||impact&&!HasImpact(audioHero,action))return;
+            int audioHero=hero;
+            if(audioHero<0||audioHero>=Heroes.Length||impact&&!HasImpact(audioHero,action))return;
             bool ultimate=action==4;
             CombatSoundIdentity identityTone=CombatSoundPalette.For(identity.Hero);
             float actionPitch=action switch{0=>1f,1=>1.015f,2=>.985f,3=>1.03f,4=>.94f,_=>1f};

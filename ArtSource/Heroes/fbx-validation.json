@@ -2,7 +2,7 @@
   {
     "hero": "Veyr",
     "meshCount": 3,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -35,7 +35,7 @@
   {
     "hero": "Kaelon",
     "meshCount": 3,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -68,7 +68,7 @@
   {
     "hero": "Nyra",
     "meshCount": 2,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -101,7 +101,7 @@
   {
     "hero": "Elyra",
     "meshCount": 2,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -134,7 +134,7 @@
   {
     "hero": "Mira",
     "meshCount": 2,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -167,7 +167,7 @@
   {
     "hero": "Rook",
     "meshCount": 3,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
@@ -200,7 +200,7 @@
   {
     "hero": "Traveler",
     "meshCount": 2,
-    "bones": 17,
+    "bones": 19,
     "animations": [
       "DF_Skeleton|DF_Skeleton|Attack",
       "DF_Skeleton|DF_Skeleton|Death",
