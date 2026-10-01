@@ -8,6 +8,7 @@ Shader "Alterverse/DiamondCrystal"
         _FresnelPower("Fresnel Power", Range(0.5,8)) = 3.2
         _FresnelStrength("Fresnel Strength", Range(0,2)) = 0.68
         _CoreAlpha("Core Alpha", Range(0,1)) = 0.22
+        _FacetDetail("Cut edge and glint detail", Range(0,1)) = 0
     }
 
     SubShader
@@ -25,12 +26,13 @@ Shader "Alterverse/DiamondCrystal"
             Tags { "LightMode"="UniversalForward" }
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.0
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
@@ -39,12 +41,14 @@ Shader "Alterverse/DiamondCrystal"
                 half _FresnelPower;
                 half _FresnelStrength;
                 half _CoreAlpha;
+                half _FacetDetail;
             CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                half4 color : COLOR;
             };
 
             struct Varyings
@@ -53,6 +57,7 @@ Shader "Alterverse/DiamondCrystal"
                 half3 normalWS : TEXCOORD0;
                 half3 viewDirWS : TEXCOORD1;
                 float fogFactor : TEXCOORD2;
+                half3 cutCoordinates : TEXCOORD3;
             };
 
             Varyings Vert(Attributes input)
@@ -60,6 +65,7 @@ Shader "Alterverse/DiamondCrystal"
                 Varyings output;
                 VertexPositionInputs positions = GetVertexPositionInputs(input.positionOS.xyz);
                 output.positionHCS = positions.positionCS;
+                output.cutCoordinates = input.color.rgb;
                 output.normalWS = normalize(TransformObjectToWorldNormal(input.normalOS));
                 output.viewDirWS = GetWorldSpaceNormalizeViewDir(positions.positionWS);
                 output.fogFactor = ComputeFogFactor(output.positionHCS.z);
@@ -80,6 +86,18 @@ Shader "Alterverse/DiamondCrystal"
                 rgb = lerp(rgb,rgb*prismTint,saturate(fresnel*0.42h));
                 rgb += _EmissionColor.rgb;
                 rgb += fresnel*_FresnelStrength*half3(0.62h,0.88h,1.0h);
+                // Flat face normals create separate reflections on each physical cut.
+                // Edge highlights use actual triangle boundaries and a fixed pixel width.
+                Light key=GetMainLight();
+                half3 halfway=SafeNormalize(key.direction+v);
+                half specular=pow(saturate(dot(n,halfway)),lerp(36.0h,140.0h,_Smoothness));
+                half facetShade=0.48h+0.52h*saturate(dot(n,key.direction));
+                float3 edgeWidth=max(fwidth(input.cutCoordinates)*1.15,0.0001);
+                half3 inside=smoothstep(0.0,edgeWidth,input.cutCoordinates);
+                half edge=1.0h-min(inside.x,min(inside.y,inside.z));
+                half glint=pow(saturate(dot(n,SafeNormalize(half3(-.45h,.8h,.35h)+v))),96.0h);
+                rgb=lerp(rgb,rgb*facetShade+key.color*specular*.95h+
+                    prismTint*edge*.20h+half3(.75h,.9h,1.0h)*glint*.45h,_FacetDetail);
                 rgb = MixFog(rgb,input.fogFactor);
 
                 half alpha = saturate(_CoreAlpha + _BaseColor.a*0.55h + fresnel*_FresnelStrength*0.34h);

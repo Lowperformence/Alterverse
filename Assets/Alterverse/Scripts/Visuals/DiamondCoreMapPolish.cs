@@ -97,7 +97,7 @@ namespace Alterverse.Visuals
             floorRenderer.shadowCastingMode=ShadowCastingMode.Off;
             floorRenderer.receiveShadows=false;
 
-            crystalMesh=BuildGemMesh("DF_PSRJ1719_FacetedGem",8);
+            crystalMesh=DiamondCoreArenaRuntime.CreateMapCrystalMesh();
             BuildPerimeterCrystals();
         }
 
@@ -214,10 +214,19 @@ namespace Alterverse.Visuals
 
         Material MakeCrystalMaterial(string name,Color color,float smoothness,float emission)
         {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
+            Shader shader=Resources.Load<Shader>("DF_DiamondCrystal")??Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
             Material m=new(shader){name=name};
             ownedMaterials.Add(m);
-            DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,emission,.08f);
+            if(m.HasProperty("_FacetDetail"))
+            {
+                color.a=.48f;
+                m.SetColor("_BaseColor",color);
+                m.SetColor("_EmissionColor",new Color(color.r,color.g,color.b)*emission*.18f);
+                m.SetFloat("_Smoothness",smoothness);
+                m.SetFloat("_CoreAlpha",.16f);
+                m.SetFloat("_FacetDetail",1f);
+            }
+            else DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,emission*.3f,.08f);
             return m;
         }
 

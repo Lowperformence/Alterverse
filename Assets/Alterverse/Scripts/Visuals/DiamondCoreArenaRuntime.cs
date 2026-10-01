@@ -62,7 +62,7 @@ namespace Alterverse.Visuals
 
             root=new GameObject("DF_DiamondCoreArena").transform;
             root.SetParent(world,false);
-            crystalMesh=CreateCrystalMesh();
+            crystalMesh=CreateMapCrystalMesh();
             meshes.Add(crystalMesh);
 
             floorMaterial=CreateTransparentCrystal(new Color(.64f,.91f,1f,.32f),.08f,.96f,new Color(.16f,.72f,1f,1f)*.22f);
@@ -177,6 +177,7 @@ namespace Alterverse.Visuals
 
         private void BuildUnderfloorDiamondHeart()
         {
+            if(clearCrystal!=null)clearCrystal.SetFloat("_FacetDetail",1f);
             GameObject heart=Crystal("DF_DiamondHeart",new Vector3(0,-7.6f,0),new Vector3(7.2f,8.7f,7.2f),clearCrystal);
             heart.transform.rotation=Quaternion.Euler(18f,34f,12f);
             Color[] spectrum={new(.2f,.86f,1f),new(.73f,.24f,1f),new(.16f,1f,.62f),new(1f,.58f,.16f),new(.98f,.42f,.72f),new(.62f,.78f,1f)};
@@ -322,7 +323,10 @@ namespace Alterverse.Visuals
 
         private Material Gem(Color color,float emission)
         {
-            return Mat(color,false,.14f,.94f,color*emission);
+            color.a=.56f;
+            Material gem=CreateTransparentCrystal(color,.14f,.94f,color*emission*.55f);
+            if(gem!=null)gem.SetFloat("_FacetDetail",1f);
+            return gem;
         }
 
         private Material Mat(Color color,bool unlit,float metallic,float smoothness,Color emission)
@@ -349,6 +353,43 @@ namespace Alterverse.Visuals
             if(material.HasProperty("_CoreAlpha"))material.SetFloat("_CoreAlpha",Mathf.Clamp(color.a*.34f,.08f,.30f));
             materials.Add(material);
             return material;
+        }
+
+        internal static Mesh CreateMapCrystalMesh()
+        {
+            const int sides=12;
+            float[] heights={1.2f,.90f,.38f,.12f,.04f,-.42f,-.82f,-1f};
+            float[] radii={0f,.28f,.56f,.70f,.72f,.52f,.22f,0f};
+            var vertices=new List<Vector3>();var normals=new List<Vector3>();
+            var colors=new List<Color>();var indices=new List<int>();
+            Vector3 Point(int ring,int side)
+            {
+                float angle=side*Mathf.PI*2/sides+((ring&1)==0?0:Mathf.PI/sides*.45f);
+                return new Vector3(Mathf.Cos(angle)*radii[ring],heights[ring],Mathf.Sin(angle)*radii[ring]);
+            }
+            void Triangle(Vector3 a,Vector3 b,Vector3 c)
+            {
+                Vector3 normal=Vector3.Cross(b-a,c-a);
+                if(normal.sqrMagnitude<.000001f)return;
+                Vector3 center=(a+b+c)/3;
+                if(Vector3.Dot(normal,new Vector3(center.x,center.y-.1f,center.z))<0){(b,c)=(c,b);normal=-normal;}
+                int index=vertices.Count;
+                vertices.Add(a);vertices.Add(b);vertices.Add(c);
+                normals.Add(normal.normalized);normals.Add(normal.normalized);normals.Add(normal.normalized);
+                // Barycentric coordinates identify each actual cut edge in the crystal shader.
+                colors.Add(new Color(1,0,0));colors.Add(new Color(0,1,0));colors.Add(new Color(0,0,1));
+                indices.Add(index);indices.Add(index+1);indices.Add(index+2);
+            }
+            for(int ring=0;ring<heights.Length-1;ring++)
+                for(int side=0;side<sides;side++)
+                {
+                    Vector3 a=Point(ring,side),b=Point(ring,side+1);
+                    Vector3 c=Point(ring+1,side+1),d=Point(ring+1,side);
+                    Triangle(a,b,c);Triangle(a,c,d);
+                }
+            var mesh=new Mesh{name="DF_MapDiamondBrilliantCut"};
+            mesh.SetVertices(vertices);mesh.SetNormals(normals);mesh.SetColors(colors);
+            mesh.SetTriangles(indices,0);mesh.RecalculateBounds();return mesh;
         }
 
         internal static Mesh CreateCrystalMesh()
