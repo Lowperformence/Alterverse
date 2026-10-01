@@ -38,11 +38,15 @@ namespace Alterverse.Visuals
             instance.transform.localPosition = new Vector3(0, -.96f, 0);
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.10f, 1f, 1.10f);
-            Animator animator = instance.GetComponent<Animator>() ?? instance.AddComponent<Animator>();
+            // Unity can return a native-null wrapper for a missing component in the Editor.
+            // TryGetComponent checks the native object; C# ?? only checks the managed reference.
+            if (!instance.TryGetComponent<Animator>(out Animator animator))
+                animator = instance.AddComponent<Animator>();
             animator.runtimeAnimatorController = controller;
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            var presentation = actor.GetComponent<AuthoredHeroPresentation>() ?? actor.AddComponent<AuthoredHeroPresentation>();
+            if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
+                presentation = actor.AddComponent<AuthoredHeroPresentation>();
             presentation.Initialize(animator);
             return true;
         }
