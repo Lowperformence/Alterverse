@@ -132,6 +132,36 @@ def bind(o,arm,body=False):
  mod=o.modifiers.new('DF_Skin','ARMATURE');mod.object=arm;o.parent=arm
 
 PROFILE={'Veyr':(.94,.94,1.02,.94),'Kaelon':(1.43,1.20,1.08,1.30),'Nyra':(.88,.94,1.02,.93),'Elyra':(.89,.96,1.09,.92),'Mira':(.89,1.09,1.02,.96),'Rook':(1.60,1.32,1.04,1.40),'Traveler':(1.03,.96,1.07,.97)}
+# Radial muscle volume around anatomical bone axes, independent of torso width.
+# (upper arm, forearm, thigh, calf): male/female silhouettes are deliberately distinct.
+LIMB_VOLUME={
+ 'Veyr':(1.30,1.24,1.12,1.10),
+ 'Kaelon':(1.52,1.40,1.26,1.22),
+ 'Nyra':(.86,.86,.94,.90),
+ 'Elyra':(.84,.85,.94,.90),
+ 'Mira':(.86,.86,.96,.92),
+ 'Rook':(1.62,1.48,1.30,1.26),
+ 'Traveler':(1.34,1.27,1.14,1.12)}
+def shape_limb_volume(hero,obj,arm):
+ """Expand cross-sections, never segment lengths, hands, feet or weapon meshes."""
+ prefixes=('UpperArm','Forearm','Thigh','Shin');factors=LIMB_VOLUME[hero]
+ if obj.get('bone','').startswith('Hand'):return
+ names={g.index:g.name for g in obj.vertex_groups}
+ for v in obj.data.vertices:
+  original=v.co.copy();offset=Vector((0,0,0))
+  for g in v.groups:
+   name=names[g.group]
+   index=next((i for i,n in enumerate(prefixes) if name.startswith(n)),None)
+   if index is None:continue
+   bone=arm.data.bones[name];axis=bone.tail_local-bone.head_local
+   t=(original-bone.head_local).dot(axis)/axis.length_squared
+   if t<0 or t>1:continue
+   # Rounded biceps/thighs and calves taper continuously at elbows, knees and wrists.
+   envelope=sin(pi*t)**.65
+   center=bone.head_local+axis*t
+   offset+=(original-center)*((factors[index]-1)*envelope*g.weight)
+  v.co=original+offset
+
 def proportion(hero,point):
  x,y,z=point;chest,hip,height,depth=PROFILE[hero]
  if z>1.52:width=1.12 if hero=='Rook' else 1.0;d=1.07 if hero=='Rook' else 1.0
@@ -616,6 +646,7 @@ def build(hero,female,color,label):
   bind(o,arm,o==body)
  # Proportions alter anatomy, costume, weapon positions and bind skeleton together.
  for o in parts:
+  shape_limb_volume(hero,o,arm)
   for v in o.data.vertices:v.co=weapon_point(hero,v.co) if o.get('bone','').startswith('Hand') and hero!='Rook' else proportion(hero,v.co)
  bpy.ops.object.select_all(action='DESELECT');arm.select_set(True);bpy.context.view_layer.objects.active=arm;bpy.ops.object.mode_set(mode='EDIT')
  for bone in arm.data.edit_bones:
@@ -706,7 +737,7 @@ def build(hero,female,color,label):
  scene.view_settings.view_transform='AgX';scene.render.image_settings.file_format='PNG';scene.render.filepath=os.path.join(PREVIEW,hero+'.png')
  bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ROOT,'ArtSource/Heroes',hero+'.blend'),compress=True)
  bpy.ops.render.render(write_still=True)
- stats={'hero':hero,'label':label,'vertices':sum(len(o.data.vertices) for o in parts),'triangles':sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in parts),'bones':len(arm.data.bones),'animations':9}
+ stats={'hero':hero,'label':label,'vertices':sum(len(o.data.vertices) for o in parts),'triangles':sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in parts),'bones':len(arm.data.bones),'animations':9,'limbVolume':dict(zip(['upperArm','forearm','thigh','calf'],LIMB_VOLUME[hero]))}
  print('HERO_COMPLETE',json.dumps(stats),flush=True)
  return stats
 selected=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []

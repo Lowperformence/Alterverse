@@ -5,7 +5,13 @@
     "vertices": 25380,
     "triangles": 49018,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 1.3,
+      "forearm": 1.24,
+      "thigh": 1.12,
+      "calf": 1.1
+    }
   },
   {
     "hero": "Kaelon",
@@ -13,7 +19,13 @@
     "vertices": 24892,
     "triangles": 47886,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 1.52,
+      "forearm": 1.4,
+      "thigh": 1.26,
+      "calf": 1.22
+    }
   },
   {
     "hero": "Nyra",
@@ -21,7 +33,13 @@
     "vertices": 24291,
     "triangles": 46826,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 0.86,
+      "forearm": 0.86,
+      "thigh": 0.94,
+      "calf": 0.9
+    }
   },
   {
     "hero": "Elyra",
@@ -29,7 +47,13 @@
     "vertices": 24752,
     "triangles": 48214,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 0.84,
+      "forearm": 0.85,
+      "thigh": 0.94,
+      "calf": 0.9
+    }
   },
   {
     "hero": "Mira",
@@ -37,7 +61,13 @@
     "vertices": 32238,
     "triangles": 62144,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 0.86,
+      "forearm": 0.86,
+      "thigh": 0.96,
+      "calf": 0.92
+    }
   },
   {
     "hero": "Rook",
@@ -45,7 +75,13 @@
     "vertices": 27313,
     "triangles": 52482,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 1.62,
+      "forearm": 1.48,
+      "thigh": 1.3,
+      "calf": 1.26
+    }
   },
   {
     "hero": "Traveler",
@@ -53,6 +89,12 @@
     "vertices": 27368,
     "triangles": 52680,
     "bones": 19,
-    "animations": 9
+    "animations": 9,
+    "limbVolume": {
+      "upperArm": 1.34,
+      "forearm": 1.27,
+      "thigh": 1.14,
+      "calf": 1.12
+    }
   }
 ]

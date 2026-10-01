@@ -1,0 +1,107 @@
+[
+  {
+    "hero": "Veyr",
+    "female": false,
+    "medianRadialThicknessRatio": {
+      "ForearmL": 1.2281919497533527,
+      "UpperArmL": 1.2759945730142213,
+      "ThighL": 1.0968185183359727,
+      "ShinL": 1.0911799598761542,
+      "ForearmR": 1.2311707637892289,
+      "UpperArmR": 1.2758535371121753,
+      "ThighR": 1.1034901787502533,
+      "ShinR": 1.0911799598761542
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Kaelon",
+    "female": false,
+    "medianRadialThicknessRatio": {
+      "ForearmL": 1.357191715825396,
+      "UpperArmL": 1.4774479247694519,
+      "ThighL": 1.2090535314427608,
+      "ShinL": 1.2069012984792675,
+      "ForearmR": 1.3581184827959598,
+      "UpperArmR": 1.4772874734151051,
+      "ThighR": 1.2118530003710781,
+      "ShinR": 1.2069012984792675
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Nyra",
+    "female": true,
+    "medianRadialThicknessRatio": {
+      "UpperArmL": 0.8697368425918344,
+      "ForearmL": 0.8737729341873183,
+      "ThighL": 0.9445559285136211,
+      "ShinL": 0.9095384363148651,
+      "UpperArmR": 0.8696628504288257,
+      "ForearmR": 0.8759602658631515,
+      "ThighR": 0.9445547301087969,
+      "ShinR": 0.9095384363148651
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Elyra",
+    "female": true,
+    "medianRadialThicknessRatio": {
+      "UpperArmL": 0.8414157214209965,
+      "ForearmL": 0.8653594186199918,
+      "ThighL": 0.9509399145075634,
+      "ShinL": 0.9095343048930752,
+      "UpperArmR": 0.8430411633498767,
+      "ForearmR": 0.8645444719783985,
+      "ThighR": 0.9511150126975925,
+      "ShinR": 0.9095343048930752
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Mira",
+    "female": true,
+    "medianRadialThicknessRatio": {
+      "UpperArmL": 0.8749175022173507,
+      "ForearmL": 0.8692613245981446,
+      "ThighL": 0.9634915670703796,
+      "ShinL": 0.9257422131006912,
+      "UpperArmR": 0.8697162789072346,
+      "ForearmR": 0.8701329928427023,
+      "ThighR": 0.9658838789239024,
+      "ShinR": 0.9261206517353391
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Rook",
+    "female": false,
+    "medianRadialThicknessRatio": {
+      "ForearmL": 1.4435281462203093,
+      "UpperArmL": 1.1756256654934414,
+      "ThighL": 1.2457143378938211,
+      "ShinL": 1.2528184509732132,
+      "ForearmR": 1.4435554655269613,
+      "UpperArmR": 1.173761265811659,
+      "ThighR": 1.2480763222153421,
+      "ShinR": 1.2522499187207747
+    },
+    "jointPositionsUnchanged": true
+  },
+  {
+    "hero": "Traveler",
+    "female": false,
+    "medianRadialThicknessRatio": {
+      "ForearmL": 1.248883683106111,
+      "UpperArmL": 1.3109074364333435,
+      "ThighL": 1.1129743859275785,
+      "ShinL": 1.1150026590038142,
+      "ForearmR": 1.246387654338479,
+      "UpperArmR": 1.311576612618783,
+      "ThighR": 1.1207684676838547,
+      "ShinR": 1.1155726899627418
+    },
+    "jointPositionsUnchanged": true
+  }
+]
