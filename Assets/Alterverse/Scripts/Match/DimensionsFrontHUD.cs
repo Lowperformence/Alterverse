@@ -39,6 +39,13 @@ namespace Alterverse.Match
                 theme.Label(new Rect(r.xMax-66,r.y+52,60,22),$"{front.LumenControl:0.#}%",theme.Small,true);
                 theme.Center(new Rect(r.x+90,r.y+52,240,22),front.IsOvertime?"OVERTIME":"DIMENSIONS FRONT");
 
+                var supplies=front.GetComponent<Alterverse.Combat.BattleItemAirdropSchedule>();
+                if(supplies!=null&&!string.IsNullOrEmpty(supplies.Status))
+                {
+                    Rect supply=new Rect((width-280)*.5f,210,280,28);theme.Panel(supply);
+                    theme.Center(supply,supplies.Status);
+                }
+
                 if(CoopAuthority.Active)
                 {
                     CoopVoiceChatService voice=CoopVoiceChatService.Instance;

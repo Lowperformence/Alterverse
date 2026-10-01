@@ -48,7 +48,7 @@ namespace Alterverse.Profile
             BattleItemType.Heal=>"Team pickup: restores 20% max HP.",
             BattleItemType.Shield=>"Team pickup: grants a 20% max-HP shield.",
             BattleItemType.Speed=>"Team pickup: +10% move speed for 5 seconds.",
-            BattleItemType.Meteor=>"Calls a telegraphed meteor on your focused enemy for 40 damage.",
+            BattleItemType.Meteor=>"Team pickup: arms a 40-damage meteor strike on a nearby enemy.",
             _=>"No battle item equipped."
         };
 

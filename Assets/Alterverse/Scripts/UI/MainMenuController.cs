@@ -1075,7 +1075,7 @@ namespace Alterverse.UI
             theme.Panel(new Rect(Left,354,cardW,270));
             BattleItemIconRenderer.Draw(new Rect(Left+24,374,132,132),BattleItemType.Shield);
             theme.Label(new Rect(Left+180,370,cardW-204,38),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
-            theme.Label(new Rect(Left+180,410,cardW-204,62),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nTriggers from your first successful ultimate next match.",theme.Body,true);
+            theme.Label(new Rect(Left+180,410,cardW-204,62),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nParachute supply drop after 2 minutes. Only your team can collect it.",theme.Body,true);
             theme.Label(new Rect(Left+180,478,cardW-204,24),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
             theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} SHARDS",theme.Heading);
             bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
@@ -1086,7 +1086,7 @@ namespace Alterverse.UI
             float x=Left+cardW+34,w=ContentWidth-cardW-34;
             theme.Label(new Rect(x,364,w,38),"Victory drops",theme.Heading);
             theme.Label(new Rect(x,410,w,110),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Meteor Cores are equally likely.",theme.Body,true);
-            theme.Label(new Rect(x,530,w,68),"Only one item can be equipped. It is consumed when its first valid Ultimate activation happens.",theme.Body,true);
+            theme.Label(new Rect(x,530,w,68),"One item per match. Consumed when the 2-minute supply drop starts. The crate stays until your team collects it.",theme.Body,true);
             if(theme.Action(new Rect(x,610,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
         }
 

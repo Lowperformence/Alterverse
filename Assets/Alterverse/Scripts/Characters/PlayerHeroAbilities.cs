@@ -107,11 +107,7 @@ namespace Alterverse.Characters
             {
                 targeting.RegisterOffensiveAction();
                 Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
-                // Battle items are device-local inventory. Disable them in private co-op until
-                // per-player inventory state is explicitly networked; never consume the host's
-                // item on behalf of a remote friend.
-                if(slot==3&&!Alterverse.Multiplayer.CoopAuthority.Active)
-                    BattleItemRuntime.TryActivateEquipped(gameObject,target);
+
             }
             return success;
         }

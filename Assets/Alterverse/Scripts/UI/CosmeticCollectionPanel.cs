@@ -239,7 +239,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(rect.x+130,rect.y+80,rect.width-150,32),slot.Count,theme.Heading);
             theme.Label(new Rect(rect.x+130,rect.y+120,rect.width-150,24),slot.Equipped?"EQUIPPED":"OWNED",theme.Small,true);
             theme.Label(new Rect(rect.x+20,rect.y+180,rect.width-40,60),slot.Description,theme.Body);
-            theme.Label(new Rect(rect.x+20,rect.y+238,rect.width-40,38),"Activates on your first successful Ultimate next match.",theme.Small,true);
+            theme.Label(new Rect(rect.x+20,rect.y+238,rect.width-40,38),"Team supply drop after 2 minutes. Stays until an ally collects it.",theme.Small,true);
             if(theme.Action(new Rect(rect.x+20,rect.yMax-70,rect.width-40,48),slot.Equipped?"UNEQUIP":"EQUIP",true,enabled:!previewOnly))
             {BattleItemInventory.Equip(slot.Equipped?BattleItemType.None:slot.Item);dirty=true;bag.Message=slot.Equipped?"UNEQUIPPED":"EQUIPPED";}
             theme.Label(new Rect(rect.x+20,rect.yMax-21,rect.width-40,18),bag.Message,theme.Small,true);
