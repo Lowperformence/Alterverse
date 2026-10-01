@@ -90,7 +90,7 @@ namespace Alterverse.Visuals
 
         private void BuildTransparentSurface()
         {
-            const int xSegments=20,zSegments=18;
+            const int xSegments=84,zSegments=72;
             Vector3[] vertices=new Vector3[(xSegments+1)*(zSegments+1)];
             Vector2[] uv=new Vector2[vertices.Length];
             int[] triangles=new int[xSegments*zSegments*6];
@@ -105,8 +105,7 @@ namespace Alterverse.Visuals
                     px+=Mathf.Sin(x*8.91f+z*2.73f)*.22f;
                     pz+=Mathf.Sin(x*3.17f-z*7.21f)*.22f;
                 }
-                float relief=FrontierPlanetLayout.Surface(px,pz).y;
-                vertices[i]=new Vector3(px,.006f+relief,pz);
+                vertices[i]=FrontierPlanetLayout.Surface(px,pz)+Vector3.up*.006f;
                 uv[i]=new Vector2((px+42f)/84f,(pz+36f)/72f);
             }
             int t=0;
@@ -132,6 +131,7 @@ namespace Alterverse.Visuals
             surface.AddComponent<MeshFilter>().sharedMesh=mesh;
             MeshRenderer renderer=surface.AddComponent<MeshRenderer>();renderer.sharedMaterial=floorMaterial;
             renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+            ShatteredArenaEdge.Build(root,ShatteredArenaEdge.Perimeter(vertices,xSegments,zSegments),clearCrystal,blackCrystal,blackCrystal,meshes);
         }
 
         private void BuildCrystalPlateaus()

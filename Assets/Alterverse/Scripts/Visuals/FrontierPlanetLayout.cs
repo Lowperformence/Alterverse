@@ -66,6 +66,7 @@ namespace Alterverse.Visuals
 
         public static Vector3 Surface(float x,float z)
         {
+            Vector2 edge=ShatteredArenaEdge.Warp(x,z);x=edge.x;z=edge.y;
             Sample(x,z,out float height,out _,out _);
             return new Vector3(x,.015f+height,z);
         }

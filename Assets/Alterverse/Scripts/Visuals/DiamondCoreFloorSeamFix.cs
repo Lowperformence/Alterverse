@@ -80,7 +80,7 @@ namespace Alterverse.Visuals
 
         static Mesh BuildMesh()
         {
-            const float minX=-42f,maxX=42f,minZ=-36f,maxZ=36f,step=7.5f;
+            const float minX=-42f,maxX=42f,minZ=-36f,maxZ=36f,step=1f;
             int xCells=Mathf.CeilToInt((maxX-minX)/step);
             int zCells=Mathf.CeilToInt((maxZ-minZ)/step);
 

@@ -46,7 +46,7 @@ namespace Alterverse.Visuals
                 int i=z*(xs+1)+x;
                 float px=-42f+84f*x/xs,pz=-36f+72f*z/zs;
                 vertices[i]=FrontierPlanetLayout.Surface(px,pz);
-                uv[i]=new Vector2((px+48f)/96f,(pz+42f)/84f);
+                uv[i]=new Vector2((vertices[i].x+48f)/96f,(vertices[i].z+42f)/84f);
             }
             int t=0;
             for(int z=0;z<zs;z++)for(int x=0;x<xs;x++)
@@ -58,6 +58,10 @@ namespace Alterverse.Visuals
             Mesh mesh=new(){name="GJ504b_IndependentDuneSurface",vertices=vertices,uv=uv,triangles=triangles};
             mesh.RecalculateNormals();mesh.RecalculateTangents();mesh.RecalculateBounds();meshes.Add(mesh);
             Render("DF_GJ504bSandSea",mesh,material);
+            Material crust=Mat("GJ504b_FracturedRoseRim",new Color(.49f,.055f,.31f));
+            Material lower=Mat("GJ504b_FracturedRoseUndercut",new Color(.24f,.035f,.14f));
+            detail.Apply(crust);detail.Apply(lower);
+            ShatteredArenaEdge.Build(transform,ShatteredArenaEdge.Perimeter(vertices,xs,zs),crust,crust,lower,meshes);
         }
 
         void BuildSandstoneRanges()

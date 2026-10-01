@@ -1,3 +1,4 @@
+using Alterverse.Match;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -154,46 +155,14 @@ namespace Alterverse.Visuals
         void BuildGeologicalSlab()
         {
             if(perimeter==null)return;
-            // Shared rim positions close the top surface exactly. Lower rings pull inward into a massive undercut.
-            Vector3[] upper=perimeter;
-            float[] levels={-1.7f,-5.2f,-9.8f};float[] inset={1.025f,.96f,.77f};
-            for(int layer=0;layer<3;layer++)
-            {
-                Vector3[] lower=new Vector3[perimeter.Length];
-                for(int i=0;i<lower.Length;i++)
-                {
-                    Vector3 p=perimeter[i];float n=Mathf.PerlinNoise(p.x*.24f+31+layer*4,p.z*.24f+18);
-                    float scale=inset[layer]+(n-.5f)*.055f;
-                    lower[i]=new Vector3(p.x*scale,levels[layer]-(n-.5f)*(layer+1)*1.4f,p.z*scale);
-                }
-                var vertices=new List<Vector3>(upper.Length*6);var indices=new List<int>(upper.Length*6);
-                for(int i=0;i<upper.Length;i++)
-                {
-                    int j=(i+1)%upper.Length;
-                    AddFace(vertices,indices,upper[i],upper[j],lower[i]);AddFace(vertices,indices,upper[j],lower[j],lower[i]);
-                }
-                Mesh mesh=new(){name="DF_MoonStratum_"+layer};mesh.SetVertices(vertices);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();meshes.Add(mesh);
-                Material mat=layer==0?rimMat:layer==1?regolith:darkRegolith;
-                // The surface atlas is not stretched vertically across a cliff: strata use their own neutral rock material.
-                if(layer==1)
-                {
-                    mat=Mat(Alterverse.Match.ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
-                        Alterverse.Match.ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
-                        Alterverse.Match.ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
-                        Alterverse.Match.ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):
-                        new Color(.125f,.137f,.153f),0,.08f);
-                    surfaceMaterials.Apply(mat);
-                }
-                MeshObject("DF_FracturedMoonStratum",mesh,mat,Vector3.zero);
-                upper=lower;
-            }
-            // Close the underside. No visible collision plane is added.
-            var bottomVertices=new List<Vector3>(upper.Length+1){new Vector3(0,-11,0)};bottomVertices.AddRange(upper);
-            var bottomIndices=new List<int>(upper.Length*3);
-            for(int i=0;i<upper.Length;i++){bottomIndices.Add(0);bottomIndices.Add(i+1);bottomIndices.Add((i+1)%upper.Length+1);}
-            Mesh bottom=new(){name="DF_MoonUndercut"};bottom.SetVertices(bottomVertices);bottom.SetTriangles(bottomIndices,0);bottom.RecalculateNormals();bottom.RecalculateBounds();meshes.Add(bottom);
-            MeshObject("DF_MoonUndercut",bottom,darkRegolith,Vector3.zero);
+            Material middle=Mat(ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
+                ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
+                ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
+                ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):new Color(.125f,.137f,.153f),0,.08f);
+            surfaceMaterials.Apply(middle);
+            ShatteredArenaEdge.Build(root,perimeter,rimMat,middle,darkRegolith,meshes);
         }
+
         static void AddFace(List<Vector3> vertices,List<int> indices,Vector3 a,Vector3 b,Vector3 c)
         {int start=vertices.Count;vertices.Add(a);vertices.Add(b);vertices.Add(c);indices.Add(start);indices.Add(start+1);indices.Add(start+2);}
         void BatchStaticDetails()

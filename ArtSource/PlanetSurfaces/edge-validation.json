@@ -1,0 +1,134 @@
+[
+  {
+    "planet": "Moon",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.14445985710232578,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Mars",
+    "grid": [
+      192,
+      160
+    ],
+    "boundaryVertices": 704,
+    "minimumSignedTriangleArea": 0.09103559991820331,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "GreenPlanet",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.14640514872581978,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Noxara",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.14940110291584377,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Kryon",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.14457927422575648,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Earth",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.14907933930123426,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Pyraxis",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.1566565858394484,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Neptune",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.16317224755670748,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "Dark00",
+    "grid": [
+      144,
+      128
+    ],
+    "boundaryVertices": 544,
+    "minimumSignedTriangleArea": 0.1415500732868578,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "DiamondCore",
+    "grid": [
+      84,
+      72
+    ],
+    "boundaryVertices": 312,
+    "minimumSignedTriangleArea": 0.5,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  },
+  {
+    "planet": "GJ504b",
+    "grid": [
+      168,
+      144
+    ],
+    "boundaryVertices": 624,
+    "minimumSignedTriangleArea": 0.10927081670141524,
+    "interiorUnchanged": true,
+    "outwardOnly": true,
+    "sharedCliffTop": true
+  }
+]
