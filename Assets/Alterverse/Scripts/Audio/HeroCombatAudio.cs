@@ -62,7 +62,7 @@ namespace Alterverse.Audio
             // Per-actor throttling: other actors of the same class cannot silence the player.
             float cooldown=phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
             int cue=phase==2?70+hero*5+action:hero*10+action*2+phase;
-            DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetInstanceID());
+            DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }
         public static void Receive(GameObject actor,int action,int phase,Vector3 position)
         {if(phase>=0&&phase<=2)PlayPhase(actor,action,phase,position,false);}
