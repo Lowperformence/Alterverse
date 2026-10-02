@@ -117,8 +117,6 @@ namespace Alterverse.Match
             activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;nextScan=0;
             transform.position=ChooseSpawnPosition();
             BuildZoneVisual();
-            PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
-            PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
             HotZoneOpened?.Invoke();
             if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
                 NetworkZoneOpened?.Invoke(transform.position,occurrence);
@@ -289,8 +287,6 @@ namespace Alterverse.Match
             activeElapsed=0;zeroTime=0;lumenTime=0;zeroInside=lumenInside=0;
             transform.position=position;
             BuildZoneVisual();
-            PrototypeVfx.RadialBurst(transform.position,new Color(.82f,.86f,1f),Radius*.92f);
-            PrototypeVfx.Burst(transform.position,new Color(.82f,.86f,1f),1.15f,10);
             HotZoneOpened?.Invoke();
         }
 
@@ -409,3 +405,4 @@ namespace Alterverse.Match
         }
     }
 }
+
