@@ -1,0 +1,16 @@
+{
+  "baseVertices": 8485,
+  "addedVertices": 2800,
+  "detailObjects": 50,
+  "legPlates": 8,
+  "boneNames": [
+    "Chest",
+    "ForearmL",
+    "ForearmR",
+    "Hips",
+    "ShinL",
+    "ShinR",
+    "ThighL",
+    "ThighR"
+  ]
+}
