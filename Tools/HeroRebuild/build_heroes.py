@@ -448,7 +448,7 @@ def build(hero,female,color,label):
    for j in range(4):ellipsoid('Knuckle', (s*.39+(j-1.5)*.04,-.155,1.02),(.027,.033,.045),steel,'Hand'+k)
   tube('Spinal reactor',[(0,.135,1.14),(0,.135,1.40)],.05,energy)
  elif hero=='Traveler':
-  cape('Traveler coat',1.22,.80,.28,accent);tube('DF_WeaponR',[(.41,-.06,.78),(.41,-.06,1.04)],.023,gold,'HandR')
+  cape('Traveler coat',1.22,.80,.28,accent) # The chronosphere floats; no physical handle.
   ellipsoid('Chronosphere',(.41,-.06,1.22),(.11,.08,.11),energy,'HandR')
   for j in range(3):
    a=j*pi/3;pts=[(.41+.145*cos(t*2*pi/48),-.06+.045*sin(t*2*pi/48+a),1.22+.145*sin(t*2*pi/48)) for t in range(49)];tube('Chronosphere orbit',pts,.007,gold,'HandR')
@@ -797,7 +797,7 @@ def build(hero,female,color,label):
   for obj in created:obj['anatomical_hand']=True;bind(obj,arm)
  # Explicit named VFX socket travels with the weapon hand.
  socket=bpy.data.objects.new('DF_Muzzle',None);bpy.context.collection.objects.link(socket);socket.parent=arm;socket.parent_type='BONE';socket.parent_bone='HandR' if hero=='Rook' else 'WeaponGripR';bpy.context.view_layer.update()
- muzzle_point={'Nyra':(.40,-.99,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.12),'Rook':(.415,-.222,.902),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
+ muzzle_point={'Nyra':(.40,-.99,.97),'Mira':(.42,-.07,1.49),'Elyra':(.42,-.07,1.49),'Traveler':(.41,-.06,1.22),'Rook':(.415,-.222,.902),'Kaelon':(.40,-.04,1.06),'Veyr':(.39,-.08,.70)}[hero]
  grip_pose=arm.pose.bones[socket.parent_bone]
  socket.matrix_world=Matrix.Translation(grip_pose.matrix@grip_pose.bone.matrix_local.inverted()@fitted_point(muzzle_point))
  export_sockets=[socket]
@@ -859,3 +859,4 @@ stats=[]
 for row in HEROES:
  if not selected or row[0] in selected:stats.append(build(*row))
 with open(os.path.join(ROOT,'manifest.json'),'w') as f:json.dump(stats,f,indent=2)
+

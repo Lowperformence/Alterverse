@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Weapon-shop variants are colorways of each hero's authored standard weapon only.
-    /// Color is applied to the authored weapon materials without generating replacement geometry.
+    /// A translucent energy layer shares the original mesh; the original materials remain visible.
     /// </summary>
     [DefaultExecutionOrder(5000)]
     internal sealed class OriginalWeaponColorwayOverride : MonoBehaviour
@@ -50,6 +50,7 @@ namespace Alterverse.Visuals
             public Renderer Renderer;
             public Material[] Original;
             public Material[] Styled;
+            public Renderer Overlay;
         }
 
         private readonly List<RendererState> baseRenderers=new();
@@ -149,6 +150,7 @@ namespace Alterverse.Visuals
             {
                 Renderer renderer=baseRenderers[i].Renderer;
                 if(renderer!=null)renderer.enabled=visible;
+                if(baseRenderers[i].Overlay!=null)baseRenderers[i].Overlay.enabled=visible;
             }
         }
 
@@ -156,59 +158,55 @@ namespace Alterverse.Visuals
         {
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);
 
-            // Variant 0 is the darker saturated treatment; variant 1 is the brighter polished treatment.
-            Color accent=variant==0
-                ?Color.Lerp(item.Glow,Color.black,.12f)
-                :Color.Lerp(item.Glow,Color.white,.24f);
-            float tint=variant==0?.62f:.72f;
-            float metallic=variant==0?.66f:.60f;
-            float smoothness=variant==0?.74f:.86f;
-            float emission=variant==0?2.15f:2.65f;
-
-            for(int i=0;i<baseRenderers.Count;i++)
+            Shader shader=Resources.Load<Shader>("HeroArt/WeaponEnergyOverlay");
+            if(shader==null)
             {
-                RendererState state=baseRenderers[i];
-                Renderer renderer=state.Renderer;
-                if(renderer==null)continue;
-
-                Material[] styled=new Material[state.Original.Length];
-                for(int m=0;m<state.Original.Length;m++)
+                Debug.LogError("DF: WeaponEnergyOverlay shader is missing; keeping standard weapon visible.",this);
+                return;
+            }
+            foreach(RendererState state in baseRenderers)
+            {
+                Renderer source=state.Renderer;
+                if(source==null)continue;
+                var layer=new GameObject("DF_WeaponEnergyOverlay");
+                layer.layer=source.gameObject.layer;
+                layer.transform.SetParent(source.transform,false);
+                Renderer overlay;
+                int submeshes;
+                if(source is SkinnedMeshRenderer skin && skin.sharedMesh!=null)
                 {
-                    Material source=state.Original[m];
-                    if(source==null)continue;
-
-                    Material material=new Material(source)
-                    {
-                        name=source.name+"_DF_Colorway_"+variant
-                    };
-                    if(material.HasProperty("_WeaponTint"))
-                    {
-                        // HeroSurface uses _BaseColor.a for hit flashes, not persistent tint.
-                        // A separate channel keeps the vertex-painted shading and flash restoration intact.
-                        material.SetColor("_WeaponTint",new Color(accent.r,accent.g,accent.b,tint));
-                    }
-                    else
-                    {
-                        Color baseColor=ReadColor(source);
-                        Color target=Color.Lerp(baseColor,accent,tint);
-                        target.a=baseColor.a;
-                        WriteColor(material,target);
-                    }
-
-                    if(material.HasProperty("_Metallic"))
-                        material.SetFloat("_Metallic",Mathf.Max(material.GetFloat("_Metallic"),metallic));
-                    if(material.HasProperty("_Smoothness"))
-                        material.SetFloat("_Smoothness",Mathf.Max(material.GetFloat("_Smoothness"),smoothness));
-                    if(material.HasProperty("_EmissionColor"))
-                    {
-                        material.EnableKeyword("_EMISSION");
-                        material.SetColor("_EmissionColor",accent*emission);
-                    }
-                    styled[m]=material;
+                    var copy=layer.AddComponent<SkinnedMeshRenderer>();
+                    copy.sharedMesh=skin.sharedMesh;
+                    copy.bones=skin.bones;
+                    copy.rootBone=skin.rootBone;
+                    copy.localBounds=skin.localBounds;
+                    copy.quality=skin.quality;
+                    copy.updateWhenOffscreen=skin.updateWhenOffscreen;
+                    overlay=copy;
+                    submeshes=skin.sharedMesh.subMeshCount;
                 }
-
-                state.Styled=styled;
-                renderer.sharedMaterials=styled;
+                else if(source.TryGetComponent<MeshFilter>(out var filter) && filter.sharedMesh!=null)
+                {
+                    layer.AddComponent<MeshFilter>().sharedMesh=filter.sharedMesh;
+                    overlay=layer.AddComponent<MeshRenderer>();
+                    submeshes=filter.sharedMesh.subMeshCount;
+                }
+                else { Destroy(layer);continue; }
+                var material=new Material(shader) { name="DF_TransparentColorway_"+hero+"_"+variant };
+                Color glow=item.Glow;
+                glow.a=variant==0?.22f:.28f;
+                material.SetColor("_GlowColor",glow);
+                material.SetFloat("_RimOpacity",variant==0?.32f:.40f);
+                var slots=new Material[submeshes];
+                for(int i=0;i<slots.Length;i++)slots[i]=material;
+                overlay.sharedMaterials=slots;
+                overlay.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                overlay.receiveShadows=false;
+                overlay.lightProbeUsage=UnityEngine.Rendering.LightProbeUsage.Off;
+                overlay.reflectionProbeUsage=UnityEngine.Rendering.ReflectionProbeUsage.Off;
+                overlay.enabled=source.enabled;
+                state.Overlay=overlay;
+                state.Styled=new[]{material};
             }
         }
 
@@ -219,6 +217,12 @@ namespace Alterverse.Visuals
                 RendererState state=baseRenderers[i];
                 if(state.Renderer!=null&&state.Original!=null)
                     state.Renderer.sharedMaterials=state.Original;
+                if(state.Overlay!=null)
+                {
+                    state.Overlay.gameObject.SetActive(false);
+                    Destroy(state.Overlay.gameObject);
+                    state.Overlay=null;
+                }
                 Release(state.Styled);
                 state.Styled=null;
             }
@@ -232,20 +236,6 @@ namespace Alterverse.Visuals
         }
 
         private void OnDestroy()=>RestoreAndRelease();
-
-        private static Color ReadColor(Material material)
-        {
-            if(material.HasProperty("_BaseColor"))return material.GetColor("_BaseColor");
-            if(material.HasProperty("_Color"))return material.GetColor("_Color");
-            return material.color;
-        }
-
-        private static void WriteColor(Material material,Color color)
-        {
-            material.color=color;
-            if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",color);
-            if(material.HasProperty("_Color"))material.SetColor("_Color",color);
-        }
 
         private static void Release(Material[] materials)
         {
@@ -267,3 +257,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
