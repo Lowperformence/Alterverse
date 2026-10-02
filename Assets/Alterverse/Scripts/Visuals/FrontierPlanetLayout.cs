@@ -24,10 +24,15 @@ namespace Alterverse.Visuals
             return new Vector3(side*(8f+i*6.4f),.60f,side*(29f+(i%2)*2.3f));
         }
 
+        // Envelope of all mesa layers and their gravel fan; shared by visual and collision builders.
+        public static Bounds ObstacleSceneryBounds(int index)=>new Bounds(ObstaclePosition(index),ArenaVariantRuntime.IsGJ504b?new Vector3(12f,8f,10f):new Vector3(9f,7f,9f));
+
         public static void BuildObstacles(Transform parent)
         {
+            var clearance=new SceneryBuildingClearance();
             for(int i=0;i<ObstacleCount;i++)
             {
+                if(clearance.Blocks(ObstacleSceneryBounds(i)))continue;
                 var go=new GameObject(ArenaVariantRuntime.IsGJ504b?"DF_GJ504bMesaCollision":"DF_PSRJ1719TerraceCollision");
                 go.transform.SetParent(parent,false);go.transform.localPosition=ObstaclePosition(i);
                 go.layer=GameplayCollision.Structures;
@@ -76,4 +81,5 @@ namespace Alterverse.Visuals
             =>1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(inner,outer,distance));
     }
 }
+
 

@@ -42,6 +42,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildHealingIntegration(27.5f);
         // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
+        var clearance=new SceneryBuildingClearance();
+        int decorationStart=root.childCount;
         BuildRocks();
         if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
         if(ArenaVariantRuntime.IsKryon)BuildKryonIceAccents();
@@ -50,6 +52,8 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildSmallLandmarks();
         BuildDensityClusters();
         BuildReferenceSilhouettes();
+        // Filter before combining meshes; keep the floor, base foundations and cliff shell intact.
+        for(int i=decorationStart;i<root.childCount;i++)clearance.RemoveIfBlocked(root.GetChild(i).gameObject);
         // The Blender-authored border now owns the small edge fragments and cliff rocks.
         BuildGeologicalSlab();
         BatchStaticDetails();
@@ -279,3 +283,4 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
+

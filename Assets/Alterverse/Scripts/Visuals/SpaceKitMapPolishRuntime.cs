@@ -83,8 +83,11 @@ namespace Alterverse.Visuals
             BuildScenery();
         }
 
+        private SceneryBuildingClearance clearance;
+
         private void BuildScenery()
         {
+            clearance=new SceneryBuildingClearance();
             rockMesh = DecodeMesh("USK_Rock_Large_1", RockLarge1Data);
             domeMesh = DecodeMesh("USK_GeodesicDome", GeodesicDomeData);
             plantMesh = DecodeMesh("USK_Plant_2", Plant2Data);
@@ -348,6 +351,7 @@ namespace Alterverse.Visuals
             renderer.receiveShadows = true;
             renderer.lightProbeUsage = LightProbeUsage.BlendProbes;
             renderer.reflectionProbeUsage = ReflectionProbeUsage.BlendProbes;
+            clearance.RemoveIfBlocked(go);
             return go;
         }
 
@@ -399,3 +403,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

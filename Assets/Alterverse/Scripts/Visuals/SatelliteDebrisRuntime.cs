@@ -44,6 +44,7 @@ namespace Alterverse.Visuals
 
         void BuildDebris(Transform parent)
         {
+            var clearance=new SceneryBuildingClearance();
             // Authored pockets stay away from bases, heal stations and the central objective.
             // On the Moon a few pieces are large enough to read as a crashed satellite from
             // the normal gameplay camera. They remain visual-only and use one combined mesh.
@@ -82,6 +83,7 @@ namespace Alterverse.Visuals
                     float pitch = type == 1 ? 11f : (pocket % 2 == 0 ? 5f : -6f);
                     Quaternion rotation = Quaternion.Euler(pitch, yaw, type == 0 ? 8f : -4f);
                     Vector3 center = surface + Vector3.up * (size.y * .5f + .014f);
+                    if(clearance.Blocks(SceneryBuildingClearance.TransformBounds(new Bounds(Vector3.zero,size),Matrix4x4.TRS(center,rotation,Vector3.one))))continue;
                     AddBox(vertices, triangles, center, size, rotation);
                 }
             }
@@ -154,3 +156,4 @@ namespace Alterverse.Visuals
         void OnDestroy() => ClearDebris();
     }
 }
+

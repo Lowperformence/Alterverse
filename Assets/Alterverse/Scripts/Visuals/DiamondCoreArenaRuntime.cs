@@ -60,8 +60,11 @@ namespace Alterverse.Visuals
             }
         }
 
+        private SceneryBuildingClearance clearance;
+
         private void Build(Transform world)
         {
+            clearance=new SceneryBuildingClearance();
             GameObject lunar=GameObject.Find("DF_ProductionLunarGround");
             if(lunar!=null&&lunar.transform.IsChildOf(world))lunar.SetActive(false);
 
@@ -89,6 +92,13 @@ namespace Alterverse.Visuals
             BuildPulsar();
             BuildLighting();
             BuildCrystalPlateaus();
+            // Only exposed scenery; keep the transparent floor, cliff shell and underfloor cosmos.
+            foreach(var renderer in root.GetComponentsInChildren<MeshRenderer>())
+            {
+                string label=renderer.gameObject.name;
+                if(label=="DF_DiamondPerimeterSpire"||label=="DF_BlackCrystalCanyon"||label=="DF_BlackCanyonPrism"||label=="DF_PSRJ1719_CrystalTerrace"||label=="DF_PSRJ1719_TerracePrism")
+                    clearance.RemoveIfBlocked(renderer.gameObject);
+            }
         }
 
         private void BuildTransparentSurface()
@@ -142,6 +152,7 @@ namespace Alterverse.Visuals
             // Paired faceted terraces frame the central crystalline court.
             for(int side=-1;side<=1;side+=2)for(int i=0;i<5;i++)
             {
+                if(clearance.Blocks(FrontierPlanetLayout.ObstacleSceneryBounds(side<0?i:i+5)))continue;
                 float x=side*(8f+i*6.4f),z=side*(29f+(i%2)*2.3f);
                 GameObject shelf=Crystal("DF_PSRJ1719_CrystalTerrace",new Vector3(x,-.8f,z),
                     new Vector3(3.6f,1.4f,2.8f),blackCrystal);
@@ -527,4 +538,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

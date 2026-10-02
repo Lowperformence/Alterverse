@@ -53,8 +53,11 @@ namespace Alterverse.Visuals
             UpgradeScorpions();
         }
 
+        SceneryBuildingClearance clearance;
+
         void BuildArena(Transform world)
         {
+            clearance=new SceneryBuildingClearance();
             GameObject root=new(RootName);
             arenaRoot=root.transform;
             arenaRoot.SetParent(world,false);
@@ -112,6 +115,7 @@ namespace Alterverse.Visuals
                 Vector3 scale=new(.72f+(r%3)*.14f,.34f+(r%2)*.12f,.58f+(r%4)*.08f);
                 Part(PrimitiveType.Sphere,"BasaltPoolRim",pool,p,scale,Quaternion.Euler((r%3)*7f,r*31f,8f-(r%2)*13f),r%4==0?basaltHot:basalt);
             }
+            clearance.RemoveIfBlocked(pool.gameObject);
         }
 
         void BuildVolcano(Vector3 location,float side,int pairIndex,Material basalt,Material basaltHot,Material lavaHot,Material meteor)
@@ -138,6 +142,7 @@ namespace Alterverse.Visuals
             muzzle.SetParent(volcano,false);
             muzzle.localPosition=new Vector3(0,3.80f,0);
 
+            if(clearance.RemoveIfBlocked(volcano.gameObject))return;
             PyraxisVolcanoMeteorEmitter emitter=volcano.gameObject.AddComponent<PyraxisVolcanoMeteorEmitter>();
             emitter.Configure(muzzle,projectileRoot,meteor,side,pairIndex,location.z);
         }
@@ -552,4 +557,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

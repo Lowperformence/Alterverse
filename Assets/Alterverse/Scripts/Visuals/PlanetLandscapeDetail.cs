@@ -27,12 +27,14 @@ namespace Alterverse.Visuals
             new(31,-32), new(18,-32), new(5,-32), new(-8,-32)
         };
 
+        SceneryBuildingClearance clearance;
         void Start()=>Build();
 
         public void Build()
         {
             if(scenery!=null)return;
             variant = ArenaVariantRuntime.Current;
+            clearance=new SceneryBuildingClearance();
             scenery = new GameObject("DF_PlanetLandscape_" + variant).transform;
             scenery.SetParent(transform, false);
             rock = Own(LunarFragmentGeometry.Create(83));
@@ -288,7 +290,9 @@ namespace Alterverse.Visuals
             Vector3 world=center+orientation*new Vector3(offset.x,0,offset.z);
             Vector3 position=orientation*offset;
             position.y+=LunarSurfaceField.Surface(world.x,world.z).y;
-            batches[material].Add(new CombineInstance { mesh=mesh,transform=Matrix4x4.TRS(position,orientation*rotation,scale) });
+            Matrix4x4 placement=Matrix4x4.TRS(position,orientation*rotation,scale);
+            if(clearance.Blocks(mesh,Matrix4x4.Translate(center)*placement))return;
+            batches[material].Add(new CombineInstance { mesh=mesh,transform=placement });
         }
 
         void Flush(int site)
@@ -369,3 +373,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

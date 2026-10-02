@@ -86,8 +86,11 @@ namespace Alterverse.Visuals
             }
         }
 
+        private SceneryBuildingClearance clearance;
+
         private void BuildFloodlightGrid()
         {
+            clearance=new SceneryBuildingClearance();
             // Rotationally mirrored placements keep both teams' illumination and visual cover identical.
             Vector3[] positions={
                 new(-38f,0f, 25f),new( 38f,0f,-25f),
@@ -135,6 +138,7 @@ namespace Alterverse.Visuals
             light.range=24f;
             light.spotAngle=58f;
             light.shadows=LightShadows.None;
+            clearance.RemoveIfBlocked(rig.gameObject);
         }
 
         private void StyleGuards(Transform world)
@@ -420,3 +424,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

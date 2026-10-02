@@ -12,6 +12,7 @@ namespace Alterverse.Visuals
         readonly List<Material> materials=new();
         Texture2D albedo,normals;
         PlanetSurfaceMaterials detail;
+        SceneryBuildingClearance clearance;
 
         void Start()
         {
@@ -24,6 +25,7 @@ namespace Alterverse.Visuals
             sand.SetTexture("_BaseMap",albedo);
             sand.SetTexture("_BumpMap",normals);
             BuildSandSea(sand);
+            clearance=new SceneryBuildingClearance();
             BuildSandstoneRanges();
             BuildDust();
         }
@@ -77,6 +79,7 @@ namespace Alterverse.Visuals
             Vector2[] anchors={new(35,30),new(18,31),new(39,15),new(8,33)};
             for(int side=-1;side<=1;side+=2)for(int site=0;site<anchors.Length;site++)
             {
+                if(clearance.Blocks(FrontierPlanetLayout.ObstacleSceneryBounds(side<0?site:site+anchors.Length)))continue;
                 Vector2 a=anchors[site]*side;
                 for(int layer=0;layer<4;layer++)
                 {
@@ -160,6 +163,8 @@ namespace Alterverse.Visuals
 
         void Batch(string name,List<CombineInstance> instances,Material material)
         {
+            instances.RemoveAll(item=>clearance.Blocks(item.mesh,transform.localToWorldMatrix*item.transform));
+            if(instances.Count==0)return;
             Mesh mesh=new(){name=name,indexFormat=IndexFormat.UInt32};
             mesh.CombineMeshes(instances.ToArray(),true,true);mesh.RecalculateBounds();meshes.Add(mesh);
             Render(name,mesh,material);
@@ -202,3 +207,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

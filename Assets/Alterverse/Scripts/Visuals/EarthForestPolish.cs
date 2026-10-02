@@ -88,8 +88,11 @@ namespace Alterverse.Visuals
             }
         }
 
+        SceneryBuildingClearance clearance;
+
         void BuildForest(Transform world)
         {
+            clearance=new SceneryBuildingClearance();
             ClearForest();
             GameObject root=new(ForestRootName);
             forestRoot=root.transform;
@@ -145,6 +148,7 @@ namespace Alterverse.Visuals
                 }
             }
 
+            for(int i=0;i<forestRoot.childCount;i++)clearance.RemoveIfBlocked(forestRoot.GetChild(i).gameObject);
             RefreshBuildingSoil(world);
         }
 
@@ -371,3 +375,4 @@ namespace Alterverse.Visuals
         void OnDestroy()=>ClearForest();
     }
 }
+

@@ -60,6 +60,7 @@ namespace Alterverse.Visuals
         void BuildTheme(Transform world,ArenaVariant variant)
         {
             ClearTheme();
+            clearance=new SceneryBuildingClearance();
             builtFor=variant;
             GameObject root=new("DF_PlanetTheme_"+variant);
             detailRoot=root.transform;
@@ -114,6 +115,8 @@ namespace Alterverse.Visuals
                     Quaternion.Euler(0,i*41f,12f),stone);
             }
         }
+
+        SceneryBuildingClearance clearance;
 
         void BuildPyraxis()
         {
@@ -217,7 +220,7 @@ namespace Alterverse.Visuals
             return material;
         }
 
-        static GameObject Primitive(PrimitiveType type,string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Material material)
+        GameObject Primitive(PrimitiveType type,string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Material material)
         {
             GameObject go=GameObject.CreatePrimitive(type);
             go.name=name;
@@ -229,6 +232,7 @@ namespace Alterverse.Visuals
             if(collider!=null){collider.enabled=false;Object.Destroy(collider);}
             MeshRenderer renderer=go.GetComponent<MeshRenderer>();
             if(renderer!=null&&material!=null)renderer.sharedMaterial=material;
+            clearance.RemoveIfBlocked(go);
             return go;
         }
 
@@ -442,4 +446,5 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
+
 

@@ -107,9 +107,12 @@ namespace Alterverse.Visuals
             }
         }
 
+        private SceneryBuildingClearance clearance;
+
         private void BuildCentralLavaPools(Transform theme)
         {
             if(theme==null)return;
+            clearance=new SceneryBuildingClearance();
             GameObject root=new("DF_PyraxisCentralLavaPools");
             poolRoot=root.transform;
             poolRoot.SetParent(theme,false);
@@ -295,7 +298,7 @@ namespace Alterverse.Visuals
             return material;
         }
 
-        private static GameObject Primitive(PrimitiveType type,string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Material material)
+        private GameObject Primitive(PrimitiveType type,string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Material material)
         {
             GameObject go=GameObject.CreatePrimitive(type);
             go.name=name;
@@ -307,6 +310,7 @@ namespace Alterverse.Visuals
             if(collider!=null)Destroy(collider);
             MeshRenderer renderer=go.GetComponent<MeshRenderer>();
             if(renderer!=null&&material!=null)renderer.sharedMaterial=material;
+            clearance.RemoveIfBlocked(go);
             return go;
         }
 
@@ -386,3 +390,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
