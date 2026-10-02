@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Alterverse.Multiplayer
 {
-    /// <summary>Stable 0-9 roster identity shared by every peer in a co-op match.</summary>
+    /// <summary>Stable 0-9 roster identity shared by every peer in a network match.</summary>
     public sealed class CoopHeroSlot : MonoBehaviour
     {
         [SerializeField]private int slot=-1;
@@ -17,10 +17,15 @@ namespace Alterverse.Multiplayer
 
         public void Configure(int rosterSlot,MatchPlayerSlot data)
         {
+            Configure(rosterSlot,data,data!=null&&data.IsLocal);
+        }
+
+        public void Configure(int rosterSlot,MatchPlayerSlot data,bool isLocalOnThisPeer)
+        {
             slot=Mathf.Clamp(rosterSlot,0,MatchSession.MaxPlayers-1);
             playerId=data?.PlayerId??"";
             human=data!=null&&!data.IsBot;
-            localHuman=human&&data.IsLocal;
+            localHuman=human&&isLocalOnThisPeer;
         }
     }
 }
