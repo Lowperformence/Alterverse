@@ -136,7 +136,7 @@ namespace Alterverse.Multiplayer
 
         /// <summary>
         /// Polls the local Group Up membership every three seconds. Once HOST_ASSIGNED is returned,
-        /// switches NGO/UTP to the assigned fqdn + external gameport and waits until NGO confirms
+        /// switches NGO/UTP to the assigned fqdn + external game port and waits until NGO confirms
         /// the direct connection (including the cold-start retry window).
         /// </summary>
         public async Task<bool> WaitForAssignmentAndConnectAsync(int timeoutSeconds = 180)
@@ -320,7 +320,8 @@ namespace Alterverse.Multiplayer
             if (assignment != null)
             {
                 string host = !string.IsNullOrWhiteSpace(assignment.fqdn) ? assignment.fqdn : assignment.public_ip;
-                int externalPort = assignment.ports?.gameport?.external ?? 0;
+                AssignmentPort mappedPort = assignment.ports?.gameport ?? assignment.ports?.game;
+                int externalPort = mappedPort?.external ?? 0;
                 if (!string.IsNullOrWhiteSpace(host) && externalPort > 0 && externalPort <= ushort.MaxValue)
                 {
                     AssignedHost = host.Trim();
@@ -416,6 +417,7 @@ namespace Alterverse.Multiplayer
         private sealed class AssignmentPorts
         {
             public AssignmentPort gameport;
+            public AssignmentPort game;
         }
 
         [Serializable]
