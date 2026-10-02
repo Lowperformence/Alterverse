@@ -7,7 +7,7 @@ using Alterverse.Match;
 namespace Alterverse.Multiplayer
 {
     [Serializable]
-    public sealed class CoopMatchPlan
+    public class CoopMatchPlan
     {
         public string MatchId;
         public ArenaVariant Arena;
@@ -16,7 +16,7 @@ namespace Alterverse.Multiplayer
 
         public MatchPlayerSlot Host=>Session?.Slots[0];
         public MatchPlayerSlot Friend=>Session?.Slots[1];
-        public int HumanCount { get; private set; }
+        public int HumanCount { get; protected set; }
 
         public static CoopMatchPlan Build(
             string matchId,
