@@ -44,7 +44,9 @@ CoopMatchPlan coopPlan=coop?CoopAuthority.ActivePlan:null;
 int localSlot=coop?CoopRosterBuilder.FindLocalHumanSlot(coopPlan):-1;
 if(coop&&localSlot<0){Debug.LogError("DIMENSIONS FRONT CO-OP: local human slot missing.");return;}
 
-HeroId selected=coop?coopPlan.Session.Slots[localSlot].Hero:PlayerHeroSelection.Selected;
+MatchPlayerSlot localSlotData=coop?coopPlan.Session.Slots[localSlot]:null;
+int localTeam=localSlotData?.Team??0;
+HeroId selected=coop?localSlotData.Hero:PlayerHeroSelection.Selected;
 if(coop)
 {
 ArenaVariantRuntime.BeginCoopMatch(coopPlan.Arena);
@@ -59,14 +61,14 @@ GameObject world=new GameObject("DF_MatchWorld");
 
 BuildArena();
 
-Vector3 playerSpawn=coop?CoopRosterBuilder.SafeSpawn(0,localSlot):new Vector3(-32,1,-4);
-GameObject player=CreateLocalPlayer(selected,playerSpawn,!coop||CoopAuthority.LocalIsHost);
+Vector3 playerSpawn=coop?CoopRosterBuilder.SafeSpawn(localTeam,localSlot):new Vector3(-32,1,-4);
+GameObject player=CreateLocalPlayer(selected,playerSpawn,!coop||CoopAuthority.LocalIsHost,localTeam);
 Health ph=player.GetComponent<Health>();
 
 SpawnHealingZone zeroZone=GameObject.Find("AV_ZeroSpawnZone")?.GetComponent<SpawnHealingZone>();
-if(zeroZone!=null){zeroZone.InitializeTeam(0);zeroZone.Initialize(ph);}
+if(zeroZone!=null){zeroZone.InitializeTeam(0);zeroZone.Initialize(localTeam==0?ph:null);}
 SpawnHealingZone lumenZone=GameObject.Find("AV_LumenSpawnZone")?.GetComponent<SpawnHealingZone>();
-if(lumenZone!=null)lumenZone.InitializeTeam(1);
+if(lumenZone!=null){lumenZone.InitializeTeam(1);lumenZone.Initialize(localTeam==1?ph:null);}
 
 UnityEngine.Camera cam=UnityEngine.Camera.main;
 if(cam==null){GameObject cameraObject=new("Main Camera");cameraObject.tag="MainCamera";cam=cameraObject.AddComponent<UnityEngine.Camera>();}
@@ -113,7 +115,7 @@ foreach(GameObject created in gameObject.scene.GetRootGameObjects())
 if(created!=world&&!existing.Contains(created))created.transform.SetParent(world.transform,true);
 }
 
-private static GameObject CreateLocalPlayer(HeroId selected,Vector3 spawn,bool authoritativeRespawn)
+private static GameObject CreateLocalPlayer(HeroId selected,Vector3 spawn,bool authoritativeRespawn,int team)
 {
 GameObject player=new GameObject("AV_Player");
 player.transform.position=spawn;
@@ -122,7 +124,7 @@ player.AddComponent<HeroIdentity>().Configure(selected);
 HeroCombatProfile profile=player.AddComponent<HeroCombatProfile>();profile.Configure(selected);
 player.AddComponent<HeroAbilityKit>().Configure(selected);
 Health ph=player.AddComponent<Health>();ph.Configure(profile.Health);
-player.AddComponent<TeamMember>().Initialize(0);
+player.AddComponent<TeamMember>().Initialize(Mathf.Clamp(team,0,1));
 player.AddComponent<HeroMotor>();
 if(authoritativeRespawn)player.AddComponent<HeroRespawn>();
 player.AddComponent<BasicAttack>();
