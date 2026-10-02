@@ -186,6 +186,8 @@ namespace Alterverse.Combat
             AuthoredHotZoneArt.Apply(transform,ArenaVariantRuntime.IsGJ504b?"Sandstone":
                 kryonBear?"Ice":noxaraSpider?"Spider":xenoAlien?"Xeno":marsSkeleton?"Skeleton":"Machine");
             if(ArenaVariantRuntime.IsDiamondCore)DiamondCoreGuardianWorldVisual.Prepare(this);
+            if(ArenaVariantRuntime.IsNeptune && GetComponent<NeptuneOctopusVisualOverride>()==null)
+                gameObject.AddComponent<NeptuneOctopusVisualOverride>();
             lastMovementSample=transform.position;
             movementSampleReady=true;
             SetNextPatrol();
