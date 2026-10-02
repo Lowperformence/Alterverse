@@ -46,7 +46,8 @@ public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assas
 // Preserve the existing 15% durability adjustment and add 5% to current base HP.
 // The independent universal hero shield is configured by Health.
 public const float GlobalHealthMultiplier=1.15f*1.05f;
-public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f,_=>200f})*GlobalHealthMultiplier;
+// THE TRAVELER receives an additional 5% hero-specific health increase on top of the global multiplier.
+public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,_=>200f})*GlobalHealthMultiplier;
 public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>14f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,_=>17f};
 }
 }
