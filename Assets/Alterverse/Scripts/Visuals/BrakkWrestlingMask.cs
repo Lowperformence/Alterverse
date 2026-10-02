@@ -32,57 +32,53 @@ namespace Alterverse.Visuals
         }
         void Build(Transform model,Transform head,Vector3 center,Vector3 radius)
         {
-            var vertices=new List<Vector3>();var red=new List<int>();var silver=new List<int>();const int rows=48,cols=96;
-            Vector3 Position(float x,float y,float z,float lift=1f)=>head.InverseTransformPoint(model.TransformPoint(center+Vector3.Scale(radius,new Vector3(x,y,z))*lift));
-            for(int row=0;row<=rows;row++)for(int col=0;col<=cols;col++)
+            var v=new List<Vector3>();var bronze=new List<int>();var trim=new List<int>();var crest=new List<int>();
+            Vector3 P(float x,float y,float z)=>head.InverseTransformPoint(model.TransformPoint(center+Vector3.Scale(radius,new Vector3(x,y,z))));
+            const int rows=40,cols=72;
+            for(int y=0;y<=rows;y++)for(int x=0;x<=cols;x++)
+            {float a=y*Mathf.PI/rows,b=x*Mathf.PI*2/cols;v.Add(P(Mathf.Sin(a)*Mathf.Sin(b),Mathf.Cos(a),Mathf.Sin(a)*Mathf.Cos(b)));}
+            for(int y=0;y<rows;y++)for(int x=0;x<cols;x++)
             {
-                float lat=Mathf.PI*row/rows,lon=2*Mathf.PI*col/cols;
-                vertices.Add(Position(Mathf.Sin(lat)*Mathf.Sin(lon),Mathf.Cos(lat),Mathf.Sin(lat)*Mathf.Cos(lon)));
+                float a=(y+.5f)*Mathf.PI/rows,b=(x+.5f)*Mathf.PI*2/cols;
+                float px=Mathf.Sin(a)*Mathf.Sin(b),py=Mathf.Cos(a),pz=Mathf.Sin(a)*Mathf.Cos(b);
+                // Open eye slit and narrow breathing opening; enclosed bronze cheek guards.
+                if(pz>.48f && ((py>-.11f&&py<.16f&&Mathf.Abs(px)>.13f) || (py<-.26f&&Mathf.Abs(px)<.14f)))continue;
+                int i=y*(cols+1)+x;Quad(bronze,i,i+1,i+cols+2,i+cols+1);
             }
-            for(int row=0;row<rows;row++)for(int col=0;col<cols;col++)
+            void Plate(Vector3[] points,List<int> faces,float thickness)
             {
-                float lat=Mathf.PI*(row+.5f)/rows,lon=2*Mathf.PI*(col+.5f)/cols;
-                float x=Mathf.Sin(lat)*Mathf.Sin(lon),y=Mathf.Cos(lat),z=Mathf.Sin(lat)*Mathf.Cos(lon);
-                bool eye=Mathf.Pow((Mathf.Abs(x)-.38f)/.23f,2)+Mathf.Pow((y-.10f)/.17f,2)<1;
-                bool mouth=Mathf.Pow(x/.25f,2)+Mathf.Pow((y+.51f)/.15f,2)<1;
-                if(z>.35f&&(eye||mouth))continue;
-                int a=row*(cols+1)+col;Quad(red,a,a+1,a+cols+2,a+cols+1);
+                int start=v.Count;foreach(var q in points)v.Add(P(q.x,q.y,q.z));foreach(var q in points)v.Add(P(q.x,q.y,q.z-thickness));
+                for(int j=1;j<points.Length-1;j++){faces.Add(start);faces.Add(start+j);faces.Add(start+j+1);faces.Add(start+points.Length);faces.Add(start+points.Length+j+1);faces.Add(start+points.Length+j);}
+                for(int j=0;j<points.Length;j++){int k=(j+1)%points.Length;Quad(faces,start+j,start+k,start+points.Length+k,start+points.Length+j);}
             }
-            void Band(float cx,float cy,float rx,float ry)
+            // Projecting brow, nose guard and swept cheek plates evoke the bronze helmet reference.
+            foreach(float sign in new[]{-1f,1f})
             {
-                int start=vertices.Count;const int segments=64;
-                for(int i=0;i<=segments;i++)for(int edge=0;edge<2;edge++)
-                {
-                    float angle=i*Mathf.PI*2/segments;float factor=edge==0?1f:1.25f;
-                    float x=cx+Mathf.Cos(angle)*rx*factor,y=cy+Mathf.Sin(angle)*ry*factor;
-                    vertices.Add(Position(x,y,Mathf.Sqrt(Mathf.Max(.005f,1-x*x-y*y)),1.009f));
-                }
-                for(int i=0;i<segments;i++){int a=start+i*2;Quad(silver,a,a+2,a+3,a+1);}
+                Plate(new[]{new Vector3(sign*.10f,.20f,1.03f),new Vector3(sign*.82f,.29f,.66f),new Vector3(sign*.80f,.15f,.81f),new Vector3(sign*.12f,.09f,1.09f)},trim,.055f);
+                Plate(new[]{new Vector3(sign*.19f,-.16f,1.00f),new Vector3(sign*.73f,-.11f,.78f),new Vector3(sign*.79f,-.91f,.62f),new Vector3(sign*.36f,-1.15f,.76f),new Vector3(sign*.18f,-.62f,1.01f)},bronze,.08f);
             }
-            Band(-.38f,.10f,.23f,.17f);Band(.38f,.10f,.23f,.17f);Band(0,-.51f,.25f,.15f);
-            void Stripe(Vector2[] outline)
+            Plate(new[]{new Vector3(-.13f,.24f,1.04f),new Vector3(.13f,.24f,1.04f),new Vector3(.085f,-.45f,1.16f),new Vector3(0,-.57f,1.19f),new Vector3(-.085f,-.45f,1.16f)},bronze,.08f);
+            // Continuous sagittal red horsehair crest; individual tapered blades create the fringe.
+            for(int j=0;j<48;j++)
             {
-                int start=vertices.Count;
-                foreach(var p in outline)vertices.Add(Position(p.x,p.y,Mathf.Sqrt(Mathf.Max(.005f,1-p.sqrMagnitude)),1.012f));
-                for(int i=1;i<outline.Length-1;i++){silver.Add(start);silver.Add(start+i+1);silver.Add(start+i);}
+                float angle=Mathf.Lerp(-1.18f,1.48f,j/47f);float z=Mathf.Sin(angle),y=Mathf.Cos(angle);
+                float length=.45f+.15f*Mathf.Sin(j*.83f)*Mathf.Sin(j*.83f);
+                float width=.045f;
+                int start=v.Count;
+                v.Add(P(-width,y*.98f,z*.98f));v.Add(P(width,y*.98f,z*.98f));
+                v.Add(P(width*.35f,y*(1.0f+length)+.25f,z*(1.0f+length)));v.Add(P(-width*.35f,y*(1.0f+length)+.25f,z*(1.0f+length)));
+                Quad(crest,start,start+1,start+2,start+3);Quad(crest,start+3,start+2,start+1,start);
             }
-            foreach(float s in new[]{-1f,1f})
-            {
-                Stripe(new[]{new Vector2(s*.08f,.80f),new Vector2(s*.24f,.65f),new Vector2(s*.19f,.36f),new Vector2(s*.07f,.21f),new Vector2(s*.12f,.48f)});
-                Stripe(new[]{new Vector2(s*.64f,-.12f),new Vector2(s*.78f,-.08f),new Vector2(s*.52f,-.69f),new Vector2(s*.44f,-.77f),new Vector2(s*.47f,-.36f)});
-            }
-            mesh=new Mesh {name="DF_BrakkRedSilverWrestlingMask"};mesh.SetVertices(vertices);mesh.subMeshCount=2;
-            // Make front/back winding independent of mirrored decorative outlines.
-            void Outward(List<int> ids)
-            {
-                Vector3 c=head.InverseTransformPoint(model.TransformPoint(center));
-                for(int i=0;i<ids.Count;i+=3){Vector3 a=vertices[ids[i]],b=vertices[ids[i+1]],d=vertices[ids[i+2]];if(Vector3.Dot(Vector3.Cross(b-a,d-a),(a+b+d)/3-c)<0){int t=ids[i+1];ids[i+1]=ids[i+2];ids[i+2]=t;}}
-            }
-            Outward(red);Outward(silver);mesh.SetTriangles(red,0);mesh.SetTriangles(silver,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
-            materials=new[]{RuntimeShaderLibrary.Create(new Color(.55f,.018f,.028f),false,.05f,.24f,Color.black),RuntimeShaderLibrary.Create(new Color(.79f,.81f,.80f),false,.55f,.40f,Color.black)};
-            var go=new GameObject("DF_BrakkWrestlingMask");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
+            mesh=new Mesh{name="DF_BrakkBronzeCrestHelmet"};mesh.SetVertices(v);mesh.subMeshCount=3;
+            Vector3 localCenter=P(0,0,0);
+            foreach(var ids in new[]{bronze,trim})for(int i=0;i<ids.Count;i+=3)
+            {Vector3 a=v[ids[i]],b=v[ids[i+1]],c=v[ids[i+2]];if(Vector3.Dot(Vector3.Cross(b-a,c-a),(a+b+c)/3-localCenter)<0){int t=ids[i+1];ids[i+1]=ids[i+2];ids[i+2]=t;}}
+            mesh.SetTriangles(bronze,0);mesh.SetTriangles(trim,1);mesh.SetTriangles(crest,2);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black),RuntimeShaderLibrary.Create(new Color(.56f,.015f,.025f),false,.02f,.20f,Color.black)};
+            var go=new GameObject("DF_BrakkBronzeCrestHelmet");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
         }
         static void Quad(List<int> t,int a,int b,int c,int d){t.Add(a);t.Add(b);t.Add(c);t.Add(a);t.Add(c);t.Add(d);}
         void OnDestroy(){if(mesh!=null)Destroy(mesh);if(materials!=null)foreach(var m in materials)if(m!=null)Destroy(m);}
     }
 }
+
