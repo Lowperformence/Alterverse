@@ -8,8 +8,8 @@ using CombatFeedbackComponent=Alterverse.Combat.CombatFeedback;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Builds the exact same ten hero slots on every peer. Only the authoritative NGO server gives AI slots
-    /// decision/movement/combat components. Human input remains local to its owning device.
+    /// Builds the exact same ten hero slots on every peer. Clients mark only their controlled hero local;
+    /// a dedicated server can build all ten authoritative actors without owning a local player.
     /// </summary>
     public static class CoopRosterBuilder
     {
@@ -31,6 +31,24 @@ namespace Alterverse.Multiplayer
                 MatchPlayerSlot data=plan.Session.Slots[slot];
                 if(data==null)continue;
                 if(data.IsBot)CreateBot(data,slot,CoopAuthority.LocalHasServerAuthority);
+                else CreateRemoteHuman(data,slot);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Dedicated-server path: creates every roster actor as server-owned simulation state.
+        /// No actor receives local input ownership and no AV_Player object is required.
+        /// </summary>
+        public static bool BuildServer(CoopMatchPlan plan)
+        {
+            if(plan?.Session==null||!plan.Session.IsFull||!CoopAuthority.LocalHasServerAuthority)return false;
+
+            for(int slot=0;slot<MatchSession.MaxPlayers;slot++)
+            {
+                MatchPlayerSlot data=plan.Session.Slots[slot];
+                if(data==null)return false;
+                if(data.IsBot)CreateBot(data,slot,true);
                 else CreateRemoteHuman(data,slot);
             }
             return true;
@@ -82,7 +100,7 @@ namespace Alterverse.Multiplayer
 
             HeroLocomotion locomotion=hero.GetComponent<HeroLocomotion>()??hero.AddComponent<HeroLocomotion>();
             CoopHeroSlot netSlot=hero.GetComponent<CoopHeroSlot>()??hero.AddComponent<CoopHeroSlot>();
-            netSlot.Configure(slot,data);
+            netSlot.Configure(slot,data,local);
             if(hero.GetComponent<CoopRespawnReplica>()==null)hero.AddComponent<CoopRespawnReplica>();
 
             StylizedHeroVisual visual=hero.GetComponent<StylizedHeroVisual>();
@@ -145,7 +163,7 @@ namespace Alterverse.Multiplayer
             TeamMember member=bot.AddComponent<TeamMember>();member.Initialize(data.Team);
             bot.AddComponent<HeroLocomotion>();
             bot.AddComponent<StylizedHeroVisual>().Build();
-            bot.AddComponent<CoopHeroSlot>().Configure(slot,data);
+            bot.AddComponent<CoopHeroSlot>().Configure(slot,data,false);
 
             if(authoritative)
             {
