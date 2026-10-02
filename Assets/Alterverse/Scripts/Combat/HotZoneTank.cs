@@ -152,6 +152,7 @@ namespace Alterverse.Combat
         }
 
         private ReferenceMonsterRig referenceRig;
+        public void SetPresentationMuzzle(Transform muzzle) { if(muzzle!=null)barrelPivot=muzzle; }
 
         private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien,bool spider,bool bear)
         {
@@ -321,7 +322,7 @@ namespace Alterverse.Combat
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color energy=referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
             bool creature=FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore&&barrelPivot==null?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             PrototypeVfx.Ring(muzzle,energy,kryonBear?.40f:noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
             if(kryonBear)PrototypeVfx.Burst(muzzle,Color.Lerp(energy,Color.white,.35f),.15f,4);
             else if(noxaraSpider)PrototypeVfx.Burst(muzzle,energy,.12f,3);
@@ -342,7 +343,7 @@ namespace Alterverse.Combat
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
             bool creature=FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore&&barrelPivot==null?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color energy=referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;

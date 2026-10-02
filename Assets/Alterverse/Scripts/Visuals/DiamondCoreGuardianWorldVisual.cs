@@ -20,6 +20,8 @@ namespace Alterverse.Visuals
             public Mesh mesh;
             public readonly List<Material> materials=new();
             public float phase;
+            public ReferenceMonsterRig reference;
+            public bool wasWindingUp;
         }
 
         readonly Dictionary<HotZoneTank,VisualState> visuals=new();
@@ -93,6 +95,12 @@ namespace Alterverse.Visuals
 
                 // SyncGuardians already hides legacy meshes at the bounded scan interval.
                 // Repeated hierarchy-array allocations here previously happened every frame.
+                if(state.reference!=null)
+                {
+                    if(tank.AttackWindup&&!state.wasWindingUp)state.reference.PulseAttack();
+                    state.wasWindingUp=tank.AttackWindup;
+                    continue;
+                }
                 float t=Time.time+state.phase;
                 float cast=tank.AttackWindup?1f:0f;
                 float hover=2.95f+Mathf.Sin(t*.92f)*.18f+cast*.12f;
@@ -108,6 +116,13 @@ namespace Alterverse.Visuals
         VisualState BuildVisual(HotZoneTank tank)
         {
             VisualState state=new();
+            state.reference=ReferenceMonsterRig.Build(tank.transform,"PSRCrystalTitan",transform);
+            if(state.reference!=null)
+            {
+                state.root=state.reference.gameObject;
+                tank.SetPresentationMuzzle(state.reference.Muzzle);
+                return state;
+            }
             state.phase=Mathf.Abs(tank.gameObject.name.GetHashCode()%1000)*.00628f;
             state.mesh=DiamondCoreCrystalVisuals.BuildGuardianGemMesh();
 
@@ -213,4 +228,5 @@ namespace Alterverse.Visuals
         void OnDestroy(){ClearAll();}
     }
 }
+
 

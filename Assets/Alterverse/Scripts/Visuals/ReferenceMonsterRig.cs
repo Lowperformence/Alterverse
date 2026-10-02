@@ -15,12 +15,12 @@ namespace Alterverse.Visuals
         private bool planted;
         public Transform Muzzle { get; private set; }
         public Color EnergyColor { get; private set; }
-        public static ReferenceMonsterRig Build(Transform host, string resource)
+        public static ReferenceMonsterRig Build(Transform host, string resource, Transform visualParent = null)
         {
             var data = ResourceCreatureMesh.Load(resource);
             if (data == null || data.joints == null) return null;
             var root = new GameObject("DF_ReferenceMonster_" + resource).transform;
-            root.SetParent(host, false);
+            root.SetParent(visualParent != null ? visualParent : host, false);
             var rig = root.gameObject.AddComponent<ReferenceMonsterRig>(); rig.host = host;
             rig.joints.Add("",root);
             foreach (var joint in data.joints)
@@ -48,7 +48,7 @@ namespace Alterverse.Visuals
         {
             Vector3 p = host.position;
             p.y = LunarSurfaceField.Surface(p.x,p.z).y + .035f;
-            transform.position = p;
+            transform.position = p; transform.rotation = host.rotation;
         }
         private Vector3 Ground(Vector3 p) { p.y = LunarSurfaceField.Surface(p.x,p.z).y + .16f; return p; }
         private void LateUpdate()
