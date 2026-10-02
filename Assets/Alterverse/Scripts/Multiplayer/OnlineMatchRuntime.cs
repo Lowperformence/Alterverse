@@ -1,5 +1,6 @@
 using Alterverse.Characters;
 using Alterverse.Match;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace Alterverse.Multiplayer
@@ -13,14 +14,28 @@ namespace Alterverse.Multiplayer
                 return false;
 
             int localSlot = CoopRosterBuilder.FindLocalHumanSlot(plan);
-            if (localSlot < 0 || plan.Session.Slots[localSlot] == null)
+            NetworkManager manager = NetworkManager.Singleton;
+            bool serverOnly = localSlot < 0 && manager != null && manager.IsListening && manager.IsServer &&
+                              CoopAuthority.LocalHasServerAuthority;
+
+            if (localSlot < 0 && !serverOnly)
             {
                 Debug.LogError("DIMENSIONS FRONT ONLINE: local human slot missing from verified match plan.");
                 CoopAuthority.EndMatch();
                 return false;
             }
 
-            PlayerHeroSelection.Select(plan.Session.Slots[localSlot].Hero);
+            if (!serverOnly)
+            {
+                MatchPlayerSlot local = plan.Session.Slots[localSlot];
+                if (local == null)
+                {
+                    Debug.LogError("DIMENSIONS FRONT ONLINE: local human slot is invalid.");
+                    CoopAuthority.EndMatch();
+                    return false;
+                }
+                PlayerHeroSelection.Select(local.Hero);
+            }
 
             Alterverse.Prototype.PrototypeBootstrap bootstrap =
                 Object.FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
@@ -32,7 +47,7 @@ namespace Alterverse.Multiplayer
             }
 
             bool restarting = GameObject.Find("DF_MatchWorld") != null;
-            Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
+            if (!serverOnly) Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             MatchClock.Set(PauseReason.Result, false);
             MatchClock.Set(PauseReason.Menu, false);
 
