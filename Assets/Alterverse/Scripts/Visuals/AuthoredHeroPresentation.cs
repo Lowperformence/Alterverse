@@ -61,7 +61,11 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Nyra) CyberRangerAppearance.Apply(instance.transform);
             if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
-            if (hero == HeroId.Mira) HealerLegArmorAppearance.Apply(instance.transform);
+            if (hero == HeroId.Mira)
+            {
+                HealerLegArmorAppearance.Apply(instance.transform);
+                TahlaEmeraldCrown.Apply(instance.transform);
+            }
             if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
             if (hero == HeroId.Traveler)
             {
@@ -397,3 +401,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
