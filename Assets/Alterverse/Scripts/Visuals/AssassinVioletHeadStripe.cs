@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>A violet helmet strip fitted to the assassin head, including menu previews.</summary>
+    /// <summary>Violet roof lighting: central helmet strip and two raised top rails, including menu previews.</summary>
     [DisallowMultipleComponent]
     public sealed class AssassinVioletHeadStripe : MonoBehaviour
     {
@@ -52,7 +52,7 @@ namespace Alterverse.Visuals
             Color violet=new(.66f,.08f,1f,1f);
             crownMaterial=RuntimeShaderLibrary.Create(violet,false,.15f,.5f,violet*3f);
             if(crownMaterial==null)return;
-            crownMaterial.name="DF_AssassinVioletHeadStripe";crownMaterial.EnableKeyword("_EMISSION");
+            crownMaterial.name="DF_AssassinVioletHelmetRoofLights";crownMaterial.EnableKeyword("_EMISSION");
             var vertices=new List<Vector3>();var triangles=new List<int>();
             // Follow the highest actual helmet points, so boxy head geometry cannot bury the strip.
             const int segments=24;
@@ -85,6 +85,22 @@ namespace Alterverse.Visuals
             {
                 int n=vertices.Count;vertices.Add(a);vertices.Add(b);vertices.Add(c);vertices.Add(d);
                 triangles.Add(n);triangles.Add(n+1);triangles.Add(n+2);triangles.Add(n);triangles.Add(n+2);triangles.Add(n+3);
+            }
+            // Two compact lights sit above the helmet roof, alongside the central strip.
+            foreach(float side in new[]{-1f,1f})
+            {
+                float x=bounds.center.x+side*bounds.extents.x*.48f;
+                float y=bounds.max.y+clearance*1.25f;
+                float z=bounds.center.z+bounds.extents.z*.05f;
+                float w=bounds.size.x*.047f;
+                float length=bounds.size.z*.24f;
+                float thickness=clearance*.55f;
+                Vector3 P(float dx,float dy,float dz)
+                    =>head.InverseTransformPoint(model.TransformPoint(new Vector3(x+dx,y+dy,z+dz)));
+                Vector3 a=P(-w,0,-length),b=P(w,0,-length),c=P(w,0,length),d=P(-w,0,length);
+                Vector3 e=P(-w,-thickness,-length),f=P(w,-thickness,-length),g=P(w,-thickness,length),h=P(-w,-thickness,length);
+                Quad(a,d,c,b);Quad(e,f,g,h);
+                Quad(a,b,f,e);Quad(d,h,g,c);Quad(a,e,h,d);Quad(b,c,g,f);
             }
             crownMesh=new Mesh{name="DF_AssassinHeadStripe"};
             crownMesh.SetVertices(vertices);crownMesh.SetTriangles(triangles,0);crownMesh.RecalculateNormals();crownMesh.RecalculateBounds();
