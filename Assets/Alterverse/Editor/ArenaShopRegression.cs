@@ -42,15 +42,15 @@ namespace Alterverse.EditorChecks
 
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be free.");
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must always be free.");
-                Assert(ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),"Green Planet must always be free.");
+                Assert(ArenaShopCatalog.For(ArenaVariant.GreenPlanet).Price==800,"MOOR12C must cost 800 shards.");
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Kryon),"Kryon must always be free.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked.");
                 Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==1000,"Noxara must cost exactly 1000 shards.");
 
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&ArenaVariantRuntime.Selected==ArenaVariant.Mars,
                     "Free Mars must be selectable.");
-                Assert(ArenaVariantRuntime.Select(ArenaVariant.GreenPlanet)&&ArenaVariantRuntime.Selected==ArenaVariant.GreenPlanet,
-                    "Free Green Planet must be selectable.");
+                Assert(ArenaVariantRuntime.CanSelect(ArenaVariant.GreenPlanet)==ArenaUnlockInventory.Owned(ArenaVariant.GreenPlanet),
+                    "MOOR12C selection must follow ownership.");
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Kryon)&&ArenaVariantRuntime.Selected==ArenaVariant.Kryon,
                     "Free Kryon must be selectable.");
                 Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
@@ -100,3 +100,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

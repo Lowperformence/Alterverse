@@ -21,7 +21,7 @@ for side,sign in [('L',-1),('R',1)]:
  BONES['Foot'+side]=(BONES['Shin'+side][1],(sign*.216,.0648,.15))
  BONES['WeaponGrip'+side]=BONES['Hand'+side]
 BN=list(BONES);V=[];F=[];MI=[];BI=[];PARTS=[];GI=[];GROUP=0
-COLORS=np.array([[.028,.038,.031],[.18,.235,.135],[.38,.32,.19],[1.0,.32,.035],[.30,.36,.34]])
+COLORS=np.array([[.028,.038,.031],[.18,.235,.135],[.38,.32,.19],[1.0,.32,.035],[.30,.36,.34],[.65,.08,1.0]])
 def unit(v):
  v=np.array(v,dtype=float);return v/max(np.linalg.norm(v),1e-12)
 def add(name,vertices,faces,mat,bone):
@@ -217,6 +217,10 @@ ell('shield bronze rim',c+[0,0,.037],(.283,.419,.078),2,bone,32,16)
 ell('shield olive face',c+[0,0,.067],(.262,.395,.073),1,bone,32,16)
 oval('shield silver perimeter',c+[0,0,.085],.27,.400,.012,4,bone)
 ell('shield center dome',c+[0,.027,.116],(.214,.312,.073),1,bone,32,16)
+# Raised original DR lettering, rigidly skinned to the shield grip.
+# A distinct emissive material preserves its purple identity across shop variants.
+for label,points in [('D',[(-.15,-.095),(-.15,.13),(-.072,.13),(-.035,.09),(-.035,-.05),(-.072,-.095),(-.15,-.095)]),('R',[(.015,-.095),(.015,.13),(.085,.13),(.125,.095),(.125,.044),(.085,.015),(.015,.015)]),('R leg',[(.075,.015),(.14,-.095)])]:
+ tube('shield DR '+label,[c+[x,y+.025,.203] for x,y in points],.013,5,bone,8)
 for a in np.linspace(0,2*math.pi,12,endpoint=False):
  q=c+[.271*math.cos(a),.400*math.sin(a),.094]
  ell('shield perimeter fastener',q,(.013,.013,.012),4,bone,12,6)
@@ -271,9 +275,9 @@ mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':lis
 {'name':'ShieldCenter','bone':'WeaponGripL','position':shieldCenter.tolist()},
 {'name':'ShieldFront','bone':'WeaponGripL','position':(shieldCenter+[0,0,.17]).tolist()},
 {'name':'ShieldTop','bone':'WeaponGripL','position':(shieldCenter+[0,.40,0]).tolist()}],
-'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(5)]}
+'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(6)]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
-report={'vertices':len(V),'triangles':len(F),'materials':5,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
+report={'vertices':len(V),'triangles':len(F),'materials':6,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
 (ART/'geometry-report.json').write_text(json.dumps(report,indent=2))
 assert np.isfinite(vertices).all() and np.isfinite(normals).all()
 assert triangles.min()>=0 and triangles.max()<len(V)
@@ -306,7 +310,8 @@ def render(yaw,name):
   for direction,lc in lights:
    ndl=np.maximum(0,np.sum(normal*direction,axis=2));half=unit(direction+[0,0,1]);spec=np.maximum(0,np.sum(normal*half,axis=2))**(44 if material in [1,2,4] else 12)
    color+=COLORS[material]*ndl[:,:,None]*lc*.85+spec[:,:,None]*lc*(.30 if material in [1,2,4] else .06)
-  if material==3:color+=COLORS[material]*.85
+  if material in [3,5]:color+=COLORS[material]*.85
   patch=img[lo[1]:hi[1]+1,lo[0]:hi[0]+1];patch[mask]=color[mask];depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=iz[mask]
  image=Image.fromarray((np.clip(img,0,1)**(1/1.7)*255).astype(np.uint8));d=ImageDraw.Draw(image);d.text((20,20),'SIEGE TANK / KAELON',fill=(195,224,214));d.text((20,h-28),'Geometry preview - not a Unity screenshot',fill=(130,155,157));image.save(ART/name)
 render(-14,'front.png');render(158,'back.png')
+

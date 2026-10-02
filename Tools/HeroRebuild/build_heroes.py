@@ -835,6 +835,9 @@ def build(hero,female,color,label):
  sys.path.insert(0,str(Path(__file__).resolve().parent))
  from refine_proportions import refine
  refine(hero,arm,parts)
+ if hero=='Mira':
+  from replace_tahla_robes import replace
+  replace(arm,bpy.data.objects['DF_Anatomy'])
  # FBX exports gameplay objects only; studio scene is saved independently for reproducible previews.
  bpy.ops.object.select_all(action='DESELECT')
  for o in parts+[arm]+export_sockets:o.select_set(True)
@@ -859,3 +862,4 @@ stats=[]
 for row in HEROES:
  if not selected or row[0] in selected:stats.append(build(*row))
 with open(os.path.join(ROOT,'manifest.json'),'w') as f:json.dump(stats,f,indent=2)
+

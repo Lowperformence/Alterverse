@@ -29,6 +29,9 @@ namespace Alterverse.Shop
     /// <summary>Premium arenas are persistent shard unlocks; zero-price arenas remain immediately available.</summary>
     public static class ArenaShopCatalog
     {
+        public const int MoorPrice=800;
+        public const int PyraxisPrice=800;
+        public const int PsrPrice=1200;
         public const int NoxaraPrice=1000;
         public const int EarthPrice=500;
         public const int Dark00Price=1800;
@@ -36,14 +39,14 @@ namespace Alterverse.Shop
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
             new(ArenaVariant.Mars,"MARS","RED PLANET ARENA",0,new Color(.88f,.28f,.12f)),
-            new(ArenaVariant.GreenPlanet,"MOOR12C","ALIEN BATTLEFIELD",0,new Color(.20f,.78f,.38f)),
+            new(ArenaVariant.GreenPlanet,"MOOR12C","ALIEN BATTLEFIELD",MoorPrice,new Color(.20f,.78f,.38f)),
             new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
             new(ArenaVariant.Kryon,"KRYON","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
             new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
-            new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",0,new Color(1f,.34f,.04f)),
+            new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",PyraxisPrice,new Color(1f,.34f,.04f)),
             new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f)),
             new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",Dark00Price,new Color(.92f,.08f,.08f)),
-            new(ArenaVariant.DiamondCore,"PSR J1719-1438 b","SHATTERED CRYSTAL WORLD",0,new Color(.62f,.90f,1f)),
+            new(ArenaVariant.DiamondCore,"PSR J1719-1438 b","SHATTERED CRYSTAL WORLD",PsrPrice,new Color(.62f,.90f,1f)),
             new(ArenaVariant.GJ504b,"GJ 504 b","MAGENTA SANDSTONE FRONT",0,new Color(.90f,.16f,.58f))
         };
 
@@ -79,12 +82,18 @@ namespace Alterverse.Shop
 
     public static class ArenaUnlockInventory
     {
+        internal const string MoorOwnedKey="DF_ArenaOwned_GreenPlanet";
+        internal const string PyraxisOwnedKey="DF_ArenaOwned_Pyraxis";
+        internal const string PsrOwnedKey="DF_ArenaOwned_DiamondCore";
         internal const string NoxaraOwnedKey="DF_ArenaOwned_Noxara";
         internal const string EarthOwnedKey="DF_ArenaOwned_Earth";
         internal const string Dark00OwnedKey="DF_ArenaOwned_Dark00";
 
         private static string OwnedKey(ArenaVariant variant)
         {
+            if(variant==ArenaVariant.GreenPlanet)return MoorOwnedKey;
+            if(variant==ArenaVariant.Pyraxis)return PyraxisOwnedKey;
+            if(variant==ArenaVariant.DiamondCore)return PsrOwnedKey;
             if(variant==ArenaVariant.Noxara)return NoxaraOwnedKey;
             if(variant==ArenaVariant.Earth)return EarthOwnedKey;
             if(variant==ArenaVariant.Dark00)return Dark00OwnedKey;
@@ -121,3 +130,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

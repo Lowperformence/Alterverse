@@ -115,6 +115,19 @@ def render(hero,a,phase,v):
  target=-29 if phase=='Windup' else -24 if a==0 else -22 if a<4 else -21
  out*=min(10**(target/20)/max(np.sqrt(np.mean(out*out)),1e-8),10**(-22/20)/max(float(max(abs(out))),1e-8))
  return out.astype(np.float32)
+def render_hero_death():
+ # Original CC0 voiced HA: bright, short triumph cue, no copied game sound.
+ x=record('HeroDeathHa').copy()
+ x=signal.resample_poly(x,100,112)
+ x=signal.sosfilt(signal.butter(2,[130,6800],fs=SR,btype='bandpass',output='sos'),x)
+ x=np.tanh(x/max(np.max(abs(x)),1e-8)*1.35)
+ dry=x.copy();delay=int(.055*SR)
+ x=np.pad(x,(0,delay));x[delay:]+=dry*.14
+ fade=min(96,len(x)//4);tail=min(800,len(x)//4)
+ x[:fade]*=np.linspace(0,1,fade);x[-tail:]*=np.linspace(1,0,tail)
+ x*=10**(-22/20)/max(abs(x))
+ return x.astype(np.float32)
+
 def render_kill():
  # Original short kill-confirmation: dry body, sharp crack, tiny glass tail.
  # Uses the project's licensed recorded sources rather than a copied game sound.
@@ -148,14 +161,16 @@ def main():
      used.clear();x=render(hero,a,phase,v);p=DEST/'Heroes'/hero/(action+'_'+phase+('' if v==0 else '_v'+str(v+1))+'.ogg');encode(x,p)
      manifest.append(dict(hero=hero,action=action,phase=phase,variant=v+1,path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
  # Support, reactions, deaths and explosions: recorded layers replace generic metallic placeholders.
- extras={'Shield':('Kaelon',2,'Cast'),'Heal':('Mira',2,'Cast'),'HitLight':('Rook',0,'Impact'),'HitHeavy':('Rook',4,'Impact'),'HeroDeath':('Traveler',4,'Impact'),'MinionDeath':('Rook',0,'Impact'),'TowerShot':('Kaelon',1,'Cast'),'TowerImpact':('Kaelon',1,'Impact'),'MeteorImpact':('Kaelon',4,'Impact'),'CoreHit':('Traveler',4,'Impact'),'AbilityCast':('Elyra',1,'Cast'),'AbilityImpact':('Elyra',1,'Impact'),'Attack':('Veyr',0,'Cast')}
+ extras={'Shield':('Kaelon',2,'Cast'),'Heal':('Mira',2,'Cast'),'HitLight':('Rook',0,'Impact'),'HitHeavy':('Rook',4,'Impact'),'MinionDeath':('Rook',0,'Impact'),'TowerShot':('Kaelon',1,'Cast'),'TowerImpact':('Kaelon',1,'Impact'),'MeteorImpact':('Kaelon',4,'Impact'),'CoreHit':('Traveler',4,'Impact'),'AbilityCast':('Elyra',1,'Cast'),'AbilityImpact':('Elyra',1,'Impact'),'Attack':('Veyr',0,'Cast')}
  for cue,(hero,a,phase) in extras.items():
   used.clear();x=render(hero,a,phase,0);p=DEST/'SFX'/(cue+'.ogg');encode(x,p);manifest.append(dict(cue=cue,path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
+ used.clear();x=render_hero_death();p=DEST/'SFX/HeroDeath.ogg';encode(x,p)
+ manifest.append(dict(cue='HeroDeath',path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
  used.clear();x=render_kill();p=DEST/'SFX/Kill.ogg';encode(x,p)
  manifest.append(dict(cue='Kill',path=str(p.relative_to(ROOT)),sources=list(used.values()),duration=len(x)/SR))
  # Preserve warning identities; enforce a pool-safe peak ceiling, after decode, for every SFX.
  for p in (DEST/'SFX').glob('*.ogg'):
-  if p.stem not in extras and p.stem!='Kill':
+  if p.stem not in extras and p.stem not in ('Kill','HeroDeath'):
    source=SRC/'Warnings'/p.name
    x=decode(source);x*=min(1,10**(-22/20)/max(abs(x)));encode(x,p)
    manifest.append(dict(cue=p.stem,path=str(p.relative_to(ROOT)),sources=[dict(file=str(source.relative_to(ROOT)),sha256=sha(source),provenance='Docs/ThirdPartyAudioLicenses.md')],duration=len(x)/SR))
@@ -192,3 +207,4 @@ def main():
  (ROOT/'Docs/Combat-Audio-Audition.json').write_text(json.dumps(chapters,indent=2)+'\n')
  print('Rendered',len(manifest),'combat assets;',round(cursor,2),'second audition')
 if __name__=='__main__':main()
+

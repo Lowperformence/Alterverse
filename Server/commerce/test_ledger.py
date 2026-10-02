@@ -8,6 +8,26 @@ class LedgerTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory();self.ledger=Ledger(Path(self.tmp.name)/'ledger.db')
         self.valid={'purchaseState':0,'obfuscatedExternalAccountId':'account-a','quantity':1,'consumptionState':0}
     def tearDown(self): self.tmp.cleanup()
+    def test_new_avatars_keep_price_and_ownership_after_restart(self):
+        self.ledger.fulfill('account-a','dimensions_shards_5500','avatar-token',self.valid)
+        for avatar_id in range(17,27):
+            with self.subTest(avatar_id=avatar_id):
+                before=self.ledger.wallet('account-a')['balance']
+                self.ledger.buy('account-a',f'avatar_{avatar_id}')
+                self.ledger.buy('account-a',f'avatar_{avatar_id}')
+                restarted=Ledger(self.ledger.path)
+                snapshot=restarted.wallet('account-a')
+                self.assertEqual(snapshot['balance'],before-450)
+                self.assertIn(avatar_id,snapshot['avatars'])
+                self.assertNotIn(avatar_id,restarted.wallet('account-b')['avatars'])
+        self.assertEqual(self.ledger.wallet('account-a')['balance'],1000)
+
+    def test_new_avatar_rejects_insufficient_shards(self):
+        with self.assertRaises(ValueError):self.ledger.buy('account-a','avatar_17')
+        snapshot=self.ledger.wallet('account-a')
+        self.assertEqual(snapshot['balance'],0)
+        self.assertNotIn(17,snapshot['avatars'])
+
     def test_replayed_callbacks_and_restart_credit_once(self):
         with ThreadPoolExecutor(max_workers=6) as pool:
             list(pool.map(lambda _:self.ledger.fulfill('account-a','dimensions_shards_1200','token-1',self.valid),range(20)))
@@ -54,3 +74,4 @@ class LedgerTests(unittest.TestCase):
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','dimensions_shards_500','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
+

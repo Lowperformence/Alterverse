@@ -6,10 +6,18 @@ namespace Alterverse.UI
     {
         private static Texture2D atlas;
         private static bool loaded;
+        private static readonly Texture2D[] extra=new Texture2D[10];
         private static GUIStyle betaLabel;
         public static void Draw(Rect rect,int avatarId,Texture2D pixel,float time)
         {
             if(avatarId==BattlePassProgress.BetaCrownAvatarId){DrawBetaCrown(rect);return;}
+            if(avatarId>=17&&avatarId<=26)
+            {
+                int index=avatarId-17;
+                if(extra[index]==null)extra[index]=Resources.Load<Texture2D>("Avatars/Avatar"+avatarId);
+                if(extra[index]!=null){Color previous=GUI.color;GUI.color=Color.white;GUI.DrawTexture(rect,extra[index],ScaleMode.ScaleToFit,true);GUI.color=previous;}
+                return;
+            }
             if(!loaded){atlas=Resources.Load<Texture2D>("Avatars/CosmicAtlas");loaded=true;}
             if(atlas==null)return;
             // Existing ownership IDs stay valid; legacy starter IDs share the two starter illustrations.
@@ -45,3 +53,4 @@ namespace Alterverse.UI
         }
     }
 }
+

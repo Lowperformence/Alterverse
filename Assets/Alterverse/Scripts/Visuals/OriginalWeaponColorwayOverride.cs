@@ -194,11 +194,22 @@ namespace Alterverse.Visuals
                 else { Destroy(layer);continue; }
                 var material=new Material(shader) { name="DF_TransparentColorway_"+hero+"_"+variant };
                 Color glow=item.Glow;
-                glow.a=variant==0?.22f:.28f;
+                glow.a=.5f;
                 material.SetColor("_GlowColor",glow);
-                material.SetFloat("_RimOpacity",variant==0?.32f:.40f);
+                material.SetFloat("_RimOpacity",.5f);
                 var slots=new Material[submeshes];
-                for(int i=0;i<slots.Length;i++)slots[i]=material;
+                Material inscription=null;
+                for(int i=0;i<slots.Length;i++)
+                {
+                    slots[i]=material;
+                    if(i<state.Original.Length&&state.Original[i]!=null&&state.Original[i].name.Contains("Shield DR"))
+                    {
+                        inscription=new Material(shader){name="DF_DR_ClearOverlay"};
+                        inscription.SetColor("_GlowColor",Color.clear);
+                        inscription.SetFloat("_RimOpacity",0f);
+                        slots[i]=inscription;
+                    }
+                }
                 overlay.sharedMaterials=slots;
                 overlay.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
                 overlay.receiveShadows=false;
@@ -206,7 +217,7 @@ namespace Alterverse.Visuals
                 overlay.reflectionProbeUsage=UnityEngine.Rendering.ReflectionProbeUsage.Off;
                 overlay.enabled=source.enabled;
                 state.Overlay=overlay;
-                state.Styled=new[]{material};
+                state.Styled=inscription!=null?new[]{material,inscription}:new[]{material};
             }
         }
 
@@ -257,4 +268,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

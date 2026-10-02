@@ -66,9 +66,9 @@ namespace Alterverse.Characters
                 HeroId.Mira=>new HeroAbilityLoadout(
                     new("Living memory",0,0,0),
                     new("Resonant Seed",7,18,6.5f),
-                    new("Growth Veil",9,42,6.5f),
+                    new("Growth Veil",9,42*1.08f,6.5f),
                     new("Venn Shelter",13,50,6.5f),
-                    new("Wildsurge",58,58,0,5f,.4f)),
+                    new("Wildsurge",58,58*1.08f,0,5f,.4f)),
                 HeroId.Rook=>new HeroAbilityLoadout(
                     new("Scrap recovery",0,.12f,0),
                     new("Wreck Swing",7,34,2.9f),
@@ -94,3 +94,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

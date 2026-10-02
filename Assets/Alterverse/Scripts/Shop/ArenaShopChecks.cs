@@ -35,23 +35,43 @@ namespace Alterverse.Shop
             IntPrefSnapshot shards=new(ShardsKey);
             IntPrefSnapshot earthOwned=new(ArenaUnlockInventory.EarthOwnedKey);
             IntPrefSnapshot darkOwned=new(ArenaUnlockInventory.Dark00OwnedKey);
+            IntPrefSnapshot moor=new(ArenaUnlockInventory.MoorOwnedKey),pyraxis=new(ArenaUnlockInventory.PyraxisOwnedKey),psr=new(ArenaUnlockInventory.PsrOwnedKey);
+            IntPrefSnapshot selected=new("DF_SelectedArenaVariant"),shuffle=new("DF_ArenaShuffle");
             try
             {
+                CheckPaidArena(ArenaVariant.GreenPlanet,ArenaUnlockInventory.MoorOwnedKey,800);
+                CheckPaidArena(ArenaVariant.Pyraxis,ArenaUnlockInventory.PyraxisOwnedKey,800);
+                CheckPaidArena(ArenaVariant.DiamondCore,ArenaUnlockInventory.PsrOwnedKey,1200);
                 CheckEarthPriceAndLock();
                 CheckEarthInsufficientShards();
                 CheckEarthExactPurchaseAndDuplicateProtection();
                 CheckDarkPriceAndLock();
                 CheckDarkInsufficientShards();
                 CheckDarkExactPurchaseAndDuplicateProtection();
-                Debug.Log("DIMENSIONS FRONT: Earth 500-shard and Dark 00 1800-shard purchase, lock, unlock and duplicate-purchase checks passed.");
+                Debug.Log("DIMENSIONS FRONT: MOOR12C 800, PYRAXIS 800, PSR 1200, Earth 500 and Dark 00 1800 purchase checks passed.");
             }
             finally
             {
+                moor.Restore();pyraxis.Restore();psr.Restore();selected.Restore();shuffle.Restore();
                 shards.Restore();
                 earthOwned.Restore();
                 darkOwned.Restore();
                 PlayerPrefs.Save();
             }
+        }
+
+        private static void CheckPaidArena(ArenaVariant variant,string key,int price)
+        {
+            ResetArena(key,price-1);
+            Assert(ArenaShopCatalog.For(variant).Price==price,"Shop price mismatch: "+variant);
+            Assert(!ArenaUnlockInventory.Owned(variant)&&!ArenaVariantRuntime.CanSelect(variant),"Unowned map must stay locked: "+variant);
+            Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.InsufficientShards,"Insufficient balance must be rejected.");
+            Assert(PlayerWallet.Balance==price-1&&!ArenaUnlockInventory.Owned(variant),"Rejected purchase must preserve balance and ownership.");
+            PlayerPrefs.SetInt(ShardsKey,price);
+            Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.Purchased,"Exact balance must purchase map.");
+            Assert(PlayerWallet.Balance==0&&ArenaUnlockInventory.Owned(variant),"Purchase must debit exact price and grant ownership.");
+            Assert(ArenaVariantRuntime.Select(variant)&&ArenaVariantRuntime.Selected==variant,"Purchased map must be selectable.");
+            Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Duplicate purchase must never debit again.");
         }
 
         private static void ResetArena(string ownedKey,int shards)
@@ -137,3 +157,4 @@ namespace Alterverse.Shop
     }
 }
 #endif
+

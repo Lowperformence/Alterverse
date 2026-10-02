@@ -142,6 +142,11 @@ namespace Alterverse.Combat
                 (DamageGate != null && !DamageGate()))
                 return;
 
+            // Apply Brakk's 5% bonus once at the damage boundary, including abilities/projectiles.
+            var attackerHero = source != null ? source.GetComponentInParent<Alterverse.Characters.HeroIdentity>() : null;
+            if (attackerHero != null && attackerHero.Hero == Alterverse.Characters.HeroId.Rook)
+                amount *= 1.05f;
+
             // Flux boosts all outgoing damage from a member of the capturing team, including
             // abilities and minion attacks that bypass HeroCombatRules.Damage.
             PlanetBuffReceiver attackerBuff = source != null
@@ -202,7 +207,7 @@ namespace Alterverse.Combat
 
                 if (GetComponent<Alterverse.Characters.HeroIdentity>() != null)
                 {
-                    Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.HeroDeath, transform.position, .78f);
+                    Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.HeroDeath, .78f);
                     var killer = source != null ? source.GetComponentInParent<Alterverse.Characters.HeroIdentity>() : null;
                     if (killer != null && killer.gameObject != gameObject)
                         Alterverse.Audio.HeroCombatAudio.ConfirmedKill(killer.gameObject);
@@ -250,6 +255,7 @@ namespace Alterverse.Combat
 
         public void ApplyNetworkSnapshot(float current, float currentShield, bool dead)
         {
+            bool wasDead = IsDead;
             Current = Mathf.Clamp(current, 0, maxHealth);
 
             // Clients display the host's combined shield snapshot as one presentation value.
@@ -261,6 +267,8 @@ namespace Alterverse.Combat
             shieldUntil = shield > 0 ? Time.time + .35f : 0;
 
             IsDead = dead || Current <= 0;
+            if (!wasDead && IsDead && GetComponent<Alterverse.Characters.HeroIdentity>() != null)
+                Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.HeroDeath, .78f);
             if (!IsDead && Current <= 0)
                 Current = Mathf.Min(1, maxHealth);
             Changed?.Invoke(Current, maxHealth);
@@ -280,5 +288,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
