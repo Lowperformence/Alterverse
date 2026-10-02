@@ -7,28 +7,47 @@ namespace Alterverse.Visuals
     public sealed class BrakkWrestlingMask : MonoBehaviour
     {
         Mesh mesh; Material[] materials;
+        readonly List<Mesh> detailMeshes=new List<Mesh>();
         public static void Apply(Transform model)
         {
             if(model.GetComponent<BrakkWrestlingMask>()!=null)return;
+            Transform head=null,chest=null;
+            foreach(var bone in model.GetComponentsInChildren<Transform>(true))
+            {if(bone.name=="Head")head=bone;if(bone.name=="Chest")chest=bone;}
+            if(head==null){Debug.LogWarning("DF: Brakk helmet requires Head bone.",model);return;}
+            float unit=chest!=null ? Vector3.Distance(model.InverseTransformPoint(head.position),model.InverseTransformPoint(chest.position))/.24f : 1f;
+            unit=Mathf.Max(unit,.001f);
+            Vector3 neck=model.InverseTransformPoint(head.position);
+            Vector3 center=neck+Vector3.up*(.16f*unit),radius=new Vector3(.12f,.155f,.125f)*unit;
             SkinnedMeshRenderer skin=null;
             foreach(var r in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))if(r.name=="DF_Anatomy"){skin=r;break;}
-            if(skin==null||!skin.sharedMesh.isReadable)return;
-            int index=Array.FindIndex(skin.bones,b=>b!=null&&b.name=="Head");if(index<0)return;
-            var baked=new Mesh();skin.BakeMesh(baked);Vector3[] points=baked.vertices;BoneWeight[] weights=skin.sharedMesh.boneWeights;
-            if(points.Length!=weights.Length){Destroy(baked);return;}
-            Vector3 low=Vector3.one*float.MaxValue,high=Vector3.one*float.MinValue;
-            for(int i=0;i<points.Length;i++)
+            // Old imports can have Read/Write disabled. A visible bone-fitted helmet must still be built.
+            if(skin!=null && skin.sharedMesh!=null && skin.sharedMesh.isReadable)
             {
-                var w=weights[i];float weight=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+(w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
-                if(weight<.8f)continue;
-                Vector3 p=model.InverseTransformPoint(skin.transform.TransformPoint(points[i]));low=Vector3.Min(low,p);high=Vector3.Max(high,p);
+                int index=Array.FindIndex(skin.bones,b=>b==head);
+                if(index>=0)
+                {
+                    var baked=new Mesh();skin.BakeMesh(baked);
+                    Vector3[] points=baked.vertices;BoneWeight[] weights=skin.sharedMesh.boneWeights;
+                    Vector3 low=Vector3.one*float.MaxValue,high=Vector3.one*float.MinValue;
+                    if(points.Length==weights.Length)for(int i=0;i<points.Length;i++)
+                    {
+                        var w=weights[i];float weight=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+(w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
+                        if(weight<.5f)continue;
+                        Vector3 q=model.InverseTransformPoint(skin.transform.TransformPoint(points[i]));low=Vector3.Min(low,q);high=Vector3.Max(high,q);
+                    }
+                    Destroy(baked);
+                    if(low.x<=high.x)
+                    {
+                        low.y=Mathf.Max(low.y,neck.y+(high.y-neck.y)*.19f);
+                        center=(low+high)*.5f;
+                        radius=Vector3.Scale(high-low,new Vector3(.60f,.57f,.60f));
+                    }
+                }
             }
-            Destroy(baked);if(low.x>high.x)return;
-            // Exclude the neck. Fit the mask to the complete existing head, including its jaw armor.
-            Vector3 neck=model.InverseTransformPoint(skin.bones[index].position);
-            low.y=Mathf.Max(low.y,neck.y+(high.y-neck.y)*.19f);
-            Vector3 center=(low+high)*.5f,radius=Vector3.Scale(high-low,new Vector3(.54f,.52f,.54f));
-            var owner=model.gameObject.AddComponent<BrakkWrestlingMask>();owner.Build(model,skin.bones[index],center,radius);
+            var owner=model.gameObject.AddComponent<BrakkWrestlingMask>();
+            owner.Build(model,head,center,radius);
+            owner.BuildArmorDetails(model,unit);
         }
         void Build(Transform model,Transform head,Vector3 center,Vector3 radius)
         {
@@ -77,8 +96,47 @@ namespace Alterverse.Visuals
             materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black),RuntimeShaderLibrary.Create(new Color(.56f,.015f,.025f),false,.02f,.20f,Color.black)};
             var go=new GameObject("DF_BrakkBronzeCrestHelmet");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
         }
+        void BuildArmorDetails(Transform model,float unit)
+        {
+            Transform[] bones=model.GetComponentsInChildren<Transform>(true);
+            foreach(string name in new[]{"Chest","UpperArmL","UpperArmR","ForearmL","ForearmR","ThighL","ThighR","ShinL","ShinR"})
+            {
+                Transform bone=Array.Find(bones,t=>t.name==name);if(bone==null)continue;
+                string next=name=="Chest"?"Head":name.Replace("UpperArm","Forearm").Replace("Forearm","Hand");
+                if(name.StartsWith("UpperArm"))next="Forearm"+name[name.Length-1];
+                if(name.StartsWith("Thigh"))next="Shin"+name[name.Length-1];
+                if(name.StartsWith("Shin"))next="Foot"+name[name.Length-1];
+                Transform tip=Array.Find(bones,t=>t.name==next);if(tip==null)continue;
+                Vector3 a=model.InverseTransformPoint(bone.position),b=model.InverseTransformPoint(tip.position);
+                var verts=new List<Vector3>();var body=new List<int>();var accents=new List<int>();
+                void Block(Vector3 c,Vector3 size,List<int> faces)
+                {
+                    int start=verts.Count;
+                    Vector2[] outline={new Vector2(-.75f,-1),new Vector2(.75f,-1),new Vector2(1,-.75f),new Vector2(1,.75f),new Vector2(.75f,1),new Vector2(-.75f,1),new Vector2(-1,.75f),new Vector2(-1,-.75f)};
+                    for(int layer=0;layer<2;layer++)foreach(var q in outline)
+                        verts.Add(bone.InverseTransformPoint(model.TransformPoint(c+new Vector3(q.x*size.x,q.y*size.y,(layer==0?-1:1)*size.z))));
+                    for(int j=1;j<7;j++){faces.Add(start);faces.Add(start+j+1);faces.Add(start+j);faces.Add(start+8);faces.Add(start+8+j);faces.Add(start+9+j);}
+                    for(int j=0;j<8;j++)Quad(faces,start+j,start+(j+1)%8,start+8+(j+1)%8,start+8+j);
+                }
+                bool torso=name=="Chest";
+                float width=(torso?.115f:name.StartsWith("Thigh")?.068f:name.StartsWith("UpperArm")?.075f:.057f)*unit;
+                float depth=(torso?.125f:.070f)*unit;
+                for(int j=0;j<3;j++)
+                {
+                    Vector3 c=Vector3.Lerp(a,b,.20f+j*.23f)+Vector3.forward*depth;
+                    Block(c,new Vector3(width,.032f*unit,.012f*unit),body);
+                    Block(c+Vector3.up*.022f*unit+Vector3.forward*.014f*unit,new Vector3(width*.88f,.004f*unit,.004f*unit),accents);
+                    foreach(float side in new[]{-1f,1f})
+                        Block(c+new Vector3(side*width*.77f,0,.019f*unit),Vector3.one*(.006f*unit),accents);
+                }
+                var detail=new Mesh{name="DF_Brakk_ArticulatedArmor_"+name};detail.SetVertices(verts);detail.subMeshCount=2;
+                detail.SetTriangles(body,0);detail.SetTriangles(accents,1);detail.RecalculateNormals();detail.RecalculateBounds();detailMeshes.Add(detail);
+                var go=new GameObject(detail.name);go.transform.SetParent(bone,false);go.AddComponent<MeshFilter>().sharedMesh=detail;
+                go.AddComponent<MeshRenderer>().sharedMaterials=new[]{materials[0],materials[1]};
+            }
+        }
         static void Quad(List<int> t,int a,int b,int c,int d){t.Add(a);t.Add(b);t.Add(c);t.Add(a);t.Add(c);t.Add(d);}
-        void OnDestroy(){if(mesh!=null)Destroy(mesh);if(materials!=null)foreach(var m in materials)if(m!=null)Destroy(m);}
+        void OnDestroy(){foreach(var detail in detailMeshes)if(detail!=null)Destroy(detail);if(mesh!=null)Destroy(mesh);if(materials!=null)foreach(var m in materials)if(m!=null)Destroy(m);}
     }
 }
 
