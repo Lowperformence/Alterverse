@@ -88,6 +88,7 @@ namespace Alterverse.Visuals
             }
             crownMesh=new Mesh{name="DF_AssassinHeadStripe"};
             crownMesh.SetVertices(vertices);crownMesh.SetTriangles(triangles,0);crownMesh.RecalculateNormals();crownMesh.RecalculateBounds();
+            if(HeadAdornmentSkin.Merge(model,head,crownMesh,crownMaterial))return;
             var stripe=new GameObject("DF_AssassinVioletHeadStripe");stripe.layer=model.gameObject.layer;
             stripe.transform.SetParent(head,false);
             stripe.AddComponent<MeshFilter>().sharedMesh=crownMesh;
@@ -97,3 +98,4 @@ namespace Alterverse.Visuals
         void OnDestroy(){if(crownMesh!=null)Destroy(crownMesh);if(crownMaterial!=null)Destroy(crownMaterial);}
     }
 }
+

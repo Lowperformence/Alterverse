@@ -20,35 +20,40 @@ namespace Alterverse.Visuals
             Bounds bounds=default;bool found=false;
             foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if(skin.sharedMesh==null||skin.name!="DF_Anatomy")continue;
+                if(skin.sharedMesh==null||!skin.sharedMesh.isReadable||skin.name!="DF_Anatomy")continue;
                 int index=System.Array.IndexOf(skin.bones,head);
                 if(index<0)continue;
-                var baked=new Mesh();skin.BakeMesh(baked);
-                var vertices=baked.vertices;var weights=skin.sharedMesh.boneWeights;
+                var vertices=skin.sharedMesh.vertices;var weights=skin.sharedMesh.boneWeights;
+                Matrix4x4 headBind=skin.sharedMesh.bindposes[index];
                 for(int i=0;i<vertices.Length&&i<weights.Length;i++)
                 {
                     var w=weights[i];
                     float influence=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+
                         (w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
                     if(influence<.5f)continue;
-                    Vector3 p=model.InverseTransformPoint(skin.transform.TransformPoint(vertices[i]));
+                    Vector3 p=model.InverseTransformPoint(head.TransformPoint(headBind.MultiplyPoint3x4(vertices[i])));
                     if(!found){bounds=new Bounds(p,Vector3.zero);found=true;}else bounds.Encapsulate(p);
                 }
-                Object.Destroy(baked);
             }
-            if(!found||bounds.size.y<=0)return;
+            if(!found||bounds.size.y<=0)
+            {
+                Transform chest=null;
+                foreach(var bone in model.GetComponentsInChildren<Transform>(true))if(bone.name=="Chest"){chest=bone;break;}
+                float unit=chest!=null?Vector3.Distance(model.InverseTransformPoint(head.position),model.InverseTransformPoint(chest.position))/.24f:1f;
+                bounds=new Bounds(model.InverseTransformPoint(head.position)+Vector3.up*.16f*unit,new Vector3(.24f,.32f,.24f)*unit);
+            }
             model.gameObject.AddComponent<TahlaEmeraldCrown>().Build(model,head,bounds);
         }
 
         void Build(Transform model,Transform head,Bounds headBounds)
         {
             Color emerald=new(.07f,1f,.23f,1f);
-            crownMaterial=RuntimeShaderLibrary.Create(emerald,false,.35f,.5f,emerald*2.2f);
+            crownMaterial=RuntimeShaderLibrary.Create(emerald,false,.35f,.5f,emerald*3f);
             if(crownMaterial==null)return;
             crownMaterial.name="DF_TahlaEmeraldCrown";crownMaterial.EnableKeyword("_EMISSION");
             float unit=headBounds.size.y;
-            float rx=headBounds.extents.x*.92f,rz=headBounds.extents.z*.92f;
-            float thickness=unit*.027f,baseY=headBounds.max.y-unit*.09f;
+            float rx=headBounds.extents.x*1.08f,rz=headBounds.extents.z*1.08f;
+            float thickness=unit*.027f,baseY=headBounds.max.y-unit*.025f;
             const int segments=64;
             var vertices=new List<Vector3>();var triangles=new List<int>();
             for(int i=0;i<segments;i++)
@@ -60,6 +65,7 @@ namespace Alterverse.Visuals
             }
             crownMesh=new Mesh{name="DF_TahlaEightPointCrown"};
             crownMesh.SetVertices(vertices);crownMesh.SetTriangles(triangles,0);crownMesh.RecalculateNormals();crownMesh.RecalculateBounds();
+            if(HeadAdornmentSkin.Merge(model,head,crownMesh,crownMaterial))return;
             var crown=new GameObject("DF_TahlaEmeraldCrown");crown.layer=model.gameObject.layer;
             crown.transform.SetParent(head,false);
             crown.AddComponent<MeshFilter>().sharedMesh=crownMesh;
@@ -84,3 +90,4 @@ namespace Alterverse.Visuals
         void OnDestroy(){if(crownMesh!=null)Destroy(crownMesh);if(crownMaterial!=null)Destroy(crownMaterial);}
     }
 }
+
