@@ -194,8 +194,9 @@ namespace Alterverse.Visuals
         public static Vector3 Surface(float x,float z)
         {
             if(FrontierPlanetLayout.Active)return FrontierPlanetLayout.Surface(x,z);
+            float fracture=ShatteredArenaEdge.FractureDepth(x,z);
             Vector2 edge=ShatteredArenaEdge.Warp(x,z);x=edge.x;z=edge.y;
-            Sample(x,z,out float relief,out _,out _);return new Vector3(x,.015f+relief,z);
+            Sample(x,z,out float relief,out _,out _);return new Vector3(x,.015f+relief-fracture,z);
         }
 
         public static void Bake(out Texture2D albedo,out Texture2D normals)
@@ -309,4 +310,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

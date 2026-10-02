@@ -66,12 +66,14 @@ namespace Alterverse.Visuals
 
         public static Vector3 Surface(float x,float z)
         {
+            float fracture=ShatteredArenaEdge.FractureDepth(x,z);
             Vector2 edge=ShatteredArenaEdge.Warp(x,z);x=edge.x;z=edge.y;
             Sample(x,z,out float height,out _,out _);
-            return new Vector3(x,.015f+height,z);
+            return new Vector3(x,.015f+height-fracture,z);
         }
 
         static float Falloff(float inner,float outer,float distance)
             =>1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(inner,outer,distance));
     }
 }
+
