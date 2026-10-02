@@ -10,6 +10,7 @@ namespace Alterverse.Visuals
         readonly Texture2D sand, stone;
         readonly bool ownsSand,ownsStone;
         readonly Texture macro;
+        readonly Texture2D geology;
         public PlanetSurfaceMaterials(Texture macro)
         {
             this.macro=macro;
@@ -21,6 +22,7 @@ namespace Alterverse.Visuals
                 return;
             }
             string profile=ArenaVariantRuntime.Current.ToString();
+            geology=Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/Macro");
             sand=Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/Ground");
             stone=Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/Stone");
             ownsSand=sand==null;ownsStone=stone==null;
@@ -38,8 +40,11 @@ namespace Alterverse.Visuals
             material.SetTexture("_SandData",sand);
             material.SetTexture("_StoneData",stone);
             material.SetTexture("_GroundMap",macro);
+            material.SetTexture("_MacroData",geology!=null?geology:Texture2D.grayTexture);
+            material.SetFloat("_MacroScale",.047f);
+            material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsDiamondCore?.34f:ArenaVariantRuntime.IsKryon?.40f:.52f);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
-            material.SetFloat("_DetailScale",.29f); // Finer world-space detail, shared by ground, craters and cliffs.
+            material.SetFloat("_DetailScale",.25f); // Finer world-space detail, shared by ground, craters and cliffs.
             material.SetFloat("_SandStrength",ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
                 ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:
                 ArenaVariantRuntime.IsEarth?.12f:ArenaVariantRuntime.IsPyraxis?.08f:ArenaVariantRuntime.IsNeptune?.10f:.27f);

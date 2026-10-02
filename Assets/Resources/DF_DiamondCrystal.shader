@@ -9,6 +9,7 @@ Shader "Alterverse/DiamondCrystal"
         _FresnelStrength("Fresnel Strength", Range(0,2)) = 0.68
         _CoreAlpha("Core Alpha", Range(0,1)) = 0.22
         _FacetDetail("Cut edge and glint detail", Range(0,1)) = 0
+        _MacroData("Blender geological value cavity roughness sediment", 2D) = "gray" {}
         _SurfaceData("Linear surface slope roughness height", 2D) = "gray" {}
         _SurfaceRelief("Surface micro relief", Range(0,1)) = 0
         _SurfaceScale("Surface world frequency", Float) = .25
@@ -49,6 +50,7 @@ Shader "Alterverse/DiamondCrystal"
                 float _SurfaceScale;
             CBUFFER_END
 
+            TEXTURE2D(_MacroData); SAMPLER(sampler_MacroData);
             TEXTURE2D(_SurfaceData); SAMPLER(sampler_SurfaceData);
 
             struct Attributes
@@ -85,12 +87,15 @@ Shader "Alterverse/DiamondCrystal"
             {
                 half3 n = normalize(input.normalWS);
                 half surfaceSmoothness=_Smoothness;
+                half surfaceValue=1;
                 if(_SurfaceRelief>.001h)
                 {
                     half4 detail=SAMPLE_TEXTURE2D(_SurfaceData,sampler_SurfaceData,input.positionWS.xz*_SurfaceScale);
                     half3 gradient=half3(detail.r-.5h,0,detail.g-.5h)*2*_SurfaceRelief;
                     n=normalize(n-(gradient-n*dot(n,gradient)));
-                    surfaceSmoothness=saturate(_Smoothness-(detail.b-.5h)*.16h*_SurfaceRelief);
+                    half4 geology=SAMPLE_TEXTURE2D(_MacroData,sampler_MacroData,input.positionWS.xz*.047);
+                    surfaceSmoothness=saturate(_Smoothness-(lerp(detail.b,geology.b,.35h)-.5h)*.16h*_SurfaceRelief);
+                    surfaceValue=(1+(geology.r-.5h)*.34h)*lerp(.96h,1.0h,geology.g);
                 }
                 half3 v = normalize(input.viewDirWS);
                 half ndv = saturate(abs(dot(n,v)));
@@ -99,7 +104,7 @@ Shader "Alterverse/DiamondCrystal"
                 // Cheap prismatic variation: view/normal dependent RGB splitting without refraction textures.
                 half prism = saturate(n.x*0.5h+n.z*0.5h+0.5h);
                 half3 prismTint = lerp(half3(0.78h,0.94h,1.0h),half3(1.0h,0.72h,0.96h),prism);
-                half3 rgb = _BaseColor.rgb*lerp(0.72h,1.12h,surfaceSmoothness);
+                half3 rgb = _BaseColor.rgb*lerp(0.72h,1.12h,surfaceSmoothness)*surfaceValue;
                 rgb = lerp(rgb,rgb*prismTint,saturate(fresnel*0.42h));
                 rgb += _EmissionColor.rgb;
                 rgb += fresnel*_FresnelStrength*half3(0.62h,0.88h,1.0h);

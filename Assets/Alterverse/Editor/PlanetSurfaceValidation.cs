@@ -26,7 +26,7 @@ namespace Alterverse.EditorChecks
                 var floor=GameObject.Find("DF_DiamondCoreCrystalFloor");
                 var renderer=floor!=null?floor.GetComponent<MeshRenderer>():null;
                 var material=renderer!=null?renderer.sharedMaterial:null;
-                if(material==null||material.GetTexture("_SurfaceData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground")||material.GetFloat("_SurfaceRelief")<=0)
+                if(material==null||material.GetTexture("_SurfaceData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground")||material.GetFloat("_SurfaceRelief")<=0||material.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Macro"))
                     throw new InvalidOperationException("Diamond Core ground detail is not bound to the live transparent floor.");
                 Debug.Log("DIMENSIONS FRONT: Diamond Core live surface detail binding passed.");return;
             }
@@ -44,7 +44,7 @@ namespace Alterverse.EditorChecks
                 var m=r.sharedMaterial;
                 if(m==null||m.shader.name!="Alterverse/PlanetSurface")continue;
                 renderers++;
-                if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null)
+                if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null||m.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/"+ArenaVariantRuntime.Current+"/Macro"))
                     throw new InvalidOperationException("Missing live detail data: "+r.name);
                 float mode=m.GetFloat("_SurfaceMode");
                 macro|=mode<.5f&&m.GetTexture("_BaseMap")!=null&&(ground==null||m.GetTexture("_BaseMap")==ground.SurfaceAlbedo);
@@ -89,7 +89,7 @@ namespace Alterverse.EditorChecks
         static void ValidateShader()
         {
             foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
-            foreach(string kind in new[]{"Ground","Stone"})
+            foreach(string kind in new[]{"Ground","Stone","Macro"})
             {
                 string path="Assets/Alterverse/Resources/PlanetSurfaces/"+planet+"/"+kind+".png";
                 var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);

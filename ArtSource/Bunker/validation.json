@@ -1,0 +1,58 @@
+[
+  {
+    "part": "DF_Bunker_MainShell",
+    "triangles": 596,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "DF_Bunker_RoofArmor",
+    "triangles": 220,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "DF_Bunker_Foundation",
+    "triangles": 220,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "Detail_body_1",
+    "triangles": 864,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "Detail_body_3",
+    "triangles": 5420,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "Detail_body_2",
+    "triangles": 1080,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "body"
+  },
+  {
+    "part": "Detail_turret_3",
+    "triangles": 216,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "turret"
+  },
+  {
+    "part": "Detail_turret_1",
+    "triangles": 864,
+    "topology": "passed",
+    "fittingEnvelope": "passed",
+    "mount": "turret"
+  }
+]

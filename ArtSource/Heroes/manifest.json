@@ -14,7 +14,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.94,
+      "waist": 0.92,
+      "chest": 1.04,
+      "thigh": 1.08,
+      "calf": 1.025,
+      "shoulder": 0.82
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Kaelon",
@@ -31,7 +40,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.95,
+      "waist": 0.94,
+      "chest": 1.055,
+      "thigh": 1.12,
+      "calf": 1.055,
+      "shoulder": 0.64
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Nyra",
@@ -48,7 +66,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.95,
+      "waist": 0.96,
+      "chest": 1.02,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Elyra",
@@ -65,7 +92,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.95,
+      "waist": 0.98,
+      "chest": 1.025,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Mira",
@@ -82,7 +118,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.95,
+      "waist": 0.98,
+      "chest": 1.025,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Rook",
@@ -99,7 +144,16 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 0.5
+    "shoulderScale": 0.5,
+    "referenceProportions": {
+      "head": 0.97,
+      "waist": 1.075,
+      "chest": 1.04,
+      "thigh": 1.15,
+      "calf": 1.07,
+      "shoulder": 1.0
+    },
+    "geometryOnlyRefinement": true
   },
   {
     "hero": "Traveler",
@@ -116,6 +170,15 @@
     },
     "additionalArmThickness": 1.3,
     "roundedBoots": true,
-    "shoulderScale": 1
+    "shoulderScale": 1,
+    "referenceProportions": {
+      "head": 0.94,
+      "waist": 0.92,
+      "chest": 1.045,
+      "thigh": 1.08,
+      "calf": 1.025,
+      "shoulder": 0.85
+    },
+    "geometryOnlyRefinement": true
   }
 ]

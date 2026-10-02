@@ -831,6 +831,10 @@ def build(hero,female,color,label):
   if len(objects)>1:bpy.ops.object.join()
   active.name=name;active.data.name=name;merged.append(active)
  parts=merged
+ # Shared final silhouette pass also used when revising existing .blend sources.
+ sys.path.insert(0,str(Path(__file__).resolve().parent))
+ from refine_proportions import refine
+ refine(hero,arm,parts)
  # FBX exports gameplay objects only; studio scene is saved independently for reproducible previews.
  bpy.ops.object.select_all(action='DESELECT')
  for o in parts+[arm]+export_sockets:o.select_set(True)

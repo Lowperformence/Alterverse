@@ -1,0 +1,114 @@
+[
+  {
+    "hero": "Veyr",
+    "profile": {
+      "head": 0.94,
+      "waist": 0.92,
+      "chest": 1.04,
+      "thigh": 1.08,
+      "calf": 1.025,
+      "shoulder": 0.82
+    },
+    "shoulderPieces": 4,
+    "collarPieces": 1,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 20620
+  },
+  {
+    "hero": "Kaelon",
+    "profile": {
+      "head": 0.95,
+      "waist": 0.94,
+      "chest": 1.055,
+      "thigh": 1.12,
+      "calf": 1.055,
+      "shoulder": 0.64
+    },
+    "shoulderPieces": 10,
+    "collarPieces": 1,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 20014
+  },
+  {
+    "hero": "Nyra",
+    "profile": {
+      "head": 0.95,
+      "waist": 0.96,
+      "chest": 1.02,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "shoulderPieces": 0,
+    "collarPieces": 0,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 19438
+  },
+  {
+    "hero": "Elyra",
+    "profile": {
+      "head": 0.95,
+      "waist": 0.98,
+      "chest": 1.025,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "shoulderPieces": 6,
+    "collarPieces": 0,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 18581
+  },
+  {
+    "hero": "Mira",
+    "profile": {
+      "head": 0.95,
+      "waist": 0.98,
+      "chest": 1.025,
+      "thigh": 1.035,
+      "calf": 1.01,
+      "shoulder": 0.9
+    },
+    "shoulderPieces": 2,
+    "collarPieces": 0,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 17741
+  },
+  {
+    "hero": "Rook",
+    "profile": {
+      "head": 0.97,
+      "waist": 1.075,
+      "chest": 1.04,
+      "thigh": 1.15,
+      "calf": 1.07,
+      "shoulder": 1.0
+    },
+    "shoulderPieces": 14,
+    "collarPieces": 1,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 18644
+  },
+  {
+    "hero": "Traveler",
+    "profile": {
+      "head": 0.94,
+      "waist": 0.92,
+      "chest": 1.045,
+      "thigh": 1.08,
+      "calf": 1.025,
+      "shoulder": 0.85
+    },
+    "shoulderPieces": 4,
+    "collarPieces": 1,
+    "restBonesUnchanged": true,
+    "weaponsAndSocketsUnchanged": true,
+    "modifiedVertices": 21860
+  }
+]

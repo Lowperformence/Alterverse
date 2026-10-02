@@ -3,7 +3,7 @@ Run: blender -b --python-exit-code 1 --python Tools/PlanetSurfaces/build_surface
 RG = signed slope encoded around .5; B = roughness; A = neutral-centered height/value.
 No albedo is baked: the game's established planet palette remains authoritative.
 """
-import bpy, numpy as np, math, json, struct, zlib, uuid
+import bpy, numpy as np, math, json, struct, zlib, uuid, os
 from pathlib import Path
 from mathutils import Vector
 ROOT=next(p for p in Path(__file__).resolve().parents if (p/'Assets/Alterverse').is_dir())
@@ -32,10 +32,10 @@ def cells(count,seed):
 
 def field(theme,rock,seed):
  broad=noise(4,seed);mid=noise(13,seed+1);fine=noise(47,seed+2);grain=noise(113,seed+3)
- f,edge=cells(12 if rock else 17,seed+9)
+ f,edge=cells(7 if rock else 13,seed+9)
  cracks=np.exp(-edge*65);pores=np.exp(-(f/.14)**2)
  ripple=np.sin(2*np.pi*(u*11+v*3)+broad*10+mid*1.7)
- h=broad*.08+mid*.04+fine*.016+grain*.009
+ h=broad*.10+mid*.055+fine*.013+grain*.006
  rough=.84
  if theme in ['Mars','GJ504b']:
   h+=ripple*(.020 if theme=='Mars' else .029)+np.sin(2*np.pi*(u*23+v*6)+broad*20)*.005
@@ -64,13 +64,43 @@ def field(theme,rock,seed):
  elif theme=='DiamondCore':
   h=edge*.11-cracks*.020+mid*.016+fine*.004
   rough=.27 if rock else .49
- if rock:h+=broad*.035+mid*.035
+ if rock:h+=broad*.045+mid*.042
+ # Fine grains stay subordinate to readable aggregate and fracture planes.
+ h+=noise(31,seed+71)*.006
  h-=h.mean()
  dx=(np.roll(h,-1,axis=1)-np.roll(h,1,axis=1))*SIZE*.5
  dz=(np.roll(h,-1,axis=0)-np.roll(h,1,axis=0))*SIZE*.5
  scale=.045 if rock else .065
  data=np.stack([.5+np.clip(dx*scale,-.48,.48),.5+np.clip(dz*scale,-.48,.48),np.clip(rough+mid*.15+cracks*.10-pores*.05,0,1),np.clip(.5+h*2.0,.12,.88)],axis=-1)
  return h,np.round(data*255).astype(np.uint8)
+
+def macro_field(theme,seed):
+ # Broad geological patches use a separate scale from centimetre-scale grain.
+ broad=noise(3,seed+200);middle=noise(9,seed+201);small=noise(27,seed+202)
+ nearest,edge=cells(5,seed+203);fracture=np.exp(-edge*38);pit=np.exp(-(nearest/.20)**2)
+ flow=np.sin(2*np.pi*(u*3+v)+broad*8+middle*1.3)
+ height=broad*.55+middle*.16+small*.035;rough=.82;sediment=np.clip(.5+broad*1.5,0,1)
+ if theme in ['Moon','Dark00']:
+  bowl=np.exp(-(nearest/.35)**2);rim=np.exp(-((nearest-.40)/.07)**2)
+  height+=rim*.11-bowl*.18;rough=.91;sediment=np.clip(.5+middle,0,1)
+ elif theme in ['Mars','GJ504b']:
+  height+=flow*.095+np.sin(2*np.pi*(u*7+v*2)+broad*13)*.026;rough=.89
+ elif theme in ['Earth','GreenPlanet']:
+  height+=np.maximum(middle,0)*.21-fracture*.035;rough=.86
+ elif theme=='Kryon':
+  height=middle*.17+edge*.32-fracture*.12+small*.018;rough=.38
+ elif theme=='Noxara':
+  height+=edge*.21-fracture*.12;rough=.60
+ elif theme=='Pyraxis':
+  height+=edge*.24-fracture*.15-pit*.11;rough=.88
+ elif theme=='Neptune':
+  height+=flow*.06-pit*.09;rough=.48
+ elif theme=='DiamondCore':
+  height=edge*.40+middle*.12-fracture*.08;rough=.31
+ height-=height.mean();cavity=np.clip(1-fracture*.34-pit*.14,0,1)
+ # R neutral value, G cavity, B roughness, A sediment. Linear data on every platform.
+ data=np.stack([np.clip(.5+height*.9,.16,.84),cavity,np.clip(rough+middle*.24,.12,.98),sediment],-1)
+ return height,np.round(data*255).astype(np.uint8)
 
 def png(path,data):
  def chunk(kind,value):return struct.pack('>I',len(value))+kind+value+struct.pack('>I',zlib.crc32(kind+value)&0xffffffff)
@@ -140,6 +170,10 @@ TextureImporter:
 bpy.ops.wm.read_factory_settings(use_empty=True);manifest=[]
 for index,theme in enumerate(THEMES):
  folder=OUT/theme;folder.mkdir(exist_ok=True)
+ macro_height,macro_data=macro_field(theme,1703+index*101);macro_path=folder/'Macro.png';png(macro_path,macro_data);meta(macro_path)
+ meta_path=macro_path.with_name(macro_path.name+'.meta');meta_path.write_text(meta_path.read_text().replace('Linear numerical RG slope B roughness A height; never import as normal map or transparency.','Linear R value G cavity B roughness A sediment; never import as normal map or transparency.'))
+ seam=max(float(np.abs(macro_height[:,-1]-macro_height[:,0]).mean()),float(np.abs(macro_height[-1,:]-macro_height[0,:]).mean()));step=max(float(np.abs(np.diff(macro_height,axis=0)).mean()),float(np.abs(np.diff(macro_height,axis=1)).mean()));assert seam<step*3+1e-5,(theme,'Macro seam')
+ manifest.append({'theme':theme,'surface':'Macro','size':SIZE,'heightMean':float(macro_height.mean()),'seamMean':seam,'interiorStepMean':step,'roughnessMean':float(macro_data[:,:,2].mean()/255),'path':str(macro_path.relative_to(ROOT))})
  for rock in [False,True]:
   name='Stone' if rock else 'Ground';h,data=field(theme,rock,1703+index*101+(37 if rock else 0));path=folder/(name+'.png');png(path,data);meta(path)
   # Validate periodic edge jumps against interior differences; the boundary is a sampled interval, not duplicated pixels.
@@ -150,7 +184,7 @@ for index,theme in enumerate(THEMES):
   # A material study with real displaced geometry, UVs and the packed roughness channel.
   n=97;verts=[];faces=[];offset=(index%4)*5.0;row=(index//4)*5.0
   for j in range(n):
-   for i in range(n):verts.append((offset+(i/(n-1)-.5)*2.1+(-1.14 if not rock else 1.14),row+(j/(n-1)-.5)*3.6,float(h[int(j/(n-1)*(SIZE-1)),int(i/(n-1)*(SIZE-1))])*.65))
+   for i in range(n):verts.append((offset+(i/(n-1)-.5)*2.1+(-1.14 if not rock else 1.14),row+(j/(n-1)-.5)*3.6,float(h[int(j/(n-1)*(SIZE-1)),int(i/(n-1)*(SIZE-1))])*.65+float(macro_height[int(j/(n-1)*(SIZE-1)),int(i/(n-1)*(SIZE-1))])*.14))
   for j in range(n-1):
    for i in range(n-1):a=j*n+i;faces.append((a,a+1,a+n+1,a+n))
   mesh=bpy.data.meshes.new(theme+name);mesh.from_pydata(verts,[],faces);mesh.update();obj=bpy.data.objects.new(theme+' '+name,mesh);bpy.context.collection.objects.link(obj)
@@ -160,8 +194,12 @@ for index,theme in enumerate(THEMES):
    for loop in poly.loop_indices:
     vertex=mesh.loops[loop].vertex_index;uv.data[loop].uv=((vertex%n)/(n-1),(vertex//n)/(n-1))
   mat=bpy.data.materials.new(theme+' '+name);mat.use_nodes=True;nodes=mat.node_tree.nodes;links=mat.node_tree.links;bs=nodes.get('Principled BSDF');bs.inputs['Base Color'].default_value=(*COLORS[index],1)
-  tex=nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(path));tex.image.colorspace_settings.name='Non-Color';tex.image.alpha_mode='CHANNEL_PACKED';tex.image.pack()
+  tex=nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(path),check_existing=True);tex.image.colorspace_settings.name='Non-Color';tex.image.alpha_mode='CHANNEL_PACKED';tex.image.filepath='//'+os.path.relpath(path,ART)
   separate=nodes.new('ShaderNodeSeparateColor');links.new(tex.outputs['Color'],separate.inputs[0]);links.new(separate.outputs['Blue'],bs.inputs['Roughness'])
+  macro_tex=nodes.new('ShaderNodeTexImage');macro_tex.image=bpy.data.images.load(str(macro_path),check_existing=True);macro_tex.image.colorspace_settings.name='Non-Color';macro_tex.image.alpha_mode='CHANNEL_PACKED';macro_tex.image.filepath='//'+os.path.relpath(macro_path,ART)
+  macro_sep=nodes.new('ShaderNodeSeparateColor');links.new(macro_tex.outputs['Color'],macro_sep.inputs[0])
+  value=nodes.new('ShaderNodeMath');value.operation='MULTIPLY_ADD';value.inputs[1].default_value=.64;value.inputs[2].default_value=.68;links.new(macro_sep.outputs['Red'],value.inputs[0])
+  tint=nodes.new('ShaderNodeMixRGB');tint.blend_type='MULTIPLY';tint.inputs[0].default_value=1;tint.inputs[1].default_value=(*COLORS[index],1);links.new(value.outputs[0],tint.inputs[2]);links.new(tint.outputs[0],bs.inputs['Base Color'])
   bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.35;bump.inputs['Distance'].default_value=.06;links.new(tex.outputs['Alpha'],bump.inputs['Height']);links.new(bump.outputs['Normal'],bs.inputs['Normal']);obj.data.materials.append(mat)
  print('SURFACE_AUTHORED',theme,flush=True)
  # Label the pair in the saved material study.

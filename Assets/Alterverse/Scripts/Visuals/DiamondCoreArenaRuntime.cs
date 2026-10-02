@@ -77,6 +77,7 @@ namespace Alterverse.Visuals
             pulsarMaterial=Mat(new Color(.93f,.98f,1f,1f),true,0f,.95f,new Color(.62f,.90f,1f,1f)*2.2f);
 
             floorMaterial.SetTexture("_SurfaceData",Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground"));
+            floorMaterial.SetTexture("_MacroData",Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Macro"));
             floorMaterial.SetFloat("_SurfaceRelief",.22f);
             floorMaterial.SetFloat("_SurfaceScale",.25f);
             BuildTransparentSurface();

@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using Alterverse.Combat;
+using Alterverse.Visuals;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,6 +42,18 @@ namespace Alterverse.EditorChecks
                     bunker.name + " has no rounded convex bunker footprint");
                 Check(solid.sharedMesh.vertexCount >= 40,
                     bunker.name + " rounded footprint is too coarse to provide useful slide normals");
+
+                AuthoredBunkerDetails art=bunker.GetComponentInChildren<AuthoredBunkerDetails>();
+                Check(art!=null,bunker.name+" has no Blender detail pass");
+                foreach(Collider collider in art.GetComponentsInChildren<Collider>(true))
+                    Check(!collider.enabled,bunker.name+" visual art added a solid collider");
+                bool rotatingDetail=false;
+                foreach(MeshFilter filter in art.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    if(filter.name.Contains("Detail_turret"))
+                    {rotatingDetail=true;Check(filter.transform.parent.name=="DF_Bunker_TurretHead","turret detail detached from aiming pivot");}
+                }
+                Check(rotatingDetail,bunker.name+" missing turret detail");
 
                 Vector3 p = bunker.transform.position;
                 Check(Mathf.Abs(Mathf.Abs(p.x) - 26.25f) < .5f, bunker.name + " is not one bunker-length farther toward arena center");

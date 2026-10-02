@@ -1,0 +1,38 @@
+{
+  "parts": [
+    {
+      "name": "DF_Bunker_MainShell",
+      "triangles": 596
+    },
+    {
+      "name": "DF_Bunker_RoofArmor",
+      "triangles": 220
+    },
+    {
+      "name": "DF_Bunker_Foundation",
+      "triangles": 220
+    },
+    {
+      "name": "Detail_body_1",
+      "triangles": 864
+    },
+    {
+      "name": "Detail_body_3",
+      "triangles": 5420
+    },
+    {
+      "name": "Detail_body_2",
+      "triangles": 1080
+    },
+    {
+      "name": "Detail_turret_3",
+      "triangles": 216
+    },
+    {
+      "name": "Detail_turret_1",
+      "triangles": 864
+    }
+  ],
+  "gameplayColliderChanged": false,
+  "turretAndMuzzleChanged": false
+}

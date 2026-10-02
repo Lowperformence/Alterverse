@@ -35,7 +35,7 @@ for hero,targets in T.items():
   if contact:
    error=(contact.matrix_world.translation-bpy.data.objects['DF_PalmGrip'+side].matrix_world.translation).length
    assert error<.002,(hero,side,error);errors.append(error)
- bpy.context.scene.cycles.samples=4;bpy.context.scene.cycles.use_denoising=False;bpy.context.scene.render.filepath=str(root/'ArtSource/Heroes/Preview'/f'{hero}-GripCheck.png');
+ bpy.context.scene.cycles.samples=16;bpy.context.scene.cycles.use_denoising=True;bpy.context.scene.render.filepath=str(root/'ArtSource/Heroes/Preview'/f'{hero}-GripCheck.png');
  if not os.environ.get('DF_SKIP_POSE_RENDER'):bpy.ops.render.render(write_still=True)
  rows.append({'hero':hero,'handlePalmDistanceMeters':errors,'rifleSupportDistanceMeters':miss})
  print('POSE_GRIP_CHECK',hero,errors,miss,flush=True)

@@ -9,6 +9,9 @@ Shader "Alterverse/PlanetSurface"
         _BumpScale("Macro relief", Float) = 0
         _SandData("Sand slope / roughness / value", 2D) = "gray" {}
         _StoneData("Stone slope / roughness / value", 2D) = "gray" {}
+        _MacroData("Blender geological value / cavity / roughness / sediment", 2D) = "gray" {}
+        _MacroScale("Geological patch frequency", Float) = 0.047
+        _MacroStrength("Geological contrast", Float) = 0.52
         _SurfaceMode("Ground 0, crater 1, stone 2", Float) = 0
         _DetailScale("World detail frequency", Float) = 0.23
         _SandStrength("Sand relief", Float) = 0.22
@@ -29,7 +32,8 @@ Shader "Alterverse/PlanetSurface"
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
             half4 _BaseColor, _EmissionColor;
-            float _DetailScale;
+            float _DetailScale, _MacroScale;
+            half _MacroStrength;
             half _BumpScale, _SurfaceMode, _SandStrength, _RockStrength, _Metallic, _Smoothness;
         CBUFFER_END
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
@@ -37,6 +41,7 @@ Shader "Alterverse/PlanetSurface"
         TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
         TEXTURE2D(_SandData); SAMPLER(sampler_SandData);
         TEXTURE2D(_StoneData); SAMPLER(sampler_StoneData);
+        TEXTURE2D(_MacroData); SAMPLER(sampler_MacroData);
         struct Attributes
         {
             float4 positionOS : POSITION;
@@ -138,9 +143,16 @@ Shader "Alterverse/PlanetSurface"
                     }
                     data.a=lerp(data.a,.5h,quiet*.6h);
                 }
+                // A separate Blender-authored geological layer reads at the gameplay camera distance.
+                float2 geologyUV=p.xz*_MacroScale+.07*sin(p.zx*.09);
+                half4 geology=SAMPLE_TEXTURE2D(_MacroData,sampler_MacroData,geologyUV);
+                half quietGeology=1-smoothstep(7.0,17.0,length(p.xz));
+                half geologicalContrast=_MacroStrength*lerp(1.0h,.45h,quietGeology);
+                albedo*=1+(geology.r-.5h)*geologicalContrast;
+                data.b=lerp(data.b,geology.b,.35h);
                 // Surface-gradient perturbation avoids tangent seams and missing UVs on generated meshes.
                 n=normalize(n-(gradient-n*dot(n,gradient)));
-                albedo*=1+(data.a-.5h)*.20h; // scalar variation cannot rotate the planet hue.
+                albedo*=1+(data.a-.5h)*.34h; // scalar variation cannot rotate the planet hue.
                 float4 shadowCoord;
                 #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
                     shadowCoord=ComputeScreenPos(TransformWorldToHClip(p));
@@ -152,8 +164,8 @@ Shader "Alterverse/PlanetSurface"
                 // Neutral response keeps the established albedo palette under the planet-tinted key.
                 half ambient=clamp(Luma(SampleSH(n)),.22h,.48h);
                 half direct=min(Luma(key.color),1.4h)*.53h*ndl*lerp(.35h,1.0h,key.shadowAttenuation);
-                half cavity=lerp(.93h,1.0h,saturate(data.a*2));
-                half smooth=saturate(_Smoothness+(1-data.b)*.12h);
+                half cavity=lerp(.93h,1.0h,saturate(data.a*2))*lerp(.94h,1.0h,geology.g);
+                half smooth=saturate(lerp(_Smoothness,1-data.b,.58h));
                 half3 h=SafeNormalize(key.direction+GetWorldSpaceNormalizeViewDir(p));
                 half spec=pow(saturate(dot(n,h)),lerp(12.0h,64.0h,smooth))*smooth*.10h*key.shadowAttenuation;
                 half3 rgb=albedo*((ambient+direct)*cavity+spec)+_EmissionColor.rgb;

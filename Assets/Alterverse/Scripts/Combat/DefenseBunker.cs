@@ -221,6 +221,7 @@ namespace Alterverse.Combat
             BuildAntennae(metal, glow, variant);
             BuildFactionTrim(concreteDark, glow);
             BuildDamageAndDust(concreteDark, dust, variant);
+            AuthoredBunkerDetails.Apply(visualRoot,turretHead,concrete,concreteLight,concreteDark,metal,recess);
         }
 
         private void BuildFrontArmor(Material concrete, Material darkConcrete, Material recess, Material glow)

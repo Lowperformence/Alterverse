@@ -56,3 +56,11 @@ Zhaev Null now wears an original closed dark gunmetal scout helmet with rounded 
 ## Final thickness, shoulders and rounded feet
 
 All seven anatomical arm cross-sections receive an additional 1.30 multiplier in their middle regions, tapering into shoulders and wrists. Bone lengths and grip positions are preserved. Brakk's shoulder plates, exosuit shells, cages and fins are reduced to half size around their mounting centers. Boots now use continuous rounded elliptical profiles with flat soles, curved toe caps and tapered ankles.
+
+## Reference-led silhouette pass
+
+`refine_proportions.py` applies the final geometry-only silhouette pass to all seven existing Blender sources. It is also called by `build_heroes.py` before export. A version marker prevents applying the pass twice.
+
+Heads/headdresses are reduced by 3–6% with a smooth neck transition. Oversized collars are narrowed. Kaelon's shoulder pieces are reduced to 64% around their mounts; Brakk's already-halved shoulders keep their current size. Assassin and Traveler have a clearer shoulder-to-waist taper. Tank and Brakk receive fuller thighs/calves, with Brakk retaining a broader waist. Female silhouettes receive smaller adjustments. The existing central +30% arm volume is kept, but abrupt end ramps are replaced by a smooth muscle envelope toward the joints.
+
+The pass does not move rest bones, sockets or weapons and does not modify skin weights. Existing animation curves and runtime movement remain in place. Validation records verify unchanged rest bones and weapon geometry; FBX round trips and guard checks verify the resulting exports and contacts. Studio renders illustrate these models, not a Unity runtime session.
