@@ -1,5 +1,6 @@
 using System.Collections;
 using Alterverse.Multiplayer;
+using Unity.Netcode;
 using UnityEngine;
 namespace Alterverse.Match
 {
@@ -31,13 +32,12 @@ private IEnumerator Start()
         yield break;
     }
 
-    while(Alterverse.UI.MainMenuController.IsVisible)yield return null;
+    // A headless dedicated server has no usable front-end and must never wait for menu visibility.
+    if(!IsServerOnly())while(Alterverse.UI.MainMenuController.IsVisible)yield return null;
 
-    // The countdown is a permanent match-start signal. Only the onboarding rules
-    // are limited to the player's first 15 completed matches.
-    showRules=Alterverse.Profile.MatchRewardService.MatchesCompleted<OpeningMatchLimit;
+    showRules=!IsServerOnly()&&Alterverse.Profile.MatchRewardService.MatchesCompleted<OpeningMatchLimit;
 
-    MatchClock.Set(PauseReason.Opening,true);ownsPause=true;visible=true;
+    MatchClock.Set(PauseReason.Opening,true);ownsPause=true;visible=!IsServerOnly();
 
     SetPhase("REALITY COLLIDE",messageSeconds);
     yield return WaitForeground(messageSeconds);
@@ -56,7 +56,6 @@ private IEnumerator Start()
 
 private void Update()
 {
-    // Keep remote presentation smooth between 5 Hz authoritative snapshots.
     if(networkControlled&&networkStateReceived&&visible&&!MatchClock.InBackground)
         phaseElapsed=Mathf.Min(phaseDuration,phaseElapsed+Time.unscaledDeltaTime);
 }
@@ -81,6 +80,12 @@ public void ApplyNetworkOpeningState(bool active,int phase,float elapsed,float d
     phaseElapsed=Mathf.Clamp(elapsed,0f,phaseDuration);
     visible=!string.IsNullOrEmpty(display);
     showRules=Alterverse.Profile.MatchRewardService.MatchesCompleted<OpeningMatchLimit;
+}
+
+private static bool IsServerOnly()
+{
+    NetworkManager manager=NetworkManager.Singleton;
+    return manager!=null&&manager.IsListening&&manager.IsServer&&!manager.IsClient&&CoopAuthority.LocalHasServerAuthority;
 }
 
 private void SetPhase(string text,float duration)
