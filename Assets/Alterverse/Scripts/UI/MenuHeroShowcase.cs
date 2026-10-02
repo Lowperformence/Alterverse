@@ -19,8 +19,7 @@ namespace Alterverse.UI
         private bool hasSelection,selectedWeapon;
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
-        private int initialFits;
-        private bool settledFit;
+        private bool needsFit;
         private bool loadoutDirty=true,cachedWeapon;
         private int cachedWeaponVariant=-1,selectedWeaponVariant=-1;
         private HeroId cachedHero;
@@ -103,10 +102,6 @@ namespace Alterverse.UI
 
             if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
-            if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
-                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.DeluxeWings?2.18f:
-                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:
-                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
             selected = hero; hasSelection = true; selectedAt = Time.unscaledTime;
             UpdateOriginWorld(hero);
@@ -123,7 +118,7 @@ namespace Alterverse.UI
             wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
             float facing=hero==HeroId.Nyra?-24:hero==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
-            initialFits = 2; settledFit = false;
+            needsFit = true;
             // No health, colliders, input, abilities, team membership or game-world registration.
             foreach (Transform part in actor.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = PreviewLayer;
             foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
@@ -252,19 +247,18 @@ namespace Alterverse.UI
         {
             if (actor == null || stage == null || !stage.activeSelf) return;
             float t = Time.unscaledTime - selectedAt;
-            float settle = 1-Mathf.Exp(-t*7);
             float facing=selected==HeroId.Nyra?-24: selected==HeroId.Kaelon?-24:-16;
-            actor.transform.localRotation = Quaternion.Euler(0,Mathf.Lerp(facing-16,facing,settle)+Mathf.Sin(t*.55f)*4,0);
-            actor.transform.localPosition = new Vector3(0,Mathf.Lerp(-.10f,0,settle)+Mathf.Sin(t*1.7f)*.015f,0);
+            actor.transform.localRotation = Quaternion.Euler(0,facing+Mathf.Sin(t*.55f)*4,0);
+            actor.transform.localPosition = Vector3.zero;
             if(orbitLeft!=null) orbitLeft.localPosition=new Vector3(-.58f,.28f+Mathf.Sin(t*1.4f)*.06f,.03f);
             if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
             if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
             if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
-            if (initialFits > 0 || (!settledFit && t >= .6f))
+            // Fit once, after the retargeted pose is ready, before this frame renders.
+            if (needsFit)
             {
                 FitPreviewBounds();
-                if (initialFits > 0) initialFits--;
-                if (t >= .6f) settledFit = true;
+                needsFit = false;
             }
         }
         private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; if (stage != null) stage.SetActive(false); }

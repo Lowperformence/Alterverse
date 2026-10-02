@@ -64,8 +64,8 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
             if (hero == HeroId.Mira)
             {
+                TahlaHandSymmetry.Apply(instance.transform);
                 HealerLegArmorAppearance.Apply(instance.transform);
-                TahlaEmeraldCrown.Apply(instance.transform);
             }
             if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
             if (hero == HeroId.Traveler)
@@ -85,7 +85,7 @@ namespace Alterverse.Visuals
         private static void ApplyHandSize(Transform imported, HeroId hero)
         {
             // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
-            float scale = hero == HeroId.Rook ? .8f : 1.6f;
+            float scale = hero == HeroId.Mira ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {
