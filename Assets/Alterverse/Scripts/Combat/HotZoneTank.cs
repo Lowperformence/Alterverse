@@ -559,6 +559,8 @@ namespace Alterverse.Combat
 
         private void BuildSkeletonVisuals()
         {
+            referenceRig=ReferenceMonsterRig.Build(transform,"MarsSkeleton");
+            if(referenceRig!=null){barrelPivot=referenceRig.Muzzle;return;}
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color energy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color bone=new Color(.36f,.41f,.47f,1),deep=new Color(.045f,.055f,.075f,1);
