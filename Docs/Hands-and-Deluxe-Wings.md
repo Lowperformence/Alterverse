@@ -1,6 +1,6 @@
 # Hands and Deluxe Wings
 
-All seven authored heroes use 200% hand scale, applied after appearance replacement and before retarget setup. WeaponGrip child bones counter-scale to keep original weapon dimensions. Grip positions follow the doubled palm contacts; rifle support uses the adjusted palm. Brakk's hand-weighted gauntlets also double.
+Hands are reduced from the previous 200% setting: six heroes use 160% of the original model size (20% smaller than the previous setting), while Brakk Orun uses 80% (60% smaller). This also resizes Brakk's hand-weighted gauntlets. Scaling applies after appearance replacement and before retarget setup. WeaponGrip child bones counter-scale to keep original weapon dimensions. Grip positions follow the resized palm contacts; rifle support uses the adjusted palm.
 
 All cosmetic wing builders use a shared 0.70 size multiplier. This applies to VOIDFALL, Beta Supporter, Plague and Deluxe Wings in gameplay and menu previews.
 

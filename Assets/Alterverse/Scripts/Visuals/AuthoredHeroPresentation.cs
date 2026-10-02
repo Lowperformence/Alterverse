@@ -68,17 +68,19 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            DoubleHandSize(instance.transform);
+            ApplyHandSize(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }
 
         // Scale the existing hand skin and Brakk's gauntlets through their shared rig.
         // Counter-scale weapon grip children so held weapons retain their original size.
-        // Their positions (and palm sockets) still follow the enlarged hands. Apply before
+        // Their positions (and palm sockets) still follow the resized hands. Apply before
         // Initialize captures the grip rest positions and the rifle support solver.
-        private static void DoubleHandSize(Transform imported)
+        private static void ApplyHandSize(Transform imported, HeroId hero)
         {
+            // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
+            float scale = hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {
@@ -89,18 +91,18 @@ namespace Alterverse.Visuals
                     if (palm.name == "DF_PalmGrip" + grip.name[grip.name.Length - 1])
                     {
                         // The contact offset remains rigid inside the unscaled weapon.
-                        // Half the sum makes its world contact coincide with the doubled palm.
+                        // Move the rigid weapon contact onto the resized palm for any scale.
                         Vector3 contact = hand.InverseTransformPoint(palm.position);
-                        grip.localPosition = (grip.localPosition + contact) * .5f;
+                        grip.localPosition = (grip.localPosition + contact * (scale - 1f)) / scale;
                         break;
                     }
             }
             foreach (Transform bone in bones)
                 if (bone.name == "HandL" || bone.name == "HandR")
-                    bone.localScale *= 2f;
+                    bone.localScale *= scale;
             foreach (Transform bone in bones)
                 if (bone.name == "WeaponGripL" || bone.name == "WeaponGripR")
-                    bone.localScale *= .5f;
+                    bone.localScale /= scale;
             foreach (SkinnedMeshRenderer renderer in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 if (renderer.sharedMesh == null) continue;
