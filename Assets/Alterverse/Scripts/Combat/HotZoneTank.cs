@@ -151,6 +151,8 @@ namespace Alterverse.Combat
             return true;
         }
 
+        private ReferenceMonsterRig referenceRig;
+
         private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien,bool spider,bool bear)
         {
             gameObject.layer=GameplayCollision.Units;
@@ -158,8 +160,9 @@ namespace Alterverse.Combat
             locomotion=GetComponent<HeroLocomotion>()??gameObject.AddComponent<HeroLocomotion>();
             if(ArenaVariantRuntime.IsGJ504b)
             {
-                planetVisual=PlanetSentinelVisual.Build(transform,team,true);
-                barrelPivot=planetVisual.Muzzle;
+                referenceRig=ReferenceMonsterRig.Build(transform,"GJMagentaGolem");
+                if(referenceRig!=null)barrelPivot=referenceRig.Muzzle;
+                else { planetVisual=PlanetSentinelVisual.Build(transform,team,true);barrelPivot=planetVisual.Muzzle; }
             }
             else if(ArenaVariantRuntime.IsDiamondCore) { /* Separate world-space crystal guardian supplies its own body. */ }
             else if(kryonBear)BuildKryonBearVisuals();
@@ -312,10 +315,11 @@ namespace Alterverse.Combat
         {
             if(target==null||target.IsDead)return;
             planetVisual?.PulseAttack();
+            referenceRig?.PulseAttack();
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            Color energy=referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
             bool creature=FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
             Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             PrototypeVfx.Ring(muzzle,energy,kryonBear?.40f:noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
@@ -341,7 +345,7 @@ namespace Alterverse.Combat
             Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
+            Color energy=referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
             if(xenoAlien)
             {
                 PrototypeVfx.BioBolt(muzzle,hit,energy,teamEnergy);
@@ -1451,4 +1455,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
