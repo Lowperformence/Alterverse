@@ -9,7 +9,7 @@ namespace Alterverse.Multiplayer
     /// <summary>
     /// Verifies that the host and every connected co-op client produced the same staged
     /// 10-slot match plan before gameplay is allowed to launch. Uses NGO named messages
-    /// over the Relay link and scales from two to five human players.
+    /// over the Relay link and scales from one to five human players; bots fill open team slots.
     /// </summary>
     public sealed class CoopPlanHandshake : MonoBehaviour
     {
@@ -96,12 +96,12 @@ namespace Alterverse.Multiplayer
                 var stale=new List<ulong>();
                 foreach(var pair in approvedPlayerIds)if(!IsConnected(manager,pair.Key))stale.Add(pair.Key);
                 for(int i=0;i<stale.Count;i++)approvedPlayerIds.Remove(stale[i]);
-                int expectedClients=Mathf.Max(1,expectedPlayers-1);
+                int expectedClients=Mathf.Max(0,expectedPlayers-1);
                 planHandshakeReady=manager.ConnectedClientsIds!=null&&
                     manager.ConnectedClientsIds.Count>=expectedPlayers&&
                     approvedClients.Count>=expectedClients;
                 status=planHandshakeReady
-                    ?$"MATCH PLAN SYNCED • {expectedPlayers}/{expectedPlayers} PLAYERS"
+                    ?expectedPlayers==1?"MATCH PLAN READY • BOTS FILL OPEN SLOTS":$"MATCH PLAN SYNCED • {expectedPlayers}/{expectedPlayers} PLAYERS"
                     :$"HOST WAITING FOR PLAN SYNC • {Mathf.Min(approvedClients.Count+1,expectedPlayers)}/{expectedPlayers}";
                 return;
             }
@@ -182,7 +182,7 @@ namespace Alterverse.Multiplayer
             }
 
             int expectedPlayers=lobby.PlayerCount;
-            int expectedClients=Mathf.Max(1,expectedPlayers-1);
+            int expectedClients=Mathf.Max(0,expectedPlayers-1);
             planHandshakeReady=valid&&manager.ConnectedClientsIds!=null&&
                 manager.ConnectedClientsIds.Count>=expectedPlayers&&
                 approvedClients.Count>=expectedClients;
