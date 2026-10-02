@@ -164,12 +164,9 @@ for side,s in [('L',-1),('R',1)]:
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
  limb('upper arm mechanical sleeve',a,e,.052,1,upper)
  ell('shoulder rotary joint',a,(.072,.074,.075),0,upper,16,10)
- # Three dimensional shoulder shell plus separate beveled hard plates.
- ell('shoulder white casing',a+[s*.062,.005,0],(.123,.113,.094),2,upper,10,8)
- plate('shoulder segmented crown',[(s*.16,1.635),(s*.26,1.651),(s*.347,1.603),(s*.328,1.529),(s*.268,1.485),(s*.207,1.525)],.066,.040,2,upper)
- plate('shoulder lower seam',[(s*.22,1.55),(s*.30,1.57),(s*.32,1.51),(s*.265,1.45),(s*.224,1.47)],.067,.023,1,upper)
- for j in range(2):
-  tube('shoulder inset vent',[(s*(.277+j*.020),1.60,.106),(s*(.266+j*.020),1.578,.112)],.005,0,upper,6)
+ # Rounded amethyst armor caps, rigidly following each upper arm.
+ ell('round silver shoulder backing',a+[s*.062,.008,0],(.134,.125,.115),2,upper,24,16)
+ ell('round luminous violet shoulder armor',a+[s*.068,.017,.006],(.129,.123,.121),3,upper,24,16)
  ell('elbow pivot',e,(.057,.055,.055),0,fore,12,8)
  ring('elbow cap',e+[0,0,.055],.034,.009,2,fore,segments=16)
  limb('forearm violet actuator',e,w,.048,1,fore)
@@ -241,17 +238,7 @@ for j in range(4):
   c=a+(b-a)*t-d*.025
   tube('cyan petal capacitor',[c+[-.012,0,-.012],c+[.012,.006,.012]],.005,4,bone,6)
 
-# Additional layered shoulder armor: front, rear and overhanging outer lip.
 GROUP=0
-for side,s in [('L',-1),('R',1)]:
- bone='UpperArm'+side
- outline=[(s*.17,1.65),(s*.26,1.689),(s*.384,1.635),(s*.39,1.549),(s*.316,1.496),(s*.24,1.555)]
- plate('added shoulder front shield',outline,.101,.033,2,bone)
- plate('added shoulder rear shield',outline,-.092,-.027,2,bone)
- plate('overlapping shoulder lower plate',[(s*.298,1.553),(s*.39,1.579),(s*.405,1.478),(s*.36,1.43),(s*.302,1.476)],.072,.033,2,bone)
- tube('shoulder dark separation',[(s*.246,1.567,.125),(s*.316,1.515,.125),(s*.379,1.556,.123)],.005,1,bone,6)
- for j in range(2):
-  tube('shoulder violet status inset',[(s*(.283+j*.027),1.63,.135),(s*(.278+j*.027),1.605,.136)],.004,3,bone,6)
 
 # Heavy mech proportions: enlarge armor around each segment axis without lengthening limbs.
 for i,v in enumerate(V):
@@ -293,7 +280,7 @@ def render(yaw,name):
  ry=np.array([[math.cos(angle),0,math.sin(angle)],[0,1,0],[-math.sin(angle),0,math.cos(angle)]])
  rx=np.array([[1,0,0],[0,math.cos(tilt),-math.sin(tilt)],[0,math.sin(tilt),math.cos(tilt)]])
  rotation=rx@ry;p=(vertices-np.array([0,1.015,0]))@rotation.T;n=normals@rotation.T
- xy=np.column_stack([w/2+p[:,0]*scale,h/2-p[:,1]*scale]);z=p[:,2]
+ xy=np.column_stack([w/2-p[:,0]*scale,h/2-p[:,1]*scale]);z=p[:,2]
  yy,xx=np.mgrid[:h,:w];grad=np.clip(1-np.sqrt(((xx-w*.5)/w)**2+((yy-h*.44)/h)**2),0,1)
  img=np.empty((h,w,3));img[:]=np.array([.025,.035,.05])+grad[:,:,None]*np.array([.035,.045,.055]);depth=np.full((h,w),-1e9)
  lights=[(unit([-.6,.8,1]),np.array([1.0,.97,.88])),(unit([.7,.2,.7]),np.array([.34,.46,.56])),(unit([.1,.6,-1]),np.array([.15,.40,.29]))]
@@ -314,4 +301,5 @@ def render(yaw,name):
   patch=img[lo[1]:hi[1]+1,lo[0]:hi[0]+1];patch[mask]=color[mask];depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=iz[mask]
  image=Image.fromarray((np.clip(img,0,1)**(1/1.7)*255).astype(np.uint8));d=ImageDraw.Draw(image);d.text((20,20),'IONE VASKA / PEARL MECH',fill=(195,224,214));d.text((20,h-28),'Geometry preview - not a Unity screenshot',fill=(130,155,157));image.save(ART/name)
 render(-14,'front.png');render(158,'back.png')
+
 

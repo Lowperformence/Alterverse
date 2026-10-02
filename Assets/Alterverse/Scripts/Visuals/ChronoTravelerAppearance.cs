@@ -58,7 +58,7 @@ namespace Alterverse.Visuals
                 data.vertices.Length % 3 != 0 || data.vertices.Length != data.normals.Length ||
                 data.boneIndices == null || data.boneIndices.Length != data.vertices.Length / 3 ||
                 data.boneNames == null || data.anchors == null || data.anchors.Length != data.boneNames.Length ||
-                data.submeshes == null || data.submeshes.Length != 5) return false;
+                data.submeshes == null || data.submeshes.Length != 6) return false;
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int b in data.boneIndices) if (b < 0 || b >= data.boneNames.Length) return false;
@@ -136,7 +136,8 @@ namespace Alterverse.Visuals
                 Surface("Graphite enamel", new Color(.062f,.082f,.10f), .66f,.57f),
                 Surface("Brushed titanium", new Color(.30f,.38f,.42f), .82f,.52f),
                 Surface("Cyan circuits", new Color(.02f,.65f,.94f), .35f,.48f, true),
-                Surface("Optical recess", new Color(.007f,.018f,.016f), .40f,.74f)
+                Surface("Optical recess", new Color(.007f,.018f,.016f), .40f,.74f),
+                Surface("Blue shoulder stripes", new Color(.025f,.18f,1f), .25f,.5f, true)
             };
             // Replace the existing instance renderer so death/respawn, portrait lighting,
             // bounds consumers and hit-flash code continue to address the same object.
@@ -208,3 +209,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

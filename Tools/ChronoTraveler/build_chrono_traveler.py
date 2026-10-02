@@ -25,7 +25,7 @@ for side,sign in [('L',-1),('R',1)]:
  BONES['Shin'+side]=(BONES['Thigh'+side][1],(sign*.1692,.1224,-.02))
  BONES['Foot'+side]=(BONES['Shin'+side][1],(sign*.1692,.0612,.15))
 BN=list(BONES);V=[];F=[];MI=[];BI=[];PARTS=[]
-COLORS=np.array([[.018,.024,.029],[.062,.082,.10],[.30,.38,.42],[.02,.65,.94],[.003,.008,.012]])
+COLORS=np.array([[.018,.024,.029],[.062,.082,.10],[.30,.38,.42],[.02,.65,.94],[.003,.008,.012],[.025,.18,1.0]])
 # material ids: undersuit, graphite enamel, titanium, emerald energy, optical black
 
 def unit(v):
@@ -125,7 +125,11 @@ for sign,side in [(-1,'L'),(1,'R')]:
  ell('shoulder rotary joint',a,(.094,.096,.093),0,upper)
  ell('sculpted shoulder cap',a+[sign*.024,.025,-.005],(.112,.105,.100),1,upper)
  ring('shoulder bearing',a+[0,0,.086],.055,.007,2,upper)
- tube('shoulder light slash',[a+[-.033,-.019,.098],a+[.033,.024,.098]],.003,3,upper)
+ # Three blue strips conform to each shoulder cap from front over the top to the rear.
+ for offset in [-.035,0,.035]:
+  fit=math.sqrt(1-(offset/.112)**2)
+  points=[a+[sign*.024+offset,.025+.110*fit*math.cos(t),-.005+.105*fit*math.sin(t)] for t in np.linspace(-1.25,1.25,13)]
+  tube('blue shoulder stripe '+side,points,.006,5,upper,8)
  limb('sealed upper arm',a,e,.077,0,upper)
  mid=(a+e)*.5;x=mid[0];y=mid[1]
  plate('bicep layered shell',[(x-.06,y+.08),(x+.06,y+.08),(x+.055,y-.07),(x,y-.10),(x-.055,y-.07)],.067,.02,1,upper)
@@ -163,9 +167,9 @@ for i in range(len(triangles)):
 normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-10)
 mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':list(BONES[n][1])} for n in BN],
 'vertices':np.round(vertices,6).ravel().tolist(),'normals':np.round(normals,6).ravel().tolist(),'boneIndices':BI,
-'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(5)]}
+'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(6)]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
-report={'vertices':len(V),'triangles':len(F),'materials':5,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
+report={'vertices':len(V),'triangles':len(F),'materials':6,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
 (ART/'geometry-report.json').write_text(json.dumps(report,indent=2))
 assert np.isfinite(vertices).all() and np.isfinite(normals).all()
 assert triangles.min()>=0 and triangles.max()<len(V)
@@ -179,7 +183,7 @@ def render(yaw,name):
  ry=np.array([[math.cos(angle),0,math.sin(angle)],[0,1,0],[-math.sin(angle),0,math.cos(angle)]])
  rx=np.array([[1,0,0],[0,math.cos(tilt),-math.sin(tilt)],[0,math.sin(tilt),math.cos(tilt)]])
  rotation=rx@ry;p=(vertices-np.array([0,.91,0]))@rotation.T;n=normals@rotation.T
- xy=np.column_stack([w/2+p[:,0]*scale,h/2-p[:,1]*scale]);z=p[:,2]
+ xy=np.column_stack([w/2-p[:,0]*scale,h/2-p[:,1]*scale]);z=p[:,2]
  yy,xx=np.mgrid[:h,:w];grad=np.clip(1-np.sqrt(((xx-w*.5)/w)**2+((yy-h*.44)/h)**2),0,1)
  img=np.empty((h,w,3));img[:]=np.array([.025,.035,.05])+grad[:,:,None]*np.array([.035,.045,.055]);depth=np.full((h,w),-1e9)
  lights=[(unit([-.6,.8,1]),np.array([1.0,.97,.88])),(unit([.7,.2,.7]),np.array([.34,.46,.56])),(unit([.1,.6,-1]),np.array([.15,.40,.29]))]
@@ -196,7 +200,8 @@ def render(yaw,name):
   for direction,lc in lights:
    ndl=np.maximum(0,np.sum(normal*direction,axis=2));half=unit(direction+[0,0,1]);spec=np.maximum(0,np.sum(normal*half,axis=2))**(44 if material in [1,2,4] else 12)
    color+=COLORS[material]*ndl[:,:,None]*lc*.85+spec[:,:,None]*lc*(.30 if material in [1,2,4] else .06)
-  if material==3:color+=COLORS[material]*.85
+  if material in [3,5]:color+=COLORS[material]*.85
   patch=img[lo[1]:hi[1]+1,lo[0]:hi[0]+1];patch[mask]=color[mask];depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=iz[mask]
  image=Image.fromarray((np.clip(img,0,1)**(1/1.7)*255).astype(np.uint8));d=ImageDraw.Draw(image);d.text((20,20),'CHRONO TRAVELER / EXOSUIT',fill=(195,224,214));d.text((20,h-28),'Geometry preview - not a Unity screenshot',fill=(130,155,157));image.save(ART/name)
 render(-22,'front.png');render(155,'back.png')
+

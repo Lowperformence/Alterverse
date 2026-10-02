@@ -58,6 +58,7 @@ namespace Alterverse.Visuals
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
+            if (hero == HeroId.Veyr) AssassinVioletHeadStripe.Apply(instance.transform);
             if (hero == HeroId.Nyra) CyberRangerAppearance.Apply(instance.transform);
             if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
@@ -401,4 +402,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
