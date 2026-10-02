@@ -52,24 +52,19 @@ namespace Alterverse.EditorTools
 
         private static void WriteEdgegapDockerFiles(string outputDirectory)
         {
-            const string dockerfile = @"FROM ubuntu:22.04
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    libatomic1 \
-    libstdc++6 \
-    libgcc-s1 \
-    libc6 \
-    libuuid1 \
-    zlib1g \
-    && rm -rf /var/lib/apt/lists/*
-WORKDIR /server
-COPY . /server
-RUN chmod +x /server/DimensionsFrontServer.x86_64
-EXPOSE 7777/udp
-ENTRYPOINT [\"./DimensionsFrontServer.x86_64\",\"-batchmode\",\"-nographics\",\"-logFile\",\"/dev/stdout\",\"-port\",\"7777\"]
-";
-            const string dockerIgnore = "DimensionsFrontServer_BackUpThisFolder_ButDontShipItWithYourGame/\n";
+            string dockerfile=string.Join("\n",new[]
+            {
+                "FROM ubuntu:22.04",
+                "ENV DEBIAN_FRONTEND=noninteractive",
+                "RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libatomic1 libstdc++6 libgcc-s1 libc6 libuuid1 zlib1g && rm -rf /var/lib/apt/lists/*",
+                "WORKDIR /server",
+                "COPY . /server",
+                "RUN chmod +x /server/DimensionsFrontServer.x86_64",
+                "EXPOSE 7777/udp",
+                "ENTRYPOINT [\"./DimensionsFrontServer.x86_64\",\"-batchmode\",\"-nographics\",\"-logFile\",\"/dev/stdout\",\"-port\",\"7777\"]",
+                ""
+            });
+            const string dockerIgnore="DimensionsFrontServer_BackUpThisFolder_ButDontShipItWithYourGame/\n";
             File.WriteAllText(Path.Combine(outputDirectory,DockerfileName),dockerfile);
             File.WriteAllText(Path.Combine(outputDirectory,".dockerignore"),dockerIgnore);
         }
