@@ -13,7 +13,7 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 3;
+        public override uint GetVersion() => 4;
         private void OnPreprocessModel()
         {
             if (!IsHero) return;
@@ -24,7 +24,7 @@ namespace Alterverse.EditorTools
             importer.importLights = false;
             importer.importBlendShapes = false;
             importer.addCollider = false;
-            importer.isReadable = Path.GetFileNameWithoutExtension(assetPath) == "Mira";
+            importer.isReadable = Path.GetFileNameWithoutExtension(assetPath) == "Mira" || Path.GetFileNameWithoutExtension(assetPath) == "Rook";
             importer.optimizeGameObjects = false; // Named muzzle and cosmetic sockets must remain accessible.
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;

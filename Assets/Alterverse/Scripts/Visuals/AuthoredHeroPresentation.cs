@@ -61,6 +61,7 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
             if (hero == HeroId.Mira) HealerLegArmorAppearance.Apply(instance.transform);
+            if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
             presentation.Initialize(root, instance.transform);
             return true;
         }
