@@ -116,6 +116,10 @@ Shader "Alterverse/PlanetSurface"
                     float2 uv=p.xz*_DetailScale;
                     uv+=.24*sin(p.zx*.117+sin(p.xz*.071));
                     half4 sand=SAMPLE_TEXTURE2D(_SandData,sampler_SandData,uv);
+                    half4 grain=SAMPLE_TEXTURE2D(_SandData,sampler_SandData,uv*3.173+float2(.37,.61));
+                    sand.rg=lerp(sand.rg,grain.rg,.18h);
+                    sand.b=lerp(sand.b,grain.b,.15h);
+                    sand.a=lerp(sand.a,grain.a,.12h);
                     // Incommensurate rotated second layer masks repeats without extra draw calls.
                     float2 stoneUV=float2(uv.x*.8-uv.y*.6,uv.x*.6+uv.y*.8)*.713+float2(.31,.73);
                     half4 rock=SAMPLE_TEXTURE2D(_StoneData,sampler_StoneData,stoneUV);
@@ -223,3 +227,4 @@ Shader "Alterverse/PlanetSurface"
     }
     Fallback Off
 }
+

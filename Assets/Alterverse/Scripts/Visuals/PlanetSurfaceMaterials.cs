@@ -44,7 +44,7 @@ namespace Alterverse.Visuals
             material.SetFloat("_MacroScale",.047f);
             material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsDiamondCore?.34f:ArenaVariantRuntime.IsKryon?.40f:.52f);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
-            material.SetFloat("_DetailScale",.25f); // Finer world-space detail, shared by ground, craters and cliffs.
+            material.SetFloat("_DetailScale",ArenaVariantRuntime.IsDiamondCore?.18f:ArenaVariantRuntime.IsKryon?.16f:ArenaVariantRuntime.IsMars?.34f:ArenaVariantRuntime.IsGJ504b?.21f:.27f); // Finer world-space detail, shared by ground, craters and cliffs.
             material.SetFloat("_SandStrength",ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
                 ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:
                 ArenaVariantRuntime.IsEarth?.12f:ArenaVariantRuntime.IsPyraxis?.08f:ArenaVariantRuntime.IsNeptune?.10f:.27f);
