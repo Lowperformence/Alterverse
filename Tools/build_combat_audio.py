@@ -122,7 +122,7 @@ def render_hero_death():
  x=signal.sosfilt(signal.butter(2,70,fs=SR,btype='highpass',output='sos'),x)
  fade=min(32,len(x)//4);tail=min(int(.075*SR),len(x)//4)
  x[:fade]*=np.linspace(0,1,fade);x[-tail:]*=np.linspace(1,0,tail)
- x*=3*10**(-22/20)/max(float(np.max(abs(x))),1e-8)
+ x*=3.6*10**(-22/20)/max(float(np.max(abs(x))),1e-8)
  return x.astype(np.float32)
 
 def render_kill():
