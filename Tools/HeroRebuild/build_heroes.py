@@ -629,7 +629,7 @@ def build(hero,female,color,label):
   tube('Ione soft lower lip',[(-.019,-.146,1.621),(0,-.152,1.620),(.019,-.146,1.621)],.003,lip,'Head')
   ellipsoid('Ione forehead moon jewel',(0,-.132,1.741),(.012,.005,.018),emerald,'Head',16,10)
  if hero=='Veyr':
-  # Closed dark scout helmet inspired by the new reference, with oval apertures and antenna.
+  # Closed dark scout helmet inspired by the new reference, with oval apertures; no antenna.
   metal=mat('Null dark gunmetal helmet',(.072,.089,.078),.76,.42)
   edge=mat('Null muted helmet panel seams',(.23,.27,.24),.72,.43)
   visor=mat('Null recessed black eye visor',(.004,.008,.009),.16,.27)
@@ -662,8 +662,6 @@ def build(hero,female,color,label):
   plate('Null central angular face plate',[(-.030,1.668),(0,1.687),(.030,1.668),(.031,1.573),(0,1.557),(-.031,1.573)],-.178,.009,metal,'Head')
   for j in range(3):
    tube('Null chin vent',[(-.024,-.205,1.560-j*.010),(.024,-.205,1.560-j*.010)],.002,visor,'Head',8)
-  box('Null antenna hinge',(-.155,.016,1.733),(.025,.045,.045),metal,'Head',.005)
-  tube('Null angular scout antenna',[(-.158,.024,1.735),(-.162,.024,2.005),(-.068,.024,1.990)],[.006,.006,.005],metal,'Head',6)
  if hero=='Mira':
   # Latest reference: pale blue elf priestess, swept white hair and ivory/gold vestments.
   frost=mat('Tahla white swept hair',(.77,.83,.87),.10,.43)

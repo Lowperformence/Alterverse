@@ -8,6 +8,7 @@ namespace Alterverse.Visuals
     public sealed class AssassinVioletHeadStripe : MonoBehaviour
     {
         Mesh crownMesh;
+        Mesh helmetMesh;
         Material crownMaterial;
 
         public static void Apply(Transform model)
@@ -44,20 +45,106 @@ namespace Alterverse.Visuals
                 float unit=chest!=null?Vector3.Distance(model.InverseTransformPoint(head.position),model.InverseTransformPoint(chest.position))/.24f:1f;
                 bounds=new Bounds(model.InverseTransformPoint(head.position)+Vector3.up*.16f*unit,new Vector3(.24f,.32f,.24f)*unit);
             }
-            model.gameObject.AddComponent<AssassinVioletHeadStripe>().Build(model,head,bounds,headPoints);
+            var appearance=model.gameObject.AddComponent<AssassinVioletHeadStripe>();
+            appearance.RemoveAntenna(model,head,ref bounds,headPoints);
+            appearance.Build(model,head,bounds,headPoints);
+        }
+
+
+        // The antenna is part of DF_Anatomy, not a separate Transform. Recover
+        // connected head pieces, welding FBX normal/UV seams by position.
+        void RemoveAntenna(Transform model,Transform head,ref Bounds bounds,List<Vector3> headPoints)
+        {
+            foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh source=skin.sharedMesh;
+                if(skin.name!="DF_Anatomy"||source==null||!source.isReadable)continue;
+                int bone=System.Array.IndexOf(skin.bones,head);
+                if(bone<0||bone>=source.bindposes.Length)continue;
+                var v=source.vertices;var w=source.boneWeights;
+                var positions=new Vector3[v.Length];var parent=new int[v.Length];
+                var isHead=new bool[v.Length];
+                var welded=new Dictionary<Vector3Int,int>();
+                float grid=Mathf.Max(bounds.size.x*.00001f,.0000001f);
+                int Find(int a){while(parent[a]!=a){parent[a]=parent[parent[a]];a=parent[a];}return a;}
+                void Join(int a,int b){parent[Find(a)]=Find(b);}
+                for(int i=0;i<v.Length;i++)
+                {
+                    parent[i]=i;
+                    if(i>=w.Length)continue;
+                    var weight=w[i];
+                    float influence=(weight.boneIndex0==bone?weight.weight0:0)+(weight.boneIndex1==bone?weight.weight1:0)+
+                        (weight.boneIndex2==bone?weight.weight2:0)+(weight.boneIndex3==bone?weight.weight3:0);
+                    if(influence<.5f)continue;
+                    isHead[i]=true;
+                    Vector3 p=model.InverseTransformPoint(head.TransformPoint(source.bindposes[bone].MultiplyPoint3x4(v[i])));
+                    positions[i]=p;
+                    var key=new Vector3Int(Mathf.RoundToInt(p.x/grid),Mathf.RoundToInt(p.y/grid),Mathf.RoundToInt(p.z/grid));
+                    if(welded.TryGetValue(key,out int other))Join(i,other);else welded.Add(key,i);
+                }
+                for(int sub=0;sub<source.subMeshCount;sub++)
+                {
+                    var t=source.GetTriangles(sub);
+                    for(int i=0;i<t.Length;i+=3)
+                        if(isHead[t[i]]&&isHead[t[i+1]]&&isHead[t[i+2]])
+                        {Join(t[i],t[i+1]);Join(t[i],t[i+2]);}
+                }
+                var pieces=new Dictionary<int,Bounds>();var counts=new Dictionary<int,int>();
+                for(int i=0;i<v.Length;i++)if(isHead[i])
+                {
+                    int key=Find(i);
+                    if(pieces.TryGetValue(key,out Bounds box)){box.Encapsulate(positions[i]);pieces[key]=box;counts[key]++;}
+                    else {pieces.Add(key,new Bounds(positions[i],Vector3.zero));counts.Add(key,1);}
+                }
+                int shell=-1,largest=0;
+                foreach(var pair in counts)
+                    if(pair.Value>largest){shell=pair.Key;largest=pair.Value;}
+                if(shell<0)continue;
+                Bounds roof=pieces[shell];
+                var removed=new HashSet<int>();
+                foreach(var pair in pieces)
+                {
+                    if(pair.Key==shell)continue;
+                    Bounds box=pair.Value;
+                    bool aerial=box.max.y>roof.max.y+roof.size.y*.04f;
+                    bool hinge=Mathf.Abs(box.center.x-roof.center.x)>roof.extents.x+roof.size.x*.008f&&
+                        box.size.x<roof.size.x*.15f&&box.size.y<roof.size.y*.20f&&
+                        Mathf.Abs(box.center.z-roof.center.z)<roof.size.z*.15f;
+                    if(aerial||hinge)removed.Add(pair.Key);
+                }
+                helmetMesh=Instantiate(source);helmetMesh.name=source.name+"_NoAntenna";
+                var used=new HashSet<int>();
+                for(int sub=0;sub<source.subMeshCount;sub++)
+                {
+                    var t=source.GetTriangles(sub);var keep=new List<int>();
+                    for(int i=0;i<t.Length;i+=3)
+                    {
+                        bool discard=false;
+                        for(int j=0;j<3;j++)if(isHead[t[i+j]]&&removed.Contains(Find(t[i+j])))discard=true;
+                        if(discard)continue;
+                        for(int j=0;j<3;j++){keep.Add(t[i+j]);if(isHead[t[i+j]])used.Add(t[i+j]);}
+                    }
+                    helmetMesh.SetTriangles(keep,sub);
+                }
+                skin.sharedMesh=helmetMesh;
+                // Fit lights to the shell only; antenna extrema must never set roof height.
+                bounds=roof;headPoints.Clear();
+                foreach(int i in used)if(Find(i)==shell)headPoints.Add(positions[i]);
+                return;
+            }
         }
 
         void Build(Transform model,Transform head,Bounds bounds,List<Vector3> headPoints)
         {
             Color violet=new(.66f,.08f,1f,1f);
-            crownMaterial=RuntimeShaderLibrary.Create(violet,false,.15f,.5f,violet*3f);
+            crownMaterial=RuntimeShaderLibrary.Create(violet,true);
             if(crownMaterial==null)return;
             crownMaterial.name="DF_AssassinVioletHelmetRoofLights";crownMaterial.EnableKeyword("_EMISSION");
             var vertices=new List<Vector3>();var triangles=new List<int>();
             // Follow the highest actual helmet points, so boxy head geometry cannot bury the strip.
             const int segments=24;
             float clearance=Mathf.Max(.008f,bounds.size.y*.03f);
-            float halfWidth=Mathf.Max(.009f,bounds.size.x*.065f);
+            float halfWidth=Mathf.Max(.009f,bounds.size.x*.095f);
             var levels=new float[segments+1];
             var zs=new float[segments+1];
             for(int i=0;i<=segments;i++)
@@ -68,7 +155,7 @@ namespace Alterverse.Visuals
                     if(Mathf.Abs(p.z-z)<bounds.extents.z*.25f&&Mathf.Abs(p.x-bounds.center.x)<bounds.extents.x*.6f)
                         top=Mathf.Max(top,p.y);
                 if(top==float.MinValue)top=bounds.max.y;
-                levels[i]=top+clearance;zs[i]=z;
+                levels[i]=Mathf.Max(top,bounds.max.y-bounds.size.y*.025f)+clearance;zs[i]=z;
             }
             for(int i=0;i<segments;i++)
             {
@@ -104,14 +191,14 @@ namespace Alterverse.Visuals
             }
             crownMesh=new Mesh{name="DF_AssassinHeadStripe"};
             crownMesh.SetVertices(vertices);crownMesh.SetTriangles(triangles,0);crownMesh.RecalculateNormals();crownMesh.RecalculateBounds();
-            if(HeadAdornmentSkin.Merge(model,head,crownMesh,crownMaterial))return;
+            // Keep roof lights independent from body material/submesh changes.
             var stripe=new GameObject("DF_AssassinVioletHeadStripe");stripe.layer=model.gameObject.layer;
             stripe.transform.SetParent(head,false);
             stripe.AddComponent<MeshFilter>().sharedMesh=crownMesh;
             stripe.AddComponent<MeshRenderer>().sharedMaterial=crownMaterial;
         }
 
-        void OnDestroy(){if(crownMesh!=null)Destroy(crownMesh);if(crownMaterial!=null)Destroy(crownMaterial);}
+        void OnDestroy(){if(helmetMesh!=null)Destroy(helmetMesh);if(crownMesh!=null)Destroy(crownMesh);if(crownMaterial!=null)Destroy(crownMaterial);}
     }
 }
 
