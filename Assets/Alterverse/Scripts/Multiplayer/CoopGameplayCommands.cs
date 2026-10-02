@@ -135,11 +135,14 @@ namespace Alterverse.Multiplayer
             string playerId=fixedId.ToString();
 
             CoopMatchPlan plan=CoopAuthority.ActivePlan;
-            if(plan?.Session?.Slots==null||rosterSlot<0||rosterSlot>=MatchSession.TeamSize)return false;
+            if(plan?.Session?.Slots==null||rosterSlot<0||rosterSlot>=MatchSession.MaxPlayers)return false;
             MatchPlayerSlot planned=plan.Session.Slots[rosterSlot];
             if(planned==null||planned.IsBot||planned.IsHost||planned.PlayerId!=playerId)return false;
 
-            if(!CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId))return false;
+            bool authorized=plan is OnlineMatchPlan
+                ?OnlinePlanHandshake.IsAuthorizedClient(senderClientId,playerId)
+                :CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId);
+            if(!authorized)return false;
             senderOwners[senderClientId]=playerId;
 
             CoopHeroSlot[] heroes=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
