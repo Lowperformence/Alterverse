@@ -7,9 +7,9 @@ using Alterverse.Match;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Deterministic 5v5 online roster. Up to ten humans are assigned in stable order;
-    /// every open slot is filled by a server-authoritative bot so a match can still start
-    /// when matchmaking does not find enough players.
+    /// Deterministic 5v5 online roster. The private friend party is kept together on team 0,
+    /// public players fill the remaining human slots, and every open slot becomes a
+    /// server-authoritative bot so a match can always start.
     /// </summary>
     [Serializable]
     public sealed class OnlineMatchPlan : CoopMatchPlan
@@ -28,36 +28,75 @@ namespace Alterverse.Multiplayer
             if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
                 throw new InvalidOperationException("Online match plan requires 1-10 human players.");
 
-            List<OnlinePartyService.MemberView> ordered = new(members.Count);
+            List<OnlinePartyService.MemberView> party = new(MatchSession.TeamSize);
+            List<OnlinePartyService.MemberView> publicPlayers = new(MatchSession.MaxPlayers);
             OnlinePartyService.MemberView host = null;
+
             for (int i = 0; i < members.Count; i++)
             {
                 OnlinePartyService.MemberView member = members[i];
-                if (member == null) throw new InvalidOperationException("Online lobby contains an invalid player.");
-                if (!member.IsHost) continue;
-                if (host != null) throw new InvalidOperationException("Online lobby contains multiple hosts.");
-                host = member;
+                if (member == null)
+                    throw new InvalidOperationException("Online lobby contains an invalid player.");
+
+                if (member.IsHost)
+                {
+                    if (host != null)
+                        throw new InvalidOperationException("Online lobby contains multiple hosts.");
+                    host = member;
+                }
+
+                if (member.IsPartyMember) party.Add(member);
+                else publicPlayers.Add(member);
             }
 
-            if (host == null) throw new InvalidOperationException("Online lobby has no host.");
-            ordered.Add(host);
+            if (host == null)
+                throw new InvalidOperationException("Online lobby has no host.");
+            if (!host.IsPartyMember)
+                throw new InvalidOperationException("Online host must belong to the friend party.");
+            if (party.Count < 1 || party.Count > MatchSession.TeamSize)
+                throw new InvalidOperationException("Friend party must contain 1-5 players.");
 
-            List<OnlinePartyService.MemberView> guests = new(members.Count - 1);
-            for (int i = 0; i < members.Count; i++)
-                if (members[i] != host) guests.Add(members[i]);
-            guests.Sort((a, b) => string.CompareOrdinal(a.PlayerId, b.PlayerId));
-            ordered.AddRange(guests);
+            party.Sort((a, b) =>
+            {
+                if (a.IsHost != b.IsHost) return a.IsHost ? -1 : 1;
+                return string.CompareOrdinal(a.PlayerId, b.PlayerId);
+            });
+            publicPlayers.Sort((a, b) => string.CompareOrdinal(a.PlayerId, b.PlayerId));
 
             MatchSession session = new(matchId, SessionMode.OnlineCasual);
-            for (int i = 0; i < ordered.Count; i++)
+
+            int team0Humans = 0;
+            for (int i = 0; i < party.Count; i++)
             {
-                int team = i < MatchSession.TeamSize ? 0 : 1;
-                if (!session.TryAssign(i, HumanSlot(ordered[i], team, i == 0)))
-                    throw new InvalidOperationException($"Could not assign online human slot {i}.");
+                if (!session.TryAssign(team0Humans, HumanSlot(party[i], 0)))
+                    throw new InvalidOperationException($"Could not assign friend-party slot {team0Humans}.");
+                team0Humans++;
             }
 
-            FillTeamWithBots(session, 0, ordered.Count);
-            FillTeamWithBots(session, 1, ordered.Count);
+            int team1Humans = 0;
+            for (int i = 0; i < publicPlayers.Count; i++)
+            {
+                OnlinePartyService.MemberView member = publicPlayers[i];
+                if (team0Humans < MatchSession.TeamSize)
+                {
+                    int slot = team0Humans;
+                    if (!session.TryAssign(slot, HumanSlot(member, 0)))
+                        throw new InvalidOperationException($"Could not assign online human slot {slot}.");
+                    team0Humans++;
+                }
+                else
+                {
+                    if (team1Humans >= MatchSession.TeamSize)
+                        throw new InvalidOperationException("Online roster contains more than ten human players.");
+                    int slot = MatchSession.TeamSize + team1Humans;
+                    if (!session.TryAssign(slot, HumanSlot(member, 1)))
+                        throw new InvalidOperationException($"Could not assign online human slot {slot}.");
+                    team1Humans++;
+                }
+            }
+
+            FillTeamWithBots(session, 0);
+            FillTeamWithBots(session, 1);
 
             if (!session.IsFull)
                 throw new InvalidOperationException("Online roster could not fill all ten match slots.");
@@ -68,11 +107,11 @@ namespace Alterverse.Multiplayer
                 Arena = arena,
                 Difficulty = difficulty,
                 Session = session,
-                HumanCount = ordered.Count
+                HumanCount = members.Count
             };
         }
 
-        private static void FillTeamWithBots(MatchSession session, int team, int humanCount)
+        private static void FillTeamWithBots(MatchSession session, int team)
         {
             int start = team * MatchSession.TeamSize;
             int end = start + MatchSession.TeamSize;
@@ -111,7 +150,7 @@ namespace Alterverse.Multiplayer
             return fallback;
         }
 
-        private static MatchPlayerSlot HumanSlot(OnlinePartyService.MemberView member, int team, bool host) => new()
+        private static MatchPlayerSlot HumanSlot(OnlinePartyService.MemberView member, int team) => new()
         {
             PlayerId = member.PlayerId,
             DisplayName = member.DisplayName,
@@ -121,7 +160,7 @@ namespace Alterverse.Multiplayer
             IsBot = false,
             Ready = member.Ready,
             Connected = true,
-            IsHost = host
+            IsHost = member.IsHost
         };
 
         private static MatchPlayerSlot BotSlot(string id, HeroId hero, int team) => new()
