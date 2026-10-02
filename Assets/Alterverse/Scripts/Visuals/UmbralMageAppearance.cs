@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Ione Vaska's iron hierophant armor, ritual head crossbar and compact crystal staff, fitted to her existing skeleton.</summary>
+    /// <summary>Ione Vaska's pearl mech armor, violet joint reactors and deployed arcane focus, fitted to the existing skeleton.</summary>
     [DisallowMultipleComponent]
     public sealed class UmbralMageAppearance : MonoBehaviour
     {
@@ -134,11 +134,11 @@ namespace Alterverse.Visuals
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
-                Surface("Sealed black core", new Color(.010f,.013f,.019f), .12f,.28f),
-                Surface("Obsidian armor", new Color(.032f,.043f,.064f), .66f,.40f),
-                Surface("Engraved silver", new Color(.30f,.34f,.42f), .85f,.52f),
-                Surface("Amethyst focus", new Color(.33f,.29f,.64f), .30f,.62f, true),
-                Surface("Crimson ritual accents", new Color(.30f,.014f,.027f), .10f,.25f)
+                Surface("Sealed black core", new Color(.018f,.019f,.026f), .12f,.28f),
+                Surface("Violet mechanical frame", new Color(.13f,.105f,.22f), .66f,.40f),
+                Surface("Pearl ceramic armor", new Color(.72f,.76f,.80f), .35f,.52f),
+                Surface("Amethyst focus", new Color(.57f,.065f,.95f), .30f,.62f, true),
+                Surface("Cyan capacitors", new Color(.015f,.72f,.78f), .20f,.55f, true)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             RendererGroup(right, 2, anatomy.transform, vertices, normals, weights, bones, materials);
