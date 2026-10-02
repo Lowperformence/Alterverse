@@ -317,6 +317,7 @@ namespace Alterverse.Visuals
         readonly Quaternion[] kneeBase=new Quaternion[8];
         readonly List<Transform> tailJoints=new();
         Transform visualRoot,tailRoot,leftClaw,rightClaw;
+        public Transform Muzzle { get; private set; }
         Vector3 rootBase,lastWorldPosition;
         float moveBlend,gaitPhase;
 
@@ -445,6 +446,8 @@ namespace Alterverse.Visuals
                 Part(PrimitiveType.Cube,"TailBridge",pivot,new Vector3(0,.28f,-.18f),new Vector3(size*.58f,.34f,size*.58f),Quaternion.Euler(28f,0,0),joint);
                 parent=pivot;
             }
+            Muzzle=new GameObject("DF_MechanicalScorpionMuzzle").transform;
+            Muzzle.SetParent(parent,false);Muzzle.localPosition=new Vector3(0,.48f,.59f);
             Part(PrimitiveType.Capsule,"Stinger",parent,new Vector3(0,.47f,-.17f),new Vector3(.21f,.42f,.21f),Quaternion.Euler(24f,0,0),glow);
         }
 

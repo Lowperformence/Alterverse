@@ -166,6 +166,13 @@ namespace Alterverse.Combat
                 else { planetVisual=PlanetSentinelVisual.Build(transform,team,true);barrelPivot=planetVisual.Muzzle; }
             }
             else if(ArenaVariantRuntime.IsDiamondCore) { /* Separate world-space crystal guardian supplies its own body. */ }
+            else if(ArenaVariantRuntime.IsPyraxis)
+            {
+                // Both legacy suppression and final art are ready before the first render.
+                if(GetComponent<PyraxisScorpionVisualOverride>()==null)gameObject.AddComponent<PyraxisScorpionVisualOverride>();
+                var scorpion=GetComponent<PyraxisScorpionPolish>()??gameObject.AddComponent<PyraxisScorpionPolish>();
+                barrelPivot=scorpion.Muzzle;
+            }
             else if(kryonBear)BuildKryonBearVisuals();
             else if(noxaraSpider)
             {
@@ -178,6 +185,7 @@ namespace Alterverse.Combat
             if(!FrontierPlanetLayout.Active)BuildModernMonsterDetails();
             AuthoredHotZoneArt.Apply(transform,ArenaVariantRuntime.IsGJ504b?"Sandstone":
                 kryonBear?"Ice":noxaraSpider?"Spider":xenoAlien?"Xeno":marsSkeleton?"Skeleton":"Machine");
+            if(ArenaVariantRuntime.IsDiamondCore)DiamondCoreGuardianWorldVisual.Prepare(this);
             lastMovementSample=transform.position;
             movementSampleReady=true;
             SetNextPatrol();

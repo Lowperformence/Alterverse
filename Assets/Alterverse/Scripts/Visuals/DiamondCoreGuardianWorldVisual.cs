@@ -37,6 +37,19 @@ namespace Alterverse.Visuals
             go.AddComponent<DiamondCoreGuardianWorldVisual>();
         }
 
+        public static void Prepare(HotZoneTank tank)
+        {
+            if(tank==null||!ArenaVariantRuntime.IsDiamondCore)return;
+            var host=GameObject.Find("DF_PSRJ1719_DiamondGuardianWorldVisual");
+            if(host==null)
+            {
+                host=new GameObject("DF_PSRJ1719_DiamondGuardianWorldVisual");
+                Object.DontDestroyOnLoad(host);
+            }
+            var manager=host.GetComponent<DiamondCoreGuardianWorldVisual>()??host.AddComponent<DiamondCoreGuardianWorldVisual>();
+            manager.SyncGuardians();
+        }
+
         void Update()
         {
             if(!ArenaVariantRuntime.IsDiamondCore)
