@@ -257,6 +257,7 @@ for s in [-1,1]:
 tube('hammer power cable',[(x+.13,cy-.10,z+.073),(x+.19,1.63,z+.08),(x+.12,1.54,z+.09),(x+.055,1.58,z+.084)],.020,0,bone,12)
 tube('hammer secondary cable',[(x-.12,cy-.11,z+.071),(x-.19,1.64,z+.083),(x-.12,1.58,z+.09),(x-.058,1.62,z+.082)],.012,4,bone,10)
 
+shieldCenter=c.copy()
 vertices=np.array(V);triangles=np.array(F,dtype=np.int32);normals=np.zeros_like(vertices)
 for i in range(len(triangles)):
  ids=triangles[i];a,b,c=vertices[ids];n=np.cross(b-a,c-a)
@@ -267,9 +268,9 @@ mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':lis
 {'name':'HammerGrip','bone':'WeaponGripR','position':[x,float(p[1]),z]},
 {'name':'HammerTop','bone':'WeaponGripR','position':[x,cy,z]},
 {'name':'HammerFront','bone':'WeaponGripR','position':[x,cy,z+.15]},
-{'name':'ShieldCenter','bone':'WeaponGripL','position':c.tolist()},
-{'name':'ShieldFront','bone':'WeaponGripL','position':(c+[0,0,.17]).tolist()},
-{'name':'ShieldTop','bone':'WeaponGripL','position':(c+[0,.40,0]).tolist()}],
+{'name':'ShieldCenter','bone':'WeaponGripL','position':shieldCenter.tolist()},
+{'name':'ShieldFront','bone':'WeaponGripL','position':(shieldCenter+[0,0,.17]).tolist()},
+{'name':'ShieldTop','bone':'WeaponGripL','position':(shieldCenter+[0,.40,0]).tolist()}],
 'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(5)]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
 report={'vertices':len(V),'triangles':len(F),'materials':5,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}

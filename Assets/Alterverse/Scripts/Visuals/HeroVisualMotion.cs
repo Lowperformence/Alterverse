@@ -67,6 +67,22 @@ namespace Alterverse.Visuals
         public float PlanarSpeed { get; private set; }
         public float GaitPhase=>phase;
         public bool ArmActionActive=>Time.time<attackUntil||Time.time<windupUntil||Time.time<hitUntil||Dashing;
+        // A straight jab/cross envelope for the imported brawler rig. Specials retain
+        // their existing delivery; basic attacks never sweep both fists inward.
+        public bool TryGetBrawlerPunch(out float extension, out float draw, out bool right)
+        {
+            extension = draw = 0f; right = attackSerial % 2 != 0;
+            if (identity == null || identity.Hero != HeroId.Rook || abilitySlot >= 0 || Time.time >= attackUntil) return false;
+            if (Time.time < windupUntil)
+            {
+                draw = Mathf.SmoothStep(0f, 1f, 1f - (windupUntil - Time.time) / Mathf.Max(.001f, windupDuration));
+                return true;
+            }
+            float t = Mathf.Clamp01((Time.time - Mathf.Max(attackStarted, windupUntil)) / Mathf.Max(.001f, attackDuration));
+            extension = t < .28f ? Mathf.SmoothStep(0f, 1f, t / .28f) : 1f - Mathf.SmoothStep(0f, 1f, (t - .28f) / .72f);
+            draw = (1f - Mathf.SmoothStep(0f, 1f, t / .16f)) * .55f;
+            return true;
+        }
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
         {
@@ -875,3 +891,4 @@ namespace Alterverse.Visuals
 
     }
 }
+

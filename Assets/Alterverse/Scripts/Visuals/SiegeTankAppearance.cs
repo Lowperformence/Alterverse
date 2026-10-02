@@ -217,9 +217,8 @@ namespace Alterverse.Visuals
 
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
         {
-            if (weight <= .001f) return;
             AlignHand(rightHand, "HammerGrip", "HammerTop", "HammerFront", true, model, weight);
-            AlignHand(leftHand, "ShieldCenter", "ShieldTop", "ShieldFront", false, model, weight);
+            AlignHand(leftHand, "ShieldCenter", "ShieldTop", "ShieldFront", false, model, 1f);
         }
         private void AlignHand(Transform hand, string center, string top, string front, bool hammer, Transform model, float weight)
         {

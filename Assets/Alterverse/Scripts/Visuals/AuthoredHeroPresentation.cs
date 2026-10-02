@@ -274,6 +274,24 @@ namespace Alterverse.Visuals
             }
         }
 
+        private void ApplyBrawlerPunch()
+        {
+            if (hero != HeroId.Rook || motion == null || leftArm == null || rightArm == null ||
+                !motion.TryGetBrawlerPunch(out float extension, out float draw, out bool right)) return;
+            foreach (ArmChain arm in new[] { leftArm, rightArm })
+            {
+                float side = arm == leftArm ? -1f : 1f;
+                bool striking = (arm == rightArm) == right;
+                Vector3 shoulder = model.InverseTransformPoint(arm.Upper.position);
+                float reach = (model.InverseTransformPoint(arm.Elbow.position) - shoulder).magnitude +
+                    (model.InverseTransformPoint(arm.Hand.position) - model.InverseTransformPoint(arm.Elbow.position)).magnitude;
+                Vector3 guard = shoulder + new Vector3(-side * .025f, -.23f, .28f);
+                Vector3 target = striking ? Vector3.Lerp(guard - model.InverseTransformVector(model.forward * (.08f * draw)),
+                    shoulder + new Vector3(-side * .035f, -.08f, reach * .96f), extension) : guard;
+                SolveGuard(arm, target, shoulder + new Vector3(side * .38f, -.45f, .08f), 1f);
+            }
+        }
+
         private void ApplyRifleAim()
         {
             if (hero != HeroId.Nyra || rightArm == null || muzzle == null ||
@@ -315,8 +333,9 @@ namespace Alterverse.Visuals
                 binding.Bone.localRotation = binding.Rest * Quaternion.Inverse(binding.Basis) * delta * binding.Basis;
             }
             ApplyModelGuard();
+            ApplyBrawlerPunch();
             ApplyWeaponGrips();
-            if (siegeTank != null) siegeTank.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
+            if (siegeTank != null) siegeTank.AlignGuard(transform, leftArm?.Hand, rightArm?.Hand, guardWeight);
             if (umbralMage != null) umbralMage.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
             ApplyRifleAim();
             ApplyRifleSupport();
