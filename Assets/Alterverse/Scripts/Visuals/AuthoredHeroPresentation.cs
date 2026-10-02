@@ -32,6 +32,7 @@ namespace Alterverse.Visuals
         private ArmChain leftArm, rightArm;
         private HeroId hero;
         private HeroVisualMotion motion;
+        private SiegeTankAppearance siegeTank;
         private float guardWeight;
         public IReadOnlyList<Renderer> WeaponRenderers => weaponRenderers;
         public Vector3 ReleasePoint => muzzle != null ? muzzle.position : transform.position + Vector3.up * .35f;
@@ -56,6 +57,7 @@ namespace Alterverse.Visuals
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
             if (hero == HeroId.Nyra) CyberRangerAppearance.Apply(instance.transform);
+            if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
             presentation.Initialize(root, instance.transform);
             return true;
         }
@@ -64,6 +66,7 @@ namespace Alterverse.Visuals
         {
             visualRoot = root;
             model = imported;
+            siegeTank = imported.GetComponent<SiegeTankAppearance>();
             foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
                 {
                 if (bone.name == "DF_Muzzle") muzzle = bone;
@@ -310,6 +313,7 @@ namespace Alterverse.Visuals
             }
             ApplyModelGuard();
             ApplyWeaponGrips();
+            if (siegeTank != null) siegeTank.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
             ApplyRifleAim();
             ApplyRifleSupport();
         }
