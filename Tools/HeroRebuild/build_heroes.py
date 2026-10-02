@@ -327,7 +327,8 @@ def build(hero,female,color,label):
   ellipsoid('Iris',(s*.035,-.142,1.677),(.005,.002,.005),accent,'Head');ellipsoid('Pupil',(s*.035,-.144,1.677),(.002,.001,.004),cloth,'Head')
   tube('Eyebrow',[(s*.016,-.141,1.700),(s*.035,-.139,1.704),(s*.056,-.125,1.700)],.004,hair,'Head')
  # Sculpted swept hair locks, tapering individually; silhouettes vary per hero.
- for i in range(48):
+ # Brakk has a bare scalp; retain eyebrows and beard details below.
+ for i in range(0 if hero=='Rook' else 48):
   a=2*pi*i/48;x=.105*cos(a);y=.085*sin(a)
   length=.30 if female and hero!='Nyra' else .12
   pts=[(x*.2,y*.2,1.78),(x*.75,y*.65,1.795),(x,y,1.735),(x*1.02,y*.95+(length*.26),1.67-length*(.45+.4*sin(a)**2))]

@@ -23,7 +23,63 @@ namespace Alterverse.Visuals
                 RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),
                 RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black)
             };
+            owner.RemoveScalpHair(model,head,unit);
             owner.BuildArmorDetails(model,unit);
+        }
+        void RemoveScalpHair(Transform model,Transform head,float unit)
+        {
+            foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if(skin.name!="DF_Anatomy"||skin.sharedMesh==null||!skin.sharedMesh.isReadable)continue;
+                Mesh original=skin.sharedMesh;
+                int headIndex=Array.FindIndex(skin.bones,b=>b==head);
+                if(headIndex<0)continue;
+                var vertices=original.vertices;var weights=original.boneWeights;
+                if(weights.Length!=vertices.Length)continue;
+                Matrix4x4 toHead=original.bindposes[headIndex];
+                float neckY=model.InverseTransformPoint(head.position).y;
+                var parents=new int[vertices.Length];
+                for(int i=0;i<parents.Length;i++)parents[i]=i;
+                int Root(int i){while(parents[i]!=i){parents[i]=parents[parents[i]];i=parents[i];}return i;}
+                void Join(int a,int b){parents[Root(a)]=Root(b);}
+                var slots=skin.sharedMaterials;
+                for(int m=0;m<original.subMeshCount&&m<slots.Length;m++)
+                {
+                    if(slots[m]==null||slots[m].name.IndexOf("Hair",StringComparison.OrdinalIgnoreCase)<0)continue;
+                    int[] indices=original.GetTriangles(m);
+                    foreach(int i in indices)parents[i]=i;
+                    for(int i=0;i<indices.Length;i+=3){Join(indices[i],indices[i+1]);Join(indices[i],indices[i+2]);}
+                    var low=new Dictionary<int,float>();var high=new Dictionary<int,float>();
+                    var headOnly=new Dictionary<int,bool>();
+                    foreach(int i in indices)
+                    {
+                        int component=Root(i);
+                        Vector3 p=model.InverseTransformPoint(head.TransformPoint(toHead.MultiplyPoint3x4(vertices[i])));
+                        BoneWeight w=weights[i];
+                        float amount=(w.boneIndex0==headIndex?w.weight0:0)+(w.boneIndex1==headIndex?w.weight1:0)+
+                            (w.boneIndex2==headIndex?w.weight2:0)+(w.boneIndex3==headIndex?w.weight3:0);
+                        low[component]=low.TryGetValue(component,out float l)?Mathf.Min(l,p.y):p.y;
+                        high[component]=high.TryGetValue(component,out float h)?Mathf.Max(h,p.y):p.y;
+                        headOnly[component]=(!headOnly.TryGetValue(component,out bool valid)||valid)&&amount>=.5f;
+                    }
+                    var kept=new List<int>();
+                    for(int i=0;i<indices.Length;i+=3)
+                    {
+                        int component=Root(indices[i]);
+                        // Hair locks are tall connected islands. Small brow/beard strands stay intact.
+                        bool scalp=headOnly[component]&&high[component]-low[component]>.06f*unit&&high[component]>neckY+.20f*unit;
+                        if(scalp)continue;
+                        kept.Add(indices[i]);kept.Add(indices[i+1]);kept.Add(indices[i+2]);
+                    }
+                    if(kept.Count==indices.Length)continue;
+                    if(skin.sharedMesh==original)
+                    {
+                        var trimmed=Instantiate(original);trimmed.name="DF_BrakkBodyWithoutScalpHair";
+                        skin.sharedMesh=trimmed;detailMeshes.Add(trimmed);
+                    }
+                    skin.sharedMesh.SetTriangles(kept,m);
+                }
+            }
         }
         void BuildArmorDetails(Transform model,float unit)
         {
