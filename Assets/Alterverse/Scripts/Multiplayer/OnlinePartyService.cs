@@ -14,10 +14,8 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Online 5v5 pre-match party flow.
-    /// Friends join the private party by code first. Only the party host can explicitly
-    /// open the party to public player search. This deliberately stays separate from the
-    /// co-op match-plan logic so online players can never accidentally launch the co-op
-    /// bot roster while sharing the same UGS Session/Relay architecture.
+    /// Friends join a private Relay-backed party by code first. Only the party leader can
+    /// explicitly open that same party to public player search.
     /// </summary>
     public sealed class OnlinePartyService : MonoBehaviour
     {
@@ -44,6 +42,7 @@ namespace Alterverse.Multiplayer
         public static OnlinePartyService Instance { get; private set; }
 
         private ISession session;
+        private bool servicesInitialized;
         private bool busy;
         private string status = "ONLINE PARTY READY";
         private string lastError = "";
@@ -78,6 +77,7 @@ namespace Alterverse.Multiplayer
                 Destroy(gameObject);
                 return;
             }
+
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
@@ -86,11 +86,7 @@ namespace Alterverse.Multiplayer
         {
             if (busy) return false;
             if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
-            {
-                lastError = "Leave the co-op lobby before creating an online party.";
-                SetStatus("CO-OP LOBBY STILL ACTIVE");
-                return false;
-            }
+                return RejectForCoop("Leave the co-op lobby before creating an online party.");
 
             try
             {
@@ -138,18 +134,13 @@ namespace Alterverse.Multiplayer
         {
             if (busy) return false;
             if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
-            {
-                lastError = "Leave the co-op lobby before joining an online party.";
-                SetStatus("CO-OP LOBBY STILL ACTIVE");
-                return false;
-            }
+                return RejectForCoop("Leave the co-op lobby before joining an online party.");
 
             string code = NormalizeJoinCode(rawCode);
             if (code.Length < 4)
             {
                 lastError = "Enter a valid party code.";
                 SetStatus("INVALID PARTY CODE");
-                RaiseChanged();
                 return false;
             }
 
@@ -180,21 +171,17 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
-        /// Solo quick-search entry. It joins an already public online party if one exists;
-        /// otherwise it creates a private solo party and immediately opens that party to search.
-        /// Friend parties should use CreatePrivatePartyAsync first, invite by code, then let the
-        /// leader call BeginPlayerSearchAsync.
+        /// Solo quick-search joins an already public online party. If none is available,
+        /// the player becomes a searchable solo host. Friend groups use CreatePrivatePartyAsync,
+        /// invite by code, then let the leader call BeginPlayerSearchAsync.
         /// </summary>
         public async Task<bool> QuickSearchAsync()
         {
             if (busy) return false;
             if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
-            {
-                lastError = "Leave the co-op lobby before searching online.";
-                SetStatus("CO-OP LOBBY STILL ACTIVE");
-                return false;
-            }
+                return RejectForCoop("Leave the co-op lobby before searching online.");
 
+            bool found = false;
             try
             {
                 busy = true;
@@ -206,26 +193,13 @@ namespace Alterverse.Multiplayer
                 QuerySessionsResults results = await MultiplayerService.Instance.QuerySessionsAsync(
                     new QuerySessionsOptions { Count = 25 });
 
-                ISessionInfo target = null;
-                if (results?.Sessions != null)
-                {
-                    for (int i = 0; i < results.Sessions.Count; i++)
-                    {
-                        ISessionInfo candidate = results.Sessions[i];
-                        if (candidate == null || candidate.IsLocked || candidate.AvailableSlots <= 0) continue;
-                        if (candidate.MaxPlayers != MaxPartyPlayers) continue;
-                        if (!string.Equals(candidate.Name, SessionName, StringComparison.Ordinal)) continue;
-                        target = candidate;
-                        break;
-                    }
-                }
-
+                ISessionInfo target = FindJoinableParty(results);
                 if (target != null)
                 {
                     session = await MultiplayerService.Instance.JoinSessionByIdAsync(target.Id, BuildJoinOptions());
                     AttachSession(session);
                     SetStatus("PLAYER FOUND • JOINED ONLINE PARTY");
-                    return true;
+                    found = true;
                 }
             }
             catch (Exception ex)
@@ -240,7 +214,7 @@ namespace Alterverse.Multiplayer
                 RaiseChanged();
             }
 
-            // No public party was available. Become the searchable solo host instead.
+            if (found) return true;
             if (!await CreatePrivatePartyAsync()) return false;
             return await BeginPlayerSearchAsync();
         }
@@ -252,10 +226,7 @@ namespace Alterverse.Multiplayer
             {
                 busy = true;
                 lastError = "";
-                IHostSession host = session.AsHost();
-                host.IsPrivate = false;
-                host.SetProperty(SearchKey, new SessionProperty("1", VisibilityPropertyOptions.Public));
-                await host.SavePropertiesAsync();
+                await SetSearchVisibilityAsync(true);
                 SetStatus("SPIELERSUCHE AKTIV • PARTY BLEIBT ZUSAMMEN");
                 return true;
             }
@@ -368,7 +339,6 @@ namespace Alterverse.Multiplayer
             {
                 lastError = "Party members on the same team need different heroes.";
                 SetStatus("CHOOSE A DIFFERENT HERO");
-                RaiseChanged();
                 return false;
             }
 
@@ -414,6 +384,7 @@ namespace Alterverse.Multiplayer
                         IsLocal = player.Id == localId
                     });
                 }
+
                 memberBuffer.Sort((a, b) => a.IsHost == b.IsHost
                     ? string.CompareOrdinal(a.PlayerId, b.PlayerId)
                     : (a.IsHost ? -1 : 1));
@@ -458,8 +429,12 @@ namespace Alterverse.Multiplayer
         {
             try
             {
-                if (UnityServices.State != ServicesInitializationState.Initialized)
+                if (!servicesInitialized)
+                {
                     await UnityServices.InitializeAsync();
+                    servicesInitialized = true;
+                }
+
                 if (!AuthenticationService.Instance.IsSignedIn)
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 return true;
@@ -490,13 +465,32 @@ namespace Alterverse.Multiplayer
             };
         }
 
+        private static ISessionInfo FindJoinableParty(QuerySessionsResults results)
+        {
+            if (results?.Sessions == null) return null;
+            for (int i = 0; i < results.Sessions.Count; i++)
+            {
+                ISessionInfo candidate = results.Sessions[i];
+                if (candidate == null || candidate.IsLocked || candidate.AvailableSlots <= 0) continue;
+                if (candidate.MaxPlayers != MaxPartyPlayers) continue;
+                if (!string.Equals(candidate.Name, SessionName, StringComparison.Ordinal)) continue;
+                return candidate;
+            }
+            return null;
+        }
+
         private async Task SetSearchVisibilityAsync(bool searchable)
         {
             if (session == null || !session.IsHost) return;
             IHostSession host = session.AsHost();
-            host.IsPrivate = !searchable;
+
+            // Custom and first-class session properties are persisted separately. Saving them in
+            // two steps avoids a known reliability edge case when privacy and metadata change together.
             host.SetProperty(SearchKey,
                 new SessionProperty(searchable ? "1" : "0", VisibilityPropertyOptions.Public));
+            await host.SavePropertiesAsync();
+
+            host.IsPrivate = !searchable;
             await host.SavePropertiesAsync();
         }
 
@@ -545,14 +539,14 @@ namespace Alterverse.Multiplayer
             RaiseChanged();
         }
 
-        private void OnPlayerJoined(string _)
+        private void OnPlayerJoined(string playerId)
         {
             if (IsHost && IsSearching && PlayerCount >= MaxPartyPlayers)
                 _ = CloseSearchWhenFullAsync();
             RaiseChanged();
         }
 
-        private void OnPlayerLeft(string _)
+        private void OnPlayerLeft(string playerId)
         {
             if (IsHost && !IsSearching)
                 status = "PLAYER LEFT • PRESS SPIELER SUCHEN TO REFILL";
@@ -564,7 +558,6 @@ namespace Alterverse.Multiplayer
             DetachSession(session);
             session = null;
             SetStatus("REMOVED FROM ONLINE PARTY");
-            RaiseChanged();
         }
 
         private void OnSessionDeleted()
@@ -572,7 +565,6 @@ namespace Alterverse.Multiplayer
             DetachSession(session);
             session = null;
             SetStatus("ONLINE PARTY CLOSED");
-            RaiseChanged();
         }
 
         private async Task LeaveInternalAsync()
@@ -603,8 +595,10 @@ namespace Alterverse.Multiplayer
             if (session == null) return false;
             string localId = session.CurrentPlayer?.Id ?? "";
             foreach (IReadOnlyPlayer player in session.Players)
+            {
                 if (player != null && player.Id != localId && ReadIntPlayer(player, PlayerHeroKey, -1) == (int)hero)
                     return true;
+            }
             return false;
         }
 
@@ -651,6 +645,13 @@ namespace Alterverse.Multiplayer
             for (int i = 0; i < chars.Length; i++)
                 if (char.IsLetterOrDigit(chars[i])) cleaned.Append(chars[i]);
             return cleaned.ToString();
+        }
+
+        private bool RejectForCoop(string message)
+        {
+            lastError = message;
+            SetStatus("CO-OP LOBBY STILL ACTIVE");
+            return false;
         }
 
         private void SetStatus(string value)
