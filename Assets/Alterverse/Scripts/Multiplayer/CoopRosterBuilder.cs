@@ -8,7 +8,7 @@ using CombatFeedbackComponent=Alterverse.Combat.CombatFeedback;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Builds the exact same ten hero slots on every peer. Only the host gives AI slots
+    /// Builds the exact same ten hero slots on every peer. Only the authoritative NGO server gives AI slots
     /// decision/movement/combat components. Human input remains local to its owning device.
     /// </summary>
     public static class CoopRosterBuilder
@@ -29,7 +29,7 @@ namespace Alterverse.Multiplayer
                 if(slot==localSlot)continue;
                 MatchPlayerSlot data=plan.Session.Slots[slot];
                 if(data==null)continue;
-                if(data.IsBot)CreateBot(data,slot,CoopAuthority.LocalIsHost);
+                if(data.IsBot)CreateBot(data,slot,CoopAuthority.LocalHasServerAuthority);
                 else CreateRemoteHuman(data,slot);
             }
             return true;
@@ -87,8 +87,8 @@ namespace Alterverse.Multiplayer
             StylizedHeroVisual visual=hero.GetComponent<StylizedHeroVisual>();
             if(visual==null){visual=hero.AddComponent<StylizedHeroVisual>();visual.Build();}
 
-            // Remote human actors need the same combat execution stack on the host so
-            // network commands can be validated/executed there, but they never read host input.
+            // Remote human actors need the same combat execution stack on the authoritative server so
+            // network commands can be validated/executed there, but they never read server-side input.
             if(hero.GetComponent<BasicAttack>()==null)hero.AddComponent<BasicAttack>();
             if(hero.GetComponent<PlayerHeroAbilities>()==null)hero.AddComponent<PlayerHeroAbilities>();
             if(hero.GetComponent<CombatFeedbackComponent>()==null)hero.AddComponent<CombatFeedbackComponent>();
@@ -103,7 +103,7 @@ namespace Alterverse.Multiplayer
                 if(motor!=null)Object.Destroy(motor);
             }
 
-            if(CoopAuthority.LocalIsHost)
+            if(CoopAuthority.LocalHasServerAuthority)
             {
                 HeroRespawn respawn=hero.GetComponent<HeroRespawn>()??hero.AddComponent<HeroRespawn>();
                 if(!local&&hero.GetComponent<CoopRemoteAutoRespawn>()==null)hero.AddComponent<CoopRemoteAutoRespawn>();
