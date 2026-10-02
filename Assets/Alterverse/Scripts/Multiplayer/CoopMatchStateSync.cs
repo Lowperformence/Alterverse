@@ -29,6 +29,13 @@ namespace Alterverse.Multiplayer
             front??=FindAnyObjectByType<DimensionsFront>();
             opening??=FindAnyObjectByType<MatchOpening>();
             if(front==null)return;
+
+            // PrototypeBootstrap intentionally omits presentation-only opening objects on a
+            // server-only build. The countdown itself is gameplay timing, though, so create its
+            // headless-safe controller here and replicate that authoritative timing to clients.
+            if(opening==null&&CoopAuthority.LocalHasServerAuthority)
+                opening=new GameObject("DF_ServerMatchOpening").AddComponent<MatchOpening>();
+
             Attach(manager.CustomMessagingManager);
 
             if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
