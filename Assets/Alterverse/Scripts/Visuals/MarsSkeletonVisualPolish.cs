@@ -43,7 +43,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<active.Count;i++)
             {
                 HotZoneTank tank=active[i];
-                if(tank==null||!tank.IsMarsSkeleton)continue;
+                if(tank==null||!tank.IsMarsSkeleton||tank.GetComponentInChildren<ReferenceMonsterRig>()!=null)continue;
                 EntityId id=tank.GetEntityId();
                 if(rigs.ContainsKey(id))continue;
                 SkeletonRig rig=SkeletonRig.TryBuild(tank);
@@ -325,3 +325,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

@@ -204,11 +204,10 @@ else:
  ell('narrow pelvis',P('Hips'),(.28,.25,.22),1,'Hips',24,14)
  limb('slender abdomen',P('Hips'),P(chest)+[0,-.08,0],.24,1,'Hips')
  ell('hunched ribcage',P(chest)+[0,.06,-.10],(.42,.48,.32),1,chest,28,16)
- ell('elongated dome',P(head)+[0,.10,-.02],(.48,.51,.55),2,head,36,22)
- ell('tapered lower face',P(head)+[0,-.18,.28],(.28,.27,.25),1,head,28,16)
+ shell('swept elongated cranium',[(2.11,.055,.07,.65),(2.23,.19,.16,.60),(2.43,.34,.25,.50),(2.66,.48,.36,.33),(2.88,.44,.42,.12),(3.02,.28,.29,.02),(3.08,.018,.020,-.02)],2,head,36)
  for s in [-1,1]:
-  ell('sunken almond eye',P(head)+[s*.218,-.11,.45],(.118,.072,.034),0,head,24,12)
-  tube('orbital brow', [P(head)+[s*.115,-.025,.489],P(head)+[s*.23,.008,.467],P(head)+[s*.329,.04,.38]],.021,1,head,10)
+  ell('sunken almond eye',P(head)+[s*.21,-.09,.329],(.103,.043,.018),0,head,24,12)
+  tube('orbital brow', [P(head)+[s*.13,-.025,.36],P(head)+[s*.24,-.005,.335],P(head)+[s*.31,.033,.28]],.021,1,head,10)
   for j in range(5):tube('lateral rib sinew', [P(chest)+[s*.12,.25-j*.10,.20],P(chest)+[s*.30,.18-j*.10,.16],P(chest)+[s*.39,.12-j*.10,.03]],.026,4,chest,9)
  tube('thin closed mouth',[P(head)+[-.14,-.30,.40],P(head)+[0,-.325,.444],P(head)+[.14,-.30,.40]],.010,0,head,8)
  for j in range(5):shard('dorsal spine',P(chest)+[0,.38-j*.16,-.34],P(chest)+[0,.60-j*.15,-.52],.058,.07,1,chest)
@@ -258,6 +257,7 @@ for s,side in [(-1,'L'),(1,'R')]:
    dx=(j-2)*.07;a0=f+[dx,-.065,.03];b0=f+[dx*1.08,-.075,.25];c0=f+[dx*1.11,-.077,.34-(j*.015)]
    boneRod('metatarsal',a0,b0,.021,foot);boneRod('toe phalanx',b0,c0,.019,foot)
  else:
+  ell('shoulder tendon cap',a,(.12,.15,.115),1,arm,20,12)
   limb('sinewy upper arm',a,e,.079,1,arm);limb('long alien forearm',e,w,.068,1,elbow)
   ell('angular elbow',e,(.085,.09,.075),2,elbow,16,8)
   tube('forearm tendon',[e+[s*.026,0,.049],w+[s*.034,.03,.045]],.016,2,elbow,8)

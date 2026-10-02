@@ -1079,6 +1079,8 @@ namespace Alterverse.Combat
 
         private void BuildAlienVisuals()
         {
+            referenceRig=ReferenceMonsterRig.Build(transform,"GreenStalker");
+            if(referenceRig!=null){barrelPivot=referenceRig.Muzzle;return;}
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
 
