@@ -144,43 +144,35 @@ namespace Alterverse.UI
         }
         private void FitPreviewBounds()
         {
-            // Imported renderer bounds include animation/culling padding. Fit the
-            // visible vertices after the pose owner (940), not the pre-pose AABB.
+            // Frame stable skeleton anchors. BakeMesh can report unsuitable coordinates
+            // for imported FBX scale/bindpose combinations in the remote portrait stage.
             bool found = false;
             Vector3 min = Vector3.zero, max = Vector3.zero;
             Quaternion cameraSpace = Quaternion.Inverse(previewCamera.transform.rotation);
-            Mesh baked = new Mesh();
-            try
+            foreach (Transform joint in actor.GetComponentsInChildren<Transform>(true))
             {
-                foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
-                {
-                    if (!renderer.enabled || renderer is ParticleSystemRenderer || renderer is TrailRenderer) continue;
-                    if (renderer is SkinnedMeshRenderer skin && skin.sharedMesh != null)
-                    {
-                        baked.Clear();
-                        skin.BakeMesh(baked);
-                        foreach (Vector3 vertex in baked.vertices)
-                            Include(cameraSpace * (skin.transform.TransformPoint(vertex) - actor.transform.position), ref found, ref min, ref max);
-                    }
-                    else
-                    {
-                        Bounds bounds = renderer.bounds;
-                        for (int corner = 0; corner < 8; corner++)
-                        {
-                            Vector3 p = bounds.center + Vector3.Scale(bounds.extents,
-                                new Vector3((corner & 1) == 0 ? -1 : 1, (corner & 2) == 0 ? -1 : 1, (corner & 4) == 0 ? -1 : 1));
-                            Include(cameraSpace * (p - actor.transform.position), ref found, ref min, ref max);
-                        }
-                    }
-                }
+                string name = joint.name;
+                bool body = name == "Hips" || name == "Spine" || name == "Chest" || name == "Head" ||
+                    name.StartsWith("UpperArm", System.StringComparison.Ordinal) || name.StartsWith("Hand", System.StringComparison.Ordinal) ||
+                    name.StartsWith("Foot", System.StringComparison.Ordinal) || name.StartsWith("Shin", System.StringComparison.Ordinal);
+                bool tip = name == "DF_Muzzle" || name == "DF_SupportGrip" || name == "DF_TankHammerTop" || name == "DF_MageStaffTop";
+                if (!body && !tip) continue;
+                Vector3 point = cameraSpace * (joint.position - actor.transform.position);
+                // Discard outliers rather than pointing the portrait camera out of its stage.
+                if (float.IsNaN(point.x) || float.IsNaN(point.y) || float.IsNaN(point.z) || point.sqrMagnitude > 100f) continue;
+                Vector3 padding = name == "Head" ? new Vector3(.24f,.52f,.24f) :
+                    name.StartsWith("Foot", System.StringComparison.Ordinal) ? new Vector3(.18f,.13f,.25f) : new Vector3(.20f,.20f,.20f);
+                Include(point - padding, ref found, ref min, ref max);
+                Include(point + padding, ref found, ref min, ref max);
             }
-            finally { Destroy(baked); }
-            if (!found) return;
+            if (!found) { min = new Vector3(-.8f,-1.1f,-.5f); max = new Vector3(.8f,1.65f,.5f); }
             Vector3 center = actor.transform.position + previewCamera.transform.rotation * ((min + max) * .5f);
             previewCamera.transform.position = center - previewCamera.transform.forward * 5f;
             Vector3 size = max - min;
-            previewCamera.orthographicSize = Mathf.Max(.5f,
-                Mathf.Max(size.y * .5f, size.x * .5f / (PreviewWidth / (float)PreviewHeight)) * 1.16f);
+            previewCamera.orthographicSize = Mathf.Clamp(
+                Mathf.Max(size.y * .5f, size.x * .5f / (PreviewWidth / (float)PreviewHeight)) * 1.10f, 1.3f, 3.5f);
+            // Keep small pose changes from invalidating imported renderer culling bounds.
+            foreach (SkinnedMeshRenderer skin in actor.GetComponentsInChildren<SkinnedMeshRenderer>()) skin.updateWhenOffscreen = true;
         }
         private static void Include(Vector3 point, ref bool found, ref Vector3 min, ref Vector3 max)
         {
