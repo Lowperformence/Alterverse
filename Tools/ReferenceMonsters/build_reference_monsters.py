@@ -20,6 +20,14 @@ if KIND=='alien':
  for s,side in [(-1,'L'),(1,'R')]:
   POS['Hips/Chest/Arm'+side]=(s*.58,2.04,.13);POS['Hips/Chest/Arm'+side+'/Elbow'+side]=(s*.85,1.43,.30);POS['Hips/Chest/Arm'+side+'/Elbow'+side+'/Hand'+side]=(s*.99,.65,.52)
   POS['Hips/Thigh'+side]=(s*.28,1.20,-.18);POS['Hips/Thigh'+side+'/Shin'+side]=(s*.39,.66,.04);POS['Hips/Thigh'+side+'/Shin'+side+'/Foot'+side]=(s*.40,.16,.22)
+# Shorten both arm segments at their joint origins before generating geometry.
+# Hands retain their size; shoulders, legs and the alien remain unchanged.
+if KIND in ('golem','skeleton','psr'):
+ for side in ('L','R'):
+  arm='Hips/Chest/Arm'+side;elbow=arm+'/Elbow'+side;hand=elbow+'/Hand'+side
+  shoulder=np.array(POS[arm],float)
+  for joint in (elbow,hand):
+   POS[joint]=tuple(shoulder+(np.array(POS[joint])-shoulder)*.70)
 BN=list(POS);BONES={n:None for n in BN};V=[];F=[];MI=[];BI=[];PARTS=[];GI=[];GROUP=0
 COLORS=np.array({'golem':[[.085,.015,.061],[.44,.045,.29],[.72,.13,.43],[.87,.28,.86],[.28,.045,.18]],'skeleton':[[.075,.065,.06],[.59,.54,.42],[.76,.70,.54],[.62,.18,.85],[.26,.22,.16]],'alien':[[.041,.063,.056],[.23,.32,.26],[.46,.51,.39],[.43,.62,.24],[.095,.13,.10]],'psr':[[.045,.085,.12],[.44,.59,.65],[.74,.84,.88],[.06,.77,1.0],[.23,.38,.46]]}[KIND])
 P=lambda name:np.array(POS[name],float)
