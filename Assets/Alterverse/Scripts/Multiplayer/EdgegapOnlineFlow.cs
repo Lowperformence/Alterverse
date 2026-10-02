@@ -389,11 +389,15 @@ namespace Alterverse.Multiplayer
                 EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
                 if (edgegap == null || !await edgegap.WaitForAssignmentAndConnectAsync(180))
                 {
+                    string error = edgegap?.LastError ?? "EDGEGAP MATCH ASSIGNMENT FAILED";
                     if (searching)
-                        Fail(edgegap?.LastError ?? "EDGEGAP MATCH ASSIGNMENT FAILED");
+                    {
+                        ResetSearchState();
+                        Fail(error);
+                    }
                     return;
                 }
-                SetStatus("DEDICATED SERVER ASSIGNED • CONNECTING");
+                SetStatus("DEDICATED SERVER CONNECTED • VERIFYING MATCH");
             }
             finally
             {
