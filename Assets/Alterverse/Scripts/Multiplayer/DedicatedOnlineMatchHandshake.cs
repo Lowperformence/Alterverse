@@ -1,0 +1,536 @@
+using System;
+using System.Collections.Generic;
+using Alterverse.AI;
+using Alterverse.Characters;
+using Alterverse.Match;
+using Unity.Collections;
+using Unity.Netcode;
+using UnityEngine;
+
+namespace Alterverse.Multiplayer
+{
+    /// <summary>
+    /// Establishes the authoritative online roster after Edgegap assigns all clients to a
+    /// dedicated server. Clients identify themselves with their Edgegap ticket/team and chosen
+    /// hero. The server builds the only authoritative 5v5 plan, returns it to every client,
+    /// waits for plan acknowledgements, then launches the finished battlefield on all peers.
+    /// </summary>
+    [DefaultExecutionOrder(-24000)]
+    public sealed class DedicatedOnlineMatchHandshake : MonoBehaviour
+    {
+        private const string HelloMessage = "DF_DEDICATED_HELLO_V1";
+        private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
+        private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
+        private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
+        private const int ProtocolVersion = 1;
+        private const float HumanJoinWindowSeconds = 8f;
+
+        private sealed class PendingHuman
+        {
+            public ulong ClientId;
+            public string TicketId;
+            public string TeamId;
+            public string MatchId;
+            public string PlayerId;
+            public string DisplayName;
+            public HeroId Hero;
+        }
+
+        public static DedicatedOnlineMatchHandshake Instance { get; private set; }
+        public static string Status => Instance == null ? "DEDICATED HANDSHAKE OFFLINE" : Instance.status;
+
+        private CustomMessagingManager messaging;
+        private bool attached;
+        private bool helloSent;
+        private bool planSent;
+        private bool launched;
+        private float firstHelloAt = -1f;
+        private uint planFingerprint;
+        private string status = "WAITING FOR EDGEGAP ASSIGNMENT";
+        private readonly Dictionary<ulong, PendingHuman> pending = new();
+        private readonly Dictionary<ulong, string> authorizedPlayers = new();
+        private readonly HashSet<ulong> planAcks = new();
+
+        public static bool IsAuthorizedClient(ulong clientId, string playerId)
+        {
+            return Instance != null && !string.IsNullOrEmpty(playerId) &&
+                   Instance.authorizedPlayers.TryGetValue(clientId, out string approved) && approved == playerId;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Ensure()
+        {
+            if (Instance == null)
+                new GameObject("DF_DedicatedOnlineMatchHandshake").AddComponent<DedicatedOnlineMatchHandshake>();
+        }
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void Update()
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            if (manager == null || !manager.IsListening)
+            {
+                if (!CoopAuthority.Active) Detach();
+                if (manager == null || !manager.IsConnectedClient) helloSent = false;
+                return;
+            }
+
+            Attach(manager.CustomMessagingManager);
+
+            if (manager.IsServer && !manager.IsClient && DedicatedServerNetworkRuntime.Requested)
+            {
+                UpdateDedicatedServer(manager);
+                return;
+            }
+
+            if (manager.IsClient && !manager.IsServer && manager.IsConnectedClient && !helloSent &&
+                CoopNetworkBootstrap.DirectServerStatus.StartsWith("CLIENT STARTED", StringComparison.Ordinal) &&
+                EdgegapMatchmakerClient.Instance != null && EdgegapMatchmakerClient.Instance.HasAssignment)
+            {
+                SendClientHello();
+            }
+        }
+
+        private void UpdateDedicatedServer(NetworkManager manager)
+        {
+            if (launched) return;
+
+            RemoveDisconnectedPending(manager);
+            if (pending.Count == 0)
+            {
+                firstHelloAt = -1f;
+                return;
+            }
+
+            if (!planSent)
+            {
+                bool full = pending.Count >= MatchSession.MaxPlayers;
+                bool graceElapsed = firstHelloAt >= 0f && Time.unscaledTime - firstHelloAt >= HumanJoinWindowSeconds;
+                if (full || graceElapsed)
+                    BuildAndSendAuthoritativePlan(manager);
+                return;
+            }
+
+            if (planAcks.Count >= pending.Count)
+                LaunchAuthoritativeMatch(manager);
+        }
+
+        private void SendClientHello()
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
+            if (manager == null || !manager.IsConnectedClient || manager.IsServer || messaging == null || edgegap == null)
+                return;
+
+            ResolveLocalIdentity(out string playerId, out string displayName, out HeroId hero);
+            if (string.IsNullOrWhiteSpace(playerId)) playerId = edgegap.TicketId;
+            if (string.IsNullOrWhiteSpace(displayName)) displayName = "TRAVELER";
+            if (string.IsNullOrWhiteSpace(edgegap.TicketId) || string.IsNullOrWhiteSpace(edgegap.TeamId))
+            {
+                status = "EDGEGAP TICKET OR TEAM MISSING";
+                return;
+            }
+
+            using FastBufferWriter writer = new(768, Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(new FixedString128Bytes(edgegap.TicketId));
+            writer.WriteValueSafe(new FixedString128Bytes(edgegap.TeamId));
+            writer.WriteValueSafe(new FixedString128Bytes(edgegap.MatchId ?? ""));
+            writer.WriteValueSafe(new FixedString128Bytes(playerId));
+            writer.WriteValueSafe(new FixedString64Bytes(SanitizeName(displayName)));
+            writer.WriteValueSafe((int)hero);
+            messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
+            helloSent = true;
+            status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
+        }
+
+        private void OnClientHello(ulong senderClientId, FastBufferReader reader)
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            if (manager == null || !manager.IsServer || manager.IsClient || !DedicatedServerNetworkRuntime.Requested || launched)
+                return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out FixedString128Bytes fixedTicket);
+            reader.ReadValueSafe(out FixedString128Bytes fixedTeam);
+            reader.ReadValueSafe(out FixedString128Bytes fixedMatch);
+            reader.ReadValueSafe(out FixedString128Bytes fixedPlayer);
+            reader.ReadValueSafe(out FixedString64Bytes fixedName);
+            reader.ReadValueSafe(out int heroRaw);
+
+            string ticketId = fixedTicket.ToString();
+            string teamId = fixedTeam.ToString();
+            string matchId = fixedMatch.ToString();
+            string playerId = fixedPlayer.ToString();
+            string displayName = fixedName.ToString();
+
+            if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(teamId) ||
+                string.IsNullOrWhiteSpace(playerId) || !Enum.IsDefined(typeof(HeroId), heroRaw))
+            {
+                Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected invalid dedicated hello from client {senderClientId}.");
+                return;
+            }
+
+            foreach (KeyValuePair<ulong, PendingHuman> pair in pending)
+            {
+                if (pair.Key == senderClientId) continue;
+                if (pair.Value.TicketId == ticketId || pair.Value.PlayerId == playerId)
+                {
+                    Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected duplicate dedicated identity from client {senderClientId}.");
+                    return;
+                }
+            }
+
+            pending[senderClientId] = new PendingHuman
+            {
+                ClientId = senderClientId,
+                TicketId = ticketId,
+                TeamId = teamId,
+                MatchId = matchId,
+                PlayerId = playerId,
+                DisplayName = SanitizeName(displayName),
+                Hero = (HeroId)heroRaw
+            };
+            authorizedPlayers[senderClientId] = playerId;
+            if (firstHelloAt < 0f) firstHelloAt = Time.unscaledTime;
+            status = $"DEDICATED PLAYERS CONNECTING • {pending.Count}/{MatchSession.MaxPlayers}";
+        }
+
+        private void BuildAndSendAuthoritativePlan(NetworkManager manager)
+        {
+            if (planSent || pending.Count == 0 || messaging == null) return;
+
+            try
+            {
+                List<PendingHuman> ordered = new(pending.Values);
+                ordered.Sort((a, b) => a.ClientId.CompareTo(b.ClientId));
+                var members = new List<OnlineMatchPlan.DedicatedMember>(ordered.Count);
+                string matchId = "";
+                for (int i = 0; i < ordered.Count; i++)
+                {
+                    PendingHuman human = ordered[i];
+                    if (string.IsNullOrWhiteSpace(matchId) && !string.IsNullOrWhiteSpace(human.MatchId))
+                        matchId = human.MatchId;
+                    members.Add(new OnlineMatchPlan.DedicatedMember
+                    {
+                        PlayerId = human.PlayerId,
+                        DisplayName = human.DisplayName,
+                        TeamId = human.TeamId,
+                        Hero = human.Hero
+                    });
+                }
+                if (string.IsNullOrWhiteSpace(matchId)) matchId = Guid.NewGuid().ToString("N");
+
+                OnlineMatchPlan plan = OnlineMatchPlan.BuildDedicated(
+                    matchId,
+                    ArenaVariantRuntime.Selected,
+                    BotDifficultySettings.Selected,
+                    members);
+                CoopAuthority.Prepare(plan);
+                planFingerprint = CoopPlanHandshake.Fingerprint(plan);
+                planAcks.Clear();
+                planSent = true;
+
+                for (int i = 0; i < ordered.Count; i++)
+                    SendPlanToClient(ordered[i].ClientId, ordered[i].PlayerId, plan, planFingerprint);
+
+                status = $"AUTHORITATIVE PLAN SENT • 0/{pending.Count} ACK";
+            }
+            catch (Exception ex)
+            {
+                planSent = false;
+                CoopAuthority.ClearPrepared();
+                status = "DEDICATED PLAN BUILD FAILED";
+                Debug.LogError("DIMENSIONS FRONT SERVER: dedicated plan build failed: " + ex);
+            }
+        }
+
+        private void SendPlanToClient(ulong clientId, string localPlayerId, OnlineMatchPlan plan, uint fingerprint)
+        {
+            using FastBufferWriter writer = new(4096, Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(fingerprint);
+            writer.WriteValueSafe(new FixedString128Bytes(plan.MatchId ?? ""));
+            writer.WriteValueSafe((int)plan.Arena);
+            writer.WriteValueSafe((int)plan.Difficulty);
+            writer.WriteValueSafe(new FixedString128Bytes(localPlayerId ?? ""));
+            writer.WriteValueSafe(MatchSession.MaxPlayers);
+
+            for (int i = 0; i < MatchSession.MaxPlayers; i++)
+            {
+                MatchPlayerSlot slot = plan.Session.Slots[i];
+                writer.WriteValueSafe(new FixedString128Bytes(slot.PlayerId ?? ""));
+                writer.WriteValueSafe(new FixedString64Bytes(SanitizeName(slot.DisplayName)));
+                writer.WriteValueSafe(slot.Team);
+                writer.WriteValueSafe((int)slot.Hero);
+                writer.WriteValueSafe(slot.IsBot);
+                writer.WriteValueSafe(slot.Ready);
+                writer.WriteValueSafe(slot.Connected);
+                writer.WriteValueSafe(slot.IsHost);
+            }
+
+            messaging.SendNamedMessage(PlanMessage, clientId, writer, NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnAuthoritativePlan(ulong senderClientId, FastBufferReader reader)
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            if (manager == null || manager.IsServer || senderClientId != NetworkManager.ServerClientId) return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out uint serverFingerprint);
+            reader.ReadValueSafe(out FixedString128Bytes fixedMatchId);
+            reader.ReadValueSafe(out int arenaRaw);
+            reader.ReadValueSafe(out int difficultyRaw);
+            reader.ReadValueSafe(out FixedString128Bytes fixedLocalPlayerId);
+            reader.ReadValueSafe(out int slotCount);
+
+            bool valid = protocol == ProtocolVersion && slotCount == MatchSession.MaxPlayers &&
+                         Enum.IsDefined(typeof(ArenaVariant), arenaRaw) && Enum.IsDefined(typeof(BotDifficulty), difficultyRaw);
+            var slots = new MatchPlayerSlot[MatchSession.MaxPlayers];
+
+            if (valid)
+            {
+                for (int i = 0; i < MatchSession.MaxPlayers; i++)
+                {
+                    reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
+                    reader.ReadValueSafe(out FixedString64Bytes fixedName);
+                    reader.ReadValueSafe(out int team);
+                    reader.ReadValueSafe(out int heroRaw);
+                    reader.ReadValueSafe(out bool isBot);
+                    reader.ReadValueSafe(out bool ready);
+                    reader.ReadValueSafe(out bool connected);
+                    reader.ReadValueSafe(out bool isHost);
+
+                    if ((team != 0 && team != 1) || !Enum.IsDefined(typeof(HeroId), heroRaw)) valid = false;
+                    slots[i] = new MatchPlayerSlot
+                    {
+                        PlayerId = fixedPlayerId.ToString(),
+                        DisplayName = fixedName.ToString(),
+                        Team = team,
+                        Hero = Enum.IsDefined(typeof(HeroId), heroRaw) ? (HeroId)heroRaw : HeroId.Veyr,
+                        IsLocal = false,
+                        IsBot = isBot,
+                        Ready = ready,
+                        Connected = connected,
+                        IsHost = isHost
+                    };
+                }
+            }
+
+            OnlineMatchPlan plan = null;
+            string localPlayerId = fixedLocalPlayerId.ToString();
+            if (valid)
+            {
+                try
+                {
+                    plan = OnlineMatchPlan.FromAuthoritativeSlots(
+                        fixedMatchId.ToString(),
+                        (ArenaVariant)arenaRaw,
+                        (BotDifficulty)difficultyRaw,
+                        slots,
+                        localPlayerId);
+                    valid = CoopPlanHandshake.Fingerprint(plan) == serverFingerprint;
+                }
+                catch (Exception ex)
+                {
+                    valid = false;
+                    Debug.LogWarning("DIMENSIONS FRONT ONLINE: dedicated plan rejected: " + ex.Message);
+                }
+            }
+
+            if (valid)
+            {
+                CoopAuthority.Prepare(plan);
+                planFingerprint = serverFingerprint;
+                status = "DEDICATED PLAN VERIFIED";
+            }
+            else
+            {
+                CoopAuthority.ClearPrepared();
+                status = "DEDICATED PLAN MISMATCH";
+            }
+
+            using FastBufferWriter writer = new(192, Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(valid);
+            writer.WriteValueSafe(serverFingerprint);
+            writer.WriteValueSafe(new FixedString128Bytes(localPlayerId ?? ""));
+            messaging?.SendNamedMessage(AckMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnPlanAck(ulong senderClientId, FastBufferReader reader)
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            if (manager == null || !manager.IsServer || manager.IsClient || !planSent || launched) return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out bool accepted);
+            reader.ReadValueSafe(out uint clientFingerprint);
+            reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
+            string playerId = fixedPlayerId.ToString();
+
+            bool valid = protocol == ProtocolVersion && accepted && clientFingerprint == planFingerprint &&
+                         pending.TryGetValue(senderClientId, out PendingHuman human) && human.PlayerId == playerId;
+            if (valid) planAcks.Add(senderClientId);
+            else planAcks.Remove(senderClientId);
+
+            status = valid
+                ? $"DEDICATED PLAN VERIFIED • {planAcks.Count}/{pending.Count} ACK"
+                : "DEDICATED PLAN ACK REJECTED";
+        }
+
+        private void LaunchAuthoritativeMatch(NetworkManager manager)
+        {
+            if (launched || CoopAuthority.PreparedPlan is not OnlineMatchPlan plan || messaging == null) return;
+            launched = true;
+
+            using FastBufferWriter writer = new(12, Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(planFingerprint);
+            foreach (ulong clientId in pending.Keys)
+                messaging.SendNamedMessage(LaunchMessage, clientId, writer, NetworkDelivery.ReliableSequenced);
+
+            if (!CoopAuthority.BeginPreparedMatch(false))
+            {
+                launched = false;
+                status = "DEDICATED SERVER COULD NOT ACTIVATE PLAN";
+                return;
+            }
+
+            DedicatedServerNetworkRuntime.ReleaseMatchBootstrap();
+            if (!OnlineMatchRuntime.Enter(plan))
+            {
+                launched = false;
+                status = "DEDICATED SERVER MATCH BOOTSTRAP FAILED";
+                return;
+            }
+
+            status = $"DEDICATED MATCH LIVE • {plan.HumanCount} HUMANS";
+            Debug.Log($"DIMENSIONS FRONT SERVER: authoritative online match started with {plan.HumanCount} humans and bot fill.");
+        }
+
+        private void OnLaunch(ulong senderClientId, FastBufferReader reader)
+        {
+            NetworkManager manager = NetworkManager.Singleton;
+            if (manager == null || manager.IsServer || senderClientId != NetworkManager.ServerClientId ||
+                CoopAuthority.PreparedPlan is not OnlineMatchPlan plan)
+                return;
+
+            reader.ReadValueSafe(out int protocol);
+            reader.ReadValueSafe(out uint serverFingerprint);
+            if (protocol != ProtocolVersion || serverFingerprint != planFingerprint ||
+                CoopPlanHandshake.Fingerprint(plan) != serverFingerprint)
+                return;
+
+            if (!CoopAuthority.BeginPreparedMatch(false)) return;
+            launched = true;
+            EdgegapOnlineFlow.MarkMatchStarted();
+            if (!OnlineMatchRuntime.Enter(plan))
+            {
+                status = "CLIENT MATCH BOOTSTRAP FAILED";
+                return;
+            }
+            status = "DEDICATED MATCH LIVE";
+        }
+
+        private void RemoveDisconnectedPending(NetworkManager manager)
+        {
+            if (manager?.ConnectedClientsIds == null || pending.Count == 0) return;
+            var remove = new List<ulong>();
+            foreach (ulong clientId in pending.Keys)
+            {
+                bool connected = false;
+                for (int i = 0; i < manager.ConnectedClientsIds.Count; i++)
+                {
+                    if (manager.ConnectedClientsIds[i] == clientId)
+                    {
+                        connected = true;
+                        break;
+                    }
+                }
+                if (!connected) remove.Add(clientId);
+            }
+
+            for (int i = 0; i < remove.Count; i++)
+            {
+                ulong id = remove[i];
+                pending.Remove(id);
+                authorizedPlayers.Remove(id);
+                planAcks.Remove(id);
+            }
+        }
+
+        private static void ResolveLocalIdentity(out string playerId, out string displayName, out HeroId hero)
+        {
+            playerId = "";
+            displayName = "TRAVELER";
+            hero = PlayerHeroSelection.Selected;
+            OnlinePartyService online = OnlinePartyService.Instance;
+            if (online == null) return;
+
+            hero = online.LocalHero;
+            IReadOnlyList<OnlinePartyService.MemberView> members = online.Members;
+            for (int i = 0; i < members.Count; i++)
+            {
+                OnlinePartyService.MemberView member = members[i];
+                if (member == null || !member.IsLocal) continue;
+                playerId = member.PlayerId ?? "";
+                displayName = member.DisplayName ?? "TRAVELER";
+                hero = member.Hero;
+                return;
+            }
+        }
+
+        private static string SanitizeName(string value)
+        {
+            string name = string.IsNullOrWhiteSpace(value) ? "TRAVELER" : value.Trim();
+            if (name.Length > 20) name = name.Substring(0, 20);
+            return name;
+        }
+
+        private void Attach(CustomMessagingManager value)
+        {
+            if (value == null || attached && messaging == value) return;
+            Detach();
+            messaging = value;
+            messaging.RegisterNamedMessageHandler(HelloMessage, OnClientHello);
+            messaging.RegisterNamedMessageHandler(PlanMessage, OnAuthoritativePlan);
+            messaging.RegisterNamedMessageHandler(AckMessage, OnPlanAck);
+            messaging.RegisterNamedMessageHandler(LaunchMessage, OnLaunch);
+            attached = true;
+        }
+
+        private void Detach()
+        {
+            if (!attached || messaging == null)
+            {
+                messaging = null;
+                attached = false;
+                return;
+            }
+            messaging.UnregisterNamedMessageHandler(HelloMessage);
+            messaging.UnregisterNamedMessageHandler(PlanMessage);
+            messaging.UnregisterNamedMessageHandler(AckMessage);
+            messaging.UnregisterNamedMessageHandler(LaunchMessage);
+            messaging = null;
+            attached = false;
+        }
+
+        private void OnDestroy()
+        {
+            Detach();
+            if (Instance == this) Instance = null;
+        }
+    }
+}
