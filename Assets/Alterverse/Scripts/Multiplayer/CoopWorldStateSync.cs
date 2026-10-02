@@ -9,8 +9,8 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Host snapshots for non-hero Health owners: cores, base guards, spawned planets and
-    /// Hot Zone rewards. Missing host entities are sent as tombstones and removed on clients.
+    /// Server snapshots for non-hero Health owners: cores, base guards, spawned planets and
+    /// Hot Zone rewards. Missing server entities are sent as tombstones and removed on clients.
     /// </summary>
     public sealed class CoopWorldStateSync : MonoBehaviour
     {
@@ -40,7 +40,7 @@ namespace Alterverse.Multiplayer
                 RefreshEntities();
             }
 
-            if(!CoopAuthority.LocalIsHost||Time.unscaledTime<nextSend)return;
+            if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
             nextSend=Time.unscaledTime+SendInterval;
             SendState(manager);
         }
@@ -61,7 +61,7 @@ namespace Alterverse.Multiplayer
 
         private void SendState(NetworkManager manager)
         {
-            if(messaging==null||manager?.ConnectedClientsIds==null)return;
+            if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
             RefreshEntities();
             currentHostKeys.Clear();
             foreach(string key in entities.Keys)currentHostKeys.Add(key);
@@ -106,7 +106,7 @@ namespace Alterverse.Multiplayer
         private void OnState(ulong sender,FastBufferReader reader)
         {
             NetworkManager manager=NetworkManager.Singleton;
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||manager==null||sender!=NetworkManager.ServerClientId)return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||sender!=NetworkManager.ServerClientId)return;
             RefreshEntities();
 
             reader.ReadValueSafe(out int count);
