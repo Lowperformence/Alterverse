@@ -45,10 +45,10 @@ namespace Alterverse.Multiplayer
             NetworkManager current=NetworkManager.Singleton;
             if(lobby==null||!lobby.InLobby||current==null)return;
 
-            bool localLost=!current.IsHost&&clientId==current.LocalClientId;
-            if(current.IsHost)
+            bool localLost=!current.IsServer&&clientId==current.LocalClientId;
+            if(current.IsServer)
             {
-                // ServerClientId is the host itself. Remote ids represent friends.
+                // ServerClientId is the server itself. Remote ids represent connected players.
                 if(clientId==NetworkManager.ServerClientId)return;
                 lobby.HandleTransportDisconnect(false);
             }
