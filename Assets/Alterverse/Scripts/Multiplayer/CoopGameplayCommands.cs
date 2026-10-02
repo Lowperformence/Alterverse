@@ -8,8 +8,8 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Routes non-host player combat intentions to the Relay host. The host performs the
-    /// existing BasicAttack / PlayerHeroAbilities logic against its authoritative world.
+    /// Routes non-server player combat intentions to the authoritative NGO server. The server
+    /// performs the existing BasicAttack / PlayerHeroAbilities logic against its authoritative world.
     /// Clients never directly mutate authoritative combat state.
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
@@ -45,7 +45,7 @@ namespace Alterverse.Multiplayer
 
         public static bool ShouldRouteClientCommand(GameObject actor)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||actor==null)return false;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||actor==null)return false;
             CoopHeroSlot slot=actor.GetComponent<CoopHeroSlot>();
             return slot!=null&&slot.IsHuman&&slot.IsLocalHuman;
         }
@@ -66,7 +66,7 @@ namespace Alterverse.Multiplayer
         private bool SendCommand(GameObject actor,int abilitySlot)
         {
             NetworkManager manager=NetworkManager.Singleton;
-            if(manager==null||manager.IsHost||!manager.IsConnectedClient||messaging==null)return false;
+            if(manager==null||manager.IsServer||!manager.IsConnectedClient||messaging==null)return false;
             CoopHeroSlot heroSlot=actor!=null?actor.GetComponent<CoopHeroSlot>():null;
             Health health=actor!=null?actor.GetComponent<Health>():null;
             if(heroSlot==null||!heroSlot.IsLocalHuman||health==null||health.IsDead)return false;
@@ -128,7 +128,7 @@ namespace Alterverse.Multiplayer
         {
             actor=null;
             NetworkManager manager=NetworkManager.Singleton;
-            if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost||manager==null||!manager.IsHost)return false;
+            if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return false;
 
             reader.ReadValueSafe(out int rosterSlot);
             reader.ReadValueSafe(out FixedString128Bytes fixedId);
