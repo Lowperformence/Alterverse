@@ -1388,8 +1388,14 @@
   {
     "cue": "HeroDeath",
     "path": "Assets/Alterverse/Resources/Audio/SFX/HeroDeath.ogg",
-    "sources": [],
-    "duration": 0.62
+    "sources": [
+      {
+        "file": "ArtSource/Audio/Combat/HeroDeathSpecialBox.wav",
+        "sha256": "ed09d1f36af5f74734afffe5e6797db4b251b139e30c47c8e6945af265f5af89",
+        "provenance": "Docs/HeroDeathVoiceLicense.md"
+      }
+    ],
+    "duration": 0.65
   },
   {
     "cue": "MinionDeath",

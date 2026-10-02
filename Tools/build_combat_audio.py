@@ -116,16 +116,13 @@ def render(hero,a,phase,v):
  out*=min(10**(target/20)/max(np.sqrt(np.mean(out*out)),1e-8),10**(-22/20)/max(float(max(abs(out))),1e-8))
  return out.astype(np.float32)
 def render_hero_death():
- # Original CC0 voiced HA: bright, short triumph cue, no copied game sound.
- x=record('HeroDeathHa').copy()
- x=signal.resample_poly(x,100,112)
- x=signal.sosfilt(signal.butter(2,[130,6800],fs=SR,btype='bandpass',output='sos'),x)
- x=np.tanh(x/max(np.max(abs(x)),1e-8)*1.35)
- dry=x.copy();delay=int(.055*SR)
- x=np.pad(x,(0,delay));x[delay:]+=dry*.14
- fade=min(96,len(x)//4);tail=min(800,len(x)//4)
+ # User-selected Mixkit Open special box (3190), preserved in the private project.
+ # Keep the opening transient and recognizable bright tail; remove the long reverb.
+ x=record('HeroDeathSpecialBox').copy()[:int(.65*SR)]
+ x=signal.sosfilt(signal.butter(2,70,fs=SR,btype='highpass',output='sos'),x)
+ fade=min(32,len(x)//4);tail=min(int(.075*SR),len(x)//4)
  x[:fade]*=np.linspace(0,1,fade);x[-tail:]*=np.linspace(1,0,tail)
- x*=10**(-22/20)/max(abs(x))
+ x*=10**(-22/20)/max(float(np.max(abs(x))),1e-8)
  return x.astype(np.float32)
 
 def render_kill():
@@ -207,4 +204,3 @@ def main():
  (ROOT/'Docs/Combat-Audio-Audition.json').write_text(json.dumps(chapters,indent=2)+'\n')
  print('Rendered',len(manifest),'combat assets;',round(cursor,2),'second audition')
 if __name__=='__main__':main()
-

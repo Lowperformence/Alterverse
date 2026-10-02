@@ -430,5 +430,17 @@
     "extract_start_seconds": 1.026,
     "extract_duration_seconds": 0.65,
     "extracted_sha256": "df251e29b946df9d3ae3290d9fc6164e15780ec41130cca597336dc1b95200ee"
+  },
+  {
+    "file": "HeroDeathSpecialBox.wav",
+    "creator": "Mixkit (supplier listed as Mixkit)",
+    "title": "Open special box",
+    "asset_id": 3190,
+    "url": "https://mixkit.co/free-sound-effects/hit/?page=4",
+    "license": "Mixkit Sound Effects Free License",
+    "license_url": "https://mixkit.co/license/modal/sfxFree/",
+    "original_file": "mixkit-open-special-box-3190.wav",
+    "original_sha256": "ed09d1f36af5f74734afffe5e6797db4b251b139e30c47c8e6945af265f5af89",
+    "source": "User-supplied download; private project source, not for public standalone redistribution"
   }
 ]
