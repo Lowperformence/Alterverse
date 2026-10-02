@@ -28,6 +28,7 @@ namespace Alterverse.Match
             UniversalHeroCosmetic.Voidfall=>5,
             UniversalHeroCosmetic.PlagueWings=>10,
             UniversalHeroCosmetic.BetaSupporterWings=>20,
+            UniversalHeroCosmetic.DeluxeWings=>50,
             _=>0
         };
 
@@ -44,6 +45,7 @@ namespace Alterverse.Match
             UniversalHeroCosmetic.Voidfall=>"VOIDFALL",
             UniversalHeroCosmetic.PlagueWings=>"PLAGUE WINGS",
             UniversalHeroCosmetic.BetaSupporterWings=>"BETA SUPPORTER",
+            UniversalHeroCosmetic.DeluxeWings=>"DELUXE WINGS",
             _=>"NO WING BONUS"
         };
 

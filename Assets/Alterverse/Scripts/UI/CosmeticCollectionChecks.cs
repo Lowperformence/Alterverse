@@ -24,7 +24,7 @@ namespace Alterverse.UI
             object previousSnapshot=snapshot.GetValue(null),previousHasSnapshot=hasSnapshot.GetValue(null);
             try
             {
-                CheckMigration();CheckPurchaseAndEquip();CheckGrid();
+                CheckMigration();CheckPurchaseAndEquip();CheckDeluxeWings();CheckGrid();
                 Debug.Log("DIMENSIONS FRONT: cosmetic migration, purchases, per-hero equip, match snapshot and grid geometry checks passed. Touch/render validation remains a device check.");
             }
             finally
@@ -46,7 +46,7 @@ namespace Alterverse.UI
                 Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Elyra)==legacy,"Legacy selection must migrate to the selected hero.");
                 Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Rook)==UniversalHeroCosmetic.Original,"Other heroes start with Original.");
                 Assert(data["DF_Shards"]==4321&&data[UniversalSkin.OwnedKey]==1&&data[PlagueWings.OwnedKey]==1&&data[BetaSupporterWings.OwnedKey]==1,"Migration preserves currency and all ownership keys.");
-                Assert(CosmeticProfile.LastTestTransaction.Length==7,"Six slots and migration marker form one journal transaction.");
+                Assert(CosmeticProfile.LastTestTransaction.Length==HeroIdentity.HeroCount+1,"All hero slots and migration marker form one journal transaction.");
                 UniversalCosmeticSelection.EquipFor(HeroId.Elyra,UniversalHeroCosmetic.Original);
                 UniversalCosmeticSelection.EnsureMigrated(HeroId.Veyr);
                 Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Elyra)==UniversalHeroCosmetic.Original,"Migration must never reapply a legacy loadout.");
@@ -94,6 +94,33 @@ namespace Alterverse.UI
             Assert(CosmeticCatalog.Purchase(UniversalHeroCosmetic.Voidfall)==AvatarPurchaseResult.InsufficientShards&&CosmeticProfile.Balance==1999&&!CosmeticCatalog.IsOwned(UniversalHeroCosmetic.Voidfall),"Insufficient shards cannot grant or charge.");
             Assert(!UniversalCosmeticSelection.EquipFor(HeroId.Veyr,UniversalHeroCosmetic.Voidfall),"Unowned cosmetics cannot be equipped.");
         }
+        private static void CheckDeluxeWings()
+        {
+            var id=UniversalHeroCosmetic.DeluxeWings;
+            Assert(CosmeticCatalog.Find(id).Price==20000,"Deluxe Wings cost exactly 20000 shards.");
+            CosmeticProfile.TestData=new Dictionary<string,int>{{"DF_Shards",19999}};
+            Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.InsufficientShards&&CosmeticProfile.Balance==19999&&!CosmeticCatalog.IsOwned(id),"Insufficient balance preserves wallet and ownership.");
+            Assert(!UniversalCosmeticSelection.EquipFor(HeroId.Traveler,id),"Unowned Deluxe Wings cannot be equipped.");
+            CosmeticProfile.TestData=new Dictionary<string,int>{{"DF_Shards",20000}};
+            Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.Purchased&&CosmeticProfile.Balance==0&&CosmeticCatalog.IsOwned(id),"Exact balance purchases Deluxe Wings.");
+            Assert(CosmeticProfile.LastTestTransaction.Length==2,"Deluxe ownership and payment commit together.");
+            Assert(CosmeticCatalog.Purchase(id)==AvatarPurchaseResult.AlreadyOwned&&CosmeticProfile.Balance==0,"Repeat purchase never charges twice.");
+            for(int i=0;i<HeroIdentity.HeroCount;i++)
+            {
+                var hero=(HeroId)i;
+                Assert(UniversalCosmeticSelection.EquipFor(hero,id)&&UniversalCosmeticSelection.EquippedFor(hero)==id,"Deluxe Wings equip on every hero.");
+            }
+            CosmeticProfile.TestData=new Dictionary<string,int>(CosmeticProfile.TestData);
+            Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Traveler)==id,"Saved Deluxe loadout survives profile reload.");
+            WingMatchRewardBonus.BeginMatch(HeroId.Traveler);
+            Assert(WingMatchRewardBonus.MatchPercent==50&&WingMatchRewardBonus.CalculateBonus(100,id)==50,"20000 shards grant 50 percent XP and shard bonus.");
+            UniversalCosmeticSelection.EquipFor(HeroId.Traveler,UniversalHeroCosmetic.Original);
+            Assert(UniversalCosmeticSelection.EquippedFor(HeroId.Traveler)==UniversalHeroCosmetic.Original&&UniversalCosmeticSelection.EquippedFor(HeroId.Rook)==id,"Unequip affects only the selected hero.");
+            Assert(WingMatchRewardBonus.MatchPercent==50,"Current match retains its Deluxe bonus snapshot.");
+            WingMatchRewardBonus.BeginMatch(HeroId.Traveler);
+            Assert(WingMatchRewardBonus.MatchPercent==0,"Next match after unequip grants no wing bonus.");
+        }
+
         private static void CheckGrid()
         {
             foreach(float screenWidth in new[]{1920f,2160f,2400f,800f})

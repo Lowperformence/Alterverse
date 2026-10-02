@@ -7,7 +7,8 @@ namespace Alterverse.Visuals
     public sealed class VoidWingPresentation:MonoBehaviour
     {
         readonly Transform[] wings=new Transform[2];
-        Mesh mesh;Material core,edge;Vector3 lastPosition;float motion,pulseUntil;bool preview,betaSupporter,plague;
+        const float WingSize=.70f;
+        Mesh mesh;Material core,edge,facet;Vector3 lastPosition;float motion,pulseUntil;bool preview,betaSupporter,plague,deluxe;
         Color energyColor;
 
         public void Build(Transform visual,bool isPreview)
@@ -32,7 +33,7 @@ namespace Alterverse.Visuals
             {
                 var wing=new GameObject(side==0?"DF_VoidWingLeft":"DF_VoidWingRight");wing.transform.SetParent(visual,false);wings[side]=wing.transform;
                 wing.transform.localPosition=new Vector3(side==0?-.12f:.12f,.22f,-.27f);
-                wing.transform.localScale=new Vector3(side==0?-1:1,1,1);
+                wing.transform.localScale=new Vector3(side==0?-1:1,1,1)*WingSize;
                 wing.AddComponent<MeshFilter>().sharedMesh=mesh;var r=wing.AddComponent<MeshRenderer>();r.sharedMaterial=core;r.shadowCastingMode=ShadowCastingMode.Off;
                 AddEnergyEdges(wing.transform,v,3,.026f,"VoidEnergyEdge");
             }
@@ -69,7 +70,7 @@ namespace Alterverse.Visuals
             AddBackFaces(v,t);
             mesh=new Mesh{name="DF_BetaSupporterWingBlades"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
 
-            float scale=HeroScale(hero,1.06f,.94f,.96f,1.02f,1.15f,1.18f);
+            float scale=HeroScale(hero,1.06f,.94f,.96f,1.02f,1.15f,1.18f)*WingSize;
             float height=hero==HeroId.Rook?.31f:hero==HeroId.Kaelon?.28f:.25f;
             for(int side=0;side<2;side++)
             {
@@ -116,7 +117,7 @@ namespace Alterverse.Visuals
             AddBackFaces(v,t);
             mesh=new Mesh{name="DF_PlagueWingLeaves"};mesh.SetVertices(v);mesh.SetTriangles(t,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
 
-            float scale=HeroScale(hero,.88f,.80f,.82f,.85f,.96f,.99f);
+            float scale=HeroScale(hero,.88f,.80f,.82f,.85f,.96f,.99f)*WingSize;
             float height=hero==HeroId.Rook?.27f:hero==HeroId.Kaelon?.25f:.21f;
             for(int side=0;side<2;side++)
             {
@@ -137,6 +138,83 @@ namespace Alterverse.Visuals
                 var nr=toxicNode.GetComponent<MeshRenderer>();nr.sharedMaterial=edge;nr.shadowCastingMode=ShadowCastingMode.Off;nr.receiveShadows=false;
             }
             lastPosition=transform.position;
+        }
+
+
+        public void BuildDeluxe(Transform visual,bool isPreview,HeroId hero)
+        {
+            if(mesh!=null)return;preview=isPreview;deluxe=true;betaSupporter=false;plague=false;
+            Shader surface=WingCoreShader(),energy=WingEnergyShader();if(surface==null||energy==null)return;
+            core=CreateWingMaterial(surface,"DF_DeluxeSilver",new Color(.16f,.21f,.26f));
+            facet=CreateWingMaterial(surface,"DF_DeluxePolishedCrystal",new Color(.92f,.97f,1f));
+            edge=CreateWingMaterial(energy,"DF_DeluxeIceFractures",new Color(.25f,.88f,1f));
+            foreach(Material material in new[]{core,facet})
+            {
+                if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.82f);
+                if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.86f);
+            }
+            energyColor=new Color(.30f,.90f,1f);
+            edge.EnableKeyword("_EMISSION");edge.SetColor("_EmissionColor",energyColor*1.25f);
+            var vertices=new System.Collections.Generic.List<Vector3>();
+            var triangles=new[]{new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>(),new System.Collections.Generic.List<int>()};
+            // Layered, closed crystal feathers: raised silver ridges, dark recesses and
+            // sparse icy facets. The swept crown and long tapered tips follow the reference.
+            int crystal=0;
+            for(int row=0;row<3;row++)for(int column=0;column<7;column++)
+            {
+                float t=column/6f;
+                Vector3 root=new Vector3(.26f+.09f*column+.015f*row,
+                    .50f+Mathf.Sin(t*Mathf.PI)*.72f-.23f*row,-.035f*row);
+                Vector3 tip=new Vector3(.40f+.085f*column-.05f*row,
+                    root.y-.42f-.055f*column-.12f*row,-.11f-.035f*row);
+                AddCrystal(vertices,triangles,root,tip,.10f-.009f*row,.075f,crystal++);
+            }
+            for(int column=0;column<7;column++)
+            {
+                float t=column/6f;
+                AddCrystal(vertices,triangles,new Vector3(.18f+.08f*column,.35f+.06f*column,.025f),
+                    new Vector3(.38f+.075f*column,.70f+Mathf.Sin(t*Mathf.PI*.8f)*.70f,-.055f),
+                    .12f,.09f,crystal++);
+            }
+            mesh=new Mesh{name="DF_DeluxeFacetedCrystalWings"};
+            mesh.SetVertices(vertices);mesh.subMeshCount=3;
+            for(int i=0;i<3;i++)mesh.SetTriangles(triangles[i],i,false);
+            mesh.RecalculateNormals();mesh.RecalculateBounds();
+            float scale=HeroScale(hero,1f,.92f,.94f,.98f,1.10f,1.12f)*WingSize;
+            for(int side=0;side<2;side++)
+            {
+                var wing=new GameObject(side==0?"DF_DeluxeWingLeft":"DF_DeluxeWingRight");
+                wing.transform.SetParent(visual,false);wings[side]=wing.transform;
+                wing.transform.localPosition=new Vector3(side==0?-.13f:.13f,.25f,-.34f);
+                wing.transform.localScale=new Vector3((side==0?-1:1)*scale,scale,scale);
+                wing.AddComponent<MeshFilter>().sharedMesh=mesh;
+                var renderer=wing.AddComponent<MeshRenderer>();renderer.sharedMaterials=new[]{core,facet,edge};
+                renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
+            }
+            lastPosition=transform.position;
+        }
+
+        private static void AddCrystal(System.Collections.Generic.List<Vector3> vertices,
+            System.Collections.Generic.List<int>[] triangles,Vector3 root,Vector3 tip,float width,float depth,int crystal)
+        {
+            Vector3 axis=(tip-root).normalized;
+            Vector3 across=new Vector3(-axis.y,axis.x,0).normalized*width;
+            Vector3 shoulder=Vector3.Lerp(root,tip,.32f);
+            Vector3 ridge=Vector3.Lerp(root,tip,.40f);
+            Vector3[] points={root,shoulder+across,tip,shoulder-across,
+                ridge+Vector3.forward*depth,ridge-Vector3.forward*depth};
+            int[] faces={0,1,4,1,2,4,2,3,4,3,0,4,1,0,5,2,1,5,3,2,5,0,3,5};
+            // Separate vertices keep each triangular facet flat instead of rounding crystals.
+            for(int face=0;face<8;face++)
+            {
+                int material=face==1&&crystal%3==0?2:(face+crystal)%2;
+                for(int corner=0;corner<3;corner++)
+                {triangles[material].Add(vertices.Count);vertices.Add(points[faces[face*3+corner]]);}
+                // Mirroring the left wing reverses winding; isolated back faces keep both
+                // sides visible with correct flat normals under either transform sign.
+                for(int corner=2;corner>=0;corner--)
+                {triangles[material].Add(vertices.Count);vertices.Add(points[faces[face*3+corner]]);}
+            }
         }
 
         private static Shader WingCoreShader()
@@ -212,7 +290,9 @@ namespace Alterverse.Visuals
             for(int i=0;i<2;i++)if(wings[i]!=null)
             {
                 float side=i==0?-1:1;
-                if(plague)
+                if(deluxe)
+                    wings[i].localRotation=Quaternion.Euler(5+motion*5,side*(14+motion*8+Mathf.Sin(time*1.1f)*2-pulse*4),side*(4+Mathf.Sin(time*.8f)*1.5f));
+                else if(plague)
                     wings[i].localRotation=Quaternion.Euler(7+motion*6+Mathf.Sin(time*1.15f)*1.4f,side*(16+motion*9+Mathf.Sin(time*1.05f)*3.2f-pulse*5),side*(7+Mathf.Sin(time*.72f)*2.8f));
                 else if(betaSupporter)
                     wings[i].localRotation=Quaternion.Euler(5+motion*7,side*(18+motion*10+Mathf.Sin(time*1.35f)*2.4f-pulse*5),side*(5+Mathf.Sin(time*.85f)*2));
@@ -227,6 +307,6 @@ namespace Alterverse.Visuals
                 edge.SetColor("_EmissionColor",energyColor*(baseIntensity+wave+pulse*pulseBoost));
             }
         }
-        void OnDestroy(){if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);}
+        void OnDestroy(){if(mesh!=null)Destroy(mesh);if(core!=null)Destroy(core);if(edge!=null)Destroy(edge);if(facet!=null)Destroy(facet);}
     }
 }

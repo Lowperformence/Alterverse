@@ -68,8 +68,50 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
+            DoubleHandSize(instance.transform);
             presentation.Initialize(root, instance.transform);
             return true;
+        }
+
+        // Scale the existing hand skin and Brakk's gauntlets through their shared rig.
+        // Counter-scale weapon grip children so held weapons retain their original size.
+        // Their positions (and palm sockets) still follow the enlarged hands. Apply before
+        // Initialize captures the grip rest positions and the rifle support solver.
+        private static void DoubleHandSize(Transform imported)
+        {
+            Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
+            foreach (Transform grip in bones)
+            {
+                if (grip.name != "WeaponGripL" && grip.name != "WeaponGripR") continue;
+                Transform hand = grip.parent;
+                if (hand == null || hand.name != "Hand" + grip.name[grip.name.Length - 1]) continue;
+                foreach (Transform palm in bones)
+                    if (palm.name == "DF_PalmGrip" + grip.name[grip.name.Length - 1])
+                    {
+                        // The contact offset remains rigid inside the unscaled weapon.
+                        // Half the sum makes its world contact coincide with the doubled palm.
+                        Vector3 contact = hand.InverseTransformPoint(palm.position);
+                        grip.localPosition = (grip.localPosition + contact) * .5f;
+                        break;
+                    }
+            }
+            foreach (Transform bone in bones)
+                if (bone.name == "HandL" || bone.name == "HandR")
+                    bone.localScale *= 2f;
+            foreach (Transform bone in bones)
+                if (bone.name == "WeaponGripL" || bone.name == "WeaponGripR")
+                    bone.localScale *= .5f;
+            foreach (SkinnedMeshRenderer renderer in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (renderer.sharedMesh == null) continue;
+                var baked = new Mesh();
+                renderer.BakeMesh(baked);
+                Bounds bounds = renderer.localBounds;
+                bounds.Encapsulate(baked.bounds.min);
+                bounds.Encapsulate(baked.bounds.max);
+                renderer.localBounds = bounds;
+                Destroy(baked);
+            }
         }
 
         private void Initialize(Transform root, Transform imported)
@@ -353,5 +395,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-

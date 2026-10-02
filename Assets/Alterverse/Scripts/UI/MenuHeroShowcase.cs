@@ -104,6 +104,7 @@ namespace Alterverse.UI
             if (hasSelection && selected == hero && selectedCosmetic==cosmetic && selectedWeapon==weapon && selectedWeaponVariant==weaponVariant) return;
             selectedCosmetic=cosmetic;selectedWeapon=weapon;selectedWeaponVariant=weaponVariant;
             if(previewCamera!=null)previewCamera.orthographicSize=weapon?1.82f:
+                cosmetic==Alterverse.Shop.UniversalHeroCosmetic.DeluxeWings?2.18f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.BetaSupporterWings?2.08f:
                 cosmetic==Alterverse.Shop.UniversalHeroCosmetic.PlagueWings?2.04f:1.65f;
             if (actor != null) { actor.SetActive(false); Destroy(actor); }
@@ -161,9 +162,28 @@ namespace Alterverse.UI
                 // Discard outliers rather than pointing the portrait camera out of its stage.
                 if (float.IsNaN(point.x) || float.IsNaN(point.y) || float.IsNaN(point.z) || point.sqrMagnitude > 100f) continue;
                 Vector3 padding = name == "Head" ? new Vector3(.24f,.52f,.24f) :
-                    name.StartsWith("Foot", System.StringComparison.Ordinal) ? new Vector3(.18f,.13f,.25f) : new Vector3(.20f,.20f,.20f);
+                    name.StartsWith("Foot", System.StringComparison.Ordinal) ? new Vector3(.18f,.13f,.25f) :
+                    name.StartsWith("Hand", System.StringComparison.Ordinal) ? new Vector3(.30f,.30f,.30f) : new Vector3(.20f,.20f,.20f);
                 Include(point - padding, ref found, ref min, ref max);
                 Include(point + padding, ref found, ref min, ref max);
+            }
+            // Generated wing meshes have stable local bounds, unlike imported FBX skins.
+            // Include their transformed corners so every cosmetic fits its actual preview.
+            foreach (MeshFilter filter in actor.GetComponentsInChildren<MeshFilter>())
+            {
+                string name = filter.name;
+                if (filter.sharedMesh == null ||
+                    !(name.EndsWith("WingLeft", System.StringComparison.Ordinal) ||
+                      name.EndsWith("WingRight", System.StringComparison.Ordinal))) continue;
+                Bounds bounds = filter.sharedMesh.bounds;
+                for (int corner = 0; corner < 8; corner++)
+                {
+                    Vector3 local = bounds.center + Vector3.Scale(bounds.extents,
+                        new Vector3((corner & 1) == 0 ? -1 : 1, (corner & 2) == 0 ? -1 : 1, (corner & 4) == 0 ? -1 : 1));
+                    Vector3 point = cameraSpace * (filter.transform.TransformPoint(local) - actor.transform.position);
+                    Include(point - Vector3.one * .05f, ref found, ref min, ref max);
+                    Include(point + Vector3.one * .05f, ref found, ref min, ref max);
+                }
             }
             if (!found) { min = new Vector3(-.8f,-1.1f,-.5f); max = new Vector3(.8f,1.65f,.5f); }
             Vector3 center = actor.transform.position + previewCamera.transform.rotation * ((min + max) * .5f);
@@ -258,7 +278,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
-
-

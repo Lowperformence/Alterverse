@@ -30,7 +30,8 @@ namespace Alterverse.Shop
             new(UniversalHeroCosmetic.Original,"ORIGINAL",0,"",CosmeticCategory.Skins,"The hero's original appearance.",new Color(.48f,.65f,.72f)),
             new(UniversalHeroCosmetic.Voidfall,UniversalSkin.Name,UniversalSkin.Price,UniversalSkin.OwnedKey,CosmeticCategory.Wings,"Fractured violet wings. Preserves the hero's original colors.",new Color(.64f,.43f,.94f)),
             new(UniversalHeroCosmetic.PlagueWings,PlagueWings.Name,PlagueWings.Price,PlagueWings.OwnedKey,CosmeticCategory.Wings,"Toxic wings from the Green Planet.",new Color(.44f,.85f,.27f)),
-            new(UniversalHeroCosmetic.BetaSupporterWings,BetaSupporterWings.Name,BetaSupporterWings.Price,BetaSupporterWings.OwnedKey,CosmeticCategory.Wings,"Crimson dimensional wings for Beta Supporters.",new Color(.95f,.26f,.36f))
+            new(UniversalHeroCosmetic.BetaSupporterWings,BetaSupporterWings.Name,BetaSupporterWings.Price,BetaSupporterWings.OwnedKey,CosmeticCategory.Wings,"Crimson dimensional wings for Beta Supporters.",new Color(.95f,.26f,.36f)),
+            new(UniversalHeroCosmetic.DeluxeWings,DeluxeWings.Name,DeluxeWings.Price,DeluxeWings.OwnedKey,CosmeticCategory.Wings,"Faceted silver crystal wings with icy cyan fractures.",new Color(.72f,.92f,1f))
         };
         public static IReadOnlyList<CosmeticDefinition> All { get; }=System.Array.AsReadOnly(definitions);
         public static CosmeticDefinition Find(UniversalHeroCosmetic id)

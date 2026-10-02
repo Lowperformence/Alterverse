@@ -8,7 +8,8 @@ namespace Alterverse.Shop
         Original=0,
         Voidfall=1,
         BetaSupporterWings=2,
-        PlagueWings=3
+        PlagueWings=3,
+        DeluxeWings=4
     }
 
     /// <summary>Account ownership, one exclusive cosmetic slot per hero. Legacy keys are retained.</summary>
@@ -106,5 +107,18 @@ namespace Alterverse.Shop
         }
     }
 
+    public static class DeluxeWings
+    {
+        public const string Name="DELUXE WINGS";
+        public const string OwnedKey="DF_SkinOwned_DeluxeWings";
+        public const int Price=20000;
+        public static bool Owned=>CosmeticProfile.GetInt(OwnedKey,0)==1;
+        public static bool Equipped=>Owned&&UniversalCosmeticSelection.Equipped==UniversalHeroCosmetic.DeluxeWings;
+        public static AvatarPurchaseResult Purchase()=>CosmeticCatalog.Purchase(UniversalHeroCosmetic.DeluxeWings);
+        public static bool Equip(bool enabled)
+        {
+            if(enabled)return UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.DeluxeWings);
+            return !Equipped||UniversalCosmeticSelection.Equip(UniversalHeroCosmetic.Original);
+        }
+    }
 }
-
