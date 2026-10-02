@@ -6,9 +6,9 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Lightweight online-party surface that mirrors the existing co-op lobby flow without
-    /// modifying the finished main-menu controller. The party can stay private for friend-code
-    /// invites and only becomes discoverable after the leader presses SPIELER SUCHEN.
+    /// Online-party surface: friends join privately by code first, the leader explicitly opens
+    /// public search, and the leader can start once every currently connected human is ready.
+    /// Remaining 5v5 slots are filled by bots by the authoritative online match plan.
     /// </summary>
     public sealed class OnlinePartyOverlay : MonoBehaviour
     {
@@ -44,7 +44,6 @@ namespace Alterverse.UI
             OnlinePartyService online = OnlinePartyService.Instance;
             if (online == null) return;
 
-            // Do not offer a second live Relay room on top of an active co-op room.
             bool coopActive = CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby;
             if (coopActive && !online.InParty)
             {
@@ -100,7 +99,7 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(left + 28f, 70f, width - 220f, 38f), "ONLINE 5v5 PARTY", theme.Title);
             theme.Label(new Rect(left + 30f, 110f, width - 250f, 24f),
-                "Invite friends first. Public player search starts only when the party leader presses SPIELER SUCHEN.",
+                "Invite friends first. Then search public players. Start anytime when everyone present is ready; bots fill open match slots.",
                 theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 158f, 72f, 126f, 42f), "CLOSE"))
@@ -128,7 +127,7 @@ namespace Alterverse.UI
             theme.Panel(new Rect(firstX, 158f, panelW, 318f));
             theme.Label(new Rect(firstX + 24f, 176f, panelW - 48f, 30f), "FRIENDS FIRST", theme.Heading);
             theme.Label(new Rect(firstX + 24f, 214f, panelW - 48f, 66f),
-                "Create a private party, send the code to your friends, then start public player search when your group is ready.",
+                "Create a private party, send the code to up to four friends, then start public player search when your group is ready.",
                 theme.Body, true);
             if (theme.Action(new Rect(firstX + 24f, 302f, panelW - 48f, 54f),
                 online.Busy ? "CONNECTING..." : "CREATE PRIVATE PARTY", true, enabled: !online.Busy))
@@ -160,7 +159,7 @@ namespace Alterverse.UI
                 : online.Status + "  •  " + online.LastError;
             theme.Label(new Rect(left + 28f, 506f, width - 56f, 36f), state, theme.Small, true);
             theme.Label(new Rect(left + 28f, 552f, width - 56f, 54f),
-                "PRIVATE PARTY + RELAY  •  FRIEND CODE FIRST  •  PUBLIC SEARCH ONLY ON COMMAND",
+                "PRIVATE FRIEND PARTY 5 MAX  •  ONLINE MATCH 10 MAX  •  PUBLIC SEARCH ONLY ON COMMAND",
                 theme.Small, true);
         }
 
@@ -177,10 +176,12 @@ namespace Alterverse.UI
                 joinCodeInput = online.JoinCode;
             }
 
-            theme.Label(new Rect(left + 500f, 174f, 180f, 22f),
-                $"PARTY  {online.PlayerCount} / {online.MaxPlayers}", theme.Small, true);
-            theme.Label(new Rect(left + 500f, 198f, 240f, 18f),
-                online.IsSearching ? "PUBLIC SEARCH ACTIVE" : "PRIVATE / FRIENDS ONLY", theme.Small, true);
+            theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
+                $"FRIENDS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
+            theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
+                $"MATCH  {online.PlayerCount} / {online.MatchCapacity}", theme.Small, true);
+            theme.Label(new Rect(left + 748f, 178f, 220f, 20f),
+                online.IsSearching ? "PUBLIC SEARCH ACTIVE" : "PRIVATE / FRIENDS FIRST", theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
                 online.Busy ? "PLEASE WAIT" : "LEAVE PARTY", enabled: !online.Busy))
@@ -207,7 +208,7 @@ namespace Alterverse.UI
                 }
 
                 OnlinePartyService.MemberView member = members[slot];
-                string role = member.IsHost ? "LEADER" : $"PLAYER {slot + 1}";
+                string role = member.IsHost ? "LEADER" : member.IsPartyMember ? $"FRIEND {slot + 1}" : "PUBLIC PLAYER";
                 if (member.IsLocal) role += " • YOU";
                 theme.Label(new Rect(x + 10f, 262f, playerW - 20f, 20f), role, theme.Small, true);
                 theme.FitLabel(new Rect(x + 10f, 286f, playerW - 20f, 24f), member.DisplayName, theme.Heading);
@@ -217,7 +218,7 @@ namespace Alterverse.UI
 
                 if (member.IsLocal)
                 {
-                    bool editable = !online.Busy;
+                    bool editable = !online.Busy && !OnlinePlanHandshake.Preparing;
                     if (theme.Action(new Rect(x + 8f, 382f, 32f, 34f), "<", enabled: editable))
                         _ = online.CycleLocalHeroAsync(-1);
                     if (theme.Action(new Rect(x + playerW - 40f, 382f, 32f, 34f), ">", enabled: editable))
@@ -232,54 +233,94 @@ namespace Alterverse.UI
                 }
             }
 
-            theme.Panel(new Rect(left + 26f, 456f, width - 52f, 104f));
+            theme.Panel(new Rect(left + 26f, 456f, width - 52f, 112f));
+
             string searchText;
             bool searchEnabled;
             if (!online.IsHost)
             {
-                searchText = online.IsSearching ? "LEADER IS SEARCHING" : "WAITING FOR PARTY LEADER";
+                searchText = online.IsSearching ? "LEADER IS SEARCHING" : "WAITING FOR LEADER";
                 searchEnabled = false;
             }
             else if (online.IsFull)
             {
-                searchText = "TEAM FULL";
+                searchText = "MATCH FULL";
                 searchEnabled = false;
             }
             else if (online.IsSearching)
             {
                 searchText = "SUCHE ABBRECHEN";
-                searchEnabled = !online.Busy;
+                searchEnabled = !online.Busy && !OnlinePlanHandshake.Preparing;
             }
             else
             {
                 searchText = "SPIELER SUCHEN";
-                searchEnabled = !online.Busy;
+                searchEnabled = !online.Busy && !OnlinePlanHandshake.Preparing;
             }
 
-            if (theme.Action(new Rect(left + width - 390f, 474f, 338f, 54f), searchText, true,
+            float actionY = 474f;
+            float searchX = left + width - 490f;
+            float startX = left + width - 260f;
+            if (theme.Action(new Rect(searchX, actionY, 212f, 54f), searchText, false,
                 selected: online.IsSearching, enabled: searchEnabled))
             {
                 if (online.IsSearching) _ = online.CancelPlayerSearchAsync();
                 else _ = online.BeginPlayerSearchAsync();
             }
 
-            string partyState = online.PartyReady
-                ? "TEAM COMPLETE • ALL PLAYERS READY"
-                : online.HasHeroConflict
-                    ? "CHOOSE DIFFERENT HEROES"
+            string startText;
+            bool startEnabled;
+            if (!online.IsHost)
+            {
+                startText = "LEADER STARTS";
+                startEnabled = false;
+            }
+            else if (OnlinePlanHandshake.Preparing)
+            {
+                startText = "SYNCING...";
+                startEnabled = false;
+            }
+            else if (online.HasHeroConflict)
+            {
+                startText = "HERO CONFLICT";
+                startEnabled = false;
+            }
+            else if (!online.AllPresentPlayersReady)
+            {
+                startText = "WAITING READY";
+                startEnabled = false;
+            }
+            else
+            {
+                startText = "MATCH STARTEN";
+                startEnabled = !online.Busy;
+            }
+
+            if (theme.Action(new Rect(startX, actionY, 208f, 54f), startText, true,
+                enabled: startEnabled))
+                _ = OnlinePlanHandshake.StartOnlineMatchAsync();
+
+            string partyState = online.HasHeroConflict
+                ? "FRIEND PARTY: CHOOSE DIFFERENT HEROES"
+                : online.AllPresentPlayersReady
+                    ? "ALL CONNECTED PLAYERS READY • OPEN SLOTS WILL BECOME BOTS"
                     : online.IsSearching
-                        ? "SEARCHING PUBLIC PLAYERS • YOUR PARTY STAYS TOGETHER"
+                        ? "SEARCHING PUBLIC PLAYERS • FRIEND PARTY STAYS TOGETHER"
                         : "PRIVATE PARTY • INVITE FRIENDS OR START PLAYER SEARCH";
-            theme.Label(new Rect(left + 48f, 474f, width - 470f, 24f), partyState, theme.Small, true);
-            theme.Label(new Rect(left + 48f, 504f, width - 470f, 22f),
-                $"{online.PlayerCount} / {online.MaxPlayers} PARTY MEMBERS", theme.Small, true);
+            theme.Label(new Rect(left + 48f, 470f, width - 560f, 26f), partyState, theme.Small, true);
+            theme.Label(new Rect(left + 48f, 502f, width - 560f, 22f),
+                $"FRIENDS {online.PartyPlayerCount}/{online.PartyCapacity}  •  PUBLIC {online.PublicPlayerCount}  •  MATCH {online.PlayerCount}/{online.MatchCapacity}",
+                theme.Small, true);
+            theme.Label(new Rect(left + 48f, 532f, width - 560f, 20f),
+                OnlinePlanHandshake.Preparing ? OnlinePlanHandshake.Status : "Bots fill every unoccupied slot when the match starts.",
+                theme.Small, true);
 
             string state = string.IsNullOrEmpty(online.LastError)
                 ? online.Status
                 : online.Status + "  •  " + online.LastError;
-            theme.Label(new Rect(left + 28f, 582f, width - 56f, 28f), state, theme.Small, true);
-            theme.Label(new Rect(left + 28f, 614f, width - 56f, 24f),
-                "FRIENDS FIRST  •  LEADER CONTROLS PUBLIC SEARCH  •  PARTY MEMBERS STAY TOGETHER",
+            theme.Label(new Rect(left + 28f, 588f, width - 56f, 26f), state, theme.Small, true);
+            theme.Label(new Rect(left + 28f, 618f, width - 56f, 22f),
+                "FRIENDS FIRST  •  LEADER CONTROLS PUBLIC SEARCH  •  PARTY STAYS TOGETHER  •  BOT FILL ENABLED",
                 theme.Small, true);
         }
 
