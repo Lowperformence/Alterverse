@@ -29,7 +29,7 @@ namespace Alterverse.Multiplayer
         {
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsListening)return false;
-            expectedPlayers=Mathf.Clamp(expectedPlayers,2,CoopLobbyService.MaxHumanPlayers);
+            expectedPlayers=Mathf.Clamp(expectedPlayers,1,CoopLobbyService.MaxHumanPlayers);
             if(manager.IsHost)return manager.ConnectedClientsIds!=null&&manager.ConnectedClientsIds.Count>=expectedPlayers;
             return manager.IsConnectedClient;
         }
@@ -38,9 +38,11 @@ namespace Alterverse.Multiplayer
         {
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsListening)return "OFFLINE";
+            expectedPlayers=Mathf.Clamp(expectedPlayers,1,CoopLobbyService.MaxHumanPlayers);
             if(manager.IsHost)
             {
                 int connected=manager.ConnectedClientsIds?.Count??0;
+                if(expectedPlayers<=1&&connected>=1)return "HOST CONNECTED • BOT FILL READY";
                 return connected>=expectedPlayers
                     ?$"HOST + {Mathf.Max(0,connected-1)} FRIEND{(connected==2?"":"S")} CONNECTED"
                     :$"RELAY {connected}/{expectedPlayers} PLAYERS CONNECTED";
