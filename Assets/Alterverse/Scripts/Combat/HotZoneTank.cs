@@ -68,7 +68,7 @@ namespace Alterverse.Combat
         private float spiderMoveBlend,spiderGaitClock,spiderTurnLean,spiderVisualYaw;
         private Vector3 spiderPreviousForward,spiderPreviousWorldPosition;
         private bool spiderFeetInitialized;
-        private Color spiderEnergyBase=new(1f,.72f,.04f,1f);
+        private Color spiderEnergyBase=new(.28f,.80f,.025f,1f);
         private Transform bearBodyRoot,bearHeadPivot;
         private readonly Transform[] bearLegRoots=new Transform[4];
         private readonly Quaternion[] bearLegBase=new Quaternion[4];
@@ -772,6 +772,10 @@ namespace Alterverse.Combat
             Part("SpiderVenomSackR",PrimitiveType.Sphere,spiderBodyRoot,new Vector3(.51f,.28f,-.82f),new Vector3(.13f,.14f,.16f),energyMat,Quaternion.identity);
             Part("SpiderMandibleTipL",PrimitiveType.Capsule,turretPivot,new Vector3(-.28f,-.20f,.58f),new Vector3(.12f,.18f,.14f),teamMat,Quaternion.Euler(18,0,12));
             Part("SpiderMandibleTipR",PrimitiveType.Capsule,turretPivot,new Vector3(.28f,-.20f,.58f),new Vector3(.12f,.18f,.14f),teamMat,Quaternion.Euler(18,0,-12));
+            ResourceCreatureMesh.Apply(spiderBodyRoot,"NoxaraClockworkSpider",new[] {
+                new Color(.042f,.035f,.021f),new Color(.50f,.36f,.12f),new Color(.48f,.53f,.49f),
+                new Color(.28f,.80f,.025f,.78f),new Color(.36f,.13f,.055f)
+            });
         }
 
         private void AnimateNoxaraSpider()

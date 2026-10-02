@@ -85,7 +85,7 @@ namespace Alterverse.Visuals
             for (int i = 0; i < colors.Length; i++)
             {
                 mesh.SetTriangles(data.submeshes[i].triangles, i, false);
-                Material m = RuntimeShaderLibrary.Create(colors[i], false, i == 2 ? .7f : .25f, i == 0 ? .25f : .42f, i == 3 ? colors[i] * .25f : Color.black);
+                Material m = RuntimeShaderLibrary.Create(colors[i], colors[i].a < .99f, i == 2 ? .7f : .25f, i == 0 ? .25f : .42f, i == 3 ? colors[i] * .25f : Color.black);
                 m.name = "DF_ReferenceCreatureSurface_" + i; if (i == 3) m.EnableKeyword("_EMISSION"); materials.Add(m);
             }
             mesh.RecalculateBounds();
