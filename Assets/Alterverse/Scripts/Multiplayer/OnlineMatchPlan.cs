@@ -7,13 +7,22 @@ using Alterverse.Match;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Deterministic 5v5 online roster. The private friend party is kept together on team 0,
+    /// Deterministic 5v5 online roster. Friend parties stay on the Edgegap-assigned team,
     /// public players fill the remaining human slots, and every open slot becomes a
     /// server-authoritative bot so a match can always start.
     /// </summary>
     [Serializable]
     public sealed class OnlineMatchPlan : CoopMatchPlan
     {
+        [Serializable]
+        public sealed class DedicatedMember
+        {
+            public string PlayerId;
+            public string DisplayName;
+            public string TeamId;
+            public HeroId Hero;
+        }
+
         private static readonly HeroId[] BotPool =
         {
             HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Rook
@@ -108,6 +117,158 @@ namespace Alterverse.Multiplayer
                 Difficulty = difficulty,
                 Session = session,
                 HumanCount = members.Count
+            };
+        }
+
+        /// <summary>
+        /// Dedicated-server roster path. Edgegap team ids are the authority for team placement;
+        /// the server sorts them deterministically, resolves same-team hero conflicts, and fills
+        /// every unoccupied 5v5 slot with a server-owned bot.
+        /// </summary>
+        public static OnlineMatchPlan BuildDedicated(
+            string matchId,
+            ArenaVariant arena,
+            BotDifficulty difficulty,
+            IReadOnlyList<DedicatedMember> members)
+        {
+            if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
+                throw new InvalidOperationException("Dedicated online match requires 1-10 human players.");
+
+            var teamKeys = new List<string>(2);
+            var playersByTeam = new Dictionary<string, List<DedicatedMember>>(StringComparer.Ordinal);
+            var playerIds = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < members.Count; i++)
+            {
+                DedicatedMember member = members[i];
+                if (member == null || string.IsNullOrWhiteSpace(member.PlayerId) || string.IsNullOrWhiteSpace(member.TeamId))
+                    throw new InvalidOperationException("Dedicated online member is missing player or team identity.");
+                if (!playerIds.Add(member.PlayerId))
+                    throw new InvalidOperationException("Dedicated online roster contains a duplicate player id.");
+
+                string teamKey = member.TeamId.Trim();
+                if (!playersByTeam.TryGetValue(teamKey, out List<DedicatedMember> teamPlayers))
+                {
+                    if (teamKeys.Count >= 2)
+                        throw new InvalidOperationException("Dedicated online roster contains more than two Edgegap teams.");
+                    teamKeys.Add(teamKey);
+                    teamPlayers = new List<DedicatedMember>(MatchSession.TeamSize);
+                    playersByTeam.Add(teamKey, teamPlayers);
+                }
+                if (teamPlayers.Count >= MatchSession.TeamSize)
+                    throw new InvalidOperationException("Edgegap assigned more than five humans to one team.");
+                teamPlayers.Add(member);
+            }
+
+            teamKeys.Sort(StringComparer.Ordinal);
+            MatchSession session = new(matchId, SessionMode.OnlineCasual);
+            int humanCount = 0;
+
+            for (int team = 0; team < teamKeys.Count; team++)
+            {
+                List<DedicatedMember> teamPlayers = playersByTeam[teamKeys[team]];
+                teamPlayers.Sort((a, b) => string.CompareOrdinal(a.PlayerId, b.PlayerId));
+                var usedHeroes = new HashSet<HeroId>();
+                int replacementCursor = 0;
+
+                for (int row = 0; row < teamPlayers.Count; row++)
+                {
+                    DedicatedMember member = teamPlayers[row];
+                    HeroId hero = member.Hero;
+                    if (!usedHeroes.Add(hero))
+                    {
+                        hero = PickBotHero(usedHeroes, ref replacementCursor);
+                        usedHeroes.Add(hero);
+                    }
+
+                    int slot = team * MatchSession.TeamSize + row;
+                    MatchPlayerSlot player = new()
+                    {
+                        PlayerId = member.PlayerId,
+                        DisplayName = string.IsNullOrWhiteSpace(member.DisplayName) ? "TRAVELER" : member.DisplayName,
+                        Team = team,
+                        Hero = hero,
+                        IsLocal = false,
+                        IsBot = false,
+                        Ready = true,
+                        Connected = true,
+                        IsHost = false
+                    };
+                    if (!session.TryAssign(slot, player))
+                        throw new InvalidOperationException($"Could not assign dedicated human slot {slot}.");
+                    humanCount++;
+                }
+            }
+
+            FillTeamWithBots(session, 0);
+            FillTeamWithBots(session, 1);
+            if (!session.IsFull)
+                throw new InvalidOperationException("Dedicated online roster could not fill all ten match slots.");
+
+            return new OnlineMatchPlan
+            {
+                MatchId = string.IsNullOrWhiteSpace(matchId) ? Guid.NewGuid().ToString("N") : matchId,
+                Arena = arena,
+                Difficulty = difficulty,
+                Session = session,
+                HumanCount = humanCount
+            };
+        }
+
+        /// <summary>
+        /// Rebuilds the exact authoritative ten-slot plan received from the dedicated server and
+        /// marks only this client's player id as local. IsLocal is intentionally excluded from the
+        /// plan fingerprint, so all peers verify the same authoritative roster.
+        /// </summary>
+        public static OnlineMatchPlan FromAuthoritativeSlots(
+            string matchId,
+            ArenaVariant arena,
+            BotDifficulty difficulty,
+            IReadOnlyList<MatchPlayerSlot> slots,
+            string localPlayerId)
+        {
+            if (slots == null || slots.Count != MatchSession.MaxPlayers)
+                throw new InvalidOperationException("Authoritative online roster must contain exactly ten slots.");
+
+            MatchSession session = new(matchId, SessionMode.OnlineCasual);
+            int humans = 0;
+            bool localFound = false;
+
+            for (int i = 0; i < MatchSession.MaxPlayers; i++)
+            {
+                MatchPlayerSlot source = slots[i];
+                if (source == null)
+                    throw new InvalidOperationException($"Authoritative online roster slot {i} is empty.");
+
+                bool isLocal = !source.IsBot && !string.IsNullOrEmpty(localPlayerId) && source.PlayerId == localPlayerId;
+                MatchPlayerSlot copy = new()
+                {
+                    PlayerId = source.PlayerId,
+                    DisplayName = source.DisplayName,
+                    Team = source.Team,
+                    Hero = source.Hero,
+                    IsLocal = isLocal,
+                    IsBot = source.IsBot,
+                    Ready = source.Ready,
+                    Connected = source.Connected,
+                    IsHost = source.IsHost
+                };
+                if (!session.TryAssign(i, copy))
+                    throw new InvalidOperationException($"Could not rebuild authoritative online slot {i}.");
+                if (!copy.IsBot) humans++;
+                if (isLocal) localFound = true;
+            }
+
+            if (!localFound)
+                throw new InvalidOperationException("Local player is missing from the authoritative online roster.");
+
+            return new OnlineMatchPlan
+            {
+                MatchId = string.IsNullOrWhiteSpace(matchId) ? session.SessionId : matchId,
+                Arena = arena,
+                Difficulty = difficulty,
+                Session = session,
+                HumanCount = humans
             };
         }
 
