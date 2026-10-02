@@ -339,6 +339,10 @@ namespace Alterverse.Visuals
             leftClaw=BuildClaw(-1f,shell,plate,joint,glow);
             rightClaw=BuildClaw(1f,shell,plate,joint,glow);
             BuildTail(shell,plate,joint,glow);
+            ResourceCreatureMesh.Apply(visualRoot, "MechanicalScorpion", new[] {
+                new Color(.021f,.033f,.039f), new Color(.052f,.112f,.14f),
+                new Color(.38f,.45f,.45f), new Color(.76f,.021f,.024f), new Color(.22f,.15f,.074f)
+            });
         }
 
         void BuildBody(Material shell,Material plate,Material glow)
@@ -545,3 +549,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
