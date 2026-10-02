@@ -24,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
         private const int ProtocolVersion = 1;
-        private const float HumanJoinWindowSeconds = 20f;
+        private const float HumanJoinWindowSeconds = 60f;
 
         private sealed class PendingHuman
         {
