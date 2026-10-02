@@ -1,4 +1,6 @@
-using System.Collections;using UnityEngine;
+using System.Collections;
+using Alterverse.Multiplayer;
+using UnityEngine;
 namespace Alterverse.Match
 {
 public sealed class MatchOpening:MonoBehaviour
@@ -8,12 +10,27 @@ private const int OpeningMatchLimit=15;
 private const string Rules="SCORE KILLS TO WIN\nCAPTURE THE HOT ZONE FOR MECH SUPPORT\nCAPTURE PLANETS FOR +1 MINUTE";
 private const string BomberWarning="WARNING: SPACE BOMBERS DAMAGE EVERY PLAYER";
 private string display="";
-private bool visible,ownsPause,showRules;
+private bool visible,ownsPause,showRules,networkControlled,networkStateReceived;
 private GUIStyle title,shadow,rules,rulesShadow,warning,warningShadow;
 private float phaseElapsed,phaseDuration;
 
+public bool OpeningActive=>ownsPause;
+public int PhaseCode=>CodeFor(display);
+public float PhaseElapsed=>phaseElapsed;
+public float PhaseDuration=>phaseDuration;
+
 private IEnumerator Start()
 {
+    // In network matches the authoritative server owns the countdown. Remote clients never
+    // advance gameplay from a local timer; they wait for replicated opening state instead.
+    if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority)
+    {
+        networkControlled=true;
+        MatchClock.Set(PauseReason.Opening,true);ownsPause=true;visible=false;
+        while(networkControlled)yield return null;
+        yield break;
+    }
+
     while(Alterverse.UI.MainMenuController.IsVisible)yield return null;
 
     // The countdown is a permanent match-start signal. Only the onboarding rules
@@ -35,6 +52,35 @@ private IEnumerator Start()
     yield return WaitForeground(.55f);
     visible=false;
     RestoreTimeScale();
+}
+
+private void Update()
+{
+    // Keep remote presentation smooth between 5 Hz authoritative snapshots.
+    if(networkControlled&&networkStateReceived&&visible&&!MatchClock.InBackground)
+        phaseElapsed=Mathf.Min(phaseDuration,phaseElapsed+Time.unscaledDeltaTime);
+}
+
+public void ApplyNetworkOpeningState(bool active,int phase,float elapsed,float duration)
+{
+    if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority)return;
+    networkStateReceived=true;
+
+    if(!active)
+    {
+        visible=false;
+        networkControlled=false;
+        RestoreTimeScale();
+        return;
+    }
+
+    networkControlled=true;
+    if(!ownsPause){MatchClock.Set(PauseReason.Opening,true);ownsPause=true;}
+    display=TextFor(phase);
+    phaseDuration=Mathf.Max(.01f,duration);
+    phaseElapsed=Mathf.Clamp(elapsed,0f,phaseDuration);
+    visible=!string.IsNullOrEmpty(display);
+    showRules=Alterverse.Profile.MatchRewardService.MatchesCompleted<OpeningMatchLimit;
 }
 
 private void SetPhase(string text,float duration)
@@ -60,6 +106,9 @@ private IEnumerator WaitForeground(float seconds)
 private void RestoreTimeScale(){if(!ownsPause)return;MatchClock.Set(PauseReason.Opening,false);ownsPause=false;}
 private void OnDisable(){RestoreTimeScale();}
 private void OnDestroy(){RestoreTimeScale();}
+
+private static int CodeFor(string text)=>text switch{"REALITY COLLIDE"=>4,"3"=>3,"2"=>2,"1"=>1,"GO"=>0,_=>-1};
+private static string TextFor(int code)=>code switch{4=>"REALITY COLLIDE",3=>"3",2=>"2",1=>"1",0=>"GO",_=>""};
 
 private void OnGUI()
 {
@@ -88,11 +137,9 @@ private void OnGUI()
     Color before=GUI.color;
     Matrix4x4 matrix=GUI.matrix;
 
-    // Quiet cinematic veil keeps the rules readable without bringing back a heavy UI panel.
     GUI.color=new Color(.008f,.012f,.025f,.46f*alpha);
     GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);
 
-    // Thin ZERO/LUMEN energy accents replace the old grey box.
     float lineWidth=headline?Mathf.Min(250f*uiScale,width*.27f):Mathf.Min(95f*uiScale,width*.22f);
     float lineY=rect.center.y+height*.28f;
     DrawAccentLine(new Rect(rect.center.x-lineWidth-18f*uiScale,lineY,lineWidth,2f*uiScale),
@@ -114,7 +161,6 @@ private void OnGUI()
 
     GUI.matrix=matrix;
 
-    // Rules are onboarding only; the 3-2-1 countdown itself is shown in every match.
     if(showRules&&countdown)
     {
         const float tutorialAlpha=1f;
@@ -135,7 +181,6 @@ private void OnGUI()
         GUI.Label(warningRect,BomberWarning,warning);
     }
 
-    // Small controlled energy sheen, only at the lower edge of the glyph area.
     float sheenWidth=(headline?160f:72f)*uiScale;
     float sheenX=Mathf.Lerp(rect.center.x-sheenWidth,rect.center.x,Mathf.SmoothStep(0f,1f,progress));
     GUI.color=new Color(.42f,.88f,1f,.22f*alpha);
