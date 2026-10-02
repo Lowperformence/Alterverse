@@ -50,8 +50,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildSmallLandmarks();
         BuildDensityClusters();
         BuildReferenceSilhouettes();
-        BuildEdgeCliffs();
-        BuildEdgeFragments();
+        // The Blender-authored border now owns the small edge fragments and cliff rocks.
         BuildGeologicalSlab();
         BatchStaticDetails();
     }
@@ -280,5 +279,3 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
-
-

@@ -160,7 +160,24 @@ namespace Alterverse.Visuals
                 ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
                 ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):new Color(.125f,.137f,.153f),0,.08f);
             surfaceMaterials.Apply(middle);
-            ShatteredArenaEdge.Build(root,perimeter,rimMat,middle,darkRegolith,meshes);
+            Material crust=rimMat,underside=darkRegolith;
+            // These worlds share the ground builder but need their own exposed geology.
+            Color? tint=ArenaVariantRuntime.Current switch
+            {
+                ArenaVariant.Earth=>new Color(.24f,.22f,.16f),
+                ArenaVariant.Pyraxis=>new Color(.14f,.075f,.055f),
+                ArenaVariant.Neptune=>new Color(.07f,.14f,.23f),
+                ArenaVariant.Dark00=>new Color(.065f,.070f,.090f),
+                _=>(Color?)null
+            };
+            if(tint.HasValue)
+            {
+                crust=Mat(tint.Value,.02f,.12f);
+                middle.color=tint.Value*.70f;middle.SetColor("_BaseColor",middle.color);
+                underside=Mat(tint.Value*.38f,.01f,.08f);
+                surfaceMaterials.Apply(crust);surfaceMaterials.Apply(underside);
+            }
+            ShatteredArenaEdge.Build(root,perimeter,crust,middle,underside,meshes);
         }
 
         static void AddFace(List<Vector3> vertices,List<int> indices,Vector3 a,Vector3 b,Vector3 c)
@@ -197,5 +214,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-

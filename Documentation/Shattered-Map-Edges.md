@@ -1,13 +1,29 @@
-# Universal Blender-authored map border
+# Subtly fractured map edges — Blender model
 
-All eleven maps share one connected fractured cliff design. The silhouette uses the same deterministic outline across planets; only the existing map materials and upper-floor relief vary. There are no detached splinters.
+All eleven maps use the same connected broken-rock border with short cracks, small upper-rim chips and irregular attached cliff blocks. The top contour has only shallow weathering: 0.18–0.80 m outward displacement, replacing the former deep, repeating bays. The original gameplay rectangle and interior remain covered.
 
-`Tools/PlanetSurfaces/build_universal_border.py` creates `UniversalBorder.blend`, a static reference FBX, a rendered preview and the numerical ring profile in `Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorder.json`. Blender authors six stepped, faceted geological bands and a connected underside. Edit and regenerate through the source pipeline to keep the exported adaptive profile synchronized.
+## Authored assets and live integration
 
-`ShatteredArenaEdge` reads that baked profile once and adapts its ring samples to the exact live boundary of each map. The first ring begins at the actual floor vertices, avoiding gaps at different map resolutions. Terrain relief fades into the cliff; the underside closes at -18 m. Existing planet materials provide the surface details. Diamond Core retains its crystal material.
+`Tools/PlanetSurfaces/build_universal_border.py` runs in Blender to create:
+- `ArtSource/PlanetSurfaces/UniversalBorder.blend`: editable model and studio setup.
+- `ArtSource/PlanetSurfaces/UniversalBorder.fbx`: actual cliff geometry and attached rocks.
+- `ArtSource/PlanetSurfaces/UniversalBorder.png`: Blender geometry preview, not a Unity screenshot.
+- `Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorder.json`: six geological rings.
+- `Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorderDecor.json`: 52 short fissures, 39 small rim chips, 416 staggered cliff-block placements and their closed rock mesh.
 
-The shared budget is at most 9,152 triangles for the densest boundary, seven static meshes without colliders or cast shadows. Desktop and Android use the same border shape. The gameplay rectangle, navigation and interior remain unchanged.
+The game reads the Blender-exported profile and geometry through `ShatteredArenaEdge`, adapting the upper edge to the exact live floor vertices. This avoids seams on differently sampled terrain. The static FBX is the complete reference model; the runtime profile preserves its design while conforming to each planet's terrain relief. No extra Animator, collider, navigation obstacle, light or particle system is introduced.
 
-Blender topology validation and the Python adaptation checks cover all eleven grids, continuous attachment, nondegenerate faces, outward coverage and zero detached fragments. Unity editor outline validation also loads and validates the profile. Unity compilation and in-game camera/device checks remain pending because Unity is unavailable in this environment.
+Four irregular courses of faceted cliff blocks overlap the backing shell; small differences in width, depth, rotation and placement avoid a regular brick pattern. Existing oversized edge formations are no longer layered over the authored border. The lower shell closes at -10 m, with no detached giant core.
 
-The revised border has much deeper missing sections between its outer rock shelves. Its top remains over the original gameplay rectangle. Blender now also authors branched ground cracks and 39 small rocks attached to the upper rim. `UniversalBorderDecor.json` transfers this geometry to all eleven maps; fissures and rocks follow the actual floor relief. No floating external debris is added.
+## Planet materials
+
+Moon uses grey regolith; Mars uses red stone; GreenPlanet/Moor uses moss-colored rock; Noxara uses blue-black stone; Kryon uses icy rock. Earth, Pyraxis, Neptune and Dark00 now have explicit cliff tints matching their soil, basalt, abyssal stone and dark geology. DiamondCore/PSR retains its crystal materials; GJ504b retains rose quartz stone. Existing per-planet world-space surface textures provide fine detail.
+
+## Validation
+
+Blender backing shell: 2,185 vertices and 4,056 triangles. Each closed cliff block uses 44 triangles; the densest adapted map uses 27,456 triangles for shell plus cliff blocks, with small rim/crack detail in additional batches. The rock blocks are combined into three material meshes at runtime, rather than 416 GameObjects.
+
+Python checks pass for all eleven map grids and three relief heights: outward-only coverage, unchanged interior, positive surface triangles, nondegenerate cliff facets, monotonically descending rings, valid closed rock topology and bounded crack/rock sizes. A numerical intersection check confirmed all 416 block placements penetrate the backing shell and remain visible at zero relief. Changed C# files passed syntax parsing. Unity compilation, final camera appearance and device performance still require a Unity play-mode check.
+
+Rebuild: `blender -b -P Tools/PlanetSurfaces/build_universal_border.py`
+Validate: `python Tools/PlanetSurfaces/validate_universal_border.py`

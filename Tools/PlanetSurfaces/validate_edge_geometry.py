@@ -14,7 +14,7 @@ def angular(angle,count,seed):
 
 def warp(x,z,theme):
  x=np.asarray(x);z=np.asarray(z);r=np.sqrt(x*x+z*z);edge=np.maximum(np.abs(x)/42,np.abs(z)/36);t=np.clip((edge-.88)/.12,0,1);w=t*t*(3-2*t)
- a=(np.arctan2(z,x)/(2*math.pi))%1;seed=19;slot=(a*14+.17)%1;nt=np.clip((np.abs(slot-.5)-.065)/.135,0,1);notch=nt*nt*(3-2*nt);extension=.10+(2.4+angular(a,24,seed)*3+angular(a,80,seed+31)*.7)*notch
+ a=(np.arctan2(z,x)/(2*math.pi))%1;seed=19;extension=.18+angular(a,24,seed)*.48+angular(a,80,seed+31)*.14
  return x+x/np.maximum(r,.001)*extension*w,z+z/np.maximum(r,.001)*extension*w
 
 def perimeter(grid):return np.concatenate([grid[0,:-1],grid[:-1,-1],grid[-1,:0:-1],grid[:0:-1,0]])
@@ -30,6 +30,7 @@ def validate():
   center=np.maximum(np.abs(x)/42,np.abs(z)/36)<=.88;assert np.all(wx[center]==x[center]) and np.all(wz[center]==z[center])
   assert np.all(np.abs(wx)>=np.abs(x)-1e-8) and np.all(np.abs(wz)>=np.abs(z)-1e-8)
   boundary=perimeter(np.stack([wx,wz],-1));assert len(boundary)==2*(xs+zs)
+  extension=np.sqrt((wx-x)**2+(wz-z)**2);assert extension.max()<=.80+1e-6,(name,"excessive outline wave")
   for side in [wx[0],wx[-1],wz[:,0],wz[:,-1]]:assert np.isfinite(side).all()
   rows.append({'planet':name,'grid':[xs,zs],'boundaryVertices':len(boundary),'minimumSignedTriangleArea':float(areas.min()/2),'interiorUnchanged':True,'outwardOnly':True,'sharedCliffTop':True})
  (ROOT/'ArtSource/PlanetSurfaces/edge-validation.json').write_text(json.dumps(rows,indent=2));print('EDGE_VALIDATED',len(rows),'planets')

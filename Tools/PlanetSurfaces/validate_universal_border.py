@@ -29,11 +29,23 @@ print('Universal border passed on all eleven boundaries, three relief heights an
 decor=json.loads((root/'Assets/Alterverse/Resources/PlanetSurfaces/UniversalBorderDecor.json').read_text())
 assert len(decor['cracks'])==52 and len(decor['rocks'])==39
 for crack in decor['cracks']:
- pts=np.array(crack['points']).reshape(-1,2);assert len(pts)>=3 and np.isfinite(pts).all() and .1<=crack['width']<=.4
+ pts=np.array(crack['points']).reshape(-1,2);assert len(pts)>=3 and np.isfinite(pts).all() and .03<=crack['width']<=.10
  assert (np.linalg.norm(np.diff(pts,axis=0),axis=1)>.01).all()
 for rock in decor['rocks']:
- assert abs(rock['x'])<=42 and abs(rock['z'])<=36 and .4<rock['size']<1.6
+ assert abs(rock['x'])<=42 and abs(rock['z'])<=36 and .25<rock['size']<.75
 vertices=np.array(decor['rockVertices']).reshape(-1,3);indices=np.array(decor['rockTriangles']).reshape(-1,3)
 assert np.isfinite(vertices).all() and indices.min()>=0 and indices.max()<len(vertices)
 assert (np.linalg.norm(np.cross(vertices[indices[:,1]]-vertices[indices[:,0]],vertices[indices[:,2]]-vertices[indices[:,0]]),axis=1)>1e-7).all()
 print('52 crack strips and 39 grounded rocks validated; no detached edge debris.')
+
+# Validate the actual authored cliff blocks, including attachment to the backing cliff.
+assert len(decor['cliffRocks'])==416
+for block in decor['cliffRocks']:
+ assert all(math.isfinite(value) for value in block.values())
+ assert .95<=block['radialScale']<=1.01 and 1.1<block['depth']<8
+ assert 2.9<=block['width']<=4.3 and 2.3<=block['height']<=3.3 and 1.3<=block['thickness']<=2.1
+# Every local rock shell is closed and manifold, not a collection of open triangles.
+from collections import Counter
+edges=Counter(tuple(sorted((int(face[i]),int(face[(i+1)%3])))) for face in indices for i in range(3))
+assert all(count==2 for count in edges.values())
+print('416 Blender-authored cliff blocks and closed rock topology validated.')

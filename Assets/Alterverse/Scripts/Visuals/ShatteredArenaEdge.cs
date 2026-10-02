@@ -22,9 +22,8 @@ namespace Alterverse.Visuals
             if(angle<0f)angle+=1f;
             const int seed=19;
             float broad=Angular(angle,24,seed),chips=Angular(angle,80,seed+31);
-            float slot=Mathf.Repeat(angle*14f+.17f,1f);
-            float notch=Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.065f,.20f,Mathf.Abs(slot-.5f)));
-            float extension=.10f+(2.4f+broad*3f+chips*.7f)*notch;
+            // Shallow, irregular weathering rather than deep bays or repeated waves.
+            float extension=.18f+broad*.48f+chips*.14f;
             return p+p/radius*(extension*blend);
         }
 
@@ -114,15 +113,16 @@ namespace Alterverse.Visuals
                 upper=lower;
             }
             var bottomV=new List<Vector3>();var bottomT=new List<int>();
-            for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-18f,0),upper[i],upper[(i+1)%upper.Length]);
+            for(int i=0;i<upper.Length;i++)Face(bottomV,bottomT,new Vector3(0,-10f,0),upper[i],upper[(i+1)%upper.Length]);
             Emit(parent,"DF_UniversalPlanetUnderside",bottomV,bottomT,dark,owned);
             BuildDecor(parent,crust,dark,owned);
-            BuildCliffShards(parent,boundary,crust,owned);
+            BuildCliffShards(parent,crust,middle,dark,owned);
         }
         [System.Serializable] sealed class Crack { public float[] points;public float width; }
         [System.Serializable] sealed class Rock { public float x,z,size,rotation; }
+        [System.Serializable] sealed class CliffRock { public float x,z,depth,radialScale,width,height,thickness,rotation; }
         [System.Serializable] sealed class BorderDecor
-        { public Crack[] cracks;public Rock[] rocks;public float[] rockVertices;public int[] rockTriangles; }
+        { public Crack[] cracks;public Rock[] rocks;public CliffRock[] cliffRocks;public float[] rockVertices;public int[] rockTriangles; }
         static BorderDecor decor;
         static BorderDecor LoadDecor()
         {
@@ -130,11 +130,11 @@ namespace Alterverse.Visuals
             var asset=Resources.Load<TextAsset>("PlanetSurfaces/UniversalBorderDecor");
             if(asset==null)throw new System.InvalidOperationException("Missing authored border cracks and rocks.");
             var data=JsonUtility.FromJson<BorderDecor>(asset.text);
-            if(data==null||data.cracks==null||data.rocks==null||data.rockVertices==null||data.rockVertices.Length%3!=0||data.rockTriangles==null||data.rockTriangles.Length%3!=0)
+            if(data==null||data.cracks==null||data.rocks==null||data.cliffRocks==null||data.rockVertices==null||data.rockVertices.Length%3!=0||data.rockTriangles==null||data.rockTriangles.Length%3!=0)
                 throw new System.InvalidOperationException("Invalid authored border decoration.");
             return decor=data;
         }
-        static float CrackWidth(Crack crack,float t) => (crack.width*1.8f+.13f)*Mathf.Lerp(1f,.045f,t*t);
+        static float CrackWidth(Crack crack,float t) => (crack.width*1.1f+.015f)*Mathf.Lerp(1f,.045f,t*t);
         public static float FractureDepth(float x,float z)
         {
             // Authored fractures only occupy the outer margin; central lanes remain level.
@@ -152,7 +152,7 @@ namespace Alterverse.Visuals
                     float distance=Vector2.Distance(p,a+delta*t);
                     if(distance>width*1.85f)continue;
                     float shoulder=1f-Mathf.SmoothStep(0f,1f,Mathf.Clamp01(distance/(width*1.85f)));
-                    depth=Mathf.Max(depth,(.24f+crack.width*.65f)*shoulder*Mathf.Lerp(1f,.08f,progress*progress));
+                    depth=Mathf.Max(depth,(.06f+crack.width*.40f)*shoulder*Mathf.Lerp(1f,.08f,progress*progress));
                 }
             }
             return depth;
@@ -213,21 +213,33 @@ namespace Alterverse.Visuals
             }
             Emit(parent,"DF_UniversalBorderAttachedRocks",vertices,triangles,stone,owned);
         }
-        static void BuildCliffShards(Transform parent,Vector3[] boundary,Material stone,List<Mesh> owned)
+        static void BuildCliffShards(Transform parent,Material stone,Material middle,Material dark,List<Mesh> owned)
         {
-            var data=LoadDecor();var v=new List<Vector3>();var t=new List<int>();
-            for(int i=0;i<boundary.Length;i+=11)
+            var data=LoadDecor();
+            var vertices=new[]{new List<Vector3>(),new List<Vector3>(),new List<Vector3>()};
+            var triangles=new[]{new List<int>(),new List<int>(),new List<int>()};
+            foreach(var rock in data.cliffRocks)
             {
-                Vector3 edge=boundary[i],outward=new Vector3(edge.x,0,edge.z).normalized;
-                Vector3 center=edge+outward*(.20f+Hash(i,91)*.95f)-Vector3.up*(.55f+Hash(i,19)*2.6f);
-                Quaternion rotation=Quaternion.Euler(Hash(i,7)*28f,Hash(i,8)*360f,Hash(i,9)*25f);
-                Vector3 scale=new Vector3(.65f+Hash(i,3)*1.0f,.85f+Hash(i,4)*2.1f,.55f+Hash(i,5)*.8f);
-                int start=v.Count;
-                for(int n=0;n<data.rockVertices.Length;n+=3)
-                    v.Add(center+rotation*Vector3.Scale(new Vector3(data.rockVertices[n],data.rockVertices[n+1],data.rockVertices[n+2]),scale));
-                foreach(int index in data.rockTriangles)t.Add(start+index);
+                int band=rock.depth<3f?0:rock.depth<6f?1:2;
+                var v=vertices[band];var t=triangles[band];
+                Vector3 edge=Floor(rock.x,rock.z);
+                Vector3 center=new(edge.x*rock.radialScale,
+                    -rock.depth+edge.y*Mathf.Clamp01(1f-rock.depth/12f),edge.z*rock.radialScale);
+                Quaternion rotation=Quaternion.Euler(0,rock.rotation,0);
+                Vector3 scale=new(rock.width,rock.height,rock.thickness);
+                var points=new Vector3[3];
+                for(int n=0;n<data.rockTriangles.Length;n+=3)
+                {
+                    for(int corner=0;corner<3;corner++)
+                    {
+                        int index=data.rockTriangles[n+corner]*3;
+                        points[corner]=center+rotation*Vector3.Scale(new Vector3(data.rockVertices[index],data.rockVertices[index+1],data.rockVertices[index+2]),scale);
+                    }
+                    Face(v,t,points[0],points[1],points[2]);
+                }
             }
-            Emit(parent,"DF_BrokenPlanetCliffShards",v,t,stone,owned);
+            for(int band=0;band<3;band++)
+                Emit(parent,"DF_AuthoredFracturedCliffBlocks_"+band,vertices[band],triangles[band],band==0?stone:band==1?middle:dark,owned);
         }
         static void Face(List<Vector3> v,List<int> t,Vector3 a,Vector3 b,Vector3 c)
         {int start=v.Count;v.Add(a);v.Add(b);v.Add(c);t.Add(start);t.Add(start+1);t.Add(start+2);}
@@ -241,4 +253,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

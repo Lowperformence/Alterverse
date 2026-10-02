@@ -5,7 +5,9 @@
   "openBoundaryEdges": 312,
   "connectedComponents": 1,
   "detachedFragments": 0,
-  "maxRuntimeTriangles": 9152,
+  "cliffBlocks": 416,
+  "rockTriangles": 44,
+  "maxRuntimeCliffTriangles": 27456,
   "topologyValidation": "passed",
   "unityPlayModeValidation": "pending"
 }
