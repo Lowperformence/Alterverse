@@ -128,9 +128,17 @@ namespace Alterverse.Visuals
             for (int i = 0; i < count; i++)
             {
                 int b = data.boneIndices[i];
-                Vector3 p = heads[b] + rotations[b] * (Point(data.vertices, i * 3) - Point(data.anchors[b].head)) * scales[b];
+                Vector3 sourcePoint = Point(data.vertices, i * 3);
+                Vector3 sourceNormal = Point(data.normals, i * 3);
+                if (data.groups[i] == 2)
+                {
+                    b = lookup["WeaponGripL"];
+                    sourcePoint = LeftFocusPoint(sourcePoint);
+                    sourceNormal = LeftFocusDirection(sourceNormal);
+                }
+                Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
                 vertices[i] = toMesh.MultiplyPoint3x4(p);
-                normals[i] = toNormal.MultiplyVector(rotations[b] * Point(data.normals, i * 3)).normalized;
+                normals[i] = toNormal.MultiplyVector(rotations[b] * sourceNormal).normalized;
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
@@ -146,7 +154,8 @@ namespace Alterverse.Visuals
                 foreach (Marker marker in data.markers)
                 {
                     if (!lookup.TryGetValue(marker.bone, out int b) || marker.position == null || marker.position.Length != 3) continue;
-                    Vector3 p = heads[b] + rotations[b] * (Point(marker.position) - Point(data.anchors[b].head)) * scales[b];
+                    b = lookup["WeaponGripL"];
+                    Vector3 p = heads[b] + rotations[b] * (LeftFocusPoint(Point(marker.position)) - Point(data.anchors[b].head)) * scales[b];
                     var anchor = new GameObject("DF_Mage" + marker.name).transform;
                     anchor.SetParent(bones[map[b]], false);
                     anchor.position = model.TransformPoint(p);
@@ -154,7 +163,11 @@ namespace Alterverse.Visuals
                     if (marker.name == "StaffTop")
                     {
                         Transform muzzle = Array.Find(all, t => t.name == "DF_Muzzle");
-                        if (muzzle != null) muzzle.position = anchor.position;
+                        if (muzzle != null)
+                        {
+                            muzzle.SetParent(anchor, false);
+                            muzzle.localPosition = Vector3.zero;
+                        }
                     }
                 }
             return true;
@@ -196,7 +209,7 @@ namespace Alterverse.Visuals
                 for (int i = 0; i < sourceIndices.Length; i += 3)
                 {
                     int a = remap[sourceIndices[i]], b = remap[sourceIndices[i+1]], c = remap[sourceIndices[i+2]];
-                    if (a >= 0 && b >= 0 && c >= 0) { indices.Add(a); indices.Add(b); indices.Add(c); }
+                    if (a >= 0 && b >= 0 && c >= 0) { indices.Add(a); indices.Add(group == 2 ? c : b); indices.Add(group == 2 ? b : c); }
                 }
                 mesh.SetTriangles(indices, m, false);
             }
@@ -217,18 +230,30 @@ namespace Alterverse.Visuals
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
         {
             if (weight <= .001f) return;
-            AlignHand(rightHand, "StaffGrip", "StaffTop", "StaffFront", true, model, weight);
+            AlignHand(leftHand, "StaffGrip", "StaffTop", "StaffFront", true, model, weight);
         }
         private void AlignHand(Transform hand, string center, string top, string front, bool hammer, Transform model, float weight)
         {
             if (hand == null || !markers.TryGetValue(center, out var c) ||
                 !markers.TryGetValue(top, out var t) || !markers.TryGetValue(front, out var f)) return;
-            Vector3 up = t.position - c.position;
-            Vector3 forward = f.position - (hammer ? t.position : c.position);
+            // The aperture axis is forward; the former staff front marker now points down.
+            Vector3 forward = t.position - c.position;
+            Vector3 up = t.position - f.position;
             if (up.sqrMagnitude < .000001f || forward.sqrMagnitude < .000001f) return;
             Quaternion current = Quaternion.LookRotation(forward, up);
             Quaternion desired = Quaternion.LookRotation(model.forward, model.up);
             hand.rotation = Quaternion.Slerp(hand.rotation, desired * Quaternion.Inverse(current) * hand.rotation, weight);
+        }
+
+        // Mirror the authored right-hand focus, then rotate its +Y barrel to +Z.
+        // Renderer identity stays DF_WeaponR for shop compatibility; skinning follows WeaponGripL.
+        private static Vector3 LeftFocusDirection(Vector3 direction) =>
+            new Vector3(-direction.x, -direction.z, direction.y);
+        private static Vector3 LeftFocusPoint(Vector3 point)
+        {
+            Vector3 authoredGrip = new Vector3(.34977f, .97991f, .08252f);
+            Vector3 leftGrip = new Vector3(-authoredGrip.x, authoredGrip.y, authoredGrip.z);
+            return leftGrip + LeftFocusDirection(point - authoredGrip);
         }
 
         private static Vector3 Point(float[] values, int offset = 0) => new Vector3(values[offset], values[offset + 1], values[offset + 2]);
