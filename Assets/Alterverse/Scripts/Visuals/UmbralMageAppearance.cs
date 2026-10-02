@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Ione Vaska's hooded armor, articulated light leg plates and crystal staff, fitted to her existing skeleton.</summary>
+    /// <summary>Ione Vaska's iron hierophant armor, ritual head crossbar and compact crystal staff, fitted to her existing skeleton.</summary>
     [DisallowMultipleComponent]
     public sealed class UmbralMageAppearance : MonoBehaviour
     {
@@ -134,11 +134,11 @@ namespace Alterverse.Visuals
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
-                Surface("Shadow cloth", new Color(.016f,.020f,.028f), .08f,.24f),
-                Surface("Obsidian armor", new Color(.035f,.048f,.050f), .66f,.40f),
-                Surface("Engraved silver", new Color(.38f,.42f,.45f), .85f,.52f),
-                Surface("Amethyst focus", new Color(.40f,.12f,.82f), .30f,.62f, true),
-                Surface("Violet leather", new Color(.075f,.057f,.095f), .12f,.30f)
+                Surface("Sealed black core", new Color(.010f,.013f,.019f), .12f,.28f),
+                Surface("Obsidian armor", new Color(.032f,.043f,.064f), .66f,.40f),
+                Surface("Engraved silver", new Color(.30f,.34f,.42f), .85f,.52f),
+                Surface("Amethyst focus", new Color(.33f,.29f,.64f), .30f,.62f, true),
+                Surface("Crimson ritual accents", new Color(.30f,.014f,.027f), .10f,.25f)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             RendererGroup(right, 2, anatomy.transform, vertices, normals, weights, bones, materials);
@@ -250,3 +250,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
