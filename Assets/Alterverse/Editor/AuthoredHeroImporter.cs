@@ -13,6 +13,13 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
+        public override uint GetVersion() => 2;
+
+        private void OnPostprocessModel(GameObject root)
+        {
+            if (IsHero) AuthoredHeroDetailPass.Apply(root, Path.GetFileNameWithoutExtension(assetPath));
+        }
+
         private void OnPreprocessModel()
         {
             if (!IsHero) return;
@@ -48,13 +55,13 @@ namespace Alterverse.EditorTools
             material.shader = shader;
             material.SetColor("_BaseColor", color);
             string name = material.name.ToLowerInvariant();
-            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel");
+            bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel") || name.Contains("steel") || name.Contains("gold");
             material.SetFloat("_Metallic", metal ? .65f : 0);
-            material.SetFloat("_Smoothness", name.Contains("fabric") ? .25f : .55f);
-            if (name.Contains("energy"))
+            material.SetFloat("_Smoothness", name.Contains("fabric") || name.Contains("cloth") ? .20f : name.Contains("skin") ? .30f : .48f);
+            if (name.Contains("energy") || name.Contains("chronolight"))
             {
                 material.EnableKeyword("_EMISSION");
-                material.SetColor("_EmissionColor", color * 2f);
+                material.SetColor("_EmissionColor", color * 1.25f);
             }
         }
         private static string StateName(string name)
@@ -91,3 +98,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
+

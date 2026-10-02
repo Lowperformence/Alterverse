@@ -17,7 +17,11 @@ namespace Alterverse.Visuals
         private readonly Dictionary<string, Transform> controls = new Dictionary<string, Transform>();
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
-        private Transform model, muzzle, visualRoot, rifleSupport, leftPalm;
+        private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, guardChest;
+        private Matrix4x4 guardChestRestInverse;
+        [SerializeField] private Vector3 leftGuardAdjustment;
+        [SerializeField] private Vector3 rightGuardAdjustment;
+        [SerializeField, Range(.08f, .45f)] private float elbowOutward = .18f;
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
@@ -27,6 +31,7 @@ namespace Alterverse.Visuals
         {
             public Transform Bone, Control;
             public Quaternion RestLocal;
+            public Vector3 RestPosition;
         }
         private readonly List<WeaponGrip> grips = new List<WeaponGrip>();
         private ArmChain leftArm, rightArm;
@@ -66,6 +71,7 @@ namespace Alterverse.Visuals
             foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
                 {
                 if (bone.name == "DF_Muzzle") muzzle = bone;
+                if (bone.name == "Chest") guardChest = bone;
                 if (bone.name == "DF_SupportGrip") rifleSupport = bone;
                 if (bone.name == "DF_PalmGripL") leftPalm = bone;
             }
@@ -73,6 +79,8 @@ namespace Alterverse.Visuals
                 if (renderer.name == "DF_WeaponL" || renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletL" || renderer.name == "DF_GauntletR")
                     weaponRenderers.Add(renderer);
             hero = GetComponent<HeroIdentity>().Hero;
+            if (guardChest != null)
+                guardChestRestInverse = (model.worldToLocalMatrix * guardChest.localToWorldMatrix).inverse;
             leftArm = CaptureArm("L"); rightArm = CaptureArm("R");
             BuildControls();
             Bind("Hips", "PelvisJoint");
@@ -162,10 +170,15 @@ namespace Alterverse.Visuals
 
         // Solve the guard against actual shoulder/elbow/hand positions. Old guard angles
         // assumed different arm lengths and cannot define a grip on the imported anatomy.
-        private void SolveGuard(ArmChain arm, Vector3 targetInModel, Vector3 hintInModel, float weight)
+        private void SolveGuard(ArmChain arm, Vector3 targetInModel, Vector3 hintInModel, float weight, bool followChest = true)
         {
             if (arm == null || weight <= .001f) return;
             Vector3 shoulder = arm.Upper.position;
+            // Keep the authored guard relative to the moving chest, so turns and weight
+            // shifts travel through shoulder, elbow and hand instead of leaving hands frozen.
+            if (followChest && guardChest != null)
+                targetInModel = (model.worldToLocalMatrix * guardChest.localToWorldMatrix * guardChestRestInverse).MultiplyPoint3x4(targetInModel);
+            if (followChest) targetInModel += arm == leftArm ? leftGuardAdjustment : rightGuardAdjustment;
             Vector3 target = model.TransformPoint(targetInModel);
             Vector3 hint = model.TransformPoint(hintInModel);
             float upperLength = Vector3.Distance(shoulder, arm.Elbow.position);
@@ -173,7 +186,7 @@ namespace Alterverse.Visuals
             if (upperLength < .001f || lowerLength < .001f) return;
             Vector3 toTarget = target - shoulder;
             float distance = Mathf.Clamp(toTarget.magnitude,
-                Mathf.Abs(upperLength - lowerLength) + .001f, upperLength + lowerLength - .001f);
+                Mathf.Abs(upperLength - lowerLength) + .001f, (upperLength + lowerLength) * .985f);
             if (toTarget.sqrMagnitude < .000001f) return;
             Vector3 direction = toTarget.normalized;
             Vector3 bend = Vector3.ProjectOnPlane(hint - shoulder, direction);
@@ -205,7 +218,7 @@ namespace Alterverse.Visuals
                 return;
             }
             grips.Add(new WeaponGrip { Bone = target, Control = control,
-                RestLocal = target.localRotation });
+                RestLocal = target.localRotation, RestPosition = target.localPosition });
         }
 
         private void ApplyWeaponGrips()
@@ -216,6 +229,14 @@ namespace Alterverse.Visuals
                 // The fitted handle and the palm share one rigid frame. Independent world
                 // rotation previously pulled the handle out of the fingers during movement.
                 grip.Bone.localRotation = grip.RestLocal;
+                grip.Bone.localPosition = grip.RestPosition;
+                if (hero == HeroId.Traveler && grip.Bone.name == "WeaponGripR")
+                {
+                    // Only the orb grip floats. Hands and their authored poses stay intact;
+                    // the muzzle socket is a child of this grip and follows the same motion.
+                    Vector3 hover = model.up * (.016f * Mathf.Sin(Time.time * 1.8f));
+                    grip.Bone.localPosition += grip.Bone.parent.InverseTransformVector(hover);
+                }
             }
         }
 
@@ -223,7 +244,7 @@ namespace Alterverse.Visuals
         {
             if (arm == null) return Vector3.zero;
             return model.InverseTransformPoint(arm.Upper.position)
-                + new Vector3(arm == leftArm ? -1f : 1f, -.40f, .10f);
+                + new Vector3((arm == leftArm ? -1f : 1f) * elbowOutward, -.36f, -.08f);
         }
 
         private void ApplyModelGuard()
@@ -275,7 +296,7 @@ namespace Alterverse.Visuals
             {
                 Vector3 palmOffset = leftPalm.position - leftArm.Hand.position;
                 Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);
-                SolveGuard(leftArm, wrist, GuardHint(leftArm), guardWeight);
+                SolveGuard(leftArm, wrist, GuardHint(leftArm), guardWeight, false);
             }
         }
 
@@ -296,3 +317,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
