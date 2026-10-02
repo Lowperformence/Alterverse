@@ -12,6 +12,8 @@ namespace Alterverse.Multiplayer
     /// <summary>
     /// Synchronizes a deterministic online match plan over the already established Relay/NGO link.
     /// The host launches only after every connected human has rebuilt and acknowledged the same plan.
+    /// This legacy Relay-host path remains for compatibility; dedicated online matches authorize
+    /// gameplay through DedicatedOnlineMatchHandshake.
     /// </summary>
     public sealed class OnlinePlanHandshake : MonoBehaviour
     {
@@ -76,9 +78,16 @@ namespace Alterverse.Multiplayer
 
         public static bool IsAuthorizedClient(ulong clientId, string playerId)
         {
+            if (string.IsNullOrEmpty(playerId)) return false;
+
+            // Production/public online path: the NGO dedicated server binds network client ids
+            // to the player id accepted during the Edgegap handoff handshake.
+            if (DedicatedOnlineMatchHandshake.IsAuthorizedClient(clientId, playerId)) return true;
+
+            // Compatibility path for the older Relay-host online flow.
             OnlinePlanHandshake service = Instance;
-            if (service == null || string.IsNullOrEmpty(playerId)) return false;
-            return service.approvedPlayerIds.TryGetValue(clientId, out string approved) && approved == playerId;
+            return service != null &&
+                   service.approvedPlayerIds.TryGetValue(clientId, out string approved) && approved == playerId;
         }
 
         public static async Task<bool> StartOnlineMatchAsync()
