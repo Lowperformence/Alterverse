@@ -224,11 +224,14 @@ namespace Alterverse.Multiplayer
         private bool ValidateOwner(ulong senderClientId,int rosterSlot,string playerId)
         {
             CoopMatchPlan plan=CoopAuthority.ActivePlan;
-            if(plan?.Session?.Slots==null||rosterSlot<0||rosterSlot>=MatchSession.TeamSize)return false;
+            if(plan?.Session?.Slots==null||rosterSlot<0||rosterSlot>=MatchSession.MaxPlayers)return false;
             MatchPlayerSlot slot=plan.Session.Slots[rosterSlot];
             if(slot==null||slot.IsBot||slot.IsHost||slot.PlayerId!=playerId)return false;
 
-            if(!CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId))return false;
+            bool authorized=plan is OnlineMatchPlan
+                ?OnlinePlanHandshake.IsAuthorizedClient(senderClientId,playerId)
+                :CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId);
+            if(!authorized)return false;
             senderOwners[senderClientId]=playerId;
             return true;
         }
