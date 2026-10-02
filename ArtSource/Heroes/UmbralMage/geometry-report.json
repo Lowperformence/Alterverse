@@ -1,12 +1,12 @@
 {
-  "vertices": 7087,
-  "triangles": 13530,
-  "materials": 5,
+  "vertices": 5779,
+  "triangles": 10882,
+  "materials": 6,
   "bones": 18,
-  "parts": 136,
+  "parts": 140,
   "bounds": [
     [
-      -0.40804152420192286,
+      -0.40603680166823364,
       0.047,
       -0.16998275496308507
     ],

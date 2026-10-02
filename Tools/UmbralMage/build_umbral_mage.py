@@ -21,7 +21,7 @@ for side,sign in [('L',-1),('R',1)]:
  BONES['Foot'+side]=(BONES['Shin'+side][1],(sign*.1728,.0654,.15))
  BONES['WeaponGrip'+side]=BONES['Hand'+side]
 BN=list(BONES);V=[];F=[];MI=[];BI=[];PARTS=[];GI=[];GROUP=0
-COLORS=np.array([[.018,.019,.026],[.13,.105,.22],[.72,.76,.80],[.57,.065,.95],[.015,.72,.78]])
+COLORS=np.array([[.018,.019,.026],[.13,.105,.22],[.72,.76,.80],[.57,.065,.95],[.015,.72,.78],[1.,1.,1.]])
 
 def unit(v):
  v=np.array(v,dtype=float);return v/max(np.linalg.norm(v),1e-12)
@@ -164,9 +164,18 @@ for side,s in [('L',-1),('R',1)]:
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
  limb('upper arm mechanical sleeve',a,e,.052,1,upper)
  ell('shoulder rotary joint',a,(.072,.074,.075),0,upper,16,10)
- # Rounded amethyst armor caps, rigidly following each upper arm.
- ell('round silver shoulder backing',a+[s*.062,.008,0],(.134,.125,.115),2,upper,24,16)
- ell('round luminous violet shoulder armor',a+[s*.068,.017,.006],(.129,.123,.121),3,upper,24,16)
+ # Upper-arm plate between shoulder and elbow; no luminous shoulder cap.
+ axis=unit(e-a);across=unit(np.array([-axis[1],axis[0],0]))
+ top=a+(e-a)*.19;bottom=a+(e-a)*.83
+ outline=[(top-across*.044)[:2],(top+across*.044)[:2],(bottom+across*.057)[:2],(bottom+axis*.017+across*.028)[:2],(bottom+axis*.017-across*.028)[:2],(bottom-across*.057)[:2]]
+ faceZ=max(a[2],e[2])+.080
+ plate('upper arm pearl armor plate',outline,faceZ,.030,2,upper)
+ plate('upper arm rear armor plate',outline,-.057,-.023,1,upper)
+ stripeStart=a+(e-a)*.28;stripeEnd=a+(e-a)*.74
+ stripeStart[2]=faceZ+.030;stripeEnd[2]=faceZ+.030
+ tube('upper arm recessed stripe channel',[stripeStart,stripeEnd],.010,0,upper,8)
+ stripeStart[2]+=.008;stripeEnd[2]+=.008
+ tube('upper arm fluorescent white stripe',[stripeStart,stripeEnd],.0055,5,upper,8)
  ell('elbow pivot',e,(.057,.055,.055),0,fore,12,8)
  ring('elbow cap',e+[0,0,.055],.034,.009,2,fore,segments=16)
  limb('forearm violet actuator',e,w,.048,1,fore)
@@ -262,9 +271,9 @@ for i in range(len(triangles)):
 normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-10)
 mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':list(BONES[n][1])} for n in BN],
 'vertices':np.round(vertices,6).ravel().tolist(),'normals':np.round(normals,6).ravel().tolist(),'boneIndices':BI,'groups':GI,'markers':[{'name':'StaffGrip','bone':'WeaponGripR','position':[x,float(p[1]),z]},{'name':'StaffTop','bone':'WeaponGripR','position':[x,float(p[1]+.26),z]},{'name':'StaffFront','bone':'WeaponGripR','position':[x,float(p[1]+.26),z+.1]}],
-'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(5)]}
+'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(len(COLORS))]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
-report={'vertices':len(V),'triangles':len(F),'materials':5,'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
+report={'vertices':len(V),'triangles':len(F),'materials':len(COLORS),'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
 (ART/'geometry-report.json').write_text(json.dumps(report,indent=2))
 assert np.isfinite(vertices).all() and np.isfinite(normals).all()
 assert triangles.min()>=0 and triangles.max()<len(V)
@@ -297,9 +306,7 @@ def render(yaw,name):
   for direction,lc in lights:
    ndl=np.maximum(0,np.sum(normal*direction,axis=2));half=unit(direction+[0,0,1]);spec=np.maximum(0,np.sum(normal*half,axis=2))**(44 if material in [1,2,4] else 12)
    color+=COLORS[material]*ndl[:,:,None]*lc*.85+spec[:,:,None]*lc*(.30 if material in [1,2,4] else .06)
-  if material==3:color+=COLORS[material]*.85
+  if material in [3,4,5]:color+=COLORS[material]*.85
   patch=img[lo[1]:hi[1]+1,lo[0]:hi[0]+1];patch[mask]=color[mask];depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=iz[mask]
  image=Image.fromarray((np.clip(img,0,1)**(1/1.7)*255).astype(np.uint8));d=ImageDraw.Draw(image);d.text((20,20),'IONE VASKA / PEARL MECH',fill=(195,224,214));d.text((20,h-28),'Geometry preview - not a Unity screenshot',fill=(130,155,157));image.save(ART/name)
 render(-14,'front.png');render(158,'back.png')
-
-

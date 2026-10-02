@@ -61,7 +61,7 @@ namespace Alterverse.Visuals
                 data.vertices.Length % 3 != 0 || data.vertices.Length != data.normals.Length ||
                 data.groups == null || data.groups.Length != data.vertices.Length / 3 || data.boneIndices == null || data.boneIndices.Length != data.vertices.Length / 3 ||
                 data.boneNames == null || data.anchors == null || data.anchors.Length != data.boneNames.Length ||
-                data.submeshes == null || data.submeshes.Length != 5) return false;
+                data.submeshes == null || data.submeshes.Length != 6) return false;
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int group in data.groups) if (group < 0 || group > 2) return false;
@@ -146,7 +146,8 @@ namespace Alterverse.Visuals
                 Surface("Violet mechanical frame", new Color(.13f,.105f,.22f), .66f,.40f),
                 Surface("Pearl ceramic armor", new Color(.72f,.76f,.80f), .35f,.52f),
                 Surface("Amethyst focus", new Color(.57f,.065f,.95f), .30f,.62f, true),
-                Surface("Cyan capacitors", new Color(.015f,.72f,.78f), .20f,.55f, true)
+                Surface("Cyan capacitors", new Color(.015f,.72f,.78f), .20f,.55f, true),
+                Surface("White upper arm light strip", Color.white, .10f,.50f, true)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             RendererGroup(right, 2, anatomy.transform, vertices, normals, weights, bones, materials);
@@ -202,8 +203,8 @@ namespace Alterverse.Visuals
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.boneWeights = w.ToArray();
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
-            mesh.bindposes = bindposes; mesh.subMeshCount = 5;
-            for (int m = 0; m < 5; m++)
+            mesh.bindposes = bindposes; mesh.subMeshCount = materials.Length;
+            for (int m = 0; m < materials.Length; m++)
             {
                 var indices = new List<int>(); int[] sourceIndices = geometry.submeshes[m].triangles;
                 for (int i = 0; i < sourceIndices.Length; i += 3)
@@ -275,4 +276,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
