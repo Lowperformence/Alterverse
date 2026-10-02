@@ -132,6 +132,18 @@ namespace Alterverse.Combat
                     new Vector3(.040f,.020f,.040f),trim,Quaternion.Euler(90,0,0));
             }
             CreatePart(root,"DF_GuardIDPlate",PrimitiveType.Cube,new Vector3(-.46f,1.10f,.56f),new Vector3(.24f,.11f,.035f),zero?new Color(.20f,.24f,.22f):new Color(.24f,.22f,.20f),Quaternion.identity);
+            // Attached service panels inherit the existing articulated part transforms.
+            Transform chestPanel=root.Find("DF_GuardChestPlate"),pack=root.Find("DF_GuardBackpack");
+            if(chestPanel!=null)for(int i=0;i<5;i++)
+                CreatePart(chestPanel,"DF_ServiceVent_"+i,PrimitiveType.Cube,new Vector3(-.28f+i*.14f,-.12f,.54f),new Vector3(.045f,.28f,.08f),joint,Quaternion.Euler(0,0,-12));
+            if(pack!=null)for(int i=0;i<4;i++)
+                CreatePart(pack,"DF_BackCoolingFin_"+i,PrimitiveType.Cube,new Vector3(0,-.30f+i*.19f,-.55f),new Vector3(.76f,.06f,.16f),trim,Quaternion.identity);
+            foreach(string side in new[]{"L","R"})
+            {
+                Transform forearm=root.Find("DF_GuardForearmArmor"+side);
+                if(forearm==null)continue;
+                for(int i=0;i<3;i++)CreatePart(forearm,"DF_InstrumentRib_"+side+i,PrimitiveType.Cube,new Vector3(0,-.24f+i*.22f,.53f),new Vector3(.62f,.055f,.08f),trim,Quaternion.identity);
+            }
         }
 
         private static void BuildArm(Transform root,float side,bool zero,Color dark,Color armor,Color joint,Color energy)
@@ -369,4 +381,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
