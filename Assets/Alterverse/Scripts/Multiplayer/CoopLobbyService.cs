@@ -15,8 +15,9 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Private 2-5 player co-op session owner. Sessions use Relay-backed NGO networking while
-    /// preserving the existing local-vs-AI mode as an independent path.
+    /// Private 1-5 player co-op session owner. Sessions use Relay-backed NGO networking while
+    /// preserving the existing local-vs-AI mode as an independent path. Open team slots are
+    /// filled automatically by authoritative bots when the match plan is staged.
     /// </summary>
     public sealed class CoopLobbyService : MonoBehaviour, IMultiplayerProvider
     {
@@ -30,7 +31,7 @@ namespace Alterverse.Multiplayer
             public bool IsLocal;
         }
 
-        public const int MinHumanPlayers=2;
+        public const int MinHumanPlayers=1;
         public const int MaxHumanPlayers=5;
         private const string SessionType="df-private-coop-v2";
         private const string PlayerNameKey="displayName";
@@ -275,7 +276,7 @@ namespace Alterverse.Multiplayer
                 busy=true;lastError="";
                 session.CurrentPlayer.SetProperty(PlayerReadyKey,new PlayerProperty(ready?"1":"0",VisibilityPropertyOptions.Member));
                 await session.SaveCurrentPlayerDataAsync();
-                SetStatus(ready?"READY • WAITING FOR TEAM":"NOT READY");
+                SetStatus(ready?(PlayerCount<=1?"READY • BOTS WILL FILL OPEN SLOTS":"READY • WAITING FOR TEAM"):"NOT READY");
                 return true;
             }
             catch(Exception ex){Fail("COULD NOT UPDATE READY STATE",ex);return false;}
