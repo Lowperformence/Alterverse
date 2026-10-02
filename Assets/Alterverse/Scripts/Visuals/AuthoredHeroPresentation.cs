@@ -27,6 +27,7 @@ namespace Alterverse.Visuals
         {
             public Transform Bone, Control;
             public Quaternion RestLocal;
+            public Vector3 RestPosition;
         }
         private readonly List<WeaponGrip> grips = new List<WeaponGrip>();
         private ArmChain leftArm, rightArm;
@@ -215,7 +216,7 @@ namespace Alterverse.Visuals
                 return;
             }
             grips.Add(new WeaponGrip { Bone = target, Control = control,
-                RestLocal = target.localRotation });
+                RestLocal = target.localRotation, RestPosition = target.localPosition });
         }
 
         private void ApplyWeaponGrips()
@@ -226,6 +227,9 @@ namespace Alterverse.Visuals
                 // The fitted handle and the palm share one rigid frame. Independent world
                 // rotation previously pulled the handle out of the fingers during movement.
                 grip.Bone.localRotation = grip.RestLocal;
+                grip.Bone.localPosition = grip.RestPosition;
+                if(hero == HeroId.Traveler && grip.Bone.name == "WeaponGripR")
+                    grip.Bone.position += model.TransformVector(new Vector3(0,.10f + Mathf.Sin(Time.time*2.2f)*.015f,0));
             }
         }
 

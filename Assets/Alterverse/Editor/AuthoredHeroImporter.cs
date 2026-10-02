@@ -13,7 +13,11 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 4;
+        public override uint GetVersion() => 5;
+        private void OnPostprocessModel(GameObject root)
+        {
+            if(IsHero && Path.GetFileNameWithoutExtension(assetPath)=="Traveler") TravelerOrbImportPass.Apply(root);
+        }
         private void OnPreprocessModel()
         {
             if (!IsHero) return;
