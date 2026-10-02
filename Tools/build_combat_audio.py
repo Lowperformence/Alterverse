@@ -14,9 +14,9 @@ HAS_HIT=[[True,True,True,False,True],[True,True,False,True,True],[True,True,Fals
 # Different recorded takes provide variants; pitch changes are only an additional design layer.
 PALETTES={
  'Veyr':dict(body=['knifeSlice','knifeSlice2','drawKnife3'],hit=['chop','impactPunch_medium_001','impactPunch_medium_003'],texture=['drawKnife1','drawKnife2','drawKnife3'],low=6800),
- 'Kaelon':dict(body=['impactMetal_heavy_000','impactMetal_heavy_002','impactMetal_heavy_004'],hit=['impactPlate_heavy_000','impactPlate_heavy_002','impactPlate_heavy_004'],texture=['metalLatch','metalPot2','metalPot3'],low=5800),
+ 'Kaelon':dict(body=['impactMetal_heavy_000','impactMetal_heavy_002','impactMetal_heavy_004'],hit=['impactPlate_heavy_000','impactPlate_heavy_002','impactPlate_heavy_004'],texture=['silence','silence','silence'],low=5800),
  'Nyra':dict(body=['rifle_T17','rifle_T27','rifle_M21'],hit=['impactSoft_heavy_000','impactSoft_heavy_002','impactSoft_heavy_004'],texture=['metalClick','metalLatch','drawKnife2'],low=8200),
- 'Elyra':dict(body=['impactMining_000','impactMining_002','impactMining_004'],hit=['impactGlass_heavy_000','impactGlass_heavy_002','impactGlass_heavy_004'],texture=['creak1','creak2','creak3'],low=5000),
+ 'Elyra':dict(body=['impactMining_000','impactMining_002','impactMining_004'],hit=['impactGlass_heavy_000','impactGlass_heavy_002','impactGlass_heavy_004'],texture=['silence','silence','silence'],low=5000),
  'Mira':dict(body=['impactGlass_light_000','impactGlass_light_002','impactGlass_light_004'],hit=['impactBell_heavy_000','impactBell_heavy_002','impactBell_heavy_004'],texture=['bookFlip1','bookFlip2','bookFlip3'],low=6800),
  'Rook':dict(body=['cloth1','cloth2','cloth4'],hit=['impactPunch_heavy_000','impactPunch_heavy_002','impactPunch_heavy_004'],texture=['impactSoft_heavy_001','impactSoft_heavy_003','dropLeather'],low=5200),
  'Traveler':dict(body=['impactGlass_medium_001','impactGlass_medium_003','impactGlass_medium_004'],hit=['impactWood_heavy_001','impactWood_heavy_002','impactWood_heavy_003'],texture=['bookOpen','bookClose','bookPlace2'],low=6300),
@@ -27,7 +27,7 @@ def decode(p):
 def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def bootstrap(folder):
  SRC.mkdir(parents=True,exist_ok=True);provenance=[]
- names=set(n for pal in PALETTES.values() for key in ('body','hit','texture') for n in pal[key] if not n.startswith('rifle'))
+ names=set(n for pal in PALETTES.values() for key in ('body','hit','texture') for n in pal[key] if not n.startswith('rifle') and n!='silence')
  for n in sorted(names):
   files=list(folder.rglob(n+'.ogg'));assert files,n;p=files[0];shutil.copyfile(p,SRC/(n+'.ogg'))
   pack='rpg-audio' if '/rpg/' in str(p) else 'impact-sounds'
@@ -59,6 +59,8 @@ def layer(n,duration,rate=1,reverse=False):
  x=np.tanh(x*.35)
  return x
 def mix_layer(out,n,gain=1,delay=0,rate=1,reverse=False):
+ # Remove armor clatter and creaking layers without replacing the body/impact recordings.
+ if n=="silence":return
  start=int(delay*SR)
  if start>=len(out):return
  x=layer(n,(len(out)-start)/SR,rate,reverse);out[start:]+=x*gain
@@ -111,7 +113,7 @@ def render(hero,a,phase,v):
  out=np.tanh(out*1.3)
  fade=int(.002*SR);tail=min(int(.045*SR),len(out)//3);out[:fade]*=np.linspace(0,1,fade);out[-tail:]*=np.linspace(1,0,tail)
  target=-29 if phase=='Windup' else -24 if a==0 else -22 if a<4 else -21
- out*=min(10**(target/20)/max(np.sqrt(np.mean(out*out)),1e-8),10**(-22/20)/max(abs(out)))
+ out*=min(10**(target/20)/max(np.sqrt(np.mean(out*out)),1e-8),10**(-22/20)/max(float(max(abs(out))),1e-8))
  return out.astype(np.float32)
 def render_kill():
  # Original short kill-confirmation: dry body, sharp crack, tiny glass tail.
