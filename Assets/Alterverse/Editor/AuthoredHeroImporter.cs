@@ -13,7 +13,7 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 7;
+        public override uint GetVersion() => 8;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;

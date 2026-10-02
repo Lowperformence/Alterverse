@@ -39,7 +39,7 @@ namespace Alterverse.Visuals
             var p=go.AddComponent<ParticleSystem>();p.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
             var main=p.main;main.loop=false;main.playOnAwake=false;main.duration=.1f;main.startDelay=delay;
             main.startLifetime=new ParticleSystem.MinMaxCurve(life*.75f,life);main.startSize=new ParticleSystem.MinMaxCurve(size*.65f,size);
-            main.startSpeed=new ParticleSystem.MinMaxCurve(speed*.55f,speed);main.startColor=first;
+            main.startSpeed=new ParticleSystem.MinMaxCurve(speed*.55f,speed);main.startColor=Color.white;
             main.startRotation=new ParticleSystem.MinMaxCurve(0,Mathf.PI*2);main.simulationSpace=ParticleSystemSimulationSpace.World;main.maxParticles=count;
             var emission=p.emission;emission.rateOverTime=0;emission.SetBursts(new[]{new ParticleSystem.Burst(0,(short)count)});
             var shape=p.shape;shape.shapeType=ground?ParticleSystemShapeType.Circle:ParticleSystemShapeType.Hemisphere;shape.radius=spread;

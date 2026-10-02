@@ -80,7 +80,9 @@ namespace Alterverse.EditorTools
             bool heavy = hero == "Kaelon" || hero == "Rook";
             foreach (string side in new[] { "L", "R" })
             {
+                AddPlates("UpperArm" + side, "Forearm" + side, 2, false);
                 AddPlates("Forearm" + side, "Hand" + side, heavy ? 3 : 2, false);
+                AddPlates("Thigh" + side, "Shin" + side, 2, false);
                 AddPlates("Hand" + side, null, 4, true);
                 AddPlates("Shin" + side, "Foot" + side, 2, false);
             }
@@ -183,3 +185,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
+
