@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Captures authoritative end-of-match statistics on the host and sends the same immutable
+    /// Captures authoritative end-of-match statistics on the server and sends the same immutable
     /// result snapshot to every client. Each device can then grant its own local progression
     /// exactly once using a deterministic receipt id derived from match + player id.
     /// </summary>
@@ -92,7 +92,7 @@ namespace Alterverse.Multiplayer
 
         private void OnMatchEnded(int winner)
         {
-            if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost||resultReady)return;
+            if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||resultReady)return;
             CaptureHostResult(winner);
             BroadcastResult();
             CoopLobbyService lobby=CoopLobbyService.Instance;
@@ -129,7 +129,7 @@ namespace Alterverse.Multiplayer
         private void BroadcastResult()
         {
             NetworkManager manager=NetworkManager.Singleton;
-            if(manager==null||!manager.IsHost||messaging==null||manager.ConnectedClientsIds==null)return;
+            if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
 
             using FastBufferWriter writer=new(2048,Allocator.Temp);
             writer.WriteValueSafe(ProtocolVersion);
@@ -156,7 +156,7 @@ namespace Alterverse.Multiplayer
         private void OnResult(ulong senderClientId,FastBufferReader reader)
         {
             NetworkManager manager=NetworkManager.Singleton;
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||manager==null||senderClientId!=NetworkManager.ServerClientId)return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||senderClientId!=NetworkManager.ServerClientId)return;
 
             reader.ReadValueSafe(out int protocol);
             if(protocol!=ProtocolVersion)return;
