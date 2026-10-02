@@ -56,7 +56,8 @@ namespace Alterverse.Visuals
             }
             var baked=new Mesh();renderer.BakeMesh(baked);
             Vector3[] points=baked.vertices;BoneWeight[] weights=source.boneWeights;
-            var rigid=new bool[n];var below=new bool[n];for(int i=0;i<n;i++)rigid[i]=true;
+            var rigid=new bool[n];var below=new bool[n];var low=new float[n];var high=new float[n];
+            for(int i=0;i<n;i++){rigid[i]=true;low[i]=float.MaxValue;high[i]=float.MinValue;}
             Transform head=Array.Find(renderer.bones,b=>b!=null&&b.name=="Head");
             if(head==null || weights.Length!=n || points.Length!=n){Destroy(baked);return;}
             float unit=Vector3.Distance(hips.position,head.position);
@@ -66,7 +67,9 @@ namespace Alterverse.Visuals
                 string name=renderer.bones[w.boneIndex0].name;
                 if(w.weight0<.999f || (name!="Hips"&&name!="Chest"&&name!="Spine"))rigid[group]=false;
                 Vector3 world=renderer.transform.TransformPoint(points[i]);
-                if(Vector3.Dot(world-hips.position,model.up)<-unit*.15f)below[group]=true;
+                float height=Vector3.Dot(world-hips.position,model.up);
+                low[group]=Mathf.Min(low[group],height);high[group]=Mathf.Max(high[group],height);
+                if(height<-unit*.15f)below[group]=true;
             }
             Destroy(baked);
             Mesh copy=Instantiate(source);copy.name="DF_HealerWithoutLongVestments";meshes.Add(copy);
@@ -74,7 +77,7 @@ namespace Alterverse.Visuals
             {
                 var keep=new List<int>();int[] ids=triangles[s];
                 for(int i=0;i<ids.Length;i+=3)
-                {int group=Find(parent,ids[i]);if(rigid[group]&&below[group])continue;keep.Add(ids[i]);keep.Add(ids[i+1]);keep.Add(ids[i+2]);}
+                {int group=Find(parent,ids[i]);if(rigid[group]&&(below[group] || (low[group]<unit*.16f && high[group]-low[group]>unit*.40f)))continue;keep.Add(ids[i]);keep.Add(ids[i+1]);keep.Add(ids[i+2]);}
                 copy.SetTriangles(keep,s,false);
             }
             renderer.sharedMesh=copy;
@@ -106,3 +109,4 @@ namespace Alterverse.Visuals
         void OnDestroy(){foreach(var mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(var m in materials)if(m!=null)Destroy(m);}
     }
 }
+
