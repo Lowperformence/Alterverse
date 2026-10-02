@@ -27,7 +27,9 @@ namespace Alterverse.Multiplayer
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
         {
-            if (!DedicatedServerNetworkRuntime.Requested) return;
+            // Do not depend on ordering between multiple BeforeSceneLoad initializers. This tiny
+            // component may exist in a client build too, but remains completely dormant unless the
+            // dedicated-server bootstrap has actually requested server mode.
             if (FindAnyObjectByType<EdgegapDedicatedServerLifecycle>() == null)
                 new GameObject("DF_EdgegapDedicatedServerLifecycle").AddComponent<EdgegapDedicatedServerLifecycle>();
         }
