@@ -45,7 +45,6 @@ namespace Alterverse.Multiplayer
         {
             if(!Requested)yield break;
 
-            // Keep the headless process from ever entering the normal local/offline bootstrap.
             SuppressClientOnlyRuntime();
             yield return null;
             SuppressClientOnlyRuntime();
@@ -94,8 +93,10 @@ namespace Alterverse.Multiplayer
         {
             MatchClock.Set(PauseReason.Menu,false);
 
+            // A disabled menu would still report IsVisible=true because visibility is stored internally.
+            // Remove the client-only front end entirely so the headless bootstrap can never wait on it.
             MainMenuController menu=FindAnyObjectByType<MainMenuController>();
-            if(menu!=null&&menu.gameObject.activeSelf)menu.gameObject.SetActive(false);
+            if(menu!=null)UnityEngine.Object.Destroy(menu.gameObject);
 
             // PrototypeBootstrap must remain dormant until an authoritative match plan is installed.
             PrototypeBootstrap bootstrap=FindAnyObjectByType<PrototypeBootstrap>();
