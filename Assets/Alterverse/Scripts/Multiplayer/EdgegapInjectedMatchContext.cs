@@ -29,6 +29,15 @@ namespace Alterverse.Multiplayer
         public static string InjectedMatchId =>
             (Environment.GetEnvironmentVariable(MatchIdVariable) ?? "").Trim();
 
+        public static int AssignedTicketCount
+        {
+            get
+            {
+                string json = Environment.GetEnvironmentVariable(TicketIdsVariable) ?? "";
+                return CountJsonStrings(json);
+            }
+        }
+
         public static bool TryValidateTicket(
             string ticketId,
             string claimedTeamId,
@@ -124,6 +133,25 @@ namespace Alterverse.Multiplayer
         private static bool JsonStringArrayContains(string json, string expected)
         {
             if (string.IsNullOrWhiteSpace(json) || string.IsNullOrEmpty(expected)) return false;
+            bool found = false;
+            VisitJsonStrings(json, value =>
+            {
+                if (string.Equals(value, expected, StringComparison.Ordinal)) found = true;
+            });
+            return found;
+        }
+
+        private static int CountJsonStrings(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return 0;
+            int count = 0;
+            VisitJsonStrings(json, _ => count++);
+            return count;
+        }
+
+        private static void VisitJsonStrings(string json, Action<string> visitor)
+        {
+            if (string.IsNullOrWhiteSpace(json) || visitor == null) return;
 
             // MM_TICKET_IDS is a JSON string array. Avoid a third-party JSON dependency and parse
             // quoted JSON strings conservatively, including standard backslash escapes.
@@ -171,13 +199,12 @@ namespace Alterverse.Multiplayer
                 if (ch == '"')
                 {
                     inString = false;
-                    if (string.Equals(buffer.ToString(), expected, StringComparison.Ordinal)) return true;
+                    visitor(buffer.ToString());
                     continue;
                 }
 
                 buffer.Append(ch);
             }
-            return false;
         }
     }
 }
