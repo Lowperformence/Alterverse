@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using System.Threading.Tasks;
 using Alterverse.Characters;
 using Alterverse.Match;
@@ -14,9 +15,10 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Online 5v5 pre-match party flow.
-    /// Friends join a private Relay-backed party by code first. Only the party leader can
-    /// explicitly open that same party to public player search.
+    /// Online 5v5 pre-match flow. The Relay session is provisioned for all ten match players,
+    /// but starts private so up to five friends can assemble by join code first. Only the party
+    /// leader can expose the session to public search. The friend-party snapshot is persisted in
+    /// session data so the deterministic match plan can keep that group on the same team.
     /// </summary>
     public sealed class OnlinePartyService : MonoBehaviour
     {
@@ -28,17 +30,21 @@ namespace Alterverse.Multiplayer
             public bool Ready;
             public bool IsHost;
             public bool IsLocal;
+            public bool IsPartyMember;
         }
 
-        public const int MaxPartyPlayers = 5;
-        private const string SessionType = "df-online-party-v1";
-        private const string SessionName = "DIMENSIONS FRONT ONLINE PARTY";
+        public const int MaxPartyPlayers = MatchSession.TeamSize;
+        public const int MaxMatchPlayers = MatchSession.MaxPlayers;
+
+        private const string SessionType = "df-online-party-v2";
+        private const string SessionName = "DIMENSIONS FRONT ONLINE 5V5";
         private const string PlayerNameKey = "displayName";
         private const string PlayerHeroKey = "hero";
         private const string PlayerReadyKey = "ready";
         private const string SearchKey = "playerSearch";
         private const string ModeKey = "mode";
         private const string ArenaKey = "arena";
+        private const string PartyIdsKey = "partyIds";
 
         public static OnlinePartyService Instance { get; private set; }
 
@@ -47,7 +53,7 @@ namespace Alterverse.Multiplayer
         private bool busy;
         private string status = "ONLINE PARTY READY";
         private string lastError = "";
-        private readonly List<MemberView> memberBuffer = new(MaxPartyPlayers);
+        private readonly List<MemberView> memberBuffer = new(MaxMatchPlayers);
 
         public event Action Changed;
 
@@ -56,13 +62,31 @@ namespace Alterverse.Multiplayer
         public bool IsHost => session != null && session.IsHost;
         public string JoinCode => session?.Code ?? "";
         public int PlayerCount => session?.PlayerCount ?? 0;
-        public int MaxPlayers => session?.MaxPlayers ?? MaxPartyPlayers;
+        public int MaxPlayers => session?.MaxPlayers ?? MaxMatchPlayers;
+        public int PartyCapacity => MaxPartyPlayers;
+        public int MatchCapacity => MaxMatchPlayers;
         public string Status => status;
         public string LastError => lastError;
         public bool IsSearching => ReadSession(SearchKey, "0") == "1";
-        public bool IsFull => PlayerCount >= MaxPartyPlayers;
+        public bool IsFull => PlayerCount >= MaxMatchPlayers;
+        public bool IsPartyFull => PartyPlayerCount >= MaxPartyPlayers;
         public bool LocalReady => session?.CurrentPlayer != null && ReadPlayer(session.CurrentPlayer, PlayerReadyKey, "0") == "1";
-        public bool PartyReady => IsFull && !HasHeroConflict && AllPresentPlayersReady;
+        public bool PartyReady => PlayerCount > 0 && !HasHeroConflict && AllPresentPlayersReady;
+        public bool CanStartMatch => IsHost && !Busy && PartyReady;
+
+        public int PartyPlayerCount
+        {
+            get
+            {
+                int count = 0;
+                IReadOnlyList<MemberView> members = Members;
+                for (int i = 0; i < members.Count; i++)
+                    if (members[i].IsPartyMember) count++;
+                return count;
+            }
+        }
+
+        public int PublicPlayerCount => Mathf.Max(0, PlayerCount - PartyPlayerCount);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
@@ -101,7 +125,9 @@ namespace Alterverse.Multiplayer
                 {
                     Type = SessionType,
                     Name = SessionName,
-                    MaxPlayers = MaxPartyPlayers,
+                    // Relay capacity must be allocated for the final 5v5 from the beginning.
+                    // Privacy and our friend-party checks keep the pre-search group at five.
+                    MaxPlayers = MaxMatchPlayers,
                     IsPrivate = true,
                     IsLocked = false,
                     PlayerProperties = BuildLocalPlayerProperties(false),
@@ -153,9 +179,24 @@ namespace Alterverse.Multiplayer
                 if (!await EnsureServicesAsync()) return false;
                 await LeaveInternalAsync();
 
-                session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code, BuildJoinOptions());
+                ISession joined = await MultiplayerService.Instance.JoinSessionByCodeAsync(code, BuildJoinOptions());
+                bool searchAlreadyActive = ReadSession(joined, SearchKey, "0") == "1";
+
+                // Before public search the private friend party is intentionally limited to one team.
+                // The Relay allocation itself is larger because it must later carry both teams.
+                if (!searchAlreadyActive && joined.PlayerCount > MaxPartyPlayers)
+                {
+                    try { await joined.LeaveAsync(); } catch { }
+                    lastError = "The private friend party already has five players.";
+                    SetStatus("FRIEND PARTY FULL");
+                    return false;
+                }
+
+                session = joined;
                 AttachSession(session);
-                SetStatus(IsSearching ? "JOINED ONLINE PARTY • PLAYER SEARCH ACTIVE" : "JOINED PRIVATE FRIEND PARTY");
+                SetStatus(searchAlreadyActive
+                    ? "JOINED ONLINE MATCH LOBBY • PLAYER SEARCH ACTIVE"
+                    : "JOINED PRIVATE FRIEND PARTY");
                 return true;
             }
             catch (Exception ex)
@@ -172,9 +213,8 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
-        /// Solo quick-search joins an already public online party. If none is available,
-        /// the player becomes a searchable solo host. Friend groups use CreatePrivatePartyAsync,
-        /// invite by code, then let the leader call BeginPlayerSearchAsync.
+        /// Solo quick-search joins an already public online lobby. If none is available,
+        /// the player creates a private lobby and immediately exposes it to public search.
         /// </summary>
         public async Task<bool> QuickSearchAsync()
         {
@@ -187,19 +227,19 @@ namespace Alterverse.Multiplayer
             {
                 busy = true;
                 lastError = "";
-                SetStatus("SEARCHING FOR ONLINE PARTY");
+                SetStatus("SEARCHING FOR ONLINE MATCH");
                 if (!await EnsureServicesAsync()) return false;
                 await LeaveInternalAsync();
 
                 QuerySessionsResults results = await MultiplayerService.Instance.QuerySessionsAsync(
                     new QuerySessionsOptions { Count = 25 });
 
-                ISessionInfo target = FindJoinableParty(results);
+                ISessionInfo target = FindJoinableMatch(results);
                 if (target != null)
                 {
                     session = await MultiplayerService.Instance.JoinSessionByIdAsync(target.Id, BuildJoinOptions());
                     AttachSession(session);
-                    SetStatus("PLAYER FOUND • JOINED ONLINE PARTY");
+                    SetStatus("PLAYER FOUND • JOINED ONLINE MATCH LOBBY");
                     found = true;
                 }
             }
@@ -223,12 +263,30 @@ namespace Alterverse.Multiplayer
         public async Task<bool> BeginPlayerSearchAsync()
         {
             if (session == null || !IsHost || busy || IsFull) return false;
+
             try
             {
                 busy = true;
                 lastError = "";
-                await SetSearchVisibilityAsync(true);
-                SetStatus("SPIELERSUCHE AKTIV • PARTY BLEIBT ZUSAMMEN");
+
+                IHostSession host = session.AsHost();
+                string partyIds = PlayerCount <= MaxPartyPlayers
+                    ? EncodeCurrentPlayers()
+                    : ReadSession(PartyIdsKey, "");
+
+                if (string.IsNullOrEmpty(partyIds))
+                    partyIds = EncodeCurrentPlayers(MaxPartyPlayers);
+
+                host.MaxPlayers = MaxMatchPlayers;
+                host.IsPrivate = false;
+                host.SetProperty(PartyIdsKey, new SessionProperty(partyIds, VisibilityPropertyOptions.Member));
+                host.SetProperty(SearchKey, new SessionProperty("1", VisibilityPropertyOptions.Public));
+                host.SetProperty(ArenaKey, new SessionProperty(
+                    ((int)ArenaVariantRuntime.Selected).ToString(CultureInfo.InvariantCulture),
+                    VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+
+                SetStatus("SPIELERSUCHE AKTIV • FREUNDESPARTY BLEIBT ZUSAMMEN");
                 return true;
             }
             catch (Exception ex)
@@ -251,7 +309,7 @@ namespace Alterverse.Multiplayer
                 busy = true;
                 lastError = "";
                 await SetSearchVisibilityAsync(false);
-                SetStatus("PLAYER SEARCH STOPPED • PARTY PRIVATE");
+                SetStatus("PLAYER SEARCH STOPPED • LOBBY PRIVATE");
                 return true;
             }
             catch (Exception ex)
@@ -296,7 +354,7 @@ namespace Alterverse.Multiplayer
             {
                 int next = Mod((int)current + Math.Sign(direction) * step, count);
                 HeroId candidate = (HeroId)next;
-                if (HeroUnlockInventory.Owned(candidate) && !HeroUsedByOther(candidate))
+                if (HeroUnlockInventory.Owned(candidate) && !HeroBlockedForLocal(candidate))
                     return await SetLocalHeroAsync(candidate);
             }
             return false;
@@ -304,7 +362,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalHeroAsync(HeroId hero)
         {
-            if (session?.CurrentPlayer == null || busy || !HeroUnlockInventory.Owned(hero) || HeroUsedByOther(hero))
+            if (session?.CurrentPlayer == null || busy || !HeroUnlockInventory.Owned(hero) || HeroBlockedForLocal(hero))
                 return false;
 
             try
@@ -336,9 +394,9 @@ namespace Alterverse.Multiplayer
         public async Task<bool> SetLocalReadyAsync(bool ready)
         {
             if (session?.CurrentPlayer == null || busy) return false;
-            if (ready && HeroUsedByOther(LocalHero))
+            if (ready && HeroBlockedForLocal(LocalHero))
             {
-                lastError = "Party members on the same team need different heroes.";
+                lastError = "Friend-party members on the same team need different heroes.";
                 SetStatus("CHOOSE A DIFFERENT HERO");
                 return false;
             }
@@ -350,7 +408,7 @@ namespace Alterverse.Multiplayer
                 session.CurrentPlayer.SetProperty(PlayerReadyKey,
                     new PlayerProperty(ready ? "1" : "0", VisibilityPropertyOptions.Member));
                 await session.SaveCurrentPlayerDataAsync();
-                SetStatus(ready ? (IsFull ? "READY • WAITING FOR TEAM" : "READY • WAITING FOR PLAYERS") : "NOT READY");
+                SetStatus(ready ? "READY • WAITING FOR MATCH" : "NOT READY");
                 return true;
             }
             catch (Exception ex)
@@ -371,6 +429,7 @@ namespace Alterverse.Multiplayer
             {
                 memberBuffer.Clear();
                 if (session == null) return memberBuffer;
+
                 string localId = session.CurrentPlayer?.Id ?? "";
                 foreach (IReadOnlyPlayer player in session.Players)
                 {
@@ -382,13 +441,12 @@ namespace Alterverse.Multiplayer
                         Hero = (HeroId)ReadIntPlayer(player, PlayerHeroKey, (int)HeroId.Veyr),
                         Ready = ReadPlayer(player, PlayerReadyKey, "0") == "1",
                         IsHost = player.Id == session.Host,
-                        IsLocal = player.Id == localId
+                        IsLocal = player.Id == localId,
+                        IsPartyMember = IsPartyMemberId(player.Id)
                     });
                 }
 
-                memberBuffer.Sort((a, b) => a.IsHost == b.IsHost
-                    ? string.CompareOrdinal(a.PlayerId, b.PlayerId)
-                    : (a.IsHost ? -1 : 1));
+                memberBuffer.Sort(CompareMembers);
                 return memberBuffer.ToArray();
             }
         }
@@ -409,7 +467,11 @@ namespace Alterverse.Multiplayer
                 IReadOnlyList<MemberView> members = Members;
                 HashSet<HeroId> heroes = new();
                 for (int i = 0; i < members.Count; i++)
-                    if (!heroes.Add(members[i].Hero)) return true;
+                {
+                    MemberView member = members[i];
+                    if (!member.IsPartyMember) continue;
+                    if (!heroes.Add(member.Hero)) return true;
+                }
                 return false;
             }
         }
@@ -466,14 +528,14 @@ namespace Alterverse.Multiplayer
             };
         }
 
-        private static ISessionInfo FindJoinableParty(QuerySessionsResults results)
+        private static ISessionInfo FindJoinableMatch(QuerySessionsResults results)
         {
             if (results?.Sessions == null) return null;
             for (int i = 0; i < results.Sessions.Count; i++)
             {
                 ISessionInfo candidate = results.Sessions[i];
                 if (candidate == null || candidate.IsLocked || candidate.AvailableSlots <= 0) continue;
-                if (candidate.MaxPlayers != MaxPartyPlayers) continue;
+                if (candidate.MaxPlayers != MaxMatchPlayers) continue;
                 if (!string.Equals(candidate.Name, SessionName, StringComparison.Ordinal)) continue;
                 return candidate;
             }
@@ -484,28 +546,24 @@ namespace Alterverse.Multiplayer
         {
             if (session == null || !session.IsHost) return;
             IHostSession host = session.AsHost();
-
-            // Custom and first-class session properties are persisted separately. Saving them in
-            // two steps avoids a known reliability edge case when privacy and metadata change together.
+            host.MaxPlayers = MaxMatchPlayers;
+            host.IsPrivate = !searchable;
             host.SetProperty(SearchKey,
                 new SessionProperty(searchable ? "1" : "0", VisibilityPropertyOptions.Public));
-            await host.SavePropertiesAsync();
-
-            host.IsPrivate = !searchable;
             await host.SavePropertiesAsync();
         }
 
         private async Task CloseSearchWhenFullAsync()
         {
-            if (session == null || !IsHost || !IsSearching || PlayerCount < MaxPartyPlayers) return;
+            if (session == null || !IsHost || !IsSearching || PlayerCount < MaxMatchPlayers) return;
             try
             {
                 await SetSearchVisibilityAsync(false);
-                SetStatus("TEAM FULL • PLAYER SEARCH CLOSED");
+                SetStatus("MATCH LOBBY FULL • PLAYER SEARCH CLOSED");
             }
             catch (Exception ex)
             {
-                Debug.LogWarning("DIMENSIONS FRONT ONLINE: could not close full party search: " + ex.Message);
+                Debug.LogWarning("DIMENSIONS FRONT ONLINE: could not close full match search: " + ex.Message);
             }
             RaiseChanged();
         }
@@ -542,15 +600,17 @@ namespace Alterverse.Multiplayer
 
         private void OnPlayerJoined(string playerId)
         {
-            if (IsHost && IsSearching && PlayerCount >= MaxPartyPlayers)
+            if (IsHost && IsSearching && PlayerCount >= MaxMatchPlayers)
                 _ = CloseSearchWhenFullAsync();
             RaiseChanged();
         }
 
         private void OnPlayerLeft(string playerId)
         {
-            if (IsHost && !IsSearching)
-                status = "PLAYER LEFT • PRESS SPIELER SUCHEN TO REFILL";
+            if (IsHost)
+                status = IsSearching
+                    ? "PLAYER LEFT • SEARCHING FOR REPLACEMENT"
+                    : "PLAYER LEFT • LOBBY PRIVATE";
             RaiseChanged();
         }
 
@@ -591,21 +651,60 @@ namespace Alterverse.Multiplayer
             catch { }
         }
 
-        private bool HeroUsedByOther(HeroId hero)
+        private bool HeroBlockedForLocal(HeroId hero)
         {
-            if (session == null) return false;
-            string localId = session.CurrentPlayer?.Id ?? "";
+            if (session?.CurrentPlayer == null || !IsPartyMemberId(session.CurrentPlayer.Id)) return false;
+            string localId = session.CurrentPlayer.Id;
             foreach (IReadOnlyPlayer player in session.Players)
             {
-                if (player != null && player.Id != localId && ReadIntPlayer(player, PlayerHeroKey, -1) == (int)hero)
-                    return true;
+                if (player == null || player.Id == localId || !IsPartyMemberId(player.Id)) continue;
+                if (ReadIntPlayer(player, PlayerHeroKey, -1) == (int)hero) return true;
             }
             return false;
         }
 
-        private string ReadSession(string key, string fallback)
+        private bool IsPartyMemberId(string playerId)
         {
-            if (session != null && session.Properties.TryGetValue(key, out SessionProperty value) && !string.IsNullOrEmpty(value.Value))
+            if (session == null || string.IsNullOrEmpty(playerId)) return false;
+
+            // While a private group contains no more than one team, everyone currently in it is
+            // part of the friend party. On public search we switch to the persisted snapshot.
+            if (!IsSearching && PlayerCount <= MaxPartyPlayers) return true;
+
+            string encoded = ReadSession(PartyIdsKey, "");
+            if (string.IsNullOrEmpty(encoded)) return false;
+            string[] ids = encoded.Split('|');
+            for (int i = 0; i < ids.Length; i++)
+                if (string.Equals(ids[i], playerId, StringComparison.Ordinal)) return true;
+            return false;
+        }
+
+        private string EncodeCurrentPlayers(int limit = MaxPartyPlayers)
+        {
+            if (session == null) return "";
+            List<string> ids = new(Mathf.Min(limit, session.PlayerCount));
+            foreach (IReadOnlyPlayer player in session.Players)
+            {
+                if (player == null || string.IsNullOrEmpty(player.Id)) continue;
+                ids.Add(player.Id);
+            }
+            ids.Sort(StringComparer.Ordinal);
+            if (ids.Count > limit) ids.RemoveRange(limit, ids.Count - limit);
+            return string.Join("|", ids);
+        }
+
+        private static int CompareMembers(MemberView a, MemberView b)
+        {
+            if (a.IsHost != b.IsHost) return a.IsHost ? -1 : 1;
+            if (a.IsPartyMember != b.IsPartyMember) return a.IsPartyMember ? -1 : 1;
+            return string.CompareOrdinal(a.PlayerId, b.PlayerId);
+        }
+
+        private string ReadSession(string key, string fallback) => ReadSession(session, key, fallback);
+
+        private static string ReadSession(ISession source, string key, string fallback)
+        {
+            if (source != null && source.Properties.TryGetValue(key, out SessionProperty value) && !string.IsNullOrEmpty(value.Value))
                 return value.Value;
             return fallback;
         }
@@ -642,7 +741,7 @@ namespace Alterverse.Multiplayer
         {
             if (string.IsNullOrWhiteSpace(value)) return "";
             char[] chars = value.Trim().ToUpperInvariant().ToCharArray();
-            var cleaned = new System.Text.StringBuilder(chars.Length);
+            var cleaned = new StringBuilder(chars.Length);
             for (int i = 0; i < chars.Length; i++)
                 if (char.IsLetterOrDigit(chars[i])) cleaned.Append(chars[i]);
             return cleaned.ToString();
