@@ -241,6 +241,18 @@ for j in range(4):
   c=a+(b-a)*t-d*.025
   tube('cyan petal capacitor',[c+[-.012,0,-.012],c+[.012,.006,.012]],.005,4,bone,6)
 
+# Additional layered shoulder armor: front, rear and overhanging outer lip.
+GROUP=0
+for side,s in [('L',-1),('R',1)]:
+ bone='UpperArm'+side
+ outline=[(s*.17,1.65),(s*.26,1.689),(s*.384,1.635),(s*.39,1.549),(s*.316,1.496),(s*.24,1.555)]
+ plate('added shoulder front shield',outline,.101,.033,2,bone)
+ plate('added shoulder rear shield',outline,-.092,-.027,2,bone)
+ plate('overlapping shoulder lower plate',[(s*.298,1.553),(s*.39,1.579),(s*.405,1.478),(s*.36,1.43),(s*.302,1.476)],.072,.033,2,bone)
+ tube('shoulder dark separation',[(s*.246,1.567,.125),(s*.316,1.515,.125),(s*.379,1.556,.123)],.005,1,bone,6)
+ for j in range(2):
+  tube('shoulder violet status inset',[(s*(.283+j*.027),1.63,.135),(s*(.278+j*.027),1.605,.136)],.004,3,bone,6)
+
 # Heavy mech proportions: enlarge armor around each segment axis without lengthening limbs.
 for i,v in enumerate(V):
  if GI[i]!=0:continue
