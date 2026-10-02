@@ -14,7 +14,7 @@ namespace Alterverse.Multiplayer
         private DimensionsFront front;
         private MatchOpening opening;
         private CustomMessagingManager messaging;
-        private bool attached;
+        private bool attached,openingEverActive;
         private float nextSend;
 
         private void Awake(){front=FindAnyObjectByType<DimensionsFront>();opening=FindAnyObjectByType<MatchOpening>();}
@@ -32,6 +32,15 @@ namespace Alterverse.Multiplayer
             Attach(manager.CustomMessagingManager);
 
             if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
+
+            // Never publish an initial "opening=false" before the authoritative countdown has
+            // actually entered its pause. Remote clients intentionally remain paused until this happens.
+            if(!openingEverActive)
+            {
+                if(opening==null||!opening.OpeningActive)return;
+                openingEverActive=true;
+            }
+
             nextSend=Time.unscaledTime+SendInterval;
             SendState(manager);
         }
