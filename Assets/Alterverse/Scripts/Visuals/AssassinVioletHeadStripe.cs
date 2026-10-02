@@ -18,51 +18,73 @@ namespace Alterverse.Visuals
                 if(bone.name=="Head"){head=bone;break;}
             if(head==null)return;
             Bounds bounds=default;bool found=false;
+            var headPoints=new List<Vector3>();
             foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if(skin.sharedMesh==null||skin.name!="DF_Anatomy")continue;
+                if(skin.sharedMesh==null||!skin.sharedMesh.isReadable||skin.name!="DF_Anatomy")continue;
                 int index=System.Array.IndexOf(skin.bones,head);
                 if(index<0)continue;
-                var baked=new Mesh();skin.BakeMesh(baked);
-                var vertices=baked.vertices;var weights=skin.sharedMesh.boneWeights;
+                var vertices=skin.sharedMesh.vertices;var weights=skin.sharedMesh.boneWeights;
+                Matrix4x4 headBind=skin.sharedMesh.bindposes[index];
                 for(int i=0;i<vertices.Length&&i<weights.Length;i++)
                 {
                     var w=weights[i];
                     float influence=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+
                         (w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
                     if(influence<.5f)continue;
-                    Vector3 p=model.InverseTransformPoint(skin.transform.TransformPoint(vertices[i]));
+                    Vector3 p=model.InverseTransformPoint(head.TransformPoint(headBind.MultiplyPoint3x4(vertices[i])));
+                    headPoints.Add(p);
                     if(!found){bounds=new Bounds(p,Vector3.zero);found=true;}else bounds.Encapsulate(p);
                 }
-                Object.Destroy(baked);
             }
-            if(!found||bounds.size.y<=0)return;
-            model.gameObject.AddComponent<AssassinVioletHeadStripe>().Build(model,head,bounds);
+            if(!found||bounds.size.y<=0)
+            {
+                Transform chest=null;
+                foreach(var bone in model.GetComponentsInChildren<Transform>(true))if(bone.name=="Chest"){chest=bone;break;}
+                float unit=chest!=null?Vector3.Distance(model.InverseTransformPoint(head.position),model.InverseTransformPoint(chest.position))/.24f:1f;
+                bounds=new Bounds(model.InverseTransformPoint(head.position)+Vector3.up*.16f*unit,new Vector3(.24f,.32f,.24f)*unit);
+            }
+            model.gameObject.AddComponent<AssassinVioletHeadStripe>().Build(model,head,bounds,headPoints);
         }
 
-        void Build(Transform model,Transform head,Bounds bounds)
+        void Build(Transform model,Transform head,Bounds bounds,List<Vector3> headPoints)
         {
-            Color violet=new(.63f,.055f,1f,1f);
-            crownMaterial=RuntimeShaderLibrary.Create(violet,false,.15f,.5f,violet*2.1f);
+            Color violet=new(.66f,.08f,1f,1f);
+            crownMaterial=RuntimeShaderLibrary.Create(violet,false,.15f,.5f,violet*3f);
             if(crownMaterial==null)return;
             crownMaterial.name="DF_AssassinVioletHeadStripe";crownMaterial.EnableKeyword("_EMISSION");
             var vertices=new List<Vector3>();var triangles=new List<int>();
-            // A narrow raised strip follows the helmet's crown from brow to rear.
+            // Follow the highest actual helmet points, so boxy head geometry cannot bury the strip.
             const int segments=24;
+            float clearance=Mathf.Max(.008f,bounds.size.y*.03f);
+            float halfWidth=Mathf.Max(.009f,bounds.size.x*.065f);
+            var levels=new float[segments+1];
+            var zs=new float[segments+1];
             for(int i=0;i<=segments;i++)
             {
-                float angle=Mathf.Lerp(-1.15f,1.15f,i/(float)segments);
-                float y=bounds.center.y+(bounds.extents.y+.007f)*Mathf.Cos(angle);
-                float z=bounds.center.z+(bounds.extents.z+.007f)*Mathf.Sin(angle);
-                for(int side=-1;side<=1;side+=2)
-                {
-                    Vector3 p=new(bounds.center.x+side*bounds.size.x*.045f,y,z);
-                    vertices.Add(head.InverseTransformPoint(model.TransformPoint(p)));
-                }
-                if(i==segments)continue;
-                int n=i*2;
-                triangles.Add(n);triangles.Add(n+2);triangles.Add(n+1);
-                triangles.Add(n+1);triangles.Add(n+2);triangles.Add(n+3);
+                float z=Mathf.Lerp(bounds.center.z-bounds.extents.z*.72f,bounds.center.z+bounds.extents.z*.72f,i/(float)segments);
+                float top=float.MinValue;
+                foreach(Vector3 p in headPoints)
+                    if(Mathf.Abs(p.z-z)<bounds.extents.z*.25f&&Mathf.Abs(p.x-bounds.center.x)<bounds.extents.x*.6f)
+                        top=Mathf.Max(top,p.y);
+                if(top==float.MinValue)top=bounds.max.y;
+                levels[i]=top+clearance;zs[i]=z;
+            }
+            for(int i=0;i<segments;i++)
+            {
+                Vector3 a=Point(i,-1,0),b=Point(i,1,0),c=Point(i+1,1,0),d=Point(i+1,-1,0);
+                Vector3 ab=Point(i,-1,-clearance*.65f),bb=Point(i,1,-clearance*.65f);
+                Vector3 cb=Point(i+1,1,-clearance*.65f),db=Point(i+1,-1,-clearance*.65f);
+                Quad(a,d,c,b);Quad(ab,bb,cb,db);Quad(a,ab,db,d);Quad(b,c,cb,bb);
+                if(i==0)Quad(a,b,bb,ab);
+                if(i==segments-1)Quad(d,db,cb,c);
+            }
+            Vector3 Point(int i,int side,float depth)
+                =>head.InverseTransformPoint(model.TransformPoint(new Vector3(bounds.center.x+side*halfWidth,levels[i]+depth,zs[i])));
+            void Quad(Vector3 a,Vector3 b,Vector3 c,Vector3 d)
+            {
+                int n=vertices.Count;vertices.Add(a);vertices.Add(b);vertices.Add(c);vertices.Add(d);
+                triangles.Add(n);triangles.Add(n+1);triangles.Add(n+2);triangles.Add(n);triangles.Add(n+2);triangles.Add(n+3);
             }
             crownMesh=new Mesh{name="DF_AssassinHeadStripe"};
             crownMesh.SetVertices(vertices);crownMesh.SetTriangles(triangles,0);crownMesh.RecalculateNormals();crownMesh.RecalculateBounds();
