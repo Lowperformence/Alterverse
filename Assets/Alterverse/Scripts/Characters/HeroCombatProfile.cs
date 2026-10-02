@@ -26,7 +26,8 @@ namespace Alterverse.Characters
             // Melee movement is role-specific rather than a blanket buff. Zhaev already owns a long
             // gap-close, Auren has ranged control and tank durability, while Brakk has no true dash
             // and therefore needs enough foot speed to eventually punish a perfectly kiting carry.
-            HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f,.2f,.1f),
+            // Zhaev receives an additional 5% hero-specific movement-speed increase.
+            HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f*1.05f,.2f,.1f),
             HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,6.0f,1f,.8f),
             HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,5.58f,.3f,.05f),
             HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
