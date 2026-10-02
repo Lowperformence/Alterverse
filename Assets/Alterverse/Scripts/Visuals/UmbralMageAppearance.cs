@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Ione Vaska's hooded armor, split robe and crystal staff, fitted to her existing skeleton.</summary>
+    /// <summary>Ione Vaska's hooded armor, articulated light leg plates and crystal staff, fitted to her existing skeleton.</summary>
     [DisallowMultipleComponent]
     public sealed class UmbralMageAppearance : MonoBehaviour
     {

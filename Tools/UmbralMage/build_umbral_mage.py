@@ -162,17 +162,9 @@ for side,s in [('L',-1),('R',1)]:
  panel('rib armor',[(s*.033,1.335),(s*.112,1.344),(s*.123,1.245),(s*.067,1.207),(s*.025,1.264)],.087,.022,'Spine')
  for j in range(3):tube('corset seam',[(s*.105,1.303-j*.034,.107),(s*.06,1.278-j*.034,.114)],.004,2,'Spine')
  shard('collar thorn',(s*.085,1.50,.019),(s*.174,1.675,-.033),.022,.014,2,'Chest')
- # Hanging side robes follow each thigh; a split front leaves room for a stride.
- thigh='Thigh'+side
- fabric('long outer robe '+side,[(1.04,s*.052,s*.17,-.025),(.87,s*.07,s*.20,.024),(.58,s*.10,s*.242,.034),(.25,s*.11,s*.27,.040),(.105,s*.146,s*.234,.041)],1,thigh,side=='L')
- fabric('front pointed tabard '+side,[(1.10,s*.024,s*.14,.10),(.91,s*.037,s*.16,.125),(.63,s*.049,s*.184,.134),(.36,s*.059,s*.182,.143),(.21,s*.12,s*.142,.143)],0,thigh)
- tube('tabard silver border',[(s*.032,1.085,.122),(s*.047,.87,.147),(s*.06,.60,.155),(s*.074,.37,.16),(s*.13,.216,.156),(s*.17,.37,.16)],.0035,2,thigh)
- tube('robe violet embroidery',[(s*.09,.85,.153),(s*.12,.79,.157),(s*.083,.69,.155),(s*.127,.57,.16)],.0024,4,thigh)
- # Back cloak has a central split and folded silhouette.
- fabric('upper shoulder mantle '+side,[(1.50,s*.015,s*.14,-.09),(1.26,s*.021,s*.17,-.13),(1.035,s*.03,s*.19,-.139)],0,'Chest')
- fabric('lower split mantle '+side,[(1.065,s*.03,s*.19,-.147),(.65,s*.045,s*.23,-.153),(.29,s*.060,s*.263,-.17),(.17,s*.106,s*.23,-.165)],0,thigh)
- tube('upper mantle silver edge',[(s*.137,1.46,-.107),(s*.165,1.26,-.146),(s*.189,1.035,-.155)],.003,2,'Chest')
- tube('lower mantle silver edge',[(s*.19,1.065,-.163),(s*.223,.65,-.17),(s*.253,.30,-.184),(s*.23,.17,-.18)],.003,2,thigh)
+ # Short shoulder mantle ends at the waist; legs remain fully articulated.
+ fabric('short shoulder mantle '+side,[(1.50,s*.015,s*.14,-.09),(1.26,s*.021,s*.17,-.13),(1.12,s*.03,s*.16,-.139)],0,'Chest')
+ tube('short mantle silver edge',[(s*.137,1.46,-.107),(s*.165,1.26,-.146),(s*.16,1.12,-.155)],.003,2,'Chest')
 # Silver-violet amulet and a filigree belt clasp.
 ring('chest amulet frame',(0,1.459,.14),.029,.005,2,'Chest')
 shard('chest violet talisman',(0,1.426,.15),(0,1.50,.15),.017,.010,3,'Chest')
@@ -209,6 +201,13 @@ for side,s in [('L',-1),('R',1)]:
  thigh='Thigh'+side;shin='Shin'+side;foot='Foot'+side
  h=np.array(BONES[thigh][0]);k=np.array(BONES[shin][0]);f=np.array(BONES[foot][0])
  limb('leggings',h,k,.069,0,thigh);limb('high armored boot',k,f,.057,1,shin)
+ x=(h[0]+k[0])*.5
+ panel('light thigh plate '+side,[(x-.054,h[1]-.08),(x+.054,h[1]-.08),(x+.048,k[1]+.14),(x,k[1]+.09),(x-.048,k[1]+.14)],.065,.015,thigh)
+ x=k[0]
+ panel('articulated knee guard '+side,[(x-.045,k[1]+.04),(x+.045,k[1]+.04),(x+.049,k[1]-.02),(x,k[1]-.067),(x-.049,k[1]-.02)],.058,.016,shin)
+ x=(k[0]+f[0])*.5
+ panel('light shin guard '+side,[(x-.043,k[1]-.10),(x+.043,k[1]-.10),(x+.035,f[1]+.07),(x,f[1]+.035),(x-.035,f[1]+.07)],.044,.014,shin)
+ tube('violet shin inlay '+side,[(x,k[1]-.13,.069),(x,f[1]+.10,.069)],.0026,3,shin)
  ell('boot toe',f+[0,-.064,.071],(.061,.041,.111),1,foot,20,10)
  tube('boot silver welt',[f+[-.05,-.076,.116],f+[-.026,-.076,.173],f+[.03,-.076,.17],f+[.054,-.076,.11]],.004,2,foot)
 # Original violet crystal staff, separated from anatomy for shop colorways.
