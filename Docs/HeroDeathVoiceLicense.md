@@ -11,9 +11,9 @@ License page checked 2026-10-02: https://mixkit.co/license/modal/sfxFree/
 
 The license permits incorporation into commercial video games and modification. It prohibits standalone redistribution and redistribution with source files. Keep this source in the private project; do not include it in a public source release or sound library. The game runtime uses the processed clip as part of the finished game.
 
-Tools/build_combat_audio.py rebuilds Assets/Alterverse/Resources/Audio/SFX/HeroDeath.ogg from that source. Processing removes leading silence, keeps 0.65 seconds of the opening sound, removes sub-70Hz rumble, applies a short ending fade and preserves the existing -22dBFS peak budget. No voiced exclamation, pitch change or new synthesized layer is used. The existing death and multiplayer transition playback remains unchanged.
+Tools/build_combat_audio.py rebuilds Assets/Alterverse/Resources/Audio/SFX/HeroDeath.ogg from that source. Processing removes leading silence, keeps 0.65 seconds of the opening sound, removes sub-70Hz rumble, applies a short ending fade and uses three times the previous amplitude (+9.54dB), targeting -12.46dBFS peak. No voiced exclamation, pitch change or new synthesized layer is used. The existing death and multiplayer transition playback remains unchanged.
 
-Validation: generated Ogg decoded successfully at 32kHz mono; decoded duration 0.646s and peak -22.10dBFS, no clipping and faded ending. Live Unity playback remains unverified.
+Validation: generated Ogg decoded successfully at 32kHz mono; decoded duration 0.646s and peak -12.27dBFS (decoded Vorbis), measured amplitude ratio 2.992 versus the previous encoded clip, no clipping and faded ending. Live Unity playback remains unverified.
 
 ## Archived voice source
 
