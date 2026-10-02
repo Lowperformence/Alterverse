@@ -14,7 +14,7 @@ namespace Alterverse.Audio
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,_=>false
         });
         public static bool HasWindup(int hero,int action)=>action==0||HasImpact(hero,action);
-        public static int VariantCount(int hero,int action,int phase)=>phase!=2&&(action==0||hero==2&&action==4)?3:1;
+        public static int VariantCount(int hero,int action,int phase)=>phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static AudioClip[][] Load()
         {
             var clips=new AudioClip[CueCount][];
@@ -26,6 +26,7 @@ namespace Alterverse.Audio
                 for(int v=0;v<clips[cue].Length;v++)
                 {
                     string path="Audio/Heroes/"+Heroes[h]+"/"+Actions[a]+(phase==0?"_Cast":phase==1?"_Impact":"_Windup")+(v==0?"":"_v"+(v+1));
+                    if(a==4&&phase==0)path="Audio/Heroes/"+Heroes[h]+"/Ultimate_Selected";
                     clips[cue][v]=Resources.Load<AudioClip>(path);
                     if(clips[cue][v]==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
                 }
@@ -60,7 +61,8 @@ namespace Alterverse.Audio
             }
             float pan=local?0:Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f);
             // Per-actor throttling: other actors of the same class cannot silence the player.
-            float cooldown=phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
+            // Sivra fires four shots in .54s; the selected ultimate recording starts only once.
+            float cooldown=ultimate&&phase==0?1f:phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
             int cue=phase==2?70+hero*5+action:hero*10+action*2+phase;
             DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }

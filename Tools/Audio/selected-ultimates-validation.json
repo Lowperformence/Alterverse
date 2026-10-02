@@ -1,0 +1,58 @@
+[
+  {
+    "hero": "Rook",
+    "source": "brakk ulti.wav",
+    "source_sha256": "b998cbcd8c89b188380eaeb532d31539edd6b2e3ce22a23175ff1b91c40ae9e9",
+    "duration": 2.0,
+    "peak_dbfs": -5.698237172865209,
+    "bytes": 23912
+  },
+  {
+    "hero": "Mira",
+    "source": "heiler ulti.wav",
+    "source_sha256": "91037a5a859e90e1255757f9127782e661a764ff20a2a042bfb95d7b8e686734",
+    "duration": 3.7539909297052154,
+    "peak_dbfs": -6.216187416544058,
+    "bytes": 64384
+  },
+  {
+    "hero": "Elyra",
+    "source": "ione ulti.wav",
+    "source_sha256": "6097c4b9350beb3f6af7cc078bc81c0dd28ba381315eca066063a1cf85507db2",
+    "duration": 3.4694331065759636,
+    "peak_dbfs": -5.98199047064062,
+    "bytes": 61994
+  },
+  {
+    "hero": "Nyra",
+    "source": "sivra ulti.wav",
+    "source_sha256": "32fe8e4b6f40d44ab78b5599da01450ec44601fd4259821dcef5c258bec4bdd1",
+    "duration": 6.036485260770975,
+    "peak_dbfs": -5.509463626179276,
+    "bytes": 96734
+  },
+  {
+    "hero": "Kaelon",
+    "source": "tank ulti.wav",
+    "source_sha256": "d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593",
+    "duration": 2.7125850340136055,
+    "peak_dbfs": -5.937132738522227,
+    "bytes": 56114
+  },
+  {
+    "hero": "Traveler",
+    "source": "ulti traveler.wav",
+    "source_sha256": "d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593",
+    "duration": 2.7125850340136055,
+    "peak_dbfs": -5.937132738522227,
+    "bytes": 56114
+  },
+  {
+    "hero": "Veyr",
+    "source": "assasinen ulti.mp3",
+    "source_sha256": "a57a2611ad4484d1934d71b7a7a911cace8a0a91d1792f645f9d8199d65d507d",
+    "duration": 1.5673469387755101,
+    "peak_dbfs": -6.246300341097253,
+    "bytes": 30778
+  }
+]
