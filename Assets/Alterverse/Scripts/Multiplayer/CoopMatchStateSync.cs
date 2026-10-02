@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Alterverse.Multiplayer
 {
-    /// <summary>Replicates the host-owned match clock, control score and result to every client.</summary>
+    /// <summary>Replicates the server-owned match clock, control score and result to every client.</summary>
     public sealed class CoopMatchStateSync : MonoBehaviour
     {
         private const string StateMessage="DF_COOP_MATCH_STATE_V1";
@@ -29,14 +29,14 @@ namespace Alterverse.Multiplayer
             if(front==null)return;
             Attach(manager.CustomMessagingManager);
 
-            if(!CoopAuthority.LocalIsHost||Time.unscaledTime<nextSend)return;
+            if(!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextSend)return;
             nextSend=Time.unscaledTime+SendInterval;
             SendState(manager);
         }
 
         private void SendState(NetworkManager manager)
         {
-            if(messaging==null||manager?.ConnectedClientsIds==null)return;
+            if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
             using FastBufferWriter writer=new(64,Allocator.Temp);
             writer.WriteValueSafe(front.TimeRemaining);
             writer.WriteValueSafe(front.ZeroControl);
@@ -56,7 +56,7 @@ namespace Alterverse.Multiplayer
 
         private void OnState(ulong senderClientId,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||senderClientId!=NetworkManager.ServerClientId)return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||senderClientId!=NetworkManager.ServerClientId)return;
             front??=FindAnyObjectByType<DimensionsFront>();
             if(front==null)return;
 
