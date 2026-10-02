@@ -41,7 +41,22 @@ namespace Alterverse.Visuals
                     {
                         low.y=Mathf.Max(low.y,neck.y+(high.y-neck.y)*.19f);
                         center=(low+high)*.5f;
-                        radius=Vector3.Scale(high-low,new Vector3(.60f,.57f,.60f));
+                        radius=Vector3.Max(Vector3.Scale(high-low,new Vector3(.60f,.57f,.60f)),new Vector3(.10f,.13f,.10f)*unit);
+                        // An ellipsoid fitted only to box extents cuts through the box corners.
+                        // Fit the enclosing surface to the actual head, including hair and jaw armor.
+                        float enclosure=1f;
+                        for(int i=0;i<points.Length;i++)
+                        {
+                            var w=weights[i];
+                            float weight=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+(w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
+                            if(weight<.5f)continue;
+                            Vector3 q=model.InverseTransformPoint(skin.transform.TransformPoint(points[i]));
+                            if(q.y<low.y)continue;
+                            Vector3 d=q-center;
+                            float normalizedRadius=new Vector3(d.x/radius.x,d.y/radius.y,d.z/radius.z).magnitude;
+                            enclosure=Mathf.Max(enclosure,normalizedRadius*1.06f);
+                        }
+                        radius*=enclosure;
                     }
                 }
             }
@@ -83,7 +98,7 @@ namespace Alterverse.Visuals
             {Vector3 a=v[ids[i]],b=v[ids[i+1]],c=v[ids[i+2]];if(Vector3.Dot(Vector3.Cross(b-a,c-a),(a+b+c)/3-localCenter)<0){int t=ids[i+1];ids[i+1]=ids[i+2];ids[i+2]=t;}}
             mesh.SetTriangles(bronze,0);mesh.SetTriangles(trim,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
             materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black)};
-            var go=new GameObject("DF_BrakkBronzeHelmet");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
+            var go=new GameObject("DF_BrakkBronzeHelmet");go.transform.SetParent(head,false);go.layer=head.gameObject.layer;go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
         }
         void BuildArmorDetails(Transform model,float unit)
         {
@@ -120,7 +135,7 @@ namespace Alterverse.Visuals
                 }
                 var detail=new Mesh{name="DF_Brakk_ArticulatedArmor_"+name};detail.SetVertices(verts);detail.subMeshCount=2;
                 detail.SetTriangles(body,0);detail.SetTriangles(accents,1);detail.RecalculateNormals();detail.RecalculateBounds();detailMeshes.Add(detail);
-                var go=new GameObject(detail.name);go.transform.SetParent(bone,false);go.AddComponent<MeshFilter>().sharedMesh=detail;
+                var go=new GameObject(detail.name);go.transform.SetParent(bone,false);go.layer=bone.gameObject.layer;go.AddComponent<MeshFilter>().sharedMesh=detail;
                 go.AddComponent<MeshRenderer>().sharedMaterials=new[]{materials[0],materials[1]};
             }
         }
