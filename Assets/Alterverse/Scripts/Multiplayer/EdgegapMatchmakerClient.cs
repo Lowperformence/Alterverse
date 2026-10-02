@@ -22,6 +22,7 @@ namespace Alterverse.Multiplayer
         private const int RequestTimeoutSeconds = 15;
         private const int PollIntervalMilliseconds = 3000;
         private const int MaxRequestAttempts = 3;
+        private const int DedicatedConnectionTimeoutSeconds = 65;
 
         public static EdgegapMatchmakerClient Instance { get; private set; }
 
@@ -134,8 +135,9 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
-        /// Polls the local Group Up membership every three seconds, as recommended by Edgegap.
-        /// Once HOST_ASSIGNED is returned, switches NGO/UTP to the assigned fqdn + external gameport.
+        /// Polls the local Group Up membership every three seconds. Once HOST_ASSIGNED is returned,
+        /// switches NGO/UTP to the assigned fqdn + external gameport and waits until NGO confirms
+        /// the direct connection (including the cold-start retry window).
         /// </summary>
         public async Task<bool> WaitForAssignmentAndConnectAsync(int timeoutSeconds = 180)
         {
@@ -150,7 +152,10 @@ namespace Alterverse.Multiplayer
                     if (!CoopNetworkBootstrap.ConnectToDedicatedServer(AssignedHost, AssignedPort))
                         return Fail("COULD NOT START DEDICATED SERVER CONNECTION");
 
-                    SetStatus($"HOST ASSIGNED • {AssignedHost}:{AssignedPort}");
+                    SetStatus($"HOST ASSIGNED • CONNECTING {AssignedHost}:{AssignedPort}");
+                    if (!await WaitForDedicatedConnectionAsync()) return false;
+                    LastError = "";
+                    SetStatus($"DEDICATED SERVER CONNECTED • {AssignedHost}:{AssignedPort}");
                     return true;
                 }
 
@@ -161,6 +166,27 @@ namespace Alterverse.Multiplayer
             }
 
             return Fail("MATCHMAKING ASSIGNMENT TIMEOUT");
+        }
+
+        private async Task<bool> WaitForDedicatedConnectionAsync()
+        {
+            DateTime deadline = DateTime.UtcNow.AddSeconds(DedicatedConnectionTimeoutSeconds);
+            while (DateTime.UtcNow < deadline)
+            {
+                var manager = CoopNetworkBootstrap.Manager;
+                if (manager != null && manager.IsConnectedClient && !manager.IsServer)
+                    return true;
+
+                string connectionState = CoopNetworkBootstrap.DirectServerStatus ?? "";
+                if (connectionState.StartsWith("DEDICATED CONNECTION FAILED", StringComparison.Ordinal) ||
+                    connectionState.StartsWith("NETWORK SHUTDOWN TIMEOUT", StringComparison.Ordinal) ||
+                    connectionState.StartsWith("NETWORK MANAGER UNAVAILABLE", StringComparison.Ordinal))
+                    return Fail(connectionState);
+
+                await Task.Delay(250);
+            }
+
+            return Fail("DEDICATED SERVER CONNECTION TIMEOUT");
         }
 
         private async Task<MemberResponse> SendMemberAsync(string method, string path, object body)
