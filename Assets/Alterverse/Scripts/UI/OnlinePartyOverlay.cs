@@ -26,6 +26,17 @@ namespace Alterverse.UI
                 new GameObject("DF_OnlinePartyOverlay").AddComponent<OnlinePartyOverlay>();
         }
 
+        public static void Show()
+        {
+            if(instance==null)AutoCreate();
+            if(instance!=null)instance.open=true;
+        }
+
+        public static void Hide()
+        {
+            if(instance!=null)instance.open=false;
+        }
+
         private void Awake()
         {
             if (instance != null && instance != this)

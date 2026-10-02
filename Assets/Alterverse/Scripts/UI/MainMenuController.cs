@@ -32,6 +32,7 @@ namespace Alterverse.UI
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
+        private bool choosingMatchMode;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
         private bool battlePassPreviewPremium;
@@ -394,7 +395,15 @@ namespace Alterverse.UI
                     :ArenaBrowseStatus(browsed.Variant,owned,selectedNow));
             }
 
-            if (theme.Action(new Rect(Left,620,w,58),"START MATCH",true)) BeginLaunch();
+            const float matchButtonGap = 8f;
+            float matchButtonWidth = (w - matchButtonGap) * .5f;
+            bool matchButtonsEnabled = !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
+                (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
+                (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
+            if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
+                enabled:matchButtonsEnabled)) _ = BeginOnlineMatchmakingAsync();
+            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Play Offline",true,
+                enabled:matchButtonsEnabled)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
@@ -1264,10 +1273,8 @@ namespace Alterverse.UI
             if (!audioDirty) return;
             PlayerProfile.SetAudioVolumes(master,music,sfx,true); audioDirty=false;
         }
-        private void BeginLaunch()
+        private bool PrepareSelectedMatch()
         {
-            if (launching) return;
-
             // The arena visible in the PLAY slider is the arena that starts.
             // Previously the slider could browse Kryon/Noxara while an older persisted arena
             // (often Moon) remained selected, so START MATCH launched the wrong battlefield.
@@ -1278,7 +1285,7 @@ namespace Alterverse.UI
                 if(!ArenaUnlockInventory.Owned(browsed.Variant))
                 {
                     launchMessage=browsed.Name+" LOCKED  •  "+ArenaUnlockInventory.UnlockRequirement(browsed.Variant);
-                    return;
+                    return false;
                 }
                 ArenaVariantRuntime.Select(browsed.Variant);
             }
@@ -1288,19 +1295,82 @@ namespace Alterverse.UI
             if(!ArenaUnlockInventory.Owned(selectedArena))
             {
                 launchMessage="Selected arena is locked.";
-                return;
+                return false;
             }
             HeroId requestedHero=(HeroId)selectedHero;
             if(!HeroUnlockInventory.Owned(requestedHero))
             {
                 launchMessage="THE TRAVELER LOCKED  •  UNLOCK IN STORE FOR 10,000 SHARDS";
-                return;
+                return false;
             }
             if(!PlayerHeroSelection.Select(requestedHero))
             {
                 launchMessage="Selected hero is unavailable.";
-                return;
+                return false;
             }
+            return true;
+        }
+
+        private async System.Threading.Tasks.Task BeginOnlineMatchmakingAsync()
+        {
+            if (launching || choosingMatchMode || !PrepareSelectedMatch()) return;
+            var online=OnlinePartyService.Instance;
+            if(online==null){launchMessage="Online service is initializing. Please try again.";return;}
+            if(online.Busy || OnlinePlanHandshake.Preparing)return;
+            if(CoopLobbyService.Instance!=null && CoopLobbyService.Instance.InLobby)
+            {launchMessage="Leave the private co-op lobby before online matchmaking.";return;}
+            choosingMatchMode=true;
+            try
+            {
+                OnlinePartyOverlay.Show();
+                if(online.InParty)
+                {
+                    if(online.IsHost && !online.IsSearching && !online.IsFull)
+                        await online.BeginPlayerSearchAsync();
+                    return;
+                }
+                launchMessage="SEARCHING FOR ONLINE MATCH...";
+                bool connected=await online.QuickSearchAsync();
+                launchMessage=connected?"ONLINE MATCHMAKING ACTIVE":online.LastError;
+            }
+            catch(System.Exception ex)
+            {
+                launchMessage="Online matchmaking could not connect.";
+                Debug.LogError("DIMENSIONS FRONT: online matchmaking failed: "+ex.Message);
+            }
+            finally { choosingMatchMode=false; }
+        }
+
+        private async System.Threading.Tasks.Task BeginOfflineMatchAsync()
+        {
+            if(launching || choosingMatchMode || !PrepareSelectedMatch())return;
+            var online=OnlinePartyService.Instance;
+            var coop=CoopLobbyService.Instance;
+            if(OnlinePlanHandshake.Preparing || online!=null&&online.Busy || coop!=null&&coop.Busy)return;
+            choosingMatchMode=true;
+            try
+            {
+                if(online!=null&&online.InParty)await online.LeavePartyAsync();
+                if(online!=null&&online.InParty)
+                {launchMessage="Could not leave the online party. Please try again.";return;}
+                if(coop!=null&&coop.InLobby)await coop.LeaveLobbyAsync();
+                if(coop!=null&&coop.InLobby)
+                {launchMessage="Could not leave the co-op lobby. Please try again.";return;}
+                OnlinePartyOverlay.Hide();
+                CoopAuthority.EndMatch();
+                BeginLaunch();
+            }
+            catch(System.Exception ex)
+            {
+                launchMessage="Offline match could not start.";
+                Debug.LogError("DIMENSIONS FRONT: offline launch failed: "+ex.Message);
+            }
+            finally { choosingMatchMode=false; }
+        }
+
+        private void BeginLaunch()
+        {
+            if (launching || !PrepareSelectedMatch()) return;
             FlushAudio();
             launchMessage=""; launching=true; launchAt=Time.unscaledTime; GUI.FocusControl(null);
             showcase.Present((HeroId)selectedHero,false);
