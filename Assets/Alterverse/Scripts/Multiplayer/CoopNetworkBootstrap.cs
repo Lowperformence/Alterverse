@@ -13,12 +13,18 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopNetworkBootstrap : MonoBehaviour
     {
+        private const int DedicatedConnectAttempts=5;
+        private const float DedicatedAttemptTimeoutSeconds=8f;
+        private const float DedicatedRetryDelaySeconds=2f;
+
         public static CoopNetworkBootstrap Instance { get; private set; }
         public static NetworkManager Manager => NetworkManager.Singleton;
         public static bool IsListening => NetworkManager.Singleton!=null&&NetworkManager.Singleton.IsListening;
         public static string DirectServerHost { get; private set; } = "";
         public static ushort DirectServerPort { get; private set; }
         public static string DirectServerStatus { get; private set; } = "DIRECT SERVER IDLE";
+
+        private Coroutine dedicatedConnectRoutine;
 
         public static int ConnectedPeerCount
         {
@@ -66,13 +72,14 @@ namespace Alterverse.Multiplayer
 
         /// <summary>
         /// Switches the local NGO runtime from any current Relay/client link to a direct
-        /// dedicated-server connection. This deliberately replaces the UnityTransport
-        /// component so Relay protocol state cannot leak into the direct UTP connection.
+        /// dedicated-server connection. Edgegap can report HOST_ASSIGNED while the container is
+        /// still finishing startup, so the direct connection is retried instead of failing once.
         /// </summary>
         public static bool ConnectToDedicatedServer(string host,ushort port)
         {
             if(Instance==null||string.IsNullOrWhiteSpace(host)||port==0)return false;
-            Instance.StartCoroutine(Instance.SwitchToDedicatedClient(host.Trim(),port));
+            if(Instance.dedicatedConnectRoutine!=null)Instance.StopCoroutine(Instance.dedicatedConnectRoutine);
+            Instance.dedicatedConnectRoutine=Instance.StartCoroutine(Instance.SwitchToDedicatedClient(host.Trim(),port));
             return true;
         }
 
@@ -82,17 +89,19 @@ namespace Alterverse.Multiplayer
             if(manager==null)
             {
                 DirectServerStatus="NETWORK MANAGER UNAVAILABLE";
+                dedicatedConnectRoutine=null;
                 yield break;
             }
             if(manager.IsServer&&!manager.IsHost)
             {
                 DirectServerStatus="DEDICATED SERVER CANNOT START CLIENT";
+                dedicatedConnectRoutine=null;
                 yield break;
             }
 
             DirectServerHost=host;
             DirectServerPort=port;
-            DirectServerStatus=$"CONNECTING {host}:{port}";
+            DirectServerStatus=$"PREPARING DIRECT CONNECTION {host}:{port}";
 
             if(manager.IsListening)
             {
@@ -102,10 +111,13 @@ namespace Alterverse.Multiplayer
                 if(manager.IsListening)
                 {
                     DirectServerStatus="NETWORK SHUTDOWN TIMEOUT";
+                    dedicatedConnectRoutine=null;
                     yield break;
                 }
             }
 
+            // Replace the Relay-configured transport once. The clean direct UTP transport can then
+            // be restarted for each cold-start retry without carrying Relay protocol state forward.
             UnityTransport previous=manager.NetworkConfig.NetworkTransport as UnityTransport;
             UnityTransport direct=manager.gameObject.AddComponent<UnityTransport>();
             direct.UseWebSockets=false;
@@ -114,14 +126,52 @@ namespace Alterverse.Multiplayer
             if(previous!=null&&previous!=direct)Destroy(previous);
             yield return null;
 
-            if(!manager.StartClient())
+            for(int attempt=1;attempt<=DedicatedConnectAttempts;attempt++)
             {
-                DirectServerStatus=$"FAILED TO START CLIENT {host}:{port}";
-                yield break;
+                DirectServerStatus=$"CONNECTING {host}:{port} • TRY {attempt}/{DedicatedConnectAttempts}";
+
+                if(!manager.StartClient())
+                {
+                    DirectServerStatus=$"CLIENT START FAILED • TRY {attempt}/{DedicatedConnectAttempts}";
+                }
+                else
+                {
+                    Debug.Log($"DIMENSIONS FRONT ONLINE: dedicated connection attempt {attempt}/{DedicatedConnectAttempts} to {host}:{port}.");
+                    float attemptDeadline=Time.realtimeSinceStartup+DedicatedAttemptTimeoutSeconds;
+                    while(Time.realtimeSinceStartup<attemptDeadline)
+                    {
+                        if(manager.IsConnectedClient)
+                        {
+                            DirectServerStatus=$"CLIENT CONNECTED {host}:{port}";
+                            Debug.Log($"DIMENSIONS FRONT ONLINE: connected to dedicated server {host}:{port}.");
+                            dedicatedConnectRoutine=null;
+                            yield break;
+                        }
+                        // NGO may stop listening itself after a rejected/failed connection.
+                        if(!manager.IsListening)break;
+                        yield return null;
+                    }
+                }
+
+                if(manager.IsListening)
+                {
+                    manager.Shutdown();
+                    float shutdownDeadline=Time.realtimeSinceStartup+3f;
+                    while(manager.IsListening&&Time.realtimeSinceStartup<shutdownDeadline)yield return null;
+                }
+
+                if(attempt<DedicatedConnectAttempts)
+                {
+                    DirectServerStatus=$"SERVER NOT READY • RETRY {attempt+1}/{DedicatedConnectAttempts}";
+                    float retryAt=Time.realtimeSinceStartup+DedicatedRetryDelaySeconds;
+                    while(Time.realtimeSinceStartup<retryAt)yield return null;
+                    direct.SetConnectionData(host,port);
+                }
             }
 
-            DirectServerStatus=$"CLIENT STARTED {host}:{port}";
-            Debug.Log($"DIMENSIONS FRONT ONLINE: connecting directly to dedicated server {host}:{port}.");
+            DirectServerStatus=$"DEDICATED CONNECTION FAILED {host}:{port}";
+            Debug.LogError($"DIMENSIONS FRONT ONLINE: could not connect to dedicated server {host}:{port} after {DedicatedConnectAttempts} attempts.");
+            dedicatedConnectRoutine=null;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -157,6 +207,8 @@ namespace Alterverse.Multiplayer
 
         private void OnDestroy()
         {
+            if(dedicatedConnectRoutine!=null)StopCoroutine(dedicatedConnectRoutine);
+            dedicatedConnectRoutine=null;
             if(Instance==this)Instance=null;
         }
     }
