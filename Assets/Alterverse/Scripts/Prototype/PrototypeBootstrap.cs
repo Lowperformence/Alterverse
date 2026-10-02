@@ -1,4 +1,4 @@
-using Alterverse.AI;using Alterverse.CameraSystem;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Match;using Alterverse.Multiplayer;using Alterverse.UI;using Alterverse.Visuals;using UnityEngine;
+using Alterverse.AI;using Alterverse.CameraSystem;using Alterverse.Characters;using Alterverse.Combat;using Alterverse.Match;using Alterverse.Multiplayer;using Alterverse.UI;using Alterverse.Visuals;using Unity.Netcode;using UnityEngine;
 using CombatFeedbackComponent=Alterverse.Combat.CombatFeedback;using FrontHudComponent=Alterverse.Match.DimensionsFrontHUD;
 namespace Alterverse.Prototype
 {
@@ -27,7 +27,7 @@ public System.Collections.IEnumerator RestartPrototype()
 MatchClock.Set(PauseReason.Transition,true);
 try
 {
-PrepareTransitionFrame();
+if(!IsServerOnlyMatch())PrepareTransitionFrame();
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
@@ -37,39 +37,47 @@ finally{MatchClock.Set(PauseReason.Transition,false);}
 }
 public void BuildPrototype()
 {
-if(GameObject.Find("AV_Player")!=null)return;
+if(GameObject.Find("AV_Player")!=null||GameObject.Find("DF_MatchWorld")!=null)return;
 
 bool coop=CoopAuthority.Active&&CoopAuthority.ActivePlan?.Session!=null;
 CoopMatchPlan coopPlan=coop?CoopAuthority.ActivePlan:null;
 int localSlot=coop?CoopRosterBuilder.FindLocalHumanSlot(coopPlan):-1;
-if(coop&&localSlot<0){Debug.LogError("DIMENSIONS FRONT CO-OP: local human slot missing.");return;}
+bool serverOnly=coop&&localSlot<0&&IsServerOnlyMatch();
+if(coop&&localSlot<0&&!serverOnly){Debug.LogError("DIMENSIONS FRONT CO-OP: local human slot missing.");return;}
 
-MatchPlayerSlot localSlotData=coop?coopPlan.Session.Slots[localSlot]:null;
+MatchPlayerSlot localSlotData=coop&&!serverOnly?coopPlan.Session.Slots[localSlot]:null;
 int localTeam=localSlotData?.Team??0;
-HeroId selected=coop?localSlotData.Hero:PlayerHeroSelection.Selected;
+HeroId selected=localSlotData?.Hero??PlayerHeroSelection.Selected;
 if(coop)
 {
 ArenaVariantRuntime.BeginCoopMatch(coopPlan.Arena);
 BotDifficultySettings.BeginMatchOverride(coopPlan.Difficulty);
-PlayerHeroSelection.Select(selected);
+if(!serverOnly)PlayerHeroSelection.Select(selected);
 }
 else ArenaVariantRuntime.BeginMatch();
 
-WingMatchRewardBonus.BeginMatch(selected);
+if(!serverOnly)WingMatchRewardBonus.BeginMatch(selected);
 var existing=new System.Collections.Generic.HashSet<GameObject>(gameObject.scene.GetRootGameObjects());
 GameObject world=new GameObject("DF_MatchWorld");
 
 BuildArena();
 
+GameObject player=null;
+Health ph=null;
+if(!serverOnly)
+{
 Vector3 playerSpawn=coop?CoopRosterBuilder.SafeSpawn(localTeam,localSlot):new Vector3(-32,1,-4);
-GameObject player=CreateLocalPlayer(selected,playerSpawn,!coop||CoopAuthority.LocalIsHost,localTeam);
-Health ph=player.GetComponent<Health>();
+player=CreateLocalPlayer(selected,playerSpawn,!coop||CoopAuthority.LocalIsHost,localTeam);
+ph=player.GetComponent<Health>();
+}
 
 SpawnHealingZone zeroZone=GameObject.Find("AV_ZeroSpawnZone")?.GetComponent<SpawnHealingZone>();
-if(zeroZone!=null){zeroZone.InitializeTeam(0);zeroZone.Initialize(localTeam==0?ph:null);}
+if(zeroZone!=null){zeroZone.InitializeTeam(0);zeroZone.Initialize(!serverOnly&&localTeam==0?ph:null);}
 SpawnHealingZone lumenZone=GameObject.Find("AV_LumenSpawnZone")?.GetComponent<SpawnHealingZone>();
-if(lumenZone!=null){lumenZone.InitializeTeam(1);lumenZone.Initialize(localTeam==1?ph:null);}
+if(lumenZone!=null){lumenZone.InitializeTeam(1);lumenZone.Initialize(!serverOnly&&localTeam==1?ph:null);}
 
+if(!serverOnly)
+{
 UnityEngine.Camera cam=UnityEngine.Camera.main;
 if(cam==null){GameObject cameraObject=new("Main Camera");cameraObject.tag="MainCamera";cam=cameraObject.AddComponent<UnityEngine.Camera>();}
 cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=GameplayVoidColor;
@@ -80,12 +88,16 @@ new GameObject("AV_HUD").AddComponent<PrototypeHUD>().Initialize(ph,null,null);
 if(FindAnyObjectByType<InMatchSettingsMenu>()==null)new GameObject("DF_InMatchSettings").AddComponent<InMatchSettingsMenu>();
 new GameObject("DF_TargetIndicator").AddComponent<TargetIndicatorHUD>();
 new GameObject("DF_HeroTeamMarkers").AddComponent<HeroTeamMarkers>();
+}
 
 if(coop)
 {
-if(!CoopRosterBuilder.Build(player,coopPlan))
+bool rosterBuilt=serverOnly?CoopRosterBuilder.BuildServer(coopPlan):CoopRosterBuilder.Build(player,coopPlan);
+if(!rosterBuilt)
 {
-Debug.LogError("DIMENSIONS FRONT CO-OP: deterministic roster build failed.");
+Debug.LogError(serverOnly
+?"DIMENSIONS FRONT SERVER: authoritative roster build failed."
+:"DIMENSIONS FRONT CO-OP: deterministic roster build failed.");
 return;
 }
 new GameObject("DF_CoopHeroStateSync").AddComponent<CoopHeroStateSync>();
@@ -99,20 +111,29 @@ else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
 new GameObject("AV_DimensionsFront").AddComponent<DimensionsFront>();
 new GameObject("AV_DimensionsFrontCombatBridge").AddComponent<DimensionsFrontCombatBridge>();
 new GameObject("AV_DimensionsFrontVisual").AddComponent<DimensionsFrontVisual>();
-new GameObject("AV_DimensionsFrontHUD").AddComponent<FrontHudComponent>();
+if(!serverOnly)new GameObject("AV_DimensionsFrontHUD").AddComponent<FrontHudComponent>();
 new GameObject("DF_HotZone").AddComponent<HotZoneDirector>();
+if(!serverOnly)
+{
 new GameObject("DF_HotZoneHUD").AddComponent<HotZoneHUD>();
 new GameObject("DF_HotZoneTankHUD").AddComponent<HotZoneTankHUD>();
 new GameObject("DF_OvertimePresentation").AddComponent<OvertimePresentation>();
+}
 new GameObject("DF_DimensionPlanetDirector").AddComponent<DimensionPlanetDirector>();
-new GameObject("DF_PlanetHUD").AddComponent<PlanetHUD>();
+if(!serverOnly)new GameObject("DF_PlanetHUD").AddComponent<PlanetHUD>();
 new GameObject("DF_SpaceBomberDirector").AddComponent<SpaceBomberDirector>();
 new GameObject("AV_MatchTelemetry").AddComponent<MatchTelemetry>();
 new GameObject("AV_MatchScoreboard").AddComponent<MatchScoreboard>();
-new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
+if(!serverOnly)new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
 
 foreach(GameObject created in gameObject.scene.GetRootGameObjects())
 if(created!=world&&!existing.Contains(created))created.transform.SetParent(world.transform,true);
+}
+
+private static bool IsServerOnlyMatch()
+{
+NetworkManager manager=NetworkManager.Singleton;
+return manager!=null&&manager.IsListening&&manager.IsServer&&!manager.IsClient&&CoopAuthority.LocalHasServerAuthority;
 }
 
 private static GameObject CreateLocalPlayer(HeroId selected,Vector3 spawn,bool authoritativeRespawn,int team)
