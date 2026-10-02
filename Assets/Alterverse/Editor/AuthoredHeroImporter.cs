@@ -13,10 +13,13 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 5;
+        public override uint GetVersion() => 6;
         private void OnPostprocessModel(GameObject root)
         {
-            if(IsHero && Path.GetFileNameWithoutExtension(assetPath)=="Traveler") TravelerOrbImportPass.Apply(root);
+            if(!IsHero)return;
+            string hero=Path.GetFileNameWithoutExtension(assetPath);
+            if(hero=="Traveler")TravelerOrbImportPass.Apply(root);
+            if(hero=="Mira"||hero=="Rook"||hero=="Veyr"||hero=="Traveler")AuthoredHeroDetailPass.Apply(root,hero);
         }
         private void OnPreprocessModel()
         {
