@@ -8,7 +8,7 @@ namespace Alterverse.Multiplayer
     /// <summary>Replicates the server-owned match clock, opening countdown, control score and result to every client.</summary>
     public sealed class CoopMatchStateSync : MonoBehaviour
     {
-        private const string StateMessage="DF_COOP_MATCH_STATE_V1";
+        private const string StateMessage="DF_COOP_MATCH_STATE_V2";
         private const float SendInterval=.20f;
 
         private DimensionsFront front;
@@ -49,6 +49,7 @@ namespace Alterverse.Multiplayer
         {
             if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
             using FastBufferWriter writer=new(96,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(front.TimeRemaining);
             writer.WriteValueSafe(front.ZeroControl);
             writer.WriteValueSafe(front.LumenControl);
@@ -78,6 +79,8 @@ namespace Alterverse.Multiplayer
             opening??=FindAnyObjectByType<MatchOpening>();
             if(front==null)return;
 
+            reader.ReadValueSafe(out uint round);
+            if (round != CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan)) return;
             reader.ReadValueSafe(out float remaining);
             reader.ReadValueSafe(out float zero);
             reader.ReadValueSafe(out float lumen);

@@ -601,6 +601,26 @@ namespace Alterverse.Multiplayer
             finally{busy=false;RaiseChanged();}
         }
 
+        public async Task<bool> ResumeRoundAsync(string matchId)
+        {
+            if (session == null || !IsHost || busy) return false;
+            try
+            {
+                busy = true;
+                IHostSession host = session.AsHost();
+                host.IsLocked = true;
+                host.SetProperties(new Dictionary<string, SessionProperty> {
+                    { MatchIdKey, new SessionProperty(matchId, VisibilityPropertyOptions.Member) },
+                    { PhaseKey, new SessionProperty("playing", VisibilityPropertyOptions.Member) }
+                });
+                await host.SavePropertiesAsync();
+                SetStatus("NEXT CO-OP ROUND");
+                return true;
+            }
+            catch (Exception ex) { Fail("COULD NOT START NEXT ROUND", ex); return false; }
+            finally { busy = false; RaiseChanged(); }
+        }
+
         private async Task AbortActiveMatchAsync(string reason)
         {
             if(session==null||!IsHost)return;
@@ -632,7 +652,7 @@ namespace Alterverse.Multiplayer
                     _=CancelMatchStagingAsync();
                     status="RELAY CLIENT LOST • MATCH PREP CANCELLED";
                 }
-                else if((IsLaunching||CoopAuthority.Active)&&!IsPostMatch&&!IsAborted)
+                else if((IsLaunching||CoopAuthority.Active)&&!IsPostMatch&&!IsAborted&&!NetworkRoundLoop.IsBetweenRounds)
                     _=AbortActiveMatchAsync("A co-op player lost the Relay connection.");
                 RaiseChanged();
                 return;
@@ -766,7 +786,7 @@ namespace Alterverse.Multiplayer
                 _=CancelMatchStagingAsync();
                 status="PLAYER LEFT • MATCH PREP CANCELLED";
             }
-            else if(IsHost&&(IsLaunching||CoopAuthority.Active)&&PlayerCount<expected)
+            else if(IsHost&&!IsPostMatch&&!NetworkRoundLoop.IsBetweenRounds&&(IsLaunching||CoopAuthority.Active)&&PlayerCount<expected)
             {
                 _=AbortActiveMatchAsync("A co-op player disconnected from the match.");
             }

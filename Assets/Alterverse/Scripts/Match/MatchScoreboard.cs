@@ -4,6 +4,7 @@ namespace Alterverse.Match
 public sealed class MatchScoreboard:MonoBehaviour
 {
 private MatchResultScreen resultScreen;
+public bool ResultCommitted => matchEnded && rewardGranted;
 private bool resultSnapshotReady,resultSnapshotWarning;
 private int battlePassXpBefore;
 private BotDifficulty resultDifficulty;
@@ -152,15 +153,7 @@ private void DrawResult()
     float scale=MatchResultLayout.Scale(Screen.safeArea);
     if(resultScreen.Draw(Screen.safeArea.width/scale,Screen.safeArea.height/scale)&&rewardGranted)
     {
-        matchEnded=false;
-        if(CoopAuthority.Active)
-        {
-            CoopLobbyService lobby=CoopLobbyService.Instance;
-            if(lobby!=null)_=lobby.FinishMatchAndReturnToLobbyAsync();
-            else CoopAuthority.EndMatch();
-            MainMenuController.ShowCoopAfterMatch();
-        }
-        else MainMenuController.ShowHome();
+        _ = MatchExit.ReturnToMenuAsync();
     }
 }
 private void DrawTeam(List<Entry> team,float x,float y,float width,string title){GUI.Label(new Rect(x,y,width,22),title,header);for(int i=0;i<team.Count;i++){Entry e=team[i];bool founder=e.Member.GetComponent<HeroRespawn>()!=null&&FounderEntitlement.Owned;string badge=founder?"◆ ":"";GUI.Label(new Rect(x,y+24+i*27,width,24),$"{badge}{e.Name,-13}   {e.Kills} / {e.Deaths} / {e.Assists} / {Performance(e):0}",row);}}private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}

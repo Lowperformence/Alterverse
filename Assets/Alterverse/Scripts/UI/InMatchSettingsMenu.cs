@@ -125,39 +125,9 @@ namespace Alterverse.UI
             if (leaving) return;
             leaving = true;
 
-            bool coop = CoopAuthority.Active;
-            CoopLobbyService lobby = coop ? CoopLobbyService.Instance : null;
-
             FlushAudio();
             CloseOverlay();
-
-            GameObject world = GameObject.Find("DF_MatchWorld");
-            if (world != null) world.SetActive(false);
-            MatchClock.Set(PauseReason.Result, false);
-            MatchClock.Set(PauseReason.Settings, false);
-            // Co-op difficulty is a match-scoped override. Clear it on an aborted/left match so
-            // the next local match always starts from the player's selected difficulty.
-            BotDifficultySettings.EndMatchOverride();
-
-            if (!coop)
-            {
-                // Leaving an unfinished local match intentionally grants no result reward.
-                if (world != null) Destroy(world);
-                MainMenuController.ShowHome();
-                leaving = false;
-                return;
-            }
-
-            // A running co-op match is shared state. Leave the session through the existing lobby
-            // service so Relay/NGO and Vivox can unwind through their normal disconnect paths.
-            if (lobby != null)
-                await lobby.LeaveLobbyAsync();
-            else
-                CoopNetworkBootstrap.ShutdownLocalNetwork();
-
-            CoopAuthority.EndMatch();
-            if (world != null) Destroy(world);
-            MainMenuController.ShowHome();
+            await MatchExit.ReturnToMenuAsync();
             leaving = false;
         }
 

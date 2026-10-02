@@ -162,6 +162,7 @@ namespace Alterverse.Multiplayer
             if(protocol!=ProtocolVersion)return;
             reader.ReadValueSafe(out int winner);
             reader.ReadValueSafe(out FixedString128Bytes fixedMatchId);
+            if (fixedMatchId.ToString() != CoopAuthority.ActivePlan?.MatchId) return;
             reader.ReadValueSafe(out int count);
             count=Mathf.Clamp(count,0,MatchSession.MaxPlayers);
 

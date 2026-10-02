@@ -87,6 +87,31 @@ namespace Alterverse.Multiplayer
             };
         }
 
+        // Preserve teams/heroes while assigning a fresh receipt namespace to each round.
+        public static CoopMatchPlan NextRound(CoopMatchPlan previous, string id, int humanMask)
+        {
+            if (previous?.Session == null || !previous.Session.IsFull || string.IsNullOrEmpty(id) || id == previous.MatchId)
+                throw new InvalidOperationException("Invalid next-round plan.");
+            CoopMatchPlan next = previous is OnlineMatchPlan ? new OnlineMatchPlan() : new CoopMatchPlan();
+            next.MatchId = id; next.Arena = previous.Arena; next.Difficulty = previous.Difficulty;
+            next.Session = new MatchSession(id, previous.Session.Mode);
+            for (int i = 0; i < MatchSession.MaxPlayers; i++)
+            {
+                MatchPlayerSlot old = previous.Session.Slots[i];
+                bool human = !old.IsBot && (humanMask & (1 << i)) != 0;
+                var slot = new MatchPlayerSlot {
+                    PlayerId = human || old.IsBot ? old.PlayerId : "round-bot-" + i,
+                    DisplayName = human || old.IsBot ? old.DisplayName : old.Hero.ToString(),
+                    Team = old.Team, Hero = old.Hero, IsLocal = human && old.IsLocal,
+                    IsBot = !human, Ready = true, Connected = true, IsHost = human && old.IsHost
+                };
+                if (!next.Session.TryAssign(i, slot)) throw new InvalidOperationException("Invalid next-round roster.");
+                if (human) next.HumanCount++;
+            }
+            if (next.HumanCount == 0) throw new InvalidOperationException("No players remain.");
+            return next;
+        }
+
         private static MatchPlayerSlot HumanSlot(CoopLobbyService.MemberView member,bool host)=>new()
         {
             PlayerId=member.PlayerId,
