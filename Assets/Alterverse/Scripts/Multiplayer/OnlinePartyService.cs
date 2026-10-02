@@ -269,6 +269,7 @@ namespace Alterverse.Multiplayer
                 busy = true;
                 lastError = "";
 
+                // Capacity is fixed by SessionOptions at creation; ISession.MaxPlayers is read-only.
                 IHostSession host = session.AsHost();
                 string partyIds = PlayerCount <= MaxPartyPlayers
                     ? EncodeCurrentPlayers()
@@ -277,7 +278,6 @@ namespace Alterverse.Multiplayer
                 if (string.IsNullOrEmpty(partyIds))
                     partyIds = EncodeCurrentPlayers(MaxPartyPlayers);
 
-                host.MaxPlayers = MaxMatchPlayers;
                 host.IsPrivate = false;
                 host.SetProperty(PartyIdsKey, new SessionProperty(partyIds, VisibilityPropertyOptions.Member));
                 host.SetProperty(SearchKey, new SessionProperty("1", VisibilityPropertyOptions.Public));
@@ -546,7 +546,6 @@ namespace Alterverse.Multiplayer
         {
             if (session == null || !session.IsHost) return;
             IHostSession host = session.AsHost();
-            host.MaxPlayers = MaxMatchPlayers;
             host.IsPrivate = !searchable;
             host.SetProperty(SearchKey,
                 new SessionProperty(searchable ? "1" : "0", VisibilityPropertyOptions.Public));
