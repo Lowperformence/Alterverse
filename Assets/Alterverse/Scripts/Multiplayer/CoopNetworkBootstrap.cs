@@ -142,7 +142,9 @@ namespace Alterverse.Multiplayer
                     {
                         if(manager.IsConnectedClient)
                         {
-                            DirectServerStatus=$"CLIENT CONNECTED {host}:{port}";
+                            // Keep the historical prefix because the dedicated identity handshake
+                            // waits on it before sending the Edgegap ticket/team binding.
+                            DirectServerStatus=$"CLIENT STARTED {host}:{port} • CONNECTED";
                             Debug.Log($"DIMENSIONS FRONT ONLINE: connected to dedicated server {host}:{port}.");
                             dedicatedConnectRoutine=null;
                             yield break;
