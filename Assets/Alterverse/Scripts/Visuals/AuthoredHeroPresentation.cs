@@ -55,6 +55,7 @@ namespace Alterverse.Visuals
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
+            if (hero == HeroId.Nyra) CyberRangerAppearance.Apply(instance.transform);
             presentation.Initialize(root, instance.transform);
             return true;
         }
@@ -296,3 +297,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
