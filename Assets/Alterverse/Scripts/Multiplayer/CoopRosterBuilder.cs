@@ -21,8 +21,9 @@ namespace Alterverse.Multiplayer
 
             int localSlot=FindLocalHumanSlot(plan);
             if(localSlot<0)return false;
+            MatchPlayerSlot localData=plan.Session.Slots[localSlot];
 
-            ConfigureHuman(localPlayer,plan.Session.Slots[localSlot],localSlot,true,SafeSpawn(0,localSlot));
+            ConfigureHuman(localPlayer,localData,localSlot,true,SafeSpawn(localData.Team,localSlot));
 
             for(int slot=0;slot<MatchSession.MaxPlayers;slot++)
             {
@@ -77,7 +78,7 @@ namespace Alterverse.Multiplayer
             Health health=hero.GetComponent<Health>()??hero.AddComponent<Health>();
             health.Configure(profile.Health);
             TeamMember team=hero.GetComponent<TeamMember>()??hero.AddComponent<TeamMember>();
-            team.Initialize(0);
+            team.Initialize(data.Team);
 
             HeroLocomotion locomotion=hero.GetComponent<HeroLocomotion>()??hero.AddComponent<HeroLocomotion>();
             CoopHeroSlot netSlot=hero.GetComponent<CoopHeroSlot>()??hero.AddComponent<CoopHeroSlot>();
@@ -121,7 +122,7 @@ namespace Alterverse.Multiplayer
         private static GameObject CreateRemoteHuman(MatchPlayerSlot data,int slot)
         {
             GameObject hero=new($"AV_CoopHuman_{slot}_{data.Hero}");
-            hero.transform.position=SafeSpawn(0,slot);
+            hero.transform.position=SafeSpawn(data.Team,slot);
             CapsuleCollider hitbox=hero.AddComponent<CapsuleCollider>();
             hitbox.height=HeroIdentity.HeroCollisionHeight;hitbox.radius=HeroIdentity.HeroCollisionRadius;
             ParentToWorld(hero);
