@@ -1,53 +1,31 @@
-# DIMENSIONS FRONT — Bot Difficulty
+# DIMENSIONS FRONT — Bot difficulty
 
-## Bedienung und Speicherung
+Updated 2 October 2026: EASY → MEDIUM → HARD → EXPERT → NIGHTMARE.
 
-**Settings → BOT DIFFICULTY → EASY / NORMAL / HARD.** Standard: **NORMAL**. Die drei 54 Einheiten hohen Schaltflächen nutzen das vorhandene Menüdesign. Play zeigt die gewählte Stufe vor dem Start. Kein Expert-Modus: drei Stufen reichen für diesen Pass.
+## Profiles
 
-`BotDifficultySettings.Selected` speichert sofort unter `DF_BotDifficulty` in PlayerPrefs und ruft `Save()` auf. Fehlende/ungültige Werte ergeben NORMAL. Jede Bot-Brain übernimmt beim Erstellen ihre Stufe; eine Menüänderung gilt für das nächste Match, für **beide Bot-Teams**. Ein laufendes Match wird nicht nachträglich umgestellt. Matchende, Rückkehr und Respawn löschen die Einstellung nicht. Geräte-Neustart-Persistenz ist noch praktisch zu prüfen.
+| Tier | Saved value | Reaction delay | Decision interval scale | Objective interval | Ability mistake | Incoming damage |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Easy | 0 | .75 s | 1.80 | 2.40 s | 38% | 100% |
+| Medium (internal Normal) | 1 | .38 s | 1.00 | 1.10 s | 18% | 100% |
+| Hard | 2 | .20 s | .72 | .50 s | 5.5% | 100% |
+| Expert | 3 | .11 s | .50 | .28 s | 1.5% | 100% |
+| Nightmare | 4 | .08 s | .42 | .22 s | .5% | 96% |
 
-## Eine Architektur, drei Profile
+The former Expert 4% damage reduction now belongs exclusively to Nightmare. `Health.TakeDamage` applies this difficulty multiplier only to enemy bots on team 1. It is not a player-wide damage reduction. Other independent buffs and shields still apply normally.
 
-`BotDifficultyProfile` enthält ausschließlich Verhaltensparameter. Die vorhandenen Komponenten Brain, Sensor, Mover und HeroBotAbilities verwenden diese gemeinsam.
+Nightmare improves decision quality, accuracy, positioning and discipline. Team tactics update every .28 s versus Expert's .35 s. It uses the same visibility and legal observations as the other tiers. The existing minimum decision interval and personality factors still apply; these values are not measured end-to-end reaction times. Movement speed, outgoing damage and cooldowns are not increased by this profile.
 
-| Parameter | EASY | NORMAL | HARD |
-|---|---:|---:|---:|
-| Wartezeit vor neuem Ziel, Sekunden | 0,60 | 0,35 | 0,22 |
-| Faktor für Persönlichkeits-Entscheidungsintervall, Scans und Fähigkeitserwägung | 1,65 | 1,00 | 0,80 |
-| Objective-Auswertung, Sekunden | 2,00 | 1,00 | 0,55 |
-| Genauigkeitsgewicht der Ziel-/Gefahrenbewertung | 0,35 | 0,65 | 0,90 |
-| Anpassung persönlicher HP-Rückzugsschwelle | −0,04 | 0 | +0,03 |
-| Gruppierungsgewicht × persönlicher Teamfokus | 0,35 | 0,60 | 0,85 |
-| Gefahrenerinnerung / starke Zielbindung, Sekunden | 1,5 | 3 | 5 |
-| Offensive Fähigkeitsentscheidung auslassen | 28 % | 15 % | 7 % |
-| Positionsgewicht | 0,30 | 0,60 | 0,90 |
+## Selection, progression and persistence
 
-Die Zielwartezeit beginnt bei der Beobachtung; Scan-/Entscheidungsintervalle kommen hinzu. Das sind keine garantierten gemessenen Reaktionszeiten. Persönliche Reaktionsintervalle haben weiterhin mindestens 0,15 Sekunden. Verpasste Fähigkeitsgelegenheiten verschieben nur die Entscheidung; echte Cooldowns bleiben identisch. Schutz-/Heilentscheidungen bleiben auch auf EASY aktiv.
+`DF_BotAdaptiveTier` stores the personal solo tier. Existing values 0–3 retain their meanings. Missing or invalid values fall back to Medium. Three consecutive solo wins increase the tier by one, now capped at Nightmare; three losses decrease it, down to Easy. Duplicate match receipts cannot advance the streak twice.
 
-Höhere Zielgenauigkeit gewichtet sichtbare verwundete Gegner stärker und verringert zufällige Bewertungsfehler. Rückzug berücksichtigt eigene Lebenspunkte, lokal beobachtete zahlenmäßige Unterlegenheit und kürzlich selbst erlittenen Schaden. Fernkampfrollen halten je nach Stufe mehr Abstand, setzen sich mit der bestehenden Bewegung zurück und suchen bei Unterzahl zeitweise Nähe zu beobachteten Verbündeten. Nahkämpfer bleiben an ihre Reichweite gebunden. HARD berücksichtigt zusätzlich grobe lokale Gegnergruppen für geeignete Ultimates; Brakks Selbst-AoE wartet auf Nahdistanz.
+Co-op uses an authoritative match override. Lobby cycling and reading already enumerate all BotDifficulty values, so Nightmare becomes selectable and is included in the existing shared match plan and handshake. The result label is NIGHTMARE.
 
-## Rolle + Persönlichkeit + Schwierigkeit + Situation
+The existing reward rule grants 10 percentage points per tier, therefore Nightmare receives a 40% bonus, above Expert's 30%. This preserves the existing progression formula.
 
-Alle fünf bestehenden Persönlichkeiten bleiben erhalten: Balanced, Aggressive, Defensive, Supportive, ObjectiveFocused. Es wurden keine drei getrennten Systeme oder sieben nur nominelle neue Persönlichkeitstypen angelegt.
+## Validation
 
-- Hero-Rolle: bestehende sechs individuellen Skill-Entscheidungswege, Waffenreichweite, Support-Heilung, Tank-Schutz, Assassin-Dash und Fernkampfpositionierung.
-- Persönlichkeit: Aggression beeinflusst Hero-Zielpriorität; Vorsicht bestimmt Basis-Rückzugsschwelle; Teamfokus beeinflusst Gruppierung; Objective-Fokus beeinflusst Rotationsbereitschaft; persönliche Reaktionszeit bleibt Basis des Entscheidungsintervalls.
-- Schwierigkeit: bestimmt die Ausführung dieser Entscheidungen. Unabhängige Bot-Zufallsfolgen variieren Bewertungsfehler und Gruppierungsentscheidungen auch auf HARD, ohne Unitys globalen Gameplay-Zufall zu verändern.
-- Situation: lokale Feind-/Verbündetenzahl, HP, erlittene Schäden, aktuelles Ziel, Distanz, Rolle, aktive öffentliche Planeten und vorhandene Lane-/Turmschutzlogik.
+Local checks confirm five stable enum values, Expert multiplier 1.0, Nightmare multiplier .96, stronger Nightmare behavior parameters and updated tier bounds. Unity editor regression checks now cover all five tiers, persistence, promotion/demotion, maximum tier, duplicate receipts and Nightmare co-op plan transfer. Old regression preference keys were corrected to the active adaptive-tier key.
 
-Gedächtnis speichert begrenzte Gefahr und Zielbindung, keine unsichtbaren Live-Gegnerpositionen. Ziele außerhalb derselben rollenabhängigen Sichtdistanz oder hinter soliden Hindernissen sind nicht angreifbar. Ein bereits bekanntes Ziel wird nach Sichtverlust verworfen; Neuaufnahme braucht erneut Wartezeit. Physische Einheiten zählen nicht als undurchsichtige Wände. Die Wahrnehmungsprüfung benutzt wiederverwendete Raycast-Puffer; bei vollem Puffer wird konservativ keine Sicht angenommen. Öffentliche Objective-/Strukturinformationen und Turm-/Telegraph-Sicherheitsregeln sind auf allen Stufen gleich.
-
-Keine Änderungen an HP, Schaden, Bewegungsgeschwindigkeit, Angriffs-/Fähigkeitscooldowns, Minions, Front-Balance oder Belohnungen. Kein Aim-Assist-Bonus und keine Teleportbewegung. Dies ist eine kompakte Erweiterung der vorhandenen Heuristiken, keine Behauptung einer vollständig menschenähnlichen oder bereits ausbalancierten KI.
-
-## Prüfung
-
-Hier ausgeführt: Syntaxprüfung aller 210 lokalen C#-Dateien ohne Fehler, Whitespaceprüfung und Vergleich der unveränderten Kampf-/Bewegungs-/Fähigkeitswerte gegen den vorherigen Commit. **Keine Unity-Kompilierung, keine Play-Mode-Matches, keine Geräte-/Performanceprüfung.** Keine Stufe wurde hier im Spiel getestet.
-
-Bestehender Editorcheck `DIMENSIONS FRONT > Checks > Bot and minion regression (Play mode)` erweitert:
-- fehlende/ungültige Einstellung → NORMAL, gespeicherter Wert wird zurückgelesen;
-- alle drei Stufen × fünf Persönlichkeiten: Stufe erfasst, Persönlichkeit erhalten, Kampfwerte unverändert;
-- verzögerte Zielaufnahme, Abbruch bei Sichtwand bzw. Reichweitenverlust;
-- Zielwechsel-/Todchecks berücksichtigen Reaktionszeit statt Sofort-Neuziel;
-- vorheriger Einstellungswert wird im `finally` wiederhergestellt.
-
-Diese Unity-Checks wurden vorbereitet, **nicht ausgeführt**. Danach EASY-, NORMAL- und HARD-Match mit allen Rollen durchspielen, Objectives/Grouping/Rückzug/Respawn und zwei aufeinanderfolgende Matches prüfen. Einstellung ändern, App beenden und neu starten; auf kleinem Smartphone Touchfläche/Lesbarkeit prüfen. Fairness, Schwierigkeitsabstand, Sichtprüfungskosten und Kiting müssen durch echte Spielsitzungen/Profiler bestätigt werden; erst danach Feinabstimmung der zentralen Profile.
+Unity is unavailable in this execution environment. Compilation, editor regression execution, full matches and Android balance/performance validation remain to be run. Art changes are tracked separately in draft PR #20.

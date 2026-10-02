@@ -22,8 +22,8 @@ namespace Alterverse.EditorChecks
         {
             if (!Application.isPlaying) throw new InvalidOperationException("Enter Play mode before running these checks.");
             float previousScale = Time.timeScale;
-            bool hadDifficulty=PlayerPrefs.HasKey("DF_BotDifficulty");
-            int previousDifficulty=PlayerPrefs.GetInt("DF_BotDifficulty");
+            bool hadDifficulty=PlayerPrefs.HasKey("DF_BotAdaptiveTier");
+            int previousDifficulty=PlayerPrefs.GetInt("DF_BotAdaptiveTier");
             // Remove existing movers from the separation registry for an isolated synchronous check.
             var suspended = new List<MobaBotMover>();
             foreach (MobaBotMover mover in UnityEngine.Object.FindObjectsByType<MobaBotMover>())
@@ -32,7 +32,7 @@ namespace Alterverse.EditorChecks
             {
                 Time.timeScale = 1f;
                 BotTeamRegression.Run();
-                PlayerPrefs.SetInt("DF_BotDifficulty",(int)BotDifficulty.Normal);
+                PlayerPrefs.SetInt("DF_BotAdaptiveTier",(int)BotDifficulty.Normal);
                 CheckBrainAndRespawn();
                 CheckPvpProgressModel();
                 CheckObstacleRecovery();
@@ -51,8 +51,8 @@ namespace Alterverse.EditorChecks
             finally
             {
                 Time.timeScale = previousScale;
-                if(hadDifficulty)PlayerPrefs.SetInt("DF_BotDifficulty",previousDifficulty);
-                else PlayerPrefs.DeleteKey("DF_BotDifficulty");
+                if(hadDifficulty)PlayerPrefs.SetInt("DF_BotAdaptiveTier",previousDifficulty);
+                else PlayerPrefs.DeleteKey("DF_BotAdaptiveTier");
                 PlayerPrefs.Save();
                 foreach (GameObject obj in Created) if (obj != null) UnityEngine.Object.DestroyImmediate(obj);
                 Created.Clear();
@@ -363,7 +363,11 @@ namespace Alterverse.EditorChecks
 
         private static void CheckDifficulty()
         {
-            const string key="DF_BotDifficulty";
+            const string key="DF_BotAdaptiveTier";
+            string[] adaptiveKeys={"DF_BotAdaptiveWinStreak","DF_BotAdaptiveLossStreak","DF_BotAdaptiveLastReceipt"};
+            bool[] hadAdaptive=System.Array.ConvertAll(adaptiveKeys,PlayerPrefs.HasKey);
+            int winsBefore=PlayerPrefs.GetInt(adaptiveKeys[0]),lossesBefore=PlayerPrefs.GetInt(adaptiveKeys[1]);
+            string receiptBefore=PlayerPrefs.GetString(adaptiveKeys[2],"");
             bool existed=PlayerPrefs.HasKey(key);int previous=PlayerPrefs.GetInt(key);
             try
             {
@@ -378,7 +382,15 @@ namespace Alterverse.EditorChecks
                 Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Hard).DamageTakenMultiplier,1f),
                     "HARD must not receive a hidden damage reduction.");
 
-                for(int level=0;level<4;level++)
+                Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Expert).DamageTakenMultiplier,1f),
+                    "EXPERT must receive normal damage.");
+                Assert(Mathf.Approximately(BotDifficultyProfile.For(BotDifficulty.Nightmare).DamageTakenMultiplier,.96f),
+                    "Only NIGHTMARE receives 4% less incoming damage.");
+                Assert(BotDifficultySettings.Label(BotDifficulty.Nightmare)=="NIGHTMARE","Nightmare label is available.");
+                Assert(BotDifficultyProfile.For(BotDifficulty.Nightmare).ReactionDelay < BotDifficultyProfile.For(BotDifficulty.Expert).ReactionDelay,
+                    "Nightmare reacts faster than Expert.");
+
+                for(int level=0;level<= (int)BotDifficulty.Nightmare;level++)
                 {
                     BotDifficultySettings.Selected=(BotDifficulty)level;
                     Assert(PlayerPrefs.GetInt(key)==level&&BotDifficultySettings.Selected==(BotDifficulty)level,"Difficulty is stored and read back.");
@@ -409,10 +421,23 @@ namespace Alterverse.EditorChecks
                         Assert(sensor.CurrentTarget==null,"Memory cannot track an out-of-sight target.");
                     }
                 }
+                BotDifficultySettings.Selected=BotDifficulty.Expert;
+                PlayerPrefs.SetInt(adaptiveKeys[0],0);PlayerPrefs.SetInt(adaptiveKeys[1],0);PlayerPrefs.DeleteKey(adaptiveKeys[2]);
+                string receipt="nightmare-regression-"+System.Guid.NewGuid().ToString("N");
+                for(int i=0;i<3;i++)BotDifficultySettings.RecordSoloResult(true,receipt+i);
+                Assert(BotDifficultySettings.Selected==BotDifficulty.Nightmare,"Three Expert wins promote to Nightmare.");
+                Assert(!BotDifficultySettings.RecordSoloResult(true,receipt+2),"Duplicate result must not count twice.");
+                for(int i=3;i<6;i++)BotDifficultySettings.RecordSoloResult(true,receipt+i);
+                Assert(BotDifficultySettings.Selected==BotDifficulty.Nightmare,"Nightmare is the maximum adaptive tier.");
+                for(int i=6;i<9;i++)BotDifficultySettings.RecordSoloResult(false,receipt+i);
+                Assert(BotDifficultySettings.Selected==BotDifficulty.Expert,"Three Nightmare losses return to Expert.");
             }
             finally
             {
                 if(existed)PlayerPrefs.SetInt(key,previous);else PlayerPrefs.DeleteKey(key);
+                if(hadAdaptive[0])PlayerPrefs.SetInt(adaptiveKeys[0],winsBefore);else PlayerPrefs.DeleteKey(adaptiveKeys[0]);
+                if(hadAdaptive[1])PlayerPrefs.SetInt(adaptiveKeys[1],lossesBefore);else PlayerPrefs.DeleteKey(adaptiveKeys[1]);
+                if(hadAdaptive[2])PlayerPrefs.SetString(adaptiveKeys[2],receiptBefore);else PlayerPrefs.DeleteKey(adaptiveKeys[2]);
                 PlayerPrefs.Save();
             }
         }
@@ -480,6 +505,7 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 
 
 

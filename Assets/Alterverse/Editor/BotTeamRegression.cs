@@ -22,7 +22,7 @@ namespace Alterverse.EditorChecks
         public static void Run()
         {
             if(!Application.isPlaying)throw new InvalidOperationException("Enter Play mode first.");
-            float scale=Time.timeScale;bool saved=PlayerPrefs.HasKey("DF_BotDifficulty");int previous=PlayerPrefs.GetInt("DF_BotDifficulty");
+            float scale=Time.timeScale;bool saved=PlayerPrefs.HasKey("DF_BotAdaptiveTier");int previous=PlayerPrefs.GetInt("DF_BotAdaptiveTier");
             var healths=new List<Health>(Health.Active);
             var activeBrains=new List<MobaBotBrain>();
             var activeColliders=new List<Collider>();
@@ -52,7 +52,7 @@ namespace Alterverse.EditorChecks
                 foreach(var h in healths)if(h!=null)h.enabled=true;
                 foreach(var b in activeBrains)if(b!=null)b.enabled=true;
                 Time.timeScale=scale;
-                if(saved)PlayerPrefs.SetInt("DF_BotDifficulty",previous);else PlayerPrefs.DeleteKey("DF_BotDifficulty");
+                if(saved)PlayerPrefs.SetInt("DF_BotAdaptiveTier",previous);else PlayerPrefs.DeleteKey("DF_BotAdaptiveTier");
                 PlayerPrefs.Save();
             }
         }
@@ -77,7 +77,7 @@ namespace Alterverse.EditorChecks
         }
         private static MobaBotBrain Bot(HeroId role,Vector3 position,BotDifficulty difficulty=BotDifficulty.Expert)
         {
-            PlayerPrefs.SetInt("DF_BotDifficulty",(int)difficulty);
+            PlayerPrefs.SetInt("DF_BotAdaptiveTier",(int)difficulty);
             var obj=Unit("TeamCheck_"+role+"_"+bots.Count,0,position,role);
             obj.AddComponent<BotTargetSensor>();var brain=obj.AddComponent<MobaBotBrain>();brain.Initialize(0,16);bots.Add(brain);
             return brain;
@@ -110,20 +110,20 @@ namespace Alterverse.EditorChecks
         }
         private static void CheckDifficultyAndOutnumbered()
         {
-            for(int level=0;level<4;level++)
+            for(int level=0;level<= (int)BotDifficulty.Nightmare;level++)
             {
                 var difficulty=(BotDifficulty)level;
                 var bot=Bot(HeroId.Kaelon,new Vector3(0,1,0),difficulty);
                 for(int i=0;i<3;i++)Unit("Threat",1,new Vector3(3,1,i-1),HeroId.Rook);
                 Think(difficulty);
-                if(level>=1)Assert(bot.State==MobaBotBrain.BotState.Retreat,"Medium/Hard/Expert must disengage from a healthy 1v3.");
+                if(level>=1)Assert(bot.State==MobaBotBrain.BotState.Retreat,"Medium/Hard/Expert/Nightmare must disengage from a healthy 1v3.");
                 else Assert(!bot.FollowTeamCall,"Easy must not receive coordinated focus calls.");
                 Cleanup();
             }
             var easy=BotDifficultyProfile.For(BotDifficulty.Easy);var medium=BotDifficultyProfile.For(BotDifficulty.Normal);
             var hard=BotDifficultyProfile.For(BotDifficulty.Hard);var expert=BotDifficultyProfile.For(BotDifficulty.Expert);
             Assert(easy.ReactionDelay>medium.ReactionDelay&&medium.ReactionDelay>hard.ReactionDelay&&hard.ReactionDelay>expert.ReactionDelay,"Reaction tiers must remain distinct.");
-            Assert(!easy.Coordinated&&medium.Coordinated&&hard.Coordinated&&!hard.FullTeamCalls&&expert.FullTeamCalls,"Medium and above use shared tactics; only Expert follows as a full team.");
+            Assert(!easy.Coordinated&&medium.Coordinated&&hard.Coordinated&&!hard.FullTeamCalls&&expert.FullTeamCalls,"Medium and above use shared tactics; Expert and Nightmare follow as a full team.");
             Assert(medium.TeamCallDelay>hard.TeamCallDelay&&hard.TeamCallDelay>expert.TeamCallDelay,"Team-call reactions must remain slower on Medium than Hard/Expert.");
         }
         private static void CheckFocusAndFormation()
@@ -147,7 +147,7 @@ namespace Alterverse.EditorChecks
         }
         private static void CheckCallParticipation()
         {
-            for(int level=2;level<4;level++)
+            for(int level=2;level<= (int)BotDifficulty.Nightmare;level++)
             {
                 var difficulty=(BotDifficulty)level;
                 for(int i=0;i<5;i++)Bot((HeroId)i,new Vector3(-4,1,i-2),difficulty);
@@ -159,7 +159,7 @@ namespace Alterverse.EditorChecks
                 }
                 Think(difficulty);int following=0;
                 foreach(var bot in bots)if(bot.FollowTeamCall)following++;
-                Assert(following==(level==2?4:5),"Hard assigns four of five; Expert assigns all five to an ordinary call.");
+                Assert(following==(level==2?4:5),"Hard assigns four of five; Expert/Nightmare assign all five to an ordinary call.");
                 Cleanup();
             }
         }

@@ -19,7 +19,7 @@ namespace Alterverse.AI
 
         public static void BeginMatchOverride(BotDifficulty value)
         {
-            matchOverride=value<BotDifficulty.Easy||value>BotDifficulty.Expert?BotDifficulty.Normal:value;
+            matchOverride=value<BotDifficulty.Easy||value>BotDifficulty.Nightmare?BotDifficulty.Normal:value;
             hasMatchOverride=true;
         }
 
@@ -30,18 +30,18 @@ namespace Alterverse.AI
             get
             {
                 int value=PlayerPrefs.GetInt(Key,(int)BotDifficulty.Normal);
-                return value>=0&&value<=3?(BotDifficulty)value:BotDifficulty.Normal;
+                return value>=(int)BotDifficulty.Easy&&value<=(int)BotDifficulty.Nightmare?(BotDifficulty)value:BotDifficulty.Normal;
             }
             set
             {
-                if(value<BotDifficulty.Easy||value>BotDifficulty.Expert)value=BotDifficulty.Normal;
+                if(value<BotDifficulty.Easy||value>BotDifficulty.Nightmare)value=BotDifficulty.Normal;
                 PlayerPrefs.SetInt(Key,(int)value);PlayerPrefs.Save();
             }
         }
 
         public static int RewardBonusPercent(BotDifficulty value)
         {
-            int tier=Mathf.Clamp((int)value,(int)BotDifficulty.Easy,(int)BotDifficulty.Expert);
+            int tier=Mathf.Clamp((int)value,(int)BotDifficulty.Easy,(int)BotDifficulty.Nightmare);
             return tier*10;
         }
 
@@ -64,7 +64,7 @@ namespace Alterverse.AI
 
             if(wins>=StreakThreshold)
             {
-                if(tier<BotDifficulty.Expert){tier++;changed=true;}
+                if(tier<BotDifficulty.Nightmare){tier++;changed=true;}
                 wins=0;losses=0;
             }
             else if(losses>=StreakThreshold)
@@ -86,7 +86,9 @@ namespace Alterverse.AI
             BotDifficulty.Easy=>"EASY",
             BotDifficulty.Hard=>"HARD",
             BotDifficulty.Expert=>"EXPERT",
+            BotDifficulty.Nightmare=>"NIGHTMARE",
             _=>"MEDIUM"
         };
     }
 }
+

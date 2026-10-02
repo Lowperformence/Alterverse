@@ -121,8 +121,8 @@ namespace Alterverse.AI
         public void Tick(BotDifficulty difficulty)
         {
             if(Time.timeScale<=0||Time.time<nextTick)return;
-            bool expert=difficulty==BotDifficulty.Expert;
-            nextTick=Time.time+(expert?.35f:.60f);
+            bool expert=difficulty>=BotDifficulty.Expert;
+            nextTick=Time.time+(difficulty==BotDifficulty.Nightmare?.28f:expert?.35f:.60f);
 #if UNITY_EDITOR || DEBUG
             TacticalTicks++;
 #endif
@@ -442,3 +442,4 @@ namespace Alterverse.AI
         private static float FlatSqr(Vector3 value){value.y=0;return value.sqrMagnitude;}
     }
 }
+

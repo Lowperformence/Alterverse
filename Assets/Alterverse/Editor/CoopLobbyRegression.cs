@@ -33,10 +33,10 @@ namespace Alterverse.Editor
                         IsLocal=i==0
                     });
 
-                CoopMatchPlan plan=CoopMatchPlan.Build($"regression-{humanCount}",ArenaVariant.Kryon,BotDifficulty.Hard,members);
+                CoopMatchPlan plan=CoopMatchPlan.Build($"regression-{humanCount}",ArenaVariant.Kryon,BotDifficulty.Nightmare,members);
                 Assert(plan!=null&&plan.Session!=null,$"{humanCount}-player co-op match plan was not created.");
                 Assert(plan.HumanCount==humanCount,$"{humanCount}-player plan reports wrong human count.");
-                Assert(plan.Arena==ArenaVariant.Kryon&&plan.Difficulty==BotDifficulty.Hard,"Host match settings were not preserved.");
+                Assert(plan.Arena==ArenaVariant.Kryon&&plan.Difficulty==BotDifficulty.Nightmare,"Host match settings were not preserved.");
                 Assert(plan.Session.IsFull,$"{humanCount}-player co-op plan must always fill ten match slots.");
 
                 for(int i=0;i<humanCount;i++)Assert(!plan.Session.Slots[i].IsBot,$"Human slot {i} became AI.");
@@ -119,3 +119,4 @@ namespace Alterverse.Editor
         }
     }
 }
+
