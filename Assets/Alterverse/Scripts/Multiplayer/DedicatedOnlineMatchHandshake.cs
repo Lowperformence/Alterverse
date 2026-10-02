@@ -11,9 +11,10 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Establishes the authoritative online roster after Edgegap assigns all clients to a
-    /// dedicated server. Clients identify themselves with their Edgegap ticket/team and chosen
-    /// hero. The server builds the only authoritative 5v5 plan, returns it to every client,
-    /// waits for plan acknowledgements, then launches the finished battlefield on all peers.
+    /// dedicated server. Clients announce their Edgegap ticket; on an Edgegap deployment the
+    /// server verifies that ticket/team/match against injected Matchmaker variables before a
+    /// player is authorized. The server builds the only authoritative 5v5 plan, returns it to
+    /// every client, waits for plan acknowledgements, then launches the battlefield on all peers.
     /// </summary>
     [DefaultExecutionOrder(-24000)]
     public sealed class DedicatedOnlineMatchHandshake : MonoBehaviour
@@ -23,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
         private const int ProtocolVersion = 1;
-        private const float HumanJoinWindowSeconds = 8f;
+        private const float HumanJoinWindowSeconds = 20f;
 
         private sealed class PendingHuman
         {
@@ -114,9 +115,17 @@ namespace Alterverse.Multiplayer
 
             if (!planSent)
             {
+                int edgegapAssigned = EdgegapInjectedMatchContext.IsEdgegapDeployment
+                    ? Mathf.Clamp(EdgegapInjectedMatchContext.AssignedTicketCount, 0, MatchSession.MaxPlayers)
+                    : 0;
+                bool allAssignedConnected = edgegapAssigned > 0 && pending.Count >= edgegapAssigned;
                 bool full = pending.Count >= MatchSession.MaxPlayers;
                 bool graceElapsed = firstHelloAt >= 0f && Time.unscaledTime - firstHelloAt >= HumanJoinWindowSeconds;
-                if (full || graceElapsed)
+
+                if (edgegapAssigned > 0 && !allAssignedConnected && !graceElapsed)
+                    status = $"WAITING FOR EDGEGAP PLAYERS • {pending.Count}/{edgegapAssigned}";
+
+                if (allAssignedConnected || full || graceElapsed)
                     BuildAndSendAuthoritativePlan(manager);
                 return;
             }
@@ -169,17 +178,35 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int heroRaw);
 
             string ticketId = fixedTicket.ToString();
-            string teamId = fixedTeam.ToString();
-            string matchId = fixedMatch.ToString();
-            string playerId = fixedPlayer.ToString();
+            string claimedTeamId = fixedTeam.ToString();
+            string claimedMatchId = fixedMatch.ToString();
+            string claimedPlayerId = fixedPlayer.ToString();
             string displayName = fixedName.ToString();
 
-            if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(teamId) ||
-                string.IsNullOrWhiteSpace(playerId) || !Enum.IsDefined(typeof(HeroId), heroRaw))
+            if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(claimedTeamId) ||
+                !Enum.IsDefined(typeof(HeroId), heroRaw))
             {
                 Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected invalid dedicated hello from client {senderClientId}.");
                 return;
             }
+
+            if (!EdgegapInjectedMatchContext.TryValidateTicket(
+                    ticketId,
+                    claimedTeamId,
+                    claimedMatchId,
+                    out string teamId,
+                    out string matchId,
+                    out string validationReason))
+            {
+                Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected Edgegap ticket from client {senderClientId}: {validationReason}.");
+                return;
+            }
+
+            // Ticket ID is the authoritative per-match player identity. A client-provided account or
+            // lobby id is intentionally not trusted by gameplay authorization on the dedicated server.
+            string playerId = ticketId;
+            if (!string.IsNullOrWhiteSpace(claimedPlayerId) && claimedPlayerId != ticketId)
+                Debug.Log($"DIMENSIONS FRONT SERVER: lobby identity {claimedPlayerId} bound to verified ticket {ticketId}.");
 
             foreach (KeyValuePair<ulong, PendingHuman> pair in pending)
             {
@@ -187,6 +214,12 @@ namespace Alterverse.Multiplayer
                 if (pair.Value.TicketId == ticketId || pair.Value.PlayerId == playerId)
                 {
                     Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected duplicate dedicated identity from client {senderClientId}.");
+                    return;
+                }
+                if (!string.IsNullOrWhiteSpace(matchId) && !string.IsNullOrWhiteSpace(pair.Value.MatchId) &&
+                    !string.Equals(pair.Value.MatchId, matchId, StringComparison.Ordinal))
+                {
+                    Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected cross-match client {senderClientId}.");
                     return;
                 }
             }
@@ -203,7 +236,11 @@ namespace Alterverse.Multiplayer
             };
             authorizedPlayers[senderClientId] = playerId;
             if (firstHelloAt < 0f) firstHelloAt = Time.unscaledTime;
-            status = $"DEDICATED PLAYERS CONNECTING • {pending.Count}/{MatchSession.MaxPlayers}";
+
+            int assigned = EdgegapInjectedMatchContext.IsEdgegapDeployment
+                ? EdgegapInjectedMatchContext.AssignedTicketCount
+                : MatchSession.MaxPlayers;
+            status = $"DEDICATED PLAYERS CONNECTING • {pending.Count}/{Mathf.Max(1, assigned)}";
         }
 
         private void BuildAndSendAuthoritativePlan(NetworkManager manager)
@@ -215,7 +252,7 @@ namespace Alterverse.Multiplayer
                 List<PendingHuman> ordered = new(pending.Values);
                 ordered.Sort((a, b) => a.ClientId.CompareTo(b.ClientId));
                 var members = new List<OnlineMatchPlan.DedicatedMember>(ordered.Count);
-                string matchId = "";
+                string matchId = EdgegapInjectedMatchContext.InjectedMatchId;
                 for (int i = 0; i < ordered.Count; i++)
                 {
                     PendingHuman human = ordered[i];
@@ -393,17 +430,11 @@ namespace Alterverse.Multiplayer
         private void LaunchAuthoritativeMatch(NetworkManager manager)
         {
             if (launched || CoopAuthority.PreparedPlan is not OnlineMatchPlan plan || messaging == null) return;
-            launched = true;
 
-            using FastBufferWriter writer = new(12, Allocator.Temp);
-            writer.WriteValueSafe(ProtocolVersion);
-            writer.WriteValueSafe(planFingerprint);
-            foreach (ulong clientId in pending.Keys)
-                messaging.SendNamedMessage(LaunchMessage, clientId, writer, NetworkDelivery.ReliableSequenced);
-
+            // Activate and construct the authoritative world first. Clients receive launch only
+            // after the server has successfully entered the match, avoiding a client-only launch.
             if (!CoopAuthority.BeginPreparedMatch(false))
             {
-                launched = false;
                 status = "DEDICATED SERVER COULD NOT ACTIVATE PLAN";
                 return;
             }
@@ -411,10 +442,17 @@ namespace Alterverse.Multiplayer
             DedicatedServerNetworkRuntime.ReleaseMatchBootstrap();
             if (!OnlineMatchRuntime.Enter(plan))
             {
-                launched = false;
+                CoopAuthority.EndMatch();
                 status = "DEDICATED SERVER MATCH BOOTSTRAP FAILED";
                 return;
             }
+
+            launched = true;
+            using FastBufferWriter writer = new(12, Allocator.Temp);
+            writer.WriteValueSafe(ProtocolVersion);
+            writer.WriteValueSafe(planFingerprint);
+            foreach (ulong clientId in pending.Keys)
+                messaging.SendNamedMessage(LaunchMessage, clientId, writer, NetworkDelivery.ReliableSequenced);
 
             status = $"DEDICATED MATCH LIVE • {plan.HumanCount} HUMANS";
             Debug.Log($"DIMENSIONS FRONT SERVER: authoritative online match started with {plan.HumanCount} humans and bot fill.");
