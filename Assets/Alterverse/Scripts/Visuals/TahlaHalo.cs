@@ -40,8 +40,8 @@ namespace Alterverse.Visuals
             }
             if (!found || bounds.size.y <= 0) return;
             var owner = model.gameObject.AddComponent<TahlaHalo>();
-            float radius = bounds.size.y * .34f;
-            Vector3 center = new Vector3(bounds.center.x, bounds.max.y + bounds.size.y * .16f, bounds.center.z);
+            float radius = bounds.size.y * .238f;
+            Vector3 center = new Vector3(bounds.center.x, bounds.max.y + bounds.size.y * .10f, bounds.center.z);
             Vector3[] points = geometry.vertices;
             for (int i = 0; i < points.Length; i++) points[i] = head.InverseTransformPoint(model.TransformPoint(center + points[i] * radius));
             owner.ownedMesh = new Mesh { name = "DF_TahlaBlenderHalo" };
