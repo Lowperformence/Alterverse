@@ -506,7 +506,7 @@ namespace Alterverse.Combat
             Vector3 impact=new(target.x,target.y+.25f,target.z);
             Color blast=ArenaVariantRuntime.IsKryon?new Color(.72f,.97f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.74f,.04f):new Color(1f,.34f,.10f);
             Color shock=ArenaVariantRuntime.IsKryon?new Color(.24f,.88f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.66f,.02f):new Color(1f,.28f,.08f);
-            CombatImpactPool.Emit(impact,blast,1);
+            BomberExplosionVfx.Play(impact,blast,ImpactRadius);
             PrototypeVfx.Shockwave(impact,shock,ImpactRadius*1.05f);
 
             int hits=Physics.OverlapSphereNonAlloc(target,ImpactRadius,hitBuffer);
@@ -554,3 +554,4 @@ namespace Alterverse.Combat
         }
     }
 }
+
