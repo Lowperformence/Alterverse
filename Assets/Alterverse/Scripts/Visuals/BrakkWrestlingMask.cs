@@ -51,7 +51,7 @@ namespace Alterverse.Visuals
         }
         void Build(Transform model,Transform head,Vector3 center,Vector3 radius)
         {
-            var v=new List<Vector3>();var bronze=new List<int>();var trim=new List<int>();var crest=new List<int>();
+            var v=new List<Vector3>();var bronze=new List<int>();var trim=new List<int>();
             Vector3 P(float x,float y,float z)=>head.InverseTransformPoint(model.TransformPoint(center+Vector3.Scale(radius,new Vector3(x,y,z))));
             const int rows=40,cols=72;
             for(int y=0;y<=rows;y++)for(int x=0;x<=cols;x++)
@@ -77,24 +77,13 @@ namespace Alterverse.Visuals
                 Plate(new[]{new Vector3(sign*.19f,-.16f,1.00f),new Vector3(sign*.73f,-.11f,.78f),new Vector3(sign*.79f,-.91f,.62f),new Vector3(sign*.36f,-1.15f,.76f),new Vector3(sign*.18f,-.62f,1.01f)},bronze,.08f);
             }
             Plate(new[]{new Vector3(-.13f,.24f,1.04f),new Vector3(.13f,.24f,1.04f),new Vector3(.085f,-.45f,1.16f),new Vector3(0,-.57f,1.19f),new Vector3(-.085f,-.45f,1.16f)},bronze,.08f);
-            // Continuous sagittal red horsehair crest; individual tapered blades create the fringe.
-            for(int j=0;j<48;j++)
-            {
-                float angle=Mathf.Lerp(-1.18f,1.48f,j/47f);float z=Mathf.Sin(angle),y=Mathf.Cos(angle);
-                float length=.45f+.15f*Mathf.Sin(j*.83f)*Mathf.Sin(j*.83f);
-                float width=.045f;
-                int start=v.Count;
-                v.Add(P(-width,y*.98f,z*.98f));v.Add(P(width,y*.98f,z*.98f));
-                v.Add(P(width*.35f,y*(1.0f+length)+.25f,z*(1.0f+length)));v.Add(P(-width*.35f,y*(1.0f+length)+.25f,z*(1.0f+length)));
-                Quad(crest,start,start+1,start+2,start+3);Quad(crest,start+3,start+2,start+1,start);
-            }
-            mesh=new Mesh{name="DF_BrakkBronzeCrestHelmet"};mesh.SetVertices(v);mesh.subMeshCount=3;
+            mesh=new Mesh{name="DF_BrakkBronzeHelmet"};mesh.SetVertices(v);mesh.subMeshCount=2;
             Vector3 localCenter=P(0,0,0);
             foreach(var ids in new[]{bronze,trim})for(int i=0;i<ids.Count;i+=3)
             {Vector3 a=v[ids[i]],b=v[ids[i+1]],c=v[ids[i+2]];if(Vector3.Dot(Vector3.Cross(b-a,c-a),(a+b+c)/3-localCenter)<0){int t=ids[i+1];ids[i+1]=ids[i+2];ids[i+2]=t;}}
-            mesh.SetTriangles(bronze,0);mesh.SetTriangles(trim,1);mesh.SetTriangles(crest,2);mesh.RecalculateNormals();mesh.RecalculateBounds();
-            materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black),RuntimeShaderLibrary.Create(new Color(.56f,.015f,.025f),false,.02f,.20f,Color.black)};
-            var go=new GameObject("DF_BrakkBronzeCrestHelmet");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
+            mesh.SetTriangles(bronze,0);mesh.SetTriangles(trim,1);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black)};
+            var go=new GameObject("DF_BrakkBronzeHelmet");go.transform.SetParent(head,false);go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
         }
         void BuildArmorDetails(Transform model,float unit)
         {
