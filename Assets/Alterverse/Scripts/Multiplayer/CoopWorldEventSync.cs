@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Replicates sparse deterministic battlefield events. Damage/scoring remain host-owned;
+    /// Replicates sparse deterministic battlefield events. Damage/scoring remain server-owned;
     /// clients receive the exact Hot Zone position, planet spawn and bomber route seed for visuals.
     /// </summary>
     public sealed class CoopWorldEventSync : MonoBehaviour
@@ -197,7 +197,7 @@ namespace Alterverse.Multiplayer
         private bool CanBroadcast()
         {
             NetworkManager manager=NetworkManager.Singleton;
-            return CoopAuthority.Active&&CoopAuthority.LocalIsHost&&manager!=null&&manager.IsHost&&messaging!=null;
+            return CoopAuthority.Active&&CoopAuthority.LocalHasServerAuthority&&manager!=null&&manager.IsServer&&messaging!=null;
         }
 
         private void SendAll(string name,FastBufferWriter writer)
@@ -319,7 +319,7 @@ namespace Alterverse.Multiplayer
         private static bool ValidServerMessage(ulong sender)
         {
             NetworkManager manager=NetworkManager.Singleton;
-            return CoopAuthority.Active&&!CoopAuthority.LocalIsHost&&manager!=null&&manager.IsClient&&sender==NetworkManager.ServerClientId;
+            return CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority&&manager!=null&&manager.IsClient&&sender==NetworkManager.ServerClientId;
         }
 
         private void Attach(CustomMessagingManager value)
