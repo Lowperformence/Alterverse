@@ -5,6 +5,7 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>One isolated preview of the actual hero model; never a combat actor.</summary>
+    [DefaultExecutionOrder(960)]
     public sealed class MenuHeroShowcase : MonoBehaviour
     {
         private const int PreviewLayer = 31;
@@ -18,6 +19,8 @@ namespace Alterverse.UI
         private bool hasSelection,selectedWeapon;
         private Alterverse.Shop.UniversalHeroCosmetic selectedCosmetic;
         private float selectedAt;
+        private int initialFits;
+        private bool settledFit;
         private bool loadoutDirty=true,cachedWeapon;
         private int cachedWeaponVariant=-1,selectedWeaponVariant=-1;
         private HeroId cachedHero;
@@ -119,7 +122,7 @@ namespace Alterverse.UI
             wingLeft=visual.Find("DF_WingL"); wingRight=visual.Find("DF_WingR");
             float facing=hero==HeroId.Nyra?-24:hero==HeroId.Kaelon?-24:-16;
             actor.transform.localRotation=Quaternion.Euler(0,facing,0);
-            FitPreviewBounds();
+            initialFits = 2; settledFit = false;
             // No health, colliders, input, abilities, team membership or game-world registration.
             foreach (Transform part in actor.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = PreviewLayer;
             foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
@@ -141,22 +144,48 @@ namespace Alterverse.UI
         }
         private void FitPreviewBounds()
         {
-            Renderer[] renderers=actor.GetComponentsInChildren<Renderer>();
-            bool found=false;Bounds bounds=default;
-            foreach(var renderer in renderers)
+            // Imported renderer bounds include animation/culling padding. Fit the
+            // visible vertices after the pose owner (940), not the pre-pose AABB.
+            bool found = false;
+            Vector3 min = Vector3.zero, max = Vector3.zero;
+            Quaternion cameraSpace = Quaternion.Inverse(previewCamera.transform.rotation);
+            Mesh baked = new Mesh();
+            try
             {
-                if(!renderer.enabled)continue;
-                if(!found){bounds=renderer.bounds;found=true;}else bounds.Encapsulate(renderer.bounds);
+                foreach (Renderer renderer in actor.GetComponentsInChildren<Renderer>())
+                {
+                    if (!renderer.enabled || renderer is ParticleSystemRenderer || renderer is TrailRenderer) continue;
+                    if (renderer is SkinnedMeshRenderer skin && skin.sharedMesh != null)
+                    {
+                        baked.Clear();
+                        skin.BakeMesh(baked);
+                        foreach (Vector3 vertex in baked.vertices)
+                            Include(cameraSpace * (skin.transform.TransformPoint(vertex) - actor.transform.position), ref found, ref min, ref max);
+                    }
+                    else
+                    {
+                        Bounds bounds = renderer.bounds;
+                        for (int corner = 0; corner < 8; corner++)
+                        {
+                            Vector3 p = bounds.center + Vector3.Scale(bounds.extents,
+                                new Vector3((corner & 1) == 0 ? -1 : 1, (corner & 2) == 0 ? -1 : 1, (corner & 4) == 0 ? -1 : 1));
+                            Include(cameraSpace * (p - actor.transform.position), ref found, ref min, ref max);
+                        }
+                    }
+                }
             }
-            if(!found)return;
-            Vector3 forward=previewCamera.transform.forward;
-            previewCamera.transform.position=bounds.center-forward*5f;
-            Vector3 extent=bounds.extents;
-            Vector3 right=previewCamera.transform.right,up=previewCamera.transform.up;
-            float horizontal=Mathf.Abs(right.x)*extent.x+Mathf.Abs(right.y)*extent.y+Mathf.Abs(right.z)*extent.z;
-            float vertical=Mathf.Abs(up.x)*extent.x+Mathf.Abs(up.y)*extent.y+Mathf.Abs(up.z)*extent.z;
-            // Slightly tighter framing than before, while preserving the complete silhouette.
-            previewCamera.orthographicSize=Mathf.Max(1.40f,Mathf.Max(vertical,horizontal/(PreviewWidth/(float)PreviewHeight))*1.08f);
+            finally { Destroy(baked); }
+            if (!found) return;
+            Vector3 center = actor.transform.position + previewCamera.transform.rotation * ((min + max) * .5f);
+            previewCamera.transform.position = center - previewCamera.transform.forward * 5f;
+            Vector3 size = max - min;
+            previewCamera.orthographicSize = Mathf.Max(.5f,
+                Mathf.Max(size.y * .5f, size.x * .5f / (PreviewWidth / (float)PreviewHeight)) * 1.16f);
+        }
+        private static void Include(Vector3 point, ref bool found, ref Vector3 min, ref Vector3 max)
+        {
+            if (!found) { min = max = point; found = true; }
+            else { min = Vector3.Min(min, point); max = Vector3.Max(max, point); }
         }
         private void CreateStage()
         {
@@ -219,6 +248,12 @@ namespace Alterverse.UI
             if(orbitRight!=null) orbitRight.localPosition=new Vector3(.58f,.28f-Mathf.Sin(t*1.4f)*.06f,.03f);
             if(wingLeft!=null) wingLeft.localRotation=Quaternion.Euler(0,-18,-18-Mathf.Sin(t*2)*3);
             if(wingRight!=null) wingRight.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2)*3);
+            if (initialFits > 0 || (!settledFit && t >= .6f))
+            {
+                FitPreviewBounds();
+                if (initialFits > 0) initialFits--;
+                if (t >= .6f) settledFit = true;
+            }
         }
         private void OnDisable() { Alterverse.Profile.ProfileTransaction.Committed-=InvalidateLoadout;Alterverse.Shop.PaidShardCommerce.EntitlementsChanged-=InvalidateLoadout; if (stage != null) stage.SetActive(false); }
         private void OnDestroy()
@@ -231,6 +266,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

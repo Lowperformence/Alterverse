@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<string, Transform> controls = new Dictionary<string, Transform>();
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
-        private Transform model, muzzle, visualRoot, rifleSupport, leftPalm;
+        private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
@@ -69,6 +69,7 @@ namespace Alterverse.Visuals
                 if (bone.name == "DF_Muzzle") muzzle = bone;
                 if (bone.name == "DF_SupportGrip") rifleSupport = bone;
                 if (bone.name == "DF_PalmGripL") leftPalm = bone;
+                if (bone.name == "DF_HandleContactR") rifleHandle = bone;
             }
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                 if (renderer.name == "DF_WeaponL" || renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletL" || renderer.name == "DF_GauntletR")
@@ -238,7 +239,7 @@ namespace Alterverse.Visuals
             switch (hero)
             {
                 case HeroId.Nyra:
-                    SolveGuard(rightArm, new Vector3(0.090024f, 1.264800f, 0.229989f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.11f, 1.30f, .205f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Veyr:
                     SolveGuard(leftArm, new Vector3(-0.239700f, 1.122000f, 0.206800f), GuardHint(leftArm), guardWeight);
@@ -267,6 +268,22 @@ namespace Alterverse.Visuals
             }
         }
 
+        private void ApplyRifleAim()
+        {
+            if (hero != HeroId.Nyra || rightArm == null || muzzle == null ||
+                rifleSupport == null || rifleHandle == null) return;
+            // Three authored contact points define the barrel and its roll without
+            // assuming FBX bone axes. Rotate the hand and rifle together, never the
+            // weapon independently of its trigger grip.
+            Vector3 forward = muzzle.position - rifleSupport.position;
+            Vector3 up = Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward);
+            if (forward.sqrMagnitude < .000001f || up.sqrMagnitude < .000001f) return;
+            Quaternion current = Quaternion.LookRotation(forward, up);
+            Vector3 aim = model.forward - model.up * (motion != null && motion.ArmActionActive ? 0f : .06f);
+            Quaternion desired = Quaternion.LookRotation(aim, model.up);
+            rightArm.Hand.rotation = desired * Quaternion.Inverse(current) * rightArm.Hand.rotation;
+        }
+
         private void ApplyRifleSupport()
         {
             if (hero != HeroId.Nyra || rifleSupport == null || leftArm == null || leftPalm == null) return;
@@ -293,6 +310,7 @@ namespace Alterverse.Visuals
             }
             ApplyModelGuard();
             ApplyWeaponGrips();
+            ApplyRifleAim();
             ApplyRifleSupport();
         }
     }
