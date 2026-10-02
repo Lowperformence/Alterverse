@@ -10,8 +10,8 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Lightweight custom-message synchronization for the ten deterministic hero slots.
-    /// Human owners send only their movement pose to the host. The host validates it, runs
-    /// all authoritative gameplay, and broadcasts hero pose/health snapshots to clients.
+    /// Human owners send only their movement pose to the authoritative server. The server validates it,
+    /// runs authoritative gameplay, and broadcasts hero pose/health snapshots to clients.
     /// </summary>
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
@@ -46,7 +46,7 @@ namespace Alterverse.Multiplayer
 
             if(Time.unscaledTime>=nextRefresh)RefreshSlots(false);
 
-            if(CoopAuthority.LocalIsHost)
+            if(CoopAuthority.LocalHasServerAuthority)
             {
                 if(Time.unscaledTime>=nextHostSnapshot)
                 {
@@ -114,12 +114,12 @@ namespace Alterverse.Multiplayer
             senderLastPoseAt.Clear();
         }
 
-        // Presentation only: confirmed phases originate on the authoritative host. Sending before
-        // viewport culling lets a client hear its own hero even when it is outside the host's view.
+        // Presentation only: confirmed phases originate on the authoritative server. Sending before
+        // viewport culling lets a client hear its own hero even when it is outside the server's view.
         public static void BroadcastCombatSound(GameObject actor,int action,int phase,Vector3 position)
         {
             var service=audioRelay;var manager=NetworkManager.Singleton;
-            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalIsHost||manager==null||!manager.IsHost)return;
+            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
             using FastBufferWriter writer=new(24,Allocator.Temp);
             writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(action);writer.WriteValueSafe(phase);
@@ -132,7 +132,7 @@ namespace Alterverse.Multiplayer
         }
         private void OnCombatSound(ulong sender,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(24))return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(24))return;
             reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int action);reader.ReadValueSafe(out int phase);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             if(slot<0||slot>=slots.Length||slots[slot]==null||action<0||action>4||phase<0||phase>2)return;
@@ -143,7 +143,7 @@ namespace Alterverse.Multiplayer
         public static void BroadcastKillSound(GameObject killer)
         {
             var service=audioRelay;var manager=NetworkManager.Singleton;
-            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalIsHost||manager==null||!manager.IsHost)return;
+            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=killer.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
             using FastBufferWriter writer=new(4,Allocator.Temp);
             writer.WriteValueSafe(slot.Slot);
@@ -153,7 +153,7 @@ namespace Alterverse.Multiplayer
         }
         private void OnKillSound(ulong sender,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(4))return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(4))return;
             reader.ReadValueSafe(out int slot);
             if(slot>=0&&slot<slots.Length&&slots[slot]!=null)
                 Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
@@ -161,7 +161,7 @@ namespace Alterverse.Multiplayer
 
         private void SendOwnerPose(NetworkManager manager)
         {
-            if(manager==null||manager.IsHost||messaging==null||localSlot<0)return;
+            if(manager==null||manager.IsServer||messaging==null||localSlot<0)return;
             CoopHeroSlot slot=slots[localSlot];
             Health health=slot!=null?slot.GetComponent<Health>():null;
             if(slot==null||health==null||health.IsDead)return;
@@ -180,9 +180,9 @@ namespace Alterverse.Multiplayer
 
         private void OnOwnerPose(ulong senderClientId,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||!CoopAuthority.LocalIsHost||Time.timeScale<=0f)return;
+            if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||Time.timeScale<=0f)return;
             NetworkManager manager=NetworkManager.Singleton;
-            if(manager==null||!manager.IsHost)return;
+            if(manager==null||!manager.IsServer)return;
 
             reader.ReadValueSafe(out int rosterSlot);
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
@@ -235,7 +235,7 @@ namespace Alterverse.Multiplayer
 
         private void BroadcastHostSnapshot(NetworkManager manager)
         {
-            if(manager==null||!manager.IsHost||messaging==null||manager.ConnectedClientsIds==null)return;
+            if(manager==null||!manager.IsServer||messaging==null||manager.ConnectedClientsIds==null)return;
 
             int count=0;
             for(int i=0;i<slots.Length;i++)if(slots[i]!=null)count++;
@@ -277,7 +277,7 @@ namespace Alterverse.Multiplayer
 
         private void OnHeroSnapshot(ulong senderClientId,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalIsHost||senderClientId!=NetworkManager.ServerClientId)return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||senderClientId!=NetworkManager.ServerClientId)return;
 
             reader.ReadValueSafe(out int count);
             count=Mathf.Clamp(count,0,MatchSession.MaxPlayers);
