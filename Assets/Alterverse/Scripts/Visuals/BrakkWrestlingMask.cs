@@ -27,16 +27,17 @@ namespace Alterverse.Visuals
                 int index=Array.FindIndex(skin.bones,b=>b==head);
                 if(index>=0)
                 {
-                    var baked=new Mesh();skin.BakeMesh(baked);
-                    Vector3[] points=baked.vertices;BoneWeight[] weights=skin.sharedMesh.boneWeights;
+                    // Read head points in bone space; this is independent of BakeMesh timing and renderer scale.
+                    Vector3[] points=skin.sharedMesh.vertices;BoneWeight[] weights=skin.sharedMesh.boneWeights;
+                    Matrix4x4 headBind=skin.sharedMesh.bindposes[index];
+                    Vector3 HeadPoint(int vertex)=>model.InverseTransformPoint(head.TransformPoint(headBind.MultiplyPoint3x4(points[vertex])));
                     Vector3 low=Vector3.one*float.MaxValue,high=Vector3.one*float.MinValue;
                     if(points.Length==weights.Length)for(int i=0;i<points.Length;i++)
                     {
                         var w=weights[i];float weight=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+(w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
                         if(weight<.5f)continue;
-                        Vector3 q=model.InverseTransformPoint(skin.transform.TransformPoint(points[i]));low=Vector3.Min(low,q);high=Vector3.Max(high,q);
+                        Vector3 q=HeadPoint(i);low=Vector3.Min(low,q);high=Vector3.Max(high,q);
                     }
-                    Destroy(baked);
                     if(low.x<=high.x)
                     {
                         low.y=Mathf.Max(low.y,neck.y+(high.y-neck.y)*.19f);
@@ -50,7 +51,7 @@ namespace Alterverse.Visuals
                             var w=weights[i];
                             float weight=(w.boneIndex0==index?w.weight0:0)+(w.boneIndex1==index?w.weight1:0)+(w.boneIndex2==index?w.weight2:0)+(w.boneIndex3==index?w.weight3:0);
                             if(weight<.5f)continue;
-                            Vector3 q=model.InverseTransformPoint(skin.transform.TransformPoint(points[i]));
+                            Vector3 q=HeadPoint(i);
                             if(q.y<low.y)continue;
                             Vector3 d=q-center;
                             float normalizedRadius=new Vector3(d.x/radius.x,d.y/radius.y,d.z/radius.z).magnitude;
@@ -62,6 +63,7 @@ namespace Alterverse.Visuals
             }
             var owner=model.gameObject.AddComponent<BrakkWrestlingMask>();
             owner.Build(model,head,center,radius);
+            owner.MergeHelmetIntoBody(model,skin,head,center.y-radius.y*.84f);
             owner.BuildArmorDetails(model,unit);
         }
         void Build(Transform model,Transform head,Vector3 center,Vector3 radius)
@@ -100,6 +102,71 @@ namespace Alterverse.Visuals
             materials=new[]{RuntimeShaderLibrary.Create(new Color(.47f,.31f,.12f),false,.72f,.37f,Color.black),RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.75f,.42f,Color.black)};
             var go=new GameObject("DF_BrakkBronzeHelmet");go.transform.SetParent(head,false);go.layer=head.gameObject.layer;go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterials=materials;
         }
+        void MergeHelmetIntoBody(Transform model,SkinnedMeshRenderer skin,Transform head,float neckCut)
+        {
+            if(skin==null||skin.sharedMesh==null||!skin.sharedMesh.isReadable)return;
+            Mesh original=skin.sharedMesh;
+            int headIndex=Array.FindIndex(skin.bones,b=>b==head);
+            if(headIndex<0||headIndex>=original.bindposes.Length)return;
+            var vertices=new List<Vector3>(original.vertices);
+            var normals=new List<Vector3>(original.normals);
+            if(normals.Count!=vertices.Count){normals.Clear();for(int i=0;i<vertices.Count;i++)normals.Add(Vector3.up);}
+            var weights=new List<BoneWeight>(original.boneWeights);
+            var colors=new List<Color>(original.colors);
+            if(colors.Count!=vertices.Count){colors.Clear();for(int i=0;i<vertices.Count;i++)colors.Add(Color.white);}
+            var uv=new List<Vector2>();original.GetUVs(0,uv);
+            if(uv.Count!=vertices.Count){uv.Clear();for(int i=0;i<vertices.Count;i++)uv.Add(Vector2.zero);}
+            var finish=new List<Vector2>();original.GetUVs(1,finish);
+            if(finish.Count!=vertices.Count){finish.Clear();for(int i=0;i<vertices.Count;i++)finish.Add(Vector2.zero);}
+            int offset=vertices.Count;
+            Matrix4x4 headToMesh=original.bindposes[headIndex].inverse;
+            Matrix4x4 normalMatrix=headToMesh.inverse.transpose;
+            Vector3[] helmetVertices=mesh.vertices,helmetNormals=mesh.normals;
+            for(int i=0;i<helmetVertices.Length;i++)
+            {
+                vertices.Add(headToMesh.MultiplyPoint3x4(helmetVertices[i]));
+                normals.Add(normalMatrix.MultiplyVector(helmetNormals[i]).normalized);
+                weights.Add(new BoneWeight{boneIndex0=headIndex,weight0=1});
+                colors.Add(Color.white);uv.Add(Vector2.zero);finish.Add(new Vector2(.72f,.4f));
+            }
+            bool OldHead(int i)
+            {
+                BoneWeight w=weights[i];
+                float amount=(w.boneIndex0==headIndex?w.weight0:0)+(w.boneIndex1==headIndex?w.weight1:0)+(w.boneIndex2==headIndex?w.weight2:0)+(w.boneIndex3==headIndex?w.weight3:0);
+                Vector3 point=model.InverseTransformPoint(head.TransformPoint(original.bindposes[headIndex].MultiplyPoint3x4(vertices[i])));
+                return amount>=.5f&&point.y>neckCut;
+            }
+            var merged=new Mesh{name="DF_BrakkBodyWithBronzeHelmet"};
+            merged.indexFormat=vertices.Count>65535?UnityEngine.Rendering.IndexFormat.UInt32:UnityEngine.Rendering.IndexFormat.UInt16;
+            merged.SetVertices(vertices);merged.SetNormals(normals);merged.SetColors(colors);
+            merged.SetUVs(0,uv);merged.SetUVs(1,finish);merged.boneWeights=weights.ToArray();merged.bindposes=original.bindposes;
+            merged.subMeshCount=original.subMeshCount+2;
+            for(int m=0;m<original.subMeshCount;m++)
+            {
+                int[] source=original.GetTriangles(m);var kept=new List<int>();
+                for(int i=0;i<source.Length;i+=3)
+                {
+                    if(OldHead(source[i])&&OldHead(source[i+1])&&OldHead(source[i+2]))continue;
+                    kept.Add(source[i]);kept.Add(source[i+1]);kept.Add(source[i+2]);
+                }
+                merged.SetTriangles(kept,m);
+            }
+            for(int m=0;m<2;m++)
+            {
+                int[] ids=mesh.GetTriangles(m);for(int i=0;i<ids.Length;i++)ids[i]+=offset;
+                merged.SetTriangles(ids,original.subMeshCount+m);
+            }
+            var combined=new List<Material>(skin.sharedMaterials);
+            // Keep one material per original submesh, then append helmet bronze and trim.
+            while(combined.Count<original.subMeshCount)combined.Add(materials[0]);
+            if(combined.Count>original.subMeshCount)combined.RemoveRange(original.subMeshCount,combined.Count-original.subMeshCount);
+            combined.Add(materials[0]);combined.Add(materials[1]);
+            merged.RecalculateBounds();skin.sharedMesh=merged;skin.sharedMaterials=combined.ToArray();
+            Bounds bounds=skin.localBounds;bounds.Encapsulate(merged.bounds);skin.localBounds=bounds;
+            detailMeshes.Add(merged);
+            Transform separate=head.Find("DF_BrakkBronzeHelmet");
+            if(separate!=null){separate.gameObject.SetActive(false);Destroy(separate.gameObject);}
+        }
         void BuildArmorDetails(Transform model,float unit)
         {
             Transform[] bones=model.GetComponentsInChildren<Transform>(true);
@@ -123,8 +190,8 @@ namespace Alterverse.Visuals
                     for(int j=0;j<8;j++)Quad(faces,start+j,start+(j+1)%8,start+8+(j+1)%8,start+8+j);
                 }
                 bool torso=name=="Chest";
-                float width=(torso?.115f:name.StartsWith("Thigh")?.068f:name.StartsWith("UpperArm")?.075f:.057f)*unit;
-                float depth=(torso?.125f:.070f)*unit;
+                float width=(torso?.15f:name.StartsWith("Thigh")?.080f:name.StartsWith("UpperArm")?.105f:.070f)*unit;
+                float depth=(torso?.17f:name.StartsWith("UpperArm")?.105f:.085f)*unit;
                 for(int j=0;j<3;j++)
                 {
                     Vector3 c=Vector3.Lerp(a,b,.20f+j*.23f)+Vector3.forward*depth;
