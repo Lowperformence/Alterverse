@@ -29,6 +29,8 @@ namespace Alterverse.Multiplayer
         public string GroupId { get; private set; } = "";
         public string MemberId { get; private set; } = "";
         public string TicketId { get; private set; } = "";
+        public string TeamId { get; private set; } = "";
+        public string MatchId { get; private set; } = "";
         public string MatchmakerStatus { get; private set; } = "IDLE";
         public string LastError { get; private set; } = "";
         public string AssignedHost { get; private set; } = "";
@@ -63,6 +65,8 @@ namespace Alterverse.Multiplayer
             GroupId = "";
             MemberId = "";
             TicketId = "";
+            TeamId = "";
+            MatchId = "";
             AssignedHost = "";
             AssignedPort = 0;
             LastError = "";
@@ -282,6 +286,8 @@ namespace Alterverse.Multiplayer
             if (!string.IsNullOrWhiteSpace(response.group_id)) GroupId = response.group_id;
             if (!string.IsNullOrWhiteSpace(response.member_id)) MemberId = response.member_id;
             if (!string.IsNullOrWhiteSpace(response.ticket_id)) TicketId = response.ticket_id;
+            if (!string.IsNullOrWhiteSpace(response.team_id)) TeamId = response.team_id;
+            if (!string.IsNullOrWhiteSpace(response.match_id)) MatchId = response.match_id;
             if (!string.IsNullOrWhiteSpace(response.status)) MatchmakerStatus = response.status;
 
             Assignment assignment = response.assignment;
@@ -321,13 +327,6 @@ namespace Alterverse.Multiplayer
         {
             return "/groups/" + UnityWebRequest.EscapeURL(GroupId) +
                    "/members/" + UnityWebRequest.EscapeURL(MemberId);
-        }
-
-        private void ResetAssignmentOnly()
-        {
-            LastError = "";
-            AssignedHost = "";
-            AssignedPort = 0;
         }
 
         private bool Fail(string message)
@@ -374,6 +373,7 @@ namespace Alterverse.Multiplayer
             public bool is_ready;
             public string ticket_id;
             public string team_id;
+            public string match_id;
             public string status;
             public Assignment assignment;
         }
