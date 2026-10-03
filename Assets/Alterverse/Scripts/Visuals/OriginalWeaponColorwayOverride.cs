@@ -51,6 +51,7 @@ namespace Alterverse.Visuals
             public Material[] Original;
             public Material[] Styled;
             public Renderer Overlay;
+            public Mesh PatternMesh;
         }
 
         private readonly List<RendererState> baseRenderers=new();
@@ -177,7 +178,8 @@ namespace Alterverse.Visuals
                 if(source is SkinnedMeshRenderer skin && skin.sharedMesh!=null)
                 {
                     var copy=layer.AddComponent<SkinnedMeshRenderer>();
-                    copy.sharedMesh=skin.sharedMesh;
+                    state.PatternMesh=CreatePatternMesh(skin.sharedMesh);
+                    copy.sharedMesh=state.PatternMesh;
                     copy.bones=skin.bones;
                     copy.rootBone=skin.rootBone;
                     copy.localBounds=skin.localBounds;
@@ -188,7 +190,8 @@ namespace Alterverse.Visuals
                 }
                 else if(source.TryGetComponent<MeshFilter>(out var filter) && filter.sharedMesh!=null)
                 {
-                    layer.AddComponent<MeshFilter>().sharedMesh=filter.sharedMesh;
+                    state.PatternMesh=CreatePatternMesh(filter.sharedMesh);
+                    layer.AddComponent<MeshFilter>().sharedMesh=state.PatternMesh;
                     overlay=layer.AddComponent<MeshRenderer>();
                     submeshes=filter.sharedMesh.subMeshCount;
                 }
@@ -198,6 +201,9 @@ namespace Alterverse.Visuals
                 glow.a=.5f;
                 material.SetColor("_GlowColor",glow);
                 material.SetFloat("_RimOpacity",.5f);
+                material.SetFloat("_PatternStyle",PatternStyle(hero));
+                material.SetFloat("_PatternOffset",variant*.37f);
+                material.SetFloat("_PatternStrength",.38f);
                 var slots=new Material[submeshes];
                 Material inscription=null;
                 for(int i=0;i<slots.Length;i++)
@@ -225,6 +231,29 @@ namespace Alterverse.Visuals
             }
         }
 
+        private static int PatternStyle(HeroId hero)
+        {
+            if(hero==HeroId.Nyra||hero==HeroId.Traveler)return 0;
+            if(hero==HeroId.Elyra||hero==HeroId.Mira)return 1;
+            if(hero==HeroId.Kaelon||hero==HeroId.Rook)return 2;
+            return 3;
+        }
+
+        // Rest coordinates keep patterns attached during skinning. Only the overlay owns this copy.
+        private static Mesh CreatePatternMesh(Mesh source)
+        {
+            Mesh mesh=Instantiate(source);
+            mesh.name="DF_EpicDetail_"+source.name;
+            if(!source.isReadable)return mesh;
+            Vector3[] vertices=source.vertices;
+            Bounds bounds=source.bounds;
+            float scale=Mathf.Max(.001f,Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z)));
+            var coordinates=new List<Vector3>(vertices.Length);
+            foreach(Vector3 vertex in vertices)coordinates.Add((vertex-bounds.center)/scale);
+            mesh.SetUVs(2,coordinates);
+            return mesh;
+        }
+
         private void RestoreMaterialsOnly()
         {
             for(int i=0;i<baseRenderers.Count;i++)
@@ -238,6 +267,8 @@ namespace Alterverse.Visuals
                     Destroy(state.Overlay.gameObject);
                     state.Overlay=null;
                 }
+                if(state.PatternMesh!=null)Destroy(state.PatternMesh);
+                state.PatternMesh=null;
                 Release(state.Styled);
                 state.Styled=null;
             }

@@ -3,7 +3,10 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
  Properties
  {
   _GlowColor("Translucent color",Color)=(.3,.5,1,.24)
-  _RimOpacity("Edge opacity",Range(0,1))=.35
+  _RimOpacity("Edge opacity",Range(0,1))=.5
+  _PatternStrength("Small detail contrast",Range(0,1))=0
+  _PatternStyle("Hero engraving style",Float)=0
+  _PatternOffset("Colorway engraving offset",Float)=0
  }
  SubShader
  {
@@ -20,11 +23,14 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
    #pragma vertex vert
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-   struct Attributes { float4 position:POSITION; float3 normal:NORMAL; };
-   struct Varyings { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; };
+   struct Attributes { float4 position:POSITION; float3 normal:NORMAL; float3 pattern:TEXCOORD2; };
+   struct Varyings { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; float3 pattern:TEXCOORD2; };
    CBUFFER_START(UnityPerMaterial)
    half4 _GlowColor;
    half _RimOpacity;
+   half _PatternStrength;
+   float _PatternStyle;
+   float _PatternOffset;
    CBUFFER_END
    Varyings vert(Attributes i)
    {
@@ -32,7 +38,45 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
     o.position=TransformObjectToHClip(i.position.xyz);
     o.world=TransformObjectToWorld(i.position.xyz);
     o.normal=TransformObjectToWorldNormal(i.normal);
+    o.pattern=i.pattern;
     return o;
+   }
+   float Line(float distance,float width)
+   {
+    float aa=max(fwidth(distance),.0008);
+    return 1-smoothstep(width,width+aa,distance);
+   }
+   float Engraving(float2 p)
+   {
+    p=p*7+_PatternOffset;
+    float2 cell=frac(p)-.5;
+    float2 id=floor(p);
+    float select=frac(sin(dot(id,float2(12.9898,78.233)))*43758.5453);
+    float rivet=Line(length(cell-float2(.32,.32)),.045)*step(.65,select);
+    if(_PatternStyle<.5)
+    {
+     // Short circuit traces and small terminals.
+     float trace=Line(abs(cell.x+.16),.018)*step(abs(cell.y),.30);
+     trace=max(trace,Line(abs(cell.y-.28),.018)*step(abs(cell.x),.18));
+     return max(rivet,trace*step(.52,select));
+    }
+    if(_PatternStyle<1.5)
+    {
+     // Sparse diamond runes.
+     float rune=Line(abs(abs(cell.x)+abs(cell.y)-.23),.018);
+     return max(rivet,rune*step(.63,select));
+    }
+    if(_PatternStyle<2.5)
+    {
+     // Panel corners and restrained fastener heads.
+     float corner=max(Line(abs(cell.x+.30),.016)*step(abs(cell.y+.18),.12),
+                      Line(abs(cell.y+.30),.016)*step(abs(cell.x+.18),.12));
+     return max(rivet,corner*step(.45,select));
+    }
+    // Paired diagonal cuts on the assassin's blades.
+    float cuts=max(Line(abs(cell.x+cell.y-.08),.017),
+                   Line(abs(cell.x+cell.y+.08),.017))*step(abs(cell.x-cell.y),.24);
+    return max(rivet,cuts*step(.65,select));
    }
    half4 frag(Varyings i):SV_Target
    {
@@ -42,7 +86,13 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
     // Transparent faces reveal the original metal, engraving and shading.
     // Only grazing edges carry a brighter fluorescent highlight.
     half alpha=lerp(_GlowColor.a,_RimOpacity,rim);
-    return half4(_GlowColor.rgb*lerp(1.05h,2.0h,rim),alpha);
+    // Coordinates come from the undeformed mesh, so patterns follow the weapon.
+    float marks=max(Engraving(i.pattern.xy),max(Engraving(i.pattern.yz),Engraving(i.pattern.zx)));
+    half detail=saturate(marks)*_PatternStrength;
+    half3 color=_GlowColor.rgb*lerp(1.05h,2.0h,rim);
+    color=lerp(color,color*1.65h+half3(.10h,.12h,.14h),detail);
+    // Detail changes brightness only; it never increases opacity.
+    return half4(color,alpha);
    }
    ENDHLSL
   }
