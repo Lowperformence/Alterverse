@@ -123,9 +123,23 @@ namespace Alterverse.Visuals
             for (int i = 0; i < count; i++)
             {
                 int b = data.boneIndices[i];
-                Vector3 p = heads[b] + rotations[b] * (Point(data.vertices, i * 3) - Point(data.anchors[b].head)) * scales[b];
+                Vector3 sourcePoint = Point(data.vertices, i * 3);
+                Vector3 sourceNormal = Point(data.normals, i * 3);
+                string boneName = data.boneNames[b];
+                if (boneName.StartsWith("Thigh", StringComparison.Ordinal) ||
+                    boneName.StartsWith("Shin", StringComparison.Ordinal))
+                {
+                    Vector3 origin = Point(data.anchors[b].head);
+                    Vector3 axis = (Point(data.anchors[b].tail) - origin).normalized;
+                    Vector3 offset = sourcePoint - origin;
+                    Vector3 axial = axis * Vector3.Dot(offset, axis);
+                    sourcePoint = origin + axial + (offset - axial) * 1.12f;
+                    Vector3 axialNormal = axis * Vector3.Dot(sourceNormal, axis);
+                    sourceNormal = (axialNormal + (sourceNormal - axialNormal) / 1.12f).normalized;
+                }
+                Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
                 vertices[i] = toMesh.MultiplyPoint3x4(p);
-                normals[i] = toNormal.MultiplyVector(rotations[b] * Point(data.normals, i * 3)).normalized;
+                normals[i] = toNormal.MultiplyVector(rotations[b] * sourceNormal).normalized;
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             var bindposes = new Matrix4x4[bones.Length];
@@ -161,7 +175,82 @@ namespace Alterverse.Visuals
             anatomy.localBounds = bounds;
             foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
                 if (renderer.name == "DF_WeaponR" || renderer.name == "DF_WeaponL") RefinishWeapon(renderer);
+            AddLegEquipment(model, anatomy, data, bones, map, heads, lookup, vertices, unitScale);
             return true;
+        }
+
+        private void AddLegEquipment(Transform model, SkinnedMeshRenderer anatomy, Geometry data,
+            Transform[] bones, int[] map, Vector3[] heads, Dictionary<string, int> lookup,
+            Vector3[] vertices, float unitScale)
+        {
+            Material shell = Surface("Leg phone casing", new Color(.07f,.10f,.13f), .65f,.40f);
+            Material cable = Surface("Leg cable insulation", new Color(.018f,.024f,.032f), .15f,.30f);
+            Material screen = Surface("Leg phone display", new Color(.025f,.55f,.95f), .15f,.5f, true);
+            Matrix4x4 toModel = model.worldToLocalMatrix * anatomy.transform.localToWorldMatrix;
+            foreach (string side in new[] { "L", "R" })
+            {
+                if (!lookup.TryGetValue("Thigh" + side, out int thigh) ||
+                    !lookup.TryGetValue("Shin" + side, out int shin)) continue;
+                float sign = side == "L" ? -1f : 1f;
+                Vector3 middle = Vector3.Lerp(heads[thigh], heads[shin], .48f);
+                float outer = sign * middle.x;
+                for (int i = 0; i < vertices.Length; i++)
+                    if (data.boneIndices[i] == thigh)
+                        outer = Mathf.Max(outer, sign * toModel.MultiplyPoint3x4(vertices[i]).x);
+                middle.x = sign * (outer + .018f * unitScale);
+                var root = new GameObject("DF_TravelerLegEquipment" + side).transform;
+                root.SetParent(model, false);
+                root.localPosition = middle;
+                root.SetParent(bones[map[thigh]], true);
+                // All pieces stay on one thigh, avoiding cables stretching across the knee.
+                if (side == "R")
+                {
+                    Part(root, "Phone cradle", PrimitiveType.Cube, Vector3.zero,
+                        new Vector3(.028f,.15f,.086f) * unitScale, shell);
+                    Part(root, "Phone screen", PrimitiveType.Cube,
+                        new Vector3(sign * .016f,.008f,0) * unitScale,
+                        new Vector3(.003f,.112f,.065f) * unitScale, screen);
+                    Part(root, "Phone button", PrimitiveType.Cube,
+                        new Vector3(sign * .018f,-.058f,0) * unitScale,
+                        new Vector3(.004f,.008f,.018f) * unitScale, shell);
+                }
+                for (int lane = 0; lane < 2; lane++)
+                {
+                    Vector3 previous = Vector3.zero;
+                    for (int k = 0; k <= 8; k++)
+                    {
+                        float t = k / 8f;
+                        Vector3 point = new Vector3(sign * (.014f + .024f * Mathf.Sin(t * Mathf.PI)),
+                            .15f - .30f * t, -.055f - lane * .019f) * unitScale;
+                        if (k > 0)
+                        {
+                            Vector3 delta = point - previous;
+                            Transform segment = Part(root, "Cable " + lane + "-" + k, PrimitiveType.Cylinder,
+                                (previous + point) * .5f,
+                                new Vector3(.008f * unitScale, delta.magnitude * .5f, .008f * unitScale), cable);
+                            segment.localRotation = Quaternion.FromToRotation(Vector3.up, delta);
+                        }
+                        if (k == 0 || k == 8)
+                            Part(root, "Cable connector " + lane + "-" + k, PrimitiveType.Cube,
+                                point, new Vector3(.018f,.019f,.015f) * unitScale, shell);
+                        previous = point;
+                    }
+                }
+            }
+        }
+
+        private static Transform Part(Transform parent, string name, PrimitiveType shape,
+            Vector3 position, Vector3 size, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(shape);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = position;
+            part.transform.localScale = size;
+            Collider collider = part.GetComponent<Collider>();
+            if (collider != null) { collider.enabled = false; Destroy(collider); }
+            part.GetComponent<Renderer>().sharedMaterial = material;
+            return part.transform;
         }
 
         private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
