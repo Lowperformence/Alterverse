@@ -88,6 +88,14 @@ namespace Alterverse.Visuals
             float unitScale = Vector3.Distance(heads[lookup["Chest"]], heads[lookup["Head"]]) /
                 Vector3.Distance(Point(data.anchors[lookup["Chest"]].head), Point(data.anchors[lookup["Head"]].head));
             if (unitScale < .01f || unitScale > 100f) return false;
+            // Lower the actual shoulder roots before fitting armor and capturing bind poses.
+            // Moving their child chains together preserves arm lengths and grip sockets.
+            Vector3 shoulderDrop = model.TransformVector(Vector3.down * (.075f * unitScale));
+            foreach (string side in new[] { "L", "R" })
+                if (lookup.TryGetValue("UpperArm" + side, out int shoulder))
+                    bones[map[shoulder]].position += shoulderDrop;
+            for (int i = 0; i < map.Length; i++)
+                heads[i] = model.InverseTransformPoint(bones[map[i]].position);
             Quaternion[] rotations = new Quaternion[map.Length];
             float[] scales = new float[map.Length];
             for (int i = 0; i < map.Length; i++)

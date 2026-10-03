@@ -8,7 +8,7 @@ namespace Alterverse.Shop
 
     public static class HeroUnlockCatalog
     {
-        public const int TravelerPrice=1000;
+        public const int TravelerPrice=1500;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
 
         // The Traveler is a paid shard unlock in normal play.

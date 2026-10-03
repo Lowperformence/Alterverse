@@ -343,8 +343,8 @@ namespace Alterverse.Visuals
                     break;
                 case HeroId.Traveler:
                     // Lower, relaxed hands keep the upper arms away from the hood.
-                    SolveGuard(leftArm, new Vector3(-.32f, .98f, .18f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.33f, 1.02f, .22f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.32f, .89f, .18f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.33f, .93f, .22f), GuardHint(rightArm), guardWeight);
                     break;
             }
         }
