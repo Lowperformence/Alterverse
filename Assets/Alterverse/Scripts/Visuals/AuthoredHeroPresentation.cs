@@ -19,6 +19,7 @@ namespace Alterverse.Visuals
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
         private Transform rifleDetailsRoot;
+        private readonly List<Material> rifleDetailMaterials = new List<Material>();
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
@@ -71,7 +72,12 @@ namespace Alterverse.Visuals
                 AssassinVioletHeadStripe.Apply(instance.transform);
                 AssassinShoulderStripes.Apply(instance.transform);
             }
-            if (hero == HeroId.Nyra) CyberRangerAppearance.Apply(instance.transform);
+            if (hero == HeroId.Nyra)
+            {
+                CyberRangerAppearance.Apply(instance.transform);
+                if (instance.GetComponent<CyberRangerAppearance>() == null)
+                    Debug.LogError("DF: Sivra's Cyber Ranger mesh was not applied; inspect Model.bytes and its bone mapping.", actor);
+            }
             if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
             if (hero == HeroId.Mira)
@@ -171,6 +177,9 @@ namespace Alterverse.Visuals
                 Bind("Shin" + side, "KneeJoint" + side);
                 Bind("Foot" + side, "AnkleJoint" + side);
             }
+            if (hero == HeroId.Nyra && (rightArm == null || leftArm == null ||
+                muzzle == null || rifleSupport == null || rifleHandle == null || leftPalm == null))
+                Debug.LogError("DF: Sivra rifle rig is incomplete. Check HandR/HandL and the muzzle, support, handle and palm sockets.", this);
             BuildNyraWeaponDetails();
         }
 
@@ -293,10 +302,14 @@ namespace Alterverse.Visuals
 
         private void BuildNyraWeaponDetails()
         {
-            if (hero != HeroId.Nyra || weaponRenderers.Count == 0) return;
+            if (hero != HeroId.Nyra) return;
             WeaponGrip grip = grips.Find(g => g.Bone != null && g.Bone.name == "WeaponGripR");
             Renderer rifle = weaponRenderers.Find(r => r != null && r.name == "DF_WeaponR");
-            if (grip == null || rifle == null) return;
+            if (grip == null || rifle == null)
+            {
+                Debug.LogError("DF: Sivra rifle details cannot attach: WeaponGripR bone or DF_WeaponR renderer is missing.", this);
+                return;
+            }
             // The imported rifle is skinned to WeaponGripR, which cancels the enlarged
             // hand scale. Details must use that same bone or they drift into the receiver.
             Vector3 forward = muzzle != null && rifleSupport != null ?
@@ -310,16 +323,64 @@ namespace Alterverse.Visuals
             rifleDetailsRoot = new GameObject("DF_SivraRifleDetails").transform;
             rifleDetailsRoot.SetParent(grip.Bone, false);
             rifleDetailsRoot.SetPositionAndRotation(origin, Quaternion.LookRotation(forward, up));
+            GameObject authoredDetails = Resources.Load<GameObject>("CyberRanger/SivraRifleDetails");
+            if (authoredDetails != null)
+            {
+                Material titanium = RuntimeShaderLibrary.Create(new Color(.33f, .45f, .48f), false, .82f, .72f, Color.black);
+                Material graphite = RuntimeShaderLibrary.Create(new Color(.026f, .043f, .052f), false, .52f, .52f, Color.black);
+                Color lineColor = new Color(.025f, .72f, .94f);
+                Material cyan = RuntimeShaderLibrary.Create(lineColor, false, .24f, .82f, lineColor * 1.8f);
+                if (titanium == null || graphite == null || cyan == null)
+                {
+                    Debug.LogError("DF: Sivra rifle shaders are unavailable.", this);
+                    if (titanium != null) Destroy(titanium);
+                    if (graphite != null) Destroy(graphite);
+                    if (cyan != null) Destroy(cyan);
+                    return;
+                }
+                cyan.EnableKeyword("_EMISSION");
+                titanium.name = "Sivra rifle titanium";
+                graphite.name = "Sivra rifle graphite";
+                cyan.name = "Sivra rifle cyan circuits";
+                rifleDetailMaterials.Add(titanium);
+                rifleDetailMaterials.Add(graphite);
+                rifleDetailMaterials.Add(cyan);
+                GameObject attachment = Instantiate(authoredDetails, rifleDetailsRoot, false);
+                attachment.name = "DF_SivraRifleAttachment";
+                attachment.transform.localPosition = Vector3.zero;
+                attachment.transform.localRotation = Quaternion.identity;
+                attachment.transform.localScale = Vector3.one;
+                int meshCount = 0;
+                foreach (MeshRenderer part in attachment.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    part.sharedMaterial = part.name.Contains("CyanEmission") ? cyan :
+                        part.name.Contains("Graphite") ? graphite : titanium;
+                    meshCount++;
+                }
+                if (meshCount != 3)
+                    Debug.LogError("DF: Sivra rifle FBX imported " + meshCount + " mesh layers instead of 3.", this);
+                else
+                    Debug.Log("DF: Sivra Blender rifle attached to WeaponGripR (3 mesh layers).", this);
+                return;
+            }
+            Debug.LogError("DF: CyberRanger/SivraRifleDetails FBX is missing; showing emergency rifle details.", this);
             Material source = rifle.sharedMaterial;
             Shader shader = source != null ? source.shader : Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null) return;
+            if (shader == null)
+            {
+                Debug.LogError("DF: Sivra rifle detail material has no usable shader.", this);
+                return;
+            }
             Material metal = source != null ? new Material(source) : new Material(shader);
             SetDetailColor(metal, new Color(.30f, .38f, .42f), false);
             Material cyan = source != null ? new Material(source) : new Material(shader);
             SetDetailColor(cyan, new Color(.04f, .78f, .92f), true);
             Material dark = source != null ? new Material(source) : new Material(shader);
             SetDetailColor(dark, new Color(.035f, .065f, .075f), false);
+            rifleDetailMaterials.Add(metal);
+            rifleDetailMaterials.Add(cyan);
+            rifleDetailMaterials.Add(dark);
 
             // Local +Z follows the barrel, +Y is the rifle's top, and X spans its sides.
             DetailBox("Receiver cheek L", new Vector3(-.063f, .025f, .055f), new Vector3(.016f, .072f, .150f), metal);
@@ -341,6 +402,8 @@ namespace Alterverse.Visuals
                     DetailBox("Receiver fastener " + side + " " + i,
                         new Vector3(side * .073f, .058f, .005f + i * .110f),
                         new Vector3(.008f, .010f, .010f), dark);
+            Debug.Log("DF: Sivra rifle details attached to WeaponGripR (" +
+                rifleDetailsRoot.childCount + " pieces).", this);
         }
 
         private void DetailBox(string name, Vector3 position, Vector3 size, Material material)
@@ -481,6 +544,12 @@ namespace Alterverse.Visuals
                 Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);
                 SolveGuard(leftArm, wrist, GuardHint(leftArm), guardWeight);
             }
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Material material in rifleDetailMaterials)
+                if (material != null) Destroy(material);
         }
 
         private void LateUpdate()

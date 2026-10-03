@@ -28,6 +28,33 @@ namespace Alterverse.EditorChecks
                 if(hero.GetComponent<HeroRespawn>()!=null)
                     Require(hero.GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()!=null,"Local player is missing mobile ability range preview: "+hero.DisplayName);
                 Require(root.GetComponentsInChildren<Collider>(true).Length==0,"Visual rig contains a gameplay collider.");
+                Transform authoredModel=root.Find("DF_AuthoredModel");
+                if(authoredModel!=null)
+                {
+                    Require(hero.GetComponent<Alterverse.Visuals.AuthoredHeroPresentation>()!=null,
+                        "Imported hero lacks the authored pose controller: "+hero.DisplayName);
+                    if(hero.Hero==HeroId.Nyra)
+                    {
+                        Require(authoredModel.GetComponent<Alterverse.Visuals.CyberRangerAppearance>()!=null,
+                            "Sivra is showing the old FBX because CyberRanger/Model.bytes did not apply.");
+                        Transform grip=FindChild(authoredModel,"WeaponGripR");
+                        Transform details=FindChild(authoredModel,"DF_SivraRifleDetails");
+                        Require(grip!=null,"Sivra WeaponGripR bone missing.");
+                        Require(Resources.Load<GameObject>("CyberRanger/SivraRifleDetails")!=null,
+                            "Sivra's Blender rifle detail FBX is missing from Resources.");
+                        Require(details!=null&&details.parent==grip&&
+                            details.GetComponentsInChildren<MeshRenderer>(true).Length>=3,
+                            "Sivra rifle details are missing or attached to the wrong bone.");
+                        foreach(string socket in new[]{"DF_Muzzle","DF_SupportGrip","DF_HandleContactR","DF_PalmGripL"})
+                            Require(FindChild(authoredModel,socket)!=null,"Sivra rifle socket missing: "+socket);
+                        SkinnedMeshRenderer rifle=Array.Find(
+                            authoredModel.GetComponentsInChildren<SkinnedMeshRenderer>(true),r=>r.name=="DF_WeaponR");
+                        Require(rifle!=null&&rifle.sharedMesh!=null&&rifle.sharedMesh.vertexCount>0,
+                            "Sivra authored rifle renderer is missing or empty.");
+                    }
+                    checkedHeroes++;
+                    continue;
+                }
                 var materials=new HashSet<Material>();int count=0;
                 foreach(MeshRenderer renderer in root.GetComponentsInChildren<MeshRenderer>(true))
                 {
@@ -96,6 +123,12 @@ namespace Alterverse.EditorChecks
                 }
             }
             Debug.Log("DIMENSIONS FRONT: 720 combat line segments retain their endpoints across HUD scales and safe areas.");
+        }
+        private static Transform FindChild(Transform root,string name)
+        {
+            foreach(Transform child in root.GetComponentsInChildren<Transform>(true))
+                if(child.name==name)return child;
+            return null;
         }
         private static void Require(bool valid,string message)
         {if(!valid)throw new InvalidOperationException("Hero presentation: "+message);}

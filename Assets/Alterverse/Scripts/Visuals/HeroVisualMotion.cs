@@ -289,7 +289,8 @@ namespace Alterverse.Visuals
             bool fullSpin=(hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot==2;
             float spinYaw=fullSpin&&preparation>0?360f*Mathf.SmoothStep(0,1,windupProgress):0f;
             // Orun Overdrive lifts the rendered hero and brings him down exactly as its warning resolves.
-            root.localPosition=basePosition+Vector3.up*(idle+bob);
+            // Sivra's sight and barrel stay at a fixed height relative to the actor.
+            root.localPosition=basePosition+Vector3.up*(hero==HeroId.Nyra?0f:idle+bob);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             bool meleeStrike=hero==HeroId.Veyr&&abilitySlot!=2||
                 (hero==HeroId.Nerok||hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot!=1;
@@ -374,8 +375,12 @@ namespace Alterverse.Visuals
             displayedScale=Vector3.Lerp(displayedScale,targetScale,1-Mathf.Exp(-18f*dt));
             root.localScale=displayedScale;
             float idleShift=Mathf.Sin(t*.8f+phase*.12f)*(1-strideWeight);
-            float sway=Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
-            Quaternion targetRotation=Quaternion.Euler((Dashing?9:lean)-7*kick-recoil,spinYaw,sway);
+            float sway=hero==HeroId.Nyra?0f:
+                Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
+            // Rotating the entire visual root also rotates the rifle after its hand IK.
+            // Shots and gait move Sivra's body joints, but leave the barrel aligned to her heading.
+            float rootPitch=hero==HeroId.Nyra?0f:(Dashing?9:lean)-7*kick-recoil;
+            Quaternion targetRotation=Quaternion.Euler(rootPitch,spinYaw,sway);
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
             root.localRotation=displayedRotation;
