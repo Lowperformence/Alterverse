@@ -17,7 +17,7 @@ TextureImporter:
     wrapU: 0
     wrapV: 0
     wrapW: 0
-  maxTextureSize: 512
+  maxTextureSize: 1024
   textureFormat: 1
   textureType: 0
   textureShape: 1
@@ -27,6 +27,6 @@ TextureImporter:
   platformSettings:
   - serializedVersion: 3
     buildTarget: DefaultTexturePlatform
-    maxTextureSize: 512
+    maxTextureSize: 1024
     textureCompression: 0
     overridden: 0

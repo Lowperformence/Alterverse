@@ -61,6 +61,7 @@ namespace Alterverse.Combat
             else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,true);
             else if(ArenaVariantRuntime.IsNeptune)NeptuneDiverMechVisual.Build(mech.transform,team);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
+            if(ArenaVariantRuntime.IsKryon)AddKryonFrost(mech.transform);
             if(!FrontierPlanetLayout.Active)mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
 
             return mech;
@@ -79,9 +80,10 @@ namespace Alterverse.Combat
             // Heavy lunar security mech inspired by the supplied military reference:
             // olive slab armor, dark exposed mechanics, compact sensor head, backpack pods,
             // oversized forearms and armored shins. Keep team identity in the emissive accents.
-            Color olive=new(.19f,.24f,.19f,1f);
-            Color oliveLight=new(.30f,.34f,.28f,1f);
-            Color oliveDark=new(.105f,.135f,.115f,1f);
+            bool frozen=ArenaVariantRuntime.IsKryon;
+            Color olive=frozen?new Color(.38f,.66f,.82f):new Color(.19f,.24f,.19f,1f);
+            Color oliveLight=frozen?new Color(.68f,.85f,.93f):new Color(.30f,.34f,.28f,1f);
+            Color oliveDark=frozen?new Color(.17f,.32f,.43f):new Color(.105f,.135f,.115f,1f);
             Color joint=new(.045f,.055f,.055f,1f);
             Color trim=new(.16f,.18f,.17f,1f);
 
@@ -146,6 +148,39 @@ namespace Alterverse.Combat
             }
         }
 
+        private static void AddKryonFrost(Transform root)
+        {
+            // Attach ice to existing armor, so it follows the mech's articulated animation.
+            Color frost=new(.83f,.93f,.98f);
+            Mesh icicle=new Mesh{name="DF_KryonGuardIceShard"};
+            icicle.vertices=new[]{new Vector3(-.5f,0,-.5f),new Vector3(.5f,0,-.5f),
+                new Vector3(.5f,0,.5f),new Vector3(-.5f,0,.5f),new Vector3(.12f,-1,0)};
+            icicle.triangles=new[]{0,2,1,0,3,2,0,1,4,1,2,4,2,3,4,3,0,4};
+            icicle.RecalculateNormals();icicle.RecalculateBounds();
+            root.gameObject.AddComponent<GameplayCollisionMeshOwner>().Own(icicle);
+            Material ice=RuntimeShaderLibrary.Create(new Color(.56f,.80f,.92f),false,.05f,.65f);
+            if(ice==null)return;
+            ice.name="DF_KryonGuardFrostIce";
+            RuntimeMaterialPalette.For(root.gameObject).OwnRepair(ice);
+            foreach(string name in new[]{"DF_GuardShoulderArmorL","DF_GuardShoulderArmorR",
+                "DF_GuardPodL","DF_GuardPodR","DF_GuardBrow","DF_GuardShinArmorL","DF_GuardShinArmorR"})
+            {
+                Transform armor=root.Find(name);if(armor==null)continue;
+                CreatePart(armor,"DF_KryonFrost_"+name,PrimitiveType.Cube,
+                    new Vector3(-.05f,.507f,0),new Vector3(.72f,.025f,.64f),frost,Quaternion.identity);
+                // Just two short ice teeth per plate; retain a lightly frozen appearance.
+                for(int i=0;i<2;i++)
+                {
+                    var shard=new GameObject("DF_KryonIceTooth_"+i);shard.layer=root.gameObject.layer;
+                    shard.transform.SetParent(armor,false);
+                    shard.transform.localPosition=new Vector3(-.23f+i*.38f,.46f,.505f);
+                    shard.transform.localScale=new Vector3(.075f,.18f+i*.035f,.06f);
+                    shard.AddComponent<MeshFilter>().sharedMesh=icicle;
+                    shard.AddComponent<MeshRenderer>().sharedMaterial=ice;
+                }
+            }
+        }
+
         private static void BuildArm(Transform root,float side,bool zero,Color dark,Color armor,Color joint,Color energy)
         {
             bool left=side<0f;
@@ -155,7 +190,7 @@ namespace Alterverse.Combat
             CreatePart(root,left?"DF_GuardShoulderArmorL":"DF_GuardShoulderArmorR",PrimitiveType.Cube,
                 new Vector3(side*1.17f,1.00f,.04f),new Vector3(.50f,.46f,.72f),armor,Quaternion.Euler(0,0,side*5f));
             CreatePart(root,left?"DF_GuardShoulderCapL":"DF_GuardShoulderCapR",PrimitiveType.Cube,
-                new Vector3(side*1.23f,1.10f,.09f),new Vector3(.24f,.18f,.54f),new Color(.30f,.34f,.28f),Quaternion.Euler(0,0,side*7f));
+                new Vector3(side*1.23f,1.10f,.09f),new Vector3(.24f,.18f,.54f),(ArenaVariantRuntime.IsKryon?new Color(.68f,.85f,.93f):new Color(.30f,.34f,.28f)),Quaternion.Euler(0,0,side*7f));
 
             CreatePart(root,left?"DF_GuardUpperArmL":"DF_GuardUpperArmR",PrimitiveType.Capsule,
                 new Vector3(side*1.20f,.55f,.02f),new Vector3(.26f,.54f,.28f),dark,Quaternion.Euler(0,0,side*4f));
@@ -200,7 +235,7 @@ namespace Alterverse.Combat
             CreatePart(root,left?"DF_GuardShinArmorL":"DF_GuardShinArmorR",PrimitiveType.Cube,
                 new Vector3(side*.53f,-1.00f,.29f),new Vector3(.50f,.60f,.40f),armor,Quaternion.Euler(-5,0,side*2f));
             CreatePart(root,left?"DF_GuardShinSideL":"DF_GuardShinSideR",PrimitiveType.Cube,
-                new Vector3(side*.72f,-1.00f,.08f),new Vector3(.15f,.46f,.34f),new Color(.105f,.135f,.115f),Quaternion.identity);
+                new Vector3(side*.72f,-1.00f,.08f),new Vector3(.15f,.46f,.34f),(ArenaVariantRuntime.IsKryon?new Color(.17f,.32f,.43f):new Color(.105f,.135f,.115f)),Quaternion.identity);
 
             CreatePart(root,left?"DF_GuardAnkleL":"DF_GuardAnkleR",PrimitiveType.Cylinder,
                 new Vector3(side*.53f,-1.34f,.17f),new Vector3(.16f,.11f,.16f),joint,Quaternion.identity);
@@ -354,6 +389,7 @@ namespace Alterverse.Combat
                 {
                     material.name=name+"_RuntimeLit";
                     renderer.sharedMaterial=material;
+                    RuntimeMaterialPalette.For(part).OwnRepair(material);
                 }
                 renderer.shadowCastingMode=ShadowCastingMode.On;
                 renderer.receiveShadows=true;
@@ -374,6 +410,7 @@ namespace Alterverse.Combat
                 {
                     material.name=name+"_RuntimeUnlit";
                     renderer.sharedMaterial=material;
+                    RuntimeMaterialPalette.For(part).OwnRepair(material);
                 }
                 renderer.shadowCastingMode=ShadowCastingMode.Off;
                 renderer.receiveShadows=false;

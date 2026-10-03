@@ -166,15 +166,11 @@ namespace Alterverse.Visuals
 
         private Material UrbanArmor()
         {
-            Shader shader=Resources.Load<Shader>("HeroArt/UrbanDigitalArmor");
-            Material material=shader!=null?new Material(shader):
-                RuntimeShaderLibrary.Create(new Color(.28f,.30f,.32f),false,.35f,.28f);
+            // Use the same proven opaque shader as the remaining armor, with a real CC0 base map.
+            Material material=RuntimeShaderLibrary.Create(Color.white,false,.28f,.25f);
             material.name="DF_Kaelon_UrbanDigitalArmor";
-            if(shader!=null&&material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",Color.white);
-            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.35f);
-            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.28f);
             Texture2D pattern=Resources.Load<Texture2D>("HeroArt/UrbanDigitalCamo");
-            if(shader!=null&&pattern!=null)material.SetTexture("_BaseMap",pattern);
+            if(pattern!=null)material.SetTexture("_BaseMap",pattern);
             ownedMaterials.Add(material);
             return material;
         }
@@ -207,8 +203,16 @@ namespace Alterverse.Visuals
             ownedMeshes.Add(mesh);
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.boneWeights = w.ToArray();
             // Pattern data is not deformed by skinning; camouflage follows each armor plate.
-            mesh.SetUVs(2,v);
-            mesh.SetUVs(3,n);
+            var camoUV=new List<Vector2>(v.Count);
+            for(int i=0;i<v.Count;i++)
+            {
+                Vector3 normal=n[i],point=v[i];
+                float x=Mathf.Abs(normal.x),y=Mathf.Abs(normal.y),z=Mathf.Abs(normal.z);
+                Vector2 uv=z>=x&&z>=y?new Vector2(point.x,point.y):
+                    x>=y?new Vector2(point.z,point.y):new Vector2(point.x,point.z);
+                camoUV.Add(uv*.60f);
+            }
+            mesh.SetUVs(0,camoUV);
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = 7;
