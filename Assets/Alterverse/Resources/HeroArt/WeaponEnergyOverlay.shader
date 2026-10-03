@@ -41,43 +41,29 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
     o.pattern=i.pattern;
     return o;
    }
-   float Line(float distance,float width)
-   {
-    float aa=max(fwidth(distance),.0008);
-    return 1-smoothstep(width,width+aa,distance);
-   }
-   float Engraving(float2 p)
-   {
-    p=p*5.5+_PatternOffset;
-    float2 cell=frac(p)-.5;
-    float2 id=floor(p);
-    float select=frac(sin(dot(id,float2(12.9898,78.233)))*43758.5453);
-    float rivet=Line(length(cell-float2(.32,.32)),.045)*step(.65,select);
-    if(_PatternStyle<.5)
-    {
-     // Short circuit traces and small terminals.
-     float trace=Line(abs(cell.x+.16),.030)*step(abs(cell.y),.30);
-     trace=max(trace,Line(abs(cell.y-.28),.030)*step(abs(cell.x),.18));
-     return max(rivet,trace*step(.52,select));
-    }
-    if(_PatternStyle<1.5)
-    {
-     // Sparse diamond runes.
-     float rune=Line(abs(abs(cell.x)+abs(cell.y)-.23),.030);
-     return max(rivet,rune*step(.63,select));
-    }
-    if(_PatternStyle<2.5)
-    {
-     // Panel corners and restrained fastener heads.
-     float corner=max(Line(abs(cell.x+.30),.028)*step(abs(cell.y+.18),.12),
-                      Line(abs(cell.y+.30),.028)*step(abs(cell.x+.18),.12));
-     return max(rivet,corner*step(.45,select));
-    }
-    // Paired diagonal cuts on the assassin's blades.
-    float cuts=max(Line(abs(cell.x+cell.y-.08),.030),
-                   Line(abs(cell.x+cell.y+.08),.030))*step(abs(cell.x-cell.y),.24);
-    return max(rivet,cuts*step(.65,select));
-   }
+float OrnamentLine(float d,float width)
+{
+ float aa=max(fwidth(d),.001);
+ return 1-smoothstep(width,width+aa,d);
+}
+float Ornament(float2 p)
+{
+ float2 q=frac(p)-.5;
+ float chain=OrnamentLine(abs(q.x),.009);
+ float beads=OrnamentLine(length(float2(q.x,frac((q.y+.5)*6)-.5)),.065);
+ float moon=OrnamentLine(max(length(q-float2(.0,.08))-.19,-(length(q-float2(.075,.12))-.16)),.01);
+ moon*=step(.03,q.y)*step(q.y,.30);
+ float2 f=q-float2(0,-.27);
+ float flower=0;
+ for(int k=0;k<6;k++)
+ {
+  float a=k*1.04719755;
+  float2 center=float2(cos(a),sin(a))*.085;
+  flower=max(flower,OrnamentLine(length(f-center),.031));
+ }
+ return saturate(max(chain,max(beads,max(moon,flower))));
+}
+   float Engraving(float2 p){return Ornament(p*2.4+_PatternOffset);}
    half4 frag(Varyings i):SV_Target
    {
     half3 n=normalize(i.normal);

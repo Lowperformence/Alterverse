@@ -86,6 +86,7 @@ namespace Alterverse.Visuals
                 TravelerOrbAppearance.Apply(instance.transform);
             }
             HeroLimbTechDetails.Apply(instance.transform, hero);
+            SkinOrnamentPresentation.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
