@@ -846,8 +846,10 @@ namespace Alterverse.Visuals
                     PoseStrike(armL,armRestL,new Vector3(-28,0,8),new Vector3(-45,0,8),new Vector3(-30,0,5),preparation,progress);
                     break;
                 case HeroId.Nyra:
-                    if(weaponR!=null)weaponR.localPosition=weaponPositionR+Vector3.back*.12f*kick;
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-7*kick,0,0);
+                    // Keep the shoulder rifle planted while firing. The old 12 cm
+                    // translation and wrist kick made the sight swing on each shot.
+                    if(weaponR!=null)weaponR.localPosition=weaponPositionR;
+                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-2f*kick,0,0);
                     break;
                 case HeroId.Elyra:
                 case HeroId.Mira:
@@ -894,4 +896,3 @@ namespace Alterverse.Visuals
 
     }
 }
-
