@@ -329,22 +329,22 @@ namespace Alterverse.Visuals
                 Material titanium = RuntimeShaderLibrary.Create(new Color(.33f, .45f, .48f), false, .82f, .72f, Color.black);
                 Material graphite = RuntimeShaderLibrary.Create(new Color(.026f, .043f, .052f), false, .52f, .52f, Color.black);
                 Color lineColor = new Color(.025f, .72f, .94f);
-                Material cyan = RuntimeShaderLibrary.Create(lineColor, false, .24f, .82f, lineColor * 1.8f);
-                if (titanium == null || graphite == null || cyan == null)
+                Material emissive = RuntimeShaderLibrary.Create(lineColor, false, .24f, .82f, lineColor * 1.8f);
+                if (titanium == null || graphite == null || emissive == null)
                 {
                     Debug.LogError("DF: Sivra rifle shaders are unavailable.", this);
                     if (titanium != null) Destroy(titanium);
                     if (graphite != null) Destroy(graphite);
-                    if (cyan != null) Destroy(cyan);
+                    if (emissive != null) Destroy(emissive);
                     return;
                 }
-                cyan.EnableKeyword("_EMISSION");
+                emissive.EnableKeyword("_EMISSION");
                 titanium.name = "Sivra rifle titanium";
                 graphite.name = "Sivra rifle graphite";
-                cyan.name = "Sivra rifle cyan circuits";
+                emissive.name = "Sivra rifle cyan circuits";
                 rifleDetailMaterials.Add(titanium);
                 rifleDetailMaterials.Add(graphite);
-                rifleDetailMaterials.Add(cyan);
+                rifleDetailMaterials.Add(emissive);
                 GameObject attachment = Instantiate(authoredDetails, rifleDetailsRoot, false);
                 attachment.name = "DF_SivraRifleAttachment";
                 attachment.transform.localPosition = Vector3.zero;
@@ -353,7 +353,7 @@ namespace Alterverse.Visuals
                 int meshCount = 0;
                 foreach (MeshRenderer part in attachment.GetComponentsInChildren<MeshRenderer>(true))
                 {
-                    part.sharedMaterial = part.name.Contains("CyanEmission") ? cyan :
+                    part.sharedMaterial = part.name.Contains("CyanEmission") ? emissive :
                         part.name.Contains("Graphite") ? graphite : titanium;
                     meshCount++;
                 }
