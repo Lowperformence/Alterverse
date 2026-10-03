@@ -158,7 +158,15 @@ for s in [-1,1]:
  plate('white cheek vane',[(s*.048,1.782),(s*.104,1.806),(s*.086,1.742),(s*.023,1.691),(s*.029,1.741)],.074,.018,2,'Head')
 for dx,dy in [(0,0),(-.018,.02),(.018,.02),(0,-.022)]:
  ell('violet optical sensor',(dx,1.762+dy,.097),(.011,.012,.006),3,'Head',8,6)
-shard('single narrow antenna',(0,1.828,-.015),(0,2.015,-.033),.012,.012,2,'Head')
+# Replace the plain antenna with a more deliberate, split mech crest.
+for s in [-1,1]:
+ shard('split crown fin',(s*.018,1.838,.018),(s*.087,1.974,-.012),.026,.018,2,'Head')
+ tube('violet crown channel',[(s*.028,1.855,.071),(s*.055,1.905,.052),(s*.084,1.960,.012)],[.006,.005,.001],3,'Head',8)
+ shard('temple signal fin',(s*.073,1.792,.045),(s*.128,1.850,-.006),.018,.014,1,'Head')
+ell('cyan forehead reactor',(0,1.852,.083),(.022,.027,.012),4,'Head',16,10)
+ring('forehead reactor bezel',(0,1.852,.080),.030,.004,2,'Head',(0,0,1),24)
+for s in [-1,1]:
+ tube('visor brow light',[(s*.016,1.806,.088),(s*.050,1.817,.080),(s*.078,1.803,.061)],[.004,.005,.001],4,'Head',8)
 for side,s in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
@@ -249,6 +257,14 @@ for j in range(4):
 
 GROUP=0
 
+# Scale Ione's entire hand-held focus by 30% around the handle center, preserving
+# the palm contact while enlarging the head, petals and all mounted details.
+WEAPON_SCALE=1.30
+weapon_pivot=np.array([x,p[1],z])
+for i,v in enumerate(V):
+ if GI[i]==2:
+  V[i]=(weapon_pivot+(np.array(v)-weapon_pivot)*WEAPON_SCALE).tolist()
+
 # Heavy mech proportions: enlarge armor around each segment axis without lengthening limbs.
 for i,v in enumerate(V):
  if GI[i]!=0:continue
@@ -269,15 +285,21 @@ for i in range(len(triangles)):
  ids=triangles[i];a,b,c=vertices[ids];n=np.cross(b-a,c-a)
  for j in ids:normals[j]+=n
 normals/=np.maximum(np.linalg.norm(normals,axis=1)[:,None],1e-10)
+focus_pivot=weapon_pivot.tolist()
+staff_top=(weapon_pivot+(np.array([x,p[1]+.26,z])-weapon_pivot)*WEAPON_SCALE).tolist()
+staff_front=(weapon_pivot+(np.array([x,p[1]+.26,z+.1])-weapon_pivot)*WEAPON_SCALE).tolist()
 mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':list(BONES[n][1])} for n in BN],
-'vertices':np.round(vertices,6).ravel().tolist(),'normals':np.round(normals,6).ravel().tolist(),'boneIndices':BI,'groups':GI,'markers':[{'name':'StaffGrip','bone':'WeaponGripR','position':[x,float(p[1]),z]},{'name':'StaffTop','bone':'WeaponGripR','position':[x,float(p[1]+.26),z]},{'name':'StaffFront','bone':'WeaponGripR','position':[x,float(p[1]+.26),z+.1]}],
+'vertices':np.round(vertices,6).ravel().tolist(),'normals':np.round(normals,6).ravel().tolist(),'boneIndices':BI,'groups':GI,'markers':[{'name':'StaffGrip','bone':'WeaponGripR','position':focus_pivot},{'name':'StaffTop','bone':'WeaponGripR','position':staff_top},{'name':'StaffFront','bone':'WeaponGripR','position':staff_front}],
 'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(len(COLORS))]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
 report={'vertices':len(V),'triangles':len(F),'materials':len(COLORS),'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
+report['weaponScale']=WEAPON_SCALE
+report['focusGripToAperture']=round(float(np.linalg.norm(np.array(staff_top)-np.array(focus_pivot))),6)
 (ART/'geometry-report.json').write_text(json.dumps(report,indent=2))
 assert np.isfinite(vertices).all() and np.isfinite(normals).all()
 assert triangles.min()>=0 and triangles.max()<len(V)
 assert len(BI)==len(V) and max(BI)<len(BN)
+assert abs(report['focusGripToAperture']-.338)<1e-6
 assert len(V)<65000 and len(F)<90000
 assert len(GI)==len(V) and set(GI)=={0,2}
 assert all(len(set(GI[i] for i in f))==1 for f in F)

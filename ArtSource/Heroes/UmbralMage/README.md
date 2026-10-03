@@ -7,3 +7,5 @@ Build with `python Tools/UmbralMage/build_umbral_mage.py` (NumPy, Pillow). Body 
 Generator validates finite vertices/normals, triangle and bone indices, geometry budgets and separate body/weapon triangles. Front/back images are offline geometry previews. Unity compilation, live animation clipping, actual materials and performance remain unverified.
 
 The pink luminous shoulder caps are removed. Front and rear upper-arm plates lie between shoulder and elbow, following each upper-arm bone. Each front plate carries a narrow fluorescent white stripe with its own emissive material. Runtime mirrors the source focus onto the left hand, rotates its barrel forward and corrects reflected winding; source geometry previews still show the canonical weapon orientation.
+
+The hand-held focus is 30% larger, scaled uniformly around its handle so the palm contact stays fixed; its aperture and orientation markers use the matching enlarged positions. The head replaces the plain antenna with a split pearl crown, violet channels, temple fins and a cyan forehead reactor while keeping the established white, violet and cyan palette.

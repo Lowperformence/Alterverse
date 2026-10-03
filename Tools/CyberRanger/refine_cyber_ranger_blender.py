@@ -176,7 +176,8 @@ for obj in objects:
     material_index = int(obj["materialIndex"])
     mesh = obj.data
     mesh.calc_loop_triangles()
-    offset = len(out_vertices)
+    # Triangle indices address vertices, while out_vertices is flattened xyz data.
+    offset = len(out_vertices) // 3
     local = [v.co.copy() for v in mesh.vertices]
     if bone_names[bone_index].startswith(("Thigh", "Shin")):
         a = anchors[bone_index]
