@@ -89,8 +89,8 @@ namespace Alterverse.Characters
                 Vector3 delta = forcedEnd - transform.position; delta.y=0;
                 float remaining = Mathf.Max(Time.deltaTime,forcedUntil-Time.time);
                 Vector3 step = delta * Mathf.Clamp01(Time.deltaTime/remaining);
-                Vector3 actual = Move(step,40f,33f,false,true);
-                if (actual.sqrMagnitude < step.sqrMagnitude*.25f || delta.sqrMagnitude < .0025f) forcedUntil=0;
+                Vector3 forcedActual = Move(step,40f,33f,false,true);
+                if (forcedActual.sqrMagnitude < step.sqrMagnitude*.25f || delta.sqrMagnitude < .0025f) forcedUntil=0;
                 return;
             }
             if(!CanMove){ResetMotion();return;}

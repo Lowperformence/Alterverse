@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Performance;
 using UnityEngine;
@@ -426,7 +427,6 @@ namespace Alterverse.Visuals
         }
     }
 }
-
 
 
 
