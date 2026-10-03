@@ -84,6 +84,16 @@ namespace Alterverse.Characters
             float dt = Time.deltaTime;
             if (dt <= 0f) return;
 
+            // A remote human is driven by the owner's authoritative pose stream. Simulating
+            // keyboard/touch locomotion again on this machine would double-apply movement.
+            Alterverse.Multiplayer.CoopHeroSlot coopSlot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+            if (coopSlot != null && coopSlot.IsHuman && !coopSlot.IsLocalHuman)
+            {
+                ClearInput();
+                ResetSmoothMotion();
+                return;
+            }
+
             if (!body.CanMove)
             {
                 ClearInput();
