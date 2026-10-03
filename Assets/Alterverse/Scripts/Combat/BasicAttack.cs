@@ -84,6 +84,7 @@ namespace Alterverse.Combat
 
                 motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), predictedLook);
                 GetComponent<HeroVisualMotion>()?.PulseBasic(windup);
+                HeavyHorizontalStrikePresentation.For(gameObject)?.PulseBasic(windup);
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
