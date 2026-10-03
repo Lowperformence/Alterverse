@@ -31,10 +31,13 @@ namespace Alterverse.Combat
         public static bool IsRanged(HeroId hero)=>hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
         public static float Windup(HeroId hero,int slot=-1)
         {
+            // Melee basics need enough anticipation to show an actual draw-back and weapon travel.
+            // Contact still happens exactly at ReleaseAt, so damage and the new IK strike stay synced.
             float basic=hero switch
             {
-                HeroId.Veyr=>.09f,HeroId.Kaelon=>.16f,HeroId.Nyra=>.08f,
-                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,HeroId.Rook=>.13f,HeroId.Traveler=>.10f,_=>.13f
+                HeroId.Veyr=>.16f,HeroId.Kaelon=>.22f,HeroId.Nyra=>.08f,
+                HeroId.Elyra=>.14f,HeroId.Mira=>.12f,HeroId.Rook=>.18f,HeroId.Traveler=>.10f,
+                HeroId.Nerok=>.20f,_=>.16f
             };
             return slot<0?basic:hero==HeroId.Nyra&&slot==3?.22f:basic+.04f;
         }
@@ -130,4 +133,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
