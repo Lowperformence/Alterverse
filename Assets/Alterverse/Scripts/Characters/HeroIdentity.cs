@@ -23,7 +23,8 @@ if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisio
 // and the feminine face polish is applied consistently in matches and menu previews.
 if(id==HeroId.Mira&&GetComponent<Alterverse.Visuals.TahlaHealerVisualPolish>()==null)
 gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
-// HeroVisualMotion is the only shoulder/weapon pose owner, including Zhaev's crossed guard.
+// HeroVisualMotion owns the base gait/guard. The dedicated melee overlay may replace only the
+// short basic-attack pose after that base has been evaluated.
 }
 private void Start()
 {
@@ -32,6 +33,10 @@ private void Start()
 // BasicAttack, HeroAbilityExecution and HeroVisualMotion immediately and track the real cast targets cleanly.
 if(GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()==null)
 gameObject.AddComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>();
+// Melee basics use a dedicated weapon/fist delivery layer: visible draw-back, contact and follow-through.
+// Classification comes from the combat profile so all current short-range heroes receive it automatically.
+if(HeroCombatProfile.StatsFor(hero).AttackRange<=3f&&GetComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>()==null)
+gameObject.AddComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>();
 // Only actors that actually own the ability execution runtime need the extra mobile-readable cast cue.
 // This keeps non-combat replicas/lightweight presentation actors free of an unnecessary Update loop.
 if(GetComponent<HeroAbilityExecution>()!=null&&GetComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>()==null)
