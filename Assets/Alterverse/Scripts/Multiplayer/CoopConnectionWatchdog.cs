@@ -1,3 +1,4 @@
+using Alterverse.Match;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -43,9 +44,14 @@ namespace Alterverse.Multiplayer
         {
             CoopLobbyService lobby=CoopLobbyService.Instance;
             NetworkManager current=NetworkManager.Singleton;
-            if(lobby==null||!lobby.InLobby||current==null)return;
-
+            if(current==null)return;
             bool localLost=!current.IsServer&&clientId==current.LocalClientId;
+            if (localLost && CoopAuthority.ActivePlan is OnlineMatchPlan && !MatchExit.Leaving)
+            {
+                _ = MatchExit.ReturnToMenuAsync();
+                return;
+            }
+            if(lobby==null||!lobby.InLobby)return;
             if(current.IsServer)
             {
                 // ServerClientId is the server itself. Remote ids represent connected players.

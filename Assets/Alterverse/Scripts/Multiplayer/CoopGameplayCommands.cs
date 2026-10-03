@@ -14,8 +14,8 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V1";
-        private const string AbilityMessage="DF_COOP_ABILITY_V1";
+        private const string BasicMessage="DF_COOP_BASIC_V2";
+        private const string AbilityMessage="DF_COOP_ABILITY_V2";
 
         public static CoopGameplayCommands Instance { get; private set; }
 
@@ -72,7 +72,8 @@ namespace Alterverse.Multiplayer
             if(heroSlot==null||!heroSlot.IsLocalHuman||health==null||health.IsDead)return false;
 
             FixedString128Bytes id=new(heroSlot.PlayerId??"");
-            using FastBufferWriter writer=new(160,Allocator.Temp);
+            using FastBufferWriter writer=new(164,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(heroSlot.Slot);
             writer.WriteValueSafe(id);
 
@@ -109,27 +110,30 @@ namespace Alterverse.Multiplayer
 
         private void OnBasic(ulong senderClientId,FastBufferReader reader)
         {
-            if(!TryReadAuthorizedActor(senderClientId,reader,out GameObject actor))return;
+            if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
             actor.GetComponent<BasicAttack>()?.TryAttack();
         }
 
         private void OnAbility(ulong senderClientId,FastBufferReader reader)
         {
-            if(!TryReadAuthorizedActor(senderClientId,reader,out GameObject actor))return;
+            if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
+            if (!reader.TryBeginRead(sizeof(int) + 3 * sizeof(float))) return;
             reader.ReadValueSafe(out int slot);
             reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);
-            if(slot<0||slot>3)return;
+            if(slot<0||slot>3||!MatchNetworkProtocol.Finite(dx)||!MatchNetworkProtocol.Finite(dy)||!MatchNetworkProtocol.Finite(dz))return;
             Vector3 requestedDirection=new(dx,dy,dz);requestedDirection.y=0f;
             if(requestedDirection.sqrMagnitude>.0001f)requestedDirection.Normalize();
             actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot,requestedDirection);
         }
 
-        private bool TryReadAuthorizedActor(ulong senderClientId,FastBufferReader reader,out GameObject actor)
+        private bool TryReadAuthorizedActor(ulong senderClientId,ref FastBufferReader reader,out GameObject actor)
         {
             actor=null;
             NetworkManager manager=NetworkManager.Singleton;
-            if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return false;
+            if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer||Time.timeScale<=0f)return false;
 
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return false;
+            if (!reader.TryBeginRead(sizeof(int) + sizeof(ushort))) return false;
             reader.ReadValueSafe(out int rosterSlot);
             reader.ReadValueSafe(out FixedString128Bytes fixedId);
             string playerId=fixedId.ToString();
@@ -139,9 +143,7 @@ namespace Alterverse.Multiplayer
             MatchPlayerSlot planned=plan.Session.Slots[rosterSlot];
             if(planned==null||planned.IsBot||planned.IsHost||planned.PlayerId!=playerId)return false;
 
-            bool authorized=plan is OnlineMatchPlan
-                ?OnlinePlanHandshake.IsAuthorizedClient(senderClientId,playerId)
-                :CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId);
+            bool authorized=MatchNetworkProtocol.Authorized(senderClientId,playerId);
             if(!authorized)return false;
             senderOwners[senderClientId]=playerId;
 
@@ -151,6 +153,8 @@ namespace Alterverse.Multiplayer
                 CoopHeroSlot h=heroes[i];
                 if(h!=null&&h.Slot==rosterSlot&&h.PlayerId==playerId)
                 {
+                    Health health=h.GetComponent<Health>();
+                    if (health == null || health.IsDead) return false;
                     actor=h.gameObject;
                     return true;
                 }

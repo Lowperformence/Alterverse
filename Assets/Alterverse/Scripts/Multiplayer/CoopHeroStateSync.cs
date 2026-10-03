@@ -16,10 +16,10 @@ namespace Alterverse.Multiplayer
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
         private static CoopHeroStateSync audioRelay;
-        private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V1";
-        private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V1";
-        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V1";
-        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V1";
+        private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
+        private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
+        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V2";
+        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V2";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/12f;
         private const float MinimumMovementSlack=.18f;
@@ -121,7 +121,8 @@ namespace Alterverse.Multiplayer
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
-            using FastBufferWriter writer=new(24,Allocator.Temp);
+            using FastBufferWriter writer=new(28,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(action);writer.WriteValueSafe(phase);
             writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
             for(int i=0;i<manager.ConnectedClientsIds.Count;i++)
@@ -132,7 +133,8 @@ namespace Alterverse.Multiplayer
         }
         private void OnCombatSound(ulong sender,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(24))return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(28))return;
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int action);reader.ReadValueSafe(out int phase);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             if(slot<0||slot>=slots.Length||slots[slot]==null||action<0||action>4||phase<0||phase>2)return;
@@ -145,7 +147,8 @@ namespace Alterverse.Multiplayer
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=killer.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
-            using FastBufferWriter writer=new(4,Allocator.Temp);
+            using FastBufferWriter writer=new(8,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(slot.Slot);
             foreach(ulong id in manager.ConnectedClientsIds)
                 if(id!=NetworkManager.ServerClientId)
@@ -153,7 +156,8 @@ namespace Alterverse.Multiplayer
         }
         private void OnKillSound(ulong sender,FastBufferReader reader)
         {
-            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(4))return;
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(8))return;
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int slot);
             if(slot>=0&&slot<slots.Length&&slots[slot]!=null)
                 Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
@@ -170,7 +174,8 @@ namespace Alterverse.Multiplayer
             float yaw=slot.transform.eulerAngles.y;
             FixedString128Bytes id=new(localPlayerId??"");
 
-            using FastBufferWriter writer=new(192,Allocator.Temp);
+            using FastBufferWriter writer=new(196,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(localSlot);
             writer.WriteValueSafe(id);
             writer.WriteValueSafe(p.x);writer.WriteValueSafe(p.y);writer.WriteValueSafe(p.z);
@@ -184,11 +189,13 @@ namespace Alterverse.Multiplayer
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||!manager.IsServer)return;
 
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int rosterSlot);
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float yaw);
 
+            if (!MatchNetworkProtocol.Finite(x) || !MatchNetworkProtocol.Finite(y) || !MatchNetworkProtocol.Finite(z) || !MatchNetworkProtocol.Finite(yaw)) return;
             string playerId=fixedPlayerId.ToString();
             if(!ValidateOwner(senderClientId,rosterSlot,playerId))return;
 
@@ -228,9 +235,7 @@ namespace Alterverse.Multiplayer
             MatchPlayerSlot slot=plan.Session.Slots[rosterSlot];
             if(slot==null||slot.IsBot||slot.IsHost||slot.PlayerId!=playerId)return false;
 
-            bool authorized=plan is OnlineMatchPlan
-                ?OnlinePlanHandshake.IsAuthorizedClient(senderClientId,playerId)
-                :CoopPlanHandshake.IsAuthorizedClient(senderClientId,playerId);
+            bool authorized=MatchNetworkProtocol.Authorized(senderClientId,playerId);
             if(!authorized)return false;
             senderOwners[senderClientId]=playerId;
             return true;
@@ -244,7 +249,8 @@ namespace Alterverse.Multiplayer
             for(int i=0;i<slots.Length;i++)if(slots[i]!=null)count++;
             if(count==0)return;
 
-            using FastBufferWriter writer=new(1024,Allocator.Temp);
+            using FastBufferWriter writer=new(1028,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(count);
             for(int i=0;i<slots.Length;i++)
             {
@@ -282,8 +288,9 @@ namespace Alterverse.Multiplayer
         {
             if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||senderClientId!=NetworkManager.ServerClientId)return;
 
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int count);
-            count=Mathf.Clamp(count,0,MatchSession.MaxPlayers);
+            if (count < 0 || count > MatchSession.MaxPlayers) return;
             for(int n=0;n<count;n++)
             {
                 reader.ReadValueSafe(out int rosterSlot);

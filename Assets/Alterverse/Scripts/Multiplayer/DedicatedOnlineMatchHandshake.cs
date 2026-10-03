@@ -81,7 +81,11 @@ namespace Alterverse.Multiplayer
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || !manager.IsListening)
             {
-                if (!CoopAuthority.Active) Detach();
+                if (!CoopAuthority.Active)
+                {
+                    Detach(); planSent = false; launched = false; firstHelloAt = -1;
+                    pending.Clear(); authorizedPlayers.Clear(); planAcks.Clear();
+                }
                 if (manager == null || !manager.IsConnectedClient) helloSent = false;
                 return;
             }
@@ -500,6 +504,10 @@ namespace Alterverse.Multiplayer
                 if (!connected) remove.Add(clientId);
             }
 
+            if (remove.Count > 0 && planSent && !launched)
+            {
+                planSent = false; planAcks.Clear(); CoopAuthority.ClearPrepared();
+            }
             for (int i = 0; i < remove.Count; i++)
             {
                 ulong id = remove[i];

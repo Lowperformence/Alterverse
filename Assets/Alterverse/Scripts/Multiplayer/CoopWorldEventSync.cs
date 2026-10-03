@@ -12,19 +12,19 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopWorldEventSync : MonoBehaviour
     {
-        private const string HotOpenMessage="DF_COOP_HOT_OPEN_V1";
-        private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V1";
-        private const string PlanetMessage="DF_COOP_PLANET_V1";
-        private const string BomberMessage="DF_COOP_BOMBER_V1";
-        private const string PlanetMeteorMessage="DF_COOP_PLANET_METEOR_V1";
-        private const string NoxaraMeteorMessage="DF_COOP_NOXARA_METEOR_V1";
-        private const string PlanetPulseStartMessage="DF_COOP_PLANET_PULSE_START_V1";
-        private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V1";
-        private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V1";
-        private const string PlanetBuffMessage="DF_COOP_PLANET_BUFF_V1";
-        private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V1";
-        private const string FractureSpawnMessage="DF_COOP_FRACTURE_SPAWN_V1";
-        private const string FractureClaimMessage="DF_COOP_FRACTURE_CLAIM_V1";
+        private const string HotOpenMessage="DF_COOP_HOT_OPEN_V2";
+        private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V2";
+        private const string PlanetMessage="DF_COOP_PLANET_V2";
+        private const string BomberMessage="DF_COOP_BOMBER_V2";
+        private const string PlanetMeteorMessage="DF_COOP_PLANET_METEOR_V2";
+        private const string NoxaraMeteorMessage="DF_COOP_NOXARA_METEOR_V2";
+        private const string PlanetPulseStartMessage="DF_COOP_PLANET_PULSE_START_V2";
+        private const string PlanetPulseDetonateMessage="DF_COOP_PLANET_PULSE_DETONATE_V2";
+        private const string CentralHealMessage="DF_COOP_CENTRAL_HEAL_V2";
+        private const string PlanetBuffMessage="DF_COOP_PLANET_BUFF_V2";
+        private const string LaneUnitMessage="DF_COOP_LANE_UNIT_V2";
+        private const string FractureSpawnMessage="DF_COOP_FRACTURE_SPAWN_V2";
+        private const string FractureClaimMessage="DF_COOP_FRACTURE_CLAIM_V2";
 
         private CustomMessagingManager messaging;
         private bool attached,eventsBound;
@@ -82,7 +82,8 @@ namespace Alterverse.Multiplayer
         private void OnHostHotOpened(Vector3 position,int occurrence)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(32,Allocator.Temp);
+            using FastBufferWriter writer=new(36,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
             writer.WriteValueSafe(occurrence);
             SendAll(HotOpenMessage,writer);
@@ -91,7 +92,8 @@ namespace Alterverse.Multiplayer
         private void OnHostHotResolved(int winner,float zero,float lumen,int occurrence)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(32,Allocator.Temp);
+            using FastBufferWriter writer=new(36,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(winner);writer.WriteValueSafe(zero);writer.WriteValueSafe(lumen);writer.WriteValueSafe(occurrence);
             SendAll(HotResolveMessage,writer);
         }
@@ -99,7 +101,8 @@ namespace Alterverse.Multiplayer
         private void OnHostPlanetSpawned(int variant)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(8,Allocator.Temp);
+            using FastBufferWriter writer=new(12,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(variant);
             SendAll(PlanetMessage,writer);
         }
@@ -107,7 +110,8 @@ namespace Alterverse.Multiplayer
         private void OnHostBomberSpawned(int pass,int seed)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(12,Allocator.Temp);
+            using FastBufferWriter writer=new(16,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(pass);writer.WriteValueSafe(seed);
             SendAll(BomberMessage,writer);
         }
@@ -115,7 +119,8 @@ namespace Alterverse.Multiplayer
         private void OnHostPlanetMeteor(string ownerName,Vector3 point,float delay,float damage,float stagger)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(256,Allocator.Temp);
+            using FastBufferWriter writer=new(260,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
             writer.WriteValueSafe(point.x);writer.WriteValueSafe(point.y);writer.WriteValueSafe(point.z);
             writer.WriteValueSafe(delay);writer.WriteValueSafe(damage);writer.WriteValueSafe(stagger);
@@ -125,7 +130,8 @@ namespace Alterverse.Multiplayer
         private void OnHostNoxaraMeteor(int team,Vector3 point,float delay,float damage,float stagger)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(128,Allocator.Temp);
+            using FastBufferWriter writer=new(132,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(team);
             writer.WriteValueSafe(point.x);writer.WriteValueSafe(point.y);writer.WriteValueSafe(point.z);
             writer.WriteValueSafe(delay);writer.WriteValueSafe(damage);writer.WriteValueSafe(stagger);
@@ -135,7 +141,8 @@ namespace Alterverse.Multiplayer
         private void OnHostPlanetPulseStart(string ownerName,float duration)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(176,Allocator.Temp);
+            using FastBufferWriter writer=new(180,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
             writer.WriteValueSafe(duration);
             SendAll(PlanetPulseStartMessage,writer);
@@ -144,7 +151,8 @@ namespace Alterverse.Multiplayer
         private void OnHostPlanetPulseDetonate(string ownerName)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(160,Allocator.Temp);
+            using FastBufferWriter writer=new(164,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(new FixedString128Bytes(ownerName??""));
             SendAll(PlanetPulseDetonateMessage,writer);
         }
@@ -152,7 +160,8 @@ namespace Alterverse.Multiplayer
         private void OnHostCentralHealChanged(bool available,float readyIn)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(16,Allocator.Temp);
+            using FastBufferWriter writer=new(20,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(available);writer.WriteValueSafe(readyIn);
             SendAll(CentralHealMessage,writer);
         }
@@ -160,7 +169,8 @@ namespace Alterverse.Multiplayer
         private void OnHostPlanetBuffGranted(int team,PlanetBuffType type,float duration)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(20,Allocator.Temp);
+            using FastBufferWriter writer=new(24,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(team);writer.WriteValueSafe((int)type);writer.WriteValueSafe(duration);
             SendAll(PlanetBuffMessage,writer);
         }
@@ -168,7 +178,8 @@ namespace Alterverse.Multiplayer
         private void OnHostLaneUnitSpawned(string key,int team,Vector3 spawn,Vector3 destination,bool siege)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(256,Allocator.Temp);
+            using FastBufferWriter writer=new(260,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(new FixedString128Bytes(key??""));
             writer.WriteValueSafe(team);
             writer.WriteValueSafe(spawn.x);writer.WriteValueSafe(spawn.y);writer.WriteValueSafe(spawn.z);
@@ -180,7 +191,8 @@ namespace Alterverse.Multiplayer
         private void OnHostFractureSpawned(int id,Vector3 position)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(24,Allocator.Temp);
+            using FastBufferWriter writer=new(28,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(id);
             writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
             SendAll(FractureSpawnMessage,writer);
@@ -189,7 +201,8 @@ namespace Alterverse.Multiplayer
         private void OnHostFractureClaimed(int id)
         {
             if(!CanBroadcast())return;
-            using FastBufferWriter writer=new(8,Allocator.Temp);
+            using FastBufferWriter writer=new(12,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(id);
             SendAll(FractureClaimMessage,writer);
         }
@@ -214,7 +227,7 @@ namespace Alterverse.Multiplayer
 
         private void OnHotOpen(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out int occurrence);
             FindAnyObjectByType<HotZoneDirector>()?.ApplyNetworkOpen(new Vector3(x,y,z),occurrence);
@@ -222,7 +235,7 @@ namespace Alterverse.Multiplayer
 
         private void OnHotResolve(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int winner);reader.ReadValueSafe(out float zero);reader.ReadValueSafe(out float lumen);
             reader.ReadValueSafe(out int occurrence);
             FindAnyObjectByType<HotZoneDirector>()?.ApplyNetworkResolve(winner,zero,lumen,occurrence);
@@ -230,21 +243,21 @@ namespace Alterverse.Multiplayer
 
         private void OnPlanet(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int variant);
             FindAnyObjectByType<DimensionPlanetDirector>()?.ApplyNetworkSpawn(variant);
         }
 
         private void OnBomber(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int pass);reader.ReadValueSafe(out int seed);
             FindAnyObjectByType<SpaceBomberDirector>()?.ApplyNetworkFlyover(pass,seed);
         }
 
         private void OnPlanetMeteor(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out FixedString128Bytes owner);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float delay);reader.ReadValueSafe(out float damage);reader.ReadValueSafe(out float stagger);
@@ -253,7 +266,7 @@ namespace Alterverse.Multiplayer
 
         private void OnNoxaraMeteor(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int team);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float delay);reader.ReadValueSafe(out float damage);reader.ReadValueSafe(out float stagger);
@@ -262,28 +275,28 @@ namespace Alterverse.Multiplayer
 
         private void OnPlanetPulseStart(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out FixedString128Bytes owner);reader.ReadValueSafe(out float duration);
             PlanetPulseAttack.ApplyNetworkPulseStart(owner.ToString(),duration);
         }
 
         private void OnPlanetPulseDetonate(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out FixedString128Bytes owner);
             PlanetPulseAttack.ApplyNetworkPulseDetonate(owner.ToString());
         }
 
         private void OnCentralHeal(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out bool available);reader.ReadValueSafe(out float readyIn);
             FindAnyObjectByType<CentralHealingPickup>()?.ApplyNetworkAvailability(available,readyIn);
         }
 
         private void OnPlanetBuff(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int team);reader.ReadValueSafe(out int rawType);reader.ReadValueSafe(out float duration);
             if(rawType<0||rawType>1)return;
             DimensionPlanet.ApplyNetworkBuff(Mathf.Clamp(team,0,1),(PlanetBuffType)rawType,duration);
@@ -291,7 +304,7 @@ namespace Alterverse.Multiplayer
 
         private void OnLaneUnit(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out FixedString128Bytes fixedKey);
             reader.ReadValueSafe(out int team);
             reader.ReadValueSafe(out float sx);reader.ReadValueSafe(out float sy);reader.ReadValueSafe(out float sz);
@@ -303,7 +316,7 @@ namespace Alterverse.Multiplayer
 
         private void OnFractureSpawn(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int id);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             FractureCorePickup.ApplyNetworkSpawn(id,new Vector3(x,y,z));
@@ -311,7 +324,7 @@ namespace Alterverse.Multiplayer
 
         private void OnFractureClaim(ulong sender,FastBufferReader reader)
         {
-            if(!ValidServerMessage(sender))return;
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
             reader.ReadValueSafe(out int id);
             FractureCorePickup.ApplyNetworkClaim(id);
         }

@@ -102,7 +102,7 @@ namespace Alterverse.Multiplayer
             return mask;
         }
         static bool Authorized(ulong id, string player) =>
-            CoopPlanHandshake.IsAuthorizedClient(id, player) || OnlinePlanHandshake.IsAuthorizedClient(id, player);
+            MatchNetworkProtocol.Authorized(id, player);
         bool Current(string id) => !MatchExit.Leaving && CoopAuthority.Active && id == CoopAuthority.ActivePlan.MatchId;
         void OnReady(ulong sender, FastBufferReader reader)
         {

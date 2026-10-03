@@ -14,7 +14,7 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopWorldStateSync : MonoBehaviour
     {
-        private const string StateMessage="DF_COOP_WORLD_STATE_V1";
+        private const string StateMessage="DF_COOP_WORLD_STATE_V2";
         private const float SendInterval=.125f;
 
         private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
@@ -71,7 +71,8 @@ namespace Alterverse.Multiplayer
 
             int count=Mathf.Min(entities.Count,96);
             int tombCount=Mathf.Min(tombstones.Count,64);
-            using FastBufferWriter writer=new(16384,Allocator.Temp);
+            using FastBufferWriter writer=new(16388,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(count);
             int written=0;
             foreach(KeyValuePair<string,CoopWorldEntityKey> pair in entities)
@@ -109,8 +110,9 @@ namespace Alterverse.Multiplayer
             if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsClient||sender!=NetworkManager.ServerClientId)return;
             RefreshEntities();
 
+            if (!MatchNetworkProtocol.ReadRound(ref reader)) return;
             reader.ReadValueSafe(out int count);
-            count=Mathf.Clamp(count,0,96);
+            if (count < 0 || count > 96) return;
             for(int i=0;i<count;i++)
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);
@@ -131,7 +133,7 @@ namespace Alterverse.Multiplayer
             }
 
             reader.ReadValueSafe(out int tombCount);
-            tombCount=Mathf.Clamp(tombCount,0,64);
+            if (tombCount < 0 || tombCount > 64) return;
             for(int i=0;i<tombCount;i++)
             {
                 reader.ReadValueSafe(out FixedString128Bytes fixedId);

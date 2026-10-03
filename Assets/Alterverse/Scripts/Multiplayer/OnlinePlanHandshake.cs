@@ -230,7 +230,8 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
             string playerId = fixedPlayerId.ToString();
 
-            bool claimed = approvedPlayerIds.ContainsValue(playerId);
+            bool ownClaim = approvedPlayerIds.TryGetValue(senderClientId, out string existing) && existing == playerId;
+            bool claimed = !ownClaim && approvedPlayerIds.ContainsValue(playerId);
             bool valid = protocol == ProtocolVersion && accepted && clientFingerprint == fingerprint &&
                          !claimed && PlayerExists(plan, playerId) && IsConnected(manager, senderClientId);
 
@@ -356,3 +357,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
