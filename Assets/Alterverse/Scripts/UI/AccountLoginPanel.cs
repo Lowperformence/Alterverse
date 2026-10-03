@@ -3,7 +3,7 @@ using Alterverse.Shop;
 using UnityEngine;
 namespace Alterverse.UI
 {
-    public static class AccountLoginPanel
+    internal static class AccountLoginPanel
     {
         static bool open;
         static string username="",password="";
