@@ -83,10 +83,11 @@ namespace Alterverse.Visuals
             SkinnedMeshRenderer left = null, right = null;
             foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if (renderer.name == "DF_WeaponL") left = renderer;
-                if (renderer.name == "DF_WeaponR") right = renderer;
+                // Brakk's shared animation rig names its hand renderers Gauntlet, not Weapon.
+                if (renderer.name == "DF_WeaponL" || renderer.name == "DF_GauntletL") left = renderer;
+                if (renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletR") right = renderer;
             }
-            if (right == null) return false;
+            if (right == null) { Debug.LogError("DF: Cyber Shark right hand renderer missing on shared rig.", this); return false; }
             int[] map = new int[data.boneNames.Length];
             Vector3[] heads = new Vector3[map.Length];
             var lookup = new Dictionary<string, int>();

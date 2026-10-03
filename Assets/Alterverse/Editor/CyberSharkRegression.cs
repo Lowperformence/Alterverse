@@ -40,7 +40,15 @@ namespace Alterverse.EditorChecks
             Require(Array.Exists(HeroFlavorContent.Heroes,h=>h.Hero==HeroId.Nerok),"Missing hero lore.");
             Require(WeaponSkinCatalog.VariantCount(HeroId.Nerok)==2,"Missing Epic anchors.");
             for(int i=0;i<2;i++)Require(WeaponSkinCatalog.For(HeroId.Nerok,i).Price==WeaponSkinCatalog.Price,"Epic price differs from other heroes.");
-            Require(Resources.Load<GameObject>("AuthoredHeroes/Rook")!=null,"Shared skeletal template missing.");
+            GameObject template=Resources.Load<GameObject>("AuthoredHeroes/Rook");
+            Require(template!=null,"Shared skeletal template missing.");
+            bool hasBody=false,hasRight=false;
+            foreach(SkinnedMeshRenderer renderer in template.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if(renderer.name=="DF_Anatomy")hasBody=true;
+                if(renderer.name=="DF_GauntletR"||renderer.name=="DF_WeaponR")hasRight=true;
+            }
+            Require(hasBody&&hasRight,"Shared rig cannot receive shark body and anchor meshes.");
             TextAsset resource=Resources.Load<TextAsset>("CyberShark/Model");Require(resource!=null,"Blender model missing.");
             Geometry model;
             using(var stream=new GZipStream(new MemoryStream(resource.bytes),CompressionMode.Decompress))
