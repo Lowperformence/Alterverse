@@ -82,6 +82,7 @@ namespace Alterverse.Combat
             pending[i]=new Pending{Active=true,Basic=true,Slot=-1,Target=target,Damage=amount,Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+windup};
             HeroCombatAudio.Windup(gameObject,0);
             GetComponent<HeroVisualMotion>()?.PulseBasic(windup);
+            HeavyHorizontalStrikePresentation.For(gameObject)?.PulseBasic(windup);
         }
         public void Ability(HeroAbilityExecution execution,int slot,Health target,bool volley=false,float windup=-1)
         {
