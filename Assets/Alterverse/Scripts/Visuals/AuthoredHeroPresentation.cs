@@ -43,6 +43,13 @@ namespace Alterverse.Visuals
         public static bool TryCreate(GameObject actor, HeroId hero, out Transform root)
         {
             root = null;
+            // Repeated Build calls reuse the existing rig and its pose controls.
+            if (actor.TryGetComponent<AuthoredHeroPresentation>(out var existing) &&
+                existing.visualRoot != null && existing.model != null)
+            {
+                root = existing.visualRoot;
+                return true;
+            }
             GameObject asset = Resources.Load<GameObject>("AuthoredHeroes/" + hero);
             if (asset == null) return false;
             root = new GameObject("DF_VisualRoot").transform;

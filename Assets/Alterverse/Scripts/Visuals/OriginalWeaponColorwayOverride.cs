@@ -104,8 +104,9 @@ namespace Alterverse.Visuals
             AuthoredHeroPresentation authored = GetComponent<AuthoredHeroPresentation>();
             if (authored != null)
             {
+                var seen = new HashSet<Renderer>();
                 foreach (Renderer renderer in authored.WeaponRenderers)
-                    if (renderer != null) baseRenderers.Add(new RendererState { Renderer = renderer, Original = (Material[])renderer.sharedMaterials.Clone() });
+                    if (renderer != null && seen.Add(renderer)) baseRenderers.Add(new RendererState { Renderer = renderer, Original = (Material[])renderer.sharedMaterials.Clone() });
                 return;
             }
             AddWeaponRoot("DF_WeaponL");
@@ -123,7 +124,7 @@ namespace Alterverse.Visuals
             for(int i=0;i<renderers.Length;i++)
             {
                 Renderer renderer=renderers[i];
-                if(renderer==null)continue;
+                if(renderer==null||renderer.name=="DF_WeaponEnergyOverlay")continue;
 
                 bool duplicate=false;
                 for(int r=0;r<baseRenderers.Count;r++)
@@ -204,9 +205,12 @@ namespace Alterverse.Visuals
                     slots[i]=material;
                     if(i<state.Original.Length&&state.Original[i]!=null&&state.Original[i].name.Contains("Shield DR"))
                     {
-                        inscription=new Material(shader){name="DF_DR_ClearOverlay"};
-                        inscription.SetColor("_GlowColor",Color.clear);
-                        inscription.SetFloat("_RimOpacity",0f);
+                        if(inscription==null)
+                        {
+                            inscription=new Material(shader){name="DF_DR_ClearOverlay"};
+                            inscription.SetColor("_GlowColor",Color.clear);
+                            inscription.SetFloat("_RimOpacity",0f);
+                        }
                         slots[i]=inscription;
                     }
                 }

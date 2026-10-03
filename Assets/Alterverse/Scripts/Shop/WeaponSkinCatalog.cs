@@ -30,10 +30,6 @@ namespace Alterverse.Shop
     {
         public const int Price=500;
 
-        // Kept for save/API compatibility with the retired legendary shop tier.
-        // The normal weapon shop now sells only two cosmetic colorways at the standard price.
-        public const int PremiumPrice=1100;
-
         // Exactly two purchasable color designs per hero. Both keep the hero's authored
         // standard weapon model, pivot, animation, grip, range, damage and timing unchanged.
         public static readonly WeaponSkinItem[] Items=

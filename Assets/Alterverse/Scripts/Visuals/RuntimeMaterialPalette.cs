@@ -10,17 +10,21 @@ namespace Alterverse.Visuals
         public void OwnRepair(Material material){if(material!=null)repairs.Add(material);}
         private readonly Dictionary<(Material,Color),Material> copies=new();
         private readonly Dictionary<(Shader,Color),Material> fallbacks=new();
+        private readonly Dictionary<Material,Material> tintSources=new();
         public static RuntimeMaterialPalette For(GameObject owner)
             =>owner.GetComponent<RuntimeMaterialPalette>()??owner.AddComponent<RuntimeMaterialPalette>();
         public static void Tint(GameObject owner,Renderer renderer,Color color)
         {
             if(owner==null||renderer==null||renderer.sharedMaterial==null)return;
             var palette=For(owner);
-            var key=(renderer.sharedMaterial,color);
+            Material source=renderer.sharedMaterial;
+            if(palette.tintSources.TryGetValue(source,out Material original))source=original;
+            var key=(source,color);
             if(!palette.copies.TryGetValue(key,out Material copy))
             {
-                copy=new Material(renderer.sharedMaterial){name="DF_OwnedTint",color=color};
+                copy=new Material(source){name="DF_OwnedTint",color=color};
                 palette.copies.Add(key,copy);
+                palette.tintSources.Add(copy,source);
             }
             renderer.sharedMaterial=copy;
         }
@@ -40,7 +44,7 @@ namespace Alterverse.Visuals
             foreach(Material material in copies.Values)if(material!=null)Destroy(material);
             foreach(Material material in fallbacks.Values)if(material!=null)Destroy(material);
             foreach(Material material in repairs)if(material!=null)Destroy(material);
-            copies.Clear();fallbacks.Clear();repairs.Clear();
+            copies.Clear();fallbacks.Clear();repairs.Clear();tintSources.Clear();
         }
     }
 }

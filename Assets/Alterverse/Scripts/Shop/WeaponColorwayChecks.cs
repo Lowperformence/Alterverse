@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Alterverse.Shop
 {
-    public static class LegendaryWeaponChecks
+    public static class WeaponColorwayChecks
     {
         [MenuItem("DIMENSIONS FRONT/Checks/Weapon colorways (non-destructive)")]
         public static void Run()
