@@ -4,7 +4,7 @@ namespace Alterverse.Combat
 public sealed class CentralHealingPickup:MonoBehaviour
 {
 public static event System.Action<bool,float> NetworkAvailabilityChanged;
-[SerializeField]private float radius=1.5f,healPercent=.286f,respawnSeconds=22f;private Transform visual,plus;private float readyAt;private bool available=true;private Material greenMat,stoneMat;
+[SerializeField]private float radius=1.5f,healPercent=.286f,respawnSeconds=22f/1.3f;private Transform visual,plus;private float readyAt;private bool available=true;private Material greenMat,stoneMat;
 private void Start(){BuildVisual();}
 private void Update()
 {
