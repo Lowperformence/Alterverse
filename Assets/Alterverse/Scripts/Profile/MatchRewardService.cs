@@ -38,26 +38,26 @@ namespace Alterverse.Profile
         private const string ReceiptBaseShards="DF_LastRewardBaseShards",ReceiptShardBonus="DF_LastRewardShardBonus";
         private const string ReceiptBaseXp="DF_LastRewardBaseXP",ReceiptXpBonus="DF_LastRewardXPBonus",ReceiptBonusCosmetic="DF_LastRewardBonusCosmetic";
 
-        public static int MatchesCompleted=>Mathf.Max(0,PlayerPrefs.GetInt(MatchesKey,0));
-        public static int MatchesWon=>Mathf.Clamp(PlayerPrefs.GetInt(WinsKey,0),0,MatchesCompleted);
-        public static int LifetimeKills=>Mathf.Max(0,PlayerPrefs.GetInt(KillsKey,0));
-        public static int LifetimeAssists=>Mathf.Max(0,PlayerPrefs.GetInt(AssistsKey,0));
-        public static int LifetimeObjectives=>Mathf.Max(0,PlayerPrefs.GetInt(ObjectivesKey,0));
+        public static int MatchesCompleted=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(MatchesKey,0));
+        public static int MatchesWon=>Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(WinsKey,0),0,MatchesCompleted);
+        public static int LifetimeKills=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(KillsKey,0));
+        public static int LifetimeAssists=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(AssistsKey,0));
+        public static int LifetimeObjectives=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ObjectivesKey,0));
 
         public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true)
         {
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
 
-            if(PlayerPrefs.GetString(ReceiptKey,"")==matchId)
+            if(Alterverse.Profile.AccountProfilePrefs.GetString(ReceiptKey,"")==matchId)
             {
-                int storedShards=Mathf.Max(0,PlayerPrefs.GetInt(ReceiptShards,0));
-                int storedXp=Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXp,0));
-                int storedBaseShards=PlayerPrefs.HasKey(ReceiptBaseShards)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseShards,0)):storedShards;
-                int storedShardBonus=PlayerPrefs.HasKey(ReceiptShardBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptShardBonus,0)):Mathf.Max(0,storedShards-storedBaseShards);
-                int storedBaseXp=PlayerPrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptBaseXp,0)):storedXp;
-                int storedXpBonus=PlayerPrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,PlayerPrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-storedBaseXp);
-                int rawCosmetic=PlayerPrefs.GetInt(ReceiptBonusCosmetic,0);
+                int storedShards=Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptShards,0));
+                int storedXp=Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptXp,0));
+                int storedBaseShards=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptBaseShards)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptBaseShards,0)):storedShards;
+                int storedShardBonus=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptShardBonus)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptShardBonus,0)):Mathf.Max(0,storedShards-storedBaseShards);
+                int storedBaseXp=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptBaseXp)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptBaseXp,0)):storedXp;
+                int storedXpBonus=Alterverse.Profile.AccountProfilePrefs.HasKey(ReceiptXpBonus)?Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptXpBonus,0)):Mathf.Max(0,storedXp-storedBaseXp);
+                int rawCosmetic=Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptBonusCosmetic,0);
                 UniversalHeroCosmetic storedCosmetic=rawCosmetic>=0&&rawCosmetic<=3?(UniversalHeroCosmetic)rawCosmetic:UniversalHeroCosmetic.Original;
 
                 // Battle Pass intentionally receives BASE account XP only; its own receipt keeps this idempotent.
@@ -94,7 +94,7 @@ namespace Alterverse.Profile
             int wins=ProfileTransaction.Add(MatchesWon,won?1:0);
             var writes=new System.Collections.Generic.List<ProfileTransaction.Write>
             {
-                new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,shards)),
+                new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.EarnedBalance,shards)),
                 new ProfileTransaction.Write("DF_AccountXP",next.ToString()),
                 new ProfileTransaction.Write(MatchesKey,ProfileTransaction.Add(MatchesCompleted,1)),
                 new ProfileTransaction.Write(WinsKey,wins),
@@ -121,3 +121,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

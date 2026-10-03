@@ -38,6 +38,7 @@ namespace Alterverse.UI
         private bool battlePassPreviewPremium;
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
+        private bool shopPurchasePending;
         private string profileName, profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
         private FrontEndTheme theme;
         private GUIStyle homeLogo,homeSubtitle;
@@ -192,6 +193,8 @@ namespace Alterverse.UI
                 }
                 float reveal = Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.16f));
                 GUI.color = new Color(1,1,1,.65f+.35f*reveal);
+                if(shopPurchasePending)
+                {shopMessage=PaidShardCommerce.Instance?.Status??shopMessage;if(!PaidShardCommerce.Spending)shopPurchasePending=false;}
                 switch (page)
                 {
                     case Page.Home: DrawHome(); break;
@@ -663,6 +666,7 @@ namespace Alterverse.UI
         }
         private void DrawShop()
         {
+            if(shopMessage=="Saving purchase…"||PaidShardCommerce.Spending)shopMessage=PaidShardCommerce.Instance?.Status??shopMessage;
             Heading("Store","Cosmetics, premium heroes, arenas, shards, battle supply and seasonal progression.");
             float tabW=104f,tabGap=7f;
             bool avatarShop=!skinShop&&!shardShop&&!itemShop&&!weaponShop&&!mapShop&&!battlePassShop&&!heroShop;
@@ -708,7 +712,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left+292,542,galleryWidth-320,60),action,true,enabled:!cosmeticBusy&&!equipped&&(owned||affordable)))
             {
                 if (owned) { PlayerProfile.Avatar=item.AvatarId; shopMessage="Avatar equipped."; }
-                else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopMessage=result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
+                else { AvatarPurchaseResult result=AvatarShopService.TryPurchase(item); shopPurchasePending=result==AvatarPurchaseResult.Pending; shopMessage=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"Unlocked and equipped.":result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed."; }
             }
             theme.Label(new Rect(Left+32,618,galleryWidth-64,26),shopMessage,theme.Small,true);
             float x=Left+galleryWidth+32, w=ContentWidth-galleryWidth-32;
@@ -754,7 +758,8 @@ namespace Alterverse.UI
                 else
                 {
                     HeroUnlockResult result=HeroUnlockInventory.Purchase(hero);
-                    shopMessage=result==HeroUnlockResult.Purchased?
+                    shopPurchasePending=result==HeroUnlockResult.Pending;
+                    shopMessage=result==HeroUnlockResult.Pending?"Saving purchase…":result==HeroUnlockResult.Purchased?
                         "THE TRAVELER UNLOCKED  •  PREMIUM STYLE, STANDARD BALANCE":
                         result==HeroUnlockResult.InsufficientShards?"Not enough shards.":"Hero could not be unlocked.";
                     if(result==HeroUnlockResult.Purchased)
@@ -847,7 +852,8 @@ namespace Alterverse.UI
                 else
                 {
                     AvatarPurchaseResult result=WeaponSkinInventory.Purchase(hero,weaponSkinVariant);
-                    shopMessage=result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
+                    shopPurchasePending=result==AvatarPurchaseResult.Pending;
+                    shopMessage=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?item.Name+" unlocked and equipped.":
                         result==AvatarPurchaseResult.InsufficientShards?"Not enough shards.":"Purchase could not be completed.";
                 }
                 showcase.InvalidateLoadout();
@@ -901,8 +907,10 @@ namespace Alterverse.UI
                     if(!owned)
                     {
                         ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(arena);
+                        shopPurchasePending=result==ArenaPurchaseResult.Pending;
                         if(result==ArenaPurchaseResult.Purchased)
                             shopMessage=item.Name+" UNLOCKED. Choose it from PLAY.";
+                        else if(result==ArenaPurchaseResult.Pending)shopMessage="Saving purchase…";
                         else if(result==ArenaPurchaseResult.InsufficientShards)shopMessage="Not enough shards.";
                         else shopMessage="Arena purchase could not be completed.";
                     }
@@ -996,7 +1004,8 @@ namespace Alterverse.UI
                 if(theme.Action(new Rect(px,632,previewW,44),canBuy?$"UNLOCK PREMIUM • {BattlePassProgress.PremiumPrice:N0} SHARDS":$"PREMIUM • NEED {BattlePassProgress.PremiumPrice-PlayerWallet.Balance:N0} SHARDS",true,enabled:canBuy))
                 {
                     BattlePassPurchaseResult result=BattlePassProgress.UnlockPremium();
-                    shopMessage=result==BattlePassPurchaseResult.Unlocked?"PREMIUM BATTLE PASS UNLOCKED.":"Premium purchase unavailable.";
+                    shopPurchasePending=result==BattlePassPurchaseResult.Pending;
+                    shopMessage=result==BattlePassPurchaseResult.Pending?"Saving purchase…":result==BattlePassPurchaseResult.Unlocked?"PREMIUM BATTLE PASS UNLOCKED.":"Premium purchase unavailable.";
                 }
             }
             else theme.Center(new Rect(px,632,previewW,44),"PREMIUM ACTIVE");
@@ -1089,7 +1098,8 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} SHARDS",theme.Heading);
             bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
             if(theme.Action(new Rect(Left+180,548,cardW-204,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 SHARDS",true,enabled:canBuy))
-                shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":"Purchase failed.";
+                shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":PaidShardCommerce.Spending?"Saving purchase…":"Purchase failed.";
+            if(PaidShardCommerce.Spending)shopPurchasePending=true;
             theme.Label(new Rect(Left,634,cardW,32),shopMessage.Length>0?shopMessage:"Any shards in your balance can buy the Aegis Core.",theme.Small,true);
 
             float x=Left+cardW+34,w=ContentWidth-cardW-34;
@@ -1149,7 +1159,7 @@ namespace Alterverse.UI
             Stat(x,458,w,"ASSISTS",ProgressionSummary.Assists.ToString());
             Stat(x,514,w,"OBJECTIVES",ProgressionSummary.Objectives.ToString());
             Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
-            theme.Label(new Rect(x,626,w,48),"GLOBAL LEVEL RANKING  /  RANKING TAB\nAccount level grants no combat power.",theme.Small,true);
+            AccountLoginPanel.Draw(theme,new Rect(x,626,w,48));
         }
         private void DrawQuests()
         {
@@ -1462,6 +1472,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

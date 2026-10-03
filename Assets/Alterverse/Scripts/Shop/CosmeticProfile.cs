@@ -19,14 +19,14 @@ namespace Alterverse.Shop
 #if UNITY_EDITOR
             if(TestData!=null)return TestData.ContainsKey(key);
 #endif
-            return PlayerPrefs.HasKey(key);
+            return Alterverse.Profile.AccountProfilePrefs.HasKey(key);
         }
         public static int GetInt(string key,int fallback=0)
         {
 #if UNITY_EDITOR
             if(TestData!=null)return TestData.TryGetValue(key,out int value)?value:fallback;
 #endif
-            return PlayerPrefs.GetInt(key,fallback);
+            return Alterverse.Profile.AccountProfilePrefs.GetInt(key,fallback);
         }
         public static int Balance=>IsTest?Mathf.Max(0,GetInt("DF_Shards")):PlayerWallet.Balance;
         public static bool PaidVoidfall=>!IsTest&&PaidShardCommerce.OwnsVoidfall;
@@ -45,3 +45,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

@@ -30,36 +30,36 @@ namespace Alterverse.Match
         {
             get
             {
-                int raw=PlayerPrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon);
+                int raw=Alterverse.Profile.AccountProfilePrefs.GetInt(SelectedKey,(int)ArenaVariant.Moon);
                 bool valid=System.Enum.IsDefined(typeof(ArenaVariant),raw);
                 ArenaVariant selected=valid?(ArenaVariant)raw:ArenaVariant.Moon;
                 if(!valid||!ArenaUnlockInventory.Owned(selected))
                 {
                     selected=ArenaVariant.Moon;
-                    PlayerPrefs.SetInt(SelectedKey,(int)selected);
-                    PlayerPrefs.Save();
+                    Alterverse.Profile.AccountProfilePrefs.SetInt(SelectedKey,(int)selected);
+                    Alterverse.Profile.AccountProfilePrefs.Save();
                 }
                 return selected;
             }
         }
 
-        public static bool ShuffleEnabled=>PlayerPrefs.GetInt(ShuffleKey,1)==1;
+        public static bool ShuffleEnabled=>Alterverse.Profile.AccountProfilePrefs.GetInt(ShuffleKey,1)==1;
         public static bool CanSelect(ArenaVariant variant)=>System.Enum.IsDefined(typeof(ArenaVariant),variant)&&
             (variant==ArenaVariant.Moon||ArenaUnlockInventory.Owned(variant));
 
         public static bool Select(ArenaVariant variant)
         {
             if(!CanSelect(variant))return false;
-            PlayerPrefs.SetInt(SelectedKey,(int)variant);
-            PlayerPrefs.SetInt(ShuffleKey,0);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(SelectedKey,(int)variant);
+            Alterverse.Profile.AccountProfilePrefs.SetInt(ShuffleKey,0);
+            Alterverse.Profile.AccountProfilePrefs.Save();
             return true;
         }
 
         public static void SetShuffleEnabled(bool enabled)
         {
-            PlayerPrefs.SetInt(ShuffleKey,enabled?1:0);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(ShuffleKey,enabled?1:0);
+            Alterverse.Profile.AccountProfilePrefs.Save();
         }
 
         public static ArenaVariant RandomOwnedArena(ArenaVariant avoid)
@@ -73,8 +73,8 @@ namespace Alterverse.Match
             if(owned.Count==0)return ArenaVariant.Moon;
             if(owned.Count>1)owned.Remove(avoid);
             ArenaVariant picked=owned[Random.Range(0,owned.Count)];
-            PlayerPrefs.SetInt(LastShuffleKey,(int)picked);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(LastShuffleKey,(int)picked);
+            Alterverse.Profile.AccountProfilePrefs.Save();
             return picked;
         }
 
@@ -91,7 +91,7 @@ namespace Alterverse.Match
                 return;
             }
 
-            int rawLast=PlayerPrefs.GetInt(LastShuffleKey,int.MinValue);
+            int rawLast=Alterverse.Profile.AccountProfilePrefs.GetInt(LastShuffleKey,int.MinValue);
             ArenaVariant avoid=Selected;
             for(int i=0;i<ArenaShopCatalog.Items.Length;i++)
                 if((int)ArenaShopCatalog.Items[i].Variant==rawLast){avoid=ArenaShopCatalog.Items[i].Variant;break;}
@@ -101,8 +101,9 @@ namespace Alterverse.Match
         public static void BeginCoopMatch(ArenaVariant arena)
         {
             // A guest may temporarily play the host-selected arena without receiving ownership.
-            // Never persist this override to PlayerPrefs.
+            // Never persist this override to Alterverse.Profile.AccountProfilePrefs.
             Current=System.Enum.IsDefined(typeof(ArenaVariant),arena)?arena:ArenaVariant.Moon;
         }
     }
 }
+

@@ -3,9 +3,10 @@ namespace Alterverse.Shop
 {
 public static class RecallCosmeticEntitlement
 {
-private const string Key="DF_Recall_RealityShatter";public static bool Owned=>PlayerPrefs.GetInt(Key,0)==1;
+private const string Key="DF_Recall_RealityShatter";public static bool Owned=>Alterverse.Profile.AccountProfilePrefs.GetInt(Key,0)==1;
 #if UNITY_EDITOR
-public static void GrantDevelopmentOnly(){PlayerPrefs.SetInt(Key,1);PlayerPrefs.Save();}
+public static void GrantDevelopmentOnly(){Alterverse.Profile.AccountProfilePrefs.SetInt(Key,1);Alterverse.Profile.AccountProfilePrefs.Save();}
 #endif
 }
 }
+

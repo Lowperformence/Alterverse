@@ -23,7 +23,7 @@ namespace Alterverse.Profile
         {
             get
             {
-                BattleItemType item=(BattleItemType)Mathf.Clamp(PlayerPrefs.GetInt(EquipKey,0),0,4);
+                BattleItemType item=(BattleItemType)Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(EquipKey,0),0,4);
                 return item!=BattleItemType.None&&Count(item)>0?item:BattleItemType.None;
             }
         }
@@ -31,7 +31,7 @@ namespace Alterverse.Profile
         public static int Count(BattleItemType item)
         {
             if(item==BattleItemType.None)return 0;
-            return Mathf.Max(0,PlayerPrefs.GetInt(Key(item),0));
+            return Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(Key(item),0));
         }
 
         public static string Name(BattleItemType item)=>item switch
@@ -54,33 +54,33 @@ namespace Alterverse.Profile
 
         public static bool Equip(BattleItemType item)
         {
-            if(item==BattleItemType.None){PlayerPrefs.SetInt(EquipKey,0);PlayerPrefs.Save();Changed?.Invoke();return true;}
+            if(item==BattleItemType.None){Alterverse.Profile.AccountProfilePrefs.SetInt(EquipKey,0);Alterverse.Profile.AccountProfilePrefs.Save();Changed?.Invoke();return true;}
             if(Count(item)<=0)return false;
-            PlayerPrefs.SetInt(EquipKey,(int)item);PlayerPrefs.Save();Changed?.Invoke();return true;
+            Alterverse.Profile.AccountProfilePrefs.SetInt(EquipKey,(int)item);Alterverse.Profile.AccountProfilePrefs.Save();Changed?.Invoke();return true;
         }
 
         public static void Grant(BattleItemType item,int amount=1)
         {
             if(item==BattleItemType.None||amount<=0)return;
-            PlayerPrefs.SetInt(Key(item),ProfileTransaction.Add(Count(item),amount));
-            PlayerPrefs.Save();Changed?.Invoke();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(Key(item),ProfileTransaction.Add(Count(item),amount));
+            Alterverse.Profile.AccountProfilePrefs.Save();Changed?.Invoke();
         }
 
         public static bool TryConsumeEquipped(BattleItemType expected)
         {
             if(expected==BattleItemType.None||Equipped!=expected)return false;
             int count=Count(expected);if(count<=0)return false;
-            PlayerPrefs.SetInt(Key(expected),count-1);
-            PlayerPrefs.SetInt(EquipKey,0);
-            PlayerPrefs.Save();Changed?.Invoke();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(Key(expected),count-1);
+            Alterverse.Profile.AccountProfilePrefs.SetInt(EquipKey,0);
+            Alterverse.Profile.AccountProfilePrefs.Save();Changed?.Invoke();
             return true;
         }
 
         public static BattleItemType RollVictoryDrop(string matchReceipt)
         {
             if(string.IsNullOrEmpty(matchReceipt))return BattleItemType.None;
-            if(PlayerPrefs.GetString(ReceiptKey,"")==matchReceipt)
-                return (BattleItemType)Mathf.Clamp(PlayerPrefs.GetInt(ReceiptDropKey,0),0,4);
+            if(Alterverse.Profile.AccountProfilePrefs.GetString(ReceiptKey,"")==matchReceipt)
+                return (BattleItemType)Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(ReceiptDropKey,0),0,4);
 
             BattleItemType drop=BattleItemType.None;
             if(Random.value<VictoryDropChance)drop=All[Random.Range(0,All.Length)];
@@ -104,8 +104,10 @@ namespace Alterverse.Profile
         public static bool TryBuyShield()
         {
             if(!PlayerWallet.CanAfford(ShieldShardPrice))return false;
+            if(Alterverse.Shop.PaidShardCommerce.Instance!=null&&Alterverse.Shop.PaidShardCommerce.Instance.Ready)
+            {PlayerWallet.BeginServerPurchase("shield");return false;}
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-ShieldShardPrice),
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-ShieldShardPrice),
                 new ProfileTransaction.Write(Key(BattleItemType.Shield),ProfileTransaction.Add(Count(BattleItemType.Shield),1)));
             return true;
         }
@@ -114,4 +116,5 @@ namespace Alterverse.Profile
         private static string Key(BattleItemType item)=>"DF_BattleItem_"+(int)item;
     }
 }
+
 

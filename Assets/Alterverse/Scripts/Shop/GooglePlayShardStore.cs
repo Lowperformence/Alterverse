@@ -15,7 +15,7 @@ namespace Alterverse.Shop
         public bool PendingRecovery{get;private set;}
         readonly Dictionary<string,string> prices=new();
         public string Price(string id)=>prices.TryGetValue(id,out string price)?price:"Unavailable";
-        public bool CanBuy(string id)=>Ready&&!Busy&&!PendingRecovery&&prices.ContainsKey(id)&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready;
+        public bool CanBuy(string id)=>Ready&&!Busy&&!PendingRecovery&&prices.ContainsKey(id)&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady;
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]static void Create(){if(FindAnyObjectByType<GooglePlayShardStore>()==null)new GameObject("DF_GooglePlayShardStore").AddComponent<GooglePlayShardStore>();}
         void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -31,7 +31,7 @@ namespace Alterverse.Shop
                 Ready=false;
                 if(processing.Count==0){Unbind();store=null;prices.Clear();unconfirmed.Clear();PendingRecovery=true;Busy=false;}
             }
-            if(store==null&&!connecting&&Time.unscaledTime>=nextConnect&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)Initialize();
+            if(store==null&&!connecting&&Time.unscaledTime>=nextConnect&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady)Initialize();
         }
         async void Initialize()
         {
@@ -76,8 +76,8 @@ namespace Alterverse.Shop
                 int session=connectedSession;
                 if(backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token)){Status="Verification pending. Reconnect to recover purchase.";return;}
                 if(this==null||store==null||backend==null||backend!=PaidShardCommerce.Instance||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session)return;
-                // Server verified the token and the retry-safe claim is now in the single game shard balance.
-                // Only after that durable handoff do we consume/acknowledge the Google Play order.
+                // Server verified the token and durably credited the account wallet.
+                // Consume/acknowledge only after that durable server credit.
                 store.ConfirmPurchase(order);Status="Shards added to your balance.";
                 Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             }

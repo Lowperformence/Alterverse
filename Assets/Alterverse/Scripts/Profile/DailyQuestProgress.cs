@@ -41,7 +41,7 @@ namespace Alterverse.Profile
             }
         }
 
-        private static bool Current => PlayerPrefs.GetInt(DayKey, 0) == Today;
+        private static bool Current => Alterverse.Profile.AccountProfilePrefs.GetInt(DayKey, 0) == Today;
 
         public static int Target(int index) => index switch
         {
@@ -62,25 +62,25 @@ namespace Alterverse.Profile
                 1 => HotZonesKey,
                 _ => SoldierKillsKey
             };
-            return Mathf.Clamp(PlayerPrefs.GetInt(key, 0), 0, Target(index));
+            return Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(key, 0), 0, Target(index));
         }
 
         public static bool Claimed(int index) =>
             index >= 0 && index < PlayerChallengeContent.Daily.Length &&
-            Current && (PlayerPrefs.GetInt(ClaimedKey, 0) & (1 << index)) != 0;
+            Current && (Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) & (1 << index)) != 0;
 
         public static ProfileTransaction.Write[] MatchWrites(int kills, int hotZoneCaptures, int soldierKills)
         {
             int today = Today;
-            int stored = PlayerPrefs.GetInt(DayKey, 0);
+            int stored = Alterverse.Profile.AccountProfilePrefs.GetInt(DayKey, 0);
             if (stored > today)
                 return Array.Empty<ProfileTransaction.Write>();
 
             bool sameDay = stored == today;
-            int priorKills = sameDay ? PlayerPrefs.GetInt(KillsKey, 0) : 0;
-            int priorHotZones = sameDay ? PlayerPrefs.GetInt(HotZonesKey, 0) : 0;
-            int priorSoldierKills = sameDay ? PlayerPrefs.GetInt(SoldierKillsKey, 0) : 0;
-            int claimed = sameDay ? PlayerPrefs.GetInt(ClaimedKey, 0) : 0;
+            int priorKills = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(KillsKey, 0) : 0;
+            int priorHotZones = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(HotZonesKey, 0) : 0;
+            int priorSoldierKills = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(SoldierKillsKey, 0) : 0;
+            int claimed = sameDay ? Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) : 0;
 
             return new[]
             {
@@ -101,10 +101,11 @@ namespace Alterverse.Profile
 
             ProfileTransaction.Commit(
                 new ProfileTransaction.Write("DF_Shards",
-                    ProfileTransaction.Add(PlayerWallet.Balance, PlayerChallengeContent.Daily[index].Shards)),
+                    ProfileTransaction.Add(PlayerWallet.EarnedBalance, PlayerChallengeContent.Daily[index].Shards)),
                 new ProfileTransaction.Write(ClaimedKey,
-                    PlayerPrefs.GetInt(ClaimedKey, 0) | (1 << index)));
+                    Alterverse.Profile.AccountProfilePrefs.GetInt(ClaimedKey, 0) | (1 << index)));
             return true;
         }
     }
 }
+

@@ -16,7 +16,8 @@ namespace Alterverse.Match
             bool background=!focused||suspended;
             MatchClock.Set(PauseReason.Background,background);
             AudioListener.pause=background;
-            if(background)PlayerPrefs.Save();
+            if(background)Alterverse.Profile.AccountProfilePrefs.Save();
         }
     }
 }
+

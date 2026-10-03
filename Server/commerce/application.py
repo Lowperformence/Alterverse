@@ -3,7 +3,7 @@ Never deploy with an authenticator that simply decodes an unsigned JWT or trusts
 """
 import json
 from urllib.parse import quote
-from ledger import Ledger, PACKS, COSMETICS
+from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 
 class CommerceApplication:
     def __init__(self, ledger_path, authenticate, google_session, package_name):
@@ -15,7 +15,7 @@ class CommerceApplication:
         try:
             if env.get('REQUEST_METHOD') != 'POST': raise ValueError('POST required')
             size = int(env.get('CONTENT_LENGTH') or '0')
-            if size < 0 or size > 32768: raise ValueError('Request too large')
+            if size < 0 or size > 262144: raise ValueError('Request too large')
             # Must validate signature/issuer/audience/expiry and return the stable obfuscated account hash.
             account = self.authenticate(env.get('HTTP_AUTHORIZATION', ''))
             if not account: raise PermissionError('Authentication required')
@@ -23,13 +23,17 @@ class CommerceApplication:
             if not isinstance(data, dict): raise ValueError('JSON object required')
             path = env.get('PATH_INFO')
             if path == '/wallet': wallet = self.ledger.wallet(account)
+            elif path == '/profile/save': wallet = self.ledger.save_profile(account, data.get('profile'), data.get('expectedProfileRevision'))
             elif path == '/wallet/claim': wallet = self.ledger.claim(account)
             elif path == '/wallet/claim/ack': wallet = self.ledger.acknowledge_claim(account, data.get('claimId'))
+            elif path == '/wallet/spend':
+                wallet = self.ledger.purchase(account, data.get('cosmeticId'), data.get('operationId'), data.get('expectedProfileRevision'))
             elif path == '/cosmetics/buy':
                 sku = data.get('cosmeticId')
                 if not isinstance(sku, str) or sku not in COSMETICS: raise ValueError('Unknown cosmetic')
                 wallet = self.ledger.buy(account, sku)
             elif path == '/google-play/fulfill':
+                if self.google is None or not self.package: raise ValueError('Billing unavailable')
                 product, token = data.get('productId'), data.get('purchaseToken')
                 if not isinstance(product, str) or product not in PACKS: raise ValueError('Unknown product')
                 if not isinstance(token, str) or not token.strip() or len(token) > 8192: raise ValueError('Invalid purchase token')
@@ -39,8 +43,13 @@ class CommerceApplication:
                 response.raise_for_status()
                 wallet = self.ledger.fulfill(account, product, token, response.json())
             else: raise ValueError('Unknown route')
+            wallet['accountHash'] = account
+            wallet['billingReady'] = self.google is not None and bool(self.package)
             body = json.dumps({'fulfilled': True, 'wallet': wallet}).encode()
             start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
+        except ProfileConflict:
+            body = b'{"fulfilled":false,"conflict":true}'
+            start_response('409 Conflict', [('Content-Type', 'application/json'), ('Cache-Control','no-store')])
         except PermissionError:
             body = b'{"fulfilled":false}'; start_response('401 Unauthorized', [('Content-Type', 'application/json')])
         except (ValueError, KeyError):
@@ -49,3 +58,4 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+

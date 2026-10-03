@@ -23,7 +23,8 @@ namespace Alterverse.Shop
         Purchased,
         AlreadyOwned,
         InsufficientShards,
-        NotPurchasable
+        NotPurchasable,
+        Pending
     }
 
     /// <summary>Premium arenas are persistent shard unlocks; zero-price arenas remain immediately available.</summary>
@@ -103,7 +104,7 @@ namespace Alterverse.Shop
         public static bool Owned(ArenaVariant variant)
         {
             string key=OwnedKey(variant);
-            return string.IsNullOrEmpty(key)||PlayerPrefs.GetInt(key,0)==1;
+            return string.IsNullOrEmpty(key)||Alterverse.Profile.AccountProfilePrefs.GetInt(key,0)==1;
         }
 
         public static string UnlockRequirement(ArenaVariant variant)
@@ -121,8 +122,10 @@ namespace Alterverse.Shop
             if(Owned(variant))return ArenaPurchaseResult.AlreadyOwned;
             if(!PlayerWallet.CanAfford(price))return ArenaPurchaseResult.InsufficientShards;
 
+            if(PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)
+                return PlayerWallet.BeginServerPurchase("arena_"+variant)?ArenaPurchaseResult.Pending:ArenaPurchaseResult.NotPurchasable;
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-price),
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-price),
                 new ProfileTransaction.Write(ownedKey,1));
 
             Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
@@ -130,4 +133,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

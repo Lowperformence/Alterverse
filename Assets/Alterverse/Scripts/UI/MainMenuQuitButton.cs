@@ -92,7 +92,7 @@ namespace Alterverse.UI
                     }
                     else
                     {
-                        PlayerPrefs.Save();
+                        Alterverse.Profile.AccountProfilePrefs.Save();
                         Application.Quit();
                     }
                 }
@@ -109,4 +109,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

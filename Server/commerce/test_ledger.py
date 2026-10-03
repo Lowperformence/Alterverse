@@ -48,30 +48,20 @@ class LedgerTests(unittest.TestCase):
     def test_token_cannot_move_between_accounts(self):
         self.ledger.fulfill('account-a','dimensions_shards_500','token',self.valid)
         with self.assertRaises(ValueError):self.ledger.fulfill('account-b','dimensions_shards_500','token',dict(self.valid,obfuscatedExternalAccountId='account-b'))
-    def test_unified_claim_is_retry_safe_and_acknowledged_once(self):
+    def test_legacy_claims_cannot_move_paid_value_off_server(self):
         self.ledger.fulfill('account-a','dimensions_shards_500','claim-token',self.valid)
-        first=self.ledger.claim('account-a')
-        second=self.ledger.claim('account-a')
-        self.assertEqual(first['claimAmount'],500)
-        self.assertEqual(first['claimId'],second['claimId'])
-        self.assertEqual(first['balance'],0)
-        self.ledger.acknowledge_claim('account-a',first['claimId'])
-        empty=self.ledger.claim('account-a')
-        self.assertEqual(empty['claimAmount'],0)
-        self.assertEqual(empty['claimId'],'')
-    def test_new_purchase_waits_behind_existing_pending_claim_without_loss(self):
+        with self.assertRaises(ValueError): self.ledger.claim('account-a')
+        with self.assertRaises(ValueError): self.ledger.acknowledge_claim('account-a','1')
+        restarted=Ledger(self.ledger.path)
+        self.assertEqual(restarted.wallet('account-a')['balance'],500)
+
+    def test_multiple_purchases_remain_in_one_durable_account_wallet(self):
         self.ledger.fulfill('account-a','dimensions_shards_500','claim-a',self.valid)
-        first=self.ledger.claim('account-a')
         self.ledger.fulfill('account-a','dimensions_shards_500','claim-b',self.valid)
-        same=self.ledger.claim('account-a')
-        self.assertEqual(first['claimId'],same['claimId'])
-        self.assertEqual(self.ledger.wallet('account-a')['balance'],500)
-        self.ledger.acknowledge_claim('account-a',first['claimId'])
-        second=self.ledger.claim('account-a')
-        self.assertNotEqual(first['claimId'],second['claimId'])
-        self.assertEqual(second['claimAmount'],500)
-        self.assertEqual(second['balance'],0)
+        self.assertEqual(Ledger(self.ledger.path).wallet('account-a')['balance'],1000)
+
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','dimensions_shards_500','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
+
 

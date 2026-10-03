@@ -193,13 +193,13 @@ namespace Alterverse.UI
                 else
                 {
                     var result=CosmeticCatalog.Purchase(definition.Id);
-                    state.Message=result==AvatarPurchaseResult.Purchased?"PURCHASED  •  AVAILABLE IN INVENTORY":result==AvatarPurchaseResult.AlreadyOwned?"ALREADY OWNED":"NOT ENOUGH SHARDS";
+                    state.Message=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"PURCHASED  •  AVAILABLE IN INVENTORY":result==AvatarPurchaseResult.AlreadyOwned?"ALREADY OWNED":"NOT ENOUGH SHARDS";
                     dirty=true;
                 }
             }
             if(!previewOnly&&ownedOnly&&active&&definition.Id!=UniversalHeroCosmetic.Original&&theme.Action(new Rect(rect.x+28+actionWidth,rect.yMax-75,rect.width-actionWidth-44,48),"UNEQUIP"))
             {UniversalCosmeticSelection.EquipFor(hero,UniversalHeroCosmetic.Original);state.Message="ORIGINAL EQUIPPED";dirty=true;}
-            theme.FitLabel(new Rect(rect.x+16,rect.yMax-24,rect.width-32,20),state.Message,theme.Small,true);
+            theme.FitLabel(new Rect(rect.x+16,rect.yMax-24,rect.width-32,20),(state.Message=="Saving purchase…"?PaidShardCommerce.Instance?.Status??state.Message:state.Message),theme.Small,true);
         }
         private void DrawBag(FrontEndTheme theme,Rect area,bool compact)
         {
@@ -296,3 +296,4 @@ namespace Alterverse.UI
         public static float ContentHeight(int count,int columns,float height)=>Mathf.Max(0,Mathf.CeilToInt(count/(float)columns)*(height+12)-12);
     }
 }
+

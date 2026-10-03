@@ -29,13 +29,13 @@ namespace Alterverse.AI
         {
             get
             {
-                int value=PlayerPrefs.GetInt(Key,(int)BotDifficulty.Normal);
+                int value=Alterverse.Profile.AccountProfilePrefs.GetInt(Key,(int)BotDifficulty.Normal);
                 return value>=(int)BotDifficulty.Easy&&value<=(int)BotDifficulty.Nightmare?(BotDifficulty)value:BotDifficulty.Normal;
             }
             set
             {
                 if(value<BotDifficulty.Easy||value>BotDifficulty.Nightmare)value=BotDifficulty.Normal;
-                PlayerPrefs.SetInt(Key,(int)value);PlayerPrefs.Save();
+                Alterverse.Profile.AccountProfilePrefs.SetInt(Key,(int)value);Alterverse.Profile.AccountProfilePrefs.Save();
             }
         }
 
@@ -55,11 +55,11 @@ namespace Alterverse.AI
         // Three consecutive wins move up one tier; three consecutive losses move down one tier.
         public static bool RecordSoloResult(bool won,string matchId)
         {
-            if(string.IsNullOrEmpty(matchId)||PlayerPrefs.GetString(AdaptiveReceiptKey,"")==matchId)return false;
+            if(string.IsNullOrEmpty(matchId)||Alterverse.Profile.AccountProfilePrefs.GetString(AdaptiveReceiptKey,"")==matchId)return false;
 
             BotDifficulty tier=Selected;
-            int wins=won?Mathf.Min(StreakThreshold,Mathf.Max(0,PlayerPrefs.GetInt(WinStreakKey,0))+1):0;
-            int losses=won?0:Mathf.Min(StreakThreshold,Mathf.Max(0,PlayerPrefs.GetInt(LossStreakKey,0))+1);
+            int wins=won?Mathf.Min(StreakThreshold,Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(WinStreakKey,0))+1):0;
+            int losses=won?0:Mathf.Min(StreakThreshold,Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(LossStreakKey,0))+1);
             bool changed=false;
 
             if(wins>=StreakThreshold)
@@ -73,11 +73,11 @@ namespace Alterverse.AI
                 wins=0;losses=0;
             }
 
-            PlayerPrefs.SetInt(Key,(int)tier);
-            PlayerPrefs.SetInt(WinStreakKey,wins);
-            PlayerPrefs.SetInt(LossStreakKey,losses);
-            PlayerPrefs.SetString(AdaptiveReceiptKey,matchId);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(Key,(int)tier);
+            Alterverse.Profile.AccountProfilePrefs.SetInt(WinStreakKey,wins);
+            Alterverse.Profile.AccountProfilePrefs.SetInt(LossStreakKey,losses);
+            Alterverse.Profile.AccountProfilePrefs.SetString(AdaptiveReceiptKey,matchId);
+            Alterverse.Profile.AccountProfilePrefs.Save();
             return changed;
         }
 
@@ -91,4 +91,5 @@ namespace Alterverse.AI
         };
     }
 }
+
 

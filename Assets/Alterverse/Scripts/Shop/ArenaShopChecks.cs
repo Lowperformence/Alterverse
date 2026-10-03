@@ -19,13 +19,13 @@ namespace Alterverse.Shop
             public IntPrefSnapshot(string key)
             {
                 Key=key;
-                HadValue=PlayerPrefs.HasKey(key);
-                Value=PlayerPrefs.GetInt(key,0);
+                HadValue=Alterverse.Profile.AccountProfilePrefs.HasKey(key);
+                Value=Alterverse.Profile.AccountProfilePrefs.GetInt(key,0);
             }
             public void Restore()
             {
-                if(HadValue)PlayerPrefs.SetInt(Key,Value);
-                else PlayerPrefs.DeleteKey(Key);
+                if(HadValue)Alterverse.Profile.AccountProfilePrefs.SetInt(Key,Value);
+                else Alterverse.Profile.AccountProfilePrefs.DeleteKey(Key);
             }
         }
 
@@ -56,7 +56,7 @@ namespace Alterverse.Shop
                 shards.Restore();
                 earthOwned.Restore();
                 darkOwned.Restore();
-                PlayerPrefs.Save();
+                Alterverse.Profile.AccountProfilePrefs.Save();
             }
         }
 
@@ -67,7 +67,7 @@ namespace Alterverse.Shop
             Assert(!ArenaUnlockInventory.Owned(variant)&&!ArenaVariantRuntime.CanSelect(variant),"Unowned map must stay locked: "+variant);
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.InsufficientShards,"Insufficient balance must be rejected.");
             Assert(PlayerWallet.Balance==price-1&&!ArenaUnlockInventory.Owned(variant),"Rejected purchase must preserve balance and ownership.");
-            PlayerPrefs.SetInt(ShardsKey,price);
+            Alterverse.Profile.AccountProfilePrefs.SetInt(ShardsKey,price);
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.Purchased,"Exact balance must purchase map.");
             Assert(PlayerWallet.Balance==0&&ArenaUnlockInventory.Owned(variant),"Purchase must debit exact price and grant ownership.");
             Assert(ArenaVariantRuntime.Select(variant)&&ArenaVariantRuntime.Selected==variant,"Purchased map must be selectable.");
@@ -76,9 +76,9 @@ namespace Alterverse.Shop
 
         private static void ResetArena(string ownedKey,int shards)
         {
-            PlayerPrefs.SetInt(ShardsKey,shards);
-            PlayerPrefs.DeleteKey(ownedKey);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(ShardsKey,shards);
+            Alterverse.Profile.AccountProfilePrefs.DeleteKey(ownedKey);
+            Alterverse.Profile.AccountProfilePrefs.Save();
         }
 
         private static void CheckEarthPriceAndLock()
@@ -157,4 +157,5 @@ namespace Alterverse.Shop
     }
 }
 #endif
+
 

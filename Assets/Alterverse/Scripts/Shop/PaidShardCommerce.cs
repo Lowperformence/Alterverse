@@ -7,148 +7,271 @@ using UnityEngine;
 using UnityEngine.Networking;
 namespace Alterverse.Shop
 {
-    // Google-verified purchases are held server-side only until they can be claimed safely
-    // into the game's single shard balance. Players never see separate shard currencies.
-    public sealed class PaidShardCommerce:MonoBehaviour
+    public sealed class PaidShardCommerce : MonoBehaviour
     {
-        [Serializable] public sealed class Snapshot {public long revision;public int balance;public bool voidfall;public int[] avatars;public string claimId;public int claimAmount;}
-        [Serializable] sealed class Request {public string productId,purchaseToken,cosmeticId,claimId;}
-        [Serializable] sealed class Response {public bool fulfilled;public Snapshot wallet;}
-        public static PaidShardCommerce Instance{get;private set;}
+        [Serializable] public sealed class Snapshot
+        {
+            public long revision, profileRevision;
+            public int balance;
+            public bool voidfall,billingReady;
+            public int[] avatars;
+            public string[] owned;
+            public AccountProfilePrefs.Entry[] profile;
+            public string operationId,accountHash;
+        }
+        [Serializable] sealed class Request
+        {
+            public string productId,purchaseToken,cosmeticId,operationId;
+            public long expectedProfileRevision;
+            public AccountProfilePrefs.Entry[] profile;
+        }
+        [Serializable] sealed class Response { public bool fulfilled; public Snapshot wallet; }
+        [Serializable] sealed class PurchaseOperation { public string id,sku; }
+        public static PaidShardCommerce Instance { get; private set; }
         public static event Action EntitlementsChanged;
-        public static int Balance=>Instance!=null&&Instance.Ready?Instance.snapshot.balance:0;
-        public bool Ready=>ready&&!string.IsNullOrEmpty(ReadCredential());
-        public string AccountHash{get;private set;}
-        public int SessionVersion=>generation;
-        public static bool OwnsVoidfall=>Instance!=null&&Instance.Ready&&Instance.snapshot.voidfall;
-        public static bool OwnsAvatar(int id)=>Instance!=null&&Instance.Ready&&Instance.snapshot.avatars!=null&&Array.IndexOf(Instance.snapshot.avatars,id)>=0;
-        readonly HashSet<TaskCompletionSource<bool>> pending=new();
-        string endpoint;Func<string> token;bool ready;int generation;Snapshot snapshot=new();
-        public string Status{get;private set;}="Store account not connected.";
+        public static int Balance => Instance != null && Instance.Ready ? Instance.snapshot.balance : 0;
+        public static bool Spending => Instance != null && (Instance.spending || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
+        public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
+        public bool PurchasesReady => Ready && snapshot.billingReady;
+        public string AccountHash { get; private set; }
+        public int SessionVersion => generation;
+        public static bool OwnsVoidfall => Instance != null && Instance.Ready && Instance.snapshot.voidfall;
+        public static bool OwnsAvatar(int id) => Instance != null && Instance.Ready && Instance.snapshot.avatars != null && Array.IndexOf(Instance.snapshot.avatars,id) >= 0;
+        readonly HashSet<TaskCompletionSource<bool>> pending = new();
+        string endpoint;
+        Func<string> token;
+        bool ready,saving,spending,refreshing;
+        int generation;
+        long lastResponseCode;
+        string settledOperation; bool operationSucceeded;
+        float nextSave,nextRefresh;
+        Snapshot snapshot = new();
+        public string Status { get; private set; } = "Account server not configured.";
+        string OperationKey => "DF_CommercePurchase_" + AccountHash;
         public static PaidShardCommerce Connect(string httpsEndpoint,Func<string> accessToken,string accountHash)
         {
-            if(!Uri.TryCreate(httpsEndpoint,UriKind.Absolute,out var uri)||uri.Scheme!="https"||string.IsNullOrWhiteSpace(accountHash)||accountHash.Length>64)throw new ArgumentException("HTTPS commerce endpoint and obfuscated account ID required");
-            if(Instance==null)new GameObject("DF_PaidShardCommerce").AddComponent<PaidShardCommerce>();
-            var c=Instance;c.generation++;c.ready=false;c.CancelPending();c.endpoint=httpsEndpoint.TrimEnd('/');c.token=accessToken;c.AccountHash=accountHash;c.ready=false;c.snapshot=new Snapshot();EntitlementsChanged?.Invoke();c.StartCoroutine(c.Sync());return c;
+            if (!Uri.TryCreate(httpsEndpoint,UriKind.Absolute,out var uri) || uri.Scheme != "https" || string.IsNullOrWhiteSpace(accountHash) || accountHash.Length > 64)
+                throw new ArgumentException("HTTPS account endpoint and obfuscated account ID required");
+            if (Instance == null) new GameObject("DF_PaidShardCommerce").AddComponent<PaidShardCommerce>();
+            var c = Instance;
+            c.generation++; c.ready = false; c.CancelPending(); AccountProfilePrefs.Detach();
+            c.endpoint = httpsEndpoint.TrimEnd('/'); c.token = accessToken; c.AccountHash = accountHash;
+            c.snapshot = new Snapshot(); c.nextSave = 0; c.nextRefresh = Time.unscaledTime + 30;
+            c.StartCoroutine(c.Sync()); EntitlementsChanged?.Invoke(); return c;
         }
-        public void Refresh(){if(token!=null)StartCoroutine(Sync());}
-        public static void Disconnect(){if(Instance==null)return;var c=Instance;c.generation++;c.ready=false;c.token=null;c.AccountHash=null;c.snapshot=new Snapshot();c.CancelPending();c.Status="Store account disconnected.";EntitlementsChanged?.Invoke();}
-        void CancelPending(){StopAllCoroutines();var tasks=new List<TaskCompletionSource<bool>>(pending);pending.Clear();foreach(var task in tasks)task.TrySetResult(false);}
-        void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
+        public void Refresh() { if (token != null && !refreshing && !spending && !saving) StartCoroutine(Sync()); }
+        public static void Disconnect()
+        {
+            if (Instance == null) return;
+            var c = Instance; c.generation++; c.ready = false; c.token = null;
+            c.CancelPending(); AccountProfilePrefs.Detach(); c.AccountHash = null; c.snapshot = new Snapshot();
+            c.Status = "Account disconnected."; EntitlementsChanged?.Invoke();
+        }
+        void CancelPending()
+        {
+            StopAllCoroutines(); saving = spending = refreshing = false;
+            var tasks = new List<TaskCompletionSource<bool>>(pending); pending.Clear();
+            foreach (var task in tasks) task.TrySetResult(false);
+        }
+        void Awake()
+        {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+            Instance = this; DontDestroyOnLoad(gameObject);
+        }
+        void Update()
+        {
+            if (token == null || saving || spending || refreshing) return;
+            if (!Ready)
+            {
+                if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + 15; Refresh(); }
+                return;
+            }
+            if (PlayerPrefs.HasKey(OperationKey) && Time.unscaledTime >= nextSave)
+            { StartCoroutine(RecoverPurchase()); return; }
+            if (AccountProfilePrefs.Dirty && Time.unscaledTime >= nextSave)
+            { nextSave = Time.unscaledTime + 5; StartCoroutine(SaveProfile(null)); }
+            else if (Time.unscaledTime >= nextRefresh)
+            { nextRefresh = Time.unscaledTime + 30; Refresh(); }
+        }
         IEnumerator Sync()
         {
-            Response response=null;
-            yield return Send("/wallet",new Request(),r=>response=r);
-            if(response==null||response.wallet==null)yield break;
-            Apply(response.wallet);ready=true;EntitlementsChanged?.Invoke();Status="Store account connected.";
-            bool claimed=false;
-            yield return ClaimVerifiedShards(ok=>claimed=ok);
-            if(claimed)Status="Shard balance synchronized.";
+            refreshing = true;
+            if (ready && AccountProfilePrefs.Dirty)
+            {
+                bool saved = false; yield return SaveProfile(ok => saved = ok);
+                if (!saved) { refreshing = false; yield break; }
+            }
+            Response response = null;
+            yield return Send("/wallet",new Request(),r => response = r);
+            if (response?.wallet == null) { refreshing = false; yield break; }
+            ApplyWallet(response.wallet);
+            if (!AccountProfilePrefs.Attached)
+                AccountProfilePrefs.Attach(AccountHash,response.wallet.profileRevision,response.wallet.profile);
+            else if (response.wallet.profileRevision != AccountProfilePrefs.Revision)
+                AccountProfilePrefs.ResolveConflict(response.wallet.profileRevision,response.wallet.profile);
+            if(AccountProfilePrefs.HadConflict)ProfileTransaction.PreserveConflictingJournal();
+            else ProfileTransaction.Recover();
+            ready = true; refreshing = false;
+            Status = AccountProfilePrefs.HadConflict ? "Server profile loaded. Offline conflict retained on this device." : "Account synchronized.";
+            EntitlementsChanged?.Invoke();
+        }
+        IEnumerator SaveProfile(Action<bool> done)
+        {
+            if (!Ready || !AccountProfilePrefs.Attached) { done?.Invoke(false); yield break; }
+            // Unity coroutines execute on the main thread: serialize every profile request.
+            while (saving) yield return null;
+            if (!AccountProfilePrefs.Dirty) { done?.Invoke(true); yield break; }
+            saving = true;
+            var submitted = AccountProfilePrefs.Capture();
+            Response response = null;
+            yield return Send("/profile/save",new Request { expectedProfileRevision = AccountProfilePrefs.Revision, profile = submitted },r => response = r);
+            if (response?.wallet != null)
+            {
+                ApplyWallet(response.wallet);
+                AccountProfilePrefs.ApplyRemote(response.wallet.profileRevision,response.wallet.profile,submitted);
+                Status = "Account saved.";
+            }
+            else if (lastResponseCode == 409)
+            {
+                Response fresh = null; yield return Send("/wallet",new Request(),r => fresh = r);
+                if (fresh?.wallet != null)
+                {
+                    ApplyWallet(fresh.wallet);
+                    AccountProfilePrefs.ResolveConflict(fresh.wallet.profileRevision,fresh.wallet.profile);
+                    Status = "Another device saved first. Server profile loaded; local changes retained.";
+                }
+            }
+            saving = false; nextSave = Time.unscaledTime + 5;
+            done?.Invoke(response?.wallet != null);
+        }
+        public Task<bool> FlushProfileAsync()
+        {
+            var task = new TaskCompletionSource<bool>();
+            pending.Add(task);
+            StartCoroutine(SaveProfile(ok => { pending.Remove(task); task.TrySetResult(ok); }));
+            return task.Task;
         }
         public Task<bool> Fulfill(string product,string purchaseToken)
         {
-            var task=new TaskCompletionSource<bool>();
-            if(!Ready||!ShardPacks.Contains(product)||string.IsNullOrEmpty(purchaseToken)){task.SetResult(false);return task.Task;}
-            pending.Add(task);StartCoroutine(FulfillAndClaim(product,purchaseToken,task));return task.Task;
+            var task = new TaskCompletionSource<bool>();
+            if (!Ready || !ShardPacks.Contains(product) || string.IsNullOrEmpty(purchaseToken)) { task.SetResult(false); return task.Task; }
+            pending.Add(task); StartCoroutine(FulfillPurchase(product,purchaseToken,task)); return task.Task;
         }
-        IEnumerator FulfillAndClaim(string product,string purchaseToken,TaskCompletionSource<bool> task)
+        IEnumerator FulfillPurchase(string product,string purchaseToken,TaskCompletionSource<bool> task)
         {
-            Response response=null;
-            yield return Send("/google-play/fulfill",new Request{productId=product,purchaseToken=purchaseToken},r=>response=r);
-            bool ok=response!=null&&response.fulfilled&&response.wallet!=null;
-            if(ok)
-            {
-                Apply(response.wallet);
-                bool claimed=false;
-                yield return ClaimVerifiedShards(value=>claimed=value);
-                ok=claimed;
-            }
-            pending.Remove(task);task.TrySetResult(ok);
+            Response response = null;
+            yield return Send("/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
+            bool ok = response?.wallet != null;
+            if (ok) { ApplyWallet(response.wallet); Status = "Shards added. Account balance saved on server."; }
+            pending.Remove(task); task.TrySetResult(ok);
         }
+        public bool BeginPurchase(string sku)
+        {
+            if (!Ready || spending || saving || refreshing || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
+            // Persist the id before making the request. A restart retries the same operation,
+            // including consumable purchases, rather than issuing a second debit.
+            PlayerPrefs.SetString(OperationKey,JsonUtility.ToJson(new PurchaseOperation { id = Guid.NewGuid().ToString("N"),sku = sku }));
+            PlayerPrefs.Save(); StartCoroutine(RecoverPurchase()); return true;
+        }
+        IEnumerator RecoverPurchase()
+        {
+            spending = true; Status = "Saving purchase…";
+            PurchaseOperation op = null;
+            try { op = JsonUtility.FromJson<PurchaseOperation>(PlayerPrefs.GetString(OperationKey)); }
+            catch (Exception) { }
+            if (op == null || string.IsNullOrEmpty(op.id) || string.IsNullOrEmpty(op.sku))
+            { spending = false; Status = "Purchase recovery needs support."; yield break; }
+            bool saved = false; yield return SaveProfile(ok => saved = ok);
+            if (!saved) { spending = false; nextSave = Time.unscaledTime + 5; yield break; }
+            var submitted = AccountProfilePrefs.Capture();
+            Response response = null;
+            yield return Send("/wallet/spend",new Request { cosmeticId = op.sku, operationId = op.id, expectedProfileRevision = AccountProfilePrefs.Revision },r => response = r);
+            if (response?.wallet != null && response.wallet.operationId == op.id)
+            {
+                ApplyWallet(response.wallet);
+                AccountProfilePrefs.ApplyRemote(response.wallet.profileRevision,response.wallet.profile,submitted);
+                // Flush the durable cache before removing the recovery operation.
+                settledOperation=op.id;operationSucceeded=true;
+                PlayerPrefs.DeleteKey(OperationKey); PlayerPrefs.Save();
+                Status = "Purchase completed."; EntitlementsChanged?.Invoke();
+                Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
+            }
+            else if (lastResponseCode == 400)
+            {
+                settledOperation=op.id;operationSucceeded=false;
+                PlayerPrefs.DeleteKey(OperationKey); PlayerPrefs.Save();
+                Status = "Purchase rejected. Refresh your balance and retry.";
+            }
+            else if (lastResponseCode == 409)
+            {
+                Response fresh = null; yield return Send("/wallet",new Request(),r => fresh = r);
+                if (fresh?.wallet != null)
+                {
+                    ApplyWallet(fresh.wallet); AccountProfilePrefs.ResolveConflict(fresh.wallet.profileRevision,fresh.wallet.profile);
+                }
+                Status = "Account changed on another device. Retrying purchase.";
+            }
+            spending = false; nextSave = Time.unscaledTime + 5;
+        }
+        // Compatibility API uses the same durable path as all other shard purchases.
         public Task<bool> BuyCosmetic(string id)
         {
-            var task=new TaskCompletionSource<bool>();if(!Ready){task.SetResult(false);return task.Task;}
-            pending.Add(task);StartCoroutine(Send("/cosmetics/buy",new Request{cosmeticId=id},r=>{bool ok=r!=null&&r.fulfilled&&r.wallet!=null;if(ok)Apply(r.wallet);pending.Remove(task);task.TrySetResult(ok);}));return task.Task;
+            if(!BeginPurchase(id))return Task.FromResult(false);
+            var task=new TaskCompletionSource<bool>();pending.Add(task);
+            var op=JsonUtility.FromJson<PurchaseOperation>(PlayerPrefs.GetString(OperationKey));
+            StartCoroutine(WaitForPurchase(op.id,task));return task.Task;
         }
-        IEnumerator ClaimVerifiedShards(Action<bool> done)
+        IEnumerator WaitForPurchase(string operation,TaskCompletionSource<bool> task)
         {
-            // Drain retry-safe claims until the verified server buffer is empty.
-            // This also handles a new Google purchase arriving while an older claim was still awaiting acknowledgement.
-            for(int pass=0;pass<4;pass++)
-            {
-                Response response=null;
-                yield return Send("/wallet/claim",new Request(),r=>response=r);
-                if(response==null||response.wallet==null){done(false);yield break;}
-                Apply(response.wallet);
-
-                string claimId=response.wallet.claimId;
-                int amount=response.wallet.claimAmount;
-                if(string.IsNullOrEmpty(claimId)||amount<=0)
-                {
-                    Status="Shard balance synchronized.";
-                    done(true);yield break;
-                }
-
-                string appliedKey="DF_ShardClaim_"+AccountHash;
-                try
-                {
-                    if(PlayerPrefs.GetString(appliedKey,"")!=claimId)
-                    {
-                        ProfileTransaction.Commit(
-                            new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,amount)),
-                            new ProfileTransaction.Write(appliedKey,claimId));
-                    }
-                }
-                catch(Exception)
-                {
-                    Status="Verified shards are waiting to be synchronized.";
-                    done(false);yield break;
-                }
-
-                Response ack=null;
-                yield return Send("/wallet/claim/ack",new Request{claimId=claimId},r=>ack=r);
-                if(ack==null)
-                {
-                    Status="Shards added. Store sync will finish on reconnect.";
-                    done(true);yield break;
-                }
-                if(ack.wallet!=null)Apply(ack.wallet);
-            }
-
-            // More than four queued claims is abnormal; keep the local grants safe and finish on the next refresh.
-            Status="Shards added. Finishing store sync on reconnect.";
-            done(true);
+            while(PlayerPrefs.HasKey(OperationKey)&&settledOperation!=operation)yield return null;
+            pending.Remove(task);task.TrySetResult(settledOperation==operation&&operationSucceeded);
         }
-
         IEnumerator Send(string route,Request body,Action<Response> done)
         {
-            int requestGeneration=generation;string credential=ReadCredential();if(string.IsNullOrEmpty(credential)){Status="Sign in to reconnect the store.";done(null);yield break;}
-            using(var request=new UnityWebRequest(endpoint+route,"POST"))
+            int version = generation;
+            string credential = ReadCredential(); lastResponseCode = 0;
+            if (string.IsNullOrEmpty(credential)) { Status = "Sign in to reconnect your account."; done(null); yield break; }
+            using var request = new UnityWebRequest(endpoint + route,"POST");
+            request.uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));
+            request.downloadHandler = new DownloadHandlerBuffer(); request.timeout = 20;
+            request.SetRequestHeader("Content-Type","application/json"); request.SetRequestHeader("Authorization","Bearer " + credential);
+            yield return request.SendWebRequest();
+            if (version != generation) { done(null); yield break; }
+            lastResponseCode = request.responseCode;
+            if (request.result != UnityWebRequest.Result.Success)
             {
-                request.uploadHandler=new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(body)));request.downloadHandler=new DownloadHandlerBuffer();request.timeout=20;
-                request.SetRequestHeader("Content-Type","application/json");request.SetRequestHeader("Authorization","Bearer "+credential);
-                yield return request.SendWebRequest();
-                if(requestGeneration!=generation){done(null);yield break;}
-                if(request.result!=UnityWebRequest.Result.Success){if(request.responseCode==401||request.responseCode==403){ready=false;snapshot=new Snapshot();}Status="Store connection interrupted. Purchases remain pending.";done(null);yield break;}
-                Response response=null;try{response=JsonUtility.FromJson<Response>(request.downloadHandler.text);}catch(ArgumentException){Status="Invalid store response.";}
-                if(response?.wallet==null||response.wallet.balance<0){done(null);yield break;}done(response);
+                if (lastResponseCode == 401 || lastResponseCode == 403) { ready = false; snapshot = new Snapshot(); EntitlementsChanged?.Invoke(); }
+                Status = "Account connection interrupted. Saved operations will retry."; done(null); yield break;
             }
+            Response response = null;
+            try { response = JsonUtility.FromJson<Response>(request.downloadHandler.text); }
+            catch (ArgumentException) { Status = "Invalid account server response."; }
+            if (response == null || !response.fulfilled || response.wallet == null || response.wallet.balance < 0 ||
+                response.wallet.profileRevision < 0 || response.wallet.profile == null || response.wallet.accountHash != AccountHash)
+            { done(null); yield break; }
+            done(response);
         }
         string ReadCredential()
         {
-            try{return token?.Invoke();}
-            catch(Exception)
-            {
-                // External login/refresh providers may fail; never throw from a shop getter.
-                ready=false;Status="Sign in to reconnect the store.";return null;
-            }
+            try { return token?.Invoke(); }
+            catch (Exception) { ready = false; Status = "Sign in to reconnect your account."; return null; }
         }
-        void Apply(Snapshot value)
+        void ApplyWallet(Snapshot value)
         {
-            if(value.revision<snapshot.revision)return;snapshot=value;EntitlementsChanged?.Invoke();
-            // Paid entitlements belong only to this authenticated session; never write offline ownership keys.
+            if (value.revision < snapshot.revision) return;
+            snapshot = value; EntitlementsChanged?.Invoke();
         }
-        void OnDestroy(){ready=false;generation++;CancelPending();if(Instance==this)Instance=null;EntitlementsChanged?.Invoke();}
+        void OnApplicationPause(bool paused)
+        {
+            AccountProfilePrefs.Save();
+            if (paused && Ready && !saving && !spending && !refreshing) StartCoroutine(SaveProfile(null));
+            if (!paused) Refresh();
+        }
+        void OnDestroy()
+        {
+            if(Instance!=this)return;
+            ready = false; generation++; CancelPending(); AccountProfilePrefs.Detach();
+            if (Instance == this) Instance = null; EntitlementsChanged?.Invoke();
+        }
     }
 }
-

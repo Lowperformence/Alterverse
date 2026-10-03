@@ -40,7 +40,8 @@ namespace Alterverse.Profile
     {
         Unlocked,
         AlreadyOwned,
-        InsufficientShards
+        InsufficientShards,
+        Pending
     }
 
     public static class BattlePassProgress
@@ -66,7 +67,7 @@ namespace Alterverse.Profile
             get
             {
                 EnsureSeasonMarker();
-                return Mathf.Clamp(PlayerPrefs.GetInt(XpKey,0),0,TotalXpRequired);
+                return Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(XpKey,0),0,TotalXpRequired);
             }
         }
 
@@ -75,9 +76,9 @@ namespace Alterverse.Profile
         public static int XpToNextLevel=>Level>=MaxLevel?0:TotalXpForLevel(Level+1)-Xp;
         public static float LevelProgress=>Level>=MaxLevel?1f:(float)XpIntoLevel/XpToAdvance(Level);
         public static int TotalXpRequired=>TotalXpForLevel(MaxLevel);
-        public static bool PremiumUnlocked=>PlayerPrefs.GetInt(PremiumKey,0)==1;
+        public static bool PremiumUnlocked=>Alterverse.Profile.AccountProfilePrefs.GetInt(PremiumKey,0)==1;
         public static bool BetaCrownUnlocked=>AvatarInventory.IsOwned(BetaCrownAvatarId);
-        public static int LastSeenLevel=>Mathf.Clamp(PlayerPrefs.GetInt(LastSeenLevelKey,1),1,MaxLevel);
+        public static int LastSeenLevel=>Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(LastSeenLevelKey,1),1,MaxLevel);
         public static bool HasUnseenLevel=>Level>LastSeenLevel;
 
         public static int XpToAdvance(int level)
@@ -112,7 +113,7 @@ namespace Alterverse.Profile
         {
             if(earnedAccountXp<=0||string.IsNullOrEmpty(matchReceipt))return 0;
             EnsureSeasonMarker();
-            if(PlayerPrefs.GetString(LastXpReceiptKey,"")==matchReceipt)return 0;
+            if(Alterverse.Profile.AccountProfilePrefs.GetString(LastXpReceiptKey,"")==matchReceipt)return 0;
 
             int before=Xp;
             int next=Mathf.Min(TotalXpRequired,ProfileTransaction.Add(before,earnedAccountXp));
@@ -128,8 +129,10 @@ namespace Alterverse.Profile
             if(PremiumUnlocked)return BattlePassPurchaseResult.AlreadyOwned;
             if(!PlayerWallet.CanAfford(PremiumPrice))return BattlePassPurchaseResult.InsufficientShards;
 
+            if(Alterverse.Shop.PaidShardCommerce.Instance!=null&&Alterverse.Shop.PaidShardCommerce.Instance.Ready)
+                return PlayerWallet.BeginServerPurchase("battlepass_beta01")?BattlePassPurchaseResult.Pending:BattlePassPurchaseResult.InsufficientShards;
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.Balance-PremiumPrice),
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-PremiumPrice),
                 new ProfileTransaction.Write(PremiumKey,1));
             return BattlePassPurchaseResult.Unlocked;
         }
@@ -232,8 +235,8 @@ namespace Alterverse.Profile
 
         public static void AcknowledgeCurrentLevel()
         {
-            PlayerPrefs.SetInt(LastSeenLevelKey,Level);
-            PlayerPrefs.Save();
+            Alterverse.Profile.AccountProfilePrefs.SetInt(LastSeenLevelKey,Level);
+            Alterverse.Profile.AccountProfilePrefs.Save();
         }
 
         public static string Status(bool premium,int level)
@@ -260,7 +263,7 @@ namespace Alterverse.Profile
 
             List<ProfileTransaction.Write> writes=new();
             if(reward.Shards>0)
-                writes.Add(new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.Balance,reward.Shards)));
+                writes.Add(new ProfileTransaction.Write("DF_Shards",ProfileTransaction.Add(PlayerWallet.EarnedBalance,reward.Shards)));
             if(reward.Item!=BattleItemType.None&&reward.ItemAmount>0)
                 writes.Add(new ProfileTransaction.Write(BattleItemInventory.StorageKey(reward.Item),
                     ProfileTransaction.Add(BattleItemInventory.Count(reward.Item),reward.ItemAmount)));
@@ -283,15 +286,16 @@ namespace Alterverse.Profile
 
         private static ulong ReadMask(string key)
         {
-            string raw=PlayerPrefs.GetString(key,"0");
+            string raw=Alterverse.Profile.AccountProfilePrefs.GetString(key,"0");
             return ulong.TryParse(raw,out ulong value)?value:0UL;
         }
 
         private static void EnsureSeasonMarker()
         {
-            if(PlayerPrefs.GetString(CurrentSeasonKey,"")==SeasonId)return;
-            PlayerPrefs.SetString(CurrentSeasonKey,SeasonId);
-            PlayerPrefs.Save();
+            if(Alterverse.Profile.AccountProfilePrefs.GetString(CurrentSeasonKey,"")==SeasonId)return;
+            Alterverse.Profile.AccountProfilePrefs.SetString(CurrentSeasonKey,SeasonId);
+            Alterverse.Profile.AccountProfilePrefs.Save();
         }
     }
 }
+

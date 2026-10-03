@@ -99,21 +99,21 @@ namespace Alterverse.Shop
         {
             // The retired four-weapon catalog used variants 2/3 as additional purchases.
             // Preserve those purchases by mapping 2 -> colorway 0 and 3 -> colorway 1.
-            if(variant==0&&PlayerPrefs.GetInt(VariantOwnedKey(hero,2),0)==1)return true;
-            if(variant==1&&PlayerPrefs.GetInt(VariantOwnedKey(hero,3),0)==1)return true;
+            if(variant==0&&Alterverse.Profile.AccountProfilePrefs.GetInt(VariantOwnedKey(hero,2),0)==1)return true;
+            if(variant==1&&Alterverse.Profile.AccountProfilePrefs.GetInt(VariantOwnedKey(hero,3),0)==1)return true;
 
             if(hero==HeroId.Veyr&&variant==0)
-                return PlayerPrefs.GetInt(LegacyVariantOwnedKey(hero,1),0)==1||
-                       PlayerPrefs.GetInt(LegacyVariantOwnedKey(hero,2),0)==1||
-                       PlayerPrefs.GetInt(LegacyVariantOwnedKey(hero,3),0)==1;
+                return Alterverse.Profile.AccountProfilePrefs.GetInt(LegacyVariantOwnedKey(hero,1),0)==1||
+                       Alterverse.Profile.AccountProfilePrefs.GetInt(LegacyVariantOwnedKey(hero,2),0)==1||
+                       Alterverse.Profile.AccountProfilePrefs.GetInt(LegacyVariantOwnedKey(hero,3),0)==1;
             return false;
         }
 
         public static bool Owned(HeroId hero,int variant)
         {
             if(!WeaponSkinCatalog.Contains(hero,variant))return false;
-            if(variant==0&&PlayerPrefs.GetInt(OwnedKey(hero),0)==1)return true;
-            if(PlayerPrefs.GetInt(VariantOwnedKey(hero,variant),0)==1)return true;
+            if(variant==0&&Alterverse.Profile.AccountProfilePrefs.GetInt(OwnedKey(hero),0)==1)return true;
+            if(Alterverse.Profile.AccountProfilePrefs.GetInt(VariantOwnedKey(hero,variant),0)==1)return true;
             return LegacyMappedOwned(hero,variant);
         }
 
@@ -124,9 +124,9 @@ namespace Alterverse.Shop
 
         public static int EquippedVariant(HeroId hero)
         {
-            if(PlayerPrefs.HasKey(SelectedVariantKey(hero)))
+            if(Alterverse.Profile.AccountProfilePrefs.HasKey(SelectedVariantKey(hero)))
             {
-                int selected=PlayerPrefs.GetInt(SelectedVariantKey(hero),-1);
+                int selected=Alterverse.Profile.AccountProfilePrefs.GetInt(SelectedVariantKey(hero),-1);
                 if(selected>=0&&selected<=1&&Owned(hero,selected))return selected;
 
                 // Migrate a currently equipped retired variant without changing the save file.
@@ -135,10 +135,10 @@ namespace Alterverse.Shop
                 return -1;
             }
 
-            if(PlayerPrefs.GetInt(EquippedKey(hero),0)==1&&Owned(hero,0))return 0;
+            if(Alterverse.Profile.AccountProfilePrefs.GetInt(EquippedKey(hero),0)==1&&Owned(hero,0))return 0;
             if(hero==HeroId.Veyr)
             {
-                int legacyTier=Mathf.Clamp(PlayerPrefs.GetInt(LegacyVariantEquippedKey(hero),0),0,3);
+                int legacyTier=Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(LegacyVariantEquippedKey(hero),0),0,3);
                 if(legacyTier>0&&Owned(hero,0))return 0;
             }
             return -1;
@@ -156,9 +156,11 @@ namespace Alterverse.Shop
             if(Owned(hero,variant))return AvatarPurchaseResult.AlreadyOwned;
             if(!PlayerWallet.CanAfford(item.Price))return AvatarPurchaseResult.InsufficientShards;
 
+            if(PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)
+                return PlayerWallet.BeginServerPurchase($"weapon_{(int)hero}_{variant}")?AvatarPurchaseResult.Pending:AvatarPurchaseResult.InvalidItem;
             var writes=new System.Collections.Generic.List<ProfileTransaction.Write>
             {
-                new("DF_Shards",PlayerWallet.Balance-item.Price),
+                new("DF_Shards",PlayerWallet.EarnedBalance-item.Price),
                 new(VariantOwnedKey(hero,variant),1),
                 new(SelectedVariantKey(hero),variant),
                 new(EquippedKey(hero),1)
@@ -197,3 +199,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

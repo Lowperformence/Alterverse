@@ -42,6 +42,14 @@ namespace Alterverse.Shop
             return id==UniversalHeroCosmetic.Original||CosmeticProfile.GetInt(definition.OwnedKey,0)==1||
                 id==UniversalHeroCosmetic.Voidfall&&CosmeticProfile.PaidVoidfall;
         }
+        public static string Sku(UniversalHeroCosmetic id) => id switch
+        {
+            UniversalHeroCosmetic.Voidfall=>"voidfall",
+            UniversalHeroCosmetic.PlagueWings=>"plague_wings",
+            UniversalHeroCosmetic.BetaSupporterWings=>"beta_supporter_wings",
+            UniversalHeroCosmetic.DeluxeWings=>"deluxe_wings",
+            _=>""
+        };
         public static AvatarPurchaseResult Purchase(UniversalHeroCosmetic id)
         {
             CosmeticProfile.Recover();
@@ -49,12 +57,15 @@ namespace Alterverse.Shop
             if(definition==null)return AvatarPurchaseResult.InvalidItem;
             if(IsOwned(id))return AvatarPurchaseResult.AlreadyOwned;
             if(CosmeticProfile.Balance<definition.Price)return AvatarPurchaseResult.InsufficientShards;
+            if(!CosmeticProfile.IsTest&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)
+                return PlayerWallet.BeginServerPurchase(Sku(id))?AvatarPurchaseResult.Pending:AvatarPurchaseResult.InvalidItem;
             // Purchase grants account ownership only. Hero equip is an explicit inventory action.
             CosmeticProfile.Commit(
-                new ProfileTransaction.Write("DF_Shards",CosmeticProfile.Balance-definition.Price),
+                new ProfileTransaction.Write("DF_Shards",(CosmeticProfile.IsTest?CosmeticProfile.Balance:PlayerWallet.EarnedBalance)-definition.Price),
                 new ProfileTransaction.Write(definition.OwnedKey,1));
             if(!CosmeticProfile.IsTest)Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             return AvatarPurchaseResult.Purchased;
         }
     }
 }
+

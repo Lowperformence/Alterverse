@@ -13,12 +13,12 @@ namespace Alterverse.Performance
 
         public static MobileQuality Current
         {
-            get => (MobileQuality)Mathf.Clamp(PlayerPrefs.GetInt(Key, (int)MobileQuality.Balanced), 0, 2);
+            get => (MobileQuality)Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(Key, (int)MobileQuality.Balanced), 0, 2);
             set
             {
                 value = (MobileQuality)Mathf.Clamp((int)value, 0, 2);
-                PlayerPrefs.SetInt(Key, (int)value);
-                PlayerPrefs.Save();
+                Alterverse.Profile.AccountProfilePrefs.SetInt(Key, (int)value);
+                Alterverse.Profile.AccountProfilePrefs.Save();
                 Apply(value);
             }
         }
@@ -75,3 +75,4 @@ namespace Alterverse.Performance
         }
     }
 }
+

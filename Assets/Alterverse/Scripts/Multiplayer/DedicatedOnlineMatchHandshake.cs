@@ -25,6 +25,7 @@ namespace Alterverse.Multiplayer
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
         private const int ProtocolVersion = 1;
         private const float HumanJoinWindowSeconds = 60f;
+        private const float PlanAckTimeoutSeconds = 20f;
 
         private sealed class PendingHuman
         {
@@ -47,6 +48,7 @@ namespace Alterverse.Multiplayer
         private bool launched;
         private float firstHelloAt = -1f;
         private uint planFingerprint;
+        private float planSentAt = -1f;
         private string status = "WAITING FOR EDGEGAP ASSIGNMENT";
         private readonly Dictionary<ulong, PendingHuman> pending = new();
         private readonly Dictionary<ulong, string> authorizedPlayers = new();
@@ -83,7 +85,7 @@ namespace Alterverse.Multiplayer
             {
                 if (!CoopAuthority.Active)
                 {
-                    Detach(); planSent = false; launched = false; firstHelloAt = -1;
+                    Detach(); planSent = false; launched = false; firstHelloAt = -1; planSentAt = -1;
                     pending.Clear(); authorizedPlayers.Clear(); planAcks.Clear();
                 }
                 if (manager == null || !manager.IsConnectedClient) helloSent = false;
@@ -136,6 +138,22 @@ namespace Alterverse.Multiplayer
 
             if (planAcks.Count >= pending.Count)
                 LaunchAuthoritativeMatch(manager);
+            else if (Time.unscaledTime - planSentAt >= PlanAckTimeoutSeconds)
+            {
+                // Evict peers that never accepted the plan, then rebuild for the survivors.
+                var stalled = new List<ulong>();
+                foreach (ulong id in pending.Keys)
+                    if (!planAcks.Contains(id)) stalled.Add(id);
+                foreach (ulong id in stalled)
+                {
+                    pending.Remove(id); authorizedPlayers.Remove(id);
+                    manager.DisconnectClient(id);
+                }
+                planSent = false; planSentAt = -1f; planAcks.Clear();
+                CoopAuthority.ClearPrepared();
+                status = "START CONFIRMATION TIMED OUT • REBUILDING MATCH";
+                if (pending.Count > 0) BuildAndSendAuthoritativePlan(manager);
+            }
         }
 
         private void SendClientHello()
@@ -170,10 +188,25 @@ namespace Alterverse.Multiplayer
         private void OnClientHello(ulong senderClientId, FastBufferReader reader)
         {
             NetworkManager manager = NetworkManager.Singleton;
-            if (manager == null || !manager.IsServer || manager.IsClient || !DedicatedServerNetworkRuntime.Requested || launched)
+            if (manager == null || !manager.IsServer || manager.IsClient || !DedicatedServerNetworkRuntime.Requested)
                 return;
+            if (launched)
+            {
+                if (!authorizedPlayers.ContainsKey(senderClientId)) manager.DisconnectClient(senderClientId);
+                return;
+            }
 
+            // The roster freezes when its plan is sent. Do not enlarge pending while
+            // waiting for ACKs from the already-issued roster.
+            if (planSent)
+            {
+                if (!pending.ContainsKey(senderClientId)) manager.DisconnectClient(senderClientId);
+                return;
+            }
+            if (!reader.TryBeginRead(sizeof(int))) return;
             reader.ReadValueSafe(out int protocol);
+            try
+            {
             reader.ReadValueSafe(out FixedString128Bytes fixedTicket);
             reader.ReadValueSafe(out FixedString128Bytes fixedTeam);
             reader.ReadValueSafe(out FixedString128Bytes fixedMatch);
@@ -245,6 +278,12 @@ namespace Alterverse.Multiplayer
                 ? EdgegapInjectedMatchContext.AssignedTicketCount
                 : MatchSession.MaxPlayers;
             status = $"DEDICATED PLAYERS CONNECTING • {pending.Count}/{Mathf.Max(1, assigned)}";
+            }
+            catch (OverflowException)
+            {
+                manager.DisconnectClient(senderClientId);
+                Debug.LogWarning("DIMENSIONS FRONT SERVER: truncated dedicated hello rejected.");
+            }
         }
 
         private void BuildAndSendAuthoritativePlan(NetworkManager manager)
@@ -281,6 +320,7 @@ namespace Alterverse.Multiplayer
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();
                 planSent = true;
+                planSentAt = Time.unscaledTime;
 
                 for (int i = 0; i < ordered.Count; i++)
                     SendPlanToClient(ordered[i].ClientId, ordered[i].PlayerId, plan, planFingerprint);
@@ -415,6 +455,9 @@ namespace Alterverse.Multiplayer
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || !manager.IsServer || manager.IsClient || !planSent || launched) return;
 
+            if (!reader.TryBeginRead(sizeof(int) + sizeof(bool) + sizeof(uint) + sizeof(ushort))) return;
+            try
+            {
             reader.ReadValueSafe(out int protocol);
             reader.ReadValueSafe(out bool accepted);
             reader.ReadValueSafe(out uint clientFingerprint);
@@ -429,6 +472,12 @@ namespace Alterverse.Multiplayer
             status = valid
                 ? $"DEDICATED PLAN VERIFIED • {planAcks.Count}/{pending.Count} ACK"
                 : "DEDICATED PLAN ACK REJECTED";
+            }
+            catch (OverflowException)
+            {
+                planAcks.Remove(senderClientId);
+                status = "TRUNCATED PLAN ACK REJECTED";
+            }
         }
 
         private void LaunchAuthoritativeMatch(NetworkManager manager)
@@ -469,6 +518,7 @@ namespace Alterverse.Multiplayer
                 CoopAuthority.PreparedPlan is not OnlineMatchPlan plan)
                 return;
 
+            if (!reader.TryBeginRead(sizeof(int) + sizeof(uint))) return;
             reader.ReadValueSafe(out int protocol);
             reader.ReadValueSafe(out uint serverFingerprint);
             if (protocol != ProtocolVersion || serverFingerprint != planFingerprint ||
@@ -480,6 +530,9 @@ namespace Alterverse.Multiplayer
             EdgegapOnlineFlow.MarkMatchStarted();
             if (!OnlineMatchRuntime.Enter(plan))
             {
+                launched = false;
+                CoopAuthority.EndMatch();
+                _ = MatchExit.ReturnToMenuAsync();
                 status = "CLIENT MATCH BOOTSTRAP FAILED";
                 return;
             }
@@ -506,7 +559,7 @@ namespace Alterverse.Multiplayer
 
             if (remove.Count > 0 && planSent && !launched)
             {
-                planSent = false; planAcks.Clear(); CoopAuthority.ClearPrepared();
+                planSent = false; planSentAt = -1f; planAcks.Clear(); CoopAuthority.ClearPrepared();
             }
             for (int i = 0; i < remove.Count; i++)
             {
@@ -580,3 +633,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
