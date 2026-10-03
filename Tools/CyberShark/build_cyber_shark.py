@@ -123,7 +123,7 @@ for side,s in [('L',-1),('R',1)]:
  for j in range(3):
   tube('boot armored toe ribs',[(f[0]-.055,f[1]-.018,.115+j*.028),(f[0]+.055,f[1]-.018,.115+j*.028)],.007,2,foot,6)
 
-# Shark-pirate reference: bare light-blue chest, strapped armor, tail, and a caged lantern.
+# Shark-pirate reference: bare light-blue chest, strapped armor, tail and anchor.
 ell('pale shark belly',(0,1.18,.118),(.145,.16,.055),5,'Spine',16,10)
 tube('leather cross-body baldric',[(-.14,1.54,.17),(-.04,1.44,.204),(.10,1.32,.177),(.20,1.24,.13)],.029,0,'Chest',8)
 for j in range(5):bolt('baldric stud',(-.09+j*.052,1.50-j*.047,.226-j*.008),'Chest',.006)
@@ -157,16 +157,16 @@ for i in range(len(tail)-1):
 tp.append(tail[-1]);radii.append(tr[-1]);tube('shark tail',tp,radii,1,'Hips',14)
 shard('tail upper lobe',(-.65,.61,-.06),(-.79,.91,-.065),.067,.023,1,'Hips')
 shard('tail lower lobe',(-.65,.61,-.06),(-.50,.78,-.07),.044,.018,1,'Hips')
-# The lantern is a separate left-hand accessory, with gold frame and warm luminous glass.
-l=np.array(BONES['HandL'][0]);lc=l+[-.13,-.27,.11]
-for j in range(4):ring('lantern chain',l+[-.04-j*.024,-.035-j*.027,.065],.018,.004,4,'HandL',normal=(0,0,1) if j%2 else (1,0,0),segments=10)
-ring('lantern bail',lc+[0,.119,0],.039,.005,4,'HandL',segments=12)
-for yy in [-.075,.075]:ring('lantern frame rim',lc+[0,yy,0],.055,.008,4,'HandL',normal=(0,1,0),segments=12)
-ell('lantern amber glass',lc,(.040,.064,.040),4,'HandL',12,8)
-for j in range(6):
- angle=j*math.tau/6;offset=np.array([math.cos(angle)*.052,0,math.sin(angle)*.052])
- tube('lantern cage bar',[lc+offset+[0,-.075,0],lc+offset+[0,.075,0]],.004,2,'HandL',6)
-ell('lantern roof',lc+[0,.08,0],(.067,.014,.067),2,'HandL',12,6)
+# Small healed scars sit proud of exposed skin and follow its bone, avoiding decal flicker.
+tube('snout old scar',[(-.072,1.803,.351),(-.042,1.812,.351),(-.016,1.815,.347)],.003,5,'Head',6)
+tube('chest healed scar',[(-.055,1.48,.191),(-.035,1.455,.198),(-.008,1.428,.20)],.0035,5,'Chest',6)
+for side,sign in [('L',-1),('R',1)]:
+ bone='UpperArm'+side;a=np.array(BONES[bone][0]);e=np.array(BONES['Forearm'+side][0]);c=a+(e-a)*.55
+ tube('upper arm claw scar',[c+[-.038,.028,.107],c+[-.012,.008,.116],c+[.022,-.017,.11]],.003,5,bone,6)
+ for j in range(3):
+  cx=c[0]-.026+j*.018;cy=c[1]+.02-j*.013
+  tube('small scar cross mark',[(cx-.004,cy-.008,c[2]+.115),(cx+.004,cy+.008,c[2]+.115)],.002,5,bone,5)
+ w=np.array(BONES['Hand'+side][0]);tube('hand scar',[w+[-.015,-.030,.066],w+[.013,-.048,.065]],.0025,5,'Hand'+side,6)
 
 # The original standard anchor is the only weapon; Epic recolors this exact mesh.
 GROUP=2
@@ -186,6 +186,10 @@ for s in [-1,1]:
  for j in range(3):bolt('anchor crossbar bolt',(x+s*(.065+j*.039),g[1]-.12,z+.031),'WeaponGripR',.008)
 for j in range(5):ring('anchor grip band',(x,g[1]+.09-j*.040,z),.034,.0045,5,'WeaponGripR',normal=(0,1,0),segments=12)
 tube('anchor power lead',[(x-.035,g[1]+.13,z),(x-.06,g[1]-.01,z+.02),(x-.05,g[1]-.10,z+.03)],.007,3,'WeaponGripR',6)
+# Double the standard anchor about its grip, preserving hand contact and bone binding.
+anchor_pivot=np.array((x,g[1],z))
+for i,group in enumerate(GI):
+ if group==2:V[i]=(anchor_pivot+(np.array(V[i])-anchor_pivot)*2.0).tolist()
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 mesh=bpy.data.meshes.new('NerokCyberShark');mesh.from_pydata(V,[],F);mesh.update()
 obj=bpy.data.objects.new('Nerok Abyss',mesh);bpy.context.collection.objects.link(obj)
@@ -287,7 +291,7 @@ for slot,name in enumerate(['AnchorProjectile','PressureHullIcon','WaveCrest','W
   if ob.type=='MESH':ob.hide_render=True
  target=bpy.data.objects[name];target.hide_render=False
  if name in ['AnchorProjectile','PressureHullIcon']:
-  cam.location=(0,-3,.1);aim(cam,(0,0,-.12 if name=='AnchorProjectile' else 0));cam.data.ortho_scale=1.3
+  cam.location=(0,-3,.1);aim(cam,(0,0,-.12 if name=='AnchorProjectile' else 0));cam.data.ortho_scale=2.6 if name=='AnchorProjectile' else 1.3
  else:
   cam.location=(0,-.3,3);aim(cam,(0,0,0));cam.data.ortho_scale=2.3
  scene.render.filepath=str(icons/(str(slot)+'.png'));bpy.ops.render.render(write_still=True)

@@ -141,7 +141,7 @@ namespace Alterverse.Visuals
                 Surface("Light blue shark skin", new Color(.38f,.72f,.94f), .08f,.40f),
                 Surface("Naval armor", new Color(.025f,.065f,.11f), .55f,.40f),
                 Surface("Tidal channels", new Color(.04f,.78f,1f), .30f,.62f, true),
-                Surface("Brass and lantern", new Color(.72f,.39f,.105f), .20f,.55f, true),
+                Surface("Brass fittings", new Color(.72f,.39f,.105f), .20f,.55f, true),
                 Surface("Shark teeth", new Color(.80f,.92f,.96f), .10f,.35f)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);

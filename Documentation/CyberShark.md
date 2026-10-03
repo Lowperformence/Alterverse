@@ -34,3 +34,7 @@ Blender generation/rendering, exported triangle/normal/bone/channel validation, 
 
 ## Pirate art revision
 Light-blue shark skin, tapered snout, visible teeth and gills, naval vest with brass trim, leather straps, split coat, curved tail, lantern and detailed anchor authored in Blender. The hook draws a pooled interlocked-chain VFX between live actor and victim transforms for the 0.35-second pull; target identity is relayed for online presentation. Nerok has 90 base shield (standard 50 plus requested 40), including existing recharge, respawn and network shield limits.
+
+Latest art adjustment: lantern and its hanging chain removed; standard anchor mesh doubled around the grip, with the projectile export and anchor HUD framing updated accordingly.
+
+Small healed scars added to exposed head, chest, arms and hands as bone-bound geometry.
