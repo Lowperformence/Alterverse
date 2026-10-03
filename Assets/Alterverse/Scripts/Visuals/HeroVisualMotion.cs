@@ -308,7 +308,7 @@ namespace Alterverse.Visuals
             // Keep the sight picture especially steady on Nyra's shoulder rifle.
             float guardBreath=Mathf.Sin(t*1.5f)*.30f*(1f-strideWeight);
             float guardStep=Mathf.Sin(phase*2f)*.45f*strideWeight;
-            float guardLift=(guardBreath+guardStep)*(hero==HeroId.Nyra?.35f:1f);
+            float guardLift=hero==HeroId.Nyra?0f:(guardBreath+guardStep);
             if(!attacking)
             {
                 // A distinct ready pose for every class. Pivots stay on the existing shoulders,
@@ -333,7 +333,8 @@ namespace Alterverse.Visuals
                         readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
                     // Nyra keeps the rifle's authored two-handed shoulder aim.
                 }
-                float shoulderSwing=Mathf.Sin(t*1.2f)*9f*strideWeight*(hero==HeroId.Nyra?.25f:hero==HeroId.Veyr?.45f:1f);
+                float shoulderSwing=hero==HeroId.Nyra?0f:
+                    Mathf.Sin(t*1.2f)*9f*strideWeight*(hero==HeroId.Veyr?.45f:1f);
                 readyL.x+=guardLift+shoulderSwing;readyR.x+=guardLift-shoulderSwing;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
@@ -459,7 +460,7 @@ namespace Alterverse.Visuals
                     {elbowL=-26f;elbowR=-30f;}
                     // A small shared elbow lift gives the guard life without a walking arm pump.
                     // Keep the rifle nearly steady and leave all attack poses untouched.
-                    float elbowLift=Mathf.Sin(t*1.2f)*9.75f*(Dashing?0f:1f)*(hero==HeroId.Nyra?.4f:1f);
+                    float elbowLift=hero==HeroId.Nyra?0f:Mathf.Sin(t*1.2f)*9.75f*(Dashing?0f:1f);
                     elbowL+=elbowLift;
                     elbowR+=elbowLift;
                 }
@@ -518,9 +519,8 @@ namespace Alterverse.Visuals
                         attackRoll=attackSide*(4f*anticipation-5f*kick);
                         break;
                     case HeroId.Nyra:
-                        attackPitch=2f*anticipation-6f*kick;
-                        attackTwist=-4f*anticipation+5f*kick;
-                        hipTwist=-2f*anticipation+3f*kick;
+                        // Keep the torso from rocking the shoulder rifle during fire.
+                        attackPitch=attackTwist=hipTwist=0f;
                         break;
                     default:
                         attackPitch=5f*anticipation-8f*kick;
@@ -550,7 +550,7 @@ namespace Alterverse.Visuals
                     -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
                     -sway*.24f-attackRoll*.30f+hitFromSide*hitWeight*3f);
                 // Animate the shared joints so the chest, shoulders, neck and face move together.
-                float idleRock=attacking||Dashing?0f:1f;
+                float idleRock=attacking||Dashing||hero==HeroId.Nyra?0f:1f;
                 float rockForward=Mathf.Sin(t*1.2f)*idleRock;
                 float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*8f,
