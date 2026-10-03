@@ -87,6 +87,7 @@ namespace Alterverse.Visuals
             }
             HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform);
+            HeroUndersuitFabric.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
