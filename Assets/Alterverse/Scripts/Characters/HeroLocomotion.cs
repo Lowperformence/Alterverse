@@ -47,14 +47,16 @@ namespace Alterverse.Characters
         public void FaceAction(Vector3 direction, float seconds=.16f)
         {
             direction.y=0; if(direction.sqrMagnitude<.0001f)return;
-            actionFacing=direction.normalized; actionUntil=Time.time+seconds;
+            actionFacing=direction.normalized;
+            actionUntil=Mathf.Max(actionUntil,Time.time+Mathf.Max(.02f,seconds));
         }
         private void LateUpdate()
         {
             if(!CanMove)return;
-            // Movement wins while steering; an attack may face its target only at rest.
-            // Thus ranged attacks never turn a running hero backwards or lock locomotion.
-            Vector3 facing=IsDashing?dashDirection:moveFacing.sqrMagnitude>.0001f?moveFacing:Time.time<actionUntil?actionFacing:Vector3.zero;
+            // Dashes stay authoritative. During a combat action the target/action facing wins
+            // over steering, while displacement remains untouched for strafing/backpedaling.
+            bool actionActive=Time.time<actionUntil&&actionFacing.sqrMagnitude>.0001f;
+            Vector3 facing=IsDashing?dashDirection:actionActive?actionFacing:moveFacing.sqrMagnitude>.0001f?moveFacing:Vector3.zero;
             if(facing.sqrMagnitude>.0001f)
                 transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(facing),1080f*Time.deltaTime);
             moveFacing=Vector3.zero;
