@@ -18,6 +18,7 @@ namespace Alterverse.Visuals
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
+        private Transform rifleDetailsRoot;
         private sealed class ArmChain
         {
             public Transform Upper, Elbow, Hand;
@@ -170,6 +171,7 @@ namespace Alterverse.Visuals
                 Bind("Shin" + side, "KneeJoint" + side);
                 Bind("Foot" + side, "AnkleJoint" + side);
             }
+            BuildNyraWeaponDetails();
         }
 
         private Transform Make(string name, Transform parent, Vector3 rootPosition)
@@ -289,8 +291,78 @@ namespace Alterverse.Visuals
                 RestLocal = target.localRotation, RestPosition = target.localPosition });
         }
 
-        private void ApplyWeaponGrips()
+        private void BuildNyraWeaponDetails()
         {
+            if (hero != HeroId.Nyra || rightArm?.Hand == null || muzzle == null ||
+                rifleSupport == null || rifleHandle == null || weaponRenderers.Count == 0) return;
+            // Use the rifle's own three authored sockets to establish a stable detail frame.
+            Vector3 forward = muzzle.position - rifleSupport.position;
+            Vector3 up = Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward);
+            if (forward.sqrMagnitude < .000001f || up.sqrMagnitude < .000001f) return;
+
+            rifleDetailsRoot = new GameObject("DF_SivraRifleDetails").transform;
+            rifleDetailsRoot.SetParent(rightArm.Hand, false);
+            rifleDetailsRoot.SetPositionAndRotation(rifleSupport.position, Quaternion.LookRotation(forward, up));
+            Material source = weaponRenderers[0].sharedMaterial;
+            Shader shader = source != null ? source.shader : Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            Material metal = source != null ? new Material(source) : new Material(shader);
+            SetDetailColor(metal, new Color(.30f, .38f, .42f), false);
+            Material cyan = source != null ? new Material(source) : new Material(shader);
+            SetDetailColor(cyan, new Color(.04f, .78f, .92f), true);
+            Material dark = source != null ? new Material(source) : new Material(shader);
+            SetDetailColor(dark, new Color(.035f, .065f, .075f), false);
+
+            // Local +Z follows the barrel, +Y is the rifle's top, and X spans its sides.
+            DetailBox("Receiver cheek L", new Vector3(-.054f, .025f, .055f), new Vector3(.012f, .060f, .115f), metal);
+            DetailBox("Receiver cheek R", new Vector3(.054f, .025f, .055f), new Vector3(.012f, .060f, .115f), metal);
+            DetailBox("Optic housing", new Vector3(0f, .075f, .075f), new Vector3(.040f, .027f, .095f), dark);
+            DetailBox("Optic lens", new Vector3(0f, .091f, .125f), new Vector3(.027f, .004f, .012f), cyan);
+            DetailBox("Power line L", new Vector3(-.035f, -.003f, .220f), new Vector3(.009f, .009f, .250f), cyan);
+            DetailBox("Power line R", new Vector3(.035f, -.003f, .220f), new Vector3(.009f, .009f, .250f), cyan);
+            DetailBox("Barrel collar", new Vector3(0f, 0f, .390f), new Vector3(.046f, .046f, .025f), metal);
+            for (int i = 0; i < 3; i++)
+            {
+                float z = .020f + i * .033f;
+                DetailBox("Cooling slot L " + i, new Vector3(-.061f, .027f, z), new Vector3(.004f, .006f, .018f), dark);
+                DetailBox("Cooling slot R " + i, new Vector3(.061f, .027f, z), new Vector3(.004f, .006f, .018f), dark);
+            }
+            for (int side = -1; side <= 1; side += 2)
+                for (int i = 0; i < 2; i++)
+                    DetailBox("Receiver fastener " + side + " " + i,
+                        new Vector3(side * .062f, .047f, .005f + i * .092f),
+                        new Vector3(.006f, .008f, .008f), metal);
+        }
+
+        private void DetailBox(string name, Vector3 position, Vector3 size, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            part.name = "DF_SivraRifle_" + name;
+            part.transform.SetParent(rifleDetailsRoot, false);
+            part.transform.localPosition = position;
+            part.transform.localRotation = Quaternion.identity;
+            part.transform.localScale = size;
+            Collider collider = part.GetComponent<Collider>();
+            if (collider != null) Destroy(collider);
+            MeshRenderer renderer = part.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            renderer.receiveShadows = true;
+        }
+
+        private static void SetDetailColor(Material material, Color color, bool emissive)
+        {
+            if (material.HasProperty("_BaseColor")) material.SetColor("_BaseColor", color);
+            if (material.HasProperty("_Color")) material.SetColor("_Color", color);
+            if (emissive)
+            {
+                material.EnableKeyword("_EMISSION");
+                if (material.HasProperty("_EmissionColor")) material.SetColor("_EmissionColor", color * 1.8f);
+            }
+        }
+
+        private void ApplyWeaponGrips()
+{
             foreach (WeaponGrip grip in grips)
             {
                 if (grip.Bone == null || grip.Control == null) continue;

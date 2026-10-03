@@ -463,6 +463,12 @@ namespace Alterverse.Visuals
                     elbowL+=elbowLift;
                     elbowR+=elbowLift;
                 }
+                if(hero==HeroId.Nyra)
+                {
+                    // Both contact points are solved from the rifle sockets later in LateUpdate.
+                    // Keep elbow and wrist inputs constant so gait and recoil cannot reintroduce sway.
+                    elbowL=-24f;elbowR=-18f;wristL=0f;wristR=0f;
+                }
                 float hitGuard=Mathf.Clamp01(hitWeight);
                 elbowL-=hero==HeroId.Nyra?0f:hitGuard*(hitFromSide<0f?4f:2f);
                 elbowR-=hero==HeroId.Nyra?0f:hitGuard*(hitFromSide>0f?4f:2f);
@@ -848,8 +854,13 @@ namespace Alterverse.Visuals
                 case HeroId.Nyra:
                     // Keep the shoulder rifle planted while firing. The old 12 cm
                     // translation and wrist kick made the sight swing on each shot.
-                    if(weaponR!=null)weaponR.localPosition=weaponPositionR;
-                    if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(-2f*kick,0,0);
+                    if(weaponR!=null)
+                    {
+                        weaponR.localPosition=weaponPositionR;
+                        weaponR.localRotation=weaponRestR;
+                    }
+                    // A rifle shot must not add a wrist kick to the planted shoulder pose.
+                    if(armR!=null)armR.localRotation=armRestR;
                     break;
                 case HeroId.Elyra:
                 case HeroId.Mira:
