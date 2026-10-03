@@ -159,6 +159,7 @@ namespace Alterverse.Match
                 }
             }
 
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,transform.position,.6f);
             PrototypeVfx.Burst(transform.position, warning, radius * .55f, 10);
             telegraphing=false;
             flashUntil=Time.time+.18f;

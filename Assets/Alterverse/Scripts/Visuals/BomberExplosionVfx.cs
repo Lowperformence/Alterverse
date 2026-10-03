@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 namespace Alterverse.Visuals
 {
-    /// <summary>Layered bomb-only impact. Visual lifetime is independent of damage and network authority.</summary>
+    /// <summary>Shared layered bomb and meteor impact. Visual lifetime is independent of damage and network authority.</summary>
     public sealed class BomberExplosionVfx : MonoBehaviour
     {
         Material material;Texture2D texture;

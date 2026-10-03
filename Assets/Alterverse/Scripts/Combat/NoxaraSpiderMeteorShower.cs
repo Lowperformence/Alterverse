@@ -226,10 +226,9 @@ namespace Alterverse.Combat
             resolved=true;
 
             Vector3 impact=new(impactPosition.x,impactPosition.y+.3f,impactPosition.z);
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.MeteorImpact,impact,.52f);
-            CombatImpactPool.Emit(impact,PoisonGreenHot,1);
-            PrototypeVfx.Shockwave(impact,PoisonGreen,ImpactRadius*1.08f);
-            PrototypeVfx.Burst(impact,PoisonGreenHot,.72f,8);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,impact,.52f);
+            BomberExplosionVfx.Play(impact,PoisonGreenHot,ImpactRadius);
+            PrototypeVfx.Ring(impact,PoisonGreen,ImpactRadius*1.05f,.3f);
 
             int hits=Physics.OverlapSphereNonAlloc(impactPosition,ImpactRadius,hitBuffer);
             for(int i=0;i<hits;i++)

@@ -507,7 +507,8 @@ namespace Alterverse.Combat
             Color blast=ArenaVariantRuntime.IsKryon?new Color(.72f,.97f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.74f,.04f):new Color(1f,.34f,.10f);
             Color shock=ArenaVariantRuntime.IsKryon?new Color(.24f,.88f,1f):ArenaVariantRuntime.IsNoxara?new Color(1f,.66f,.02f):new Color(1f,.28f,.08f);
             BomberExplosionVfx.Play(impact,blast,ImpactRadius);
-            PrototypeVfx.Shockwave(impact,shock,ImpactRadius*1.05f);
+            PrototypeVfx.Ring(impact,shock,ImpactRadius*1.05f,.3f);
+            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,impact,.65f);
 
             int hits=Physics.OverlapSphereNonAlloc(target,ImpactRadius,hitBuffer);
             for(int i=0;i<hits;i++)
@@ -554,4 +555,3 @@ namespace Alterverse.Combat
         }
     }
 }
-

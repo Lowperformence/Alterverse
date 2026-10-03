@@ -156,8 +156,13 @@ for i in range(len(tail)-1):
  for t in np.linspace(0,1,5,endpoint=False):
   tp.append(.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t));radii.append(tr[i]*(1-t)+tr[i+1]*t)
 tp.append(tail[-1]);radii.append(tr[-1]);tube('shark tail',tp,radii,1,'Hips',14)
+fluke_start=len(V)
 shard('tail upper lobe',(0,.61,-1.02),(0,.91,-1.16),.067,.023,1,'Hips')
 shard('tail lower lobe',(0,.61,-1.02),(0,.37,-1.17),.044,.018,1,'Hips')
+# Double only the terminal fin about its attachment, keeping the tail stalk intact.
+fluke_pivot=np.array((0,.61,-1.02))
+for i in range(fluke_start,len(V)):
+ V[i]=(fluke_pivot+(np.array(V[i])-fluke_pivot)*2.0).tolist()
 tail_end=len(V)
 # Small healed scars sit proud of exposed skin and follow its bone, avoiding decal flicker.
 tube('snout old scar',[(-.072,1.803,.351),(-.042,1.812,.351),(-.016,1.815,.347)],.003,5,'Head',6)
@@ -302,5 +307,6 @@ scene.render.resolution_x=700;scene.render.resolution_y=900
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
 
 # Render the five independent pictorial attacks after saving the model scene.
-import runpy
-runpy.run_path(str(ROOT/"Tools/CyberShark/build_attack_icons.py"),run_name="__main__")
+import runpy,sys
+if '--skip-icons' not in sys.argv:
+ runpy.run_path(str(ROOT/"Tools/CyberShark/build_attack_icons.py"),run_name="__main__")

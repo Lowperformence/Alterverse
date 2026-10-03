@@ -21,6 +21,8 @@ namespace Alterverse.Audio
             var clips=new AudioClip[CueCount][];
             for(int h=0;h<Heroes.Length;h++)for(int a=0;a<5;a++)for(int phase=0;phase<3;phase++)
             {
+                // The selected Nerok recording already contains swing and contact.
+                if(h==(int)HeroId.Nerok&&a==0&&phase!=1)continue;
                 if(phase==1&&!HasImpact(h,a)||phase==2&&!HasWindup(h,a))continue;
                 int cue=Cue(h,a,phase);
                 clips[cue]=new AudioClip[VariantCount(h,a,phase)];
@@ -45,6 +47,7 @@ namespace Alterverse.Audio
             if(actor==null||action<0||action>4)return;
             var identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
             int hero=(int)identity.Hero;
+            if(hero==(int)HeroId.Nerok&&action==0&&phase!=1)return;
             if(hero<0||hero>=Heroes.Length||phase==1&&!HasImpact(hero,action)||phase==2&&!HasWindup(hero,action))return;
             if(relay)CoopHeroStateSync.BroadcastCombatSound(actor,action,phase,position);
             bool local=IsLocal(actor),ultimate=action==4;

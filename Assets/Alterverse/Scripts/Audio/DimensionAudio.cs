@@ -3,7 +3,7 @@ using Alterverse.Profile;
 using UnityEngine;
 namespace Alterverse.Audio
 {
-    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact}
+    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact,Explosion}
     public sealed class DimensionAudio:MonoBehaviour
     {
         static DimensionAudio instance;
@@ -70,6 +70,7 @@ namespace Alterverse.Audio
                 if(instance.activeCue[i]==cue)overlap++;
             }
             if(priority==0&&overlap>=2)return false;
+            if(cue==(int)DimensionSound.Explosion&&overlap>=3)return false;
             // Repeated combat must not steal a warning or objective voice.
             if(slot<0)
                 for(int i=0;i<budget;i++)
@@ -93,13 +94,13 @@ namespace Alterverse.Audio
             DimensionSound.TowerTarget or DimensionSound.CoreHit or DimensionSound.MeteorImpact or
             DimensionSound.RealityShatter or DimensionSound.Overtime or DimensionSound.SuddenDeath or
             DimensionSound.Kill or DimensionSound.HeroDeath or DimensionSound.Victory or DimensionSound.Defeat=>3,
-            DimensionSound.PlanetArrival or DimensionSound.SiegeArrival or
+            DimensionSound.Explosion or DimensionSound.PlanetArrival or DimensionSound.SiegeArrival or
             DimensionSound.AbilityCast or DimensionSound.RecallComplete or DimensionSound.Purchase=>1,
             _=>0
         };
         static float Cooldown(DimensionSound sound)=>sound switch
         {
-            DimensionSound.Attack=>.12f,DimensionSound.HitLight=>.1f,DimensionSound.AbilityImpact=>.14f,
+            DimensionSound.Explosion=>.12f,DimensionSound.Attack=>.12f,DimensionSound.HitLight=>.1f,DimensionSound.AbilityImpact=>.14f,
             DimensionSound.TowerShot or DimensionSound.TowerImpact=>.2f,
             DimensionSound.TowerTarget=>.65f,DimensionSound.UiConfirm or DimensionSound.UiBack=>.16f,
             DimensionSound.Heal or DimensionSound.Shield=>.4f,_=>.075f
