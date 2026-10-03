@@ -78,16 +78,18 @@ def shell(name,levels,mat,bone,sides=28):
  # Ascending Y with +Z circumference needs reversed winding.
  faces=[list(reversed(f)) for f in faces]
  add(name,verts,faces,mat,bone)
-def plate(name,outline,z,depth,mat,bone):
+def plate(name,outline,z,depth,mat,bone,cap_front=True):
  # Curved, chamfered front rather than a flat box.
  xy=np.array(outline,float);center=xy.mean(axis=0);verts=[]
  for scale,d in [(1,-depth*.45),(.93,depth*.2),(.82,depth*.65)]:
   for x,y in center+(xy-center)*scale:verts.append([x,y,z+d-.08*x*x])
- verts.append([*center,z+depth*.88]);n=len(xy);faces=[]
+ n=len(xy);faces=[]
+ if cap_front:verts.append([*center,z+depth*.88])
  for row in range(2):
   for j in range(n):
    a=row*n+j;b=row*n+(j+1)%n;faces.extend([[a,b,b+n],[a,b+n,a+n]])
- for j in range(n):faces.append([2*n+j,2*n+(j+1)%n,3*n])
+ if cap_front:
+  for j in range(n):faces.append([2*n+j,2*n+(j+1)%n,3*n])
  # Auto orient front faces consistently towards +Z.
  for f in faces:
   a,b,c=[np.array(verts[i]) for i in f]
@@ -102,7 +104,10 @@ def bolts(name,points,bone,r=.009):
 def oval(name,c,rx,ry,r,mat,bone):
  tube(name,[np.array(c)+[rx*math.cos(a),ry*math.sin(a),0] for a in np.linspace(0,2*math.pi,49)],r,mat,bone)
 def panel(name,outline,z,depth,bone):
- plate(name+' bronze rim',outline,z,depth,2,bone)
+ # A rim is an open frame. Its former center fan almost coincided with the
+ # enamel face (.88*depth versus .878*depth) and cut through the camouflage.
+ # Keep the two bevel bands, but let the inset own the visible center surface.
+ plate(name+' bronze rim',outline,z,depth,2,bone,cap_front=False)
  xy=np.array(outline);c=xy.mean(axis=0)
  plate(name+' olive enamel',c+(xy-c)*.88,z+depth*.35,depth*.6,1,bone)
 def scar(name,a,b,bone):tube(name,[a,b],.0022,4,bone,5)

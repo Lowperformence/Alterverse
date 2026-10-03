@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Kaelon's urban digital camouflage armor, shield and hammer, fitted to her existing skeleton.</summary>
+    /// <summary>Kaelon's woodland camouflage armor, shield and hammer, fitted to her existing skeleton.</summary>
     [DisallowMultipleComponent]
     public sealed class SiegeTankAppearance : MonoBehaviour
     {
@@ -135,7 +135,7 @@ namespace Alterverse.Visuals
             }
             Material[] materials = {
                 Surface("Joint seals", new Color(.03f,.035f,.045f), .22f,.30f),
-                UrbanArmor(),
+                WoodlandArmor(),
                 Surface("Bronze edges", new Color(.38f,.32f,.19f), .80f,.44f),
                 Surface("Amber reactor", new Color(1f,.32f,.035f), .35f,.48f, true),
                 Surface("Exposed steel", new Color(.32f,.34f,.36f), .85f,.47f),
@@ -164,13 +164,16 @@ namespace Alterverse.Visuals
             return true;
         }
 
-        private Material UrbanArmor()
+        private Material WoodlandArmor()
         {
-            // Use the same proven opaque shader as the remaining armor, with a real CC0 base map.
+            // User-supplied woodland reference, anchored in rest space on every armor face.
             Material material=RuntimeShaderLibrary.Create(Color.white,false,.28f,.25f);
-            material.name="DF_Kaelon_UrbanDigitalArmor";
-            Texture2D pattern=Resources.Load<Texture2D>("HeroArt/UrbanDigitalCamo");
+            material.name="DF_Kaelon_WoodlandArmor";
+            Shader shader=Resources.Load<Shader>("HeroArt/TankWoodlandCamo");
+            if(shader!=null)material.shader=shader;
+            Texture2D pattern=Resources.Load<Texture2D>("HeroArt/WoodlandCamo");
             if(pattern!=null)material.SetTexture("_BaseMap",pattern);
+            material.SetTextureScale("_BaseMap",Vector2.one*.60f);
             ownedMaterials.Add(material);
             return material;
         }
@@ -189,6 +192,7 @@ namespace Alterverse.Visuals
         {
             var remap = new int[vertices.Length];
             var v = new List<Vector3>(); var n = new List<Vector3>(); var w = new List<BoneWeight>();
+            var rest = new List<Vector3>(); var restNormals = new List<Vector3>();
             Matrix4x4 convert = renderer.transform.worldToLocalMatrix * source.localToWorldMatrix;
             Matrix4x4 normalMatrix = convert.inverse.transpose;
             for (int i = 0; i < vertices.Length; i++)
@@ -198,21 +202,25 @@ namespace Alterverse.Visuals
                 remap[i] = v.Count;
                 v.Add(convert.MultiplyPoint3x4(vertices[i]));
                 n.Add(normalMatrix.MultiplyVector(normals[i]).normalized); w.Add(weights[i]);
+                rest.Add(Point(geometry.vertices,i*3));
+                restNormals.Add(Point(geometry.normals,i*3));
             }
             var mesh = new Mesh { name = "DF_Kaelon_Siege_" + group };
             ownedMeshes.Add(mesh);
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.boneWeights = w.ToArray();
-            // Pattern data is not deformed by skinning; camouflage follows each armor plate.
+            // Keep a continuous fallback UV map; the woodland shader uses rest-space
+            // triplanar coordinates below for the side and top faces as well.
             var camoUV=new List<Vector2>(v.Count);
             for(int i=0;i<v.Count;i++)
             {
-                Vector3 normal=n[i],point=v[i];
-                float x=Mathf.Abs(normal.x),y=Mathf.Abs(normal.y),z=Mathf.Abs(normal.z);
-                Vector2 uv=z>=x&&z>=y?new Vector2(point.x,point.y):
-                    x>=y?new Vector2(point.z,point.y):new Vector2(point.x,point.z);
-                camoUV.Add(uv*.60f);
+                Vector3 point=rest[i];
+                camoUV.Add(new Vector2(point.x,point.y));
             }
             mesh.SetUVs(0,camoUV);
+            // Continuous 3D rest coordinates avoid per-vertex projection switches and
+            // stretched UV triangles. They stay attached through animation and hand scaling.
+            mesh.SetUVs(2,rest);
+            mesh.SetUVs(3,restNormals);
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = 7;
@@ -276,5 +284,4 @@ namespace Alterverse.Visuals
         }
     }
 }
-
 
