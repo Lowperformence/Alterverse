@@ -36,12 +36,7 @@ namespace Alterverse.Shop
             new AvatarShopItem(23, "PHOENIX", "REBIRTH", ShardPacks.CosmeticPrice("avatar_23")),
             new AvatarShopItem(24, "NEVER GIVE UP", "RESOLVE", ShardPacks.CosmeticPrice("avatar_24")),
             new AvatarShopItem(25, "TEAM FIRST", "SOLIDARITY", ShardPacks.CosmeticPrice("avatar_25")),
-            new AvatarShopItem(26, "GOOD GAME", "SPORTSMANSHIP", ShardPacks.CosmeticPrice("avatar_26")),
-            new AvatarShopItem(27, "NEROK BITE", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_27")),
-            new AvatarShopItem(28, "ANCHOR RECALL", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_28")),
-            new AvatarShopItem(29, "ANCHOR SLAM", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_29")),
-            new AvatarShopItem(30, "TIDAL CHARGE", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_30")),
-            new AvatarShopItem(31, "ABYSSAL MAELSTROM", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_31"))
+            new AvatarShopItem(26, "GOOD GAME", "SPORTSMANSHIP", ShardPacks.CosmeticPrice("avatar_26"))
         };
 
         public static bool TryGet(int avatarId, out AvatarShopItem item)
