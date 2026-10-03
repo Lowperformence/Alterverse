@@ -85,6 +85,7 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
+            HeroLimbTechDetails.Apply(instance.transform, hero);
             ApplyHandSize(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
