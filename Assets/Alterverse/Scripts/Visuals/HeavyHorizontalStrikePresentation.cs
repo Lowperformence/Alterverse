@@ -10,7 +10,7 @@ namespace Alterverse.Visuals
     /// horizontally forward instead of pitching from below the character upward.
     /// </summary>
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(935)]
+    [DefaultExecutionOrder(939)]
     public sealed class HeavyHorizontalStrikePresentation : MonoBehaviour
     {
         private HeroIdentity identity;
@@ -74,8 +74,20 @@ namespace Alterverse.Visuals
             weaponR = authored != null ? authored.Control("WeaponR") : FindPart("DF_WeaponR");
 
             if (armR == null || weaponR == null) return;
-            armRestR = armR.localRotation;
-            armRestL = armL != null ? armL.localRotation : Quaternion.identity;
+
+            // This helper is normally added when the first basic attack is requested, while
+            // HeroVisualMotion is still holding its idle combat guard. Remove that known guard
+            // once so every strike keyframe is relative to the real rig rest rotation.
+            Vector3 guardR = identity.Hero == HeroId.Kaelon
+                ? new Vector3(-28f, 0f, -12f)
+                : new Vector3(-30f, 0f, -12f);
+            Vector3 guardL = identity.Hero == HeroId.Kaelon
+                ? new Vector3(-20f, 0f, 12f)
+                : new Vector3(-18f, 0f, 12f);
+            armRestR = armR.localRotation * Quaternion.Inverse(Quaternion.Euler(guardR));
+            armRestL = armL != null
+                ? armL.localRotation * Quaternion.Inverse(Quaternion.Euler(guardL))
+                : Quaternion.identity;
             weaponRestR = weaponR.localRotation;
             captured = true;
         }
