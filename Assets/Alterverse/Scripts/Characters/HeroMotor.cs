@@ -34,6 +34,7 @@ namespace Alterverse.Characters
         private HeroLocomotion body;
         private HeroCombatProfile profile;
         private PlanetBuffReceiver planetBuff;
+        private SoftTargeting targeting;
         private Vector2 moveInput;
         private Vector3 planarVelocity;
         private Vector3 lastMoveDirection = Vector3.forward;
@@ -77,6 +78,7 @@ namespace Alterverse.Characters
             body = GetComponent<HeroLocomotion>() ?? gameObject.AddComponent<HeroLocomotion>();
             profile = GetComponent<HeroCombatProfile>();
             planetBuff = GetComponent<PlanetBuffReceiver>() ?? gameObject.AddComponent<PlanetBuffReceiver>();
+            targeting = GetComponent<SoftTargeting>();
         }
 
         private void Update()
@@ -165,18 +167,49 @@ namespace Alterverse.Characters
             return desiredVelocity.sqrMagnitude > planarVelocity.sqrMagnitude ? acceleration : deceleration;
         }
 
+        private bool TryGetAttackFacing(out Vector3 facing)
+        {
+            facing = Vector3.zero;
+            if (State != FighterState.Attacking) return false;
+
+            // SoftTargeting can be added by the combat component after HeroMotor.Awake, so
+            // resolve it lazily as well. While the focus is valid, track its live position.
+            if (targeting == null) targeting = GetComponent<SoftTargeting>();
+            Health focus = targeting != null ? targeting.Current : null;
+            if (focus != null)
+            {
+                facing = focus.transform.position - transform.position;
+                facing.y = 0f;
+                if (facing.sqrMagnitude > .0001f)
+                {
+                    attackFacing = facing.normalized;
+                    facing = attackFacing;
+                    return true;
+                }
+            }
+
+            if (attackFacing.sqrMagnitude > .0001f)
+            {
+                facing = attackFacing.normalized;
+                return true;
+            }
+
+            return false;
+        }
+
         private void UpdateRotation(Vector3 inputDirection, float dt)
         {
             Vector3 facing = Vector3.zero;
+            bool actionFacingActive = TryGetAttackFacing(out Vector3 combatFacing);
 
-            // Steering wins while moving. At rest an attack can smoothly turn toward its
-            // target, matching the existing combat-facing rule without snapping.
-            if (planarVelocity.sqrMagnitude > .01f)
+            // Combat focus wins while attacking. Translation stays independent, so the hero
+            // can strafe or backpedal without ever firing/punching over the shoulder.
+            if (actionFacingActive)
+                facing = combatFacing;
+            else if (planarVelocity.sqrMagnitude > .01f)
                 facing = planarVelocity.normalized;
             else if (inputDirection.sqrMagnitude > .0001f)
                 facing = inputDirection.normalized;
-            else if (State == FighterState.Attacking && attackFacing.sqrMagnitude > .0001f)
-                facing = attackFacing.normalized;
 
             if (facing.sqrMagnitude <= .0001f)
             {
@@ -188,9 +221,12 @@ namespace Alterverse.Characters
             float slerpT = 1f - Mathf.Exp(-rotationSharpness * dt);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, slerpT);
 
-            // HeroLocomotion remains the shared facing owner for bots/dashes. Feeding it the
-            // already-smoothed forward vector prevents its LateUpdate from snapping the player.
-            body.FaceMovement(transform.forward);
+            // Keep the shared late-facing owner on the same priority rule. During combat the
+            // action direction wins; otherwise movement owns facing as before.
+            if (actionFacingActive)
+                body.FaceAction(transform.forward, Mathf.Max(.08f, dt * 2f));
+            else
+                body.FaceMovement(transform.forward);
         }
 
         private Vector2 FilterInput(Vector2 input)
@@ -220,13 +256,18 @@ namespace Alterverse.Characters
 
         /// <summary>
         /// Marks the locomotion state as attacking without taking damage execution away from
-        /// the combat system. Movement and target-facing are blended instead of hard-locked.
+        /// the combat system. Movement stays independent while target-facing gets priority.
         /// </summary>
         public void NotifyAttack(float seconds, Vector3 facing)
         {
-            attackUntil = Mathf.Max(attackUntil, Time.time + Mathf.Max(.05f, seconds));
+            float duration = Mathf.Max(.05f, seconds);
+            attackUntil = Mathf.Max(attackUntil, Time.time + duration);
             facing.y = 0f;
-            if (facing.sqrMagnitude > .0001f) attackFacing = facing.normalized;
+            if (facing.sqrMagnitude > .0001f)
+            {
+                attackFacing = facing.normalized;
+                body?.FaceAction(attackFacing, duration);
+            }
             State = FighterState.Attacking;
         }
 
