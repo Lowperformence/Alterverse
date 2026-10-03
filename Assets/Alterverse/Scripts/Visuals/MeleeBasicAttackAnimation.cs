@@ -20,8 +20,9 @@ namespace Alterverse.Visuals
         private AuthoredHeroPresentation authored;
 
         private Transform root;
-        private Transform armL, armR, weaponL, weaponR, spine, pelvis;
-        private Quaternion baseArmL, baseArmR, baseWeaponL, baseWeaponR, baseSpine, basePelvis;
+        private Transform armL, armR, elbowL, elbowR, wristL, wristR, weaponL, weaponR, spine, pelvis;
+        private Quaternion baseArmL, baseArmR, baseElbowL, baseElbowR, baseWristL, baseWristR;
+        private Quaternion baseWeaponL, baseWeaponR, baseSpine, basePelvis;
         private bool baseCaptured;
 
         private float previousCooldown;
@@ -55,8 +56,8 @@ namespace Alterverse.Visuals
             float current = basic.RemainingCooldown;
             float cooldown = Mathf.Max(.1f, basic.AttackCooldown);
 
-            // Same robust edge used by the attack-readability layer: only a real 0 -> full
-            // cooldown jump starts a strike, so replication corrections cannot double-trigger it.
+            // Only a real 0 -> full cooldown jump starts a strike. Network corrections cannot
+            // repeatedly restart the arm pose while an attack is already being presented.
             if (current > cooldown * .68f && previousCooldown < cooldown * .22f)
                 BeginAttack();
 
@@ -120,6 +121,10 @@ namespace Alterverse.Visuals
 
             if (armL == null) armL = FindControl("ArmL");
             if (armR == null) armR = FindControl("ArmR");
+            if (elbowL == null) elbowL = FindControl("ElbowJointL");
+            if (elbowR == null) elbowR = FindControl("ElbowJointR");
+            if (wristL == null) wristL = FindControl("WristJointL");
+            if (wristR == null) wristR = FindControl("WristJointR");
             if (weaponL == null) weaponL = FindControl("WeaponL");
             if (weaponR == null) weaponR = FindControl("WeaponR");
             if (spine == null) spine = FindControl("SpineUpper") ?? FindControl("Torso");
@@ -151,6 +156,10 @@ namespace Alterverse.Visuals
             if (!ControlsReady()) return;
             baseArmL = armL.localRotation;
             baseArmR = armR.localRotation;
+            baseElbowL = elbowL != null ? elbowL.localRotation : Quaternion.identity;
+            baseElbowR = elbowR != null ? elbowR.localRotation : Quaternion.identity;
+            baseWristL = wristL != null ? wristL.localRotation : Quaternion.identity;
+            baseWristR = wristR != null ? wristR.localRotation : Quaternion.identity;
             baseWeaponL = weaponL != null ? weaponL.localRotation : Quaternion.identity;
             baseWeaponR = weaponR != null ? weaponR.localRotation : Quaternion.identity;
             baseSpine = spine != null ? spine.localRotation : Quaternion.identity;
@@ -162,18 +171,10 @@ namespace Alterverse.Visuals
         {
             switch (hero)
             {
-                case HeroId.Veyr:
-                    ApplyVeyr(age);
-                    break;
-                case HeroId.Kaelon:
-                    ApplyKaelon(age);
-                    break;
-                case HeroId.Rook:
-                    ApplyRook(age);
-                    break;
-                case HeroId.Nerok:
-                    ApplyNerok(age);
-                    break;
+                case HeroId.Veyr: ApplyVeyr(age); break;
+                case HeroId.Kaelon: ApplyKaelon(age); break;
+                case HeroId.Rook: ApplyRook(age); break;
+                case HeroId.Nerok: ApplyNerok(age); break;
             }
         }
 
@@ -182,30 +183,44 @@ namespace Alterverse.Visuals
             bool right = (attackSerial & 1) != 0;
             float side = right ? 1f : -1f;
 
-            // Draw the striking blade outside the shoulder, cut across the centre line, then
-            // continue past the target. The off hand stays in the captured crossed guard.
-            Vector3 draw = new Vector3(-34f, -44f * side, 58f * side);
-            Vector3 contact = new Vector3(-82f, 20f * side, -18f * side);
-            Vector3 through = new Vector3(-58f, 56f * side, -44f * side);
-            Quaternion armPose = StrikeOffset(age, draw, contact, through, .11f, .28f);
-
-            Vector3 weaponDraw = new Vector3(-8f, -28f * side, 34f * side);
-            Vector3 weaponContact = new Vector3(18f, 16f * side, -12f * side);
-            Vector3 weaponThrough = new Vector3(32f, 48f * side, -30f * side);
-            Quaternion weaponPose = StrikeOffset(age, weaponDraw, weaponContact, weaponThrough, .11f, .28f);
+            // Alternate the blades. The striking hand first opens outside the shoulder, then
+            // cuts through centre mass and continues beyond the target instead of simply lifting.
+            Quaternion armPose = StrikeOffset(age,
+                new Vector3(-34f, -44f * side, 58f * side),
+                new Vector3(-82f, 20f * side, -18f * side),
+                new Vector3(-58f, 56f * side, -44f * side), .11f, .28f);
+            Quaternion elbowPose = StrikeOffset(age,
+                new Vector3(-48f, 0f, 0f), new Vector3(-18f, 0f, 0f),
+                new Vector3(-12f, 0f, 0f), .11f, .28f);
+            Quaternion wristPose = StrikeOffset(age,
+                new Vector3(-8f, -10f * side, 12f * side),
+                new Vector3(8f, 8f * side, -6f * side),
+                new Vector3(15f, 16f * side, -12f * side), .11f, .28f);
+            Quaternion weaponPose = StrikeOffset(age,
+                new Vector3(-8f, -28f * side, 34f * side),
+                new Vector3(18f, 16f * side, -12f * side),
+                new Vector3(32f, 48f * side, -30f * side), .11f, .28f);
 
             if (right)
             {
                 armR.localRotation = baseArmR * armPose;
+                if (elbowR != null) elbowR.localRotation = baseElbowR * elbowPose;
+                if (wristR != null) wristR.localRotation = baseWristR * wristPose;
                 if (weaponR != null) weaponR.localRotation = baseWeaponR * weaponPose;
                 armL.localRotation = baseArmL;
+                if (elbowL != null) elbowL.localRotation = baseElbowL;
+                if (wristL != null) wristL.localRotation = baseWristL;
                 if (weaponL != null) weaponL.localRotation = baseWeaponL;
             }
             else
             {
                 armL.localRotation = baseArmL * armPose;
+                if (elbowL != null) elbowL.localRotation = baseElbowL * elbowPose;
+                if (wristL != null) wristL.localRotation = baseWristL * wristPose;
                 if (weaponL != null) weaponL.localRotation = baseWeaponL * weaponPose;
                 armR.localRotation = baseArmR;
+                if (elbowR != null) elbowR.localRotation = baseElbowR;
+                if (wristR != null) wristR.localRotation = baseWristR;
                 if (weaponR != null) weaponR.localRotation = baseWeaponR;
             }
 
@@ -214,24 +229,26 @@ namespace Alterverse.Visuals
 
         private void ApplyKaelon(float age)
         {
-            // Heavy side-loaded swing. Nothing goes into the old -150 degree overhead pose:
-            // the weapon visibly travels from the rear shoulder, through the target, to follow-through.
-            Quaternion rightArm = StrikeOffset(age,
-                new Vector3(-40f, -56f, -30f),
-                new Vector3(-88f, 10f, -5f),
+            // Auren loads the weapon beside/behind his right shoulder. The old near-vertical
+            // -150 degree arm lift is deliberately absent: this is a horizontal heavy swing.
+            armR.localRotation = baseArmR * StrikeOffset(age,
+                new Vector3(-40f, -56f, -30f), new Vector3(-88f, 10f, -5f),
                 new Vector3(-62f, 52f, 22f), .13f, .22f);
-            Quaternion leftArm = StrikeOffset(age,
-                new Vector3(-28f, -22f, 14f),
-                new Vector3(-48f, 7f, 7f),
+            armL.localRotation = baseArmL * StrikeOffset(age,
+                new Vector3(-28f, -22f, 14f), new Vector3(-48f, 7f, 7f),
                 new Vector3(-38f, 25f, 12f), .13f, .22f);
-            Quaternion weapon = StrikeOffset(age,
-                new Vector3(-12f, -38f, -26f),
-                new Vector3(16f, 8f, 5f),
+            if (elbowR != null) elbowR.localRotation = baseElbowR * StrikeOffset(age,
+                new Vector3(-56f, 0f, 0f), new Vector3(-24f, 0f, 0f),
+                new Vector3(-16f, 0f, 0f), .13f, .22f);
+            if (elbowL != null) elbowL.localRotation = baseElbowL * StrikeOffset(age,
+                new Vector3(-42f, 0f, 0f), new Vector3(-32f, 0f, 0f),
+                new Vector3(-28f, 0f, 0f), .13f, .22f);
+            if (wristR != null) wristR.localRotation = baseWristR * StrikeOffset(age,
+                new Vector3(-10f, -8f, -5f), new Vector3(5f, 3f, 2f),
+                new Vector3(12f, 9f, 5f), .13f, .22f);
+            if (weaponR != null) weaponR.localRotation = baseWeaponR * StrikeOffset(age,
+                new Vector3(-12f, -38f, -26f), new Vector3(16f, 8f, 5f),
                 new Vector3(32f, 46f, 24f), .13f, .22f);
-
-            armR.localRotation = baseArmR * rightArm;
-            armL.localRotation = baseArmL * leftArm;
-            if (weaponR != null) weaponR.localRotation = baseWeaponR * weapon;
             if (weaponL != null) weaponL.localRotation = baseWeaponL;
             ApplyBodyTwist(age, -18f, 7f, 21f, 7f, -5f, -9f);
         }
@@ -241,27 +258,40 @@ namespace Alterverse.Visuals
             bool right = (attackSerial & 1) != 0;
             float side = right ? 1f : -1f;
 
-            // True jab/cross: fist retracts beside the ribs first, shoulder and chest rotate,
-            // then the arm drives straight through the target instead of lifting upward.
-            Vector3 draw = new Vector3(-18f, -58f * side, -32f * side);
-            Vector3 contact = new Vector3(-100f, 8f * side, -2f * side);
-            Vector3 through = new Vector3(-108f, 22f * side, 8f * side);
-            Quaternion punch = StrikeOffset(age, draw, contact, through, .10f, .16f);
-
+            // Brakk alternates a real jab/cross. The striking elbow folds back beside the ribs,
+            // the chest coils away, then elbow and shoulder extend together through the target.
+            Quaternion punch = StrikeOffset(age,
+                new Vector3(-18f, -58f * side, -32f * side),
+                new Vector3(-100f, 8f * side, -2f * side),
+                new Vector3(-108f, 22f * side, 8f * side), .10f, .16f);
+            Quaternion punchElbow = StrikeOffset(age,
+                new Vector3(-74f, 0f, 0f), new Vector3(-10f, 0f, 0f),
+                new Vector3(-5f, 0f, 0f), .10f, .16f);
             Quaternion brace = StrikeOffset(age,
                 new Vector3(-12f, 12f * side, 12f * side),
                 new Vector3(-26f, -8f * side, -10f * side),
                 new Vector3(-30f, -10f * side, -12f * side), .10f, .16f);
+            Quaternion braceElbow = StrikeOffset(age,
+                new Vector3(-48f, 0f, 0f), new Vector3(-42f, 0f, 0f),
+                new Vector3(-38f, 0f, 0f), .10f, .16f);
 
             if (right)
             {
                 armR.localRotation = baseArmR * punch;
                 armL.localRotation = baseArmL * brace;
+                if (elbowR != null) elbowR.localRotation = baseElbowR * punchElbow;
+                if (elbowL != null) elbowL.localRotation = baseElbowL * braceElbow;
+                if (wristR != null) wristR.localRotation = baseWristR;
+                if (wristL != null) wristL.localRotation = baseWristL;
             }
             else
             {
-                armL.localRotation = baseArmL * Mirror(punch);
-                armR.localRotation = baseArmR * Mirror(brace);
+                armL.localRotation = baseArmL * punch;
+                armR.localRotation = baseArmR * brace;
+                if (elbowL != null) elbowL.localRotation = baseElbowL * punchElbow;
+                if (elbowR != null) elbowR.localRotation = baseElbowR * braceElbow;
+                if (wristL != null) wristL.localRotation = baseWristL;
+                if (wristR != null) wristR.localRotation = baseWristR;
             }
 
             ApplyBodyTwist(age, side * -20f, side * 12f, side * 19f, 8f, -6f, -8f);
@@ -271,24 +301,30 @@ namespace Alterverse.Visuals
         {
             float side = (attackSerial & 1) != 0 ? 1f : -1f;
 
-            // Nerok's anchor is a broad low-to-mid body swing. The draw stays outside and behind
-            // the shoulder instead of pointing vertically above the head.
-            Quaternion rightArm = StrikeOffset(age,
+            // Nerok drives the anchor in a broad low-to-mid body arc. The shoulder, elbow,
+            // wrist and anchor all load together, so the weapon visibly has mass and follow-through.
+            armR.localRotation = baseArmR * StrikeOffset(age,
                 new Vector3(-30f, -62f * side, -36f * side),
                 new Vector3(-84f, 16f * side, -10f * side),
                 new Vector3(-56f, 68f * side, 30f * side), .12f, .24f);
-            Quaternion leftArm = StrikeOffset(age,
+            armL.localRotation = baseArmL * StrikeOffset(age,
                 new Vector3(-26f, -28f * side, 16f * side),
                 new Vector3(-46f, 8f * side, 4f * side),
                 new Vector3(-38f, 28f * side, 14f * side), .12f, .24f);
-            Quaternion weapon = StrikeOffset(age,
+            if (elbowR != null) elbowR.localRotation = baseElbowR * StrikeOffset(age,
+                new Vector3(-60f, 0f, 0f), new Vector3(-22f, 0f, 0f),
+                new Vector3(-14f, 0f, 0f), .12f, .24f);
+            if (elbowL != null) elbowL.localRotation = baseElbowL * StrikeOffset(age,
+                new Vector3(-46f, 0f, 0f), new Vector3(-34f, 0f, 0f),
+                new Vector3(-28f, 0f, 0f), .12f, .24f);
+            if (wristR != null) wristR.localRotation = baseWristR * StrikeOffset(age,
+                new Vector3(-12f, -10f * side, -7f * side),
+                new Vector3(6f, 4f * side, 2f * side),
+                new Vector3(14f, 12f * side, 8f * side), .12f, .24f);
+            if (weaponR != null) weaponR.localRotation = baseWeaponR * StrikeOffset(age,
                 new Vector3(-16f, -46f * side, -30f * side),
                 new Vector3(10f, 14f * side, 5f * side),
                 new Vector3(28f, 64f * side, 32f * side), .12f, .24f);
-
-            armR.localRotation = baseArmR * rightArm;
-            armL.localRotation = baseArmL * leftArm;
-            if (weaponR != null) weaponR.localRotation = baseWeaponR * weapon;
             if (weaponL != null) weaponL.localRotation = baseWeaponL;
             ApplyBodyTwist(age, side * -23f, side * 10f, side * 26f, 8f, -5f, -10f);
         }
@@ -304,7 +340,6 @@ namespace Alterverse.Visuals
 
             if (age < loadEnd)
                 return Quaternion.Slerp(Quaternion.identity, qDraw, Ease(age / Mathf.Max(.001f, loadEnd)));
-
             if (age < windup)
                 return Quaternion.Slerp(qDraw, qContact,
                     Ease((age - loadEnd) / Mathf.Max(.001f, windup - loadEnd)));
@@ -342,22 +377,15 @@ namespace Alterverse.Visuals
             if (age < loadEnd) return Mathf.Lerp(0f, drawn, Ease(age / Mathf.Max(.001f, loadEnd)));
             if (age < windup) return Mathf.Lerp(drawn, contact,
                 Ease((age - loadEnd) / Mathf.Max(.001f, windup - loadEnd)));
+
             float followEnd = windup + followSeconds;
             if (age < followEnd) return Mathf.Lerp(contact, through,
                 Ease((age - windup) / Mathf.Max(.001f, followSeconds)));
+
             float recoverEnd = followEnd + recoverySeconds;
             if (age < recoverEnd) return Mathf.Lerp(through, 0f,
                 Ease((age - followEnd) / Mathf.Max(.001f, recoverySeconds)));
             return 0f;
-        }
-
-        private static Quaternion Mirror(Quaternion rotation)
-        {
-            Vector3 e = rotation.eulerAngles;
-            e.y = -Mathf.DeltaAngle(0f, e.y);
-            e.z = -Mathf.DeltaAngle(0f, e.z);
-            e.x = Mathf.DeltaAngle(0f, e.x);
-            return Quaternion.Euler(e);
         }
 
         private static float Ease(float value)
