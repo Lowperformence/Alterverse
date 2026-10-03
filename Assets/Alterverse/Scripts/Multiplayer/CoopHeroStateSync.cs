@@ -16,10 +16,11 @@ namespace Alterverse.Multiplayer
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
         private static CoopHeroStateSync audioRelay;
+        private const string SharkEffectMessage="DF_COOP_SHARK_FX_V1";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V2";
-        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V2";
+        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V3";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/12f;
         private const float MinimumMovementSlack=.18f;
@@ -99,6 +100,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(HeroSnapshotMessage,OnHeroSnapshot);
             messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
             messaging.RegisterNamedMessageHandler(KillSoundMessage,OnKillSound);
+            messaging.RegisterNamedMessageHandler(SharkEffectMessage,OnSharkEffect);
             attached=true;
         }
 
@@ -109,6 +111,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(HeroSnapshotMessage);
             messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
             messaging.UnregisterNamedMessageHandler(KillSoundMessage);
+            messaging.UnregisterNamedMessageHandler(SharkEffectMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
             senderLastPoseAt.Clear();
@@ -163,6 +166,39 @@ namespace Alterverse.Multiplayer
                 Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
         }
 
+        public static void BroadcastSharkEffect(GameObject actor,int kind,Vector3 center,float radius,float duration)
+        {
+            var service=audioRelay;var manager=NetworkManager.Singleton;
+            if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
+            var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
+            using FastBufferWriter writer=new(32,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(kind);
+            writer.WriteValueSafe(center.x);writer.WriteValueSafe(center.y);writer.WriteValueSafe(center.z);
+            writer.WriteValueSafe(radius);writer.WriteValueSafe(duration);
+            foreach(ulong id in manager.ConnectedClientsIds)
+                if(id!=NetworkManager.ServerClientId)
+                    service.messaging.SendNamedMessage(SharkEffectMessage,id,writer,NetworkDelivery.ReliableSequenced);
+        }
+        private void OnSharkEffect(ulong sender,FastBufferReader reader)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(32))return;
+            if(!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int kind);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out float radius);reader.ReadValueSafe(out float duration);
+            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>5||
+                float.IsNaN(x)||float.IsInfinity(x)||float.IsNaN(y)||float.IsInfinity(y)||float.IsNaN(z)||float.IsInfinity(z)||
+                float.IsNaN(radius)||float.IsInfinity(radius)||radius<0||radius>4||
+                float.IsNaN(duration)||float.IsInfinity(duration)||duration<=0||duration>4)return;
+            GameObject actor=slots[slot].gameObject;
+            if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Nerok)return;
+            Vector3 center=new Vector3(x,y,z);
+            if(kind==0)Alterverse.Visuals.HeroSkillVfx.SharkAnchor(actor,center,duration);
+            else if(kind==1)Alterverse.Visuals.HeroSkillVfx.SharkVortex(actor,center,radius,duration);
+            else Alterverse.Visuals.HeroSkillVfx.Area(actor,center,radius,duration,kind!=5,false,kind==4?2:3);
+        }
+
         private void SendOwnerPose(NetworkManager manager)
         {
             if(manager==null||manager.IsServer||messaging==null||localSlot<0)return;
@@ -208,7 +244,7 @@ namespace Alterverse.Multiplayer
             Vector3 delta=desired-actor.transform.position;delta.y=0;
 
             HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
-            if(locomotion!=null&&locomotion.IsDashing)return;
+            if(locomotion!=null&&(locomotion.IsDashing||locomotion.IsForcedMoving))return;
 
             float now=Time.unscaledTime;
             float dt=senderLastPoseAt.TryGetValue(senderClientId,out float previous)
@@ -265,6 +301,7 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(health.IsDead);
                 HeroCombatStatus status=slot.GetComponent<HeroCombatStatus>();
                 writer.WriteValueSafe(status!=null&&status.Stunned);
+                writer.WriteValueSafe(slot.GetComponent<HeroLocomotion>()?.IsForcedMoving==true);
                 writer.WriteValueSafe(status!=null?status.MoveMultiplier:1f);
                 HeroRespawn respawn=slot.GetComponent<HeroRespawn>();
                 writer.WriteValueSafe(respawn!=null&&respawn.IsRespawning);
@@ -300,6 +337,7 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float shield);
                 reader.ReadValueSafe(out bool dead);
                 reader.ReadValueSafe(out bool stunned);
+                reader.ReadValueSafe(out bool forcedMoving);
                 reader.ReadValueSafe(out float moveMultiplier);
                 reader.ReadValueSafe(out bool respawning);
                 reader.ReadValueSafe(out float respawnRemaining);
@@ -316,7 +354,7 @@ namespace Alterverse.Multiplayer
                 Vector3 hostPosition=new(x,y,z);
                 bool localOwner=actor.IsLocalHuman;
                 float errorSqr=(actor.transform.position-hostPosition).sqrMagnitude;
-                if(!localOwner||dead||errorSqr>36f)
+                if(!localOwner||dead||forcedMoving||errorSqr>36f)
                     actor.transform.SetPositionAndRotation(hostPosition,Quaternion.Euler(0,yaw,0));
                 else if(localOwner&&errorSqr>.49f)
                     actor.transform.position=Vector3.Lerp(actor.transform.position,hostPosition,.42f);
@@ -324,7 +362,7 @@ namespace Alterverse.Multiplayer
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 HeroCombatStatus status=actor.GetComponent<HeroCombatStatus>()??actor.gameObject.AddComponent<HeroCombatStatus>();
-                status.ApplyNetworkSnapshot(stunned,moveMultiplier);
+                status.ApplyNetworkSnapshot(stunned,forcedMoving?0f:moveMultiplier);
                 actor.GetComponent<CoopRespawnReplica>()?.Apply(respawning,respawnRemaining);
                 if(actor.IsLocalHuman)
                 {

@@ -297,6 +297,8 @@ namespace Alterverse.Visuals
                         }
                         break;
                     }
+                case HeroId.Nerok:
+                    Fx(HeroFxShape.WaveCrest,p,Accent(actor),.75f,.22f,HeroFxMotion.Sweep,facing,actor);break;
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -360,12 +362,50 @@ namespace Alterverse.Visuals
             Fx(HeroFxShape.Hex,p,new Color(1,.48f,.16f),.82f,seconds,HeroFxMotion.Hold,actor:actor,follow:target.transform,warning:true);
             Fx(HeroFxShape.Rift,target.transform.position+Vector3.up*.25f,Accent(actor),.6f,seconds,HeroFxMotion.Contract,Face(actor.transform.position,target.transform.position),actor,target.transform,true);
         }
+        public static void SharkAnchor(GameObject actor,Vector3 impact,float flight)
+        {
+            Vector3 from=Muzzle(actor),to=impact+Vector3.up*.35f;
+            Quaternion facing=Face(from,to);Color cyan=new Color(.04f,.70f,1f,.94f);
+            HeroVfxPool.Emit(HeroFxShape.AnchorProjectile,from,to,Vector3.one*.78f,cyan,
+                flight,HeroFxMotion.TravelFixedFrame,facing,actor);
+            float distance=Vector3.Distance(from,to);
+            HeroVfxPool.Emit(HeroFxShape.Streak,to,to,new Vector3(.13f,.13f,distance/1.4f),
+                new Color(.34f,.77f,.95f,.65f),flight+.15f,HeroFxMotion.Hold,facing,actor);
+            Fx(HeroFxShape.WaveCrest,from,cyan,.32f,.18f,HeroFxMotion.Expand,facing,actor);
+        }
+        public static void SharkVortex(GameObject actor,Vector3 center,float radius,float duration)
+        {
+            Vector3 p=Ground(center);Color water=new Color(.02f,.48f,.95f,.65f);
+            Fx(HeroFxShape.WaterSpiral,p,water,radius,duration,HeroFxMotion.Orbit,actor:actor);
+            Fx(HeroFxShape.WaterSpiral,p+Vector3.up*.075f,new Color(.2f,.85f,1f,.42f),radius*.76f,
+                duration,HeroFxMotion.Orbit,Quaternion.Euler(0,60,0),actor);
+            // A clear boundary and low crests make the real area readable without hiding units.
+            Fx(HeroFxShape.Ring,p,new Color(.16f,.70f,1f,.40f),radius,duration,HeroFxMotion.Hold,actor:actor);
+            for(int i=0;i<3;i++)
+                Fx(HeroFxShape.WaveCrest,p,water,radius*.9f,duration,HeroFxMotion.Orbit,
+                    Quaternion.Euler(0,i*120,0),actor);
+            for(int i=0;i<6;i++)
+            {
+                float angle=i*Mathf.PI/3;Vector3 offset=new Vector3(Mathf.Cos(angle),.22f,Mathf.Sin(angle))*radius*.60f;
+                HeroVfxPool.Emit(HeroFxShape.Orb,p+offset,p+Vector3.up*.38f,Vector3.one*.075f,
+                    new Color(.55f,.9f,1f,.65f),duration*.55f,HeroFxMotion.Spiral,owner:actor,
+                    delay:i*.12f,decorative:true);
+            }
+        }
         public static void Area(GameObject actor,Vector3 center,float radius,float duration,bool warning,bool beneficial=false,int slot=-1)
         {
             if(actor==null)return;
             HeroId hero=Hero(actor);
             Color accent=hero==HeroId.Mira&&beneficial?new Color(.24f,1f,.42f):Accent(actor);
             Vector3 ground=Ground(center);
+            if(hero==HeroId.Nerok&&!warning)
+            {
+                Fx(HeroFxShape.WaveCrest,ground,accent,radius,.4f,HeroFxMotion.Expand,
+                    Face(actor.transform.position,center),actor);
+                Ring(actor,ground,radius,.32f);
+                Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(actor,5,center,radius,.4f);
+                return;
+            }
             if(warning)
             {
                 // Keep the real hit radius legible. Decorative rings must never imply another hit zone.
@@ -739,6 +779,7 @@ namespace Alterverse.Visuals
             {
                 case HeroId.Veyr:Slash(actor,impact,-1);break;
                 case HeroId.Kaelon:
+                case HeroId.Nerok:
                 case HeroId.Rook:HeavyContact(actor,impact,-1);break;
                 default:Projectile(actor,impact,-1,travelTime,target);break;
             }

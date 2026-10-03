@@ -20,7 +20,7 @@ namespace Alterverse.UI
         private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "DAILY", "RANKING", "SETTINGS" };
         private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
-        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
             "Hold the front. Shield your team and interrupt enemies at close range.",
@@ -28,8 +28,9 @@ namespace Alterverse.UI
             "Control the fight. Place powerful area attacks where enemies want to move.",
             "Keep allies fighting. Heal, shield and slow enemies from the backline.",
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
-            "Slip between seconds. Reposition through rifts, control space and strike with chronolight." };
-        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL" };
+            "Slip between seconds. Reposition through rifts, control space and strike with chronolight.",
+            "Hook an enemy with your anchor. Shield yourself and control fights with a water vortex." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL" };
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
         private bool choosingMatchMode;
@@ -582,11 +583,11 @@ namespace Alterverse.UI
 
         private void DrawHeroes()
         {
-            Heading("Heroes","Seven heroes. Choose how you fight.");
+            Heading("Heroes",$"{HeroIdentity.HeroCount} heroes. Choose how you fight.");
             const float rosterWidth=244f;
             for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
-                Rect row=new Rect(Left,216+i*62,rosterWidth,56);
+                Rect row=new Rect(Left,216+i*55,rosterWidth,50);
                 HeroId rowHero=(HeroId)i;
                 bool chosen=i==selectedHero;
                 bool owned=HeroUnlockInventory.Owned(rowHero);
@@ -610,7 +611,7 @@ namespace Alterverse.UI
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
             theme.Label(new Rect(portraitX,566,portraitWidth,46),RoleDescriptions[selectedHero],theme.Small,true);
             string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:
-                heroId==HeroId.Veyr?"SHADOW STEEL":heroId==HeroId.Traveler?"CHRONOLUX FOCUS":"ORIGINAL WEAPON";
+                heroId==HeroId.Veyr?"SHADOW STEEL":heroId==HeroId.Traveler?"CHRONOLUX FOCUS":heroId==HeroId.Nerok?"ABYSSAL ANCHOR":"ORIGINAL WEAPON";
             theme.FitLabel(new Rect(portraitX,616,portraitWidth,24),
                 heroOwned?"EQUIPMENT  /  "+weaponStatus:$"PREMIUM HERO  /  {HeroUnlockCatalog.Price(heroId):N0} SHARDS",theme.Small,true);
 
@@ -1472,7 +1473,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
-
-

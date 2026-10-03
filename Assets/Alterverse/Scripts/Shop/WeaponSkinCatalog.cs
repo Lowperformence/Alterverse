@@ -53,7 +53,9 @@ namespace Alterverse.Shop
             new(HeroId.Rook,"FROST STEEL","Titan Gauntlets","Rook's original Titan Gauntlets in cool metallic steel with bright cyan accents. Same weapon model and combat behavior.",new Color(.16f,.82f,1f),1),
 
             new(HeroId.Traveler,"CHRONO VIOLET","Chronolux Focus","The Traveler's original Chronolux Focus in dark temporal metal with violet chronolight. Same weapon model and combat behavior.",new Color(.72f,.28f,1f),0),
-            new(HeroId.Traveler,"CHRONO GOLD","Chronolux Focus","The Traveler's original Chronolux Focus in pale royal metal with warm golden chronolight. Same weapon model and combat behavior.",new Color(1f,.62f,.22f),1)
+            new(HeroId.Traveler,"CHRONO GOLD","Chronolux Focus","The Traveler's original Chronolux Focus in pale royal metal with warm golden chronolight. Same weapon model and combat behavior.",new Color(1f,.62f,.22f),1),
+            new(HeroId.Nerok,"TIDAL CIRCUIT","Abyssal Anchor","Epic cyan anchor engraving over the original anchor. Cosmetic only.",new Color(.08f,.82f,1f),0),
+            new(HeroId.Nerok,"DEEP CORAL","Abyssal Anchor","Epic coral anchor engraving over the original anchor. Cosmetic only.",new Color(1f,.25f,.36f),1)
         };
 
         public static WeaponSkinItem For(HeroId hero)=>For(hero,0);
@@ -199,4 +201,3 @@ namespace Alterverse.Shop
         }
     }
 }
-

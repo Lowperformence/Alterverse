@@ -208,6 +208,12 @@ namespace Alterverse.UI
                         new Color(.78f, .16f, .025f), new Color(.30f, .055f, .018f),
                         new Color(.33f, .075f, .025f), new Color(.095f, .025f, .018f),
                         new Color(1f, .38f, .08f), new Vector2(.78f, .61f), .39f, 73, false, .12f, 1f);
+                case HeroId.Nerok: // Pelagos-9 — deep ocean and cyan bioluminescence
+                    return new WorldStyle(
+                        new Color(.008f,.030f,.066f), new Color(.003f,.008f,.017f),
+                        new Color(.02f,.28f,.55f),new Color(.015f,.09f,.22f),
+                        new Color(.02f,.31f,.39f),new Color(.01f,.065f,.12f),
+                        new Color(.13f,.85f,1f),new Vector2(.78f,.60f),.37f,101,false,.5f,.32f);
                 default: // Traveler — violet temporal eclipse
                     return new WorldStyle(
                         new Color(.025f, .040f, .071f), new Color(.007f, .008f, .019f),

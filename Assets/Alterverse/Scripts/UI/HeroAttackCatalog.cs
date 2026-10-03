@@ -62,6 +62,7 @@ namespace Alterverse.UI
             if(hero==HeroId.Mira&&slot==1)return $"{spec.Power:0} HEAL";
             if(hero==HeroId.Mira&&slot==2)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Mira&&slot==3)return $"{spec.Power:0} HEAL + 25 SHIELD";
+            if(hero==HeroId.Nerok&&slot==1)return $"{spec.Power:0} SHIELD / 3s";
             if(hero==HeroId.Rook&&slot==1)return $"{spec.Power:0} HEAL + 20 SHIELD";
             if(spec.Power<=0)return "";
             return $"{spec.Power:0} DMG";
@@ -76,6 +77,7 @@ namespace Alterverse.UI
             HeroId.Mira=>"Ranged support basic attack.",
             HeroId.Rook=>"Melee strike. Below 60% HP, hero hits restore 12% of damage dealt.",
             HeroId.Traveler=>"Flux Bolt: Planet Flux fires compressed chronolight with a clean temporal trail.",
+            HeroId.Nerok=>"Heavy anchor strike. A successful hook on a hero grants 12 shield for 2s.",
             _=>"Standard attack."
         };
 
@@ -129,6 +131,13 @@ namespace Alterverse.UI
                 1=>"Rift Step: time-skip 3.6m through an entry and exit portal.",
                 2=>"Chrono Snare: delayed 2.2m field that slows enemies for 1.5s.",
                 _=>"Paradox Collapse: large delayed time-rift burst that slows enemies for 1.8s."
+            },
+            HeroId.Nerok=>slot switch
+            {
+                0=>"Throw the anchor after a readable windup; 28 damage and pull mobile enemies up to 4.2m. Walls block the hook and pull.",
+                1=>"Gain 45 shield for 3s and 15% movement speed for 2s.",
+                2=>"Short-range pressure wave; 26 damage and 25% slow for 1.2s.",
+                _=>"After a warning, a fixed 3.2m vortex deals 60 total damage over 3s, slows 25% and gently draws mobile enemies inward. Leave the circle to escape."
             },
             _=>"Unknown effect."
         };

@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Alterverse.Characters
 {
     [RequireComponent(typeof(Health), typeof(HeroIdentity), typeof(HeroAbilityKit))]
-    public sealed class HeroAbilityExecution : MonoBehaviour
+    public sealed partial class HeroAbilityExecution : MonoBehaviour
     {
         private Health self;
         private HeroLocomotion locomotion;
@@ -67,7 +67,11 @@ namespace Alterverse.Characters
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
-            if (mobility)
+            if (hero == HeroId.Nerok)
+            {
+                if(!TryCastShark(slot,target,ref presentationWindup))return false;
+            }
+            else if (mobility)
             {
                 movement.y = 0; if (movement.sqrMagnitude < .01f) movement = transform.forward;
                 Vector3 from = transform.position, end = from + movement.normalized * spec.Range;
@@ -253,6 +257,7 @@ namespace Alterverse.Characters
                 case HeroId.Elyra: if (slot == 1 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .55f : .65f, 2f); break;
                 case HeroId.Mira: HeroCombatStatus.Apply(target, .75f, 1.5f); break;
                 case HeroId.Rook: if (slot == 0) HeroCombatStatus.Apply(target, .8f, 1f); break;
+                case HeroId.Nerok: if(slot==2)HeroCombatStatus.Apply(target,.75f,1.2f); break;
                 case HeroId.Traveler: if (slot == 2 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .62f : .72f, slot == 3 ? 1.8f : 1.5f); break;
             }
             if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);

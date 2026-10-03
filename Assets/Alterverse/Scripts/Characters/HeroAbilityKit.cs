@@ -81,6 +81,12 @@ namespace Alterverse.Characters
                     new("Rift Step",13,0,3.6f),
                     new("Chrono Snare",12,22,6.5f,2.2f,.38f),
                     new("Paradox Collapse",56,60,6.8f,3.2f,.68f)),
+                HeroId.Nerok=>new HeroAbilityLoadout(
+                    new("Salvage Tide",0,12,0),
+                    new("Anchor Recall",12,28,6.2f,0,.30f),
+                    new("Pressure Hull",14,45,0),
+                    new("Breaker Wave",9,26,0,2.8f,.30f),
+                    new("Abyssal Maelstrom",58,60,6.0f,3.2f,.65f)),
                 _=>new HeroAbilityLoadout(
                     new("Unknown",0,0,0),new("Unknown",8,20,5f),new("Unknown",12,0,0),new("Unknown",12,20,5f),new("Unknown",55,50,5f))
             };

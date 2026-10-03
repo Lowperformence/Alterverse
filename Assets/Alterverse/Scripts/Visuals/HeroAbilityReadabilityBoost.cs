@@ -255,6 +255,13 @@ namespace Alterverse.Visuals
                         break;
                     }
 
+                case HeroId.Nerok:
+                    HeroVfxPool.Emit(slot==1?HeroFxShape.Shield:slot==0?HeroFxShape.AnchorProjectile:
+                        slot==2?HeroFxShape.WaveCrest:HeroFxShape.WaterSpiral,
+                        slot==1?chest:muzzle,slot==1?chest:muzzle,
+                        Vector3.one*(ultimate?.7f:.45f),accent,.25f,
+                        HeroFxMotion.Orbit,facing,gameObject);
+                    break;
                 case HeroId.Traveler:
                     if (slot == 0) // Temporal Beam
                     {

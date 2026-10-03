@@ -204,6 +204,10 @@ namespace Alterverse.Visuals
                     shape=slot==0?HeroFxShape.Bolt:slot==1?HeroFxShape.Rift:
                         slot==2?HeroFxShape.Runes:HeroFxShape.Halo;
                     point=hand;motion=HeroFxMotion.Contract;break;
+                case HeroId.Nerok:
+                    shape=slot==0?HeroFxShape.AnchorProjectile:slot==1?HeroFxShape.Shield:
+                        slot==2?HeroFxShape.WaveCrest:HeroFxShape.WaterSpiral;
+                    point=slot==1?chest:hand;motion=HeroFxMotion.Orbit;break;
                 default: shape=HeroFxShape.Burst;point=hand;break;
             }
             HeroVfxPool.Emit(shape,point,point,

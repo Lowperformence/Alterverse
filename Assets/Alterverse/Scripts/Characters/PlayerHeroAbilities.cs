@@ -45,6 +45,13 @@ namespace Alterverse.Characters
         {
             AbilitySpec s = kit.Spec(slot); HeroId h = identity.Hero;
             if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2) || (h == HeroId.Traveler && slot == 1)) return h==HeroId.Traveler?$"Time-skip {s.Range:0.#}m through paired rifts. Uses movement direction.":$"Move {s.Range:0.#}m. Uses movement direction; otherwise evade/face direction.";
+            if (h == HeroId.Nerok) return slot switch
+            {
+                0=>$"{s.Power:0} damage; pull mobile enemies up to 4.2m. Walls block the anchor.",
+                1=>$"Gain {s.Power:0} shield for 3s and 15% speed for 2s.",
+                2=>$"{s.Power:0} area damage and 25% slow for 1.2s.",
+                _=>$"{s.Power:0} total damage over 3s in {s.Radius:0.#}m. Slows and gently pulls inward."
+            };
             if (h == HeroId.Mira && slot == 1) return $"Heal the weakest nearby hero for {s.Power:0} HP.";
             if (h == HeroId.Mira && slot == 2) return $"Protect a wounded nearby hero with {s.Power:0} shield for 4s.";
             if (h == HeroId.Mira && slot == 3) return $"After {s.Windup:0.#}s: heal allied heroes in {s.Radius:0.#}m for {s.Power:0} and grant 25 shield.";

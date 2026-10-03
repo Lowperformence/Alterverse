@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -17,7 +17,7 @@ namespace Alterverse.Visuals
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
-            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning;
+            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning,CancelOnOwnerDeath;
             public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
@@ -91,7 +91,7 @@ namespace Alterverse.Visuals
             }
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
-            slot.Active=true;slot.Warning=warning;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
+            slot.Active=true;slot.Warning=warning;slot.CancelOnOwnerDeath=owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
@@ -126,7 +126,8 @@ namespace Alterverse.Visuals
             for(int i=0;i<slots.Length;i++)
             {
                 Slot s=slots[i];if(s==null||!s.Active)continue;
-                if(s.Warning&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
+                if(s.CancelOnOwnerDeath&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
+                    s.Warning&&(s.Owner==null||!s.Owner.activeInHierarchy||s.OwnerHealth!=null&&s.OwnerHealth.IsDead)||
                     s.TracksEnd&&(s.EndFollow==null||!s.EndFollow.gameObject.activeInHierarchy||s.EndHealth!=null&&s.EndHealth.IsDead)||
                     s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0))
                 {Hide(s);continue;}
@@ -199,6 +200,8 @@ namespace Alterverse.Visuals
 
         private static Mesh BuildShape(HeroFxShape shape,bool polished=true)
         {
+            if(shape==HeroFxShape.AnchorProjectile||shape==HeroFxShape.WaterSpiral||shape==HeroFxShape.WaveCrest)
+                return CyberSharkEffectMeshes.Load(shape.ToString());
             var v=new List<Vector3>();var colors=new List<Color>();var triangles=new List<int>();
             void Tri(Vector3 a,Vector3 b,Vector3 c,float alpha=1)
             {int i=v.Count;v.Add(a);v.Add(b);v.Add(c);colors.Add(new Color(1,1,1,alpha));colors.Add(new Color(1,1,1,alpha));colors.Add(new Color(1,1,1,alpha));triangles.Add(i);triangles.Add(i+1);triangles.Add(i+2);}

@@ -44,12 +44,14 @@ namespace Alterverse.UI
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
                 var image=go.GetComponent<RawImage>();
-                image.texture=atlas;
+                Texture2D heroIcon=hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):null;
+                Texture2D art=heroIcon!=null?heroIcon:atlas;
+                image.texture=art;
                 image.raycastTarget=false;
                 materials[i]=new Material(template){name="Ability HUD material "+i};
                 // Keep RawImage and shader material explicitly bound to the same atlas texture.
-                materials[i].mainTexture=atlas;
-                materials[i].SetVector(CellId,AtlasCell(hero,i));
+                materials[i].mainTexture=art;
+                materials[i].SetVector(CellId,heroIcon!=null?new Vector4(0,0,1,1):AtlasCell(hero,i));
                 materials[i].SetColor(AccentId,Accent(hero));
                 materials[i].SetFloat(UltimateId,i==3?1:0);
                 image.material=materials[i];
@@ -100,7 +102,7 @@ namespace Alterverse.UI
             HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
             HeroId.Nyra=>new Color(.12f,.78f,1),HeroId.Elyra=>new Color(.53f,.34f,1),
             HeroId.Mira=>new Color(.14f,1,.57f),HeroId.Rook=>new Color(1,.3f,.08f),
-            HeroId.Traveler=>new Color(.16f,.82f,1f),_=>Color.white
+            HeroId.Traveler=>new Color(.16f,.82f,1f),HeroId.Nerok=>new Color(.04f,.72f,1f),_=>Color.white
         };
 
         public void SetVisible(bool visible){if(canvas!=null&&canvas.enabled!=visible)canvas.enabled=visible;}

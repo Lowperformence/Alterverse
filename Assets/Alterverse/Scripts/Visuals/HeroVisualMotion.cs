@@ -292,7 +292,7 @@ namespace Alterverse.Visuals
             root.localPosition=basePosition+Vector3.up*(idle+bob);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             bool meleeStrike=hero==HeroId.Veyr&&abilitySlot!=2||
-                (hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot!=1;
+                (hero==HeroId.Nerok||hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot!=1;
             float delivery=meleeStrike&&preparation>0?StrikeDelivery(windupProgress):0f;
             float kick=preparation>0?delivery*attackWeight:
                 Time.time<attackUntil?(1f-Mathf.SmoothStep(0f,1f,progress))*attackWeight:0f;
@@ -321,6 +321,8 @@ namespace Alterverse.Visuals
                         readyL=VeyrGuardArm(false);readyR=VeyrGuardArm(true);break;
                     case HeroId.Rook:
                         readyL=new Vector3(-38f,0f,-10f);readyR=new Vector3(-38f,0f,10f);break;
+                    case HeroId.Nerok:
+                        readyL=new Vector3(-18f,0f,12f);readyR=new Vector3(-30f,0f,-12f);break;
                     case HeroId.Kaelon:
                         readyL=new Vector3(-20f,0f,12f);readyR=new Vector3(-28f,0f,-12f);break;
                     case HeroId.Elyra:
@@ -832,6 +834,7 @@ namespace Alterverse.Visuals
                         if(weaponL!=null)weaponL.localRotation=weaponRestL*VeyrGuardBlade(false);
                     }
                     break;
+                case HeroId.Nerok:
                 case HeroId.Kaelon:
                     if(abilitySlot==1)
                     {

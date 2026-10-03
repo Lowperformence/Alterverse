@@ -1,11 +1,11 @@
 using UnityEngine;
 namespace Alterverse.Characters
 {
-public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler}
+public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}
 public enum HeroRole{Assassin,Tank,Marksman,Mage,Support,Bruiser,Skirmisher}
 public sealed class HeroIdentity:MonoBehaviour
 {
-public const int HeroCount=7;
+public const int HeroCount=8;
 public const float HeroCollisionRadius=.40f;
 public const float HeroCollisionHeight=2f;
 [SerializeField]private HeroId hero;[SerializeField]private HeroRole role;public HeroId Hero=>hero;public HeroRole Role=>role;public string DisplayName=>NameFor(hero);
@@ -41,14 +41,14 @@ gameObject.AddComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>();
 if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)
 gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
 }
-public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",_=>"Unknown Hero"};
-public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,_=>HeroRole.Skirmisher};
+public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",HeroId.Nerok=>"Nerok Abyss",_=>"Unknown Hero"};
+public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,HeroId.Nerok=>HeroRole.Bruiser,_=>HeroRole.Skirmisher};
 // Preserve the existing 15% durability adjustment and add 5% to current base HP.
 // The independent universal hero shield is configured by Health.
 public const float GlobalHealthMultiplier=1.15f*1.05f;
 // THE TRAVELER receives an additional 5% hero-specific health increase on top of the global multiplier.
-public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f*1.05f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,_=>200f})*GlobalHealthMultiplier;
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>14f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,_=>17f};
+public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f*1.05f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
+public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>14f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>22f,_=>17f};
 }
 }
 

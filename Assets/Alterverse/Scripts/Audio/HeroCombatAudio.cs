@@ -7,21 +7,22 @@ namespace Alterverse.Audio
     {
         // Preserve original cast/impact cue indices; preparation occupies the appended bank.
         public const int CueCount=HeroIdentity.HeroCount*15;
-        static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler"};
+        static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","Nerok"};
         static readonly string[] Actions={"Basic","Q","W","E","R"};
         public static bool HasImpact(int hero,int action)=>action==0||(hero switch
         {
-            0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,_=>false
+            0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
         });
         public static bool HasWindup(int hero,int action)=>action==0||HasImpact(hero,action);
-        public static int VariantCount(int hero,int action,int phase)=>phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
+        public static int VariantCount(int hero,int action,int phase)=>hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
+        public static int Cue(int hero,int action,int phase)=>hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;
         public static AudioClip[][] Load()
         {
             var clips=new AudioClip[CueCount][];
             for(int h=0;h<Heroes.Length;h++)for(int a=0;a<5;a++)for(int phase=0;phase<3;phase++)
             {
                 if(phase==1&&!HasImpact(h,a)||phase==2&&!HasWindup(h,a))continue;
-                int cue=phase==2?70+h*5+a:h*10+a*2+phase;
+                int cue=Cue(h,a,phase);
                 clips[cue]=new AudioClip[VariantCount(h,a,phase)];
                 for(int v=0;v<clips[cue].Length;v++)
                 {
@@ -63,7 +64,7 @@ namespace Alterverse.Audio
             // Per-actor throttling: other actors of the same class cannot silence the player.
             // Sivra fires four shots in .54s; the selected ultimate recording starts only once.
             float cooldown=ultimate&&phase==0?1f:phase==2?.045f:ultimate&&hero==2?.06f:phase==1?.065f:.08f;
-            int cue=phase==2?70+hero*5+action:hero*10+action*2+phase;
+            int cue=Cue(hero,action,phase);
             DimensionAudio.PlayHero(cue,gain*attenuation,local?2:ultimate?1:0,cooldown,pan,1f,actor.GetEntityId().GetHashCode());
         }
         // A confirmed hero kill is feedback for its owner, independent of camera visibility.

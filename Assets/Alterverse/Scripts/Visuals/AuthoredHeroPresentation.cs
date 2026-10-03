@@ -50,7 +50,7 @@ namespace Alterverse.Visuals
                 root = existing.visualRoot;
                 return true;
             }
-            GameObject asset = Resources.Load<GameObject>("AuthoredHeroes/" + hero);
+            GameObject asset = Resources.Load<GameObject>("AuthoredHeroes/" + (hero == HeroId.Nerok ? HeroId.Rook : hero));
             if (asset == null) return false;
             root = new GameObject("DF_VisualRoot").transform;
             root.SetParent(actor.transform, false);
@@ -80,6 +80,7 @@ namespace Alterverse.Visuals
                 TahlaHalo.Apply(instance.transform);
             }
             if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
+            if (hero == HeroId.Nerok) CyberSharkAppearance.Apply(instance.transform);
             if (hero == HeroId.Traveler)
             {
                 ChronoTravelerAppearance.Apply(instance.transform);
@@ -100,7 +101,7 @@ namespace Alterverse.Visuals
         private static void ApplyHandSize(Transform imported, HeroId hero)
         {
             // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
-            float scale = hero == HeroId.Mira ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
+            float scale = hero == HeroId.Mira ? 1f : hero == HeroId.Nerok ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {
@@ -342,6 +343,10 @@ namespace Alterverse.Visuals
                     SolveGuard(leftArm, new Vector3(-0.368000f, 1.237600f, 0.364000f), GuardHint(leftArm), guardWeight);
                     SolveGuard(rightArm, new Vector3(0.368000f, 1.237600f, 0.364000f), GuardHint(rightArm), guardWeight);
                     break;
+                case HeroId.Nerok:
+                    SolveGuard(leftArm, new Vector3(-.33f, 1.07f, .20f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.36f, 1.04f, .23f), GuardHint(rightArm), guardWeight);
+                    break;
                 case HeroId.Traveler:
                     // Lower, relaxed hands keep the upper arms away from the hood.
                     SolveGuard(leftArm, new Vector3(-.32f, .89f, .18f), GuardHint(leftArm), guardWeight);
@@ -418,5 +423,4 @@ namespace Alterverse.Visuals
         }
     }
 }
-
 

@@ -16,9 +16,12 @@ namespace Alterverse.Characters
         private float actionUntil, dashRemaining, dashSpeed;
         private int dashFrame = -1;
         private bool focused = true;
+        private Vector3 forcedEnd;
+        private float forcedUntil;
+        public bool IsForcedMoving => Time.time < forcedUntil;
         public Vector3 DashDestination=>transform.position+dashDirection*dashRemaining;
         public bool IsDashing => dashRemaining > .001f;
-        public bool OwnsMovementFrame => IsDashing || dashFrame == Time.frameCount;
+        public bool OwnsMovementFrame => IsForcedMoving || IsDashing || dashFrame == Time.frameCount;
         public bool CanMove => isActiveAndEnabled && focused && health != null && !health.IsDead && !status.Stunned && Time.timeScale > 0;
         public float SpeedMultiplier => status.MoveMultiplier;
         public Vector3 Velocity { get; private set; }
@@ -33,7 +36,7 @@ namespace Alterverse.Characters
         }
         public void ResetMotion()
         {
-            dashRemaining=0; dashFrame=-1; Velocity=Vector3.zero;
+            forcedUntil=0; dashRemaining=0; dashFrame=-1; Velocity=Vector3.zero;
             moveFacing=actionFacing=Vector3.zero; actionUntil=0; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
         }
         private void OnDisable() => ResetMotion();
@@ -69,8 +72,27 @@ namespace Alterverse.Characters
             dashSpeed=delta.magnitude/.16f; dashFrame=Time.frameCount;
             return true;
         }
+        public bool BeginForcedMove(Vector3 destination, float duration)
+        {
+            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || health == null || health.IsDead ||
+                !isActiveAndEnabled || Time.timeScale <= 0 || IsForcedMoving) return false;
+            forcedEnd = GameplayCollision.ClampToRoundedArena(destination,40f,33f);
+            forcedEnd.y = transform.position.y;
+            forcedUntil = Time.time + Mathf.Clamp(duration,.05f,.5f);
+            dashRemaining = 0;
+            return true;
+        }
         private void Update()
         {
+            if (IsForcedMoving && health != null && !health.IsDead && Time.timeScale > 0)
+            {
+                Vector3 delta = forcedEnd - transform.position; delta.y=0;
+                float remaining = Mathf.Max(Time.deltaTime,forcedUntil-Time.time);
+                Vector3 step = delta * Mathf.Clamp01(Time.deltaTime/remaining);
+                Vector3 actual = Move(step,40f,33f,false,true);
+                if (actual.sqrMagnitude < step.sqrMagnitude*.25f || delta.sqrMagnitude < .0025f) forcedUntil=0;
+                return;
+            }
             if(!CanMove){ResetMotion();return;}
             if(!IsDashing)return;
             dashFrame=Time.frameCount;
@@ -172,10 +194,10 @@ namespace Alterverse.Characters
             Sweep(transform.position,direction,distance,out float allowed,out _,out _);
             return allowed>=distance-.03f;
         }
-        public Vector3 Move(Vector3 displacement,float halfWidth,float halfHeight,bool slide=true)
+        public Vector3 Move(Vector3 displacement,float halfWidth,float halfHeight,bool slide=true,bool forced=false)
         {
             Vector3 before=transform.position; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
-            if(!CanMove){Velocity=Vector3.zero;return Vector3.zero;}
+            if(!CanMove && !(forced && health != null && !health.IsDead && Time.timeScale > 0)){Velocity=Vector3.zero;return Vector3.zero;}
             displacement.y=0;
             Vector3 goal=GameplayCollision.ClampToRoundedArena(before+displacement,halfWidth,halfHeight);
             Vector3 remaining=goal-before;

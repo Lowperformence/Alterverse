@@ -57,7 +57,7 @@ namespace Alterverse.Multiplayer
                 if(!session.TryAssign(i,HumanSlot(ordered[i],i==0)))
                     throw new InvalidOperationException($"Could not assign co-op human slot {i}.");
 
-            HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Rook};
+            HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Nerok,HeroId.Rook};
             int allySlot=ordered.Count;
             for(int i=0;i<pool.Length&&allySlot<MatchSession.TeamSize;i++)
             {
@@ -70,7 +70,8 @@ namespace Alterverse.Multiplayer
             if(allySlot!=MatchSession.TeamSize)
                 throw new InvalidOperationException("Co-op roster could not fill Team Zero to five members.");
 
-            HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Rook};
+            HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,
+                !string.IsNullOrEmpty(matchId)&&(matchId[0]&1)==0?HeroId.Nerok:HeroId.Rook};
             for(int i=0;i<enemyHeroes.Length;i++)
                 if(!session.TryAssign(5+i,BotSlot($"enemy-{i}",enemyHeroes[i],1)))
                     throw new InvalidOperationException("Could not assign enemy co-op bot.");

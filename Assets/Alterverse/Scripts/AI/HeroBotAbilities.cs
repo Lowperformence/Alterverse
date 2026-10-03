@@ -60,7 +60,7 @@ namespace Alterverse.AI
                 if(sensor.NearbyEnemies>0&&TryCast(2,target))return;
             }
             float defensiveThreshold=Mathf.Lerp(.55f,.82f,discipline);
-            if ((h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
+            if ((h == HeroId.Nerok && sensor.NearbyEnemies>0 || h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
             if (target == null) return;
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)) || (h == HeroId.Traveler && TryCast(1,target)))) return;
             bool safeEngage=!coordinated||!brain.NeedsCombatReset&&target!=null&&!brain.Tactics.UnsafeDefense(target.transform.position)&&
@@ -102,20 +102,20 @@ namespace Alterverse.AI
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra) && TryCast(1,target)) return;
             if (h==HeroId.Traveler && distance<=kit.E.Range && TryCast(2,target)) return;
-            if ((h == HeroId.Kaelon || h == HeroId.Nyra || h == HeroId.Rook) && distance <= Mathf.Max(kit.E.Range,kit.E.Radius)) TryCast(2,target);
+            if ((h == HeroId.Nerok || h == HeroId.Kaelon || h == HeroId.Nyra || h == HeroId.Rook) && distance <= Mathf.Max(kit.E.Range,kit.E.Radius)) TryCast(2,target);
         }
         private bool TryCast(int slot, Health target)
         {
             if(execution.Remaining(slot)>0)return false;
             AbilitySpec spec=kit.Spec(slot);
             bool support=identity.Hero==HeroId.Mira&&(slot==1||slot==2||slot==3);
-            bool defensive=(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1;
+            bool defensive=(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1;
             if(!support&&!defensive&&spec.Radius>0&&spec.Range<=0)
             {
                 // The execution layer permits ground casts; AI must avoid empty circles.
                 if(target==null||HeroCombatRules.Distance(transform.position,target.transform.position)>spec.Radius*.92f)return false;
             }
-            if(brain!=null&&brain.Difficulty.Coordinated&&(identity.Hero==HeroId.Elyra||identity.Hero==HeroId.Traveler)&&spec.Radius>0&&spec.Range>0)
+            if(brain!=null&&brain.Difficulty.Coordinated&&(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Elyra||identity.Hero==HeroId.Traveler)&&spec.Radius>0&&spec.Range>0)
                 target=SelectAreaTarget(target,spec);
             if(slot==3&&!support&&spec.Radius>0&&spec.Windup>0&&brain!=null&&brain.Difficulty.Coordinated&&target!=null)
             {
