@@ -25,7 +25,7 @@ Shader "Alterverse/UrbanDigitalArmor"
             Tags { "LightMode"="UniversalForward" }
 
             HLSLPROGRAM
-            #pragma target 2.0
+            #pragma target 3.0
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_fog
@@ -53,6 +53,7 @@ Shader "Alterverse/UrbanDigitalArmor"
                 float4 tangentOS : TANGENT;
                 float2 uv : TEXCOORD0;
                 float3 rest : TEXCOORD2;
+                float3 restNormal : TEXCOORD3;
             };
 
             struct Varyings
@@ -63,6 +64,7 @@ Shader "Alterverse/UrbanDigitalArmor"
                 half4 tangentWS : TEXCOORD2;
                 float fogFactor : TEXCOORD3;
                 float3 rest : TEXCOORD4;
+                float3 restNormal : TEXCOORD5;
             };
 
             Varyings Vert(Attributes input)
@@ -74,30 +76,24 @@ Shader "Alterverse/UrbanDigitalArmor"
                 output.tangentWS = half4(normalize(TransformObjectToWorldDir(input.tangentOS.xyz)), input.tangentOS.w);
                 output.fogFactor = ComputeFogFactor(output.positionHCS.z);
                 output.rest=input.rest;
+                output.restNormal=input.restNormal;
                 return output;
             }
 
-            float CamoHash(float3 cell)
+            half3 UrbanCamo(float3 rest,float3 restNormal)
             {
-                cell=frac(cell*float3(.1031,.11369,.13787));
-                cell+=dot(cell,cell.yzx+19.19);
-                return frac((cell.x+cell.y)*cell.z);
-            }
-            half3 UrbanCamo(float3 rest)
-            {
-                // Fixed rest-space pixels form coarse patches with small digital edge variation.
-                float3 pixel=floor(rest*18);
-                float coarse=CamoHash(floor(pixel/4));
-                float fine=CamoHash(pixel);
-                float value=coarse*.72+fine*.28;
-                if(value<.28)return half3(.085,.10,.12);
-                if(value<.48)return half3(.24,.27,.30);
-                if(value<.67)return half3(.45,.47,.46);
-                return half3(.58,.55,.48);
+                // Mipmapped texture in undeformed space. No hash thresholds or scrolling noise.
+                float3 blend=pow(abs(restNormal),8);
+                blend/=max(dot(blend,float3(1,1,1)),.0001);
+                float3 p=rest*.85;
+                half3 x=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.yz).rgb;
+                half3 y=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.xz).rgb;
+                half3 z=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,p.xy).rgb;
+                return x*blend.x+y*blend.y+z*blend.z;
             }
             half4 Frag(Varyings input) : SV_Target
             {
-                half4 baseSample = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
+                half4 baseSample = half4(UrbanCamo(input.rest,input.restNormal),1);
                 half3 n = normalize(input.normalWS);
 
                 // Procedural lunar terrain supplies a runtime-generated RGB normal texture.
@@ -117,7 +113,7 @@ Shader "Alterverse/UrbanDigitalArmor"
                 half diffuse = lerp(0.42h, 1.0h, ndl);
                 half edge = pow(1.0h - saturate(abs(n.y)), 2.0h) * (0.04h + _Smoothness * 0.08h);
                 half metallicLift = _Metallic * 0.06h;
-                half3 rgb = UrbanCamo(input.rest) * baseSample.rgb * _BaseColor.rgb * (diffuse + edge + metallicLift) + _EmissionColor.rgb;
+                half3 rgb = baseSample.rgb * _BaseColor.rgb * (diffuse + edge + metallicLift) + _EmissionColor.rgb;
                 rgb = MixFog(rgb, input.fogFactor);
                 return half4(rgb, baseSample.a * _BaseColor.a);
             }

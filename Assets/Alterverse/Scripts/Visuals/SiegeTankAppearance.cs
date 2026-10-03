@@ -173,6 +173,8 @@ namespace Alterverse.Visuals
             if(shader!=null&&material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",Color.white);
             if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.35f);
             if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.28f);
+            Texture2D pattern=Resources.Load<Texture2D>("HeroArt/UrbanDigitalCamo");
+            if(shader!=null&&pattern!=null)material.SetTexture("_BaseMap",pattern);
             ownedMaterials.Add(material);
             return material;
         }
@@ -206,6 +208,7 @@ namespace Alterverse.Visuals
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.boneWeights = w.ToArray();
             // Pattern data is not deformed by skinning; camouflage follows each armor plate.
             mesh.SetUVs(2,v);
+            mesh.SetUVs(3,n);
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = 7;
