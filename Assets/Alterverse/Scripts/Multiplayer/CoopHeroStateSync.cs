@@ -166,16 +166,22 @@ namespace Alterverse.Multiplayer
                 Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
         }
 
-        public static void BroadcastSharkEffect(GameObject actor,int kind,Vector3 center,float radius,float duration)
+        public static void BroadcastSharkEffect(GameObject actor,int kind,Vector3 center,float radius,float duration,Health target=null)
         {
             var service=audioRelay;var manager=NetworkManager.Singleton;
             if(service==null||service.messaging==null||!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
             var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
-            using FastBufferWriter writer=new(32,Allocator.Temp);
+            using FastBufferWriter writer=new(256,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(kind);
             writer.WriteValueSafe(center.x);writer.WriteValueSafe(center.y);writer.WriteValueSafe(center.z);
             writer.WriteValueSafe(radius);writer.WriteValueSafe(duration);
+            if(kind==6)
+            {
+                writer.WriteValueSafe(target!=null?target.GetComponent<CoopHeroSlot>()?.Slot??-1:-1);
+                FixedString128Bytes key=new(target!=null?target.GetComponent<CoopWorldEntityKey>()?.Key??"":"");
+                writer.WriteValueSafe(key);
+            }
             foreach(ulong id in manager.ConnectedClientsIds)
                 if(id!=NetworkManager.ServerClientId)
                     service.messaging.SendNamedMessage(SharkEffectMessage,id,writer,NetworkDelivery.ReliableSequenced);
@@ -187,14 +193,27 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int kind);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float radius);reader.ReadValueSafe(out float duration);
-            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>5||
+            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>6||
                 float.IsNaN(x)||float.IsInfinity(x)||float.IsNaN(y)||float.IsInfinity(y)||float.IsNaN(z)||float.IsInfinity(z)||
                 float.IsNaN(radius)||float.IsInfinity(radius)||radius<0||radius>4||
                 float.IsNaN(duration)||float.IsInfinity(duration)||duration<=0||duration>4)return;
             GameObject actor=slots[slot].gameObject;
             if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Nerok)return;
             Vector3 center=new Vector3(x,y,z);
-            if(kind==0)Alterverse.Visuals.HeroSkillVfx.SharkAnchor(actor,center,duration);
+            if(kind==6)
+            {
+                reader.ReadValueSafe(out int targetSlot);reader.ReadValueSafe(out FixedString128Bytes fixedKey);
+                Health target=null;
+                if(targetSlot>=0&&targetSlot<slots.Length&&slots[targetSlot]!=null)target=slots[targetSlot].GetComponent<Health>();
+                else
+                {
+                    string key=fixedKey.ToString();
+                    if(key.Length>0)foreach(Health candidate in Health.Active)
+                        if(candidate!=null&&candidate.GetComponent<CoopWorldEntityKey>()?.Key==key){target=candidate;break;}
+                }
+                if(target!=null)Alterverse.Visuals.HeroSkillVfx.SharkPullChain(actor,target,duration);
+            }
+            else if(kind==0)Alterverse.Visuals.HeroSkillVfx.SharkAnchor(actor,center,duration);
             else if(kind==1)Alterverse.Visuals.HeroSkillVfx.SharkVortex(actor,center,radius,duration);
             else Alterverse.Visuals.HeroSkillVfx.Area(actor,center,radius,duration,kind!=5,false,kind==4?2:3);
         }

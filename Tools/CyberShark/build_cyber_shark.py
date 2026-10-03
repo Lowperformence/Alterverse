@@ -14,37 +14,46 @@ exec(compile(helper.read_text().split('# Pearl armored arcane mech')[0].replace(
 OUT=ROOT/'Assets/Alterverse/Resources/CyberShark'
 ART=ROOT/'ArtSource/Heroes/CyberShark'
 OUT.mkdir(parents=True,exist_ok=True);ART.mkdir(parents=True,exist_ok=True)
-COLORS=[(.028,.045,.060),(.17,.24,.29),(.73,.81,.84),(.02,.67,.94),(.90,.10,.065),(.83,.90,.92)]
-shell('armored torso',[(1.02,.16,.11,0),(1.25,.24,.15,0),(1.46,.30,.19,0),(1.57,.18,.13,0)],0,'Chest',20)
+COLORS=[(.035,.022,.014),(.38,.72,.94),(.025,.065,.11),(.04,.78,1.0),(.72,.39,.105),(.80,.92,.96)]
+shell('armored torso',[(1.02,.16,.11,0),(1.25,.24,.15,0),(1.46,.30,.19,0),(1.57,.18,.13,0)],1,'Chest',20)
 shell('abdomen',[(.89,.18,.12,0),(1.04,.20,.13,0),(1.23,.16,.11,0)],1,'Spine',16)
 for s in [-1,1]:
- plate('layered breastplate',[(s*.025,1.54),(s*.24,1.52),(s*.285,1.40),(s*.18,1.28),(s*.035,1.33)],.145,.055,2,'Chest')
+ plate('pirate side cuirass',[(s*.17,1.54),(s*.255,1.52),(s*.285,1.40),(s*.23,1.29),(s*.19,1.33)],.145,.055,2,'Chest')
  tube('chest cyan seam',[(s*.045,1.49,.202),(s*.11,1.41,.209),(s*.18,1.36,.19)],.005,3,'Chest',6)
  for j in range(3):plate('abdomen course',[(s*.018,1.24-j*.075),(s*.16,1.22-j*.075),(s*.15,1.17-j*.075),(s*.018,1.19-j*.075)],.11,.025,1,'Spine')
  # Swept back fins and mechanical gill vents.
  shard('dorsal back fin',(s*.07,1.39,-.15),(s*.10,1.80,-.35),.070,.022,2,'Chest')
  for j in range(4):tube('gill vent',[(s*.20,1.50-j*.035,-.08),(s*.24,1.48-j*.035,.015)],.009,0,'Chest',6)
-ell('shark skull',(0,1.735,.055),(.155,.17,.155),1,'Head',20,12)
-ell('shark upper snout',(0,1.755,.155),(.145,.093,.16),2,'Head',20,10)
-ell('open mouth shadow',(0,1.660,.192),(.123,.070,.070),0,'Head',16,10)
-plate('lower armored jaw',[(-.125,1.65),(-.09,1.58),(0,1.565),(.09,1.58),(.125,1.65)],.19,.05,2,'Head')
-shard('head dorsal crest',(0,1.79,-.02),(0,2.035,-.105),.08,.025,2,'Head')
+ell('shark skull',(0,1.735,.055),(.18,.18,.175),1,'Head',24,12)
+# Tapered shark rostrum rather than a round humanoid muzzle.
+sv=[];sf=[];sections=[(.08,.177,1.79,.115),(.22,.171,1.78,.09),(.35,.116,1.763,.048),(.408,.042,1.748,.024)]
+for zz,ww,yy,hh in sections:
+ for j in range(16):
+  angle=j*math.tau/16;sv.append((ww*math.cos(angle),yy+hh*math.sin(angle),zz))
+for row in range(3):
+ for j in range(16):
+  a=row*16+j;b=row*16+(j+1)%16;sf.extend([(a,b,b+16),(a,b+16,a+16)])
+sf.append(tuple(range(48,64)))
+add('tapered shark snout',sv,sf,1,'Head')
+ell('open mouth shadow',(0,1.65,.255),(.151,.084,.107),0,'Head',20,10)
+ell('shark lower jaw',(0,1.589,.233),(.148,.045,.14),5,'Head',20,8)
+shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
 for s in [-1,1]:
- shard('side brow fin',(s*.115,1.80,.05),(s*.205,1.955,-.015),.036,.022,2,'Head')
- ell('red eye',(s*.124,1.802,.281),(.026,.014,.015),4,'Head',10,6)
+ tube('organic brow',[(s*.105,1.828,.24),(s*.165,1.817,.24),(s*.17,1.806,.18)],.018,1,'Head',8)
+ ell('red eye',(s*.157,1.801,.265),(.014,.007,.011),4,'Head',10,6)
  for j in range(3):tube('cranial vent',[(s*.127,1.79-j*.025,.09),(s*.147,1.78-j*.025,.12)],.004,0,'Head',6)
 for j in range(11):
- x=(j-5)*.020
- shard('upper tooth',(x,1.691,.258),(x,1.657-(.011 if j%2 else 0),.27),.007,.007,5,'Head')
- shard('lower tooth',(x,1.617,.254),(x,1.647+(.009 if j%2 else 0),.268),.007,.007,5,'Head')
+ x=(j-5)*.025
+ shard('upper tooth',(x,1.705,.335),(x,1.665-(.011 if j%2 else 0),.345),.007,.007,5,'Head')
+ shard('lower tooth',(x,1.609,.327),(x,1.647+(.009 if j%2 else 0),.337),.007,.007,5,'Head')
 for side,s in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
- limb('upper arm',a,e,.086,1,upper)
- ell('shoulder armor',a+[s*.05,-.025,0],(.135,.11,.125),2,upper,16,10)
+ limb('upper arm',a,e,.118,1,upper)
+ ell('shoulder armor',a+[s*.05,.005,-.025],(.142,.09,.13),2,upper,16,10)
  shard('shoulder fin',a+[s*.08,0,-.025],a+[s*.22,.10,-.07],.047,.025,2,upper)
  ell('elbow bearing',e,(.077,.066,.072),0,fore,12,8)
- limb('forearm',e,w,.081,1,fore)
+ limb('forearm',e,w,.103,1,fore)
  mid=(e+w)*.5
  plate('forearm plate',[(mid[0]-.07,mid[1]+.105),(mid[0]+.07,mid[1]+.105),(mid[0]+.06,mid[1]-.10),(mid[0]-.06,mid[1]-.10)],.05,.05,2,fore)
  tube('forearm energy',[(mid[0],mid[1]+.06,.10),(mid[0],mid[1]-.06,.10)],.005,3,fore,6)
@@ -55,7 +64,7 @@ for side,s in [('L',-1),('R',1)]:
  tube('thumb',[w+[s*.045,-.025,.01],w+[s*.054,-.05,.045],w+[s*.033,-.067,.05]],.012,2,hand,6)
  thigh='Thigh'+side;shin='Shin'+side;foot='Foot'+side
  h=np.array(BONES[thigh][0]);k=np.array(BONES[shin][0]);f=np.array(BONES[foot][0])
- limb('thigh',h,k,.092,1,thigh)
+ limb('pirate trouser thigh',h,k,.105,0,thigh)
  x=(h[0]+k[0])*.5
  plate('thigh armor',[(x-.08,.91),(x+.08,.91),(x+.078,.67),(x-.073,.66)],.055,.05,2,thigh)
  ell('knee',k,(.083,.071,.076),2,shin,12,8)
@@ -63,25 +72,125 @@ for side,s in [('L',-1),('R',1)]:
  x=(k[0]+f[0])*.5
  plate('shin armor',[(x-.063,.47),(x+.063,.47),(x+.056,.19),(x-.053,.19)],.040,.045,2,shin)
  tube('shin light',[(x,.41,.090),(x,.25,.088)],.006,3,shin,6)
- ell('boot',f+[0,-.050,.060],(.087,.066,.145),1,foot,16,8)
+ ell('boot',f+[0,-.050,.060],(.087,.066,.145),0,foot,16,8)
  # Armored cable bundles on the outer thighs.
  tube('leg cable',[h+[s*.10,-.05,-.05],h+[s*.13,-.17,-.07],k+[s*.09,.10,-.04]],.008,0,thigh,8)
+# Additional pressure hardware and layered pale-blue armor, all rigidly bound to the rig.
+def bolt(name,c,bone,r=.009):
+ ell(name,c,(r,r,r*.45),5,bone,6,4)
+for s in [-1,1]:
+ # Separate cheek armor, reinforced gill grilles, and cranial panel seams.
+ plate('cheek armor',[(s*.10,1.75),(s*.168,1.73),(s*.163,1.64),(s*.12,1.625)],.145,.030,2,'Head')
+ for j in range(4):
+  tube('cheek gill grille',[(s*(.119+j*.008),1.72-j*.007,.17),(s*(.128+j*.008),1.68-j*.007,.173)],.0045,0,'Head',6)
+ tube('brow ice trim',[(s*.02,1.833,.217),(s*.072,1.827,.248),(s*.135,1.817,.26)],.005,5,'Head',6)
+ bolt('temple fastener',(s*.153,1.742,.157),'Head')
+ # Clear breastplate edging and fasteners, larger enough to read at gameplay scale.
+ tube('cuirass brass rim',[(s*.18,1.53,.19),(s*.24,1.50,.192),(s*.266,1.41,.192)],.007,4,'Chest',6)
+ for bx,by in [(.056,1.51),(.218,1.49),(.204,1.36)]:bolt('chest captive bolt',(s*bx,by,.202),'Chest')
+ for j in range(3):
+  tube('rib grille',[(s*.205,1.37-j*.034,.111),(s*.265,1.39-j*.034,.116)],.008,0,'Chest',6)
+ tube('pressure hose',[(s*.24,1.48,-.10),(s*.30,1.43,-.11),(s*.29,1.29,-.055),(s*.19,1.25,-.025)],.013,1,'Chest',8)
+ # Small back-mounted water jets frame the existing dorsal fins.
+ tube('water jet pod',[(s*.17,1.28,-.175),(s*.17,1.45,-.21)],.040,2,'Chest',10)
+ ring('jet exhaust',(s*.17,1.27,-.174),.026,.008,1,'Chest',normal=(0,1,0),segments=12)
+ ring('jet luminous throat',(s*.17,1.266,-.174),.016,.004,3,'Chest',normal=(0,1,0),segments=12)
+ring('chest pressure dial',(0,1.40,.206),.039,.009,1,'Chest',segments=16)
+ell('pressure dial lens',(0,1.40,.208),(.031,.031,.008),3,'Chest',12,6)
+tube('dial indicator',[(0,1.40,.221),(.016,1.421,.221)],.0035,5,'Chest',6)
+for side,s in [('L',-1),('R',1)]:
+ upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
+ a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0]);mid=(e+w)*.5
+ for j in range(3):
+  tube('shoulder segmented trim',[(a[0]+s*(.00+j*.035),a[1]+.025,.11),(a[0]+s*(.015+j*.035),a[1]-.065,.104)],.006,1,upper,6)
+ for dy in [-.078,.078]:
+  for dx in [-.05,.05]:bolt('forearm armor screw',(mid[0]+dx,mid[1]+dy,.105),fore,.007)
+ plate('wrist control module',[(w[0]-.033,w[1]+.066),(w[0]+.033,w[1]+.066),(w[0]+.033,w[1]+.021),(w[0]-.033,w[1]+.021)],.098,.018,1,fore)
+ for j in range(3):
+  tube('wrist luminous readout',[(w[0]-.022,w[1]+.034+j*.010,.116),(w[0]+.01+j*.004,w[1]+.034+j*.010,.116)],.0028,3,fore,6)
+ tube('forearm flex conduit',[e+[s*.08,-.015,-.018],mid+[s*.103,0,-.01],w+[s*.061,.035,.01]],.011,0,fore,8)
+ for j in range(4):bolt('knuckle cap',(w[0]+(j-1.5)*.021,w[1]-.025,.065),hand,.008)
+ thigh='Thigh'+side;shin='Shin'+side;foot='Foot'+side
+ h=np.array(BONES[thigh][0]);k=np.array(BONES[shin][0]);f=np.array(BONES[foot][0]);tx=(h[0]+k[0])*.5;sx=(k[0]+f[0])*.5
+ for yy in [.86,.70]:
+  for xx in [-.052,.052]:bolt('thigh plate screw',(tx+xx,yy,.098),thigh,.008)
+ for j in range(3):tube('thigh cooling slot',[(tx-.042,.83-j*.028,.100),(tx+.042,.83-j*.028,.100)],.005,0,thigh,6)
+ tube('shin hydraulic sleeve',[k+[s*.08,-.065,-.005],f+[s*.073,.15,-.005]],.020,1,shin,8)
+ tube('shin piston rod',[f+[s*.073,.15,-.005],f+[s*.073,.04,-.005]],.010,5,shin,8)
+ for yy in [.43,.22]:
+  for xx in [-.042,.042]:bolt('shin plate screw',(sx+xx,yy,.080),shin,.007)
+ ring('knee lock',(k[0],k[1],k[2]+.075),.039,.006,1,shin,segments=12)
+ for j in range(3):
+  tube('boot armored toe ribs',[(f[0]-.055,f[1]-.018,.115+j*.028),(f[0]+.055,f[1]-.018,.115+j*.028)],.007,2,foot,6)
+
+# Shark-pirate reference: bare light-blue chest, strapped armor, tail, and a caged lantern.
+ell('pale shark belly',(0,1.18,.118),(.145,.16,.055),5,'Spine',16,10)
+tube('leather cross-body baldric',[(-.14,1.54,.17),(-.04,1.44,.204),(.10,1.32,.177),(.20,1.24,.13)],.029,0,'Chest',8)
+for j in range(5):bolt('baldric stud',(-.09+j*.052,1.50-j*.047,.226-j*.008),'Chest',.006)
+plate('belt buckle',[(-.055,1.046),(.055,1.046),(.055,.978),(-.055,.978)],.15,.024,4,'Hips')
+plate('belt buckle inset',[(-.033,1.03),(.033,1.03),(.033,.995),(-.033,.995)],.174,.005,0,'Hips')
+tube('broad leather waist belt',[(-.18,1.015,.055),(-.13,1.015,.135),(0,1.015,.153),(.13,1.015,.135),(.18,1.015,.055)],.026,0,'Hips',8)
+for side,sign in [('L',-1),('R',1)]:
+ a=np.array(BONES['UpperArm'+side][0]);bone='UpperArm'+side
+ tube('pauldron brass border',[a+[sign*.02,.07,.10],a+[sign*.13,.04,.137],a+[sign*.17,-.055,.09]],.009,4,bone,8)
+ for j in range(3):
+  shard('pauldron tooth',a+[sign*(.07+j*.045),.035-j*.025,-.015],a+[sign*(.13+j*.048),.125-j*.02,-.025],.025,.018,4,bone)
+ # A visible leather belt and buckle on each upper arm.
+ tube('arm leather strap',[a+[sign*.05,-.13,.06],a+[sign*.085,-.17,.07],a+[sign*.10,-.19,.03]],.013,0,bone,6)
+for sign,side in [(-1,'L'),(1,'R')]:
+ plate('open naval vest',[(sign*.135,1.55),(sign*.245,1.49),(sign*.218,1.24),(sign*.174,1.075),(sign*.085,1.095),(sign*.115,1.30)],.142,.035,2,'Chest')
+ tube('vest brass lapel',[(sign*.135,1.55,.17),(sign*.115,1.30,.18),(sign*.085,1.095,.18)],.008,4,'Chest',6)
+ for j in range(4):tube('vest gold braid',[(sign*.115,1.42-j*.072,.184),(sign*.196,1.415-j*.072,.176)],.0045,4,'Chest',6)
+ plate('split coat tail',[(sign*.082,1.07),(sign*.22,1.07),(sign*.27,.73),(sign*.235,.56),(sign*.115,.65)],.077,.024,2,'Thigh'+side)
+ tube('coat tail piping',[(sign*.085,1.05,.1),(sign*.117,.66,.095),(sign*.231,.57,.096)],.007,4,'Thigh'+side,6)
+ # Leather boot panels and straps complement the exposed blue arms.
+ for yy in [.24,.38]:
+  tube('boot leather strap',[(sign*.11,yy,.073),(sign*.16,yy,.095),(sign*.22,yy,.06)],.013,0,'Shin'+side,6)
+
+# Curled organic shark tail, attached to the pelvis so it follows the stride.
+tail=np.array([(0,.97,-.14),(-.07,.79,-.30),(-.24,.49,-.38),(-.45,.28,-.29),(-.64,.36,-.13),(-.65,.63,-.06)])
+tr=[.105,.095,.074,.055,.038,.022];tp=[];radii=[]
+for i in range(len(tail)-1):
+ p0=tail[max(0,i-1)];p1=tail[i];p2=tail[i+1];p3=tail[min(len(tail)-1,i+2)]
+ for t in np.linspace(0,1,5,endpoint=False):
+  tp.append(.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t));radii.append(tr[i]*(1-t)+tr[i+1]*t)
+tp.append(tail[-1]);radii.append(tr[-1]);tube('shark tail',tp,radii,1,'Hips',14)
+shard('tail upper lobe',(-.65,.61,-.06),(-.79,.91,-.065),.067,.023,1,'Hips')
+shard('tail lower lobe',(-.65,.61,-.06),(-.50,.78,-.07),.044,.018,1,'Hips')
+# The lantern is a separate left-hand accessory, with gold frame and warm luminous glass.
+l=np.array(BONES['HandL'][0]);lc=l+[-.13,-.27,.11]
+for j in range(4):ring('lantern chain',l+[-.04-j*.024,-.035-j*.027,.065],.018,.004,4,'HandL',normal=(0,0,1) if j%2 else (1,0,0),segments=10)
+ring('lantern bail',lc+[0,.119,0],.039,.005,4,'HandL',segments=12)
+for yy in [-.075,.075]:ring('lantern frame rim',lc+[0,yy,0],.055,.008,4,'HandL',normal=(0,1,0),segments=12)
+ell('lantern amber glass',lc,(.040,.064,.040),4,'HandL',12,8)
+for j in range(6):
+ angle=j*math.tau/6;offset=np.array([math.cos(angle)*.052,0,math.sin(angle)*.052])
+ tube('lantern cage bar',[lc+offset+[0,-.075,0],lc+offset+[0,.075,0]],.004,2,'HandL',6)
+ell('lantern roof',lc+[0,.08,0],(.067,.014,.067),2,'HandL',12,6)
+
 # The original standard anchor is the only weapon; Epic recolors this exact mesh.
 GROUP=2
 g=np.array(BONES['WeaponGripR'][0]);x=g[0]+.022;z=g[2]+.055
-limb('anchor shank',(x,g[1]+.16,z),(x,g[1]-.46,z),.034,1,'WeaponGripR')
+limb('anchor shank',(x,g[1]+.16,z),(x,g[1]-.46,z),.034,2,'WeaponGripR')
 ring('anchor handle',(x,g[1]+.21,z),.069,.014,2,'WeaponGripR',segments=20)
 tube('anchor crossbar',[(x-.17,g[1]-.12,z),(x+.17,g[1]-.12,z)],.029,2,'WeaponGripR',10)
-tube('anchor curved arms',[(x-.24,g[1]-.30,z),(x-.18,g[1]-.44,z),(x,g[1]-.49,z),(x+.18,g[1]-.44,z),(x+.24,g[1]-.30,z)],.034,1,'WeaponGripR',12)
+tube('anchor curved arms',[(x-.24,g[1]-.30,z),(x-.18,g[1]-.44,z),(x,g[1]-.49,z),(x+.18,g[1]-.44,z),(x+.24,g[1]-.30,z)],.034,2,'WeaponGripR',12)
 for s in [-1,1]:
  shard('anchor fluke',(x+s*.19,g[1]-.43,z),(x+s*.25,g[1]-.25,z),.066,.035,2,'WeaponGripR')
  tube('anchor cyan channel',[(x+s*.11,g[1]-.445,z+.032),(x+s*.20,g[1]-.34,z+.032)],.006,3,'WeaponGripR',6)
 for j in range(6):ring('short grip chain',(x+.10,g[1]+.12-j*.048,z-.02),.029,.006,1,'WeaponGripR',normal=(0,0,1) if j%2 else (1,0,0),segments=12)
+# Bolted anchor housing, pressure core and engraved grip bands.
+ring('anchor pressure core',(x,g[1]-.12,z+.036),.053,.009,2,'WeaponGripR',segments=16)
+ell('anchor core lens',(x,g[1]-.12,z+.044),(.040,.040,.010),3,'WeaponGripR',12,6)
+for s in [-1,1]:
+ for j in range(3):bolt('anchor crossbar bolt',(x+s*(.065+j*.039),g[1]-.12,z+.031),'WeaponGripR',.008)
+for j in range(5):ring('anchor grip band',(x,g[1]+.09-j*.040,z),.034,.0045,5,'WeaponGripR',normal=(0,1,0),segments=12)
+tube('anchor power lead',[(x-.035,g[1]+.13,z),(x-.06,g[1]-.01,z+.02),(x-.05,g[1]-.10,z+.03)],.007,3,'WeaponGripR',6)
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 mesh=bpy.data.meshes.new('NerokCyberShark');mesh.from_pydata(V,[],F);mesh.update()
 obj=bpy.data.objects.new('Nerok Abyss',mesh);bpy.context.collection.objects.link(obj)
 for idx,color in enumerate(COLORS):
- mat=bpy.data.materials.new('Nerok slot '+str(idx));mat.diffuse_color=(*color,1);mat.use_nodes=True;bsdf=mat.node_tree.nodes.get('Principled BSDF');bsdf.inputs['Base Color'].default_value=(*color,1);bsdf.inputs['Metallic'].default_value=.45;bsdf.inputs['Roughness'].default_value=.38;obj.data.materials.append(mat)
+ mat=bpy.data.materials.new('Nerok slot '+str(idx));mat.diffuse_color=(*color,1);mat.use_nodes=True;bsdf=mat.node_tree.nodes.get('Principled BSDF');bsdf.inputs['Base Color'].default_value=(*color,1);bsdf.inputs['Metallic'].default_value=(.55 if idx==4 else .15 if idx==2 else 0);bsdf.inputs['Roughness'].default_value=.58;obj.data.materials.append(mat)
 for face,m in zip(mesh.polygons,MI):face.material_index=m;face.use_smooth=True
 for idx,name in enumerate(BN):
  group=obj.vertex_groups.new(name=name);indices=[i for i,b in enumerate(BI) if b==idx]
@@ -106,6 +215,24 @@ def export_effect(name,verts,faces,alpha):
  payload={'vertices':[float(c) for v in m.vertices for c in v.co], 'triangles':indices,'alpha':alpha}
  (OUT/(name+'.bytes')).write_text(json.dumps(payload,separators=(',',':')))
  ob.rotation_euler.x=math.pi/2
+# One pooled chain mesh: interlocked oval links along local +Z, stretched to the live endpoints.
+cv=[];cf=[];links=24;around=12;sides=6
+for link in range(links):
+ base=len(cv);center=(link+.5)/links
+ for j in range(around):
+  angle=j*math.tau/around
+  for k in range(sides):
+   cross=k*math.tau/sides
+   xx=(.028+.006*math.cos(cross))*math.cos(angle);yy=.006*math.sin(cross)
+   zz=center+(.031+.006*math.cos(cross))*math.sin(angle)
+   cv.append((xx,yy,zz) if link%2==0 else (-yy,xx,zz))
+ for j in range(around):
+  for k in range(sides):
+   a=base+j*sides+k;b=base+((j+1)%around)*sides+k
+   c=base+((j+1)%around)*sides+(k+1)%sides;d=base+j*sides+(k+1)%sides
+   cf.extend([(a,b,c),(a,c,d)])
+export_effect('AnchorChain',cv,cf,[1]*len(cv))
+
 # Three feathered spiral ribbons, visibly descending into the vortex center.
 v=[];f=[];a=[]
 for arm in range(3):
@@ -139,10 +266,10 @@ export_effect('AnchorProjectile',v,f,[.9]*len(v))
 obj.rotation_euler.x=math.pi/2
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'))
 scene=bpy.context.scene;scene.render.engine='BLENDER_EEVEE_NEXT';scene.render.resolution_x=700;scene.render.resolution_y=900;scene.render.resolution_percentage=100
-scene.world.color=(.025,.025,.025)
+scene.world.color=(.025,.025,.025);scene.view_settings.view_transform='AgX';scene.view_settings.exposure=-.25
 def aim(ob,point):ob.rotation_euler=(Vector(point)-ob.location).to_track_quat('-Z','Y').to_euler()
 bpy.ops.object.camera_add(location=(2.4,-4.0,1.8));cam=bpy.context.object;aim(cam,(0,0,1.02));scene.camera=cam;cam.data.type='ORTHO';cam.data.ortho_scale=2.4
-for pos,power,size in [((2,-4,3),900,3),((-3,-1,2),1100,3),((0,3,2),700,2)]:
+for pos,power,size in [((2,-4,3),230,3),((-3,-1,2),280,3),((0,3,2),220,2)]:
  bpy.ops.object.light_add(type='AREA',location=pos);light=bpy.context.object;light.data.energy=power;light.data.shape='DISK';light.data.size=size;aim(light,(0,0,1))
 scene.render.filepath=str(ART/'preview.png');bpy.ops.render.render(write_still=True)
 print('NEROK_EXPORT',len(bones),'vertices',len(bones)//3,'triangles',len(PARTS),'parts')

@@ -59,7 +59,7 @@ namespace Alterverse.EditorChecks
             for(int i=0;i<model.groups.Length;i++)
                 if(model.groups[i]==2){weaponVertices++;Require(model.boneNames[model.boneIndices[i]]=="WeaponGripR","Anchor bound to wrong hand.");}
             Require(weaponVertices>0,"Anchor mesh absent.");
-            foreach(string mesh in new[]{"AnchorProjectile","WaterSpiral","WaveCrest"})
+            foreach(string mesh in new[]{"AnchorProjectile","WaterSpiral","WaveCrest","AnchorChain"})
                 Require(Resources.Load<TextAsset>("CyberShark/"+mesh)!=null,"Missing Blender VFX: "+mesh);
             for(int i=0;i<5;i++)Require(Resources.Load<Texture2D>("CyberShark/Icons/"+i)!=null,"Missing attack icon "+i);
             Require(Resources.Load<AudioClip>("Audio/Heroes/Nerok/Ultimate_Selected")!=null,"User's ultimate MP3 missing.");

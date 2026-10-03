@@ -373,6 +373,14 @@ namespace Alterverse.Visuals
                 new Color(.34f,.77f,.95f,.65f),flight+.15f,HeroFxMotion.Hold,facing,actor);
             Fx(HeroFxShape.WaveCrest,from,cyan,.32f,.18f,HeroFxMotion.Expand,facing,actor);
         }
+        public static void SharkPullChain(GameObject actor,Health target,float duration)
+        {
+            if(actor==null||target==null||target.IsDead)return;
+            Vector3 from=Muzzle(actor),to=target.transform.position+Vector3.up*.4f;
+            HeroVfxPool.Emit(HeroFxShape.AnchorChain,from,to,new Vector3(.9f,.9f,1f),
+                new Color(.45f,.80f,1f,1f),duration,HeroFxMotion.Tether,
+                owner:actor,follow:actor.transform,endFollow:target.transform);
+        }
         public static void SharkVortex(GameObject actor,Vector3 center,float radius,float duration)
         {
             Vector3 p=Ground(center);Color water=new Color(.02f,.48f,.95f,.65f);

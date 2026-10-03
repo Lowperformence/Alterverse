@@ -31,3 +31,6 @@ The user-supplied `universfield-water-splash-199583.mp3` is preserved unchanged 
 ## Verification
 
 Blender generation/rendering, exported triangle/normal/bone/channel validation, distinct audio addresses, icon/resource presence and MP3 byte equality were checked outside Unity. `DIMENSIONS FRONT/Checks/Cyber shark integration (non-destructive)` adds a Unity resource/catalog/balance-bound check. Unity compilation, hook collision playtests, mobile appearance/FPS and a two-peer multiplayer test remain to be run in Unity; Unity is unavailable in the editing environment.
+
+## Pirate art revision
+Light-blue shark skin, tapered snout, visible teeth and gills, naval vest with brass trim, leather straps, split coat, curved tail, lantern and detailed anchor authored in Blender. The hook draws a pooled interlocked-chain VFX between live actor and victim transforms for the 0.35-second pull; target identity is relayed for online presentation. Nerok has 90 base shield (standard 50 plus requested 40), including existing recharge, respawn and network shield limits.

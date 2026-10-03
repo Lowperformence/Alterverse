@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -139,9 +139,15 @@ namespace Alterverse.Visuals
         private void Draw(Slot s,float t)
         {
             Vector3 point=s.Follows?s.Follow.position+s.Offset:s.From;
-            float scale=1;Quaternion rotation=s.Rotation;
+            float scale=1;Quaternion rotation=s.Rotation;Vector3 drawnSize=s.Size;
             switch(s.Motion)
             {
+                case HeroFxMotion.Tether:
+                    Vector3 tetherEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 tetherDelta=tetherEnd-point;
+                    if(tetherDelta.sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(tetherDelta);
+                    drawnSize.z=tetherDelta.magnitude;
+                    break;
                 case HeroFxMotion.Expand:scale=Mathf.Lerp(.24f,1f,1f-Mathf.Pow(1f-t,3f));break;
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
                 case HeroFxMotion.TravelFixedFrame:
@@ -175,10 +181,10 @@ namespace Alterverse.Visuals
                 case HeroFxMotion.Orbit:rotation*=Quaternion.Euler(0,t*180,0);scale=1-t*.22f;break;
                 case HeroFxMotion.Sweep:rotation*=Quaternion.Euler(0,Mathf.Lerp(-35,35,Mathf.SmoothStep(0f,1f,t)),0);scale=.88f+.12f*Mathf.Sin(t*Mathf.PI);break;
             }
-            s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=s.Size*scale;
+            s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=drawnSize*scale;
             // Projectile cores remain readable until contact. Decorative flashes die away
             // smoothly; exact warning outlines retain their original size and opacity.
-            bool flight=s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral;
+            bool flight=s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
@@ -201,7 +207,7 @@ namespace Alterverse.Visuals
 
         private static Mesh BuildShape(HeroFxShape shape,bool polished=true)
         {
-            if(shape==HeroFxShape.AnchorProjectile||shape==HeroFxShape.WaterSpiral||shape==HeroFxShape.WaveCrest)
+            if(shape==HeroFxShape.AnchorProjectile||shape==HeroFxShape.WaterSpiral||shape==HeroFxShape.WaveCrest||shape==HeroFxShape.AnchorChain)
                 return CyberSharkEffectMeshes.Load(shape.ToString());
             var v=new List<Vector3>();var colors=new List<Color>();var triangles=new List<int>();
             void Tri(Vector3 a,Vector3 b,Vector3 c,float alpha=1)

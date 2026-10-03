@@ -6,7 +6,7 @@ namespace Alterverse.Combat
 {
     public sealed class Health : MonoBehaviour
     {
-        private const float HeroBaseShieldCapacity = 50f;
+        private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero == Alterverse.Characters.HeroId.Nerok ? 90f : 50f;
         private const float HeroBaseShieldRechargeDelay = 15f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);

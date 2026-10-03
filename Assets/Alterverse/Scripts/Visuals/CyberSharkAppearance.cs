@@ -137,12 +137,12 @@ namespace Alterverse.Visuals
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
-                Surface("Pressure suit", new Color(.028f,.045f,.060f), .12f,.28f),
-                Surface("Gunmetal frame", new Color(.17f,.24f,.29f), .66f,.40f),
-                Surface("Ceramic armor", new Color(.73f,.81f,.84f), .35f,.40f),
-                Surface("Tidal channels", new Color(.02f,.67f,.94f), .30f,.62f, true),
-                Surface("Red optics", new Color(.90f,.10f,.065f), .20f,.55f, true),
-                Surface("Shark teeth", new Color(.83f,.90f,.92f), .10f,.35f)
+                Surface("Pirate leather", new Color(.035f,.022f,.014f), .12f,.28f),
+                Surface("Light blue shark skin", new Color(.38f,.72f,.94f), .08f,.40f),
+                Surface("Naval armor", new Color(.025f,.065f,.11f), .55f,.40f),
+                Surface("Tidal channels", new Color(.04f,.78f,1f), .30f,.62f, true),
+                Surface("Brass and lantern", new Color(.72f,.39f,.105f), .20f,.55f, true),
+                Surface("Shark teeth", new Color(.80f,.92f,.96f), .10f,.35f)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             RendererGroup(right, 2, anatomy.transform, vertices, normals, weights, bones, materials);

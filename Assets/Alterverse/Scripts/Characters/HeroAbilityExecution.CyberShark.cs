@@ -90,7 +90,11 @@ namespace Alterverse.Characters
             if(distance<.1f)yield break;
             HeroLocomotion body=target.GetComponent<HeroLocomotion>()??target.gameObject.AddComponent<HeroLocomotion>();
             if(body.BeginForcedMove(target.transform.position+delta.normalized*distance,.35f))
+            {
+                HeroSkillVfx.SharkPullChain(gameObject,target,.35f);
+                Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,6,target.transform.position,0,.35f,target);
                 HeroCombatStatus.Apply(target,.65f,.7f);
+            }
         }
 
         private IEnumerator SharkVortex(Vector3 center,int castLife)
