@@ -510,22 +510,38 @@ namespace Alterverse.Combat
             PrototypeVfx.Ring(impact,shock,ImpactRadius*1.05f,.3f);
             Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.Explosion,impact,.65f);
 
+            // Track damaged Health components explicitly so multi-collider actors and the
+            // Hot Zone fallback below can never receive the same blast damage twice.
+            var damaged=new System.Collections.Generic.HashSet<Health>();
             int hits=Physics.OverlapSphereNonAlloc(target,ImpactRadius,hitBuffer);
             for(int i=0;i<hits;i++)
             {
                 Collider c=hitBuffer[i];if(c==null)continue;
                 Health h=c.GetComponentInParent<Health>();
-                if(h==null||h.IsDead)continue;
-
-                bool duplicate=false;
-                for(int j=0;j<i;j++)
-                {
-                    Collider prior=hitBuffer[j];
-                    if(prior!=null&&prior.GetComponentInParent<Health>()==h){duplicate=true;break;}
-                }
-                if(duplicate)continue;
+                if(h==null||h.IsDead||damaged.Contains(h))continue;
                 if(h.GetComponent<RealityCore>()!=null||h.GetComponent<Alterverse.Match.DimensionPlanet>()!=null)continue;
-                if(h.GetComponent<TeamMember>()==null)continue;
+
+                // Normal battlefield units still use TeamMember. Hot Zone monsters are also
+                // accepted explicitly so planet-specific variants cannot be filtered out.
+                bool isHotZoneMonster=h.GetComponent<HotZoneTank>()!=null;
+                if(h.GetComponent<TeamMember>()==null&&!isHotZoneMonster)continue;
+                damaged.Add(h);
+                h.TakeDamage(damage,gameObject);
+            }
+
+            // Hot Zone monsters have large/custom visual rigs and may not always expose a
+            // collider that overlaps the blast query. Check their authoritative registry as a
+            // second path, using the same horizontal blast radius and the same damage value.
+            // The HashSet above guarantees exactly one hit even when the physics path succeeded.
+            for(int i=HotZoneTank.Active.Count-1;i>=0;i--)
+            {
+                HotZoneTank monster=HotZoneTank.Active[i];
+                if(monster==null)continue;
+                Health h=monster.TankHealth;
+                if(h==null||h.IsDead||damaged.Contains(h))continue;
+                Vector3 delta=monster.transform.position-target;delta.y=0f;
+                if(delta.sqrMagnitude>ImpactRadius*ImpactRadius)continue;
+                damaged.Add(h);
                 h.TakeDamage(damage,gameObject);
             }
             Cleanup();
