@@ -127,6 +127,7 @@ bpy.context.view_layer.objects.active = merged[0]
 bpy.ops.export_scene.fbx(filepath=str(ASSET), use_selection=True,
                          object_types={"MESH"}, axis_forward="-Z", axis_up="Y",
                          apply_unit_scale=True, bake_space_transform=False,
+                         apply_scale_options="FBX_SCALE_UNITS",
                          path_mode="AUTO")
 
 # Source preview; the in-game attachment uses the same three exported meshes.

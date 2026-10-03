@@ -19,6 +19,9 @@ namespace Alterverse.Visuals
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
         private Transform rifleDetailsRoot;
+        private Transform rifleDetailsGrip;
+        private Vector3 rifleDetailsGripPosition;
+        private Quaternion rifleDetailsGripRotation;
         private readonly List<Material> rifleDetailMaterials = new List<Material>();
         private sealed class ArmChain
         {
@@ -310,8 +313,9 @@ namespace Alterverse.Visuals
                 Debug.LogError("DF: Sivra rifle details cannot attach: WeaponGripR bone or DF_WeaponR renderer is missing.", this);
                 return;
             }
-            // The imported rifle is skinned to WeaponGripR, which cancels the enlarged
-            // hand scale. Details must use that same bone or they drift into the receiver.
+            // Skinned weapons cancel FBX bone scale through their bind poses. Static
+            // mesh attachments do not: parenting them under a centimetre-scaled bone
+            // can enlarge the details 100x and cover the entire gameplay camera.
             Vector3 forward = muzzle != null && rifleSupport != null ?
                 muzzle.position - rifleSupport.position : model.forward;
             Vector3 up = rifleSupport != null && rifleHandle != null ?
@@ -321,8 +325,11 @@ namespace Alterverse.Visuals
             Vector3 origin = rifleSupport != null ? rifleSupport.position : rifle.bounds.center;
 
             rifleDetailsRoot = new GameObject("DF_SivraRifleDetails").transform;
-            rifleDetailsRoot.SetParent(grip.Bone, false);
+            rifleDetailsRoot.SetParent(model, false);
             rifleDetailsRoot.SetPositionAndRotation(origin, Quaternion.LookRotation(forward, up));
+            rifleDetailsGrip = grip.Bone;
+            rifleDetailsGripPosition = grip.Bone.InverseTransformPoint(origin);
+            rifleDetailsGripRotation = Quaternion.Inverse(grip.Bone.rotation) * rifleDetailsRoot.rotation;
             GameObject authoredDetails = Resources.Load<GameObject>("CyberRanger/SivraRifleDetails");
             if (authoredDetails != null)
             {
@@ -349,7 +356,15 @@ namespace Alterverse.Visuals
                 attachment.name = "DF_SivraRifleAttachment";
                 attachment.transform.localPosition = Vector3.zero;
                 attachment.transform.localRotation = Quaternion.identity;
-                attachment.transform.localScale = Vector3.one;
+                // Retain the FBX import's root scale and normalize its complete mesh
+                // envelope in the attachment frame. Never assume FBX units are metres.
+                if (!FitRifleDetails(attachment.transform, rifleDetailsRoot))
+                {
+                    attachment.SetActive(false);
+                    Destroy(attachment);
+                    Debug.LogError("DF: Sivra rifle details have invalid imported bounds.", this);
+                    return;
+                }
                 int meshCount = 0;
                 foreach (MeshRenderer part in attachment.GetComponentsInChildren<MeshRenderer>(true))
                 {
@@ -420,6 +435,42 @@ namespace Alterverse.Visuals
             renderer.sharedMaterial = material;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             renderer.receiveShadows = true;
+        }
+
+        private static bool FitRifleDetails(Transform attachment, Transform frame)
+        {
+            if (attachment == null || frame == null) return false;
+            Bounds envelope = default;
+            bool found = false;
+            foreach (MeshFilter filter in attachment.GetComponentsInChildren<MeshFilter>(true))
+            {
+                if (filter.sharedMesh == null) continue;
+                Bounds bounds = filter.sharedMesh.bounds;
+                Matrix4x4 toFrame = frame.worldToLocalMatrix * filter.transform.localToWorldMatrix;
+                for (int x = -1; x <= 1; x += 2)
+                    for (int y = -1; y <= 1; y += 2)
+                        for (int z = -1; z <= 1; z += 2)
+                        {
+                            Vector3 p = toFrame.MultiplyPoint3x4(bounds.center + Vector3.Scale(bounds.extents, new Vector3(x, y, z)));
+                            if (float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z) ||
+                                float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z)) return false;
+                            if (!found) { envelope = new Bounds(p, Vector3.zero); found = true; }
+                            else envelope.Encapsulate(p);
+                        }
+            }
+            if (!found || envelope.size.z < .00001f) return false;
+            // Blender design spans -0.147 to +0.7475 metres along the barrel.
+            float scale = .8945f / envelope.size.z;
+            attachment.localScale *= scale;
+            return true;
+        }
+
+        private void FollowRifleDetails()
+        {
+            if (rifleDetailsRoot == null || rifleDetailsGrip == null) return;
+            // Follow the final two-hand pose, copying position/rotation only.
+            rifleDetailsRoot.SetPositionAndRotation(rifleDetailsGrip.TransformPoint(rifleDetailsGripPosition),
+                rifleDetailsGrip.rotation * rifleDetailsGripRotation);
         }
 
         private static void SetDetailColor(Material material, Color color, bool emissive)
@@ -570,7 +621,7 @@ namespace Alterverse.Visuals
             if (umbralMage != null) umbralMage.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
             ApplyRifleAim();
             ApplyRifleSupport();
+            FollowRifleDetails();
         }
     }
 }
-
