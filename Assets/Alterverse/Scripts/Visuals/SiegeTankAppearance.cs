@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Kaelon's olive siege armor, shield and hammer, fitted to her existing skeleton.</summary>
+    /// <summary>Kaelon's urban digital camouflage armor, shield and hammer, fitted to her existing skeleton.</summary>
     [DisallowMultipleComponent]
     public sealed class SiegeTankAppearance : MonoBehaviour
     {
@@ -134,11 +134,11 @@ namespace Alterverse.Visuals
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
-                Surface("Joint seals", new Color(.028f,.038f,.031f), .22f,.30f),
-                Surface("Olive armor", new Color(.18f,.235f,.135f), .55f,.38f),
+                Surface("Joint seals", new Color(.03f,.035f,.045f), .22f,.30f),
+                UrbanArmor(),
                 Surface("Bronze edges", new Color(.38f,.32f,.19f), .80f,.44f),
                 Surface("Amber reactor", new Color(1f,.32f,.035f), .35f,.48f, true),
-                Surface("Exposed steel", new Color(.30f,.36f,.34f), .85f,.47f),
+                Surface("Exposed steel", new Color(.32f,.34f,.36f), .85f,.47f),
                 // Retain legacy material key for weapon-colorway exclusion; geometry now spells DF.
                 Surface("Shield DR", new Color(.36f,.16f,.055f), .12f,.30f),
                 Surface("Yellow head stripe", new Color(1f,.85f,.015f), .1f,.45f, true)
@@ -162,6 +162,19 @@ namespace Alterverse.Visuals
                     }
                 }
             return true;
+        }
+
+        private Material UrbanArmor()
+        {
+            Shader shader=Resources.Load<Shader>("HeroArt/UrbanDigitalArmor");
+            Material material=shader!=null?new Material(shader):
+                RuntimeShaderLibrary.Create(new Color(.28f,.30f,.32f),false,.35f,.28f);
+            material.name="DF_Kaelon_UrbanDigitalArmor";
+            if(shader!=null&&material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",Color.white);
+            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",.35f);
+            if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",.28f);
+            ownedMaterials.Add(material);
+            return material;
         }
 
         private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
@@ -191,6 +204,8 @@ namespace Alterverse.Visuals
             var mesh = new Mesh { name = "DF_Kaelon_Siege_" + group };
             ownedMeshes.Add(mesh);
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.boneWeights = w.ToArray();
+            // Pattern data is not deformed by skinning; camouflage follows each armor plate.
+            mesh.SetUVs(2,v);
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = 7;

@@ -203,7 +203,7 @@ namespace Alterverse.Visuals
                 material.SetFloat("_RimOpacity",.5f);
                 material.SetFloat("_PatternStyle",PatternStyle(hero));
                 material.SetFloat("_PatternOffset",variant*.37f);
-                material.SetFloat("_PatternStrength",.38f);
+                material.SetFloat("_PatternStrength",.78f);
                 var slots=new Material[submeshes];
                 Material inscription=null;
                 for(int i=0;i<slots.Length;i++)
