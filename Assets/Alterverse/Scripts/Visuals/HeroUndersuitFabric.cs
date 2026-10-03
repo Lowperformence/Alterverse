@@ -62,9 +62,11 @@ namespace Alterverse.Visuals
                 {
                     Material original = slots[i];
                     if (!IsUndersuit(original)) continue;
-                    Color color = original.HasProperty("_BaseColor") ? original.GetColor("_BaseColor") : original.color;
+                    // Use a clear anthracite so the fabric stays visible under dark lighting.
+                    Color color = new Color(.075f, .085f, .10f, 1f);
                     var copy = new Material(original) { shader = shader, name = original.name + "_MatteWeave" };
                     copy.SetColor("_BaseColor", color);
+                    if (copy.HasProperty("_Color")) copy.SetColor("_Color", color);
                     copy.SetFloat("_Metallic", 0f);
                     copy.SetFloat("_Smoothness", .06f);
                     copy.SetFloat("_BumpScale", 0f);

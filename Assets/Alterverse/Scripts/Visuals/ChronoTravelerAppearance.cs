@@ -202,18 +202,15 @@ namespace Alterverse.Visuals
                 root.SetParent(model, false);
                 root.localPosition = middle;
                 root.SetParent(bones[map[thigh]], true);
-                // All pieces stay on one thigh, avoiding cables stretching across the knee.
-                if (side == "R")
-                {
-                    Part(root, "Phone cradle", PrimitiveType.Cube, Vector3.zero,
-                        new Vector3(.028f,.15f,.086f) * unitScale, shell);
-                    Part(root, "Phone screen", PrimitiveType.Cube,
-                        new Vector3(sign * .016f,.008f,0) * unitScale,
-                        new Vector3(.003f,.112f,.065f) * unitScale, screen);
-                    Part(root, "Phone button", PrimitiveType.Cube,
-                        new Vector3(sign * .018f,-.058f,0) * unitScale,
-                        new Vector3(.004f,.008f,.018f) * unitScale, shell);
-                }
+                // Mount phones on the outside of both thighs, with each screen facing out.
+                Part(root, "Phone cradle", PrimitiveType.Cube, Vector3.zero,
+                    new Vector3(.028f,.15f,.086f) * unitScale, shell);
+                Part(root, "Phone screen", PrimitiveType.Cube,
+                    new Vector3(sign * .016f,.008f,0) * unitScale,
+                    new Vector3(.003f,.112f,.065f) * unitScale, screen);
+                Part(root, "Phone button", PrimitiveType.Cube,
+                    new Vector3(sign * .018f,-.058f,0) * unitScale,
+                    new Vector3(.004f,.008f,.018f) * unitScale, shell);
                 for (int lane = 0; lane < 2; lane++)
                 {
                     Vector3 previous = Vector3.zero;
@@ -306,4 +303,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
