@@ -293,19 +293,27 @@ namespace Alterverse.Visuals
 
         private void BuildNyraWeaponDetails()
         {
-            if (hero != HeroId.Nyra || rightArm?.Hand == null || muzzle == null ||
-                rifleSupport == null || rifleHandle == null || weaponRenderers.Count == 0) return;
-            // Use the rifle's own three authored sockets to establish a stable detail frame.
-            Vector3 forward = muzzle.position - rifleSupport.position;
-            Vector3 up = Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward);
-            if (forward.sqrMagnitude < .000001f || up.sqrMagnitude < .000001f) return;
+            if (hero != HeroId.Nyra || weaponRenderers.Count == 0) return;
+            WeaponGrip grip = grips.Find(g => g.Bone != null && g.Bone.name == "WeaponGripR");
+            Renderer rifle = weaponRenderers.Find(r => r != null && r.name == "DF_WeaponR");
+            if (grip == null || rifle == null) return;
+            // The imported rifle is skinned to WeaponGripR, which cancels the enlarged
+            // hand scale. Details must use that same bone or they drift into the receiver.
+            Vector3 forward = muzzle != null && rifleSupport != null ?
+                muzzle.position - rifleSupport.position : model.forward;
+            Vector3 up = rifleSupport != null && rifleHandle != null ?
+                Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward) : model.up;
+            if (forward.sqrMagnitude < .000001f) forward = model.forward;
+            if (up.sqrMagnitude < .000001f) up = model.up;
+            Vector3 origin = rifleSupport != null ? rifleSupport.position : rifle.bounds.center;
 
             rifleDetailsRoot = new GameObject("DF_SivraRifleDetails").transform;
-            rifleDetailsRoot.SetParent(rightArm.Hand, false);
-            rifleDetailsRoot.SetPositionAndRotation(rifleSupport.position, Quaternion.LookRotation(forward, up));
-            Material source = weaponRenderers[0].sharedMaterial;
+            rifleDetailsRoot.SetParent(grip.Bone, false);
+            rifleDetailsRoot.SetPositionAndRotation(origin, Quaternion.LookRotation(forward, up));
+            Material source = rifle.sharedMaterial;
             Shader shader = source != null ? source.shader : Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) shader = Shader.Find("Standard");
+            if (shader == null) return;
             Material metal = source != null ? new Material(source) : new Material(shader);
             SetDetailColor(metal, new Color(.30f, .38f, .42f), false);
             Material cyan = source != null ? new Material(source) : new Material(shader);
@@ -314,24 +322,25 @@ namespace Alterverse.Visuals
             SetDetailColor(dark, new Color(.035f, .065f, .075f), false);
 
             // Local +Z follows the barrel, +Y is the rifle's top, and X spans its sides.
-            DetailBox("Receiver cheek L", new Vector3(-.054f, .025f, .055f), new Vector3(.012f, .060f, .115f), metal);
-            DetailBox("Receiver cheek R", new Vector3(.054f, .025f, .055f), new Vector3(.012f, .060f, .115f), metal);
-            DetailBox("Optic housing", new Vector3(0f, .075f, .075f), new Vector3(.040f, .027f, .095f), dark);
-            DetailBox("Optic lens", new Vector3(0f, .091f, .125f), new Vector3(.027f, .004f, .012f), cyan);
-            DetailBox("Power line L", new Vector3(-.035f, -.003f, .220f), new Vector3(.009f, .009f, .250f), cyan);
-            DetailBox("Power line R", new Vector3(.035f, -.003f, .220f), new Vector3(.009f, .009f, .250f), cyan);
-            DetailBox("Barrel collar", new Vector3(0f, 0f, .390f), new Vector3(.046f, .046f, .025f), metal);
+            DetailBox("Receiver cheek L", new Vector3(-.063f, .025f, .055f), new Vector3(.016f, .072f, .150f), metal);
+            DetailBox("Receiver cheek R", new Vector3(.063f, .025f, .055f), new Vector3(.016f, .072f, .150f), metal);
+            DetailBox("Optic base", new Vector3(0f, .093f, .072f), new Vector3(.060f, .020f, .105f), metal);
+            DetailBox("Optic housing", new Vector3(0f, .118f, .082f), new Vector3(.060f, .038f, .105f), dark);
+            DetailBox("Optic lens", new Vector3(0f, .120f, .139f), new Vector3(.048f, .030f, .008f), cyan);
+            DetailBox("Power line L", new Vector3(-.067f, .004f, .218f), new Vector3(.009f, .014f, .295f), cyan);
+            DetailBox("Power line R", new Vector3(.067f, .004f, .218f), new Vector3(.009f, .014f, .295f), cyan);
+            DetailBox("Barrel collar", new Vector3(0f, 0f, .390f), new Vector3(.058f, .054f, .032f), metal);
             for (int i = 0; i < 3; i++)
             {
                 float z = .020f + i * .033f;
-                DetailBox("Cooling slot L " + i, new Vector3(-.061f, .027f, z), new Vector3(.004f, .006f, .018f), dark);
-                DetailBox("Cooling slot R " + i, new Vector3(.061f, .027f, z), new Vector3(.004f, .006f, .018f), dark);
+                DetailBox("Cooling slot L " + i, new Vector3(-.073f, .032f, z), new Vector3(.004f, .009f, .023f), dark);
+                DetailBox("Cooling slot R " + i, new Vector3(.073f, .032f, z), new Vector3(.004f, .009f, .023f), dark);
             }
             for (int side = -1; side <= 1; side += 2)
                 for (int i = 0; i < 2; i++)
                     DetailBox("Receiver fastener " + side + " " + i,
-                        new Vector3(side * .062f, .047f, .005f + i * .092f),
-                        new Vector3(.006f, .008f, .008f), metal);
+                        new Vector3(side * .073f, .058f, .005f + i * .110f),
+                        new Vector3(.008f, .010f, .010f), dark);
         }
 
         private void DetailBox(string name, Vector3 position, Vector3 size, Material material)
