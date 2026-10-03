@@ -21,6 +21,8 @@ namespace Alterverse.Visuals
             public Anchor[] anchors;
             public float[] vertices, normals;
             public int[] boneIndices, groups;
+            public int[] tailVertices;
+            public float[] tailPivot;
             public Marker[] markers;
             public Submesh[] submeshes;
         }
@@ -28,6 +30,10 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
+        private Transform tail;
+        private Quaternion tailRest;
+        private Vector3 tailAxis;
+        private float tailTime;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache() => geometry = null;
@@ -136,6 +142,24 @@ namespace Alterverse.Visuals
                 normals[i] = toNormal.MultiplyVector(rotations[b] * sourceNormal).normalized;
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
+            if (data.tailVertices != null && data.tailVertices.Length > 0 &&
+                data.tailPivot != null && data.tailPivot.Length == 3)
+            {
+                int hips = lookup["Hips"];
+                Vector3 pivot = heads[hips] + rotations[hips] *
+                    (Point(data.tailPivot) - Point(data.anchors[hips].head)) * scales[hips];
+                tail = new GameObject("DF_Nerok_Tail").transform;
+                tail.SetParent(bones[hips], false);
+                tail.position = model.TransformPoint(pivot);
+                tailRest = tail.localRotation;
+                tailAxis = bones[hips].InverseTransformDirection(model.up).normalized;
+                int tailIndex = bones.Length;
+                Array.Resize(ref bones, tailIndex + 1);
+                bones[tailIndex] = tail;
+                foreach (int index in data.tailVertices)
+                    if (index >= 0 && index < weights.Length && data.groups[index] == 0)
+                        weights[index] = new BoneWeight { boneIndex0 = tailIndex, weight0 = 1f };
+            }
             Material[] materials = {
                 Surface("Pirate leather", new Color(.035f,.022f,.014f), .12f,.28f),
                 Surface("Light blue shark skin", new Color(.38f,.72f,.94f), .08f,.40f),
@@ -145,7 +169,19 @@ namespace Alterverse.Visuals
                 Surface("Shark teeth", new Color(.80f,.92f,.96f), .10f,.35f)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
-            RendererGroup(right, 2, anatomy.transform, vertices, normals, weights, bones, materials);
+            // The inherited gauntlet renderer has its own FBX transform/root bone.
+            // Keep the new anchor independent of the inherited gauntlet scale:
+            // both new skins use the anatomy's coordinate frame and skeleton root.
+            right.sharedMesh = null; right.enabled = false;
+            right.name = "DF_Nerok_LegacyGauntletR";
+            var anchorObject = new GameObject("DF_GauntletR");
+            anchorObject.layer = anatomy.gameObject.layer;
+            anchorObject.transform.SetParent(anatomy.transform, false);
+            var anchorRenderer = anchorObject.AddComponent<SkinnedMeshRenderer>();
+            anchorRenderer.rootBone = anatomy.rootBone;
+            anchorRenderer.quality = anatomy.quality;
+            anchorRenderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
+            RendererGroup(anchorRenderer, 2, anatomy.transform, vertices, normals, weights, bones, materials);
             if (left != null) { left.sharedMesh = null; left.enabled = false; }
             return true;
         }
@@ -216,10 +252,23 @@ namespace Alterverse.Visuals
             if (name.StartsWith("Shin", StringComparison.Ordinal)) return "Foot" + name[name.Length - 1];
             return null;
         }
+        private void LateUpdate()
+        {
+            if (tail == null || Time.deltaTime <= 0f) return;
+            // Start at the centred neutral pose. A full sweep takes eight seconds;
+            // only the tail bone moves, independent of the hero's combat animation.
+            tailTime += Time.deltaTime;
+            tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
+        }
         private void OnDestroy()
         {
-            foreach (Mesh mesh in ownedMeshes) if (mesh != null) Destroy(mesh);
-            foreach (Material material in ownedMaterials) if (material != null) Destroy(material);
+            foreach (Mesh mesh in ownedMeshes) if (mesh != null) Release(mesh);
+            foreach (Material material in ownedMaterials) if (material != null) Release(material);
+        }
+        private static void Release(UnityEngine.Object resource)
+        {
+            if (Application.isPlaying) Destroy(resource);
+            else DestroyImmediate(resource);
         }
     }
 }

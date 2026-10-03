@@ -147,16 +147,18 @@ for sign,side in [(-1,'L'),(1,'R')]:
  for yy in [.24,.38]:
   tube('boot leather strap',[(sign*.11,yy,.073),(sign*.16,yy,.095),(sign*.22,yy,.06)],.013,0,'Shin'+side,6)
 
-# Curled organic shark tail, attached to the pelvis so it follows the stride.
-tail=np.array([(0,.97,-.14),(-.07,.79,-.30),(-.24,.49,-.38),(-.45,.28,-.29),(-.64,.36,-.13),(-.65,.63,-.06)])
+# Neutral tail is centred behind the pelvis; runtime adds a slow +/-45 degree sweep.
+tail_start=len(V)
+tail=np.array([(0,.97,-.14),(0,.79,-.30),(0,.49,-.48),(0,.28,-.69),(0,.36,-.88),(0,.63,-1.02)])
 tr=[.105,.095,.074,.055,.038,.022];tp=[];radii=[]
 for i in range(len(tail)-1):
  p0=tail[max(0,i-1)];p1=tail[i];p2=tail[i+1];p3=tail[min(len(tail)-1,i+2)]
  for t in np.linspace(0,1,5,endpoint=False):
   tp.append(.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t));radii.append(tr[i]*(1-t)+tr[i+1]*t)
 tp.append(tail[-1]);radii.append(tr[-1]);tube('shark tail',tp,radii,1,'Hips',14)
-shard('tail upper lobe',(-.65,.61,-.06),(-.79,.91,-.065),.067,.023,1,'Hips')
-shard('tail lower lobe',(-.65,.61,-.06),(-.50,.78,-.07),.044,.018,1,'Hips')
+shard('tail upper lobe',(0,.61,-1.02),(0,.91,-1.16),.067,.023,1,'Hips')
+shard('tail lower lobe',(0,.61,-1.02),(0,.37,-1.17),.044,.018,1,'Hips')
+tail_end=len(V)
 # Small healed scars sit proud of exposed skin and follow its bone, avoiding decal flicker.
 tube('snout old scar',[(-.072,1.803,.351),(-.042,1.812,.351),(-.016,1.815,.347)],.003,5,'Head',6)
 tube('chest healed scar',[(-.055,1.48,.191),(-.035,1.455,.198),(-.008,1.428,.20)],.0035,5,'Chest',6)
@@ -199,15 +201,20 @@ for face,m in zip(mesh.polygons,MI):face.material_index=m;face.use_smooth=True
 for idx,name in enumerate(BN):
  group=obj.vertex_groups.new(name=name);indices=[i for i,b in enumerate(BI) if b==idx]
  if indices:group.add(indices,1,'REPLACE')
+tail_group=obj.vertex_groups.new(name='Tail')
+tail_group.add(list(range(tail_start,tail_end)),1,'REPLACE')
+obj.vertex_groups['Hips'].remove(list(range(tail_start,tail_end)))
 mesh.calc_loop_triangles()
-vertices=[];normals=[];bones=[];groups=[];subs=[{'triangles':[]} for _ in COLORS]
+vertices=[];normals=[];bones=[];groups=[];tail_vertices=[];subs=[{'triangles':[]} for _ in COLORS]
 for tri in mesh.loop_triangles:
  for loop in tri.loops:
   vi=mesh.loops[loop].vertex_index;idx=len(bones)
   vertices.extend(mesh.vertices[vi].co);normals.extend(mesh.corner_normals[loop].vector)
   bones.append(BI[vi]);groups.append(GI[vi]);subs[tri.material_index]['triangles'].append(idx)
+  if tail_start<=vi<tail_end:tail_vertices.append(idx)
 data={'version':1,'boneNames':BN,'anchors':[{'head':BONES[b][0],'tail':BONES[b][1]} for b in BN],
- 'vertices':vertices,'normals':normals,'boneIndices':bones,'groups':groups,'submeshes':subs,'markers':[]}
+ 'vertices':vertices,'normals':normals,'boneIndices':bones,'groups':groups,'submeshes':subs,'markers':[],
+ 'tailVertices':tail_vertices,'tailPivot':[0,.97,-.14]}
 with gzip.GzipFile(filename=str(OUT/'Model.bytes'),mode='wb',mtime=0) as f:f.write(json.dumps(data,separators=(',',':')).encode())
 # Blender-authored effect meshes are exported once and reused by the runtime pool.
 def export_effect(name,verts,faces,alpha):
@@ -268,7 +275,7 @@ f=[tuple(remap[i] for i in face) for face in F if all(i in remap for i in face)]
 export_effect('AnchorProjectile',v,f,[.9]*len(v))
 # Keep Blender's preview upright while exported gameplay geometry remains +Y up.
 obj.rotation_euler.x=math.pi/2
-bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
 scene=bpy.context.scene;scene.render.engine='BLENDER_EEVEE_NEXT';scene.render.resolution_x=700;scene.render.resolution_y=900;scene.render.resolution_percentage=100
 scene.world.color=(.025,.025,.025);scene.view_settings.view_transform='AgX';scene.view_settings.exposure=-.25
 def aim(ob,point):ob.rotation_euler=(Vector(point)-ob.location).to_track_quat('-Z','Y').to_euler()
@@ -277,29 +284,12 @@ for pos,power,size in [((2,-4,3),230,3),((-3,-1,2),280,3),((0,3,2),220,2)]:
  bpy.ops.object.light_add(type='AREA',location=pos);light=bpy.context.object;light.data.energy=power;light.data.shape='DISK';light.data.size=size;aim(light,(0,0,1))
 scene.render.filepath=str(ART/'preview.png');bpy.ops.render.render(write_still=True)
 print('NEROK_EXPORT',len(bones),'vertices',len(bones)//3,'triangles',len(PARTS),'parts')
-# Five dedicated HUD images, rendered from the Blender anchor/wave/vortex geometry.
-icons=OUT/'Icons';icons.mkdir(exist_ok=True)
-scene.render.resolution_x=256;scene.render.resolution_y=256;scene.eevee.taa_render_samples=24
-fxmat=bpy.data.materials.new('HUD cyan luminous metal');fxmat.use_nodes=True
-bsdf=fxmat.node_tree.nodes.get('Principled BSDF');bsdf.inputs['Base Color'].default_value=(.025,.65,.95,1)
-bsdf.inputs['Emission Color'].default_value=(.01,.35,.7,1);bsdf.inputs['Emission Strength'].default_value=.8
-shieldmesh=bpy.data.meshes.new('PressureHullIcon');shieldmesh.from_pydata([(-.4,0,.4),(.4,0,.4),(.34,0,-.10),(0,0,-.48),(-.34,0,-.1)],[],[(0,1,2),(0,2,3),(0,3,4)]);shieldmesh.update()
-shield=bpy.data.objects.new('PressureHullIcon',shieldmesh);bpy.context.collection.objects.link(shield);shield.hide_render=True
-for ob in [bpy.data.objects['AnchorProjectile'],bpy.data.objects['WaveCrest'],bpy.data.objects['WaterSpiral'],shield]:ob.data.materials.clear();ob.data.materials.append(fxmat)
-for slot,name in enumerate(['AnchorProjectile','PressureHullIcon','WaveCrest','WaterSpiral','AnchorProjectile']):
- for ob in bpy.data.objects:
-  if ob.type=='MESH':ob.hide_render=True
- target=bpy.data.objects[name];target.hide_render=False
- if name in ['AnchorProjectile','PressureHullIcon']:
-  cam.location=(0,-3,.1);aim(cam,(0,0,-.12 if name=='AnchorProjectile' else 0));cam.data.ortho_scale=2.6 if name=='AnchorProjectile' else 1.3
- else:
-  cam.location=(0,-.3,3);aim(cam,(0,0,0));cam.data.ortho_scale=2.3
- scene.render.filepath=str(icons/(str(slot)+'.png'));bpy.ops.render.render(write_still=True)
 # Keep an editable armature in the source .blend, using the same bones as the game exporter.
 armdata=bpy.data.armatures.new('NerokArmature');arm=bpy.data.objects.new('NerokArmature',armdata);bpy.context.collection.objects.link(arm)
 bpy.context.view_layer.objects.active=arm;arm.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
 for name in BN:
  bone=armdata.edit_bones.new(name);bone.head=BONES[name][0];bone.tail=BONES[name][1]
+tail_bone=armdata.edit_bones.new('Tail');tail_bone.head=(0,.97,-.14);tail_bone.tail=(0,.79,-.30);tail_bone.parent=armdata.edit_bones['Hips']
 for name in BN:
  parent='Hips' if name=='Spine' else 'Spine' if name=='Chest' else 'Chest' if name=='Head' or name.startswith('UpperArm') else 'Hips' if name.startswith('Thigh') else 'UpperArm'+name[-1] if name.startswith('Forearm') else 'Forearm'+name[-1] if name.startswith('Hand') else 'Thigh'+name[-1] if name.startswith('Shin') else 'Shin'+name[-1] if name.startswith('Foot') else 'Hand'+name[-1] if name.startswith('WeaponGrip') else None
  if parent:armdata.edit_bones[name].parent=armdata.edit_bones[parent]
@@ -309,4 +299,8 @@ for ob in bpy.data.objects:
  if ob.type=='MESH':ob.hide_render=ob!=obj
 cam.location=(2.4,-4,1.8);aim(cam,(0,0,1.02));cam.data.ortho_scale=2.4
 scene.render.resolution_x=700;scene.render.resolution_y=900
-bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'))
+bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
+
+# Render the five independent pictorial attacks after saving the model scene.
+import runpy
+runpy.run_path(str(ROOT/"Tools/CyberShark/build_attack_icons.py"),run_name="__main__")

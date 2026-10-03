@@ -3,6 +3,27 @@ from pathlib import Path
 import numpy as np,wave
 R=Path(__file__).resolve().parents[2];O=R/'Assets/Alterverse/Resources/Audio/Heroes/Nerok';O.mkdir(parents=True,exist_ok=True)
 sr=22050;rng=np.random.default_rng(1874)
+def anchor_strike(phase):
+ # Dry anchor swing/contact: short noise transients and a damped metal body,
+ # without the sustained electronic whistle of the original basic cues.
+ duration=[.19,.24,.16][phase]
+ t=np.arange(int(sr*duration))/sr
+ n=np.random.default_rng(901+phase).normal(0,1,len(t))
+ low=np.convolve(n,np.ones(15)/15,mode='same')
+ bright=n-np.convolve(n,np.ones(5)/5,mode='same')
+ if phase==1:
+  body=np.sin(2*np.pi*(115*t-45*t*t))*np.exp(-t*32)
+  metal=(.20*np.sin(2*np.pi*342*t)+.11*np.sin(2*np.pi*617*t))*np.exp(-t*42)
+  y=.62*body+metal+.26*bright*np.exp(-t*110)+.36*low*np.exp(-t*28)
+  attack=.001
+ else:
+  envelope=np.sin(np.pi*t/duration)**2*np.exp(-t*(7 if phase==0 else 3))
+  y=(.7*low+.10*bright)*envelope
+  if phase==0:y+=.15*np.sin(2*np.pi*168*t)*np.exp(-t*38)
+  attack=.004
+ y*=np.minimum(t/attack,1)*np.minimum((duration-t)/.018,1)
+ y*=([.50,.82,.38][phase])/max(np.max(np.abs(y)),1e-6)
+ return y
 for action in range(5):
  for phase in range(3):
   if action==2 and phase!=0:continue
@@ -16,6 +37,7 @@ for action in range(5):
   elif phase==1:y=.42*metal+.32*water*np.exp(-t*7)
   else:y=.25*metal+.35*water*np.sin(np.pi*t/duration)**1.5
   y*=np.minimum(t/.008,1)*np.minimum((duration-t)/.035,1);y=np.clip(y,-.85,.85)
+  if action==0:y=anchor_strike(phase)
   name=['Basic','Q','W','E','R'][action]+['_Cast','_Impact','_Windup'][phase]+'.wav'
   with wave.open(str(O/name),'wb') as f:f.setnchannels(1);f.setsampwidth(2);f.setframerate(sr);f.writeframes((y*32767).astype('<i2').tobytes())
 print('Original Nerok cues generated')
