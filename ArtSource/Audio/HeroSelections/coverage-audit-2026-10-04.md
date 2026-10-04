@@ -7,14 +7,16 @@ All 40 action slots have a non-empty primary resource. Anchor Recall now uses th
 | Hero | Basic | Q | W | E | R |
 |---|---|---|---|---|---|
 | Veyr / Zhaev | Legacy | Selected | Selected | Selected | Selected ultimate |
-| Kaelon / Auren | Legacy | Selected | Legacy: Lumen Wall | Selected | Selected ultimate |
-| Nyra / Sivra | Legacy | Selected | Legacy: Vector Shift | Selected | Selected ultimate |
+| Kaelon / Auren | Legacy | Selected | Selected: shared shield | Selected | Selected ultimate |
+| Nyra / Sivra | Legacy | Selected | Selected: shared dash | Selected | Selected ultimate |
 | Elyra / Ione | Legacy | Selected | Selected | Selected | Selected ultimate |
 | Mira / Tahla | Legacy | Selected | Selected | Selected | Selected ultimate |
-| Rook / Brakk | Legacy | Legacy: Wreck Swing | Legacy: Armor Grip | Selected | Selected ultimate |
-| Traveler | Legacy | Legacy: Temporal Beam | Selected | Selected | Selected ultimate |
-| Nerok | Selected quiet hit | Selected: Anchor Recall | Legacy: Pressure Hull | Selected | Selected: Maelstrom |
+| Rook / Brakk | Legacy | Legacy: Wreck Swing | Selected: shared shield | Selected | Selected ultimate |
+| Traveler | Legacy | Selected: requested dash sound | Selected | Selected | Selected ultimate |
+| Nerok | Selected quiet hit | Selected: Anchor Recall | Selected: shared shield | Selected | Selected: Maelstrom |
 
-26 of 32 ability slots use selected recordings. Six abilities and seven basic attacks retain their earlier sounds. The original selection manifest maps 17 ability slots; Anchor Recall and Maelstrom add two, and the separate ultimate importer maps seven more. Earlier selected ultimate sources include WAV recordings as well as MP3.
+31 of 32 ability slots use selected recordings. Wreck Swing and seven basic attacks retain their earlier sounds. The original selection manifest maps 17 ability slots; Anchor Recall and Maelstrom add two, and the separate ultimate importer maps seven more. Earlier selected ultimate sources include WAV recordings as well as MP3.
 
-SelectedHeroAudioRegression now checks loaded clips for empty data and rejects duplicate Resources keys. Its 19 selected complete-cue mappings exclude the earlier seven ultimate mappings, which retain their existing layered audio behavior. This audit does not claim every action uses an MP3 or that every recording has been listened to in Unity.
+SelectedHeroAudioRegression now checks loaded clips for empty data and rejects duplicate Resources keys. Its 24 selected complete-cue mappings exclude the earlier seven ultimate mappings, which retain their existing layered audio behavior. This audit does not claim every action uses an MP3 or that every recording has been listened to in Unity.
+
+Update: five additional shield/dash mappings reuse the existing selected recordings. Traveler Q legacy impact/windup assets are removed.

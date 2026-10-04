@@ -14,13 +14,13 @@ namespace Alterverse.Audio
         public static bool UsesSelectedRecording(int hero,int action)=>hero switch
         {
             0=>action>=1&&action<=3,
-            1=>action==1||action==3,
-            2=>action==1||action==3,
+            1=>action>=1&&action<=3,
+            2=>action>=1&&action<=3,
             3=>action>=1&&action<=3,
             4=>action>=1&&action<=3,
-            5=>action==3,
-            6=>action==2||action==3,
-            7=>action==1||action==3||action==4,
+            5=>action==2||action==3,
+            6=>action>=1&&action<=3,
+            7=>action>=1&&action<=4,
             _=>false
         };
         public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(hero switch
