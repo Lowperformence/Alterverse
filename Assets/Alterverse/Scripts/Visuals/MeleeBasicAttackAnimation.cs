@@ -5,392 +5,286 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Final-pass melee basic animation for imported hero rigs.
-    /// Runs after AuthoredHeroPresentation so the strike is solved from real shoulder/elbow/hand
-    /// positions instead of guessed local Euler axes. This makes draw-back, contact and follow-through
-    /// consistent even when imported heroes use different bone orientations.
+    /// Final combat pose owner for ALL authored heroes (legacy component name retained for scene/network compatibility).
+    /// Blender clips supply anatomical world frames; fitted grips and heavy weapon paths are solved afterwards.
+    /// HeroAttackDelivery still exclusively owns damage, cooldowns and the contact clock.
     /// </summary>
-    [DisallowMultipleComponent]
-    [DefaultExecutionOrder(950)]
+    [DisallowMultipleComponent, DefaultExecutionOrder(950)]
     public sealed class MeleeBasicAttackAnimation : MonoBehaviour
     {
-        private sealed class ArmChain
+        private sealed class Bone
         {
-            public Transform Upper;
-            public Transform Elbow;
-            public Transform Hand;
+            public Transform Transform;
+            public Quaternion AnatomicalOffset, RestModel, GuardWorld, LastLocal;
         }
-
         private HeroIdentity identity;
         private BasicAttack basic;
-        private Health health;
+        private Health health, target;
+        private HeroVisualMotion motion;
+        private HeroLocomotion locomotion;
+        private AuthoredHeroPresentation presentation;
         private Transform model;
-        private Transform hips;
-        private Transform chest;
-        private ArmChain leftArm;
-        private ArmChain rightArm;
-
-        private float attackStarted = -100f;
-        private float contactTime;
-        private float animationDuration;
-        private int attackSerial;
-        private bool active;
-
+        private Bone[] bones;
+        private CombatAnimationLibrary.Clip clip;
+        private float started = -100f, contact, duration, cancelStarted = -100f;
+        private int serial;
+        private bool active, mirror;
+        private Vector3 aim;
+        private readonly Quaternion[] previousPose = new Quaternion[16];
+        public bool OwnsPose => isActiveAndEnabled && (health == null || !health.IsDead) &&
+            bones != null && CombatAnimationLibrary.Bones != null;
+        public bool StrikeActive => active && Time.time < started + duration;
         private void Awake()
         {
-            identity = GetComponent<HeroIdentity>();
-            basic = GetComponent<BasicAttack>();
-            health = GetComponent<Health>();
+            identity = GetComponent<HeroIdentity>(); basic = GetComponent<BasicAttack>();
+            health = GetComponent<Health>(); motion = GetComponent<HeroVisualMotion>();
+            locomotion = GetComponent<HeroLocomotion>(); presentation = GetComponent<AuthoredHeroPresentation>();
         }
-
-        private void Start()
-        {
-            if (basic == null) basic = GetComponent<BasicAttack>();
-            ResolveRig();
-        }
-
-        public bool OwnsPose => identity != null && IsMelee(identity.Hero) && ResolveRig();
-        public bool StrikeActive => active && Time.time < attackStarted + animationDuration;
-        private Health attackTarget;private Vector3 attackAim;
-        public void SetAim(Vector3 point){attackAim=point;}
         public static MeleeBasicAttackAnimation For(GameObject actor)
         {
-            var id=actor.GetComponent<HeroIdentity>();
-            if(id==null || !IsMelee(id.Hero))return null;
+            if (actor.GetComponent<HeroIdentity>() == null) return null;
             return actor.GetComponent<MeleeBasicAttackAnimation>() ?? actor.AddComponent<MeleeBasicAttackAnimation>();
         }
-        public void Begin(float windup, Health target=null)
+        public void InitializeRig(Transform imported)
         {
-            attackTarget=target;attackAim=target!=null?target.transform.position:transform.position+transform.forward;
-            BeginAttack();
-            contactTime=Mathf.Max(.001f,windup);
-            float budget=basic!=null?basic.AttackCooldown:HeroCombatProfile.StatsFor(identity.Hero).AttackInterval;
-            animationDuration=Mathf.Min(contactTime+FollowSeconds(identity.Hero)+RecoverySeconds(identity.Hero),Mathf.Max(contactTime+.05f,budget*.95f));
-            GetComponent<HeroMotor>()?.NotifyAttack(animationDuration,target!=null?target.transform.position-transform.position:transform.forward);
+            if (bones != null || imported == null || CombatAnimationLibrary.Bones == null) return;
+            model = imported;
+            string[] names = CombatAnimationLibrary.Bones;
+            var captured = new Bone[names.Length];
+            Transform[] all = model.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < names.Length; i++)
+            {
+                Transform bone = null;
+                foreach (Transform part in all) if (part.name == names[i]) { bone = part; break; }
+                if (bone == null) { Debug.LogError("DF: combat retarget bone missing: " + names[i], this); return; }
+                captured[i] = new Bone { Transform = bone, RestModel = Quaternion.Inverse(model.rotation) * bone.rotation,
+                    LastLocal = bone.localRotation };
+            }
+            // Capture before any pose is written. Anatomical offsets compensate each model's A/T-pose
+            // and FBX axes. Hand direction comes from the forearm, not an assumed local bone axis.
+            for (int i = 0; i < names.Length; i++)
+            {
+                int next = i == 0 ? 1 : i == 1 ? 2 : i == 2 ? 3 : i == 4 || i == 5 || i == 7 || i == 8 ||
+                    i == 10 || i == 11 || i == 13 || i == 14 ? i + 1 : -1;
+                Vector3 along = next >= 0 ? captured[next].Transform.position - captured[i].Transform.position :
+                    i == 6 || i == 9 ? captured[i].Transform.position - captured[i-1].Transform.position : model.up;
+                if (i == 12 || i == 15) along = model.forward - model.up * .3f;
+                Quaternion frame = CombatAnimationLibrary.Frame(model.InverseTransformDirection(along), Vector3.forward);
+                captured[i].AnatomicalOffset = Quaternion.Inverse(frame) * captured[i].RestModel;
+            }
+            bones = captured;
         }
+        private void Start()
+        {
+            if (bones != null) return;
+            Transform root = transform.Find("DF_VisualRoot");
+            if (root != null) InitializeRig(root.Find("DF_AuthoredModel"));
+        }
+        public void SetAim(Vector3 point) { aim = point; }
+        public void Begin(float windup, Health attackTarget = null)
+        {
+            if (identity == null) return;
+            target = attackTarget; aim = target != null ? target.transform.position : transform.position + transform.forward;
+            serial++; mirror = false;
+            switch (identity.Hero)
+            {
+                case HeroId.Veyr: clip = CombatAnimationLibrary.Find("slash_a"); mirror = serial % 2 == 0; break;
+                case HeroId.Kaelon: case HeroId.Nerok: clip = CombatAnimationLibrary.Find("heavy_sweep"); break;
+                case HeroId.Rook: clip = CombatAnimationLibrary.Find(serial % 2 == 1 ? "jab" : "cross"); break;
+                case HeroId.Nyra: clip = null; break;
+                default: clip = CombatAnimationLibrary.Find("spell"); mirror = identity.Hero != HeroId.Mira; break;
+            }
+            contact = Mathf.Max(.001f, windup);
+            float recovery = identity.Hero == HeroId.Veyr ? .40f : identity.Hero == HeroId.Rook ? .34f :
+                identity.Hero == HeroId.Nerok ? .49f : identity.Hero == HeroId.Kaelon ? .46f : .36f;
+            float budget = basic != null ? basic.AttackCooldown : HeroCombatProfile.StatsFor(identity.Hero).AttackInterval;
+            duration = Mathf.Min(contact + recovery, Mathf.Max(contact + .06f, budget * .95f));
+            started = Time.time; active = identity.Hero == HeroId.Nyra || clip != null; cancelStarted = -100f;
+            // Facing is presentation-only here; BasicAttack keeps the original movement slowdown window.
+            if (locomotion == null) locomotion = GetComponent<HeroLocomotion>();
+            locomotion?.FaceAction(aim - transform.position, duration);
+        }
+        public void Seek(float elapsed) { started -= Mathf.Max(0, elapsed); }
+        public void CancelStrike()
+        {
+            if (active && bones != null)
+            {
+                cancelStarted = Time.time;
+                for (int i = 0; i < bones.Length; i++) previousPose[i] = bones[i].LastLocal;
+            }
+            active = false; target = null;
+        }
+        private void OnDisable() { CancelStrike(); }
         private void Update()
         {
-            if(!StrikeActive)return;
-            if(health!=null&&health.IsDead||!HeroCombatStatus.CanAct(gameObject)){active=false;return;}
-            Vector3 facing=attackTarget!=null?attackTarget.transform.position-transform.position:attackAim-transform.position;
-            GetComponent<HeroLocomotion>()?.FaceAction(facing,Mathf.Max(.02f,attackStarted+animationDuration-Time.time));
+            if (!StrikeActive) return;
+            if ((health != null && health.IsDead) || !HeroCombatStatus.CanAct(gameObject)) { CancelStrike(); return; }
+            Vector3 facing = target != null ? target.transform.position - transform.position : aim - transform.position;
+            if (locomotion == null) locomotion = GetComponent<HeroLocomotion>();
+            locomotion?.FaceAction(facing, Mathf.Max(.02f, started + duration - Time.time));
         }
-
         private void LateUpdate()
         {
-            if (identity == null || !IsMelee(identity.Hero)) return;
-            if (health != null && health.IsDead)
+            if (!OwnsPose || identity == null || (health != null && health.IsDead)) return;
+            if (motion == null) motion = GetComponent<HeroVisualMotion>();
+            if (presentation == null) presentation = GetComponent<AuthoredHeroPresentation>();
+            if (motion != null && motion.AbilityActionActive)
             {
-                active = false;
-                return;
+                // Ability presentation owns the rig until its action ends. Blend its actual last pose
+                // back to guard instead of dropping raised arms in a single frame.
+                active = false; cancelStarted = Time.time;
+                for (int i = 0; i < bones.Length; i++) previousPose[i] = bones[i].Transform.localRotation;
+                RememberPose(); return;
             }
-            if (!ResolveRig()) return;
-
-            float age = Time.time - attackStarted;
-            if (age < 0f) return;
-            if (!active || age >= animationDuration)
+            ApplyGuard();
+            for (int i = 0; i < bones.Length; i++) bones[i].GuardWorld = bones[i].Transform.rotation;
+            float age = Time.time - started;
+            if (StrikeActive && age >= 0f)
             {
-                active = false;
-                if(GetComponent<HeroVisualMotion>() is HeroVisualMotion motion && motion.AbilityActionActive)return;
-                ApplyGuard();
-                GetComponent<AuthoredHeroPresentation>()?.FinalizeMeleeGrip();
-                return;
+                if (identity.Hero == HeroId.Nyra) ApplyRifleRecoil(age);
+                else ApplyClip(age);
             }
-            // Body first, then hand targets: twisting after IK moves the contact point away again.
-            ApplyStrike(identity.Hero, age);
-            GetComponent<AuthoredHeroPresentation>()?.FinalizeMeleeGrip();
-        }
-
-        private void BeginAttack()
-        {
-            HeroId hero = identity.Hero;
-            attackSerial++;
-            attackStarted = Time.time;
-            contactTime = Mathf.Max(.10f, HeroAttackDelivery.Windup(hero));
-            animationDuration = contactTime + FollowSeconds(hero) + RecoverySeconds(hero);
-            active = true;
-        }
-
-        private bool ResolveRig()
-        {
-            if (model == null)
+            else active = false;
+            if (!active && Time.time - cancelStarted < .16f)
             {
-                Transform visualRoot = transform.Find("DF_VisualRoot");
-                if (visualRoot != null) model = visualRoot.Find("DF_AuthoredModel");
-                if (model == null)
-                {
-                    Transform[] all = GetComponentsInChildren<Transform>(true);
-                    for (int i = 0; i < all.Length; i++)
-                        if (all[i] != null && all[i].name == "DF_AuthoredModel") { model = all[i]; break; }
-                }
+                float weight = CombatMotion.Ease((Time.time - cancelStarted) / .16f);
+                // Parent-to-child local blend preserves a connected rig throughout interruptions.
+                for (int i = 0; i < 10; i++) bones[i].Transform.localRotation =
+                    Quaternion.Slerp(previousPose[i], bones[i].Transform.localRotation, weight);
             }
-            if (model == null) return false;
-
-            if (leftArm == null) leftArm = CaptureArm("L");
-            if (rightArm == null) rightArm = CaptureArm("R");
-            if (hips == null) hips = FindBone("Hips");
-            if (chest == null) chest = FindBone("Chest") ?? FindBone("Spine");
-            return leftArm != null && rightArm != null;
+            presentation?.FinalizeCombatGrip();
+            RememberPose();
         }
-
-        private ArmChain CaptureArm(string side)
+        private void RememberPose() { for (int i = 0; i < bones.Length; i++) bones[i].LastLocal = bones[i].Transform.localRotation; }
+        private float Reach(int upper) => Vector3.Distance(bones[upper].Transform.position, bones[upper+1].Transform.position) +
+            Vector3.Distance(bones[upper+1].Transform.position, bones[upper+2].Transform.position);
+        private Vector3 GuardPoint(int upper)
         {
-            Transform upper = FindBone("UpperArm" + side);
-            Transform elbow = FindBone("Forearm" + side);
-            Transform hand = FindBone("Hand" + side);
-            return upper != null && elbow != null && hand != null
-                ? new ArmChain { Upper = upper, Elbow = elbow, Hand = hand }
-                : null;
-        }
-
-        private Transform FindBone(string boneName)
-        {
-            if (model == null) return null;
-            Transform[] all = model.GetComponentsInChildren<Transform>(true);
-            for (int i = 0; i < all.Length; i++)
-                if (all[i] != null && all[i].name == boneName) return all[i];
-            return null;
-        }
-
-        private void ApplyStrike(HeroId hero, float age)
-        {
-            switch (hero)
+            float side = upper == 4 ? -1f : 1f, length = Reach(upper);
+            Vector3 offset;
+            switch (identity.Hero)
             {
-                case HeroId.Veyr:
-                    ApplyVeyr(age);
-                    break;
-                case HeroId.Kaelon:
-                    ApplyKaelon(age);
-                    break;
-                case HeroId.Rook:
-                    ApplyRook(age);
-                    break;
-                case HeroId.Nerok:
-                    ApplyNerok(age);
-                    break;
-                default:
-                    ApplyGenericMelee(age);
-                    break;
+                case HeroId.Rook: offset = new Vector3(-side * .08f, -.28f, .55f); break;
+                case HeroId.Veyr: offset = new Vector3(side * .16f, -.62f, .28f); break;
+                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.18f, -.40f, .47f) : new Vector3(.23f, -.68f, .20f); break;
+                case HeroId.Nerok: offset = new Vector3(side * .25f, -.70f, upper == 7 ? .27f : .24f); break;
+                case HeroId.Elyra: offset = new Vector3(side * .17f, -.50f, .40f); break;
+                case HeroId.Mira: offset = new Vector3(side * .12f, -.64f, .31f); break;
+                case HeroId.Traveler: offset = new Vector3(side * .10f, -.78f, .26f); break;
+                default: offset = new Vector3(-.23f, -.41f, .46f); break;
             }
+            return bones[upper].Transform.position + transform.TransformDirection(offset) * length;
         }
-
-        private void ApplyVeyr(float age)
+        private Vector3 Hint(int upper) => bones[upper].Transform.position +
+            transform.TransformDirection(new Vector3(upper == 4 ? -.62f : .62f, -.60f, -.08f)) * Reach(upper);
+        private void SolveArm(int upper, Vector3 point)
         {
-            bool strikeRight = (attackSerial & 1) != 0;
-            ArmChain strike = strikeRight ? rightArm : leftArm;
-            ArmChain guard = strikeRight ? leftArm : rightArm;
-            float side = strikeRight ? 1f : -1f;
-
-            ApplyBodyDrive(age, HeroId.Veyr, side, -17f, 10f, 22f, 4f, -5f, -7f);
-            float reach = Reach(strike);
-            Vector3 shoulder = strike.Upper.position;
-            Vector3 ready = GuardPoint(strike, side, .34f);
-            Vector3 draw = shoulder + transform.right * (side * .30f) + transform.up * -.03f - transform.forward * .16f;
-            Vector3 contact = shoulder - transform.right * (side * .10f) + transform.up * -.12f + transform.forward * (reach * .88f);
-            Vector3 through = shoulder - transform.right * (side * .34f) + transform.up * -.18f + transform.forward * (reach * .70f);
-            Vector3 target = EvaluatePath(age, ready, draw, contact, through, HeroId.Veyr);
-
-            SolveArm(strike, target, ElbowHint(strike, side, .48f), 1f);
-            SolveArm(guard, GuardPoint(guard, -side, .31f), ElbowHint(guard, -side, .42f), 1f);
+            CombatMotion.Solve(bones[upper].Transform, bones[upper+1].Transform, bones[upper+2].Transform, point, Hint(upper));
         }
-
-        private void ApplyKaelon(float age)
-        {
-            float side = 1f;
-            ApplyBodyDrive(age, HeroId.Kaelon, side, -22f, 9f, 27f, 7f, -6f, -10f);
-            float reach = Reach(rightArm);
-            Vector3 shoulder = rightArm.Upper.position;
-            Vector3 ready = GuardPoint(rightArm, side, .31f);
-
-            // Heavy weapon draw is deliberately behind and outside the right shoulder. The hand
-            // then travels horizontally through the target instead of lifting vertically overhead.
-            Vector3 draw = shoulder + transform.right * .34f + transform.up * -.15f - transform.forward * .20f;
-            Vector3 contact = shoulder - transform.right * .13f + transform.up * -.15f + transform.forward * (reach * .84f);
-            Vector3 through = shoulder - transform.right * .16f + transform.up * -.15f + transform.forward * (reach * .60f);
-            Vector3 target = EvaluatePath(age, ready, draw, contact, through, HeroId.Kaelon);
-            SolveArm(rightArm, target, ElbowHint(rightArm, side, .52f), 1f);
-
-            SolveArm(leftArm, GuardPoint(leftArm,-1f,.28f),ElbowHint(leftArm,-1f,.46f),1f);
-
-        }
-
-        private void ApplyRook(float age)
-        {
-            bool strikeRight = (attackSerial & 1) != 0;
-            ArmChain strike = strikeRight ? rightArm : leftArm;
-            ArmChain guard = strikeRight ? leftArm : rightArm;
-            float side = strikeRight ? 1f : -1f;
-            ApplyBodyDrive(age, HeroId.Rook, side, -24f, 13f, 20f, 8f, -6f, -8f);
-            float reach = Reach(strike);
-            Vector3 shoulder = strike.Upper.position;
-
-            // Jab/cross path: fist visibly retracts beside the ribs, then drives almost straight
-            // forward and continues slightly through the target. No local bone-angle guessing.
-            Vector3 ready = GuardPoint(strike, side, .30f);
-            Vector3 draw = shoulder + transform.right * (side * .16f) + transform.up * -.20f + transform.forward * .01f;
-            Vector3 contact = shoulder - transform.right * (side * .035f) + transform.up * -.08f + transform.forward * (reach * .94f);
-            Vector3 through = shoulder - transform.right * (side * .10f) + transform.up * -.07f + transform.forward * (reach * .95f);
-            if(attackSerial%3==0)
-            {
-                draw=shoulder+transform.right*side*reach*.48f-transform.up*reach*.26f;
-                contact=shoulder+transform.forward*reach*.76f-transform.up*reach*.18f;
-                through=contact-transform.right*side*reach*.30f;
-            }
-            SolveArm(strike, EvaluatePath(age, ready, draw, contact, through, HeroId.Rook),
-                ElbowHint(strike, side, .45f), 1f);
-
-            Vector3 guardTarget = GuardPoint(guard, -side, .34f);
-            SolveArm(guard, guardTarget, ElbowHint(guard, -side, .42f), 1f);
-        }
-
-        private void ApplyNerok(float age)
-        {
-            float side = 1f;
-            ApplyBodyDrive(age, HeroId.Nerok, side, -26f, 11f, 31f, 8f, -6f, -11f);
-            float reach = Reach(rightArm);
-            Vector3 shoulder = rightArm.Upper.position;
-            Vector3 ready = GuardPoint(rightArm, 1f, .30f);
-
-            // Broad low-to-mid anchor sweep: large lateral travel is what sells the weight.
-            Vector3 draw = shoulder + transform.right * (side * .38f) + transform.up * -.08f - transform.forward * .18f;
-            Vector3 contact = shoulder - transform.right * (side * .12f) + transform.up * -.18f + transform.forward * (reach * .83f);
-            Vector3 through = shoulder - transform.right * (side * .44f) + transform.up * -.24f + transform.forward * (reach * .58f);
-            SolveArm(rightArm, EvaluatePath(age, ready, draw, contact, through, HeroId.Nerok),
-                ElbowHint(rightArm, side, .54f), 1f);
-
-            // The anchor is rigidly bound to the right grip; the free hand guards the left side.
-            SolveArm(leftArm,GuardPoint(leftArm,-1f,.27f),ElbowHint(leftArm,-1f,.46f),1f);
-
-        }
-
-        private void ApplyGenericMelee(float age)
-        {
-            bool strikeRight = (attackSerial & 1) != 0;
-            ArmChain strike = strikeRight ? rightArm : leftArm;
-            ArmChain guard = strikeRight ? leftArm : rightArm;
-            float side = strikeRight ? 1f : -1f;
-            ApplyBodyDrive(age, identity.Hero, side, -18f, 9f, 22f, 5f, -4f, -7f);
-            float reach = Reach(strike);
-            Vector3 shoulder = strike.Upper.position;
-            Vector3 ready = GuardPoint(strike, side, .30f);
-            Vector3 draw = shoulder + transform.right * (side * .25f) + transform.up * -.08f - transform.forward * .12f;
-            Vector3 contact = shoulder - transform.right * (side * .06f) + transform.up * -.12f + transform.forward * (reach * .88f);
-            Vector3 through = shoulder - transform.right * (side * .25f) + transform.up * -.16f + transform.forward * (reach * .70f);
-            SolveArm(strike, EvaluatePath(age, ready, draw, contact, through, identity.Hero),
-                ElbowHint(strike, side, .46f), 1f);
-            SolveArm(guard, GuardPoint(guard, -side, .31f), ElbowHint(guard, -side, .42f), 1f);
-        }
-
-        private Vector3 EvaluatePath(float age, Vector3 ready, Vector3 draw, Vector3 contact, Vector3 through, HeroId hero)
-        {
-            float windup = Mathf.Max(.001f, contactTime);
-            float loadEnd = windup * .58f;
-            if (age < loadEnd)
-                return Vector3.Lerp(ready, draw, Ease(age / Mathf.Max(.001f, loadEnd)));
-            if (age < windup)
-                return Vector3.Lerp(draw, contact, Mathf.Pow(Mathf.Clamp01((age-loadEnd)/Mathf.Max(.001f,windup-loadEnd)),2f));
-
-            float tail=Mathf.Max(.05f,animationDuration-contactTime);
-            float follow = tail*FollowSeconds(hero)/(FollowSeconds(hero)+RecoverySeconds(hero));
-            float followEnd = windup + follow;
-            if (age < followEnd)
-                return Vector3.Lerp(contact, through, Ease((age - windup) / Mathf.Max(.001f, follow)));
-
-            float recovery = Mathf.Max(.01f,animationDuration-followEnd);
-            return Vector3.Lerp(through, ready, Ease((age - followEnd) / Mathf.Max(.001f, recovery)));
-        }
-
-        private void ApplyBodyDrive(float age, HeroId hero, float side,
-            float drawYaw, float contactYaw, float throughYaw,
-            float drawPitch, float contactPitch, float throughPitch)
-        {
-            float yaw = EvaluateScalar(age, hero, drawYaw * side, contactYaw * side, throughYaw * side);
-            float pitch = EvaluateScalar(age, hero, drawPitch, contactPitch, throughPitch);
-
-            // World-space axes are stable across imported FBX bone coordinate systems.
-            if (hips != null)
-            {
-                hips.rotation = Quaternion.AngleAxis(-yaw * .34f, transform.up) * hips.rotation;
-                hips.rotation = Quaternion.AngleAxis(pitch * .18f, transform.right) * hips.rotation;
-            }
-            if (chest != null)
-            {
-                chest.rotation = Quaternion.AngleAxis(yaw, transform.up) * chest.rotation;
-                chest.rotation = Quaternion.AngleAxis(pitch, transform.right) * chest.rotation;
-            }
-        }
-
-        private float EvaluateScalar(float age, HeroId hero, float draw, float contact, float through)
-        {
-            float windup = Mathf.Max(.001f, contactTime);
-            float loadEnd = windup * .58f;
-            if (age < loadEnd) return Mathf.Lerp(0f, draw, Ease(age / Mathf.Max(.001f, loadEnd)));
-            if (age < windup) return Mathf.Lerp(draw, contact, Mathf.Pow(Mathf.Clamp01((age-loadEnd)/Mathf.Max(.001f,windup-loadEnd)),2f));
-            float tail=Mathf.Max(.05f,animationDuration-contactTime);
-            float follow = tail*FollowSeconds(hero)/(FollowSeconds(hero)+RecoverySeconds(hero));
-            float followEnd = windup + follow;
-            if (age < followEnd) return Mathf.Lerp(contact, through, Ease((age - windup) / Mathf.Max(.001f, follow)));
-            return Mathf.Lerp(through, 0f, Ease((age - followEnd) / Mathf.Max(.001f, animationDuration-followEnd)));
-        }
-
         private void ApplyGuard()
         {
-            SolveArm(leftArm,GuardPoint(leftArm,-1f,.3f),ElbowHint(leftArm,-1f,.45f),1f);
-            SolveArm(rightArm,GuardPoint(rightArm,1f,.3f),ElbowHint(rightArm,1f,.45f),1f);
+            // Body/legs retain the existing gait. Only the arm guard has a single final owner.
+            if (identity.Hero == HeroId.Nyra) return; // Its authored stock/handle sockets are authoritative.
+            for (int upper = 4; upper <= 7; upper += 3)
+            {
+                SolveArm(upper, GuardPoint(upper));
+                Quaternion wrist = model.rotation * bones[upper+2].RestModel;
+                if (identity.Hero == HeroId.Rook)
+                {
+                    // Calibrate to the actual rest forearm direction instead of hand-local Euler axes.
+                    Vector3 anatomical = model.rotation * (bones[upper+2].RestModel * Quaternion.Inverse(bones[upper+2].AnatomicalOffset) * Vector3.forward);
+                    wrist = Quaternion.FromToRotation(anatomical, transform.forward) * wrist;
+                }
+                bones[upper+2].Transform.rotation = wrist;
+            }
         }
-        public void Seek(float elapsed){attackStarted-=Mathf.Max(0,elapsed);}
-        public void CancelStrike(){active=false;attackTarget=null;}
-        private void OnDisable(){CancelStrike();}
-
-        private Vector3 GuardPoint(ArmChain arm, float side, float forwardDistance)
+        private Quaternion SourceRotation(int index, float frame)
         {
-            float reach=Reach(arm);
-            return arm.Upper.position + transform.right*(side*reach*.10f) - transform.up*(reach*.50f) + transform.forward*(reach*.36f);
+            Quaternion q = clip.Sample(mirror ? CombatAnimationLibrary.MirrorBone(index) : index, frame, bones.Length);
+            return mirror ? CombatAnimationLibrary.Mirror(q) : q;
         }
-
-        private Vector3 ElbowHint(ArmChain arm, float side, float outside)
+        private void ApplyClip(float age)
         {
-            return arm.Upper.position + transform.right * (side * outside) + transform.up * -.34f + transform.forward * .08f;
+            Vector3 footL = bones[12].Transform.position, footR = bones[15].Transform.position;
+            Vector3 kneeL = bones[11].Transform.position, kneeR = bones[14].Transform.position;
+            Quaternion footRotationL = bones[12].Transform.rotation, footRotationR = bones[15].Transform.rotation;
+            bool heavy = identity.Hero == HeroId.Kaelon || identity.Hero == HeroId.Nerok;
+            float tail = duration - contact;
+            // Heavy source contains another windup after frame23: our own recovery begins BEFORE that.
+            float sourceEnd = heavy ? contact + tail * .48f : duration;
+            float frame = CombatAnimationLibrary.SourceFrame(clip, age, contact, sourceEnd);
+            float entry = CombatMotion.Ease(age / Mathf.Max(.015f, contact * .42f));
+            float exit = 1f - CombatMotion.Ease((age - (heavy ? sourceEnd : duration - tail * .30f)) /
+                Mathf.Max(.01f, heavy ? duration-sourceEnd : tail*.30f));
+            float weight = entry * exit;
+            for (int i = 0; i < 10; i++)
+            {
+                if (identity.Hero == HeroId.Mira && i >= 7 || (identity.Hero == HeroId.Elyra || identity.Hero == HeroId.Traveler) && i >= 4 && i <= 6) continue;
+                if (heavy && i >= 4 && i <= 6) continue;
+                Quaternion desired = model.rotation * SourceRotation(i, frame) * bones[i].AnatomicalOffset;
+                if (i < 4)
+                {
+                    // Keep a forward-facing torso and planted gait; source combo has a full body spin.
+                    float limit = i == 0 ? 10f : i == 3 ? 7f : heavy ? 28f : 22f;
+                    desired = Quaternion.RotateTowards(bones[i].GuardWorld, desired, limit);
+                }
+                if (i == 6 || i == 9)
+                {
+                    // Wrist motion is relative to the source start pose, calibrated onto the real fitted grip.
+                    Quaternion delta = SourceRotation(i, frame) * Quaternion.Inverse(SourceRotation(i, 0));
+                    desired = model.rotation * delta * Quaternion.Inverse(model.rotation) * bones[i].GuardWorld;
+                }
+                bones[i].Transform.rotation = Quaternion.Slerp(bones[i].GuardWorld, desired, weight);
+            }
+            // Preserve the current locomotion foot targets, including strafing/backpedaling.
+            CombatMotion.Solve(bones[10].Transform, bones[11].Transform, bones[12].Transform, footL, kneeL);
+            CombatMotion.Solve(bones[13].Transform, bones[14].Transform, bones[15].Transform, footR, kneeR);
+            bones[12].Transform.rotation = footRotationL; bones[15].Transform.rotation = footRotationR;
+            if (heavy) ApplyHeavySweep(age);
+            else if (identity.Hero == HeroId.Veyr)
+            {
+                int off = mirror ? 7 : 4;
+                SolveArm(off, GuardPoint(off)); bones[off+2].Transform.rotation = bones[off+2].GuardWorld;
+            }
         }
-
-        private static float Reach(ArmChain arm)
+        private void ApplyHeavySweep(float age)
         {
-            if (arm == null) return .65f;
-            return Vector3.Distance(arm.Upper.position, arm.Elbow.position) +
-                   Vector3.Distance(arm.Elbow.position, arm.Hand.position);
+            float length = Reach(7);
+            Vector3 shoulder = bones[7].Transform.position, ready = GuardPoint(7);
+            Vector3 draw = shoulder + transform.TransformDirection(new Vector3(.62f, -.26f, -.36f)) * length;
+            Vector3 hit = shoulder + transform.TransformDirection(new Vector3(.02f, -.27f, .82f)) * length;
+            Vector3 through = shoulder + transform.TransformDirection(new Vector3(-.17f, -.27f, .64f)) * length;
+            SolveArm(7, SmoothSweep(age, ready, draw, hit, through));
+            SolveArm(4, GuardPoint(4));
+            bones[6].Transform.rotation = bones[6].GuardWorld;
+            // Shaft direction follows its own horizontal arc. The handle remains rigid in the palm.
+            Vector3 restAxis = identity.Hero == HeroId.Kaelon ? transform.up : -transform.up;
+            Vector3 axis = SmoothSweep(age, restAxis, transform.right*.86f-transform.forward*.50f,
+                transform.forward, -transform.right*.84f+transform.forward*.54f).normalized;
+            bones[9].Transform.rotation = Quaternion.FromToRotation(restAxis, axis) * bones[9].GuardWorld;
         }
-
-        private static void SolveArm(ArmChain arm, Vector3 target, Vector3 elbowHint, float weight)
+        private Vector3 SmoothSweep(float age, Vector3 guard, Vector3 draw, Vector3 hit, Vector3 through)
         {
-            if(arm==null)return;
-            CombatMotion.Solve(arm.Upper,arm.Elbow,arm.Hand,target,elbowHint);
+            float load = contact*.58f, follow = contact+(duration-contact)*.34f;
+            if (age < load) return Vector3.Lerp(guard, draw, CombatMotion.Ease(age/Mathf.Max(.001f,load)));
+            // Cubic Hermite with a shared contact velocity: no stop or kink at the damage frame.
+            Vector3 velocity = (through-draw) / Mathf.Max(.001f, follow-load);
+            if (age < contact) return Hermite(draw, hit, Vector3.zero, velocity*(contact-load), (age-load)/(contact-load));
+            if (age < follow) return Hermite(hit, through, velocity*(follow-contact), Vector3.zero, (age-contact)/(follow-contact));
+            return Vector3.Lerp(through, guard, CombatMotion.Ease((age-follow)/Mathf.Max(.001f,duration-follow)));
         }
-
-        private static float FollowSeconds(HeroId hero) => hero switch
+        private static Vector3 Hermite(Vector3 a, Vector3 b, Vector3 va, Vector3 vb, float t)
         {
-            HeroId.Veyr => .15f,
-            HeroId.Kaelon => .18f,
-            HeroId.Rook => .11f,
-            HeroId.Nerok => .17f,
-            _ => .14f
-        };
-
-        private static float RecoverySeconds(HeroId hero) => hero switch
-        {
-            HeroId.Veyr => .26f,
-            HeroId.Kaelon => .30f,
-            HeroId.Rook => .22f,
-            HeroId.Nerok => .28f,
-            _ => .25f
-        };
-
-        private static float Ease(float value)
-        {
-            value = Mathf.Clamp01(value);
-            return value * value * (3f - 2f * value);
+            t = Mathf.Clamp01(t); float t2=t*t, t3=t2*t;
+            return (2*t3-3*t2+1)*a+(t3-2*t2+t)*va+(-2*t3+3*t2)*b+(t3-t2)*vb;
         }
-
-        private static bool IsMelee(HeroId hero) => HeroCombatProfile.StatsFor(hero).AttackRange <= 3f;
+        private void ApplyRifleRecoil(float age)
+        {
+            // Brace before projectile release, recoil afterwards, and recover with both hands on the rifle.
+            float shift = age < contact ? -.018f * CombatMotion.Ease(age/contact) :
+                age < contact+.055f ? Mathf.Lerp(-.018f,-.055f,CombatMotion.Ease((age-contact)/.055f)) :
+                Mathf.Lerp(-.055f,0,CombatMotion.Ease((age-contact-.055f)/Mathf.Max(.01f,duration-contact-.055f)));
+            SolveArm(7, bones[9].Transform.position + transform.forward*shift);
+        }
     }
 }
-

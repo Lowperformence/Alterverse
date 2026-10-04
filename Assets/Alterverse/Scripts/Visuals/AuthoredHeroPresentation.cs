@@ -66,7 +66,7 @@ namespace Alterverse.Visuals
             instance.transform.localPosition = new Vector3(0, -.96f, 0);
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.10f, 1f, 1.10f);
-            // The user chose the established movement. Never let imported clips compete with it.
+            // A single final pose layer samples Blender clips; an imported Animator must not also write the same bones.
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
@@ -184,6 +184,7 @@ namespace Alterverse.Visuals
                 muzzle == null || rifleSupport == null || rifleHandle == null || leftPalm == null))
                 Debug.LogError("DF: Sivra rifle rig is incomplete. Check HandR/HandL and the muzzle, support, handle and palm sockets.", this);
             BuildNyraWeaponDetails();
+            MeleeBasicAttackAnimation.For(gameObject)?.InitializeRig(model);
         }
 
         private Transform Make(string name, Transform parent, Vector3 rootPosition)
@@ -508,7 +509,10 @@ namespace Alterverse.Visuals
         private void ApplyModelGuard()
         {
             if (motion == null) motion = GetComponent<HeroVisualMotion>();
-            // Rifle fire keeps both grips; melee/cast actions retain their established delivery.
+            // The final combat layer owns all non-rifle guards. Rifle grips are authored sockets.
+            if (hero != HeroId.Nyra && GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose == true &&
+                (motion == null || !motion.AbilityActionActive)) return;
+            // Rifle fire keeps both grips; cast actions retain their established delivery.
             float targetWeight = hero == HeroId.Nyra || motion == null || !motion.ArmActionActive ? 1f : 0f;
             guardWeight = Mathf.MoveTowards(guardWeight, targetWeight, Time.deltaTime * 14f);
             // Coordinates include each imported model's proportions. Elbows stay down and
@@ -603,22 +607,28 @@ namespace Alterverse.Visuals
                 if (material != null) Destroy(material);
         }
 
-        public void FinalizeMeleeGrip()
+        public void FinalizeMeleeGrip() => FinalizeCombatGrip();
+        public void FinalizeCombatGrip()
         {
             ApplyWeaponGrips();
-            if(siegeTank!=null)siegeTank.AlignGuard(transform,leftArm?.Hand,rightArm?.Hand,0f);
+            // Shield remains left-facing; the hammer wrist belongs to its strike trajectory.
+            if (siegeTank != null) siegeTank.AlignGuard(transform, leftArm?.Hand, rightArm?.Hand, 0f);
+            ApplyRifleAim();
+            ApplyRifleSupport();
+            FollowRifleDetails();
         }
         private void LateUpdate()
         {
             // HeroVisualMotion (930) -> HeroProceduralRig (935) -> this coordinate conversion (940).
             // There are no old visible meshes and no independent Animator writing the same bones.
+            if (motion == null) motion = GetComponent<HeroVisualMotion>();
             var melee=GetComponent<MeleeBasicAttackAnimation>();
             bool ownsBasicPose=melee!=null&&melee.OwnsPose && (motion==null||!motion.AbilityActionActive);
             foreach (Binding binding in bindings)
             {
                 if (binding.Bone == null || binding.Control == null) continue;
                 if(ownsBasicPose &&
-                    (binding.Bone.name.Contains("Arm")||binding.Bone.name.StartsWith("Forearm")||binding.Bone.name.Contains("Hand")||binding.Bone.name=="Chest"||binding.Bone.name=="Spine"||binding.Bone.name=="Hips"))
+                    (binding.Bone.name.Contains("Arm")||binding.Bone.name.StartsWith("Forearm")||binding.Bone.name.Contains("Hand")))
                 {binding.Bone.localRotation=binding.Rest;continue;}
                 Quaternion delta = binding.PoseOffset * Quaternion.Inverse(binding.ControlRest) * binding.Control.localRotation;
                 if (binding.Extra != null) delta *= Quaternion.Inverse(binding.ExtraRest) * binding.Extra.localRotation;
