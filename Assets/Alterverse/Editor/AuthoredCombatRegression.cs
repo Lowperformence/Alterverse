@@ -54,6 +54,20 @@ namespace Alterverse.EditorChecks
                 Require(HeroAttackDelivery.Windup(hero)>0, "Invalid gameplay windup");
             }
             CombatMotionRegression.Run();
+            // Inward/downward guards must open toward their own side, with a 50-degree cap.
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Vector3 direction = new Vector3(-side*.3f, -.8f, .5f).normalized;
+                Vector3 outward = Vector3.right*side;
+                Quaternion correction = MeleeBasicAttackAnimation.OutwardRotation(direction, outward);
+                Require(Mathf.Abs(Quaternion.Angle(Quaternion.identity, correction)-50f)<.01f,
+                    "Manual arm opening must be 50 degrees for an inward guard");
+                Require(Vector3.Dot(correction*direction,outward)>Vector3.Dot(direction,outward),
+                    "Manual arm correction moved toward the torso");
+                Require(Quaternion.Angle(Quaternion.identity,
+                    MeleeBasicAttackAnimation.OutwardRotation(outward,outward))<.01f,
+                    "Already outward arm must not overshoot and rotate back inward");
+            }
             Require(CombatAnimationLibrary.Find("idle_relaxed").loop, "Relaxed idle must loop");
             var standing = CombatAnimationLibrary.Find("mixamo_standing_idle");
             for (int bone = 0; bone < names.Length; bone++)

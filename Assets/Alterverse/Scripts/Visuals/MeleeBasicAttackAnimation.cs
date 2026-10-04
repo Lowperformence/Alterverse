@@ -38,6 +38,7 @@ namespace Alterverse.Visuals
         public bool OwnsPose => isActiveAndEnabled && (health == null || !health.IsDead) &&
             bones != null && CombatAnimationLibrary.Bones != null;
         public bool StrikeActive => active && Time.time < started + duration;
+        public const float OutwardGuardDegrees = 50f;
         public static bool UsesStandingPose(HeroId hero, int bone) => hero != HeroId.Nyra &&
             !(hero == HeroId.Kaelon && bone >= 4 && bone <= 6);
         private void Awake()
@@ -172,6 +173,7 @@ namespace Alterverse.Visuals
                 RememberPose(); return;
             }
             ApplyGuard();
+            ApplyOutwardGuard();
             for (int i = 0; i < bones.Length; i++)
             {
                 bones[i].GuardWorld = bones[i].Transform.rotation;
@@ -196,7 +198,7 @@ namespace Alterverse.Visuals
             if (!reportedStandingPose && standingIdle != null && identity.Hero != HeroId.Nyra)
             {
                 reportedStandingPose = true;
-                Debug.Log("DF: MIXAMO Standing Idle v2 ACTIVE on " + identity.DisplayName +
+                Debug.Log("DF: Standing Idle v3 + manual 50-degree outward arms ACTIVE on " + identity.DisplayName +
                     (identity.Hero == HeroId.Kaelon ? " (left shield arm preserved)" : "") + ".", this);
             }
         }
@@ -212,10 +214,37 @@ namespace Alterverse.Visuals
             foreach (int i in new[] { 4, 5, 7, 8 })
             {
                 if (!UsesStandingPose(identity.Hero, i)) continue;
-                Quaternion desired = model.rotation * standingIdle.Sample(i, 0f, bones.Length) * bones[i].AnatomicalOffset;
+                Quaternion desired = (i < 7 ? outwardLeft : outwardRight) * model.rotation *
+                    standingIdle.Sample(i, 0f, bones.Length) * bones[i].AnatomicalOffset;
                 largest = Mathf.Max(largest, Quaternion.Angle(bones[i].Transform.rotation, desired));
             }
-            return "Mixamo loaded; largest arm deviation " + largest.ToString("F2") + " degrees";
+            return "Manual outward guard active (50-degree limit); largest arm deviation " + largest.ToString("F2") + " degrees";
+        }
+        private Quaternion outwardLeft = Quaternion.identity, outwardRight = Quaternion.identity;
+        public static Quaternion OutwardRotation(Vector3 shoulderToHand, Vector3 outward)
+        {
+            if (shoulderToHand.sqrMagnitude < .000001f || outward.sqrMagnitude < .000001f)
+                return Quaternion.identity;
+            // Work from the actual chain direction, not imported FBX local axes. This always
+            // moves toward the hero's outer side, even on differently oriented skeletons.
+            // Stop at fully outward if less than 50 degrees remain, rather than swinging back in.
+            return Quaternion.RotateTowards(Quaternion.identity,
+                Quaternion.FromToRotation(shoulderToHand, outward), OutwardGuardDegrees);
+        }
+        private void ApplyOutwardGuard()
+        {
+            outwardLeft = outwardRight = Quaternion.identity;
+            if (identity.Hero == HeroId.Nyra) return;
+            for (int upper = 4; upper <= 7; upper += 3)
+            {
+                if (!UsesStandingPose(identity.Hero, upper)) continue;
+                Vector3 direction = bones[upper+2].Transform.position - bones[upper].Transform.position;
+                Quaternion turn = OutwardRotation(direction, model.right * (upper == 4 ? -1f : 1f));
+                // Rotate ONLY the shoulder. Its elbow, wrist and weapon children follow once;
+                // rotating all three joints separately would accumulate up to 150 degrees.
+                bones[upper].Transform.rotation = turn * bones[upper].Transform.rotation;
+                if (upper == 4) outwardLeft = turn; else outwardRight = turn;
+            }
         }
         private void RememberPose() { for (int i = 0; i < bones.Length; i++) bones[i].LastLocal = bones[i].Transform.localRotation; }
         private float Reach(int upper) => Vector3.Distance(bones[upper].Transform.position, bones[upper+1].Transform.position) +
