@@ -9,6 +9,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>Nerok's Blender-authored cyber shark and anchor, fitted to the existing skeleton.</summary>
     [DisallowMultipleComponent]
+    [DefaultExecutionOrder(960)]
     public sealed class CyberSharkAppearance : MonoBehaviour
     {
         [Serializable] private sealed class Anchor { public float[] head, tail; }
@@ -30,10 +31,12 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
-        private Transform tail;
+        private Transform tail, freeUpperArm, freeHand;
         private Quaternion tailRest;
         private Vector3 tailAxis;
         private float tailTime;
+        private HeroVisualMotion motion;
+        private MeleeBasicAttackAnimation combatPose;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache() => geometry = null;
@@ -84,6 +87,10 @@ namespace Alterverse.Visuals
         {
             Geometry data = geometry;
             Transform[] all = model.GetComponentsInChildren<Transform>(true);
+            freeUpperArm = Array.Find(all, b => b.name == "UpperArmL");
+            freeHand = Array.Find(all, b => b.name == "HandL");
+            motion = GetComponentInParent<HeroVisualMotion>();
+            combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
             Transform[] bones = new Transform[data.boneNames.Length];
             for (int i = 0; i < bones.Length; i++) bones[i] = Array.Find(all, b => b.name == data.boneNames[i]);
             SkinnedMeshRenderer left = null, right = null;
@@ -221,6 +228,20 @@ namespace Alterverse.Visuals
                 v.Add(convert.MultiplyPoint3x4(vertices[i]));
                 n.Add(normalMatrix.MultiplyVector(normals[i]).normalized); w.Add(weights[i]);
             }
+            // Group 2 is Nerok's independent anchor. Shrink only the weapon geometry by 30%
+            // around the right-hand grip so its hand contact and animation path do not move.
+            if (group == 2 && v.Count > 0)
+            {
+                Transform grip = Array.Find(bones, b => b != null && b.name == "WeaponGripR");
+                Vector3 pivot = Vector3.zero;
+                if (grip != null) pivot = renderer.transform.InverseTransformPoint(grip.position);
+                else
+                {
+                    foreach (Vector3 point in v) pivot += point;
+                    pivot /= v.Count;
+                }
+                for (int i = 0; i < v.Count; i++) v[i] = pivot + (v[i] - pivot) * .70f;
+            }
             var mesh = new Mesh { name = "DF_Nerok_Siege_" + group };
             ownedMeshes.Add(mesh);
             mesh.SetVertices(v); mesh.SetNormals(n); mesh.SetUVs(2, v); mesh.boneWeights = w.ToArray();
@@ -284,11 +305,32 @@ namespace Alterverse.Visuals
         }
         private void LateUpdate()
         {
-            if (tail == null || Time.deltaTime <= 0f) return;
-            // Start at the centred neutral pose. A full sweep takes eight seconds;
-            // only the tail bone moves, independent of the hero's combat animation.
-            tailTime += Time.deltaTime;
-            tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
+            if (tail != null && Time.deltaTime > 0f)
+            {
+                // Start at the centred neutral pose. A full sweep takes eight seconds;
+                // only the tail bone moves, independent of the hero's combat animation.
+                tailTime += Time.deltaTime;
+                tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
+            }
+            RotateFreeArmInward();
+        }
+        private void RotateFreeArmInward()
+        {
+            if (freeUpperArm == null || freeHand == null) return;
+            if (motion == null) motion = GetComponentInParent<HeroVisualMotion>();
+            if (combatPose == null) combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
+            // The right-side anchor is skinned to WeaponGripR, so the opposite (free) arm is
+            // the left skeleton chain. Apply the requested 20-degree inward turn only while
+            // the normal guard pose owns the rig; attacks and abilities keep their authored motion.
+            if (combatPose == null || !combatPose.OwnsPose || combatPose.StrikeActive ||
+                motion != null && motion.AbilityActionActive) return;
+            Vector3 up = transform.up;
+            Vector3 shoulderToHand = Vector3.ProjectOnPlane(freeHand.position - freeUpperArm.position, up);
+            Vector3 inward = Vector3.ProjectOnPlane(transform.right, up);
+            if (shoulderToHand.sqrMagnitude < .000001f || inward.sqrMagnitude < .000001f) return;
+            Quaternion turn = Quaternion.RotateTowards(Quaternion.identity,
+                Quaternion.FromToRotation(shoulderToHand, inward), 20f);
+            freeUpperArm.rotation = turn * freeUpperArm.rotation;
         }
         private void OnDestroy()
         {
