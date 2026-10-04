@@ -15,7 +15,7 @@ namespace Alterverse.EditorChecks
         {
             string[] names = CombatAnimationLibrary.Bones;
             Require(names != null && names.Length == 16, "Missing/invalid Blender combat library");
-            string[] clips = { "idle_relaxed", "jab", "cross", "slash_a", "heavy_sweep", "spell" };
+            string[] clips = { "idle_relaxed", "mixamo_standing_idle", "jab", "cross", "slash_a", "heavy_sweep", "spell" };
             foreach (string name in clips)
             {
                 var clip = CombatAnimationLibrary.Find(name);
@@ -39,6 +39,10 @@ namespace Alterverse.EditorChecks
             }
             foreach (HeroId hero in Enum.GetValues(typeof(HeroId)))
             {
+                for (int bone = 0; bone < names.Length; bone++)
+                    Require(MeleeBasicAttackAnimation.UsesStandingPose(hero, bone) ==
+                        (hero != HeroId.Nyra && !(hero == HeroId.Kaelon && bone >= 4 && bone <= 6)),
+                        "Standing pose must exclude Sivra and Auren's entire shield arm");
                 var model = Resources.Load<GameObject>("AuthoredHeroes/"+(hero==HeroId.Nerok?HeroId.Rook:hero));
                 Require(model != null, "Missing authored model for "+hero);
                 foreach (string name in names)
@@ -51,7 +55,11 @@ namespace Alterverse.EditorChecks
             }
             CombatMotionRegression.Run();
             Require(CombatAnimationLibrary.Find("idle_relaxed").loop, "Relaxed idle must loop");
-            Debug.Log("DF: eight hero rigs, six Blender clips, contact clocks, mirror mapping and IK regression passed. " +
+            var standing = CombatAnimationLibrary.Find("mixamo_standing_idle");
+            for (int bone = 0; bone < names.Length; bone++)
+                Require(Quaternion.Angle(standing.Sample(bone, 0, names.Length), standing.Sample(bone, 1, names.Length)) < .1f,
+                    "Starting pose must remain stationary");
+            Debug.Log("DF: eight hero rigs, seven pose/clip assets, contact clocks, mirror mapping and IK regression passed. " +
                 "Still inspect live weapon/shield clearance and network playback in Play Mode.");
         }
         private static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}

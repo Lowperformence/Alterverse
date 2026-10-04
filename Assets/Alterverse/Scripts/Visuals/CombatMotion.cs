@@ -23,13 +23,13 @@ namespace Alterverse.Visuals
                 Curve(age,contact,end,draw.y-guard.y,hit.y-guard.y,through.y-guard.y),
                 Curve(age,contact,end,draw.z-guard.z,hit.z-guard.z,through.z-guard.z));
         }
-        public static void Solve(Transform upper,Transform elbow,Transform hand,Vector3 target,Vector3 hint)
+        public static void Solve(Transform upper,Transform elbow,Transform hand,Vector3 target,Vector3 hint,float maxExtension=.975f)
         {
             if(upper==null||elbow==null||hand==null)return;
             Vector3 origin=upper.position,line=target-origin;
             float a=Vector3.Distance(origin,elbow.position),b=Vector3.Distance(elbow.position,hand.position);
             if(a<.001f||b<.001f||line.sqrMagnitude<.000001f)return;
-            float distance=Mathf.Clamp(line.magnitude,Mathf.Abs(a-b)+.001f,(a+b)*.975f);
+            float distance=Mathf.Clamp(line.magnitude,Mathf.Abs(a-b)+.001f,(a+b)*Mathf.Clamp(maxExtension,.9f,.99999f));
             Vector3 dir=line.normalized,bend=Vector3.ProjectOnPlane(hint-origin,dir);
             if(bend.sqrMagnitude<.000001f)bend=Vector3.Cross(dir,Mathf.Abs(dir.y)<.9f?Vector3.up:Vector3.right);
             bend.Normalize();float along=(a*a+distance*distance-b*b)/(2*distance);

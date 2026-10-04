@@ -26,15 +26,19 @@ namespace Alterverse.Visuals
         private AuthoredHeroPresentation presentation;
         private Transform model;
         private Bone[] bones;
-        private CombatAnimationLibrary.Clip clip, relaxedIdle;
+        private CombatAnimationLibrary.Clip clip, relaxedIdle, standingIdle;
         private float started = -100f, contact, duration, cancelStarted = -100f;
         private int serial;
         private bool active, mirror;
+        private bool standingOffsetApplied;
+        private Vector3 standingHipsLocal;
         private Vector3 aim;
         private readonly Quaternion[] previousPose = new Quaternion[16];
         public bool OwnsPose => isActiveAndEnabled && (health == null || !health.IsDead) &&
             bones != null && CombatAnimationLibrary.Bones != null;
         public bool StrikeActive => active && Time.time < started + duration;
+        public static bool UsesStandingPose(HeroId hero, int bone) => hero != HeroId.Nyra &&
+            !(hero == HeroId.Kaelon && bone >= 4 && bone <= 6);
         private void Awake()
         {
             identity = GetComponent<HeroIdentity>(); basic = GetComponent<BasicAttack>();
@@ -79,6 +83,7 @@ namespace Alterverse.Visuals
                     captured[upper+1].Transform.position - captured[upper].Transform.position);
             bones = captured;
             relaxedIdle = CombatAnimationLibrary.Find("idle_relaxed");
+            standingIdle = CombatAnimationLibrary.Find("mixamo_standing_idle");
         }
         private void Start()
         {
@@ -120,7 +125,14 @@ namespace Alterverse.Visuals
             }
             active = false; target = null;
         }
-        private void OnDisable() { CancelStrike(); }
+        private void OnDisable() { CancelStrike(); ResetStandingOffset(); }
+        // Called before the upstream pose writer; never accumulate presentation-only hip offsets.
+        public void ResetStandingOffset()
+        {
+            if (standingOffsetApplied && bones != null && bones[0].Transform != null)
+                bones[0].Transform.localPosition = standingHipsLocal;
+            standingOffsetApplied = false;
+        }
         private void Update()
         {
             if (!StrikeActive) return;
@@ -193,8 +205,25 @@ namespace Alterverse.Visuals
         }
         private void ApplyGuard()
         {
-            // Body/legs retain the existing gait. Only the arm guard has a single final owner.
             if (identity.Hero == HeroId.Nyra) return; // Its authored stock/handle sockets are authoritative.
+            if (standingIdle != null)
+            {
+                ApplyStandingBody();
+                for (int i = 4; i < 10; i++)
+                {
+                    // Auren's left upper arm, elbow and wrist keep the existing shield guard.
+                    if (!UsesStandingPose(identity.Hero, i)) continue;
+                    bones[i].Transform.rotation = model.rotation * standingIdle.Sample(i, 0f, bones.Length) *
+                        bones[i].AnatomicalOffset;
+                }
+                if (identity.Hero == HeroId.Kaelon)
+                {
+                    SolveArm(4, GuardPoint(4));
+                    bones[6].Transform.rotation = model.rotation * bones[6].RestModel;
+                }
+                presentation?.FinalizeGuardGrip();
+                return;
+            }
             if (relaxedIdle != null && (identity.Hero == HeroId.Mira || identity.Hero == HeroId.Rook ||
                 identity.Hero == HeroId.Veyr || identity.Hero == HeroId.Traveler))
             {
@@ -213,6 +242,41 @@ namespace Alterverse.Visuals
                 SolveArm(upper, GuardPoint(upper));
                 bones[upper+2].Transform.rotation = model.rotation * bones[upper+2].RestModel;
             }
+        }
+        private void ApplyStandingBody()
+        {
+            // Fade the standing body out as locomotion takes over; the arms retain the new
+            // starting guard. No source translation, root motion or collider change is applied.
+            float speed = motion != null ? motion.PlanarSpeed : 0f;
+            float weight = motion != null && motion.Dashing ? 0f :
+                1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(.05f, .8f, speed));
+            if (weight <= 0f) return;
+            Vector3 footL = bones[12].Transform.position, footR = bones[15].Transform.position;
+            Quaternion rotationL = bones[12].Transform.rotation, rotationR = bones[15].Transform.rotation;
+            for (int i = 0; i < bones.Length; i++)
+            {
+                if (i >= 4 && i < 10) continue;
+                Quaternion desired = model.rotation * standingIdle.Sample(i, 0f, bones.Length) * bones[i].AnatomicalOffset;
+                bones[i].Transform.rotation = Quaternion.Slerp(bones[i].Transform.rotation, desired, weight);
+            }
+            // Keep the existing ground height and sole orientation on each hero's proportions.
+            Vector3 left = bones[12].Transform.position, right = bones[15].Transform.position;
+            left.y = footL.y; right.y = footR.y;
+            float extension = Mathf.Lerp(.99999f, .975f, weight);
+            float drop = Mathf.Max(StandingHipDrop(10, left, extension), StandingHipDrop(13, right, extension));
+            standingHipsLocal = bones[0].Transform.localPosition;
+            standingOffsetApplied = true;
+            bones[0].Transform.position -= Vector3.up * drop;
+            CombatMotion.Solve(bones[10].Transform, bones[11].Transform, bones[12].Transform, left, bones[11].Transform.position, extension);
+            CombatMotion.Solve(bones[13].Transform, bones[14].Transform, bones[15].Transform, right, bones[14].Transform.position, extension);
+            bones[12].Transform.rotation = rotationL; bones[15].Transform.rotation = rotationR;
+        }
+        private float StandingHipDrop(int thigh, Vector3 foot, float extension)
+        {
+            float reach = Reach(thigh) * extension;
+            Vector3 delta = bones[thigh].Transform.position - foot;
+            float verticalReach = Mathf.Sqrt(Mathf.Max(0f, reach * reach - delta.x * delta.x - delta.z * delta.z));
+            return Mathf.Max(0f, delta.y - verticalReach);
         }
         private Quaternion SourceRotation(int index, float frame)
         {
@@ -274,12 +338,12 @@ namespace Alterverse.Visuals
         private void ApplyHeavySweep(float age)
         {
             float length = Reach(7);
-            Vector3 shoulder = bones[7].Transform.position, ready = GuardPoint(7);
+            Vector3 shoulder = bones[7].Transform.position, ready = bones[9].GuardPosition;
             Vector3 draw = shoulder + transform.TransformDirection(new Vector3(.62f, -.26f, -.36f)) * length;
             Vector3 hit = shoulder + transform.TransformDirection(new Vector3(.02f, -.27f, .82f)) * length;
             Vector3 through = shoulder + transform.TransformDirection(new Vector3(-.17f, -.27f, .64f)) * length;
             SolveArm(7, SmoothSweep(age, ready, draw, hit, through));
-            SolveArm(4, GuardPoint(4));
+            SolveArm(4, bones[6].GuardPosition);
             bones[6].Transform.rotation = bones[6].GuardWorld;
             // Shaft direction follows its own horizontal arc. The handle remains rigid in the palm.
             Vector3 restAxis = identity.Hero == HeroId.Kaelon ? transform.up : -transform.up;

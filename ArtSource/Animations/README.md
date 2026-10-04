@@ -23,10 +23,39 @@ blender -b --python Tools/CombatAnimation/bake_combat_library.py -- /path/to/ext
 
 `MeleeBasicAttackAnimation` keeps its historical component name for serialized/network compatibility but owns guard/basic arm poses for all eight heroes. There is one final bone writer. Source world orientation is baked into anatomical frames; runtime offsets account for each imported rig's axes and bind pose. No FBX Euler-angle constants are transferred.
 
-Six used clips are shipped, including the downloaded `Idle_Loop` (frames 1–76) as `idle_relaxed`. Tahla, Brakk, Zhaev and Traveler retarget its arm, elbow and wrist frames directly during idle; their procedural hand-position guard is now only the missing-clip fallback. Legs and torso keep their existing locomotion. The fitted weapon guard is captured before blending into an attack, so resting grip correction and attack recovery share the same baseline. Contact indices: jab 7, cross 10, slash 8, heavy 15, spell 17 (1-based). Spell is composed from Enter + Shoot + Exit, with release at the end of Enter. Clips are retimed to `HeroAttackDelivery.Windup`, not vice versa. Damage, cooldowns, projectile simulation and movement speed rules are unchanged. The original source heavy combo is trimmed to its first swing; body rotation is limited and the actual hammer/anchor trajectory is authored separately to prevent a full-body spin and underhand swings.
+Six Quaternius clips are shipped, plus the user-supplied Mixamo standing baseline described below. `idle_relaxed` remains the previous fallback. The fitted weapon guard is captured before blending into an attack, so resting grip correction and attack recovery share the same baseline. Contact indices: jab 7, cross 10, slash 8, heavy 15, spell 17 (1-based). Spell is composed from Enter + Shoot + Exit, with release at the end of Enter. Clips are retimed to `HeroAttackDelivery.Windup`, not vice versa. Damage, cooldowns, projectile simulation and movement speed rules are unchanged. The original source heavy combo is trimmed to its first swing; body rotation is limited and the actual hammer/anchor trajectory is authored separately to prevent a full-body spin and underhand swings.
 
 Character locomotion remains in control of legs. Combat preserves foot positions **and orientations** during torso adjustments. Death/disabled components release pose ownership. Ability poses blend back into guard. Multiplayer uses the existing timestamped attack event and Seek.
 
 Validation performed outside Unity: Blender import/sampling, numerical frame/quaternion checks, C# parsing, source pose review and code review. Unity is unavailable in this environment. Run `DIMENSIONS FRONT > Checks > All authored hero combat clips` and inspect all eight heroes in Play Mode for final weapon/shield clearance, ability interruption, moving attacks and remote timing. These Unity checks are supplied but have **not** been executed here.
 
 2026-10-04 idle validation: inspected front/side projections of the downloaded source skeleton; both hands remain below their elbows throughout all 76 frames. This validates the source, not rendered Unity hero clearance. The existing Standard FBX download is reused; no paid Source assets are used.
+
+## User-supplied Mixamo starting pose — 2026-10-04
+
+`StandingIdle.fbx.gz` is a losslessly compressed copy of the user's `Standing Idle (1).fbx`.
+It is a Mixamo asset supplied by the user, **not** part of the CC0 Quaternius packages above.
+The first animated frame (frame 1, not the skeleton's T-pose) is the stationary starting
+position for Zhaev, Auren, Ione, Tahla, Brakk, Traveler and Nerok. Sivra/Nyra is excluded.
+Auren/Kaelon's left upper arm, elbow and hand retain the previous shield guard and grip.
+
+Rebuild the separate runtime asset without changing the attack library:
+
+```
+blender -b --python Tools/CombatAnimation/bake_mixamo_standing_idle.py -- ArtSource/Animations/StandingIdle.fbx.gz
+```
+
+`StandingIdle.json` contains the same pose twice for the existing interpolating sampler.
+`mixamo-standing-idle-report.json` records the original SHA-256, source frame and anatomical
+mapping. Runtime offsets retarget this pose to each hero; no local FBX Euler angles are copied.
+The body blends out as the hero starts moving. Foot IK preserves ground height and sole
+orientation, with a small visual pelvis adjustment that is reset before every upstream pose
+update and on disable. The gameplay root and collider do not move. Attacks return to the
+captured new guard, including heavy-weapon hand paths. Abilities keep their existing priority.
+
+Validation: Blender 4.5.9 imported the uploaded file and all seven source hero rigs; anatomical
+arm/leg direction and quaternion checks passed. Every affected source rig retains lowered
+arms; Nerok uses Rook's rig. Ground targets are reachable after the pelvis correction.
+C# syntax was parsed successfully. Unity is not installed here, so the editor regression and
+live gameplay/menu rendering still need to run in Unity, especially Auren's final shield
+clearance with the runtime replacement mesh.

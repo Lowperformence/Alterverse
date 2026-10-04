@@ -683,6 +683,7 @@ namespace Alterverse.Visuals
             // There are no old visible meshes and no independent Animator writing the same bones.
             if (motion == null) motion = GetComponent<HeroVisualMotion>();
             var melee=GetComponent<MeleeBasicAttackAnimation>();
+            melee?.ResetStandingOffset();
             bool ownsBasicPose=melee!=null&&melee.OwnsPose && (motion==null||!motion.AbilityActionActive);
             foreach (Binding binding in bindings)
             {
