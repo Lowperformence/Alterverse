@@ -143,8 +143,11 @@ for sign,side in [(-1,'L'),(1,'R')]:
  ell('sealed glove',palm,(.039,.051,.031),0,hand,20,12)
  for j in range(4):
   x=palm[0]+(j-1.5)*.017
-  tube('articulated finger',[(x,palm[1]-.015,palm[2]+.025),(x,palm[1]-.064,palm[2]+.037),(x,palm[1]-.076,palm[2]+.012)],[.009,.008,.005],2,hand,8)
- tube('opposing thumb',[palm+[-sign*.027,.005,.017],palm+[-sign*.043,-.025,.046],palm+[-sign*.033,-.044,.052]],.01,1,hand,8)
+  # Fold the distal fingers back into the palm; the silhouette is a closed fist.
+  # Preserve vertex/ring counts so existing fitted Blender details stay untouched.
+  tube('articulated finger',[(x,palm[1]-.018,palm[2]+.025),(x,palm[1]-.045,palm[2]+.037),(x,palm[1]-.042,palm[2]-.007)],[.009,.008,.005],2,hand,8)
+ # Thumb crosses the curled fingers instead of projecting away from the glove.
+ tube('opposing thumb',[palm+[-sign*.027,.005,.017],palm+[-sign*.039,-.017,.041],palm+[sign*.008,-.034,.047]],.01,1,hand,8)
  thigh='Thigh'+side;shin='Shin'+side;foot='Foot'+side
  h=np.array(BONES[thigh][0]);k=np.array(BONES[shin][0]);f=np.array(BONES[foot][0])
  limb('thigh undersuit',h,k,.073,0,thigh);limb('shin undersuit',k,f,.060,0,shin)

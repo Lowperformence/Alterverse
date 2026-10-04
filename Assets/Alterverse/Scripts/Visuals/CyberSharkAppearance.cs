@@ -126,7 +126,15 @@ namespace Alterverse.Visuals
                 rotations[i] = Quaternion.FromToRotation(reference, target);
                 scales[i] = target.magnitude / reference.magnitude;
             }
+            // The shared brawler forearms are much broader than the source shark palms.
+            // Fit the existing complete hands (palm, four fingers, thumb and knuckles)
+            // together about each wrist; never scale the independent anchor.
+            for (int i = 0; i < map.Length; i++)
+                if (data.boneNames[i] == "HandL" || data.boneNames[i] == "HandR") scales[i] *= 1.5f;
             int count = data.vertices.Length / 3;
+            var digits = new bool[count];
+            foreach (int index in data.submeshes[2].triangles)
+                if (HandVertex(index)) digits[index] = true;
             var vertices = new Vector3[count];
             var normals = new Vector3[count];
             var weights = new BoneWeight[count];
@@ -136,6 +144,9 @@ namespace Alterverse.Visuals
             {
                 int b = data.boneIndices[i];
                 Vector3 sourcePoint = Point(data.vertices, i * 3);
+                // Finger tubes were buried behind the palm surface. Expose the curled
+                // fingers and thumb while keeping their roots intersecting the palm.
+                if (digits[i]) sourcePoint.z += .025f;
                 Vector3 sourceNormal = Point(data.normals, i * 3);
                 Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
                 vertices[i] = toMesh.MultiplyPoint3x4(p);
@@ -216,16 +227,26 @@ namespace Alterverse.Visuals
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = materials.Length;
+            var materialTriangles = new List<int>[materials.Length];
+            for (int m = 0; m < materials.Length; m++) materialTriangles[m] = new List<int>();
             for (int m = 0; m < materials.Length; m++)
             {
-                var indices = new List<int>(); int[] sourceIndices = geometry.submeshes[m].triangles;
+                int[] sourceIndices = geometry.submeshes[m].triangles;
                 for (int i = 0; i < sourceIndices.Length; i += 3)
                 {
                     int a = remap[sourceIndices[i]], b = remap[sourceIndices[i+1]], c = remap[sourceIndices[i+2]];
-                    if (a >= 0 && b >= 0 && c >= 0) { indices.Add(a); indices.Add(b); indices.Add(c); }
+                    if (a < 0 || b < 0 || c < 0) continue;
+                    // The original nearly black fingers disappear beside the grey palm.
+                    // Give only hand-bound armor-slot triangles the same shark-skin finish.
+                    int material = m;
+                    if (group == 0 && m == 2 && HandVertex(sourceIndices[i]) &&
+                        HandVertex(sourceIndices[i+1]) && HandVertex(sourceIndices[i+2])) material = 1;
+                    materialTriangles[material].Add(a);
+                    materialTriangles[material].Add(b);
+                    materialTriangles[material].Add(c);
                 }
-                mesh.SetTriangles(indices, m, false);
             }
+            for (int m = 0; m < materials.Length; m++) mesh.SetTriangles(materialTriangles[m], m, false);
             mesh.RecalculateBounds();
             if (group > 0)
             {
@@ -241,6 +262,12 @@ namespace Alterverse.Visuals
             }
             renderer.sharedMesh = mesh; renderer.bones = bones; renderer.sharedMaterials = materials;
             Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
+        }
+
+        private static bool HandVertex(int index)
+        {
+            string bone = geometry.boneNames[geometry.boneIndices[index]];
+            return bone == "HandL" || bone == "HandR";
         }
 
         private static Vector3 Point(float[] values, int offset = 0) => new Vector3(values[offset], values[offset + 1], values[offset + 2]);
