@@ -91,12 +91,12 @@ namespace Alterverse.Visuals
                 if(!planted){plants[i]=home;swingStart[i]=home;swingEnd[i]=home;swinging[i]=false;}
                 bool swing=moving>.05f&&cycle>.60f;
                 if(swing&&!swinging[i]){swingStart[i]=plants[i];swingEnd[i]=Ground(home+host.forward*.28f);}
-                Vector3 target=plants[i];
-                if(swing){float t=(cycle-.60f)/.40f;target=Vector3.Lerp(swingStart[i],swingEnd[i],Mathf.SmoothStep(0,1,t))+Vector3.up*(Mathf.Sin(t*Mathf.PI)*.16f);}
-                else if(swinging[i]){plants[i]=Ground(swingEnd[i]);target=plants[i];}
-                if(moving<.03f) {plants[i]=Vector3.Lerp(plants[i],home,Time.deltaTime*7f);target=plants[i];}
+                Vector3 legTarget=plants[i];
+                if(swing){float t=(cycle-.60f)/.40f;legTarget=Vector3.Lerp(swingStart[i],swingEnd[i],Mathf.SmoothStep(0,1,t))+Vector3.up*(Mathf.Sin(t*Mathf.PI)*.16f);}
+                else if(swinging[i]){plants[i]=Ground(swingEnd[i]);legTarget=plants[i];}
+                if(moving<.03f) {plants[i]=Vector3.Lerp(plants[i],home,Time.deltaTime*7f);legTarget=plants[i];}
                 swinging[i]=swing;
-                SolveLeg(hip,knee,foot,target,host.forward);
+                SolveLeg(hip,knee,foot,legTarget,host.forward);
                 foot.rotation=host.rotation;
             }
             planted=true;
