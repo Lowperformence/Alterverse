@@ -13,8 +13,10 @@ namespace Alterverse.Visuals
     [DefaultExecutionOrder(2000)]
     internal sealed class VeyrBladeGripCorrection : MonoBehaviour
     {
-        private const float InwardOffset = 0.10f;
-        private const float UpOffset = 0.018f;
+        // Calibrated from the marked menu reference: the red marks sit on the exact
+        // black/gold handle contact point that should be centred in each closed fist.
+        private const float InwardOffset = 0.20f;
+        private const float UpOffset = -0.022f;
         private const float RefreshInterval = 0.5f;
         private const string HostName = "DF_VeyrBladeGripCorrection";
 
@@ -58,8 +60,8 @@ namespace Alterverse.Visuals
                 if (rig == null || rig.Identity == null || rig.Model == null) continue;
 
                 // Veyr's left side is negative model-X, so +X moves that weapon inward.
-                // The right side is mirrored. A slight upward correction centres the
-                // gold-wrapped handle vertically in the closed fist shown in the reference.
+                // The right side is mirrored. The small negative Y correction aligns the
+                // marked gold handle point vertically with the centre of the closed fist.
                 ApplyOffset(rig.LeftGrip, rig.LeftRest, rig.Model,
                     new Vector3(InwardOffset, UpOffset, 0f));
                 ApplyOffset(rig.RightGrip, rig.RightRest, rig.Model,
