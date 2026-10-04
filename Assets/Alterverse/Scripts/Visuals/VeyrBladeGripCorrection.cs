@@ -28,8 +28,10 @@ namespace Alterverse.Visuals
             public Vector3 RightRest;
         }
 
-        private readonly Dictionary<int, GripRig> rigs = new Dictionary<int, GripRig>();
-        private readonly List<int> stale = new List<int>();
+        // Use the component reference itself as the key. Unity 6.6 marks
+        // Object.GetInstanceID() obsolete, so this avoids the deprecated API entirely.
+        private readonly Dictionary<HeroIdentity, GripRig> rigs = new Dictionary<HeroIdentity, GripRig>();
+        private readonly List<HeroIdentity> stale = new List<HeroIdentity>();
         private float nextRefresh;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -68,16 +70,17 @@ namespace Alterverse.Visuals
         private void RefreshRigs()
         {
             stale.Clear();
-            foreach (KeyValuePair<int, GripRig> entry in rigs)
-                if (entry.Value == null || entry.Value.Identity == null || entry.Value.Model == null)
+            foreach (KeyValuePair<HeroIdentity, GripRig> entry in rigs)
+                if (entry.Key == null || entry.Value == null ||
+                    entry.Value.Identity == null || entry.Value.Model == null)
                     stale.Add(entry.Key);
-            foreach (int key in stale) rigs.Remove(key);
+            foreach (HeroIdentity key in stale)
+                if (!ReferenceEquals(key, null)) rigs.Remove(key);
 
             foreach (HeroIdentity identity in Object.FindObjectsOfType<HeroIdentity>(true))
             {
                 if (identity == null || identity.Hero != HeroId.Veyr) continue;
-                int key = identity.GetInstanceID();
-                if (rigs.ContainsKey(key)) continue;
+                if (rigs.ContainsKey(identity)) continue;
 
                 Transform model = FindDeep(identity.transform, "DF_AuthoredModel");
                 if (model == null) continue;
@@ -85,7 +88,7 @@ namespace Alterverse.Visuals
                 Transform right = FindDeep(model, "WeaponGripR");
                 if (left == null || right == null) continue;
 
-                rigs.Add(key, new GripRig
+                rigs.Add(identity, new GripRig
                 {
                     Identity = identity,
                     Model = model,
