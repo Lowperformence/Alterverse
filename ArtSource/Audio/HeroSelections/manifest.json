@@ -1,0 +1,288 @@
+[
+  {
+    "source": "floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+    "sourceSha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3",
+    "sourcePeak": 1.435104,
+    "gain": 0.438993,
+    "trimmedLeadingSeconds": 0.030771,
+    "durationSeconds": 1.937234,
+    "targets": [
+      {
+        "hero": "Kaelon",
+        "slot": "Q",
+        "ability": "Anchor Strike",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+        "decodedPeak": 0.655683,
+        "sha256": "6b55c4a027ad458a1d3021e137467b8dcdac802a6220e22c3c603d046325d0ea"
+      }
+    ]
+  },
+  {
+    "source": "floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+    "sourceSha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f",
+    "sourcePeak": 1.525825,
+    "gain": 0.412891,
+    "trimmedLeadingSeconds": 0.034717,
+    "durationSeconds": 1.50127,
+    "targets": [
+      {
+        "hero": "Kaelon",
+        "slot": "E",
+        "ability": "Gravity Anchor",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+        "decodedPeak": 0.64821,
+        "sha256": "a713205ce4a6b6cdb388161c0f0540989bd9363d5759776c0c7faddc343bfbb8"
+      }
+    ]
+  },
+  {
+    "source": "freesound_community-funny-swish-101878(1).mp3",
+    "sourceSha256": "0601948ad6e4937cc6bca126f0decb2218037f39f6f7dc99cee359efdb66212b",
+    "sourcePeak": 0.234468,
+    "gain": 2.686935,
+    "trimmedLeadingSeconds": 0.045034,
+    "durationSeconds": 0.602971,
+    "targets": [
+      {
+        "hero": "Veyr",
+        "slot": "E",
+        "ability": "Gapfold",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+        "decodedPeak": 0.637064,
+        "sha256": "18d48bc1b9fce1d2d74e88b4bcc6199f04e031201e3a665401e08f0588314bad"
+      },
+      {
+        "hero": "Traveler",
+        "slot": "W",
+        "ability": "Rift Step",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
+        "decodedPeak": 0.637064,
+        "sha256": "2a2b910c00e19a8851cc5225d340d45e06ff09783289f7c983bdab33783d9377"
+      },
+      {
+        "hero": "Elyra",
+        "slot": "E",
+        "ability": "Phase Fold",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+        "decodedPeak": 0.637064,
+        "sha256": "b3fef5c9ef6d709ecb5865fef592b079708b6de057ca6ace0890fdb61db43b50"
+      }
+    ]
+  },
+  {
+    "source": "dragon-studio-sword-slice-393847(1).mp3",
+    "sourceSha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b",
+    "sourcePeak": 0.950092,
+    "gain": 0.663094,
+    "trimmedLeadingSeconds": 0.048186,
+    "durationSeconds": 2.1461,
+    "targets": [
+      {
+        "hero": "Veyr",
+        "slot": "W",
+        "ability": "Rift Scar",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+        "decodedPeak": 0.621818,
+        "sha256": "67f75dd06c847b5b3bd533016030fa413187554ef4a8d61bbcc1a96857ef975c"
+      }
+    ]
+  },
+  {
+    "source": "dragon-studio-sword-slice-2-393845.mp3",
+    "sourceSha256": "abcd14bd051183b3812fd68e87a87ab30116f30514c6328a108a36eb2863a8e3",
+    "sourcePeak": 1.305887,
+    "gain": 0.482431,
+    "trimmedLeadingSeconds": 0.07542,
+    "durationSeconds": 2.118866,
+    "targets": [
+      {
+        "hero": "Veyr",
+        "slot": "Q",
+        "ability": "Null Cut",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+        "decodedPeak": 0.621945,
+        "sha256": "eca935fecf6df6a47caea70aef45e94f851d9980857ddab8e0fae9284bdcc844"
+      }
+    ]
+  },
+  {
+    "source": "soundreality-sci-fi-gun-shot-312659(1).mp3",
+    "sourceSha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75",
+    "sourcePeak": 1.027432,
+    "gain": 0.613179,
+    "trimmedLeadingSeconds": 0.033946,
+    "durationSeconds": 1.934059,
+    "targets": [
+      {
+        "hero": "Nyra",
+        "slot": "E",
+        "ability": "Light Snare",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+        "decodedPeak": 0.617177,
+        "sha256": "c2a7f34c96ebc77af7b6bf1e9cae40aa915bae70b93829dcf79e192a653f4b6e"
+      }
+    ]
+  },
+  {
+    "source": "universfield-sci-fi-blaster-shot-229313(1).mp3",
+    "sourceSha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8",
+    "sourcePeak": 0.90869,
+    "gain": 0.693306,
+    "trimmedLeadingSeconds": 0.072925,
+    "durationSeconds": 0.791088,
+    "targets": [
+      {
+        "hero": "Nyra",
+        "slot": "Q",
+        "ability": "Prism Shot",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+        "decodedPeak": 0.655923,
+        "sha256": "55d2ce04c1008788e4bb6954db0d5e346a8d665ca188be3c7362c8ac128ac989"
+      }
+    ]
+  },
+  {
+    "source": "yodguard-short-energy-beam-shot-4-482500(1).mp3",
+    "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+    "sourcePeak": 0.940812,
+    "gain": 0.669634,
+    "trimmedLeadingSeconds": 0.030408,
+    "durationSeconds": 2.993605,
+    "targets": [
+      {
+        "hero": "Elyra",
+        "slot": "Q",
+        "ability": "Orbit Fracture",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+        "decodedPeak": 0.632278,
+        "sha256": "48aeb9c87bea0dc7684f1fe5982c8947ffadce3b1a0b207848b54332561beef9"
+      }
+    ]
+  },
+  {
+    "source": "yodguard-short-energy-beam-shot-1-482495.mp3",
+    "sourceSha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a",
+    "sourcePeak": 1.214438,
+    "gain": 0.518759,
+    "trimmedLeadingSeconds": 0.034263,
+    "durationSeconds": 2.989751,
+    "targets": [
+      {
+        "hero": "Elyra",
+        "slot": "W",
+        "ability": "Invert Field",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+        "decodedPeak": 0.625996,
+        "sha256": "9376b6ecdedacde988ded03fc17610d9b4d8031d12c0d669da36123ef4f825e3"
+      }
+    ]
+  },
+  {
+    "source": "yodguard-healing-magic-2-378663(1).mp3",
+    "sourceSha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb",
+    "sourcePeak": 0.557184,
+    "gain": 1.130686,
+    "trimmedLeadingSeconds": 0.021315,
+    "durationSeconds": 8.018685,
+    "targets": [
+      {
+        "hero": "Mira",
+        "slot": "W",
+        "ability": "Growth Veil",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+        "decodedPeak": 0.566341,
+        "sha256": "40cc499267f67940c8e27377f9499ad46f82cd299d345b46a65d44bbb51d8952"
+      }
+    ]
+  },
+  {
+    "source": "yodguard-short-energy-beam-shot-4-482500.mp3",
+    "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+    "sourcePeak": 0.940812,
+    "gain": 0.669634,
+    "trimmedLeadingSeconds": 0.030408,
+    "durationSeconds": 2.993605,
+    "targets": [
+      {
+        "hero": "Mira",
+        "slot": "E",
+        "ability": "Venn Shelter",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+        "decodedPeak": 0.632278,
+        "sha256": "c515800d7dff2ed6e1d402fde8a6992e5f931f27ce86695dbee375860ad1d57b"
+      }
+    ]
+  },
+  {
+    "source": "freesound_community-power-down-7103.mp3",
+    "sourceSha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7",
+    "sourcePeak": 0.761972,
+    "gain": 0.826802,
+    "trimmedLeadingSeconds": 0.045034,
+    "durationSeconds": 1.77898,
+    "targets": [
+      {
+        "hero": "Mira",
+        "slot": "Q",
+        "ability": "Resonant Seed",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+        "decodedPeak": 0.629832,
+        "sha256": "89f0b48058ad68a3ae7b0329954bb045d8db0b726b58de1b6e6f677c7facea04"
+      }
+    ]
+  },
+  {
+    "source": "audiopapkin-big-robot-footstep-014-445104.mp3",
+    "sourceSha256": "7914552fd9dd48f3899d5e24265fc28475e6a20f88325bcba3606cc7be571e1f",
+    "sourcePeak": 1.40667,
+    "gain": 0.447866,
+    "trimmedLeadingSeconds": 0.083333,
+    "durationSeconds": 1.596667,
+    "targets": [
+      {
+        "hero": "Rook",
+        "slot": "E",
+        "ability": "Wreckstorm",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+        "decodedPeak": 0.619211,
+        "sha256": "f696f4d204889ab6786f5e07114b16666c96ac449152298608d2dda832df07c1"
+      }
+    ]
+  },
+  {
+    "source": "yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+    "sourceSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba",
+    "sourcePeak": 0.940812,
+    "gain": 0.669634,
+    "trimmedLeadingSeconds": 0.030408,
+    "durationSeconds": 2.993605,
+    "targets": [
+      {
+        "hero": "Traveler",
+        "slot": "E",
+        "ability": "Chrono Snare",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Cast.ogg",
+        "decodedPeak": 0.632278,
+        "sha256": "6359d9031b582b46d8bf660ebf2f9782244a38912423256757df42f7838b5174"
+      }
+    ]
+  },
+  {
+    "source": "audiopapkin-big-robot-footstep-009-426481.mp3",
+    "sourceSha256": "5e14be6ffde96bd5f8ce191d8789f12c6deef417df0ee675f5449555dc7f14fe",
+    "sourcePeak": 1.418144,
+    "gain": 0.444243,
+    "trimmedLeadingSeconds": 0.276916,
+    "durationSeconds": 2.09907,
+    "targets": [
+      {
+        "hero": "Nerok",
+        "slot": "E",
+        "ability": "Breaker Wave",
+        "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/E_Cast.ogg",
+        "decodedPeak": 0.627093,
+        "sha256": "5768f1d54931adaaf7a5f42817b29eeefdece56eb2d3eff0b6da2de6a7f0a997"
+      }
+    ]
+  }
+]

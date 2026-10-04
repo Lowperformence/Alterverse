@@ -1,0 +1,13 @@
+# User-selected hero recordings — 2026-10-04
+
+The 15 exact user-supplied MP3 filenames are preserved in `Originals/`. `manifest.json` records original SHA-256 hashes and all 17 ability mappings. The selected dash recording is shared by Gapfold, Rift Step and Phase Fold. Wreckstorm is Rook E, Chrono Snare is Traveler E, Breaker Wave is Nerok E (verified against `HeroAbilityKit`).
+
+Rebuild: `python3 Tools/Audio/import_hero_selections.py /path/to/source_mp3s` (requires ffmpeg).
+
+Game clips are mono 44.1 kHz Vorbis at the existing `_Cast.ogg` paths; Unity asset GUIDs remain unchanged. Leading digital silence is removed with 1 ms preroll. Full recordings/reverb tails are retained, with a 2 ms fade-in and 10 ms fade-out. PCM peak is normalized to 0.63; decoded Vorbis files were checked for finite samples and peaks below 0.95 (actual maximum 0.656).
+
+The three filenames `yodguard-short-energy-beam-shot-4-482500.mp3`, `...482500(1).mp3`, and `...482500 (1).mp3` are byte-identical in the supplied files. They are still explicitly mapped to the requested abilities; no alternative version was substituted.
+
+Each selected cue plays once at the existing ability-release event. Old synthesized Windup/Impact layers for those slots are disabled in `HeroCombatAudio` and their unused resources removed. This also prevents an area attack playing the entire recording separately for every victim. Basic attacks, Nerok's quiet basic hit, ultimates, death/hitmarker sounds, network cue indices, cooldowns and damage remain unchanged.
+
+Validation: every source decoded, exact filename/hash mapping recorded, all 17 output clips decoded again, clipping headroom verified, C# syntax parsed. Unity Editor unavailable: run `DIMENSIONS FRONT > Checks > Selected hero sound recordings` and listen in Play Mode for final mix approval. No Unity playback test is claimed.

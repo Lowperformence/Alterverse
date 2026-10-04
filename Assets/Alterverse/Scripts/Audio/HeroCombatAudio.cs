@@ -9,11 +9,25 @@ namespace Alterverse.Audio
         public const int CueCount=HeroIdentity.HeroCount*15;
         static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","Nerok"};
         static readonly string[] Actions={"Basic","Q","W","E","R"};
-        public static bool HasImpact(int hero,int action)=>action==0||(hero switch
+        // User-selected recordings are complete cues. Play them once at ability release,
+        // not over the former synthesized preparation/impact layers (or once per AoE victim).
+        public static bool UsesSelectedRecording(int hero,int action)=>hero switch
+        {
+            0=>action>=1&&action<=3,
+            1=>action==1||action==3,
+            2=>action==1||action==3,
+            3=>action>=1&&action<=3,
+            4=>action>=1&&action<=3,
+            5=>action==3,
+            6=>action==2||action==3,
+            7=>action==3,
+            _=>false
+        };
+        public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(hero switch
         {
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
-        });
-        public static bool HasWindup(int hero,int action)=>action==0||HasImpact(hero,action);
+        }));
+        public static bool HasWindup(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
         public static int VariantCount(int hero,int action,int phase)=>hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static int Cue(int hero,int action,int phase)=>hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;
         public static AudioClip[][] Load()
