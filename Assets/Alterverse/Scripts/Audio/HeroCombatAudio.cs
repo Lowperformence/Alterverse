@@ -20,7 +20,7 @@ namespace Alterverse.Audio
             4=>action>=1&&action<=3,
             5=>action==3,
             6=>action==2||action==3,
-            7=>action==3,
+            7=>action==3||action==4,
             _=>false
         };
         public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(hero switch

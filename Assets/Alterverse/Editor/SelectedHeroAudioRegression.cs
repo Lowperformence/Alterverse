@@ -22,9 +22,9 @@ namespace Alterverse.EditorChecks
                 Require(bank[HeroCombatAudio.Cue(hero,action,1)]==null&&bank[HeroCombatAudio.Cue(hero,action,2)]==null,
                     "Selected recording will be doubled by legacy audio");
             }
-            Require(count==17,"Expected 17 ability mappings from 15 selected source files");
+            Require(count==18,"Expected 18 selected ability mappings including Nerok's Maelstrom");
             Require(bank[HeroCombatAudio.Cue(7,0,1)]!=null,"Nerok's quiet basic hit was lost");
-            Debug.Log("DF: 17 selected ability recordings loaded with no duplicate preparation/impact layers; basic and ultimate banks preserved.");
+            Debug.Log("DF: 18 selected ability recordings loaded with no duplicate preparation/impact layers; basic attack banks preserved.");
         }
         static void Require(bool value,string message){if(!value)throw new InvalidOperationException(message);}
     }
