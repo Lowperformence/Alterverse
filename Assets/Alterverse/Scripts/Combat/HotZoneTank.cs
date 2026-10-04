@@ -955,6 +955,13 @@ namespace Alterverse.Combat
 
         private void BuildKryonBearVisuals()
         {
+            if(KryonBearBlenderModel.TryBuild(transform,out var authoredBody,out var authoredHead,out var authoredMuzzle,out var authoredLegs))
+            {
+                bearBodyRoot=authoredBody;bearBodyRest=authoredBody.localPosition;
+                turretPivot=bearHeadPivot=authoredHead;barrelPivot=authoredMuzzle;bearBarrelRest=authoredMuzzle.localPosition;
+                for(int i=0;i<4;i++){bearLegRoots[i]=authoredLegs[i];bearLegBase[i]=authoredLegs[i].localRotation;}
+                return;
+            }
             Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");if(shader==null)return;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color armor=new(.72f,.80f,.84f,1f),ice=new(.88f,.95f,.98f,1f),deep=new(.022f,.038f,.052f,1f),joint=new(.07f,.12f,.15f,1f);
@@ -1473,6 +1480,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 
