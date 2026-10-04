@@ -31,7 +31,7 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
-        private Transform tail, freeUpperArm, freeHand;
+        private Transform tail, freeUpperArm, freeForearm, freeHand;
         private Quaternion tailRest;
         private Vector3 tailAxis;
         private float tailTime;
@@ -88,6 +88,7 @@ namespace Alterverse.Visuals
             Geometry data = geometry;
             Transform[] all = model.GetComponentsInChildren<Transform>(true);
             freeUpperArm = Array.Find(all, b => b.name == "UpperArmL");
+            freeForearm = Array.Find(all, b => b.name == "ForearmL");
             freeHand = Array.Find(all, b => b.name == "HandL");
             motion = GetComponentInParent<HeroVisualMotion>();
             combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
@@ -312,25 +313,34 @@ namespace Alterverse.Visuals
                 tailTime += Time.deltaTime;
                 tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
             }
-            RotateFreeArmInward();
+            PoseFreeArmAlongGuide();
         }
-        private void RotateFreeArmInward()
+        private void PoseFreeArmAlongGuide()
         {
-            if (freeUpperArm == null || freeHand == null) return;
+            if (freeUpperArm == null || freeForearm == null || freeHand == null) return;
             if (motion == null) motion = GetComponentInParent<HeroVisualMotion>();
             if (combatPose == null) combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
-            // The right-side anchor is skinned to WeaponGripR, so the opposite (free) arm is
-            // the left skeleton chain. Apply the requested 20-degree inward turn only while
-            // the normal guard pose owns the rig; attacks and abilities keep their authored motion.
+            // The anchor uses the right-hand grip, so the left chain is Nerok's free arm.
+            // Match the marked guide: almost straight down, about ten degrees inward toward the torso.
+            // Only apply in the normal idle/guard state; attacks and abilities keep authored motion.
             if (combatPose == null || !combatPose.OwnsPose || combatPose.StrikeActive ||
                 motion != null && motion.AbilityActionActive) return;
-            Vector3 up = transform.up;
-            Vector3 shoulderToHand = Vector3.ProjectOnPlane(freeHand.position - freeUpperArm.position, up);
-            Vector3 inward = Vector3.ProjectOnPlane(transform.right, up);
-            if (shoulderToHand.sqrMagnitude < .000001f || inward.sqrMagnitude < .000001f) return;
-            Quaternion turn = Quaternion.RotateTowards(Quaternion.identity,
-                Quaternion.FromToRotation(shoulderToHand, inward), 20f);
-            freeUpperArm.rotation = turn * freeUpperArm.rotation;
+
+            Vector3 upper = freeForearm.position - freeUpperArm.position;
+            Vector3 forearm = freeHand.position - freeForearm.position;
+            if (upper.sqrMagnitude < .000001f || forearm.sqrMagnitude < .000001f) return;
+
+            // First remove the visible elbow kink so shoulder, elbow and wrist form one clean line.
+            Transform elbowParent = freeForearm.parent;
+            Vector3 upperSpace = elbowParent != null ? elbowParent.InverseTransformVector(upper) : upper;
+            Vector3 forearmSpace = elbowParent != null ? elbowParent.InverseTransformVector(forearm) : forearm;
+            freeForearm.localRotation = Quaternion.FromToRotation(forearmSpace, upperSpace) * freeForearm.localRotation;
+
+            // Then aim the complete straight arm along the user's red line.
+            Vector3 current = freeHand.position - freeUpperArm.position;
+            Vector3 desired = (-transform.up + transform.right * Mathf.Tan(10f * Mathf.Deg2Rad)).normalized;
+            if (current.sqrMagnitude < .000001f) return;
+            freeUpperArm.rotation = Quaternion.FromToRotation(current.normalized, desired) * freeUpperArm.rotation;
         }
         private void OnDestroy()
         {
