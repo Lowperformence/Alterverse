@@ -21,6 +21,7 @@ def canonical_frame(direction):
  return Matrix((x,y,z)).transposed()
 def spec(name,parts,contact=0,loop=False):return dict(name=name,parts=parts,contact=contact,loop=loop)
 SPECS={1:[
+ spec('idle_relaxed',[('Idle_Loop',1,76)],0,True),
  spec('jab',[('Punch_Jab',1,27)],7),
  spec('cross',[('Punch_Cross',1,31)],10),
  spec('spell',[('Spell_Simple_Enter',1,17),('Spell_Simple_Shoot',2,16),('Spell_Simple_Exit',2,14)],17)],

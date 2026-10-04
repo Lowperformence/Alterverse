@@ -518,12 +518,12 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void ClearIdleWeaponOverlap()
+        private void ClearIdleWeaponOverlap(bool buildingGuard = false)
         {
-            if (model == null || motion != null && motion.ArmActionActive) return;
+            if (model == null || !buildingGuard && motion != null && motion.ArmActionActive) return;
             // Only the idle pose is adjusted. A strike owns its wrist and weapon arc.
             var attack = GetComponent<MeleeBasicAttackAnimation>();
-            if (attack != null && attack.StrikeActive) return;
+            if (!buildingGuard && attack != null && attack.StrikeActive) return;
             if (hero == HeroId.Nyra || hero == HeroId.Rook) return;
             for (int i = 0; i < 2; i++)
             {
@@ -662,6 +662,11 @@ namespace Alterverse.Visuals
         }
 
         public void FinalizeMeleeGrip() => FinalizeCombatGrip();
+        public void FinalizeGuardGrip()
+        {
+            ApplyWeaponGrips();
+            ClearIdleWeaponOverlap(true);
+        }
         public void FinalizeCombatGrip()
         {
             ApplyWeaponGrips();

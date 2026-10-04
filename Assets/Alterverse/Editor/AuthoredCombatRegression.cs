@@ -15,7 +15,7 @@ namespace Alterverse.EditorChecks
         {
             string[] names = CombatAnimationLibrary.Bones;
             Require(names != null && names.Length == 16, "Missing/invalid Blender combat library");
-            string[] clips = { "jab", "cross", "slash_a", "heavy_sweep", "spell" };
+            string[] clips = { "idle_relaxed", "jab", "cross", "slash_a", "heavy_sweep", "spell" };
             foreach (string name in clips)
             {
                 var clip = CombatAnimationLibrary.Find(name);
@@ -50,7 +50,8 @@ namespace Alterverse.EditorChecks
                 Require(HeroAttackDelivery.Windup(hero)>0, "Invalid gameplay windup");
             }
             CombatMotionRegression.Run();
-            Debug.Log("DF: eight hero rigs, five Blender clips, contact clocks, mirror mapping and IK regression passed. " +
+            Require(CombatAnimationLibrary.Find("idle_relaxed").loop, "Relaxed idle must loop");
+            Debug.Log("DF: eight hero rigs, six Blender clips, contact clocks, mirror mapping and IK regression passed. " +
                 "Still inspect live weapon/shield clearance and network playback in Play Mode.");
         }
         private static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}

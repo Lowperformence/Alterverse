@@ -16,7 +16,7 @@ namespace Alterverse.Visuals
         {
             public Transform Transform;
             public Quaternion AnatomicalOffset, RestModel, GuardWorld, LastLocal;
-            public Vector3 RestElbowOffsetModel;
+            public Vector3 RestElbowOffsetModel, GuardPosition;
         }
         private HeroIdentity identity;
         private BasicAttack basic;
@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
         private AuthoredHeroPresentation presentation;
         private Transform model;
         private Bone[] bones;
-        private CombatAnimationLibrary.Clip clip;
+        private CombatAnimationLibrary.Clip clip, relaxedIdle;
         private float started = -100f, contact, duration, cancelStarted = -100f;
         private int serial;
         private bool active, mirror;
@@ -78,6 +78,7 @@ namespace Alterverse.Visuals
                 captured[upper].RestElbowOffsetModel = model.InverseTransformVector(
                     captured[upper+1].Transform.position - captured[upper].Transform.position);
             bones = captured;
+            relaxedIdle = CombatAnimationLibrary.Find("idle_relaxed");
         }
         private void Start()
         {
@@ -142,7 +143,11 @@ namespace Alterverse.Visuals
                 RememberPose(); return;
             }
             ApplyGuard();
-            for (int i = 0; i < bones.Length; i++) bones[i].GuardWorld = bones[i].Transform.rotation;
+            for (int i = 0; i < bones.Length; i++)
+            {
+                bones[i].GuardWorld = bones[i].Transform.rotation;
+                bones[i].GuardPosition = bones[i].Transform.position;
+            }
             float age = Time.time - started;
             if (StrikeActive && age >= 0f)
             {
@@ -190,6 +195,19 @@ namespace Alterverse.Visuals
         {
             // Body/legs retain the existing gait. Only the arm guard has a single final owner.
             if (identity.Hero == HeroId.Nyra) return; // Its authored stock/handle sockets are authoritative.
+            if (relaxedIdle != null && (identity.Hero == HeroId.Mira || identity.Hero == HeroId.Rook ||
+                identity.Hero == HeroId.Veyr || identity.Hero == HeroId.Traveler))
+            {
+                // Use the downloaded CC0 Idle_Loop, including its actual elbow and wrist
+                // directions. Anatomical offsets retarget it without assuming FBX local axes.
+                float frame = Mathf.Repeat(Time.time * relaxedIdle.fps, relaxedIdle.frames - 1);
+                for (int i = 4; i < 10; i++)
+                    bones[i].Transform.rotation = model.rotation * relaxedIdle.Sample(i, frame, bones.Length) *
+                        bones[i].AnatomicalOffset;
+                // Capture the SAME fitted grip pose for idle and the attack's entry/recovery.
+                presentation?.FinalizeGuardGrip();
+                return;
+            }
             for (int upper = 4; upper <= 7; upper += 3)
             {
                 SolveArm(upper, GuardPoint(upper));
@@ -250,7 +268,7 @@ namespace Alterverse.Visuals
             else if (identity.Hero == HeroId.Veyr)
             {
                 int off = mirror ? 7 : 4;
-                SolveArm(off, GuardPoint(off)); bones[off+2].Transform.rotation = bones[off+2].GuardWorld;
+                SolveArm(off, bones[off+2].GuardPosition); bones[off+2].Transform.rotation = bones[off+2].GuardWorld;
             }
         }
         private void ApplyHeavySweep(float age)
