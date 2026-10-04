@@ -1,0 +1,20 @@
+[
+  {
+    "ability": "Wreckstorm",
+    "slot": "E",
+    "source": "soundreality-cinematic-hit-shot-442015(1).mp3",
+    "sourceSha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+    "duration": 4.032018140589569,
+    "decodedPeak": 0.6483569145202637
+  },
+  {
+    "ability": "Wreck Swing",
+    "slot": "Q",
+    "source": "dragon-studio-boom-swoosh-01-416172(1).mp3",
+    "sourceSha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0",
+    "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg",
+    "duration": 4.032018140589569,
+    "decodedPeak": 0.6586045026779175
+  }
+]

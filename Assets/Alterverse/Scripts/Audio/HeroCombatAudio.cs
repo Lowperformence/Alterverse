@@ -18,7 +18,7 @@ namespace Alterverse.Audio
             2=>action>=1&&action<=3,
             3=>action>=1&&action<=3,
             4=>action>=1&&action<=3,
-            5=>action==2||action==3,
+            5=>action>=1&&action<=3,
             6=>action>=1&&action<=3,
             7=>action>=1&&action<=4,
             _=>false
@@ -70,6 +70,7 @@ namespace Alterverse.Audio
             if(!local&&(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f))return;
             float gain=phase==2?.32f:action==0?(phase==1?.48f:.58f):ultimate?(phase==1?.84f:.9f):(phase==1?.62f:.7f);
             gain*=CombatSoundPalette.For(identity.Hero).Gain;
+            if(hero==(int)HeroId.Nerok&&ultimate)gain*=.80f;
             // Other heroes start 30% quieter; distance attenuation is applied afterwards.
             float attenuation=local?1f:.70f;
             Ray ray=camera.ViewportPointToRay(new Vector3(.5f,.5f,0));
