@@ -2,7 +2,7 @@
 Usage: python3 Tools/Audio/import_hero_selections.py /path/to/selected_sfx
 Existing Unity .ogg.meta files are preserved by the commit. Never guess duplicate filenames.
 """
-import array, hashlib, json, math, shutil, subprocess, sys
+import array, hashlib, json, math, shutil, subprocess, sys, tempfile
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[2]
 SOURCE=Path(sys.argv[1])
@@ -44,11 +44,24 @@ for filename,targets in MAPPINGS:
  destinations=[]
  for hero,slot,ability in targets:
   out=ROOT/f'Assets/Alterverse/Resources/Audio/Heroes/{hero}/{slot}_Cast.ogg';out.parent.mkdir(parents=True,exist_ok=True)
-  subprocess.run(['ffmpeg','-v','error','-y','-f','f32le','-ar','44100','-ac','1','-i','pipe:0','-c:a','libvorbis','-q:a','5',str(out)],input=samples.tobytes(),check=True)
-  # Decode the actual shipped compressed file; encoding overshoot must retain headroom.
-  check=array.array('f');check.frombytes(subprocess.check_output(['ffmpeg','-v','error','-i',str(out),'-f','f32le','-ac','1','pipe:1']))
-  peak=max(abs(x) for x in check);assert peak<.95,(filename,peak)
+  # Never truncate the live Unity asset before encoding and verification succeed.
+  with tempfile.NamedTemporaryFile(dir=out.parent,suffix='.pending',delete=False) as f: pending=Path(f.name)
+  try:
+   subprocess.run(['ffmpeg','-v','error','-y','-f','f32le','-ar','44100','-ac','1','-i','pipe:0','-c:a','libvorbis','-q:a','5','-f','ogg',str(pending)],input=samples.tobytes(),check=True)
+   assert pending.stat().st_size>100,filename
+   check=array.array('f');check.frombytes(subprocess.check_output(['ffmpeg','-nostdin','-v','error','-i',str(pending),'-f','f32le','-ac','1','pipe:1']))
+   assert check and all(math.isfinite(x) for x in check),filename
+   peak=max(abs(x) for x in check);assert 0<peak<.95,(filename,peak)
+   pending.replace(out)
+  finally:
+   pending.unlink(missing_ok=True)
   destinations.append(dict(hero=hero,slot=slot,ability=ability,path=out.relative_to(ROOT).as_posix(),decodedPeak=round(peak,6),sha256=hashlib.sha256(out.read_bytes()).hexdigest()))
  report.append(dict(source=filename,sourceSha256=hashlib.sha256(src.read_bytes()).hexdigest(),sourcePeak=round(original_peak,6),gain=round(gain,6),trimmedLeadingSeconds=round(first/44100,6),durationSeconds=round(len(samples)/44100,6),targets=destinations))
-(ART/'manifest.json').write_text(json.dumps(report,indent=2)+'\n')
+for row in report:
+ for target in row['targets']:
+  data=(ROOT/target['path']).read_bytes()
+  assert len(data)>100 and hashlib.sha256(data).hexdigest()==target['sha256'],target['path']
+manifest_pending=ART/'manifest.json.pending'
+manifest_pending.write_text(json.dumps(report,indent=2)+'\n')
+manifest_pending.replace(ART/'manifest.json')
 print(json.dumps([dict(source=r['source'],seconds=r['durationSeconds'],targets=[x['hero']+' '+x['slot'] for x in r['targets']]) for r in report],indent=2))
