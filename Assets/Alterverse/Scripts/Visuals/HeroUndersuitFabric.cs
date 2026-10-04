@@ -16,9 +16,12 @@ namespace Alterverse.Visuals
             string name = material.name.Replace(" (Instance)", "");
             // Explicit allowlist: black mechanical cores, seals, armor, cables,
             // weapons and ornaments must not acquire a fabric finish.
+            // Nerok's pirate-leather torso is his undersuit-equivalent, so it uses
+            // the same woven hero finish while shark skin and naval armor stay intact.
             return name == "Obsidian fabric" ||
                    name == "DF_Nyra_Cyber undersuit" ||
-                   name == "DF_Traveler_Cyber undersuit";
+                   name == "DF_Traveler_Cyber undersuit" ||
+                   name == "DF_Nerok_Pirate leather";
         }
 
         public static void Apply(Transform model)
