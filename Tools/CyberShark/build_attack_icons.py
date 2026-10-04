@@ -1,7 +1,7 @@
 """Render Nerok's five attack illustrations entirely in Blender.
 Run: blender --background --python Tools/CyberShark/build_attack_icons.py
 Slots: Q anchor pull, W pressure hull, E tidal wave, R abyssal vortex, basic anchor strike.
-Illustrations use real shaded meshes rather than thin HUD glyphs. No external artwork.
+Illustrations use real shaded meshes rather than thin HUD glyphs. The supplied water vortex is used only as the background; foreground meshes are unchanged.
 """
 from pathlib import Path
 import math, random, os
@@ -106,9 +106,18 @@ def aim(ob,p):ob.rotation_euler=(Vector(p)-ob.location).to_track_quat('-Z','Y').
 bpy.ops.object.camera_add(location=(0,-5,1.3));cam=bpy.context.object;cam.name='Icon portrait camera';aim(cam,(0,0,0));cam.data.type='ORTHO';cam.data.ortho_scale=2.04;scene.camera=cam
 for pos,power,color,size in [((-2,-4,4),500,(.40,.74,1),4),((2,-1,1),320,(1,.68,.27),3),((0,2,3),650,(.05,.65,1),2)]:
  bpy.ops.object.light_add(type='AREA',location=pos);ob=bpy.context.object;ob.data.energy=power;ob.data.color=color;ob.data.shape='DISK';ob.data.size=size;aim(ob,(0,0,0))
-# Backdrop has a physical dark ocean disk; all important details stay within the HUD's circle.
-bpy.ops.mesh.primitive_plane_add(size=200,location=(0,1.0,0),rotation=(math.pi/2,0,0));finish(bpy.context.object,mat('Deep abyss backdrop',(.002,.013,.034),0,.8),False)
-background=bpy.context.object.data.materials[0];nodes=background.node_tree.nodes;nodes.clear();em=nodes.new('ShaderNodeEmission');em.inputs['Color'].default_value=(.003,.017,.041,1);em.inputs['Strength'].default_value=.8;output=nodes.new('ShaderNodeOutputMaterial');background.node_tree.links.new(em.outputs[0],output.inputs['Surface'])
+# Preserve all five existing icon illustrations. Only their backdrop changes.
+scene.render.film_transparent=True
+background_path=ROOT/'Assets/Alterverse/Resources/CyberShark/Icons/Background.png'
+back=n.new('CompositorNodeImage');back.image=bpy.data.images.load(str(background_path));back.image.pack()
+dim=n.new('CompositorNodeMixRGB');dim.blend_type='MULTIPLY';dim.inputs[0].default_value=1
+# Darken the exact supplied artwork so existing white/cyan icons and cooldowns stay legible.
+dim.inputs[2].default_value=(.38,.38,.38,1)
+over=n.new('CompositorNodeAlphaOver');over.inputs[0].default_value=1
+scene.node_tree.links.new(back.outputs['Image'],dim.inputs[1])
+scene.node_tree.links.new(dim.outputs['Image'],over.inputs[1])
+scene.node_tree.links.new(gl.outputs['Image'],over.inputs[2])
+scene.node_tree.links.new(over.outputs['Image'],comp.inputs['Image'])
 roots=[]
 for slot in range(5):
  root=bpy.data.objects.new(['Q Anchor pull','W Pressure hull','E Tidal wave','R Abyssal vortex','Basic Anchor strike'][slot],None);bpy.context.collection.objects.link(root);roots.append(root)
@@ -181,3 +190,4 @@ for gr in roots:
  for ob in gr.children_recursive:ob.hide_render=gr!=roots[0]
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokAttackIcons.blend'),compress=True)
 print('NEROK_ATTACK_ICONS',OUT)
+

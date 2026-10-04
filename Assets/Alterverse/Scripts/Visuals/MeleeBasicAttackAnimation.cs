@@ -31,6 +31,7 @@ namespace Alterverse.Visuals
         private int serial;
         private bool active, mirror;
         private bool standingOffsetApplied;
+        private bool reportedStandingPose;
         private Vector3 standingHipsLocal;
         private Vector3 aim;
         private readonly Quaternion[] previousPose = new Quaternion[16];
@@ -45,6 +46,13 @@ namespace Alterverse.Visuals
             health = GetComponent<Health>(); motion = GetComponent<HeroVisualMotion>();
             locomotion = GetComponent<HeroLocomotion>(); presentation = GetComponent<AuthoredHeroPresentation>();
         }
+        private void OnEnable()
+        {
+            reportedStandingPose = false;
+            if (bones == null) return;
+            relaxedIdle = CombatAnimationLibrary.Find("idle_relaxed");
+            standingIdle = CombatAnimationLibrary.Find("mixamo_standing_idle");
+        }
         public static MeleeBasicAttackAnimation For(GameObject actor)
         {
             if (actor.GetComponent<HeroIdentity>() == null) return null;
@@ -53,6 +61,9 @@ namespace Alterverse.Visuals
         public void InitializeRig(Transform imported)
         {
             if (bones != null || imported == null || CombatAnimationLibrary.Bones == null) return;
+            // Also initialize when a preview actor was assembled while inactive.
+            identity = GetComponent<HeroIdentity>();
+            presentation = GetComponent<AuthoredHeroPresentation>();
             model = imported;
             string[] names = CombatAnimationLibrary.Bones;
             var captured = new Bone[names.Length];
@@ -143,6 +154,12 @@ namespace Alterverse.Visuals
         }
         private void LateUpdate()
         {
+            // AuthoredHeroPresentation calls us synchronously AFTER its base-bone writes.
+            // This remains correct with local Script Execution Order overrides in Unity.
+            if (presentation == null) EvaluatePose();
+        }
+        public void EvaluatePose()
+        {
             if (!OwnsPose || identity == null || (health != null && health.IsDead)) return;
             if (motion == null) motion = GetComponent<HeroVisualMotion>();
             if (presentation == null) presentation = GetComponent<AuthoredHeroPresentation>();
@@ -176,6 +193,29 @@ namespace Alterverse.Visuals
             }
             presentation?.FinalizeCombatGrip();
             RememberPose();
+            if (!reportedStandingPose && standingIdle != null && identity.Hero != HeroId.Nyra)
+            {
+                reportedStandingPose = true;
+                Debug.Log("DF: MIXAMO Standing Idle v2 ACTIVE on " + identity.DisplayName +
+                    (identity.Hero == HeroId.Kaelon ? " (left shield arm preserved)" : "") + ".", this);
+            }
+        }
+        public string StandingPoseStatus()
+        {
+            if (identity == null) return "Hero identity missing";
+            if (identity.Hero == HeroId.Nyra) return "Sivra excluded as requested";
+            if (bones == null) return "Rig has not initialized";
+            if (standingIdle == null) return "Mixamo resource missing or invalid";
+            if (!OwnsPose) return "Pose disabled/dead";
+            if (StrikeActive || motion != null && motion.AbilityActionActive) return "Combat action currently owns pose";
+            float largest = 0f;
+            foreach (int i in new[] { 4, 5, 7, 8 })
+            {
+                if (!UsesStandingPose(identity.Hero, i)) continue;
+                Quaternion desired = model.rotation * standingIdle.Sample(i, 0f, bones.Length) * bones[i].AnatomicalOffset;
+                largest = Mathf.Max(largest, Quaternion.Angle(bones[i].Transform.rotation, desired));
+            }
+            return "Mixamo loaded; largest arm deviation " + largest.ToString("F2") + " degrees";
         }
         private void RememberPose() { for (int i = 0; i < bones.Length; i++) bones[i].LastLocal = bones[i].Transform.localRotation; }
         private float Reach(int upper) => Vector3.Distance(bones[upper].Transform.position, bones[upper+1].Transform.position) +

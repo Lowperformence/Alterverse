@@ -704,6 +704,8 @@ namespace Alterverse.Visuals
             ApplyRifleSupport();
             if (!ownsBasicPose) ClearIdleWeaponOverlap();
             FollowRifleDetails();
+            // Final pose must run after these writes, independent of .meta/editor execution-order overrides.
+            if (melee != null && melee.isActiveAndEnabled) melee.EvaluatePose();
         }
     }
 }

@@ -230,9 +230,12 @@ namespace Alterverse.Visuals
             if (group > 0)
             {
                 Material[] independent = new Material[materials.Length];
+                Material anchorMetal = group == 2 ? NerokAnchorMaterial.Create(true) : null;
+                if (anchorMetal != null) ownedMaterials.Add(anchorMetal);
                 for (int i = 0; i < materials.Length; i++)
                 {
-                    independent[i] = new Material(materials[i]); ownedMaterials.Add(independent[i]);
+                    independent[i] = anchorMetal != null ? anchorMetal : new Material(materials[i]);
+                    if (anchorMetal == null) ownedMaterials.Add(independent[i]);
                 }
                 materials = independent;
             }

@@ -28,6 +28,7 @@ namespace Alterverse.Visuals
         private readonly Mesh[] shapes=new Mesh[(int)HeroFxShape.Count];
         private readonly Mesh[] warningShapes=new Mesh[(int)HeroFxShape.Count];
         private Material material;
+        private Material anchorMetal;
         private bool ownsMaterial;
         private int cursor;
         private static readonly int Life=Shader.PropertyToID("_Life"),SurfaceStyle=Shader.PropertyToID("_SurfaceStyle");
@@ -107,6 +108,10 @@ namespace Alterverse.Visuals
             slot.Rotation=rotation==default?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
+            if (!warning && shape == HeroFxShape.AnchorProjectile && anchorMetal == null)
+                anchorMetal = NerokAnchorMaterial.Create(false);
+            slot.Renderer.sharedMaterial = !warning && shape == HeroFxShape.AnchorProjectile && anchorMetal != null
+                ? anchorMetal : material;
             Draw(slot,0);if(delay>0)slot.Renderer.enabled=false;
         }
         public static void CancelWarnings(GameObject actor)
@@ -201,6 +206,7 @@ namespace Alterverse.Visuals
                 if(shapes[i]!=null)Destroy(shapes[i]);
             }
             if(ownsMaterial&&material!=null)Destroy(material);
+            if(anchorMetal!=null)Destroy(anchorMetal);
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset(){instance=null;}

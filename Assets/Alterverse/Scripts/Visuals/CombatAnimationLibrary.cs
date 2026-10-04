@@ -31,12 +31,20 @@ namespace Alterverse.Visuals
         private static Bank bank;
         private static bool attempted;
         private static readonly Dictionary<string, Clip> clips = new Dictionary<string, Clip>();
-        public static string[] Bones { get { Load(); return bank?.bones; } }
+        private static readonly string[] BoneNames = { "Hips", "Spine", "Chest", "Head", "UpperArmL", "ForearmL", "HandL",
+            "UpperArmR", "ForearmR", "HandR", "ThighL", "ShinL", "FootL", "ThighR", "ShinR", "FootR" };
+        public static string[] Bones { get { Load(); return BoneNames; } }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetCache()
+        {
+            attempted = false; bank = null; clips.Clear();
+        }
         public static Clip Find(string name) { Load(); return clips.TryGetValue(name, out Clip clip) ? clip : null; }
         private static void Load()
         {
             if (attempted) return;
             attempted = true;
+            LoadStandingPose();
             TextAsset asset = Resources.Load<TextAsset>("CombatAnimation/Library");
             if (asset == null) { Debug.LogError("DF: missing Blender combat animation library; using legacy pose fallback."); return; }
             try
@@ -46,6 +54,10 @@ namespace Alterverse.Visuals
                 using (var reader = new StreamReader(zip)) bank = JsonUtility.FromJson<Bank>(reader.ReadToEnd());
                 if (bank == null || bank.version != 1 || bank.bones == null || bank.clips == null)
                     throw new InvalidDataException("Invalid combat library version/schema");
+                if (bank.bones.Length != BoneNames.Length)
+                    throw new InvalidDataException("Invalid combat bone count");
+                for (int i = 0; i < BoneNames.Length; i++)
+                    if (bank.bones[i] != BoneNames[i]) throw new InvalidDataException("Combat bone order mismatch");
                 foreach (Clip clip in bank.clips)
                 {
                     if (clip.frames < 2 || clip.fps <= 0 || clip.contact < 0 || clip.contact >= clip.frames ||
@@ -55,29 +67,34 @@ namespace Alterverse.Visuals
                         if (float.IsNaN(value) || float.IsInfinity(value)) throw new InvalidDataException("Non-finite pose");
                     clips.Add(clip.name, clip);
                 }
-                // Separate asset: importing a new resting pose must not rebake or retime attacks.
-                TextAsset standing = Resources.Load<TextAsset>("CombatAnimation/StandingIdle");
-                if (standing != null)
-                {
-                    try
-                    {
-                        Clip pose = JsonUtility.FromJson<Clip>(standing.text);
-                        if (pose == null || pose.name != "mixamo_standing_idle" || pose.frames != 2 ||
-                            pose.fps <= 0 || pose.rotations == null || pose.rotations.Length != 2 * bank.bones.Length * 4)
-                            throw new InvalidDataException("Invalid Mixamo standing pose");
-                        for (int i = 0; i < pose.rotations.Length; i += 4)
-                        {
-                            float norm = 0f;
-                            for (int j = 0; j < 4; j++) norm += pose.rotations[i+j] * pose.rotations[i+j];
-                            if (float.IsNaN(norm) || float.IsInfinity(norm) || Mathf.Abs(norm-1f) > .001f)
-                                throw new InvalidDataException("Invalid Mixamo standing rotation");
-                        }
-                        clips.Add(pose.name, pose);
-                    }
-                    catch (Exception error) { Debug.LogError("DF: standing pose failed; retaining previous guard: " + error.Message); }
-                }
+
             }
-            catch (Exception error) { bank = null; clips.Clear(); Debug.LogError("DF: combat library failed: " + error.Message); }
+            catch (Exception error) { bank = null; Debug.LogError("DF: combat library failed; standing pose remains available: " + error.Message); }
+        }
+        private static void LoadStandingPose()
+        {
+            TextAsset standing = Resources.Load<TextAsset>("CombatAnimation/StandingIdle");
+            if (standing == null)
+            {
+                Debug.LogError("DF: Mixamo StandingIdle.json is MISSING. Update dev/vertical-slice and reimport Assets/Alterverse/Resources/CombatAnimation. Old guards would otherwise remain visible.");
+                return;
+            }
+            try
+            {
+                Clip pose = JsonUtility.FromJson<Clip>(standing.text);
+                if (pose == null || pose.name != "mixamo_standing_idle" || pose.frames != 2 || pose.fps <= 0 ||
+                    pose.rotations == null || pose.rotations.Length != 2 * BoneNames.Length * 4)
+                    throw new InvalidDataException("Invalid Mixamo standing pose");
+                for (int i = 0; i < pose.rotations.Length; i += 4)
+                {
+                    float norm = 0f;
+                    for (int j = 0; j < 4; j++) norm += pose.rotations[i+j] * pose.rotations[i+j];
+                    if (float.IsNaN(norm) || float.IsInfinity(norm) || Mathf.Abs(norm-1f) > .001f)
+                        throw new InvalidDataException("Invalid Mixamo standing rotation");
+                }
+                clips.Add(pose.name, pose);
+            }
+            catch (Exception error) { Debug.LogError("DF: Mixamo standing pose failed: " + error.Message); }
         }
         public static Quaternion Frame(Vector3 along, Vector3 forward)
         {
