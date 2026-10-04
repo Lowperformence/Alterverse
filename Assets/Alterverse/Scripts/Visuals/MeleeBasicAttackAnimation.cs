@@ -169,16 +169,16 @@ namespace Alterverse.Visuals
             Vector3 offset;
             switch (identity.Hero)
             {
-                case HeroId.Rook: offset = new Vector3(side * .31f, -.77f, .04f); break;
-                case HeroId.Veyr: offset = new Vector3(side * .30f, -.76f, .05f); break;
-                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.28f, -.66f, .10f) : new Vector3(.34f, -.76f, .04f); break;
-                case HeroId.Nerok: offset = new Vector3(side * .34f, -.76f, .04f); break;
-                case HeroId.Elyra: offset = new Vector3(side * .27f, -.79f, .05f); break;
-                case HeroId.Mira: offset = new Vector3(side * .27f, -.80f, .04f); break;
-                case HeroId.Traveler: offset = new Vector3(side * .27f, -.82f, .04f); break;
-                default: offset = new Vector3(side * .29f, -.77f, .05f); break;
+                case HeroId.Rook: offset = new Vector3(side * .34f, -.76f, .04f); break;
+                case HeroId.Veyr: offset = new Vector3(side * .40f, -.73f, .06f); break;
+                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.34f, -.67f, .12f) : new Vector3(.43f, -.72f, .07f); break;
+                case HeroId.Nerok: offset = new Vector3(side * .44f, -.73f, .06f); break;
+                case HeroId.Elyra: offset = new Vector3(side * .36f, -.76f, .05f); break;
+                case HeroId.Mira: offset = new Vector3(side * .35f, -.77f, .04f); break;
+                case HeroId.Traveler: offset = new Vector3(side * .37f, -.77f, .04f); break;
+                default: offset = new Vector3(side * .37f, -.74f, .05f); break;
             }
-            return bones[upper].Transform.position + transform.TransformDirection(offset) * length;
+            return bones[upper].Transform.position + model.TransformDirection(offset) * length;
         }
         private Vector3 Hint(int upper) => bones[upper].Transform.position +
             model.TransformVector(bones[upper].RestElbowOffsetModel) + transform.forward * (Reach(upper) * .035f);

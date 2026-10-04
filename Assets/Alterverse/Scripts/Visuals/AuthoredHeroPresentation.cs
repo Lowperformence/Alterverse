@@ -33,6 +33,8 @@ namespace Alterverse.Visuals
             public Transform Bone, Control;
             public Quaternion RestLocal;
             public Vector3 RestPosition;
+            public Vector3 WeaponCenterLocal;
+            public bool HasWeaponCenter;
         }
         private readonly List<WeaponGrip> grips = new List<WeaponGrip>();
         private ArmChain leftArm, rightArm;
@@ -300,8 +302,27 @@ namespace Alterverse.Visuals
                 Debug.LogError("DF: weapon grip bone missing: WeaponGrip" + side, this);
                 return;
             }
-            grips.Add(new WeaponGrip { Bone = target, Control = control,
-                RestLocal = target.localRotation, RestPosition = target.localPosition });
+            var grip = new WeaponGrip { Bone = target, Control = control,
+                RestLocal = target.localRotation, RestPosition = target.localPosition };
+            foreach (Renderer candidate in weaponRenderers)
+            {
+                if (candidate == null || candidate.name != "DF_Weapon" + side) continue;
+                // Cache the skinned mesh centre in grip space once. Renderer.bounds can
+                // lag a bone pose, which would make a live clearance correction oscillate.
+                if (candidate is SkinnedMeshRenderer skin)
+                {
+                    var baked = new Mesh();
+                    skin.BakeMesh(baked);
+                    if (baked.vertexCount > 0)
+                    {
+                        grip.WeaponCenterLocal = target.InverseTransformPoint(skin.transform.TransformPoint(baked.bounds.center));
+                        grip.HasWeaponCenter = true;
+                    }
+                    Destroy(baked);
+                }
+                break;
+            }
+            grips.Add(grip);
         }
 
         private void BuildNyraWeaponDetails()
@@ -486,16 +507,46 @@ namespace Alterverse.Visuals
         }
 
         private void ApplyWeaponGrips()
-{
+        {
             foreach (WeaponGrip grip in grips)
             {
                 if (grip.Bone == null || grip.Control == null) continue;
-                // The fitted handle and the palm share one rigid frame. Independent world
-                // rotation previously pulled the handle out of the fingers during movement.
+                // The grip is a child of the hand. Keep its fitted Blender handle contact
+                // fixed even while the hand is repositioned by the combat pose solver.
                 grip.Bone.localRotation = grip.RestLocal;
                 grip.Bone.localPosition = grip.RestPosition;
-                if(hero == HeroId.Traveler && grip.Bone.name == "WeaponGripR")
-                    grip.Bone.position += model.TransformVector(new Vector3(0,.10f + Mathf.Sin(Time.time*2.2f)*.015f,0));
+            }
+        }
+
+        private void ClearIdleWeaponOverlap()
+        {
+            if (model == null || motion != null && motion.ArmActionActive) return;
+            // Only the idle pose is adjusted. A strike owns its wrist and weapon arc.
+            var attack = GetComponent<MeleeBasicAttackAnimation>();
+            if (attack != null && attack.StrikeActive) return;
+            if (hero == HeroId.Nyra || hero == HeroId.Rook) return;
+            for (int i = 0; i < 2; i++)
+            {
+                ArmChain arm = i == 0 ? leftArm : rightArm;
+                if (arm == null) continue;
+                bool left = i == 0;
+                if (hero == HeroId.Kaelon && left) continue; // The shield keeps its own left-hand orientation.
+                WeaponGrip grip = null;
+                string gripName = left ? "WeaponGripL" : "WeaponGripR";
+                foreach (WeaponGrip candidate in grips)
+                    if (candidate.Bone != null && candidate.Bone.name == gripName) { grip = candidate; break; }
+                if (grip == null || !grip.HasWeaponCenter) continue;
+                Vector3 weaponCenter = grip.Bone.TransformPoint(grip.WeaponCenterLocal);
+                Vector3 shaft = weaponCenter - arm.Hand.position;
+                if (shaft.sqrMagnitude < .0025f) continue; // No reliable shaft direction on a compact prop.
+                float side = left ? -1f : 1f;
+                Vector3 hand = model.InverseTransformPoint(arm.Hand.position);
+                Vector3 center = model.InverseTransformPoint(weaponCenter);
+                float torsoEdge = Mathf.Abs(model.InverseTransformPoint(arm.Upper.position).x) * .84f;
+                // The mesh centre must clear the torso; correct the wrist, never the grip.
+                if (side * center.x > torsoEdge + .08f && center.y < hand.y + .10f) continue;
+                Vector3 desired = model.TransformDirection(new Vector3(side * .48f, -.86f, .12f));
+                arm.Hand.rotation = Quaternion.FromToRotation(shaft, desired) * arm.Hand.rotation;
             }
         }
 
@@ -618,6 +669,7 @@ namespace Alterverse.Visuals
             if (siegeTank != null) siegeTank.AlignGuard(transform, leftArm?.Hand, rightArm?.Hand, 0f);
             ApplyRifleAim();
             ApplyRifleSupport();
+            ClearIdleWeaponOverlap();
             FollowRifleDetails();
         }
         private void LateUpdate()
@@ -644,6 +696,7 @@ namespace Alterverse.Visuals
             if (umbralMage != null) umbralMage.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
             ApplyRifleAim();
             ApplyRifleSupport();
+            if (!ownsBasicPose) ClearIdleWeaponOverlap();
             FollowRifleDetails();
         }
     }
