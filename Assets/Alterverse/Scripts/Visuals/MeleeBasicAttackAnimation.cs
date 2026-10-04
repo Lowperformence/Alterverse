@@ -174,6 +174,7 @@ namespace Alterverse.Visuals
             }
             ApplyGuard();
             ApplyOutwardGuard();
+            StraightenGuardArms();
             for (int i = 0; i < bones.Length; i++)
             {
                 bones[i].GuardWorld = bones[i].Transform.rotation;
@@ -198,7 +199,7 @@ namespace Alterverse.Visuals
             if (!reportedStandingPose && standingIdle != null && identity.Hero != HeroId.Nyra)
             {
                 reportedStandingPose = true;
-                Debug.Log("DF: Standing Idle v3 + manual 50-degree outward arms ACTIVE on " + identity.DisplayName +
+                Debug.Log("DF: Standing Idle v4 + straight elbows + outward arms ACTIVE on " + identity.DisplayName +
                     (identity.Hero == HeroId.Kaelon ? " (left shield arm preserved)" : "") + ".", this);
             }
         }
@@ -214,11 +215,39 @@ namespace Alterverse.Visuals
             foreach (int i in new[] { 4, 5, 7, 8 })
             {
                 if (!UsesStandingPose(identity.Hero, i)) continue;
-                Quaternion desired = (i < 7 ? outwardLeft : outwardRight) * model.rotation *
-                    standingIdle.Sample(i, 0f, bones.Length) * bones[i].AnatomicalOffset;
+                Quaternion desired = bones[i].GuardWorld;
                 largest = Mathf.Max(largest, Quaternion.Angle(bones[i].Transform.rotation, desired));
             }
-            return "Manual outward guard active (50-degree limit); largest arm deviation " + largest.ToString("F2") + " degrees";
+            float bend = 0f;
+            for (int upper = 4; upper <= 7; upper += 3)
+            {
+                if (!UsesStandingPose(identity.Hero, upper)) continue;
+                bend = Mathf.Max(bend, Vector3.Angle(
+                    bones[upper+1].Transform.position-bones[upper].Transform.position,
+                    bones[upper+2].Transform.position-bones[upper+1].Transform.position));
+            }
+            return "Straight outward guard; elbow bend " + bend.ToString("F2") +
+                " degrees; pose deviation " + largest.ToString("F2") + " degrees";
+        }
+        public static void StraightenArm(Transform shoulder, Transform elbow, Transform hand)
+        {
+            if (shoulder == null || elbow == null || hand == null) return;
+            Vector3 upper = elbow.position - shoulder.position;
+            Vector3 forearm = hand.position - elbow.position;
+            // Work in the elbow parent's space to account for the hero's nonuniform scale.
+            if (elbow.parent != null)
+            {
+                upper = elbow.parent.InverseTransformVector(upper);
+                forearm = elbow.parent.InverseTransformVector(forearm);
+            }
+            if (upper.sqrMagnitude < .000001f || forearm.sqrMagnitude < .000001f) return;
+            elbow.localRotation = Quaternion.FromToRotation(forearm, upper) * elbow.localRotation;
+        }
+        private void StraightenGuardArms()
+        {
+            for (int upper = 4; upper <= 7; upper += 3)
+                if (UsesStandingPose(identity.Hero, upper))
+                    StraightenArm(bones[upper].Transform, bones[upper+1].Transform, bones[upper+2].Transform);
         }
         private Quaternion outwardLeft = Quaternion.identity, outwardRight = Quaternion.identity;
         public static Quaternion OutwardRotation(Vector3 shoulderToHand, Vector3 outward)

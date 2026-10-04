@@ -18,3 +18,13 @@ The existing live pose check compares against the corrected pose. C# syntax and
 numerical left/right opening checks were performed outside Unity. The supplied
 Unity regression checks still require execution in the user's editor; live mesh
 and weapon clearance cannot be confirmed here.
+
+## Straight elbows requested afterwards
+
+The baseline now also aligns each forearm with its upper arm, forming one straight
+shoulder-elbow-hand line. Only the elbow rotates; hand and weapon follow and no
+bone length or scale is modified. Parent-space correction accounts for nonuniform
+hero scaling. It runs after outward opening and before attack recovery is captured.
+Attacks and abilities may still bend their elbows during their normal actions.
+Sivra and Auren's left shield arm remain excluded. The activation message is v4;
+the live check now reports actual elbow bend (zero means straight).
