@@ -16,6 +16,7 @@ namespace Alterverse.Visuals
         {
             public Transform Transform;
             public Quaternion AnatomicalOffset, RestModel, GuardWorld, LastLocal;
+            public Vector3 RestElbowOffsetModel;
         }
         private HeroIdentity identity;
         private BasicAttack basic;
@@ -72,6 +73,10 @@ namespace Alterverse.Visuals
                 Quaternion frame = CombatAnimationLibrary.Frame(model.InverseTransformDirection(along), Vector3.forward);
                 captured[i].AnatomicalOffset = Quaternion.Inverse(frame) * captured[i].RestModel;
             }
+            // Follow the imported arm's natural elbow bend instead of an exaggerated outside hint.
+            for (int upper = 4; upper <= 7; upper += 3)
+                captured[upper].RestElbowOffsetModel = model.InverseTransformVector(
+                    captured[upper+1].Transform.position - captured[upper].Transform.position);
             bones = captured;
         }
         private void Start()
@@ -164,19 +169,19 @@ namespace Alterverse.Visuals
             Vector3 offset;
             switch (identity.Hero)
             {
-                case HeroId.Rook: offset = new Vector3(-side * .08f, -.28f, .55f); break;
-                case HeroId.Veyr: offset = new Vector3(side * .16f, -.62f, .28f); break;
-                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.18f, -.40f, .47f) : new Vector3(.23f, -.68f, .20f); break;
-                case HeroId.Nerok: offset = new Vector3(side * .25f, -.70f, upper == 7 ? .27f : .24f); break;
-                case HeroId.Elyra: offset = new Vector3(side * .17f, -.50f, .40f); break;
-                case HeroId.Mira: offset = new Vector3(side * .12f, -.64f, .31f); break;
-                case HeroId.Traveler: offset = new Vector3(side * .10f, -.78f, .26f); break;
-                default: offset = new Vector3(-.23f, -.41f, .46f); break;
+                case HeroId.Rook: offset = new Vector3(side * .31f, -.77f, .04f); break;
+                case HeroId.Veyr: offset = new Vector3(side * .30f, -.76f, .05f); break;
+                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.28f, -.66f, .10f) : new Vector3(.34f, -.76f, .04f); break;
+                case HeroId.Nerok: offset = new Vector3(side * .34f, -.76f, .04f); break;
+                case HeroId.Elyra: offset = new Vector3(side * .27f, -.79f, .05f); break;
+                case HeroId.Mira: offset = new Vector3(side * .27f, -.80f, .04f); break;
+                case HeroId.Traveler: offset = new Vector3(side * .27f, -.82f, .04f); break;
+                default: offset = new Vector3(side * .29f, -.77f, .05f); break;
             }
             return bones[upper].Transform.position + transform.TransformDirection(offset) * length;
         }
         private Vector3 Hint(int upper) => bones[upper].Transform.position +
-            transform.TransformDirection(new Vector3(upper == 4 ? -.62f : .62f, -.60f, -.08f)) * Reach(upper);
+            model.TransformVector(bones[upper].RestElbowOffsetModel) + transform.forward * (Reach(upper) * .035f);
         private void SolveArm(int upper, Vector3 point)
         {
             CombatMotion.Solve(bones[upper].Transform, bones[upper+1].Transform, bones[upper+2].Transform, point, Hint(upper));
@@ -188,14 +193,7 @@ namespace Alterverse.Visuals
             for (int upper = 4; upper <= 7; upper += 3)
             {
                 SolveArm(upper, GuardPoint(upper));
-                Quaternion wrist = model.rotation * bones[upper+2].RestModel;
-                if (identity.Hero == HeroId.Rook)
-                {
-                    // Calibrate to the actual rest forearm direction instead of hand-local Euler axes.
-                    Vector3 anatomical = model.rotation * (bones[upper+2].RestModel * Quaternion.Inverse(bones[upper+2].AnatomicalOffset) * Vector3.forward);
-                    wrist = Quaternion.FromToRotation(anatomical, transform.forward) * wrist;
-                }
-                bones[upper+2].Transform.rotation = wrist;
+                bones[upper+2].Transform.rotation = model.rotation * bones[upper+2].RestModel;
             }
         }
         private Quaternion SourceRotation(int index, float frame)
@@ -232,7 +230,15 @@ namespace Alterverse.Visuals
                 {
                     // Wrist motion is relative to the source start pose, calibrated onto the real fitted grip.
                     Quaternion delta = SourceRotation(i, frame) * Quaternion.Inverse(SourceRotation(i, 0));
-                    desired = model.rotation * delta * Quaternion.Inverse(model.rotation) * bones[i].GuardWorld;
+                    Quaternion wristGuard = bones[i].GuardWorld;
+                    if (identity.Hero == HeroId.Rook && (clip.name == "jab" ? i == 6 : i == 9))
+                    {
+                        // The resting fist points down; only the striking fist rotates toward contact.
+                        Vector3 anatomical = model.rotation * (bones[i].RestModel *
+                            Quaternion.Inverse(bones[i].AnatomicalOffset) * Vector3.forward);
+                        wristGuard = Quaternion.FromToRotation(anatomical, transform.forward) * wristGuard;
+                    }
+                    desired = model.rotation * delta * Quaternion.Inverse(model.rotation) * wristGuard;
                 }
                 bones[i].Transform.rotation = Quaternion.Slerp(bones[i].GuardWorld, desired, weight);
             }

@@ -12,11 +12,11 @@ blender -b --python Tools/CombatAnimation/bake_combat_library.py -- /path/to/ext
 
 | Hero | Guard and attack |
 | --- | --- |
-| Zhaev / Veyr | Low dual-blade guard; Regular A plus recovery, mirrored on alternate attacks; free arm guards |
+| Zhaev / Veyr | Blades rest beside the thighs; Regular A plus recovery, mirrored on alternate attacks; free arm stays to the side |
 | Auren / Kaelon | Shield left, hammer right; limited Heavy Combo torso, authored horizontal hand/shaft path |
-| Brakk / Rook | Bent-elbow boxing guard; alternating Punch Jab / Cross |
+| Brakk / Rook | Hands and elbows relaxed beside the body; fists turn and extend only for alternating Punch Jab / Cross |
 | Nerok | Low anchor guard; horizontal hand/shaft path, heavy recovery and free left arm |
-| Sivra / Nyra | Existing actual rifle grip/muzzle/support sockets; brace, recoil after release, controlled return |
+| Sivra / Nyra | Rifle parked at right hip, support hand relaxed; both hands take actual grip/muzzle/support sockets for firing |
 | Ione / Elyra | Right-hand mirrored Spell Enter/Shoot/Exit, left hand supporting |
 | Tahla / Mira | Left-hand Spell Enter/Shoot/Exit, lower relaxed guard |
 | Traveler | Lower shoulders/hands; right-hand mirrored casting, original orb grip retained |

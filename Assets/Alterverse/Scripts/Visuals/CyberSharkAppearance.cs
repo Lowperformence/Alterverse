@@ -162,11 +162,11 @@ namespace Alterverse.Visuals
             }
             Material[] materials = {
                 Surface("Pirate leather", new Color(.035f,.022f,.014f), .12f,.28f),
-                Surface("Light blue shark skin", new Color(.38f,.72f,.94f), .08f,.40f),
-                Surface("Naval armor", new Color(.025f,.065f,.11f), .55f,.40f),
+                Surface("Natural light grey shark skin", new Color(.58f,.61f,.62f), .08f,.40f),
+                Surface("Naval armor", new Color(.035f,.065f,.078f), .55f,.40f),
                 Surface("Tidal channels", new Color(.04f,.78f,1f), .30f,.62f, true),
                 Surface("Brass fittings", new Color(.72f,.39f,.105f), .20f,.55f, true),
-                Surface("Shark teeth", new Color(.80f,.92f,.96f), .10f,.35f)
+                Surface("White ventral skin and teeth", new Color(.93f,.94f,.91f), .10f,.35f)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             // The inherited gauntlet renderer has its own FBX transform/root bone.

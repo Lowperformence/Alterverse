@@ -14,7 +14,7 @@ exec(compile(helper.read_text().split('# Pearl armored arcane mech')[0].replace(
 OUT=ROOT/'Assets/Alterverse/Resources/CyberShark'
 ART=ROOT/'ArtSource/Heroes/CyberShark'
 OUT.mkdir(parents=True,exist_ok=True);ART.mkdir(parents=True,exist_ok=True)
-COLORS=[(.035,.022,.014),(.38,.72,.94),(.025,.065,.11),(.04,.78,1.0),(.72,.39,.105),(.80,.92,.96)]
+COLORS=[(.035,.022,.014),(.58,.61,.62),(.035,.065,.078),(.04,.78,1.0),(.72,.39,.105),(.93,.94,.91)]
 shell('armored torso',[(1.02,.16,.11,0),(1.25,.24,.15,0),(1.46,.30,.19,0),(1.57,.18,.13,0)],1,'Chest',20)
 shell('abdomen',[(.89,.18,.12,0),(1.04,.20,.13,0),(1.23,.16,.11,0)],1,'Spine',16)
 for s in [-1,1]:
@@ -75,7 +75,7 @@ for side,s in [('L',-1),('R',1)]:
  ell('boot',f+[0,-.050,.060],(.087,.066,.145),0,foot,16,8)
  # Armored cable bundles on the outer thighs.
  tube('leg cable',[h+[s*.10,-.05,-.05],h+[s*.13,-.17,-.07],k+[s*.09,.10,-.04]],.008,0,thigh,8)
-# Additional pressure hardware and layered pale-blue armor, all rigidly bound to the rig.
+# Additional pressure hardware and layered slate armor, all rigidly bound to the rig.
 def bolt(name,c,bone,r=.009):
  ell(name,c,(r,r,r*.45),5,bone,6,4)
 for s in [-1,1]:
@@ -123,8 +123,26 @@ for side,s in [('L',-1),('R',1)]:
  for j in range(3):
   tube('boot armored toe ribs',[(f[0]-.055,f[1]-.018,.115+j*.028),(f[0]+.055,f[1]-.018,.115+j*.028)],.007,2,foot,6)
 
-# Shark-pirate reference: bare light-blue chest, strapped armor, tail and anchor.
-ell('pale shark belly',(0,1.18,.118),(.145,.16,.055),5,'Spine',16,10)
+# The ventral pigment follows the EXACT torso cross-sections with a tiny surface offset.
+# It reads as white skin, not a raised oval plate or a second body part.
+torso_sections=[(1.02,.16,.11,0),(1.25,.24,.15,0),(1.46,.30,.19,0),(1.57,.18,.13,0)]
+def ventral_section(y):
+ for lo,hi in zip(torso_sections,torso_sections[1:]):
+  if lo[0]<=y<=hi[0]:
+   t=(y-lo[0])/(hi[0]-lo[0]);return tuple(lo[i]*(1-t)+hi[i]*t for i in range(1,4))
+ raise ValueError(y)
+white_rows=[(1.02,.15),(1.12,.70),(1.25,.83),(1.46,.72),(1.57,.10)]
+white_vertices=[];white_faces=[];slices=13
+for y,width in white_rows:
+ rx,rz,cz=ventral_section(y)
+ for j in range(slices):
+  a=math.pi/2+width*(2*j/(slices-1)-1)
+  white_vertices.append((rx*math.cos(a)*1.014,y,cz+rz*math.sin(a)+.0025))
+for row in range(len(white_rows)-1):
+ for j in range(slices-1):
+  a=row*slices+j;b=a+1;c=a+slices;d=c+1
+  white_faces.extend([(a,d,b),(a,c,d)])
+add('white shark ventral pigment',white_vertices,white_faces,5,'Chest')
 tube('leather cross-body baldric',[(-.14,1.54,.17),(-.04,1.44,.204),(.10,1.32,.177),(.20,1.24,.13)],.029,0,'Chest',8)
 for j in range(5):bolt('baldric stud',(-.09+j*.052,1.50-j*.047,.226-j*.008),'Chest',.006)
 plate('belt buckle',[(-.055,1.046),(.055,1.046),(.055,.978),(-.055,.978)],.15,.024,4,'Hips')
@@ -143,7 +161,7 @@ for sign,side in [(-1,'L'),(1,'R')]:
  for j in range(4):tube('vest gold braid',[(sign*.115,1.42-j*.072,.184),(sign*.196,1.415-j*.072,.176)],.0045,4,'Chest',6)
  plate('split coat tail',[(sign*.082,1.07),(sign*.22,1.07),(sign*.27,.73),(sign*.235,.56),(sign*.115,.65)],.077,.024,2,'Thigh'+side)
  tube('coat tail piping',[(sign*.085,1.05,.1),(sign*.117,.66,.095),(sign*.231,.57,.096)],.007,4,'Thigh'+side,6)
- # Leather boot panels and straps complement the exposed blue arms.
+ # Leather boot panels and straps complement the exposed grey arms.
  for yy in [.24,.38]:
   tube('boot leather strap',[(sign*.11,yy,.073),(sign*.16,yy,.095),(sign*.22,yy,.06)],.013,0,'Shin'+side,6)
 

@@ -502,8 +502,7 @@ namespace Alterverse.Visuals
         private Vector3 GuardHint(ArmChain arm)
         {
             if (arm == null) return Vector3.zero;
-            return model.InverseTransformPoint(arm.Upper.position)
-                + new Vector3(arm == leftArm ? -1f : 1f, -.40f, .10f);
+            return model.InverseTransformPoint(arm.Elbow.position) + new Vector3(0f, -.03f, .015f);
         }
 
         private void ApplyModelGuard()
@@ -520,36 +519,38 @@ namespace Alterverse.Visuals
             switch (hero)
             {
                 case HeroId.Nyra:
-                    SolveGuard(rightArm, new Vector3(.11f, 1.30f, .205f), GuardHint(rightArm), guardWeight);
+                    // Park the rifle by her right thigh; raise it when an action begins.
+                    bool aiming = motion != null && motion.ArmActionActive;
+                    SolveGuard(rightArm, aiming ? new Vector3(.16f, 1.30f, .205f) :
+                        new Vector3(.355f, .955f, .085f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Veyr:
-                    SolveGuard(leftArm, new Vector3(-0.239700f, 1.122000f, 0.206800f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(0.239700f, 1.122000f, 0.206800f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.35f, 1.01f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.35f, 1.01f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Kaelon:
-                    SolveGuard(leftArm, new Vector3(-0.339662f, 1.134000f, 0.260000f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(0.357009f, 1.166400f, 0.234000f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.35f, 1.10f, .11f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.37f, 1.00f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Elyra:
-                    SolveGuard(leftArm, new Vector3(-0.222500f, 1.199000f, 0.193200f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(0.347100f, 1.199000f, 0.147200f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.34f, 1.04f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.34f, 1.04f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Mira:
-                    SolveGuard(leftArm, new Vector3(-0.222927f, 1.101600f, 0.153600f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(0.258100f, 1.101600f, 0.172800f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.34f, .99f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.34f, .99f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Rook:
-                    SolveGuard(leftArm, new Vector3(-0.368000f, 1.237600f, 0.364000f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(0.368000f, 1.237600f, 0.364000f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.36f, 1.00f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.36f, 1.00f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Nerok:
-                    SolveGuard(leftArm, new Vector3(-.33f, 1.07f, .20f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.36f, 1.04f, .23f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.36f, 1.00f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.37f, 1.00f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Traveler:
-                    // Lower, relaxed hands keep the upper arms away from the hood.
-                    SolveGuard(leftArm, new Vector3(-.32f, .89f, .18f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.33f, .93f, .22f), GuardHint(rightArm), guardWeight);
+                    SolveGuard(leftArm, new Vector3(-.35f, .89f, .04f), GuardHint(leftArm), guardWeight);
+                    SolveGuard(rightArm, new Vector3(.35f, .89f, .04f), GuardHint(rightArm), guardWeight);
                     break;
             }
         }
@@ -583,7 +584,7 @@ namespace Alterverse.Visuals
             Vector3 up = Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward);
             if (forward.sqrMagnitude < .000001f || up.sqrMagnitude < .000001f) return;
             Quaternion current = Quaternion.LookRotation(forward, up);
-            Vector3 aim = model.forward - model.up * (motion != null && motion.ArmActionActive ? 0f : .06f);
+            Vector3 aim = model.forward - model.up * (motion != null && motion.ArmActionActive ? 0f : .30f);
             Quaternion desired = Quaternion.LookRotation(aim, model.up);
             rightArm.Hand.rotation = desired * Quaternion.Inverse(current) * rightArm.Hand.rotation;
         }
@@ -591,6 +592,8 @@ namespace Alterverse.Visuals
         private void ApplyRifleSupport()
         {
             if (hero != HeroId.Nyra || rifleSupport == null || leftArm == null || leftPalm == null) return;
+            // Her support hand rests by her side, and takes the foregrip while firing.
+            if (motion == null || !motion.ArmActionActive) return;
             // The support socket is on the rifle, so the left palm tracks its actual foregrip.
             // Four short corrections account for the palm's offset from the wrist joint.
             for (int i = 0; i < 4; i++)
@@ -645,4 +648,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
