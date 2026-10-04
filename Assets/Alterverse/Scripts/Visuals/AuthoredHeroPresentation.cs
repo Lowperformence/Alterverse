@@ -70,6 +70,7 @@ namespace Alterverse.Visuals
             instance.transform.localScale = new Vector3(1.10f, 1f, 1.10f);
             // A single final pose layer samples Blender clips; an imported Animator must not also write the same bones.
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
+            RestoreImportedBindPose(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
             if (hero == HeroId.Veyr)
@@ -104,6 +105,48 @@ namespace Alterverse.Visuals
             ApplyHandSize(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
+        }
+
+        // FBX default transforms can contain an exported animation pose. They are NOT
+        // necessarily the rest transforms against which the mesh was skinned.
+        // Restore from skin bind matrices before cosmetics, grips or retarget offsets are captured.
+        internal static void RestoreImportedBindPose(Transform imported, HeroId hero)
+        {
+            if (hero == HeroId.Nyra) return;
+            var targets = new Dictionary<Transform, Matrix4x4>();
+            foreach (SkinnedMeshRenderer renderer in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (renderer.sharedMesh == null) continue;
+                Matrix4x4[] bind = renderer.sharedMesh.bindposes;
+                Transform[] skinBones = renderer.bones;
+                for (int i = 0; i < skinBones.Length && i < bind.Length; i++)
+                {
+                    Transform bone = skinBones[i];
+                    if (bone == null || targets.ContainsKey(bone)) continue;
+                    bool shield = false;
+                    if (hero == HeroId.Kaelon)
+                        for (Transform parent = bone; parent != null && parent != imported; parent = parent.parent)
+                            if (parent.name == "UpperArmL") { shield = true; break; }
+                    if (!shield) targets.Add(bone, renderer.localToWorldMatrix * bind[i].inverse);
+                }
+            }
+            // Capture ALL matrices first; changing a parent must not alter a later skin reference.
+            var ordered = new List<Transform>(targets.Keys);
+            ordered.Sort((a, b) => BoneDepth(a).CompareTo(BoneDepth(b)));
+            foreach (Transform bone in ordered)
+            {
+                Matrix4x4 local = bone.parent != null
+                    ? bone.parent.worldToLocalMatrix * targets[bone] : targets[bone];
+                bone.localPosition = local.GetColumn(3);
+                bone.localRotation = local.rotation;
+                bone.localScale = local.lossyScale;
+            }
+        }
+        private static int BoneDepth(Transform bone)
+        {
+            int depth = 0;
+            while (bone.parent != null) { depth++; bone = bone.parent; }
+            return depth;
         }
 
         // Scale the existing hand skin and Brakk's gauntlets through their shared rig.
@@ -667,14 +710,14 @@ namespace Alterverse.Visuals
             ApplyWeaponGrips();
             ClearIdleWeaponOverlap(true);
         }
-        public void FinalizeCombatGrip()
+        public void FinalizeCombatGrip(bool adjustIdleWrists = true)
         {
             ApplyWeaponGrips();
             // Shield remains left-facing; the hammer wrist belongs to its strike trajectory.
             if (siegeTank != null) siegeTank.AlignGuard(transform, leftArm?.Hand, rightArm?.Hand, 0f);
             ApplyRifleAim();
             ApplyRifleSupport();
-            ClearIdleWeaponOverlap();
+            if (adjustIdleWrists) ClearIdleWeaponOverlap();
             FollowRifleDetails();
         }
         private void LateUpdate()
@@ -683,7 +726,6 @@ namespace Alterverse.Visuals
             // There are no old visible meshes and no independent Animator writing the same bones.
             if (motion == null) motion = GetComponent<HeroVisualMotion>();
             var melee=GetComponent<MeleeBasicAttackAnimation>();
-            melee?.ResetStandingOffset();
             bool ownsBasicPose=melee!=null&&melee.OwnsPose && (motion==null||!motion.AbilityActionActive);
             foreach (Binding binding in bindings)
             {

@@ -1,3 +1,5 @@
+> Superseded by Pose-Reset-2026-10-04.md. The manual opening and elbow straightening are disabled.
+
 # Manual outward arm correction
 
 The user's screenshot confirms `MIXAMO Standing Idle v2 ACTIVE` while the visible
