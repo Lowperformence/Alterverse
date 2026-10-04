@@ -66,6 +66,7 @@ namespace Alterverse.Visuals
         // Stable values can later drive an Animator blend tree without replacing movement logic.
         public float PlanarSpeed { get; private set; }
         public float GaitPhase=>phase;
+        public bool AbilityActionActive=>abilitySlot>=0&&(Time.time<attackUntil||Time.time<windupUntil);
         public bool ArmActionActive=>Time.time<attackUntil||Time.time<windupUntil||Time.time<hitUntil||Dashing;
         // A straight jab/cross envelope for the imported brawler rig. Specials retain
         // their existing delivery; basic attacks never sweep both fists inward.
@@ -107,6 +108,7 @@ namespace Alterverse.Visuals
         }
         public void PulseAbility(int slot,float windup)
         {
+            GetComponent<MeleeBasicAttackAnimation>()?.CancelStrike();
             
             PulseAttack(slot==3);abilitySlot=slot;
             windupDuration=Mathf.Max(0,windup);windupUntil=Time.time+windupDuration;attackUntil=windupUntil+attackDuration;
@@ -379,7 +381,8 @@ namespace Alterverse.Visuals
                 Mathf.Sin(phase)*strideWeight*Mathf.Lerp(1.6f,3.2f,runBlend)*(heavy?.8f:1)+idleShift*.45f;
             // Rotating the entire visual root also rotates the rifle after its hand IK.
             // Shots and gait move Sivra's body joints, but leave the barrel aligned to her heading.
-            float rootPitch=hero==HeroId.Nyra?0f:(Dashing?9:lean)-7*kick-recoil;
+            bool solvedBasic=abilitySlot<0&&GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose==true;
+            float rootPitch=hero==HeroId.Nyra?0f:(Dashing?9:lean)-(solvedBasic?0f:7*kick)-recoil;
             Quaternion targetRotation=Quaternion.Euler(rootPitch,spinYaw,sway);
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
@@ -912,3 +915,4 @@ namespace Alterverse.Visuals
 
     }
 }
+

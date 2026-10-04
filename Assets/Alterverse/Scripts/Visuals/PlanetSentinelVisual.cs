@@ -143,7 +143,9 @@ namespace Alterverse.Visuals
             var renderer=part.gameObject.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;
             renderer.shadowCastingMode=ShadowCastingMode.On;
         }
-        public void PulseAttack()=>attackUntil=Time.time+.38f;
+        float contact=.22f,started=-100f;
+        public void PulseAttack(float windup=.22f){contact=windup;started=Time.time;attackUntil=Time.time+contact+.42f;}
+        public void Seek(float elapsed){started-=elapsed;attackUntil-=elapsed;}
         void LateUpdate()
         {
             if(root==null)return;
@@ -154,11 +156,11 @@ namespace Alterverse.Visuals
             phase=Mathf.Repeat(phase+delta.magnitude*3.4f,Mathf.PI*2f);
             for(int i=0;i<legs.Count;i++)
                 legs[i].localRotation=rest[i]*Quaternion.Euler(Mathf.Sin(phase+i*Mathf.PI)*(beast?19f:29f)*blend,0,0);
-            float attack=Time.time<attackUntil?Mathf.Sin((1f-(attackUntil-Time.time)/.38f)*Mathf.PI):0;
+            float attack=CombatMotion.Curve(Time.time-started,contact,contact+.42f,-.45f,1f,1.2f);
             root.localPosition=Vector3.up*(Mathf.Sin(Time.time*1.5f)*.009f+blend*Mathf.Abs(Mathf.Sin(phase))*.025f);
             root.localRotation=Quaternion.Euler(attack*-8f,0,0);
-            if(leftArm!=null)leftArm.localRotation=Quaternion.Euler(-attack*34f,0,beast?attack*-10f:0);
-            if(rightArm!=null)rightArm.localRotation=Quaternion.Euler(-attack*34f,0,beast?attack*10f:0);
+            if(leftArm!=null)leftArm.rotation=Quaternion.AngleAxis(attack*28f,transform.up)*root.rotation;
+            if(rightArm!=null)rightArm.rotation=Quaternion.AngleAxis(-attack*28f,transform.up)*root.rotation;
         }
         void OnDestroy()
         {
@@ -167,3 +169,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

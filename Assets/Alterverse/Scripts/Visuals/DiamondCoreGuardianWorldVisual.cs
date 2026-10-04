@@ -110,7 +110,8 @@ namespace Alterverse.Visuals
                 // Repeated hierarchy-array allocations here previously happened every frame.
                 if(state.reference!=null)
                 {
-                    if(tank.AttackWindup&&!state.wasWindingUp)state.reference.PulseAttack();
+                    if(tank.AttackWindup&&!state.wasWindingUp)
+                    {var gesture=tank.GetComponent<CreatureAttackMotion>();state.reference.PulseAttack(gesture!=null?gesture.ContactTime:.22f);if(gesture!=null)state.reference.Seek(gesture.Age);}
                     state.wasWindingUp=tank.AttackWindup;
                     continue;
                 }
@@ -241,5 +242,6 @@ namespace Alterverse.Visuals
         void OnDestroy(){ClearAll();}
     }
 }
+
 
 

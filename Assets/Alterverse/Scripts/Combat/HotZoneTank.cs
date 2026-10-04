@@ -38,7 +38,7 @@ namespace Alterverse.Combat
         private Vector3 moonBodyRest;
         private float moonMoveBlend;
         private PlanetSentinelVisual planetVisual;
-        public bool AttackWindup=>shotPending;
+        public bool AttackWindup=>shotPending || (GetComponent<CreatureAttackMotion>()?.WindingUp??false);
         private Transform xenoVisualRoot,xenoTorsoPivot,xenoPelvisPivot,xenoHeadPivot,xenoBackRoot;
         private Transform xenoLeftShoulderPivot,xenoRightShoulderPivot,xenoLeftForearmPivot,xenoRightForearmPivot,xenoLeftClaw,xenoRightClaw;
         private Transform xenoLeftHipPivot,xenoRightHipPivot,xenoLeftShinPivot,xenoRightShinPivot,xenoLeftFoot,xenoRightFoot;
@@ -325,8 +325,7 @@ namespace Alterverse.Combat
         private void BeginFire()
         {
             if(target==null||target.IsDead)return;
-            planetVisual?.PulseAttack();
-            referenceRig?.PulseAttack();
+            CombatMotion.Begin(gameObject,ShotWindup,target);
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
             Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
@@ -1474,5 +1473,6 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 

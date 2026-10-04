@@ -21,7 +21,7 @@ namespace Alterverse.Visuals
             if (data == null || data.joints == null) return null;
             var root = new GameObject("DF_ReferenceMonster_" + resource).transform;
             root.SetParent(visualParent != null ? visualParent : host, false);
-            var rig = root.gameObject.AddComponent<ReferenceMonsterRig>(); rig.host = host;
+            var rig = root.gameObject.AddComponent<ReferenceMonsterRig>(); rig.host = host;rig.species=resource;
             rig.joints.Add("",root);
             foreach (var joint in data.joints)
             {
@@ -43,7 +43,9 @@ namespace Alterverse.Visuals
             rig.Muzzle.localPosition = new Vector3(0,-.10f,.28f);
             rig.previous = host.position; rig.PlaceOnSurface(); return rig;
         }
-        public void PulseAttack() => attackUntil = Time.time + .48f;
+        float attackStarted=-100f,contact=.22f;int attackSerial;string species;
+        public void PulseAttack(float windup=.22f){contact=Mathf.Max(.01f,windup);attackStarted=Time.time;attackUntil=Time.time+contact+.42f;attackSerial++;}
+        public void Seek(float elapsed){attackStarted-=elapsed;attackUntil-=elapsed;}
         private void PlaceOnSurface()
         {
             Vector3 p = host.position;
@@ -62,15 +64,28 @@ namespace Alterverse.Visuals
             moving=Mathf.MoveTowards(moving,Mathf.Clamp01(speed/.7f),Time.deltaTime*5f);
             phase+=delta.magnitude*2.8f;
             foreach(var pair in rest)pair.Key.localRotation=pair.Value;
-            float attack=Time.time<attackUntil?Mathf.Sin((1-(attackUntil-Time.time)/.48f)*Mathf.PI):0f;
-            chest.localRotation=Quaternion.Euler(-attack*9f,Mathf.Sin(phase)*3f*moving,0);
+            float age=Time.time-attackStarted;
+            float attack=CombatMotion.Curve(age,contact,contact+.42f,-.3f,1f,.65f);
+            chest.rotation=Quaternion.AngleAxis(CombatMotion.Curve(age,contact,contact+.42f,-18,12,23),host.up)*chest.rotation;
             head.localRotation=Quaternion.Euler(2f*Mathf.Sin(Time.time*1.3f),0,0);
             for(int i=0;i<2;i++)
             {
                 string side=i==0?"L":"R";float sign=i==0?-1f:1f;
                 Transform arm=joints["Hips/Chest/Arm"+side], elbow=joints["Hips/Chest/Arm"+side+"/Elbow"+side];
-                arm.localRotation=Quaternion.Euler(-12f-Mathf.Sin(phase+i*Mathf.PI)*7f*moving-attack*(i==1?61f:12f),0,sign*5f);
-                elbow.localRotation=Quaternion.Euler(-12f+attack*(i==1?10f:-9f),0,0);
+                Transform hand=joints["Hips/Chest/Arm"+side+"/Elbow"+side+"/Hand"+side];
+                float reach=Vector3.Distance(arm.position,elbow.position)+Vector3.Distance(elbow.position,hand.position);
+                Vector3 guard=arm.position-host.up*reach*.58f+host.forward*reach*.28f+host.right*sign*reach*.1f;
+                bool striking=i==(attackSerial%2);
+                Vector3 target=guard;
+                if(striking&&Time.time<attackUntil)
+                {
+                    bool slash=species=="MarsSkeleton"||species=="GreenStalker";
+                    Vector3 draw=arm.position+host.right*sign*reach*(slash?.48f:.18f)-host.forward*reach*.15f-host.up*reach*.2f;
+                    Vector3 hit=arm.position+host.forward*reach*.90f-host.up*reach*.20f;
+                    Vector3 through=hit+(slash?-host.right*sign*reach*.40f:host.forward*reach*.035f);
+                    target=CombatMotion.Path(age,contact,contact+.42f,guard,draw,hit,through);
+                }
+                CombatMotion.Solve(arm,elbow,hand,target,arm.position+host.right*sign*reach*.65f-host.up*reach*.35f);
                 Transform hip=joints["Hips/Thigh"+side],knee=joints["Hips/Thigh"+side+"/Shin"+side],foot=joints["Hips/Thigh"+side+"/Shin"+side+"/Foot"+side];
                 Vector3 home=Ground(foot.position);float cycle=Mathf.Repeat(phase/(Mathf.PI*2f)+i*.5f,1f);
                 if(!planted){plants[i]=home;swingStart[i]=home;swingEnd[i]=home;swinging[i]=false;}
@@ -98,3 +113,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

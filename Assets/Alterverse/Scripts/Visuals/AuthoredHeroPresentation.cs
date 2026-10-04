@@ -603,19 +603,29 @@ namespace Alterverse.Visuals
                 if (material != null) Destroy(material);
         }
 
+        public void FinalizeMeleeGrip()
+        {
+            ApplyWeaponGrips();
+            if(siegeTank!=null)siegeTank.AlignGuard(transform,leftArm?.Hand,rightArm?.Hand,0f);
+        }
         private void LateUpdate()
         {
             // HeroVisualMotion (930) -> HeroProceduralRig (935) -> this coordinate conversion (940).
             // There are no old visible meshes and no independent Animator writing the same bones.
+            var melee=GetComponent<MeleeBasicAttackAnimation>();
+            bool ownsBasicPose=melee!=null&&melee.OwnsPose && (motion==null||!motion.AbilityActionActive);
             foreach (Binding binding in bindings)
             {
                 if (binding.Bone == null || binding.Control == null) continue;
+                if(ownsBasicPose &&
+                    (binding.Bone.name.Contains("Arm")||binding.Bone.name.StartsWith("Forearm")||binding.Bone.name.Contains("Hand")||binding.Bone.name=="Chest"||binding.Bone.name=="Spine"||binding.Bone.name=="Hips"))
+                {binding.Bone.localRotation=binding.Rest;continue;}
                 Quaternion delta = binding.PoseOffset * Quaternion.Inverse(binding.ControlRest) * binding.Control.localRotation;
                 if (binding.Extra != null) delta *= Quaternion.Inverse(binding.ExtraRest) * binding.Extra.localRotation;
                 binding.Bone.localRotation = binding.Rest * Quaternion.Inverse(binding.Basis) * delta * binding.Basis;
             }
             ApplyModelGuard();
-            ApplyBrawlerPunch();
+            if (GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose != true) ApplyBrawlerPunch();
             ApplyWeaponGrips();
             if (siegeTank != null) siegeTank.AlignGuard(transform, leftArm?.Hand, rightArm?.Hand, guardWeight);
             if (umbralMage != null) umbralMage.AlignGuard(model, leftArm?.Hand, rightArm?.Hand, guardWeight);
@@ -625,3 +635,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

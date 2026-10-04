@@ -53,7 +53,7 @@ namespace Alterverse.Visuals
 
         private void LateUpdate()
         {
-            if(!ready)return;
+            if(!ready || GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose == true)return;
             // HeroVisualMotion writes the old guard every idle frame and also to the free hand
             // during a one-handed slash. Replace only that exact guard; never overwrite a strike.
             if(weaponL!=null)
@@ -104,3 +104,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

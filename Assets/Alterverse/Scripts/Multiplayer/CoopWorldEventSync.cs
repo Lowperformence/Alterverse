@@ -12,6 +12,7 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopWorldEventSync : MonoBehaviour
     {
+        private const string AttackMotionMessage="DF_COOP_ATTACK_MOTION_V1";
         private const string HotOpenMessage="DF_COOP_HOT_OPEN_V2";
         private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V2";
         private const string PlanetMessage="DF_COOP_PLANET_V2";
@@ -57,6 +58,7 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned+=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned+=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed+=OnHostFractureClaimed;
+            Alterverse.Visuals.CombatMotion.Started+=OnAttackStarted;
             eventsBound=true;
         }
 
@@ -76,8 +78,49 @@ namespace Alterverse.Multiplayer
             LaneWaveSpawner.NetworkUnitSpawned-=OnHostLaneUnitSpawned;
             FractureCorePickup.NetworkSpawned-=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed-=OnHostFractureClaimed;
+            Alterverse.Visuals.CombatMotion.Started-=OnAttackStarted;
             eventsBound=false;
         }
+
+        private void OnAttackStarted(GameObject actor,float windup,Vector3 aim)
+        {
+            if(!CanBroadcast())return;
+            var hero=actor.GetComponent<CoopHeroSlot>();var entity=actor.GetComponent<CoopWorldEntityKey>();
+            if(hero==null&&entity==null)return;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(hero!=null?hero.Slot:-1);
+            writer.WriteValueSafe(new FixedString128Bytes(entity!=null?entity.Key:""));
+            writer.WriteValueSafe(windup);writer.WriteValueSafe(aim.x);writer.WriteValueSafe(aim.y);writer.WriteValueSafe(aim.z);
+            writer.WriteValueSafe(NetworkManager.Singleton.ServerTime.Time);
+            SendAll(AttackMotionMessage,writer);
+        }
+        private void OnAttackMotion(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out FixedString128Bytes key);
+            reader.ReadValueSafe(out float windup);reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out double sent);
+            if(float.IsNaN(windup)||windup<.001f||windup>2f||!Finite(x)||!Finite(y)||!Finite(z)||double.IsNaN(sent)||double.IsInfinity(sent))return;
+            float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
+            if(elapsed>windup+.5f)return;
+            GameObject actor=null;
+            for(int i=0;i<Health.Active.Count;i++)
+            {
+                var hp=Health.Active[i];if(hp==null||hp.IsDead)continue;
+                if(slot>=0)
+                {var hero=hp.GetComponent<CoopHeroSlot>();if(hero!=null&&hero.Slot==slot){if(hero.IsLocalHuman)return;actor=hp.gameObject;break;}}
+                else {var entity=hp.GetComponent<CoopWorldEntityKey>();if(entity!=null&&entity.Key==key.ToString()){actor=hp.gameObject;break;}}
+            }
+            if(actor==null)return;
+            Alterverse.Visuals.CombatMotion.Present(actor,windup,new Vector3(x,y,z));
+            actor.GetComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>()?.Seek(elapsed);
+            actor.GetComponent<Alterverse.Visuals.CreatureAttackMotion>()?.Seek(elapsed);
+            actor.GetComponentInChildren<Alterverse.Visuals.ReferenceMonsterRig>()?.Seek(elapsed);
+            actor.GetComponent<Alterverse.Visuals.PlanetSentinelVisual>()?.Seek(elapsed);
+            actor.GetComponent<Alterverse.Visuals.LaneUnitVisualMotion>()?.Seek(elapsed);
+        }
+        private static bool Finite(float value)=>!float.IsNaN(value)&&!float.IsInfinity(value);
 
         private void OnHostHotOpened(Vector3 position,int occurrence)
         {
@@ -340,6 +383,7 @@ namespace Alterverse.Multiplayer
             if(value==null||attached&&messaging==value)return;
             Detach();
             messaging=value;
+            messaging.RegisterNamedMessageHandler(AttackMotionMessage,OnAttackMotion);
             messaging.RegisterNamedMessageHandler(HotOpenMessage,OnHotOpen);
             messaging.RegisterNamedMessageHandler(HotResolveMessage,OnHotResolve);
             messaging.RegisterNamedMessageHandler(PlanetMessage,OnPlanet);
@@ -359,6 +403,7 @@ namespace Alterverse.Multiplayer
         private void Detach()
         {
             if(!attached||messaging==null){messaging=null;attached=false;return;}
+            messaging.UnregisterNamedMessageHandler(AttackMotionMessage);
             messaging.UnregisterNamedMessageHandler(HotOpenMessage);
             messaging.UnregisterNamedMessageHandler(HotResolveMessage);
             messaging.UnregisterNamedMessageHandler(PlanetMessage);
@@ -376,3 +421,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

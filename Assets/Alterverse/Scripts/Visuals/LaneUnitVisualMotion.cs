@@ -13,6 +13,8 @@ namespace Alterverse.Visuals
         private Vector3 lastPosition, previousVelocity;
         private float phase, gait, lean, attackUntil, attackDuration, attackWeight;
         private bool configured, robot;
+        private Transform attackElbowL,attackElbowR,attackHandL,attackHandR;
+        private float attackContact=.18f,attackStarted=-100;private int attackSerial;
 
         public void ConfigureInfantry(Color armor, Color accent) => Configure(false, armor, accent);
         public void ConfigureRobot() => Configure(true, Color.gray, Color.white);
@@ -50,6 +52,8 @@ namespace Alterverse.Visuals
                 BindRobotParts();
             else
                 BuildInfantryParts(armor, accent);
+            BuildAttackChain(ref armL,-1f,out attackElbowL,out attackHandL);
+            BuildAttackChain(ref armR,1f,out attackElbowR,out attackHandR);
             CaptureRestPose();
             lastPosition = transform.position;
         }
@@ -187,11 +191,51 @@ namespace Alterverse.Visuals
             shoulderRestL = Rest(shoulderL); shoulderRestR = Rest(shoulderR); headRest = Rest(head);
         }
 
-        public void PulseAttack()
+        private void BuildAttackChain(ref Transform arm,float side,out Transform elbow,out Transform hand)
         {
-            attackDuration = robot ? .30f : .20f;
-            attackUntil = Time.time + attackDuration;
-            attackWeight = robot ? 1f : .7f;
+            elbow=hand=null;if(arm==null)return;
+            if(robot)
+            {
+                string suffix=side<0?"L":"R";
+                elbow=side<0?shoulderL:shoulderR;
+                if(arm.name.StartsWith("DF_MarsGolem"))
+                {elbow=FindDeep("DF_MarsGolemForearm"+suffix);hand=FindDeep("DF_MarsGolemFist"+suffix);return;}
+                if(arm.name.StartsWith("DF_GreenMech"))
+                {
+                    elbow=new GameObject("DF_GreenMechElbow"+suffix).transform;elbow.SetParent(arm,false);elbow.localPosition=new Vector3(0,-.55f,.08f);
+                    Transform armor=FindDeep("ForearmArmor"+suffix);hand=FindDeep("DF_GreenMechClaw"+suffix);
+                    if(armor!=null)armor.SetParent(elbow,true);if(hand!=null)hand.SetParent(elbow,true);return;
+                }
+                if(elbow==null||!elbow.IsChildOf(arm))return;
+                hand=new GameObject("DF_AttackPalm").transform;hand.SetParent(elbow,false);
+                hand.localPosition=arm.name.StartsWith("DF_Neptune")?new Vector3(0,-.4f,.02f):new Vector3(0,-.52f,.09f);return;
+            }
+            Transform mesh=arm;
+            Transform upper=new GameObject("DF_InfantryUpperArm").transform;
+            upper.SetParent(visualRoot,false);upper.localPosition=mesh.localPosition+Vector3.up*.15f;
+            mesh.SetParent(upper,true);mesh.localPosition=new Vector3(0,-.085f,0);mesh.localScale=new Vector3(.16f,.17f,.19f);
+            elbow=new GameObject("DF_InfantryElbow").transform;elbow.SetParent(upper,false);elbow.localPosition=new Vector3(0,-.17f,0);
+            GameObject lower=GameObject.CreatePrimitive(PrimitiveType.Cube);Destroy(lower.GetComponent<Collider>());
+            lower.name="DF_InfantryForearm";lower.transform.SetParent(elbow,false);lower.transform.localPosition=new Vector3(0,-.085f,0);lower.transform.localScale=new Vector3(.14f,.17f,.17f);
+            lower.GetComponent<Renderer>().sharedMaterial=mesh.GetComponent<Renderer>().sharedMaterial;
+            hand=new GameObject("DF_InfantryPalm").transform;hand.SetParent(elbow,false);hand.localPosition=new Vector3(0,-.17f,0);arm=upper;
+        }
+        public void PulseAttack(float windup=.18f)
+        {
+            attackContact=Mathf.Max(.01f,windup);attackStarted=Time.time;attackSerial++;
+            attackDuration=attackContact+.38f;attackUntil=Time.time+attackDuration;
+        }
+        public void Seek(float elapsed){attackStarted-=elapsed;attackUntil-=elapsed;}
+        private void AttackArm(Transform arm,Transform elbow,Transform hand,float side,bool striking)
+        {
+            if(arm==null||elbow==null||hand==null)return;
+            elbow.localRotation=Quaternion.identity;
+            float reach=Vector3.Distance(arm.position,elbow.position)+Vector3.Distance(elbow.position,hand.position);
+            Vector3 guard=arm.position-transform.up*reach*.55f+transform.forward*reach*.32f;
+            Vector3 hit=arm.position+transform.forward*reach*.92f-transform.up*reach*.20f;
+            Vector3 target=striking?CombatMotion.Path(Time.time-attackStarted,attackContact,attackDuration,guard,
+                arm.position-transform.up*reach*.3f-transform.forward*reach*.12f+transform.right*side*reach*.2f,hit,hit+transform.forward*reach*.02f):guard;
+            CombatMotion.Solve(arm,elbow,hand,target,arm.position+transform.right*side*reach*.55f-transform.up*reach*.35f);
         }
 
         private void LateUpdate()
@@ -247,13 +291,10 @@ namespace Alterverse.Visuals
             Pose(shoulderL, shoulderRestL, -sway * .65f); Pose(shoulderR, shoulderRestR, -sway * .65f);
             Pose(head, headRest, -lean * .28f - sway * .2f);
 
-            if (Time.time < attackUntil)
-            {
-                float progress = 1f - (attackUntil - Time.time) / attackDuration;
-                float recoil = Mathf.Sin(progress * Mathf.PI) * attackWeight;
-                visualRoot.localRotation *= Quaternion.Euler(-8f * recoil, 0f, 0f);
-                Pose(armR, armRestR, stride * .8f - 30f * recoil);
-            }
+            float twist=CombatMotion.Curve(Time.time-attackStarted,attackContact,attackDuration,-14,12,20)*((attackSerial&1)==0?-1:1);
+            visualRoot.rotation=Quaternion.AngleAxis(twist,transform.up)*visualRoot.rotation;
+            AttackArm(armL,attackElbowL,attackHandL,-1f,(attackSerial&1)==0);
+            AttackArm(armR,attackElbowR,attackHandR,1f,(attackSerial&1)!=0);
         }
 
         private void ResetPoseAfterRelocation()
@@ -303,3 +344,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
