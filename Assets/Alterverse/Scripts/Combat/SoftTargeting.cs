@@ -3,7 +3,7 @@ namespace Alterverse.Combat
 {
 [RequireComponent(typeof(Health))]public sealed class SoftTargeting:MonoBehaviour
 {
-[SerializeField]private float stickSeconds=1.25f;private const float HeroPriorityAlignment=.15f;private Health current,self;private float stickyUntil;private TeamMember team;public Health Current=>Valid(current)?current:null;private void Awake(){team=GetComponent<TeamMember>();self=GetComponent<Health>();}
+[SerializeField]private float stickSeconds=1.25f;private Health current,self;private float stickyUntil;private TeamMember team;public Health Current=>Valid(current)?current:null;private void Awake(){team=GetComponent<TeamMember>();self=GetComponent<Health>();}
 public Health Acquire(float range,Vector3 aimDirection,bool preferHeroes=true)
 {
 bool sticky=Valid(current)&&Time.time<stickyUntil&&HeroCombatRules.TargetDistance(transform.position,current)<=range;
@@ -13,9 +13,9 @@ for(int i=0;i<count;i++)
 {
 Health h=candidates[i];if(!Valid(h))continue;float dist=HeroCombatRules.TargetDistance(transform.position,h);if(dist>range)continue;Vector3 d=h.transform.position-transform.position;d.y=0;float magnitude=Mathf.Max(.01f,d.magnitude),alignment=Vector3.Dot(aim,d/magnitude);bool hero=h.GetComponent<HeroIdentity>()!=null;bool objective=h.GetComponent<DimensionPlanet>()!=null;float score=(range-dist)*1.2f+alignment*3.5f+(objective?1.2f:0);
 if(score>bestScore){bestScore=score;best=h;}
-// A real enemy hero in a reasonable forward cone beats minions/objectives. This prevents melee
-// heroes from wasting their short engage window on a soldier standing slightly closer to them.
-if(preferHeroes&&hero&&alignment>=HeroPriorityAlignment&&score>bestHeroScore){bestHeroScore=score;bestHero=h;}
+// Hero priority is a target-class rule, independent of facing. Alignment only ranks
+// targets within a class; a sticky soldier/mech cannot hide an in-range enemy hero.
+if(preferHeroes&&hero&&score>bestHeroScore){bestHeroScore=score;bestHero=h;}
 }
 if(bestHero!=null)best=bestHero;else if(sticky)return current;current=best;stickyUntil=Time.time+stickSeconds;return current;
 }
