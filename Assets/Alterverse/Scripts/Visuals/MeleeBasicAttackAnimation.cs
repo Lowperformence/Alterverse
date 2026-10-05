@@ -247,6 +247,9 @@ namespace Alterverse.Visuals
                 // Preserve the established shield guard, including its wrist orientation.
                 SolveArm(4, GuardPoint(4));
                 bones[6].Transform.rotation = model.rotation * bones[6].RestModel;
+                // Establish the hammer's grip orientation before GuardWorld is captured;
+                // attack/recovery then inherit it instead of a second LateUpdate fighting them.
+                model.GetComponent<SiegeTankAppearance>()?.OrientHammerGuard(transform, bones[9].Transform);
             }
         }
         private Quaternion SourceRotation(int index, float frame)

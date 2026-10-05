@@ -28,6 +28,8 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
+        private Transform calibratedHammerHand;
+        private Quaternion hammerFrameInHand;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache() => geometry = null;
@@ -248,6 +250,32 @@ namespace Alterverse.Visuals
             Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
         }
 
+        /// <summary>Set the right-hand guard from a fixed weapon frame, before strike sampling.</summary>
+        public void OrientHammerGuard(Transform actor, Transform hand)
+        {
+            if (actor == null || hand == null) return;
+            if (calibratedHammerHand != hand)
+            {
+                if (!markers.TryGetValue("HammerGrip", out var grip) ||
+                    !markers.TryGetValue("HammerTop", out var top) ||
+                    !markers.TryGetValue("HammerFront", out var front)) return;
+                Vector3 shaft = top.position - grip.position;
+                Vector3 casingFront = front.position - top.position;
+                if (shaft.sqrMagnitude < .000001f ||
+                    Vector3.Cross(shaft, casingFront).sqrMagnitude < .000001f) return;
+                // Calibrate once after hand sizing and grip fitting. Do not feed last frame's
+                // corrected wrist back into another correction (the old late helper did that).
+                hammerFrameInHand = Quaternion.Inverse(hand.rotation) *
+                    Quaternion.LookRotation(casingFront, shaft);
+                calibratedHammerHand = hand;
+            }
+            // The authored HammerFront marker is on the SIDE of the head: its striking
+            // faces lie along local X. Put that striking axis fore/aft, shaft/head upward.
+            // Hand and child grip move together, retaining the closed fingers' contact.
+            Quaternion weaponFrame = Quaternion.LookRotation(actor.right, actor.up);
+            hand.rotation = weaponFrame * Quaternion.Inverse(hammerFrameInHand);
+        }
+
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
         {
             AlignHand(rightHand, "HammerGrip", "HammerTop", "HammerFront", true, model, weight);
@@ -284,4 +312,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

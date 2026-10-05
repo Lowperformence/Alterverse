@@ -3,6 +3,8 @@ namespace Alterverse.Match
 {
 public sealed class DimensionPlanetDirector:MonoBehaviour
 {
+// Shared by every arena and by host/client objective spawns. Guard HP reduced by 30%.
+public const float GuardPlanetHealth=900f*.70f;
 public static event System.Action<Vector3> PlanetArrived;
 public static event System.Action<int> NetworkPlanetSpawned;
 private const float FirstSpawn=120f,SecondSpawn=405f,ThirdSpawn=510f,Warning=15f;private static DimensionPlanetDirector active;private float elapsed;private bool warnedFirst,warnedSecond,warnedThird,spawnedFirst,spawnedSecond,spawnedThird;private DimensionsFront front;public static string Announcement{get;private set;}public static float AnnouncementUntil{get;private set;}
@@ -47,7 +49,7 @@ string name;Vector3 p;PlanetBuffType type;float hp;Color color;
 switch(variant)
 {
 case 0:name="DF_FluxPlanet";p=new Vector3(0,1.25f,3.2f);type=PlanetBuffType.Flux;hp=320;color=StylizedArtDirection.LumenEnergy;break;
-case 1:name="DF_GuardPlanet";p=new Vector3(0,1.25f,-3.2f);type=PlanetBuffType.Guard;hp=900;color=StylizedArtDirection.WarmAccent;break;
+case 1:name="DF_GuardPlanet";p=new Vector3(0,1.25f,-3.2f);type=PlanetBuffType.Guard;hp=GuardPlanetHealth;color=StylizedArtDirection.WarmAccent;break;
 case 2:name="DF_FinalFluxPlanet";p=new Vector3(0,1.25f,10f);type=PlanetBuffType.Flux;hp=460;color=StylizedArtDirection.LumenEnergy;break;
 default:return;
 }
@@ -59,3 +61,4 @@ if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Mult
 private static void Announce(string text){Announcement=text;AnnouncementUntil=Time.unscaledTime+4f;}private static void SpawnPlanet(string name,Vector3 p,PlanetBuffType type,float hp,Color color,int variant){GameObject root=GameObject.CreatePrimitive(PrimitiveType.Sphere);root.name=name;GameObject world=GameObject.Find("DF_MatchWorld");if(world!=null)root.transform.SetParent(world.transform,true);root.transform.position=p;root.transform.localScale=Vector3.one*(variant==2?1.82f:1.65f);root.AddComponent<PlanetVisualPresentation>().Build(color,variant);Health h=root.AddComponent<Health>();h.Configure(hp);DimensionPlanet planet=root.AddComponent<DimensionPlanet>();planet.Initialize(type);PlanetPulseAttack pulse=root.AddComponent<PlanetPulseAttack>();if(type==PlanetBuffType.Guard){pulse.enabled=false;root.AddComponent<PlanetMeteorShower>();}PlanetArrived?.Invoke(p);}
 }
 }
+

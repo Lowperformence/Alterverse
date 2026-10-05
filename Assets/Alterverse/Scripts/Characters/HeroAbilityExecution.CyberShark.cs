@@ -105,32 +105,37 @@ namespace Alterverse.Characters
             HeroCombatAudio.Cast(gameObject,3);
             HeroSkillVfx.SharkVortex(gameObject,center,spec.Radius,3f);
             Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,1,center,spec.Radius,3f);
-            // Six half-second ticks: total damage is exactly the catalog power, never per-tick power.
-            for(int tick=0;tick<6;tick++)
+            // Register the current continuously; damage retains exactly six half-second ticks.
+            float started=Time.time;
+            int ticks=0;
+            while(ticks<6)
             {
-                yield return new WaitForSeconds(.5f);
-                if(castLife!=life||self.IsDead)yield break;
+                if(castLife!=life||self.IsDead||!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)yield break;
+                float elapsed=Time.time-started;
+                int due=Mathf.Min(6,Mathf.FloorToInt((elapsed+.00001f)/.5f));
                 bool confirmed=false;
                 for(int i=Health.Active.Count-1;i>=0;i--)
                 {
                     Health h=Health.Active[i];
                     if(!HeroCombatRules.Enemy(gameObject,h))continue;
-                    Vector3 delta=center-h.transform.position;delta.y=0;
-                    if(delta.sqrMagnitude>spec.Radius*spec.Radius)continue;
-                    // The same sight rule prevents drawing or damaging opponents through a building.
-                    if(!SharkSightFrom(center,h))continue;
+                    HeroLocomotion body=h.GetComponent<HeroLocomotion>();
+                    Vector3 position=body!=null?body.FrameStartPosition:h.transform.position;
+                    Vector3 delta=center-position;delta.y=0;
+                    if(delta.sqrMagnitude>spec.Radius*spec.Radius||!SharkSightFrom(center,h))continue;
                     float before=h.Current+h.Shield;
-                    HeroCombatRules.Damage(gameObject,h,spec.Power/6f);
+                    for(int tick=ticks;tick<due;tick++)HeroCombatRules.Damage(gameObject,h,spec.Power/6f);
                     confirmed|=h.Current+h.Shield<before;
-                    HeroCombatStatus.Apply(h,.75f,.6f);
-                    if(!h.IsDead&&(h.GetComponent<HeroIdentity>()!=null||h.GetComponent<LaneMinion>()!=null)&&delta.magnitude>.65f)
+                    if(!h.IsDead&&(h.GetComponent<HeroIdentity>()!=null||h.GetComponent<LaneMinion>()!=null))
                     {
-                        HeroLocomotion body=h.GetComponent<HeroLocomotion>()??h.gameObject.AddComponent<HeroLocomotion>();
-                        body.BeginForcedMove(h.transform.position+delta.normalized*Mathf.Min(.24f,delta.magnitude-.65f),.10f);
+                        body=body??h.gameObject.AddComponent<HeroLocomotion>();
+                        body.SetVortexPull(center,spec.Radius,Mathf.Min(Time.deltaTime*1.5f,Mathf.Max(0f,3f-elapsed)));
                     }
                 }
                 if(confirmed)HeroCombatAudio.Impact(gameObject,3,center);
+                ticks=due;
+                if(ticks<6)yield return null;
             }
         }
     }
 }
+

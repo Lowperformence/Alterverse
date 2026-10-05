@@ -18,6 +18,37 @@ namespace Alterverse.Characters
         private bool focused = true;
         private Vector3 forcedEnd;
         private float forcedUntil;
+        private Vector3 vortexCenter, remoteRunVelocity;
+        private float vortexUntil, remoteRunUntil;
+        private float vortexRadius;
+        public bool IsVortexPulled => Time.time < vortexUntil;
+        public Vector3 VortexCenter => vortexCenter;
+        public float VortexRadius => vortexRadius;
+        public Vector3 FrameStartPosition { get; private set; }
+        public float RunningSpeed
+        {
+            get
+            {
+                var motor=GetComponent<HeroMotor>();
+                if(motor!=null)return motor.MoveSpeed;
+                var profile=GetComponent<HeroCombatProfile>();
+                var minion=GetComponent<LaneMinion>();
+                float speed=profile!=null?profile.MoveSpeed:minion!=null?minion.RunningSpeed:6.5f;
+                return speed*(GetComponent<Alterverse.Match.PlanetBuffReceiver>()?.MoveSpeedMultiplier??1f)*SpeedMultiplier;
+            }
+        }
+        // A short heartbeat makes interrupted casts, death and lost network snapshots expire safely.
+        public void SetVortexPull(Vector3 center,float radius,float seconds)
+        {
+            vortexCenter=center;vortexRadius=Mathf.Max(0f,radius);
+            vortexUntil=Time.time+Mathf.Max(0f,seconds);
+        }
+        public void SetRemoteRunVelocity(Vector3 velocity)
+        {
+            velocity.y=0;
+            remoteRunVelocity=Vector3.ClampMagnitude(velocity,RunningSpeed);
+            remoteRunUntil=Time.time+.2f;
+        }
         public bool IsForcedMoving => Time.time < forcedUntil;
         public Vector3 DashDestination=>transform.position+dashDirection*dashRemaining;
         public bool IsDashing => dashRemaining > .001f;
@@ -29,6 +60,7 @@ namespace Alterverse.Characters
         public Collider LastCollisionCollider { get; private set; }
         private void Awake()
         {
+            FrameStartPosition=transform.position;
             health = GetComponent<Health>(); controller = GetComponent<CharacterController>();
             status = GetComponent<HeroCombatStatus>() ?? gameObject.AddComponent<HeroCombatStatus>();
             health.Died += ResetMotion;
@@ -36,7 +68,7 @@ namespace Alterverse.Characters
         }
         public void ResetMotion()
         {
-            forcedUntil=0; dashRemaining=0; dashFrame=-1; Velocity=Vector3.zero;
+            forcedUntil=vortexUntil=remoteRunUntil=0; remoteRunVelocity=Vector3.zero; dashRemaining=0; dashFrame=-1; Velocity=Vector3.zero;
             moveFacing=actionFacing=Vector3.zero; actionUntil=0; LastCollisionNormal=Vector3.zero; LastCollisionCollider=null;
         }
         private void OnDisable() => ResetMotion();
@@ -52,6 +84,21 @@ namespace Alterverse.Characters
         }
         private void LateUpdate()
         {
+            if(IsVortexPulled && health!=null && !health.IsDead && Time.timeScale>0 && !OwnsMovementFrame)
+            {
+                var slot=GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
+                bool host=Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay;
+                bool localOwner=slot!=null&&slot.IsLocalHuman;
+                if(host||localOwner)
+                {
+                    // Remote owners send steering while trapped; absolute owner positions must not
+                    // undo the server's continuous pull. Local owners predict the same displacement.
+                    if(host&&slot!=null&&slot.IsHuman&&!localOwner&&Time.time<remoteRunUntil)
+                        Move(remoteRunVelocity*Time.deltaTime,40f,33f);
+                    Vector3 toward=vortexCenter-transform.position;toward.y=0;
+                    Move(Vector3.ClampMagnitude(toward,RunningSpeed*Time.deltaTime),40f,33f,true,true);
+                }
+            }
             if(!CanMove)return;
             // Dashes stay authoritative. During a combat action the target/action facing wins
             // over steering, while displacement remains untouched for strafing/backpedaling.
@@ -86,6 +133,7 @@ namespace Alterverse.Characters
         }
         private void Update()
         {
+            FrameStartPosition=transform.position;
             if (IsForcedMoving && health != null && !health.IsDead && Time.timeScale > 0)
             {
                 Vector3 delta = forcedEnd - transform.position; delta.y=0;
@@ -95,7 +143,7 @@ namespace Alterverse.Characters
                 if (forcedActual.sqrMagnitude < step.sqrMagnitude*.25f || delta.sqrMagnitude < .0025f) forcedUntil=0;
                 return;
             }
-            if(!CanMove){ResetMotion();return;}
+            if(!CanMove){dashRemaining=0;Velocity=Vector3.zero;return;}
             if(!IsDashing)return;
             dashFrame=Time.frameCount;
             float distance=Mathf.Min(dashRemaining,dashSpeed*Time.deltaTime);
@@ -223,3 +271,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

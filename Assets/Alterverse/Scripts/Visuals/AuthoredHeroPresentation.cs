@@ -71,6 +71,7 @@ namespace Alterverse.Visuals
             // A single final pose layer samples Blender clips; an imported Animator must not also write the same bones.
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             RestoreImportedBindPose(instance.transform, hero);
+            BrakkForearmTrim.Apply(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
             if (hero == HeroId.Veyr)
@@ -347,6 +348,15 @@ namespace Alterverse.Visuals
                 Debug.LogError("DF: weapon grip bone missing: WeaponGrip" + side, this);
                 return;
             }
+            if (hero == HeroId.Veyr)
+            {
+                Transform palm = null;
+                foreach (Transform part in model.GetComponentsInChildren<Transform>(true))
+                    if (part.name == "DF_PalmGrip" + side) { palm = part; break; }
+                foreach (Renderer candidate in weaponRenderers)
+                    if (candidate != null && candidate.name == "DF_Weapon" + side && candidate is SkinnedMeshRenderer skin)
+                        FitVeyrGoldEnd(skin, target, palm);
+            }
             var grip = new WeaponGrip { Bone = target, Control = control,
                 RestLocal = target.localRotation, RestPosition = target.localPosition };
             foreach (Renderer candidate in weaponRenderers)
@@ -368,6 +378,62 @@ namespace Alterverse.Visuals
                 break;
             }
             grips.Add(grip);
+        }
+
+        // Use the actual gold end piece selected in the reference, not the old mid-wrap socket.
+        // Baking makes this independent of FBX axis conventions and imported bone scale.
+        private static void FitVeyrGoldEnd(SkinnedMeshRenderer skin, Transform grip, Transform palm)
+        {
+            if (skin.sharedMesh == null || palm == null) return;
+            var baked = new Mesh();
+            skin.BakeMesh(baked);
+            Vector3[] vertices = baked.vertices;
+            int[] parents = new int[vertices.Length];
+            bool[] gold = new bool[vertices.Length];
+            for (int i = 0; i < parents.Length; i++) parents[i] = i;
+            int Root(int index)
+            {
+                while (parents[index] != index) { parents[index] = parents[parents[index]]; index = parents[index]; }
+                return index;
+            }
+            Material[] materials = skin.sharedMaterials;
+            for (int sub = 0; sub < baked.subMeshCount && sub < materials.Length; sub++)
+            {
+                if (materials[sub] == null || !materials[sub].name.Contains("Champagne metal")) continue;
+                int[] triangles = baked.GetTriangles(sub);
+                for (int i = 0; i + 2 < triangles.Length; i += 3)
+                {
+                    int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
+                    gold[a] = gold[b] = gold[c] = true;
+                    parents[Root(b)] = Root(a); parents[Root(c)] = Root(a);
+                }
+            }
+            var bounds = new Dictionary<int, Bounds>();
+            var sums = new Dictionary<int, Vector3>();
+            var counts = new Dictionary<int, int>();
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                if (!gold[i]) continue;
+                int root = Root(i);
+                if (!bounds.TryGetValue(root, out Bounds part))
+                { part = new Bounds(vertices[i], Vector3.zero); sums[root] = Vector3.zero; counts[root] = 0; }
+                part.Encapsulate(vertices[i]); bounds[root] = part;
+                sums[root] += vertices[i]; counts[root]++;
+            }
+            // The wide terminal gold piece is larger than each narrow grip-wrap strip.
+            int selected = -1; float largest = 0f;
+            foreach (var part in bounds)
+                if (part.Value.size.sqrMagnitude > largest)
+                { largest = part.Value.size.sqrMagnitude; selected = part.Key; }
+            if (selected >= 0)
+            {
+                Vector3 end = skin.transform.TransformPoint(sums[selected] / counts[selected]);
+                grip.position += palm.position - end;
+                foreach (Transform socket in grip.GetComponentsInChildren<Transform>(true))
+                    if (socket.name == "DF_HandleContact" + grip.name[grip.name.Length - 1])
+                        socket.position = palm.position;
+            }
+            Destroy(baked);
         }
 
         private void BuildNyraWeaponDetails()

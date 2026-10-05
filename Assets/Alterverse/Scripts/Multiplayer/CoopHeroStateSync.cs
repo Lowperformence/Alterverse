@@ -19,8 +19,8 @@ namespace Alterverse.Multiplayer
         private const string SharkEffectMessage="DF_COOP_SHARK_FX_V1";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
-        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V2";
-        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V3";
+        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V3";
+        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V4";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/12f;
         private const float MinimumMovementSlack=.18f;
@@ -229,12 +229,14 @@ namespace Alterverse.Multiplayer
             float yaw=slot.transform.eulerAngles.y;
             FixedString128Bytes id=new(localPlayerId??"");
 
-            using FastBufferWriter writer=new(196,Allocator.Temp);
+            using FastBufferWriter writer=new(256,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(localSlot);
             writer.WriteValueSafe(id);
             writer.WriteValueSafe(p.x);writer.WriteValueSafe(p.y);writer.WriteValueSafe(p.z);
             writer.WriteValueSafe(yaw);
+            Vector3 run=slot.GetComponent<HeroMotor>()?.SmoothedVelocity??Vector3.zero;
+            writer.WriteValueSafe(run.x);writer.WriteValueSafe(run.z);
             messaging.SendNamedMessage(OwnerPoseMessage,NetworkManager.ServerClientId,writer,NetworkDelivery.UnreliableSequenced);
         }
 
@@ -249,6 +251,8 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float yaw);
+            reader.ReadValueSafe(out float runX);reader.ReadValueSafe(out float runZ);
+            if(!MatchNetworkProtocol.Finite(runX)||!MatchNetworkProtocol.Finite(runZ))return;
 
             if (!MatchNetworkProtocol.Finite(x) || !MatchNetworkProtocol.Finite(y) || !MatchNetworkProtocol.Finite(z) || !MatchNetworkProtocol.Finite(yaw)) return;
             string playerId=fixedPlayerId.ToString();
@@ -264,6 +268,12 @@ namespace Alterverse.Multiplayer
 
             HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
             if(locomotion!=null&&(locomotion.IsDashing||locomotion.IsForcedMoving))return;
+            locomotion?.SetRemoteRunVelocity(new Vector3(runX,0f,runZ));
+            if(locomotion!=null&&locomotion.IsVortexPulled)
+            {
+                actor.transform.rotation=Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0);
+                return;
+            }
 
             float now=Time.unscaledTime;
             float dt=senderLastPoseAt.TryGetValue(senderClientId,out float previous)
@@ -304,7 +314,7 @@ namespace Alterverse.Multiplayer
             for(int i=0;i<slots.Length;i++)if(slots[i]!=null)count++;
             if(count==0)return;
 
-            using FastBufferWriter writer=new(1028,Allocator.Temp);
+            using FastBufferWriter writer=new(2048,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(count);
             for(int i=0;i<slots.Length;i++)
@@ -322,6 +332,11 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(status!=null&&status.Stunned);
                 writer.WriteValueSafe(slot.GetComponent<HeroLocomotion>()?.IsForcedMoving==true);
                 writer.WriteValueSafe(status!=null?status.MoveMultiplier:1f);
+                HeroLocomotion body=slot.GetComponent<HeroLocomotion>();
+                writer.WriteValueSafe(body!=null&&body.IsVortexPulled);
+                Vector3 pull=body!=null?body.VortexCenter:Vector3.zero;
+                writer.WriteValueSafe(pull.x);writer.WriteValueSafe(pull.y);writer.WriteValueSafe(pull.z);
+                writer.WriteValueSafe(body!=null?body.VortexRadius:0f);
                 HeroRespawn respawn=slot.GetComponent<HeroRespawn>();
                 writer.WriteValueSafe(respawn!=null&&respawn.IsRespawning);
                 writer.WriteValueSafe(respawn!=null?respawn.RemainingSeconds:0f);
@@ -358,6 +373,9 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out bool stunned);
                 reader.ReadValueSafe(out bool forcedMoving);
                 reader.ReadValueSafe(out float moveMultiplier);
+                reader.ReadValueSafe(out bool vortexPulled);
+                reader.ReadValueSafe(out float pullX);reader.ReadValueSafe(out float pullY);reader.ReadValueSafe(out float pullZ);
+                reader.ReadValueSafe(out float pullRadius);
                 reader.ReadValueSafe(out bool respawning);
                 reader.ReadValueSafe(out float respawnRemaining);
                 reader.ReadValueSafe(out float basicRemaining);
@@ -382,6 +400,8 @@ namespace Alterverse.Multiplayer
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 HeroCombatStatus status=actor.GetComponent<HeroCombatStatus>()??actor.gameObject.AddComponent<HeroCombatStatus>();
                 status.ApplyNetworkSnapshot(stunned,forcedMoving?0f:moveMultiplier);
+                HeroLocomotion body=actor.GetComponent<HeroLocomotion>()??actor.gameObject.AddComponent<HeroLocomotion>();
+                body.SetVortexPull(new Vector3(pullX,pullY,pullZ),pullRadius,vortexPulled?.25f:0f);
                 actor.GetComponent<CoopRespawnReplica>()?.Apply(respawning,respawnRemaining);
                 if(actor.IsLocalHuman)
                 {
@@ -400,3 +420,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
