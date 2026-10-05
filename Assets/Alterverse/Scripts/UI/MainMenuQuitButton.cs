@@ -47,7 +47,7 @@ namespace Alterverse.UI
 
         private void OnGUI()
         {
-            if (!SettingsPageVisible())
+            if (OnlinePartyOverlay.IsOpen || !SettingsPageVisible())
             {
                 confirming = false;
                 return;

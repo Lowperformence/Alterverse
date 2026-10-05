@@ -134,6 +134,10 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
+            EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
+            if (page == Page.Play && onlineFlow != null &&
+                (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
+                launchMessage = onlineFlow.Status;
             CoopLobbyService coop=CoopLobbyService.Instance;
             if(!launching&&page==Page.Coop&&coop!=null&&coop.InLobby&&coop.IsLaunching)
                 BeginCoopLaunch(coop);
@@ -155,7 +159,7 @@ namespace Alterverse.UI
                 else if (nameKeyboard.status == TouchScreenKeyboard.Status.Canceled || nameKeyboard.status == TouchScreenKeyboard.Status.LostFocus)
                 { CancelName(); }
             }
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            if (!OnlinePartyOverlay.IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 if (editingName) CancelName();
                 else if (launching) launching = false;
@@ -172,7 +176,7 @@ namespace Alterverse.UI
         }
         private void OnGUI()
         {
-            if (!visible) return;
+            if (!visible || OnlinePartyOverlay.IsOpen) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
@@ -402,6 +406,7 @@ namespace Alterverse.UI
             const float matchButtonGap = 8f;
             float matchButtonWidth = (w - matchButtonGap) * .5f;
             bool matchButtonsEnabled = !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
+                (EdgegapOnlineFlow.Instance == null || !EdgegapOnlineFlow.Instance.Busy) &&
                 (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
                 (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
             if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
@@ -523,7 +528,7 @@ namespace Alterverse.UI
                         _=coop.CycleLocalHeroAsync(1);
                     float readyX=x+50f,readyW=Mathf.Max(42f,playerW-100f);
                     string readyText=coop.LocalReady?"UNREADY":"READY";
-                    if(theme.Action(new Rect(readyX,456,readyW,34),readyText,true,enabled:lobbyEditable&&!coop.HasHeroConflict))
+                    if(theme.Action(new Rect(readyX,456,readyW,34),readyText,true,enabled:lobbyEditable&&(coop.LocalReady||!coop.HasHeroConflict)))
                         _=coop.SetLocalReadyAsync(!coop.LocalReady);
                 }
             }
@@ -1340,22 +1345,28 @@ namespace Alterverse.UI
             if (launching || choosingMatchMode || !PrepareSelectedMatch()) return;
             var online=OnlinePartyService.Instance;
             if(online==null){launchMessage="Online service is initializing. Please try again.";return;}
-            if(online.Busy || OnlinePlanHandshake.Preparing)return;
+            var flow=EdgegapOnlineFlow.Instance;
+            if(flow==null){launchMessage="Online matchmaking is initializing. Please try again.";return;}
+            if(online.Busy || flow.Busy || OnlinePlanHandshake.Preparing)return;
             if(CoopLobbyService.Instance!=null && CoopLobbyService.Instance.InLobby)
             {launchMessage="Leave the private co-op lobby before online matchmaking.";return;}
             choosingMatchMode=true;
             try
             {
                 OnlinePartyOverlay.Show();
+                if(flow.IsSearching){launchMessage=flow.Status;return;}
                 if(online.InParty)
                 {
-                    if(online.IsHost && !online.IsSearching && !online.IsFull)
-                        await online.BeginPlayerSearchAsync();
+                    if(!online.IsHost){launchMessage="Waiting for the party leader to start matchmaking.";return;}
+                    if(online.HasHeroConflict || !online.AllPresentPlayersReady)
+                    {launchMessage="Choose different heroes and ready up in the online party.";return;}
+                    await flow.BeginSearchAsync();
+                    launchMessage=flow.Status;
                     return;
                 }
                 launchMessage="SEARCHING FOR ONLINE MATCH...";
-                bool connected=await online.QuickSearchAsync();
-                launchMessage=connected?"ONLINE MATCHMAKING ACTIVE":online.LastError;
+                await flow.QuickSearchAsync();
+                launchMessage=flow.Status;
             }
             catch(System.Exception ex)
             {
@@ -1370,11 +1381,13 @@ namespace Alterverse.UI
             if(launching || choosingMatchMode || !PrepareSelectedMatch())return;
             var online=OnlinePartyService.Instance;
             var coop=CoopLobbyService.Instance;
-            if(OnlinePlanHandshake.Preparing || online!=null&&online.Busy || coop!=null&&coop.Busy)return;
+            if(OnlinePlanHandshake.Preparing || online!=null&&online.Busy || coop!=null&&coop.Busy ||
+                EdgegapOnlineFlow.Instance!=null&&EdgegapOnlineFlow.Instance.Busy)return;
             choosingMatchMode=true;
             try
             {
-                if(online!=null&&online.InParty)await online.LeavePartyAsync();
+                if(EdgegapOnlineFlow.Instance!=null)await EdgegapOnlineFlow.Instance.LeavePartyAsync();
+                else if(online!=null&&online.InParty)await online.LeavePartyAsync();
                 if(online!=null&&online.InParty)
                 {launchMessage="Could not leave the online party. Please try again.";return;}
                 if(coop!=null&&coop.InLobby)await coop.LeaveLobbyAsync();

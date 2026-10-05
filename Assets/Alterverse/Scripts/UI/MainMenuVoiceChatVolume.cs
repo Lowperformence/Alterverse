@@ -70,7 +70,7 @@ namespace Alterverse.UI
 
         private void OnGUI()
         {
-            if(!IsSettingsPage())return;
+            if(OnlinePartyOverlay.IsOpen || !IsSettingsPage())return;
 
             Rect safe=Screen.safeArea;
             if(safe.width<=0||safe.height<=0)return;

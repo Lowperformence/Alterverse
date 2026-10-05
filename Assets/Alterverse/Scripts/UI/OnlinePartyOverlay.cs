@@ -13,6 +13,7 @@ namespace Alterverse.UI
     public sealed class OnlinePartyOverlay : MonoBehaviour
     {
         private static OnlinePartyOverlay instance;
+        public static bool IsOpen => instance != null && instance.open && MainMenuController.IsVisible;
         private FrontEndTheme theme;
         private bool open;
         private string joinCodeInput = "";
@@ -67,8 +68,10 @@ namespace Alterverse.UI
             Matrix4x4 oldMatrix = GUI.matrix;
             Color oldColor = GUI.color;
             bool oldEnabled = GUI.enabled;
+            int oldDepth = GUI.depth;
             try
             {
+                GUI.depth = -6000;
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0f || safe.height <= 0f) return;
 
@@ -98,6 +101,7 @@ namespace Alterverse.UI
                 GUI.matrix = oldMatrix;
                 GUI.color = oldColor;
                 GUI.enabled = oldEnabled;
+                GUI.depth = oldDepth;
             }
         }
 
@@ -168,7 +172,7 @@ namespace Alterverse.UI
                 enabled: !busy && joinCodeInput.Length >= 4))
                 _ = online.JoinByCodeAsync(joinCodeInput);
 
-            string state = edgegap != null && !string.IsNullOrEmpty(edgegap.LastError)
+            string state = edgegap != null && (edgegap.Busy || edgegap.IsSearching || !string.IsNullOrEmpty(edgegap.LastError))
                 ? edgegap.Status
                 : online.Status;
             theme.Label(new Rect(left + 28f, 506f, width - 56f, 36f), state, theme.Small, true);
@@ -201,7 +205,7 @@ namespace Alterverse.UI
                 edgegapSearching ? "EDGEGAP SEARCH ACTIVE" : "PRIVATE / FRIENDS FIRST", theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
-                busy ? "PLEASE WAIT" : "LEAVE PARTY", enabled: !busy && !edgegapSearching))
+                busy ? "PLEASE WAIT" : "LEAVE PARTY", enabled: !busy))
             {
                 if (edgegap != null) _ = edgegap.LeavePartyAsync();
                 else _ = online.LeavePartyAsync();
@@ -248,7 +252,7 @@ namespace Alterverse.UI
                     float readyW = Mathf.Max(38f, playerW - 90f);
                     string readyText = online.LocalReady ? "UNREADY" : "READY";
                     if (theme.Action(new Rect(readyX, 382f, readyW, 34f), readyText, true,
-                        enabled: editable && !online.HasHeroConflict))
+                        enabled: editable && (online.LocalReady || !online.HasHeroConflict)))
                         _ = online.SetLocalReadyAsync(!online.LocalReady);
                 }
             }
