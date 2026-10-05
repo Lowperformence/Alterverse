@@ -88,11 +88,31 @@ class ProfileTests(unittest.TestCase):
         with self.ledger.connect() as db: self.assertEqual(db.execute('SELECT count(*) FROM purchase').fetchone()[0],0)
     def test_server_catalog_covers_all_purchase_types(self):
         self.grant('dimensions_shards_5500'); self.grant('dimensions_shards_5500','token2')
-        for i,sku in enumerate(['hero_traveler','arena_Noxara','weapon_0_1','battlepass_beta01','shield']):
+        for i,sku in enumerate(['hero_traveler','hero_nerok','arena_Noxara','weapon_0_1','battlepass_beta01','shield']):
             before=self.ledger.wallet('a'); self.ledger.purchase('a',sku,format(i+100,'032x'),before['profileRevision'])
         result=Ledger(self.path).wallet('a')
-        for key in ['DF_HeroOwned_Traveler','DF_ArenaOwned_Noxara','DF_WeaponSkinOwnedItem_0_1','DF_BP_BETA01_Premium','DF_BattleItem_2']:
+        for key in ['DF_HeroOwned_Traveler','DF_HeroOwned_Nerok','DF_ArenaOwned_Noxara','DF_WeaponSkinOwnedItem_0_1','DF_BP_BETA01_Premium','DF_BattleItem_2']:
             self.assertEqual(profile_value(result,key),1)
+
+    def test_nerok_unlock_costs_2200_and_survives_retries_and_profile_sync(self):
+        self.grant()
+        self.ledger.save_profile('a',[number('DF_Shards',1000)],0)
+        bought=self.ledger.purchase('a','hero_nerok','a'*32,1)
+        self.assertEqual(bought['balance'],0)
+        self.assertEqual(profile_value(bought,'DF_Shards'),0)
+        self.assertEqual(profile_value(bought,'DF_HeroOwned_Nerok'),1)
+        replay=Ledger(self.path).purchase('a','hero_nerok','a'*32,0)
+        self.assertEqual(replay['profileRevision'],bought['profileRevision'])
+        restored=self.ledger.save_profile('a',[],bought['profileRevision'])
+        self.assertEqual(profile_value(restored,'DF_HeroOwned_Nerok'),1)
+        self.assertIsNone(profile_value(self.ledger.wallet('b'),'DF_HeroOwned_Nerok'))
+
+    def test_nerok_unlock_rejects_insufficient_shards_without_ownership(self):
+        self.grant()
+        before=self.ledger.wallet('a')
+        with self.assertRaises(ValueError):
+            self.ledger.purchase('a','hero_nerok','b'*32,before['profileRevision'])
+        self.assertEqual(self.ledger.wallet('a'),before)
 
     def test_nerok_weapon_purchases_restore_and_equip_both_colorways(self):
         self.grant()
@@ -135,4 +155,3 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
-

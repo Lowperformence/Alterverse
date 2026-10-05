@@ -141,7 +141,7 @@ namespace Alterverse.UI
             bool previewInventory=page==Page.Inventory&&collection.InventoryPreview;
             bool previewWeapon=page==Page.Shop&&weaponShop;
             bool previewPremiumHero=page==Page.Shop&&heroShop;
-            HeroId previewHero=previewPremiumHero?HeroId.Traveler:(HeroId)selectedHero;
+            HeroId previewHero=previewPremiumHero?PremiumShopHero:(HeroId)selectedHero;
             showcase.Present(previewHero,
                 !launching&&(page==Page.Home||page==Page.Play||page==Page.Heroes||previewSkin||previewWeapon||previewInventory||previewPremiumHero),
                 previewSkin?null:previewWeapon?(bool?)false:null,
@@ -724,9 +724,12 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,518,w,62),FounderEntitlement.Owned?"First Traveler status active.\nYour owned cosmetics remain available.":"The real-money store is not available yet.",theme.Body,true);
             if(RecallCosmeticEntitlement.Owned) theme.Label(new Rect(x,600,w,48),RecallCosmeticCatalog.DisplayName+" / OWNED",theme.Small,true);
         }
+        private HeroId PremiumShopHero=>HeroUnlockCatalog.Purchasable((HeroId)selectedHero)?
+            (HeroId)selectedHero:HeroId.Traveler;
+
         private void DrawPremiumHeroShop()
         {
-            HeroId hero=HeroId.Traveler;
+            HeroId hero=PremiumShopHero;
             bool owned=HeroUnlockInventory.Owned(hero);
             int price=HeroUnlockCatalog.Price(hero);
             showcase.Present(hero,true,false,false,null);
@@ -734,18 +737,27 @@ namespace Alterverse.UI
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
             theme.Panel(new Rect(Left,270,w,394));
             FrontEndTheme.Fill(new Rect(Left,270,5,394),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
-            DrawPortrait(new Rect(Left+22,286,w-44,320));
-            theme.Center(new Rect(Left+22,614,w-44,34),"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
+            float tabWidth=(w-52f)*.5f;
+            if(theme.Action(new Rect(Left+22,282,tabWidth,32),"THE TRAVELER",selected:hero==HeroId.Traveler))
+                selectedHero=(int)HeroId.Traveler;
+            if(theme.Action(new Rect(Left+30+tabWidth,282,tabWidth,32),"NEROK ABYSS",selected:hero==HeroId.Nerok))
+                selectedHero=(int)HeroId.Nerok;
+            DrawPortrait(new Rect(Left+22,320,w-44,280));
+            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.Nerok?
+                "PREMIUM HERO  •  TIDAL BRUISER":"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
 
-            theme.Label(new Rect(x,276,rw,58),"THE TRAVELER",theme.Title);
-            theme.Label(new Rect(x,342,rw,28),"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
+            theme.Label(new Rect(x,276,rw,58),HeroIdentity.NameFor(hero).ToUpperInvariant(),theme.Title);
+            theme.Label(new Rect(x,342,rw,28),hero==HeroId.Nerok?
+                "ANCHOR / PULL / AREA CONTROL":"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
             theme.Label(new Rect(x,384,rw,92),
+                hero==HeroId.Nerok?
+                "A shark bruiser with a heavy anchor. Hook enemies, protect yourself and draw opponents into an abyssal vortex.":
                 "A shadow moving between seconds. Bend chronolight, open paired rifts and control space with temporal fields. Premium presentation; balanced by the same combat budget as every hero.",
                 theme.Body,true);
             theme.Label(new Rect(x,494,rw,34),owned?"OWNED":$"{price:N0} SHARDS",theme.Heading);
             FrontEndTheme.Fill(new Rect(x,536,rw,3),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
 
-            string action=owned?"SELECT THE TRAVELER":
+            string action=owned?"SELECT "+HeroIdentity.NameFor(hero).ToUpperInvariant():
                 PlayerWallet.CanAfford(price)?$"UNLOCK {price:N0} SHARDS":$"NEED {price:N0} SHARDS";
             bool enabled=owned||PlayerWallet.CanAfford(price);
             if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled))
@@ -761,8 +773,8 @@ namespace Alterverse.UI
                     HeroUnlockResult result=HeroUnlockInventory.Purchase(hero);
                     shopPurchasePending=result==HeroUnlockResult.Pending;
                     shopMessage=result==HeroUnlockResult.Pending?"Saving purchase…":result==HeroUnlockResult.Purchased?
-                        "THE TRAVELER UNLOCKED  •  PREMIUM STYLE, STANDARD BALANCE":
-                        result==HeroUnlockResult.InsufficientShards?"Not enough shards.":"Hero could not be unlocked.";
+                        HeroIdentity.NameFor(hero).ToUpperInvariant()+" UNLOCKED":
+                        result==HeroUnlockResult.InsufficientShards?"Not enough shards.":"Purchase unavailable. Reconnect your account.";
                     if(result==HeroUnlockResult.Purchased)
                     {
                         selectedHero=(int)hero;
@@ -1311,7 +1323,8 @@ namespace Alterverse.UI
             HeroId requestedHero=(HeroId)selectedHero;
             if(!HeroUnlockInventory.Owned(requestedHero))
             {
-                launchMessage="THE TRAVELER LOCKED  •  UNLOCK IN STORE FOR 10,000 SHARDS";
+                launchMessage=HeroIdentity.NameFor(requestedHero).ToUpperInvariant()+
+                    $" LOCKED  •  UNLOCK IN STORE FOR {HeroUnlockCatalog.Price(requestedHero):N0} SHARDS";
                 return false;
             }
             if(!PlayerHeroSelection.Select(requestedHero))
@@ -1473,4 +1486,3 @@ namespace Alterverse.UI
         }
     }
 }
-
