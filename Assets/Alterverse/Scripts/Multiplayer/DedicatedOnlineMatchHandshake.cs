@@ -26,6 +26,7 @@ namespace Alterverse.Multiplayer
         private const int ProtocolVersion = 1;
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
+        private const float AuthenticationTimeoutSeconds = 10f;
 
         private sealed class PendingHuman
         {
@@ -53,6 +54,7 @@ namespace Alterverse.Multiplayer
         private readonly Dictionary<ulong, PendingHuman> pending = new();
         private readonly Dictionary<ulong, string> authorizedPlayers = new();
         private readonly HashSet<ulong> planAcks = new();
+        private readonly Dictionary<ulong, float> unauthenticatedSince = new();
 
         public static bool IsAuthorizedClient(ulong clientId, string playerId)
         {
@@ -86,7 +88,7 @@ namespace Alterverse.Multiplayer
                 if (!CoopAuthority.Active)
                 {
                     Detach(); planSent = false; launched = false; firstHelloAt = -1; planSentAt = -1;
-                    pending.Clear(); authorizedPlayers.Clear(); planAcks.Clear();
+                    pending.Clear(); authorizedPlayers.Clear(); planAcks.Clear(); unauthenticatedSince.Clear();
                 }
                 if (manager == null || !manager.IsConnectedClient) helloSent = false;
                 return;
@@ -110,6 +112,7 @@ namespace Alterverse.Multiplayer
 
         private void UpdateDedicatedServer(NetworkManager manager)
         {
+            DisconnectUnauthenticatedClients(manager);
             if (launched) return;
 
             RemoveDisconnectedPending(manager);
@@ -146,7 +149,9 @@ namespace Alterverse.Multiplayer
                     if (!planAcks.Contains(id)) stalled.Add(id);
                 foreach (ulong id in stalled)
                 {
-                    pending.Remove(id); authorizedPlayers.Remove(id);
+                    pending.Remove(id);
+                    authorizedPlayers.Remove(id);
+                    unauthenticatedSince.Remove(id);
                     manager.DisconnectClient(id);
                 }
                 planSent = false; planSentAt = -1f; planAcks.Clear();
@@ -154,6 +159,44 @@ namespace Alterverse.Multiplayer
                 status = "START CONFIRMATION TIMED OUT • REBUILDING MATCH";
                 if (pending.Count > 0) BuildAndSendAuthoritativePlan(manager);
             }
+        }
+
+        private void DisconnectUnauthenticatedClients(NetworkManager manager)
+        {
+            if (manager?.ConnectedClientsIds == null) return;
+
+            var staleTimers = new List<ulong>();
+            foreach (KeyValuePair<ulong, float> pair in unauthenticatedSince)
+            {
+                bool stillConnected = false;
+                for (int i = 0; i < manager.ConnectedClientsIds.Count; i++)
+                {
+                    if (manager.ConnectedClientsIds[i] == pair.Key)
+                    {
+                        stillConnected = true;
+                        break;
+                    }
+                }
+                if (!stillConnected || authorizedPlayers.ContainsKey(pair.Key)) staleTimers.Add(pair.Key);
+            }
+            for (int i = 0; i < staleTimers.Count; i++) unauthenticatedSince.Remove(staleTimers[i]);
+
+            var timedOut = new List<ulong>();
+            for (int i = 0; i < manager.ConnectedClientsIds.Count; i++)
+            {
+                ulong clientId = manager.ConnectedClientsIds[i];
+                if (clientId == NetworkManager.ServerClientId || authorizedPlayers.ContainsKey(clientId)) continue;
+                if (!unauthenticatedSince.TryGetValue(clientId, out float connectedAt))
+                {
+                    unauthenticatedSince[clientId] = Time.unscaledTime;
+                    continue;
+                }
+                if (Time.unscaledTime - connectedAt >= AuthenticationTimeoutSeconds)
+                    timedOut.Add(clientId);
+            }
+
+            for (int i = 0; i < timedOut.Count; i++)
+                RejectClient(manager, timedOut[i], "dedicated authentication timeout");
         }
 
         private void SendClientHello()
@@ -192,7 +235,8 @@ namespace Alterverse.Multiplayer
                 return;
             if (launched)
             {
-                if (!authorizedPlayers.ContainsKey(senderClientId)) manager.DisconnectClient(senderClientId);
+                if (!authorizedPlayers.ContainsKey(senderClientId))
+                    RejectClient(manager, senderClientId, "match already launched");
                 return;
             }
 
@@ -200,10 +244,15 @@ namespace Alterverse.Multiplayer
             // waiting for ACKs from the already-issued roster.
             if (planSent)
             {
-                if (!pending.ContainsKey(senderClientId)) manager.DisconnectClient(senderClientId);
+                if (!pending.ContainsKey(senderClientId))
+                    RejectClient(manager, senderClientId, "roster already frozen");
                 return;
             }
-            if (!reader.TryBeginRead(sizeof(int))) return;
+            if (!reader.TryBeginRead(sizeof(int)))
+            {
+                RejectClient(manager, senderClientId, "truncated dedicated hello");
+                return;
+            }
             reader.ReadValueSafe(out int protocol);
             try
             {
@@ -223,7 +272,7 @@ namespace Alterverse.Multiplayer
             if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(claimedTeamId) ||
                 !Enum.IsDefined(typeof(HeroId), heroRaw))
             {
-                Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected invalid dedicated hello from client {senderClientId}.");
+                RejectClient(manager, senderClientId, "invalid dedicated hello");
                 return;
             }
 
@@ -235,7 +284,7 @@ namespace Alterverse.Multiplayer
                     out string matchId,
                     out string validationReason))
             {
-                Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected Edgegap ticket from client {senderClientId}: {validationReason}.");
+                RejectClient(manager, senderClientId, "invalid Edgegap ticket: " + validationReason);
                 return;
             }
 
@@ -250,13 +299,13 @@ namespace Alterverse.Multiplayer
                 if (pair.Key == senderClientId) continue;
                 if (pair.Value.TicketId == ticketId || pair.Value.PlayerId == playerId)
                 {
-                    Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected duplicate dedicated identity from client {senderClientId}.");
+                    RejectClient(manager, senderClientId, "duplicate dedicated identity");
                     return;
                 }
                 if (!string.IsNullOrWhiteSpace(matchId) && !string.IsNullOrWhiteSpace(pair.Value.MatchId) &&
                     !string.Equals(pair.Value.MatchId, matchId, StringComparison.Ordinal))
                 {
-                    Debug.LogWarning($"DIMENSIONS FRONT SERVER: rejected cross-match client {senderClientId}.");
+                    RejectClient(manager, senderClientId, "cross-match dedicated identity");
                     return;
                 }
             }
@@ -272,6 +321,7 @@ namespace Alterverse.Multiplayer
                 Hero = (HeroId)heroRaw
             };
             authorizedPlayers[senderClientId] = playerId;
+            unauthenticatedSince.Remove(senderClientId);
             if (firstHelloAt < 0f) firstHelloAt = Time.unscaledTime;
 
             int assigned = EdgegapInjectedMatchContext.IsEdgegapDeployment
@@ -281,9 +331,28 @@ namespace Alterverse.Multiplayer
             }
             catch (OverflowException)
             {
-                manager.DisconnectClient(senderClientId);
-                Debug.LogWarning("DIMENSIONS FRONT SERVER: truncated dedicated hello rejected.");
+                RejectClient(manager, senderClientId, "truncated dedicated hello");
             }
+        }
+
+        private void RejectClient(NetworkManager manager, ulong clientId, string reason)
+        {
+            bool rosterChanged = pending.Remove(clientId);
+            authorizedPlayers.Remove(clientId);
+            planAcks.Remove(clientId);
+            unauthenticatedSince.Remove(clientId);
+
+            if (rosterChanged && planSent && !launched)
+            {
+                planSent = false;
+                planSentAt = -1f;
+                planAcks.Clear();
+                CoopAuthority.ClearPrepared();
+            }
+
+            status = "DEDICATED CLIENT REJECTED";
+            Debug.LogWarning($"DIMENSIONS FRONT SERVER: disconnected client {clientId}: {reason}.");
+            manager?.DisconnectClient(clientId);
         }
 
         private void BuildAndSendAuthoritativePlan(NetworkManager manager)
@@ -455,7 +524,11 @@ namespace Alterverse.Multiplayer
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || !manager.IsServer || manager.IsClient || !planSent || launched) return;
 
-            if (!reader.TryBeginRead(sizeof(int) + sizeof(bool) + sizeof(uint) + sizeof(ushort))) return;
+            if (!reader.TryBeginRead(sizeof(int) + sizeof(bool) + sizeof(uint) + sizeof(ushort)))
+            {
+                RejectClient(manager, senderClientId, "truncated dedicated plan acknowledgement");
+                return;
+            }
             try
             {
             reader.ReadValueSafe(out int protocol);
@@ -466,17 +539,19 @@ namespace Alterverse.Multiplayer
 
             bool valid = protocol == ProtocolVersion && accepted && clientFingerprint == planFingerprint &&
                          pending.TryGetValue(senderClientId, out PendingHuman human) && human.PlayerId == playerId;
-            if (valid) planAcks.Add(senderClientId);
-            else planAcks.Remove(senderClientId);
-
-            status = valid
-                ? $"DEDICATED PLAN VERIFIED • {planAcks.Count}/{pending.Count} ACK"
-                : "DEDICATED PLAN ACK REJECTED";
+            if (valid)
+            {
+                planAcks.Add(senderClientId);
+                status = $"DEDICATED PLAN VERIFIED • {planAcks.Count}/{pending.Count} ACK";
+            }
+            else
+            {
+                RejectClient(manager, senderClientId, "invalid dedicated plan acknowledgement");
+            }
             }
             catch (OverflowException)
             {
-                planAcks.Remove(senderClientId);
-                status = "TRUNCATED PLAN ACK REJECTED";
+                RejectClient(manager, senderClientId, "truncated dedicated plan acknowledgement");
             }
         }
 
@@ -567,6 +642,7 @@ namespace Alterverse.Multiplayer
                 pending.Remove(id);
                 authorizedPlayers.Remove(id);
                 planAcks.Remove(id);
+                unauthenticatedSince.Remove(id);
             }
         }
 
@@ -633,4 +709,3 @@ namespace Alterverse.Multiplayer
         }
     }
 }
-
