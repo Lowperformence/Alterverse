@@ -42,6 +42,12 @@ namespace Alterverse.Characters
             slot=Mathf.Clamp(slot,0,3);
             ready[slot]=Time.time+Mathf.Max(0f,remaining);
         }
+
+        private static float TemporaryShield(Health health)
+        {
+            return health==null?0f:Mathf.Max(0f,health.Shield-health.HeroBaseShield);
+        }
+
         public Health WoundedAlly(float range, bool shield = false)
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
@@ -54,7 +60,7 @@ namespace Alterverse.Characters
                 Health h=Health.Active[i];
                 if(h==null||h.IsDead||!h.isActiveAndEnabled||h.GetComponent<HeroIdentity>()==null||h.Normalized>=lowest)continue;
                 TeamMember member=h.GetComponent<TeamMember>();
-                if(member==null||member.Team!=team.Team||(shield&&h.Shield>5f))continue;
+                if(member==null||member.Team!=team.Team||(shield&&TemporaryShield(h)>5f))continue;
                 Vector3 delta=h.transform.position-transform.position;delta.y=0;
                 if(delta.sqrMagnitude>rangeSqr)continue;
                 lowest=h.Normalized;best=h;
@@ -102,7 +108,7 @@ namespace Alterverse.Characters
             }
             else if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
             {
-                if (hero == HeroId.Kaelon) { if (self.Shield > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
+                if (hero == HeroId.Kaelon) { if (TemporaryShield(self) > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
                 else { if (self.Normalized >= .95f) return false; HeroCombatAudio.Cast(gameObject,slot);self.Heal(spec.Power,false); self.AddShield(20, 3,false); }
                 HeroSkillVfx.Support(gameObject,self,true,hero==HeroId.Kaelon?4f:3f);
                 if(hero==HeroId.Rook)HeroSkillVfx.Support(gameObject,self,false,.45f);
@@ -248,17 +254,17 @@ namespace Alterverse.Characters
             {
                 HeroSkillVfx.Impact(gameObject,target,slot);
                 if(visual)HeroCombatAudio.Impact(gameObject,slot,target.transform.position);
-            }
-            switch (identity.Hero)
-            {
-                case HeroId.Veyr: if (slot == 1) HeroCombatStatus.Apply(target, .8f, 1.2f); break;
-                case HeroId.Kaelon: HeroCombatStatus.Apply(target, slot == 3 ? .5f : .65f, slot == 3 ? 2f : 1.5f, slot == 0 ? .55f : 0); break;
-                case HeroId.Nyra: if (slot == 2) HeroCombatStatus.Apply(target, .7f, 1.8f); break;
-                case HeroId.Elyra: if (slot == 1 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .55f : .65f, 2f); break;
-                case HeroId.Mira: HeroCombatStatus.Apply(target, .75f, 1.5f); break;
-                case HeroId.Rook: if (slot == 0) HeroCombatStatus.Apply(target, .8f, 1f); break;
-                case HeroId.Nerok: if(slot==2)HeroCombatStatus.Apply(target,.75f,1.2f); break;
-                case HeroId.Traveler: if (slot == 2 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .62f : .72f, slot == 3 ? 1.8f : 1.5f); break;
+                switch (identity.Hero)
+                {
+                    case HeroId.Veyr: if (slot == 1) HeroCombatStatus.Apply(target, .8f, 1.2f); break;
+                    case HeroId.Kaelon: HeroCombatStatus.Apply(target, slot == 3 ? .5f : .65f, slot == 3 ? 2f : 1.5f, slot == 0 ? .55f : 0); break;
+                    case HeroId.Nyra: if (slot == 2) HeroCombatStatus.Apply(target, .7f, 1.8f); break;
+                    case HeroId.Elyra: if (slot == 1 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .55f : .65f, 2f); break;
+                    case HeroId.Mira: HeroCombatStatus.Apply(target, .75f, 1.5f); break;
+                    case HeroId.Rook: if (slot == 0) HeroCombatStatus.Apply(target, .8f, 1f); break;
+                    case HeroId.Nerok: if(slot==2)HeroCombatStatus.Apply(target,.75f,1.2f); break;
+                    case HeroId.Traveler: if (slot == 2 || slot == 3) HeroCombatStatus.Apply(target, slot == 3 ? .62f : .72f, slot == 3 ? 1.8f : 1.5f); break;
+                }
             }
             if (visual&&!launched) HeroSkillVfx.Spell(gameObject, target.transform.position, slot);
             if(damaged&&(identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Mira||identity.Hero==HeroId.Veyr&&slot==1||
@@ -267,4 +273,3 @@ namespace Alterverse.Characters
         }
     }
 }
-
