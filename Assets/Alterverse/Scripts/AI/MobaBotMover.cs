@@ -112,6 +112,17 @@ namespace Alterverse.AI
                 // prolonged pursuit of a target that keeps escaping, never normal combat.
                 if(delta.sqrMagnitude<=combatStop*combatStop*1.30f)chaseStarted=Time.time;
                 float maxChase=Mathf.Lerp(2.7f,4.8f,brain.Aggression)*brain.CommitmentRhythm;
+                HeroIdentity enemyHero=target.GetComponent<HeroIdentity>();
+                if(enemyHero!=null)
+                {
+                    // A visible hero's published running speed is known even when
+                    // the last observed position is briefly retained behind cover.
+                    HeroCombatProfile enemyProfile=target.GetComponent<HeroCombatProfile>();
+                    float enemySpeed=enemyProfile!=null?enemyProfile.MoveSpeed:
+                        HeroCombatProfile.StatsFor(enemyHero.Hero).MoveSpeed*HeroCombatProfile.GlobalMoveSpeedMultiplier;
+                    float speedRatio=enemySpeed/Mathf.Max(1f,MoveSpeed);
+                    maxChase*=Mathf.Clamp(1.3f-.3f*speedRatio,.65f,1.12f);
+                }
                 int chasePressure=sensor!=null?Mathf.Max(0,sensor.NearbyEnemies-(sensor.NearbyAllies+1)):0;
                 if(target.Normalized<.35f)
                     maxChase*=Mathf.Lerp(1f,1.45f,brain.Difficulty.ChaseDiscipline);
@@ -780,6 +791,5 @@ namespace Alterverse.AI
         }
     }
 }
-
 
 

@@ -24,6 +24,7 @@ namespace Alterverse.AI
         private int observedCall=-1;
         private float callReadyAt;
         private HeroIdentity identity;
+        private HeroCombatProfile ownCombatProfile;
         private DimensionsFront match;
         private float nextMatchScan;
         public Health Vitals=>health;
@@ -78,6 +79,7 @@ namespace Alterverse.AI
             decisions=new System.Random(unchecked((int)hash^System.Environment.TickCount));
 
             identity=GetComponent<HeroIdentity>();
+            ownCombatProfile=GetComponent<HeroCombatProfile>();
             health = GetComponent<Health>();lastHealth=health.Normalized; respawn = GetComponent<MobaBotRespawn>();
             personality = GetComponent<BotPersonality>(); targetSensor = GetComponent<BotTargetSensor>();
             ApplyPersonality();
@@ -145,17 +147,41 @@ namespace Alterverse.AI
             return match.IsSuddenDeath?-.010f:0f;
         }
 
-        // Visible hero profile/status are legal local information and were previously ignored by the
-        // retreat evaluator. Ranged/control/sustain threats now slightly raise danger while wounded or
-        // controlled opponents are treated as less dangerous. This affects decisions, never combat stats.
+        // Only evaluate a currently perceived hero. Their combat profile gives the bot
+        // the same published speed and basic attack numbers available to players.
         private float VisibleThreatAdjustment(Health target)
         {
-            if(target==null||target.IsDead||target.GetComponent<HeroIdentity>()==null)return 0f;
+            HeroIdentity enemyIdentity=target!=null?target.GetComponent<HeroIdentity>():null;
+            if(target==null||target.IsDead||enemyIdentity==null)return 0f;
             HeroCombatProfile enemy=target.GetComponent<HeroCombatProfile>();
-            if(enemy==null)return 0f;
+            if(ownCombatProfile==null)ownCombatProfile=GetComponent<HeroCombatProfile>();
+            HeroCombatStats enemyStats=HeroCombatProfile.StatsFor(enemyIdentity.Hero);
+            float attack=enemy!=null?enemy.Attack:HeroIdentity.AttackDamage(enemyIdentity.Hero);
+            float interval=enemy!=null?enemy.AttackInterval:enemyStats.AttackInterval;
+            float move=enemy!=null?enemy.MoveSpeed:enemyStats.MoveSpeed*HeroCombatProfile.GlobalMoveSpeedMultiplier;
+            float ownAttack=ownCombatProfile!=null?ownCombatProfile.Attack:identity!=null?HeroIdentity.AttackDamage(identity.Hero):20f;
+            float ownInterval=ownCombatProfile!=null?ownCombatProfile.AttackInterval:identity!=null?HeroCombatProfile.StatsFor(identity.Hero).AttackInterval:1f;
+            float ownMove=ownCombatProfile!=null?ownCombatProfile.MoveSpeed:identity!=null?
+                HeroCombatProfile.StatsFor(identity.Hero).MoveSpeed*HeroCombatProfile.GlobalMoveSpeedMultiplier:5f;
+            HeroLocomotion enemyLocomotion=target.GetComponent<HeroLocomotion>();
+            HeroLocomotion ownLocomotion=GetComponent<HeroLocomotion>();
+            if(enemyLocomotion!=null)move=enemyLocomotion.RunningSpeed;
+            if(ownLocomotion!=null)ownMove=ownLocomotion.RunningSpeed;
+            float enemyDps=attack*(target.GetComponent<PlanetBuffReceiver>()?.OutgoingDamageMultiplier??1f)/Mathf.Max(.2f,interval);
+            float ownDps=ownAttack/Mathf.Max(.2f,ownInterval);
             float threat=0f;
-            if(enemy.AttackRange>4f)threat+=.012f;
-            threat+=(enemy.Control*.020f+enemy.Sustain*.010f)*Difficulty.ThreatAwareness;
+            float range=enemy!=null?enemy.AttackRange:enemyStats.AttackRange;
+            if(range>4f)threat+=.012f;
+            float control=enemy!=null?enemy.Control:enemyStats.Control;
+            float sustain=enemy!=null?enemy.Sustain:enemyStats.Sustain;
+            threat+=(control*.020f+sustain*.010f)*Difficulty.ThreatAwareness;
+            threat+=Mathf.Clamp((enemyDps/Mathf.Max(1f,ownDps)-1f)*.035f,-.012f,.045f)*Difficulty.ThreatAwareness;
+            AbilitySpec enemyQ=HeroAbilityKit.LoadoutFor(enemyIdentity.Hero).Q;
+            if(enemyQ.Power>0f&&enemyQ.Range>0f)
+                threat+=Mathf.Clamp(enemyQ.Power/Mathf.Max(1f,enemyQ.Cooldown)/Mathf.Max(1f,ownDps)*.025f,
+                    0f,.012f)*Difficulty.ThreatAwareness;
+            // Ranged heroes that can also outrun us are harder to disengage from.
+            if(range>4f)threat+=Mathf.Clamp((move-ownMove)*.012f,-.008f,.025f)*Difficulty.ThreatAwareness;
             if(target.Normalized<.30f)threat*=.55f;
             HeroCombatStatus status=target.GetComponent<HeroCombatStatus>();
             if(status!=null&&(status.Stunned||status.MoveMultiplier<.8f))threat*=.40f;
@@ -288,4 +314,3 @@ namespace Alterverse.AI
         }
     }
 }
-

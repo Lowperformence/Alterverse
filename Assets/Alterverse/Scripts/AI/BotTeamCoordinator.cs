@@ -438,8 +438,18 @@ namespace Alterverse.AI
         }
 
         public static bool IsBackline(HeroId role)=>role==HeroId.Nyra||role==HeroId.Elyra||role==HeroId.Mira||role==HeroId.Traveler;
-        private static float RolePower(HeroId role)=>role==HeroId.Mira?.78f:role==HeroId.Kaelon?1.1f:1f;
+        private static float RolePower(HeroId role)
+        {
+            // Both teams are evaluated from the current hero catalog. Fixed role
+            // weights went stale when health and attack balance changed.
+            HeroCombatStats stats=HeroCombatProfile.StatsFor(role);
+            float basicDps=HeroIdentity.AttackDamage(role)/Mathf.Max(.2f,stats.AttackInterval);
+            float durability=HeroIdentity.BaseHealth(role);
+            float runningSpeed=stats.MoveSpeed*HeroCombatProfile.GlobalMoveSpeedMultiplier;
+            float power=.52f*basicDps/25f+.22f*durability/250f+
+                .10f*stats.Control+.10f*stats.Sustain+.06f*runningSpeed/5.5f;
+            return Mathf.Clamp(power,.65f,1.55f);
+        }
         private static float FlatSqr(Vector3 value){value.y=0;return value.sqrMagnitude;}
     }
 }
-
