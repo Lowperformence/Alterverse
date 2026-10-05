@@ -274,11 +274,6 @@ namespace Alterverse.Visuals
             }
         }
 
-        private void OnDestroy()
-        {
-            foreach (Mesh mesh in rigidWeaponMeshes) if (mesh != null) Destroy(mesh);
-        }
-
         private Transform Make(string name, Transform parent, Vector3 rootPosition)
         {
             Transform part = new GameObject("DF_" + name).transform;
@@ -825,6 +820,7 @@ namespace Alterverse.Visuals
 
         private void OnDestroy()
         {
+            foreach (Mesh mesh in rigidWeaponMeshes) if (mesh != null) Destroy(mesh);
             foreach (Material material in rifleDetailMaterials)
                 if (material != null) Destroy(material);
         }
