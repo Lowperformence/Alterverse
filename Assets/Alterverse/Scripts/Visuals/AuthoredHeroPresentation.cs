@@ -823,11 +823,16 @@ namespace Alterverse.Visuals
             switch (hero)
             {
                 case HeroId.Nyra:
-                    // Park the rifle by her right thigh; raise it when an action begins.
+                {
+                    // Keep the trigger hand close to the chest so both elbows can
+                    // bend around the rifle instead of extending above a low gun.
                     bool aiming = motion != null && motion.ArmActionActive;
-                    SolveGuard(rightArm, aiming ? new Vector3(.16f, 1.30f, .205f) :
-                        new Vector3(.355f, .955f, .085f), GuardHint(rightArm), guardWeight);
+                    Vector3 shoulder = model.InverseTransformPoint(rightArm.Upper.position);
+                    SolveGuard(rightArm, aiming ? new Vector3(.14f, 1.28f, .27f) :
+                        new Vector3(.20f, 1.12f, .18f),
+                        shoulder + new Vector3(.28f, -.28f, .12f), guardWeight);
                     break;
+                }
                 case HeroId.Veyr:
                     SolveGuard(leftArm, new Vector3(-.35f, 1.01f, .04f), GuardHint(leftArm), guardWeight);
                     SolveGuard(rightArm, new Vector3(.35f, 1.01f, .04f), GuardHint(rightArm), guardWeight);
@@ -888,7 +893,7 @@ namespace Alterverse.Visuals
             Vector3 up = Vector3.ProjectOnPlane(rifleSupport.position - rifleHandle.position, forward);
             if (forward.sqrMagnitude < .000001f || up.sqrMagnitude < .000001f) return;
             Quaternion current = Quaternion.LookRotation(forward, up);
-            Vector3 aim = model.forward - model.up * (motion != null && motion.ArmActionActive ? 0f : .30f);
+            Vector3 aim = model.forward - model.up * (motion != null && motion.ArmActionActive ? 0f : .12f);
             Quaternion desired = Quaternion.LookRotation(aim, model.up);
             rightArm.Hand.rotation = desired * Quaternion.Inverse(current) * rightArm.Hand.rotation;
         }
@@ -896,16 +901,13 @@ namespace Alterverse.Visuals
         private void ApplyRifleSupport()
         {
             if (hero != HeroId.Nyra || rifleSupport == null || leftArm == null || leftPalm == null) return;
-            // Her support hand rests by her side, and takes the foregrip while firing.
-            if (motion == null || !motion.ArmActionActive) return;
-            // The support socket is on the rifle, so the left palm tracks its actual foregrip.
-            // Four short corrections account for the palm's offset from the wrist joint.
-            for (int i = 0; i < 4; i++)
-            {
-                Vector3 palmOffset = leftPalm.position - leftArm.Hand.position;
-                Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);
-                SolveGuard(leftArm, wrist, GuardHint(leftArm), guardWeight);
-            }
+            // Hold the foregrip in idle as well as during fire. Previously this
+            // solver returned in idle, leaving her left arm extended above the gun.
+            Vector3 palmOffset = leftPalm.position - leftArm.Hand.position;
+            Vector3 wrist = model.InverseTransformPoint(rifleSupport.position - palmOffset);
+            Vector3 shoulder = model.InverseTransformPoint(leftArm.Upper.position);
+            Vector3 elbowHint = shoulder + new Vector3(-.27f, -.30f, .17f);
+            SolveGuard(leftArm, wrist, elbowHint, guardWeight);
         }
 
         private void OnDestroy()
