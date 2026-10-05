@@ -40,6 +40,8 @@ namespace Alterverse.Multiplayer
         public bool HasMembership => !string.IsNullOrWhiteSpace(GroupId) && !string.IsNullOrWhiteSpace(MemberId);
         public bool IsConfigured => !string.IsNullOrWhiteSpace(ResolveAuthToken());
 
+        private int waitGeneration;
+
         public event Action Changed;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -74,8 +76,15 @@ namespace Alterverse.Multiplayer
             SetStatus("IDLE");
         }
 
+        public void CancelPendingAssignmentWait()
+        {
+            waitGeneration++;
+            CoopNetworkBootstrap.CancelDedicatedConnection();
+        }
+
         public async Task<bool> CreateGroupAsync(bool ready = false)
         {
+            CancelPendingAssignmentWait();
             ResetLocalState();
             MemberResponse response = await SendMemberAsync(
                 "POST",
@@ -89,6 +98,7 @@ namespace Alterverse.Multiplayer
             if (string.IsNullOrWhiteSpace(groupId))
                 return Fail("EDGEGAP GROUP ID IS EMPTY");
 
+            CancelPendingAssignmentWait();
             ResetLocalState();
             GroupId = groupId.Trim();
             MemberResponse response = await SendMemberAsync(
@@ -117,11 +127,31 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
+        /// Removes only this member from a Group Up group. Guests use this when leaving so a
+        /// disconnected/abandoned member cannot remain ready in Edgegap as a ghost player.
+        /// </summary>
+        public async Task<bool> LeaveGroupAsync()
+        {
+            CancelPendingAssignmentWait();
+            if (!HasMembership)
+            {
+                ResetLocalState();
+                return true;
+            }
+
+            string path = MemberPath();
+            bool success = await SendNoContentAsync("DELETE", path);
+            if (success) ResetLocalState();
+            return success;
+        }
+
+        /// <summary>
         /// Cancels the whole Group Up group. This is used by the party leader before a host has
         /// been assigned, so abandoned searches do not remain queued until ticket expiration.
         /// </summary>
         public async Task<bool> CancelGroupAsync()
         {
+            CancelPendingAssignmentWait();
             if (string.IsNullOrWhiteSpace(GroupId))
             {
                 ResetLocalState();
@@ -137,23 +167,29 @@ namespace Alterverse.Multiplayer
         /// <summary>
         /// Polls the local Group Up membership every three seconds. Once HOST_ASSIGNED is returned,
         /// switches NGO/UTP to the assigned fqdn + external game port and waits until NGO confirms
-        /// the direct connection (including the cold-start retry window).
+        /// the direct connection (including the cold-start retry window). The generation guard
+        /// prevents a cancelled/older search from connecting after a late Edgegap response.
         /// </summary>
         public async Task<bool> WaitForAssignmentAndConnectAsync(int timeoutSeconds = 180)
         {
             if (!HasMembership) return Fail("EDGEGAP GROUP MEMBERSHIP IS MISSING");
+            int generation = ++waitGeneration;
             DateTime deadline = DateTime.UtcNow.AddSeconds(Mathf.Max(15, timeoutSeconds));
 
             while (DateTime.UtcNow < deadline)
             {
+                if (generation != waitGeneration) return false;
                 if (!await RefreshMembershipAsync()) return false;
+                if (generation != waitGeneration) return false;
+
                 if (HasAssignment)
                 {
                     if (!CoopNetworkBootstrap.ConnectToDedicatedServer(AssignedHost, AssignedPort))
                         return Fail("COULD NOT START DEDICATED SERVER CONNECTION");
 
                     SetStatus($"HOST ASSIGNED • CONNECTING {AssignedHost}:{AssignedPort}");
-                    if (!await WaitForDedicatedConnectionAsync()) return false;
+                    if (!await WaitForDedicatedConnectionAsync(generation)) return false;
+                    if (generation != waitGeneration) return false;
                     LastError = "";
                     SetStatus($"DEDICATED SERVER CONNECTED • {AssignedHost}:{AssignedPort}");
                     return true;
@@ -165,14 +201,21 @@ namespace Alterverse.Multiplayer
                 await Task.Delay(PollIntervalMilliseconds);
             }
 
+            if (generation != waitGeneration) return false;
             return Fail("MATCHMAKING ASSIGNMENT TIMEOUT");
         }
 
-        private async Task<bool> WaitForDedicatedConnectionAsync()
+        private async Task<bool> WaitForDedicatedConnectionAsync(int generation)
         {
             DateTime deadline = DateTime.UtcNow.AddSeconds(DedicatedConnectionTimeoutSeconds);
             while (DateTime.UtcNow < deadline)
             {
+                if (generation != waitGeneration)
+                {
+                    CoopNetworkBootstrap.CancelDedicatedConnection();
+                    return false;
+                }
+
                 var manager = CoopNetworkBootstrap.Manager;
                 if (manager != null && manager.IsConnectedClient && !manager.IsServer)
                     return true;
@@ -186,6 +229,7 @@ namespace Alterverse.Multiplayer
                 await Task.Delay(250);
             }
 
+            if (generation != waitGeneration) return false;
             return Fail("DEDICATED SERVER CONNECTION TIMEOUT");
         }
 
