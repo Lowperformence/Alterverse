@@ -60,35 +60,57 @@ namespace Alterverse.Combat
 
         public bool TryAttack()
         {
-            if (Time.timeScale <= 0f || selfHealth == null || selfHealth.IsDead || !HeroCombatStatus.CanAct(gameObject) || Time.time < nextAttackTime)
-                return false;
+            if (!CanAttempt()) return false;
 
             Health target = targeting.Acquire(Range, transform.forward, true);
+            if (target == null) return false;
+
             HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
             float windup = HeroAttackDelivery.Windup(hero);
 
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
-                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject)) return false;
+                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject, target)) return false;
 
                 nextAttackTime = Time.time + Cooldown;
                 targeting.RegisterOffensiveAction();
 
-                Vector3 predictedLook = Vector3.zero;
-                if (target != null)
-                {
-                    predictedLook = target.transform.position - transform.position;
-                    predictedLook.y = 0f;
-                    locomotion.FaceAction(predictedLook);
-                }
-
+                Vector3 predictedLook = target.transform.position - transform.position;
+                predictedLook.y = 0f;
+                locomotion.FaceAction(predictedLook);
                 motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), predictedLook);
-                CombatMotion.Begin(gameObject,windup,target);
+                CombatMotion.Begin(gameObject, windup, target);
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
 
-            if (target == null) return false;
+            return TryAttackAuthoritative(target);
+        }
+
+        public bool TryAttackNetworkAuthoritative(Health requestedTarget)
+        {
+            if (!CanAttempt()) return false;
+            return TryAttackAuthoritative(requestedTarget);
+        }
+
+        private bool CanAttempt()
+        {
+            return Time.timeScale > 0f &&
+                   selfHealth != null &&
+                   !selfHealth.IsDead &&
+                   HeroCombatStatus.CanAct(gameObject) &&
+                   Time.time >= nextAttackTime;
+        }
+
+        private bool TryAttackAuthoritative(Health target)
+        {
+            if (target == null ||
+                !HeroCombatRules.Enemy(gameObject, target) ||
+                HeroCombatRules.TargetDistance(transform.position, target) > Range)
+                return false;
+
+            HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
+            float windup = HeroAttackDelivery.Windup(hero);
 
             nextAttackTime = Time.time + Cooldown;
             targeting.RegisterOffensiveAction();
@@ -117,4 +139,3 @@ namespace Alterverse.Combat
         }
     }
 }
-
