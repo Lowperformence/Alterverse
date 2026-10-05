@@ -54,7 +54,7 @@ namespace Alterverse.Combat
         {
             if (Time.timeScale <= 0f) return;
             Alterverse.Multiplayer.CoopHeroSlot slot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
-            if (slot != null && slot.IsHuman && !slot.IsLocalHuman) return;
+            if (slot != null && !slot.IsLocalHuman) return;
             if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) TryAttack();
         }
 
@@ -95,7 +95,7 @@ namespace Alterverse.Combat
 
         private bool CanAttempt()
         {
-            return Time.timeScale > 0f &&
+            return isActiveAndEnabled && Time.timeScale > 0f &&
                    selfHealth != null &&
                    !selfHealth.IsDead &&
                    HeroCombatStatus.CanAct(gameObject) &&
@@ -104,7 +104,7 @@ namespace Alterverse.Combat
 
         private bool TryAttackAuthoritative(Health target)
         {
-            if (target == null ||
+            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || target == null ||
                 !HeroCombatRules.Enemy(gameObject, target) ||
                 HeroCombatRules.TargetDistance(transform.position, target) > Range)
                 return false;
@@ -139,3 +139,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

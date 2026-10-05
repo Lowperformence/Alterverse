@@ -1,100 +1,123 @@
 using System;
-using System.Reflection;
 using Alterverse.Profile;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
-
-// Google Play Games compatibility bridge. The project currently imports the
-// Google Play Games plugin as Assets, so reflection keeps this source compiling
-// even when that optional plugin is temporarily absent in another checkout.
-#pragma warning disable CS0618 // Unity Social API is deprecated, but remains the fallback here.
+#if UNITY_ANDROID && !UNITY_EDITOR
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
+#endif
 
 namespace Alterverse.Online
 {
-    /// <summary>
-    /// Google Play Games global leaderboard bridge for lifetime match wins.
-    /// </summary>
+    /// <summary>Google Play Games all-time lifetime match wins.</summary>
     public static class GooglePlayLevelLeaderboard
     {
-        // MOST WINS leaderboard configured in Google Play Console.
         public const string MostWinsLeaderboardId="CgkI57GIjPsdEAIQAA";
+        public enum ConnectionState { NotConfigured, Idle, Authenticating, Ready, Submitting, Error, Unsupported }
 
-        public enum ConnectionState
-        {
-            NotConfigured,
-            Idle,
-            Authenticating,
-            Ready,
-            Submitting,
-            Error,
-            Unsupported
-        }
-
-        private static bool activationAttempted;
-        private static int lastSubmittedScore=-1;
+        [Serializable] private sealed class SettingsSnapshot { public string mAppId; }
         private static ConnectionState state=ConnectionState.Idle;
         private static string status="Google Play Games is not connected.";
+        private static bool authenticating, submitting, openingUi, openAfterAuthentication;
+        private static int lastSubmittedScore=-1, generation;
+        private static string lastSubmittedPlayer;
+        private static bool? hasGameAppId;
 
-        public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
-        public static string Status=>IsConfigured?status:"Create the MOST WINS leaderboard in Google Play Console, then add its leaderboard ID.";
-        public static bool IsConfigured=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
+        public static bool HasLeaderboardId=>!string.IsNullOrWhiteSpace(MostWinsLeaderboardId)&&
             !MostWinsLeaderboardId.StartsWith("REPLACE_",StringComparison.Ordinal);
-        public static bool IsAuthenticated=>Social.localUser!=null&&Social.localUser.authenticated;
-        public static string PlayerName=>IsAuthenticated&&!string.IsNullOrWhiteSpace(Social.localUser.userName)
-            ?Social.localUser.userName:"Not signed in";
+        public static bool IsConfigured=>HasLeaderboardId&&HasGameAppId;
+        public static ConnectionState State=>IsConfigured?state:ConnectionState.NotConfigured;
+        public static string Status=>!HasLeaderboardId?"Add the MOST WINS leaderboard ID from Google Play Console.":
+            !HasGameAppId?"Play Games setup incomplete: game App ID is missing. Run Android Setup with the Play Console resources.":status;
+        public static bool IsBusy=>authenticating||submitting||openingUi;
+        public static bool IsAuthenticated
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                return PlayGamesPlatform.Instance.IsAuthenticated();
+#else
+                return false;
+#endif
+            }
+        }
+        public static string PlayerName
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                string name=IsAuthenticated?PlayGamesPlatform.Instance.localUser.userName:null;
+                return string.IsNullOrWhiteSpace(name)?"Not signed in":name;
+#else
+                return "Not signed in";
+#endif
+            }
+        }
         public static int CurrentScore=>Mathf.Max(0,MatchRewardService.MatchesWon);
         public static int LastSubmittedScore=>lastSubmittedScore;
+
+        private static bool HasGameAppId
+        {
+            get
+            {
+                if(hasGameAppId.HasValue)return hasGameAppId.Value;
+                // Read the same bundled settings as the plugin. The leaderboard ID alone
+                // does not configure the Android game and cannot substitute for its App ID.
+                var asset=Resources.Load("PlayGamesSettings");
+                if(asset==null){hasGameAppId=false;return false;}
+                try
+                {
+                    var settings=JsonUtility.FromJson<SettingsSnapshot>(JsonUtility.ToJson(asset));
+                    hasGameAppId=ulong.TryParse(settings?.mAppId,out ulong number)&&number>0;
+                }
+                catch(Exception){hasGameAppId=false;}
+                return hasGameAppId.Value;
+            }
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetRuntimeState()
         {
-            activationAttempted=false;
-            lastSubmittedScore=-1;
-            state=ConnectionState.Idle;
-            status="Google Play Games is not connected.";
+            generation++;
+            hasGameAppId=null;
+            authenticating=submitting=openingUi=openAfterAuthentication=false;
+            lastSubmittedScore=-1;lastSubmittedPlayer=null;
+            state=ConnectionState.Idle;status="Google Play Games is not connected.";
         }
 
-        public static void AuthenticateAndSync()
+        public static void AuthenticateAndSync(bool interactive=false)
         {
-            if(!IsConfigured)
-            {
-                state=ConnectionState.NotConfigured;
-                return;
-            }
-
+            if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
-            ActivateGooglePlayProviderIfPresent();
-            if(Social.localUser==null)
-            {
-                Fail("Google Play Games provider is unavailable.");
-                return;
-            }
-
-            if(Social.localUser.authenticated)
-            {
-                state=ConnectionState.Ready;
-                status="Google Play Games connected.";
-                SubmitCurrentScore();
-                return;
-            }
-
-            state=ConnectionState.Authenticating;
+            if(authenticating)return;
+            PlayGamesPlatform.Activate();
+            if(IsAuthenticated){SubmitCurrentScore();return;}
+            authenticating=true;state=ConnectionState.Authenticating;
             status="Signing in to Google Play Games...";
-            Social.localUser.Authenticate(success=>
+            int requestGeneration=generation;
+            Action<SignInStatus> completed=result=>
             {
-                if(!success)
+                if(requestGeneration!=generation)return;
+                authenticating=false;
+                if(result!=SignInStatus.Success)
                 {
-                    Fail("Google Play Games sign-in failed.");
+                    openAfterAuthentication=false;
+                    Fail("Play Games sign-in failed ("+result+"). Tap CONNECT to retry; check the installed build's Play Games setup.");
                     return;
                 }
-
-                state=ConnectionState.Ready;
-                status="Google Play Games connected.";
+                state=ConnectionState.Ready;status="Google Play Games connected.";
                 SubmitCurrentScore();
-            });
+                if(openAfterAuthentication){openAfterAuthentication=false;ShowNativeLeaderboardUi();}
+            };
+            // Authenticate observes automatic sign-in. A user-requested retry must use
+            // ManuallyAuthenticate; repeating automatic authentication will not prompt.
+            try
+            {
+                if(interactive)PlayGamesPlatform.Instance.ManuallyAuthenticate(completed);
+                else PlayGamesPlatform.Instance.Authenticate(completed);
+            }
+            catch(Exception e){authenticating=false;openAfterAuthentication=false;Fail("Play Games sign-in could not start: "+e.Message);}
 #else
-            state=ConnectionState.Unsupported;
-            status="Google Play leaderboard is available in the Android build.";
+            Unsupported();
 #endif
         }
 
@@ -102,206 +125,70 @@ namespace Alterverse.Online
         {
             if(!IsConfigured)return;
 #if UNITY_ANDROID && !UNITY_EDITOR
-            ActivateGooglePlayProviderIfPresent();
-            if(!IsAuthenticated)
-            {
-                AuthenticateAndSync();
-                return;
-            }
-
+            if(!IsAuthenticated){AuthenticateAndSync();return;}
+            if(submitting)return;
+            string player=PlayGamesPlatform.Instance.localUser.id;
+            if(lastSubmittedPlayer!=player){lastSubmittedPlayer=player;lastSubmittedScore=-1;}
             int wins=CurrentScore;
-            state=ConnectionState.Submitting;
-            status="Syncing wins "+wins+"...";
-            Social.ReportScore(wins,MostWinsLeaderboardId,success=>
+            if(lastSubmittedScore==wins){state=ConnectionState.Ready;status="Wins "+wins+" synced to the global ranking.";return;}
+            submitting=true;state=ConnectionState.Submitting;status="Syncing wins "+wins+"...";
+            int requestGeneration=generation;
+            try
             {
-                if(!success)
+                PlayGamesPlatform.Instance.ReportScore(wins,MostWinsLeaderboardId,success=>
                 {
-                    Fail("Win sync failed. Check your connection and Play Games setup.");
-                    return;
-                }
-
-                lastSubmittedScore=wins;
-                state=ConnectionState.Ready;
-                status="Wins "+wins+" synced to the global ranking.";
-            });
+                    if(requestGeneration!=generation)return;
+                    submitting=false;
+                    if(!success){Fail("Win sync failed. Check the connection and published Play Games leaderboard.");return;}
+                    if(!IsAuthenticated||PlayGamesPlatform.Instance.localUser.id!=player){lastSubmittedScore=-1;return;}
+                    lastSubmittedScore=wins;state=ConnectionState.Ready;status="Wins "+wins+" synced to the global ranking.";
+                    // A match can finish while the previous score is still being sent.
+                    if(CurrentScore!=wins)SubmitCurrentScore();
+                });
+            }
+            catch(Exception e){submitting=false;Fail("Win sync could not start: "+e.Message);}
 #else
-            state=ConnectionState.Unsupported;
-            status="Google Play leaderboard is available in the Android build.";
+            Unsupported();
 #endif
         }
 
         public static void ShowLeaderboard()
         {
-            if(!IsConfigured)
-            {
-                state=ConnectionState.NotConfigured;
-                return;
-            }
+            if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
-            ActivateGooglePlayProviderIfPresent();
-            if(Social.localUser==null)
-            {
-                Fail("Google Play Games provider is unavailable.");
-                return;
-            }
-
+            if(openingUi)return;
             if(!IsAuthenticated)
             {
-                state=ConnectionState.Authenticating;
-                status="Signing in to Google Play Games...";
-                Social.localUser.Authenticate(success=>
-                {
-                    if(!success)
-                    {
-                        Fail("Google Play Games sign-in failed.");
-                        return;
-                    }
-
-                    state=ConnectionState.Ready;
-                    status="Google Play Games connected.";
-                    SubmitCurrentScore();
-                    ShowNativeLeaderboardUi();
-                });
+                openAfterAuthentication=true;
+                AuthenticateAndSync(true);
                 return;
             }
-
-            SubmitCurrentScore();
-            ShowNativeLeaderboardUi();
+            SubmitCurrentScore();ShowNativeLeaderboardUi();
 #else
-            state=ConnectionState.Unsupported;
-            status="Google Play leaderboard is available in the Android build.";
+            Unsupported();
 #endif
         }
 
-        /// <summary>
-        /// Opens this specific Google Play leaderboard through PlayGamesPlatform.Instance.
-        /// This bypasses cases where Unity's generic Social.ShowLeaderboardUI() silently
-        /// does nothing even though Google Play Games authentication succeeded.
-        /// </summary>
         private static void ShowNativeLeaderboardUi()
         {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if(openingUi)return;
+            openingUi=true;
+            int requestGeneration=generation;
             try
             {
-                Type type=ResolvePlayGamesPlatformType();
-                if(type!=null)
+                PlayGamesPlatform.Instance.ShowLeaderboardUI(MostWinsLeaderboardId,LeaderboardTimeSpan.AllTime,result=>
                 {
-                    PropertyInfo instanceProperty=type.GetProperty("Instance",BindingFlags.Public|BindingFlags.Static);
-                    object instance=instanceProperty?.GetValue(null,null);
-                    if(instance!=null)
-                    {
-                        MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                        for (int i = 0; i < methods.Length; i++)
-                        {
-                            MethodInfo showSpecific = methods[i];
-                            if (showSpecific.Name != "ShowLeaderboardUI")
-                                continue;
-
-                            ParameterInfo[] parameters = showSpecific.GetParameters();
-                            if (parameters.Length == 0 || parameters[0].ParameterType != typeof(string))
-                                continue;
-
-                            object[] arguments = new object[parameters.Length];
-                            arguments[0] = MostWinsLeaderboardId;
-                            bool supported = true;
-                            for (int parameter = 1; parameter < parameters.Length; parameter++)
-                            {
-                                ParameterInfo info = parameters[parameter];
-                                if (info.IsOptional)
-                                {
-                                    arguments[parameter] = info.DefaultValue;
-                                }
-                                else if (info.ParameterType.IsEnum)
-                                {
-                                    try
-                                    {
-                                        arguments[parameter] = Enum.Parse(info.ParameterType, "AllTime", true);
-                                    }
-                                    catch
-                                    {
-                                        supported = false;
-                                        break;
-                                    }
-                                }
-                                else if (!typeof(Delegate).IsAssignableFrom(info.ParameterType) &&
-                                         info.ParameterType.IsValueType &&
-                                         Nullable.GetUnderlyingType(info.ParameterType) == null)
-                                {
-                                    supported = false;
-                                    break;
-                                }
-                            }
-                            if (!supported)
-                                continue;
-
-                            showSpecific.Invoke(instance, arguments);
-                            return;
-                        }
-                    }
-                }
+                    if(requestGeneration!=generation)return;
+                    openingUi=false;
+                    if(result!=UIStatus.Valid&&result!=UIStatus.UserClosedUI)Fail("Play Games ranking could not open ("+result+"). Check published leaderboard, tester access and signing certificate.");
+                });
             }
-            catch(Exception exception)
-            {
-                Debug.LogWarning("DIMENSIONS FRONT: direct Google Play leaderboard UI failed: "+exception.Message);
-            }
-
-            // Older plugin versions expose only the generic Unity Social UI.
-            Social.ShowLeaderboardUI();
+            catch(Exception e){openingUi=false;Fail("Play Games ranking could not open: "+e.Message);}
+#endif
         }
 
-        private static void ActivateGooglePlayProviderIfPresent()
-        {
-            if(activationAttempted)return;
-            activationAttempted=true;
-
-            try
-            {
-                Type type=ResolvePlayGamesPlatformType();
-                if(type==null)
-                {
-                    Debug.LogWarning("DIMENSIONS FRONT: Google Play Games PlayGamesPlatform type was not found.");
-                    return;
-                }
-
-                MethodInfo activate=type.GetMethod("Activate",BindingFlags.Public|BindingFlags.Static);
-                if(activate==null)
-                {
-                    Debug.LogWarning("DIMENSIONS FRONT: Google Play Games Activate() method was not found.");
-                    return;
-                }
-
-                activate.Invoke(null,null);
-            }
-            catch(Exception exception)
-            {
-                Debug.LogWarning("DIMENSIONS FRONT: Google Play Games activation failed: "+exception.Message);
-            }
-        }
-
-        private static Type ResolvePlayGamesPlatformType()
-        {
-            const string typeName = "GooglePlayGames.PlayGamesPlatform";
-            Type resolved = Type.GetType(typeName + ", GooglePlayGames", false)
-                ?? Type.GetType(typeName + ", GooglePlayGames.Android", false)
-                ?? Type.GetType(typeName + ", Google.Play.Games", false);
-            if (resolved != null)
-                return resolved;
-
-            // The plugin assembly name differs between the legacy and current Unity packages.
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                resolved = assembly.GetType(typeName, false);
-                if (resolved != null)
-                    return resolved;
-            }
-            return null;
-        }
-
-        private static void Fail(string message)
-        {
-            state=ConnectionState.Error;
-            status=message;
-            Debug.LogWarning("DIMENSIONS FRONT: "+message);
-        }
+        private static void Unsupported(){state=ConnectionState.Unsupported;status="Google Play leaderboard is available in the Android build.";}
+        private static void Fail(string message){state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
-#pragma warning restore CS0618

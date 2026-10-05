@@ -37,7 +37,7 @@ namespace Alterverse.Characters
         {
             if (Time.timeScale <= 0 || Keyboard.current == null) return;
             Alterverse.Multiplayer.CoopHeroSlot coopSlot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
-            if (coopSlot != null && coopSlot.IsHuman && !coopSlot.IsLocalHuman) return;
+            if (coopSlot != null && !coopSlot.IsLocalHuman) return;
             if (Keyboard.current.qKey.wasPressedThisFrame) CastQ();
             if (Keyboard.current.eKey.wasPressedThisFrame) CastW();
             if (Keyboard.current.rKey.wasPressedThisFrame) CastE();
@@ -63,7 +63,7 @@ namespace Alterverse.Characters
                 0 => $"{s.Power:0} damage; pull mobile enemies up to 4.2m. Walls block the anchor.",
                 1 => $"Gain {s.Power:0} shield for 3s and 15% speed for 2s.",
                 2 => $"{s.Power:0} area damage and 25% slow for 1.2s.",
-                _ => $"{s.Power:0} total damage over 3s in {s.Radius:0.#}m. Slows and gently pulls inward."
+                _ => $"{s.Power:0} total damage over 3s in {s.Radius:0.#}m. Pulls mobile enemies inward at their running speed; running directly outward cancels the pull."
             };
             if (h == HeroId.Mira && slot == 1) return $"Heal the weakest nearby hero for {s.Power:0} HP.";
             if (h == HeroId.Mira && slot == 2) return $"Protect a wounded nearby hero with {s.Power:0} shield for 4s.";
@@ -72,7 +72,7 @@ namespace Alterverse.Characters
             if (h == HeroId.Rook && slot == 1) return $"Recover {s.Power:0} HP and gain 20 shield for 3s.";
             if (h == HeroId.Kaelon && slot == 0) return $"{s.Power:0} damage and a 0.55s stun. Brief stun immunity follows.";
             if (h == HeroId.Nyra && slot == 3) return $"Four shots, {s.Power:0} total damage. Leaving range or stunning interrupts the volley.";
-            if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after 0.4s, up to 35% more against wounded heroes. Target can leave range.";
+            if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after {s.Windup:0.##}s, up to 35% more against wounded heroes. Target can leave range.";
             if (s.Radius > 0)
                 return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." +
                        (h == HeroId.Kaelon ? " Slows enemies; ultimate shields allies." :

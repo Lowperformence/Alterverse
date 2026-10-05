@@ -33,6 +33,7 @@ namespace Alterverse.Combat
         }
         public void BoostSpeed(float factor,float seconds)
         {
+            if (Time.time >= speedBoostUntil) speedBoostFactor = 1f;
             speedBoostFactor=Mathf.Max(speedBoostFactor,Mathf.Clamp(factor,1f,1.5f));
             speedBoostUntil=Mathf.Max(speedBoostUntil,Time.time+Mathf.Clamp(seconds,0f,10f));
         }
@@ -55,3 +56,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

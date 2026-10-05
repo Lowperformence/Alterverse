@@ -113,6 +113,11 @@ namespace Alterverse.Profile
             writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills));
             ProfileTransaction.Commit(writes.ToArray());
 
+            // Persist the win before reporting it. Co-op can stay on its own result/lobby
+            // flow without visiting MainMenu.ShowHome, so menu-only sync misses these wins.
+            if(won&&Alterverse.Online.GooglePlayLevelLeaderboard.IsAuthenticated)
+                Alterverse.Online.GooglePlayLevelLeaderboard.SubmitCurrentScore();
+
             // Difficulty reward bonus accelerates account progression only. Battle Pass keeps its
             // existing base-XP economy, and solo adaptive progression is receipt-safe.
             BattlePassProgress.GrantMatchXp(baseXp,matchId);
@@ -121,4 +126,3 @@ namespace Alterverse.Profile
         }
     }
 }
-

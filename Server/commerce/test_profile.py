@@ -94,6 +94,19 @@ class ProfileTests(unittest.TestCase):
         for key in ['DF_HeroOwned_Traveler','DF_ArenaOwned_Noxara','DF_WeaponSkinOwnedItem_0_1','DF_BP_BETA01_Premium','DF_BattleItem_2']:
             self.assertEqual(profile_value(result,key),1)
 
+    def test_nerok_weapon_purchases_restore_and_equip_both_colorways(self):
+        self.grant()
+        for variant in (0,1):
+            before=self.ledger.wallet('a')
+            bought=self.ledger.purchase('a',f'weapon_7_{variant}',format(200+variant,'032x'),before['profileRevision'])
+            restored=Ledger(self.path).wallet('a')
+            self.assertEqual(profile_value(restored,f'DF_WeaponSkinOwnedItem_7_{variant}'),1)
+            self.assertEqual(profile_value(restored,'DF_WeaponSkinSelected_7'),variant)
+            self.assertEqual(profile_value(restored,'DF_WeaponSkinEquipped_7'),1)
+        self.assertEqual(restored['balance'],200)
+        self.assertEqual(profile_value(restored,'DF_WeaponSkinOwnedItem_7_0'),1)
+        self.assertEqual(profile_value(restored,'DF_WeaponSkinOwnedItem_7_1'),1)
+
 class ProfileHttpTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory(); self.app=CommerceApplication(Path(self.tmp.name)/'db',lambda h:'a' if h=='Bearer valid' else None,Mock(),'package')
@@ -122,3 +135,4 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
+

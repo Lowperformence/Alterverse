@@ -9,7 +9,23 @@ namespace Alterverse.Shop
     public sealed class GooglePlayShardStore:MonoBehaviour
     {
         public static GooglePlayShardStore Instance{get;private set;}
-        public string Status{get;private set;}="Google Play purchases unavailable until store setup is complete.";
+        string status="Connecting to Google Play…";
+        public string Status
+        {
+            get
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                var backend=PaidShardCommerce.Instance;
+                if(backend==null)return Alterverse.Profile.AccountServerBootstrap.Instance?.Status??"Account service unavailable.";
+                if(!backend.Ready)return backend.Status;
+                if(!backend.PurchasesReady)return "Shard purchases are unavailable: account server billing is not enabled.";
+                return status;
+#else
+                return "Shard purchases require the Android Google Play build. Checkout is unavailable here.";
+#endif
+            }
+            private set=>status=value;
+        }
         public bool Ready{get;private set;}
         public bool Busy{get;private set;}
         public bool PendingRecovery{get;private set;}
@@ -19,13 +35,18 @@ namespace Alterverse.Shop
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]static void Create(){if(FindAnyObjectByType<GooglePlayShardStore>()==null)new GameObject("DF_GooglePlayShardStore").AddComponent<GooglePlayShardStore>();}
         void Awake(){if(Instance!=null&&Instance!=this){Destroy(gameObject);return;}Instance=this;DontDestroyOnLoad(gameObject);}
 #if UNITY_ANDROID && !UNITY_EDITOR
-        StoreController store;bool connecting;float nextConnect;
+        StoreController store;bool connecting,retryRequested;float nextConnect;
         readonly HashSet<string> processing=new();
         readonly HashSet<string> unconfirmed=new();
         string connectedAccount;int connectedSession;
         void Update()
         {
             var backend=PaidShardCommerce.Instance;
+            if(retryRequested&&!connecting&&processing.Count==0&&Time.unscaledTime>=nextConnect)
+            {
+                Unbind();store=null;prices.Clear();Ready=false;Busy=false;
+                PendingRecovery=true;retryRequested=false;
+            }
             if(store!=null&&!connecting&&(backend==null||!backend.Ready||backend.AccountHash!=connectedAccount||backend.SessionVersion!=connectedSession))
             {
                 Ready=false;
@@ -35,7 +56,7 @@ namespace Alterverse.Shop
         }
         async void Initialize()
         {
-            connecting=true;
+            connecting=true;retryRequested=false;
             try
             {
                 connectedAccount=PaidShardCommerce.Instance.AccountHash;connectedSession=PaidShardCommerce.Instance.SessionVersion;PendingRecovery=true;
@@ -56,14 +77,24 @@ namespace Alterverse.Shop
             catch(Exception){if(this==null)return;Status="Google Play connection failed. Reconnect to retry.";Unbind();store=null;nextConnect=Time.unscaledTime+15;}
             finally{if(this!=null)connecting=false;}
         }
-        void Products(List<Product> products){prices.Clear();foreach(var p in products)if(p.availableToPurchase&&ShardPacks.Contains(p.definition.id))prices[p.definition.id]=p.metadata.localizedPriceString;Ready=prices.Count>0;Status=Ready?"Prices supplied by Google Play.":"Products unavailable.";store.FetchPurchases();}
-        void ProductsFailed(ProductFetchFailed failure){Ready=false;Status="Store products unavailable.";}
-        void Disconnected(StoreConnectionFailureDescription failure){Ready=false;Busy=false;Status="Store disconnected. Reconnect to retry.";}
-        void FetchFailed(PurchasesFetchFailureDescription failure){PendingRecovery=true;Busy=processing.Count>0;Status="Purchase recovery failed. Reconnect to retry.";}
-        void Confirmed(Order order){string token=order.Info.Google?.PurchaseToken;if(!(order is FailedOrder)&&token!=null)unconfirmed.Remove(token);PendingRecovery=unconfirmed.Count>0;Status=PendingRecovery?"Store confirmation pending. Reconnect to retry.":"Purchase completed.";}
+        void Products(List<Product> products){prices.Clear();foreach(var p in products)if(p.availableToPurchase&&ShardPacks.Contains(p.definition.id))prices[p.definition.id]=p.metadata.localizedPriceString;Ready=prices.Count>0;Status=Ready?"Prices supplied by Google Play.":"Products unavailable. Retrying…";if(!Ready)ScheduleRetry();store.FetchPurchases();}
+        void ProductsFailed(ProductFetchFailed failure){Ready=false;Status="Store products unavailable. Retrying…";ScheduleRetry();}
+        void Disconnected(StoreConnectionFailureDescription failure){Ready=false;Busy=processing.Count>0;Status="Store disconnected. Retrying…";ScheduleRetry();}
+        void FetchFailed(PurchasesFetchFailureDescription failure){PendingRecovery=true;Busy=processing.Count>0;Status="Purchase recovery failed. Retrying…";ScheduleRetry();}
+        void ScheduleRetry(){retryRequested=true;nextConnect=Time.unscaledTime+15;}
+        void Confirmed(Order order)
+        {
+            string token=order.Info.Google?.PurchaseToken;
+            if(order is FailedOrder||string.IsNullOrEmpty(token))
+            {
+                PendingRecovery=true;Status="Store confirmation pending. Retrying…";ScheduleRetry();return;
+            }
+            unconfirmed.Remove(token);PendingRecovery=unconfirmed.Count>0;
+            Status=PendingRecovery?"Store confirmation pending.":"Purchase completed.";
+        }
         void Failed(FailedOrder order){Busy=false;Status=order.FailureReason==PurchaseFailureReason.UserCancelled?"Purchase cancelled.":"Purchase failed. No shards granted.";}
         void Deferred(DeferredOrder order){Busy=false;Status="Payment pending. Shards unlock after confirmation.";}
-        void Fetched(Orders orders){foreach(var order in orders.PendingOrders){string token=order.Info.Google?.PurchaseToken;if(!string.IsNullOrEmpty(token))unconfirmed.Add(token);}PendingRecovery=unconfirmed.Count>0||orders.PendingOrders.Count>0;foreach(var order in orders.PendingOrders)Pending(order);}
+        void Fetched(Orders orders){if(processing.Count==0)unconfirmed.Clear();foreach(var order in orders.PendingOrders){string token=order.Info.Google?.PurchaseToken;if(!string.IsNullOrEmpty(token))unconfirmed.Add(token);}PendingRecovery=unconfirmed.Count>0||orders.PendingOrders.Count>0;foreach(var order in orders.PendingOrders)Pending(order);}
         async void Pending(PendingOrder order)
         {
             string token=order.Info.Google?.PurchaseToken;if(string.IsNullOrEmpty(token)||!processing.Add(token))return;
@@ -74,14 +105,14 @@ namespace Alterverse.Shop
                 string product=items[0].Product.definition.id;
                 var backend=PaidShardCommerce.Instance;
                 int session=connectedSession;
-                if(backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token)){Status="Verification pending. Reconnect to recover purchase.";return;}
+                if(backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token)){Status="Verification pending. Retrying purchase recovery…";ScheduleRetry();return;}
                 if(this==null||store==null||backend==null||backend!=PaidShardCommerce.Instance||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session)return;
                 // Server verified the token and durably credited the account wallet.
                 // Consume/acknowledge only after that durable server credit.
                 store.ConfirmPurchase(order);Status="Shards added to your balance.";
                 Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.Purchase,.65f);
             }
-            catch(Exception){if(this==null)return;Status="Purchase retained for recovery. No local grant was made.";}
+            catch(Exception){if(this==null)return;Status="Purchase retained for recovery. Retrying…";ScheduleRetry();}
             finally{processing.Remove(token);if(this!=null)Busy=processing.Count>0;}
         }
         void Unbind(){if(store==null)return;store.OnProductsFetched-=Products;store.OnProductsFetchFailed-=ProductsFailed;store.OnPurchasePending-=Pending;store.OnPurchaseConfirmed-=Confirmed;store.OnPurchaseFailed-=Failed;store.OnPurchaseDeferred-=Deferred;store.OnPurchasesFetched-=Fetched;store.OnPurchasesFetchFailed-=FetchFailed;store.OnStoreDisconnected-=Disconnected;}
@@ -98,7 +129,7 @@ namespace Alterverse.Shop
         {
             PaidShardCommerce.Instance?.Refresh();
 #if UNITY_ANDROID && !UNITY_EDITOR
-            if(Busy||connecting||processing.Count>0)return;Unbind();store=null;prices.Clear();Ready=false;PendingRecovery=true;nextConnect=0;
+            if(Busy||connecting||processing.Count>0)return;Unbind();store=null;prices.Clear();Ready=false;PendingRecovery=true;retryRequested=false;nextConnect=0;
 #endif
         }
         void OnDestroy(){if(Instance==this)Instance=null;

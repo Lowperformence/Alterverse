@@ -66,7 +66,7 @@ namespace Alterverse.Visuals
             float cooldown=Mathf.Max(.1f,basic.AttackCooldown);
             // A real attack is the large 0 -> full-cooldown jump. Small network corrections do not retrigger visuals.
             if(current>cooldown*.68f&&previousBasic<cooldown*.22f)
-                BeginPresentation(-1,BasicWindup(identity!=null?identity.Hero:HeroId.Veyr));
+                BeginPresentation(-1,HeroAttackDelivery.Windup(identity!=null?identity.Hero:HeroId.Veyr));
             previousBasic=current;
         }
 
@@ -81,7 +81,7 @@ namespace Alterverse.Visuals
                 if(current>cooldown*.68f&&previousAbility[slot]<cooldown*.22f)
                 {
                     AbilitySpec spec=kit.Spec(slot);
-                    float visualWindup=Mathf.Max(spec.Windup,AbilityWindup(identity.Hero,slot));
+                    float visualWindup=HeroAttackDelivery.AbilityWindup(identity.Hero,slot,spec);
                     BeginPresentation(slot,visualWindup);
                 }
                 previousAbility[slot]=current;
@@ -92,7 +92,7 @@ namespace Alterverse.Visuals
         {
             if(identity==null)return;
             AbilitySpec spec=slot>=0&&kit!=null?kit.Spec(slot):default;
-            float range=slot>=0?spec.Range:BasicVisualRange(identity.Hero);
+            float range=slot>=0?spec.Range:HeroCombatProfile.StatsFor(identity.Hero).AttackRange;
             float radius=slot>=0?spec.Radius:0f;
             Vector3 visualTarget=ResolveVisualTarget(slot,range,radius);
 
@@ -282,23 +282,5 @@ namespace Alterverse.Visuals
             return transform.position+Vector3.up*.75f+transform.forward*.35f;
         }
 
-        private static float BasicWindup(HeroId hero)=>hero switch
-        {
-            HeroId.Veyr=>.09f,HeroId.Kaelon=>.16f,HeroId.Nyra=>.08f,HeroId.Elyra=>.14f,
-            HeroId.Mira=>.12f,HeroId.Rook=>.13f,HeroId.Traveler=>.10f,_=>.10f
-        };
-
-        private static float AbilityWindup(HeroId hero,int slot)
-        {
-            if(slot==3&&hero==HeroId.Nyra)return .22f;
-            return BasicWindup(hero)+.04f;
-        }
-
-        private static float BasicVisualRange(HeroId hero)=>hero switch
-        {
-            HeroId.Nyra=>7.2f,HeroId.Elyra=>6.2f,HeroId.Mira=>5.8f,HeroId.Traveler=>6.3f,
-            HeroId.Veyr=>2.3f,HeroId.Kaelon=>2.6f,HeroId.Rook=>2.25f,_=>2.4f
-        };
     }
 }
-

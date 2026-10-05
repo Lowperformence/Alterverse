@@ -39,9 +39,6 @@ namespace Alterverse.Combat
         public static float Damage(GameObject actor, Health target, float amount)
         {
             if (!Enemy(actor, target)) return 0;
-            PlanetBuffReceiver buff = actor.GetComponent<PlanetBuffReceiver>();
-            // Guard's minion bonus remains target-specific. Flux applies centrally in Health.TakeDamage.
-            if (target.GetComponent<LaneMinion>() != null && buff != null) amount *= buff.MinionDamageMultiplier;
             float before = target.Current;
             target.TakeDamage(amount, actor);
             return Mathf.Max(0, before - target.Current);
@@ -66,3 +63,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

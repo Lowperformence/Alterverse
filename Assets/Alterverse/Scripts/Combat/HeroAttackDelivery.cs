@@ -75,7 +75,9 @@ namespace Alterverse.Combat
         }
         public void Basic(Health target,float amount,float range)
         {
-            if(target==null||HeroCombatRules.TargetDistance(transform.position,target)>range)return;
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||!isActiveAndEnabled||
+                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
+                !HeroCombatRules.Enemy(gameObject,target)||HeroCombatRules.TargetDistance(transform.position,target)>range)return;
             int i=FreeSlot();if(i<0)return;
             float windup=Windup(identity.Hero);
             hasPending=true;
@@ -85,6 +87,9 @@ namespace Alterverse.Combat
         }
         public void Ability(HeroAbilityExecution execution,int slot,Health target,bool volley=false,float windup=-1)
         {
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||!isActiveAndEnabled||
+                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
+                execution==null||execution.gameObject!=gameObject||!execution.isActiveAndEnabled||slot<0||slot>3||!HeroCombatRules.Enemy(gameObject,target))return;
             int i=FreeSlot();if(i<0||target==null)return;
             float range=GetComponent<HeroAbilityKit>().Spec(slot).Range;
             if(HeroCombatRules.TargetDistance(transform.position,target)>range)return;
@@ -104,7 +109,8 @@ namespace Alterverse.Combat
         private void Update()
         {
             if(!hasPending||Time.timeScale<=0)return;
-            if(self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)){Cancel();return;}
+            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||
+                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)){Cancel();return;}
             for(int i=0;i<pending.Length;i++)
             {
                 Pending p=pending[i];if(!p.Active)continue;
@@ -144,4 +150,3 @@ namespace Alterverse.Combat
         }
     }
 }
-

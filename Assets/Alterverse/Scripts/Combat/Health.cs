@@ -45,6 +45,8 @@ namespace Alterverse.Combat
         private float heroBaseShieldRechargeAt = -1f;
 
         private float TransientShield => Time.time < shieldUntil ? shield : 0f;
+        /// <summary>Ability shield only, excluding the permanent regenerating hero shield.</summary>
+        public float TemporaryShield => TransientShield;
 
         /// <summary>Total currently active shield, including temporary ability shields.</summary>
         public float Shield => TransientShield + heroBaseShield;
@@ -288,6 +290,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

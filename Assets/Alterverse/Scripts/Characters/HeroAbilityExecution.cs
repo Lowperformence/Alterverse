@@ -16,6 +16,7 @@ namespace Alterverse.Characters
         private readonly float[] ready = new float[4];
         private readonly System.Collections.Generic.HashSet<Health> resolvedTargets=new();
         private int life;
+        private bool wasStunned;
         private readonly RaycastHit[] sightHits=new RaycastHit[16];
         private void Awake()
         {
@@ -23,6 +24,12 @@ namespace Alterverse.Characters
             self = GetComponent<Health>(); identity = GetComponent<HeroIdentity>(); kit = GetComponent<HeroAbilityKit>();
             ready[3] = Time.time + HeroAbilityKit.UltimateInitialLock;
             self.Died += CancelPending;
+        }
+        private void Update()
+        {
+            bool stunned=!HeroCombatStatus.CanAct(gameObject);
+            if(stunned&&!wasStunned)CancelPending();
+            wasStunned=stunned;
         }
         private void CancelPending() { GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
@@ -43,11 +50,6 @@ namespace Alterverse.Characters
             ready[slot]=Time.time+Mathf.Max(0f,remaining);
         }
 
-        private static float TemporaryShield(Health health)
-        {
-            return health==null?0f:Mathf.Max(0f,health.Shield-health.HeroBaseShield);
-        }
-
         public Health WoundedAlly(float range, bool shield = false)
         {
             TeamMember team = GetComponent<TeamMember>(); if (team == null) return null;
@@ -60,7 +62,7 @@ namespace Alterverse.Characters
                 Health h=Health.Active[i];
                 if(h==null||h.IsDead||!h.isActiveAndEnabled||h.GetComponent<HeroIdentity>()==null||h.Normalized>=lowest)continue;
                 TeamMember member=h.GetComponent<TeamMember>();
-                if(member==null||member.Team!=team.Team||(shield&&TemporaryShield(h)>5f))continue;
+                if(member==null||member.Team!=team.Team||(shield&&h.TemporaryShield>5f))continue;
                 Vector3 delta=h.transform.position-transform.position;delta.y=0;
                 if(delta.sqrMagnitude>rangeSqr)continue;
                 lowest=h.Normalized;best=h;
@@ -69,7 +71,7 @@ namespace Alterverse.Characters
         }
         public bool TryCast(int slot, Health target, Vector3 movement)
         {
-            if (slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
+            if (!isActiveAndEnabled || !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
@@ -108,7 +110,7 @@ namespace Alterverse.Characters
             }
             else if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
             {
-                if (hero == HeroId.Kaelon) { if (TemporaryShield(self) > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
+                if (hero == HeroId.Kaelon) { if (self.TemporaryShield > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
                 else { if (self.Normalized >= .95f) return false; HeroCombatAudio.Cast(gameObject,slot);self.Heal(spec.Power,false); self.AddShield(20, 3,false); }
                 HeroSkillVfx.Support(gameObject,self,true,hero==HeroId.Kaelon?4f:3f);
                 if(hero==HeroId.Rook)HeroSkillVfx.Support(gameObject,self,false,.45f);
@@ -225,7 +227,8 @@ namespace Alterverse.Characters
             {
                 Health h=Health.Active[i];
                 if(h==null||h.IsDead||!h.isActiveAndEnabled||!resolvedTargets.Add(h))continue;
-                if((h.transform.position-center).sqrMagnitude>radiusSqr)continue;
+                Vector3 delta=h.transform.position-center;delta.y=0;
+                if(delta.sqrMagnitude>radiusSqr)continue;
                 TeamMember member=h.GetComponent<TeamMember>();
                 bool ally=own!=null&&member!=null&&member.Team==own.Team&&h.GetComponent<HeroIdentity>()!=null;
                 if(identity.Hero==HeroId.Mira)
@@ -249,7 +252,9 @@ namespace Alterverse.Characters
                 damage *= 1f + (1f - target.Normalized) * .35f;
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject, target, damage);
-            bool damaged=target.Current+target.Shield<before;
+            bool damaged=target!=null&&target.Current+target.Shield<before;
+            // A rejected hit (for example an invulnerable objective) cannot apply control either.
+            if(!damaged)return;
             if(damaged)
             {
                 HeroSkillVfx.Impact(gameObject,target,slot);
@@ -273,3 +278,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

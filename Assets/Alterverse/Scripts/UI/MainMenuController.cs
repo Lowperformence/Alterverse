@@ -1222,10 +1222,10 @@ namespace Alterverse.UI
 
             bool configured = GooglePlayLevelLeaderboard.IsConfigured;
             string syncLabel = GooglePlayLevelLeaderboard.IsAuthenticated ? "SYNC WINS" : "CONNECT & SYNC";
-            if (theme.Action(new Rect(Left + 28, 558, (leftWidth - 68) * .5f, 58), syncLabel, true, enabled: configured))
-                GooglePlayLevelLeaderboard.AuthenticateAndSync();
+            if (theme.Action(new Rect(Left + 28, 558, (leftWidth - 68) * .5f, 58), syncLabel, true, enabled: configured && !GooglePlayLevelLeaderboard.IsBusy))
+                GooglePlayLevelLeaderboard.AuthenticateAndSync(true);
             if (theme.Action(new Rect(Left + 40 + (leftWidth - 68) * .5f, 558, (leftWidth - 68) * .5f, 58),
-                "OPEN MOST WINS", true, enabled: configured))
+                "OPEN MOST WINS", true, enabled: configured && !GooglePlayLevelLeaderboard.IsBusy))
                 GooglePlayLevelLeaderboard.ShowLeaderboard();
 
             float x = Left + leftWidth + 32, w = ContentWidth - leftWidth - 32;
@@ -1241,7 +1241,7 @@ namespace Alterverse.UI
             Stat(x, 532, w, "SCOPE", "ALL-TIME / GLOBAL");
             theme.Label(new Rect(x, 604, w, 56),
                 configured ? "Google Play stores the global Most Wins leaderboard."
-                    : "SETUP REQUIRED  /  Add the MOST WINS leaderboard ID from Google Play Console.",
+                    : "SETUP REQUIRED  /  Import the game App ID and leaderboard resources from Google Play Console.",
                 theme.Small, true);
         }
 
@@ -1473,3 +1473,4 @@ namespace Alterverse.UI
         }
     }
 }
+

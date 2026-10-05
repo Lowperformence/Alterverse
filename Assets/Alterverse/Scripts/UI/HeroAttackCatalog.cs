@@ -116,7 +116,7 @@ namespace Alterverse.UI
                 0=>"Damages and slows the target by 25% for 1.5s.",
                 1=>"Heals the most wounded ally in range.",
                 2=>"Shields a wounded ally for 4s.",
-                _=>"Large support field: heals allies for 58 and grants 25 shield for 3s."
+                _=>"Large support field: heals nearby allies and grants 25 shield for 3s."
             },
             HeroId.Rook=>slot switch
             {
@@ -137,10 +137,11 @@ namespace Alterverse.UI
                 0=>"Throw the anchor after a readable windup; 28 damage and pull mobile enemies up to 4.2m. Walls block the hook and pull.",
                 1=>"Gain 45 shield for 3s and 15% movement speed for 2s.",
                 2=>"Short-range pressure wave; 26 damage and 25% slow for 1.2s.",
-                _=>"After a warning, a fixed 3.2m vortex deals 60 total damage over 3s, slows 25% and gently draws mobile enemies inward. Leave the circle to escape."
+                _=>"After a warning, a fixed 3.2m vortex deals 60 total damage over 3s, draws mobile enemies inward at their running speed. Running directly outward cancels the pull."
             },
             _=>"Unknown effect."
         };
     }
 }
+
 

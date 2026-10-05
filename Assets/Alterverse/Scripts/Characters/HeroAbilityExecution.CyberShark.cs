@@ -20,7 +20,7 @@ namespace Alterverse.Characters
             }
             else if(slot==1)
             {
-                if(self.Shield>5f)return false;
+                if(self.TemporaryShield>5f)return false;
                 HeroCombatAudio.Cast(gameObject,slot);
                 self.AddShield(spec.Power,3f,false);
                 (GetComponent<HeroCombatStatus>()??gameObject.AddComponent<HeroCombatStatus>()).BoostSpeed(1.15f,2f);
@@ -117,7 +117,7 @@ namespace Alterverse.Characters
                 for(int i=Health.Active.Count-1;i>=0;i--)
                 {
                     Health h=Health.Active[i];
-                    if(!HeroCombatRules.Enemy(gameObject,h))continue;
+                    if(!HeroCombatRules.Enemy(gameObject,h)||(h.DamageGate!=null&&!h.DamageGate()))continue;
                     HeroLocomotion body=h.GetComponent<HeroLocomotion>();
                     Vector3 position=body!=null?body.FrameStartPosition:h.transform.position;
                     Vector3 delta=center-position;delta.y=0;
