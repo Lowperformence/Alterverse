@@ -9,8 +9,8 @@ namespace Alterverse.Match
 {
     /// <summary>
     /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
-    /// stays active for 30 seconds, and relocates randomly with a strong bias toward
-    /// the middle third of the arena. Every hero inside scores independently for their
+    /// stays active for 30 seconds, and relocates randomly inside the middle 50%
+    /// of the arena width. The entire capture circle stays out of both outer quarters. Every hero inside scores independently for their
     /// team, even while both teams occupy the zone.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
@@ -27,7 +27,8 @@ namespace Alterverse.Match
         private const float ArenaHalfHeight=36f;
         private const float ZoneEdgeMargin=1.25f;
         private const float SpawnPadX=27.5f;
-        private const float MiddleThirdSpawnChance=.70f;
+        public const float ExcludedSideFraction=.25f;
+        private Bounds arenaBounds;
         private const float InnerRingRadiusScale=.76f;
         private const float RingAlpha=.42f;
         private static readonly Color HotZoneGreen=new(.38f,.96f,.28f,1f);
@@ -124,33 +125,28 @@ namespace Alterverse.Match
 
         private Vector3 ChooseSpawnPosition()
         {
-            float xLimit=ArenaHalfWidth-Radius-ZoneEdgeMargin;
-            float zLimit=ArenaHalfHeight-Radius-ZoneEdgeMargin;
-
-            // The middle third of a full axis spans one third of the arena width,
-            // so its half-extent is one third of the arena half-extent.
-            float centerXLimit=ArenaHalfWidth/3f;
-            float centerZLimit=ArenaHalfHeight/3f;
-            bool preferCenter=rng.NextDouble()<MiddleThirdSpawnChance;
+            // Every current map uses DF_ArenaFloor. Read its actual collision bounds so
+            // this restriction follows future map sizes instead of a fixed world X range.
+            Collider floor=GameObject.Find("DF_ArenaFloor")?.GetComponent<Collider>();
+            arenaBounds=floor!=null?floor.bounds:
+                new Bounds(Vector3.zero,new Vector3(ArenaHalfWidth*2f,1f,ArenaHalfHeight*2f));
+            Vector2 limits=SpawnCenterHalfExtents(arenaBounds);
+            float xLimit=limits.x;
+            float zLimit=limits.y;
 
             Vector3 spawn;
-            if(preferCenter&&TryChooseRandomSpawn(centerXLimit,centerZLimit,true,out spawn))
-                return RememberSpawn(spawn);
-
             if(TryChooseRandomSpawn(xLimit,zLimit,true,out spawn))
                 return RememberSpawn(spawn);
 
             // If recent positions leave no room, relax only the repeat-avoidance rule.
-            if(preferCenter&&TryChooseRandomSpawn(centerXLimit,centerZLimit,false,out spawn))
-                return RememberSpawn(spawn);
             if(TryChooseRandomSpawn(xLimit,zLimit,false,out spawn))
                 return RememberSpawn(spawn);
 
             // Rare crowded arenas still get a deterministic safe fallback.
             Vector3[] anchors={
-                LunarSurfaceField.Surface(0f,0f),
-                LunarSurfaceField.Surface(0f,12f),
-                LunarSurfaceField.Surface(0f,-12f)};
+                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z),
+                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z+zLimit*.5f),
+                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z-zLimit*.5f)};
             foreach(Vector3 anchor in anchors)
                 if(IsSpawnPositionSafe(anchor))return RememberSpawn(anchor);
             return RememberSpawn(anchors[0]);
@@ -160,8 +156,8 @@ namespace Alterverse.Match
         {
             for(int attempt=0;attempt<72;attempt++)
             {
-                float x=Next(-xLimit,xLimit);
-                float z=Next(-zLimit,zLimit);
+                float x=arenaBounds.center.x+Next(-xLimit,xLimit);
+                float z=arenaBounds.center.z+Next(-zLimit,zLimit);
                 Vector3 candidate=LunarSurfaceField.Surface(x,z);
                 if(!IsSpawnPositionSafe(candidate))continue;
                 if(avoidRecent&&IsTooCloseToRecentSpawn(candidate))continue;
@@ -193,8 +189,21 @@ namespace Alterverse.Match
             return spawn;
         }
 
+        /// <summary>Center limits keep the full zone in the middle half of X and on the floor in Z.</summary>
+        public static Vector2 SpawnCenterHalfExtents(Bounds bounds)=>new Vector2(
+            Mathf.Max(0f,bounds.size.x*(.5f-ExcludedSideFraction)-Radius),
+            Mathf.Max(0f,bounds.extents.z-Radius-ZoneEdgeMargin));
+
+        public static bool IsInsideSpawnBand(Vector3 candidate,Bounds bounds)
+        {
+            Vector2 limits=SpawnCenterHalfExtents(bounds);
+            return Mathf.Abs(candidate.x-bounds.center.x)<=limits.x&&
+                Mathf.Abs(candidate.z-bounds.center.z)<=limits.y;
+        }
+
         private bool IsSpawnPositionSafe(Vector3 candidate)
         {
+            if(!IsInsideSpawnBand(candidate,arenaBounds))return false;
             float baseClearance=Radius+2.25f;
             Vector3 left=new(-SpawnPadX,candidate.y,0);
             Vector3 right=new(SpawnPadX,candidate.y,0);
@@ -405,4 +414,5 @@ namespace Alterverse.Match
         }
     }
 }
+
 
