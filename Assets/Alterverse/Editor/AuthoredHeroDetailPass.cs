@@ -44,12 +44,13 @@ namespace Alterverse.EditorTools
             {
                 Adjust("Thigh" + side, "Shin" + side, thigh);
                 Adjust("Forearm" + side, "Hand" + side, forearm);
+                if (hero == "Veyr") Adjust("Shin" + side, "Foot" + side, .80f, false);
             }
             mesh.vertices = vertices;
             mesh.RecalculateNormals();
             mesh.RecalculateBounds();
 
-            void Adjust(string name, string child, float factor)
+            void Adjust(string name, string child, float factor, bool taper = true)
             {
                 int bone = Bone(skin, name), tip = Bone(skin, child);
                 if (bone < 0 || tip < 0) return;
@@ -63,7 +64,7 @@ namespace Alterverse.EditorTools
                     float t = Vector3.Dot(vertices[i] - start, axis) / length2;
                     if (t <= 0 || t >= 1) continue;
                     Vector3 radial = vertices[i] - (start + axis * t);
-                    vertices[i] += radial * ((factor - 1) * Mathf.Sin(t * Mathf.PI) * weight);
+                    vertices[i] += radial * ((factor - 1) * (taper ? Mathf.Sin(t * Mathf.PI) : 1f) * weight);
                 }
             }
         }
@@ -185,4 +186,3 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
-
