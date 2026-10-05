@@ -232,6 +232,12 @@ namespace Alterverse.Visuals
                 muzzle == null || rifleSupport == null || rifleHandle == null || leftPalm == null))
                 Debug.LogError("DF: Sivra rifle rig is incomplete. Check HandR/HandL and the muzzle, support, handle and palm sockets.", this);
             BuildNyraWeaponDetails();
+            // The blade grips move outside the bounds exported for the original pose.
+            // Keep skinning alive so Unity updates their bounds after the gold-end fit
+            // and during attack arcs, even after a renderer was culled for one frame.
+            if (hero == HeroId.Veyr)
+                foreach (Renderer weapon in weaponRenderers)
+                    if (weapon is SkinnedMeshRenderer skin) skin.updateWhenOffscreen = true;
             MeleeBasicAttackAnimation.For(gameObject)?.InitializeRig(model);
         }
 
@@ -408,12 +414,25 @@ namespace Alterverse.Visuals
                     parents[Root(b)] = Root(a); parents[Root(c)] = Root(a);
                 }
             }
-            var bounds = new Dictionary<int, Bounds>();
-            var sums = new Dictionary<int, Vector3>();
-            var counts = new Dictionary<int, int>();
+            // FBX import splits vertices at UV/material and hard-normal seams.
+            // Join coincident gold vertices before finding connected pieces; otherwise
+            // a single triangle can be mistaken for the marked terminal handle.
+            var welded = new Dictionary<Vector3Int, int>();
+            Vector3Int Key(Vector3 point) => new Vector3Int(
+                Mathf.RoundToInt(point.x * 100000f), Mathf.RoundToInt(point.y * 100000f),
+                Mathf.RoundToInt(point.z * 100000f));
             for (int i = 0; i < vertices.Length; i++)
             {
                 if (!gold[i]) continue;
+                Vector3Int key = Key(vertices[i]);
+                if (welded.TryGetValue(key, out int same)) parents[Root(i)] = Root(same);
+                else welded.Add(key, i);
+            }
+            var bounds = new Dictionary<int, Bounds>();
+            var sums = new Dictionary<int, Vector3>();
+            var counts = new Dictionary<int, int>();
+            foreach (int i in welded.Values)
+            {
                 int root = Root(i);
                 if (!bounds.TryGetValue(root, out Bounds part))
                 { part = new Bounds(vertices[i], Vector3.zero); sums[root] = Vector3.zero; counts[root] = 0; }

@@ -82,6 +82,9 @@ namespace Alterverse.Visuals
             foreach (HeroIdentity identity in Object.FindObjectsOfType<HeroIdentity>(true))
             {
                 if (identity == null || identity.Hero != HeroId.Veyr) continue;
+                // Authored rigs already fit the actual gold end to the palm and own
+                // the grip through every animation. Do not apply a second 20cm shift.
+                if (identity.GetComponent<AuthoredHeroPresentation>() != null) continue;
                 if (rigs.ContainsKey(identity)) continue;
 
                 Transform model = FindDeep(identity.transform, "DF_AuthoredModel");
