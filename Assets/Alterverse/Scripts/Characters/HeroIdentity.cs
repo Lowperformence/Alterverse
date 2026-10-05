@@ -52,7 +52,9 @@ public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assas
 // The independent universal hero shield is configured by Health.
 public const float GlobalHealthMultiplier=1.15f*1.05f;
 // THE TRAVELER receives an additional 5% hero-specific health increase on top of the global multiplier.
-public static float BaseHealth(HeroId id)=>(id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f*1.05f,HeroId.Nyra=>160f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
+// Sivra's 160 HP is the final in-game maximum, not a value to multiply again.
+public static float BaseHealth(HeroId id)=>id==HeroId.Nyra?160f:
+    (id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f*1.05f,HeroId.Elyra=>190f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
 public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>17f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>22f,_=>17f};
 }
 }
