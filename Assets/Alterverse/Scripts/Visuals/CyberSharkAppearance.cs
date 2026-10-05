@@ -291,7 +291,15 @@ namespace Alterverse.Visuals
                     foreach (Vector3 point in v) pivot += point;
                     pivot /= v.Count;
                 }
-                for (int i = 0; i < v.Count; i++) v[i] = pivot + (v[i] - pivot) * .70f;
+                // Slight turn about the vertical axis through the hand contact moves
+                // the anchor eye away from the forearm without moving the grip.
+                Vector3 vertical = renderer.transform.InverseTransformDirection(transform.up).normalized;
+                Quaternion tilt = Quaternion.AngleAxis(8f, vertical);
+                for (int i = 0; i < v.Count; i++)
+                {
+                    v[i] = pivot + tilt * ((v[i] - pivot) * .70f);
+                    n[i] = tilt * n[i];
+                }
             }
             var mesh = new Mesh { name = "DF_Nerok_Siege_" + group };
             ownedMeshes.Add(mesh);

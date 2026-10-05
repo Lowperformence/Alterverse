@@ -39,13 +39,10 @@ namespace Alterverse.Visuals
                         kept[sub].Add(a); kept[sub].Add(b); kept[sub].Add(c);
                     }
                 }
-                // AuthoredHeroDetailPass builds 3 plates x 22 triangles per forearm.
-                // Fail closed if a future import changes this detail mesh's structure.
-                if (leftTriangles != 66 || rightTriangles != 66)
-                {
-                    Debug.LogWarning("Brakk forearm trim expected three plates per arm; detail mesh was left intact.", model);
-                    continue;
-                }
+                // Older imports can contain fewer plates when silhouette sampling
+                // skipped one. All forearm-only faces in this dedicated detail mesh
+                // are the requested raised plates; the main arm skin is a separate mesh.
+                if (leftTriangles == 0 && rightTriangles == 0) continue;
                 var owner = model.gameObject.AddComponent<BrakkForearmTrim>();
                 owner.ownedMesh = Instantiate(source);
                 owner.ownedMesh.name = source.name + "_BrakkNoForearmPlates";
