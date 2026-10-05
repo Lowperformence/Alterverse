@@ -18,6 +18,13 @@ namespace Alterverse.Visuals
         private void Start() => ApplyIfReady();
         private void OnEnable() => ApplyIfReady();
 
+        public static void Apply(GameObject actor)
+        {
+            if (actor == null) return;
+            var slimmer = actor.GetComponent<AurenForearmSlimmer>() ?? actor.AddComponent<AurenForearmSlimmer>();
+            slimmer.ApplyIfReady();
+        }
+
         private void ApplyIfReady()
         {
             if (applied) return;
@@ -139,3 +146,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

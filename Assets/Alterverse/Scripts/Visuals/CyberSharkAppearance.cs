@@ -31,8 +31,9 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
-        private Transform tail, freeUpperArm, freeForearm, freeHand;
+        private Transform tail, freeUpperArm, freeForearm, freeHand, anchorGrip;
         private Quaternion tailRest;
+        private Quaternion anchorGripRest;
         private Vector3 tailAxis;
         private float tailTime;
         private HeroVisualMotion motion;
@@ -94,6 +95,8 @@ namespace Alterverse.Visuals
             combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
             Transform[] bones = new Transform[data.boneNames.Length];
             for (int i = 0; i < bones.Length; i++) bones[i] = Array.Find(all, b => b.name == data.boneNames[i]);
+            anchorGrip = Array.Find(all, b => b.name == "WeaponGripR");
+            if (anchorGrip != null) anchorGripRest = anchorGrip.localRotation;
             SkinnedMeshRenderer left = null, right = null;
             foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -291,15 +294,7 @@ namespace Alterverse.Visuals
                     foreach (Vector3 point in v) pivot += point;
                     pivot /= v.Count;
                 }
-                // Slight turn about the vertical axis through the hand contact moves
-                // the anchor eye away from the forearm without moving the grip.
-                Vector3 vertical = renderer.transform.InverseTransformDirection(transform.up).normalized;
-                Quaternion tilt = Quaternion.AngleAxis(8f, vertical);
-                for (int i = 0; i < v.Count; i++)
-                {
-                    v[i] = pivot + tilt * ((v[i] - pivot) * .70f);
-                    n[i] = tilt * n[i];
-                }
+                for (int i = 0; i < v.Count; i++) v[i] = pivot + (v[i] - pivot) * .70f;
             }
             var mesh = new Mesh { name = "DF_Nerok_Siege_" + group };
             ownedMeshes.Add(mesh);
@@ -374,6 +369,9 @@ namespace Alterverse.Visuals
                 tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
             }
             PoseFreeArmAlongGuide();
+            // Run after the final authored/combat pose (execution order 960).
+            // Pitch at the grip moves the upper eye clear of the forearm on every frame.
+            if (anchorGrip != null) anchorGrip.localRotation = anchorGripRest * Quaternion.Euler(14f, 0f, 0f);
         }
         private void PoseFreeArmAlongGuide()
         {

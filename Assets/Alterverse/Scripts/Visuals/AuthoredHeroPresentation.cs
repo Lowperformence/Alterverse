@@ -86,7 +86,11 @@ namespace Alterverse.Visuals
                 if (instance.GetComponent<CyberRangerAppearance>() == null)
                     Debug.LogError("DF: Sivra's Cyber Ranger mesh was not applied; inspect Model.bytes and its bone mapping.", actor);
             }
-            if (hero == HeroId.Kaelon) SiegeTankAppearance.Apply(instance.transform);
+            if (hero == HeroId.Kaelon)
+            {
+                SiegeTankAppearance.Apply(instance.transform);
+                AurenForearmSlimmer.Apply(actor);
+            }
             if (hero == HeroId.Elyra) UmbralMageAppearance.Apply(instance.transform);
             if (hero == HeroId.Mira)
             {
