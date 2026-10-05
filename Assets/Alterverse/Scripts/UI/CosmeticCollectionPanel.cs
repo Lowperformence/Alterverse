@@ -184,7 +184,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(x,y+136,w,40),definition.BonusLabel,theme.Small);
             theme.Label(new Rect(x,y+182,w,22),"NO COMBAT POWER",theme.Small,true);
             string action=ownedOnly?(active?"EQUIPPED":"EQUIP FOR HERO"):owned?"OWNED":balance>=definition.Price?"BUY":"NOT ENOUGH SHARDS";
-            bool enabled=!previewOnly&&(ownedOnly?!active:!owned&&balance>=definition.Price);
+            bool enabled=!previewOnly&&(ownedOnly?!active:!owned&&PlayerWallet.CanAfford(definition.Price));
             float actionWidth=ownedOnly&&active&&definition.Id!=UniversalHeroCosmetic.Original?(rect.width-44)*.55f:rect.width-32;
             if(theme.Action(new Rect(rect.x+16,rect.yMax-75,actionWidth,48),action,true,enabled:enabled))
             {
@@ -193,7 +193,7 @@ namespace Alterverse.UI
                 else
                 {
                     var result=CosmeticCatalog.Purchase(definition.Id);
-                    state.Message=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"PURCHASED  •  AVAILABLE IN INVENTORY":result==AvatarPurchaseResult.AlreadyOwned?"ALREADY OWNED":"NOT ENOUGH SHARDS";
+                    state.Message=result==AvatarPurchaseResult.Pending?"Saving purchase…":result==AvatarPurchaseResult.Purchased?"PURCHASED  •  AVAILABLE IN INVENTORY":result==AvatarPurchaseResult.AlreadyOwned?"ALREADY OWNED":result==AvatarPurchaseResult.InsufficientShards?"NOT ENOUGH SHARDS":"Purchase could not be completed. Please try again.";
                     dirty=true;
                 }
             }
@@ -241,7 +241,11 @@ namespace Alterverse.UI
             theme.Label(new Rect(rect.x+20,rect.y+180,rect.width-40,60),slot.Description,theme.Body);
             theme.Label(new Rect(rect.x+20,rect.y+238,rect.width-40,38),"Team supply drop after 2 minutes. Stays until an ally collects it.",theme.Small,true);
             if(theme.Action(new Rect(rect.x+20,rect.yMax-70,rect.width-40,48),slot.Equipped?"UNEQUIP":"EQUIP",true,enabled:!previewOnly))
-            {BattleItemInventory.Equip(slot.Equipped?BattleItemType.None:slot.Item);dirty=true;bag.Message=slot.Equipped?"UNEQUIPPED":"EQUIPPED";}
+            {
+                bool equipped=BattleItemInventory.Equip(slot.Equipped?BattleItemType.None:slot.Item);
+                dirty=true;
+                bag.Message=equipped?(slot.Equipped?"UNEQUIPPED":"EQUIPPED"):"Item is no longer available. Choose another item.";
+            }
             theme.Label(new Rect(rect.x+20,rect.yMax-21,rect.width-40,18),bag.Message,theme.Small,true);
         }
         private static void BeginGrid(Rect viewport,ViewState state,float contentHeight)

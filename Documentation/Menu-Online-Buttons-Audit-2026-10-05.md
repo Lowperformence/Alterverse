@@ -39,3 +39,23 @@ Configure via Play Console → Play Games Services → Setup and management → 
 4. Switching to offline after closing the overlay cleans up the online search before starting offline gameplay.
 5. Co-op Unready still works after a conflicting hero choice; staging and launching remain host gated.
 6. After Play Games setup, CONNECT & SYNC authenticates in Android; a recorded victory changes the submitted lifetime-win count; OPEN MOST WINS opens the configured All Time leaderboard. Failed sign-in can be retried. Editor execution only reports Android support.
+
+## Follow-up: remaining button actions
+Reviewed the backing services in addition to UI call sites: PlayerProfile/AvatarInventory, PlayerWallet/PaidShardCommerce/GooglePlayShardStore, arena/hero/weapon/cosmetic ownership and purchases, BattleItemInventory, BattlePassProgress, DailyQuestProgress, AccountServerBootstrap, co-op lobby/voice and MatchExit.
+
+Additional corrections:
+- Account login keeps authentication status visible while the panel is open. Empty credentials disable SIGN IN/SECURE ACCOUNT with an input hint instead of silently calling a service that immediately rejects them.
+- Cosmetic purchase controls use PlayerWallet.CanAfford, which includes the ongoing-purchase lock. The backing commerce service already rejects duplicate pending purchases; the UI now follows the same lock.
+- Cosmetic purchase failures distinguish insufficient shards from other failed requests.
+- Battle-item EQUIP/UNEQUIP reports the actual service result rather than showing success after a rejected equip from stale inventory.
+
+Reviewed behavior, without execution:
+- Paid purchase recovery keeps an operation ID and retries the same debit; purchase UI activation is guarded. Google Play credits are verified before confirmation.
+- Ownership and affordability are checked again by arena/hero/weapon purchases; equip requires ownership.
+- Daily claims commit currency and claim state together; repeat claims are rejected.
+- Battle Pass claims use claim masks; locked/premium/unreached rewards are rejected and repeated claims do not grant again.
+- Display name validation and save/cancel paths, avatar ownership, and volume clamping/persistence are connected to their intended profile operations.
+- Result menu return is receipt gated. MatchExit routes cleanup through Edgegap and restores the home menu; co-op voice controls request permission/join or toggle mute.
+- Ranking behavior remains as documented above. No additional setup changes were made because the user's local setup may already be complete.
+
+Validation: inspected final changed files and checked balanced delimiters. No C# compiler/Unity runtime is present. This is a code-level functional audit; device clicks, integration tests and external-service behavior remain unverified. No purchases, account sign-ins or rewards were issued during the audit.

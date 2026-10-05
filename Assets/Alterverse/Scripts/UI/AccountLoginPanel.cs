@@ -12,7 +12,7 @@ namespace Alterverse.UI
         {
             var service=AccountServerBootstrap.Instance;
             string status=service!=null?service.Status:"Account unavailable.";
-            if(PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)status=PaidShardCommerce.Instance.Status;
+            if(!open&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)status=PaidShardCommerce.Instance.Status;
             theme.Label(new Rect(area.x,area.y,area.width-130,40),status,theme.Small,true);
             if(theme.Action(new Rect(area.xMax-124,area.y,124,40),"ACCOUNT"))open=!open;
             if(!open)return;
@@ -23,11 +23,15 @@ namespace Alterverse.UI
             username=GUI.TextField(new Rect(panel.x+16,panel.y+70,panel.width-32,38),username,64,theme.Field);
             theme.Label(new Rect(panel.x+16,panel.y+111,panel.width-32,24),"Password",theme.Small,true);
             password=GUI.PasswordField(new Rect(panel.x+16,panel.y+137,panel.width-32,38),password,'•',128,theme.Field);
-            bool enabled=!working&&service!=null&&!service.Busy;
+            bool hasCredentials=!string.IsNullOrWhiteSpace(username)&&!string.IsNullOrEmpty(password);
+            bool enabled=!working&&service!=null&&!service.Busy&&hasCredentials;
             float width=(panel.width-40)*.5f;
             if(theme.Action(new Rect(panel.x+16,panel.y+186,width,40),"SIGN IN",true,enabled:enabled))Submit(false);
             if(theme.Action(new Rect(panel.x+24+width,panel.y+186,width,40),"SECURE ACCOUNT",true,enabled:enabled))Submit(true);
-            theme.Label(new Rect(panel.x+16,panel.y+230,panel.width-32,24),"Secure Account keeps your current progress.",theme.Small,true);
+            theme.Label(new Rect(panel.x+16,panel.y+230,panel.width-32,24),
+                working||service!=null&&service.Busy?"Signing in…":
+                !hasCredentials?"Enter a username and password.":
+                service!=null?service.Status:"Account unavailable.",theme.Small,true);
         }
         static async void Submit(bool register)
         {
