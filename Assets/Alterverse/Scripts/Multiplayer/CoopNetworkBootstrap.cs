@@ -71,6 +71,31 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
+        /// Stops a direct dedicated-server switch/connection without tearing down an untouched
+        /// Relay host. This is used when matchmaking is cancelled while a late assignment or
+        /// cold-start retry is still in flight.
+        /// </summary>
+        public static void CancelDedicatedConnection()
+        {
+            if(Instance==null)return;
+            bool hadDirectAttempt=Instance.dedicatedConnectRoutine!=null||!string.IsNullOrWhiteSpace(DirectServerHost);
+            if(Instance.dedicatedConnectRoutine!=null)
+            {
+                Instance.StopCoroutine(Instance.dedicatedConnectRoutine);
+                Instance.dedicatedConnectRoutine=null;
+            }
+            if(!hadDirectAttempt)return;
+
+            NetworkManager manager=NetworkManager.Singleton;
+            // If the party is still the Relay host, stopping the coroutine is enough; keep that
+            // private party alive. Once switched to a dedicated client, shut the direct link down.
+            if(manager!=null&&manager.IsListening&&!manager.IsServer)manager.Shutdown();
+            DirectServerHost="";
+            DirectServerPort=0;
+            DirectServerStatus="DEDICATED CONNECTION CANCELLED";
+        }
+
+        /// <summary>
         /// Switches the local NGO runtime from any current Relay/client link to a direct
         /// dedicated-server connection. Edgegap can report HOST_ASSIGNED while the container is
         /// still finishing startup, so the direct connection is retried instead of failing once.
