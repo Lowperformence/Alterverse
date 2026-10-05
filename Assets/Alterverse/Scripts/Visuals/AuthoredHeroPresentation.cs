@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Alterverse.Characters;
 using UnityEngine;
@@ -108,10 +109,43 @@ namespace Alterverse.Visuals
             SkinOrnamentPresentation.Apply(instance.transform);
             HeroUndersuitFabric.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
+            if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);
             // Recolor after every generated detail and material pass so no gold forearm layer remains.
             BrakkForearmTrim.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
+        }
+
+        private static void FitSivraRifleGrip(Transform model)
+        {
+            Transform[] parts = model.GetComponentsInChildren<Transform>(true);
+            Transform Find(string name) => Array.Find(parts, p => p.name == name);
+            Transform grip = Find("WeaponGripR");
+            Transform rightHand = Find("HandR");
+            Transform leftHand = Find("HandL");
+            Transform handle = Find("DF_HandleContactR");
+            Transform support = Find("DF_SupportGrip");
+            Transform muzzle = Find("DF_Muzzle");
+            Transform leftPalm = Find("DF_PalmGripL");
+            if (grip == null || rightHand == null || leftHand == null ||
+                handle == null || support == null || muzzle == null || leftPalm == null)
+            {
+                Debug.LogError("DF: Sivra rifle grip or contact sockets are missing.", model);
+                return;
+            }
+            // The imported contact objects are siblings of the bones. Without this
+            // binding they remain at their rest positions when the rifle or hands move.
+            handle.SetParent(grip, true);
+            support.SetParent(grip, true);
+            muzzle.SetParent(grip, true);
+            leftPalm.SetParent(leftHand, true);
+            leftPalm.position = leftHand.position;
+
+            // The FBX rifle was authored at a separate aiming pose: its trigger
+            // contact is away from the rest-pose hand. Fit the weapon itself to the
+            // hand before Initialize records the grip's rest position.
+            grip.position += rightHand.position - handle.position;
+            Debug.Log("DF: Sivra rifle trigger fitted to the right hand; muzzle and support sockets now follow the weapon.", model);
         }
 
         // FBX default transforms can contain an exported animation pose. They are NOT
