@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Gives every piece attached to Brakk's forearm bones the same silver finish.</summary>
+    /// <summary>Removes Brakk's gold forearm plates and extra hand decorations.</summary>
     [DisallowMultipleComponent]
     public sealed class BrakkForearmTrim : MonoBehaviour
     {
@@ -19,54 +19,74 @@ namespace Alterverse.Visuals
             BrakkForearmTrim owner = null;
             foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
+                bool anatomy = skin.name == "DF_Anatomy";
+                bool details = skin.name == "DF_ArticulatedArmorDetails";
+                if (!anatomy && !details) continue;
                 Mesh source = skin.sharedMesh;
                 if (source == null || !source.isReadable) continue;
                 int left = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmL");
                 int right = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmR");
-                if (left < 0 && right < 0) continue;
+                int handL = Array.FindIndex(skin.bones, b => b != null && b.name == "HandL");
+                int handR = Array.FindIndex(skin.bones, b => b != null && b.name == "HandR");
+                if (left < 0 && right < 0 && (!details || handL < 0 && handR < 0)) continue;
                 BoneWeight[] weights = source.boneWeights;
                 if (weights.Length != source.vertexCount) continue;
 
                 var kept = new List<int>[source.subMeshCount];
-                var forearm = new List<int>();
+                var silverForearm = new List<int>();
+                int removed = 0;
+                Material[] materials = skin.sharedMaterials;
                 for (int sub = 0; sub < kept.Length; sub++)
                 {
                     kept[sub] = new List<int>();
                     int[] triangles = source.GetTriangles(sub);
+                    bool gold = sub < materials.Length && materials[sub] != null &&
+                        materials[sub].name.IndexOf("Champagne metal", StringComparison.OrdinalIgnoreCase) >= 0;
                     for (int i = 0; i < triangles.Length; i += 3)
                     {
                         int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
-                        List<int> target = (Attached(a, left) && Attached(b, left) && Attached(c, left)) ||
-                            (Attached(a, right) && Attached(b, right) && Attached(c, right)) ? forearm : kept[sub];
+                        bool onForearm = (Attached(a, left) && Attached(b, left) && Attached(c, left)) ||
+                            (Attached(a, right) && Attached(b, right) && Attached(c, right));
+                        bool onHand = (Attached(a, handL) && Attached(b, handL) && Attached(c, handL)) ||
+                            (Attached(a, handR) && Attached(b, handR) && Attached(c, handR));
+                        // The six imported gold pieces are in Anatomy. Additional
+                        // wrist/knuckle plates are generated on the hand bones.
+                        if (anatomy && gold && onForearm || details && (onForearm || onHand))
+                        {
+                            removed++;
+                            continue;
+                        }
+                        List<int> target = anatomy && onForearm ? silverForearm : kept[sub];
                         target.Add(a); target.Add(b); target.Add(c);
                     }
                 }
-                if (forearm.Count == 0) continue;
+                if (removed == 0 && silverForearm.Count == 0) continue;
                 if (owner == null)
                 {
                     owner = model.gameObject.AddComponent<BrakkForearmTrim>();
+                }
+                if (silverForearm.Count > 0 && owner.silver == null)
+                {
                     owner.silver = RuntimeShaderLibrary.Create(new Color(.59f, .64f, .68f), metallic: .76f, smoothness: .48f);
-                    if (owner.silver == null)
-                    {
-                        Destroy(owner);
-                        Debug.LogError("DF: Brakk forearm silver shader is missing.", model);
-                        return;
-                    }
+                    if (owner.silver == null) { Debug.LogError("DF: Brakk forearm silver shader is missing.", model); return; }
                     owner.silver.name = "DF_Brakk_SilverForearms";
                 }
                 Mesh recolored = Instantiate(source);
-                recolored.name = source.name + "_BrakkSilverForearms";
-                recolored.subMeshCount = kept.Length + 1;
+                recolored.name = source.name + "_BrakkWithoutGoldPlates";
+                recolored.subMeshCount = kept.Length + (silverForearm.Count > 0 ? 1 : 0);
                 for (int sub = 0; sub < kept.Length; sub++) recolored.SetTriangles(kept[sub], sub, false);
-                recolored.SetTriangles(forearm, kept.Length, false);
+                if (silverForearm.Count > 0) recolored.SetTriangles(silverForearm, kept.Length, false);
                 recolored.RecalculateBounds();
-                Material[] materials = skin.sharedMaterials;
-                Array.Resize(ref materials, kept.Length + 1);
-                materials[kept.Length] = owner.silver;
+                if (silverForearm.Count > 0)
+                {
+                    Array.Resize(ref materials, kept.Length + 1);
+                    materials[kept.Length] = owner.silver;
+                    skin.sharedMaterials = materials;
+                }
                 skin.sharedMesh = recolored;
-                skin.sharedMaterials = materials;
                 owner.ownedMeshes.Add(recolored);
-                Debug.Log("DF: Brakk colored " + (forearm.Count / 3) + " forearm triangles silver on " + skin.name, model);
+                Debug.Log("DF: Brakk removed " + removed + " plate triangles and colored " +
+                    (silverForearm.Count / 3) + " remaining forearm triangles silver on " + skin.name, model);
 
                 bool Attached(int vertex, int bone)
                 {
