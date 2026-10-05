@@ -17,6 +17,7 @@ namespace Alterverse.Visuals
         private readonly Dictionary<string, Transform> controls = new Dictionary<string, Transform>();
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
+        private readonly List<Mesh> rigidWeaponMeshes = new List<Mesh>();
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
         private Transform rifleDetailsRoot;
         private Transform rifleDetailsGrip;
@@ -232,13 +233,50 @@ namespace Alterverse.Visuals
                 muzzle == null || rifleSupport == null || rifleHandle == null || leftPalm == null))
                 Debug.LogError("DF: Sivra rifle rig is incomplete. Check HandR/HandL and the muzzle, support, handle and palm sockets.", this);
             BuildNyraWeaponDetails();
-            // The blade grips move outside the bounds exported for the original pose.
-            // Keep skinning alive so Unity updates their bounds after the gold-end fit
-            // and during attack arcs, even after a renderer was culled for one frame.
-            if (hero == HeroId.Veyr)
-                foreach (Renderer weapon in weaponRenderers)
-                    if (weapon is SkinnedMeshRenderer skin) skin.updateWhenOffscreen = true;
+            if (hero == HeroId.Veyr) BuildRigidBlades();
             MeleeBasicAttackAnimation.For(gameObject)?.InitializeRig(model);
+        }
+
+        // Each authored blade is weighted entirely to one WeaponGrip bone. A rigid
+        // renderer on that bone preserves the exact fitted geometry and materials,
+        // without relying on skinned bounds or an imported bind-pose root for visibility.
+        private void BuildRigidBlades()
+        {
+            for (int i = 0; i < weaponRenderers.Count; i++)
+            {
+                if (!(weaponRenderers[i] is SkinnedMeshRenderer skin) || skin.sharedMesh == null) continue;
+                WeaponGrip grip = grips.Find(g => g.Bone != null && g.Bone.name == "WeaponGrip" + skin.name[skin.name.Length - 1]);
+                if (grip == null) continue;
+                var mesh = new Mesh { name = skin.name + "_RigidGrip" };
+                skin.BakeMesh(mesh);
+                if (mesh.vertexCount == 0) { Destroy(mesh); continue; }
+                Matrix4x4 toGrip = grip.Bone.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                Matrix4x4 normalMatrix = toGrip.inverse.transpose;
+                Vector3[] vertices = mesh.vertices, normals = mesh.normals;
+                for (int v = 0; v < vertices.Length; v++) vertices[v] = toGrip.MultiplyPoint3x4(vertices[v]);
+                for (int v = 0; v < normals.Length; v++) normals[v] = normalMatrix.MultiplyVector(normals[v]).normalized;
+                mesh.vertices = vertices;
+                mesh.normals = normals;
+                mesh.RecalculateBounds();
+                if (mesh.uv.Length == mesh.vertexCount) mesh.RecalculateTangents();
+                var blade = new GameObject(skin.name);
+                blade.layer = skin.gameObject.layer;
+                blade.transform.SetParent(grip.Bone, false);
+                blade.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var renderer = blade.AddComponent<MeshRenderer>();
+                renderer.sharedMaterials = skin.sharedMaterials;
+                renderer.shadowCastingMode = skin.shadowCastingMode;
+                renderer.receiveShadows = skin.receiveShadows;
+                skin.enabled = false;
+                skin.name += "_SkinSource";
+                weaponRenderers[i] = renderer;
+                rigidWeaponMeshes.Add(mesh);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            foreach (Mesh mesh in rigidWeaponMeshes) if (mesh != null) Destroy(mesh);
         }
 
         private Transform Make(string name, Transform parent, Vector3 rootPosition)
