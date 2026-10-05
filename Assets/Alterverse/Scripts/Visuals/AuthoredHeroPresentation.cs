@@ -247,16 +247,23 @@ namespace Alterverse.Visuals
                 if (!(weaponRenderers[i] is SkinnedMeshRenderer skin) || skin.sharedMesh == null) continue;
                 WeaponGrip grip = grips.Find(g => g.Bone != null && g.Bone.name == "WeaponGrip" + skin.name[skin.name.Length - 1]);
                 if (grip == null) continue;
-                var mesh = new Mesh { name = skin.name + "_RigidGrip" };
-                skin.BakeMesh(mesh);
-                if (mesh.vertexCount == 0) { Destroy(mesh); continue; }
-                Matrix4x4 toGrip = grip.Bone.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                if (!TryBladeBindMatrix(skin, grip.Bone, out Matrix4x4 toGrip)) continue;
+                var mesh = Instantiate(skin.sharedMesh);
+                mesh.name = skin.name + "_RigidGrip";
                 Matrix4x4 normalMatrix = toGrip.inverse.transpose;
                 Vector3[] vertices = mesh.vertices, normals = mesh.normals;
                 for (int v = 0; v < vertices.Length; v++) vertices[v] = toGrip.MultiplyPoint3x4(vertices[v]);
                 for (int v = 0; v < normals.Length; v++) normals[v] = normalMatrix.MultiplyVector(normals[v]).normalized;
                 mesh.vertices = vertices;
                 mesh.normals = normals;
+                if (toGrip.determinant < 0f)
+                    for (int sub = 0; sub < mesh.subMeshCount; sub++)
+                    {
+                        int[] triangles = mesh.GetTriangles(sub);
+                        for (int t = 0; t + 2 < triangles.Length; t += 3)
+                        { int swap = triangles[t + 1]; triangles[t + 1] = triangles[t + 2]; triangles[t + 2] = swap; }
+                        mesh.SetTriangles(triangles, sub);
+                    }
                 mesh.RecalculateBounds();
                 if (mesh.uv.Length == mesh.vertexCount) mesh.RecalculateTangents();
                 var blade = new GameObject(skin.name);
@@ -271,7 +278,38 @@ namespace Alterverse.Visuals
                 skin.name += "_SkinSource";
                 weaponRenderers[i] = renderer;
                 rigidWeaponMeshes.Add(mesh);
+                Debug.Log("DF: Zhaev blade bind-space v2: " + blade.name + " / " + mesh.vertexCount +
+                    " vertices / local size " + mesh.bounds.size, this);
             }
+        }
+
+        private static bool TryBladeBindMatrix(SkinnedMeshRenderer skin, Transform grip, out Matrix4x4 toGrip)
+        {
+            toGrip = Matrix4x4.identity;
+            Mesh source = skin.sharedMesh;
+            if (source == null || !source.isReadable) return false;
+            int index = System.Array.IndexOf(skin.bones, grip);
+            Matrix4x4[] bind = source.bindposes;
+            if (index < 0 || index >= bind.Length) return false;
+            // Both crescent blades are authored as rigid, 100%-weighted grip meshes.
+            // Validate that contract before converting the source to a MeshRenderer.
+            foreach (BoneWeight weight in source.boneWeights)
+                if (weight.boneIndex0 != index || weight.weight0 < .999f ||
+                    weight.weight1 > .001f || weight.weight2 > .001f || weight.weight3 > .001f)
+                    return false;
+            toGrip = bind[index];
+            return true;
+        }
+
+        private static Matrix4x4 RelativeMatrix(Transform part, Transform ancestor)
+        {
+            Matrix4x4 result = Matrix4x4.identity;
+            for (Transform current = part; current != ancestor; current = current.parent)
+            {
+                if (current == null) throw new System.InvalidOperationException("Blade palm is outside its hand hierarchy.");
+                result = Matrix4x4.TRS(current.localPosition, current.localRotation, current.localScale) * result;
+            }
+            return result;
         }
 
         private Transform Make(string name, Transform parent, Vector3 rootPosition)
@@ -405,6 +443,18 @@ namespace Alterverse.Visuals
                 // lag a bone pose, which would make a live clearance correction oscillate.
                 if (candidate is SkinnedMeshRenderer skin)
                 {
+                    if (hero == HeroId.Veyr && TryBladeBindMatrix(skin, target, out Matrix4x4 toGrip))
+                    {
+                        Vector3[] vertices = skin.sharedMesh.vertices;
+                        if (vertices.Length > 0)
+                        {
+                            Bounds bounds = new Bounds(toGrip.MultiplyPoint3x4(vertices[0]), Vector3.zero);
+                            foreach (Vector3 vertex in vertices) bounds.Encapsulate(toGrip.MultiplyPoint3x4(vertex));
+                            grip.WeaponCenterLocal = bounds.center;
+                            grip.HasWeaponCenter = true;
+                        }
+                        break;
+                    }
                     var baked = new Mesh();
                     skin.BakeMesh(baked);
                     if (baked.vertexCount > 0)
@@ -420,13 +470,13 @@ namespace Alterverse.Visuals
         }
 
         // Use the actual gold end piece selected in the reference, not the old mid-wrap socket.
-        // Baking makes this independent of FBX axis conventions and imported bone scale.
+        // Bind-space coordinates avoid BakeMesh and world-position precision entirely.
         private static void FitVeyrGoldEnd(SkinnedMeshRenderer skin, Transform grip, Transform palm)
         {
-            if (skin.sharedMesh == null || palm == null) return;
-            var baked = new Mesh();
-            skin.BakeMesh(baked);
-            Vector3[] vertices = baked.vertices;
+            if (palm == null || grip.parent == null || !TryBladeBindMatrix(skin, grip, out Matrix4x4 toGrip)) return;
+            Mesh source = skin.sharedMesh;
+            Vector3[] vertices = source.vertices;
+            for (int i = 0; i < vertices.Length; i++) vertices[i] = toGrip.MultiplyPoint3x4(vertices[i]);
             int[] parents = new int[vertices.Length];
             bool[] gold = new bool[vertices.Length];
             for (int i = 0; i < parents.Length; i++) parents[i] = i;
@@ -436,10 +486,10 @@ namespace Alterverse.Visuals
                 return index;
             }
             Material[] materials = skin.sharedMaterials;
-            for (int sub = 0; sub < baked.subMeshCount && sub < materials.Length; sub++)
+            for (int sub = 0; sub < source.subMeshCount && sub < materials.Length; sub++)
             {
                 if (materials[sub] == null || !materials[sub].name.Contains("Champagne metal")) continue;
-                int[] triangles = baked.GetTriangles(sub);
+                int[] triangles = source.GetTriangles(sub);
                 for (int i = 0; i + 2 < triangles.Length; i += 3)
                 {
                     int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
@@ -479,13 +529,14 @@ namespace Alterverse.Visuals
                 { largest = part.Value.size.sqrMagnitude; selected = part.Key; }
             if (selected >= 0)
             {
-                Vector3 end = skin.transform.TransformPoint(sums[selected] / counts[selected]);
-                grip.position += palm.position - end;
+                Matrix4x4 gripToHand = Matrix4x4.TRS(grip.localPosition, grip.localRotation, grip.localScale);
+                Vector3 end = gripToHand.MultiplyPoint3x4(sums[selected] / counts[selected]);
+                Vector3 palmInHand = RelativeMatrix(palm, grip.parent).MultiplyPoint3x4(Vector3.zero);
+                grip.localPosition += palmInHand - end;
                 foreach (Transform socket in grip.GetComponentsInChildren<Transform>(true))
                     if (socket.name == "DF_HandleContact" + grip.name[grip.name.Length - 1])
-                        socket.position = palm.position;
+                        socket.localPosition = RelativeMatrix(socket.parent, grip.parent).inverse.MultiplyPoint3x4(palmInHand);
             }
-            Destroy(baked);
         }
 
         private void BuildNyraWeaponDetails()
