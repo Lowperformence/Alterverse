@@ -9,13 +9,21 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Routes non-server player combat intentions to the authoritative NGO server. The server
-    /// performs the existing BasicAttack / PlayerHeroAbilities logic against its authoritative world.
+    /// validates and executes the exact target selected by the client instead of re-targeting.
     /// Clients never directly mutate authoritative combat state.
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V2";
-        private const string AbilityMessage="DF_COOP_ABILITY_V2";
+        private const string BasicMessage="DF_COOP_BASIC_V3";
+        private const string AbilityMessage="DF_COOP_ABILITY_V3";
+
+        private const int TargetNone=0;
+        private const int TargetHero=1;
+        private const int TargetMinion=2;
+        private const int TargetTower=3;
+        private const int TargetCore=4;
+        private const int TargetPlanet=5;
+        private const int TargetOther=6;
 
         public static CoopGameplayCommands Instance { get; private set; }
 
@@ -50,20 +58,20 @@ namespace Alterverse.Multiplayer
             return slot!=null&&slot.IsHuman&&slot.IsLocalHuman;
         }
 
-        public static bool TrySendBasic(GameObject actor)
+        public static bool TrySendBasic(GameObject actor,Health target)
         {
             CoopGameplayCommands service=Instance;
-            return service!=null&&service.SendCommand(actor,-1);
+            return service!=null&&service.SendCommand(actor,-1,target);
         }
 
-        public static bool TrySendAbility(GameObject actor,int abilitySlot)
+        public static bool TrySendAbility(GameObject actor,int abilitySlot,Health target)
         {
             if(abilitySlot<0||abilitySlot>3)return false;
             CoopGameplayCommands service=Instance;
-            return service!=null&&service.SendCommand(actor,abilitySlot);
+            return service!=null&&service.SendCommand(actor,abilitySlot,target);
         }
 
-        private bool SendCommand(GameObject actor,int abilitySlot)
+        private bool SendCommand(GameObject actor,int abilitySlot,Health target)
         {
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||manager.IsServer||!manager.IsConnectedClient||messaging==null)return false;
@@ -72,10 +80,29 @@ namespace Alterverse.Multiplayer
             if(heroSlot==null||!heroSlot.IsLocalHuman||health==null||health.IsDead)return false;
 
             FixedString128Bytes id=new(heroSlot.PlayerId??"");
-            using FastBufferWriter writer=new(164,Allocator.Temp);
+            using FastBufferWriter writer=new(232,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(heroSlot.Slot);
             writer.WriteValueSafe(id);
+
+            bool hasTarget=target!=null&&!target.IsDead&&target.isActiveAndEnabled;
+            writer.WriteValueSafe(hasTarget);
+            if(hasTarget)
+            {
+                int kind=TargetKind(target);
+                int targetHeroSlot=-1;
+                if(kind==TargetHero)
+                {
+                    CoopHeroSlot targetSlot=target.GetComponent<CoopHeroSlot>();
+                    if(targetSlot!=null)targetHeroSlot=targetSlot.Slot;
+                }
+                int targetTeam=TargetTeam(target);
+                Vector3 position=target.transform.position;
+                writer.WriteValueSafe(kind);
+                writer.WriteValueSafe(targetHeroSlot);
+                writer.WriteValueSafe(targetTeam);
+                writer.WriteValueSafe(position.x);writer.WriteValueSafe(position.y);writer.WriteValueSafe(position.z);
+            }
 
             string message=abilitySlot<0?BasicMessage:AbilityMessage;
             if(abilitySlot>=0)
@@ -111,19 +138,91 @@ namespace Alterverse.Multiplayer
         private void OnBasic(ulong senderClientId,FastBufferReader reader)
         {
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
-            actor.GetComponent<BasicAttack>()?.TryAttack();
+            if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
+            actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(requestedTarget);
         }
 
         private void OnAbility(ulong senderClientId,FastBufferReader reader)
         {
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
+            if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!reader.TryBeginRead(sizeof(int) + 3 * sizeof(float))) return;
             reader.ReadValueSafe(out int slot);
             reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);
             if(slot<0||slot>3||!MatchNetworkProtocol.Finite(dx)||!MatchNetworkProtocol.Finite(dy)||!MatchNetworkProtocol.Finite(dz))return;
             Vector3 requestedDirection=new(dx,dy,dz);requestedDirection.y=0f;
             if(requestedDirection.sqrMagnitude>.0001f)requestedDirection.Normalize();
-            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot,requestedDirection);
+            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot,requestedDirection,requestedTarget);
+        }
+
+        private static bool TryReadTarget(GameObject actor,ref FastBufferReader reader,out Health target)
+        {
+            target=null;
+            if(!reader.TryBeginRead(sizeof(bool)))return false;
+            reader.ReadValueSafe(out bool hasTarget);
+            if(!hasTarget)return true;
+
+            if(!reader.TryBeginRead(3*sizeof(int)+3*sizeof(float)))return false;
+            reader.ReadValueSafe(out int kind);
+            reader.ReadValueSafe(out int heroSlot);
+            reader.ReadValueSafe(out int targetTeam);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            if(kind<TargetHero||kind>TargetOther||
+               !MatchNetworkProtocol.Finite(x)||!MatchNetworkProtocol.Finite(y)||!MatchNetworkProtocol.Finite(z))return false;
+
+            if(kind==TargetHero&&heroSlot>=0&&heroSlot<MatchSession.MaxPlayers)
+            {
+                CoopHeroSlot[] heroes=FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);
+                for(int i=0;i<heroes.Length;i++)
+                {
+                    CoopHeroSlot slot=heroes[i];
+                    if(slot==null||slot.Slot!=heroSlot)continue;
+                    Health health=slot.GetComponent<Health>();
+                    if(health!=null&&HeroCombatRules.Enemy(actor,health))target=health;
+                    return true;
+                }
+                return true;
+            }
+
+            Vector3 requestedPosition=new(x,y,z);
+            float bestSqr=float.MaxValue;
+            var candidates=Health.Active;
+            for(int i=0;i<candidates.Count;i++)
+            {
+                Health candidate=candidates[i];
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled||!HeroCombatRules.Enemy(actor,candidate))continue;
+                if(!MatchesTargetKind(candidate,kind,targetTeam))continue;
+                Vector3 delta=candidate.transform.position-requestedPosition;delta.y=0f;
+                float sqr=delta.sqrMagnitude;
+                if(sqr<bestSqr){bestSqr=sqr;target=candidate;}
+            }
+            return true;
+        }
+
+        private static int TargetKind(Health target)
+        {
+            if(target==null)return TargetNone;
+            if(target.GetComponent<HeroIdentity>()!=null)return TargetHero;
+            if(target.GetComponent<LaneMinion>()!=null)return TargetMinion;
+            if(target.GetComponent<LaneTower>()!=null)return TargetTower;
+            if(target.GetComponent<RealityCore>()!=null)return TargetCore;
+            if(target.GetComponent<DimensionPlanet>()!=null)return TargetPlanet;
+            return TargetOther;
+        }
+
+        private static int TargetTeam(Health target)
+        {
+            if(target==null)return int.MinValue;
+            RealityCore core=target.GetComponent<RealityCore>();if(core!=null)return core.Team;
+            LaneMinion minion=target.GetComponent<LaneMinion>();if(minion!=null)return minion.Team;
+            LaneTower tower=target.GetComponent<LaneTower>();if(tower!=null)return tower.Team;
+            TeamMember member=target.GetComponent<TeamMember>();return member!=null?member.Team:int.MinValue;
+        }
+
+        private static bool MatchesTargetKind(Health candidate,int kind,int targetTeam)
+        {
+            if(TargetKind(candidate)!=kind)return false;
+            return targetTeam==int.MinValue||TargetTeam(candidate)==targetTeam;
         }
 
         private bool TryReadAuthorizedActor(ulong senderClientId,ref FastBufferReader reader,out GameObject actor)
