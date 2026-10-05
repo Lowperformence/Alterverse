@@ -30,6 +30,10 @@ namespace Alterverse.Multiplayer
         private bool searching;
         private bool polling;
         private bool joiningGroup;
+        private bool searchOwner;
+        private bool cleanupRunning;
+        private int searchGeneration;
+        private int expectedPartyPlayers;
         private float nextGroupBroadcast;
         private string activeGroupId = "";
         private string status = "EDGEGAP ONLINE READY";
@@ -71,11 +75,23 @@ namespace Alterverse.Multiplayer
                 Detach();
 
             OnlinePartyService online = OnlinePartyService.Instance;
-            if (searching && (online == null || !online.InParty) && !CoopAuthority.Active)
+            if (searching && !CoopAuthority.Active)
             {
-                ResetSearchState();
-                EdgegapMatchmakerClient.Instance?.ResetLocalState();
-                SetStatus("EDGEGAP ONLINE READY");
+                if (!cleanupRunning && (online == null || !online.InParty))
+                {
+                    _ = AbortSearchAfterPartyChangeAsync("ONLINE PARTY LOST • MATCHMAKING CANCELLED", false);
+                    return;
+                }
+
+                // The Edgegap group is created from an exact friend-party snapshot. If somebody
+                // disappears afterwards, cancel the whole group so their ready membership cannot
+                // survive as a ghost ticket and stall the dedicated server.
+                if (!cleanupRunning && searchOwner && expectedPartyPlayers > 0 &&
+                    online.PlayerCount != expectedPartyPlayers)
+                {
+                    _ = AbortSearchAfterPartyChangeAsync("FRIEND LEFT • MATCHMAKING CANCELLED", true);
+                    return;
+                }
             }
 
             if (!searching || string.IsNullOrWhiteSpace(activeGroupId) || online == null || !online.IsHost)
@@ -116,6 +132,10 @@ namespace Alterverse.Multiplayer
             if (!online.AllPresentPlayersReady)
                 return Fail("ALL FRIENDS MUST BE READY BEFORE SEARCHING");
 
+            int generation = ++searchGeneration;
+            searchOwner = true;
+            expectedPartyPlayers = online.PlayerCount;
+
             try
             {
                 busy = true;
@@ -123,17 +143,34 @@ namespace Alterverse.Multiplayer
                 joinedGuestClients.Clear();
                 SetStatus("PREPARING EDGEGAP GROUP");
 
-                if (!await WaitForFriendRelayAsync(online.PlayerCount, 12f))
+                if (!await WaitForFriendRelayAsync(expectedPartyPlayers, 12f, generation))
+                {
+                    ResetSearchState();
                     return Fail("FRIEND PARTY RELAY IS NOT READY");
+                }
 
                 // Important: owner stays NOT READY while friends join. Edgegap locks a group once
                 // matchmaking starts, so setting the owner ready during creation can strand friends.
                 if (!await edgegap.CreateGroupAsync(false))
+                {
+                    ResetSearchState();
                     return Fail(edgegap.LastError.Length > 0 ? edgegap.LastError : "COULD NOT CREATE EDGEGAP GROUP");
+                }
+
+                if (generation != searchGeneration || online == null || !online.InParty ||
+                    online.PlayerCount != expectedPartyPlayers)
+                {
+                    await edgegap.CancelGroupAsync();
+                    ResetSearchState();
+                    return Fail("FRIEND PARTY CHANGED DURING MATCHMAKING");
+                }
 
                 activeGroupId = edgegap.GroupId;
                 if (string.IsNullOrWhiteSpace(activeGroupId))
+                {
+                    ResetSearchState();
                     return Fail("EDGEGAP DID NOT RETURN A GROUP ID");
+                }
 
                 searching = true;
                 nextGroupBroadcast = 0f;
@@ -143,12 +180,20 @@ namespace Alterverse.Multiplayer
                 if (manager != null && manager.IsHost)
                     BroadcastGroup(manager);
 
-                int expectedGuests = Mathf.Max(0, online.PlayerCount - 1);
-                if (!await WaitForGuestJoinAcksAsync(expectedGuests, FriendJoinTimeoutSeconds))
+                int expectedGuests = Mathf.Max(0, expectedPartyPlayers - 1);
+                if (!await WaitForGuestJoinAcksAsync(expectedGuests, FriendJoinTimeoutSeconds, generation))
                 {
                     await edgegap.CancelGroupAsync();
                     ResetSearchState();
                     return Fail("NOT ALL FRIENDS JOINED EDGEGAP MATCHMAKING");
+                }
+
+                if (generation != searchGeneration || online == null || !online.InParty ||
+                    online.PlayerCount != expectedPartyPlayers)
+                {
+                    await edgegap.CancelGroupAsync();
+                    ResetSearchState();
+                    return Fail("FRIEND PARTY CHANGED DURING MATCHMAKING");
                 }
 
                 // Guests joined already-ready. The owner becomes ready last, which atomically opens
@@ -161,8 +206,14 @@ namespace Alterverse.Multiplayer
                     return Fail(edgegap.LastError.Length > 0 ? edgegap.LastError : "COULD NOT START EDGEGAP MATCHMAKING");
                 }
 
+                if (generation != searchGeneration)
+                {
+                    await edgegap.CancelGroupAsync();
+                    return false;
+                }
+
                 SetStatus("EDGEGAP SEARCH ACTIVE • PARTY STAYS TOGETHER");
-                _ = PollAssignmentAndConnectAsync();
+                _ = PollAssignmentAndConnectAsync(generation);
                 return true;
             }
             catch (Exception ex)
@@ -191,11 +242,17 @@ namespace Alterverse.Multiplayer
                 if (manager != null && manager.IsHost)
                     BroadcastCancel(manager);
 
-                EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
-                if (edgegap != null && !await edgegap.CancelGroupAsync())
-                    Debug.LogWarning("DIMENSIONS FRONT ONLINE: Edgegap group cleanup failed: " + edgegap.LastError);
+                bool owner = searchOwner;
+                ResetSearchState(); // invalidate poll/connect before awaiting network cleanup
 
-                ResetSearchState();
+                EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
+                if (edgegap != null)
+                {
+                    bool cleaned = owner ? await edgegap.CancelGroupAsync() : await edgegap.LeaveGroupAsync();
+                    if (!cleaned)
+                        Debug.LogWarning("DIMENSIONS FRONT ONLINE: Edgegap search cleanup failed: " + edgegap.LastError);
+                }
+
                 SetStatus("PLAYER SEARCH STOPPED • PARTY REMAINS PRIVATE");
                 return true;
             }
@@ -210,38 +267,54 @@ namespace Alterverse.Multiplayer
         {
             if (busy) return;
             OnlinePartyService online = OnlinePartyService.Instance;
-            if (online == null) return;
 
             if (searching)
             {
-                if (online.IsHost)
-                    await CancelSearchAsync();
-                else
+                bool owner = searchOwner || (online != null && online.IsHost);
+                NetworkManager manager = NetworkManager.Singleton;
+                if (owner && manager != null && manager.IsHost)
+                    BroadcastCancel(manager);
+
+                ResetSearchState(); // kills stale assignment/direct-connect before API cleanup
+                EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
+                if (edgegap != null && edgegap.HasMembership)
                 {
-                    EdgegapMatchmakerClient.Instance?.ResetLocalState();
-                    ResetSearchState();
+                    bool cleaned = owner ? await edgegap.CancelGroupAsync() : await edgegap.LeaveGroupAsync();
+                    if (!cleaned)
+                        Debug.LogWarning("DIMENSIONS FRONT ONLINE: Edgegap leave cleanup failed: " + edgegap.LastError);
                 }
             }
-            await online.LeavePartyAsync();
+
+            if (online != null && online.InParty)
+                await online.LeavePartyAsync();
         }
 
         public static void MarkMatchStarted()
         {
             EdgegapOnlineFlow flow = Instance;
             if (flow == null) return;
+            // Do not cancel the direct link here: this is the successful transition into gameplay.
+            flow.searchGeneration++;
             flow.searching = false;
             flow.polling = false;
             flow.joiningGroup = false;
+            flow.searchOwner = false;
+            flow.expectedPartyPlayers = 0;
+            flow.activeGroupId = "";
             flow.joinedGuestClients.Clear();
             flow.SetStatus("DEDICATED MATCH CONNECTED");
         }
 
-        private async Task<bool> WaitForFriendRelayAsync(int expectedPlayers, float timeoutSeconds)
+        private async Task<bool> WaitForFriendRelayAsync(int expectedPlayers, float timeoutSeconds, int generation)
         {
             float deadline = Time.realtimeSinceStartup + Mathf.Max(2f, timeoutSeconds);
             expectedPlayers = Mathf.Clamp(expectedPlayers, 1, OnlinePartyService.MaxPartyPlayers);
             while (Time.realtimeSinceStartup < deadline)
             {
+                if (generation != searchGeneration) return false;
+                OnlinePartyService online = OnlinePartyService.Instance;
+                if (online == null || !online.InParty || online.PlayerCount != expectedPlayers) return false;
+
                 NetworkManager manager = NetworkManager.Singleton;
                 if (manager != null && manager.IsListening && manager.IsHost &&
                     CoopNetworkBootstrap.IsLinkReadyForPlayers(expectedPlayers))
@@ -251,19 +324,22 @@ namespace Alterverse.Multiplayer
             return false;
         }
 
-        private async Task<bool> WaitForGuestJoinAcksAsync(int expectedGuests, float timeoutSeconds)
+        private async Task<bool> WaitForGuestJoinAcksAsync(int expectedGuests, float timeoutSeconds, int generation)
         {
             if (expectedGuests <= 0) return true;
             float deadline = Time.realtimeSinceStartup + Mathf.Max(3f, timeoutSeconds);
             while (Time.realtimeSinceStartup < deadline)
             {
+                if (generation != searchGeneration) return false;
+                OnlinePartyService online = OnlinePartyService.Instance;
+                if (online == null || !online.InParty || online.PlayerCount != expectedPartyPlayers) return false;
                 if (joinedGuestClients.Count >= expectedGuests) return true;
                 NetworkManager manager = NetworkManager.Singleton;
                 if (manager == null || !manager.IsHost || !manager.IsListening) return false;
                 BroadcastGroup(manager);
                 await Task.Delay(200);
             }
-            return joinedGuestClients.Count >= expectedGuests;
+            return generation == searchGeneration && joinedGuestClients.Count >= expectedGuests;
         }
 
         private void BroadcastGroup(NetworkManager manager)
@@ -299,7 +375,7 @@ namespace Alterverse.Multiplayer
             if (!string.Equals(fixedGroupId.ToString(), activeGroupId, StringComparison.Ordinal)) return;
             if (senderClientId == NetworkManager.ServerClientId) return;
             joinedGuestClients.Add(senderClientId);
-            SetStatus($"FRIENDS JOINED EDGEGAP • {joinedGuestClients.Count + 1}/{Mathf.Max(1, OnlinePartyService.Instance?.PlayerCount ?? 1)}");
+            SetStatus($"FRIENDS JOINED EDGEGAP • {joinedGuestClients.Count + 1}/{Mathf.Max(1, expectedPartyPlayers)}");
         }
 
         private void BroadcastCancel(NetworkManager manager)
@@ -348,6 +424,10 @@ namespace Alterverse.Multiplayer
         private async Task JoinFriendGroupAsync(string groupId)
         {
             if (joiningGroup) return;
+            int generation = ++searchGeneration;
+            searchOwner = false;
+            OnlinePartyService online = OnlinePartyService.Instance;
+            expectedPartyPlayers = online?.PlayerCount ?? 0;
             joiningGroup = true;
             try
             {
@@ -367,27 +447,36 @@ namespace Alterverse.Multiplayer
                     return;
                 }
 
+                if (generation != searchGeneration)
+                {
+                    await edgegap.LeaveGroupAsync();
+                    return;
+                }
+
                 activeGroupId = groupId;
                 searching = true;
                 SetStatus("EDGEGAP GROUP JOINED • WAITING FOR LEADER");
                 SendJoinAck();
-                _ = PollAssignmentAndConnectAsync();
+                _ = PollAssignmentAndConnectAsync(generation);
             }
             finally
             {
-                joiningGroup = false;
+                if (generation == searchGeneration) joiningGroup = false;
                 RaiseChanged();
             }
         }
 
-        private async Task PollAssignmentAndConnectAsync()
+        private async Task PollAssignmentAndConnectAsync(int generation)
         {
-            if (polling) return;
+            if (polling && generation == searchGeneration) return;
             polling = true;
             try
             {
                 EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
-                if (edgegap == null || !await edgegap.WaitForAssignmentAndConnectAsync(180))
+                bool connected = edgegap != null && await edgegap.WaitForAssignmentAndConnectAsync(180);
+                if (generation != searchGeneration) return;
+
+                if (!connected)
                 {
                     string error = edgegap?.LastError ?? "EDGEGAP MATCH ASSIGNMENT FAILED";
                     if (searching)
@@ -401,7 +490,35 @@ namespace Alterverse.Multiplayer
             }
             finally
             {
-                polling = false;
+                if (generation == searchGeneration) polling = false;
+                RaiseChanged();
+            }
+        }
+
+        private async Task AbortSearchAfterPartyChangeAsync(string nextStatus, bool broadcastCancel)
+        {
+            if (cleanupRunning || !searching) return;
+            cleanupRunning = true;
+            try
+            {
+                bool owner = searchOwner;
+                NetworkManager manager = NetworkManager.Singleton;
+                if (broadcastCancel && owner && manager != null && manager.IsHost)
+                    BroadcastCancel(manager);
+
+                ResetSearchState();
+                EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
+                if (edgegap != null && edgegap.HasMembership)
+                {
+                    bool cleaned = owner ? await edgegap.CancelGroupAsync() : await edgegap.LeaveGroupAsync();
+                    if (!cleaned)
+                        Debug.LogWarning("DIMENSIONS FRONT ONLINE: Edgegap disconnect cleanup failed: " + edgegap.LastError);
+                }
+                SetStatus(nextStatus);
+            }
+            finally
+            {
+                cleanupRunning = false;
                 RaiseChanged();
             }
         }
@@ -434,11 +551,15 @@ namespace Alterverse.Multiplayer
 
         private void ResetSearchState()
         {
+            searchGeneration++;
             searching = false;
             polling = false;
             joiningGroup = false;
+            searchOwner = false;
+            expectedPartyPlayers = 0;
             activeGroupId = "";
             joinedGuestClients.Clear();
+            EdgegapMatchmakerClient.Instance?.CancelPendingAssignmentWait();
         }
 
         private bool Fail(string message)
@@ -465,6 +586,7 @@ namespace Alterverse.Multiplayer
         private void OnDestroy()
         {
             Detach();
+            if (searching) EdgegapMatchmakerClient.Instance?.CancelPendingAssignmentWait();
             if (Instance == this) Instance = null;
         }
     }
