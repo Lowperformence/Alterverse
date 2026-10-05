@@ -184,8 +184,9 @@ namespace Alterverse.Visuals
                 Surface("Natural light grey shark skin", new Color(.58f,.61f,.62f), .08f,.40f),
                 Surface("Naval armor", new Color(.035f,.065f,.078f), .55f,.40f),
                 Surface("Tidal channels", new Color(.04f,.78f,1f), .30f,.62f, true),
-                Surface("Brass fittings", new Color(.72f,.39f,.105f), .20f,.55f, true),
-                Surface("White ventral skin and teeth", new Color(.93f,.94f,.91f), .10f,.35f)
+                Surface("Brass fittings", new Color(.48f,.29f,.12f), .72f,.32f),
+                Surface("White ventral skin and teeth", new Color(.93f,.94f,.91f), .10f,.35f),
+                JacketFabric()
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             // The inherited gauntlet renderer has its own FBX transform/root bone.
@@ -212,6 +213,55 @@ namespace Alterverse.Visuals
             if (energy) material.EnableKeyword("_EMISSION");
             ownedMaterials.Add(material);
             return material;
+        }
+
+        private Material JacketFabric()
+        {
+            Shader shader = Resources.Load<Shader>("CyberShark/JacketFabric");
+            if (shader == null || !shader.isSupported)
+                return Surface("Brown canvas jacket", new Color(.22f,.12f,.065f), 0f,.08f);
+            var material = new Material(shader) { name = "DF_Nerok_WovenBrownJacket" };
+            ownedMaterials.Add(material);
+            return material;
+        }
+
+        // The resource has six authored material slots. Its vest and tails share slot 2
+        // with metal armor. Match their exact source plate vertices rather than a broad
+        // bounding box, which would also recolor nearby armor or shark skin.
+        private static bool JacketVertex(int index)
+        {
+            string bone = geometry.boneNames[geometry.boneIndices[index]];
+            Vector3 p = Point(geometry.vertices, index * 3);
+            p.x = Mathf.Abs(p.x);
+            if (bone == "Chest") return PlateVertex(p, VestOutline, .142f,.035f);
+            if (bone == "ThighL" || bone == "ThighR") return PlateVertex(p, TailOutline, .077f,.024f);
+            return false;
+        }
+
+        private static readonly Vector2[] VestOutline = {
+            new Vector2(.135f,1.55f), new Vector2(.245f,1.49f), new Vector2(.218f,1.24f),
+            new Vector2(.174f,1.075f), new Vector2(.085f,1.095f), new Vector2(.115f,1.30f) };
+        private static readonly Vector2[] TailOutline = {
+            new Vector2(.082f,1.07f), new Vector2(.22f,1.07f), new Vector2(.27f,.73f),
+            new Vector2(.235f,.56f), new Vector2(.115f,.65f) };
+
+        private static bool PlateVertex(Vector3 p, Vector2[] outline, float z, float depth)
+        {
+            Vector2 center = Vector2.zero;
+            foreach (Vector2 point in outline) center += point;
+            center /= outline.Length;
+            for (int row = 0; row < 3; row++)
+            {
+                float scale = row == 0 ? 1f : row == 1 ? .93f : .82f;
+                float offset = depth * (row == 0 ? -.45f : row == 1 ? .2f : .65f);
+                foreach (Vector2 point in outline)
+                {
+                    Vector2 xy = center + (point - center) * scale;
+                    Vector3 vertex = new Vector3(xy.x, xy.y, z + offset - .08f * xy.x * xy.x);
+                    if ((p - vertex).sqrMagnitude < .000000001f) return true;
+                }
+            }
+            return (p - new Vector3(center.x,center.y,z+depth*.88f)).sqrMagnitude < .000000001f;
         }
 
         private void RendererGroup(SkinnedMeshRenderer renderer, int group, Transform source,
@@ -251,7 +301,7 @@ namespace Alterverse.Visuals
             mesh.bindposes = bindposes; mesh.subMeshCount = materials.Length;
             var materialTriangles = new List<int>[materials.Length];
             for (int m = 0; m < materials.Length; m++) materialTriangles[m] = new List<int>();
-            for (int m = 0; m < materials.Length; m++)
+            for (int m = 0; m < geometry.submeshes.Length; m++)
             {
                 int[] sourceIndices = geometry.submeshes[m].triangles;
                 for (int i = 0; i < sourceIndices.Length; i += 3)
@@ -263,6 +313,8 @@ namespace Alterverse.Visuals
                     int material = m;
                     if (group == 0 && m == 2 && HandVertex(sourceIndices[i]) &&
                         HandVertex(sourceIndices[i+1]) && HandVertex(sourceIndices[i+2])) material = 1;
+                    if (group == 0 && m == 2 && JacketVertex(sourceIndices[i]) &&
+                        JacketVertex(sourceIndices[i+1]) && JacketVertex(sourceIndices[i+2])) material = 6;
                     materialTriangles[material].Add(a);
                     materialTriangles[material].Add(b);
                     materialTriangles[material].Add(c);
