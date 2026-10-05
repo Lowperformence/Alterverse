@@ -72,7 +72,6 @@ namespace Alterverse.Visuals
             // A single final pose layer samples Blender clips; an imported Animator must not also write the same bones.
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             RestoreImportedBindPose(instance.transform, hero);
-            BrakkForearmTrim.Apply(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
             if (hero == HeroId.Veyr)
@@ -109,6 +108,8 @@ namespace Alterverse.Visuals
             SkinOrnamentPresentation.Apply(instance.transform);
             HeroUndersuitFabric.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
+            // Recolor after every generated detail and material pass so no gold forearm layer remains.
+            BrakkForearmTrim.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }
