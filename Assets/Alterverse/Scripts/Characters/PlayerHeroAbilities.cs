@@ -108,7 +108,7 @@ namespace Alterverse.Characters
 
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
-                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(gameObject, slot)) return false;
+                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(gameObject, slot, target)) return false;
                 execution.MarkNetworkRequestCooldown(slot);
                 targeting.RegisterOffensiveAction();
                 NotifyMotorAttack(slot, target, direction);
@@ -123,6 +123,13 @@ namespace Alterverse.Characters
         {
             if (slot < 0 || slot > 3) return false;
             Health target = targeting.Acquire(Mathf.Max(kit.Spec(slot).Range, 1f), transform.forward, true);
+            return CastNetworkAuthoritative(slot, requestedDirection, target);
+        }
+
+        public bool CastNetworkAuthoritative(int slot, Vector3 requestedDirection, Health requestedTarget)
+        {
+            if (slot < 0 || slot > 3) return false;
+            Health target = requestedTarget;
             Vector3 direction = DirectionFor(target);
             if (UsesMovementDirection(slot) && requestedDirection.sqrMagnitude > .0001f) direction = requestedDirection.normalized;
             return CastAuthoritative(slot, target, direction);
