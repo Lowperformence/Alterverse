@@ -9,8 +9,8 @@ namespace Alterverse.Match
 {
     /// <summary>
     /// Recurring free-roam PvP objective. A new Hot Zone opens every 60 match-seconds,
-    /// stays active for 30 seconds, and relocates randomly inside the middle 50%
-    /// of the arena width. The entire capture circle stays out of both outer quarters. Every hero inside scores independently for their
+    /// stays active for 30 seconds, and relocates randomly inside the middle third
+    /// of the arena width. The entire capture circle stays out of both outer thirds. Every hero inside scores independently for their
     /// team, even while both teams occupy the zone.
     /// </summary>
     public sealed class HotZoneDirector : MonoBehaviour
@@ -27,7 +27,7 @@ namespace Alterverse.Match
         private const float ArenaHalfHeight=36f;
         private const float ZoneEdgeMargin=1.25f;
         private const float SpawnPadX=27.5f;
-        public const float ExcludedSideFraction=.25f;
+        public const float ExcludedSideFraction=1f/3f;
         private Bounds arenaBounds;
         private const float InnerRingRadiusScale=.76f;
         private const float RingAlpha=.42f;
@@ -189,7 +189,7 @@ namespace Alterverse.Match
             return spawn;
         }
 
-        /// <summary>Center limits keep the full zone in the middle half of X and on the floor in Z.</summary>
+        /// <summary>Center limits keep the full zone in the middle third of X and on the floor in Z.</summary>
         public static Vector2 SpawnCenterHalfExtents(Bounds bounds)=>new Vector2(
             Mathf.Max(0f,bounds.size.x*(.5f-ExcludedSideFraction)-Radius),
             Mathf.Max(0f,bounds.extents.z-Radius-ZoneEdgeMargin));
@@ -414,5 +414,4 @@ namespace Alterverse.Match
         }
     }
 }
-
 
