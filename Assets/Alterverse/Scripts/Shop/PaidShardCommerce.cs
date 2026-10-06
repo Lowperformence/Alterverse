@@ -41,6 +41,7 @@ namespace Alterverse.Shop
             yield return Send("/wallet",new Request(),r=>response=r);
             if(response==null||response.wallet==null)yield break;
             Apply(response.wallet);ready=true;EntitlementsChanged?.Invoke();Status="Store account connected.";
+            Debug.Log("DIMENSIONS FRONT COMMERCE: authenticated wallet connected.");
             bool claimed=false;
             yield return ClaimVerifiedShards(ok=>claimed=ok);
             if(claimed)Status="Shard balance synchronized.";
@@ -151,4 +152,3 @@ namespace Alterverse.Shop
         void OnDestroy(){ready=false;generation++;CancelPending();if(Instance==this)Instance=null;EntitlementsChanged?.Invoke();}
     }
 }
-
