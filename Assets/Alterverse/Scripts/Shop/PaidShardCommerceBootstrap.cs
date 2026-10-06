@@ -65,6 +65,8 @@ namespace Alterverse.Shop
                         ? AuthenticationService.Instance.AccessToken
                         : null,
                     accountHash);
+
+                Debug.Log("DIMENSIONS FRONT COMMERCE: purchase server connection started.");
             }
             catch (Exception ex)
             {
