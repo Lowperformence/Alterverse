@@ -134,6 +134,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
+            LoginStreakProgress.GrantForToday();
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
             if (page == Page.Play && onlineFlow != null &&
                 (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
@@ -1182,20 +1183,33 @@ namespace Alterverse.UI
         private void DrawQuests()
         {
             Heading("Daily missions","Daily progress resets at 00:00 Europe/Berlin. Claim completed missions here.");
-            float width=Mathf.Min(780,ContentWidth);
+            float width=Mathf.Min(960,ContentWidth);
             float x=Left+(ContentWidth-width)*.5f;
+            theme.Panel(new Rect(x,208,width,100));
+            theme.Label(new Rect(x+18,216,width-36,24),"DAILY LOGIN STREAK",theme.Heading);
+            float cellW=(width-36)/LoginStreakProgress.CycleDays;
+            for(int day=1;day<=LoginStreakProgress.CycleDays;day++)
+            {
+                Rect cell=new Rect(x+18+(day-1)*cellW,246,cellW-6,48);
+                bool current=LoginStreakProgress.ReceivedToday&&LoginStreakProgress.CurrentDay==day;
+                FrontEndTheme.Fill(cell,current?FrontEndTheme.Raised:FrontEndTheme.Surface);
+                theme.Center(new Rect(cell.x,cell.y,cell.width,22),$"DAY {day}  •  {LoginStreakProgress.RewardForDay(day)} SHARDS");
+                theme.Center(new Rect(cell.x,cell.y+23,cell.width,20),current?"RECEIVED":day<LoginStreakProgress.CurrentDay?"DONE":"LOGIN DAILY");
+            }
+            if(LoginStreakProgress.ClockBehind)
+                theme.Label(new Rect(x+18,286,width-36,20),"Check your device date. Daily rewards paused until the saved day.",theme.Small,true);
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
             {
                 ChallengeDef quest=PlayerChallengeContent.Daily[i];
-                float y=220+i*142;
-                theme.Panel(new Rect(x,y,width,126));
-                theme.Label(new Rect(x+22,y+13,width-235,30),quest.Name,theme.Heading);
-                theme.Label(new Rect(x+22,y+48,width-235,30),quest.Description,theme.Body,true);
+                float y=322+i*92;
+                theme.Panel(new Rect(x,y,width,84));
+                theme.Label(new Rect(x+18,y+8,width-252,26),quest.Name,theme.Heading);
+                theme.Label(new Rect(x+18,y+35,width-252,24),quest.Description,theme.Body,true);
                 int progress=DailyQuestProgress.Progress(i),target=DailyQuestProgress.Target(i);
-                theme.Progress(new Rect(x+22,y+91,width-260,8),progress/(float)target);
-                theme.Label(new Rect(x+width-213,y+18,190,24),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
+                theme.Progress(new Rect(x+18,y+67,width-252,5),target>0?progress/(float)target:0);
+                theme.Label(new Rect(x+width-213,y+8,190,22),$"{progress} / {target}  •  {quest.Shards} SHARDS",theme.Small,true);
                 bool claimed=DailyQuestProgress.Claimed(i);
-                if(theme.Action(new Rect(x+width-205,y+58,180,50),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&progress>=target))
+                if(theme.Action(new Rect(x+width-205,y+35,180,36),claimed?"CLAIMED":"CLAIM",true,enabled:!claimed&&target>0&&progress>=target))
                     DailyQuestProgress.Claim(i);
             }
         }
@@ -1499,3 +1513,4 @@ namespace Alterverse.UI
         }
     }
 }
+

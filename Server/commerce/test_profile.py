@@ -28,6 +28,37 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile_value(restored,'DF_BattleItem_2'),2)
         self.assertEqual(profile_value(restored,'DF_MasterVolume'),.75)
         self.assertEqual(self.ledger.wallet('b')['profile'],[])
+    def test_daily_progression_restores_and_stays_account_scoped(self):
+        entries=[number('DF_Shards',12),number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',4),number('DF_DailyQuestWonMaps_v1',31)]
+        self.ledger.save_profile('a',entries,0)
+        restored=Ledger(self.path).wallet('a')
+        for entry in entries: self.assertEqual(profile_value(restored,entry['key']),entry['number'])
+        self.assertEqual(self.ledger.wallet('b')['profile'],[])
+        self.assertEqual(restored['balance'],0) # daily rewards never credit the Google-paid wallet
+
+    def test_invalid_daily_progression_rejected(self):
+        invalid=[number('DF_LoginStreakIndex_v1',0),number('DF_LoginStreakIndex_v1',8),number('DF_LoginStreakIndex_v1',True),text('DF_LoginStreakIndex_v1','7'),number('DF_DailyQuestWonMaps_v1',-1),number('DF_DailyQuestWonMaps_v1',2048),text('DF_DailyQuestWonMaps_v1','31'),number('DF_LoginStreakDay_v1',20260230),number('DF_LoginStreakDay_v1',99991231)]
+        for entry in invalid:
+            with self.subTest(entry=entry), self.assertRaises(ValueError): self.ledger.save_profile('a',[entry],0)
+        self.assertEqual(self.ledger.wallet('a')['profile'],[])
+
+    def test_login_marker_cannot_be_deleted_or_rewound(self):
+        entries=[number('DF_LoginStreakDay_v1',20260102),number('DF_LoginStreakIndex_v1',2)]
+        saved=self.ledger.save_profile('a',entries,0)
+        preserved=self.ledger.save_profile('a',[],saved['profileRevision'])
+        self.assertEqual(profile_value(preserved,'DF_LoginStreakDay_v1'),20260102)
+        bad=[[number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',1)], [number('DF_LoginStreakDay_v1',20260102),number('DF_LoginStreakIndex_v1',7)], [number('DF_LoginStreakDay_v1',20260103)]]
+        for entries in bad:
+            with self.subTest(entries=entries), self.assertRaises(ValueError):
+                self.ledger.save_profile('a',entries,preserved['profileRevision'])
+
+    def test_two_devices_cannot_both_save_a_daily_payout(self):
+        self.ledger.save_profile('a',[number('DF_Shards',10)],0)
+        payout=[number('DF_Shards',22),number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',4)]
+        self.ledger.save_profile('a',payout,1)
+        with self.assertRaises(ProfileConflict): self.ledger.save_profile('a',payout,1)
+        self.assertEqual(profile_value(self.ledger.wallet('a'),'DF_Shards'),22)
+
     def test_stale_device_cannot_overwrite_newer_profile(self):
         self.ledger.save_profile('a',[text('DF_AccountXP','100')],0)
         with self.assertRaises(ProfileConflict): self.ledger.save_profile('a',[text('DF_AccountXP','1')],0)
@@ -155,3 +186,4 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
+

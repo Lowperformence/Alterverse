@@ -3,6 +3,8 @@ The single displayed balance combines server-saved earned progress and verified 
 No client-supplied prices, shard amounts or user IDs may be trusted by the HTTP adapter.
 """
 import json
+from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 import sqlite3
 from pathlib import Path
 
@@ -47,6 +49,17 @@ def validate_profile(entries):
             value['real'] = real
         else: raise ValueError('Invalid profile type')
         if key == 'DF_Shards' and kind != 0: raise ValueError('Invalid earned balance type')
+        if key in ('DF_LoginStreakDay_v1', 'DF_LoginStreakIndex_v1', 'DF_DailyQuestWonMaps_v1'):
+            if kind != 0: raise ValueError('Invalid daily progression type')
+            if key == 'DF_LoginStreakIndex_v1' and not 1 <= number <= 7:
+                raise ValueError('Invalid login streak')
+            if key == 'DF_DailyQuestWonMaps_v1' and not 0 <= number <= (1 << 11) - 1:
+                raise ValueError('Invalid won-map mask')
+            if key == 'DF_LoginStreakDay_v1':
+                try: claimed_day = date(number // 10000, number // 100 % 100, number % 100)
+                except (ValueError, OverflowError): raise ValueError('Invalid login day')
+                if claimed_day > datetime.now(timezone.utc).astimezone(ZoneInfo('Europe/Berlin')).date():
+                    raise ValueError('Future login day')
         clean.append(value)
     return clean
 
@@ -138,6 +151,18 @@ class Ledger:
             current = db.execute('SELECT revision,data FROM profile WHERE account=?', (account,)).fetchone()
             if current[0] != expected_revision: raise ProfileConflict()
             by_key = {e['key']:e for e in entries}
+            saved = {e['key']:e for e in json.loads(current[1])}
+            daily_day, daily_index = 'DF_LoginStreakDay_v1', 'DF_LoginStreakIndex_v1'
+            if daily_day not in by_key and daily_index not in by_key:
+                for key in (daily_day, daily_index):
+                    if key in saved: by_key[key] = saved[key]
+            if (daily_day in by_key) != (daily_index in by_key):
+                raise ValueError('Incomplete login streak')
+            if daily_day in saved and daily_day in by_key:
+                old_day, new_day = saved[daily_day]['number'], by_key[daily_day]['number']
+                if new_day < old_day: raise ValueError('Login day cannot move backwards')
+                if new_day == old_day and by_key[daily_index] != saved.get(daily_index):
+                    raise ValueError('Login streak already recorded for this day')
             for (sku,) in db.execute('SELECT sku FROM cosmetic WHERE account=?', (account,)):
                 for write in ITEMS.get(sku,{}).get('writes',[]):
                     if 'Owned' in write['key'] or write['key'] == 'DF_BP_BETA01_Premium':
@@ -209,4 +234,5 @@ class Ledger:
             if row.rowcount != 1: raise ValueError('Insufficient shards')
             db.execute('INSERT INTO cosmetic VALUES (?,?)', (account, sku))
             return self.snapshot(db, account)
+
 

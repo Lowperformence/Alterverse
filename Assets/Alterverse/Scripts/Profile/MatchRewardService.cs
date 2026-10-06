@@ -110,7 +110,7 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(ReceiptXpBonus,xpBonus),
                 new ProfileTransaction.Write(ReceiptBonusCosmetic,(int)cosmetic)
             };
-            writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills));
+            writes.AddRange(DailyQuestProgress.MatchWrites(enemyKills<0?kills:enemyKills,hotZoneCaptures,soldierKills,won,ArenaVariantRuntime.Current));
             ProfileTransaction.Commit(writes.ToArray());
 
             // Persist the win before reporting it. Co-op can stay on its own result/lobby
@@ -126,3 +126,4 @@ namespace Alterverse.Profile
         }
     }
 }
+
