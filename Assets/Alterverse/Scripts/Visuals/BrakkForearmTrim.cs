@@ -10,18 +10,38 @@ namespace Alterverse.Visuals
     public sealed class BrakkForearmTrim : MonoBehaviour
     {
         readonly List<Mesh> ownedMeshes = new List<Mesh>();
+        readonly List<Material> ownedSkinMaterials = new List<Material>();
         Material black;
 
         public static void Apply(Transform model, HeroId hero)
         {
             // Nerok uses the same imported Rook asset: only alter Brakk's instance.
             if (hero != HeroId.Rook || model == null || model.GetComponent<BrakkForearmTrim>() != null) return;
-            BrakkForearmTrim owner = null;
+            BrakkForearmTrim owner = model.gameObject.AddComponent<BrakkForearmTrim>();
+            // Clone skin slots on this instance; Nerok shares the imported asset.
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (renderer.name != "DF_Anatomy") continue;
+                Material[] slots = renderer.sharedMaterials;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    Material original = slots[i];
+                    if (original == null || !original.name.StartsWith("Skin", StringComparison.OrdinalIgnoreCase)) continue;
+                    var copy = new Material(original) { name = original.name + "_BrakkLighter" };
+                    Color color = new Color(.68f, .43f, .31f, 1f);
+                    if (copy.HasProperty("_BaseColor")) copy.SetColor("_BaseColor", color);
+                    if (copy.HasProperty("_Color")) copy.SetColor("_Color", color);
+                    slots[i] = copy;
+                    owner.ownedSkinMaterials.Add(copy);
+                }
+                renderer.sharedMaterials = slots;
+            }
             foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 bool anatomy = skin.name == "DF_Anatomy";
                 bool details = skin.name == "DF_ArticulatedArmorDetails";
-                if (!anatomy && !details) continue;
+                bool techDetails = skin.name == "DF_LimbTechDetails";
+                if (!anatomy && !details && !techDetails) continue;
                 Mesh source = skin.sharedMesh;
                 if (source == null || !source.isReadable) continue;
                 int left = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmL");
@@ -51,7 +71,8 @@ namespace Alterverse.Visuals
                             (Attached(a, handR) && Attached(b, handR) && Attached(c, handR));
                         // The six imported gold pieces are in Anatomy. Additional
                         // wrist/knuckle plates are generated on the hand bones.
-                        if (anatomy && gold && onForearm || details && (onForearm || onHand))
+                        if ((anatomy && gold && onForearm) || (details && (onForearm || onHand)) ||
+                            (techDetails && onForearm))
                         {
                             removed++;
                             continue;
@@ -104,6 +125,7 @@ namespace Alterverse.Visuals
         void OnDestroy()
         {
             foreach (Mesh mesh in ownedMeshes) if (mesh != null) Destroy(mesh);
+            foreach (Material material in ownedSkinMaterials) if (material != null) Destroy(material);
             if (black != null) Destroy(black);
         }
     }
