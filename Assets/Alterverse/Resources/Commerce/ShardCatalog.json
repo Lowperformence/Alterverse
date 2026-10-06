@@ -11,11 +11,6 @@
       "amount": 1200
     },
     {
-      "id": "dimensions_shards_2500",
-      "name": "LARGE",
-      "amount": 2500
-    },
-    {
       "id": "dimensions_shards_5500",
       "name": "PREMIUM",
       "amount": 5500
