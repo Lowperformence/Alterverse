@@ -18,6 +18,7 @@ namespace Alterverse.Visuals
             // Nerok uses the same imported Rook asset: only alter Brakk's instance.
             if (hero != HeroId.Rook || model == null || model.GetComponent<BrakkForearmTrim>() != null) return;
             BrakkForearmTrim owner = model.gameObject.AddComponent<BrakkForearmTrim>();
+            SlimCalves(model, owner);
             // Clone skin slots on this instance; Nerok shares the imported asset.
             foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -119,6 +120,57 @@ namespace Alterverse.Visuals
                         (w.boneIndex3 == bone ? w.weight3 : 0f);
                     return influence > .95f;
                 }
+            }
+        }
+
+
+        static void SlimCalves(Transform model, BrakkForearmTrim owner)
+        {
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh source = renderer.sharedMesh;
+                if (source == null || !source.isReadable) continue;
+                Vector3[] vertices = source.vertices;
+                BoneWeight[] weights = source.boneWeights;
+                Matrix4x4[] bind = source.bindposes;
+                if (weights.Length != vertices.Length) continue;
+                bool changed = false;
+                foreach (string side in new[] { "L", "R" })
+                {
+                    int shin = Array.FindIndex(renderer.bones, b => b != null && b.name == "Shin" + side);
+                    int foot = Array.FindIndex(renderer.bones, b => b != null && b.name == "Foot" + side);
+                    if (shin < 0 || foot < 0 || shin >= bind.Length || foot >= bind.Length) continue;
+                    Vector3 knee = bind[shin].inverse.MultiplyPoint3x4(Vector3.zero);
+                    Vector3 axis = bind[foot].inverse.MultiplyPoint3x4(Vector3.zero) - knee;
+                    if (axis.sqrMagnitude < 1e-10f) continue;
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        BoneWeight w = weights[i];
+                        float influence = (w.boneIndex0 == shin ? w.weight0 : 0f) +
+                            (w.boneIndex1 == shin ? w.weight1 : 0f) +
+                            (w.boneIndex2 == shin ? w.weight2 : 0f) +
+                            (w.boneIndex3 == shin ? w.weight3 : 0f);
+                        if (influence <= 0f) continue;
+                        float t = Vector3.Dot(vertices[i] - knee, axis) / axis.sqrMagnitude;
+                        if (t <= 0f || t >= 1f) continue;
+                        // Preserve joint seams and length; narrow the calf and its fitted armor together.
+                        float taper = Mathf.Clamp01(Mathf.Min(t, 1f - t) / .10f);
+                        Vector3 radial = vertices[i] - (knee + axis * t);
+                        vertices[i] -= radial * (.20f * influence * taper);
+                        changed = true;
+                    }
+                }
+                if (!changed) continue;
+                Mesh mesh = Instantiate(source);
+                mesh.name = source.name + "_BrakkSlimCalves";
+                mesh.vertices = vertices;
+                mesh.RecalculateNormals();
+                mesh.RecalculateBounds();
+                renderer.sharedMesh = mesh;
+                Bounds bounds = renderer.localBounds;
+                bounds.Encapsulate(mesh.bounds);
+                renderer.localBounds = bounds;
+                owner.ownedMeshes.Add(mesh);
             }
         }
 
