@@ -10,7 +10,7 @@ namespace Alterverse.Visuals
     public sealed class BrakkForearmTrim : MonoBehaviour
     {
         readonly List<Mesh> ownedMeshes = new List<Mesh>();
-        Material silver;
+        Material black;
 
         public static void Apply(Transform model, HeroId hero)
         {
@@ -33,7 +33,7 @@ namespace Alterverse.Visuals
                 if (weights.Length != source.vertexCount) continue;
 
                 var kept = new List<int>[source.subMeshCount];
-                var silverForearm = new List<int>();
+                var blackForearm = new List<int>();
                 int removed = 0;
                 Material[] materials = skin.sharedMaterials;
                 for (int sub = 0; sub < kept.Length; sub++)
@@ -56,37 +56,37 @@ namespace Alterverse.Visuals
                             removed++;
                             continue;
                         }
-                        List<int> target = anatomy && onForearm ? silverForearm : kept[sub];
+                        List<int> target = anatomy && onForearm ? blackForearm : kept[sub];
                         target.Add(a); target.Add(b); target.Add(c);
                     }
                 }
-                if (removed == 0 && silverForearm.Count == 0) continue;
+                if (removed == 0 && blackForearm.Count == 0) continue;
                 if (owner == null)
                 {
                     owner = model.gameObject.AddComponent<BrakkForearmTrim>();
                 }
-                if (silverForearm.Count > 0 && owner.silver == null)
+                if (blackForearm.Count > 0 && owner.black == null)
                 {
-                    owner.silver = RuntimeShaderLibrary.Create(new Color(.59f, .64f, .68f), metallic: .76f, smoothness: .48f);
-                    if (owner.silver == null) { Debug.LogError("DF: Brakk forearm silver shader is missing.", model); return; }
-                    owner.silver.name = "DF_Brakk_SilverForearms";
+                    owner.black = RuntimeShaderLibrary.Create(new Color(.025f, .025f, .025f), metallic: .15f, smoothness: .32f);
+                    if (owner.black == null) { Debug.LogError("DF: Brakk forearm black shader is missing.", model); return; }
+                    owner.black.name = "DF_Brakk_BlackForearms";
                 }
                 Mesh recolored = Instantiate(source);
                 recolored.name = source.name + "_BrakkWithoutGoldPlates";
-                recolored.subMeshCount = kept.Length + (silverForearm.Count > 0 ? 1 : 0);
+                recolored.subMeshCount = kept.Length + (blackForearm.Count > 0 ? 1 : 0);
                 for (int sub = 0; sub < kept.Length; sub++) recolored.SetTriangles(kept[sub], sub, false);
-                if (silverForearm.Count > 0) recolored.SetTriangles(silverForearm, kept.Length, false);
+                if (blackForearm.Count > 0) recolored.SetTriangles(blackForearm, kept.Length, false);
                 recolored.RecalculateBounds();
-                if (silverForearm.Count > 0)
+                if (blackForearm.Count > 0)
                 {
                     Array.Resize(ref materials, kept.Length + 1);
-                    materials[kept.Length] = owner.silver;
+                    materials[kept.Length] = owner.black;
                     skin.sharedMaterials = materials;
                 }
                 skin.sharedMesh = recolored;
                 owner.ownedMeshes.Add(recolored);
                 Debug.Log("DF: Brakk removed " + removed + " plate triangles and colored " +
-                    (silverForearm.Count / 3) + " remaining forearm triangles silver on " + skin.name, model);
+                    (blackForearm.Count / 3) + " remaining forearm triangles black on " + skin.name, model);
 
                 bool Attached(int vertex, int bone)
                 {
@@ -104,7 +104,7 @@ namespace Alterverse.Visuals
         void OnDestroy()
         {
             foreach (Mesh mesh in ownedMeshes) if (mesh != null) Destroy(mesh);
-            if (silver != null) Destroy(silver);
+            if (black != null) Destroy(black);
         }
     }
 }
