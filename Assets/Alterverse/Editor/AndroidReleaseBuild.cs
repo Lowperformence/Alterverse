@@ -141,6 +141,42 @@ namespace Alterverse.EditorChecks
             EditorUtility.RevealInFinder(output);
         }
 
+        [MenuItem("DIMENSIONS FRONT/Development/Build Google Play shard test bundle")]
+        public static void BuildGooglePlayShardTest()
+        {
+            EnsureLauncherIcon();
+            EditorUserBuildSettings.buildAppBundle=true;
+            EditorUserBuildSettings.development=false;
+            EditorUserBuildSettings.allowDebugging=false;
+            EditorUserBuildSettings.connectProfiler=false;
+            EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
+            ApplyDeviceCompatibilitySettings();
+            AssetDatabase.SaveAssets();
+            Validate();
+
+            var scenes=new List<string>();
+            foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)scenes.Add(scene.path);
+            Directory.CreateDirectory("Builds/Android");
+
+            string outputPath="Builds/Android/DIMENSIONS-FRONT-IAP-TEST-"+PlayerSettings.Android.bundleVersionCode+".aab";
+            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes=scenes.ToArray(),
+                target=BuildTarget.Android,
+                options=BuildOptions.None,
+                extraScriptingDefines=new[]{"DF_GOOGLE_PLAY_SHARD_TEST"},
+                locationPathName=outputPath
+            });
+            if(report.summary.result!=BuildResult.Succeeded)
+                throw new BuildFailedException("DIMENSIONS FRONT Google Play shard test build failed. Inspect the Unity build log.");
+
+            string output=Path.GetFullPath(report.summary.outputPath);
+            Debug.LogWarning("DIMENSIONS FRONT: INTERNAL GOOGLE PLAY SHARD TEST bundle created at "+output+
+                ". This build bypasses the account backend for shard fulfillment and credits device-local test shards. "+
+                "Upload only to a controlled Play test track. The normal Release build does not include this bypass.");
+            EditorUtility.RevealInFinder(output);
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Open Android build folder")]
         public static void OpenBuildFolder()
         {
