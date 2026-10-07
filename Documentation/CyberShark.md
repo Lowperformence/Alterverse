@@ -38,3 +38,6 @@ Light-blue shark skin, tapered snout, visible teeth and gills, naval vest with b
 Latest art adjustment: lantern and its hanging chain removed; standard anchor mesh doubled around the grip, with the projectile export and anchor HUD framing updated accordingly.
 
 Small healed scars added to exposed head, chest, arms and hands as bone-bound geometry.
+
+Free-hand chain hook: seven interlocked oval metal links, a forged eye and a long pointed hook are bound to `WeaponGripL` in independent mesh group 1. `CyberSharkAppearance` renders this group with its own rust-brown metal/oxidation colors and a runtime swing bone parented to the left grip. The forged hook uses a darker brown material slot than the chain. The held link remains fixed while the accessory swings with `HeroVisualMotion.PlanarSpeed` and `GaitPhase` (up to 10 degrees forward/back and 4 degrees sideways), easing back to rest when stopped. Right-hand anchor shrinking, Epic anchor skins and the thrown anchor export continue to affect group 2 only. No collider or ability behavior changes.
+

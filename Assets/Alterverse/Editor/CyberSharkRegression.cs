@@ -55,10 +55,14 @@ namespace Alterverse.EditorChecks
             using(var reader=new StreamReader(stream))model=JsonUtility.FromJson<Geometry>(reader.ReadToEnd());
             Require(model.vertices.Length==model.normals.Length&&model.vertices.Length==model.groups.Length*3,"Invalid mesh channels.");
             Require(model.submeshes.Length==6,"Material slots changed.");
-            int weaponVertices=0;
+            int weaponVertices=0,hookVertices=0;
             for(int i=0;i<model.groups.Length;i++)
+            {
                 if(model.groups[i]==2){weaponVertices++;Require(model.boneNames[model.boneIndices[i]]=="WeaponGripR","Anchor bound to wrong hand.");}
+                if(model.groups[i]==1){hookVertices++;Require(model.boneNames[model.boneIndices[i]]=="WeaponGripL","Chain hook bound to wrong hand.");}
+            }
             Require(weaponVertices>0,"Anchor mesh absent.");
+            Require(hookVertices>0,"Free-hand chain hook mesh absent.");
             foreach(string mesh in new[]{"AnchorProjectile","WaterSpiral","WaveCrest","AnchorChain"})
                 Require(Resources.Load<TextAsset>("CyberShark/"+mesh)!=null,"Missing Blender VFX: "+mesh);
             for(int i=0;i<5;i++)Require(Resources.Load<Texture2D>("CyberShark/Icons/"+i)!=null,"Missing attack icon "+i);
@@ -75,3 +79,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

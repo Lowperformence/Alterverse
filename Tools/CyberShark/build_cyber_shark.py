@@ -98,7 +98,7 @@ def build_unified_shark_head():
    points=[smile_point(p) for p in points]
    center=np.mean(points,axis=0)
    for face in tooth_faces:
-    p,q,r=[points[i] for i in face]
+    p,q,r=np.array([points[i] for i in face])
     if np.dot(np.cross(q-p,r-p),(p+q+r)/3-center)<0:face.reverse()
    add(row+' shark tooth',points,tooth_faces,5,'Head')
 build_unified_shark_head()
@@ -300,7 +300,36 @@ for side,sign in [('L',-1),('R',1)]:
   tube('small scar cross mark',[(cx-.004,cy-.008,c[2]+.115),(cx+.004,cy+.008,c[2]+.115)],.002,5,bone,5)
  w=np.array(BONES['Hand'+side][0]);tube('hand scar',[w+[-.015,-.030,.066],w+[.013,-.048,.065]],.0025,5,'Hand'+side,6)
 
-# The original standard anchor is the only weapon; Epic recolors this exact mesh.
+# Free-hand chain hook: independent group, so anchor scaling/skins/projectiles cannot affect it.
+GROUP=1
+hook_start=len(V)
+hook_grip=np.array(BONES['WeaponGripL'][0])+[-.012,-.052,.070]
+def hook_link(center,normal):
+ n=unit(normal);u=unit(np.cross(n,[0,1,0]));v=unit(np.cross(n,u))
+ vertices=[];faces=[];around=20;sides=6
+ for j in range(around):
+  angle=j*math.tau/around
+  radial=unit(math.cos(angle)*u+math.sin(angle)*v)
+  for k in range(sides):
+   cross=k*math.tau/sides
+   vertices.append(center+.018*math.cos(angle)*u+.034*math.sin(angle)*v+
+                   .007*(math.cos(cross)*radial+math.sin(cross)*n))
+ for j in range(around):
+  for k in range(sides):
+   a=j*sides+k;b=((j+1)%around)*sides+k
+   c=((j+1)%around)*sides+(k+1)%sides;d=j*sides+(k+1)%sides
+   faces.extend([(a,b,c),(a,c,d)])
+ add('free hand interlocked hook chain',vertices,faces,2,'WeaponGripL')
+for j in range(7):
+ hook_link(hook_grip+[0,-j*.049,0],(0,0,1) if j%2==0 else (1,0,0))
+hook_eye=hook_grip+[0,-6*.049-.056,0]
+ring('forged hook eye',hook_eye,.030,.010,2,'WeaponGripL',segments=20)
+tube('long forged hook shank',[hook_eye+[0,-.028,0],hook_eye+[0,-.325,0],
+      hook_eye+[-.065,-.365,0],hook_eye+[-.132,-.315,0],hook_eye+[-.156,-.247,0]],
+     [.019,.023,.022,.015,.001],4,'WeaponGripL',12)
+hook_end=len(V)
+
+# Epic skins recolor the original right-hand anchor mesh independently.
 GROUP=2
 g=np.array(BONES['WeaponGripR'][0]);x=g[0]+.022;z=g[2]+.055
 limb('anchor shank',(x,g[1]+.16,z),(x,g[1]-.46,z),.034,2,'WeaponGripR')
@@ -351,7 +380,8 @@ for tri in mesh.loop_triangles:
   if tail_start<=vi<tail_end:tail_vertices.append(idx)
 data={'version':1,'boneNames':BN,'anchors':[{'head':BONES[b][0],'tail':BONES[b][1]} for b in BN],
  'vertices':vertices,'normals':normals,'boneIndices':bones,'boneIndices2':bones2,'boneWeights2':weights2,'groups':groups,'submeshes':subs,'markers':[],
- 'tailVertices':tail_vertices,'tailPivot':[0,.97,-.14]}
+ 'tailVertices':tail_vertices,'tailPivot':[0,.97,-.14],
+ 'hookGrip':hook_grip.tolist()}
 with gzip.GzipFile(filename=str(OUT/'Model.bytes'),mode='wb',mtime=0) as f:f.write(json.dumps(data,separators=(',',':')).encode())
 # Blender-authored effect meshes are exported once and reused by the runtime pool.
 def export_effect(name,verts,faces,alpha):
@@ -410,6 +440,22 @@ indices=[i for i,g in enumerate(GI) if g==2];remap={old:new for new,old in enume
 v=[((V[i][0]-x)*1.4,(V[i][1]-g[1])*1.4,(V[i][2]-z)*1.4) for i in indices]
 f=[tuple(remap[i] for i in face) for face in F if all(i in remap for i in face)]
 export_effect('AnchorProjectile',v,f,[.9]*len(v))
+# Rust-brown preview material is assigned after export; runtime retains six material slots.
+hook_mat=bpy.data.materials.new('Rust brown chain hook');hook_mat.diffuse_color=(.35,.14,.045,1);hook_mat.use_nodes=True
+hook_bsdf=hook_mat.node_tree.nodes.get('Principled BSDF')
+hook_bsdf.inputs['Metallic'].default_value=.30;hook_bsdf.inputs['Roughness'].default_value=.74
+noise=hook_mat.node_tree.nodes.new('ShaderNodeTexNoise');noise.inputs['Scale'].default_value=38
+ramp=hook_mat.node_tree.nodes.new('ShaderNodeValToRGB')
+ramp.color_ramp.elements[0].color=(.12,.037,.009,1);ramp.color_ramp.elements[1].color=(.42,.17,.050,1)
+hook_mat.node_tree.links.new(noise.outputs['Fac'],ramp.inputs['Fac'])
+hook_mat.node_tree.links.new(ramp.outputs['Color'],hook_bsdf.inputs['Base Color'])
+obj.data.materials.append(hook_mat)
+dark_hook_mat=hook_mat.copy();dark_hook_mat.name='Darker rust brown hook';dark_hook_mat.diffuse_color=(.24,.085,.025,1)
+dark_ramp=next(n for n in dark_hook_mat.node_tree.nodes if n.type=='VALTORGB')
+dark_ramp.color_ramp.elements[0].color=(.08,.020,.006,1);dark_ramp.color_ramp.elements[1].color=(.28,.095,.026,1)
+obj.data.materials.append(dark_hook_mat)
+for face in obj.data.polygons:
+ if GI[face.vertices[0]]==1:face.material_index=len(obj.data.materials)-(1 if face.material_index==4 else 2)
 # Keep Blender's preview upright while exported gameplay geometry remains +Y up.
 obj.rotation_euler.x=math.pi/2
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
@@ -442,3 +488,4 @@ bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=T
 import runpy,sys
 if '--skip-icons' not in sys.argv:
  runpy.run_path(str(ROOT/"Tools/CyberShark/build_attack_icons.py"),run_name="__main__")
+

@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             public float[] boneWeights2;
             public int[] tailVertices;
             public float[] tailPivot;
+            public float[] hookGrip;
             public Marker[] markers;
             public Submesh[] submeshes;
         }
@@ -33,7 +34,10 @@ namespace Alterverse.Visuals
         private readonly List<Mesh> ownedMeshes = new List<Mesh>();
         private readonly Dictionary<string, Transform> markers = new Dictionary<string, Transform>();
         private readonly List<Material> ownedMaterials = new List<Material>();
-        private Transform tail, freeUpperArm, freeForearm, freeHand, anchorGrip;
+        private Transform tail, freeUpperArm, freeForearm, freeHand, anchorGrip, hookSwing;
+        private Quaternion hookRest;
+        private Vector3 hookPitchAxis, hookRollAxis;
+        private Vector2 hookAngles, hookAngularVelocity;
         private Quaternion tailRest;
         private Quaternion anchorGripRest;
         private Vector3 tailAxis;
@@ -217,6 +221,25 @@ namespace Alterverse.Visuals
                     if (index >= 0 && index < weights.Length && data.groups[index] == 0)
                         weights[index] = new BoneWeight { boneIndex0 = tailIndex, weight0 = 1f };
             }
+            if (Array.Exists(data.groups, group => group == 1))
+            {
+                int grip = lookup["WeaponGripL"];
+                Vector3 sourcePivot = data.hookGrip != null && data.hookGrip.Length == 3
+                    ? Point(data.hookGrip) : Point(data.anchors[grip].head) + new Vector3(-.012f, -.052f, .070f);
+                Vector3 pivot = heads[grip] + rotations[grip] *
+                    (sourcePivot - Point(data.anchors[grip].head)) * scales[grip];
+                hookSwing = new GameObject("DF_Nerok_HookSwing").transform;
+                hookSwing.SetParent(bones[grip], false);
+                hookSwing.position = model.TransformPoint(pivot);
+                hookRest = hookSwing.localRotation;
+                hookPitchAxis = hookSwing.InverseTransformDirection(model.right).normalized;
+                hookRollAxis = hookSwing.InverseTransformDirection(model.forward).normalized;
+                int hookIndex = bones.Length;
+                Array.Resize(ref bones, hookIndex + 1);
+                bones[hookIndex] = hookSwing;
+                for (int i = 0; i < count; i++)
+                    if (data.groups[i] == 1) weights[i] = new BoneWeight { boneIndex0 = hookIndex, weight0 = 1f };
+            }
             Material[] materials = {
                 Surface("Pirate leather", new Color(.035f,.022f,.014f), .12f,.28f),
                 Surface("Natural light grey shark skin", new Color(.58f,.61f,.62f), .08f,.40f),
@@ -243,6 +266,14 @@ namespace Alterverse.Visuals
             anchorRenderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
             RendererGroup(anchorRenderer, 2, anatomy.transform, vertices, normals, weights, bones, materials);
             if (left != null) { left.sharedMesh = null; left.enabled = false; }
+            var hookObject = new GameObject("DF_Nerok_ChainHook");
+            hookObject.layer = anatomy.gameObject.layer;
+            hookObject.transform.SetParent(anatomy.transform, false);
+            var hookRenderer = hookObject.AddComponent<SkinnedMeshRenderer>();
+            hookRenderer.rootBone = anatomy.rootBone;
+            hookRenderer.quality = anatomy.quality;
+            hookRenderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
+            RendererGroup(hookRenderer, 1, anatomy.transform, vertices, normals, weights, bones, materials);
             return true;
         }
 
@@ -369,12 +400,31 @@ namespace Alterverse.Visuals
             if (group > 0)
             {
                 Material[] independent = new Material[materials.Length];
-                Material anchorMetal = group == 2 ? NerokAnchorMaterial.Create(true) : null;
+                Material anchorMetal = group == 1 || group == 2 ? NerokAnchorMaterial.Create(true) : null;
+                if (group == 1 && anchorMetal != null)
+                {
+                    var rustBrown = new Color(.35f, .14f, .045f);
+                    anchorMetal.name = "DF_Nerok_RustBrownChainHook";
+                    if (anchorMetal.HasProperty("_SilverColor")) anchorMetal.SetColor("_SilverColor", rustBrown);
+                    if (anchorMetal.HasProperty("_RustColor")) anchorMetal.SetColor("_RustColor", new Color(.22f, .065f, .018f));
+                    if (anchorMetal.HasProperty("_BaseColor")) anchorMetal.SetColor("_BaseColor", rustBrown);
+                    if (anchorMetal.HasProperty("_Color")) anchorMetal.SetColor("_Color", rustBrown);
+                }
                 if (anchorMetal != null) ownedMaterials.Add(anchorMetal);
                 for (int i = 0; i < materials.Length; i++)
                 {
                     independent[i] = anchorMetal != null ? anchorMetal : new Material(materials[i]);
                     if (anchorMetal == null) ownedMaterials.Add(independent[i]);
+                    if (group == 1 && i == 4 && anchorMetal != null)
+                    {
+                        Material darkHook = new Material(anchorMetal) { name = "DF_Nerok_DarkerRustBrownHook" };
+                        var darkBrown = new Color(.24f, .085f, .025f);
+                        if (darkHook.HasProperty("_SilverColor")) darkHook.SetColor("_SilverColor", darkBrown);
+                        if (darkHook.HasProperty("_RustColor")) darkHook.SetColor("_RustColor", new Color(.12f, .030f, .008f));
+                        if (darkHook.HasProperty("_BaseColor")) darkHook.SetColor("_BaseColor", darkBrown);
+                        if (darkHook.HasProperty("_Color")) darkHook.SetColor("_Color", darkBrown);
+                        ownedMaterials.Add(darkHook); independent[i] = darkHook;
+                    }
                 }
                 materials = independent;
             }
@@ -410,9 +460,23 @@ namespace Alterverse.Visuals
                 tail.localRotation = Quaternion.AngleAxis(45f * Mathf.Sin(tailTime * Mathf.PI / 4f), tailAxis) * tailRest;
             }
             PoseFreeArmAlongGuide();
+            UpdateHookSwing();
             // Run after the final authored/combat pose (execution order 960).
             // Pitch at the grip moves the upper eye clear of the forearm on every frame.
             if (anchorGrip != null) anchorGrip.localRotation = anchorGripRest * Quaternion.Euler(14f, 0f, 0f);
+        }
+        private void UpdateHookSwing()
+        {
+            if (hookSwing == null || Time.deltaTime <= 0f) return;
+            if (motion == null) motion = GetComponentInParent<HeroVisualMotion>();
+            float movement = motion != null ? Mathf.InverseLerp(.10f, 3.5f, motion.PlanarSpeed) : 0f;
+            float phase = motion != null ? motion.GaitPhase : 0f;
+            var target = new Vector2(Mathf.Sin(phase) * 10f, Mathf.Sin(phase + .65f) * 4f) * movement;
+            // Swing only below the held link; ease back to rest when movement stops.
+            hookAngles = Vector2.SmoothDamp(hookAngles, target, ref hookAngularVelocity, .10f,
+                90f, Mathf.Min(Time.deltaTime, .05f));
+            hookSwing.localRotation = Quaternion.AngleAxis(hookAngles.x, hookPitchAxis) *
+                Quaternion.AngleAxis(hookAngles.y, hookRollAxis) * hookRest;
         }
         private void PoseFreeArmAlongGuide()
         {
@@ -453,3 +517,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
