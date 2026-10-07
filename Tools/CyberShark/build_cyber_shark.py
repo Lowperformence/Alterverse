@@ -24,54 +24,57 @@ for s in [-1,1]:
  # Swept back fins and mechanical gill vents.
  shard('dorsal back fin',(s*.07,1.39,-.15),(s*.10,1.80,-.35),.070,.022,2,'Chest')
  for j in range(4):tube('gill vent',[(s*.20,1.50-j*.035,-.08),(s*.24,1.48-j*.035,.015)],.009,0,'Chest',6)
-ell('shark skull',(0,1.735,.055),(.18,.18,.175),1,'Head',24,12)
-# Tapered shark rostrum rather than a round humanoid muzzle.
-sv=[];sf=[];sections=[(.08,.177,1.79,.115),(.22,.171,1.78,.09),(.35,.116,1.763,.048),(.408,.042,1.748,.024)]
-for zz,ww,yy,hh in sections:
- for j in range(16):
-  angle=j*math.tau/16;sv.append((ww*math.cos(angle),yy+hh*math.sin(angle),zz))
-for row in range(3):
- for j in range(16):
-  a=row*16+j;b=row*16+(j+1)%16;sf.extend([(a,b,b+16),(a,b+16,a+16)])
-sf.append(tuple(range(48,64)))
-add('tapered shark snout',sv,sf,1,'Head')
-# Rounded shark gape with broad triangular teeth, following the user's mouth reference.
-def build_reference_mouth():
- center_y=1.650
- # Skin bridges the lip back into the head, so the opening is a jaw rather than a floating ring.
- jaw_vertices=[];jaw_faces=[];segments=48
- for rx,ry,z in [(.159,.103,.349),(.180,.119,.312),(.165,.095,.180)]:
-  for angle in np.linspace(0,math.tau,segments,endpoint=False):
-   jaw_vertices.append((rx*math.cos(angle),center_y+ry*math.sin(angle),z))
- for row in range(2):
+# One connected shark head: skull, snout, jaw edge and mouth cavity share vertices.
+def build_unified_shark_head():
+ segments=64
+ vertices=[];faces=[];materials=[]
+ # Start at the mouth edge, roll into the jaw, then flow over the snout into the skull.
+ rings=[(.153,.092,1.650,.326,.060),(.163,.103,1.656,.317,.064),
+        (.178,.130,1.710,.203,.090),(.180,.180,1.735,.055,0),
+        (.146,.149,1.735,-.057,0),(.082,.086,1.735,-.103,0)]
+ for rx,ry,cy,z,nose in rings:
+  for a in np.linspace(0,math.tau,segments,endpoint=False):
+   vertices.append((rx*math.cos(a),cy+ry*math.sin(a),z+nose*max(0,math.sin(a))))
+ for row in range(len(rings)-1):
   for j in range(segments):
    a=row*segments+j;b=row*segments+(j+1)%segments
-   jaw_faces.extend([[a,b,b+segments],[a,b+segments,a+segments]])
- # These front and cheek bands face outwards, toward the mouth's visible side.
- for face in jaw_faces:face.reverse()
- add('continuous shark jaw cheeks',jaw_vertices,jaw_faces,1,'Head')
- ell('rounded mouth cavity',(0,center_y,.279),(.156,.096,.074),0,'Head',28,14)
- ell('shark lower jaw',(0,1.558,.267),(.153,.039,.102),1,'Head',24,10)
- angles=np.linspace(0,math.tau,49)
- tube('rounded shark lip',[(.164*math.cos(a),center_y+.107*math.sin(a),.349) for a in angles],.008,1,'Head',10)
- tube('dark gum line',[(.150*math.cos(a),center_y+.092*math.sin(a),.356) for a in angles],.006,0,'Head',8)
+   faces.extend([[a,b+segments,b],[a,a+segments,b+segments]]);materials.extend([1,1])
+ back=len(vertices);vertices.append((0,1.735,-.120))
+ for j in range(segments):
+  faces.append([(len(rings)-1)*segments+j,back,(len(rings)-1)*segments+(j+1)%segments]);materials.append(1)
+ # The inner wall shares the exact opening ring with the skin: no separate lip/cheek objects.
+ last=0
+ for rx,ry,cy,z in [(.131,.075,1.650,.230),(.061,.036,1.650,.188)]:
+  row=len(vertices)
+  for a in np.linspace(0,math.tau,segments,endpoint=False):
+   vertices.append((rx*math.cos(a),cy+ry*math.sin(a),z))
+  for j in range(segments):
+   a=last+j;b=last+(j+1)%segments
+   faces.extend([[a,b,row+(j+1)%segments],[a,row+(j+1)%segments,row+j]]);materials.extend([0,0])
+  last=row
+ inside=len(vertices);vertices.append((0,1.650,.178))
+ for j in range(segments):
+  faces.append([last+j,last+(j+1)%segments,inside]);materials.append(0)
+ material_start=len(MI)
+ add('unified shark skull snout and jaw',vertices,faces,1,'Head')
+ MI[material_start:]=materials
+ # Broad shark teeth sit inside the opening and follow the curved upper/lower jaw.
  for row,count in [('upper',11),('lower',9)]:
   for angle in np.linspace(math.radians(16),math.radians(164),count):
    a=angle if row=='upper' else -angle
-   base=np.array((.146*math.cos(a),center_y+.087*math.sin(a),.366))
+   base=np.array((.145*math.cos(a),1.650+.085*math.sin(a),.332+.060*max(0,math.sin(a))))
    inward=unit(np.array((-math.cos(a),-math.sin(a),0)))
    tangent=np.array((-inward[1],inward[0],0))
-   half_width=.010+.004*abs(math.sin(a))
-   length=.028+.021*abs(math.sin(a))
-   left=base-tangent*half_width;right=base+tangent*half_width;tip=base+inward*length
-   points=[left,right,tip,left+[0,0,-.017],right+[0,0,-.017],tip+[0,0,-.017]]
-   faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
-   mid=np.mean(points,axis=0)
-   for face in faces:
+   width=.010+.003*abs(math.sin(a));length=.026+.017*abs(math.sin(a))
+   left=base-tangent*width;right=base+tangent*width;tip=base+inward*length+[0,0,-.004]
+   points=[left,right,tip,left+[0,0,-.014],right+[0,0,-.014],tip+[0,0,-.014]]
+   tooth_faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
+   center=np.mean(points,axis=0)
+   for face in tooth_faces:
     p,q,r=[points[i] for i in face]
-    if np.dot(np.cross(q-p,r-p),(p+q+r)/3-mid)<0:face.reverse()
-   add(row+' triangular shark tooth',points,faces,5,'Head')
-build_reference_mouth()
+    if np.dot(np.cross(q-p,r-p),(p+q+r)/3-center)<0:face.reverse()
+   add(row+' shark tooth',points,tooth_faces,5,'Head')
+build_unified_shark_head()
 # Enlarge only the cranial fin about its head attachment by 50 percent.
 cranial_fin_start=len(V)
 shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
