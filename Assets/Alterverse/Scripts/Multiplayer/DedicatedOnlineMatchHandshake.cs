@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.Profile;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -23,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
-        private const int ProtocolVersion = 1;
+        private const int ProtocolVersion = 2;
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
         private const float AuthenticationTimeoutSeconds = 10f;
@@ -37,6 +38,7 @@ namespace Alterverse.Multiplayer
             public string PlayerId;
             public string DisplayName;
             public HeroId Hero;
+            public BattleItemType BattleItem;
         }
 
         public static DedicatedOnlineMatchHandshake Instance { get; private set; }
@@ -223,6 +225,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(new FixedString128Bytes(playerId));
             writer.WriteValueSafe(new FixedString64Bytes(SanitizeName(displayName)));
             writer.WriteValueSafe((int)hero);
+            writer.WriteValueSafe((int)BattleItemInventory.Equipped);
             messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
             helloSent = true;
             status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
@@ -262,6 +265,7 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayer);
             reader.ReadValueSafe(out FixedString64Bytes fixedName);
             reader.ReadValueSafe(out int heroRaw);
+            reader.ReadValueSafe(out int battleItemRaw);
 
             string ticketId = fixedTicket.ToString();
             string claimedTeamId = fixedTeam.ToString();
@@ -270,7 +274,7 @@ namespace Alterverse.Multiplayer
             string displayName = fixedName.ToString();
 
             if (protocol != ProtocolVersion || string.IsNullOrWhiteSpace(ticketId) || string.IsNullOrWhiteSpace(claimedTeamId) ||
-                !Enum.IsDefined(typeof(HeroId), heroRaw))
+                !Enum.IsDefined(typeof(HeroId), heroRaw) || !Enum.IsDefined(typeof(BattleItemType), battleItemRaw))
             {
                 RejectClient(manager, senderClientId, "invalid dedicated hello");
                 return;
@@ -318,7 +322,8 @@ namespace Alterverse.Multiplayer
                 MatchId = matchId,
                 PlayerId = playerId,
                 DisplayName = SanitizeName(displayName),
-                Hero = (HeroId)heroRaw
+                Hero = (HeroId)heroRaw,
+                BattleItem = (BattleItemType)battleItemRaw
             };
             authorizedPlayers[senderClientId] = playerId;
             unauthenticatedSince.Remove(senderClientId);
@@ -375,7 +380,8 @@ namespace Alterverse.Multiplayer
                         PlayerId = human.PlayerId,
                         DisplayName = human.DisplayName,
                         TeamId = human.TeamId,
-                        Hero = human.Hero
+                        Hero = human.Hero,
+                        BattleItem = human.BattleItem
                     });
                 }
                 if (string.IsNullOrWhiteSpace(matchId)) matchId = Guid.NewGuid().ToString("N");
@@ -423,6 +429,7 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(new FixedString64Bytes(SanitizeName(slot.DisplayName)));
                 writer.WriteValueSafe(slot.Team);
                 writer.WriteValueSafe((int)slot.Hero);
+                writer.WriteValueSafe((int)slot.BattleItem);
                 writer.WriteValueSafe(slot.IsBot);
                 writer.WriteValueSafe(slot.Ready);
                 writer.WriteValueSafe(slot.Connected);
@@ -457,18 +464,20 @@ namespace Alterverse.Multiplayer
                     reader.ReadValueSafe(out FixedString64Bytes fixedName);
                     reader.ReadValueSafe(out int team);
                     reader.ReadValueSafe(out int heroRaw);
+                    reader.ReadValueSafe(out int battleItemRaw);
                     reader.ReadValueSafe(out bool isBot);
                     reader.ReadValueSafe(out bool ready);
                     reader.ReadValueSafe(out bool connected);
                     reader.ReadValueSafe(out bool isHost);
 
-                    if ((team != 0 && team != 1) || !Enum.IsDefined(typeof(HeroId), heroRaw)) valid = false;
+                    if ((team != 0 && team != 1) || !Enum.IsDefined(typeof(HeroId), heroRaw) || !Enum.IsDefined(typeof(BattleItemType), battleItemRaw)) valid = false;
                     slots[i] = new MatchPlayerSlot
                     {
                         PlayerId = fixedPlayerId.ToString(),
                         DisplayName = fixedName.ToString(),
                         Team = team,
                         Hero = Enum.IsDefined(typeof(HeroId), heroRaw) ? (HeroId)heroRaw : HeroId.Veyr,
+                        BattleItem = Enum.IsDefined(typeof(BattleItemType), battleItemRaw) ? (BattleItemType)battleItemRaw : BattleItemType.None,
                         IsLocal = false,
                         IsBot = isBot,
                         Ready = ready,
