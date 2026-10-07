@@ -6,6 +6,9 @@ public sealed class PrototypeBootstrap:MonoBehaviour
 {
 private static readonly Color GameplayVoidColor=new(.004f,.006f,.012f,1f);
 private const int MenuShowcaseLayer=31;
+private UnityEngine.Camera pendingArenaCamera;
+private GameObject pendingArenaWorld;
+private int revealArenaFrame;
 
 /// <summary>
 /// Prevents the scene camera from exposing the underlying scene/default clear color while
@@ -21,7 +24,27 @@ camera.backgroundColor=GameplayVoidColor;
 camera.cullingMask=0;
 }
 }
-[SerializeField]private bool buildOnStart=true;[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]private static void AutoCreate(){if(FindAnyObjectByType<PrototypeBootstrap>()==null)new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();}private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yield return null;while(MainMenuController.IsVisible)yield return null;BuildPrototype();}
+[SerializeField]private bool buildOnStart=true;
+[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+private static void AutoCreate()
+{
+// The bootstrap coroutine yields before building the arena. Hide the scene's
+// default skybox before that first yield can expose a blue startup frame.
+if(GameObject.Find("DF_MatchWorld")==null)PrepareTransitionFrame();
+if(FindAnyObjectByType<PrototypeBootstrap>()==null)new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();
+}
+private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yield return null;while(MainMenuController.IsVisible)yield return null;BuildPrototype();}
+
+private void LateUpdate()
+{
+if(pendingArenaCamera==null||Time.frameCount<revealArenaFrame)return;
+// Terrain, lighting and the panorama are built in Start; planet themes run in
+// Update. Reveal only after the next frame has run those initialization steps.
+if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
+pendingArenaCamera.cullingMask=~(1<<MenuShowcaseLayer);
+pendingArenaCamera=null;
+pendingArenaWorld=null;
+}
 public System.Collections.IEnumerator RestartPrototype()
 {
 MatchClock.Set(PauseReason.Transition,true);
@@ -83,7 +106,7 @@ if(!serverOnly)
 UnityEngine.Camera cam=UnityEngine.Camera.main;
 if(cam==null){GameObject cameraObject=new("Main Camera");cameraObject.tag="MainCamera";cam=cameraObject.AddComponent<UnityEngine.Camera>();}
 cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=GameplayVoidColor;
-cam.cullingMask=~(1<<MenuShowcaseLayer);
+cam.cullingMask=0;
 MobaCamera mc=cam.GetComponent<MobaCamera>()??cam.gameObject.AddComponent<MobaCamera>();mc.SetTarget(player.transform);
 
 new GameObject("AV_HUD").AddComponent<PrototypeHUD>().Initialize(ph,null,null);
@@ -129,6 +152,12 @@ new GameObject("AV_MatchScoreboard").AddComponent<MatchScoreboard>();
 if(!serverOnly)new GameObject("AV_MatchOpening").AddComponent<MatchOpening>();
 
 completed=true;
+if(!serverOnly)
+{
+pendingArenaCamera=UnityEngine.Camera.main;
+pendingArenaWorld=world;
+revealArenaFrame=Time.frameCount+1;
+}
 }
 finally
 {
@@ -168,4 +197,5 @@ return player;
 private static void BuildArena(){CreateGround("DF_ArenaFloor",new Vector3(0,-.12f,0),new Vector3(84,.2f,72),Color.gray);CreateBaseCore(new Vector3(-36,0f,0),StylizedArtDirection.ZeroEnergy,"DF_ZeroRealityCore",true,0);CreateBaseCore(new Vector3(36,0f,0),StylizedArtDirection.LumenEnergy,"DF_LumenRealityCore",false,1);CreateSpawnZone(new Vector3(-27.5f,.14f,0),StylizedArtDirection.ZeroEnergy,"AV_ZeroSpawnZone");CreateSpawnZone(new Vector3(27.5f,.14f,0),StylizedArtDirection.LumenEnergy,"AV_LumenSpawnZone");HealingGuardMech.Spawn(0,new Vector3(-27.5f,.14f,0));HealingGuardMech.Spawn(1,new Vector3(27.5f,.14f,0));CreateDefenseBunkers();CreateDefenseTrenches();new GameObject("DF_TrenchReinforcements").AddComponent<TrenchReinforcementDirector>();CreateCentralHealing();if(ArenaVariantRuntime.IsGJ504b)new GameObject("DF_GJ504bArenaLandscape").AddComponent<GJ504bArenaLandscape>();else if(!ArenaVariantRuntime.IsDiamondCore)new GameObject("DF_ProductionLunarGround").AddComponent<ProductionLunarGround>();new GameObject("DF_CosmicArenaBackdrop").AddComponent<CosmicArenaBackdrop>();if(FrontierPlanetLayout.Active)FrontierPlanetLayout.BuildObstacles(GameObject.Find("DF_MatchWorld").transform);}
 private static void CreateSpawnZone(Vector3 p,Color c,string n){GameObject g=new GameObject(n);g.transform.position=p;g.AddComponent<SpawnHealingZone>();g.AddComponent<HealingZoneMarker>();}private static void CreateDefenseBunkers(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.BunkerPosition:new Vector2(26.25f,21.5f);float x=layout.x,z=layout.y;DefenseBunker.Spawn(0,new Vector3(-x,0,z),"Left");DefenseBunker.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseBunker.Spawn(1,new Vector3(x,0,-z),"Left");DefenseBunker.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateDefenseTrenches(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.TrenchPosition:new Vector2(25.25f,10.75f);float x=layout.x,z=layout.y;DefenseTrench.Spawn(0,new Vector3(-x,0,z),"Left");DefenseTrench.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseTrench.Spawn(1,new Vector3(x,0,-z),"Left");DefenseTrench.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+
 

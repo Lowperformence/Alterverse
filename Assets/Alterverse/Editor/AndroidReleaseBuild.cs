@@ -12,6 +12,7 @@ namespace Alterverse.EditorChecks
     public sealed class AndroidReleaseBuild : IPreprocessBuildWithReport
     {
         private const string AppIconPath="Assets/Alterverse/Branding/DimensionsFrontAppIcon.png";
+        private const string InterruptedBuildKey="DimensionsFront.AndroidBuildNeedsCleanRetry";
         public int callbackOrder=>0;
         public void OnPreprocessBuild(BuildReport report)
         {
@@ -117,33 +118,21 @@ namespace Alterverse.EditorChecks
         }
 
         [MenuItem("DIMENSIONS FRONT/Release/Build signed Android bundle")]
-        public static void Build()
-        {
-            EnsureLauncherIcon();
-            EditorUserBuildSettings.buildAppBundle=true;
-            EditorUserBuildSettings.development=false;
-            EditorUserBuildSettings.allowDebugging=false;
-            EditorUserBuildSettings.connectProfiler=false;
-            EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
-            ApplyDeviceCompatibilitySettings();
-            AssetDatabase.SaveAssets();
-            Validate();
-            var scenes=new List<string>();foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)scenes.Add(scene.path);
-            Directory.CreateDirectory("Builds/Android");
-            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions
-            {
-                scenes=scenes.ToArray(),target=BuildTarget.Android,options=BuildOptions.None,
-                locationPathName="Builds/Android/DIMENSIONS-FRONT-"+PlayerSettings.Android.bundleVersionCode+".aab"
-            });
-            if(report.summary.result!=BuildResult.Succeeded)throw new BuildFailedException("DIMENSIONS FRONT Android build failed. Inspect the Unity build log.");
-            string output=Path.GetFullPath(report.summary.outputPath);
-            Debug.Log("DIMENSIONS FRONT: signed Android bundle created at "+output+". Compatibility manifest snapshots are in Builds/Android.");
-            EditorUtility.RevealInFinder(output);
-        }
+        public static void Build()=>BuildSignedBundle(false,false);
+
+        [MenuItem("DIMENSIONS FRONT/Release/Rebuild signed Android bundle (clean)")]
+        public static void RebuildClean()=>BuildSignedBundle(true,false);
 
         [MenuItem("DIMENSIONS FRONT/Development/Build Google Play shard test bundle")]
-        public static void BuildGooglePlayShardTest()
+        public static void BuildGooglePlayShardTest()=>BuildSignedBundle(false,true);
+
+        private static void BuildSignedBundle(bool forceClean,bool shardTest)
         {
+            if(BuildPipeline.isBuildingPlayer)
+                throw new BuildFailedException("An Android build is already running. Wait for it to finish or cancel it before retrying.");
+            if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode)
+                throw new BuildFailedException("Wait for Unity to finish importing/compiling and leave Play Mode before building Android.");
+
             EnsureLauncherIcon();
             EditorUserBuildSettings.buildAppBundle=true;
             EditorUserBuildSettings.development=false;
@@ -158,23 +147,64 @@ namespace Alterverse.EditorChecks
             foreach(var scene in EditorBuildSettings.scenes)if(scene.enabled)scenes.Add(scene.path);
             Directory.CreateDirectory("Builds/Android");
 
-            string outputPath="Builds/Android/DIMENSIONS-FRONT-IAP-TEST-"+PlayerSettings.Android.bundleVersionCode+".aab";
-            var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            bool clean=forceClean||SessionState.GetBool(InterruptedBuildKey,false);
+            string prefix=shardTest?"DIMENSIONS-FRONT-IAP-TEST-":"DIMENSIONS-FRONT-";
+            string outputPath="Builds/Android/"+prefix+PlayerSettings.Android.bundleVersionCode+".aab";
+            var options=new BuildPlayerOptions
             {
                 scenes=scenes.ToArray(),
                 target=BuildTarget.Android,
-                options=BuildOptions.None,
-                extraScriptingDefines=new[]{"DF_GOOGLE_PLAY_SHARD_TEST"},
+                options=clean?BuildOptions.CleanBuildCache:BuildOptions.None,
                 locationPathName=outputPath
-            });
-            if(report.summary.result!=BuildResult.Succeeded)
-                throw new BuildFailedException("DIMENSIONS FRONT Google Play shard test build failed. Inspect the Unity build log.");
+            };
+            if(shardTest)options.extraScriptingDefines=new[]{"DF_GOOGLE_PLAY_SHARD_TEST"};
 
-            string output=Path.GetFullPath(report.summary.outputPath);
-            Debug.LogWarning("DIMENSIONS FRONT: INTERNAL GOOGLE PLAY SHARD TEST bundle created at "+output+
-                ". This build bypasses the account backend for shard fulfillment and credits device-local test shards. "+
-                "Upload only to a controlled Play test track. The normal Release build does not include this bypass.");
-            EditorUtility.RevealInFinder(output);
+            // Keep the retry marker on cancellation, failure or an exception. SessionState
+            // survives script reloads; after restarting Unity the explicit clean menu is available.
+            SessionState.SetBool(InterruptedBuildKey,true);
+            Debug.Log("DIMENSIONS FRONT: starting "+(clean?"clean":"incremental")+" signed Android bundle build: "+outputPath+
+                ". If progress stops, use Release/Show Unity build log to inspect Editor.log.");
+            try
+            {
+                BuildReport report=BuildPipeline.BuildPlayer(options);
+                if(report==null)
+                    throw new BuildFailedException("Android build returned no report. Inspect Editor.log; the next attempt will use a clean build.");
+                if(report.summary.result==BuildResult.Cancelled)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT: Android build cancelled. No new bundle was confirmed. The next attempt in this editor session will use a clean build.");
+                    return;
+                }
+                if(report.summary.result!=BuildResult.Succeeded)
+                    throw new BuildFailedException("DIMENSIONS FRONT Android build failed with "+report.summary.totalErrors+
+                        " errors. Inspect Editor.log; the next attempt will use a clean build.");
+
+                SessionState.EraseBool(InterruptedBuildKey);
+                string output=Path.GetFullPath(report.summary.outputPath);
+                if(shardTest)
+                    Debug.LogWarning("DIMENSIONS FRONT: INTERNAL GOOGLE PLAY SHARD TEST bundle created at "+output+
+                        ". This build bypasses the account backend for shard fulfillment and credits device-local test shards. "+
+                        "Upload only to a controlled Play test track. The normal Release build does not include this bypass.");
+                else
+                    Debug.Log("DIMENSIONS FRONT: signed Android bundle created at "+output+". Compatibility manifest snapshots are in Builds/Android.");
+                Debug.Log("DIMENSIONS FRONT: Android build completed in "+report.summary.totalTime.TotalSeconds.ToString("F1")+" seconds.");
+                EditorUtility.RevealInFinder(output);
+            }
+            finally
+            {
+                EditorUtility.ClearProgressBar();
+            }
+        }
+
+        [MenuItem("DIMENSIONS FRONT/Release/Show Unity build log")]
+        public static void ShowBuildLog()
+        {
+            string log=Application.consoleLogPath;
+            if(string.IsNullOrWhiteSpace(log)||!File.Exists(log))
+            {
+                Debug.LogWarning("DIMENSIONS FRONT: Unity Editor.log is not available on this machine.");
+                return;
+            }
+            EditorUtility.RevealInFinder(log);
         }
 
         [MenuItem("DIMENSIONS FRONT/Release/Open Android build folder")]
@@ -188,3 +218,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
