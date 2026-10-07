@@ -3,6 +3,7 @@ import io
 import json
 import tempfile
 import unittest
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
@@ -32,13 +33,13 @@ class SocialTests(unittest.TestCase):
 
     @staticmethod
     def profile(name, xp):
-        return [{'key':'DF_PlayerName','kind':1,'text':name}, {'key':'DF_AccountXP','kind':1,'text':str(xp)}]
+        return [{'key':'DF_PlayerName','kind':1,'text':name}, {'key':'DF_AccountXP','kind':1,'text':str(xp)}, {'key':'DF_Shards','kind':0,'number':1000}]
 
     def call(self, who, route='/social/state', **data):
         return self.social.dispatch(who, route, data)
 
     def create(self, who='a', name='Planet Guards', tag='PG', opened=True):
-        return self.call(who, '/social/clan/create', name=name, tag=tag, open=opened)['clan']['clanId']
+        return self.call(who, '/social/clan/create', name=name, tag=tag, open=opened, operationId=uuid.uuid4().hex,expectedProfileRevision=self.ledger.wallet(who)['profileRevision'])['clan']['clanId']
 
     def test_migration_and_stable_public_identity_without_private_profile(self):
         first = self.call('a')
@@ -234,6 +235,125 @@ class SocialTests(unittest.TestCase):
             with self.assertRaises(ValueError): self.social.dispatch('a','/social/clan/create',data)
         with self.assertRaises(ValueError): self.call('a','/social/unknown')
 
+    def test_new_account_is_not_automatically_in_a_clan(self):
+        state=self.call('new-account')
+        self.assertIsNone(state['clan'])
+        self.assertFalse(state['hasClan'])
+        self.assertEqual(state['role'],'')
+        self.assertEqual(state['clanCreationCost'],500)
+        self.assertEqual(state['messages'],[])
+
+    def test_creation_cost_earned_paid_split_and_durable_retry(self):
+        self.ledger.save_profile('a',[{'key':'DF_Shards','kind':0,'number':200}],1)
+        self.ledger.fulfill('a','dimensions_shards_500','clan-token',{'purchaseState':0,'obfuscatedExternalAccountId':'a'})
+        revision=self.ledger.wallet('a')['profileRevision']
+        data={'name':'Paid Clan','tag':'PAY','operationId':uuid.uuid4().hex,'expectedProfileRevision':revision,'cost':-1,'account':'b'}
+        first=self.social.dispatch('a','/social/clan/create',data)
+        self.assertEqual(first['wallet']['balance'],200)
+        earned=next(e['number'] for e in first['wallet']['profile'] if e['key']=='DF_Shards')
+        self.assertEqual(earned,0)
+        second=self.make_social(self.make_ledger()).dispatch('a','/social/clan/create',data)
+        self.assertEqual(first['clan']['clanId'],second['clan']['clanId'])
+        self.assertEqual(second['wallet']['balance'],200)
+        self.assertEqual(first['wallet']['profileRevision'],second['wallet']['profileRevision'])
+        with self.assertRaises(ValueError): self.social.dispatch('a','/social/clan/create',dict(data,name='Other Clan'))
+        self.assertEqual(self.ledger.wallet('b')['balance'],0)
+
+    def test_creation_failure_and_profile_conflict_never_debit(self):
+        self.ledger.save_profile('a',[{'key':'DF_Shards','kind':0,'number':499}],1)
+        data={'name':'Poor Clan','tag':'POOR','operationId':uuid.uuid4().hex,'expectedProfileRevision':2}
+        before=self.ledger.wallet('a')
+        with self.assertRaises(ValueError): self.social.dispatch('a','/social/clan/create',data)
+        self.assertEqual(before,self.ledger.wallet('a'))
+        self.assertIsNone(self.call('a')['clan'])
+        from ledger import ProfileConflict
+        with self.assertRaises(ProfileConflict): self.social.dispatch('a','/social/clan/create',dict(data,expectedProfileRevision=1))
+        self.assertEqual(before,self.ledger.wallet('a'))
+
+    def test_concurrent_creation_charges_once(self):
+        revision=self.ledger.wallet('a')['profileRevision']
+        def create(index):
+            try:
+                self.call('a','/social/clan/create',name='Clan '+str(index),tag='T'+str(index),operationId=uuid.uuid4().hex,expectedProfileRevision=revision)
+                return True
+            except ValueError: return False
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            self.assertEqual(sum(pool.map(create,[1,2])),1)
+        earned=next(e['number'] for e in self.ledger.wallet('a')['profile'] if e['key']=='DF_Shards')
+        self.assertEqual(earned,500)
+
+    def test_leader_icon_ownership_persistence_and_public_listing(self):
+        self.ledger.purchase('a','avatar_10',uuid.uuid4().hex,1)
+        clan=self.create()
+        self.call('b','/social/clan/join',clanId=clan)
+        with self.assertRaises(ValueError): self.call('a','/social/clan/icon',avatar=11)
+        with self.assertRaises(ValueError): self.call('a','/social/clan/icon',avatar=0)
+        with self.assertRaises(SocialForbidden): self.call('b','/social/clan/icon',avatar=10)
+        self.call('a','/social/clan/icon',avatar=10)
+        self.assertEqual(self.call('b')['clan']['avatar'],10)
+        self.assertEqual(self.call('c','/social/clan-levels')['clans'][0]['avatar'],10)
+        self.assertEqual(self.make_social(self.make_ledger()).dispatch('a','/social/state',{})['clan']['avatar'],10)
+        self.call('a','/social/clan/transfer',playerId=self.ids['b'])
+        self.assertEqual(self.call('b')['clan']['avatar'],10)
+        with self.assertRaises(ValueError): self.call('b','/social/clan/icon',avatar=10)
+
+    def test_chat_membership_retry_author_permissions_and_cleanup(self):
+        clan=self.create()
+        self.call('b','/social/clan/join',clanId=clan)
+        message_id=uuid.uuid4().hex
+        for _ in range(2): self.call('a','/social/clan/message',messageId=message_id,text='Welcome to the clan!')
+        self.assertEqual(len(self.call('b')['messages']),1)
+        self.assertEqual(self.call('c')['messages'],[])
+        with self.assertRaises(ValueError): self.call('c','/social/clan/message',messageId=uuid.uuid4().hex,text='Outsider')
+        with self.assertRaises(ValueError): self.call('a','/social/clan/message',messageId=message_id,text='Changed text')
+        with self.assertRaises(SocialForbidden): self.call('b','/social/clan/message/remove',messageId=message_id)
+        own=uuid.uuid4().hex
+        self.call('b','/social/clan/message',messageId=own,text='Hi leader')
+        self.call('b','/social/clan/message/remove',messageId=own)
+        self.assertEqual(len(self.call('a')['messages']),1)
+        own=uuid.uuid4().hex
+        self.call('b','/social/clan/message',messageId=own,text='Second message')
+        self.call('a','/social/clan/message/remove',messageId=own)
+        restored=self.make_social(self.make_ledger()).dispatch('b','/social/state',{})
+        self.assertEqual(restored['messages'][0]['text'],'Welcome to the clan!')
+        self.call('a','/social/clan/kick',playerId=self.ids['b'])
+        self.assertEqual(self.call('b')['messages'],[])
+        with self.assertRaises(ValueError): self.call('b','/social/clan/message',messageId=uuid.uuid4().hex,text='No longer a member')
+        self.call('a','/social/clan/leave')
+        self.assertEqual(self.call('a')['messages'],[])
+
+    def test_chat_validation_retention_and_order(self):
+        self.create()
+        for text in ('','  ','x'*241,'control\x00text'):
+            with self.assertRaises(ValueError): self.call('a','/social/clan/message',messageId=uuid.uuid4().hex,text=text)
+        with patch('social.MAX_MESSAGES',3),patch('social.time.time',return_value=1000):
+            for index in range(4): self.call('a','/social/clan/message',messageId=uuid.uuid4().hex,text='Message '+str(index))
+            rows=self.call('a')['messages']
+            self.assertEqual([m['text'] for m in rows],['Message 1','Message 2','Message 3'])
+            self.assertEqual([m['createdAt'] for m in rows],sorted(set(m['createdAt'] for m in rows)))
+
+    def test_creation_retry_after_leaving_does_not_create_or_charge_again(self):
+        revision=self.ledger.wallet('a')['profileRevision']
+        data={'name':'Once Only','tag':'ONCE','operationId':uuid.uuid4().hex,'expectedProfileRevision':revision}
+        self.social.dispatch('a','/social/clan/create',data)
+        self.call('a','/social/clan/leave')
+        before=self.ledger.wallet('a')
+        retried=self.make_social(self.make_ledger()).dispatch('a','/social/clan/create',data)
+        self.assertIsNone(retried['clan'])
+        self.assertEqual(before,self.ledger.wallet('a'))
+
+    def test_legacy_clan_image_migrates_without_changing_membership(self):
+        clan=self.create()
+        if hasattr(self.ledger,'connect'):
+            with self.ledger.connect() as db: db.execute('ALTER TABLE social_clan DROP COLUMN avatar')
+        else:
+            ref=self.social.collections['social_clan'].document(clan)
+            self.client.data[ref.path].pop('avatar')
+        restored=self.make_social(self.make_ledger()).dispatch('a','/social/state',{})
+        self.assertEqual(restored['clan']['clanId'],clan)
+        self.assertEqual(restored['clan']['avatar'],-1)
+        self.assertTrue(restored['hasClan'])
+
 
 class SocialHttpTests(unittest.TestCase):
     def setUp(self):
@@ -263,9 +383,25 @@ class SocialHttpTests(unittest.TestCase):
         for raw in (b'[]',b'null',b'{',b'"x"'):
             self.assertEqual(self.request('a','/social/state',raw=raw)['status'],'400 Bad Request')
         self.assertEqual(self.request('a','/social/unknown')['status'],'400 Bad Request')
-        a=self.request('a','/social/clan/create',{'name':'Planet Guards','tag':'PG'})['body']['social']
+        self.app.ledger.save_profile('a',[{'key':'DF_Shards','kind':0,'number':1000}],0)
+        a=self.request('a','/social/clan/create',{'name':'Planet Guards','tag':'PG','operationId':uuid.uuid4().hex,'expectedProfileRevision':1})['body']['social']
         b=self.request('b','/social/clan/join',{'clanId':a['clan']['clanId']})['body']['social']
         c=self.request('c','/social/clan/join',{'clanId':a['clan']['clanId']})['body']['social']
         forbidden=self.request('b','/social/clan/kick',{'playerId':c['me']['playerId'],'account':'a'})
         self.assertEqual(forbidden['status'],'403 Forbidden')
         self.assertEqual(self.request('c','/social/state')['body']['social']['clan']['memberCount'],3)
+
+    def test_paid_creation_response_contains_only_callers_wallet_and_conflict_is_409(self):
+        self.app.ledger.save_profile('a',[{'key':'DF_Shards','kind':0,'number':700}],0)
+        data={'name':'HTTP Clan','tag':'HTTP','operationId':uuid.uuid4().hex,'expectedProfileRevision':0,'price':0}
+        self.assertEqual(self.request('a','/social/clan/create',data)['status'],'409 Conflict')
+        data['expectedProfileRevision']=1
+        reply=self.request('a','/social/clan/create',data)
+        self.assertEqual(reply['status'],'200 OK')
+        wallet=reply['body']['social']['wallet']
+        self.assertEqual(wallet['accountHash'],'a')
+        self.assertEqual(next(e['number'] for e in wallet['profile'] if e['key']=='DF_Shards'),200)
+        self.assertTrue(reply['body']['social']['hasClan'])
+        b=self.request('b','/social/state')['body']['social']
+        self.assertNotIn('wallet',b)
+        self.assertIsNone(b['clan'])

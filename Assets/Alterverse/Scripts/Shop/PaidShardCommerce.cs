@@ -30,7 +30,7 @@ namespace Alterverse.Shop
         public static PaidShardCommerce Instance { get; private set; }
         public static event Action EntitlementsChanged;
         public static int Balance => Instance != null && Instance.Ready ? Instance.snapshot.balance : 0;
-        public static bool Spending => Instance != null && (Instance.spending || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
+        public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
         public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
         public bool PurchasesReady => Ready && snapshot.billingReady;
         public string AccountHash { get; private set; }
@@ -40,7 +40,7 @@ namespace Alterverse.Shop
         readonly HashSet<TaskCompletionSource<bool>> pending = new();
         string endpoint;
         Func<string> token;
-        bool ready,saving,spending,refreshing;
+        bool ready,saving,spending,refreshing,socialSpending;
         int generation;
         long lastResponseCode;
         string settledOperation; bool operationSucceeded;
@@ -59,7 +59,7 @@ namespace Alterverse.Shop
             c.snapshot = new Snapshot(); c.nextSave = 0; c.nextRefresh = Time.unscaledTime + 30;
             c.StartCoroutine(c.Sync()); EntitlementsChanged?.Invoke(); return c;
         }
-        public void Refresh() { if (token != null && !refreshing && !spending && !saving) StartCoroutine(Sync()); }
+        public void Refresh() { if (token != null && !refreshing && !spending && !saving && !socialSpending) StartCoroutine(Sync()); }
         public static void Disconnect()
         {
             if (Instance == null) return;
@@ -69,7 +69,7 @@ namespace Alterverse.Shop
         }
         void CancelPending()
         {
-            StopAllCoroutines(); saving = spending = refreshing = false;
+            StopAllCoroutines(); saving = spending = refreshing = socialSpending = false;
             var tasks = new List<TaskCompletionSource<bool>>(pending); pending.Clear();
             foreach (var task in tasks) task.TrySetResult(false);
         }
@@ -80,7 +80,7 @@ namespace Alterverse.Shop
         }
         void Update()
         {
-            if (token == null || saving || spending || refreshing) return;
+            if (token == null || saving || spending || refreshing || socialSpending) return;
             if (!Ready)
             {
                 if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + 15; Refresh(); }
@@ -119,7 +119,7 @@ namespace Alterverse.Shop
         {
             if (!Ready || !AccountProfilePrefs.Attached) { done?.Invoke(false); yield break; }
             // Unity coroutines execute on the main thread: serialize every profile request.
-            while (saving) yield return null;
+            while (saving || socialSpending) yield return null;
             if (!AccountProfilePrefs.Dirty) { done?.Invoke(true); yield break; }
             saving = true;
             var submitted = AccountProfilePrefs.Capture();
@@ -159,15 +159,33 @@ namespace Alterverse.Shop
         }
         IEnumerator FulfillPurchase(string product,string purchaseToken,TaskCompletionSource<bool> task)
         {
+            while(socialSpending)yield return null;
             Response response = null;
             yield return Send("/google-play/fulfill",new Request { productId = product,purchaseToken = purchaseToken },r => response = r);
             bool ok = response?.wallet != null;
             if (ok) { ApplyWallet(response.wallet); Status = "Shards added. Account balance saved on server."; }
             pending.Remove(task); task.TrySetResult(ok);
         }
+        public bool TryBeginSocialSpend()
+        {
+            if(!Ready||saving||spending||refreshing||socialSpending||PlayerPrefs.HasKey(OperationKey))return false;
+            socialSpending=true;return true;
+        }
+        public void EndSocialSpend(int session,Snapshot value,AccountProfilePrefs.Entry[] submitted)
+        {
+            if(session!=generation)return;
+            if(value!=null&&value.accountHash==AccountHash&&value.profile!=null&&
+                value.balance>=0&&value.revision>=snapshot.revision&&value.profileRevision>=AccountProfilePrefs.Revision)
+            {
+                ApplyWallet(value);
+                AccountProfilePrefs.ApplyRemote(value.profileRevision,value.profile,submitted);
+                EntitlementsChanged?.Invoke();
+            }
+            socialSpending=false;
+        }
         public bool BeginPurchase(string sku)
         {
-            if (!Ready || spending || saving || refreshing || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
+            if (!Ready || spending || saving || refreshing || socialSpending || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
             // Persist the id before making the request. A restart retries the same operation,
             // including consumable purchases, rather than issuing a second debit.
             PlayerPrefs.SetString(OperationKey,JsonUtility.ToJson(new PurchaseOperation { id = Guid.NewGuid().ToString("N"),sku = sku }));
@@ -264,7 +282,7 @@ namespace Alterverse.Shop
         void OnApplicationPause(bool paused)
         {
             AccountProfilePrefs.Save();
-            if (paused && Ready && !saving && !spending && !refreshing) StartCoroutine(SaveProfile(null));
+            if (paused && Ready && !saving && !spending && !refreshing && !socialSpending) StartCoroutine(SaveProfile(null));
             if (!paused) Refresh();
         }
         void OnDestroy()
@@ -275,3 +293,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

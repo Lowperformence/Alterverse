@@ -20,14 +20,16 @@ TABLES = {
     'social_player': ('account','player_id','name','name_search','xp','level','avatar'),
     'social_friend': ('a','b','sender','accepted'),
     'social_block': ('account','target'),
-    'social_clan': ('id','name','name_search','tag','description','open'),
+    'social_clan': ('id','name','name_search','tag','description','open','avatar'),
     'social_member': ('account','clan','role'),
     'social_application': ('account','clan'),
     'social_rate': ('account','window','count'),
+    'social_creation': ('account','operation_id','clan_id','fingerprint','cost'),
+    'social_message': ('id','clan','account','name','text','created_at'),
 }
 KEYS = {'social_player':('account',),'social_friend':('a','b'),'social_block':('account','target'),
         'social_clan':('id',),'social_member':('account',),'social_application':('account','clan'),
-        'social_rate':('account',)}
+        'social_rate':('account',),'social_creation':('account','operation_id'),'social_message':('id',)}
 READ_ROUTES = {'/social/state','/social/players','/social/levels','/social/clans','/social/clan-levels'}
 
 
@@ -71,7 +73,7 @@ class FirestoreSocial:
                 snapshot = self.collections[table].document(identifier).get(transaction=tx)
                 if snapshot.exists:
                     value = snapshot.to_dict()
-                    rows[table][identifier] = {c:value[c] for c in TABLES[table]}
+                    rows[table][identifier] = {c:value.get(c,-1) if c=='avatar' and table=='social_clan' else value[c] for c in TABLES[table]}
                     return rows[table][identifier]
                 return None
             def query(table, field=None, value=None):
@@ -79,10 +81,11 @@ class FirestoreSocial:
                 source = collection.where(field,'==',value) if field else collection
                 for snapshot in source.stream(transaction=tx):
                     value = snapshot.to_dict()
-                    rows[table][snapshot.id] = {c:value[c] for c in TABLES[table]}
+                    rows[table][snapshot.id] = {c:value.get(c,-1) if c=='avatar' and table=='social_clan' else value[c] for c in TABLES[table]}
 
             profile = self.ledger.accounts.document(account).get(transaction=tx)
-            caller_profile = self.ledger._data(profile)['profile']
+            caller_account = self.ledger._data(profile)
+            caller_profile = caller_account['profile']
             caller = read('social_player',account)
             target = None
             player_id = data.get('playerId')
@@ -97,6 +100,9 @@ class FirestoreSocial:
                 for field in ('account','target'): query('social_block',field,who)
                 query('social_application','account',who)
             read('social_rate',account)
+            query('social_creation','account',account)
+            message_id=data.get('messageId')
+            if isinstance(message_id,str) and len(message_id)==32: read('social_message',message_id)
             clans = {r['clan'] for r in rows['social_member'].values()}
             identifier = data.get('clanId')
             if isinstance(identifier,str) and len(identifier)==20: clans.add(identifier)
@@ -104,12 +110,14 @@ class FirestoreSocial:
                 read('social_clan',identifier)
                 query('social_member','clan',identifier)
                 query('social_application','clan',identifier)
+                query('social_message','clan',identifier)
             # Applicants and friends need public values, not another account's private profile.
             accounts = set(actors)
             for relation in rows['social_friend'].values(): accounts.update((relation['a'],relation['b']))
             for relation in rows['social_block'].values(): accounts.update((relation['account'],relation['target']))
             for relation in rows['social_member'].values(): accounts.add(relation['account'])
             for relation in rows['social_application'].values(): accounts.add(relation['account'])
+            for message in rows['social_message'].values(): accounts.add(message['account'])
             for who in accounts:
                 read('social_player',who)
                 # Required to enforce one-clan membership when accepting an applicant.
@@ -143,13 +151,21 @@ class FirestoreSocial:
                     for table,columns in TABLES.items():
                         for row in rows[table].values():
                             db.execute('INSERT INTO '+table+' ('+','.join(columns)+') VALUES ('+','.join('?' for _ in columns)+')',tuple(row[c] for c in columns))
-                    db.execute('INSERT INTO profile(account,data) VALUES(?,?)',(account,json.dumps(caller_profile)))
+                    db.execute('INSERT INTO profile(account,revision,data) VALUES(?,?,?)',(account,caller_account['profileRevision'],json.dumps(caller_profile)))
+                    db.execute('INSERT INTO wallet(account,balance,revision) VALUES(?,?,?)',(account,caller_account['balance'],caller_account['revision']))
+                    for sku in caller_account['owned']:
+                        db.execute('INSERT INTO cosmetic(account,sku) VALUES(?,?)',(account,sku))
                 result = rules.dispatch(account,route,data)
                 after = {}
                 with ledger.connect() as db:
                     for table,columns in TABLES.items():
                         values = [dict(zip(columns,r)) for r in db.execute('SELECT '+','.join(columns)+' FROM '+table)]
                         after[table] = {key_for(table,r):r for r in values}
+            # Clan creation and its earned/paid debit commit in this same transaction.
+            if route=='/social/clan/create' and result.get('wallet') is not None:
+                wallet=result['wallet']
+                updated=dict(caller_account,balance=wallet['balance'],revision=wallet['revision'],profileRevision=wallet['profileRevision'],profile=wallet['profile'])
+                if updated!=caller_account: tx.set(self.ledger.accounts.document(account),updated)
             # All reads above finish before any Firestore write is queued.
             for table in TABLES:
                 for identifier in before[table].keys()-after[table].keys():
@@ -187,3 +203,4 @@ if __name__ == '__main__':
     social = FirestoreSocial(ledger)
     for snapshot in ledger.accounts.stream():
         social.sync_wallet(snapshot.id)
+

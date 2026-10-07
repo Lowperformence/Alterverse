@@ -30,6 +30,9 @@ class CommerceApplication:
             path = env.get('PATH_INFO')
             if isinstance(path, str) and path.startswith('/social/'):
                 social = self.social.dispatch(account, path, data)
+                if social.get('wallet') is not None:
+                    social['wallet']['accountHash'] = account
+                    social['wallet']['billingReady'] = self.google is not None and bool(self.package)
                 body = json.dumps({'fulfilled': True, 'social': social}).encode()
                 start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
                 return [body]
@@ -77,5 +80,6 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+
 
 
