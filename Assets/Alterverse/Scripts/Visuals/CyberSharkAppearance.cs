@@ -22,6 +22,8 @@ namespace Alterverse.Visuals
             public Anchor[] anchors;
             public float[] vertices, normals;
             public int[] boneIndices, groups;
+            public int[] boneIndices2;
+            public float[] boneWeights2;
             public int[] tailVertices;
             public float[] tailPivot;
             public Marker[] markers;
@@ -72,6 +74,17 @@ namespace Alterverse.Visuals
                 data.groups == null || data.groups.Length != data.vertices.Length / 3 || data.boneIndices == null || data.boneIndices.Length != data.vertices.Length / 3 ||
                 data.boneNames == null || data.anchors == null || data.anchors.Length != data.boneNames.Length ||
                 data.submeshes == null || data.submeshes.Length != 6) return false;
+            bool hasSecondary = data.boneIndices2 != null || data.boneWeights2 != null;
+            if (hasSecondary)
+            {
+                int count = data.boneIndices.Length;
+                if (data.boneIndices2 == null || data.boneWeights2 == null ||
+                    data.boneIndices2.Length != count || data.boneWeights2.Length != count) return false;
+                for (int i = 0; i < count; i++)
+                    if (data.boneIndices2[i] < 0 || data.boneIndices2[i] >= data.boneNames.Length ||
+                        float.IsNaN(data.boneWeights2[i]) || float.IsInfinity(data.boneWeights2[i]) ||
+                        data.boneWeights2[i] < 0f || data.boneWeights2[i] > 1f) return false;
+            }
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int group in data.groups) if (group < 0 || group > 2) return false;
@@ -160,9 +173,31 @@ namespace Alterverse.Visuals
                 if (digits[i]) sourcePoint.z += .025f;
                 Vector3 sourceNormal = Point(data.normals, i * 3);
                 Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
+                Vector3 n = rotations[b] * sourceNormal;
+                float blend = data.boneWeights2 != null ? data.boneWeights2[i] : 0f;
+                int secondary = data.boneIndices2 != null ? data.boneIndices2[i] : b;
+                if (blend > 0f && secondary != b)
+                {
+                    Vector3 p2 = heads[secondary] + rotations[secondary] *
+                        (sourcePoint - Point(data.anchors[secondary].head)) * scales[secondary];
+                    p = Vector3.Lerp(p, p2, blend);
+                    n = Vector3.Lerp(n, rotations[secondary] * sourceNormal, blend);
+                    // Unity expects the strongest influence first.
+                    weights[i] = blend <= .5f
+                        ? new BoneWeight
+                        {
+                            boneIndex0 = map[b], weight0 = 1f - blend,
+                            boneIndex1 = map[secondary], weight1 = blend
+                        }
+                        : new BoneWeight
+                        {
+                            boneIndex0 = map[secondary], weight0 = blend,
+                            boneIndex1 = map[b], weight1 = 1f - blend
+                        };
+                }
+                else weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
                 vertices[i] = toMesh.MultiplyPoint3x4(p);
-                normals[i] = toNormal.MultiplyVector(rotations[b] * sourceNormal).normalized;
-                weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
+                normals[i] = toNormal.MultiplyVector(n).normalized;
             }
             if (data.tailVertices != null && data.tailVertices.Length > 0 &&
                 data.tailPivot != null && data.tailPivot.Length == 3)
@@ -189,8 +224,10 @@ namespace Alterverse.Visuals
                 Surface("Tidal channels", new Color(.04f,.78f,1f), .30f,.62f, true),
                 Surface("Brass fittings", new Color(.48f,.29f,.12f), .72f,.32f),
                 Surface("White ventral skin and teeth", new Color(.93f,.94f,.91f), .10f,.35f),
-                JacketFabric()
+                JacketFabric(),
+                Surface("Black shark eyes and nostrils", new Color(.003f,.004f,.006f), 0f,.32f)
             };
+            if (data.boneWeights2 != null) anatomy.quality = SkinQuality.Bone2;
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
             // The inherited gauntlet renderer has its own FBX transform/root bone.
             // Keep the new anchor independent of the inherited gauntlet scale:
@@ -314,6 +351,10 @@ namespace Alterverse.Visuals
                     // The original nearly black fingers disappear beside the grey palm.
                     // Give only hand-bound armor-slot triangles the same shark-skin finish.
                     int material = m;
+                    if (group == 0 && m == 0 &&
+                        geometry.boneNames[geometry.boneIndices[sourceIndices[i]]] == "Head" &&
+                        geometry.boneNames[geometry.boneIndices[sourceIndices[i+1]]] == "Head" &&
+                        geometry.boneNames[geometry.boneIndices[sourceIndices[i+2]]] == "Head") material = 7;
                     if (group == 0 && m == 2 && HandVertex(sourceIndices[i]) &&
                         HandVertex(sourceIndices[i+1]) && HandVertex(sourceIndices[i+2])) material = 1;
                     if (group == 0 && m == 2 && JacketVertex(sourceIndices[i]) &&

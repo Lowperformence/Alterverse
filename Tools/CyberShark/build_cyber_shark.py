@@ -1,4 +1,4 @@
-"""Build Nerok's original cyber-shark and anchor in Blender; export rigid skin geometry.
+"""Build Nerok's original cyber-shark and anchor in Blender; export skeletal skin geometry.
 Run: blender --background --python Tools/CyberShark/build_cyber_shark.py
 Uses the established +Y-up hero bone contract. No external artwork is embedded.
 """
@@ -29,12 +29,12 @@ def build_unified_shark_head():
  segments=64
  vertices=[];faces=[];materials=[]
  # Start at the mouth edge, roll into the jaw, then flow over the snout into the skull.
- rings=[(.153,.092,1.650,.326,.060),(.163,.103,1.656,.317,.064),
-        (.178,.130,1.710,.203,.090),(.180,.180,1.735,.055,0),
+ rings=[(.145,.061,1.630,.332,.047),(.158,.072,1.640,.317,.070),
+        (.171,.095,1.695,.218,.195),(.180,.180,1.735,.055,0),
         (.146,.149,1.735,-.057,0),(.082,.086,1.735,-.103,0)]
  for rx,ry,cy,z,nose in rings:
   for a in np.linspace(0,math.tau,segments,endpoint=False):
-   vertices.append((rx*math.cos(a),cy+ry*math.sin(a),z+nose*max(0,math.sin(a))))
+   vertices.append((rx*math.cos(a)*(1-.40*max(0,math.sin(a))**2 if nose>.10 else 1),cy+ry*math.sin(a),z+nose*max(0,math.sin(a))))
  for row in range(len(rings)-1):
   for j in range(segments):
    a=row*segments+j;b=row*segments+(j+1)%segments
@@ -44,7 +44,7 @@ def build_unified_shark_head():
   faces.append([(len(rings)-1)*segments+j,back,(len(rings)-1)*segments+(j+1)%segments]);materials.append(1)
  # The inner wall shares the exact opening ring with the skin: no separate lip/cheek objects.
  last=0
- for rx,ry,cy,z in [(.131,.075,1.650,.230),(.061,.036,1.650,.188)]:
+ for rx,ry,cy,z in [(.125,.049,1.630,.230),(.059,.024,1.630,.188)]:
   row=len(vertices)
   for a in np.linspace(0,math.tau,segments,endpoint=False):
    vertices.append((rx*math.cos(a),cy+ry*math.sin(a),z))
@@ -52,20 +52,38 @@ def build_unified_shark_head():
    a=last+j;b=last+(j+1)%segments
    faces.extend([[a,b,row+(j+1)%segments],[a,row+(j+1)%segments,row+j]]);materials.extend([0,0])
   last=row
- inside=len(vertices);vertices.append((0,1.650,.178))
+ inside=len(vertices);vertices.append((0,1.630,.178))
  for j in range(segments):
   faces.append([last+j,last+(j+1)%segments,inside]);materials.append(0)
  material_start=len(MI)
  add('unified shark skull snout and jaw',vertices,faces,1,'Head')
  MI[material_start:]=materials
+ # Locate eyes and nostrils on the actual skin, keeping them embedded in the snout.
+ def skin_depth(x,y):
+  depths=[]
+  for face,material in zip(faces,materials):
+   if material!=1:continue
+   p,q,r=np.array([vertices[i] for i in face])
+   den=(q[1]-r[1])*(p[0]-r[0])+(r[0]-q[0])*(p[1]-r[1])
+   if abs(den)<1e-10:continue
+   u=((q[1]-r[1])*(x-r[0])+(r[0]-q[0])*(y-r[1]))/den
+   v=((r[1]-p[1])*(x-r[0])+(p[0]-r[0])*(y-r[1]))/den
+   if u>=-1e-8 and v>=-1e-8 and u+v<=1+1e-8:depths.append(u*p[2]+v*q[2]+(1-u-v)*r[2])
+  if not depths:raise ValueError('Facial feature lies outside shark head')
+  return max(depths)
+ for s in [-1,1]:
+  x=s*.148;y=1.786
+  ell('black shark eye',(x,y,skin_depth(x,y)),(.015,.011,.008),0,'Head',16,10)
+  x=s*.058;y=1.757
+  ell('shark nostril',(x,y,skin_depth(x,y)+.0005),(.007,.005,.0035),0,'Head',12,8)
  # Broad shark teeth sit inside the opening and follow the curved upper/lower jaw.
  for row,count in [('upper',11),('lower',9)]:
   for angle in np.linspace(math.radians(16),math.radians(164),count):
    a=angle if row=='upper' else -angle
-   base=np.array((.145*math.cos(a),1.650+.085*math.sin(a),.332+.060*max(0,math.sin(a))))
+   base=np.array((.137*math.cos(a),1.630+.055*math.sin(a),.338+.047*max(0,math.sin(a))))
    inward=unit(np.array((-math.cos(a),-math.sin(a),0)))
    tangent=np.array((-inward[1],inward[0],0))
-   width=.010+.003*abs(math.sin(a));length=.026+.017*abs(math.sin(a))
+   width=.010+.003*abs(math.sin(a));length=.018+.012*abs(math.sin(a))
    left=base-tangent*width;right=base+tangent*width;tip=base+inward*length+[0,0,-.004]
    points=[left,right,tip,left+[0,0,-.014],right+[0,0,-.014],tip+[0,0,-.014]]
    tooth_faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
@@ -82,17 +100,59 @@ cranial_fin_pivot=np.array((0,1.85,-.08))
 for i in range(cranial_fin_start,len(V)):
  V[i]=(cranial_fin_pivot+(np.array(V[i])-cranial_fin_pivot)*1.5).tolist()
 for s in [-1,1]:
- tube('organic brow',[(s*.105,1.828,.24),(s*.165,1.817,.24),(s*.17,1.806,.18)],.018,1,'Head',8)
- ell('red eye',(s*.157,1.801,.265),(.014,.007,.011),4,'Head',10,6)
  for j in range(3):tube('cranial vent',[(s*.127,1.79-j*.025,.09),(s*.147,1.78-j*.025,.12)],.004,0,'Head',6)
+# Closed arm envelopes with shared elbow rings and two-bone skinning.
+ARM_SKIN_WEIGHTS={}
+def build_continuous_arm(side):
+ upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
+ a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
+ du=unit(e-a);df=unit(w-e)
+ rings=[]
+ for t,r in [(0,.109),(.15,.116),(.35,.114),(.55,.105),(.70,.097),(.85,.090),(1,.085)]:
+  blend=max(0,(t-.65)/.35)*.5
+  rings.append((a+(e-a)*t,r,upper,fore,blend,unit(du*(1-t)+df*t)))
+ for t,r in [(.15,.088),(.30,.095),(.50,.100),(.70,.091),(.85,.079),(1,.060)]:
+  if t<.30:primary,secondary,blend=upper,fore,.5+t/.30*.5
+  else:primary,secondary,blend=fore,hand,max(0,(t-.75)/.25)*.55
+  rings.append((e+(w-e)*t,r,primary,secondary,blend,df))
+ rings.append((w+df*.018,.056,fore,hand,.80,df))
+ vertices=[];faces=[];bindings=[];segments=20;last_u=None
+ for center,r,primary,secondary,blend,tangent in rings:
+  u=unit(np.cross(tangent,[0,0,1]))
+  if last_u is not None and np.dot(u,last_u)<0:u=-u
+  last_u=u;v=unit(np.cross(tangent,u))
+  for angle in np.linspace(0,math.tau,segments,endpoint=False):
+   vertices.append(center+r*(math.cos(angle)*u+math.sin(angle)*v*.94))
+   bindings.append((BN.index(primary),BN.index(secondary),blend))
+ for row in range(len(rings)-1):
+  for j in range(segments):
+   i=row*segments+j;k=row*segments+(j+1)%segments
+   faces.extend([[i,k,k+segments],[i,k+segments,i+segments]])
+ start=len(vertices);vertices.append(rings[0][0]);bindings.append(bindings[0])
+ end=len(vertices);vertices.append(rings[-1][0]);bindings.append(bindings[(len(rings)-1)*segments])
+ for j in range(segments):
+  faces.append([start,(j+1)%segments,j])
+  base=(len(rings)-1)*segments;faces.append([end,base+j,base+(j+1)%segments])
+ # Tube basis may turn from left to right; orient every face away from its local centerline.
+ for face in faces:
+  points=np.array([vertices[i] for i in face]);center=points.mean(axis=0)
+  line=min((c for c,*_ in rings),key=lambda c:np.linalg.norm(center-c))
+  normal=np.cross(points[1]-points[0],points[2]-points[0])
+  outward=center-line
+  if start in face:outward=-du
+  elif end in face:outward=df
+  if np.dot(normal,outward)<0:face.reverse()
+ offset=len(V)
+ add('continuous shark arm '+side,vertices,faces,1,upper)
+ for i,(primary,secondary,blend) in enumerate(bindings):
+  BI[offset+i]=primary;ARM_SKIN_WEIGHTS[offset+i]=(secondary,blend)
+
 for side,s in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
- limb('upper arm',a,e,.118,1,upper)
+ build_continuous_arm(side)
  ell('shoulder armor',a+[s*.05,.005,-.025],(.142,.09,.13),2,upper,16,10)
  shard('shoulder fin',a+[s*.08,0,-.025],a+[s*.22,.10,-.07],.047,.025,2,upper)
- ell('elbow bearing',e,(.077,.066,.072),0,fore,12,8)
- limb('forearm',e,w,.103,1,fore)
  mid=(e+w)*.5
  plate('forearm plate',[(mid[0]-.07,mid[1]+.105),(mid[0]+.07,mid[1]+.105),(mid[0]+.06,mid[1]-.10),(mid[0]-.06,mid[1]-.10)],.05,.05,2,fore)
  tube('forearm energy',[(mid[0],mid[1]+.06,.10),(mid[0],mid[1]-.06,.10)],.005,3,fore,6)
@@ -122,7 +182,6 @@ for s in [-1,1]:
  plate('cheek armor',[(s*.10,1.75),(s*.168,1.73),(s*.163,1.64),(s*.12,1.625)],.145,.030,2,'Head')
  for j in range(4):
   tube('cheek gill grille',[(s*(.119+j*.008),1.72-j*.007,.17),(s*(.128+j*.008),1.68-j*.007,.173)],.0045,0,'Head',6)
- tube('brow ice trim',[(s*.02,1.833,.217),(s*.072,1.827,.248),(s*.135,1.817,.26)],.005,5,'Head',6)
  bolt('temple fastener',(s*.153,1.742,.157),'Head')
  # Clear breastplate edging and fasteners, larger enough to read at gameplay scale.
  tube('cuirass brass rim',[(s*.18,1.53,.19),(s*.24,1.50,.192),(s*.266,1.41,.192)],.007,4,'Chest',6)
@@ -263,19 +322,26 @@ for face,m in zip(mesh.polygons,MI):face.material_index=m;face.use_smooth=True
 for idx,name in enumerate(BN):
  group=obj.vertex_groups.new(name=name);indices=[i for i,b in enumerate(BI) if b==idx]
  if indices:group.add(indices,1,'REPLACE')
+for vi,(secondary,blend) in ARM_SKIN_WEIGHTS.items():
+ if blend>0:
+  obj.vertex_groups[BN[BI[vi]]].add([vi],1-blend,'REPLACE')
+  obj.vertex_groups[BN[secondary]].add([vi],blend,'REPLACE')
 tail_group=obj.vertex_groups.new(name='Tail')
 tail_group.add(list(range(tail_start,tail_end)),1,'REPLACE')
 obj.vertex_groups['Hips'].remove(list(range(tail_start,tail_end)))
 mesh.calc_loop_triangles()
-vertices=[];normals=[];bones=[];groups=[];tail_vertices=[];subs=[{'triangles':[]} for _ in COLORS]
+vertices=[];normals=[];bones=[];bones2=[];weights2=[];groups=[];tail_vertices=[];subs=[{'triangles':[]} for _ in COLORS]
 for tri in mesh.loop_triangles:
  for loop in tri.loops:
   vi=mesh.loops[loop].vertex_index;idx=len(bones)
   vertices.extend(mesh.vertices[vi].co);normals.extend(mesh.corner_normals[loop].vector)
-  bones.append(BI[vi]);groups.append(GI[vi]);subs[tri.material_index]['triangles'].append(idx)
+  bones.append(BI[vi])
+  secondary,blend=ARM_SKIN_WEIGHTS.get(vi,(BI[vi],0.0))
+  bones2.append(secondary);weights2.append(blend)
+  groups.append(GI[vi]);subs[tri.material_index]['triangles'].append(idx)
   if tail_start<=vi<tail_end:tail_vertices.append(idx)
 data={'version':1,'boneNames':BN,'anchors':[{'head':BONES[b][0],'tail':BONES[b][1]} for b in BN],
- 'vertices':vertices,'normals':normals,'boneIndices':bones,'groups':groups,'submeshes':subs,'markers':[],
+ 'vertices':vertices,'normals':normals,'boneIndices':bones,'boneIndices2':bones2,'boneWeights2':weights2,'groups':groups,'submeshes':subs,'markers':[],
  'tailVertices':tail_vertices,'tailPivot':[0,.97,-.14]}
 with gzip.GzipFile(filename=str(OUT/'Model.bytes'),mode='wb',mtime=0) as f:f.write(json.dumps(data,separators=(',',':')).encode())
 # Blender-authored effect meshes are exported once and reused by the runtime pool.
