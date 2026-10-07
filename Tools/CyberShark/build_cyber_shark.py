@@ -10,7 +10,7 @@ from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[2]
 # Reuse the project's tested geometry primitives, without executing its hero construction.
 helper=ROOT/'Tools/UmbralMage/build_umbral_mage.py'
-exec(compile(helper.read_text().split('# Pearl armored arcane mech')[0].replace('from PIL import Image, ImageDraw', ''),str(helper),'exec'))
+exec(compile(helper.read_text().split('# Pearl armored arcane mech')[0].split('# Refinement of the existing pearl-mech design')[0].replace('from PIL import Image, ImageDraw', ''),str(helper),'exec'))
 OUT=ROOT/'Assets/Alterverse/Resources/CyberShark'
 ART=ROOT/'ArtSource/Heroes/CyberShark'
 OUT.mkdir(parents=True,exist_ok=True);ART.mkdir(parents=True,exist_ok=True)
@@ -35,8 +35,43 @@ for row in range(3):
   a=row*16+j;b=row*16+(j+1)%16;sf.extend([(a,b,b+16),(a,b+16,a+16)])
 sf.append(tuple(range(48,64)))
 add('tapered shark snout',sv,sf,1,'Head')
-ell('open mouth shadow',(0,1.65,.255),(.151,.084,.107),0,'Head',20,10)
-ell('shark lower jaw',(0,1.589,.233),(.148,.045,.14),5,'Head',20,8)
+# Rounded shark gape with broad triangular teeth, following the user's mouth reference.
+def build_reference_mouth():
+ center_y=1.650
+ # Skin bridges the lip back into the head, so the opening is a jaw rather than a floating ring.
+ jaw_vertices=[];jaw_faces=[];segments=48
+ for rx,ry,z in [(.159,.103,.349),(.180,.119,.312),(.165,.095,.180)]:
+  for angle in np.linspace(0,math.tau,segments,endpoint=False):
+   jaw_vertices.append((rx*math.cos(angle),center_y+ry*math.sin(angle),z))
+ for row in range(2):
+  for j in range(segments):
+   a=row*segments+j;b=row*segments+(j+1)%segments
+   jaw_faces.extend([[a,b,b+segments],[a,b+segments,a+segments]])
+ # These front and cheek bands face outwards, toward the mouth's visible side.
+ for face in jaw_faces:face.reverse()
+ add('continuous shark jaw cheeks',jaw_vertices,jaw_faces,1,'Head')
+ ell('rounded mouth cavity',(0,center_y,.279),(.156,.096,.074),0,'Head',28,14)
+ ell('shark lower jaw',(0,1.558,.267),(.153,.039,.102),1,'Head',24,10)
+ angles=np.linspace(0,math.tau,49)
+ tube('rounded shark lip',[(.164*math.cos(a),center_y+.107*math.sin(a),.349) for a in angles],.008,1,'Head',10)
+ tube('dark gum line',[(.150*math.cos(a),center_y+.092*math.sin(a),.356) for a in angles],.006,0,'Head',8)
+ for row,count in [('upper',11),('lower',9)]:
+  for angle in np.linspace(math.radians(16),math.radians(164),count):
+   a=angle if row=='upper' else -angle
+   base=np.array((.146*math.cos(a),center_y+.087*math.sin(a),.366))
+   inward=unit(np.array((-math.cos(a),-math.sin(a),0)))
+   tangent=np.array((-inward[1],inward[0],0))
+   half_width=.010+.004*abs(math.sin(a))
+   length=.028+.021*abs(math.sin(a))
+   left=base-tangent*half_width;right=base+tangent*half_width;tip=base+inward*length
+   points=[left,right,tip,left+[0,0,-.017],right+[0,0,-.017],tip+[0,0,-.017]]
+   faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
+   mid=np.mean(points,axis=0)
+   for face in faces:
+    p,q,r=[points[i] for i in face]
+    if np.dot(np.cross(q-p,r-p),(p+q+r)/3-mid)<0:face.reverse()
+   add(row+' triangular shark tooth',points,faces,5,'Head')
+build_reference_mouth()
 # Enlarge only the cranial fin about its head attachment by 50 percent.
 cranial_fin_start=len(V)
 shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
@@ -47,10 +82,6 @@ for s in [-1,1]:
  tube('organic brow',[(s*.105,1.828,.24),(s*.165,1.817,.24),(s*.17,1.806,.18)],.018,1,'Head',8)
  ell('red eye',(s*.157,1.801,.265),(.014,.007,.011),4,'Head',10,6)
  for j in range(3):tube('cranial vent',[(s*.127,1.79-j*.025,.09),(s*.147,1.78-j*.025,.12)],.004,0,'Head',6)
-for j in range(11):
- x=(j-5)*.025
- shard('upper tooth',(x,1.705,.335),(x,1.665-(.011 if j%2 else 0),.345),.007,.007,5,'Head')
- shard('lower tooth',(x,1.609,.327),(x,1.647+(.009 if j%2 else 0),.337),.007,.007,5,'Head')
 for side,s in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
