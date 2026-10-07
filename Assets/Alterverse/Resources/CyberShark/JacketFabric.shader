@@ -70,7 +70,7 @@ Shader "DimensionsFront/Nerok/WovenJacket"
                 float fibers=.5+.5*sin(i.rest.y*92+sin(i.rest.x*47)*.65);
                 half3 color=_BaseColor.rgb*(.82+.24*worn+.13*weave+.025*fibers);
                 half3 rgb=DFSurfaceLighting(i.positionWS,n,color,0.0h,
-                    lerp(.16h,.24h,saturate(weave)),1.0h,half3(0,0,0));
+                    lerp(.16h,.24h,saturate(weave)),1.0h,half3(0,0,0),i.positionHCS);
                 // Broad fiber sheen only; canvas has no hard metallic highlight.
                 half3 view=normalize(GetWorldSpaceViewDir(i.positionWS));
                 half sheen=pow(1-saturate(abs(dot(n,view))),4)*.055;

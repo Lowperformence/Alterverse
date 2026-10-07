@@ -35,9 +35,16 @@ namespace Alterverse.EditorChecks
                         {
                             Mesh mesh=filter.sharedMesh;
                             Require(mesh!=null&&mesh.vertexCount>0&&mesh.vertexCount<65535,variant+": invalid mesh");
+                            Require(mesh.normals.Length==mesh.vertexCount,variant+": missing surface normals");
                             Require(mesh.subMeshCount==1,variant+": unexpected material split");
                             Material material=filter.GetComponent<Renderer>().sharedMaterial;
                             Require(material!=null&&material.shader!=null&&material.shader.isSupported,variant+": shader unavailable");
+                            Require(material.shader.name=="Alterverse/ScenerySurface"&&material.GetTexture("_DetailData")!=null,
+                                variant+": unfinished landscape material");
+                            Require(filter.GetComponent<Renderer>().receiveShadows,variant+": shadow reception disabled");
+                            foreach(Vector3 normal in mesh.normals)
+                                Require(float.IsFinite(normal.x)&&float.IsFinite(normal.y)&&float.IsFinite(normal.z)&&normal.sqrMagnitude>.5f,
+                                    variant+": invalid surface normal");
                             foreach(Vector3 vertex in mesh.vertices)
                             {
                                 Vector3 world=filter.transform.TransformPoint(vertex);
@@ -58,3 +65,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

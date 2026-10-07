@@ -64,7 +64,7 @@ Shader "DimensionsFront/HeroSurface"
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
     // Filter narrow highlights on small distant hero surfaces to avoid sparkling edges.
     smoothness=saturate(smoothness-min(.20h,length(fwidth(n))*.18h));
-    half3 worldLight=DFSurfaceLighting(i.world,n,albedo,metal,smoothness,1,half3(0,0,0));
+    half3 worldLight=DFSurfaceLighting(i.world,n,albedo,metal,smoothness,1,half3(0,0,0),i.position);
     // Camera-space studio rig is isolated per portrait renderer with a property block.
     // It stays stable across planets and doesn't need extra per-pixel lights on Android.
     half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));

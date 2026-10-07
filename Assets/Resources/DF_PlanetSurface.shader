@@ -18,6 +18,9 @@ Shader "Alterverse/PlanetSurface"
         _RockStrength("Stone relief", Float) = 0.28
         _Metallic("Metallic", Range(0,1)) = 0
         _Smoothness("Smoothness", Range(0,1)) = 0.12
+        _RoughnessBias("Planet roughness adjustment",Range(-.3,.3))=0
+        _CavityStrength("Micro cavity occlusion",Range(0,1))=.2
+        _DetailContrast("Neutral surface detail",Range(0,.7))=.34
         [HDR] _EmissionColor("Emission", Color) = (0,0,0,0)
     }
     SubShader
@@ -35,6 +38,7 @@ Shader "Alterverse/PlanetSurface"
             float _DetailScale, _MacroScale;
             half _MacroStrength;
             half _BumpScale, _SurfaceMode, _SandStrength, _RockStrength, _Metallic, _Smoothness;
+            half _RoughnessBias,_CavityStrength,_DetailContrast;
         CBUFFER_END
         TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
         TEXTURE2D(_GroundMap); SAMPLER(sampler_GroundMap);
@@ -161,10 +165,13 @@ Shader "Alterverse/PlanetSurface"
                 data.b=lerp(data.b,geology.b,.35h);
                 // Surface-gradient perturbation avoids tangent seams and missing UVs on generated meshes.
                 n=normalize(n-(gradient-n*dot(n,gradient)));
-                albedo*=1+(data.a-.5h)*.34h; // scalar variation cannot rotate the planet hue.
-                half cavity=lerp(.93h,1.0h,saturate(data.a*2))*lerp(.94h,1.0h,geology.g);
-                half smooth=saturate(lerp(_Smoothness,1-data.b,.58h));
-                half3 rgb=DFSurfaceLighting(p,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb);
+                albedo*=1+(data.a-.5h)*_DetailContrast; // scalar variation cannot rotate the planet hue.
+                // Broad combat courts retain quiet detail; peripheral fissures receive deeper contact shading.
+                half cavityWeight=_CavityStrength*lerp(1.0h,.45h,quietGeology);
+                half cavity=lerp(1.0h,lerp(.70h,1.0h,saturate(data.a*2))*lerp(.80h,1.0h,geology.g),cavityWeight);
+                half roughness=clamp(data.b+_RoughnessBias,.03h,.97h);
+                half smooth=saturate(lerp(_Smoothness,1-roughness,.58h));
+                half3 rgb=DFSurfaceLighting(p,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,i.positionCS);
                 return half4(MixFog(rgb,i.fog),1);
             }
             ENDHLSL

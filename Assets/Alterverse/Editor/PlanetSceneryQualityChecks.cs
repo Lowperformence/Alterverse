@@ -27,7 +27,12 @@ namespace Alterverse.EditorChecks
             int planets=0;
             foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
             {
+                PlanetSurfaceFinishProfile profile=PlanetSurfaceFinishProfile.For(planet);
+                Require(profile.RoughnessBias>=-.3f&&profile.RoughnessBias<=.3f&&
+                    profile.CavityStrength>=0&&profile.CavityStrength<=1&&profile.DetailContrast>=0,
+                    "Invalid terrain finish: "+planet);
                 Require(Resources.Load<Texture2D>("PlanetSurfaces/"+planet+"/Stone")!=null,"Missing stone detail: "+planet);
+                Require(Resources.Load<Texture2D>("PlanetSurfaces/"+planet+"/Ground")!=null,"Missing soil detail: "+planet);
                 for(int layer=0;layer<4;layer++)
                 {
                     Material material=RuntimeShaderLibrary.Create(new Color(.24f,.31f,.42f),false,.25f,.4f,new Color(.02f,.03f,.04f));

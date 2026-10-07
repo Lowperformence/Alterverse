@@ -41,6 +41,10 @@ namespace Alterverse.Visuals
             material.SetTexture("_StoneData",stone);
             material.SetTexture("_GroundMap",macro);
             material.SetTexture("_MacroData",geology!=null?geology:Texture2D.grayTexture);
+            PlanetSurfaceFinishProfile finish=PlanetSurfaceFinishProfile.For(ArenaVariantRuntime.Current);
+            material.SetFloat("_RoughnessBias",finish.RoughnessBias);
+            material.SetFloat("_CavityStrength",finish.CavityStrength);
+            material.SetFloat("_DetailContrast",finish.DetailContrast);
             material.SetFloat("_MacroScale",.047f);
             material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsDiamondCore?.34f:ArenaVariantRuntime.IsKryon?.40f:.52f);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
@@ -111,3 +115,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

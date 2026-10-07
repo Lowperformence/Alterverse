@@ -12,6 +12,7 @@ Shader "Alterverse/ScenerySurface"
         _Relief("Micro surface relief",Range(0,1))=.2
         _ValueContrast("Neutral surface contrast",Range(0,1))=.2
         _RoughnessWeight("Texture finish weight",Range(0,1))=.3
+        _RoughnessBias("Planet stone roughness adjustment",Range(-.3,.3))=0
         _Sheen("Leaf edge sheen",Range(0,.2))=0
     }
     SubShader
@@ -27,6 +28,7 @@ Shader "Alterverse/ScenerySurface"
             half4 _BaseColor,_EmissionColor;
             float _DetailScale;
             half _Metallic,_Smoothness,_Relief,_ValueContrast,_RoughnessWeight,_Sheen;
+            half _RoughnessBias;
         CBUFFER_END
         struct Attributes
         {
@@ -95,9 +97,10 @@ Shader "Alterverse/ScenerySurface"
                 n=normalize(n-(gradient-n*dot(n,gradient)));
                 half3 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).rgb*_BaseColor.rgb;
                 albedo*=1+(detail.a-.5h)*_ValueContrast;
-                half smooth=saturate(lerp(_Smoothness,1-detail.b,_RoughnessWeight));
+                half roughness=clamp(detail.b+_RoughnessBias,.03h,.97h);
+                half smooth=saturate(lerp(_Smoothness,1-roughness,_RoughnessWeight));
                 half cavity=lerp(.88h,1.0h,saturate(detail.a*2));
-                half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb);
+                half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,input.positionCS);
                 half rim=pow(1-saturate(dot(n,GetWorldSpaceNormalizeViewDir(input.positionWS))),4);
                 rgb+=albedo*rim*_Sheen;
                 return half4(MixFog(rgb,input.fog),1);

@@ -133,7 +133,7 @@ float Ornament(float2 p)
                 float ink=Ornament(input.rest.xy*4);
                 albedo=lerp(albedo,half3(.065,.028,.023),ink*.82);
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
-                    smoothness,1.0h,_EmissionColor.rgb);
+                    smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
                 return half4(rgb, baseSample.a * _BaseColor.a);
             }

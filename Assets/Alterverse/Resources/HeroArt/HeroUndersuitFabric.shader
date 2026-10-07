@@ -134,7 +134,7 @@ float Fabric(float3 p,float3 normal)
                 albedo*=weave;
                 smoothness=min(smoothness,.28h)*lerp(.85h,1.0h,saturate(weave-.5h));
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
-                    smoothness,1.0h,_EmissionColor.rgb);
+                    smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
                 return half4(rgb, baseSample.a * _BaseColor.a);
             }

@@ -34,6 +34,8 @@ Shader "Alterverse/DiamondCrystal"
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_fog
+            #pragma multi_compile_fragment _ _REFLECTION_PROBE_BLENDING
+            #pragma multi_compile_fragment _ _REFLECTION_PROBE_BOX_PROJECTION
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -98,6 +100,7 @@ Shader "Alterverse/DiamondCrystal"
                     surfaceValue=(1+(geology.r-.5h)*.34h)*lerp(.96h,1.0h,geology.g);
                 }
                 half3 v = normalize(input.viewDirWS);
+                surfaceSmoothness=saturate(surfaceSmoothness-min(.18h,length(fwidth(n))*.16h));
                 half ndv = saturate(abs(dot(n,v)));
                 half fresnel = pow(1.0h-ndv,max(0.5h,_FresnelPower));
 
@@ -108,6 +111,10 @@ Shader "Alterverse/DiamondCrystal"
                 rgb = lerp(rgb,rgb*prismTint,saturate(fresnel*0.42h));
                 rgb += _EmissionColor.rgb;
                 rgb += fresnel*_FresnelStrength*half3(0.62h,0.88h,1.0h);
+                // Actual sky/probe reflections follow each physical cut while the original prism tint stays intact.
+                half3 reflected=GlossyEnvironmentReflection(reflect(-v,n),input.positionWS,
+                    1-surfaceSmoothness,1,GetNormalizedScreenSpaceUV(input.positionHCS));
+                rgb+=reflected*lerp(.08h,.28h,fresnel)*lerp(.35h,1.0h,surfaceSmoothness);
                 // Flat face normals create separate reflections on each physical cut.
                 // Edge highlights use actual triangle boundaries and a fixed pixel width.
                 Light key=GetMainLight();
@@ -130,3 +137,4 @@ Shader "Alterverse/DiamondCrystal"
     }
     Fallback Off
 }
+

@@ -82,7 +82,7 @@ Shader "DimensionsFront/Nerok/WornSilverAnchor"
                 // Oxidation is rough dielectric material; exposed silver stays reflective.
                 half smoothness=lerp(.56h,.16h,rust)*lerp(.84h,1.0h,grain);
                 half3 rgb=DFSurfaceLighting(i.positionWS,n,color,lerp(.90h,0.0h,rust),
-                    smoothness,1.0h,half3(0,0,0));
+                    smoothness,1.0h,half3(0,0,0),i.positionHCS);
                 return half4(MixFog(rgb,i.fog),1);
             }
             ENDHLSL

@@ -118,7 +118,7 @@ Shader "Alterverse/TankWoodlandCamo"
                 half3 albedo=baseSample.rgb*_BaseColor.rgb;
                 half smoothness=_Smoothness;
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
-                    smoothness,1.0h,_EmissionColor.rgb);
+                    smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
                 return half4(rgb, baseSample.a * _BaseColor.a);
             }

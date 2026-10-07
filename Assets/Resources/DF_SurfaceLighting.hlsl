@@ -7,7 +7,7 @@
 // Shared opaque surface response. Keep authored albedo, RGB normals and emission intact.
 // Metallic, roughness and reflection probes now use the same BRDF as URP Lit.
 half3 DFSurfaceLighting(float3 positionWS, half3 normalWS, half3 albedo,
-    half metallic, half smoothness, half occlusion, half3 emission)
+    half metallic, half smoothness, half occlusion, half3 emission, float4 rasterPosition)
 {
     InputData lighting = (InputData)0;
     lighting.positionWS = positionWS;
@@ -19,7 +19,8 @@ half3 DFSurfaceLighting(float3 positionWS, half3 normalWS, half3 albedo,
         lighting.shadowCoord = TransformWorldToShadowCoord(positionWS);
     #endif
     lighting.bakedGI = SampleSH(lighting.normalWS);
-    lighting.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(TransformWorldToHClip(positionWS));
+    // Fragment SV_POSITION is in pixels. Reprojected clip coordinates cannot sample screen-space AO.
+    lighting.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(rasterPosition);
     lighting.shadowMask = half4(1,1,1,1);
 
     SurfaceData surface = (SurfaceData)0;
