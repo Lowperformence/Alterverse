@@ -27,7 +27,7 @@ namespace Alterverse.UI
             var retry=Fixture(10);retry.Prepare();Assert(!retry.Ready&&retry.XpText=="—"&&retry.Status.Contains("RETRYING"),"Retry stays pending and does not claim rewards were received.");
             var pending=Fixture(9);pending.Prepare();Assert(!pending.Ready&&pending.Status=="FINALIZING REWARDS…","Pending state is explicit.");
             var large=Fixture(8);large.Prepare();Assert(large.XpText.Length<=7&&large.Xp==int.MaxValue,"Large total abbreviation must not change the underlying receipt.");
-            var drop=Fixture(5);drop.Prepare();Assert(drop.DropName==BattleItemInventory.Name(BattleItemType.Meteor),"Drop identity comes from the existing inventory catalog.");
+            var drop=Fixture(5);drop.Prepare();Assert(drop.DropName==BattleItemInventory.Name(BattleItemType.TeamHeal),"Drop identity comes from the existing inventory catalog.");
             var noDrop=Fixture(6);noDrop.Prepare();Assert(noDrop.DropName=="NO BATTLE ITEM DROP","No drop must not appear as a granted item.");
             foreach(var size in new[]{new Vector2(1920,1080),new Vector2(2160,1080),new Vector2(2340,1080),new Vector2(2400,1080),new Vector2(800,360),new Vector2(640,360),new Vector2(480,270),new Vector2(360,640)})
             {
@@ -57,7 +57,7 @@ namespace Alterverse.UI
                 Won=scenario!=4,Ready=scenario!=9&&scenario!=10,Retrying=scenario==10,Difficulty="EXPERT",Hero="Ione Vaska",
                 Kills=12,Deaths=3,Assists=8,Objectives=4,Xp=120,Shards=144,BaseXp=100,XpBonus=20,BaseShards=120,ShardBonus=24,
                 BonusPercent=WingMatchRewardBonus.Percent(cosmetic),BonusName=WingMatchRewardBonus.DisplayName(cosmetic),
-                Drop=scenario==5?BattleItemType.Meteor:BattleItemType.None,
+                Drop=scenario==5?BattleItemType.TeamHeal:BattleItemType.None,
                 AccountLevel=22,AccountInto=1840,AccountRequired=2200,AccountProgress=.836f,
                 PassLevel=14,PassInto=120,PassRequired=342,PassProgress=.351f,PassXpGained=100,PassLevelUp=true
             };
@@ -66,14 +66,14 @@ namespace Alterverse.UI
             data.XpBonus=percent;data.Xp=100+percent;data.ShardBonus=percent;data.BaseShards=100;data.Shards=100+percent;
             if(scenario==7){data.AccountMax=true;data.AccountLevel=PlayerExperience.MaxLevel;data.Xp=1;data.BaseXp=1;data.XpBonus=0;data.AccountProgress=1;data.PassXpGained=1;}
             if(scenario==8){data.Xp=int.MaxValue;data.Shards=int.MaxValue;data.BaseXp=int.MaxValue;data.BaseShards=int.MaxValue;data.Kills=123456;data.Deaths=10000;data.Assists=999999;}
-            if(scenario==11)data.Drops=new[]{new MatchResultScreenData.DropReward(BattleItemType.Heal,1),new MatchResultScreenData.DropReward(BattleItemType.Shield,2),new MatchResultScreenData.DropReward(BattleItemType.Meteor,1)};
+            if(scenario==11)data.Drops=new[]{new MatchResultScreenData.DropReward(BattleItemType.Heal,1),new MatchResultScreenData.DropReward(BattleItemType.Shield,2),new MatchResultScreenData.DropReward(BattleItemType.TeamHeal,1)};
             data.Details=new[]{new MatchResultScreenData.Metric("PLAYED HERO",data.Hero),new MatchResultScreenData.Metric("EXACT ACCOUNT XP",data.Xp.ToString("N0")),new MatchResultScreenData.Metric("EXACT SHARDS",data.Shards.ToString("N0")),new MatchResultScreenData.Metric("DAMAGE DEALT","12,450"),new MatchResultScreenData.Metric("MATCH MVP","A very long example player name")};
             return data;
         }
     }
     public sealed class MatchResultPreviewWindow : EditorWindow
     {
-        private static readonly string[] Names={"Victory / Original","Voidfall +5%","Plague +10%","Beta +20%","Defeat","Meteor drop","No drop","Account cap","Large numbers","Finalizing","Retry","Multiple drops (fixture)"};
+        private static readonly string[] Names={"Victory / Original","Voidfall +5%","Plague +10%","Beta +20%","Defeat","Team Heal drop","No drop","Account cap","Large numbers","Finalizing","Retry","Multiple drops (fixture)"};
         private static readonly Vector2[] Sizes={new(800,360),new(640,360),new(1920,1080),new(2160,1080),new(2340,1080),new(2400,1080),new(360,640)};
         private static readonly string[] SizeNames={"800×360","640×360","16:9","18:9","19.5:9","20:9","360×640"};
         private MatchResultScreen screen;
