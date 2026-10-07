@@ -73,3 +73,8 @@ Official references:
 - https://docs.unity.com/en-us/authentication/platform-signin/username-password
 - https://docs.unity.com/en-us/services-web-apis/client-auth
 - https://docs.unity.com/en-us/oas-player-auth-jwks/1.0.0
+
+
+## Friends, levels and clans
+
+The same persistent account backend now serves social routes, player-level rankings and clans. See [Social-System.md](Social-System.md) for behavior, limits, deployment and verification. Rebuild the backend image and configure the existing HTTPS endpoint to activate them.

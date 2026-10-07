@@ -103,6 +103,10 @@ class Ledger:
         balance, revision = db.execute('SELECT balance,revision FROM wallet WHERE account=?', (account,)).fetchone()
         owned = [r[0] for r in db.execute('SELECT sku FROM cosmetic WHERE account=?', (account,))]
         profile_revision, profile_data = db.execute('SELECT revision,data FROM profile WHERE account=?', (account,)).fetchone()
+        # Keep public level/name data current on profile saves and wallet loads.
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='social_player'").fetchone():
+            from social import sync_player
+            sync_player(db, account, profile_data)
         return {'profileRevision':profile_revision, 'profile':json.loads(profile_data), 'balance': balance, 'revision': revision, 'voidfall': 'voidfall' in owned,
                 'avatars': [int(s[7:]) for s in owned if s.startswith('avatar_')],
                 'owned': owned}
@@ -234,5 +238,6 @@ class Ledger:
             if row.rowcount != 1: raise ValueError('Insufficient shards')
             db.execute('INSERT INTO cosmetic VALUES (?,?)', (account, sku))
             return self.snapshot(db, account)
+
 
 

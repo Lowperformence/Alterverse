@@ -58,9 +58,10 @@ namespace Alterverse.Profile
             string account=BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(auth.PlayerId))).Replace("-","").ToLowerInvariant();
             ProfileTransaction.Recover();
             PaidShardCommerce.Connect(endpoint,()=>AuthenticationService.Instance.IsAuthorized?AuthenticationService.Instance.AccessToken:null,account);
+            SocialService.Connect(endpoint,()=>AuthenticationService.Instance.IsAuthorized?AuthenticationService.Instance.AccessToken:null);
             Status="Account connected.";
         }
-        void OnSignedOut(){connectedPlayer=null;PaidShardCommerce.Disconnect();Status="Signed out.";}
+        void OnSignedOut(){connectedPlayer=null;SocialService.Disconnect();PaidShardCommerce.Disconnect();Status="Signed out.";}
         void OnExpired(){Status="Session expired. Sign in to synchronize.";PaidShardCommerce.Instance?.Refresh();}
         void Update()
         {
@@ -112,3 +113,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

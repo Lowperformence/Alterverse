@@ -12,13 +12,13 @@ using UnityEngine.InputSystem;
 
 namespace Alterverse.UI
 {
-    public sealed class MainMenuController : MonoBehaviour
+    public sealed partial class MainMenuController : MonoBehaviour
     {
-        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop, BattlePass }
+        private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop, BattlePass, Friends, Clans }
         private static MainMenuController instance;
         public static bool IsVisible => instance != null && instance.visible;
-        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "DAILY", "RANKING", "SETTINGS" };
-        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Quests, Page.Leaderboard, Page.Settings };
+        private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "FRIENDS", "CLANS", "DAILY", "RANKING", "SETTINGS" };
+        private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Friends, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
         private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER" };
         private static readonly string[] RoleDescriptions = {
@@ -173,7 +173,9 @@ namespace Alterverse.UI
             if (page == next || launching) return;
             FlushAudio(); CancelName(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
+            confirmRoute=confirmPlayer=confirmLabel=null;
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
+            if(next==Page.Friends||next==Page.Clans)SocialService.Instance?.Load("/social/state");
         }
         private void OnGUI()
         {
@@ -214,6 +216,8 @@ namespace Alterverse.UI
                     case Page.Leaderboard: DrawLeaderboard(); break;
                     case Page.Settings: DrawSettings(); break;
                     case Page.Coop: DrawCoop(); break;
+                    case Page.Friends: DrawFriends(); break;
+                    case Page.Clans: DrawClans(); break;
                     default: DrawPlay(); break;
                 }
             }
@@ -227,7 +231,7 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(rail+218,26,1,660),new Color(.53f,.64f,.75f,.22f));
             if(theme.Navigation(new Rect(rail,116,202,46),"HOME",0,selected:page==Page.Home))SetPage(Page.Home);
             for(int i=0;i<NavigationLabels.Length;i++)
-                if(theme.Navigation(new Rect(rail,178+i*51,202,46),NavigationLabels[i],NavigationIcon(NavigationPages[i]),
+                if(theme.Navigation(new Rect(rail,178+i*44,202,40),NavigationLabels[i],NavigationIcon(NavigationPages[i]),
                     primary:i==0,selected:page==NavigationPages[i]))SetPage(NavigationPages[i]);
             theme.FitLabel(new Rect(Left,30,ContentWidth*.62f,34),"COMMAND DECK  /  "+page.ToString().ToUpperInvariant(),theme.Heading);
             theme.FitLabel(new Rect(Right-300,32,300,30),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Body,true);
@@ -307,6 +311,8 @@ namespace Alterverse.UI
             DrawHomeCard(new Rect(Left+(cardWidth+12)*2,542,cardWidth,126),"03  /  DAILY OBJECTIVES","MISSIONS",Page.Quests);
             if(theme.Action(new Rect(Left,680,112,28),"RANKING"))SetPage(Page.Leaderboard);
             if(theme.Action(new Rect(Left+124,680,112,28),"SETTINGS"))SetPage(Page.Settings);
+            if(theme.Action(new Rect(Left+248,680,112,28),"FRIENDS"))SetPage(Page.Friends);
+            if(theme.Action(new Rect(Left+372,680,112,28),"CLANS"))SetPage(Page.Clans);
             theme.FitLabel(new Rect(Right-350,681,350,26),"SAME STARS. NEW POSSIBILITIES.",theme.Small,true);
         }
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
@@ -1237,13 +1243,14 @@ namespace Alterverse.UI
         private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawLeaderboard()
         {
+            if(DrawRankingTabs())return;
             Heading("Most Wins", "Worldwide lifetime win rankings powered by Google Play Games.");
 
             float leftWidth = ContentWidth * .58f;
-            theme.Panel(new Rect(Left, 220, leftWidth, 430));
-            theme.Label(new Rect(Left + 28, 244, leftWidth - 56, 24), "MOST WINS", theme.Small, true);
+            theme.Panel(new Rect(Left, 244, leftWidth, 406));
+            theme.Label(new Rect(Left + 28, 260, leftWidth - 56, 24), "MOST WINS", theme.Small, true);
             int wins = Alterverse.Profile.MatchRewardService.MatchesWon;
-            theme.Label(new Rect(Left + 28, 278, leftWidth - 56, 54), $"WINS {wins:N0}", theme.Title);
+            theme.Label(new Rect(Left + 28, 292, leftWidth - 56, 44), $"WINS {wins:N0}", theme.Title);
             theme.Label(new Rect(Left + 28, 344, leftWidth - 56, 40),
                 "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
 
@@ -1513,4 +1520,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 
