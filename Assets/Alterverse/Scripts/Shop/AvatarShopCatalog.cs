@@ -36,7 +36,17 @@ namespace Alterverse.Shop
             new AvatarShopItem(23, "PHOENIX", "REBIRTH", ShardPacks.CosmeticPrice("avatar_23")),
             new AvatarShopItem(24, "NEVER GIVE UP", "RESOLVE", ShardPacks.CosmeticPrice("avatar_24")),
             new AvatarShopItem(25, "TEAM FIRST", "SOLIDARITY", ShardPacks.CosmeticPrice("avatar_25")),
-            new AvatarShopItem(26, "GOOD GAME", "SPORTSMANSHIP", ShardPacks.CosmeticPrice("avatar_26"))
+            new AvatarShopItem(26, "GOOD GAME", "SPORTSMANSHIP", ShardPacks.CosmeticPrice("avatar_26")),
+            new AvatarShopItem(32, "NEROK ANCHOR", "NEROK ABYSS", ShardPacks.CosmeticPrice("avatar_32")),
+            new AvatarShopItem(33, "AUREN AEGIS", "AUREN KEST", ShardPacks.CosmeticPrice("avatar_33")),
+            new AvatarShopItem(34, "TRAVELER RIFT", "THE TRAVELER", ShardPacks.CosmeticPrice("avatar_34")),
+            new AvatarShopItem(35, "TILT PROOF", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_35")),
+            new AvatarShopItem(36, "SHARK SNACK", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_36")),
+            new AvatarShopItem(38, "BRAKK IMPACT", "BRAKK ORUN", ShardPacks.CosmeticPrice("avatar_38")),
+            new AvatarShopItem(39, "DIMENSION HEART", "COLLISION FRONT", ShardPacks.CosmeticPrice("avatar_39")),
+            new AvatarShopItem(40, "LOOT GOBLIN", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_40")),
+            new AvatarShopItem(41, "ONE MORE MATCH", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_41")),
+            new AvatarShopItem(42, "COMEBACK SPARK", "RESOLVE", ShardPacks.CosmeticPrice("avatar_42"))
         };
 
         public static bool TryGet(int avatarId, out AvatarShopItem item)
