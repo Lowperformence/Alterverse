@@ -84,25 +84,18 @@ float OrnamentLine(float d,float width)
  float aa=max(fwidth(d),.001);
  return 1-smoothstep(width,width+aa,d);
 }
-// Original floral borders inspired by the reference; no image or watermark is copied.
+// Fine industrial seams, paired service marks and recessed screws from the concept armor.
+// Rest-space projection keeps the detailing attached to animated armor plates.
 float Ornament(float2 p)
 {
  float2 q=frac(p)-.5;
- float border=OrnamentLine(abs(abs(q.y)-.44),.012);
- float beads=OrnamentLine(length(float2(frac(p.x*6)-.5,(abs(q.y)-.37)*6)),.10);
- float2 f=q-float2(0,-.10);
- float flower=OrnamentLine(abs(length(f)-.055),.010);
- for(int k=0;k<8;k++)
- {
-  float angle=k*.78539816;
-  float2 center=float2(cos(angle),sin(angle))*.13;
-  flower=max(flower,OrnamentLine(abs(length(f-center)-.075),.012));
- }
- float2 t=float2(q.x,(q.y-.24)*.85);
- float drop=OrnamentLine(abs(length(t)-(.07-.20*t.y)),.012);
- drop*=step(-.10,t.y)*step(t.y,.16);
- float dot=OrnamentLine(length(q-float2(0,.34)),.023);
- return saturate(max(border,max(beads,max(flower,max(drop,dot)))));
+ float horizontal=OrnamentLine(abs(abs(q.y)-.46),.0035);
+ float vertical=OrnamentLine(abs(abs(q.x)-.46),.0035);
+ float2 corner=abs(q)-.405;
+ float screw=OrnamentLine(abs(length(corner)-.012),.0025);
+ float service=OrnamentLine(abs(q.y+.36),.0025)*
+     (1-smoothstep(.08,.10,abs(q.x)));
+ return saturate(max(screw,max(service,max(horizontal,vertical))));
 }
             half4 Frag(Varyings input) : SV_Target
             {
@@ -131,7 +124,7 @@ float Ornament(float2 p)
                 blend/=max(blend.x+blend.y+blend.z,.0001);
                 float ink=dot(blend,float3(Ornament(input.rest.zy*5),
                     Ornament(input.rest.xz*5),Ornament(input.rest.xy*5)));
-                rgb=lerp(rgb,half3(.065,.028,.023)*diffuse,ink*.82);
+                rgb=lerp(rgb,half3(.065,.028,.023)*diffuse,ink*.32);
                 rgb = MixFog(rgb, input.fogFactor);
                 return half4(rgb, baseSample.a * _BaseColor.a);
             }
@@ -141,3 +134,4 @@ float Ornament(float2 p)
 
     Fallback Off
 }
+

@@ -1,9 +1,9 @@
 {
-  "vertices": 6248,
-  "triangles": 11778,
+  "vertices": 6318,
+  "triangles": 11894,
   "materials": 6,
   "bones": 18,
-  "parts": 149,
+  "parts": 155,
   "bounds": [
     [
       -0.40603680166823364,

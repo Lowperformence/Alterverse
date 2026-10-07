@@ -21,7 +21,7 @@ for side,sign in [('L',-1),('R',1)]:
  BONES['Foot'+side]=(BONES['Shin'+side][1],(sign*.1728,.0654,.15))
  BONES['WeaponGrip'+side]=BONES['Hand'+side]
 BN=list(BONES);V=[];F=[];MI=[];BI=[];PARTS=[];GI=[];GROUP=0
-COLORS=np.array([[.018,.019,.026],[.13,.105,.22],[.72,.76,.80],[.57,.065,.95],[.015,.72,.78],[1.,1.,1.]])
+COLORS=np.array([[.018,.019,.026],[.055,.050,.075],[.84,.86,.89],[.57,.065,.95],[.015,.72,.78],[1.,1.,1.]])
 
 def unit(v):
  v=np.array(v,dtype=float);return v/max(np.linalg.norm(v),1e-12)
@@ -150,14 +150,20 @@ for s in [-1,1]:
  plate('back reactor housing',[(s*.015,1.55),(s*.13,1.53),(s*.145,1.36),(s*.03,1.30)],-.09,-.042,1,'Chest')
  for j in range(3):
   tube('back cooling slit',[(s*.04,1.38+j*.045,-.135),(s*.11,1.38+j*.045,-.135)],.005,4,'Chest',6)
+# Shallow concept detailing: split chest seam, paired vents and silver service fasteners.
+for sign in [-1,1]:
+ tube('chest panel seam',[(sign*.016,1.535,.161),(sign*.023,1.435,.166),(sign*.021,1.384,.153)],.0028,0,'Chest',5)
+ for y in [1.514,1.385]:
+  ell('chest service fastener',(sign*.110,y,.163),(.0045,.0045,.0028),1,'Chest',8,5)
 limb('neck actuator',(0,1.52,0),(0,1.69,0),.039,0,'Head')
 ell('compact helmet core',(0,1.755,0),(.080,.100,.075),1,'Head',12,10)
 plate('black sensor mask',[(-.048,1.82),(0,1.85),(.048,1.82),(.045,1.72),(0,1.68),(-.045,1.72)],.063,.015,0,'Head')
 for s in [-1,1]:
  plate('white helmet brow',[(0,1.867),(s*.035,1.86),(s*.082,1.803),(s*.06,1.771),(s*.02,1.799)],.069,.025,2,'Head')
  plate('white cheek vane',[(s*.048,1.782),(s*.104,1.806),(s*.086,1.742),(s*.023,1.691),(s*.029,1.741)],.074,.018,2,'Head')
-for dx,dy in [(0,0),(-.018,.02),(.018,.02),(0,-.022)]:
- ell('violet optical sensor',(dx,1.762+dy,.097),(.011,.012,.006),3,'Head',8,6)
+# Two recessed violet eyes keep the concept helmet readable at gameplay distance.
+for sign in [-1,1]:
+ tube('violet optical slit',[(sign*.014,1.790,.102),(sign*.033,1.798,.101),(sign*.049,1.794,.095)],[.0035,.005,.0025],3,'Head',8)
 # Replace the plain antenna with a more deliberate, split mech crest.
 for s in [-1,1]:
  shard('split crown fin',(s*.018,1.838,.018),(s*.087,1.974,-.012),.026,.018,2,'Head')
@@ -171,7 +177,7 @@ for side,s in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
  a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
  limb('upper arm mechanical sleeve',a,e,.052,1,upper)
- ell('shoulder rotary joint',a,(.072,.074,.075),0,upper,16,10)
+ ell('shoulder rotary joint',a,(.079,.074,.079),0,upper,16,10)
  # Upper-arm plate between shoulder and elbow; no luminous shoulder cap.
  axis=unit(e-a);across=unit(np.array([-axis[1],axis[0],0]))
  top=a+(e-a)*.19;bottom=a+(e-a)*.83
@@ -210,8 +216,10 @@ for side,s in [('L',-1),('R',1)]:
  plate('white angular kneecap',[(k[0]-.062,.585),(k[0]+.062,.585),(k[0]+.067,.54),(k[0]+.038,.481),(k[0]-.047,.49)],.054,.038,2,shin)
  limb('lower leg actuators',k,f,.046,0,shin)
  x=(k[0]+f[0])*.5
- plate('long violet greave',[(x-.045,.481),(x+.044,.482),(x+.053,.37),(x+.035,.178),(x-.034,.17),(x-.049,.32)],.030,.034,1,shin)
- tube('shin central rail',[(x,.43,.078),(x,.23,.066)],.008,2,shin,8)
+ plate('long pearl greave',[(x-.045,.481),(x+.044,.482),(x+.053,.37),(x+.035,.178),(x-.034,.17),(x-.049,.32)],.030,.034,2,shin)
+ # A slim dark recess and a restrained violet conduit preserve the white shell.
+ tube('shin recessed rail',[(x,.43,.078),(x,.23,.066)],.009,0,shin,8)
+ tube('shin violet conduit',[(x,.40,.088),(x,.29,.080)],.0035,3,shin,6)
  plate('outer white shin blade',[(x+s*.045,.49),(x+s*.102,.56),(x+s*.087,.29),(x+s*.040,.21)],.02,.031,2,shin)
  ell('ankle bearing',f,(.041,.044,.044),0,foot,12,8)
  shell('angular mech foot',[(.048,.057,.11,.061),(.086,.06,.108,.055),(.145,.037,.042,-.012)],1,foot,8)
@@ -274,7 +282,7 @@ for i,v in enumerate(V):
   point[0]*=sx;point[2]*=1.22
  elif name.startswith(('UpperArm','Forearm','Thigh','Shin')):
   axis=unit(b-a);center=a+axis*np.dot(point-a,axis)
-  factor=1.25 if name.startswith(('UpperArm','Forearm')) else 1.23
+  factor=1.18 if name.startswith(('UpperArm','Forearm')) else 1.16
   point=center+(point-center)*factor
  elif name.startswith('Foot'):
   point[0]=a[0]+(point[0]-a[0])*1.20
@@ -332,3 +340,4 @@ def render(yaw,name):
   patch=img[lo[1]:hi[1]+1,lo[0]:hi[0]+1];patch[mask]=color[mask];depth[lo[1]:hi[1]+1,lo[0]:hi[0]+1][mask]=iz[mask]
  image=Image.fromarray((np.clip(img,0,1)**(1/1.7)*255).astype(np.uint8));d=ImageDraw.Draw(image);d.text((20,20),'IONE VASKA / PEARL MECH',fill=(195,224,214));d.text((20,h-28),'Geometry preview - not a Unity screenshot',fill=(130,155,157));image.save(ART/name)
 render(-14,'front.png');render(158,'back.png')
+

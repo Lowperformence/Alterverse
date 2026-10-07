@@ -139,9 +139,9 @@ namespace Alterverse.Visuals
                     Vector3 axis = (Point(data.anchors[b].tail) - origin).normalized;
                     Vector3 offset = sourcePoint - origin;
                     Vector3 axial = axis * Vector3.Dot(offset, axis);
-                    sourcePoint = origin + axial + (offset - axial) * 1.30f;
+                    sourcePoint = origin + axial + (offset - axial) * 1.12f;
                     Vector3 normalAxial = axis * Vector3.Dot(sourceNormal, axis);
-                    sourceNormal = (normalAxial + (sourceNormal - normalAxial) / 1.30f).normalized;
+                    sourceNormal = (normalAxial + (sourceNormal - normalAxial) / 1.12f).normalized;
                 }
                 if (data.groups[i] == 2)
                 {
@@ -156,7 +156,7 @@ namespace Alterverse.Visuals
             }
             Material[] materials = {
                 Surface("Sealed black core", new Color(.018f,.019f,.026f), .12f,.28f),
-                Surface("Violet mechanical frame", new Color(.13f,.105f,.22f), .66f,.40f),
+                Surface("Violet mechanical frame", new Color(.055f,.050f,.075f), .55f,.36f),
                 PearlArmor(),
                 Surface("Amethyst focus", new Color(.57f,.065f,.95f), .30f,.62f, true),
                 Surface("Cyan capacitors", new Color(.015f,.72f,.78f), .20f,.55f, true),
@@ -189,7 +189,7 @@ namespace Alterverse.Visuals
 
         private Material PearlArmor()
         {
-            Material material = Surface("Pearl ceramic armor", new Color(.72f,.76f,.80f), .35f,.52f);
+            Material material = Surface("Pearl ceramic armor", new Color(.84f,.86f,.89f), .28f,.56f);
             Shader shader = Resources.Load<Shader>("HeroArt/IoneArmorOrnaments");
             if (shader != null) material.shader = shader;
             else Debug.LogError("DF: Ione armor ornament shader is missing.", this);
@@ -198,7 +198,7 @@ namespace Alterverse.Visuals
 
         private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
         {
-            Material material = RuntimeShaderLibrary.Create(color, false, metal, smooth, energy ? color * .75f : Color.black);
+            Material material = RuntimeShaderLibrary.Create(color, false, metal, smooth, energy ? color * .65f : Color.black);
             material.name = "DF_Elyra_" + name;
             if (energy) material.EnableKeyword("_EMISSION");
             ownedMaterials.Add(material);
@@ -298,3 +298,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
