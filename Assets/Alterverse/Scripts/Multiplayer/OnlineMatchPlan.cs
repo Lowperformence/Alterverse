@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.Profile;
 
 namespace Alterverse.Multiplayer
 {
@@ -21,6 +22,7 @@ namespace Alterverse.Multiplayer
             public string DisplayName;
             public string TeamId;
             public HeroId Hero;
+            public BattleItemType BattleItem;
         }
 
         private static readonly HeroId[] BotPool =
@@ -188,7 +190,8 @@ namespace Alterverse.Multiplayer
                         DisplayName = string.IsNullOrWhiteSpace(member.DisplayName) ? "TRAVELER" : member.DisplayName,
                         Team = team,
                         Hero = hero,
-                        IsLocal = false,
+                        BattleItem = member.BattleItem,
+                        IsLocal = false;
                         IsBot = false,
                         Ready = true,
                         Connected = true,
@@ -247,7 +250,8 @@ namespace Alterverse.Multiplayer
                     DisplayName = source.DisplayName,
                     Team = source.Team,
                     Hero = source.Hero,
-                    IsLocal = isLocal,
+                    BattleItem = source.BattleItem,
+                    IsLocal = isLocal;
                     IsBot = source.IsBot,
                     Ready = source.Ready,
                     Connected = source.Connected,
@@ -317,7 +321,8 @@ namespace Alterverse.Multiplayer
             DisplayName = member.DisplayName,
             Team = team,
             Hero = member.Hero,
-            IsLocal = member.IsLocal,
+            BattleItem = member.BattleItem,
+            IsLocal = member.IsLocal;
             IsBot = false,
             Ready = member.Ready,
             Connected = true,
@@ -330,7 +335,8 @@ namespace Alterverse.Multiplayer
             DisplayName = id,
             Team = team,
             Hero = hero,
-            IsLocal = false,
+            BattleItem = BattleItemType.None,
+            IsLocal = false;
             IsBot = true,
             Ready = true,
             Connected = true,
