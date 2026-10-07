@@ -8,7 +8,7 @@ namespace Alterverse.Profile
     {
         public static event System.Action Changed;
         public const float VictoryDropChance=.30f;
-        public const int ShieldShardPrice=100;
+        public const int ShardPrice=100;
 
         private const string EquipKey="DF_BattleItemEquipped";
         private const string ReceiptKey="DF_LastBattleItemRewardReceipt";
@@ -101,16 +101,32 @@ namespace Alterverse.Profile
             return drop;
         }
 
-        public static bool TryBuyShield()
+        public static string ShopSku(BattleItemType item)=>item switch
         {
-            if(!PlayerWallet.CanAfford(ShieldShardPrice))return false;
+            BattleItemType.Heal=>"regen",
+            BattleItemType.Shield=>"shield",
+            BattleItemType.Speed=>"velocity",
+            BattleItemType.TeamHeal=>"team_heal",
+            _=>null
+        };
+
+        public static bool TryBuy(BattleItemType item)
+        {
+            string sku=ShopSku(item);
+            if(string.IsNullOrEmpty(sku)||!PlayerWallet.CanAfford(ShardPrice))return false;
             if(Alterverse.Shop.PaidShardCommerce.Instance!=null&&Alterverse.Shop.PaidShardCommerce.Instance.Ready)
-            {PlayerWallet.BeginServerPurchase("shield");return false;}
+            {
+                PlayerWallet.BeginServerPurchase(sku);
+                return false;
+            }
+            if(PlayerWallet.EarnedBalance<ShardPrice)return false;
             ProfileTransaction.Commit(
-                new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-ShieldShardPrice),
-                new ProfileTransaction.Write(Key(BattleItemType.Shield),ProfileTransaction.Add(Count(BattleItemType.Shield),1)));
+                new ProfileTransaction.Write("DF_Shards",PlayerWallet.EarnedBalance-ShardPrice),
+                new ProfileTransaction.Write(Key(item),ProfileTransaction.Add(Count(item),1)));
             return true;
         }
+
+        public static bool TryBuyShield()=>TryBuy(BattleItemType.Shield);
 
         internal static string StorageKey(BattleItemType item)=>Key(item);
         private static string Key(BattleItemType item)=>"DF_BattleItem_"+(int)item;
