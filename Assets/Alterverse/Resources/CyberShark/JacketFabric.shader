@@ -11,17 +11,8 @@ Shader "DimensionsFront/Nerok/WovenJacket"
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" "RenderPipeline"="UniversalPipeline" }
         Cull Back ZWrite On
-        Pass
-        {
-            Tags { "LightMode"="UniversalForward" }
-            HLSLPROGRAM
-            #pragma target 3.0
-            #pragma vertex Vert
-            #pragma fragment Frag
-            #pragma multi_compile_fog
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        HLSLINCLUDE
+            #include "Assets/Resources/DF_SurfaceLighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 float _ThreadDensity;
@@ -54,6 +45,19 @@ Shader "DimensionsFront/Nerok/WovenJacket"
                 float crossing=cos((thread.x-thread.y)*3.1415927)*min(visible.x,visible.y);
                 return .5+.17*(strands.x+strands.y)+.08*crossing;
             }
+        ENDHLSL
+        Pass
+        {
+            Tags { "LightMode"="UniversalForward" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #pragma multi_compile_fog
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             half4 Frag(Varyings i):SV_Target
             {
                 half3 n=normalize(i.normalWS);
@@ -62,18 +66,53 @@ Shader "DimensionsFront/Nerok/WovenJacket"
                 float worn=.5+.5*sin(i.rest.x*17+i.rest.y*7)*sin(i.rest.y*31+i.rest.z*13);
                 float fibers=.5+.5*sin(i.rest.y*92+sin(i.rest.x*47)*.65);
                 half3 color=_BaseColor.rgb*(.82+.24*worn+.13*weave+.025*fibers);
-                Light mainLight=GetMainLight(TransformWorldToShadowCoord(i.positionWS));
-                half3 illumination=SampleSH(n)+mainLight.color*saturate(dot(n,mainLight.direction))*mainLight.shadowAttenuation*mainLight.distanceAttenuation;
+                half3 rgb=DFSurfaceLighting(i.positionWS,n,color,0.0h,
+                    lerp(.16h,.24h,saturate(weave)),1.0h,half3(0,0,0));
                 // Broad fiber sheen only; canvas has no hard metallic highlight.
                 half3 view=normalize(GetWorldSpaceViewDir(i.positionWS));
                 half sheen=pow(1-saturate(abs(dot(n,view))),4)*.055;
-                return half4(MixFog(color*max(illumination,half3(.16,.16,.16))+color*sheen,i.fog),1);
+                return half4(MixFog(rgb+color*sheen,i.fog),1);
             }
             ENDHLSL
         }
-        UsePass "Universal Render Pipeline/Lit/ShadowCaster"
-        UsePass "Universal Render Pipeline/Lit/DepthOnly"
-        UsePass "Universal Render Pipeline/Lit/DepthNormals"
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode"="ShadowCaster" }
+            ColorMask 0
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFShadowVert
+            #pragma fragment DFShadowFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthOnly"
+            Tags { "LightMode"="DepthOnly" }
+            ColorMask R
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFDepthVert
+            #pragma fragment DFDepthFrag
+            #pragma multi_compile_instancing
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode"="DepthNormals" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFNormalVert
+            #pragma fragment DFNormalFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            ENDHLSL
+        }
     }
     Fallback Off
 }
+

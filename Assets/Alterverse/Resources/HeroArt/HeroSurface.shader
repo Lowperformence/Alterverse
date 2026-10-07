@@ -10,17 +10,8 @@ Shader "DimensionsFront/HeroSurface"
  SubShader
  {
   Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
-  Pass
-  {
-   Tags { "LightMode"="UniversalForward" }
-   ZWrite On Cull Back
-   HLSLPROGRAM
-   #pragma vertex vert
-   #pragma fragment frag
-   #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
-   #pragma multi_compile_fragment _ _SHADOWS_SOFT
-   #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-   #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+  HLSLINCLUDE
+   #include "Assets/Resources/DF_SurfaceLighting.hlsl"
    struct A { float4 position:POSITION; float3 normal:NORMAL; half4 color:COLOR; half2 finish:TEXCOORD1; };
    struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; float4 shadow:TEXCOORD3; };
    CBUFFER_START(UnityPerMaterial)
@@ -46,6 +37,20 @@ Shader "DimensionsFront/HeroSurface"
     half broad=pow(saturate(dot(n,SafeNormalize(direction+view))),lerp(5.0h,18.0h,smoothness))*ndl;
     return (albedo*diffuse*(1.0h-metal*.28h)+specColor*(spec*(.65h+smoothness*.7h)+broad*.12h*smoothness)+clearcoat*half3(.82h,.90h,1.0h))*lightColor;
    }
+  ENDHLSL
+  Pass
+  {
+   Tags { "LightMode"="UniversalForward" }
+   ZWrite On Cull Back
+   HLSLPROGRAM
+   #pragma target 3.0
+   #pragma vertex vert
+   #pragma fragment frag
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
+
    half4 frag(V i):SV_Target
    {
     half3 n=normalize(i.normal),view=SafeNormalize(GetWorldSpaceViewDir(i.world));
@@ -56,9 +61,7 @@ Shader "DimensionsFront/HeroSurface"
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
     // Filter narrow highlights on small distant hero surfaces to avoid sparkling edges.
     smoothness=saturate(smoothness-min(.20h,length(fwidth(n))*.18h));
-    Light key=GetMainLight(i.shadow);
-    half3 ambient=max(SampleSH(n),half3(.16h,.19h,.24h));
-    half3 worldLight=albedo*ambient*.65h+Lobe(n,view,key.direction,min(key.color,1.6h)*key.distanceAttenuation*lerp(.30h,1.0h,key.shadowAttenuation),albedo,metal,smoothness);
+    half3 worldLight=DFSurfaceLighting(i.world,n,albedo,metal,smoothness,1,half3(0,0,0));
     // Camera-space studio rig is isolated per portrait renderer with a property block.
     // It stays stable across planets and doesn't need extra per-pixel lights on Android.
     half3 nv=normalize(mul((float3x3)UNITY_MATRIX_V,n));
@@ -80,7 +83,43 @@ Shader "DimensionsFront/HeroSurface"
    }
    ENDHLSL
   }
-  UsePass "Universal Render Pipeline/Lit/ShadowCaster"
-  UsePass "Universal Render Pipeline/Lit/DepthOnly"
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode"="ShadowCaster" }
+            ColorMask 0
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFShadowVert
+            #pragma fragment DFShadowFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthOnly"
+            Tags { "LightMode"="DepthOnly" }
+            ColorMask R
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFDepthVert
+            #pragma fragment DFDepthFrag
+            #pragma multi_compile_instancing
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode"="DepthNormals" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFNormalVert
+            #pragma fragment DFNormalFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            ENDHLSL
+        }
  }
 }
+

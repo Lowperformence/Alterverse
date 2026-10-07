@@ -28,7 +28,7 @@ Shader "Alterverse/PlanetSurface"
         ZWrite On
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+        #include "Assets/Resources/DF_SurfaceLighting.hlsl"
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
             half4 _BaseColor, _EmissionColor;
@@ -89,6 +89,8 @@ Shader "Alterverse/PlanetSurface"
             #pragma multi_compile_fog
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             half4 Frag(Varyings i) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(i);
@@ -157,22 +159,9 @@ Shader "Alterverse/PlanetSurface"
                 // Surface-gradient perturbation avoids tangent seams and missing UVs on generated meshes.
                 n=normalize(n-(gradient-n*dot(n,gradient)));
                 albedo*=1+(data.a-.5h)*.34h; // scalar variation cannot rotate the planet hue.
-                float4 shadowCoord;
-                #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
-                    shadowCoord=ComputeScreenPos(TransformWorldToHClip(p));
-                #else
-                    shadowCoord=TransformWorldToShadowCoord(p);
-                #endif
-                Light key=GetMainLight(shadowCoord);
-                half ndl=saturate(dot(n,key.direction));
-                // Neutral response keeps the established albedo palette under the planet-tinted key.
-                half ambient=clamp(Luma(SampleSH(n)),.22h,.48h);
-                half direct=min(Luma(key.color),1.4h)*.53h*ndl*lerp(.35h,1.0h,key.shadowAttenuation);
                 half cavity=lerp(.93h,1.0h,saturate(data.a*2))*lerp(.94h,1.0h,geology.g);
                 half smooth=saturate(lerp(_Smoothness,1-data.b,.58h));
-                half3 h=SafeNormalize(key.direction+GetWorldSpaceNormalizeViewDir(p));
-                half spec=pow(saturate(dot(n,h)),lerp(12.0h,64.0h,smooth))*smooth*.10h*key.shadowAttenuation;
-                half3 rgb=albedo*((ambient+direct)*cavity+spec)+_EmissionColor.rgb;
+                half3 rgb=DFSurfaceLighting(p,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb);
                 return half4(MixFog(rgb,i.fog),1);
             }
             ENDHLSL
@@ -188,8 +177,6 @@ Shader "Alterverse/PlanetSurface"
             #pragma fragment DepthFrag
             #pragma multi_compile_instancing
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
-            float3 _LightDirection;
-            float3 _LightPosition;
             float4 ShadowVert(Attributes i) : SV_POSITION
             {
                 UNITY_SETUP_INSTANCE_ID(i);
@@ -224,7 +211,20 @@ Shader "Alterverse/PlanetSurface"
             half4 DepthFrag(Varyings i) : SV_Target {return i.positionCS.z;}
             ENDHLSL
         }
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode"="DepthNormals" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFNormalVert
+            #pragma fragment DFNormalFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
+            ENDHLSL
+        }
     }
     Fallback Off
 }
+
 

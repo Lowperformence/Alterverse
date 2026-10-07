@@ -10,15 +10,8 @@ Shader "DimensionsFront/Nerok/WornSilverAnchor"
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" "RenderPipeline"="UniversalPipeline" }
         Cull Back ZWrite On
-        Pass
-        {
-            Tags { "LightMode"="UniversalForward" }
-            HLSLPROGRAM
-            #pragma target 3.0
-            #pragma vertex Vert
-            #pragma fragment Frag
-            #pragma multi_compile_fog
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        HLSLINCLUDE
+            #include "Assets/Resources/DF_SurfaceLighting.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 half4 _SilverColor, _RustColor;
                 float _UseRestCoordinates;
@@ -62,6 +55,19 @@ Shader "DimensionsFront/Nerok/WornSilverAnchor"
                 o.fog = ComputeFogFactor(o.positionHCS.z);
                 return o;
             }
+        ENDHLSL
+        Pass
+        {
+            Tags { "LightMode"="UniversalForward" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex Vert
+            #pragma fragment Frag
+            #pragma multi_compile_fog
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile_fragment _ _ADDITIONAL_LIGHT_SHADOWS
             half4 Frag(Varyings i) : SV_Target
             {
                 float patches = Noise(i.rest*19.0 + float3(8,13,3));
@@ -70,15 +76,52 @@ Shader "DimensionsFront/Nerok/WornSilverAnchor"
                 half rust = smoothstep(.59,.77,patches*.82 + grain*.18);
                 half3 color = lerp(_SilverColor.rgb*(.90+.10*grain), _RustColor.rgb*(.65+.65*grain), rust);
                 half3 n = normalize(i.normalWS);
-                half3 lightDir = normalize(half3(-.38,.84,.39));
-                half3 viewDir = normalize(GetWorldSpaceViewDir(i.positionWS));
-                half diffuse = .40 + .60*saturate(dot(n,lightDir));
-                half highlight = pow(saturate(dot(n,normalize(lightDir+viewDir))),52.0)*(1-rust)*.7;
-                half rim = pow(1-saturate(abs(dot(n,viewDir))),3.0)*.12*(1-rust);
-                return half4(MixFog(color*diffuse+highlight+rim,i.fog),1);
+                // Oxidation is rough dielectric material; exposed silver stays reflective.
+                half smoothness=lerp(.56h,.16h,rust)*lerp(.84h,1.0h,grain);
+                half3 rgb=DFSurfaceLighting(i.positionWS,n,color,lerp(.90h,0.0h,rust),
+                    smoothness,1.0h,half3(0,0,0));
+                return half4(MixFog(rgb,i.fog),1);
             }
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode"="ShadowCaster" }
+            ColorMask 0
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFShadowVert
+            #pragma fragment DFShadowFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthOnly"
+            Tags { "LightMode"="DepthOnly" }
+            ColorMask R
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFDepthVert
+            #pragma fragment DFDepthFrag
+            #pragma multi_compile_instancing
+            ENDHLSL
+        }
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode"="DepthNormals" }
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DFNormalVert
+            #pragma fragment DFNormalFrag
+            #pragma multi_compile_instancing
+            #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
             ENDHLSL
         }
     }
     Fallback Off
 }
+
