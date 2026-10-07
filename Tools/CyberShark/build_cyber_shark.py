@@ -93,12 +93,12 @@ def build_unified_shark_head():
     if np.dot(np.cross(q-p,r-p),(p+q+r)/3-center)<0:face.reverse()
    add(row+' shark tooth',points,tooth_faces,5,'Head')
 build_unified_shark_head()
-# Enlarge only the cranial fin about its head attachment by 50 percent.
+# Keep the enlarged fin footprint, but halve its height about the head attachment.
 cranial_fin_start=len(V)
 shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
 cranial_fin_pivot=np.array((0,1.85,-.08))
 for i in range(cranial_fin_start,len(V)):
- V[i]=(cranial_fin_pivot+(np.array(V[i])-cranial_fin_pivot)*1.5).tolist()
+ V[i]=(cranial_fin_pivot+(np.array(V[i])-cranial_fin_pivot)*np.array((1.5,.75,1.5))).tolist()
 for s in [-1,1]:
  for j in range(3):tube('cranial vent',[(s*.127,1.79-j*.025,.09),(s*.147,1.78-j*.025,.12)],.004,0,'Head',6)
 # Closed arm envelopes with shared elbow rings and two-bone skinning.
