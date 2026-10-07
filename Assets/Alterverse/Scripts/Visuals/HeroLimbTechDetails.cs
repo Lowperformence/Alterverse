@@ -13,6 +13,8 @@ namespace Alterverse.Visuals
         Mesh mesh;
         readonly List<Material> materials=new();
         readonly List<Vector3> vertices=new();
+        readonly List<Vector3> normals=new();
+        readonly List<Vector2> uvs=new();
         readonly List<BoneWeight> weights=new();
         readonly List<int>[] triangles={new(),new(),new()};
 
@@ -64,10 +66,11 @@ namespace Alterverse.Visuals
             if(metal==null||circuits==null||screws==null)return;
             metal.name="DF_LimbMicroArmor";circuits.name="DF_LimbCircuitAccents";screws.name="DF_LimbFasteners";
             mesh=new Mesh{name="DF_"+hero+"_LimbMicroDetails"};
-            mesh.SetVertices(vertices);mesh.boneWeights=weights.ToArray();mesh.bindposes=bind;
+            mesh.SetVertices(vertices);mesh.SetNormals(normals);mesh.SetUVs(0,uvs);
+            mesh.boneWeights=weights.ToArray();mesh.bindposes=bind;
             mesh.subMeshCount=3;
             for(int i=0;i<3;i++)mesh.SetTriangles(triangles[i],i);
-            mesh.RecalculateNormals();mesh.RecalculateBounds();
+            mesh.RecalculateBounds();mesh.RecalculateTangents();
             var go=new GameObject("DF_LimbTechDetails");go.layer=anatomy.gameObject.layer;
             go.transform.SetParent(anatomy.transform,false);
             var renderer=go.AddComponent<SkinnedMeshRenderer>();
@@ -77,7 +80,7 @@ namespace Alterverse.Visuals
             renderer.quality=anatomy.quality;renderer.updateWhenOffscreen=anatomy.updateWhenOffscreen;
             renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=true;
             // CPU construction buffers are no longer needed once the mesh owns its data.
-            vertices.Clear();weights.Clear();foreach(var list in triangles)list.Clear();
+            vertices.Clear();normals.Clear();uvs.Clear();weights.Clear();foreach(var list in triangles)list.Clear();
 
             void Panel(string boneName,string nextName,float fraction,float span)
             {
@@ -130,17 +133,58 @@ namespace Alterverse.Visuals
 
                 void Box(Vector3 c,Vector3 size,int material)
                 {
-                    Vector3[] corners=new Vector3[8];int k=0;
-                    for(int z=-1;z<=1;z+=2)for(int y=-1;y<=1;y+=2)for(int x=-1;x<=1;x+=2)
-                        corners[k++]=c+across*(x*size.x*.5f)+axis*(y*size.y*.5f)+front*(z*size.z*.5f);
-                    // Duplicate face vertices keep flat, crisp normals on these tiny details.
-                    int[] faces={0,2,3,1,4,5,7,6,0,1,5,4,2,6,7,3,0,4,6,2,1,3,7,5};
-                    for(int f=0;f<faces.Length;f+=4)
+                    // Rounded corners and a curved front lip catch light without changing panel size.
+                    int cornerSteps=material==0?3:2,contourCount=cornerSteps*4;
+                    float radius=Mathf.Min(size.x,size.y)*.22f;
+                    float bevel=Mathf.Min(size.z*.36f,radius*.45f);
+                    int start=vertices.Count;
+                    Matrix4x4 normalMatrix=toMesh.inverse.transpose;
+                    // Back edge, straight side, half-rounded lip, front face.
+                    for(int ring=0;ring<4;ring++)
                     {
-                        int start=vertices.Count;
-                        for(int j=0;j<4;j++)
-                        {vertices.Add(toMesh.MultiplyPoint3x4(corners[faces[f+j]]));weights.Add(new BoneWeight{boneIndex0=bone,weight0=1});}
-                        triangles[material].AddRange(new[]{start,start+1,start+2,start,start+2,start+3});
+                        float angle=ring<2?0f:(ring==2?Mathf.PI*.25f:Mathf.PI*.5f);
+                        float inset=bevel*(1f-Mathf.Cos(angle));
+                        float z=ring==0?-size.z*.5f:size.z*.5f-bevel+bevel*Mathf.Sin(angle);
+                        for(int corner=0;corner<4;corner++)for(int step=0;step<cornerSteps;step++)
+                        {
+                            float a=(corner*90f+step*90f/(cornerSteps-1))*Mathf.Deg2Rad;
+                            Vector2 outward=new Vector2(Mathf.Cos(a),Mathf.Sin(a));
+                            float sx=corner==0||corner==3?1f:-1f,sy=corner<2?1f:-1f;
+                            Vector2 xy=new Vector2(sx*(size.x*.5f-radius),sy*(size.y*.5f-radius))+outward*(radius-inset);
+                            Vector3 p=c+across*xy.x+axis*xy.y+front*z;
+                            Vector3 n=(across*outward.x+axis*outward.y)*Mathf.Cos(angle)+front*Mathf.Sin(angle);
+                            vertices.Add(toMesh.MultiplyPoint3x4(p));
+                            normals.Add(normalMatrix.MultiplyVector(n).normalized);
+                            uvs.Add(new Vector2(xy.x/size.x+.5f,xy.y/size.y+.5f));
+                            weights.Add(new BoneWeight{boneIndex0=bone,weight0=1});
+                        }
+                    }
+                    for(int ring=0;ring<3;ring++)for(int j=0;j<contourCount;j++)
+                    {
+                        int a=start+ring*contourCount+j,b=start+ring*contourCount+(j+1)%contourCount;
+                        int d=a+contourCount,e=b+contourCount;
+                        triangles[material].AddRange(new[]{a,b,d,b,e,d});
+                    }
+                    // Flat caps use separate vertices so normals do not shade across the face.
+                    Cap(3,1);Cap(0,-1);
+                    void Cap(int ring,int direction)
+                    {
+                        int cap=vertices.Count;
+                        Vector3 center=c+front*(direction*size.z*.5f);
+                        Vector3 normal=normalMatrix.MultiplyVector(front*direction).normalized;
+                        vertices.Add(toMesh.MultiplyPoint3x4(center));normals.Add(normal);uvs.Add(new Vector2(.5f,.5f));
+                        weights.Add(new BoneWeight{boneIndex0=bone,weight0=1});
+                        for(int j=0;j<contourCount;j++)
+                        {
+                            int edge=start+ring*contourCount+j;
+                            vertices.Add(vertices[edge]);normals.Add(normal);uvs.Add(uvs[edge]);
+                            weights.Add(new BoneWeight{boneIndex0=bone,weight0=1});
+                        }
+                        for(int j=0;j<contourCount;j++)
+                        {
+                            int a=cap+1+j,b=cap+1+(j+1)%contourCount;
+                            triangles[material].AddRange(direction>0?new[]{cap,a,b}:new[]{cap,b,a});
+                        }
                     }
                 }
             }

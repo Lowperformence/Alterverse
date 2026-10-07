@@ -53,7 +53,13 @@ namespace Alterverse.Visuals
             if(litShader==null||unlitShader==null)return;
 
             Renderer[] renderers=FindObjectsByType<Renderer>(FindObjectsInactive.Exclude,FindObjectsSortMode.None);
-            foreach(Renderer renderer in renderers)RepairRenderer(renderer);
+            GameObject world=GameObject.Find("DF_MatchWorld");
+            Transform worldRoot=world!=null?world.transform:null;
+            foreach(Renderer renderer in renderers)
+            {
+                RepairRenderer(renderer);
+                SurfaceEdgeQuality.Apply(renderer,worldRoot);
+            }
         }
 
         private static void RepairRenderer(Renderer renderer)
@@ -147,3 +153,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
