@@ -51,13 +51,12 @@ namespace Alterverse.UI
 
         private void OnGUI()
         {
-            if (!MainMenuController.IsVisible) return;
+            // Play Online opens this surface; a closed party must not draw over the menu.
+            if (!MainMenuController.IsVisible || !open) return;
 
             OnlinePartyService online = OnlinePartyService.Instance;
             if (online == null) return;
             EdgegapOnlineFlow edgegap = EdgegapOnlineFlow.Instance;
-            bool edgegapSearching = edgegap != null && edgegap.IsSearching;
-
             bool coopActive = CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby;
             if (coopActive && !online.InParty)
             {
@@ -82,17 +81,6 @@ namespace Alterverse.UI
                 GUI.color = Color.white;
                 GUI.enabled = true;
                 theme ??= new FrontEndTheme();
-
-                if (!open)
-                {
-                    string label = online.InParty
-                        ? (edgegapSearching ? "ONLINE  •  SUCHE AKTIV" : "ONLINE  •  PARTY")
-                        : "ONLINE 5v5";
-                    if (theme.Action(new Rect(menuWidth - 274f, 648f, 238f, 48f), label, true,
-                        selected: online.InParty || edgegapSearching))
-                        open = true;
-                    return;
-                }
 
                 DrawOverlay(menuWidth, online, edgegap);
             }
