@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
 using Alterverse.Match;
+using Alterverse.Profile;
 
 namespace Alterverse.Multiplayer
 {
@@ -103,7 +104,7 @@ namespace Alterverse.Multiplayer
                 var slot = new MatchPlayerSlot {
                     PlayerId = human || old.IsBot ? old.PlayerId : "round-bot-" + i,
                     DisplayName = human || old.IsBot ? old.DisplayName : old.Hero.ToString(),
-                    Team = old.Team, Hero = old.Hero, IsLocal = human && old.IsLocal,
+                    Team = old.Team, Hero = old.Hero, BattleItem = BattleItemType.None, IsLocal = human && old.IsLocal,
                     IsBot = !human, Ready = true, Connected = true, IsHost = human && old.IsHost
                 };
                 if (!next.Session.TryAssign(i, slot)) throw new InvalidOperationException("Invalid next-round roster.");
@@ -119,7 +120,8 @@ namespace Alterverse.Multiplayer
             DisplayName=member.DisplayName,
             Team=0,
             Hero=member.Hero,
-            IsLocal=member.IsLocal,
+            BattleItem=member.BattleItem,
+            IsLocal=member.IsLocal;
             IsBot=false,
             Ready=member.Ready,
             Connected=true,
@@ -132,7 +134,8 @@ namespace Alterverse.Multiplayer
             DisplayName=id,
             Team=team,
             Hero=hero,
-            IsLocal=false,
+            BattleItem=BattleItemType.None,
+            IsLocal=false;
             IsBot=true,
             Ready=true,
             Connected=true,
