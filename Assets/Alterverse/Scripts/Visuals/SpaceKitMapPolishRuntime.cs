@@ -399,6 +399,8 @@ namespace Alterverse.Visuals
             mesh.vertices = vertices;
             mesh.triangles = triangles;
             mesh.RecalculateNormals();
+            if(meshName=="USK_Plant_2"||meshName=="USK_Tree_Spiral_1")
+                SceneryMeshQuality.SmoothPlantNormals(mesh);
             mesh.RecalculateBounds();
             return mesh;
         }

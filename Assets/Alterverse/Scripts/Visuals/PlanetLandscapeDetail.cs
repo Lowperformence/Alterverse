@@ -38,13 +38,15 @@ namespace Alterverse.Visuals
             scenery = new GameObject("DF_PlanetLandscape_" + variant).transform;
             scenery.SetParent(transform, false);
             rock = Own(LunarFragmentGeometry.Create(83));
-            column = Own(Revolved("ErodedColumn", 7, new[] {
-                new Vector2(.48f,0), new Vector2(.51f,.12f), new Vector2(.37f,.68f), new Vector2(.30f,1) }));
+            Vector2[] columnProfile={new(.48f,0),new(.51f,.12f),new(.37f,.68f),new(.30f,1)};
+            column = Own(variant==ArenaVariant.Pyraxis||variant==ArenaVariant.Noxara
+                ?Revolved("FracturedColumn",7,columnProfile)
+                :SceneryMeshQuality.SoftProfile("ErodedColumn",16,columnProfile));
             crystal = Own(Revolved("CutPrism", 6, new[] {
                 new Vector2(.18f,0), new Vector2(.43f,.20f), new Vector2(.35f,.78f), new Vector2(.025f,1) }));
-            leaf = Own(Leaf());
-            beam = Own(Revolved("SquareBeam", 4, new[] {new Vector2(.5f,0),new Vector2(.5f,1)}));
-            canopy = Own(Revolved("FacetedCanopy", 7, new[] {
+            leaf = Own(SceneryMeshQuality.CurvedFrond());
+            beam = Own(SceneryMeshQuality.RoundedBeam());
+            canopy = Own(SceneryMeshQuality.SoftProfile("RoundedCanopy", 16, new[] {
                 new Vector2(.16f,0), new Vector2(.38f,.10f), new Vector2(.50f,.36f),
                 new Vector2(.37f,.72f), new Vector2(.16f,.94f), new Vector2(.015f,1f) }));
             palette = BuildPalette();
@@ -348,23 +350,6 @@ namespace Alterverse.Visuals
             return Finish(name,vertices,triangles);
         }
 
-        static Mesh Leaf()
-        {
-            var v=new List<Vector3>();var t=new List<int>();
-            for(int i=0;i<5;i++)
-            {
-                float a=i/5f,b=(i+1)/5f;
-                Vector3 ca=new(0,Mathf.Sin(a*Mathf.PI*.8f)*.55f,a),cb=new(0,Mathf.Sin(b*Mathf.PI*.8f)*.55f,b);
-                float wa=Mathf.Sin(a*Mathf.PI)*.24f,wb=Mathf.Sin(b*Mathf.PI)*.24f;
-                foreach(int side in new[]{-1,1})
-                {
-                    Vector3 ea=ca+new Vector3(side*wa,-.04f,0),eb=cb+new Vector3(side*wb,-.04f,0);
-                    Face(v,t,ca,cb,eb);Face(v,t,ca,eb,ea);
-                    Face(v,t,eb,cb,ca);Face(v,t,ea,eb,ca);
-                }
-            }
-            return Finish("CurvedDoubleSidedFrond",v,t);
-        }
         static void Face(List<Vector3> v,List<int> t,Vector3 a,Vector3 b,Vector3 c)
         {int n=v.Count;v.Add(a);v.Add(b);v.Add(c);t.Add(n);t.Add(n+1);t.Add(n+2);}
         static Mesh Finish(string name,List<Vector3> vertices,List<int> triangles)
