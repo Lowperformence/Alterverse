@@ -10,7 +10,7 @@ namespace Alterverse.UI
             BattleItemType.Heal=>new Color(.12f,1f,.34f),
             BattleItemType.Shield=>new Color(.18f,.82f,1f),
             BattleItemType.Speed=>new Color(1f,.72f,.18f),
-            BattleItemType.Meteor=>new Color(1f,.36f,.12f),
+            BattleItemType.TeamHeal=>new Color(.28f,1f,.72f),
             _=>FrontEndTheme.Muted
         };
 
@@ -41,8 +41,8 @@ namespace Alterverse.UI
                 case BattleItemType.Speed:
                     DrawSpeed(c,s,accent);
                     break;
-                case BattleItemType.Meteor:
-                    DrawMeteor(c,s,accent);
+                case BattleItemType.TeamHeal:
+                    DrawTeamHeal(c,s,accent);
                     break;
             }
 
@@ -75,13 +75,13 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(c.x+s*.10f,c.y+s*.09f,s*.16f,s*.07f),accent);
         }
 
-        private static void DrawMeteor(Vector2 c,float s,Color accent)
+        private static void DrawTeamHeal(Vector2 c,float s,Color accent)
         {
-            FrontEndTheme.Fill(new Rect(c.x-s*.23f,c.y-s*.23f,s*.07f,s*.24f),new Color(1f,.75f,.3f));
-            FrontEndTheme.Fill(new Rect(c.x-s*.14f,c.y-s*.18f,s*.07f,s*.20f),new Color(1f,.54f,.18f));
-            Rect rock=new(c.x-s*.02f,c.y-s*.02f,s*.25f,s*.25f);
-            FrontEndTheme.Fill(rock,accent);
-            FrontEndTheme.Fill(new Rect(rock.x+s*.05f,rock.y+s*.05f,s*.05f,s*.05f),new Color(.18f,.10f,.07f));
+            FrontEndTheme.Fill(new Rect(c.x-s*.035f,c.y-s*.19f,s*.07f,s*.38f),Color.white);
+            FrontEndTheme.Fill(new Rect(c.x-s*.19f,c.y-s*.035f,s*.38f,s*.07f),Color.white);
+            FrontEndTheme.Fill(new Rect(c.x-s*.29f,c.y+s*.17f,s*.12f,s*.12f),accent);
+            FrontEndTheme.Fill(new Rect(c.x+s*.17f,c.y+s*.17f,s*.12f,s*.12f),accent);
+            FrontEndTheme.Fill(new Rect(c.x-s*.06f,c.y+s*.23f,s*.12f,s*.12f),accent);
         }
     }
 }
