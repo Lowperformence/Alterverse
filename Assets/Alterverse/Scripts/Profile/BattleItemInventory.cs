@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Alterverse.Profile
 {
-    public enum BattleItemType { None=0, Heal=1, Shield=2, Speed=3, Meteor=4 }
+    public enum BattleItemType { None=0, Heal=1, Shield=2, Speed=3, TeamHeal=4 }
 
     public static class BattleItemInventory
     {
@@ -16,7 +16,7 @@ namespace Alterverse.Profile
 
         public static readonly BattleItemType[] All =
         {
-            BattleItemType.Heal,BattleItemType.Shield,BattleItemType.Speed,BattleItemType.Meteor
+            BattleItemType.Heal,BattleItemType.Shield,BattleItemType.Speed,BattleItemType.TeamHeal
         };
 
         public static BattleItemType Equipped
@@ -39,7 +39,7 @@ namespace Alterverse.Profile
             BattleItemType.Heal=>"REGEN CORE",
             BattleItemType.Shield=>"AEGIS CORE",
             BattleItemType.Speed=>"VELOCITY CORE",
-            BattleItemType.Meteor=>"METEOR CORE",
+            BattleItemType.TeamHeal=>"TEAM HEAL CORE",
             _=>"NONE"
         };
 
@@ -48,7 +48,7 @@ namespace Alterverse.Profile
             BattleItemType.Heal=>"Team pickup: restores 20% max HP.",
             BattleItemType.Shield=>"Team pickup: grants a 20% max-HP shield.",
             BattleItemType.Speed=>"Team pickup: +10% move speed for 5 seconds.",
-            BattleItemType.Meteor=>"Team pickup: arms a 40-damage meteor strike on a nearby enemy.",
+            BattleItemType.TeamHeal=>"Team pickup: restores 20 HP to every living allied hero.",
             _=>"No battle item equipped."
         };
 
