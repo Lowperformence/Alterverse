@@ -27,6 +27,7 @@ namespace Alterverse.Multiplayer
             public string PlayerId;
             public string DisplayName;
             public HeroId Hero;
+            public BattleItemType BattleItem;
             public bool Ready;
             public bool IsHost;
             public bool IsLocal;
@@ -40,6 +41,7 @@ namespace Alterverse.Multiplayer
         private const string SessionName = "DIMENSIONS FRONT ONLINE 5V5";
         private const string PlayerNameKey = "displayName";
         private const string PlayerHeroKey = "hero";
+        private const string PlayerBattleItemKey = "battleItem";
         private const string PlayerReadyKey = "ready";
         private const string SearchKey = "playerSearch";
         private const string ModeKey = "mode";
@@ -405,8 +407,11 @@ namespace Alterverse.Multiplayer
             {
                 busy = true;
                 lastError = "";
-                session.CurrentPlayer.SetProperty(PlayerReadyKey,
-                    new PlayerProperty(ready ? "1" : "0", VisibilityPropertyOptions.Member));
+                session.CurrentPlayer.SetProperties(new Dictionary<string, PlayerProperty>
+                {
+                    { PlayerBattleItemKey, new PlayerProperty(((int)BattleItemInventory.Equipped).ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member) },
+                    { PlayerReadyKey, new PlayerProperty(ready ? "1" : "0", VisibilityPropertyOptions.Member) }
+                });
                 await session.SaveCurrentPlayerDataAsync();
                 SetStatus(ready ? "READY • WAITING FOR MATCH" : "NOT READY");
                 return true;
@@ -439,6 +444,7 @@ namespace Alterverse.Multiplayer
                         PlayerId = player.Id,
                         DisplayName = ReadPlayer(player, PlayerNameKey, "TRAVELER"),
                         Hero = (HeroId)ReadIntPlayer(player, PlayerHeroKey, (int)HeroId.Veyr),
+                        BattleItem = (BattleItemType)Mathf.Clamp(ReadIntPlayer(player, PlayerBattleItemKey, 0), 0, 4),
                         Ready = ReadPlayer(player, PlayerReadyKey, "0") == "1",
                         IsHost = player.Id == session.Host,
                         IsLocal = player.Id == localId,
@@ -524,6 +530,7 @@ namespace Alterverse.Multiplayer
             {
                 { PlayerNameKey, new PlayerProperty(SanitizeDisplayName(PlayerProfile.PlayerName), VisibilityPropertyOptions.Member) },
                 { PlayerHeroKey, new PlayerProperty(((int)PlayerHeroSelection.Selected).ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member) },
+                { PlayerBattleItemKey, new PlayerProperty(((int)BattleItemInventory.Equipped).ToString(CultureInfo.InvariantCulture), VisibilityPropertyOptions.Member) },
                 { PlayerReadyKey, new PlayerProperty(ready ? "1" : "0", VisibilityPropertyOptions.Member) }
             };
         }
