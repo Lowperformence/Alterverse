@@ -91,8 +91,11 @@ namespace Alterverse.Visuals
                 default:
                     stone=new(.12f,.14f,.16f);edge=new(.31f,.33f,.35f);accent=new(.43f,.46f,.47f);organic=new(.075f,.085f,.10f);glow=0;break;
             }
-            return new[]{Mat("Bedrock",stone,metal,polish),Mat("ExposedEdges",edge,metal,polish),
+            Material[] result={Mat("Bedrock",stone,metal,polish),Mat("ExposedEdges",edge,metal,polish),
                 Mat("MineralAccents",accent,metal,polish,accent*glow),Mat("Secondary",organic,metal,.22f)};
+            for(int i=0;i<result.Length;i++)
+                PlanetSceneryMaterials.Apply(result[i],variant,PlanetSceneryMaterials.LandscapeFinish(variant,i));
+            return result;
         }
 
         void BuildPocket(int seed)
@@ -199,14 +202,14 @@ namespace Alterverse.Visuals
                 float z=tree==1?.22f:-.22f;
                 float height=tree==1?2.45f:1.95f+(tree%2)*.16f;
                 float yaw=seed*29+tree*47;
-                Add(column,tree==1?1:0,new Vector3(x,.03f,z),new Vector3(.22f,height,.22f),Quaternion.Euler(0,yaw,tree==0?-2:2));
+                Add(column,1,new Vector3(x,.03f,z),new Vector3(.22f,height,.22f),Quaternion.Euler(0,yaw,tree==0?-2:2));
 
                 for(int branch=0;branch<3;branch++)
                 {
                     float angle=(yaw+branch*120f)*Mathf.Deg2Rad;
                     Vector3 direction=new(Mathf.Sin(angle)*.55f,.84f,Mathf.Cos(angle)*.55f);
                     Vector3 pivot=new Vector3(x,.70f+height*.22f,z);
-                    Add(column,0,pivot,new Vector3(.085f,.72f,.085f),Quaternion.FromToRotation(Vector3.up,direction));
+                    Add(column,1,pivot,new Vector3(.085f,.72f,.085f),Quaternion.FromToRotation(Vector3.up,direction));
                 }
 
                 int foliage=tree==1?2:3;
@@ -308,8 +311,9 @@ namespace Alterverse.Visuals
                 var go=new GameObject(palette[i].name);go.transform.SetParent(pocket,false);
                 go.AddComponent<MeshFilter>().sharedMesh=mesh;
                 var renderer=go.AddComponent<MeshRenderer>();renderer.sharedMaterial=palette[i];
-                renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
-                renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
+                // The existing regional batches now receive the arena key and ground contact shading.
+                renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=true;
+                renderer.lightProbeUsage=LightProbeUsage.BlendProbes;renderer.reflectionProbeUsage=ReflectionProbeUsage.BlendProbes;
                 renderers.Add(renderer);batches[i].Clear();
             }
             // Regional batches preserve frustum culling. No hundreds of prop GameObjects.
@@ -373,4 +377,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
