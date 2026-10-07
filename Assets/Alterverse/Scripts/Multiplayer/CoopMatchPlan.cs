@@ -121,7 +121,7 @@ namespace Alterverse.Multiplayer
             Team=0,
             Hero=member.Hero,
             BattleItem=member.BattleItem,
-            IsLocal=member.IsLocal;
+            IsLocal=member.IsLocal,
             IsBot=false,
             Ready=member.Ready,
             Connected=true,
@@ -135,7 +135,7 @@ namespace Alterverse.Multiplayer
             Team=team,
             Hero=hero,
             BattleItem=BattleItemType.None,
-            IsLocal=false;
+            IsLocal=false,
             IsBot=true,
             Ready=true,
             Connected=true,
