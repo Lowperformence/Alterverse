@@ -335,7 +335,7 @@ namespace Alterverse.UI
             Heading("Deployment","Choose your hero and arena before entering the Front.");
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
-            theme.Label(new Rect(Left+28,228,w-56,22),"AVAILABLE NOW",theme.Small,true);
+            theme.StatusBadge(new Rect(Left+28,224,154,28),"READY TO PLAY",FrontEndTheme.Positive);
             theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 5v5",theme.Title);
             theme.Label(new Rect(Left+28,300,w-56,48),"Five versus five.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
             if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP  •  PRIVATE LOBBY",true))
@@ -418,7 +418,7 @@ namespace Alterverse.UI
                 (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
             if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
                 enabled:matchButtonsEnabled)) _ = BeginOnlineMatchmakingAsync();
-            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Play Offline",true,
+            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Play Offline",
                 enabled:matchButtonsEnabled)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
@@ -524,7 +524,7 @@ namespace Alterverse.UI
                 theme.Label(new Rect(x+10,344,playerW-20,20),role,theme.Small,true);
                 theme.FitLabel(new Rect(x+10,368,playerW-20,26),member.DisplayName,theme.Heading);
                 theme.FitLabel(new Rect(x+10,400,playerW-20,22),HeroIdentity.NameFor(member.Hero).ToUpperInvariant(),theme.Small,true);
-                theme.Center(new Rect(x+10,430,playerW-20,20),member.Ready?"READY":"NOT READY");
+                theme.StatusBadge(new Rect(x+10,424,playerW-20,26),member.Ready?"READY":"NOT READY",member.Ready?FrontEndTheme.Positive:FrontEndTheme.Warning);
 
                 if(member.IsLocal)
                 {
@@ -1535,5 +1535,6 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 

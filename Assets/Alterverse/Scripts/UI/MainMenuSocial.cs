@@ -91,7 +91,7 @@ namespace Alterverse.UI
             string[] tabs={"MOST WINS","PLAYER LEVELS","CLAN LEVELS"};
             for(int i=0;i<tabs.Length;i++)
             {
-                if(theme.Action(new Rect(Left+i*210,202,198,36),tabs[i],rankingTab==i))
+                if(theme.Action(new Rect(Left+i*210,202,198,36),tabs[i],selected:rankingTab==i))
                 {
                     rankingTab=i;
                     if(i>0)SocialService.Instance?.Load(i==1?"/social/levels":"/social/clan-levels");
@@ -140,69 +140,77 @@ namespace Alterverse.UI
 
         void DrawFriends()
         {
-            Heading("Friends","Find players by name or player ID. Friendships require an accepted request.");
+            Heading("Friends","Your crew, requests and new connections — all in one place.");
             string[] tabs={"FRIENDS","REQUESTS","SENT","BLOCKED","FIND PLAYERS"};
+            float tabWidth=(ContentWidth-32f)/tabs.Length;
             for(int i=0;i<tabs.Length;i++)
-                if(theme.Action(new Rect(Left+i*155,212,145,40),tabs[i],friendTab==i))
+                if(theme.Action(new Rect(Left+i*(tabWidth+8),212,tabWidth,40),tabs[i],selected:friendTab==i))
                 {friendTab=i;friendOffset=0;confirmRoute=null;}
             if(!SocialReady()){SocialFooter();return;}
             var service=SocialService.Instance;
             var state=service.State;
             if(DrawSocialConfirmation())return;
             if(state==null){SocialFooter();return;}
-            theme.FitLabel(new Rect(Left,262,ContentWidth,30),"YOUR PLAYER ID  "+state.me?.playerId,theme.Body);
+            theme.Panel(new Rect(Left,262,ContentWidth,36));
+            theme.FitLabel(new Rect(Left+14,262,ContentWidth-168,36),"PLAYER ID  "+state.me?.playerId,theme.Small,true);
+            if(theme.Action(new Rect(Right-138,264,132,32),"COPY ID",enabled:!string.IsNullOrEmpty(state.me?.playerId)))
+                GUIUtility.systemCopyBuffer=state.me.playerId;
             SocialService.Player[] rows;
-            friendOffset=Mathf.Min(friendOffset,Mathf.Max(0,((friendTab==0?state.friends:friendTab==1?state.incoming:friendTab==2?state.outgoing:state.blocked)?.Length??0)-1)/8*8);
+            const int friendPageSize=6;
+            friendOffset=Mathf.Min(friendOffset,Mathf.Max(0,((friendTab==0?state.friends:friendTab==1?state.incoming:friendTab==2?state.outgoing:state.blocked)?.Length??0)-1)/friendPageSize*friendPageSize);
             int start=friendOffset;
             if(friendTab==4)
             {
-                playerQuery=GUI.TextField(new Rect(Left,298,ContentWidth-190,40),playerQuery,40,theme.Field);
-                if(theme.Action(new Rect(Right-178,298,178,40),"SEARCH",enabled:!service.Busy&&playerQuery.Trim().Length>=2))
+                playerQuery=GUI.TextField(new Rect(Left,306,ContentWidth-190,40),playerQuery,40,theme.Field);
+                if(theme.Action(new Rect(Right-178,306,178,40),"SEARCH",enabled:!service.Busy&&playerQuery.Trim().Length>=2))
                 {service.Load("/social/players",new SocialService.Request{query=playerQuery});}
                 rows=service.Search?.players??NoPlayers;start=0;
             }
             else rows=(friendTab==0?state.friends:friendTab==1?state.incoming:friendTab==2?state.outgoing:state.blocked)??NoPlayers;
-            int count=Mathf.Min(8,Mathf.Max(0,rows.Length-start));
+            int count=Mathf.Min(friendPageSize,Mathf.Max(0,rows.Length-start));
             for(int i=0;i<count;i++)
             {
-                var p=rows[start+i];float y=(friendTab==4?346:308)+i*34;
-                theme.Panel(new Rect(Left,y,ContentWidth,32));
-                theme.FitLabel(new Rect(Left+12,y,ContentWidth-390,32),$"{p.name}  /  LV {p.level}  /  {p.playerId}",theme.Small);
+                var p=rows[start+i];float y=(friendTab==4?354:308)+i*44;
+                theme.Panel(new Rect(Left,y,ContentWidth,42));
+                theme.IdentityTile(new Rect(Left+8,y+5,32,32),p.name,p.playerId==state.me?.playerId);
+                theme.FitLabel(new Rect(Left+52,y+3,ContentWidth-330,21),p.name,theme.Body);
+                theme.FitLabel(new Rect(Left+52,y+23,ContentWidth-330,17),$"LEVEL {p.level}  •  {p.playerId}",theme.Small,true);
                 if(friendTab==0)
                 {
-                    SocialButton(new Rect(Right-252,y,120,30),"REMOVE","/social/friend/remove",p.playerId);
-                    SocialButton(new Rect(Right-124,y,120,30),"BLOCK","/social/block",p.playerId);
+                    SocialButton(new Rect(Right-252,y+4,120,34),"REMOVE","/social/friend/remove",p.playerId);
+                    SocialButton(new Rect(Right-124,y+4,120,34),"BLOCK","/social/block",p.playerId);
                 }
                 else if(friendTab==1)
                 {
-                    SocialButton(new Rect(Right-252,y,120,30),"ACCEPT","/social/friend/accept",p.playerId);
-                    SocialButton(new Rect(Right-124,y,120,30),"DECLINE","/social/friend/remove",p.playerId);
+                    SocialButton(new Rect(Right-252,y+4,120,34),"ACCEPT","/social/friend/accept",p.playerId);
+                    SocialButton(new Rect(Right-124,y+4,120,34),"DECLINE","/social/friend/remove",p.playerId);
                 }
-                else if(friendTab==2)SocialButton(new Rect(Right-124,y,120,30),"CANCEL","/social/friend/remove",p.playerId);
-                else if(friendTab==3)SocialButton(new Rect(Right-124,y,120,30),"UNBLOCK","/social/unblock",p.playerId);
+                else if(friendTab==2)SocialButton(new Rect(Right-124,y+4,120,34),"CANCEL","/social/friend/remove",p.playerId);
+                else if(friendTab==3)SocialButton(new Rect(Right-124,y+4,120,34),"UNBLOCK","/social/unblock",p.playerId);
                 else
                 {
                     bool friends=Array.Exists(state.friends??NoPlayers,x=>x.playerId==p.playerId);
                     bool sent=Array.Exists(state.outgoing??NoPlayers,x=>x.playerId==p.playerId);
                     bool incoming=Array.Exists(state.incoming??NoPlayers,x=>x.playerId==p.playerId);
-                    SocialButton(new Rect(Right-252,y,120,30),friends?"FRIENDS":sent?"SENT":incoming?"ACCEPT":"ADD",
+                    SocialButton(new Rect(Right-252,y+4,120,34),friends?"FRIENDS":sent?"SENT":incoming?"ACCEPT":"ADD",
                         incoming?"/social/friend/accept":"/social/friend/request",p.playerId,enabled:!friends&&!sent);
-                    SocialButton(new Rect(Right-124,y,120,30),"BLOCK","/social/block",p.playerId);
+                    SocialButton(new Rect(Right-124,y+4,120,34),"BLOCK","/social/block",p.playerId);
                 }
             }
             if(friendTab==4)
-                DrawSocialPager(service.Search?.offset??0,count,offset=>{service.Load("/social/players",new SocialService.Request{query=playerQuery,offset=offset});});
-            else DrawSocialPager(friendOffset,count,offset=>friendOffset=offset,rows.Length);
-            if(count==0)theme.Label(new Rect(Left,362,ContentWidth,40),friendTab==4?"Search by name or paste a player's ID.":"No players in this list.",theme.Body,true);
+                DrawSocialPager(service.Search?.offset??0,count,offset=>{service.Load("/social/players",new SocialService.Request{query=playerQuery,offset=offset});},pageSize:friendPageSize);
+            else DrawSocialPager(friendOffset,count,offset=>friendOffset=offset,rows.Length,pageSize:friendPageSize);
+            if(count==0)theme.EmptyState(new Rect(Left,364,ContentWidth,132),friendTab==4?"Find your next teammate":"No players here yet",
+                friendTab==4?"Search by name or paste a player ID to connect.":friendTab==0?"Open FIND PLAYERS to send your first friend request.":"New requests and players will appear in this list.");
             SocialFooter();
         }
 
         void DrawClans()
         {
-            Heading("Clans","Create a clan or join one. Up to 50 members contribute to your clan's total level.");
+            Heading("Clans","Build your crew. Grow together. Up to 50 members per clan.");
             string[] tabs={"FIND CLANS","MY CLAN","CREATE CLAN"};
             for(int i=0;i<tabs.Length;i++)
-                if(theme.Action(new Rect(Left+i*210,212,198,40),tabs[i],clanTab==i))
+                if(theme.Action(new Rect(Left+i*210,212,198,40),tabs[i],selected:clanTab==i))
                 {clanTab=i;memberOffset=0;confirmRoute=null;if(i==0)SocialService.Instance?.Load("/social/clans");}
             if(!SocialReady()){SocialFooter();return;}
             if(DrawSocialConfirmation())return;
@@ -225,19 +233,21 @@ namespace Alterverse.UI
             if(theme.Action(new Rect(Right-178,270,178,40),"SEARCH",enabled:!service.Busy))
             {service.Load("/social/clans",new SocialService.Request{query=clanQuery});}
             var rows=service.Clans?.clans??NoClans;
-            for(int i=0;i<rows.Length;i++)
+            int count=Mathf.Min(6,rows.Length);
+            for(int i=0;i<count;i++)
             {
-                var c=rows[i];float y=326+i*36;
-                theme.Panel(new Rect(Left,y,ContentWidth,34));
-                AvatarBadgeRenderer.Draw(new Rect(Left+10,y+2,30,30),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-                theme.FitLabel(new Rect(Left+50,y,ContentWidth-478,34),$"[{c.tag}] {c.name}",theme.Body);
-                theme.FitLabel(new Rect(Right-416,y,240,34),$"{c.memberCount}/50  /  LV {c.totalLevel:N0}  /  "+(c.open?"OPEN":"APPLY"),theme.Small);
+                var c=rows[i];float y=326+i*48;
+                theme.Panel(new Rect(Left,y,ContentWidth,44));
+                AvatarBadgeRenderer.Draw(new Rect(Left+10,y+6,32,32),Mathf.Max(0,c.avatar),Texture2D.whiteTexture,Time.unscaledTime);
+                theme.FitLabel(new Rect(Left+56,y+2,ContentWidth-442,24),$"[{c.tag}] {c.name}",theme.Body);
+                theme.FitLabel(new Rect(Left+56,y+25,ContentWidth-442,17),$"{c.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {c.totalLevel:N0}",theme.Small,true);
+                theme.StatusBadge(new Rect(Right-276,y+9,104,26),c.open?"OPEN":"APPLY",c.open?FrontEndTheme.Positive:FrontEndTheme.Accent);
                 bool pending=Array.IndexOf(state.pendingClans??Array.Empty<string>(),c.clanId)>=0;
-                SocialButton(new Rect(Right-160,y,156,32),pending?"CANCEL REQUEST":c.open?"JOIN":"APPLY",
+                SocialButton(new Rect(Right-160,y+4,156,36),pending?"CANCEL REQUEST":c.open?"JOIN":"APPLY",
                     pending?"/social/clan/cancel":"/social/clan/join",clanId:c.clanId,enabled:state.clan==null&&(pending||c.memberCount<50));
             }
-            if(rows.Length==0)theme.Label(new Rect(Left,346,ContentWidth,40),"Search to browse clans, or create your own.",theme.Body,true);
-            DrawSocialPager(service.Clans?.offset??0,rows.Length,offset=>{service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=offset});});
+            if(count==0)theme.EmptyState(new Rect(Left,336,ContentWidth,134),"Find your crew","Search for a clan or open CREATE CLAN to build your own.");
+            DrawSocialPager(service.Clans?.offset??0,count,offset=>{service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=offset});},pageSize:6);
         }
         void DrawCreateClan(SocialService service,SocialService.Snapshot state)
         {
@@ -245,6 +255,7 @@ namespace Alterverse.UI
             var pending=service.PendingClanCreation;
             if(pending!=null){clanName=pending.name??"";clanTag=pending.tag??"";clanDescription=pending.description??"";clanOpen=pending.open;}
             bool previousEnabled=GUI.enabled;
+            theme.Panel(new Rect(Left-8,262,ContentWidth+16,390));
             GUI.enabled=previousEnabled&&pending==null&&!service.Busy;
             theme.Label(new Rect(Left,276,220,36),"NAME (3–24)",theme.Small);
             clanName=GUI.TextField(new Rect(Left+230,270,ContentWidth-230,42),clanName,24,theme.Field);
@@ -263,31 +274,34 @@ namespace Alterverse.UI
         void DrawMyClan(SocialService service,SocialService.Snapshot state)
         {
             var clan=state.clan;
-            if(clan==null){theme.Label(new Rect(Left,284,ContentWidth,48),"Join or create a clan to see its members.",theme.Heading);return;}
+            if(clan==null){theme.EmptyState(new Rect(Left,272,ContentWidth,154),"Your clan starts here","Join a crew from FIND CLANS, or create a clan for 500 Shards.");return;}
+            theme.Panel(new Rect(Left-8,262,ContentWidth+16,78));
             AvatarBadgeRenderer.Draw(new Rect(Left,268,66,66),Mathf.Max(0,clan.avatar),Texture2D.whiteTexture,Time.unscaledTime);
-            theme.FitLabel(new Rect(Left+80,268,ContentWidth-270,40),$"[{clan.tag}] {clan.name}  /  TOTAL LEVEL {clan.totalLevel:N0}",theme.Heading);
+            theme.FitLabel(new Rect(Left+80,268,ContentWidth-270,30),$"[{clan.tag}] {clan.name}",theme.Heading);
             if(theme.Action(new Rect(Right-178,270,178,38),"LEAVE CLAN",enabled:!service.Busy))
                 ConfirmAction("/social/clan/leave",null,clan.memberCount==1?"Leave and delete your empty clan?":"Leave this clan? Leaders must transfer leadership first.");
-            theme.FitLabel(new Rect(Left+80,310,ContentWidth-80,28),clan.description,theme.Small,true);
+            theme.FitLabel(new Rect(Left+80,299,ContentWidth-270,18),$"{clan.memberCount} / 50 MEMBERS  •  TOTAL LEVEL {clan.totalLevel:N0}  •  {state.role?.ToUpperInvariant()}",theme.Small,true);
+            theme.FitLabel(new Rect(Left+80,317,ContentWidth-80,20),clan.description,theme.Small,true);
             bool manages=state.role=="leader"||state.role=="officer";
             if(!manages)clanApplications=false;
             if(state.role!="leader"&&clanDetailTab==3)clanDetailTab=0;
-            if(theme.Action(new Rect(Left,346,170,34),"MEMBERS",clanDetailTab==0)){clanDetailTab=0;clanApplications=false;memberOffset=0;}
-            if(manages&&theme.Action(new Rect(Left+180,346,220,34),"APPLICATIONS",clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
-            if(theme.Action(new Rect(Left+410,346,160,34),"CLAN CHAT",clanDetailTab==2))
+            if(theme.Action(new Rect(Left,346,170,34),"MEMBERS",selected:clanDetailTab==0)){clanDetailTab=0;clanApplications=false;memberOffset=0;}
+            if(manages&&theme.Action(new Rect(Left+180,346,220,34),"APPLICATIONS",selected:clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
+            if(theme.Action(new Rect(Left+410,346,160,34),"CLAN CHAT",selected:clanDetailTab==2))
             {clanDetailTab=2;clanChatOffset=int.MaxValue;}
-            if(state.role=="leader"&&theme.Action(new Rect(Left+580,346,190,34),"CLAN IMAGE",clanDetailTab==3))
+            if(state.role=="leader"&&theme.Action(new Rect(Left+580,346,190,34),"CLAN IMAGE",selected:clanDetailTab==3))
             {clanDetailTab=3;clanIconIndex=0;}
             if(clanDetailTab==2){DrawClanChat(service,state);return;}
             if(clanDetailTab==3){DrawClanImage(service,state);return;}
             var rows=(clanApplications?state.applications:clan.members)??NoPlayers;
-            memberOffset=Mathf.Min(memberOffset,Mathf.Max(0,rows.Length-1)/6*6);
-            int count=Mathf.Min(6,Mathf.Max(0,rows.Length-memberOffset));
+            memberOffset=Mathf.Min(memberOffset,Mathf.Max(0,rows.Length-1)/5*5);
+            int count=Mathf.Min(5,Mathf.Max(0,rows.Length-memberOffset));
             for(int i=0;i<count;i++)
             {
-                var p=rows[memberOffset+i];float y=390+i*38;
-                theme.Panel(new Rect(Left,y,ContentWidth,36));
-                theme.FitLabel(new Rect(Left+12,y,ContentWidth-510,36),$"{p.name}  /  LV {p.level}  /  {p.role}",theme.Small);
+                var p=rows[memberOffset+i];float y=390+i*44;
+                theme.Panel(new Rect(Left,y,ContentWidth,42));
+                theme.FitLabel(new Rect(Left+14,y+2,ContentWidth-514,21),p.name,theme.Body);
+                theme.FitLabel(new Rect(Left+14,y+23,ContentWidth-514,17),$"LEVEL {p.level}  •  {p.role?.ToUpperInvariant()}",theme.Small,true);
                 if(clanApplications)
                 {
                     SocialButton(new Rect(Right-252,y,120,36),"ACCEPT","/social/clan/accept",p.playerId);
@@ -306,7 +320,8 @@ namespace Alterverse.UI
                             ConfirmAction("/social/clan/kick",p.playerId,"Remove "+p.name+" from your clan?");
                 }
             }
-            DrawSocialPager(memberOffset,count,offset=>memberOffset=offset,rows.Length,pageSize:6);
+            DrawSocialPager(memberOffset,count,offset=>memberOffset=offset,rows.Length,pageSize:5);
+            if(count==0)theme.EmptyState(new Rect(Left,390,ContentWidth,120),"No applications yet","Players who apply to your clan will appear here.");
         }
         void DrawClanImage(SocialService service,SocialService.Snapshot state)
         {
@@ -345,13 +360,14 @@ namespace Alterverse.UI
             {
                 var message=messages[clanChatOffset+i];float y=384+i*64;
                 theme.Panel(new Rect(Left,y,ContentWidth,60));
+                if(message.playerId==state.me?.playerId)theme.Frame(new Rect(Left,y,ContentWidth,60),true);
                 string time=DateTimeOffset.FromUnixTimeMilliseconds(message.createdAt).ToLocalTime().ToString("HH:mm");
                 theme.FitLabel(new Rect(Left+12,y,ContentWidth-126,20),message.name+"  /  "+time,theme.Small,true);
                 GUI.Label(new Rect(Left+12,y+20,ContentWidth-138,38),message.text,clanMessageStyle);
                 if((state.role=="leader"||message.playerId==state.me?.playerId)&&theme.Action(new Rect(Right-110,y+12,100,36),"DELETE",enabled:!service.Busy))
                     service.Load("/social/clan/message/remove",new SocialService.Request{messageId=message.messageId});
             }
-            if(count==0)theme.Label(new Rect(Left,404,ContentWidth,50),"Write the first message to your clan.",theme.Body,true);
+            if(count==0)theme.EmptyState(new Rect(Left,390,ContentWidth,140),"Start the conversation","Write a message below to coordinate with your clan.");
             clanChatText=GUI.TextField(new Rect(Left,584,ContentWidth-166,36),clanChatText,240,theme.Field);
             if(theme.Action(new Rect(Right-154,584,154,36),"SEND",true,enabled:!service.Busy&&!string.IsNullOrWhiteSpace(clanChatText)))
             {
@@ -364,4 +380,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

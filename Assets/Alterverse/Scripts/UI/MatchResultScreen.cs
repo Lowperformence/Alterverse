@@ -148,17 +148,19 @@ namespace Alterverse.UI
         private void Header(MatchResultLayout layout,Color accent)
         {
             Rect r=layout.Header;
-            theme.Label(new Rect(r.x,r.y,layout.Stacked?r.width:r.width*.57f,48),data.Result,title);
+            theme.Panel(r);
+            theme.Label(new Rect(r.x+16,r.y,layout.Stacked?r.width-32:r.width*.53f,48),data.Result,title);
             if(layout.Stacked)
             {
-                theme.Label(new Rect(r.x,r.y+48,r.width,24),data.ObjectivesText,small,true);
+                theme.Label(new Rect(r.x+16,r.y+48,r.width-32,24),data.ObjectivesText,small,true);
             }
             else
             {
-                float x=r.x+r.width*.59f,w=r.width*.41f;
-                theme.Label(new Rect(x,r.y+12,w,23),data.ObjectivesText,small,true);
+                float x=r.x+r.width*.57f,w=r.width*.43f-16;
+                theme.FitLabel(new Rect(x,r.y+3,w,23),data.Hero??"MATCH COMPLETE",label);
+                theme.FitLabel(new Rect(x,r.y+27,w,21),data.ObjectivesText,small,true);
             }
-            FrontEndTheme.Fill(new Rect(r.x,r.yMax-2,r.width,2),accent);
+            FrontEndTheme.Fill(new Rect(r.x+16,r.yMax-2,r.width-32,2),accent);
         }
         private void Kda(Rect r,Color accent)
         {
@@ -260,4 +262,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 

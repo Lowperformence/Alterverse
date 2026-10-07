@@ -8,26 +8,28 @@ namespace Alterverse.UI
     {
         public static readonly Color Background = new(.020f, .028f, .041f);
         // Dark glass and champagne highlights leave the orbital artwork visible.
-        public static readonly Color Surface = new(.025f, .038f, .055f, .76f);
-        public static readonly Color Raised = new(.14f, .12f, .09f, .88f);
+        public static readonly Color Surface = new(.025f, .040f, .062f, .94f);
+        public static readonly Color Raised = new(.060f, .105f, .145f, .98f);
         public static readonly Color Text = new(.96f, .975f, .99f);
         public static readonly Color Muted = new(.63f, .71f, .79f);
         public static readonly Color Accent = new(.91f, .73f, .48f);
         public static readonly Color Zero = new(.60f, .39f, .82f);
+        public static readonly Color Positive = new(.37f, .86f, .73f);
+        public static readonly Color Warning = new(.96f, .70f, .39f);
 
         // Thin steel frames and warm selected edges match the orbital artwork.
-        private static readonly Color Outline = new(.36f, .49f, .63f, .98f);
-        private static readonly Color OutlineSoft = new(.25f, .35f, .46f, .94f);
+        private static readonly Color Outline = new(.30f, .43f, .57f, .76f);
+        private static readonly Color OutlineSoft = new(.23f, .34f, .46f, .58f);
         private static readonly Color OutlineSelected = new(1f, .84f, .60f, 1f);
 
         private const int RoundedTextureSize = 48;
-        private const float CornerRadius = 5f;
+        private const float CornerRadius = 10f;
         private const float OutlineThickness = 1.2f;
         private const int SliceBorder = 15;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
 
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
-        private readonly GUIStyle centered;
+        private readonly GUIStyle centered, badge, monogram;
         private readonly GUIContent measuredText = new GUIContent();
         public void FitLabel(Rect rect, string text, GUIStyle style, bool muted = false)
         {
@@ -64,6 +66,11 @@ namespace Alterverse.UI
             Button.clipping = TextClipping.Clip;
             centered = Label(16, FontStyle.Normal);
             centered.alignment = TextAnchor.MiddleCenter;
+            badge = Label(14, FontStyle.Bold);
+            badge.alignment = TextAnchor.MiddleCenter;
+            badge.wordWrap = false;
+            monogram = Label(22, FontStyle.Bold);
+            monogram.alignment = TextAnchor.MiddleCenter;
 
             Field = new GUIStyle(GUI.skin.textField)
             {
@@ -203,12 +210,34 @@ namespace Alterverse.UI
 
         public void Panel(Rect rect)
         {
+            RoundedFill(new Rect(rect.x, rect.y + 3, rect.width, rect.height), new Color(0, 0, 0, .18f));
             RoundedFill(rect, Surface);
             RoundedOutline(rect, OutlineSoft);
-            // Second subtle ring gives panels the crisp framed look from the visual target.
-            if (rect.width > 8 && rect.height > 8)
-                RoundedOutline(new Rect(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4),
-                    new Color(.43f, .57f, .70f, .22f));
+        }
+
+        public void StatusBadge(Rect rect, string text, Color tint)
+        {
+            RoundedFill(rect, new Color(tint.r, tint.g, tint.b, .12f));
+            RoundedOutline(rect, new Color(tint.r, tint.g, tint.b, .36f));
+            Color before = GUI.color;
+            GUI.color *= tint;
+            FitLabel(new Rect(rect.x + 6, rect.y, rect.width - 12, rect.height), text, badge);
+            GUI.color = before;
+        }
+
+        public void IdentityTile(Rect rect, string name, bool highlighted = false)
+        {
+            RoundedFill(rect, highlighted ? Raised : new Color(.10f, .16f, .22f, 1f));
+            RoundedOutline(rect, highlighted ? Positive : OutlineSoft);
+            string initial = string.IsNullOrWhiteSpace(name) ? "?" : System.Globalization.StringInfo.GetNextTextElement(name.Trim()).ToUpperInvariant();
+            Label(rect, initial, monogram);
+        }
+
+        public void EmptyState(Rect rect, string title, string detail)
+        {
+            Panel(rect);
+            Label(new Rect(rect.x + 24, rect.y + 18, rect.width - 48, 32), title, Heading);
+            Label(new Rect(rect.x + 24, rect.y + 56, rect.width - 48, rect.height - 70), detail, Body, true);
         }
 
         public void Label(Rect rect, string text, GUIStyle style, bool muted = false)
@@ -320,4 +349,5 @@ namespace Alterverse.UI
         }
     }
 }
+
 
