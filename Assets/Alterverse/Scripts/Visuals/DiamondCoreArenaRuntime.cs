@@ -216,9 +216,6 @@ namespace Alterverse.Visuals
         private void BuildUnderfloorCosmos()
         {
             BuildStarCarpet();
-            BuildGalaxy(new Vector3(-25f,-13f,18f),10f,.42f,new Color(.52f,.30f,1f,1f),17);
-            BuildGalaxy(new Vector3(25f,-16f,-18f),12f,.36f,new Color(.18f,.68f,1f,1f),31);
-            BuildGalaxy(new Vector3(8f,-20f,29f),8f,.50f,new Color(1f,.42f,.72f,1f),47);
         }
 
         private void BuildStarCarpet()
@@ -240,25 +237,6 @@ namespace Alterverse.Visuals
             Mesh mesh=new(){name="DF_DiamondUnderfloorStars",vertices=vertices,uv=uv,triangles=triangles};mesh.RecalculateBounds();meshes.Add(mesh);
             GameObject stars=new("DF_DiamondUnderfloorStars");stars.transform.SetParent(root,false);stars.AddComponent<MeshFilter>().sharedMesh=mesh;
             MeshRenderer renderer=stars.AddComponent<MeshRenderer>();renderer.sharedMaterial=Mat(new Color(.88f,.95f,1f,1f),true,0f,0f,new Color(.7f,.9f,1f)*1.4f);renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
-        }
-
-        private void BuildGalaxy(Vector3 center,float radius,float flatten,Color color,int seed)
-        {
-            const int points=96;
-            Vector3[] vertices=new Vector3[points*4];Vector2[] uv=new Vector2[points*4];int[] triangles=new int[points*6];
-            for(int i=0;i<points;i++)
-            {
-                int arm=i%3;float t=(i/3)/31f;float a=arm*Mathf.PI*2f/3f+t*Mathf.PI*3.15f+seed*.07f;
-                float r=.6f+t*radius+((i*seed)%11)*.035f;
-                Vector3 p=center+new Vector3(Mathf.Cos(a)*r,0,Mathf.Sin(a)*r*flatten);
-                float s=.08f+(i%5)*.025f;int v=i*4,q=i*6;
-                vertices[v]=p+new Vector3(-s,0,-s);vertices[v+1]=p+new Vector3(s,0,-s);vertices[v+2]=p+new Vector3(s,0,s);vertices[v+3]=p+new Vector3(-s,0,s);
-                uv[v]=Vector2.zero;uv[v+1]=Vector2.right;uv[v+2]=Vector2.one;uv[v+3]=Vector2.up;
-                triangles[q]=v;triangles[q+1]=v+2;triangles[q+2]=v+1;triangles[q+3]=v;triangles[q+4]=v+3;triangles[q+5]=v+2;
-            }
-            Mesh mesh=new(){name="DF_DiamondUnderfloorGalaxy",vertices=vertices,uv=uv,triangles=triangles};mesh.RecalculateBounds();meshes.Add(mesh);
-            GameObject galaxy=new("DF_DiamondUnderfloorGalaxy");galaxy.transform.SetParent(root,false);galaxy.AddComponent<MeshFilter>().sharedMesh=mesh;
-            MeshRenderer renderer=galaxy.AddComponent<MeshRenderer>();renderer.sharedMaterial=Mat(color,true,0f,0f,color*1.35f);renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;
         }
 
         private void BuildFloatingShards()
