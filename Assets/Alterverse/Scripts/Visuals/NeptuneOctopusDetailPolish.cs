@@ -166,6 +166,7 @@ namespace Alterverse.Visuals
                 material.EnableKeyword("_EMISSION");
                 if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",color*emissionPower);
             }
+            if(!emission)AuthoredHotZoneArt.ConfigureSurface(material,"Xeno");
             return material;
         }
 
@@ -198,3 +199,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

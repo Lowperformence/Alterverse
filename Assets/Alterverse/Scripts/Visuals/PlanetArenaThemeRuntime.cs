@@ -433,6 +433,7 @@ namespace Alterverse.Visuals
                             new Vector3(.11f,.055f,.14f),Quaternion.identity,glow);
                 }
             }
+            AuthoredHotZoneArt.Apply(visualRoot,"Xeno");
         }
 
         void Update()
@@ -453,6 +454,7 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
+
 
 
 

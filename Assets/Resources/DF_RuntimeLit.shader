@@ -5,6 +5,7 @@ Shader "Alterverse/RuntimeLit"
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         [MainColor] _BaseColor("Base Color", Color) = (1,1,1,1)
         [Normal] _BumpMap("Normal Map", 2D) = "bump" {}
+        _NormalEncoding("Normal encoding: RGB 0, Unity imported 1", Float) = 0
         _BumpScale("Normal Strength", Range(0,2)) = 0
         _Metallic("Metallic", Range(0,1)) = 0
         _Smoothness("Smoothness", Range(0,1)) = 0.2
@@ -21,6 +22,7 @@ Shader "Alterverse/RuntimeLit"
 
         HLSLINCLUDE
             #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -31,6 +33,7 @@ Shader "Alterverse/RuntimeLit"
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
                 half _BumpScale;
+                half _NormalEncoding;
                 half _Metallic;
                 half _Smoothness;
                 half4 _EmissionColor;
@@ -97,8 +100,17 @@ Shader "Alterverse/RuntimeLit"
                 {
                     half3 tangent = normalize(input.tangentWS.xyz);
                     half3 bitangent = normalize(cross(n, tangent) * input.tangentWS.w);
-                    half3 normalTS = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv).xyz * 2.0h - 1.0h;
-                    normalTS.xy *= _BumpScale;
+                    half4 packedNormal = SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, input.uv);
+                    // Imported normal maps may use platform-specific channel packing.
+                    // Runtime-generated terrain normals remain ordinary RGB textures.
+                    half3 normalTS;
+                    if (_NormalEncoding > 0.5h)
+                        normalTS = UnpackNormalScale(packedNormal, _BumpScale);
+                    else
+                    {
+                        normalTS = packedNormal.xyz * 2.0h - 1.0h;
+                        normalTS.xy *= _BumpScale;
+                    }
                     normalTS = normalize(normalTS);
                     n = normalize(tangent * normalTS.x + bitangent * normalTS.y + n * normalTS.z);
                 }
@@ -153,4 +165,5 @@ Shader "Alterverse/RuntimeLit"
 
     Fallback Off
 }
+
 

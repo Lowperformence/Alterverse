@@ -72,12 +72,29 @@ namespace Alterverse.Visuals
                             (updated.GetTexture("_BaseMap")==null||updated.GetTexture("_BaseMap").name=="white"||updated.GetTexture("_BaseMap").name=="Default-White"))
                             updated.SetTexture("_BaseMap",surface);
                         if(normal!=null&&updated.HasProperty("_BumpMap")&&updated.GetTexture("_BumpMap")==null)
-                        {updated.SetTexture("_BumpMap",normal);updated.SetFloat("_BumpScale",.32f);updated.EnableKeyword("_NORMALMAP");}
+                        {updated.SetTexture("_BumpMap",normal);updated.SetFloat("_BumpScale",.32f);
+                            if(updated.HasProperty("_NormalEncoding"))updated.SetFloat("_NormalEncoding",1f);
+                            updated.EnableKeyword("_NORMALMAP");}
                         materialCache.Add(originalMat,updated);materials.Add(updated);sourceMaterials.Add(originalMat);
                     }
                     slots[i]=updated;
                 }
                 renderer.sharedMaterials=slots;
+            }
+        }
+
+        public static void ConfigureSurface(Material material,string family)
+        {
+            if(material==null||string.IsNullOrEmpty(family))return;
+            Texture2D surface=Resources.Load<Texture2D>("AuthoredHotZone/"+family+"Surface");
+            Texture2D normal=Resources.Load<Texture2D>("AuthoredHotZone/"+family+"Normal");
+            if(surface!=null&&material.HasProperty("_BaseMap"))material.SetTexture("_BaseMap",surface);
+            if(normal!=null&&material.HasProperty("_BumpMap"))
+            {
+                material.SetTexture("_BumpMap",normal);
+                if(material.HasProperty("_BumpScale"))material.SetFloat("_BumpScale",.32f);
+                if(material.HasProperty("_NormalEncoding"))material.SetFloat("_NormalEncoding",1f);
+                material.EnableKeyword("_NORMALMAP");
             }
         }
 
@@ -157,3 +174,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

@@ -347,6 +347,7 @@ namespace Alterverse.Visuals
             Primitive(PrimitiveType.Sphere,"EyeSocket",visualRoot,new Vector3(0,.22f,Radius*.94f),new Vector3(.48f,.48f,.18f),Quaternion.identity,panel);
             Primitive(PrimitiveType.Sphere,"RedEye",visualRoot,new Vector3(0,.22f,Radius*1.025f),new Vector3(.31f,.31f,.12f),Quaternion.identity,red);
 
+            AuthoredHotZoneArt.Apply(visualRoot,"Machine");
             lastPosition=transform.position;
         }
 
@@ -426,5 +427,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

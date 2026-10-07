@@ -1,0 +1,86 @@
+[
+  {
+    "resource": "MarsSkeleton",
+    "family": "Skeleton",
+    "sourceSha256": "d6e051d7bcb82a1f1cfc1919a0025ddfb40427983dc8c084df74d0f211fda24b",
+    "sourceVertices": 29323,
+    "uvVertices": 46693,
+    "triangles": 56648,
+    "uvBytes": 556419,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "GreenStalker",
+    "family": "Xeno",
+    "sourceSha256": "60b5a58d03d51e09d2e3cfddb2f5f8d7782dac1a2c6ce72b3ab82f118bd9e692",
+    "sourceVertices": 4739,
+    "uvVertices": 7388,
+    "triangles": 9236,
+    "uvBytes": 97609,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "NoxaraClockworkSpider",
+    "family": "Spider",
+    "sourceSha256": "9840dcb848bdb3d4d5f65a2d364d39b474b0809e4bf1564fd7c552e17d25afb3",
+    "sourceVertices": 29189,
+    "uvVertices": 57838,
+    "triangles": 57164,
+    "uvBytes": 648206,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "KryonBear",
+    "family": "Ice",
+    "sourceSha256": "c1337739f6997f8ce0700143afab140d0bffef284a9d38e0e4876d5dc31cb6d1",
+    "sourceVertices": 44928,
+    "uvVertices": 44928,
+    "triangles": 14976,
+    "uvBytes": 372263,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "MechanicalScorpion",
+    "family": "Machine",
+    "sourceSha256": "8c8dca8789b8535a84aa633c3615d12d5903477a25665723d30860ff5109cc6d",
+    "sourceVertices": 34767,
+    "uvVertices": 63534,
+    "triangles": 67216,
+    "uvBytes": 712143,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "GJMagentaGolem",
+    "family": "Sandstone",
+    "sourceSha256": "c4c69aba4c9650c94d87aa4e18553d6df21bf3a471d9a8c3b86e475fc15fa86c",
+    "sourceVertices": 35430,
+    "uvVertices": 36277,
+    "triangles": 13984,
+    "uvBytes": 343543,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  },
+  {
+    "resource": "PSRCrystalTitan",
+    "family": "Crystal",
+    "sourceSha256": "cfc547b48e5a9629ee5cba3ccd68d5fdf73f916bfd5e08c2d45d6b70a0e01b44",
+    "sourceVertices": 31266,
+    "uvVertices": 31970,
+    "triangles": 12416,
+    "uvBytes": 303075,
+    "geometry": "unchanged",
+    "rig": "unchanged",
+    "submeshes": "unchanged"
+  }
+]
