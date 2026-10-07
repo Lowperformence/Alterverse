@@ -191,7 +191,7 @@ namespace Alterverse.Multiplayer
                         Team = team,
                         Hero = hero,
                         BattleItem = member.BattleItem,
-                        IsLocal = false;
+                        IsLocal = false,
                         IsBot = false,
                         Ready = true,
                         Connected = true,
@@ -251,7 +251,7 @@ namespace Alterverse.Multiplayer
                     Team = source.Team,
                     Hero = source.Hero,
                     BattleItem = source.BattleItem,
-                    IsLocal = isLocal;
+                    IsLocal = isLocal,
                     IsBot = source.IsBot,
                     Ready = source.Ready,
                     Connected = source.Connected,
@@ -322,7 +322,7 @@ namespace Alterverse.Multiplayer
             Team = team,
             Hero = member.Hero,
             BattleItem = member.BattleItem,
-            IsLocal = member.IsLocal;
+            IsLocal = member.IsLocal,
             IsBot = false,
             Ready = member.Ready,
             Connected = true,
@@ -336,7 +336,7 @@ namespace Alterverse.Multiplayer
             Team = team,
             Hero = hero,
             BattleItem = BattleItemType.None,
-            IsLocal = false;
+            IsLocal = false,
             IsBot = true,
             Ready = true,
             Connected = true,
