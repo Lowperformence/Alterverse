@@ -226,11 +226,12 @@ class FirestoreLedger:
                 data["balance"] -= paid
                 data["revision"] += 1
                 entries["DF_Shards"] = {"key": "DF_Shards", "kind": 0, "number": earned - contribution}
-                if sku == "shield":
-                    old = entries.get("DF_BattleItem_2", {}).get("number", 0)
+                increment_key = definition.get("incrementKey")
+                if sku in CONSUMABLES and increment_key:
+                    old = entries.get(increment_key, {}).get("number", 0)
                     if old >= MAX_BALANCE:
                         raise ValueError("Inventory capacity exceeded")
-                    entries["DF_BattleItem_2"] = {"key": "DF_BattleItem_2", "kind": 0, "number": old + 1}
+                    entries[increment_key] = {"key": increment_key, "kind": 0, "number": old + 1}
                 else:
                     for write in writes:
                         entries[write["key"]] = write
