@@ -18,32 +18,6 @@ namespace Alterverse.Combat
             Object.Destroy(pickup.gameObject);pickup=null;return false;
         }
 
-        internal static bool TryMeteor(GameObject actor,Health target)
-        {
-            if(!ValidEnemyHero(actor,target))target=NearestEnemyHero(actor,15f);
-            if(target==null)return false;
-            return BattleItemMeteorStrike.Create(actor,target,40f);
-        }
-
-        private static bool ValidEnemyHero(GameObject actor,Health target)
-        {
-            if(target==null||target.IsDead||target.GetComponent<HeroIdentity>()==null)return false;
-            TeamMember own=actor.GetComponent<TeamMember>(),other=target.GetComponent<TeamMember>();
-            return own!=null&&other!=null&&own.Team!=other.Team;
-        }
-
-        private static Health NearestEnemyHero(GameObject actor,float range)
-        {
-            Health best=null;float bestSqr=range*range;
-            for(int i=0;i<Health.Active.Count;i++)
-            {
-                Health h=Health.Active[i];
-                if(!ValidEnemyHero(actor,h))continue;
-                Vector3 d=h.transform.position-actor.transform.position;d.y=0;
-                float sqr=d.sqrMagnitude;if(sqr<bestSqr){bestSqr=sqr;best=h;}
-            }
-            return best;
-        }
     }
 
     public sealed class BattleItemPickup:MonoBehaviour
@@ -67,7 +41,7 @@ namespace Alterverse.Combat
 
         public static BattleItemPickup Create(BattleItemType item,int ownerTeam,Vector3 position,bool airdrop)
         {
-            if((int)item<(int)BattleItemType.Heal||(int)item>(int)BattleItemType.Meteor)return null;
+            if((int)item<(int)BattleItemType.Heal||(int)item>(int)BattleItemType.TeamHeal)return null;
             GameObject go=new("DF_BattleItemDrop_"+item);
             Vector3 ground=position;ground.y=LunarSurfaceField.Surface(position.x,position.z).y+.10f;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
@@ -86,7 +60,7 @@ namespace Alterverse.Combat
         {
             Color color=type==BattleItemType.Heal?new Color(.12f,1f,.34f):
                 type==BattleItemType.Shield?new Color(.18f,.82f,1f):
-                type==BattleItemType.Speed?new Color(1f,.72f,.18f):new Color(1f,.28f,.08f);
+                type==BattleItemType.Speed?new Color(1f,.72f,.18f):new Color(.28f,1f,.72f);
             Shader shader=RuntimeShaderLibrary.Lit;
             if(shader==null)return false;
             energyMat=new Material(shader){color=color};darkMat=new Material(shader){color=new Color(.10f,.12f,.16f)};
@@ -119,12 +93,12 @@ namespace Alterverse.Combat
             if(type==BattleItemType.Heal){Part("PlusV",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.10f,.34f,.06f),energyMat);Part("PlusH",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.34f,.10f,.06f),energyMat);}
             else if(type==BattleItemType.Shield)Part("ShieldMark",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.32f,.30f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,45);
             else if(type==BattleItemType.Speed) {Part("SpeedMark",PrimitiveType.Cube,visual,new Vector3(0,0,.28f),new Vector3(.38f,.08f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,-18);Part("SpeedMark2",PrimitiveType.Cube,visual,new Vector3(-.08f,.13f,.28f),new Vector3(.28f,.07f,.06f),energyMat).localRotation=Quaternion.Euler(0,0,-18);}
-            else
+            else if(type==BattleItemType.TeamHeal)
             {
-                Part("MeteorMark",PrimitiveType.Sphere,visual,new Vector3(0,0,.31f),
-                    new Vector3(.19f,.19f,.065f),energyMat);
-                Part("MeteorTail",PrimitiveType.Cube,visual,new Vector3(-.11f,.12f,.31f),
-                    new Vector3(.065f,.28f,.045f),energyMat).localRotation=Quaternion.Euler(0,0,-38);
+                Part("TeamHealPlusV",PrimitiveType.Cube,visual,new Vector3(0,0,.30f),new Vector3(.09f,.34f,.06f),energyMat);
+                Part("TeamHealPlusH",PrimitiveType.Cube,visual,new Vector3(0,0,.30f),new Vector3(.34f,.09f,.06f),energyMat);
+                Part("TeamHealAllyL",PrimitiveType.Sphere,visual,new Vector3(-.28f,.18f,.29f),new Vector3(.10f,.10f,.055f),energyMat);
+                Part("TeamHealAllyR",PrimitiveType.Sphere,visual,new Vector3(.28f,.18f,.29f),new Vector3(.10f,.10f,.055f),energyMat);
             }
             return true;
         }
@@ -235,8 +209,16 @@ namespace Alterverse.Combat
                     hero.AddShield(hero.Max*.20f,5f,false);
                     HeroSkillVfx.Support(hero.gameObject,hero,true,5f);
                     break;
-                case BattleItemType.Meteor:
-                    (hero.GetComponent<BattleItemMeteorCarrier>()??hero.gameObject.AddComponent<BattleItemMeteorCarrier>()).Arm();
+                case BattleItemType.TeamHeal:
+                    for(int i=0;i<Health.Active.Count;i++)
+                    {
+                        Health ally=Health.Active[i];
+                        if(ally==null||ally.IsDead||ally.GetComponent<HeroIdentity>()==null)continue;
+                        TeamMember allyMember=ally.GetComponent<TeamMember>();
+                        if(allyMember==null||allyMember.Team!=team)continue;
+                        ally.Heal(20f,false);
+                        HeroSkillVfx.Support(ally.gameObject,ally,false,.45f);
+                    }
                     break;
                 case BattleItemType.Speed:
                     (hero.GetComponent<HeroCombatStatus>()??hero.gameObject.AddComponent<HeroCombatStatus>()).BoostSpeed(1.10f,5f);
@@ -332,129 +314,4 @@ namespace Alterverse.Combat
         private void OnDisable(){if(drop!=null)Destroy(drop.gameObject);}
     }
 
-    // Meteor supply can be collected without an enemy nearby. It stays armed on the
-    // collecting hero until an eligible enemy enters range, rather than eating the item.
-    public sealed class BattleItemMeteorCarrier:MonoBehaviour
-    {
-        private bool armed;
-        private float nextScan,armedAt;
-        private Alterverse.Match.DimensionsFront match;
-        public void Arm()
-        {
-            match=Object.FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
-            armedAt=match!=null?match.ElapsedSeconds:0;armed=true;nextScan=0;
-        }
-        private void Update()
-        {
-            if(match==null||match.HasEnded||match.ElapsedSeconds<armedAt){Destroy(this);return;}
-            if(!armed||Time.timeScale<=0||Time.time<nextScan||Alterverse.UI.MainMenuController.IsVisible)return;
-            nextScan=Time.time+.2f;
-            Health own=GetComponent<Health>();
-            if(own==null||own.IsDead)return;
-            if(!BattleItemRuntime.TryMeteor(gameObject,GetComponent<SoftTargeting>()?.Current))return;
-            armed=false;Destroy(this);
-        }
-    }
-
-    public sealed class BattleItemMeteorStrike:MonoBehaviour
-    {
-        private const float Delay=1.15f,ImpactRadius=2.1f;
-        private Health target;
-        private GameObject source,warning,meteor;
-        private readonly GameObject[] fragments=new GameObject[2];
-        private LineRenderer warningLine,trail;
-        private Material warningMat,rockMat;
-        private Mesh meteorMesh;
-        private Vector3 impact;
-        private float hitAt,damage;
-
-        public static bool Create(GameObject source,Health target,float damage)
-        {
-            if(source==null||target==null||target.IsDead)return false;
-            GameObject go=new("DF_BattleItemMeteorStrike");
-            Transform world=GameObject.Find("DF_MatchWorld")?.transform;if(world!=null)go.transform.SetParent(world,true);
-            BattleItemMeteorStrike strike=go.AddComponent<BattleItemMeteorStrike>();
-            strike.source=source;strike.target=target;strike.damage=damage;strike.impact=target.transform.position;
-            strike.impact.y=LunarSurfaceField.Surface(strike.impact.x,strike.impact.z).y+.10f;
-            strike.hitAt=Time.time+Delay;
-            if(!strike.Build(world)){Destroy(go);return false;}
-            return true;
-        }
-
-        private bool Build(Transform world)
-        {
-            Shader ink=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
-            Shader rock=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            if(ink==null||rock==null)return false;
-            warningMat=new Material(ink){name="DF_ItemMeteorWarning"};rockMat=new Material(rock){name="DF_ItemMeteorRock",color=new Color(.19f,.14f,.11f)};
-            if(rockMat.HasProperty("_EmissionColor")){rockMat.EnableKeyword("_EMISSION");rockMat.SetColor("_EmissionColor",new Color(.55f,.15f,.025f));}
-
-            warning=new GameObject("DF_ItemMeteorTarget");if(world!=null)warning.transform.SetParent(world,false);
-            warningLine=warning.AddComponent<LineRenderer>();warningLine.sharedMaterial=warningMat;warningLine.loop=true;warningLine.useWorldSpace=true;
-            warningLine.positionCount=40;warningLine.widthMultiplier=.09f;warningLine.startColor=warningLine.endColor=new Color(1f,.44f,.08f);
-            DrawWarning();
-
-            meteorMesh=LunarFragmentGeometry.Create(13);
-            meteor=ProductionMeshFactory.MeshObject("DF_ItemFallingMeteor",world,meteorMesh,rockMat);
-            meteor.transform.localScale=Vector3.one*.62f;meteor.transform.position=impact+Vector3.up*9f;
-            trail=meteor.AddComponent<LineRenderer>();trail.sharedMaterial=warningMat;trail.useWorldSpace=true;trail.positionCount=2;
-            trail.startWidth=.16f;trail.endWidth=.02f;trail.startColor=new Color(1f,.55f,.15f);trail.endColor=new Color(.35f,.12f,.03f);
-            trail.shadowCastingMode=ShadowCastingMode.Off;
-            for(int i=0;i<fragments.Length;i++)
-            {
-                fragments[i]=ProductionMeshFactory.MeshObject("DF_ItemMeteorFragment",world,meteorMesh,rockMat);
-                fragments[i].transform.localScale=Vector3.one*(.32f+i*.06f);
-                fragments[i].transform.position=impact+new Vector3(i==0?-.65f:.65f,10f+i,.4f);
-            }
-            return true;
-        }
-
-        private void DrawWarning()
-        {
-            if(warningLine==null)return;
-            for(int i=0;i<40;i++){float a=i*Mathf.PI*2f/40f;warningLine.SetPosition(i,impact+new Vector3(Mathf.Cos(a)*ImpactRadius,0,Mathf.Sin(a)*ImpactRadius));}
-        }
-
-        private void Update()
-        {
-            if(Time.timeScale<=0f)return;
-            if(Time.time<hitAt)
-            {
-                float remain=Mathf.Max(0,hitAt-Time.time),height=Mathf.Lerp(.35f,9f,Mathf.Clamp01(remain/Delay));
-                if(meteor!=null)
-                {
-                    meteor.transform.position=new Vector3(impact.x,height,impact.z);meteor.transform.Rotate(85*Time.deltaTime,38*Time.deltaTime,54*Time.deltaTime);
-                    if(trail!=null){trail.SetPosition(0,meteor.transform.position);trail.SetPosition(1,meteor.transform.position+new Vector3(.14f,1.5f,.1f));}
-                }
-                for(int i=0;i<fragments.Length;i++)
-                    if(fragments[i]!=null)
-                    {
-                        float t=Mathf.Clamp01(remain/Delay);
-                        fragments[i].transform.position=impact+new Vector3(i==0?-.65f:.65f,t*(9.5f+i),.4f);
-                        fragments[i].transform.Rotate(110*Time.deltaTime,50*Time.deltaTime,70*Time.deltaTime);
-                    }
-                return;
-            }
-
-            Alterverse.Audio.DimensionAudio.PlayAt(Alterverse.Audio.DimensionSound.MeteorImpact,impact,.5f);
-            CombatImpactPool.Emit(new Vector3(impact.x,.3f,impact.z),new Color(1f,.63f,.23f),1);
-            PrototypeVfx.RadialBurst(impact,new Color(1f,.48f,.12f),ImpactRadius);
-            if(target!=null&&!target.IsDead)
-            {
-                TeamMember sourceTeam=source!=null?source.GetComponent<TeamMember>():null;
-                TeamMember targetTeam=target.GetComponent<TeamMember>();
-                Vector3 d=target.transform.position-impact;d.y=0;
-                if(sourceTeam!=null&&targetTeam!=null&&sourceTeam.Team!=targetTeam.Team&&d.sqrMagnitude<=ImpactRadius*ImpactRadius)
-                    target.TakeDamage(damage,source);
-            }
-            Destroy(gameObject);
-        }
-
-        private void OnDestroy()
-        {
-            if(warning!=null)Destroy(warning);if(meteor!=null)Destroy(meteor);
-            foreach(GameObject fragment in fragments)if(fragment!=null)Destroy(fragment);
-            if(warningMat!=null)Destroy(warningMat);if(rockMat!=null)Destroy(rockMat);if(meteorMesh!=null)Destroy(meteorMesh);
-        }
-    }
 }
