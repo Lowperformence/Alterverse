@@ -28,6 +28,7 @@ namespace Alterverse.Visuals
         private float hitFromSide;
         private float phase,strideWeight,attackUntil,attackDuration,attackWeight,lean,displayedSpeed;
         private Vector3 previousWorldVelocity;
+        private Vector3 displayedTravelDirection;
         private Quaternion displayedRotation=Quaternion.identity;
         private Vector3 displayedScale;
         private bool wasDead,moving;
@@ -205,6 +206,7 @@ namespace Alterverse.Visuals
             wasDead=moving=false;
             phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=0f;
             previousWorldVelocity=Vector3.zero;
+            displayedTravelDirection=transform.forward;
             previousHeading=transform.eulerAngles.y;
             attackUntil=windupUntil=dashUntil=empowerUntil=hitUntil=hitStarted=windupDuration=0f;hitFromSide=0f;
             abilitySlot=-1;
@@ -250,19 +252,28 @@ namespace Alterverse.Visuals
             PlanarSpeed=travel/dt;
             Vector3 worldVelocity=delta/dt;
             Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);
+            // Smooth direction in world space: facing an attack target must not make a
+            // strafing/backpedalling hero keep marching forward. This only drives bones.
+            if(!Dashing&&PlanarSpeed>.10f)
+                displayedTravelDirection=Vector3.Lerp(displayedTravelDirection,worldVelocity/PlanarSpeed,1-Mathf.Exp(-18f*dt));
+            Vector3 gaitDirection=transform.InverseTransformDirection(displayedTravelDirection);
+            float gaitForward=Mathf.Clamp(gaitDirection.z,-1f,1f);
+            float gaitSide=Mathf.Clamp(gaitDirection.x,-1f,1f);
             // Subtract in the same coordinate frame: turning alone is not acceleration.
             Vector3 localAcceleration=transform.InverseTransformDirection((worldVelocity-previousWorldVelocity)/dt);
             localAcceleration=Vector3.ClampMagnitude(localAcceleration,45f);
             previousWorldVelocity=worldVelocity;
             // Ease the visible gait in and out while keeping collision and input immediate.
             displayedSpeed=Mathf.Lerp(displayedSpeed,PlanarSpeed,1-Mathf.Exp(-(PlanarSpeed>displayedSpeed?12f:9f)*dt));
-            float response=1-Mathf.Exp(-11f*dt);
+            // Let the legs settle promptly when physical travel stops at a wall or on
+            // release, rather than retaining a high raised-foot pose as speed fades.
+            float response=1-Mathf.Exp(-(PlanarSpeed<.10f?20f:11f)*dt);
             // Tiny steering corrections should not restart the walk cycle. The gameplay root
             // can still settle by a few centimetres without making the hero visually shuffle.
             if(moving){if(displayedSpeed<.10f)moving=false;}
             else if(displayedSpeed>.28f)moving=true;
             if(Dashing)moving=false;
-            float desired=Dashing||!moving?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
+            float desired=Dashing||!moving||PlanarSpeed<.10f?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
             float strideLength=heavy?1.65f:1.45f;
@@ -413,12 +424,18 @@ namespace Alterverse.Visuals
                 float brace=Mathf.Max(hitWeight*.72f,Mathf.Max(castCharge,castRelease*.38f));
                 leftKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
                 rightKneeAngle+=brace*(castCharge>0f||castRelease>0f?9f:11f);
-                Quaternion leftHip=Quaternion.Euler(leftHipAngle,0f,Mathf.Sin(phase)*2.5f*strideWeight);
-                Quaternion rightHip=Quaternion.Euler(rightHipAngle,0f,Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
+                // Lateral steps use bounded hip abduction; knees keep their anatomical
+                // flexion axis. Counter-rotate the ankle to retain the contact sole angle.
+                float leftSide=-leftHipAngle*gaitSide*.42f;
+                float rightSide=-rightHipAngle*gaitSide*.42f;
+                float leftPitch=leftHipAngle*gaitForward;
+                float rightPitch=rightHipAngle*gaitForward;
+                Quaternion leftHip=Quaternion.Euler(leftPitch,0f,leftSide+Mathf.Sin(phase)*2.5f*strideWeight);
+                Quaternion rightHip=Quaternion.Euler(rightPitch,0f,rightSide+Mathf.Sin(phase+Mathf.PI)*2.5f*strideWeight);
                 Quaternion leftKnee=Quaternion.Euler(leftKneeAngle,0f,0f);
                 Quaternion rightKnee=Quaternion.Euler(rightKneeAngle,0f,0f);
-                Quaternion leftAnkle=Quaternion.Euler(leftAnkleAngle,0f,0f);
-                Quaternion rightAnkle=Quaternion.Euler(rightAnkleAngle,0f,0f);
+                Quaternion leftAnkle=Quaternion.Euler(Mathf.Clamp(leftAnkleAngle+leftHipAngle-leftPitch,-60f,60f),0f,-leftSide);
+                Quaternion rightAnkle=Quaternion.Euler(Mathf.Clamp(rightAnkleAngle+rightHipAngle-rightPitch,-60f,60f),0f,-rightSide);
                 // Elbows flex forward; they must not alternate into hyperextension, or
                 // continue their walking oscillation while the shoulders deliver an attack.
                 // No gait-synchronous elbow pumping. Keep a small relaxed bend as a base;
@@ -581,11 +598,13 @@ namespace Alterverse.Visuals
             if(cycle<stance)
             {
                 float u=cycle/stance;
-                float hipU=Mathf.SmoothStep(0f,1f,u);
+                // Mostly constant stance travel reduces the sliding caused by easing
+                // the loaded leg to a halt at both ends of every ground contact.
+                float hipU=Mathf.Lerp(u,Mathf.SmoothStep(0f,1f,u),.15f);
                 hipAngle=Mathf.Lerp(hipRange,-hipRange,hipU)*(imported?-1f:1f);
 
                 float load=u<.14f?Mathf.Lerp(0f,1f,Mathf.SmoothStep(0f,1f,u/.14f)):
-                    u>.78f?Mathf.Lerp(1f,0f,Mathf.SmoothStep(.78f,1f,u)):1f;
+                    u>.78f?1f-Mathf.SmoothStep(0f,1f,(u-.78f)/.22f):1f;
                 kneeAngle=Mathf.Lerp(2f,8f,load)*weight;
 
                 float footPitch;
@@ -594,7 +613,9 @@ namespace Alterverse.Visuals
                 else footPitch=Mathf.Lerp(0f,18f,Mathf.SmoothStep(0f,1f,(u-.76f)/.24f));
                 // Counter-rotate against thigh and shin so the sole stays planted; the final
                 // part releases into a distinct toe-off rather than drawing a pendulum arc.
-                ankleAngle=Mathf.Clamp(footPitch-hipAngle-kneeAngle,-60f,60f)*weight;
+                // Hip and knee are already weighted. Applying weight again breaks
+                // sole compensation and makes the stance/swing seam jump on startup.
+                ankleAngle=Mathf.Clamp(footPitch*weight-hipAngle-kneeAngle,-60f,60f);
                 return;
             }
 
@@ -603,17 +624,17 @@ namespace Alterverse.Visuals
             hipAngle=Mathf.Lerp(-hipRange,hipRange,eased)*(imported?-1f:1f);
             // Bend after push-off, clear the ground, then extend into a heel-first landing.
             float kneeLift=Mathf.Sin(Mathf.PI*swing);
-            kneeAngle=(Mathf.Lerp(5f,1f,eased)+kneeRange*kneeLift)*weight;
+            kneeAngle=(2f+kneeRange*kneeLift)*weight;
 
-            float toeOffAngle=Mathf.Clamp(18f+(imported?-hipRange:hipRange)-5f,-60f,60f)*weight;
+            float toeOffAngle=Mathf.Clamp(18f*weight+(imported?-hipRange:hipRange)-2f*weight,-60f,60f);
             float recoveryAngle=-9f*weight;
             ankleAngle=swing<.22f
                 ?Mathf.Lerp(toeOffAngle,recoveryAngle,Mathf.SmoothStep(0f,1f,swing/.22f))
                 :recoveryAngle;
             if(swing>.78f)
             {
-                float plantAngle=Mathf.Clamp(-7f-hipAngle-kneeAngle,-60f,60f)*weight;
-                ankleAngle=Mathf.Lerp(ankleAngle,plantAngle,Mathf.SmoothStep(.78f,1f,(swing-.78f)/.22f));
+                float plantAngle=Mathf.Clamp(-7f*weight-hipAngle-kneeAngle,-60f,60f);
+                ankleAngle=Mathf.Lerp(ankleAngle,plantAngle,Mathf.SmoothStep(0f,1f,(swing-.78f)/.22f));
             }
         }
 
@@ -915,4 +936,5 @@ namespace Alterverse.Visuals
 
     }
 }
+
 
