@@ -112,7 +112,7 @@ namespace Alterverse.Multiplayer
         public async Task<bool> CreatePrivatePartyAsync()
         {
             if (busy) return false;
-            if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
+            if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before creating an online party.");
 
             try
@@ -162,7 +162,7 @@ namespace Alterverse.Multiplayer
         public async Task<bool> JoinByCodeAsync(string rawCode)
         {
             if (busy) return false;
-            if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
+            if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before joining an online party.");
 
             string code = NormalizeJoinCode(rawCode);
@@ -182,20 +182,20 @@ namespace Alterverse.Multiplayer
                 await LeaveInternalAsync();
 
                 ISession joined = await MultiplayerService.Instance.JoinSessionByCodeAsync(code, BuildJoinOptions());
+                session = joined;
+                AttachSession(session);
                 bool searchAlreadyActive = ReadSession(joined, SearchKey, "0") == "1";
 
                 // Before public search the private friend party is intentionally limited to one team.
                 // The Relay allocation itself is larger because it must later carry both teams.
                 if (!searchAlreadyActive && joined.PlayerCount > MaxPartyPlayers)
                 {
-                    try { await joined.LeaveAsync(); } catch { }
+                    await LeaveInternalAsync();
                     lastError = "The private friend party already has five players.";
                     SetStatus("FRIEND PARTY FULL");
                     return false;
                 }
 
-                session = joined;
-                AttachSession(session);
                 SetStatus(searchAlreadyActive
                     ? "JOINED ONLINE MATCH LOBBY • PLAYER SEARCH ACTIVE"
                     : "JOINED PRIVATE FRIEND PARTY");
@@ -221,7 +221,7 @@ namespace Alterverse.Multiplayer
         public async Task<bool> QuickSearchAsync()
         {
             if (busy) return false;
-            if (CoopLobbyService.Instance != null && CoopLobbyService.Instance.InLobby)
+            if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before searching online.");
 
             bool found = false;
@@ -639,16 +639,17 @@ namespace Alterverse.Multiplayer
             ISession old = session;
             if (old == null) return;
             DetachSession(old);
-            session = null;
             try
             {
                 if (old.IsHost) await old.AsHost().DeleteAsync();
                 else await old.LeaveAsync();
             }
-            catch (Exception ex)
+            catch
             {
-                Debug.LogWarning("DIMENSIONS FRONT ONLINE: party leave cleanup failed: " + ex.Message);
+                AttachSession(old);
+                throw; // Do not report a successful leave while membership remains.
             }
+            session = null;
         }
 
         private async Task SafeLeaveAfterFailureAsync()
@@ -785,3 +786,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

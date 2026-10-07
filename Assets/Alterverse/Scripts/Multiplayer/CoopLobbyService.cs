@@ -138,6 +138,13 @@ namespace Alterverse.Multiplayer
         public async Task<bool> CreateLobbyAsync()
         {
             if(busy)return false;
+            if(OnlinePartyService.Instance?.InParty==true || OnlinePartyService.Instance?.Busy==true ||
+                EdgegapOnlineFlow.Instance?.Busy==true || EdgegapOnlineFlow.Instance?.IsSearching==true)
+            {
+                lastError="Leave the online party or finish connecting before opening a co-op lobby.";
+                SetStatus("ONLINE PARTY ACTIVE");
+                return false;
+            }
             try
             {
                 busy=true;lastError="";SetStatus("CREATING PRIVATE CO-OP LOBBY");
@@ -179,6 +186,13 @@ namespace Alterverse.Multiplayer
         public async Task<bool> JoinLobbyAsync(string rawCode)
         {
             if(busy)return false;
+            if(OnlinePartyService.Instance?.InParty==true || OnlinePartyService.Instance?.Busy==true ||
+                EdgegapOnlineFlow.Instance?.Busy==true || EdgegapOnlineFlow.Instance?.IsSearching==true)
+            {
+                lastError="Leave the online party or finish connecting before opening a co-op lobby.";
+                SetStatus("ONLINE PARTY ACTIVE");
+                return false;
+            }
             string code=NormalizeJoinCode(rawCode);
             if(code.Length<4){lastError="Enter a valid lobby code.";SetStatus("INVALID LOBBY CODE");RaiseChanged();return false;}
 
@@ -838,21 +852,25 @@ namespace Alterverse.Multiplayer
             ISession old=session;
             if(old==null)return;
             DetachSession(old);
-            session=null;
-            CoopAuthority.EndMatch();
             try
             {
                 if(old.IsHost)await old.AsHost().DeleteAsync();
                 else await old.LeaveAsync();
             }
-            catch(Exception ex){Debug.LogWarning("DIMENSIONS FRONT: lobby leave cleanup failed: "+ex.Message);}
-            finally{CoopNetworkBootstrap.ShutdownLocalNetwork();}
+            catch
+            {
+                AttachSession(old);
+                throw; // Keep membership visible so the player can retry cleanup.
+            }
+            session=null;
+            CoopAuthority.EndMatch();
+            CoopNetworkBootstrap.ShutdownLocalNetwork();
         }
 
         private async Task SafeLeaveAfterFailureAsync()
         {
             try{await LeaveExistingSessionInternalAsync();}
-            catch{session=null;}
+            catch{}
         }
 
         private void Fail(string userMessage,Exception ex)
@@ -915,3 +933,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

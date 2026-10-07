@@ -73,7 +73,7 @@ namespace Alterverse.Profile
         public async Task<bool> SignInAsync(string username,string password,bool register)
         {
             if(Busy||string.IsNullOrWhiteSpace(username)||string.IsNullOrEmpty(password))return false;
-            if(Alterverse.Multiplayer.CoopAuthority.Active||Alterverse.Multiplayer.CoopLobbyService.Instance?.InLobby==true||Alterverse.Multiplayer.OnlinePartyService.Instance?.InParty==true)
+            if(Alterverse.Multiplayer.CoopLobbyService.Instance?.Busy==true||Alterverse.Multiplayer.OnlinePartyService.Instance?.Busy==true||Alterverse.Multiplayer.EdgegapOnlineFlow.Instance?.Busy==true||Alterverse.Multiplayer.CoopAuthority.Active||Alterverse.Multiplayer.CoopLobbyService.Instance?.InLobby==true||Alterverse.Multiplayer.OnlinePartyService.Instance?.InParty==true)
             {Status="Leave the match or party before changing accounts.";return false;}
             Busy=true;
             try
@@ -113,4 +113,5 @@ namespace Alterverse.Profile
         }
     }
 }
+
 
