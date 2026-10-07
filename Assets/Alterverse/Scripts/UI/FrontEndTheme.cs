@@ -235,10 +235,6 @@ namespace Alterverse.UI
         public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
         {
 
-            // Keep the Battle Item insufficient-funds button in sync with the actual purchase price.
-            if(string.Equals(text,"NEED 250 SHARDS",StringComparison.OrdinalIgnoreCase))
-                text=$"NEED {Alterverse.Profile.BattleItemInventory.ShieldShardPrice} SHARDS";
-
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
             text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
             rect = FitActionRect(rect, text);
