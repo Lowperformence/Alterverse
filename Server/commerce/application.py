@@ -6,8 +6,10 @@ from urllib.parse import quote
 from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 
 class CommerceApplication:
-    def __init__(self, ledger_path, authenticate, google_session, package_name):
-        self.ledger = Ledger(ledger_path)
+    def __init__(self, ledger_or_path, authenticate, google_session, package_name):
+        # Tests/local development may still pass a SQLite path. Cloud Run can pass
+        # a FirestoreLedger instance with the same public methods.
+        self.ledger = ledger_or_path if hasattr(ledger_or_path, 'wallet') else Ledger(ledger_or_path)
         self.authenticate = authenticate
         self.google = google_session  # google.auth.transport.requests.AuthorizedSession, server credentials only
         self.package = package_name
@@ -58,4 +60,3 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
-
