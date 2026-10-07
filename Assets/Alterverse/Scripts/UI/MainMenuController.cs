@@ -1129,7 +1129,7 @@ namespace Alterverse.UI
 
             float x=Left+cardW+34,w=ContentWidth-cardW-34;
             theme.Label(new Rect(x,364,w,38),"Victory drops",theme.Heading);
-            theme.Label(new Rect(x,410,w,110),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Meteor Cores are equally likely.",theme.Body,true);
+            theme.Label(new Rect(x,410,w,110),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Team Heal Cores are equally likely.",theme.Body,true);
             theme.Label(new Rect(x,530,w,68),"One item per match. Consumed when the 2-minute supply drop starts. The crate stays until your team collects it.",theme.Body,true);
             if(theme.Action(new Rect(x,610,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
         }
