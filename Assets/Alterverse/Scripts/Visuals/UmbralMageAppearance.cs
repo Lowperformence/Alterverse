@@ -222,7 +222,9 @@ namespace Alterverse.Visuals
             }
             var mesh = new Mesh { name = "DF_Elyra_Siege_" + group };
             ownedMeshes.Add(mesh);
-            mesh.SetVertices(v); mesh.SetNormals(n); mesh.SetUVs(2, v); mesh.boneWeights = w.ToArray();
+            mesh.SetVertices(v); mesh.SetNormals(n);
+            // Bind-pose projection weights keep ceramic seams stable during arm/leg animation.
+            mesh.SetUVs(2, v); mesh.SetUVs(3, n); mesh.boneWeights = w.ToArray();
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = materials.Length;

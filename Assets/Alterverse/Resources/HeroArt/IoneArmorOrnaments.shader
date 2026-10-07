@@ -43,6 +43,7 @@ Shader "Alterverse/IoneArmorOrnaments"
                 float4 tangentOS : TANGENT;
                 float2 uv : TEXCOORD0;
                 float3 rest : TEXCOORD2;
+                float3 restNormal : TEXCOORD3;
             };
 
             struct Varyings
@@ -67,7 +68,7 @@ Shader "Alterverse/IoneArmorOrnaments"
                 output.tangentWS = half4(normalize(TransformObjectToWorldDir(input.tangentOS.xyz)), input.tangentOS.w * GetOddNegativeScale());
                 output.fogFactor = ComputeFogFactor(output.positionHCS.z);
                 output.rest=input.rest;
-                output.restNormal=input.normalOS;
+                output.restNormal=input.restNormal;
                 return output;
             }
 

@@ -136,104 +136,127 @@ def fabric(name,rows,mat,bone,phase=0):
  faces+= [[c+off,b+off,a+off] for a,b,c in faces]
  add(name,verts,faces,mat,bone)
 
-# Pearl armored arcane mech, based on the new user silhouette.
-shell('pelvis engine',[(.87,.12,.085,0),(1.04,.15,.10,0),(1.12,.095,.07,0)],0,'Hips')
-shell('narrow violet waist',[(1.05,.080,.061,0),(1.23,.09,.070,0),(1.36,.125,.088,0)],1,'Spine')
-shell('chest armored volume',[(1.27,.10,.085,0),(1.36,.17,.11,0),(1.49,.19,.10,0),(1.57,.11,.07,0)],0,'Chest')
-for s in [-1,1]:
- plate('broad ivory chest facet',[(s*.008,1.55),(s*.15,1.565),(s*.208,1.46),(s*.14,1.34),(s*.016,1.375)],.088,.058,2,'Chest')
- plate('chest lower bevel',[(s*.015,1.39),(s*.142,1.35),(s*.13,1.30),(s*.02,1.335)],.093,.029,1,'Chest')
- for j in range(3):
-  y=1.48-j*.019
-  tube('chest intake',[(s*.085,y,.148),(s*.137,y-.012,.148)],.004,0,'Chest',6)
- tube('abdominal piston',[(s*.061,1.09,.065),(s*.068,1.32,.077)],.013,2,'Spine',10)
- plate('back reactor housing',[(s*.015,1.55),(s*.13,1.53),(s*.145,1.36),(s*.03,1.30)],-.09,-.042,1,'Chest')
- for j in range(3):
-  tube('back cooling slit',[(s*.04,1.38+j*.045,-.135),(s*.11,1.38+j*.045,-.135)],.005,4,'Chest',6)
-# Shallow concept detailing: split chest seam, paired vents and silver service fasteners.
+# Refinement of the existing pearl-mech design; components follow the original rig.
+# Repeated longitudinal rings create curved armor rather than flat extruded boxes.
+def armor_wrap(name,a,b,width,depth,mat,bone):
+ a=np.array(a,float);b=np.array(b,float);axis=unit(b-a)
+ across=unit(np.cross(axis,[0,0,1]));out=unit(np.cross(across,axis))
+ verts=[];faces=[];segments=20
+ profiles=[(0,.70),(.06,.86),(.18,1.0),(.45,1.03),(.73,.96),(.90,.83),(1,.66)]
+ for t,factor in profiles:
+  center=a+(b-a)*t
+  for j in range(segments):
+   ang=2*math.pi*j/segments
+   # Flatten the inner shell slightly; let the front contour remain rounded.
+   z=math.sin(ang);z=z if z>0 else z*.78
+   verts.append(center+across*math.cos(ang)*width*factor+out*z*depth*factor)
+ for row in range(len(profiles)-1):
+  for j in range(segments):
+   i=row*segments+j;k=row*segments+(j+1)%segments
+   faces.extend([[i,k,k+segments],[i,k+segments,i+segments]])
+ for row,reverse in [(0,True),(len(profiles)-1,False)]:
+  center=len(verts);verts.append(a+(b-a)*profiles[row][0])
+  for j in range(segments):
+   f=[center,row*segments+j,row*segments+(j+1)%segments]
+   if reverse:f.reverse()
+   faces.append(f)
+ # End caps need axial normals; radial tests on coplanar caps are numerically unstable.
+ cap_start=len(profiles)*segments
+ for f in faces:
+  p,q,r=[verts[i] for i in f];c=(p+q+r)/3
+  outward=(-axis if cap_start in f else axis) if max(f)>=cap_start else c-(a+axis*np.dot(c-a,axis))
+  if np.dot(np.cross(q-p,r-p),outward)<0:f.reverse()
+ add(name,verts,faces,mat,bone)
+
+shell('sealed pelvis flexible shell',[(.875,.095,.075,0),(.935,.140,.105,0),(1.025,.147,.103,0),(1.10,.105,.080,0)],0,'Hips',32)
+shell('fitted ribbed abdomen',[(1.04,.082,.067,0),(1.12,.086,.073,0),(1.20,.095,.080,0),(1.29,.116,.087,0),(1.36,.130,.09,0)],0,'Spine',32)
+shell('anatomical upper thorax',[(1.27,.116,.080,0),(1.34,.158,.107,0),(1.44,.190,.120,0),(1.52,.190,.105,0),(1.575,.115,.080,0)],0,'Chest',32)
+# Separate left/right sculpted breastplate with deliberate underlapping side panels.
 for sign in [-1,1]:
- tube('chest panel seam',[(sign*.016,1.535,.161),(sign*.023,1.435,.166),(sign*.021,1.384,.153)],.0028,0,'Chest',5)
- for y in [1.514,1.385]:
-  ell('chest service fastener',(sign*.110,y,.163),(.0045,.0045,.0028),1,'Chest',8,5)
-limb('neck actuator',(0,1.52,0),(0,1.69,0),.039,0,'Head')
-ell('compact helmet core',(0,1.755,0),(.080,.100,.075),1,'Head',12,10)
-plate('black sensor mask',[(-.048,1.82),(0,1.85),(.048,1.82),(.045,1.72),(0,1.68),(-.045,1.72)],.063,.015,0,'Head')
-for s in [-1,1]:
- plate('white helmet brow',[(0,1.867),(s*.035,1.86),(s*.082,1.803),(s*.06,1.771),(s*.02,1.799)],.069,.025,2,'Head')
- plate('white cheek vane',[(s*.048,1.782),(s*.104,1.806),(s*.086,1.742),(s*.023,1.691),(s*.029,1.741)],.074,.018,2,'Head')
-# Two recessed violet eyes keep the concept helmet readable at gameplay distance.
+ plate('sculpted ceramic breastplate',[(sign*.012,1.570),(sign*.135,1.563),(sign*.203,1.508),(sign*.194,1.420),(sign*.140,1.345),(sign*.056,1.357),(sign*.014,1.412)],.099,.069,2,'Chest')
+ plate('rib overlapping ceramic',[(sign*.142,1.437),(sign*.192,1.45),(sign*.162,1.345),(sign*.116,1.308),(sign*.081,1.335)],.070,.042,2,'Chest')
+ plate('clavicle collar',[(sign*.014,1.601),(sign*.115,1.60),(sign*.170,1.559),(sign*.091,1.546),(sign*.027,1.568)],.055,.030,1,'Chest')
+ for j in range(3):
+  y=1.526-j*.016
+  tube('recessed chest intake',[(sign*.108,y,.164),(sign*.148,y-.006,.158)],.003,0,'Chest',6)
+ for y in [1.544,1.407]:ell('flush chest socket',(sign*.067,y,.173),(.004,.004,.002),1,'Chest',8,5)
+ plate('rear sculpted shoulder blade',[(sign*.012,1.565),(sign*.142,1.551),(sign*.166,1.446),(sign*.096,1.346),(sign*.015,1.364)],-.090,-.052,2,'Chest')
+ for j in range(3):
+  tube('rear radiator vent',[(sign*.046,1.457+j*.022,-.145),(sign*.114,1.452+j*.022,-.145)],.0035,0,'Chest',6)
+# Articulated abdominal lamellae conceal the empty stick-like midsection.
+for j in range(4):
+ y=1.28-j*.044
+ plate('abdominal lamella',[(-.058,y+.019),(.058,y+.019),(.066,y-.013),(.042,y-.026),(-.042,y-.026),(-.066,y-.013)],.079,.020,1,'Spine')
+ for sign in [-1,1]:
+  tube('abdominal oblique rib',[(sign*.066,y+.016,.078),(sign*.093,y+.004,.044)],.007,0,'Spine',8)
+plate('central pelvis ceramic',[(-.062,1.105),(.062,1.105),(.074,1.025),(.035,.900),(0,.870),(-.035,.900),(-.074,1.025)],.093,.040,2,'Hips')
+# Raised neck seals and collar close the artificial long neck gap.
+limb('neck flexible seal',(0,1.535,0),(0,1.677,0),.047,0,'Head')
+for y in [1.583,1.598,1.613,1.628]:ring('neck seal rib',(0,y,0),.048,.0035,1,'Head',(0,1,0),20)
+ell('enclosed helmet shell',(0,1.752,-.007),(.096,.113,.086),1,'Head',32,18)
+plate('recessed black mask',[(-.071,1.811),(0,1.854),(.071,1.811),(.061,1.730),(0,1.657),(-.061,1.730)],.072,.026,0,'Head')
 for sign in [-1,1]:
- tube('violet optical slit',[(sign*.014,1.790,.102),(sign*.033,1.798,.101),(sign*.049,1.794,.095)],[.0035,.005,.0025],3,'Head',8)
-# Replace the plain antenna with a more deliberate, split mech crest.
-for s in [-1,1]:
- shard('split crown fin',(s*.018,1.838,.018),(s*.087,1.974,-.012),.026,.018,2,'Head')
- tube('violet crown channel',[(s*.028,1.855,.071),(s*.055,1.905,.052),(s*.084,1.960,.012)],[.006,.005,.001],3,'Head',8)
- shard('temple signal fin',(s*.073,1.792,.045),(s*.128,1.850,-.006),.018,.014,1,'Head')
-ell('cyan forehead reactor',(0,1.852,.083),(.022,.027,.012),4,'Head',16,10)
-ring('forehead reactor bezel',(0,1.852,.080),.030,.004,2,'Head',(0,0,1),24)
-for s in [-1,1]:
- tube('visor brow light',[(s*.016,1.806,.088),(s*.050,1.817,.080),(s*.078,1.803,.061)],[.004,.005,.001],4,'Head',8)
-for side,s in [('L',-1),('R',1)]:
+ plate('swept white brow',[(sign*.004,1.866),(sign*.047,1.858),(sign*.093,1.812),(sign*.075,1.778),(sign*.026,1.810)],.077,.034,2,'Head')
+ plate('sculpted cheek jaw shell',[(sign*.069,1.792),(sign*.109,1.808),(sign*.102,1.739),(sign*.065,1.695),(sign*.012,1.655),(sign*.023,1.725)],.076,.029,2,'Head')
+ plate('helmet lateral cheek vent',[(sign*.083,1.779),(sign*.106,1.785),(sign*.093,1.749),(sign*.076,1.74)],.099,.007,0,'Head')
+ plate('helmet rear quarter',[(sign*.005,1.853),(sign*.068,1.839),(sign*.091,1.77),(sign*.06,1.696),(sign*.014,1.674)],-.057,-.033,2,'Head')
+ tube('slanted violet optical lens',[(sign*.019,1.780,.117),(sign*.038,1.791,.115),(sign*.058,1.803,.108)],[.004,.006,.0028],3,'Head',10)
+ shard('swept split crown',(sign*.020,1.833,-.004),(sign*.094,1.976,-.028),.024,.018,2,'Head')
+ tube('crown inset violet emitter',[(sign*.029,1.863,.060),(sign*.062,1.914,.036),(sign*.088,1.962,-.005)],[.0038,.003,.001],3,'Head',8)
+ shard('temple antenna',(sign*.085,1.800,.025),(sign*.125,1.839,-.018),.013,.010,1,'Head')
+shard('cyan forehead diamond',(0,1.801,.116),(0,1.850,.102),.009,.006,4,'Head')
+tube('forehead axial inlay',[(0,1.855,.106),(0,1.901,.039)],[.0038,.002],4,'Head',8)
+plate('white central chin',[(-.022,1.703),(0,1.722),(.022,1.703),(.018,1.660),(0,1.644),(-.018,1.660)],.090,.018,2,'Head')
+
+for side,sign in [('L',-1),('R',1)]:
  upper='UpperArm'+side;fore='Forearm'+side;hand='Hand'+side
- a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0])
- limb('upper arm mechanical sleeve',a,e,.052,1,upper)
- ell('shoulder rotary joint',a,(.079,.074,.079),0,upper,16,10)
- # Upper-arm plate between shoulder and elbow; no luminous shoulder cap.
- axis=unit(e-a);across=unit(np.array([-axis[1],axis[0],0]))
- top=a+(e-a)*.19;bottom=a+(e-a)*.83
- outline=[(top-across*.044)[:2],(top+across*.044)[:2],(bottom+across*.057)[:2],(bottom+axis*.017+across*.028)[:2],(bottom+axis*.017-across*.028)[:2],(bottom-across*.057)[:2]]
- faceZ=max(a[2],e[2])+.080
- plate('upper arm pearl armor plate',outline,faceZ,.030,2,upper)
- plate('upper arm rear armor plate',outline,-.057,-.023,1,upper)
- stripeStart=a+(e-a)*.28;stripeEnd=a+(e-a)*.74
- stripeStart[2]=faceZ+.030;stripeEnd[2]=faceZ+.030
- tube('upper arm recessed stripe channel',[stripeStart,stripeEnd],.010,0,upper,8)
- stripeStart[2]+=.008;stripeEnd[2]+=.008
- tube('upper arm fluorescent white stripe',[stripeStart,stripeEnd],.0055,5,upper,8)
- ell('elbow pivot',e,(.057,.055,.055),0,fore,12,8)
- ring('elbow cap',e+[0,0,.055],.034,.009,2,fore,segments=16)
- limb('forearm violet actuator',e,w,.048,1,fore)
- p=(e+w)*.5
- plate('white forearm shell',[(p[0]-s*.052,p[1]+.115),(p[0]+s*.052,p[1]+.091),(p[0]+s*.061,p[1]-.060),(p[0]+s*.021,p[1]-.118),(p[0]-s*.042,p[1]-.076)],.045,.050,2,fore)
- plate('forearm inset',[(p[0]-s*.021,p[1]+.061),(p[0]+s*.025,p[1]+.05),(p[0]+s*.029,p[1]-.018),(p[0]-s*.015,p[1]-.04)],.093,.006,0,fore)
- palm=w+[s*.01424,-.05341,.02576]
- plate('hand knuckle block',[(palm[0]-.035,palm[1]+.038),(palm[0]+.035,palm[1]+.038),(palm[0]+.032,palm[1]-.035),(palm[0]-.032,palm[1]-.035)],palm[2],.036,1,hand)
+ a=np.array(BONES[upper][0]);e=np.array(BONES[fore][0]);w=np.array(BONES[hand][0]);axis=unit(e-a)
+ # Glossy graphite shoulder shell: a complete sculpted cap, not a loose sphere.
+ ell('graphite shoulder rotary core',a+[sign*.028,0,0],(.104,.088,.096),0,upper,28,16)
+ ell('graphite shoulder crown',a+[sign*.034,.028,-.012],(.106,.077,.093),1,upper,28,14)
+ ring('shoulder recessed bearing',a+[sign*.030,0,.074],.056,.007,1,upper,(0,0,1),24)
+ armor_wrap('continuous ceramic upper arm',a+(e-a)*.23,e-axis*.042,.060,.067,2,upper)
+ tube('white upper arm light strip',[a+(e-a)*.40+[sign*.012,0,.070],a+(e-a)*.62+[sign*.012,0,.070]],.0025,5,upper,8)
+ # Keep the dark cuff independent of the joint motion.
+ armor_wrap('upper arm terminal cuff',e-axis*.053,e-axis*.032,.058,.059,1,upper)
+ ell('elbow recessed pivot',e,(.060,.059,.064),0,fore,24,14)
+ ring('silver elbow retaining bezel',e+[0,0,.060],.035,.006,1,fore,segments=24)
+ armor_wrap('sculpted wraparound forearm',e+(w-e)*.17,w+(e-w)*.10,.064,.066,2,fore)
+ p=e+(w-e)*.52
+ plate('recessed forearm service panel',[(p[0]-.022,p[1]+.055),(p[0]+.022,p[1]+.055),(p[0]+.021,p[1]-.045),(p[0]-.021,p[1]-.048)],p[2]+.081,.005,0,fore)
+ tube('forearm restrained violet conduit',[(p[0],p[1]+.037,p[2]+.088),(p[0],p[1]-.023,p[2]+.088)],.0028,3,fore,6)
+ palm=w+[sign*.01424,-.05341,.02576]
+ ell('flexible palm',palm,(.037,.044,.025),0,hand,20,12)
+ plate('hand protective metacarpal',[(palm[0]-.035,palm[1]+.033),(palm[0]+.035,palm[1]+.033),(palm[0]+.030,palm[1]-.009),(palm[0]-.030,palm[1]-.009)],palm[2]+.032,.012,1,hand)
  for j in range(4):
   xx=palm[0]+(j-1.5)*.017
-  tube('segmented finger',[(xx,palm[1]+.010,palm[2]+.038),(xx,palm[1]-.031,palm[2]+.045),(xx,palm[1]-.045,palm[2]+.012)],.007,0,hand,6)
- tube('opposed thumb',[palm+[s*.041,.025,0],palm+[s*.046,-.007,.025],palm+[s*.026,-.014,.036]],.011,1,hand,6)
+  points=[(xx,palm[1]+.003,palm[2]+.015),(xx,palm[1]-.025,palm[2]+.038),(xx,palm[1]-.045,palm[2]+.013)]
+  tube('articulated closed finger',points,[.0085,.008,.006],0,hand,8)
+  ell('finger hinge',points[1],(.0088,.0088,.0088),1,hand,10,6)
+ tube('opposing segmented thumb',[palm+[sign*.037,.018,0],palm+[sign*.045,-.008,.027],palm+[sign*.023,-.017,.034]],[.012,.011,.008],0,hand,8)
  thigh='Thigh'+side;shin='Shin'+side;foot='Foot'+side
  h=np.array(BONES[thigh][0]);k=np.array(BONES[shin][0]);f=np.array(BONES[foot][0])
- ell('hip gimbal',h+[0,.013,0],(.083,.083,.08),0,thigh,16,10)
- ring('violet hip reactor',h+[0,.021,.078],.059,.009,3,thigh,segments=24)
- ring('hip reactor bezel',h+[0,.021,.077],.073,.007,1,thigh,segments=24)
- limb('thigh structure',h,k,.068,1,thigh)
- x=(h[0]+k[0])*.5
- plate('large white thigh armor',[(x-s*.07,.885),(x+s*.08,.90),(x+s*.10,.72),(x+s*.05,.615),(x-s*.06,.65)],.048,.056,2,thigh)
- plate('thigh terminal seam',[(x-s*.05,.712),(x+s*.065,.725),(x+s*.068,.70),(x-s*.05,.689)],.101,.006,0,thigh)
- plate('rear thigh armor',[(x-.059,.86),(x+.059,.86),(x+.055,.67),(x-.055,.67)],-.041,-.032,1,thigh)
- ell('knee hinge',k,(.063,.061,.065),0,shin,12,8)
- plate('white angular kneecap',[(k[0]-.062,.585),(k[0]+.062,.585),(k[0]+.067,.54),(k[0]+.038,.481),(k[0]-.047,.49)],.054,.038,2,shin)
- limb('lower leg actuators',k,f,.046,0,shin)
- x=(k[0]+f[0])*.5
- plate('long pearl greave',[(x-.045,.481),(x+.044,.482),(x+.053,.37),(x+.035,.178),(x-.034,.17),(x-.049,.32)],.030,.034,2,shin)
- # A slim dark recess and a restrained violet conduit preserve the white shell.
- tube('shin recessed rail',[(x,.43,.078),(x,.23,.066)],.009,0,shin,8)
- tube('shin violet conduit',[(x,.40,.088),(x,.29,.080)],.0035,3,shin,6)
- plate('outer white shin blade',[(x+s*.045,.49),(x+s*.102,.56),(x+s*.087,.29),(x+s*.040,.21)],.02,.031,2,shin)
- ell('ankle bearing',f,(.041,.044,.044),0,foot,12,8)
- shell('angular mech foot',[(.048,.057,.11,.061),(.086,.06,.108,.055),(.145,.037,.042,-.012)],1,foot,8)
- # shell helper is centered on x=0: move only this foot's vertices to its own ankle.
- count=PARTS[-1]['vertices']
- for v in V[-count:]:v[0]+=f[0]
- plate('toe cap',[(f[0]-.052,.087),(f[0]+.052,.087),(f[0]+.05,.047),(f[0]-.05,.047)],.158,.020,2,foot)
-plate('white pelvic shield',[(-.052,1.11),(.052,1.11),(.065,1.013),(.031,.871),(0,.835),(-.041,.902)],.088,.040,2,'Hips')
-for side,s in [('L',-1),('R',1)]:
- for bone,y0,y1,width in [('Forearm'+side,1.23,1.07,.043),('Shin'+side,.46,.21,.043)]:
-  a=np.array(BONES[bone][0]);b=np.array(BONES[bone][1]);xx=(a[0]+b[0])*.5
-  plate('rear articulated armor',[(xx-width,y0),(xx+width,y0),(xx+width*.8,y1),(xx-width*.8,y1)],-.046,-.027,1,bone)
-  tube('rear actuator rail',[(xx,y0-.035,-.08),(xx,y1+.025,-.08)],.006,2,bone,6)
- plate('rear helmet casing',[(s*.006,1.84),(s*.055,1.823),(s*.071,1.752),(s*.035,1.69),(s*.008,1.706)],-.059,-.026,2,'Head')
+ ell('hip sealed articulation',h+[0,.015,0],(.086,.087,.083),0,thigh,24,14)
+ ring('violet hip annular reactor',h+[0,.020,.089],.062,.009,3,thigh,segments=40)
+ ring('hip machined outer bezel',h+[0,.020,.085],.078,.007,1,thigh,segments=32)
+ armor_wrap('rounded anatomical thigh shell',h+(k-h)*.21,k+(h-k)*.17,.088,.082,2,thigh)
+ p=h+(k-h)*.69
+ plate('thigh angled inset',[(p[0]-.055,p[1]+.008),(p[0]+.055,p[1]+.022),(p[0]+.053,p[1]+.008),(p[0]-.052,p[1]-.005)],p[2]+.091,.005,0,thigh)
+ ell('knee flexible hinge',k,(.066,.065,.068),0,shin,24,14)
+ plate('floating shaped knee cap',[(k[0]-.054,k[1]+.047),(k[0]+.054,k[1]+.047),(k[0]+.061,k[1]+.011),(k[0]+.036,k[1]-.043),(k[0]-.036,k[1]-.043),(k[0]-.061,k[1]+.011)],.073,.040,2,shin)
+ armor_wrap('calf undershell',k+(f-k)*.16,f+(k-f)*.13,.048,.052,0,shin)
+ armor_wrap('continuous ceramic greave',k+(f-k)*.18,f+(k-f)*.19,.063,.064,2,shin)
+ p=k+(f-k)*.55
+ plate('long greave technical recess',[(p[0]-.019,p[1]+.084),(p[0]+.019,p[1]+.082),(p[0]+.017,p[1]-.077),(p[0]-.017,p[1]-.077)],p[2]+.072,.005,0,shin)
+ tube('violet greave inlay',[(p[0],p[1]+.053,p[2]+.080),(p[0],p[1]-.039,p[2]+.080)],.003,3,shin,8)
+ shard('outer swept greave',p+[sign*.046,-.071,0],k+[sign*.083,.024,.012],.026,.021,2,shin)
+ ell('ankle bearing',f,(.042,.044,.047),0,foot,20,12)
+ # Three dimensional feet now have a rounded vamp, toe box and independent sole.
+ ell('sculpted armored foot',f+[0,-.062,.060],(.062,.052,.120),1,foot,24,14)
+ ell('ceramic upper vamp',f+[0,-.031,.043],(.054,.046,.076),2,foot,24,14)
+ plate('angular toe armor',[(f[0]-.048,.080),(f[0]+.048,.080),(f[0]+.051,.050),(f[0]+.032,.036),(f[0]-.032,.036),(f[0]-.051,.050)],.169,.023,2,foot)
+ ell('rubber foot sole',f+[0,-.089,.064],(.060,.016,.118),0,foot,20,8)
+
 # Hand-held deployable focus: compact reactor and four open armored petals; no staff.
 GROUP=2;bone='WeaponGripR';p=np.array(BONES['HandR'][0])+[.01424,-.05341,.02576];x=p[0];z=p[2]+.031
 limb('focus grip',(x,p[1]-.049,z),(x,p[1]+.065,z),.015,0,bone)
@@ -273,21 +296,6 @@ for i,v in enumerate(V):
  if GI[i]==2:
   V[i]=(weapon_pivot+(np.array(v)-weapon_pivot)*WEAPON_SCALE).tolist()
 
-# Heavy mech proportions: enlarge armor around each segment axis without lengthening limbs.
-for i,v in enumerate(V):
- if GI[i]!=0:continue
- name=BN[BI[i]];a=np.array(BONES[name][0]);b=np.array(BONES[name][1]);point=np.array(v)
- if name in ['Hips','Spine','Chest']:
-  sx={'Hips':1.15,'Spine':1.38,'Chest':1.20}[name]
-  point[0]*=sx;point[2]*=1.22
- elif name.startswith(('UpperArm','Forearm','Thigh','Shin')):
-  axis=unit(b-a);center=a+axis*np.dot(point-a,axis)
-  factor=1.18 if name.startswith(('UpperArm','Forearm')) else 1.16
-  point=center+(point-center)*factor
- elif name.startswith('Foot'):
-  point[0]=a[0]+(point[0]-a[0])*1.20
- V[i]=point.tolist()
-
 vertices=np.array(V);triangles=np.array(F,dtype=np.int32);normals=np.zeros_like(vertices)
 for i in range(len(triangles)):
  ids=triangles[i];a,b,c=vertices[ids];n=np.cross(b-a,c-a)
@@ -301,10 +309,12 @@ mesh={'version':1,'boneNames':BN,'anchors':[{'head':list(BONES[n][0]),'tail':lis
 'submeshes':[{'triangles':triangles[np.array(MI)==m].ravel().tolist()} for m in range(len(COLORS))]}
 (OUT/'Model.bytes').write_bytes(gzip.compress(json.dumps(mesh,separators=(',',':')).encode(), mtime=0))
 report={'vertices':len(V),'triangles':len(F),'materials':len(COLORS),'bones':len(BN),'parts':len(PARTS),'bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()]}
+report['qualityPass']='Rounded pearl-mech shells, recessed joints and fitted helmet details; original rig and focus retained'
 report['weaponScale']=WEAPON_SCALE
 report['focusGripToAperture']=round(float(np.linalg.norm(np.array(staff_top)-np.array(focus_pivot))),6)
 (ART/'geometry-report.json').write_text(json.dumps(report,indent=2))
 assert np.isfinite(vertices).all() and np.isfinite(normals).all()
+assert np.allclose(np.linalg.norm(normals,axis=1),1,atol=.001)
 assert triangles.min()>=0 and triangles.max()<len(V)
 assert len(BI)==len(V) and max(BI)<len(BN)
 assert abs(report['focusGripToAperture']-.338)<1e-6

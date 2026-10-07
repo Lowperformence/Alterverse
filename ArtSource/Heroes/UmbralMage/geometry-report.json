@@ -1,21 +1,22 @@
 {
-  "vertices": 6318,
-  "triangles": 11894,
+  "vertices": 14053,
+  "triangles": 27291,
   "materials": 6,
   "bones": 18,
-  "parts": 155,
+  "parts": 172,
   "bounds": [
     [
-      -0.40603680166823364,
-      0.047,
+      -0.4049832435997378,
+      0.016800000000000002,
       -0.17132404797226622
     ],
     [
       0.6047813449118113,
-      1.974,
+      1.976,
       0.33636404797226627
     ]
   ],
+  "qualityPass": "Rounded pearl-mech shells, recessed joints and fitted helmet details; original rig and focus retained",
   "weaponScale": 1.3,
   "focusGripToAperture": 0.338
 }
