@@ -14,7 +14,7 @@ namespace Alterverse.Multiplayer
     [DefaultExecutionOrder(-26000)]
     public sealed class EdgegapMatchmakerClient : MonoBehaviour
     {
-        public const string DefaultApiUrl = "https://om-71fje1pjhx.edgegap.net";
+        public const string DefaultApiUrl = "https://om-4tj8ca86qm.edgegap.net";
         public const string Profile = "dimensions-front-online";
         public const string TokenEnvironmentVariable = "DF_EDGEGAP_MATCHMAKER_TOKEN";
         public const string TokenResourcePath = "LocalSecrets/edgegap_matchmaker_token";
