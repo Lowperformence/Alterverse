@@ -60,6 +60,32 @@ class LedgerTests(unittest.TestCase):
         self.ledger.fulfill('account-a','dimensions_shards_500','claim-b',self.valid)
         self.assertEqual(Ledger(self.ledger.path).wallet('account-a')['balance'],1000)
 
+    def test_all_battle_items_cost_100_and_increment_inventory(self):
+        self.ledger.fulfill('account-a','dimensions_shards_500','battle-items-token',self.valid)
+        expected={
+            'regen':'DF_BattleItem_1',
+            'shield':'DF_BattleItem_2',
+            'velocity':'DF_BattleItem_3',
+            'team_heal':'DF_BattleItem_4',
+        }
+        for index,(sku,key) in enumerate(expected.items()):
+            wallet=self.ledger.wallet('account-a')
+            result=self.ledger.purchase('account-a',sku,f'battle-op-{index}',wallet['profileRevision'])
+            profile={entry['key']:entry for entry in result['profile']}
+            self.assertEqual(profile[key]['number'],1)
+        self.assertEqual(self.ledger.wallet('account-a')['balance'],100)
+
+        wallet=self.ledger.wallet('account-a')
+        result=self.ledger.purchase('account-a','team_heal','battle-op-repeat',wallet['profileRevision'])
+        profile={entry['key']:entry for entry in result['profile']}
+        self.assertEqual(profile['DF_BattleItem_4']['number'],2)
+        self.assertEqual(result['balance'],0)
+
+        retried=self.ledger.purchase('account-a','team_heal','battle-op-repeat',result['profileRevision'])
+        profile={entry['key']:entry for entry in retried['profile']}
+        self.assertEqual(profile['DF_BattleItem_4']['number'],2)
+        self.assertEqual(retried['balance'],0)
+
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','dimensions_shards_500','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
