@@ -39,7 +39,7 @@ namespace Alterverse.Characters
                 HeroId.Veyr=>new HeroAbilityLoadout(
                     new("Fractured edge",0,0,0),
                     new("Null Cut",7,38,3.1f),
-                    new("Rift Scar",10,28,3.3f),
+                    new("Rift Scar",10,35,3.3f),
                     // Zhaev depends on Gapfold to enter ranged matchups at all. Eleven seconds keeps
                     // a real punish window while avoiding long periods where a 2.25m assassin has
                     // no viable way to cross 6-7m ranged pressure.
@@ -79,7 +79,7 @@ namespace Alterverse.Characters
                     new("Between seconds",0,0,0),
                     new("Temporal Beam",8,30,7.2f),
                     new("Rift Step",13,0,3.6f),
-                    new("Chrono Snare",12,22,6.5f,2.2f,.38f),
+                    new("Chrono Snare",12,35,6.5f,2.2f,.38f),
                     new("Paradox Collapse",56,60,6.8f,3.2f,.68f)),
                 HeroId.Nerok=>new HeroAbilityLoadout(
                     new("Salvage Tide",0,12,0),
