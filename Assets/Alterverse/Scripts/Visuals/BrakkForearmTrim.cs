@@ -5,13 +5,14 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Removes Brakk's gold forearm plates and extra hand decorations.</summary>
+    /// <summary>Applies Brakk's gold suit and removes forearm plates and extra hand decorations.</summary>
     [DisallowMultipleComponent]
     public sealed class BrakkForearmTrim : MonoBehaviour
     {
         readonly List<Mesh> ownedMeshes = new List<Mesh>();
         readonly List<Material> ownedSkinMaterials = new List<Material>();
-        Material black;
+        Material goldForearms;
+        static readonly Color SuitGold = new Color(.82f, .56f, .18f, 1f);
 
         public static void Apply(Transform model, HeroId hero)
         {
@@ -19,6 +20,7 @@ namespace Alterverse.Visuals
             if (hero != HeroId.Rook || model == null || model.GetComponent<BrakkForearmTrim>() != null) return;
             BrakkForearmTrim owner = model.gameObject.AddComponent<BrakkForearmTrim>();
             SlimCalves(model, owner);
+            RecolorSuit(model, owner);
             // Clone skin slots on this instance; Nerok shares the imported asset.
             foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -54,7 +56,7 @@ namespace Alterverse.Visuals
                 if (weights.Length != source.vertexCount) continue;
 
                 var kept = new List<int>[source.subMeshCount];
-                var blackForearm = new List<int>();
+                var goldForearm = new List<int>();
                 int removed = 0;
                 Material[] materials = skin.sharedMaterials;
                 for (int sub = 0; sub < kept.Length; sub++)
@@ -78,37 +80,37 @@ namespace Alterverse.Visuals
                             removed++;
                             continue;
                         }
-                        List<int> target = anatomy && onForearm ? blackForearm : kept[sub];
+                        List<int> target = anatomy && onForearm ? goldForearm : kept[sub];
                         target.Add(a); target.Add(b); target.Add(c);
                     }
                 }
-                if (removed == 0 && blackForearm.Count == 0) continue;
+                if (removed == 0 && goldForearm.Count == 0) continue;
                 if (owner == null)
                 {
                     owner = model.gameObject.AddComponent<BrakkForearmTrim>();
                 }
-                if (blackForearm.Count > 0 && owner.black == null)
+                if (goldForearm.Count > 0 && owner.goldForearms == null)
                 {
-                    owner.black = RuntimeShaderLibrary.Create(new Color(.025f, .025f, .025f), metallic: .15f, smoothness: .32f);
-                    if (owner.black == null) { Debug.LogError("DF: Brakk forearm black shader is missing.", model); return; }
-                    owner.black.name = "DF_Brakk_BlackForearms";
+                    owner.goldForearms = RuntimeShaderLibrary.Create(SuitGold, metallic: .65f, smoothness: .32f);
+                    if (owner.goldForearms == null) { Debug.LogError("DF: Brakk forearm gold shader is missing.", model); return; }
+                    owner.goldForearms.name = "DF_Brakk_GoldForearms";
                 }
                 Mesh recolored = Instantiate(source);
                 recolored.name = source.name + "_BrakkWithoutGoldPlates";
-                recolored.subMeshCount = kept.Length + (blackForearm.Count > 0 ? 1 : 0);
+                recolored.subMeshCount = kept.Length + (goldForearm.Count > 0 ? 1 : 0);
                 for (int sub = 0; sub < kept.Length; sub++) recolored.SetTriangles(kept[sub], sub, false);
-                if (blackForearm.Count > 0) recolored.SetTriangles(blackForearm, kept.Length, false);
+                if (goldForearm.Count > 0) recolored.SetTriangles(goldForearm, kept.Length, false);
                 recolored.RecalculateBounds();
-                if (blackForearm.Count > 0)
+                if (goldForearm.Count > 0)
                 {
                     Array.Resize(ref materials, kept.Length + 1);
-                    materials[kept.Length] = owner.black;
+                    materials[kept.Length] = owner.goldForearms;
                     skin.sharedMaterials = materials;
                 }
                 skin.sharedMesh = recolored;
                 owner.ownedMeshes.Add(recolored);
                 Debug.Log("DF: Brakk removed " + removed + " plate triangles and colored " +
-                    (blackForearm.Count / 3) + " remaining forearm triangles black on " + skin.name, model);
+                    (goldForearm.Count / 3) + " remaining forearm triangles gold on " + skin.name, model);
 
                 bool Attached(int vertex, int bone)
                 {
@@ -123,6 +125,32 @@ namespace Alterverse.Visuals
             }
         }
 
+
+        static void RecolorSuit(Transform model, BrakkForearmTrim owner)
+        {
+            // Work on this Brakk instance only; Nerok shares the Rook FBX.
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (renderer.name != "DF_Anatomy") continue;
+                Material[] slots = renderer.sharedMaterials;
+                bool changed = false;
+                for (int i = 0; i < slots.Length; i++)
+                {
+                    Material original = slots[i];
+                    if (original == null) continue;
+                    string name = original.name.Replace(" (Instance)", "");
+                    // Preserve red enamel, skin, silver armor and mechanical details.
+                    if (name != "Obsidian fabric" && name != "Obsidian fabric_MatteWeave") continue;
+                    var copy = new Material(original) { name = original.name + "_BrakkGold" };
+                    if (copy.HasProperty("_BaseColor")) copy.SetColor("_BaseColor", SuitGold);
+                    if (copy.HasProperty("_Color")) copy.SetColor("_Color", SuitGold);
+                    slots[i] = copy;
+                    owner.ownedSkinMaterials.Add(copy);
+                    changed = true;
+                }
+                if (changed) renderer.sharedMaterials = slots;
+            }
+        }
 
         static void SlimCalves(Transform model, BrakkForearmTrim owner)
         {
@@ -178,7 +206,7 @@ namespace Alterverse.Visuals
         {
             foreach (Mesh mesh in ownedMeshes) if (mesh != null) Destroy(mesh);
             foreach (Material material in ownedSkinMaterials) if (material != null) Destroy(material);
-            if (black != null) Destroy(black);
+            if (goldForearms != null) Destroy(goldForearms);
         }
     }
 }
