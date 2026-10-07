@@ -37,7 +37,12 @@ sf.append(tuple(range(48,64)))
 add('tapered shark snout',sv,sf,1,'Head')
 ell('open mouth shadow',(0,1.65,.255),(.151,.084,.107),0,'Head',20,10)
 ell('shark lower jaw',(0,1.589,.233),(.148,.045,.14),5,'Head',20,8)
+# Enlarge only the cranial fin about its head attachment by 50 percent.
+cranial_fin_start=len(V)
 shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
+cranial_fin_pivot=np.array((0,1.85,-.08))
+for i in range(cranial_fin_start,len(V)):
+ V[i]=(cranial_fin_pivot+(np.array(V[i])-cranial_fin_pivot)*1.5).tolist()
 for s in [-1,1]:
  tube('organic brow',[(s*.105,1.828,.24),(s*.165,1.817,.24),(s*.17,1.806,.18)],.018,1,'Head',8)
  ell('red eye',(s*.157,1.801,.265),(.014,.007,.011),4,'Head',10,6)
