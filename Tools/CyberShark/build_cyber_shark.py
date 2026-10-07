@@ -55,12 +55,12 @@ def build_unified_shark_head():
  inside=len(vertices);vertices.append((0,1.630,.178))
  for j in range(segments):
   faces.append([last+j,last+(j+1)%segments,inside]);materials.append(0)
- # Lift the mouth corners gently into a grin, fading smoothly into the cheek.
+ # A slightly stronger upward curl gives the grin a more menacing expression.
  def smile_point(point):
   p=np.array(point,dtype=float).copy()
   vertical=max(0,1-abs(p[1]-1.635)/.115)
   forward=float(np.clip((p[2]-.210)/.120,0,1))
-  p[1]+=.018*(p[0]/.145)**2*vertical*forward
+  p[1]+=.032*(p[0]/.145)**2*vertical*forward
   return p.tolist()
  vertices=[smile_point(p) for p in vertices]
  material_start=len(MI)

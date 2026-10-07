@@ -36,7 +36,7 @@ namespace Alterverse.Visuals
         private readonly List<Material> ownedMaterials = new List<Material>();
         private Transform tail, freeUpperArm, freeForearm, freeHand, anchorGrip, hookSwing;
         private Quaternion hookRest;
-        private Vector3 hookPitchAxis, hookRollAxis;
+        private Vector3 hookHangDirection;
         private Vector2 hookAngles, hookAngularVelocity;
         private Quaternion tailRest;
         private Quaternion anchorGripRest;
@@ -232,8 +232,8 @@ namespace Alterverse.Visuals
                 hookSwing.SetParent(bones[grip], false);
                 hookSwing.position = model.TransformPoint(pivot);
                 hookRest = hookSwing.localRotation;
-                hookPitchAxis = hookSwing.InverseTransformDirection(model.right).normalized;
-                hookRollAxis = hookSwing.InverseTransformDirection(model.forward).normalized;
+                hookHangDirection = hookSwing.InverseTransformDirection(
+                    model.TransformDirection(rotations[grip] * Vector3.down)).normalized;
                 int hookIndex = bones.Length;
                 Array.Resize(ref bones, hookIndex + 1);
                 bones[hookIndex] = hookSwing;
@@ -467,16 +467,20 @@ namespace Alterverse.Visuals
         }
         private void UpdateHookSwing()
         {
-            if (hookSwing == null || Time.deltaTime <= 0f) return;
+            if (hookSwing == null) return;
             if (motion == null) motion = GetComponentInParent<HeroVisualMotion>();
             float movement = motion != null ? Mathf.InverseLerp(.10f, 3.5f, motion.PlanarSpeed) : 0f;
             float phase = motion != null ? motion.GaitPhase : 0f;
             var target = new Vector2(Mathf.Sin(phase) * 10f, Mathf.Sin(phase + .65f) * 4f) * movement;
             // Swing only below the held link; ease back to rest when movement stops.
-            hookAngles = Vector2.SmoothDamp(hookAngles, target, ref hookAngularVelocity, .10f,
-                90f, Mathf.Min(Time.deltaTime, .05f));
-            hookSwing.localRotation = Quaternion.AngleAxis(hookAngles.x, hookPitchAxis) *
-                Quaternion.AngleAxis(hookAngles.y, hookRollAxis) * hookRest;
+            if (Time.deltaTime > 0f)
+                hookAngles = Vector2.SmoothDamp(hookAngles, target, ref hookAngularVelocity, .10f,
+                    90f, Mathf.Min(Time.deltaTime, .05f));
+            // Cancel wrist/forearm tilt at the held link so the resting chain hangs straight down.
+            Quaternion inherited = hookSwing.parent.rotation * hookRest;
+            Quaternion hanging = Quaternion.FromToRotation(inherited * hookHangDirection, Vector3.down) * inherited;
+            hookSwing.rotation = Quaternion.AngleAxis(hookAngles.x, transform.right) *
+                Quaternion.AngleAxis(hookAngles.y, transform.forward) * hanging;
         }
         private void PoseFreeArmAlongGuide()
         {
