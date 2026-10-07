@@ -55,6 +55,14 @@ def build_unified_shark_head():
  inside=len(vertices);vertices.append((0,1.630,.178))
  for j in range(segments):
   faces.append([last+j,last+(j+1)%segments,inside]);materials.append(0)
+ # Lift the mouth corners gently into a grin, fading smoothly into the cheek.
+ def smile_point(point):
+  p=np.array(point,dtype=float).copy()
+  vertical=max(0,1-abs(p[1]-1.635)/.115)
+  forward=float(np.clip((p[2]-.210)/.120,0,1))
+  p[1]+=.018*(p[0]/.145)**2*vertical*forward
+  return p.tolist()
+ vertices=[smile_point(p) for p in vertices]
  material_start=len(MI)
  add('unified shark skull snout and jaw',vertices,faces,1,'Head')
  MI[material_start:]=materials
@@ -87,6 +95,7 @@ def build_unified_shark_head():
    left=base-tangent*width;right=base+tangent*width;tip=base+inward*length+[0,0,-.004]
    points=[left,right,tip,left+[0,0,-.014],right+[0,0,-.014],tip+[0,0,-.014]]
    tooth_faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
+   points=[smile_point(p) for p in points]
    center=np.mean(points,axis=0)
    for face in tooth_faces:
     p,q,r=[points[i] for i in face]
