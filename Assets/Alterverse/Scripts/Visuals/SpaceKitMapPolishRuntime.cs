@@ -88,21 +88,13 @@ namespace Alterverse.Visuals
         private void BuildScenery()
         {
             clearance=new SceneryBuildingClearance();
-            rockMesh = DecodeMesh("USK_Rock_Large_1", RockLarge1Data);
-            domeMesh = DecodeMesh("USK_GeodesicDome", GeodesicDomeData);
-            plantMesh = DecodeMesh("USK_Plant_2", Plant2Data);
-            spiralTreeMesh = DecodeMesh("USK_Tree_Spiral_1", TreeSpiral1Data);
-            radarMesh = DecodeMesh("USK_Roof_Radar", RadarData);
-            antennaMesh = DecodeMesh("USK_Roof_Antenna", AntennaData);
-            solarPanelMesh = DecodeMesh("USK_SolarPanel_Ground", SolarPanelData);
-
-            runtimeMeshes.Add(rockMesh);
-            runtimeMeshes.Add(domeMesh);
-            runtimeMeshes.Add(plantMesh);
-            runtimeMeshes.Add(spiralTreeMesh);
-            runtimeMeshes.Add(radarMesh);
-            runtimeMeshes.Add(antennaMesh);
-            runtimeMeshes.Add(solarPanelMesh);
+            rockMesh = DecodeOwnedMesh("USK_Rock_Large_1", RockLarge1Data);
+            domeMesh = DecodeOwnedMesh("USK_GeodesicDome", GeodesicDomeData);
+            plantMesh = DecodeOwnedMesh("USK_Plant_2", Plant2Data);
+            spiralTreeMesh = DecodeOwnedMesh("USK_Tree_Spiral_1", TreeSpiral1Data);
+            radarMesh = DecodeOwnedMesh("USK_Roof_Radar", RadarData);
+            antennaMesh = DecodeOwnedMesh("USK_Roof_Antenna", AntennaData);
+            solarPanelMesh = DecodeOwnedMesh("USK_SolarPanel_Ground", SolarPanelData);
 
             BuildPalette();
             BuildOuterRockField();
@@ -378,6 +370,33 @@ namespace Alterverse.Visuals
             return material;
         }
 
+#if UNITY_EDITOR
+        public static void ValidateEmbeddedGeometry()
+        {
+            string[] names={"USK_Rock_Large_1","USK_GeodesicDome","USK_Plant_2","USK_Tree_Spiral_1",
+                "USK_Roof_Radar","USK_Roof_Antenna","USK_SolarPanel_Ground"};
+            string[] data={RockLarge1Data,GeodesicDomeData,Plant2Data,TreeSpiral1Data,
+                RadarData,AntennaData,SolarPanelData};
+            for(int i=0;i<data.Length;i++)
+            {
+                Mesh mesh=DecodeMesh(names[i],data[i]);
+                try
+                {
+                    if(mesh.vertexCount==0||!float.IsFinite(mesh.bounds.size.sqrMagnitude))
+                        throw new InvalidDataException("Invalid embedded map mesh: "+names[i]);
+                }
+                finally { UnityEngine.Object.DestroyImmediate(mesh); }
+            }
+        }
+#endif
+
+        private Mesh DecodeOwnedMesh(string meshName, string encoded)
+        {
+            Mesh mesh=DecodeMesh(meshName,encoded);
+            runtimeMeshes.Add(mesh); // Own each allocation even if a later asset fails to decode.
+            return mesh;
+        }
+
         private static Mesh DecodeMesh(string meshName, string encoded)
         {
             byte[] compressed = Convert.FromBase64String(encoded);
@@ -387,13 +406,27 @@ namespace Alterverse.Visuals
 
             int vertexCount = reader.ReadUInt16();
             int indexCount = reader.ReadUInt16();
+            if(vertexCount==0||indexCount==0||indexCount%3!=0)
+                throw new InvalidDataException("Invalid embedded map geometry: "+meshName);
             Vector3[] vertices = new Vector3[vertexCount];
             int[] triangles = new int[indexCount];
 
             for (int i = 0; i < vertexCount; i++)
-                vertices[i] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+            {
+                Vector3 vertex=new Vector3(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());
+                if(!float.IsFinite(vertex.x)||!float.IsFinite(vertex.y)||!float.IsFinite(vertex.z))
+                    throw new InvalidDataException("Non-finite embedded map vertex: "+meshName);
+                vertices[i]=vertex;
+            }
             for (int i = 0; i < indexCount; i++)
-                triangles[i] = reader.ReadUInt16();
+            {
+                triangles[i]=reader.ReadUInt16();
+                if(triangles[i]>=vertexCount)
+                    throw new InvalidDataException("Embedded map index out of range: "+meshName);
+            }
+            // Read through the gzip footer before allocating a native Unity mesh.
+            if(gzip.ReadByte()!=-1)
+                throw new InvalidDataException("Trailing embedded map geometry: "+meshName);
 
             Mesh mesh = new() { name = meshName, indexFormat = IndexFormat.UInt16 };
             mesh.vertices = vertices;
@@ -414,5 +447,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

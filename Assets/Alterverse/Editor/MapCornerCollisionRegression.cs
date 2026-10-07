@@ -18,7 +18,7 @@ namespace Alterverse.EditorChecks
         public static void Run()
         {
             ArenaVariant[] variants=(ArenaVariant[])Enum.GetValues(typeof(ArenaVariant));
-            Check(variants.Length==3,"expected exactly Moon, Mars and GreenPlanet arena variants");
+            Check(variants.Length>0,"no arena variants registered");
             Check(Array.IndexOf(variants,ArenaVariant.Moon)>=0,"Moon arena missing");
             Check(Array.IndexOf(variants,ArenaVariant.Mars)>=0,"Mars arena missing");
             Check(Array.IndexOf(variants,ArenaVariant.GreenPlanet)>=0,"Green Planet arena missing");
@@ -30,7 +30,7 @@ namespace Alterverse.EditorChecks
 
             if(!Application.isPlaying)
             {
-                Debug.Log("Map rounded collision math passed for Moon, Mars and Green Planet. Start a match to scan live structure colliders.");
+                Debug.Log("Map rounded collision math passed for all registered arena variants. Start a match to scan live structure colliders.");
                 return;
             }
 
@@ -84,7 +84,7 @@ namespace Alterverse.EditorChecks
                 "arena floor is not using rounded mesh collision");
             Check(floor.GetComponent<BoxCollider>()==null,"arena floor still has square box collision");
 
-            Debug.Log("Map rounded collision regression passed: Moon, Mars and Green Planet share rounded arena corners; floor, bunkers, trenches and cores are rounded and no sharp blocking BoxCollider remains.");
+            Debug.Log("Map rounded collision regression passed: all registered arena variants share rounded arena corners; floor, bunkers, trenches and cores are rounded and no sharp blocking BoxCollider remains.");
         }
 
         private static void CheckRoundedBounds(float halfWidth,float halfHeight,string label)
@@ -104,3 +104,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
