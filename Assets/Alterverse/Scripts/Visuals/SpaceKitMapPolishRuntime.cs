@@ -173,6 +173,15 @@ namespace Alterverse.Visuals
             floraMaterial = CreateMaterial("USK_Flora", flora, .02f, .22f);
             accentMaterial = CreateMaterial("USK_Accent", accent, .18f, .52f);
             darkMaterial = CreateMaterial("USK_Dark", dark, .12f, .20f);
+            var planet=Alterverse.Match.ArenaVariantRuntime.Current;
+            PlanetSceneryMaterials.Apply(rockMaterial,planet,SceneryFinish.Stone);
+            PlanetSceneryMaterials.Apply(structureMaterial,planet,SceneryFinish.Metal);
+            PlanetSceneryMaterials.Apply(darkMaterial,planet,SceneryFinish.Metal);
+            PlanetSceneryMaterials.Apply(accentMaterial,planet,
+                planet==Alterverse.Match.ArenaVariant.Kryon?SceneryFinish.Ice:SceneryFinish.Metal);
+            PlanetSceneryMaterials.Apply(floraMaterial,planet,
+                planet==Alterverse.Match.ArenaVariant.Kryon?SceneryFinish.Ice:
+                planet==Alterverse.Match.ArenaVariant.Mars?SceneryFinish.Stone:SceneryFinish.Leaf);
         }
 
         private void BuildOuterRockField()
@@ -403,4 +412,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

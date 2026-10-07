@@ -196,6 +196,8 @@ namespace Alterverse.Visuals
                 if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",color*emissionPower);
             }
             ownedMaterials.Add(material);
+            if(!emission)PlanetSceneryMaterials.Apply(material,ArenaVariantRuntime.Current,
+                name.Contains("Terrain")?SceneryFinish.Stone:SceneryFinish.Metal);
             return material;
         }
 
@@ -424,4 +426,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

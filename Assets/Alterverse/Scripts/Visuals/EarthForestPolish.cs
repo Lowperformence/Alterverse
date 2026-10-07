@@ -354,6 +354,9 @@ namespace Alterverse.Visuals
             if(m.HasProperty("_Color"))m.SetColor("_Color",color);
             if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",metallic);
             if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",smoothness);
+            SceneryFinish finish=name.Contains("Bark")?SceneryFinish.Bark:
+                name.Contains("Soil")?SceneryFinish.Soil:SceneryFinish.Leaf;
+            PlanetSceneryMaterials.Apply(m,ArenaVariant.Earth,finish);
             materials.Add(m);
             return m;
         }
@@ -375,4 +378,5 @@ namespace Alterverse.Visuals
         void OnDestroy()=>ClearForest();
     }
 }
+
 

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    public enum SceneryFinish { Stone, Metal, Bark, Leaf, Ice, WetStone }
+    public enum SceneryFinish { Stone, Metal, Bark, Leaf, Ice, WetStone, Soil }
 
     /// <summary>Surface detail on existing, owned scenery materials; no renderer scan or texture baking.</summary>
     public static class PlanetSceneryMaterials
@@ -33,7 +33,8 @@ namespace Alterverse.Visuals
             if(material==null)return;
             Shader shader=Resources.Load<Shader>("DF_ScenerySurface");
             if(shader==null||!shader.isSupported)return; // Retain the valid original shader if unsupported.
-            string texturePath=finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone
+            string texturePath=finish==SceneryFinish.Soil?"PlanetSurfaces/"+planet+"/Ground":
+                finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone
                 ?"PlanetSurfaces/"+planet+"/Stone":"SceneryFinishes/"+finish;
             Texture2D texture=Resources.Load<Texture2D>(texturePath);
             if(texture==null){Debug.LogWarning("Scenery finish missing: "+texturePath);return;}
@@ -47,10 +48,10 @@ namespace Alterverse.Visuals
             material.SetTexture("_DetailData",texture);
             material.SetFloat("_DetailScale",finish switch {
                 SceneryFinish.Metal=>1.15f,SceneryFinish.Bark=>1.4f,SceneryFinish.Leaf=>2.6f,
-                SceneryFinish.Ice=>.72f,_=>planet==ArenaVariant.Mars?.55f:.42f});
+                SceneryFinish.Ice=>.72f,SceneryFinish.Soil=>.65f,_=>planet==ArenaVariant.Mars?.55f:.42f});
             material.SetFloat("_Relief",finish switch {
                 SceneryFinish.Metal=>.055f,SceneryFinish.Bark=>.32f,SceneryFinish.Leaf=>.15f,
-                SceneryFinish.Ice=>.075f,_=>.28f});
+                SceneryFinish.Ice=>.075f,SceneryFinish.Soil=>.16f,_=>.28f});
             material.SetFloat("_ValueContrast",finish==SceneryFinish.Metal?.10f:finish==SceneryFinish.Ice?.08f:.25f);
             material.SetFloat("_RoughnessWeight",finish==SceneryFinish.Metal?.18f:finish==SceneryFinish.Ice?.18f:.35f);
             material.SetFloat("_Sheen",finish==SceneryFinish.Leaf?.07f:0f);

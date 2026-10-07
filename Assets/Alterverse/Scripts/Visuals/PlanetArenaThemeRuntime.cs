@@ -216,6 +216,13 @@ namespace Alterverse.Visuals
                 emission?color*emissionPower:Color.black);
             if(material==null)return null;
             material.name=name;
+            if(!emission)
+            {
+                SceneryFinish finish=name.Contains("Bark")?SceneryFinish.Bark:
+                    name.Contains("Leaves")?SceneryFinish.Leaf:
+                    ArenaVariantRuntime.IsNeptune?SceneryFinish.WetStone:SceneryFinish.Stone;
+                PlanetSceneryMaterials.Apply(material,ArenaVariantRuntime.Current,finish);
+            }
             ownedMaterials.Add(material);
             return material;
         }
@@ -446,5 +453,6 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
+
 
 

@@ -73,6 +73,7 @@ namespace Alterverse.Visuals
             Material crystal=Mat("GJ504b_MagentaGeode",new Color(.86f,.035f,.42f));
             crystal.EnableKeyword("_EMISSION");if(crystal.HasProperty("_EmissionColor"))crystal.SetColor("_EmissionColor",new Color(.30f,.008f,.12f));
             detail.Apply(rock);detail.Apply(strata);
+            PlanetSceneryMaterials.Apply(crystal,ArenaVariant.GJ504b,SceneryFinish.Ice);
             Mesh fragment=LunarFragmentGeometry.Create(83);meshes.Add(fragment);
             var dark=new List<CombineInstance>();var light=new List<CombineInstance>();
             // Four authored range groups: mesas, eroded needles, gravel fans and a low broken rim.
@@ -207,4 +208,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

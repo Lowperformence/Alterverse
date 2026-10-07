@@ -24,6 +24,7 @@ namespace Alterverse.Visuals
                 if (material == null || material.shader == null || material.renderQueue >= 2450) return;
                 string shader = material.shader.name;
                 if (shader != "Alterverse/RuntimeLit" && shader != "Alterverse/PlanetSurface" &&
+                    shader != "Alterverse/ScenerySurface" &&
                     shader != "Universal Render Pipeline/Lit") return;
             }
             // Do not change transforms, BoxColliders, navigation, material slots or dimensions.
