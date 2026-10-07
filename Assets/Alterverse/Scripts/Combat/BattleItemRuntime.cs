@@ -34,12 +34,13 @@ namespace Alterverse.Combat
         private Alterverse.Match.DimensionsFront match;
         private Material energyMat,darkMat,teamMat;
         private bool claimed;
+        private bool authoritative=true;
         public bool IsAirborne=>airborne;
 
         public static bool Spawn(BattleItemType item,int ownerTeam,Vector3 position)
             =>Create(item,ownerTeam,position,false)!=null;
 
-        public static BattleItemPickup Create(BattleItemType item,int ownerTeam,Vector3 position,bool airdrop)
+        public static BattleItemPickup Create(BattleItemType item,int ownerTeam,Vector3 position,bool airdrop,bool authoritative=true)
         {
             if((int)item<(int)BattleItemType.Heal||(int)item>(int)BattleItemType.TeamHeal)return null;
             GameObject go=new("DF_BattleItemDrop_"+item);
@@ -47,7 +48,7 @@ namespace Alterverse.Combat
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)go.transform.SetParent(world,true);
             BattleItemPickup pickup=go.AddComponent<BattleItemPickup>();
-            pickup.type=item;pickup.team=Mathf.Clamp(ownerTeam,0,1);pickup.spawned=Time.time;
+            pickup.type=item;pickup.team=Mathf.Clamp(ownerTeam,0,1);pickup.spawned=Time.time;pickup.authoritative=authoritative;
             pickup.landing=ground;pickup.airborne=airdrop;
             pickup.match=Object.FindAnyObjectByType<Alterverse.Match.DimensionsFront>();
             go.transform.position=ground+(airdrop?Vector3.up*DropHeight:Vector3.zero);
@@ -199,6 +200,12 @@ namespace Alterverse.Combat
         private void Apply(Health hero)
         {
             if(claimed)return;claimed=true;
+            if(!authoritative)
+            {
+                PrototypeVfx.Burst(hero.transform.position,energyMat!=null?energyMat.color:Color.white,.6f,5);
+                Destroy(gameObject);
+                return;
+            }
             switch(type)
             {
                 case BattleItemType.Heal:
@@ -239,29 +246,54 @@ namespace Alterverse.Combat
         }
     }
 
-    /// <summary>One supply drop per equipped item, scheduled from the actual match clock.</summary>
+    /// <summary>
+    /// One supply per equipped human-player item. Offline keeps the local single-drop path.
+    /// Network matches use the verified ten-slot match plan and reserve five distinct landing
+    /// positions per team, so a full team can receive five simultaneous supplies without overlap.
+    /// </summary>
     public sealed class BattleItemAirdropSchedule:MonoBehaviour
     {
         public const float DropAtSeconds=120f;
         private Alterverse.Match.DimensionsFront match;
+
+        // Offline/local-bot path.
         private BattleItemType item;
         private int team;
         private bool captured,issued;
-        private float nextResolve;
         private BattleItemPickup drop;
+
+        // Network path. One deterministic entry per roster slot.
+        private readonly bool[] networkIssued=new bool[Alterverse.Multiplayer.MatchSession.MaxPlayers];
+        private readonly BattleItemPickup[] networkDrops=new BattleItemPickup[Alterverse.Multiplayer.MatchSession.MaxPlayers];
+        private float nextResolve;
         public string Status { get; private set; }
+
         private void Awake(){match=GetComponent<Alterverse.Match.DimensionsFront>();}
+
         public void ResetSchedule()
         {
             if(drop!=null)Destroy(drop.gameObject);
             drop=null;captured=issued=false;item=BattleItemType.None;Status=null;nextResolve=0;
+            for(int i=0;i<networkDrops.Length;i++)
+            {
+                if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
+                networkDrops[i]=null;networkIssued[i]=false;
+            }
         }
+
         private void Update()
         {
             if(match==null||match.HasEnded||Time.timeScale<=0||MainMenuVisible())return;
-            // Preserve the existing private co-op inventory restriction: no local-wallet
-            // consumption on behalf of remote players without an inventory protocol.
-            if(Alterverse.Multiplayer.CoopAuthority.Active){Status="SUPPLY UNAVAILABLE IN CO-OP";return;}
+            if(Alterverse.Multiplayer.CoopAuthority.Active)
+            {
+                UpdateNetworkSupplies();
+                return;
+            }
+            UpdateOfflineSupply();
+        }
+
+        private void UpdateOfflineSupply()
+        {
             if(!captured)
             {
                 if(Time.time<nextResolve)return;nextResolve=Time.time+.25f;
@@ -289,18 +321,75 @@ namespace Alterverse.Combat
             }
             if(!BattleItemRuntime.TryDropEquipped(item,team,position,out drop))
             {
-                // A visual/spawn failure must not permanently cancel an unconsumed item.
-                // The inventory check above still stops cancelled or exhausted loadouts.
                 Status="SUPPLY RETRYING";return;
             }
             issued=true;Status="TEAM SUPPLY DELIVERED";
         }
+
+        private void UpdateNetworkSupplies()
+        {
+            Alterverse.Multiplayer.CoopMatchPlan plan=Alterverse.Multiplayer.CoopAuthority.ActivePlan;
+            if(plan?.Session?.Slots==null){Status="TEAM SUPPLIES WAITING FOR ROSTER";return;}
+
+            int configured=0,issuedCount=0,airborneCount=0;
+            for(int slot=0;slot<Alterverse.Multiplayer.MatchSession.MaxPlayers;slot++)
+            {
+                Alterverse.Multiplayer.MatchPlayerSlot player=plan.Session.Slots[slot];
+                if(player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
+                configured++;
+                if(networkIssued[slot])
+                {
+                    issuedCount++;
+                    if(networkDrops[slot]!=null&&networkDrops[slot].IsAirborne)airborneCount++;
+                }
+            }
+
+            if(configured==0){Status=null;return;}
+            if(match.ElapsedSeconds<DropAtSeconds)
+            {
+                Status=$"TEAM SUPPLIES  {Mathf.CeilToInt(DropAtSeconds-match.ElapsedSeconds)}s  •  {configured} READY";
+                return;
+            }
+            if(Time.time<nextResolve)return;
+            nextResolve=Time.time+.5f;
+
+            bool authority=Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority;
+            for(int slot=0;slot<Alterverse.Multiplayer.MatchSession.MaxPlayers;slot++)
+            {
+                if(networkIssued[slot])continue;
+                Alterverse.Multiplayer.MatchPlayerSlot player=plan.Session.Slots[slot];
+                if(player==null||player.IsBot||player.BattleItem==BattleItemType.None)continue;
+
+                int teamSlot=slot%Alterverse.Multiplayer.MatchSession.TeamSize;
+                if(!TryLandingPosition(player.Team,teamSlot,out Vector3 position))continue;
+
+                BattleItemPickup created=BattleItemPickup.Create(player.BattleItem,player.Team,position,true,authority);
+                if(created==null)continue;
+
+                networkDrops[slot]=created;
+                networkIssued[slot]=true;
+                issuedCount++;
+
+                // Every real player pays for only their own planned supply on their own device.
+                // The authoritative host/dedicated server never consumes another player's wallet.
+                if(player.IsLocal)
+                    BattleItemInventory.TryConsumeEquipped(player.BattleItem);
+            }
+
+            airborneCount=0;
+            for(int i=0;i<networkDrops.Length;i++)
+                if(networkDrops[i]!=null&&networkDrops[i].IsAirborne)airborneCount++;
+
+            Status=issuedCount<=0?"TEAM SUPPLIES WAITING FOR CLEAR LANDING":
+                airborneCount>0?$"TEAM SUPPLIES INCOMING  •  {issuedCount}/{configured}":
+                $"TEAM SUPPLIES READY  •  {issuedCount}/{configured}";
+        }
+
         private static bool MainMenuVisible()=>Alterverse.UI.MainMenuController.IsVisible;
+
         internal static bool TryLandingPosition(int team,out Vector3 position)
         {
             float sign=team==0?-1f:1f;
-            // Bases are at x +/-36. Every candidate stays on the allied half
-            // of the central third, away from bases, bunkers and the centre pickup.
             foreach(float x in new[]{10f,8f,12f})
                 foreach(float z in new[]{7f,-7f,9f,-9f})
                 {
@@ -311,7 +400,33 @@ namespace Alterverse.Combat
                 }
             position=default;return false;
         }
-        private void OnDisable(){if(drop!=null)Destroy(drop.gameObject);}
+
+        internal static bool TryLandingPosition(int team,int teamSlot,out Vector3 position)
+        {
+            teamSlot=Mathf.Clamp(teamSlot,0,Alterverse.Multiplayer.MatchSession.TeamSize-1);
+            float sign=team==0?-1f:1f;
+            float[] rows={-14f,-7f,0f,7f,14f};
+            float baseZ=rows[teamSlot];
+
+            // Each roster slot owns its own Z lane. X and small Z fallbacks stay inside that lane,
+            // preventing another team-mate's crate from selecting the same landing point.
+            foreach(float x in new[]{10f,8f,12f})
+                foreach(float zOffset in new[]{0f,-1.5f,1.5f})
+                {
+                    Vector3 p=new(sign*x,0,baseZ+zOffset);
+                    p.y=LunarSurfaceField.Surface(p.x,p.z).y;
+                    if(Physics.CheckSphere(p+Vector3.up*.9f,.75f,
+                        GameplayCollision.SightMask,QueryTriggerInteraction.Ignore))continue;
+                    position=p;return true;
+                }
+            position=default;return false;
+        }
+
+        private void OnDisable()
+        {
+            if(drop!=null)Destroy(drop.gameObject);
+            for(int i=0;i<networkDrops.Length;i++)if(networkDrops[i]!=null)Destroy(networkDrops[i].gameObject);
+        }
     }
 
 }
