@@ -271,6 +271,7 @@ namespace Alterverse.Multiplayer
                     .Append(slot.DisplayName??"").Append(',')
                     .Append(slot.Team).Append(',')
                     .Append((int)slot.Hero).Append(',')
+                    .Append((int)slot.BattleItem).Append(',')
                     .Append(slot.IsBot?'1':'0').Append(',')
                     .Append(slot.IsHost?'1':'0');
             }
