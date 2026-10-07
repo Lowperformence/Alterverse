@@ -42,9 +42,24 @@ namespace Alterverse.Visuals
             }
             if(vertices.Count==0)return;
             Color accent=StylizedArtDirection.HeroAccent(hero);
-            Material metal=RuntimeShaderLibrary.Create(new Color(.095f,.115f,.135f),false,.55f,.32f);
+            // Keep each small service plate in its hero's concept palette. Brakk retains
+            // its established finish so his separate gold suit pass remains authoritative.
+            Color plateColor = hero switch
+            {
+                HeroId.Elyra => new Color(.82f,.84f,.87f),
+                HeroId.Kaelon => new Color(.38f,.35f,.22f),
+                HeroId.Mira => new Color(.19f,.30f,.25f),
+                HeroId.Nerok => new Color(.43f,.47f,.49f),
+                HeroId.Nyra => new Color(.10f,.13f,.15f),
+                HeroId.Traveler => new Color(.23f,.26f,.29f),
+                HeroId.Veyr => new Color(.055f,.050f,.075f),
+                _ => new Color(.095f,.115f,.135f)
+            };
+            Material metal=RuntimeShaderLibrary.Create(plateColor,false,hero==HeroId.Rook?.55f:.48f,hero==HeroId.Rook?.32f:.40f);
             Material circuits=RuntimeShaderLibrary.Create(Color.Lerp(accent,Color.white,.15f),false,.15f,.4f,accent*.8f);
-            Material screws=RuntimeShaderLibrary.Create(new Color(.36f,.30f,.20f),false,.65f,.35f);
+            Color fastenerColor = hero == HeroId.Rook || hero == HeroId.Kaelon || hero == HeroId.Mira
+                ? new Color(.36f,.30f,.20f) : new Color(.42f,.45f,.49f);
+            Material screws=RuntimeShaderLibrary.Create(fastenerColor,false,.65f,.35f);
             materials.Add(metal);materials.Add(circuits);materials.Add(screws);
             if(metal==null||circuits==null||screws==null)return;
             metal.name="DF_LimbMicroArmor";circuits.name="DF_LimbCircuitAccents";screws.name="DF_LimbFasteners";
@@ -137,3 +152,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
