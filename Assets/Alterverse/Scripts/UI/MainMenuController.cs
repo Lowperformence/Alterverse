@@ -1113,25 +1113,40 @@ namespace Alterverse.UI
         private void DrawBattleItemShop()
         {
             theme.Label(new Rect(Left,276,ContentWidth,36),"Battle Supply",theme.Heading);
-            theme.Label(new Rect(Left,316,ContentWidth,28),"Only the Aegis Core can be purchased. Other battle items are victory drops.",theme.Small,true);
-            float cardW=Mathf.Min(680,ContentWidth*.62f);
-            theme.Panel(new Rect(Left,354,cardW,270));
-            BattleItemIconRenderer.Draw(new Rect(Left+24,374,132,132),BattleItemType.Shield);
-            theme.Label(new Rect(Left+180,370,cardW-204,38),BattleItemInventory.Name(BattleItemType.Shield),theme.Heading);
-            theme.Label(new Rect(Left+180,410,cardW-204,62),BattleItemInventory.ShortDescription(BattleItemType.Shield)+"\nParachute supply drop after 2 minutes. Only your team can collect it.",theme.Body,true);
-            theme.Label(new Rect(Left+180,478,cardW-204,24),$"OWNED  {BattleItemInventory.Count(BattleItemType.Shield)}",theme.Small,true);
-            theme.Label(new Rect(Left+180,508,cardW-204,28),$"{BattleItemInventory.ShieldShardPrice} SHARDS",theme.Heading);
-            bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShieldShardPrice);
-            if(theme.Action(new Rect(Left+180,548,cardW-204,54),canBuy?"BUY 1 AEGIS CORE":"NEED 250 SHARDS",true,enabled:canBuy))
-                shopMessage=BattleItemInventory.TryBuyShield()?"Aegis Core added to inventory.":PaidShardCommerce.Spending?"Saving purchase…":"Purchase failed.";
-            if(PaidShardCommerce.Spending)shopPurchasePending=true;
-            theme.Label(new Rect(Left,634,cardW,32),shopMessage.Length>0?shopMessage:"Any shards in your balance can buy the Aegis Core.",theme.Small,true);
+            theme.Label(new Rect(Left,316,ContentWidth,28),"All Battle Items cost 100 shards. Buy as many as you want and equip one for the next match.",theme.Small,true);
 
-            float x=Left+cardW+34,w=ContentWidth-cardW-34;
-            theme.Label(new Rect(x,364,w,38),"Victory drops",theme.Heading);
-            theme.Label(new Rect(x,410,w,110),"Every victory has a 30% chance to award one random battle item. Regen, Aegis, Velocity and Team Heal Cores are equally likely.",theme.Body,true);
-            theme.Label(new Rect(x,530,w,68),"One item per match. Consumed when the 2-minute supply drop starts. The crate stays until your team collects it.",theme.Body,true);
-            if(theme.Action(new Rect(x,610,w,56),"OPEN INVENTORY"))SetPage(Page.Inventory);
+            BattleItemType[] items=BattleItemInventory.All;
+            float gap=14f;
+            float cardW=(ContentWidth-gap)*.5f;
+            float cardH=156f;
+            for(int i=0;i<items.Length;i++)
+            {
+                BattleItemType item=items[i];
+                int row=i/2,col=i%2;
+                float x=Left+col*(cardW+gap);
+                float y=350+row*(cardH+10);
+                theme.Panel(new Rect(x,y,cardW,cardH));
+                BattleItemIconRenderer.Draw(new Rect(x+14,y+18,78,78),item);
+                theme.FitLabel(new Rect(x+106,y+12,cardW-120,30),BattleItemInventory.Name(item),theme.Heading);
+                theme.Label(new Rect(x+106,y+42,cardW-120,42),BattleItemInventory.ShortDescription(item),theme.Small,true);
+                theme.Label(new Rect(x+106,y+86,cardW-120,20),$"OWNED  {BattleItemInventory.Count(item)}",theme.Small,true);
+                theme.Label(new Rect(x+14,y+116,104,28),$"{BattleItemInventory.ShardPrice} SHARDS",theme.Heading);
+
+                bool canBuy=PlayerWallet.CanAfford(BattleItemInventory.ShardPrice);
+                string action=canBuy?"BUY 1":$"NEED {BattleItemInventory.ShardPrice} SHARDS";
+                if(theme.Action(new Rect(x+128,y+110,cardW-142,38),action,true,enabled:canBuy))
+                {
+                    bool bought=BattleItemInventory.TryBuy(item);
+                    shopMessage=bought
+                        ?BattleItemInventory.Name(item)+" added to inventory."
+                        :PaidShardCommerce.Spending?"Saving purchase…":"Purchase failed.";
+                    if(PaidShardCommerce.Spending)shopPurchasePending=true;
+                }
+            }
+
+            theme.Label(new Rect(Left,682,ContentWidth-180,30),
+                shopMessage.Length>0?shopMessage:"Victory drops still remain available in addition to shop purchases.",theme.Small,true);
+            if(theme.Action(new Rect(Left+ContentWidth-166,674,166,42),"OPEN INVENTORY"))SetPage(Page.Inventory);
         }
 
         private void DrawInventory()
