@@ -1527,11 +1527,27 @@ namespace Alterverse.UI
             }
 
             bool restarting=GameObject.Find("DF_MatchWorld")!=null;
-            Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
-            launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
-            if(restarting)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
-            else bootstrap.BuildPrototype();
-            gameObject.SetActive(false);
+            try
+            {
+                Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
+                launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
+                if(restarting)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+                else
+                {
+                    bootstrap.BuildPrototype();
+                    if(GameObject.Find("AV_Player")==null||GameObject.Find("DF_MatchWorld")==null)
+                        throw new System.InvalidOperationException("No playable match was built for "+ArenaVariantRuntime.Current);
+                }
+                gameObject.SetActive(false);
+            }
+            catch(System.Exception error)
+            {
+                Debug.LogError("DIMENSIONS FRONT: match launch failed for "+ArenaVariantRuntime.Current);
+                Debug.LogException(error);
+                Alterverse.Prototype.PrototypeBootstrap.RestoreTransitionFrame();
+                ShowHome();
+                launchMessage="This arena could not be loaded. Please try again or choose another map.";
+            }
         }
     }
 }

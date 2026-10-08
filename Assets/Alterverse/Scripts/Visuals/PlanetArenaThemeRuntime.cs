@@ -17,6 +17,8 @@ namespace Alterverse.Visuals
         Transform detailRoot;
         ArenaVariant builtFor=(ArenaVariant)(-1);
         float nextBossScan;
+        GameObject failedThemeWorld;
+        ArenaVariant failedThemeVariant=(ArenaVariant)(-1);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Install()
@@ -37,12 +39,31 @@ namespace Alterverse.Visuals
             {
                 if(detailRoot==null&&ownedMaterials.Count>0)ReleaseMaterials();
                 builtFor=(ArenaVariant)(-1);
+                failedThemeWorld=null;
+                failedThemeVariant=(ArenaVariant)(-1);
                 return;
             }
 
             if(themed)
             {
-                if(detailRoot==null||builtFor!=variant)BuildTheme(world.transform,variant);
+                if((detailRoot==null||builtFor!=variant)&&
+                   (failedThemeWorld!=world||failedThemeVariant!=variant))
+                {
+                    try
+                    {
+                        BuildTheme(world.transform,variant);
+                    }
+                    catch(System.Exception error)
+                    {
+                        // Decoration must never prevent gameplay or fail every frame.
+                        Debug.LogError("DIMENSIONS FRONT: optional arena decoration failed for "+variant);
+                        Debug.LogException(error);
+                        ClearTheme();
+                        builtFor=variant;
+                        failedThemeWorld=world;
+                        failedThemeVariant=variant;
+                    }
+                }
             }
             else if(detailRoot!=null||ownedMaterials.Count>0)
             {
