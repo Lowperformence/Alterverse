@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Match;
 using Alterverse.Combat;
+using Alterverse.Visuals;
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
@@ -396,6 +397,8 @@ namespace Alterverse.Multiplayer
                 else if(localOwner&&errorSqr>.49f)
                     actor.transform.position=Vector3.Lerp(actor.transform.position,hostPosition,.42f);
                 if(!localOwner)actor.transform.rotation=Quaternion.Euler(0,yaw,0);
+                if(!localOwner)actor.GetComponent<HeroVisualMotion>()?.ReceivePresentationSnapshot(hostPosition,
+                    Quaternion.Euler(0,yaw,0),dead||respawning||errorSqr>9f,forcedMoving);
 
                 health.ApplyNetworkSnapshot(current,shield,dead);
                 HeroCombatStatus status=actor.GetComponent<HeroCombatStatus>()??actor.gameObject.AddComponent<HeroCombatStatus>();
@@ -420,4 +423,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

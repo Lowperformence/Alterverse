@@ -961,6 +961,8 @@ namespace Alterverse.Visuals
             FollowRifleDetails();
             // Final pose must run after these writes, independent of .meta/editor execution-order overrides.
             if (melee != null && melee.isActiveAndEnabled) melee.EvaluatePose();
+            GetComponent<HeroGroundedLocomotion>()?.FinalizeFeet();
         }
     }
 }
+

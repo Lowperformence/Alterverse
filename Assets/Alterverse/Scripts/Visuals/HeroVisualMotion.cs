@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Multiplayer;
 using UnityEngine;
 namespace Alterverse.Visuals
 {
@@ -21,6 +22,10 @@ namespace Alterverse.Visuals
         private Health health;
         private HeroLocomotion locomotion;
         private HeroProceduralRig articulatedRig;
+        private HeroGroundedLocomotion grounded;
+        private CoopHeroSlot replicaSlot;
+        private readonly HeroPresentationBuffer presentationBuffer = new();
+        private float replicaGroundingUntil;
         private Transform root,torso,head,legL,legR,bootL,bootR,armL,armR,orbitL,orbitR,wingL,wingR,cape,blade;
         private Quaternion torsoRest,headRest,bootRestL,bootRestR,armRestL,armRestR,bladeRest;
         private Vector3 basePosition,lastPosition,bootPositionL,bootPositionR;
@@ -67,6 +72,25 @@ namespace Alterverse.Visuals
         // Stable values can later drive an Animator blend tree without replacing movement logic.
         public float PlanarSpeed { get; private set; }
         public float GaitPhase=>phase;
+        public float RunBlend { get; private set; }
+        public float LocomotionWeight => strideWeight;
+        public Vector3 PresentedPosition { get; private set; }
+        public Quaternion PresentedRotation { get; private set; } = Quaternion.identity;
+        public Vector3 PresentedVelocity { get; private set; }
+        private bool RemoteReplica => replicaSlot != null && CoopAuthority.Active &&
+            !CoopAuthority.LocalHasServerAuthority && !replicaSlot.IsLocalHuman;
+        public bool GroundingSuspended => Dashing || Time.time < dashUntil || RemoteReplica &&
+            (Time.time < replicaGroundingUntil || PlanarSpeed > Mathf.Max(1f,(locomotion!=null?locomotion.RunningSpeed:6.5f)*1.6f));
+        public void ReceivePresentationSnapshot(Vector3 position, Quaternion rotation, bool discontinuity, bool forcedMoving)
+        {
+            if(replicaSlot==null)replicaSlot=GetComponent<CoopHeroSlot>();
+            replicaGroundingUntil = forcedMoving ? Time.time + .25f : 0f;
+            bool reset = discontinuity || !presentationBuffer.Ready;
+            presentationBuffer.Push(position, rotation, Time.time, reset);
+            if (!reset) return;
+            if (root != null) ResetPresentationAfterRelocation();
+            PresentedPosition = lastPosition = position; PresentedRotation = rotation; PresentedVelocity = Vector3.zero;
+        }
         public bool AbilityActionActive=>abilitySlot>=0&&(Time.time<attackUntil||Time.time<windupUntil);
         public bool ArmActionActive=>Time.time<attackUntil||Time.time<windupUntil||Time.time<hitUntil||Dashing;
         // A straight jab/cross envelope for the imported brawler rig. Specials retain
@@ -131,6 +155,7 @@ namespace Alterverse.Visuals
             // Native Unity objects must be created in a lifecycle callback, not a field initializer.
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
+            replicaSlot=GetComponent<CoopHeroSlot>();
             root=transform.Find("DF_VisualRoot");
             // Menu previews use the same visual rig but do not participate in combat,
             // so Health is optional. The gameplay visual root is still required for posing.
@@ -155,6 +180,9 @@ namespace Alterverse.Visuals
             Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+"). Guard v2: one shoulder/weapon pose owner.",this);
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
+            PresentedPosition=transform.position;PresentedRotation=transform.rotation;
+            grounded=GetComponent<HeroGroundedLocomotion>()??gameObject.AddComponent<HeroGroundedLocomotion>();
+            grounded.Initialize(root,articulatedRig);
             previousHeading=transform.eulerAngles.y;
             energyRenderers=root.GetComponentsInChildren<Renderer>();
             gauntletR=FindPart("GauntletR");gauntletL=FindPart("GauntletL");
@@ -199,12 +227,17 @@ namespace Alterverse.Visuals
         {
             if(root==null||articulatedRig==null||!articulatedRig.Ready)return;
             ResetPresentationAfterRelocation();
+            presentationBuffer.Clear();
+            replicaGroundingUntil=0f;
+            PresentedPosition=transform.position;PresentedRotation=transform.rotation;
             lastPosition=transform.position;
         }
         private void ResetPresentationAfterRelocation()
         {
             wasDead=moving=false;
             phase=strideWeight=lean=displayedSpeed=PlanarSpeed=smoothedTurnRate=0f;
+            RunBlend=0f;PresentedVelocity=Vector3.zero;
+            grounded?.ResetContacts();
             previousWorldVelocity=Vector3.zero;
             displayedTravelDirection=transform.forward;
             previousHeading=transform.eulerAngles.y;
@@ -232,7 +265,12 @@ namespace Alterverse.Visuals
         {
             
             if(root==null)return;
-            Vector3 delta=transform.position-lastPosition;delta.y=0;lastPosition=transform.position;
+            Vector3 presented=transform.position;Quaternion presentedRotation=transform.rotation;
+            if(RemoteReplica)presentationBuffer.Evaluate(Time.time,out presented,out presentedRotation);
+            // A replica may exist before its first snapshot; retain its spawn pose then.
+            if(RemoteReplica&&!presentationBuffer.Ready){presented=transform.position;presentedRotation=transform.rotation;}
+            PresentedPosition=presented;PresentedRotation=presentedRotation;
+            Vector3 delta=presented-lastPosition;delta.y=0;lastPosition=presented;
             if(Time.timeScale<=0){UpdateCloth(Time.unscaledDeltaTime,Time.unscaledTime,Vector3.zero);previousWorldVelocity=Vector3.zero;return;}
             float dt=Mathf.Max(Time.deltaTime,.0001f);
             if(health!=null&&health.IsDead){wasDead=true;PlanarSpeed=0;strideWeight=0;attackUntil=windupUntil=dashUntil=empowerUntil=0;root.localScale=rootScale;displayedScale=rootScale;displayedSpeed=0;SetEnergy(0);return;}
@@ -245,22 +283,23 @@ namespace Alterverse.Visuals
             HeroId hero=identity!=null?identity.Hero:HeroId.Veyr;
             bool heavy=hero==HeroId.Kaelon||hero==HeroId.Rook;
             float travel=delta.magnitude;
-            float rawTurnRate=Mathf.Clamp(Mathf.DeltaAngle(previousHeading,transform.eulerAngles.y)/dt,-540f,540f);
+            float rawTurnRate=Mathf.Clamp(Mathf.DeltaAngle(previousHeading,PresentedRotation.eulerAngles.y)/dt,-540f,540f);
             smoothedTurnRate=Mathf.Lerp(smoothedTurnRate,rawTurnRate,1-Mathf.Exp(-12f*dt));
             float turnRate=smoothedTurnRate;
-            previousHeading=transform.eulerAngles.y;
+            previousHeading=PresentedRotation.eulerAngles.y;
             PlanarSpeed=travel/dt;
             Vector3 worldVelocity=delta/dt;
-            Vector3 localVelocity=transform.InverseTransformDirection(worldVelocity);
+            PresentedVelocity=worldVelocity;
+            Vector3 localVelocity=Quaternion.Inverse(PresentedRotation)*worldVelocity;
             // Smooth direction in world space: facing an attack target must not make a
             // strafing/backpedalling hero keep marching forward. This only drives bones.
             if(!Dashing&&PlanarSpeed>.10f)
                 displayedTravelDirection=Vector3.Lerp(displayedTravelDirection,worldVelocity/PlanarSpeed,1-Mathf.Exp(-18f*dt));
-            Vector3 gaitDirection=transform.InverseTransformDirection(displayedTravelDirection);
+            Vector3 gaitDirection=Quaternion.Inverse(PresentedRotation)*displayedTravelDirection;
             float gaitForward=Mathf.Clamp(gaitDirection.z,-1f,1f);
             float gaitSide=Mathf.Clamp(gaitDirection.x,-1f,1f);
             // Subtract in the same coordinate frame: turning alone is not acceleration.
-            Vector3 localAcceleration=transform.InverseTransformDirection((worldVelocity-previousWorldVelocity)/dt);
+            Vector3 localAcceleration=Quaternion.Inverse(PresentedRotation)*((worldVelocity-previousWorldVelocity)/dt);
             localAcceleration=Vector3.ClampMagnitude(localAcceleration,45f);
             previousWorldVelocity=worldVelocity;
             // Ease the visible gait in and out while keeping collision and input immediate.
@@ -272,14 +311,14 @@ namespace Alterverse.Visuals
             // can still settle by a few centimetres without making the hero visually shuffle.
             if(moving){if(displayedSpeed<.10f)moving=false;}
             else if(displayedSpeed>.28f)moving=true;
-            if(Dashing)moving=false;
-            float desired=Dashing||!moving||PlanarSpeed<.10f?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
+            if(GroundingSuspended)moving=false;
+            float desired=GroundingSuspended||!moving||PlanarSpeed<.10f?0f:Mathf.InverseLerp(.10f,1.1f,displayedSpeed);
             strideWeight=Mathf.Lerp(strideWeight,desired,response);
             // One complete gait cycle per traveled stride, not one per fixed time interval.
-            float strideLength=heavy?1.65f:1.45f;
-            // All heroes complete 39% as many visible gait cycles over the same travel distance.
-            if(!Dashing)phase=Mathf.Repeat(phase+travel/strideLength*Mathf.PI*2*.39f,Mathf.PI*2);
             float runBlend=Mathf.InverseLerp(1.8f,4.5f,displayedSpeed)*strideWeight;
+            RunBlend=runBlend;
+            float strideLength=grounded!=null&&grounded.Ready?grounded.CycleStride(runBlend):(heavy?1.65f:1.45f);
+            if(!GroundingSuspended)phase=Mathf.Repeat(phase+travel/Mathf.Max(.1f,strideLength)*Mathf.PI*2,Mathf.PI*2);
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
@@ -303,7 +342,7 @@ namespace Alterverse.Visuals
             float spinYaw=fullSpin&&preparation>0?360f*Mathf.SmoothStep(0,1,windupProgress):0f;
             // Orun Overdrive lifts the rendered hero and brings him down exactly as its warning resolves.
             // Sivra's sight and barrel stay at a fixed height relative to the actor.
-            root.localPosition=basePosition+Vector3.up*(hero==HeroId.Nyra?0f:idle+bob);
+            root.localPosition=basePosition+transform.InverseTransformVector(PresentedPosition-transform.position)+Vector3.up*(hero==HeroId.Nyra?0f:idle+bob);
             float progress=attackDuration>0?Mathf.Clamp01(1-(attackUntil-Time.time)/attackDuration):1;
             bool meleeStrike=hero==HeroId.Veyr&&abilitySlot!=2||
                 (hero==HeroId.Nerok||hero==HeroId.Kaelon||hero==HeroId.Rook)&&abilitySlot!=1;
@@ -397,7 +436,7 @@ namespace Alterverse.Visuals
             Quaternion targetRotation=Quaternion.Euler(rootPitch,spinYaw,sway);
             // Full ability spins need their continuous angle; smoothing quaternions there would skip the arc.
             displayedRotation=fullSpin&&preparation>0?targetRotation:Quaternion.Slerp(displayedRotation,targetRotation,1-Mathf.Exp(-16f*dt));
-            root.localRotation=displayedRotation;
+            root.localRotation=Quaternion.Inverse(transform.rotation)*PresentedRotation*displayedRotation;
             float turnCounter=Mathf.Clamp(-turnRate*.025f,-12f,12f);
             if(torso!=null)torso.localRotation=torsoRest*Quaternion.Euler(lean*.35f,turnCounter,-sway*.45f);
             if(head!=null)head.localRotation=headRest*Quaternion.Euler(-lean*.35f,-turnCounter*.45f+Mathf.Sin(phase)*2f*strideWeight,-sway*.5f);
@@ -936,5 +975,6 @@ namespace Alterverse.Visuals
 
     }
 }
+
 
 

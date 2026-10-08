@@ -31,6 +31,9 @@ namespace Alterverse.Visuals
         private int poseFrame = -1, bodyPoseFrame = -1;
 
         public bool Ready { get; private set; }
+        public Transform Pelvis => pelvisJoint;
+        public void GetLeg(bool right, out Transform hip, out Transform knee, out Transform ankle)
+        { hip = right ? hipR : hipL; knee = right ? kneeR : kneeL; ankle = right ? ankleR : ankleL; }
         public Transform LeftWrist => wristL;
         public Transform RightWrist => wristR;
 
@@ -678,3 +681,4 @@ namespace Alterverse.Visuals
         private static Quaternion Rest(Transform t) => t != null ? t.localRotation : Quaternion.identity;
     }
 }
+
