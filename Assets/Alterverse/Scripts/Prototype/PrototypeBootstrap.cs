@@ -24,6 +24,15 @@ camera.backgroundColor=GameplayVoidColor;
 camera.cullingMask=0;
 }
 }
+// A failed match build must never leave gameplay cameras permanently masked.
+public static void RestoreTransitionFrame()
+{
+foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude))
+{
+if(camera==null||camera.cameraType!=CameraType.Game||camera.targetTexture!=null)continue;
+if(camera.cullingMask==0)camera.cullingMask=~(1<<MenuShowcaseLayer);
+}
+}
 [SerializeField]private bool buildOnStart=true;
 [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 private static void AutoCreate()
@@ -33,7 +42,25 @@ private static void AutoCreate()
 if(GameObject.Find("DF_MatchWorld")==null)PrepareTransitionFrame();
 if(FindAnyObjectByType<PrototypeBootstrap>()==null)new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();
 }
-private System.Collections.IEnumerator Start(){if(!buildOnStart)yield break;yield return null;while(MainMenuController.IsVisible)yield return null;BuildPrototype();}
+private System.Collections.IEnumerator Start()
+{
+if(!buildOnStart)yield break;
+yield return null;
+while(MainMenuController.IsVisible)yield return null;
+try
+{
+BuildPrototype();
+if(!IsServerOnlyMatch()&&(GameObject.Find("AV_Player")==null||GameObject.Find("DF_MatchWorld")==null))
+throw new System.InvalidOperationException("Match initialization returned without a player or world for arena "+ArenaVariantRuntime.Current);
+}
+catch(System.Exception error)
+{
+Debug.LogError("DIMENSIONS FRONT: automatic match startup failed for "+ArenaVariantRuntime.Current);
+Debug.LogException(error);
+RestoreTransitionFrame();
+MainMenuController.ShowHome();
+}
+}
 
 private void LateUpdate()
 {
@@ -41,7 +68,15 @@ if(pendingArenaCamera==null||Time.frameCount<revealArenaFrame)return;
 // Terrain, lighting and the panorama are built in Start; planet themes run in
 // Update. Reveal only after the next frame has run those initialization steps.
 if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
+{
 pendingArenaCamera.cullingMask=~(1<<MenuShowcaseLayer);
+}
+else
+{
+Debug.LogError("DIMENSIONS FRONT: arena was destroyed before camera reveal for "+ArenaVariantRuntime.Current);
+RestoreTransitionFrame();
+MainMenuController.ShowHome();
+}
 pendingArenaCamera=null;
 pendingArenaWorld=null;
 }
@@ -54,7 +89,21 @@ if(!IsServerOnlyMatch())PrepareTransitionFrame();
 GameObject previous=GameObject.Find("DF_MatchWorld");
 if(previous!=null){previous.SetActive(false);Destroy(previous);}
 yield return null;
+try
+{
 BuildPrototype();
+if(!IsServerOnlyMatch()&&(GameObject.Find("AV_Player")==null||GameObject.Find("DF_MatchWorld")==null))
+throw new System.InvalidOperationException("Restart returned without a player or world for arena "+ArenaVariantRuntime.Current);
+}
+catch(System.Exception error)
+{
+Debug.LogError("DIMENSIONS FRONT: arena restart failed for "+ArenaVariantRuntime.Current);
+Debug.LogException(error);
+pendingArenaCamera=null;
+pendingArenaWorld=null;
+RestoreTransitionFrame();
+MainMenuController.ShowHome();
+}
 }
 finally{MatchClock.Set(PauseReason.Transition,false);}
 }
