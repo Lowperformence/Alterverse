@@ -18,7 +18,7 @@ The existing 45-second initial ultimate lock applies. Leaving the hook's range, 
 
 ## Blender source and runtime assets
 
-`Tools/CyberShark/build_cyber_shark.py` generates the original shark, standard anchor, armature, three effect meshes and five HUD images using Blender 4.5. Runtime rigid skin data is under `Assets/Alterverse/Resources/CyberShark`; the editable scene is `ArtSource/Heroes/CyberShark/NerokCyberShark.blend`. Exported hero/anchor mesh: 8,959 triangles. The game's established skeleton/pose adapter is shared with the existing hero template; visible geometry is replaced by Nerok's mesh. No reference photograph/watermark is embedded.
+`Tools/CyberShark/build_cyber_shark.py` generates the original shark, standard anchor, armature, three effect meshes and five HUD images using Blender 4.5. Runtime rigid skin data is under `Assets/Alterverse/Resources/CyberShark`; the editable scene is `ArtSource/Heroes/CyberShark/NerokCyberShark.blend`. Current exported hero/accessory mesh: 26,742 triangles (9,614 head-bound triangles). The game's established skeleton/pose adapter is shared with the existing hero template; visible geometry is replaced by Nerok's mesh. No reference photograph/watermark is embedded.
 
 The VFX reuse the existing pooled HeroEnergy shader and lifetime scheduler. The water field has feathered rotating spiral ribbons, low wave crests, bubbles and a readable boundary. Its warning matches the actual radius. Multiplayer relays confirmed shark VFX from the server and synchronizes forced movement with hero snapshots. All peers must use this build (hero snapshot message V3).
 
@@ -41,3 +41,14 @@ Small healed scars added to exposed head, chest, arms and hands as bone-bound ge
 
 Free-hand chain hook: seven interlocked oval metal links, a forged eye and a long pointed hook are bound to `WeaponGripL` in independent mesh group 1. `CyberSharkAppearance` renders this group with its own rust-brown metal/oxidation colors and a runtime swing bone parented to the left grip. The forged hook uses a darker brown material slot than the chain. The held link remains fixed while the accessory swings with `HeroVisualMotion.PlanarSpeed` and `GaitPhase` (up to 10 degrees forward/back and 4 degrees sideways), easing back to rest when stopped. Right-hand anchor shrinking, Epic anchor skins and the thrown anchor export continue to affect group 2 only. No collider or ability behavior changes.
 
+
+
+## Reference head revision — 2026-10-08
+
+The supplied front-view reference guided a broader, shorter muzzle, rounded forehead, sloped inset eyes with subtle bronze irises, compressed brow folds, inlaid nostrils, a raised-corner grin, upper/lower primary and secondary tooth rows, modeled gums and mouth interior, curved gill cuts, a flush healed scar and swept cranial fin. The unified skull/muzzle/jaw/cavity has 1,666 shared source vertices and is a closed manifold with consistent winding. The cranial fin retains the previous maximum height of 2.075 source units.
+
+`CyberShark/SharkSkin` adds slate dorsal pigmentation, an ivory lower jaw, filtered fine denticle relief and a restrained wet surface response. The face uses unposed source coordinates in UV channel 2, keeping its skin detail fixed during animations. Eyes, iris, ivory enamel and dark gums receive independent runtime material assignments. Existing body and accessory rest coordinates retain their prior behavior.
+
+`build_reference_head.py` contains the reproducible head geometry and Blender materials. For a head-only runtime revision, run `build_cyber_shark.py` with `--skip-icons --preserve-body-from /path/to/previous/Model.bytes`; `merge_head_export.py` preserves all non-head triangle positions, normals, winding, skin weights and materials exactly. This revision preserves 17,128 body/weapon triangles, the rig anchors, hook grip, tail pivot and accessory groups. Each runtime renderer selects a 16-bit or 32-bit index buffer according to its own vertex count.
+
+`head-front.png`, `head-three-quarter.png` and `head-side.png` were rendered and inspected with Blender 4.5.9. `head-validation.json` records export integrity, finite unit normals, rigid head binding, mouth indices, body preservation and source topology. Re-run the checks with `python Tools/CyberShark/verify_reference_head.py --original /path/to/previous/Model.bytes`; add `--source` when invoking that script through Blender. The existing manual Unity menu **DIMENSIONS FRONT / Validate / Nerok skin and anchor poses** now also checks the head shader, materials and rest coordinates. Unity compilation, Android shader compilation, in-game appearance and mobile performance remain unverified in this environment.

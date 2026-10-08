@@ -3,7 +3,7 @@ Run: blender --background --python Tools/CyberShark/build_cyber_shark.py
 Uses the established +Y-up hero bone contract. No external artwork is embedded.
 """
 from pathlib import Path
-import math, json, gzip
+import math, json, gzip, sys
 import numpy as np
 import bpy
 from mathutils import Vector
@@ -14,6 +14,10 @@ exec(compile(helper.read_text().split('# Pearl armored arcane mech')[0].split('#
 OUT=ROOT/'Assets/Alterverse/Resources/CyberShark'
 ART=ROOT/'ArtSource/Heroes/CyberShark'
 OUT.mkdir(parents=True,exist_ok=True);ART.mkdir(parents=True,exist_ok=True)
+previous_payload=None
+if '--preserve-body-from' in sys.argv:
+ baseline=Path(sys.argv[sys.argv.index('--preserve-body-from')+1])
+ previous_payload=json.loads(gzip.decompress(baseline.read_bytes()))
 COLORS=[(.035,.022,.014),(.58,.61,.62),(.035,.065,.078),(.04,.78,1.0),(.72,.39,.105),(.93,.94,.91)]
 shell('armored torso',[(1.02,.16,.11,0),(1.25,.24,.15,0),(1.46,.30,.19,0),(1.57,.18,.13,0)],1,'Chest',20)
 shell('abdomen',[(.89,.18,.12,0),(1.04,.20,.13,0),(1.23,.16,.11,0)],1,'Spine',16)
@@ -24,92 +28,11 @@ for s in [-1,1]:
  # Swept back fins and mechanical gill vents.
  shard('dorsal back fin',(s*.07,1.39,-.15),(s*.10,1.80,-.35),.070,.022,2,'Chest')
  for j in range(4):tube('gill vent',[(s*.20,1.50-j*.035,-.08),(s*.24,1.48-j*.035,.015)],.009,0,'Chest',6)
-# One connected shark head: skull, snout, jaw edge and mouth cavity share vertices.
-def build_unified_shark_head():
- segments=64
- vertices=[];faces=[];materials=[]
- # Start at the mouth edge, roll into the jaw, then flow over the snout into the skull.
- rings=[(.145,.061,1.630,.332,.047),(.158,.072,1.640,.317,.070),
-        (.171,.095,1.695,.218,.195),(.180,.180,1.735,.055,0),
-        (.146,.149,1.735,-.057,0),(.082,.086,1.735,-.103,0)]
- for rx,ry,cy,z,nose in rings:
-  for a in np.linspace(0,math.tau,segments,endpoint=False):
-   vertices.append((rx*math.cos(a)*(1-.40*max(0,math.sin(a))**2 if nose>.10 else 1),cy+ry*math.sin(a),z+nose*max(0,math.sin(a))))
- for row in range(len(rings)-1):
-  for j in range(segments):
-   a=row*segments+j;b=row*segments+(j+1)%segments
-   faces.extend([[a,b+segments,b],[a,a+segments,b+segments]]);materials.extend([1,1])
- back=len(vertices);vertices.append((0,1.735,-.120))
- for j in range(segments):
-  faces.append([(len(rings)-1)*segments+j,back,(len(rings)-1)*segments+(j+1)%segments]);materials.append(1)
- # The inner wall shares the exact opening ring with the skin: no separate lip/cheek objects.
- last=0
- for rx,ry,cy,z in [(.125,.049,1.630,.230),(.059,.024,1.630,.188)]:
-  row=len(vertices)
-  for a in np.linspace(0,math.tau,segments,endpoint=False):
-   vertices.append((rx*math.cos(a),cy+ry*math.sin(a),z))
-  for j in range(segments):
-   a=last+j;b=last+(j+1)%segments
-   faces.extend([[a,b,row+(j+1)%segments],[a,row+(j+1)%segments,row+j]]);materials.extend([0,0])
-  last=row
- inside=len(vertices);vertices.append((0,1.630,.178))
- for j in range(segments):
-  faces.append([last+j,last+(j+1)%segments,inside]);materials.append(0)
- # A slightly stronger upward curl gives the grin a more menacing expression.
- def smile_point(point):
-  p=np.array(point,dtype=float).copy()
-  vertical=max(0,1-abs(p[1]-1.635)/.115)
-  forward=float(np.clip((p[2]-.210)/.120,0,1))
-  p[1]+=.032*(p[0]/.145)**2*vertical*forward
-  return p.tolist()
- vertices=[smile_point(p) for p in vertices]
- material_start=len(MI)
- add('unified shark skull snout and jaw',vertices,faces,1,'Head')
- MI[material_start:]=materials
- # Locate eyes and nostrils on the actual skin, keeping them embedded in the snout.
- def skin_depth(x,y):
-  depths=[]
-  for face,material in zip(faces,materials):
-   if material!=1:continue
-   p,q,r=np.array([vertices[i] for i in face])
-   den=(q[1]-r[1])*(p[0]-r[0])+(r[0]-q[0])*(p[1]-r[1])
-   if abs(den)<1e-10:continue
-   u=((q[1]-r[1])*(x-r[0])+(r[0]-q[0])*(y-r[1]))/den
-   v=((r[1]-p[1])*(x-r[0])+(p[0]-r[0])*(y-r[1]))/den
-   if u>=-1e-8 and v>=-1e-8 and u+v<=1+1e-8:depths.append(u*p[2]+v*q[2]+(1-u-v)*r[2])
-  if not depths:raise ValueError('Facial feature lies outside shark head')
-  return max(depths)
- for s in [-1,1]:
-  x=s*.148;y=1.786
-  ell('black shark eye',(x,y,skin_depth(x,y)),(.015,.011,.008),0,'Head',16,10)
-  x=s*.058;y=1.757
-  ell('shark nostril',(x,y,skin_depth(x,y)+.0005),(.007,.005,.0035),0,'Head',12,8)
- # Broad shark teeth sit inside the opening and follow the curved upper/lower jaw.
- for row,count in [('upper',11),('lower',9)]:
-  for angle in np.linspace(math.radians(16),math.radians(164),count):
-   a=angle if row=='upper' else -angle
-   base=np.array((.137*math.cos(a),1.630+.055*math.sin(a),.338+.047*max(0,math.sin(a))))
-   inward=unit(np.array((-math.cos(a),-math.sin(a),0)))
-   tangent=np.array((-inward[1],inward[0],0))
-   width=.010+.003*abs(math.sin(a));length=.018+.012*abs(math.sin(a))
-   left=base-tangent*width;right=base+tangent*width;tip=base+inward*length+[0,0,-.004]
-   points=[left,right,tip,left+[0,0,-.014],right+[0,0,-.014],tip+[0,0,-.014]]
-   tooth_faces=[[0,1,2],[5,4,3],[0,3,4],[0,4,1],[1,4,5],[1,5,2],[2,5,3],[2,3,0]]
-   points=[smile_point(p) for p in points]
-   center=np.mean(points,axis=0)
-   for face in tooth_faces:
-    p,q,r=np.array([points[i] for i in face])
-    if np.dot(np.cross(q-p,r-p),(p+q+r)/3-center)<0:face.reverse()
-   add(row+' shark tooth',points,tooth_faces,5,'Head')
-build_unified_shark_head()
-# Halve the cranial fin width; retain its enlarged height and sweep.
-cranial_fin_start=len(V)
-shard('shark cranial fin',(0,1.85,-.08),(0,2.00,-.17),.065,.025,1,'Head')
-cranial_fin_pivot=np.array((0,1.85,-.08))
-for i in range(cranial_fin_start,len(V)):
- V[i]=(cranial_fin_pivot+(np.array(V[i])-cranial_fin_pivot)*np.array((.75,1.5,1.5))).tolist()
-for s in [-1,1]:
- for j in range(3):tube('cranial vent',[(s*.127,1.79-j*.025,.09),(s*.147,1.78-j*.025,.12)],.004,0,'Head',6)
+# Reference-matched head remains one connected skull/muzzle/jaw surface.
+head_source=ROOT/'Tools/CyberShark/build_reference_head.py'
+exec(compile(head_source.read_text(),str(head_source),'exec'))
+build_reference_shark_head()
+build_reference_cranial_fin()
 # Closed arm envelopes with shared elbow rings and two-bone skinning.
 ARM_SKIN_WEIGHTS={}
 def build_continuous_arm(side):
@@ -290,7 +213,6 @@ for i in range(fluke_start,len(V)):
  V[i]=(fluke_pivot+(np.array(V[i])-fluke_pivot)*2.0).tolist()
 tail_end=len(V)
 # Small healed scars sit proud of exposed skin and follow its bone, avoiding decal flicker.
-tube('snout old scar',[(-.072,1.803,.351),(-.042,1.812,.351),(-.016,1.815,.347)],.003,5,'Head',6)
 tube('chest healed scar',[(-.055,1.48,.191),(-.035,1.455,.198),(-.008,1.428,.20)],.0035,5,'Chest',6)
 for side,sign in [('L',-1),('R',1)]:
  bone='UpperArm'+side;a=np.array(BONES[bone][0]);e=np.array(BONES['Forearm'+side][0]);c=a+(e-a)*.55
@@ -368,7 +290,7 @@ tail_group=obj.vertex_groups.new(name='Tail')
 tail_group.add(list(range(tail_start,tail_end)),1,'REPLACE')
 obj.vertex_groups['Hips'].remove(list(range(tail_start,tail_end)))
 mesh.calc_loop_triangles()
-vertices=[];normals=[];bones=[];bones2=[];weights2=[];groups=[];tail_vertices=[];subs=[{'triangles':[]} for _ in COLORS]
+vertices=[];normals=[];bones=[];bones2=[];weights2=[];groups=[];tail_vertices=[];mouth_vertices=[];subs=[{'triangles':[]} for _ in COLORS]
 for tri in mesh.loop_triangles:
  for loop in tri.loops:
   vi=mesh.loops[loop].vertex_index;idx=len(bones)
@@ -378,10 +300,15 @@ for tri in mesh.loop_triangles:
   bones2.append(secondary);weights2.append(blend)
   groups.append(GI[vi]);subs[tri.material_index]['triangles'].append(idx)
   if tail_start<=vi<tail_end:tail_vertices.append(idx)
+  if vi in MOUTH_SOURCE_VERTICES:mouth_vertices.append(idx)
 data={'version':1,'boneNames':BN,'anchors':[{'head':BONES[b][0],'tail':BONES[b][1]} for b in BN],
  'vertices':vertices,'normals':normals,'boneIndices':bones,'boneIndices2':bones2,'boneWeights2':weights2,'groups':groups,'submeshes':subs,'markers':[],
  'tailVertices':tail_vertices,'tailPivot':[0,.97,-.14],
- 'hookGrip':hook_grip.tolist()}
+ 'hookGrip':hook_grip.tolist(),'mouthVertices':mouth_vertices}
+if previous_payload is not None:
+ merge_source=ROOT/'Tools/CyberShark/merge_head_export.py'
+ exec(compile(merge_source.read_text(),str(merge_source),'exec'))
+ data=merge_head_export(previous_payload,data)
 with gzip.GzipFile(filename=str(OUT/'Model.bytes'),mode='wb',mtime=0) as f:f.write(json.dumps(data,separators=(',',':')).encode())
 # Blender-authored effect meshes are exported once and reused by the runtime pool.
 def export_effect(name,verts,faces,alpha):
@@ -456,6 +383,7 @@ dark_ramp.color_ramp.elements[0].color=(.08,.020,.006,1);dark_ramp.color_ramp.el
 obj.data.materials.append(dark_hook_mat)
 for face in obj.data.polygons:
  if GI[face.vertices[0]]==1:face.material_index=len(obj.data.materials)-(1 if face.material_index==4 else 2)
+configure_reference_head_materials(obj)
 # Keep Blender's preview upright while exported gameplay geometry remains +Y up.
 obj.rotation_euler.x=math.pi/2
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
@@ -484,8 +412,10 @@ cam.location=(2.4,-4,1.8);aim(cam,(0,0,1.02));cam.data.ortho_scale=2.4
 scene.render.resolution_x=700;scene.render.resolution_y=900
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokCyberShark.blend'),compress=True)
 
+render_reference_head_views(scene,obj,ART)
 # Render the five independent pictorial attacks after saving the model scene.
 import runpy,sys
 if '--skip-icons' not in sys.argv:
  runpy.run_path(str(ROOT/"Tools/CyberShark/build_attack_icons.py"),run_name="__main__")
+
 

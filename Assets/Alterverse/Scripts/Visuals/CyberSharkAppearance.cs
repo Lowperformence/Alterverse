@@ -25,6 +25,7 @@ namespace Alterverse.Visuals
             public int[] boneIndices2;
             public float[] boneWeights2;
             public int[] tailVertices;
+            public int[] mouthVertices;
             public float[] tailPivot;
             public float[] hookGrip;
             public Marker[] markers;
@@ -89,6 +90,9 @@ namespace Alterverse.Visuals
                         float.IsNaN(data.boneWeights2[i]) || float.IsInfinity(data.boneWeights2[i]) ||
                         data.boneWeights2[i] < 0f || data.boneWeights2[i] > 1f) return false;
             }
+            if (data.mouthVertices != null)
+                foreach (int index in data.mouthVertices)
+                    if (index < 0 || index >= data.boneIndices.Length) return false;
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int group in data.groups) if (group < 0 || group > 2) return false;
@@ -248,7 +252,11 @@ namespace Alterverse.Visuals
                 Surface("Brass fittings", new Color(.48f,.29f,.12f), .72f,.32f),
                 Surface("White ventral skin and teeth", new Color(.93f,.94f,.91f), .10f,.35f),
                 JacketFabric(),
-                Surface("Black shark eyes and nostrils", new Color(.003f,.004f,.006f), 0f,.32f)
+                Surface("Black shark eyes and nostrils", new Color(.003f,.004f,.006f), 0f,.82f),
+                SharkSkin(),
+                Surface("Natural shark mouth and gums", new Color(.10f,.028f,.032f), 0f,.32f),
+                Surface("Subtle bronze shark iris", new Color(.12f,.068f,.027f), 0f,.70f),
+                Surface("Ivory shark teeth", new Color(.87f,.865f,.79f), 0f,.46f)
             };
             if (data.boneWeights2 != null) anatomy.quality = SkinQuality.Bone2;
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
@@ -296,6 +304,16 @@ namespace Alterverse.Visuals
             return material;
         }
 
+        private Material SharkSkin()
+        {
+            Shader shader = Resources.Load<Shader>("CyberShark/SharkSkin");
+            if (shader == null || !shader.isSupported)
+                return Surface("Slate grey shark head", new Color(.22f,.255f,.28f), 0f,.46f);
+            var material = new Material(shader) { name = "DF_Nerok_DetailedSharkHead" };
+            ownedMaterials.Add(material);
+            return material;
+        }
+
         // The resource has six authored material slots. Its vest and tails share slot 2
         // with metal armor. Match their exact source plate vertices rather than a broad
         // bounding box, which would also recolor nearby armor or shark skin.
@@ -339,7 +357,7 @@ namespace Alterverse.Visuals
             Vector3[] vertices, Vector3[] normals, BoneWeight[] weights, Transform[] bones, Material[] materials)
         {
             var remap = new int[vertices.Length];
-            var v = new List<Vector3>(); var n = new List<Vector3>(); var w = new List<BoneWeight>();
+            var v = new List<Vector3>(); var rest = new List<Vector3>(); var n = new List<Vector3>(); var w = new List<BoneWeight>();
             Matrix4x4 convert = renderer.transform.worldToLocalMatrix * source.localToWorldMatrix;
             Matrix4x4 normalMatrix = convert.inverse.transpose;
             for (int i = 0; i < vertices.Length; i++)
@@ -348,6 +366,8 @@ namespace Alterverse.Visuals
                 if (geometry.groups[i] != group) continue;
                 remap[i] = v.Count;
                 v.Add(convert.MultiplyPoint3x4(vertices[i]));
+                rest.Add(geometry.boneNames[geometry.boneIndices[i]] == "Head"
+                    ? Point(geometry.vertices, i * 3) : v[v.Count - 1]);
                 n.Add(normalMatrix.MultiplyVector(normals[i]).normalized); w.Add(weights[i]);
             }
             // Group 2 is Nerok's independent anchor. Shrink only the weapon geometry by 30%
@@ -364,14 +384,16 @@ namespace Alterverse.Visuals
                 }
                 for (int i = 0; i < v.Count; i++) v[i] = pivot + (v[i] - pivot) * .70f;
             }
-            var mesh = new Mesh { name = "DF_Nerok_Siege_" + group };
+            var mesh = new Mesh { name = "DF_Nerok_Siege_" + group,
+                indexFormat = v.Count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
             ownedMeshes.Add(mesh);
-            mesh.SetVertices(v); mesh.SetNormals(n); mesh.SetUVs(2, v); mesh.boneWeights = w.ToArray();
+            mesh.SetVertices(v); mesh.SetNormals(n); mesh.SetUVs(2, group == 0 ? rest : v); mesh.boneWeights = w.ToArray();
             var bindposes = new Matrix4x4[bones.Length];
             for (int i = 0; i < bones.Length; i++) bindposes[i] = bones[i].worldToLocalMatrix * renderer.transform.localToWorldMatrix;
             mesh.bindposes = bindposes; mesh.subMeshCount = materials.Length;
             var materialTriangles = new List<int>[materials.Length];
             for (int m = 0; m < materials.Length; m++) materialTriangles[m] = new List<int>();
+            var mouth = new HashSet<int>(geometry.mouthVertices ?? Array.Empty<int>());
             for (int m = 0; m < geometry.submeshes.Length; m++)
             {
                 int[] sourceIndices = geometry.submeshes[m].triangles;
@@ -382,10 +404,17 @@ namespace Alterverse.Visuals
                     // The original nearly black fingers disappear beside the grey palm.
                     // Give only hand-bound armor-slot triangles the same shark-skin finish.
                     int material = m;
-                    if (group == 0 && m == 0 &&
+                    if (group == 0 &&
                         geometry.boneNames[geometry.boneIndices[sourceIndices[i]]] == "Head" &&
                         geometry.boneNames[geometry.boneIndices[sourceIndices[i+1]]] == "Head" &&
-                        geometry.boneNames[geometry.boneIndices[sourceIndices[i+2]]] == "Head") material = 7;
+                        geometry.boneNames[geometry.boneIndices[sourceIndices[i+2]]] == "Head")
+                    {
+                        if (m == 0) material = mouth.Contains(sourceIndices[i]) &&
+                            mouth.Contains(sourceIndices[i+1]) && mouth.Contains(sourceIndices[i+2]) ? 9 : 7;
+                        else if (m == 1) material = 8;
+                        else if (m == 4) material = 10;
+                        else if (m == 5) material = 11;
+                    }
                     if (group == 0 && m == 2 && HandVertex(sourceIndices[i]) &&
                         HandVertex(sourceIndices[i+1]) && HandVertex(sourceIndices[i+2])) material = 1;
                     if (group == 0 && m == 2 && JacketVertex(sourceIndices[i]) &&
@@ -521,4 +550,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

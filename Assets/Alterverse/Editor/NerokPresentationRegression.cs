@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using Alterverse.Visuals;
 using UnityEditor;
 using UnityEngine;
@@ -26,6 +27,18 @@ namespace Alterverse.Editor
                     throw new InvalidOperationException("Nerok skin, anchor or animated tail did not load.");
                 if (anchor.transform.parent != anatomy.transform || anchor.transform.localScale != Vector3.one || anchor.rootBone != anatomy.rootBone)
                     throw new InvalidOperationException("Anchor inherited a legacy gauntlet render transform.");
+                Shader headShader = Resources.Load<Shader>("CyberShark/SharkSkin");
+                if (headShader == null || ShaderUtil.ShaderHasError(headShader))
+                    throw new InvalidOperationException("Nerok detailed head shader is missing or has compiler errors.");
+                foreach (string materialName in new[] {
+                    "DF_Nerok_DetailedSharkHead", "DF_Nerok_Natural shark mouth and gums",
+                    "DF_Nerok_Ivory shark teeth", "DF_Nerok_Subtle bronze shark iris" })
+                    if (!Array.Exists(anatomy.sharedMaterials, m => m != null && m.name == materialName))
+                        throw new InvalidOperationException("Nerok head material missing: " + materialName);
+                var restCoordinates = new List<Vector3>();
+                anatomy.sharedMesh.GetUVs(2, restCoordinates);
+                if (restCoordinates.Count != anatomy.sharedMesh.vertexCount)
+                    throw new InvalidOperationException("Nerok skin rest coordinates are incomplete.");
                 float unit = Vector3.Distance(Find("Chest").position, Find("Head").position);
                 if (unit < .0001f) throw new InvalidOperationException("Invalid shared rig dimensions.");
                 Transform hips = Find("Hips"), arm = Find("UpperArmR");
@@ -49,7 +62,7 @@ namespace Alterverse.Editor
                         }
                     }
                 }
-                Debug.Log("DF: Nerok body/anchor skin, shared render frame and nine arm/tail poses validated.");
+                Debug.Log("DF: Nerok detailed head shader/materials, skin coordinates, body/anchor skin and nine arm/tail poses validated.");
             }
             finally
             {
@@ -60,3 +73,4 @@ namespace Alterverse.Editor
     }
 }
 #endif
+
