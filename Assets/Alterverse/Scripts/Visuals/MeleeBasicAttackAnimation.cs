@@ -31,6 +31,7 @@ namespace Alterverse.Visuals
         private int serial;
         private bool active, mirror;
         private bool reportedStandingPose;
+        private float armGaitWeight = 1f;
         private Vector3 aim;
         private readonly Quaternion[] previousPose = new Quaternion[16];
         public bool OwnsPose => isActiveAndEnabled && (health == null || !health.IsDead) &&
@@ -47,6 +48,7 @@ namespace Alterverse.Visuals
         private void OnEnable()
         {
             reportedStandingPose = false;
+            armGaitWeight = 1f;
         }
         public static MeleeBasicAttackAnimation For(GameObject actor)
         {
@@ -151,6 +153,7 @@ namespace Alterverse.Visuals
             if (presentation == null) presentation = GetComponent<AuthoredHeroPresentation>();
             if (motion != null && motion.AbilityActionActive)
             {
+                armGaitWeight = 0f;
                 // Ability presentation owns the rig until its action ends. Blend its actual last pose
                 // back to guard instead of dropping raised arms in a single frame.
                 active = false; cancelStarted = Time.time;
@@ -158,6 +161,7 @@ namespace Alterverse.Visuals
                 RememberPose(); return;
             }
             ApplyGuard();
+            ApplyLocomotionArms();
             for (int i = 0; i < bones.Length; i++)
             {
                 bones[i].GuardWorld = bones[i].Transform.rotation;
@@ -238,6 +242,9 @@ namespace Alterverse.Visuals
             for (int i = 0; i < bones.Length; i++)
             {
                 if (!UsesStandingPose(identity.Hero, i)) continue;
+                // The authored retarget layer already supplied a fresh body pose this frame.
+                // Resetting it here erased breathing, head balance and turn anticipation.
+                if (i < 4 && motion != null && motion.isActiveAndEnabled) continue;
                 if ((i < 4 || i >= 10) && !stationary) continue;
                 bones[i].Transform.localRotation = bones[i].RestLocal;
                 bones[i].Transform.localPosition = bones[i].RestPosition;
@@ -251,6 +258,27 @@ namespace Alterverse.Visuals
                 // attack/recovery then inherit it instead of a second LateUpdate fighting them.
                 model.GetComponent<SiegeTankAppearance>()?.OrientHammerGuard(transform, bones[9].Transform);
             }
+        }
+        private void ApplyLocomotionArms()
+        {
+            if (motion == null || !motion.isActiveAndEnabled || model == null) return;
+            bool action = StrikeActive || motion.ArmActionActive || Time.time - cancelStarted < .16f;
+            armGaitWeight = Mathf.MoveTowards(armGaitWeight, action ? 0f : 1f, Time.deltaTime * 12f);
+            float weight = motion.GroundingSuspended ? 0f : motion.LocomotionWeight * armGaitWeight;
+            Vector3 direction = Quaternion.Inverse(motion.PresentedRotation) * motion.GaitDirection;
+            HeroUpperBodyGait.Pose pose = HeroUpperBodyGait.Sample(identity.Hero, motion.GaitPhase,
+                weight, motion.RunBlend, direction.z, direction.x);
+            Vector3 axis = model.right;
+            // Preserve both authored rifle contacts and the established left shield guard.
+            if (identity.Hero == HeroId.Nyra) return;
+            if (identity.Hero != HeroId.Kaelon) ApplyArmGait(4, pose.leftShoulder, pose.leftElbow, axis);
+            ApplyArmGait(7, pose.rightShoulder, pose.rightElbow, axis);
+        }
+        private void ApplyArmGait(int upper, float shoulder, float elbow, Vector3 axis)
+        {
+            // World axes avoid assumptions about the imported FBX's local bone frames.
+            bones[upper].Transform.rotation = Quaternion.AngleAxis(shoulder, axis) * bones[upper].Transform.rotation;
+            bones[upper + 1].Transform.rotation = Quaternion.AngleAxis(-elbow, axis) * bones[upper + 1].Transform.rotation;
         }
         private Quaternion SourceRotation(int index, float frame)
         {
@@ -350,3 +378,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

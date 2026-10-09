@@ -77,6 +77,7 @@ namespace Alterverse.Visuals
         public Vector3 PresentedPosition { get; private set; }
         public Quaternion PresentedRotation { get; private set; } = Quaternion.identity;
         public Vector3 PresentedVelocity { get; private set; }
+        public Vector3 GaitDirection => displayedTravelDirection;
         private bool RemoteReplica => replicaSlot != null && CoopAuthority.Active &&
             !CoopAuthority.LocalHasServerAuthority && !replicaSlot.IsLocalHuman;
         public bool GroundingSuspended => Dashing || Time.time < dashUntil || RemoteReplica &&
@@ -181,6 +182,7 @@ namespace Alterverse.Visuals
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             PresentedPosition=transform.position;PresentedRotation=transform.rotation;
+            displayedTravelDirection=transform.forward;
             grounded=GetComponent<HeroGroundedLocomotion>()??gameObject.AddComponent<HeroGroundedLocomotion>();
             grounded.Initialize(root,articulatedRig);
             previousHeading=transform.eulerAngles.y;
@@ -322,8 +324,8 @@ namespace Alterverse.Visuals
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
             // The procedural joints own the legs and feet. No imported clip or secondary gait path.
-            // Keep the upper body in a composed combat guard while the legs carry the gait.
-            // Keep the shoulder swing small and time-driven so weapons remain composed.
+            // Guard remains the base; bounded upper-body motion shares the leg's distance phase.
+            // Authored heroes receive their arm offsets after the final guard reset.
             // Never feed a later presentation component's pose back into next frame's smoothing.
             Quaternion armBeforeL=displayedArmL,armBeforeR=displayedArmR;
             if(armL!=null)armL.localRotation=armBeforeL;
@@ -386,9 +388,9 @@ namespace Alterverse.Visuals
                         readyL=new Vector3(-28f,0f,13f);readyR=new Vector3(-38f,0f,-12f);break;
                     // Nyra keeps the rifle's authored two-handed shoulder aim.
                 }
-                float shoulderSwing=hero==HeroId.Nyra?0f:
-                    Mathf.Sin(t*1.2f)*9f*strideWeight*(hero==HeroId.Veyr?.45f:1f);
-                readyL.x+=guardLift+shoulderSwing;readyR.x+=guardLift-shoulderSwing;
+                HeroUpperBodyGait.Pose shoulders=HeroUpperBodyGait.Sample(hero,phase,
+                    GroundingSuspended?0f:strideWeight,runBlend,gaitForward,gaitSide);
+                readyL.x+=guardLift+shoulders.leftShoulder;readyR.x+=guardLift+shoulders.rightShoulder;
                 if(armL!=null)armL.localRotation=armRestL*Quaternion.Euler(readyL);
                 if(armR!=null)armR.localRotation=armRestR*Quaternion.Euler(readyR);
                 // Keep Veyr's paired blades tilted toward center so they cross in front of him.
@@ -447,7 +449,7 @@ namespace Alterverse.Visuals
             if(wingR!=null)wingR.localRotation=Quaternion.Euler(0,18,18+Mathf.Sin(t*2.1f)*4);
             if(cape!=null)cape.localRotation=Quaternion.Euler(2+Mathf.Min(PlanarSpeed,8)*.3f,0,Mathf.Sin(t*2)*.5f);
             UpdateCloth(dt,t,delta/dt);
-            // Veyr's blades are held in a steady guard; do not make them bob with each step.
+            // Fitted weapon grips follow their hands through the distance-driven gait.
             // One trajectory, driven by distance actually travelled by the gameplay root.
             // Hip swing, knee flex and ankle counter-rotation form a simple articulated gait.
             if(articulatedRig!=null&&articulatedRig.Ready)
@@ -522,11 +524,9 @@ namespace Alterverse.Visuals
                     {elbowL=-34f;elbowR=-42f;}
                     else if(hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler)
                     {elbowL=-26f;elbowR=-30f;}
-                    // A small shared elbow lift gives the guard life without a walking arm pump.
-                    // Keep the rifle nearly steady and leave all attack poses untouched.
-                    float elbowLift=hero==HeroId.Nyra?0f:Mathf.Sin(t*1.2f)*9.75f*(Dashing?0f:1f);
-                    elbowL+=elbowLift;
-                    elbowR+=elbowLift;
+                    HeroUpperBodyGait.Pose elbows=HeroUpperBodyGait.Sample(hero,phase,
+                        GroundingSuspended?0f:strideWeight,runBlend,gaitForward,gaitSide);
+                    elbowL-=elbows.leftElbow;elbowR-=elbows.rightElbow;
                 }
                 if(hero==HeroId.Nyra)
                 {
@@ -594,8 +594,10 @@ namespace Alterverse.Visuals
                         break;
                 }
 
-                float gaitHipYaw=Mathf.Sin(phase)*2.2f*strideWeight;
-                float gaitSpineYaw=-Mathf.Sin(phase)*2.8f*strideWeight;
+                HeroUpperBodyGait.Pose upperGait=HeroUpperBodyGait.Sample(hero,phase,
+                    GroundingSuspended?0f:strideWeight,runBlend,gaitForward,gaitSide);
+                float gaitHipYaw=upperGait.hipYaw;
+                float gaitSpineYaw=upperGait.chestYaw;
                 float pelvisPitch=Mathf.Clamp(lean*.22f,-2f,2.5f)+Mathf.Sin(phase*2f)*.7f*strideWeight+recoil*.25f;
                 float pelvisRoll=Mathf.Clamp(localAcceleration.x*.035f,-3f,3f)+attackRoll*.35f;
                 // Turn the visual pelvis into a corner and lead strikes from the hip.
@@ -614,14 +616,14 @@ namespace Alterverse.Visuals
                     -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
                     -sway*.24f-attackRoll*.30f+hitFromSide*hitWeight*3f);
                 // Animate the shared joints so the chest, shoulders, neck and face move together.
-                float idleRock=attacking||Dashing||hero==HeroId.Nyra?0f:1f;
+                float idleRock=attacking||Dashing||hero==HeroId.Nyra?0f:1f-strideWeight;
                 float rockForward=Mathf.Sin(t*1.2f)*idleRock;
                 float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
-                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*8f,
-                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*4.5f,
-                    sway*.22f+attackRoll*.55f-hitFromSide*hitWeight*4f);
+                Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*1.2f+upperGait.chestPitch,
+                    turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*.7f,
+                    sway*.22f+attackRoll*.55f-hitFromSide*hitWeight*4f+upperGait.chestRoll);
                 Quaternion neckPose=Quaternion.Euler(lean*.08f-attackPitch*.18f+recoil*.45f+hitTorso*.32f,
-                    -turnCounter*.20f-attackTwist*.35f+rockForward*12f,
+                    -turnCounter*.20f-attackTwist*.35f+rockForward*.9f+upperGait.neckYaw,
                     -sway*.10f-attackRoll*.35f);
                 articulatedRig.SetBodyPose(1f,pelvisPose,lowerSpinePose,upperSpinePose,neckPose);
             }
