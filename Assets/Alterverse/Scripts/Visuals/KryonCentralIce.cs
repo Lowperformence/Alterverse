@@ -2,10 +2,12 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Small cracked ice landmark at LHS 1140 b's center, baked into existing ground maps.</summary>
+    /// <summary>Cracked blue ice landmark at LHS 1140 b's center, baked into existing ground maps.</summary>
     public static class KryonCentralIce
     {
-        public const float Radius=4.6f;
+        private const float PatternRadius=4.6f;
+        private const float SizeScale=2.5f;
+        public const float Radius=PatternRadius*SizeScale;
 
         private readonly struct Fracture
         {
@@ -32,14 +34,16 @@ namespace Alterverse.Visuals
             normalRelief=0f;
             float squared=x*x+z*z;
             if(squared>=Radius*Radius)return ground;
-            float radius=Mathf.Sqrt(squared);
-            float cover=1f-Smooth(4.08f,Radius,radius);
+            // Scale the whole landmark, including its cracks and rim, by +150%.
+            x/=SizeScale;z/=SizeScale;
+            float radius=Mathf.Sqrt(squared)/SizeScale;
+            float cover=1f-Smooth(4.08f,PatternRadius,radius);
             float cloud=Mathf.PerlinNoise(x*.78f+47f,z*.78f+91f);
             float grain=Mathf.PerlinNoise(x*7.5f+11f,z*7.5f+29f)-.5f;
             float center=1f-Smooth(.8f,3.4f,radius);
-            Color ice=Color.Lerp(new Color(.30f,.58f,.72f,1f),new Color(.83f,.92f,.96f,1f),
+            Color ice=Color.Lerp(new Color(.045f,.16f,.31f,1f),new Color(.22f,.42f,.61f,1f),
                 Mathf.Clamp01(.20f+cloud*.55f+center*.24f));
-            ice=Color.Lerp(ice,new Color(.73f,.84f,.90f,1f),Smooth(3.65f,4.4f,radius)*.7f);
+            ice=Color.Lerp(ice,new Color(.30f,.48f,.64f,1f),Smooth(3.65f,4.4f,radius)*.7f);
             ice.r+=grain*.035f;ice.g+=grain*.035f;ice.b+=grain*.025f;
 
             Vector2 point=new Vector2(x,z);
@@ -49,8 +53,8 @@ namespace Alterverse.Visuals
                     nearest=Mathf.Min(nearest,Distance(point,fracture.Points[i-1],fracture.Points[i])/fracture.Width);
             float lip=1f-Smooth(.8f,2.8f,nearest);
             float split=1f-Smooth(.28f,1.15f,nearest);
-            ice=Color.Lerp(ice,new Color(.86f,.95f,.98f,1f),lip*.65f);
-            ice=Color.Lerp(ice,new Color(.075f,.235f,.34f,1f),split*.88f);
+            ice=Color.Lerp(ice,new Color(.50f,.72f,.86f,1f),lip*.65f);
+            ice=Color.Lerp(ice,new Color(.02f,.075f,.16f,1f),split*.88f);
             normalRelief=(grain*.007f-split*.024f)*cover;
             return Color.Lerp(ground,ice,cover);
         }
