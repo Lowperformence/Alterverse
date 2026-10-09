@@ -44,13 +44,14 @@ namespace Alterverse.EditorChecks
                 throw new InvalidOperationException("Presentation ground unexpectedly contains colliders.");
             int renderers=0,craterMaterials=0;
             bool macro=false,stone=false;
+            string surfaceProfile=ExoplanetArenaProfile.SurfaceResource(ArenaVariantRuntime.Current);
             foreach(var r in root.GetComponentsInChildren<MeshRenderer>())
             {
                 if(!r.enabled)continue;
                 var m=r.sharedMaterial;
                 if(m==null||m.shader.name!="Alterverse/PlanetSurface")continue;
                 renderers++;
-                if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null||m.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/"+ArenaVariantRuntime.Current+"/Macro"))
+                if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null||m.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/"+surfaceProfile+"/Macro"))
                     throw new InvalidOperationException("Missing live detail data: "+r.name);
                 float mode=m.GetFloat("_SurfaceMode");
                 PlanetSurfaceMicroProfile micro=mode<1.5f?PlanetSurfaceMicroProfile.Ground(ArenaVariantRuntime.Current):
@@ -126,7 +127,9 @@ namespace Alterverse.EditorChecks
             foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
             foreach(string kind in new[]{"Ground","Stone","Macro"})
             {
-                string path="Assets/Alterverse/Resources/PlanetSurfaces/"+planet+"/"+kind+".png";
+                // The same shared geology profile used by the live material bindings.
+                string profile=ExoplanetArenaProfile.SurfaceResource(planet);
+                string path="Assets/Alterverse/Resources/PlanetSurfaces/"+profile+"/"+kind+".png";
                 var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
                 var importer=AssetImporter.GetAtPath(path) as TextureImporter;
                 if(texture==null||importer==null||importer.sRGBTexture||!importer.mipmapEnabled||importer.alphaIsTransparency||importer.textureType!=TextureImporterType.Default)
@@ -157,3 +160,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

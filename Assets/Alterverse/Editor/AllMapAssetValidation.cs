@@ -21,9 +21,10 @@ namespace Alterverse.EditorChecks
             int maps=0,shaders=0;
             foreach(ArenaVariant variant in Enum.GetValues(typeof(ArenaVariant)))
             {
+                string profile=Alterverse.Visuals.ExoplanetArenaProfile.SurfaceResource(variant);
                 foreach(string kind in new[]{"Ground","Stone","Macro"})
-                    Require(Resources.Load<Texture2D>("PlanetSurfaces/"+variant+"/"+kind)!=null,
-                        "Missing map texture: "+variant+"/"+kind);
+                    Require(Resources.Load<Texture2D>("PlanetSurfaces/"+profile+"/"+kind)!=null,
+                        "Missing map texture: "+variant+"/"+kind+" (surface profile "+profile+")");
                 maps++;
             }
             Require(Resources.Load<Texture2D>("MapPanoramas/Universe")!=null,"Missing universe panorama.");
@@ -71,3 +72,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
