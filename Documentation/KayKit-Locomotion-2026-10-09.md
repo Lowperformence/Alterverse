@@ -1,5 +1,12 @@
 # Hero locomotion repair — 2026-10-09
 
+The subsequent imported-foot-height fix is documented in
+`Imported-Foot-Height-2026-10-09.md`. The original fixture checks below bypassed
+sole capture and scene raycasts; the user's shoulder-height feet report showed
+why those results were insufficient for native acceptance. The current grounding
+path uses bind-matrix skin geometry, bounded sole extent, Ground-only queries
+and terrain-height support anchors.
+
 ## Problem and corrected behavior
 
 The supplied Unity video already showed the authored movement path was active.
@@ -82,7 +89,8 @@ The new console marker is:
 DF: locomotion v2 coherent native FK active on ...
 ```
 
-The grounding component also logs `grounded locomotion v2 active`.
+The grounding component now logs `grounded locomotion v3 active` and
+`grounded locomotion v3 bind-matrix soles`.
 
 Inspect every available hero moving forward, backward and sideways while aiming,
 diagonals, sharp reversals, start/stop, moving attacks, terrain edges/slopes and crowds.

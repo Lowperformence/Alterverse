@@ -6,6 +6,8 @@ Run from the repository root with Python 3 and Mono:
 python Tools/Movement/GroundedClipRegression/validate_bank.py
 python Tools/Movement/GroundedClipRegression/run.py
 python Tools/Movement/GroundedClipRegression/run_runtime.py --native-fixtures
+python Tools/Movement/SoleCalibrationRegression/run.py
+python Tools/Movement/GroundRaycastRegression/run.py
 ```
 
 Supply `--mono-root /path/to/extracted/mono` to either compiled runner.
@@ -72,3 +74,6 @@ can differ from generator-derived fixtures. Run the in-engine recorder and inspe
 gameplay to establish those behaviors.
 
 See `Documentation/KayKit-Locomotion-2026-10-09.md` for the repair and current results.
+The separate sole/ground runners exercise the calibration and layer-query paths
+that this integration harness replaces. Their old-code negative controls reproduce
+unsafe height paths; they still do not establish rendered Unity acceptance.

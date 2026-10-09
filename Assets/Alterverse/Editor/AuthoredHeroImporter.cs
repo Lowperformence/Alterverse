@@ -13,7 +13,7 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 11;
+        public override uint GetVersion() => 12;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -31,7 +31,9 @@ namespace Alterverse.EditorTools
             importer.importLights = false;
             importer.importBlendShapes = false;
             importer.addCollider = false;
-            importer.isReadable = Path.GetFileNameWithoutExtension(assetPath) == "Mira" || Path.GetFileNameWithoutExtension(assetPath) == "Rook" || Path.GetFileNameWithoutExtension(assetPath) == "Veyr";
+            // Native foot calibration reads vertices/weights from skin bind data.
+            // The importer version bump refreshes already imported hero models.
+            importer.isReadable = true;
             importer.optimizeGameObjects = false; // Named muzzle and cosmetic sockets must remain accessible.
             importer.materialImportMode = ModelImporterMaterialImportMode.ImportStandard;
             importer.materialLocation = ModelImporterMaterialLocation.InPrefab;
@@ -99,4 +101,3 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
-

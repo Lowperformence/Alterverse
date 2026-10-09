@@ -84,7 +84,7 @@ namespace Alterverse.Visuals
             }
             if (!Ready) { Debug.LogError("DF: grounded locomotion cannot find both visible leg chains on " + name, this); return; }
             floorOffset = Mathf.Min(left.foot.position.y - left.sole, right.foot.position.y - right.sole) - transform.position.y;
-            Debug.Log("DF: grounded locomotion v2 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
+            Debug.Log("DF: grounded locomotion v3 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
         }
         private Leg Capture(Transform hip, Transform knee, Transform foot)
         {
@@ -99,40 +99,73 @@ namespace Alterverse.Visuals
         }
         private void CaptureSoles(Transform imported)
         {
-            // Once per model: bake the corrected bind pose and inspect only foot-weighted vertices.
-            var baked = new Mesh();
-            float lowL = float.PositiveInfinity, lowR = float.PositiveInfinity;
+            // Mesh bind matrices map imported vertices into their bone spaces.
+            // Reconstruct skinning explicitly: BakeMesh scale compensation must
+            // not become a second renderer/FBX scale in the foot target.
             var pointsL = new System.Collections.Generic.HashSet<Vector3>();
             var pointsR = new System.Collections.Generic.HashSet<Vector3>();
-            try
+            int rejected = 0, unreadable = 0;
+            foreach (SkinnedMeshRenderer skin in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                foreach (SkinnedMeshRenderer skin in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                Mesh mesh = skin.sharedMesh;
+                if (mesh == null) continue;
+                if (!mesh.isReadable) { unreadable++; continue; }
+                Transform[] bones = skin.bones;
+                int li = System.Array.IndexOf(bones, left.foot), ri = System.Array.IndexOf(bones, right.foot);
+                if (li < 0 && ri < 0) continue;
+                Vector3[] vertices = mesh.vertices;
+                BoneWeight[] weights = mesh.boneWeights;
+                Matrix4x4[] bind = mesh.bindposes;
+                for (int i = 0; i < vertices.Length && i < weights.Length; i++)
                 {
-                    if (skin.sharedMesh == null) continue;
-                    int li = System.Array.IndexOf(skin.bones, left.foot), ri = System.Array.IndexOf(skin.bones, right.foot);
-                    if (li < 0 && ri < 0) continue;
-                    skin.BakeMesh(baked); Vector3[] vertices = baked.vertices; BoneWeight[] weights = skin.sharedMesh.boneWeights;
-                    for (int i = 0; i < vertices.Length && i < weights.Length; i++)
-                    {
-                        BoneWeight w = weights[i];
-                        Vector3 point = skin.transform.TransformPoint(vertices[i]); float y = point.y;
-                        bool On(int index) => index >= 0 && ((w.boneIndex0 == index && w.weight0 > .35f) ||
-                            (w.boneIndex1 == index && w.weight1 > .35f) || (w.boneIndex2 == index && w.weight2 > .35f) ||
-                            (w.boneIndex3 == index && w.weight3 > .35f));
-                        if (On(li)) { lowL = Mathf.Min(lowL, y); pointsL.Add(point); }
-                        if (On(ri)) { lowR = Mathf.Min(lowR, y); pointsR.Add(point); }
-                    }
+                    BoneWeight weight = weights[i];
+                    bool onLeft = FootWeighted(weight, li), onRight = FootWeighted(weight, ri);
+                    if (!onLeft && !onRight) continue;
+                    Vector3 point = SkinVertex(bones, bind, weight, vertices[i]);
+                    if (onLeft && !CaptureSolePoint(left, point, pointsL)) rejected++;
+                    if (onRight && !CaptureSolePoint(right, point, pointsR)) rejected++;
                 }
-                if (!float.IsInfinity(lowL)) left.sole = Mathf.Clamp(left.foot.position.y - lowL, .01f, left.length * .22f);
-                if (!float.IsInfinity(lowR)) right.sole = Mathf.Clamp(right.foot.position.y - lowR, .01f, right.length * .22f);
-                void CapturePoints(Leg leg, System.Collections.Generic.HashSet<Vector3> points)
-                {
-                    leg.solePoints = new Vector3[points.Count]; int index = 0;
-                    foreach (Vector3 point in points) leg.solePoints[index++] = leg.foot.InverseTransformPoint(point);
-                }
-                CapturePoints(left, pointsL); CapturePoints(right, pointsR);
             }
-            finally { if (Application.isPlaying) Destroy(baked); else DestroyImmediate(baked); }
+            left.solePoints = new System.Collections.Generic.List<Vector3>(pointsL).ToArray();
+            right.solePoints = new System.Collections.Generic.List<Vector3>(pointsR).ToArray();
+            left.sole = SoleExtent(left); right.sole = SoleExtent(right);
+            Debug.Log("DF: grounded locomotion v3 bind-matrix soles on " + name +
+                "; points L/R=" + left.solePoints.Length + "/" + right.solePoints.Length +
+                "; sole L/R=" + left.sole.ToString("F3") + "/" + right.sole.ToString("F3") +
+                "m; rejected=" + rejected + "; unreadable=" + unreadable, this);
+        }
+        private static bool FootWeighted(BoneWeight w, int index)
+        {
+            return index >= 0 && ((w.boneIndex0 == index && w.weight0 > .35f) ||
+                (w.boneIndex1 == index && w.weight1 > .35f) ||
+                (w.boneIndex2 == index && w.weight2 > .35f) ||
+                (w.boneIndex3 == index && w.weight3 > .35f));
+        }
+        private static Vector3 SkinVertex(Transform[] bones, Matrix4x4[] bind, BoneWeight w, Vector3 point)
+        {
+            Vector3 result = Vector3.zero;
+            float total = 0f;
+            for (int influence = 0; influence < 4; influence++)
+            {
+                int index = influence == 0 ? w.boneIndex0 : influence == 1 ? w.boneIndex1 :
+                    influence == 2 ? w.boneIndex2 : w.boneIndex3;
+                float weight = influence == 0 ? w.weight0 : influence == 1 ? w.weight1 :
+                    influence == 2 ? w.weight2 : w.weight3;
+                if (weight <= 0f || float.IsNaN(weight) || float.IsInfinity(weight) ||
+                    index < 0 || index >= bones.Length || index >= bind.Length || bones[index] == null) continue;
+                result += bones[index].localToWorldMatrix.MultiplyPoint3x4(bind[index].MultiplyPoint3x4(point)) * weight;
+                total += weight;
+            }
+            return total > .00001f ? result / total : new Vector3(float.NaN, float.NaN, float.NaN);
+        }
+        private static bool CaptureSolePoint(Leg leg, Vector3 point, System.Collections.Generic.HashSet<Vector3> points)
+        {
+            Vector3 offset = point - leg.foot.position;
+            float radius = Mathf.Max(.1f, leg.length * .45f);
+            if (float.IsNaN(offset.sqrMagnitude) || float.IsInfinity(offset.sqrMagnitude) ||
+                offset.sqrMagnitude > radius * radius) return false;
+            points.Add(leg.foot.InverseTransformPoint(point));
+            return true;
         }
         private void Update() { RestorePelvis(); preparedPelvisFrame = -1; }
         private void OnDisable() { RestorePelvis(); ResetContacts(); }
@@ -248,7 +281,7 @@ namespace Alterverse.Visuals
             float floor = motion.PresentedPosition.y + floorOffset;
             Vector3 origin = new Vector3(point.x, motion.PresentedPosition.y + LegLength * .7f, point.z);
             int count = Physics.RaycastNonAlloc(origin, Vector3.down, hits, LegLength * 2f,
-                Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore);
+                1 << GameplayCollision.Ground, QueryTriggerInteraction.Ignore);
             float nearest = float.PositiveInfinity;
             for (int i = 0; i < count; i++)
             {
@@ -302,10 +335,18 @@ namespace Alterverse.Visuals
             leg.target = Vector3.MoveTowards(previous, leg.target, maxStep);
             Vector3 floor = Ground(leg.target, leg, out Vector3 normal);
             float minimum = floor.y + leg.soleAdjustment;
-            leg.target.y = Mathf.Max(minimum, leg.target.y);
+            // A support anchor belongs to the terrain, never the interpolated
+            // airborne ankle. Otherwise one elevated frame becomes a permanent
+            // floating plant. Swing interpolation must retain its lift bound too.
+            float lift = leg.length * Mathf.Lerp(.14f, .23f, motion.RunBlend);
+            leg.target.y = Mathf.Clamp(leg.target.y, minimum, minimum + lift);
             leg.normal = normal;
             leg.authoredLift = Mathf.Max(0f, leg.target.y - minimum);
-            if (leg.contact) leg.plant = leg.target - Vector3.up * leg.soleAdjustment;
+            if (leg.contact)
+            {
+                leg.plant = leg.target - Vector3.up * leg.soleAdjustment;
+                leg.plant.y = floor.y;
+            }
         }
         private void FitAuthoredTarget(Leg leg, float maxDrop, float stance, bool moving)
         {
@@ -335,7 +376,7 @@ namespace Alterverse.Visuals
                 leg.target = Ground(candidate, leg, out leg.normal) + Vector3.up * leg.authoredLift;
                 leg.soleAdjustment = 0f;
                 PrepareFoot(leg, stance, moving);
-                if (leg.contact) leg.plant = leg.target - Vector3.up * leg.soleAdjustment;
+                if (leg.contact) leg.plant = leg.target - Vector3.up * (leg.soleAdjustment + leg.authoredLift);
             }
         }
         private void Plan(Leg leg, float cycle, float stance, float run, Vector3 direction, bool moving, float dt)
@@ -427,8 +468,15 @@ namespace Alterverse.Visuals
         {
             if (leg.solePoints == null || leg.solePoints.Length == 0) return leg.sole;
             Matrix4x4 matrix = leg.foot.localToWorldMatrix; float low = float.PositiveInfinity;
-            foreach (Vector3 point in leg.solePoints) low = Mathf.Min(low, matrix.MultiplyVector(point).y);
-            return -low;
+            foreach (Vector3 point in leg.solePoints)
+            {
+                float y = matrix.MultiplyVector(point).y;
+                if (!float.IsNaN(y) && !float.IsInfinity(y)) low = Mathf.Min(low, y);
+            }
+            // An imported skin outlier must never lift a foot toward the torso.
+            // This also protects against scale changes after initial calibration.
+            float extent = float.IsInfinity(low) ? leg.sole : -low;
+            return Mathf.Clamp(extent, .01f, leg.length * .35f);
         }
         private void Solve(Leg leg, float stance, bool moving)
         {

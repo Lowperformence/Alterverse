@@ -61,6 +61,21 @@ namespace Alterverse.EditorChecks
                     "Foot solver modified gameplay root on " + feet.name);
                 float error = Mathf.Max(feet.LeftContactError, feet.RightContactError);
                 Require(error < .035f, "Stance foot misses world anchor by " + error.ToString("F3") + "m on " + feet.name);
+                // A small IK error also passes when the target itself is at the
+                // shoulders. Check the actual imported chain and its target height.
+                Transform[] parts = feet.GetComponentsInChildren<Transform>(true);
+                foreach (string side in new[] { "L", "R" })
+                {
+                    Transform hip = Array.Find(parts, part => part.name == "Thigh" + side);
+                    Transform foot = Array.Find(parts, part => part.name == "Foot" + side);
+                    if (hip == null || foot == null) continue;
+                    Vector3 target = side == "L" ? feet.LeftTarget : feet.RightTarget;
+                    float ceiling = hip.position.y + feet.LegLength * .1f;
+                    Require(foot.position.y < ceiling && target.y < ceiling,
+                        "Foot/target above hip on " + feet.name + " side " + side +
+                        ": ankleY=" + foot.position.y.ToString("F3") +
+                        ", targetY=" + target.y.ToString("F3") + ", hipY=" + hip.position.y.ToString("F3"));
+                }
                 checkedHeroes++;
                 Debug.Log("DF: " + feet.name + " stance error " + error.ToString("F4") + "m, speed " + motion.PlanarSpeed.ToString("F2") + "m/s", feet);
             }
