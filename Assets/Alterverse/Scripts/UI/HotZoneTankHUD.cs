@@ -48,7 +48,7 @@ namespace Alterverse.UI
 
                 float x=screen.x-58f;
                 float y=Screen.height-screen.y;
-                string unit=ArenaVariantRuntime.IsExoplanet?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Visuals.ExoplanetArenaProfile.MonsterName(ArenaVariantRuntime.Current):ArenaVariantRuntime.IsDark00?(tank.Team==0?"ZERO DARK 00 ORB":"LUMEN DARK 00 ORB"):
+                string unit=ArenaVariantRuntime.IsExoplanet?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Visuals.ExoplanetArenaProfile.MonsterName(ArenaVariantRuntime.Current):ArenaVariantRuntime.IsDark00?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Shop.ArenaShopCatalog.For(ArenaVariant.Dark00).Name+" ORB":
                     ArenaVariantRuntime.IsPyraxis?(tank.Team==0?"ZERO PYRAXIS SCORPION":"LUMEN PYRAXIS SCORPION"):
                     ArenaVariantRuntime.IsNeptune?(tank.Team==0?"ZERO NEPTUNE OCTOPUS":"LUMEN NEPTUNE OCTOPUS"):
                     tank.IsKryonBear?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Shop.ArenaShopCatalog.For(ArenaVariant.Kryon).Name+" FROST BEAR":
