@@ -36,6 +36,8 @@ namespace Alterverse.Shop
         public const int NoxaraPrice=900;
         public const int EarthPrice=900;
         public const int Dark00Price=900;
+        public const int Wasp76bPrice=900;
+        public const int Trappist1ePrice=900;
         public static readonly ArenaShopItem[] Items=
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),
@@ -49,8 +51,8 @@ namespace Alterverse.Shop
             new(ArenaVariant.Dark00,"DARK 00","BLACKOUT INDUSTRIAL FRONT",Dark00Price,new Color(.92f,.08f,.08f)),
             new(ArenaVariant.DiamondCore,"PSR J1719-1438 b","SHATTERED CRYSTAL WORLD",PsrPrice,new Color(.62f,.90f,1f)),
             new(ArenaVariant.GJ504b,"GJ 504 b","MAGENTA SANDSTONE FRONT",0,new Color(.90f,.16f,.58f)),
-            new(ArenaVariant.Wasp76b,"WASP-76b","IRONRAIN FRONT",0,new Color(.92f,.46f,.16f)),
-            new(ArenaVariant.Trappist1e,"TRAPPIST-1e","TWILIGHT EDEN",0,new Color(.18f,.76f,.72f))
+            new(ArenaVariant.Wasp76b,"WASP-76b","IRONRAIN FRONT",Wasp76bPrice,new Color(.92f,.46f,.16f)),
+            new(ArenaVariant.Trappist1e,"TRAPPIST-1e","TWILIGHT EDEN",Trappist1ePrice,new Color(.18f,.76f,.72f))
         };
 
         // The PLAY menu needs every arena, while the STORE must only list arenas that
@@ -91,6 +93,8 @@ namespace Alterverse.Shop
         internal const string NoxaraOwnedKey="DF_ArenaOwned_Noxara";
         internal const string EarthOwnedKey="DF_ArenaOwned_Earth";
         internal const string Dark00OwnedKey="DF_ArenaOwned_Dark00";
+        internal const string Wasp76bOwnedKey="DF_ArenaOwned_Wasp76b";
+        internal const string Trappist1eOwnedKey="DF_ArenaOwned_Trappist1e";
 
         private static string OwnedKey(ArenaVariant variant)
         {
@@ -100,6 +104,8 @@ namespace Alterverse.Shop
             if(variant==ArenaVariant.Noxara)return NoxaraOwnedKey;
             if(variant==ArenaVariant.Earth)return EarthOwnedKey;
             if(variant==ArenaVariant.Dark00)return Dark00OwnedKey;
+            if(variant==ArenaVariant.Wasp76b)return Wasp76bOwnedKey;
+            if(variant==ArenaVariant.Trappist1e)return Trappist1eOwnedKey;
             return null;
         }
 

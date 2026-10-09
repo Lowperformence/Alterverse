@@ -81,6 +81,52 @@ class ProfileTests(unittest.TestCase):
             with self.subTest(entries=entries), self.assertRaises(ValueError):
                 self.ledger.save_profile('a',entries,preserved['profileRevision'])
 
+    def test_exoplanet_purchase_costs_900_and_restores_account_unlock(self):
+        for arena in ('Wasp76b', 'Trappist1e'):
+            with self.subTest(arena=arena):
+                account='buyer-'+arena
+                key='DF_ArenaOwned_'+arena
+                sku='arena_'+arena
+                # Exercise the same combined earned/Google-paid wallet used by the client.
+                self.ledger.fulfill(account,'dimensions_shards_500','token-'+arena,
+                                    dict(self.valid,obfuscatedExternalAccountId=account))
+                self.ledger.save_profile(account,[number('DF_Shards',400)],0)
+                bought=self.ledger.purchase(account,sku,'c'*32,1)
+                self.assertEqual(bought['balance'],0)
+                self.assertEqual(profile_value(bought,'DF_Shards'),0)
+                self.assertEqual(profile_value(bought,key),1)
+                restarted=Ledger(self.path)
+                self.assertEqual(profile_value(restarted.wallet(account),key),1)
+                self.assertIsNone(profile_value(restarted.wallet('other-'+arena),key))
+                replay=restarted.purchase(account,sku,'c'*32,0)
+                self.assertEqual(replay,bought)
+                duplicate=restarted.purchase(account,sku,'d'*32,bought['profileRevision'])
+                self.assertEqual(duplicate['balance'],0)
+                self.assertEqual(duplicate['profileRevision'],bought['profileRevision'])
+                saved=restarted.save_profile(account,[],duplicate['profileRevision'])
+                self.assertEqual(profile_value(saved,key),1)
+
+    def test_exoplanet_purchase_rejects_899_without_changing_account(self):
+        for arena in ('Wasp76b', 'Trappist1e'):
+            with self.subTest(arena=arena):
+                account='short-'+arena
+                before=self.ledger.save_profile(account,[number('DF_Shards',899)],0)
+                with self.assertRaises(ValueError):
+                    self.ledger.purchase(account,'arena_'+arena,'e'*32,before['profileRevision'])
+                self.assertEqual(Ledger(self.path).wallet(account),before)
+                self.assertIsNone(profile_value(before,'DF_ArenaOwned_'+arena))
+
+    def test_exoplanet_concurrent_purchase_retries_debit_once(self):
+        for arena in ('Wasp76b', 'Trappist1e'):
+            with self.subTest(arena=arena):
+                account='retry-'+arena
+                self.ledger.save_profile(account,[number('DF_Shards',1800)],0)
+                with ThreadPoolExecutor(max_workers=8) as pool:
+                    list(pool.map(lambda _:self.ledger.purchase(account,'arena_'+arena,'f'*32,1),range(24)))
+                restored=Ledger(self.path).wallet(account)
+                self.assertEqual(profile_value(restored,'DF_Shards'),900)
+                self.assertEqual(profile_value(restored,'DF_ArenaOwned_'+arena),1)
+
     def test_two_devices_cannot_both_save_a_daily_payout(self):
         self.ledger.save_profile('a',[number('DF_Shards',10)],0)
         payout=[number('DF_Shards',22),number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',4)]

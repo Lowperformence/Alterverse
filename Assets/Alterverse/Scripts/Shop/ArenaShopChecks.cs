@@ -32,27 +32,33 @@ namespace Alterverse.Shop
         [MenuItem("DIMENSIONS FRONT/Checks/Arena purchases (non-destructive)")]
         public static void Run()
         {
+            if(AccountProfilePrefs.Attached||PaidShardCommerce.Instance!=null)
+                throw new InvalidOperationException("Run purchase fixtures with cloud account and commerce disconnected.");
             IntPrefSnapshot shards=new(ShardsKey);
             IntPrefSnapshot earthOwned=new(ArenaUnlockInventory.EarthOwnedKey);
             IntPrefSnapshot darkOwned=new(ArenaUnlockInventory.Dark00OwnedKey);
             IntPrefSnapshot moor=new(ArenaUnlockInventory.MoorOwnedKey),pyraxis=new(ArenaUnlockInventory.PyraxisOwnedKey),psr=new(ArenaUnlockInventory.PsrOwnedKey);
             IntPrefSnapshot selected=new("DF_SelectedArenaVariant"),shuffle=new("DF_ArenaShuffle");
+            IntPrefSnapshot wasp=new(ArenaUnlockInventory.Wasp76bOwnedKey),trappist=new(ArenaUnlockInventory.Trappist1eOwnedKey);
             try
             {
                 CheckPaidArena(ArenaVariant.GreenPlanet,ArenaUnlockInventory.MoorOwnedKey,900);
                 CheckPaidArena(ArenaVariant.Pyraxis,ArenaUnlockInventory.PyraxisOwnedKey,900);
                 CheckPaidArena(ArenaVariant.DiamondCore,ArenaUnlockInventory.PsrOwnedKey,900);
+                CheckPaidArena(ArenaVariant.Wasp76b,ArenaUnlockInventory.Wasp76bOwnedKey,900);
+                CheckPaidArena(ArenaVariant.Trappist1e,ArenaUnlockInventory.Trappist1eOwnedKey,900);
                 CheckEarthPriceAndLock();
                 CheckEarthInsufficientShards();
                 CheckEarthExactPurchaseAndDuplicateProtection();
                 CheckDarkPriceAndLock();
                 CheckDarkInsufficientShards();
                 CheckDarkExactPurchaseAndDuplicateProtection();
-                Debug.Log("DIMENSIONS FRONT: MOOR12C 900, PYRAXIS 900, PSR 900, Earth 900 and Dark 00 900 purchase checks passed.");
+                Debug.Log("DIMENSIONS FRONT: arena purchases passed, including WASP-76b and TRAPPIST-1e at 900 shards each.");
             }
             finally
             {
                 moor.Restore();pyraxis.Restore();psr.Restore();selected.Restore();shuffle.Restore();
+                wasp.Restore();trappist.Restore();
                 shards.Restore();
                 earthOwned.Restore();
                 darkOwned.Restore();
@@ -64,12 +70,15 @@ namespace Alterverse.Shop
         {
             ResetArena(key,price-1);
             Assert(ArenaShopCatalog.For(variant).Price==price,"Shop price mismatch: "+variant);
+            Assert(System.Array.Exists(ArenaShopCatalog.PurchasableItems,item=>item.Variant==variant&&item.Price==price),"Paid map missing from STORE: "+variant);
+            Assert(ArenaUnlockInventory.UnlockRequirement(variant)==price+" SHARDS","Unlock requirement mismatch: "+variant);
             Assert(!ArenaUnlockInventory.Owned(variant)&&!ArenaVariantRuntime.CanSelect(variant),"Unowned map must stay locked: "+variant);
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.InsufficientShards,"Insufficient balance must be rejected.");
             Assert(PlayerWallet.Balance==price-1&&!ArenaUnlockInventory.Owned(variant),"Rejected purchase must preserve balance and ownership.");
             Alterverse.Profile.AccountProfilePrefs.SetInt(ShardsKey,price);
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.Purchased,"Exact balance must purchase map.");
             Assert(PlayerWallet.Balance==0&&ArenaUnlockInventory.Owned(variant),"Purchase must debit exact price and grant ownership.");
+            Assert(AccountProfilePrefs.GetInt(key,0)==1,"Purchase must save the map entitlement: "+variant);
             Assert(ArenaVariantRuntime.Select(variant)&&ArenaVariantRuntime.Selected==variant,"Purchased map must be selectable.");
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Duplicate purchase must never debit again.");
         }
