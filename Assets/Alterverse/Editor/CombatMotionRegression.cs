@@ -42,7 +42,38 @@ namespace Alterverse.EditorChecks
                 foreach(float boundary in new[]{contact*.55f,contact,contact+(end-contact)*.3f,end})
                     Require(Mathf.Abs(CombatMotion.Curve(boundary-.00001f,contact,end,-.3f,1f,1.2f)-CombatMotion.Curve(boundary+.00001f,contact,end,-.3f,1f,1.2f))<.002f,"Discontinuous attack path");
             }
-            Debug.Log("DF: 24 imported-axis IK variants and four attack timelines passed. Run live hero/monster checks for weapon and shield clearance.");
+            CheckGuardShoulderMounts();
+            Debug.Log("DF: 24 imported-axis IK variants, four attack timelines and rigid guard shoulder mounts passed. Run live hero/monster checks for weapon and shield clearance.");
+        }
+        static void CheckGuardShoulderMounts()
+        {
+            var actor=new GameObject("Guard shoulder regression");
+            try
+            {
+                Alterverse.Combat.HealingGuardMech.BuildRobotVisual(actor.transform,0);
+                var motion=actor.AddComponent<LaneUnitVisualMotion>();motion.ConfigureRobot();
+                Transform torso=actor.transform.Find("DF_LocomotionPose");
+                Require(torso!=null,"Guard visual root missing");
+                foreach(string side in new[]{"L","R"})
+                {
+                    Transform arm=torso.Find("DF_GuardArmMotion"+side);
+                    Transform elbow=arm!=null?arm.Find("DF_GuardElbowMotion"+side):null;
+                    Require(arm!=null&&elbow!=null,"Guard arm chain missing");
+                    Transform plate=torso.Find("DF_GuardShoulderArmor"+side),cap=torso.Find("DF_GuardShoulderCap"+side);
+                    Require(plate!=null&&cap!=null,"Shoulder armor must be mounted on the torso");
+                    Require(elbow.Find("DF_GuardForearmArmor"+side)!=null,"Forearm armor must follow the elbow");
+                    Vector3 position=plate.position,capPosition=cap.position;
+                    Quaternion rotation=plate.rotation,capRotation=cap.rotation;
+                    for(int frame=0;frame<120;frame++)
+                    {
+                        arm.localRotation=Quaternion.Euler(frame*7,frame*11,frame*13);
+                        elbow.localRotation=Quaternion.Euler(frame*3,frame*5,frame*9);
+                        Require(Vector3.Distance(plate.position,position)<.0001f&&Quaternion.Angle(plate.rotation,rotation)<.05f,"Arm rotation moved the shoulder plate");
+                        Require(Vector3.Distance(cap.position,capPosition)<.0001f&&Quaternion.Angle(cap.rotation,capRotation)<.05f,"Arm rotation moved the shoulder cap");
+                    }
+                }
+            }
+            finally{UnityEngine.Object.DestroyImmediate(actor);}
         }
         static void Require(bool condition,string reason){if(!condition)throw new InvalidOperationException(reason);}
     }

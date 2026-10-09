@@ -125,9 +125,10 @@ namespace Alterverse.Visuals
             foot = Group("DF_GuardAnkleMotion" + suffix, shin, new Vector3(side*.53f,-1.34f,.17f),
                 "DF_GuardAnkle" + suffix, "DF_GuardFootCore" + suffix,
                 "DF_GuardFootArmor" + suffix, "DF_GuardHeel" + suffix);
+            // The broad shoulder plates are fixed to the torso. Only the joint and upper
+            // arm enter the IK chain; moving the plates with it makes them orbit like a rotor.
             arm = Group("DF_GuardArmMotion" + suffix, visualRoot, new Vector3(side*1.02f,.96f,0),
-                "DF_GuardShoulderCore" + suffix, "DF_GuardShoulderArmor" + suffix,
-                "DF_GuardShoulderCap" + suffix, "DF_GuardUpperArm" + suffix);
+                "DF_GuardShoulderCore" + suffix, "DF_GuardUpperArm" + suffix);
             forearm = Group("DF_GuardElbowMotion" + suffix, arm, new Vector3(side*1.25f,.20f,.08f),
                 "DF_GuardElbow" + suffix, "DF_GuardForearmCore" + suffix,
                 "DF_GuardForearmArmor" + suffix, "DF_GuardForearmPanel" + suffix,
