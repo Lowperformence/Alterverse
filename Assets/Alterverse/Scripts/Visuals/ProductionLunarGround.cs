@@ -21,7 +21,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void Start()
     {
         if(GetComponent<LunarLighting>()==null)gameObject.AddComponent<LunarLighting>();
-        string rootName=ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":
+        string rootName=ArenaVariantRuntime.IsExoplanet?"DF_"+ArenaVariantRuntime.Current+"GroundProduction":ArenaVariantRuntime.IsMars?"DF_MarsGroundProduction":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetGroundProduction":
             ArenaVariantRuntime.IsNoxara?"DF_NoxaraGroundProduction":
             ArenaVariantRuntime.IsKryon?"DF_KryonGroundProduction":"DF_LunarGroundProduction";
@@ -31,6 +31,15 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):noxara?new Color(.045f,.075f,.19f,1):kryon?new Color(.62f,.75f,.80f,1):new Color(.105f,.12f,.145f,1),.02f,kryon?.34f:.12f);
         darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):noxara?new Color(.015f,.026f,.075f,1):kryon?new Color(.16f,.24f,.29f,1):new Color(.055f,.065f,.082f,1),.01f,kryon?.22f:.08f);
         rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):noxara?new Color(.09f,.15f,.34f,1):kryon?new Color(.55f,.78f,.86f,1):new Color(.19f,.205f,.225f,1),.03f,kryon?.38f:.11f);
+        if(ArenaVariantRuntime.IsExoplanet)
+        {
+            bool iron=ArenaVariantRuntime.IsWasp76b;
+            Color tint=iron?new Color(.34f,.23f,.16f):new Color(.13f,.26f,.27f);
+            darkRegolith.color=tint*.52f;darkRegolith.SetColor("_BaseColor",darkRegolith.color);
+            rimMat.color=tint;rimMat.SetColor("_BaseColor",tint);
+            foreach(Material material in new[]{regolith,darkRegolith,rimMat})
+            {material.SetFloat("_Metallic",iron?.48f:.02f);material.SetFloat("_Smoothness",iron?.34f:.30f);}
+        }
         if(green)alienMineral=Mat(new Color(.35f,.48f,.16f,1),.02f,.18f,true);
         if(kryon)cryoIce=Mat(new Color(.26f,.90f,1f,1),.08f,.62f,true);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
@@ -85,7 +94,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         regolith.color=Color.white;regolith.SetColor("_BaseColor",Color.white);
         regolith.SetTexture("_BaseMap",surfaceAlbedo);
         regolith.SetTexture("_BumpMap",surfaceNormals);
-        string surfaceName=ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
+        string surfaceName=ArenaVariantRuntime.IsExoplanet?"DF_"+ArenaVariantRuntime.Current+"Crust":ArenaVariantRuntime.IsMars?"DF_MarsRegolith":
             ArenaVariantRuntime.IsGreenPlanet?"DF_GreenPlanetRegolith":
             ArenaVariantRuntime.IsNoxara?"DF_NoxaraRegolith":
             ArenaVariantRuntime.IsKryon?"DF_KryonIceRegolith":"DF_LunarRegolith";

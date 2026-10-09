@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Alterverse.Match
 {
-    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2, Noxara=3, Kryon=4, Earth=5, Pyraxis=6, Neptune=7, Dark00=8, DiamondCore=9, GJ504b=10 }
+    public enum ArenaVariant { Moon=0, Mars=1, GreenPlanet=2, Noxara=3, Kryon=4, Earth=5, Pyraxis=6, Neptune=7, Dark00=8, DiamondCore=9, GJ504b=10, Wasp76b=11, Trappist1e=12 }
 
     /// <summary>Persistent player-selected arena. Locked premium arenas always fall back to Moon.</summary>
     public static class ArenaVariantRuntime
@@ -25,6 +25,9 @@ namespace Alterverse.Match
         public static bool IsDark00=>Current==ArenaVariant.Dark00;
         public static bool IsGJ504b=>Current==ArenaVariant.GJ504b;
         public static bool IsDiamondCore=>Current==ArenaVariant.DiamondCore;
+        public static bool IsWasp76b=>Current==ArenaVariant.Wasp76b;
+        public static bool IsTrappist1e=>Current==ArenaVariant.Trappist1e;
+        public static bool IsExoplanet=>IsWasp76b||IsTrappist1e;
 
         public static ArenaVariant Selected
         {

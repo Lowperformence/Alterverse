@@ -19,6 +19,8 @@ namespace Alterverse.Visuals
                 case ArenaVariant.Kryon: return layer==0?SceneryFinish.Stone:SceneryFinish.Ice;
                 case ArenaVariant.Neptune: return SceneryFinish.WetStone;
                 case ArenaVariant.Dark00: return SceneryFinish.Metal;
+                case ArenaVariant.Wasp76b: return SceneryFinish.Metal;
+                case ArenaVariant.Trappist1e: return layer==1?SceneryFinish.Ice:layer>=2?SceneryFinish.Leaf:SceneryFinish.WetStone;
                 case ArenaVariant.DiamondCore: return layer==0?SceneryFinish.Stone:SceneryFinish.Ice;
                 case ArenaVariant.Moon:
                 case ArenaVariant.Mars:
@@ -33,9 +35,10 @@ namespace Alterverse.Visuals
             if(material==null)return;
             Shader shader=Resources.Load<Shader>("DF_ScenerySurface");
             if(shader==null||!shader.isSupported)return; // Retain the valid original shader if unsupported.
-            string texturePath=finish==SceneryFinish.Concrete?"SurfaceMicro/Concrete":finish==SceneryFinish.Soil?"PlanetSurfaces/"+planet+"/Ground":
+            string profile=ExoplanetArenaProfile.SurfaceResource(planet);
+            string texturePath=finish==SceneryFinish.Concrete?"SurfaceMicro/Concrete":finish==SceneryFinish.Soil?"PlanetSurfaces/"+profile+"/Ground":
                 finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone
-                ?"PlanetSurfaces/"+planet+"/Stone":"SceneryFinishes/"+finish;
+                ?"PlanetSurfaces/"+profile+"/Stone":"SceneryFinishes/"+finish;
             Texture2D texture=Resources.Load<Texture2D>(texturePath);
             if(texture==null){Debug.LogWarning("Scenery finish missing: "+texturePath);return;}
             Color albedo=material.HasProperty("_BaseColor")?material.GetColor("_BaseColor"):material.color;

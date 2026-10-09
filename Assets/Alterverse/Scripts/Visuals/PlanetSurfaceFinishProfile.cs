@@ -23,6 +23,8 @@ namespace Alterverse.Visuals
             ArenaVariant.Dark00 => new(.10f,.12f,.15f),
             ArenaVariant.DiamondCore => new(-.20f,.12f,.13f),
             ArenaVariant.GJ504b => new(.12f,.25f,.32f),
+            ArenaVariant.Wasp76b => new(-.07f,.28f,.26f),
+            ArenaVariant.Trappist1e => new(-.04f,.25f,.24f),
             _ => throw new ArgumentOutOfRangeException(nameof(planet))
         };
     }

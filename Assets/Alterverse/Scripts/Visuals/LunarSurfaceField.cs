@@ -57,7 +57,7 @@ namespace Alterverse.Visuals
             new(18,2.25f,30),new(20.1f,.82f,31.7f),new(15.8f,.58f,32.1f)
         };
 
-        private static bool IsMoon=>ArenaVariantRuntime.IsMoon;
+        private static bool IsMoon=>ArenaVariantRuntime.IsMoon||ArenaVariantRuntime.IsExoplanet;
         private static float Noise(float x,float z,float f,float seed)=>Mathf.PerlinNoise(x*f+seed,z*f+seed*.71f);
 
         // Kept only as a compatibility hook for callers from older content. The current game has
@@ -227,7 +227,9 @@ namespace Alterverse.Visuals
                 value+=Mathf.SmoothStep(.37f,.49f,vein)*(moon?.026f:.014f);
                 if(ArenaVariantRuntime.IsGreenPlanet)value=Mathf.Max(value,.235f);
                 value=Mathf.Clamp01(value);
-                if(ArenaVariantRuntime.IsGJ504b)
+                if(ArenaVariantRuntime.IsExoplanet)
+                    pixels[i]=ExoplanetArenaProfile.GroundColor(ArenaVariantRuntime.Current,wx,wz,value);
+                else if(ArenaVariantRuntime.IsGJ504b)
                 {
                     float rock=Mathf.SmoothStep(.42f,.70f,Mathf.PerlinNoise(wx*.11f+71f,wz*.11f+19f));
                     Color sand=new Color(value*1.65f,value*.40f,value*1.13f,1f);

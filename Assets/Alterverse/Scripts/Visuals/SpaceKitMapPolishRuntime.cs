@@ -99,7 +99,11 @@ namespace Alterverse.Visuals
             BuildPalette();
             BuildOuterRockField();
 
-            if (ArenaVariantRuntime.IsGreenPlanet)
+            if(ArenaVariantRuntime.IsWasp76b)
+                BuildIronrainSet();
+            else if(ArenaVariantRuntime.IsTrappist1e)
+                BuildTwilightSet();
+            else if (ArenaVariantRuntime.IsGreenPlanet)
                 BuildGreenPlanetSet();
             else if (ArenaVariantRuntime.IsNoxara)
                 BuildNoxaraSet();
@@ -119,7 +123,17 @@ namespace Alterverse.Visuals
             Color accent;
             Color dark;
 
-            if (ArenaVariantRuntime.IsMars)
+            if(ArenaVariantRuntime.IsWasp76b)
+            {
+                rock=new Color(.30f,.31f,.32f);structure=new Color(.43f,.26f,.15f);
+                flora=new Color(.27f,.21f,.17f);accent=new Color(.93f,.43f,.10f);dark=new Color(.11f,.13f,.15f);
+            }
+            else if(ArenaVariantRuntime.IsTrappist1e)
+            {
+                rock=new Color(.13f,.27f,.29f);structure=new Color(.25f,.30f,.37f);
+                flora=new Color(.19f,.43f,.40f);accent=new Color(.18f,.79f,.69f);dark=new Color(.53f,.68f,.76f);
+            }
+            else if (ArenaVariantRuntime.IsMars)
             {
                 rock = new Color(.43f, .19f, .10f, 1f);
                 structure = new Color(.28f, .24f, .22f, 1f);
@@ -166,14 +180,19 @@ namespace Alterverse.Visuals
             accentMaterial = CreateMaterial("USK_Accent", accent, .18f, .52f);
             darkMaterial = CreateMaterial("USK_Dark", dark, .12f, .20f);
             var planet=Alterverse.Match.ArenaVariantRuntime.Current;
-            PlanetSceneryMaterials.Apply(rockMaterial,planet,SceneryFinish.Stone);
+            PlanetSceneryMaterials.Apply(rockMaterial,planet,ArenaVariantRuntime.IsWasp76b?SceneryFinish.Metal:ArenaVariantRuntime.IsTrappist1e?SceneryFinish.WetStone:SceneryFinish.Stone);
             PlanetSceneryMaterials.Apply(structureMaterial,planet,SceneryFinish.Metal);
-            PlanetSceneryMaterials.Apply(darkMaterial,planet,SceneryFinish.Metal);
+            PlanetSceneryMaterials.Apply(darkMaterial,planet,ArenaVariantRuntime.IsTrappist1e?SceneryFinish.Ice:SceneryFinish.Metal);
             PlanetSceneryMaterials.Apply(accentMaterial,planet,
-                planet==Alterverse.Match.ArenaVariant.Kryon?SceneryFinish.Ice:SceneryFinish.Metal);
+                ArenaVariantRuntime.IsTrappist1e?SceneryFinish.Leaf:planet==Alterverse.Match.ArenaVariant.Kryon?SceneryFinish.Ice:SceneryFinish.Metal);
             PlanetSceneryMaterials.Apply(floraMaterial,planet,
                 planet==Alterverse.Match.ArenaVariant.Kryon?SceneryFinish.Ice:
                 planet==Alterverse.Match.ArenaVariant.Mars?SceneryFinish.Stone:SceneryFinish.Leaf);
+            if(ArenaVariantRuntime.IsExoplanet)
+            {
+                accentMaterial.SetColor("_EmissionColor",ExoplanetArenaProfile.Energy(planet)*.22f);
+                if(ArenaVariantRuntime.IsWasp76b)rockMaterial.SetFloat("_Metallic",.58f);
+            }
         }
 
         private void BuildOuterRockField()
@@ -189,7 +208,7 @@ namespace Alterverse.Visuals
             for (int i = 0; i < sites.Length; i++)
             {
                 float s = .31f + (i % 4) * .075f;
-                Spawn("USK_OuterRock", rockMesh, i % 5 == 0 ? darkMaterial : rockMaterial, sites[i],
+                Spawn("USK_OuterRock", rockMesh, ArenaVariantRuntime.IsTrappist1e?(sites[i].y<0?darkMaterial:rockMaterial):i % 5 == 0 ? darkMaterial : rockMaterial, sites[i],
                     new Vector3(s * (1f + (i % 3) * .12f), s * (.72f + (i % 2) * .13f), s),
                     i * 47f + 11f, -.03f, true, i % 2 == 0 ? 7f : -5f, i % 3 == 0 ? 4f : -3f);
             }
@@ -215,6 +234,33 @@ namespace Alterverse.Visuals
             BuildPlantCluster(new Vector2(35.8f, 29.0f), 6, .52f, accentMaterial, 41);
             BuildPlantCluster(new Vector2(-40.0f, 3.0f), 4, .43f, darkMaterial, 71);
             BuildPlantCluster(new Vector2(40.0f, -3.5f), 4, .43f, darkMaterial, 96);
+        }
+
+        private void BuildIronrainSet()
+        {
+            // Sealed observation pods and weathered iron stacks replace the Moon plant set.
+            foreach(int side in new[]{-1,1})
+            {
+                Spawn("USK_IronrainObservationPod",domeMesh,structureMaterial,new Vector2(side*37f,side*28.7f),new Vector3(.65f,.56f,.65f),side<0?24:204,-.03f,true);
+                Spawn("USK_IronrainWeatherSensor",radarMesh,structureMaterial,new Vector2(side*34f,-side*31.2f),Vector3.one*.55f,side*32,-.02f,true);
+                for(int i=0;i<4;i++)
+                    Spawn("USK_IronrainMetalStack",rockMesh,i%3==0?accentMaterial:rockMaterial,new Vector2(side*(39f-i*.55f),-22f+i*14.5f),new Vector3(.26f,.44f+(i%2)*.12f,.28f),i*61f+side*17,-.03f,true,side*8,5);
+            }
+        }
+
+        private void BuildTwilightSet()
+        {
+            // Warm northern growth and frozen southern geology are shared by both team ends.
+            foreach(int side in new[]{-1,1})
+            {
+                Spawn("USK_TwilightObservationPod",domeMesh,structureMaterial,new Vector2(side*37f,-28.8f),new Vector3(.55f,.49f,.55f),side*24,-.03f,true);
+                for(int i=0;i<3;i++)
+                    Spawn("USK_TwilightSpiralGrowth",spiralTreeMesh,i==1?accentMaterial:floraMaterial,new Vector2(side*(38.8f-i*5.9f),29f+i*1.4f),new Vector3(.64f,.73f,.64f),i*43f+side*21,-.03f,true);
+                BuildPlantCluster(new Vector2(side*38.3f,10f),5,.48f,floraMaterial,side<0?17:59);
+                BuildPlantCluster(new Vector2(side*34.5f,28.8f),5,.48f,accentMaterial,side<0?37:83);
+                for(int i=0;i<3;i++)
+                    Spawn("USK_TwilightFrozenOutcrop",rockMesh,darkMaterial,new Vector2(side*(39f-i*5f),-30f-i*.7f),new Vector3(.36f,.31f,.39f),side*31+i*51,-.03f,true);
+            }
         }
 
         private void BuildMarsSet()
@@ -358,7 +404,7 @@ namespace Alterverse.Visuals
 
         private Material CreateMaterial(string materialName, Color color, float metallic, float smoothness)
         {
-            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ??
+            Shader shader = ArenaVariantRuntime.IsExoplanet?RuntimeShaderLibrary.Lit:Shader.Find("Universal Render Pipeline/Lit") ??
                             Shader.Find("Universal Render Pipeline/Simple Lit") ??
                             Shader.Find("Standard");
             Material material = new(shader) { name = materialName, hideFlags = HideFlags.DontSave };

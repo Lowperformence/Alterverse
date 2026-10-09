@@ -11,7 +11,7 @@ namespace Alterverse.Visuals
         readonly List<Pose> owned=new();
         Transform body,left,right,leftElbow,rightElbow,leftHand,rightHand,head,tail;
         Health health; Vector3 aim; float started=-100,contact=.22f; int serial; bool posed;
-        enum Shape { None,Scorpion,Spider,Bear,Octopus,Mech }
+        enum Shape { None,Scorpion,Spider,Bear,Octopus,Mech,Ferrox,Vespera }
         Shape shape;
         public float ContactTime=>contact;
         public float Age=>Time.time-started;
@@ -48,6 +48,10 @@ namespace Alterverse.Visuals
             {shape=Shape.Octopus;left=Find("Tentacle_1");right=Find("Tentacle_7");}
             else if((body=Find("DF_MoonGuardUpperBody"))!=null)
             {shape=Shape.Mech;left=Find("DF_MoonGuardArmL");right=Find("DF_MoonGuardArmR");}
+            else if((body=Find("DF_FerroxBody"))!=null)
+            {shape=Shape.Ferrox;left=Find("DF_FerroxClaw_L");right=Find("DF_FerroxClaw_R");}
+            else if((body=Find("DF_VesperaBody"))!=null)
+            {shape=Shape.Vespera;left=Find("DF_VesperaGill_L");right=Find("DF_VesperaGill_R");}
             Keep(body);Keep(left);Keep(right);Keep(leftElbow);Keep(rightElbow);Keep(leftHand);Keep(rightHand);Keep(head);Keep(tail);
         }
         void Restore(){if(!posed)return;foreach(var p in owned)if(p.Bone!=null){p.Bone.localRotation=p.Rotation;p.Bone.localPosition=p.Position;}posed=false;}
@@ -92,6 +96,17 @@ namespace Alterverse.Visuals
             {
                 Rotate(right,u,C(-32,28,40));Rotate(right,r,C(-8,-16,-12));
                 Rotate(left,u,C(4,-5,-7));
+            }
+            else if(shape==Shape.Ferrox)
+            {
+                Rotate(left,u,C(-18,14,24));Rotate(right,u,C(18,-14,-24));
+                Rotate(left,r,C(-10,8,12));Rotate(right,r,C(-10,8,12));
+                body.position+=f*C(-.06f,.10f,.14f);
+            }
+            else if(shape==Shape.Vespera)
+            {
+                Rotate(left,u,C(-20,9,14));Rotate(right,u,C(20,-9,-14));
+                Rotate(body,r,C(-6,7,10));body.position+=f*C(-.04f,.09f,.12f);
             }
         }
         public void Seek(float elapsed){started-=Mathf.Max(0,elapsed);}

@@ -32,6 +32,7 @@ namespace Alterverse.Combat
         {
             bool zero=team==0;
             Color energy=zero?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
+            if(ArenaVariantRuntime.IsExoplanet)energy=ExoplanetGuardAppearance.GuardEnergy(ArenaVariantRuntime.Current,energy);
             Color dark=zero?StylizedArtDirection.ZeroDark:StylizedArtDirection.LumenDark;
 
             // Offset beside the plate so the healing plus and arriving heroes stay unobstructed.
@@ -146,6 +147,7 @@ namespace Alterverse.Combat
                 if(forearm==null)continue;
                 for(int i=0;i<3;i++)CreatePart(forearm,"DF_InstrumentRib_"+side+i,PrimitiveType.Cube,new Vector3(0,-.24f+i*.22f,.53f),new Vector3(.62f,.055f,.08f),trim,Quaternion.identity);
             }
+            if(ArenaVariantRuntime.IsExoplanet)ExoplanetGuardAppearance.Apply(root,ArenaVariantRuntime.Current,zero?0:1);
         }
 
         private static void AddKryonFrost(Transform root)

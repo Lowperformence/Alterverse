@@ -168,13 +168,16 @@ namespace Alterverse.Visuals
                 ArenaVariant.Pyraxis=>new Color(.14f,.075f,.055f),
                 ArenaVariant.Neptune=>new Color(.07f,.14f,.23f),
                 ArenaVariant.Dark00=>new Color(.065f,.070f,.090f),
+                ArenaVariant.Wasp76b=>new Color(.34f,.23f,.16f),
+                ArenaVariant.Trappist1e=>new Color(.13f,.26f,.27f),
                 _=>(Color?)null
             };
             if(tint.HasValue)
             {
-                crust=Mat(tint.Value,.02f,.12f);
+                crust=Mat(tint.Value,ArenaVariantRuntime.IsWasp76b?.48f:.02f,ArenaVariantRuntime.IsWasp76b?.34f:.12f);
                 middle.color=tint.Value*.70f;middle.SetColor("_BaseColor",middle.color);
-                underside=Mat(tint.Value*.38f,.01f,.08f);
+                if(ArenaVariantRuntime.IsWasp76b)middle.SetFloat("_Metallic",.40f);
+                underside=Mat(tint.Value*.38f,ArenaVariantRuntime.IsWasp76b?.35f:.01f,.08f);
                 surfaceMaterials.Apply(crust);surfaceMaterials.Apply(underside);
             }
             ShatteredArenaEdge.Build(root,perimeter,crust,middle,underside,meshes);

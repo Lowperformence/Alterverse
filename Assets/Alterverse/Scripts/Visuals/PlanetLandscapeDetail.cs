@@ -13,7 +13,7 @@ namespace Alterverse.Visuals
         readonly List<Mesh> ownedMeshes = new();
         readonly List<Material> ownedMaterials = new();
         readonly List<CombineInstance>[] batches = { new(), new(), new(), new() };
-        Mesh rock, column, crystal, leaf, beam, canopy;
+        Mesh rock, column, crystal, leaf, beam, canopy, pool;
         Material[] palette;
         ArenaVariant variant;
         Vector3 center;
@@ -46,6 +46,7 @@ namespace Alterverse.Visuals
                 new Vector2(.18f,0), new Vector2(.43f,.20f), new Vector2(.35f,.78f), new Vector2(.025f,1) }));
             leaf = Own(SceneryMeshQuality.CurvedFrond());
             beam = Own(SceneryMeshQuality.RoundedBeam());
+            if(variant==ArenaVariant.Trappist1e)pool=Own(ProductionMeshFactory.Disc(.5f,.012f,24));
             canopy = Own(SceneryMeshQuality.SoftProfile("RoundedCanopy", 16, new[] {
                 new Vector2(.16f,0), new Vector2(.38f,.10f), new Vector2(.50f,.36f),
                 new Vector2(.37f,.72f), new Vector2(.16f,.94f), new Vector2(.015f,1f) }));
@@ -60,8 +61,8 @@ namespace Alterverse.Visuals
                 Flush(site);
             }
             // Input meshes are no longer needed after baking the regional batches.
-            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam,canopy})
-            { ownedMeshes.Remove(input); Destroy(input); }
+            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam,canopy,pool})
+            { if(input==null)continue;ownedMeshes.Remove(input); Destroy(input); }
         }
 
         Material[] BuildPalette()
@@ -90,6 +91,10 @@ namespace Alterverse.Visuals
                     stone=new(.055f,.095f,.13f);edge=new(.43f,.66f,.75f);accent=new(.58f,.84f,.93f);organic=new(.18f,.27f,.34f);polish=.88f;glow=.18f;break;
                 case ArenaVariant.GJ504b:
                     stone=new(.29f,.065f,.18f);edge=new(.58f,.19f,.36f);accent=new(.76f,.36f,.49f);organic=new(.17f,.045f,.12f);glow=0;break;
+                case ArenaVariant.Wasp76b:
+                    stone=new(.21f,.23f,.25f);edge=new(.56f,.30f,.14f);accent=new(.95f,.42f,.07f);organic=new(.28f,.19f,.13f);metal=.62f;polish=.34f;glow=.42f;break;
+                case ArenaVariant.Trappist1e:
+                    stone=new(.095f,.21f,.23f);edge=new(.54f,.69f,.75f);accent=new(.13f,.78f,.68f);organic=new(.22f,.18f,.34f);polish=.40f;glow=.22f;break;
                 default:
                     stone=new(.12f,.14f,.16f);edge=new(.31f,.33f,.35f);accent=new(.43f,.46f,.47f);organic=new(.075f,.085f,.10f);glow=0;break;
             }
@@ -97,6 +102,7 @@ namespace Alterverse.Visuals
                 Mat("MineralAccents",accent,metal,polish,accent*glow),Mat("Secondary",organic,metal,.22f)};
             for(int i=0;i<result.Length;i++)
                 PlanetSceneryMaterials.Apply(result[i],variant,PlanetSceneryMaterials.LandscapeFinish(variant,i));
+            if(variant==ArenaVariant.Trappist1e)result[0].SetFloat("_Smoothness",.72f);
             return result;
         }
 
@@ -115,6 +121,8 @@ namespace Alterverse.Visuals
                 case ArenaVariant.Neptune: AbyssPocket(seed); break;
                 case ArenaVariant.Dark00: IndustrialPocket(seed); break;
                 case ArenaVariant.DiamondCore: DiamondPocket(seed); break;
+                case ArenaVariant.Wasp76b: IronPocket(seed); break;
+                case ArenaVariant.Trappist1e: TwilightPocket(seed); break;
             }
             // Fine scale debris ties the larger silhouettes back into the ground.
             for(int i=0;i<14;i++)
@@ -288,6 +296,39 @@ namespace Alterverse.Visuals
             }
             for(int i=0;i<4;i++)
                 Add(crystal,3,new Vector3(-1.3f+i*.70f,.10f,-.75f),new Vector3(.20f,.55f,.20f),Quaternion.Euler(68,i*47,12));
+        }
+
+        void IronPocket(int seed)
+        {
+            Add(rock,0,Vector3.zero,new Vector3(1.35f,.24f,.90f),Quaternion.Euler(0,seed*27,0));
+            for(int i=0;i<4;i++)
+            {
+                Vector3 p=new((i-1.5f)*.66f,.04f,(i%2)*.25f);
+                Add(crystal,i%2==0?0:1,p,new Vector3(.49f,.72f+(i%3)*.32f,.42f),Quaternion.Euler(0,seed*31+i*23,(i-2)*9));
+                Add(beam,3,p+Vector3.up*.25f,new Vector3(.59f,.07f,.45f),Quaternion.Euler(0,seed*31+i*23,8));
+                Add(rock,2,p+new Vector3(.15f,.015f,-.53f),new Vector3(.37f,.045f,.10f),Quaternion.Euler(0,i*31,0));
+            }
+        }
+
+        void TwilightPocket(int seed)
+        {
+            bool cold=center.z<0;
+            Add(rock,0,Vector3.zero,new Vector3(1.40f,.15f,.94f),Quaternion.identity);
+            Add(pool,cold?1:0,new Vector3(-.82f,.065f,-.78f),new Vector3(2.10f,1f,1.26f),Quaternion.Euler(0,seed*19,0));
+            for(int i=0;i<5;i++)
+            {
+                Quaternion q=Quaternion.Euler(0,i*72+seed*17,0);
+                Vector3 p=q*new Vector3(0,.05f,.66f);
+                if(cold)
+                    Add(crystal,1,p,new Vector3(.32f,.55f+(i%3)*.25f,.32f),q*Quaternion.Euler(9,0,12));
+                else
+                {
+                    Add(leaf,3,p,new Vector3(.72f,.90f+(i%2)*.20f,.72f),q);
+                    Add(canopy,3,p+Vector3.up*.10f,new Vector3(.45f,.62f,.45f),q);
+                }
+                Add(canopy,2,p+Vector3.up*.09f,new Vector3(.17f,.35f,.17f),q);
+            }
+            Add(rock,1,new Vector3(-.65f,.03f,-.95f),new Vector3(.83f,.07f,.38f),Quaternion.Euler(0,23,0));
         }
 
         void Add(Mesh mesh,int material,Vector3 offset,Vector3 scale,Quaternion rotation)

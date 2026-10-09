@@ -17,10 +17,29 @@ namespace Alterverse.Visuals
         private float nextBackdropUpdate;
         private Quaternion starsStartRotation;
         private Material planetRingMaterial;
+        private Texture2D exoplanetClouds;
+        private Camera exoplanetCamera;
+        private Color previousCameraColor;
+        private CameraClearFlags previousCameraFlags;
 
         private void Start()
         {
             if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
+            if(Alterverse.Match.ArenaVariantRuntime.IsExoplanet)
+            {
+                // One baked atmosphere quad plus the existing cheap star meshes; no particles,
+                // additional lights, transparent cloud layers or full-screen effects.
+                BuildVoidFloor();BuildStars();BuildBrightStars();
+                bool iron=Alterverse.Match.ArenaVariantRuntime.IsWasp76b;
+                Planet(new Vector3(0,-12,92),iron?18f:11f,iron?new Color(.82f,.40f,.13f):new Color(.62f,.20f,.12f));
+                Planet(new Vector3(-76,-15,-67),4f,new Color(.075f,.11f,.14f));
+                exoplanetCamera=Camera.main;
+                if(exoplanetCamera!=null)
+                {previousCameraColor=exoplanetCamera.backgroundColor;previousCameraFlags=exoplanetCamera.clearFlags;}
+                if(exoplanetCamera!=null)
+                {exoplanetCamera.clearFlags=CameraClearFlags.SolidColor;exoplanetCamera.backgroundColor=ExoplanetArenaProfile.BackdropColor(Alterverse.Match.ArenaVariantRuntime.Current,.5f,.5f)*.32f;}
+                return;
+            }
             photoPanorama=new PhotoArenaPanorama();
             if(photoPanorama.Load())return;
             photoPanorama=null;
@@ -58,6 +77,20 @@ namespace Alterverse.Visuals
         private void BuildVoidFloor()
         {
             Material m=Mat(new Color(.004f,.006f,.014f,1));
+            if(m!=null&&Alterverse.Match.ArenaVariantRuntime.IsExoplanet)
+            {
+                const int size=256;
+                var pixels=new Color32[size*size];
+                for(int z=0;z<size;z++)for(int x=0;x<size;x++)
+                    pixels[z*size+x]=ExoplanetArenaProfile.BackdropColor(Alterverse.Match.ArenaVariantRuntime.Current,x/(float)(size-1),z/(float)(size-1));
+                exoplanetClouds=new Texture2D(size,size,TextureFormat.RGBA32,true)
+                    {name="DF_ExoplanetAtmosphere",wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Trilinear};
+                exoplanetClouds.SetPixels32(pixels);exoplanetClouds.Apply(true,true);
+                m.color=Color.white;
+                if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",Color.white);
+                if(m.HasProperty("_BaseMap"))m.SetTexture("_BaseMap",exoplanetClouds);
+                if(m.HasProperty("_MainTex"))m.SetTexture("_MainTex",exoplanetClouds);
+            }
             GameObject g=GameObject.CreatePrimitive(PrimitiveType.Quad);g.name="DF_CosmicVoid";
             g.transform.SetParent(transform,false);g.transform.position=new Vector3(0,-48f,0);
             g.transform.rotation=Quaternion.Euler(90,0,0);g.transform.localScale=new Vector3(260,180,1);
@@ -253,11 +286,17 @@ namespace Alterverse.Visuals
             if(planetRingMaterial!=null){float shade=.92f+Mathf.Sin(Time.time*.035f)*.025f;planetRingMaterial.color=new Color(.12f*shade,.13f*shade,.16f*shade,1);}
         }
 
-        private void OnDisable(){photoPanorama?.RestoreCamera();}
+        private void OnDisable()
+        {
+            photoPanorama?.RestoreCamera();
+            if(exoplanetCamera!=null)
+            {exoplanetCamera.backgroundColor=previousCameraColor;exoplanetCamera.clearFlags=previousCameraFlags;exoplanetCamera=null;}
+        }
 
         private void OnDestroy()
         {
             photoPanorama?.Dispose();
+            if(exoplanetClouds!=null)Destroy(exoplanetClouds);
             foreach(Material m in materials)if(m!=null)Destroy(m);
             foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);
         }
