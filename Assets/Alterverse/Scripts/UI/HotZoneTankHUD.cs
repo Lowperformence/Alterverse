@@ -51,7 +51,7 @@ namespace Alterverse.UI
                 string unit=ArenaVariantRuntime.IsExoplanet?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Visuals.ExoplanetArenaProfile.MonsterName(ArenaVariantRuntime.Current):ArenaVariantRuntime.IsDark00?(tank.Team==0?"ZERO DARK 00 ORB":"LUMEN DARK 00 ORB"):
                     ArenaVariantRuntime.IsPyraxis?(tank.Team==0?"ZERO PYRAXIS SCORPION":"LUMEN PYRAXIS SCORPION"):
                     ArenaVariantRuntime.IsNeptune?(tank.Team==0?"ZERO NEPTUNE OCTOPUS":"LUMEN NEPTUNE OCTOPUS"):
-                    tank.IsKryonBear?(tank.Team==0?"ZERO KRYON FROST BEAR":"LUMEN KRYON FROST BEAR"):
+                    tank.IsKryonBear?(tank.Team==0?"ZERO ":"LUMEN ")+Alterverse.Shop.ArenaShopCatalog.For(ArenaVariant.Kryon).Name+" FROST BEAR":
                     tank.IsNoxaraSpider?(tank.Team==0?"ZERO NOXARA SPIDER":"LUMEN NOXARA SPIDER"):
                     tank.IsXenoTitan?(tank.Team==0?"ZERO XENO TITAN":"LUMEN XENO TITAN"):
                     tank.IsMarsSkeleton?(tank.Team==0?"ZERO MARS TITAN":"LUMEN MARS TITAN"):
