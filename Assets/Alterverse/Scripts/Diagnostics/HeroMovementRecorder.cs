@@ -32,7 +32,9 @@ namespace Alterverse.EditorChecks
             public bool initialized;
             public string state = "no sample";
         }
-        private readonly Dictionary<int, Sample> samples = new Dictionary<int, Sample>();
+        // The component itself is the stable key for this short recording. Unity 6.6
+        // makes the former Object.GetInstanceID API a compile-time error.
+        private readonly Dictionary<HeroIdentity, Sample> samples = new Dictionary<HeroIdentity, Sample>();
         private readonly WaitForEndOfFrame endOfFrame = new WaitForEndOfFrame();
         private double deadline;
         private bool finished;
@@ -72,11 +74,10 @@ namespace Alterverse.EditorChecks
                 var root = hero.transform.Find("DF_VisualRoot");
                 // Ignore menu previews; gameplay heroes must have Health and a visible presentation.
                 if (health == null) continue;
-                int key = hero.GetInstanceID();
-                if (!samples.TryGetValue(key, out Sample sample))
+                if (!samples.TryGetValue(hero, out Sample sample))
                 {
                     sample = new Sample { hero = hero };
-                    samples.Add(key, sample);
+                    samples.Add(hero, sample);
                 }
                 bool missingBone = false;
                 foreach (Transform bone in sample.bones) if (bone == null) missingBone = true;
