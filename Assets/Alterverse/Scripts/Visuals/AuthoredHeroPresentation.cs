@@ -274,6 +274,8 @@ namespace Alterverse.Visuals
             BuildNyraWeaponDetails();
             if (hero == HeroId.Veyr) BuildRigidBlades();
             MeleeBasicAttackAnimation.For(gameObject)?.InitializeRig(model);
+            // Capture the same corrected imported rest pose before any frame writes it.
+            HeroLocomotionAnimation.For(gameObject, model);
         }
 
         // Each authored blade is weighted entirely to one WeaponGrip bone. A rigid
@@ -961,8 +963,12 @@ namespace Alterverse.Visuals
             FollowRifleDetails();
             // Final pose must run after these writes, independent of .meta/editor execution-order overrides.
             if (melee != null && melee.isActiveAndEnabled) melee.EvaluatePose();
+            // Authored legs run after the combat layer's guard resets and foot-preserving solve.
+            // Grounding then corrects source contacts instead of replacing the source gait.
+            GetComponent<HeroLocomotionAnimation>()?.ApplyLegs();
             GetComponent<HeroGroundedLocomotion>()?.FinalizeFeet();
         }
     }
 }
+
 

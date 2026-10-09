@@ -1,0 +1,197 @@
+[
+  {
+    "name": "walk",
+    "action": "Walking_A",
+    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+    "sha256": "11422afd50abf7e8c92ea107e2e0bc94abd38023d6d15f55ad580347efbfa29e",
+    "duration": 1.0666667620340984,
+    "alignedStart": 0,
+    "frames": 33,
+    "stridePerLeg": 1.908353110298148,
+    "stanceFractions": [
+      0.4375,
+      0.4375
+    ],
+    "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
+    "soleVertexCounts": [
+      794,
+      792
+    ],
+    "contactTolerancePerLeg": 0.04,
+    "contactVelocityMaxMetersPerSecond": 0.02,
+    "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
+    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceMinAnimatedSole": [
+      -0.06145007163286209,
+      -0.06057697534561157
+    ],
+    "footCalibrationAxis": [
+      0,
+      -0.3,
+      1
+    ],
+    "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
+    "bothAirborneFraction": 0.125,
+    "maxSwingHeights": [
+      0.07738971153048624,
+      0.07655041107682337
+    ],
+    "measuredStridePerLeg": 1.908353110298148
+  },
+  {
+    "name": "run",
+    "action": "Running_A",
+    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
+    "sha256": "11422afd50abf7e8c92ea107e2e0bc94abd38023d6d15f55ad580347efbfa29e",
+    "duration": 0.8000000317891439,
+    "alignedStart": 2,
+    "frames": 25,
+    "stridePerLeg": 3.5,
+    "stanceFractions": [
+      0.20833333333333334,
+      0.20833333333333334
+    ],
+    "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
+    "soleVertexCounts": [
+      794,
+      792
+    ],
+    "contactTolerancePerLeg": 0.04,
+    "contactVelocityMaxMetersPerSecond": 0.02,
+    "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
+    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceMinAnimatedSole": [
+      -0.010827958583831787,
+      -0.010827586054801941
+    ],
+    "footCalibrationAxis": [
+      0,
+      -0.3,
+      1
+    ],
+    "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
+    "bothAirborneFraction": 0.5833333333333334,
+    "maxSwingHeights": [
+      0.12235000172404398,
+      0.12234997192172159
+    ],
+    "measuredStridePerLeg": 6.955292306487719
+  },
+  {
+    "name": "left",
+    "action": "Running_Strafe_Left",
+    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
+    "duration": 0.8000000317891439,
+    "alignedStart": 2,
+    "frames": 25,
+    "stridePerLeg": 3.5,
+    "stanceFractions": [
+      0.25,
+      0.20833333333333334
+    ],
+    "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
+    "soleVertexCounts": [
+      794,
+      792
+    ],
+    "contactTolerancePerLeg": 0.04,
+    "contactVelocityMaxMetersPerSecond": 0.02,
+    "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
+    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceMinAnimatedSole": [
+      -0.06366445869207382,
+      -0.06365065276622772
+    ],
+    "footCalibrationAxis": [
+      0,
+      -0.3,
+      1
+    ],
+    "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
+    "bothAirborneFraction": 0.5416666666666666,
+    "maxSwingHeights": [
+      0.10833960214404215,
+      0.10831972399500955
+    ],
+    "measuredStridePerLeg": 5.51731021711629
+  },
+  {
+    "name": "right",
+    "action": "Running_Strafe_Right",
+    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
+    "duration": 0.8000000317891439,
+    "alignedStart": 3,
+    "frames": 25,
+    "stridePerLeg": 3.5,
+    "stanceFractions": [
+      0.20833333333333334,
+      0.25
+    ],
+    "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
+    "soleVertexCounts": [
+      794,
+      792
+    ],
+    "contactTolerancePerLeg": 0.04,
+    "contactVelocityMaxMetersPerSecond": 0.02,
+    "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
+    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceMinAnimatedSole": [
+      -0.0636507123708725,
+      -0.06366443634033203
+    ],
+    "footCalibrationAxis": [
+      0,
+      -0.3,
+      1
+    ],
+    "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
+    "bothAirborneFraction": 0.5416666666666666,
+    "maxSwingHeights": [
+      0.10832085648326029,
+      0.10833936372546304
+    ],
+    "measuredStridePerLeg": 5.64861444266909
+  },
+  {
+    "name": "back",
+    "action": "Walking_Backwards",
+    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
+    "duration": 1.0666667620340984,
+    "alignedStart": 18,
+    "frames": 33,
+    "stridePerLeg": 1.9100349573623074,
+    "stanceFractions": [
+      0.53125,
+      0.53125
+    ],
+    "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
+    "soleVertexCounts": [
+      794,
+      792
+    ],
+    "contactTolerancePerLeg": 0.04,
+    "contactVelocityMaxMetersPerSecond": 0.02,
+    "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
+    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceMinAnimatedSole": [
+      -0.021078912541270256,
+      -0.02107880637049675
+    ],
+    "footCalibrationAxis": [
+      0,
+      -0.3,
+      1
+    ],
+    "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
+    "bothAirborneFraction": 0.125,
+    "maxSwingHeights": [
+      0.05510811323074449,
+      0.05521066302208055
+    ],
+    "measuredStridePerLeg": 1.9100349573623074
+  }
+]

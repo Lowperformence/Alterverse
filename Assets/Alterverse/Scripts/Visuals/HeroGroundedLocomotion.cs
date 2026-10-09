@@ -17,17 +17,22 @@ namespace Alterverse.Visuals
             public Quaternion rotation;
             public Vector3[] solePoints;
             public float length, sole, cycle, soleAdjustment;
-            public bool contact, initialized;
+            public bool contact, initialized, authoredSample;
+            public Vector3 authoredKneeHint, authoredTarget;
+            public Quaternion authoredRotation;
+            public float authoredLift;
         }
         private readonly RaycastHit[] hits = new RaycastHit[24];
         private HeroVisualMotion motion;
         private AuthoredHeroPresentation presentation;
+        private HeroLocomotionAnimation clips;
         private Leg left, right;
         private Transform pelvis;
         private Vector3 pelvisBefore, pelvisAfter;
         private bool correctedPelvis;
         private int appliedFrame = -1;
         private float floorOffset;
+        private bool reportedAuthoredContacts;
         public bool Ready => left != null && right != null;
         public float LegLength => Ready ? (left.length + right.length) * .5f : 1f;
         public Vector3 LeftTarget => Ready ? left.target : transform.position;
@@ -36,13 +41,19 @@ namespace Alterverse.Visuals
         public bool RightContact => Ready && right.contact;
         public float LeftContactError => Ready && left.initialized && left.contact ? Vector3.Distance(left.foot.position, left.target) : 0f;
         public float RightContactError => Ready && right.initialized && right.contact ? Vector3.Distance(right.foot.position, right.target) : 0f;
-        public float CycleStride(float run) => LegLength * Mathf.Lerp(1.05f, 1.65f, Mathf.Clamp01(run));
+        public float CycleStride(float run)
+        {
+            if (clips == null) clips = GetComponent<HeroLocomotionAnimation>();
+            return clips != null && clips.isActiveAndEnabled && clips.Ready ? clips.CycleStride(run) :
+                LegLength * Mathf.Lerp(1.05f, 1.65f, Mathf.Clamp01(run));
+        }
 
         public void Initialize(Transform visualRoot, HeroProceduralRig rig)
         {
             if (Ready || visualRoot == null || rig == null || !rig.Ready) return;
             motion = GetComponent<HeroVisualMotion>();
             presentation = GetComponent<AuthoredHeroPresentation>();
+            clips = GetComponent<HeroLocomotionAnimation>();
             Transform imported = visualRoot.Find("DF_AuthoredModel");
             if (imported != null)
             {
@@ -127,8 +138,8 @@ namespace Alterverse.Visuals
         public void ResetContacts()
         {
             RestorePelvis(); appliedFrame = -1;
-            if (left != null) left.initialized = false;
-            if (right != null) right.initialized = false;
+            if (left != null) { left.initialized = false; left.authoredSample = false; }
+            if (right != null) { right.initialized = false; right.authoredSample = false; }
         }
         private void LateUpdate()
         {
@@ -148,13 +159,37 @@ namespace Alterverse.Visuals
             float stance = Mathf.Lerp(.62f, .46f, run);
             Vector3 direction = motion.PresentedVelocity; direction.y = 0f;
             direction = direction.sqrMagnitude > .0001f ? direction.normalized : motion.PresentedRotation * Vector3.forward;
-            Plan(left, cycle, stance, run, direction, moving, dt);
-            Plan(right, Mathf.Repeat(cycle + .5f, 1f), stance, run, direction, moving, dt);
+            if (clips == null) clips = GetComponent<HeroLocomotionAnimation>();
+            Vector3 leftOffset = Vector3.zero, rightOffset = Vector3.zero, leftHint = Vector3.zero, rightHint = Vector3.zero;
+            Quaternion leftRotation = Quaternion.identity, rightRotation = Quaternion.identity;
+            bool leftContact = false, rightContact = false;
+            bool sampled = moving && clips != null && clips.isActiveAndEnabled && clips.Ready && clips.Active &&
+                clips.TryFootSample(false, out leftOffset, out leftHint, out leftContact, out leftRotation) &&
+                clips.TryFootSample(true, out rightOffset, out rightHint, out rightContact, out rightRotation);
+            if (sampled)
+            {
+                // Read the source trajectory/contact metadata sampled by ApplyLegs this frame.
+                if (!reportedAuthoredContacts)
+                {
+                    reportedAuthoredContacts = true;
+                    Debug.Log("DF: authored locomotion foot trajectories and contacts active on " + name, this);
+                }
+                PlanAuthored(left, leftOffset, leftHint, leftContact, leftRotation, cycle);
+                PlanAuthored(right, rightOffset, rightHint, rightContact, rightRotation, Mathf.Repeat(cycle + .5f, 1f));
+            }
+            else
+            {
+                Plan(left, cycle, stance, run, direction, moving, dt);
+                Plan(right, Mathf.Repeat(cycle + .5f, 1f), stance, run, direction, moving, dt);
+            }
             PrepareFoot(left, stance, moving); PrepareFoot(right, stance, moving);
             RestorePelvis();
+            float maxDrop = pelvis != null ? LegLength * .19f : 0f;
+            FitAuthoredTarget(left, maxDrop, stance, moving);
+            FitAuthoredTarget(right, maxDrop, stance, moving);
             if (pelvis != null)
             {
-                float drop = Mathf.Min(Mathf.Max(RequiredDrop(left), RequiredDrop(right)), LegLength * .19f);
+                float drop = Mathf.Min(Mathf.Max(RequiredDrop(left), RequiredDrop(right)), maxDrop);
                 if (drop > .00001f)
                 {
                     pelvisBefore = pelvis.localPosition; pelvis.position -= Vector3.up * drop;
@@ -182,8 +217,74 @@ namespace Alterverse.Visuals
             }
             point.y = floor + leg.sole; return point;
         }
+        private void PlanAuthored(Leg leg, Vector3 offset, Vector3 kneeHint, bool contact, Quaternion rotation, float cycle)
+        {
+            leg.target.y -= leg.soleAdjustment; leg.soleAdjustment = 0f;
+            Vector3 planarOffset = new Vector3(offset.x, 0f, offset.z);
+            Vector3 sourceGround = Ground(Nominal(leg) + planarOffset, leg, out Vector3 normal);
+            if (contact)
+            {
+                if (!leg.initialized || !leg.contact || !leg.authoredSample)
+                {
+                    leg.plant = sourceGround; leg.normal = normal;
+                }
+                leg.target = leg.plant;
+            }
+            else
+            {
+                leg.target = sourceGround + Vector3.up * Mathf.Max(0f, offset.y);
+                leg.normal = normal;
+            }
+            leg.authoredSample = true; leg.authoredKneeHint = kneeHint;
+            leg.authoredRotation = rotation;
+            leg.authoredLift = contact ? 0f : Mathf.Max(0f, offset.y);
+            leg.authoredTarget = sourceGround + Vector3.up * leg.authoredLift;
+            leg.cycle = cycle; leg.contact = contact; leg.initialized = true;
+            // An abrupt turn cannot preserve a contact beyond the actual leg's reach.
+            Vector3 reachOffset = leg.target - leg.hip.position; reachOffset.y = 0f;
+            if (reachOffset.magnitude > leg.length * .68f)
+            {
+                leg.target = sourceGround + (contact ? Vector3.zero : Vector3.up * Mathf.Max(0f, offset.y));
+                leg.plant = sourceGround; leg.normal = normal;
+            }
+        }
+        private void FitAuthoredTarget(Leg leg, float maxDrop, float stance, bool moving)
+        {
+            if (!leg.authoredSample) return;
+            // Source pelvis motion is not copied to the target body. A valid source
+            // swing can therefore exceed the target's reach even after its allowed
+            // pelvis drop. Keep the sole on terrain and fit only the horizontal step.
+            for (int pass = 0; pass < 3; pass++)
+            {
+                float reach = (Vector3.Distance(leg.hip.position, leg.knee.position) +
+                    Vector3.Distance(leg.knee.position, leg.foot.position)) * .99f;
+                float height = Mathf.Max(0f, leg.hip.position.y - leg.target.y - maxDrop);
+                float budget = Mathf.Sqrt(Mathf.Max(0f, reach * reach - height * height));
+                Vector3 offset = leg.target - leg.hip.position; offset.y = 0f;
+                if (offset.sqrMagnitude <= budget * budget + .0000001f) return;
+                // Preserve a planted world anchor until it becomes unreachable;
+                // then acquire a reachable contact from this frame's source pose.
+                Vector3 candidate = pass == 0 && leg.contact ?
+                    leg.authoredTarget + Vector3.up * leg.soleAdjustment : leg.target;
+                height = Mathf.Max(0f, leg.hip.position.y - candidate.y - maxDrop);
+                budget = Mathf.Sqrt(Mathf.Max(0f, reach * reach - height * height));
+                offset = candidate - leg.hip.position; offset.y = 0f;
+                if (offset.sqrMagnitude > budget * budget && offset.sqrMagnitude > .0000001f)
+                {
+                    Vector3 fitted = leg.hip.position + offset.normalized * budget;
+                    candidate.x = fitted.x; candidate.z = fitted.z;
+                }
+                leg.target = Ground(candidate, leg, out leg.normal) + Vector3.up * leg.authoredLift;
+                leg.soleAdjustment = 0f;
+                PrepareFoot(leg, stance, moving);
+                if (leg.contact) leg.plant = leg.target - Vector3.up * leg.soleAdjustment;
+            }
+        }
         private void Plan(Leg leg, float cycle, float stance, float run, Vector3 direction, bool moving, float dt)
         {
+            // A missing clip retains the established fallback; stop uses its smooth settling.
+            if (leg.authoredSample && moving) leg.initialized = false;
+            leg.authoredSample = false;
             leg.target.y -= leg.soleAdjustment; leg.soleAdjustment = 0f;
             Vector3 nominal = Ground(Nominal(leg), leg, out Vector3 normal);
             float lead = CycleStride(run) * stance * .5f * motion.LocomotionWeight;
@@ -228,13 +329,13 @@ namespace Alterverse.Visuals
         private void PrepareFoot(Leg leg, float stance, bool moving)
         {
             float pitch = 0f;
-            if (moving && leg.contact)
+            if (!leg.authoredSample && moving && leg.contact)
             {
                 float u = leg.cycle / stance;
                 if (u < .12f) pitch = Mathf.Lerp(-7f, 0f, CombatMotion.Ease(u / .12f));
                 else if (u > .80f) pitch = Mathf.Lerp(0f, 17f, CombatMotion.Ease((u - .80f) / .20f));
             }
-            else if (moving)
+            else if (!leg.authoredSample && moving)
             {
                 float u = Mathf.Clamp01((leg.cycle - stance) / (1f - stance));
                 pitch = u < .30f ? Mathf.Lerp(17f, -10f, CombatMotion.Ease(u / .30f)) :
@@ -242,8 +343,10 @@ namespace Alterverse.Visuals
             }
             pitch *= motion.LocomotionWeight;
             Quaternion flat = motion.PresentedRotation * leg.restRotation;
-            leg.rotation = Quaternion.AngleAxis(pitch, motion.PresentedRotation * Vector3.right) *
-                Quaternion.FromToRotation(Vector3.up, leg.normal) * flat;
+            leg.rotation = leg.authoredSample ?
+                Quaternion.FromToRotation(Vector3.up, leg.normal) * leg.authoredRotation :
+                Quaternion.AngleAxis(pitch, motion.PresentedRotation * Vector3.right) *
+                    Quaternion.FromToRotation(Vector3.up, leg.normal) * flat;
             leg.foot.rotation = leg.rotation;
             // Toe-off rotates around the ankle. Raise the ankle by the actual rotated
             // sole extent so the front of the boot cannot rotate through the floor.
@@ -256,10 +359,12 @@ namespace Alterverse.Visuals
         }
         private void Solve(Leg leg, float stance, bool moving)
         {
-            Vector3 hint = leg.hip.position + motion.PresentedRotation * Vector3.forward * leg.length + Vector3.up * .10f;
+            Vector3 hint = leg.authoredSample ? leg.authoredKneeHint :
+                leg.hip.position + motion.PresentedRotation * Vector3.forward * leg.length + Vector3.up * .10f;
             // Repeat once for the existing nonuniform model scale; never translate the ankle bone.
             for (int i = 0; i < 2; i++) CombatMotion.Solve(leg.hip, leg.knee, leg.foot, leg.target, hint, .9999f);
             leg.foot.rotation = leg.rotation;
         }
     }
 }
+
