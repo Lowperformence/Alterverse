@@ -25,6 +25,10 @@ namespace Alterverse.Visuals
         private void Start()
         {
             if(GetComponent<PlanetLandscapeDetail>()==null)gameObject.AddComponent<PlanetLandscapeDetail>();
+            // Every arena uses the same universe panorama; habitat backdrops are fallback only.
+            photoPanorama=new PhotoArenaPanorama();
+            if(photoPanorama.Load())return;
+            photoPanorama=null;
             if(Alterverse.Match.ArenaVariantRuntime.IsExoplanet)
             {
                 // One baked atmosphere quad plus the existing cheap star meshes; no particles,
@@ -40,9 +44,6 @@ namespace Alterverse.Visuals
                 {exoplanetCamera.clearFlags=CameraClearFlags.SolidColor;exoplanetCamera.backgroundColor=ExoplanetArenaProfile.BackdropColor(Alterverse.Match.ArenaVariantRuntime.Current,.5f,.5f)*.32f;}
                 return;
             }
-            photoPanorama=new PhotoArenaPanorama();
-            if(photoPanorama.Load())return;
-            photoPanorama=null;
             BuildVoidFloor();
             BuildStars();
             BuildBrightStars();

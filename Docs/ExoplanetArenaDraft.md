@@ -6,7 +6,7 @@ Dieser Änderungssatz enthält beide Karten samt Hotzone-Monstern und Habitat-Gu
 
 | Arena | Habitat und Landschaft | Hotzone-Monster | Guard-Mech |
 | --- | --- | --- | --- |
-| WASP-76b / IRONRAIN FRONT | Eisenkruste, Kupferformationen, warme Eisenadern, dunkle Wolken unter der Arena | Ferrox: flacher gepanzerter Sechsbeiner mit zwei Scheren, ohne Skorpionschwanz | Eisenpanzerung, Kupferplatten, Hitzeschilde an den Schultern, amberfarbene Armadern |
+| WASP-76b / IRONRAIN FRONT | Eisenkruste, Kupferformationen, warme Eisenadern; gemeinsamer Weltraumhintergrund | Ferrox: flacher gepanzerter Sechsbeiner mit zwei Scheren, ohne Skorpionschwanz | Eisenpanzerung, Kupferplatten, Hitzeschilde an den Schultern, amberfarbene Armadern |
 | TRAPPIST-1e / TWILIGHT EDEN | Petrol-violetter Dämmerboden, Wasserstellen, leuchtende Pflanzen am warmen Rand, Frost und Eis am kalten Rand | Vespera: vierbeiniger Amphibienkörper, Kiemenfächer, amberfarbener Kamm, organische Leuchtknoten | Petrol-violette Panzerung, organische Kiemenplatten, leuchtende Armadern |
 
 Die Spielfeldform, Bodenhöhen, Basen, Heilflächen, Bunker, Wege und Gameplay-Kollisionen folgen der Mond-Arena. Die warmen/kalten Zonen von TRAPPIST-1e laufen quer zur Links/Rechts-Teamachse. Farb- und Materialprofile, Randformationen, Hintergrund und Kreaturen sind eigens an die neuen Habitate angepasst.
@@ -19,7 +19,7 @@ Die Karten sind im Entwurf direkt und kostenlos auswählbar; ein Verkaufspreis w
 - Vorhandene, im Build enthaltene Resources-Shader und Detailtexturen; eigene Habitat-Farben werden getrennt davon gebacken.
 - Acht Randregionen mit bestehenden Material-Batches und regionalem Culling. Die Details enthalten keine Gameplay-Collider oder zusätzlichen Lichter.
 - Auch die zusätzliche SpaceKit-Deko verwendet eigene Habitat-Paletten und Sets: geschlossene Eisenregen-Pods/Metallformationen bzw. Dämmerpflanzen und kalte Felsränder. Neue Karten fallen hier nicht auf das Moon-Set zurück.
-- Ein 256²-Hintergrundbild aus numerischen Wolkenmustern; mipmapped, CPU-Kopie nach dem Upload freigegeben. Keine Partikelwolken oder Postprocessing-Abhängigkeit.
+- Beide Karten verwenden dasselbe Universum-Fotopanorama (`MapPanoramas/Universe`) und denselben kameraabhängigen Skybox-Aufbau wie die anderen Arenen. Nur wenn Panorama/Shader fehlen oder nicht unterstützt werden, greift der Habitat-Fallback: ein 256²-Hintergrundbild aus numerischen Wolkenmustern; mipmapped, CPU-Kopie nach dem Upload freigegeben. Keine Partikelwolken oder Postprocessing-Abhängigkeit.
 - Ferrox/Vespera werden pro animiertem Gelenk und Material gebündelt. Glatte Körper-Grundgeometrie: 325 Vertices, 528 Dreiecke. Im Editor-Check: höchstens 24 Render-Batches und weniger als 24.000 Vertices pro Monster.
 - Guard-Habitatdetails: vier zusätzliche Mesh-Batches, die an bestehenden Schulter-/Unterarmteilen hängen. Die vorhandene Bein-/Arm-Animation und das Angriffssystem werden weiterverwendet. Guard-Werte bleiben bei 520 HP und 13 Angriffsschaden; Radius/Leash/Cooldown bleiben bestehen.
 - Beide Hotzone-Monster verwenden die bestehende HotZoneTank-AI und Kampfwerte. Ferrox erhält Scherenanimationen und Eisen-Projektilfarben; Vespera Kiemenanimationen und Bio-Projektile. Die bestehende Attack-Event-Replikation präsentiert dieselben Bewegungen auf Coop-Clients.
