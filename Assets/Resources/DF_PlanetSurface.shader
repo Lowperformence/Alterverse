@@ -8,6 +8,10 @@ Shader "Alterverse/PlanetSurface"
         _BumpMap("RGB macro normal", 2D) = "bump" {}
         _BumpScale("Macro relief", Float) = 0
         _SandData("Sand slope / roughness / value", 2D) = "gray" {}
+        _FineData("Material-specific fine grain",2D)="gray" {}
+        _FineScale("Fine grain frequency",Float)=0
+        _FineRelief("Fine grain relief",Range(0,.2))=0
+        _FineContrast("Fine grain value",Range(0,.5))=0
         _StoneData("Stone slope / roughness / value", 2D) = "gray" {}
         _MacroData("Blender geological value / cavity / roughness / sediment", 2D) = "gray" {}
         _MacroScale("Geological patch frequency", Float) = 0.047
@@ -32,10 +36,12 @@ Shader "Alterverse/PlanetSurface"
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
         #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+        #include "Assets/Resources/DF_SurfaceMicro.hlsl"
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
             half4 _BaseColor, _EmissionColor;
-            float _DetailScale, _MacroScale;
+            float _DetailScale, _MacroScale, _FineScale;
+            half _FineRelief,_FineContrast;
             half _MacroStrength;
             half _BumpScale, _SurfaceMode, _SandStrength, _RockStrength, _Metallic, _Smoothness;
             half _RoughnessBias,_CavityStrength,_DetailContrast;
@@ -44,6 +50,7 @@ Shader "Alterverse/PlanetSurface"
         TEXTURE2D(_GroundMap); SAMPLER(sampler_GroundMap);
         TEXTURE2D(_BumpMap); SAMPLER(sampler_BumpMap);
         TEXTURE2D(_SandData); SAMPLER(sampler_SandData);
+        TEXTURE2D(_FineData); SAMPLER(sampler_FineData);
         TEXTURE2D(_StoneData); SAMPLER(sampler_StoneData);
         TEXTURE2D(_MacroData); SAMPLER(sampler_MacroData);
         struct Attributes
@@ -125,10 +132,13 @@ Shader "Alterverse/PlanetSurface"
                     float2 uv=p.xz*_DetailScale;
                     uv+=.24*sin(p.zx*.117+sin(p.xz*.071));
                     half4 sand=SAMPLE_TEXTURE2D(_SandData,sampler_SandData,uv);
-                    half4 grain=SAMPLE_TEXTURE2D(_SandData,sampler_SandData,uv*3.173+float2(.37,.61));
-                    sand.rg=lerp(sand.rg,grain.rg,.18h);
-                    sand.b=lerp(sand.b,grain.b,.15h);
-                    sand.a=lerp(sand.a,grain.a,.12h);
+                    if(_FineRelief<=0)
+                    {
+                        half4 grain=SAMPLE_TEXTURE2D(_SandData,sampler_SandData,uv*3.173+float2(.37,.61));
+                        sand.rg=lerp(sand.rg,grain.rg,.18h);
+                        sand.b=lerp(sand.b,grain.b,.15h);
+                        sand.a=lerp(sand.a,grain.a,.12h);
+                    }
                     // Incommensurate rotated second layer masks repeats without extra draw calls.
                     float2 stoneUV=float2(uv.x*.8-uv.y*.6,uv.x*.6+uv.y*.8)*.713+float2(.31,.73);
                     half4 rock=SAMPLE_TEXTURE2D(_StoneData,sampler_StoneData,stoneUV);
@@ -163,6 +173,24 @@ Shader "Alterverse/PlanetSurface"
                 half geologicalContrast=_MacroStrength*lerp(1.0h,.45h,quietGeology);
                 albedo*=1+(geology.r-.5h)*geologicalContrast;
                 data.b=lerp(data.b,geology.b,.35h);
+                half fineVisibility=DFMicroVisibility(p,_FineScale);
+                float3 fineDx=ddx(p)*_FineScale,fineDy=ddy(p)*_FineScale;
+                if(_FineRelief>0 && fineVisibility>0)
+                {
+                    half3 fineGradient;
+                    half4 fine;
+                    if(_SurfaceMode>1.5h)
+                        fine=DFMicroTriplanar(TEXTURE2D_ARGS(_FineData,sampler_FineData),p*_FineScale,n,fineDx,fineDy,fineGradient);
+                    else
+                    {
+                        fine=SAMPLE_TEXTURE2D_GRAD(_FineData,sampler_FineData,p.xz*_FineScale,fineDx.xz,fineDy.xz);
+                        fineGradient=half3(fine.r-.5h,0,fine.g-.5h)*2;
+                    }
+                    gradient+=fineGradient*(_FineRelief*fineVisibility);
+                    albedo*=1+(fine.a-.5h)*(_FineContrast*fineVisibility);
+                    // Fine grain varies the finish; it cannot erase ice/wet-rock roughness.
+                    data.b+= (fine.b-.82h)*(.18h*fineVisibility);
+                }
                 // Surface-gradient perturbation avoids tangent seams and missing UVs on generated meshes.
                 n=normalize(n-(gradient-n*dot(n,gradient)));
                 albedo*=1+(data.a-.5h)*_DetailContrast; // scalar variation cannot rotate the planet hue.

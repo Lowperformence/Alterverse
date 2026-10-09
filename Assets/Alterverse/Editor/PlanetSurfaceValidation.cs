@@ -26,9 +26,15 @@ namespace Alterverse.EditorChecks
                 var floor=GameObject.Find("DF_DiamondCoreCrystalFloor");
                 var renderer=floor!=null?floor.GetComponent<MeshRenderer>():null;
                 var material=renderer!=null?renderer.sharedMaterial:null;
-                if(material==null||material.GetTexture("_SurfaceData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground")||material.GetFloat("_SurfaceRelief")<=0||material.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Macro"))
-                    throw new InvalidOperationException("Diamond Core ground detail is not bound to the live transparent floor.");
-                Debug.Log("DIMENSIONS FRONT: Diamond Core live surface detail binding passed.");return;
+                if(material==null||material.shader.name!="Alterverse/DiamondCrystal"||material.GetFloat("_SurfaceRelief")!=0||material.GetFloat("_ProbeReflection")!=0||material.GetColor("_BaseColor").a>=1f)
+                    throw new InvalidOperationException("PSR J1719 must retain its original clear crystal floor without frosted detail.");
+                foreach(string label in new[]{"FacetedCrystalGroundOverlay","DF_PSRJ1719_SeamlessPrismFloor"})
+                {
+                    var overlay=GameObject.Find(label);
+                    var overlayRenderer=overlay!=null?overlay.GetComponent<MeshRenderer>():null;
+                    if(overlayRenderer!=null&&overlayRenderer.enabled)throw new InvalidOperationException("Extra opaque/frosted floor overlay remains: "+label);
+                }
+                Debug.Log("DIMENSIONS FRONT: PSR J1719 original transparent crystal floor binding passed.");return;
             }
             var ground=UnityEngine.Object.FindAnyObjectByType<ProductionLunarGround>();
             var gj=UnityEngine.Object.FindAnyObjectByType<GJ504bArenaLandscape>();
@@ -47,12 +53,29 @@ namespace Alterverse.EditorChecks
                 if(m.GetTexture("_SandData")==null||m.GetTexture("_StoneData")==null||m.GetTexture("_MacroData")!=Resources.Load<Texture2D>("PlanetSurfaces/"+ArenaVariantRuntime.Current+"/Macro"))
                     throw new InvalidOperationException("Missing live detail data: "+r.name);
                 float mode=m.GetFloat("_SurfaceMode");
+                PlanetSurfaceMicroProfile micro=mode<1.5f?PlanetSurfaceMicroProfile.Ground(ArenaVariantRuntime.Current):
+                    PlanetSurfaceMicroProfile.Scenery(ArenaVariantRuntime.IsNeptune?SceneryFinish.WetStone:SceneryFinish.Stone);
+                ValidateMicroBinding(m,micro,r.name);
                 macro|=mode<.5f&&m.GetTexture("_BaseMap")!=null&&(ground==null||m.GetTexture("_BaseMap")==ground.SurfaceAlbedo);
                 stone|=mode>1.5f;
                 if(mode>.5f&&mode<1.5f)craterMaterials++;
             }
             if(!macro||!stone||(ground!=null&&!ArenaVariantRuntime.IsMars&&craterMaterials<2))
                 throw new InvalidOperationException("Ground, stone or crater material integration is missing. Wait for map initialization.");
+            if(ArenaVariantRuntime.IsEarth)
+            {
+                var world=GameObject.Find("DF_MatchWorld");
+                int pools=0;
+                foreach(var renderer in world.GetComponentsInChildren<MeshRenderer>())
+                {
+                    if(renderer.name!="WaterPool")continue;
+                    var water=renderer.sharedMaterial;
+                    if(water==null||water.shader.name!="Alterverse/MapWater"||water.GetFloat("_WaveStrength")<=0||water.IsKeywordEnabled("_SPECULARHIGHLIGHTS_OFF"))
+                        throw new InvalidOperationException("Earth water finish missing. Wait for map initialization.");
+                    pools++;
+                }
+                if(pools!=4)throw new InvalidOperationException("Expected four existing Earth pools, found "+pools);
+            }
             Debug.Log($"DIMENSIONS FRONT: active planet surface bindings passed ({renderers} renderers). Visual quality and Android frame time still require review.");
         }
 
@@ -86,6 +109,18 @@ namespace Alterverse.EditorChecks
             }
         }
 
+        static void ValidateMicroBinding(Material material,PlanetSurfaceMicroProfile profile,string label)
+        {
+            if(profile.TextureName==null)
+            {
+                if(material.GetFloat("_FineRelief")!=0)throw new InvalidOperationException("Unexpected grain on "+label);
+                return;
+            }
+            if(material.GetTexture("_FineData")!=Resources.Load<Texture2D>("SurfaceMicro/"+profile.TextureName)||
+                Mathf.Abs(material.GetFloat("_FineRelief")-profile.Relief)>.0001f)
+                throw new InvalidOperationException("Material-specific fine detail missing on "+label);
+        }
+
         static void ValidateShader()
         {
             foreach(ArenaVariant planet in Enum.GetValues(typeof(ArenaVariant)))
@@ -100,6 +135,19 @@ namespace Alterverse.EditorChecks
                 if(!android.overridden||android.format!=TextureImporterFormat.RGBA32)
                     throw new BuildFailedException("Android planet detail must preserve the same RGBA numerical data: "+path);
             }
+            foreach(string kind in new[]{"Sand","Soil","Concrete","Stone"})
+            {
+                string path="Assets/Alterverse/Resources/SurfaceMicro/"+kind+".png";
+                var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                var importer=AssetImporter.GetAtPath(path) as TextureImporter;
+                if(texture==null||importer==null||importer.sRGBTexture||!importer.mipmapEnabled||importer.alphaIsTransparency||importer.textureType!=TextureImporterType.Default)
+                    throw new BuildFailedException("Fine surface must be linear packed data with mipmaps: "+path);
+                var android=importer.GetPlatformTextureSettings("Android");
+                if(!android.overridden||android.format!=TextureImporterFormat.RGBA32)
+                    throw new BuildFailedException("Fine Android surface must retain RGBA numerical data: "+path);
+            }
+            var water=Resources.Load<Shader>("DF_MapWater");
+            if(water==null||ShaderUtil.ShaderHasError(water))throw new BuildFailedException("Map water shader missing or has compiler errors.");
             var crystal=Resources.Load<Shader>("DF_DiamondCrystal");
             if(crystal==null||ShaderUtil.ShaderHasError(crystal))throw new BuildFailedException("Diamond surface shader missing or has compiler errors.");
             var shader=Resources.Load<Shader>("DF_PlanetSurface");

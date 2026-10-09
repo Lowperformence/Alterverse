@@ -15,8 +15,11 @@ from render_energy_regression import CORE, ROOT
 STUB = '''
 #include "PreviewCore.hlsl"
 #define TEXTURE2D(name) Texture2D name
+#define TEXTURE2D_PARAM(tex,samp) Texture2D tex, SamplerState samp
+#define TEXTURE2D_ARGS(tex,samp) tex,samp
 #define SAMPLER(name) SamplerState name
 #define SAMPLE_TEXTURE2D(tex,samp,uv) tex.Sample(samp,uv)
+#define SAMPLE_TEXTURE2D_GRAD(tex,samp,uv,dx,dy) tex.SampleGrad(samp,uv,dx,dy)
 #define TRANSFORM_TEX(uv,tex) (uv*tex##_ST.xy+tex##_ST.zw)
 #define UNITY_VERTEX_INPUT_INSTANCE_ID
 #define UNITY_VERTEX_OUTPUT_STEREO
@@ -45,9 +48,11 @@ def main():
     source=common+forward
     source=re.sub(r"^\s*#pragma.*$","",source,flags=re.M)
     source=source.replace('"Assets/Resources/DF_SurfaceLighting.hlsl"','"PreviewLighting.hlsl"')
+    source=source.replace('"Assets/Resources/DF_SurfaceMicro.hlsl"','"SurfaceMicro.hlsl"')
     with tempfile.TemporaryDirectory() as temp:
         temp=Path(temp)
         (temp/"PreviewCore.hlsl").write_text(CORE)
+        (temp/"SurfaceMicro.hlsl").write_text((ROOT/"Assets/Resources/DF_SurfaceMicro.hlsl").read_text())
         (temp/"PreviewLighting.hlsl").write_text(STUB)
         (temp/"Scenery.hlsl").write_text(source)
         for screen in (False,True):

@@ -1,0 +1,9 @@
+{
+  "baseCommit": "76f3938bb03d6cf1a8d2ad9ea5f28f907b88da3d",
+  "unchangedOriginalGeologicalMaps": 33,
+  "newUniqueMetaGuids": 9,
+  "exactChangedExistingFiles": 14,
+  "newFiles": 30,
+  "protectedAudioFiles": 385,
+  "scope": "Before commit: 33 original texture blob hashes, existing-path overlap and new GUIDs; final tree verification protects every other file, including concurrent movement/shop changes."
+}

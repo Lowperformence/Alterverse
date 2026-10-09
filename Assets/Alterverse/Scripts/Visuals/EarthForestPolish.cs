@@ -6,7 +6,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Extra Earth-only visual dressing: denser mixed forest, pointed conifers in several sizes,
-    /// deliberately flat blue water pools, and worn brown soil around gameplay structures.
+    /// worn brown soil around gameplay structures.
     /// All generated dressing is collider-free and presentation-only.
     /// </summary>
     public sealed class EarthForestPolish : MonoBehaviour
@@ -44,9 +44,7 @@ namespace Alterverse.Visuals
         readonly List<Material> materials=new();
         readonly List<Mesh> meshes=new();
         readonly HashSet<Vector2Int> soilSites=new();
-        Material waterMaterial;
         Material soilDark,soilMid,soilLight;
-        float nextWaterRefresh;
         float nextSoilRefresh;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -74,12 +72,6 @@ namespace Alterverse.Visuals
 
             if(forestRoot==null&&GameObject.Find("DF_PlanetTheme_Earth")!=null)
                 BuildForest(world.transform);
-
-            if(Time.unscaledTime>=nextWaterRefresh)
-            {
-                nextWaterRefresh=Time.unscaledTime+.75f;
-                ApplyFlatWater(world.transform);
-            }
 
             if(soilRoot!=null&&Time.unscaledTime>=nextSoilRefresh)
             {
@@ -311,39 +303,6 @@ namespace Alterverse.Visuals
             meshes.Add(mesh);
         }
 
-        void ApplyFlatWater(Transform world)
-        {
-            if(waterMaterial==null)waterMaterial=BuildWaterMaterial();
-            MeshRenderer[] renderers=world.GetComponentsInChildren<MeshRenderer>(true);
-            for(int i=0;i<renderers.Length;i++)
-            {
-                MeshRenderer r=renderers[i];
-                if(r==null||r.gameObject.name!="WaterPool")continue;
-                r.sharedMaterial=waterMaterial;
-            }
-        }
-
-        Material BuildWaterMaterial()
-        {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit");
-            if(shader==null)shader=Shader.Find("Standard");
-            if(shader==null)return null;
-            Material m=new(shader){name="DF_Earth_Water_FlatUntextured"};
-            Color blue=new(.02f,.25f,.62f,1f);
-            if(m.HasProperty("_BaseColor"))m.SetColor("_BaseColor",blue);
-            if(m.HasProperty("_Color"))m.SetColor("_Color",blue);
-            if(m.HasProperty("_BaseMap"))m.SetTexture("_BaseMap",null);
-            if(m.HasProperty("_MainTex"))m.SetTexture("_MainTex",null);
-            if(m.HasProperty("_BumpMap"))m.SetTexture("_BumpMap",null);
-            if(m.HasProperty("_MetallicGlossMap"))m.SetTexture("_MetallicGlossMap",null);
-            if(m.HasProperty("_OcclusionMap"))m.SetTexture("_OcclusionMap",null);
-            if(m.HasProperty("_Metallic"))m.SetFloat("_Metallic",.04f);
-            if(m.HasProperty("_Smoothness"))m.SetFloat("_Smoothness",.90f);
-            m.DisableKeyword("_NORMALMAP");
-            m.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
-            return m;
-        }
-
         Material Mat(string name,Color color,float metallic,float smoothness)
         {
             Shader shader=Shader.Find("Universal Render Pipeline/Lit");
@@ -372,7 +331,6 @@ namespace Alterverse.Visuals
             meshes.Clear();
             for(int i=0;i<materials.Count;i++)if(materials[i]!=null)Object.Destroy(materials[i]);
             materials.Clear();
-            if(waterMaterial!=null){Object.Destroy(waterMaterial);waterMaterial=null;}
         }
 
         void OnDestroy()=>ClearForest();

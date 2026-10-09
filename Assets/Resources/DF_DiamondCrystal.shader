@@ -7,6 +7,7 @@ Shader "Alterverse/DiamondCrystal"
         _Smoothness("Smoothness", Range(0,1)) = 0.92
         _FresnelPower("Fresnel Power", Range(0.5,8)) = 3.2
         _FresnelStrength("Fresnel Strength", Range(0,2)) = 0.68
+        _ProbeReflection("Additional probe reflection", Range(0,1)) = 1
         _CoreAlpha("Core Alpha", Range(0,1)) = 0.22
         _FacetDetail("Cut edge and glint detail", Range(0,1)) = 0
         _MacroData("Blender geological value cavity roughness sediment", 2D) = "gray" {}
@@ -47,6 +48,7 @@ Shader "Alterverse/DiamondCrystal"
                 half _FresnelPower;
                 half _FresnelStrength;
                 half _CoreAlpha;
+                half _ProbeReflection;
                 half _FacetDetail;
                 half _SurfaceRelief;
                 float _SurfaceScale;
@@ -100,7 +102,10 @@ Shader "Alterverse/DiamondCrystal"
                     surfaceValue=(1+(geology.r-.5h)*.34h)*lerp(.96h,1.0h,geology.g);
                 }
                 half3 v = normalize(input.viewDirWS);
-                surfaceSmoothness=saturate(surfaceSmoothness-min(.18h,length(fwidth(n))*.16h));
+                // The clear floor can opt back into the original transparent response.
+                // Other cut crystals keep the existing filtered reflection/detail path.
+                if(_ProbeReflection>.001h || _FacetDetail>.001h || _SurfaceRelief>.001h)
+                    surfaceSmoothness=saturate(surfaceSmoothness-min(.18h,length(fwidth(n))*.16h));
                 half ndv = saturate(abs(dot(n,v)));
                 half fresnel = pow(1.0h-ndv,max(0.5h,_FresnelPower));
 
@@ -112,9 +117,12 @@ Shader "Alterverse/DiamondCrystal"
                 rgb += _EmissionColor.rgb;
                 rgb += fresnel*_FresnelStrength*half3(0.62h,0.88h,1.0h);
                 // Actual sky/probe reflections follow each physical cut while the original prism tint stays intact.
-                half3 reflected=GlossyEnvironmentReflection(reflect(-v,n),input.positionWS,
-                    1-surfaceSmoothness,1,GetNormalizedScreenSpaceUV(input.positionHCS));
-                rgb+=reflected*lerp(.08h,.28h,fresnel)*lerp(.35h,1.0h,surfaceSmoothness);
+                if(_ProbeReflection>.001h)
+                {
+                    half3 reflected=GlossyEnvironmentReflection(reflect(-v,n),input.positionWS,
+                        1-surfaceSmoothness,1,GetNormalizedScreenSpaceUV(input.positionHCS));
+                    rgb+=reflected*lerp(.08h,.28h,fresnel)*lerp(.35h,1.0h,surfaceSmoothness)*_ProbeReflection;
+                }
                 // Flat face normals create separate reflections on each physical cut.
                 // Edge highlights use actual triangle boundaries and a fixed pixel width.
                 Light key=GetMainLight();

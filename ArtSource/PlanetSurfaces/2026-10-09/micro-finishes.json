@@ -1,0 +1,78 @@
+{
+  "Sand": {
+    "path": "Assets/Alterverse/Resources/SurfaceMicro/Sand.png",
+    "sha256": "9310848aebdc05961fb5fdd8e346161fec282715ad48b35a4a2231ba780c59a5",
+    "size": [
+      256,
+      256
+    ],
+    "heightMean": 0.5,
+    "roughnessMean": 0.911053466796875,
+    "valueDeviation": 0.11000365552214131,
+    "boundaryStep": [
+      0.00755165690314355,
+      0.01017641785137591
+    ],
+    "interiorStep": [
+      0.009045022015562799,
+      0.00898215229254653
+    ]
+  },
+  "Soil": {
+    "path": "Assets/Alterverse/Resources/SurfaceMicro/Soil.png",
+    "sha256": "3e3266f13c3dc2283c4a2852d8f272d4caf44a18addffbcd71a935bdddd04600",
+    "size": [
+      256,
+      256
+    ],
+    "heightMean": 0.5,
+    "roughnessMean": 0.8724479525696998,
+    "valueDeviation": 0.11000894578080793,
+    "boundaryStep": [
+      0.0013492908355556177,
+      0.0010485936744331094
+    ],
+    "interiorStep": [
+      0.005576288467854164,
+      0.005431604062380873
+    ]
+  },
+  "Concrete": {
+    "path": "Assets/Alterverse/Resources/SurfaceMicro/Concrete.png",
+    "sha256": "a15a8e3b2d09b78357103196d09da89f6791e09b93658e8e3f05f46819f5ba5f",
+    "size": [
+      256,
+      256
+    ],
+    "heightMean": 0.5,
+    "roughnessMean": 0.8409411262063419,
+    "valueDeviation": 0.10998311100527353,
+    "boundaryStep": [
+      0.001574005270086883,
+      0.002703687927836482
+    ],
+    "interiorStep": [
+      0.003278416527844737,
+      0.0032316256776249628
+    ]
+  },
+  "Stone": {
+    "path": "Assets/Alterverse/Resources/SurfaceMicro/Stone.png",
+    "sha256": "ed8761c36b3c48824377530226c91a5c67e9295fcc683706f81ccdeaf277d4e8",
+    "size": [
+      256,
+      256
+    ],
+    "heightMean": 0.5,
+    "roughnessMean": 0.7819695566214767,
+    "valueDeviation": 0.11001248889959465,
+    "boundaryStep": [
+      0.00035262439611937466,
+      0.0002884224503186853
+    ],
+    "interiorStep": [
+      0.0031293197873001055,
+      0.003162196778408978
+    ]
+  }
+}

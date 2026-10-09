@@ -34,7 +34,11 @@ namespace Alterverse.Visuals
                 root=new GameObject("DF_BuildingFoundations").transform;
                 root.SetParent(world,false);
                 concrete=RuntimeShaderLibrary.Create(new Color(.19f,.205f,.22f,1),false,.06f,.18f);
-                if(concrete!=null)concrete.name="DF_UniversalDarkConcrete";
+                if(concrete!=null)
+                {
+                    concrete.name="DF_UniversalDarkConcrete";
+                    PlanetSceneryMaterials.Apply(concrete,Alterverse.Match.ArenaVariantRuntime.Current,SceneryFinish.Concrete);
+                }
             }
             foreach(var bunker in world.GetComponentsInChildren<DefenseBunker>())Build(bunker.transform);
             foreach(var trench in world.GetComponentsInChildren<DefenseTrench>())Build(trench.transform);

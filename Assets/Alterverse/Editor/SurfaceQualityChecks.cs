@@ -15,6 +15,8 @@ namespace Alterverse.EditorChecks
             {
                 "Assets/Resources/DF_RuntimeLit.shader",
                 "Assets/Resources/DF_PlanetSurface.shader",
+                "Assets/Resources/DF_ScenerySurface.shader",
+                "Assets/Resources/DF_MapWater.shader",
                 "Assets/Alterverse/Resources/HeroArt/HeroSurface.shader",
                 "Assets/Alterverse/Resources/HeroArt/IoneArmorOrnaments.shader",
                 "Assets/Alterverse/Resources/HeroArt/HeroUndersuitFabric.shader",
@@ -38,7 +40,7 @@ namespace Alterverse.EditorChecks
                 }
                 finally { UnityEngine.Object.DestroyImmediate(probe); }
             }
-            Debug.Log("Surface quality: 9 shaders imported without reported errors for " +
+            Debug.Log("Surface quality: "+paths.Length+" shaders imported without reported errors for " +
                 EditorUserBuildSettings.activeBuildTarget +
                 ". Check live hero previews, every arena and Android frame time separately.");
         }

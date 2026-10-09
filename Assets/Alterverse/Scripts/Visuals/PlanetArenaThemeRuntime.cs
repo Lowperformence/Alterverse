@@ -76,7 +76,7 @@ namespace Alterverse.Visuals
 
         void BuildEarth()
         {
-            Material water=MakeMaterial("DF_Earth_Water",new Color(.025f,.22f,.52f,1f),.05f,.88f,true,.45f);
+            Material water=MakeMaterial("DF_Earth_Water",new Color(.025f,.22f,.52f,1f),0f,.90f);
             Material bark=MakeMaterial("DF_Earth_Bark",new Color(.20f,.095f,.035f,1f),0f,.16f);
             Material leaves=MakeMaterial("DF_Earth_Leaves",new Color(.08f,.34f,.055f,1f),0f,.22f);
             Material leavesLight=MakeMaterial("DF_Earth_LeavesLight",new Color(.16f,.52f,.08f,1f),0f,.20f);
@@ -216,7 +216,8 @@ namespace Alterverse.Visuals
                 emission?color*emissionPower:Color.black);
             if(material==null)return null;
             material.name=name;
-            if(!emission)
+            if(name=="DF_Earth_Water")PlanetWaterMaterials.Apply(material);
+            else if(!emission)
             {
                 SceneryFinish finish=name.Contains("Bark")?SceneryFinish.Bark:
                     name.Contains("Leaves")?SceneryFinish.Leaf:

@@ -1,0 +1,11 @@
+{
+  "renderCases": 123,
+  "compiledForwardStages": 22,
+  "disabledDetailMaximumError": 1.1920928955078125e-07,
+  "originalCrystalFloorMaximumError": 0.0,
+  "unchangedOtherCrystalMaximumError": 0.0,
+  "minimumCrystalBackgroundTransmission": 0.6976280510425568,
+  "waterAnimationMinimumDelta": 0.01869189739227295,
+  "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "scope": "Compile actual map forward HLSL and render numerical material fixtures outside Unity.\n\nUses actual packed textures, material parameters and shader vertex/fragment code.\nCore transforms, main light and URP PBR are controlled substitutes. This is not an\nin-game screenshot, Unity import/build, Android GPU timing or reflection-probe test.\nRequires NumPy, Pillow, ModernGL/EGL, glslangValidator, spirv-val, spirv-cross."
+}

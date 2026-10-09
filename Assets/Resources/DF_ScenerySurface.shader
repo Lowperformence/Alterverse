@@ -7,6 +7,10 @@ Shader "Alterverse/ScenerySurface"
         _Metallic("Metallic",Range(0,1))=0
         _Smoothness("Smoothness",Range(0,1))=.2
         [HDR] _EmissionColor("Existing emission",Color)=(0,0,0,0)
+        _FineData("Material-specific fine grain",2D)="gray" {}
+        _FineScale("Fine grain frequency",Float)=0
+        _FineRelief("Fine grain relief",Range(0,.2))=0
+        _FineContrast("Fine grain value",Range(0,.5))=0
         _DetailData("Linear slope roughness height",2D)="gray" {}
         _DetailScale("World detail frequency",Float)=.5
         _Relief("Micro surface relief",Range(0,1))=.2
@@ -22,12 +26,15 @@ Shader "Alterverse/ScenerySurface"
         Cull Back ZWrite On
         HLSLINCLUDE
         #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+        #include "Assets/Resources/DF_SurfaceMicro.hlsl"
         TEXTURE2D(_BaseMap);SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_FineData);SAMPLER(sampler_FineData);
         TEXTURE2D(_DetailData);SAMPLER(sampler_DetailData);
         CBUFFER_START(UnityPerMaterial)
             float4 _BaseMap_ST;
             half4 _BaseColor,_EmissionColor;
-            float _DetailScale;
+            float _DetailScale,_FineScale;
+            half _FineRelief,_FineContrast;
             half _Metallic,_Smoothness,_Relief,_ValueContrast,_RoughnessWeight,_Sheen;
             half _RoughnessBias;
             half _Transmission;
@@ -96,8 +103,18 @@ Shader "Alterverse/ScenerySurface"
                 half3 gradient=(half3(0,x.g-.5h,x.r-.5h)*weights.x+
                     half3(y.r-.5h,0,y.g-.5h)*weights.y+
                     half3(z.r-.5h,z.g-.5h,0)*weights.z)*2*_Relief;
-                n=normalize(n-(gradient-n*dot(n,gradient)));
                 half3 albedo=SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.uv).rgb*_BaseColor.rgb;
+                half visibility=DFMicroVisibility(input.positionWS,_FineScale);
+                float3 fineDx=ddx(input.positionWS)*_FineScale,fineDy=ddy(input.positionWS)*_FineScale;
+                if(_FineRelief>0 && visibility>0)
+                {
+                    half3 fineGradient;
+                    half4 fine=DFMicroTriplanar(TEXTURE2D_ARGS(_FineData,sampler_FineData),input.positionWS*_FineScale,n,fineDx,fineDy,fineGradient);
+                    gradient+=fineGradient*(_FineRelief*visibility);
+                    albedo*=1+(fine.a-.5h)*(_FineContrast*visibility);
+                    detail.b+=(fine.b-.82h)*(.18h*visibility);
+                }
+                n=normalize(n-(gradient-n*dot(n,gradient)));
                 albedo*=1+(detail.a-.5h)*_ValueContrast;
                 half roughness=clamp(detail.b+_RoughnessBias,.03h,.97h);
                 half smooth=saturate(lerp(_Smoothness,1-roughness,_RoughnessWeight));

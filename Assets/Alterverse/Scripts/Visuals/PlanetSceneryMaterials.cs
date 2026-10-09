@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    public enum SceneryFinish { Stone, Metal, Bark, Leaf, Ice, WetStone, Soil }
+    public enum SceneryFinish { Stone, Metal, Bark, Leaf, Ice, WetStone, Soil, Concrete }
 
     /// <summary>Surface detail on existing, owned scenery materials; no renderer scan or texture baking.</summary>
     public static class PlanetSceneryMaterials
@@ -33,7 +33,7 @@ namespace Alterverse.Visuals
             if(material==null)return;
             Shader shader=Resources.Load<Shader>("DF_ScenerySurface");
             if(shader==null||!shader.isSupported)return; // Retain the valid original shader if unsupported.
-            string texturePath=finish==SceneryFinish.Soil?"PlanetSurfaces/"+planet+"/Ground":
+            string texturePath=finish==SceneryFinish.Concrete?"SurfaceMicro/Concrete":finish==SceneryFinish.Soil?"PlanetSurfaces/"+planet+"/Ground":
                 finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone
                 ?"PlanetSurfaces/"+planet+"/Stone":"SceneryFinishes/"+finish;
             Texture2D texture=Resources.Load<Texture2D>(texturePath);
@@ -48,10 +48,10 @@ namespace Alterverse.Visuals
             material.SetTexture("_DetailData",texture);
             material.SetFloat("_DetailScale",finish switch {
                 SceneryFinish.Metal=>1.15f,SceneryFinish.Bark=>1.4f,SceneryFinish.Leaf=>2.6f,
-                SceneryFinish.Ice=>.72f,SceneryFinish.Soil=>.65f,_=>planet==ArenaVariant.Mars?.55f:.42f});
+                SceneryFinish.Ice=>.72f,SceneryFinish.Soil=>.65f,SceneryFinish.Concrete=>.65f,_=>planet==ArenaVariant.Mars?.55f:.42f});
             material.SetFloat("_Relief",finish switch {
                 SceneryFinish.Metal=>.055f,SceneryFinish.Bark=>.32f,SceneryFinish.Leaf=>.15f,
-                SceneryFinish.Ice=>.075f,SceneryFinish.Soil=>.16f,_=>.28f});
+                SceneryFinish.Ice=>.075f,SceneryFinish.Soil=>.16f,SceneryFinish.Concrete=>.10f,_=>.28f});
             material.SetFloat("_ValueContrast",finish==SceneryFinish.Metal?.10f:finish==SceneryFinish.Ice?.08f:.25f);
             material.SetFloat("_RoughnessWeight",finish==SceneryFinish.Metal?.18f:finish==SceneryFinish.Ice?.18f:.35f);
             material.SetFloat("_Sheen",finish==SceneryFinish.Leaf?.07f:0f);
@@ -59,7 +59,17 @@ namespace Alterverse.Visuals
             material.SetFloat("_RoughnessBias",finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone||finish==SceneryFinish.Soil
                 ?PlanetSurfaceFinishProfile.For(planet).RoughnessBias:0f);
             if(finish==SceneryFinish.WetStone)material.SetFloat("_Smoothness",Mathf.Max(smooth,.42f));
+            ApplyMicro(material,PlanetSurfaceMicroProfile.Scenery(finish));
             material.enableInstancing=true;
+        }
+
+        public static void ApplyMicro(Material material,PlanetSurfaceMicroProfile profile)
+        {
+            Texture2D texture=profile.TextureName!=null?Resources.Load<Texture2D>("SurfaceMicro/"+profile.TextureName):null;
+            material.SetTexture("_FineData",texture!=null?texture:Texture2D.grayTexture);
+            material.SetFloat("_FineScale",profile.Scale);
+            material.SetFloat("_FineRelief",texture!=null?profile.Relief:0f);
+            material.SetFloat("_FineContrast",texture!=null?profile.Contrast:0f);
         }
     }
 }

@@ -1,0 +1,120 @@
+{
+  "ground": {
+    "Moon": {
+      "texture": "Sand",
+      "scale": 2.4,
+      "relief": 0.075,
+      "contrast": 0.18
+    },
+    "Mars": {
+      "texture": "Sand",
+      "scale": 2.1,
+      "relief": 0.11,
+      "contrast": 0.24
+    },
+    "GreenPlanet": {
+      "texture": "Soil",
+      "scale": 1.6,
+      "relief": 0.13,
+      "contrast": 0.32
+    },
+    "Noxara": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.085,
+      "contrast": 0.2
+    },
+    "Kryon": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "Earth": {
+      "texture": "Soil",
+      "scale": 1.6,
+      "relief": 0.13,
+      "contrast": 0.32
+    },
+    "Pyraxis": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.085,
+      "contrast": 0.2
+    },
+    "Neptune": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.045,
+      "contrast": 0.12
+    },
+    "Dark00": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.055,
+      "contrast": 0.12
+    },
+    "DiamondCore": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "GJ504b": {
+      "texture": "Sand",
+      "scale": 2.1,
+      "relief": 0.11,
+      "contrast": 0.24
+    }
+  },
+  "scenery": {
+    "Stone": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.1,
+      "contrast": 0.22
+    },
+    "Metal": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "Bark": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "Leaf": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "Ice": {
+      "texture": null,
+      "scale": 0.0,
+      "relief": 0.0,
+      "contrast": 0.0
+    },
+    "WetStone": {
+      "texture": "Stone",
+      "scale": 1.8,
+      "relief": 0.05,
+      "contrast": 0.14
+    },
+    "Soil": {
+      "texture": "Soil",
+      "scale": 1.6,
+      "relief": 0.13,
+      "contrast": 0.32
+    },
+    "Concrete": {
+      "texture": "Concrete",
+      "scale": 2.0,
+      "relief": 0.085,
+      "contrast": 0.28
+    }
+  }
+}

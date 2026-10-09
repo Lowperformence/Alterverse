@@ -79,10 +79,7 @@ namespace Alterverse.Visuals
             blackCrystal=Mat(new Color(.018f,.025f,.045f,1f),false,.16f,.88f,new Color(.03f,.12f,.20f,1f)*.28f);
             pulsarMaterial=Mat(new Color(.93f,.98f,1f,1f),true,0f,.95f,new Color(.62f,.90f,1f,1f)*2.2f);
 
-            floorMaterial.SetTexture("_SurfaceData",Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Ground"));
-            floorMaterial.SetTexture("_MacroData",Resources.Load<Texture2D>("PlanetSurfaces/DiamondCore/Macro"));
-            floorMaterial.SetFloat("_SurfaceRelief",.22f);
-            floorMaterial.SetFloat("_SurfaceScale",.25f);
+            ConfigureClearFloor(floorMaterial);
             BuildTransparentSurface();
             BuildPerimeterCrystalFields();
             BuildShatteredCanyon();
@@ -99,6 +96,18 @@ namespace Alterverse.Visuals
                 if(label=="DF_DiamondPerimeterSpire"||label=="DF_BlackCrystalCanyon"||label=="DF_BlackCanyonPrism"||label=="DF_PSRJ1719_CrystalTerrace"||label=="DF_PSRJ1719_TerracePrism")
                     clearance.RemoveIfBlocked(renderer.gameObject);
             }
+        }
+
+        internal static void ConfigureClearFloor(Material material)
+        {
+            if(material==null)return;
+            // PSR J1719 is clear crystal, not an opaque snow/frost surface.
+            // Retain the original tint/alpha/Fresnel, without later grain/probe layers.
+            material.SetFloat("_SurfaceRelief",0f);
+            material.SetFloat("_FacetDetail",0f);
+            material.SetFloat("_ProbeReflection",0f);
+            material.SetTexture("_SurfaceData",null);
+            material.SetTexture("_MacroData",null);
         }
 
         private void BuildTransparentSurface()

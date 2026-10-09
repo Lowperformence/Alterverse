@@ -42,6 +42,9 @@ namespace Alterverse.Visuals
             material.SetTexture("_GroundMap",macro);
             material.SetTexture("_MacroData",geology!=null?geology:Texture2D.grayTexture);
             PlanetSurfaceFinishProfile finish=PlanetSurfaceFinishProfile.For(ArenaVariantRuntime.Current);
+            PlanetSurfaceMicroProfile micro=ground||crater?PlanetSurfaceMicroProfile.Ground(ArenaVariantRuntime.Current):
+                PlanetSurfaceMicroProfile.Scenery(ArenaVariantRuntime.IsNeptune?SceneryFinish.WetStone:SceneryFinish.Stone);
+            PlanetSceneryMaterials.ApplyMicro(material,micro);
             material.SetFloat("_RoughnessBias",finish.RoughnessBias);
             material.SetFloat("_CavityStrength",finish.CavityStrength);
             material.SetFloat("_DetailContrast",finish.DetailContrast);

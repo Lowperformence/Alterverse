@@ -1,0 +1,36 @@
+{
+  "productionCSharpAssertions": 240,
+  "groundProfiles": 11,
+  "sceneryProfiles": 8,
+  "textures": [
+    {
+      "material": "Concrete",
+      "slopeHeightCorrelations": [
+        0.9982781783691332,
+        0.9981730244379725
+      ]
+    },
+    {
+      "material": "Sand",
+      "slopeHeightCorrelations": [
+        0.9998218323913141,
+        0.9998232453634136
+      ]
+    },
+    {
+      "material": "Soil",
+      "slopeHeightCorrelations": [
+        0.9980600977978945,
+        0.9980078390220669
+      ]
+    },
+    {
+      "material": "Stone",
+      "slopeHeightCorrelations": [
+        0.9983114830623054,
+        0.9981521345961896
+      ]
+    }
+  ],
+  "scope": "Run real new C# profiles/bindings with Unity material/resource test doubles.\n\nValidate packed texture orientation, import contracts and material-specific data.\nNo scene simulation, renderer/Unity compilation or device-performance claims."
+}

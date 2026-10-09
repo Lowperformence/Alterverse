@@ -15,21 +15,8 @@ namespace Alterverse.Visuals
         readonly List<Material> ownedMaterials=new();
         Transform detailRoot;
         Transform builtWorld;
-        Mesh facetGroundMesh;
         Mesh crystalMesh;
         float nextBossScan;
-
-        // Floor stays close to the arena's original colour. The small value/alpha differences
-        // make the polygon/prism structure readable without turning the map into a rainbow.
-        static readonly Color[] FloorPalette=
-        {
-            new(.58f,.63f,.66f,.060f),
-            new(.66f,.70f,.72f,.050f),
-            new(.52f,.58f,.62f,.070f),
-            new(.72f,.75f,.76f,.045f),
-            new(.61f,.66f,.69f,.055f),
-            new(.55f,.61f,.65f,.065f)
-        };
 
         // Map crystals keep the supplied gemstone palette and transparent fluorescent look.
         static readonly Color[] CrystalPalette=
@@ -83,82 +70,9 @@ namespace Alterverse.Visuals
             detailRoot=root.transform;
             detailRoot.SetParent(world,false);
 
-            // The seamless floor controller replaces this older overlay. Do not allocate
-            // six materials and a mesh that will immediately be hidden by that controller.
-            DiamondCoreFloorSeamFix seamless=FindAnyObjectByType<DiamondCoreFloorSeamFix>();
-            if(seamless==null||!seamless.isActiveAndEnabled)
-            {
-                Material[] floorMaterials=new Material[FloorPalette.Length];
-                for(int i=0;i<floorMaterials.Length;i++)
-                    floorMaterials[i]=MakeFloorFacetMaterial("DF_PSRJ1719_FloorFacet_"+i,FloorPalette[i],.86f);
-    
-                facetGroundMesh=BuildFacetGroundMesh();
-                GameObject floor=new("FacetedCrystalGroundOverlay");
-                floor.transform.SetParent(detailRoot,false);
-                MeshFilter floorFilter=floor.AddComponent<MeshFilter>();
-                MeshRenderer floorRenderer=floor.AddComponent<MeshRenderer>();
-                floorFilter.sharedMesh=facetGroundMesh;
-                floorRenderer.sharedMaterials=floorMaterials;
-                floorRenderer.shadowCastingMode=ShadowCastingMode.Off;
-                floorRenderer.receiveShadows=false;
-    
-            }
-
+            // The original transparent arena floor is the only ground surface.
             crystalMesh=DiamondCoreArenaRuntime.CreateMapCrystalMesh();
             BuildPerimeterCrystals();
-        }
-
-        Mesh BuildFacetGroundMesh()
-        {
-            // Larger irregular facets make the prism structure visible from the gameplay camera
-            // while leaving the original ground colour clearly dominant underneath.
-            const float minX=-42f,maxX=42f,minZ=-36f,maxZ=36f,step=7.5f;
-            List<Vector3> vertices=new();
-            List<Vector3> normals=new();
-            List<int>[] triangles=new List<int>[FloorPalette.Length];
-            for(int i=0;i<triangles.Length;i++)triangles[i]=new List<int>();
-
-            int cell=0;
-            for(float z=minZ;z<maxZ-.1f;z+=step)
-            for(float x=minX;x<maxX-.1f;x+=step)
-            {
-                float jitterX=((cell*37)%11-5)*.09f;
-                float jitterZ=((cell*53)%13-6)*.075f;
-                Vector3 a=Surface(x+jitterX,z+jitterZ,.035f);
-                Vector3 b=Surface(x+step+jitterZ,z-jitterX,.035f);
-                Vector3 c=Surface(x+step-jitterX,z+step+jitterZ,.035f);
-                Vector3 d=Surface(x-jitterZ,z+step-jitterX,.035f);
-
-                if((cell&1)==0)
-                {
-                    AddTriangle(vertices,normals,triangles[(cell*3+1)%triangles.Length],a,b,c);
-                    AddTriangle(vertices,normals,triangles[(cell*5+3)%triangles.Length],a,c,d);
-                }
-                else
-                {
-                    AddTriangle(vertices,normals,triangles[(cell*7+2)%triangles.Length],a,b,d);
-                    AddTriangle(vertices,normals,triangles[(cell*11+4)%triangles.Length],b,c,d);
-                }
-                cell++;
-            }
-
-            Mesh mesh=new(){name="DF_PSRJ1719_FacetedGroundMesh"};
-            mesh.SetVertices(vertices);
-            mesh.SetNormals(normals);
-            mesh.subMeshCount=triangles.Length;
-            for(int i=0;i<triangles.Length;i++)mesh.SetTriangles(triangles[i],i,false);
-            mesh.RecalculateBounds();
-            return mesh;
-        }
-
-        static void AddTriangle(List<Vector3> vertices,List<Vector3> normals,List<int> indices,Vector3 a,Vector3 b,Vector3 c)
-        {
-            if(Vector3.Cross(b-a,c-a).y<0f)(b,c)=(c,b);
-            Vector3 n=Vector3.Cross(b-a,c-a).normalized;
-            int start=vertices.Count;
-            vertices.Add(a);vertices.Add(b);vertices.Add(c);
-            normals.Add(n);normals.Add(n);normals.Add(n);
-            indices.Add(start);indices.Add(start+1);indices.Add(start+2);
         }
 
         void BuildPerimeterCrystals()
@@ -210,15 +124,6 @@ namespace Alterverse.Visuals
         {
             DiamondCoreCrystalGuardianVisualOverride[] overrides=Object.FindObjectsByType<DiamondCoreCrystalGuardianVisualOverride>(FindObjectsSortMode.None);
             for(int i=0;i<overrides.Length;i++)if(overrides[i]!=null)Object.Destroy(overrides[i]);
-        }
-
-        Material MakeFloorFacetMaterial(string name,Color color,float smoothness)
-        {
-            Shader shader=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            Material m=new(shader){name=name};
-            ownedMaterials.Add(m);
-            DiamondCoreCrystalVisuals.ConfigureTransparentMaterial(m,color,smoothness,0f,.015f);
-            return m;
         }
 
         Material MakeCrystalMaterial(string name,Color color,float smoothness,float emission)
@@ -314,9 +219,7 @@ namespace Alterverse.Visuals
             if(detailRoot!=null)Destroy(detailRoot.gameObject);
             detailRoot=null;
             builtWorld=null;
-            if(facetGroundMesh!=null)Destroy(facetGroundMesh);
             if(crystalMesh!=null)Destroy(crystalMesh);
-            facetGroundMesh=null;
             crystalMesh=null;
             for(int i=0;i<ownedMaterials.Count;i++)if(ownedMaterials[i]!=null)Destroy(ownedMaterials[i]);
             ownedMaterials.Clear();

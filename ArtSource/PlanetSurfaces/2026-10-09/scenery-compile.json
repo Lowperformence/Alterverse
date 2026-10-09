@@ -1,0 +1,5 @@
+{
+  "compiled_stages": 4,
+  "bounded_leaf_cases": 300,
+  "scope": "Actual forward HLSL, substitute Unity lighting types; Unity/URP integration and device visuals not tested."
+}
