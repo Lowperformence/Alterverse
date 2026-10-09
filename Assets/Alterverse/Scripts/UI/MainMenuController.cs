@@ -89,6 +89,14 @@ namespace Alterverse.UI
             MatchClock.Set(PauseReason.Menu,true);
         }
 
+        public static void ShowLaunchFailure(string message)
+        {
+            ShowHome();
+            if(instance==null)return;
+            instance.page=Page.Play;
+            instance.launchMessage=message;
+        }
+
         public static void ShowCoopAfterMatch(string message="")
         {
             if(instance==null)new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
@@ -1537,6 +1545,7 @@ namespace Alterverse.UI
         }
     }
 }
+
 
 
 

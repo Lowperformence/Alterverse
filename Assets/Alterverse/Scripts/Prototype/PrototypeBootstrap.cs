@@ -24,6 +24,14 @@ camera.backgroundColor=GameplayVoidColor;
 camera.cullingMask=0;
 }
 }
+public static void RestoreTransitionFrame()
+{
+foreach(UnityEngine.Camera camera in FindObjectsByType<UnityEngine.Camera>(FindObjectsInactive.Exclude))
+{
+if(camera==null||camera.cameraType!=CameraType.Game||camera.targetTexture!=null)continue;
+if(camera.cullingMask==0)camera.cullingMask=~(1<<MenuShowcaseLayer);
+}
+}
 [SerializeField]private bool buildOnStart=true;
 [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
 private static void AutoCreate()
@@ -42,6 +50,11 @@ if(pendingArenaCamera==null||Time.frameCount<revealArenaFrame)return;
 // Update. Reveal only after the next frame has run those initialization steps.
 if(pendingArenaWorld!=null&&pendingArenaWorld.activeInHierarchy)
 pendingArenaCamera.cullingMask=~(1<<MenuShowcaseLayer);
+else
+{
+Debug.LogError("DIMENSIONS FRONT: arena disappeared before camera reveal for "+ArenaVariantRuntime.Current);
+RecoverFailedBuild();
+}
 pendingArenaCamera=null;
 pendingArenaWorld=null;
 }
@@ -83,10 +96,12 @@ if(!serverOnly)WingMatchRewardBonus.BeginMatch(selected);
 var existing=new System.Collections.Generic.HashSet<GameObject>(gameObject.scene.GetRootGameObjects());
 GameObject world=new GameObject("DF_MatchWorld");
 bool completed=false;
+string stage="arena and base guards";
 try
 {
-BuildArena();
+BuildArena(ref stage);
 
+stage="local hero";
 GameObject player=null;
 Health ph=null;
 if(!serverOnly)
@@ -115,6 +130,7 @@ new GameObject("DF_TargetIndicator").AddComponent<TargetIndicatorHUD>();
 new GameObject("DF_HeroTeamMarkers").AddComponent<HeroTeamMarkers>();
 }
 
+stage="team roster";
 if(coop)
 {
 bool rosterBuilt=serverOnly?CoopRosterBuilder.BuildServer(coopPlan):CoopRosterBuilder.Build(player,coopPlan);
@@ -133,6 +149,7 @@ new GameObject("DF_CoopMatchResultSync").AddComponent<CoopMatchResultSync>();
 }
 else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
 
+stage="match directors and HUD";
 new GameObject("AV_DimensionsFront").AddComponent<DimensionsFront>();
 new GameObject("AV_DimensionsFrontCombatBridge").AddComponent<DimensionsFrontCombatBridge>();
 new GameObject("AV_DimensionsFrontVisual").AddComponent<DimensionsFrontVisual>();
@@ -162,6 +179,7 @@ return true;
 }
 catch(System.Exception error)
 {
+Debug.LogError("DIMENSIONS FRONT: "+ArenaVariantRuntime.Current+" startup failed during "+stage);
 Debug.LogException(error);
 return false;
 }
@@ -184,7 +202,8 @@ private static void RecoverFailedBuild()
 {
 // Use the same session/network cleanup as a normal exit. Offline recovery finishes
 // synchronously; network recovery leaves through its owner before showing the menu.
-_ = MatchExit.ReturnToMenuAsync();
+RestoreTransitionFrame();
+_ = MatchExit.ReturnToMenuAsync("Could not load "+ArenaVariantRuntime.Current+". Please try again or choose another map.");
 }
 
 private static bool IsServerOnlyMatch()
@@ -212,8 +231,30 @@ player.AddComponent<CombatFeedbackComponent>();
 player.AddComponent<StylizedHeroVisual>().Build();
 return player;
 }
-private static void BuildArena(){CreateGround("DF_ArenaFloor",new Vector3(0,-.12f,0),new Vector3(84,.2f,72),Color.gray);CreateBaseCore(new Vector3(-36,0f,0),StylizedArtDirection.ZeroEnergy,"DF_ZeroRealityCore",true,0);CreateBaseCore(new Vector3(36,0f,0),StylizedArtDirection.LumenEnergy,"DF_LumenRealityCore",false,1);CreateSpawnZone(new Vector3(-27.5f,.14f,0),StylizedArtDirection.ZeroEnergy,"AV_ZeroSpawnZone");CreateSpawnZone(new Vector3(27.5f,.14f,0),StylizedArtDirection.LumenEnergy,"AV_LumenSpawnZone");HealingGuardMech.Spawn(0,new Vector3(-27.5f,.14f,0));HealingGuardMech.Spawn(1,new Vector3(27.5f,.14f,0));CreateDefenseBunkers();CreateDefenseTrenches();new GameObject("DF_TrenchReinforcements").AddComponent<TrenchReinforcementDirector>();CreateCentralHealing();if(ArenaVariantRuntime.IsGJ504b)new GameObject("DF_GJ504bArenaLandscape").AddComponent<GJ504bArenaLandscape>();else if(!ArenaVariantRuntime.IsDiamondCore)new GameObject("DF_ProductionLunarGround").AddComponent<ProductionLunarGround>();new GameObject("DF_CosmicArenaBackdrop").AddComponent<CosmicArenaBackdrop>();if(FrontierPlanetLayout.Active)FrontierPlanetLayout.BuildObstacles(GameObject.Find("DF_MatchWorld").transform);}
+private static void BuildArena(ref string stage)
+{
+stage="arena floor";
+CreateGround("DF_ArenaFloor",new Vector3(0,-.12f,0),new Vector3(84,.2f,72),Color.gray);
+stage="base cores and healing zones";
+CreateBaseCore(new Vector3(-36,0f,0),StylizedArtDirection.ZeroEnergy,"DF_ZeroRealityCore",true,0);
+CreateBaseCore(new Vector3(36,0f,0),StylizedArtDirection.LumenEnergy,"DF_LumenRealityCore",false,1);
+CreateSpawnZone(new Vector3(-27.5f,.14f,0),StylizedArtDirection.ZeroEnergy,"AV_ZeroSpawnZone");
+CreateSpawnZone(new Vector3(27.5f,.14f,0),StylizedArtDirection.LumenEnergy,"AV_LumenSpawnZone");
+stage="base guardian visuals";
+HealingGuardMech.Spawn(0,new Vector3(-27.5f,.14f,0));
+HealingGuardMech.Spawn(1,new Vector3(27.5f,.14f,0));
+stage="bunkers, trenches and healing pickup";
+CreateDefenseBunkers();CreateDefenseTrenches();
+new GameObject("DF_TrenchReinforcements").AddComponent<TrenchReinforcementDirector>();
+CreateCentralHealing();
+stage="ground, backdrop and obstacles";
+if(ArenaVariantRuntime.IsGJ504b)new GameObject("DF_GJ504bArenaLandscape").AddComponent<GJ504bArenaLandscape>();
+else if(!ArenaVariantRuntime.IsDiamondCore)new GameObject("DF_ProductionLunarGround").AddComponent<ProductionLunarGround>();
+new GameObject("DF_CosmicArenaBackdrop").AddComponent<CosmicArenaBackdrop>();
+if(FrontierPlanetLayout.Active)FrontierPlanetLayout.BuildObstacles(GameObject.Find("DF_MatchWorld").transform);
+}
 private static void CreateSpawnZone(Vector3 p,Color c,string n){GameObject g=new GameObject(n);g.transform.position=p;g.AddComponent<SpawnHealingZone>();g.AddComponent<HealingZoneMarker>();}private static void CreateDefenseBunkers(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.BunkerPosition:new Vector2(26.25f,21.5f);float x=layout.x,z=layout.y;DefenseBunker.Spawn(0,new Vector3(-x,0,z),"Left");DefenseBunker.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseBunker.Spawn(1,new Vector3(x,0,-z),"Left");DefenseBunker.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateDefenseTrenches(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.TrenchPosition:new Vector2(25.25f,10.75f);float x=layout.x,z=layout.y;DefenseTrench.Spawn(0,new Vector3(-x,0,z),"Left");DefenseTrench.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseTrench.Spawn(1,new Vector3(x,0,-z),"Left");DefenseTrench.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+
 
 

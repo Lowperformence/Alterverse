@@ -11,7 +11,18 @@ namespace Alterverse.Visuals
         public static void Build(Transform actor, int team)
         {
             if (actor.GetComponent<NeptuneDiverMechVisual>() != null) return;
-            actor.gameObject.AddComponent<NeptuneDiverMechVisual>().BuildSuit(team);
+            var visual=actor.gameObject.AddComponent<NeptuneDiverMechVisual>();
+            try{visual.BuildSuit(team);}
+            catch(System.Exception error)
+            {
+                // Optional planet art must not discard the entire playable match.
+                Transform incompleteRoot=actor.Find("DF_NeptuneDiverMechVisual");
+                if(incompleteRoot!=null){incompleteRoot.gameObject.SetActive(false);Destroy(incompleteRoot.gameObject);}
+                Destroy(visual);
+                Debug.LogWarning("DIMENSIONS FRONT: Neptune diving suit failed; using the standard base guardian.");
+                Debug.LogException(error);
+                Alterverse.Combat.HealingGuardMech.BuildRobotVisual(actor,team);
+            }
         }
         Material Surface(Color color, float metal = 0f, Color glow = default)
         {
@@ -123,3 +134,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

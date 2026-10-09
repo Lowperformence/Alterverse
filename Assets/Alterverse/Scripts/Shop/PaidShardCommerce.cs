@@ -33,6 +33,8 @@ namespace Alterverse.Shop
         public static bool Spending => Instance != null && (Instance.spending || Instance.socialSpending || !string.IsNullOrEmpty(Instance.AccountHash) && PlayerPrefs.HasKey(Instance.OperationKey));
         public bool Ready => ready && !string.IsNullOrEmpty(ReadCredential());
         public bool PurchasesReady => Ready && snapshot.billingReady;
+        // Revision survives spending the entire balance; switching must not strand paid history.
+        public bool HasPaidHistory=>snapshot.revision>0||snapshot.balance>0||(snapshot.owned?.Length??0)>0;
         public string AccountHash { get; private set; }
         public int SessionVersion => generation;
         public static bool OwnsVoidfall => Instance != null && Instance.Ready && Instance.snapshot.voidfall;
@@ -87,7 +89,7 @@ namespace Alterverse.Shop
                 return;
             }
             if (PlayerPrefs.HasKey(OperationKey) && Time.unscaledTime >= nextSave)
-            { StartCoroutine(RecoverPurchase()); return; }
+            { if(AccountServerBootstrap.Instance?.Busy!=true)StartCoroutine(RecoverPurchase()); return; }
             if (AccountProfilePrefs.Dirty && Time.unscaledTime >= nextSave)
             { nextSave = Time.unscaledTime + 5; StartCoroutine(SaveProfile(null)); }
             else if (Time.unscaledTime >= nextRefresh)
@@ -168,7 +170,7 @@ namespace Alterverse.Shop
         }
         public bool TryBeginSocialSpend()
         {
-            if(!Ready||saving||spending||refreshing||socialSpending||PlayerPrefs.HasKey(OperationKey))return false;
+            if(!Ready||AccountServerBootstrap.Instance?.Busy==true||saving||spending||refreshing||socialSpending||PlayerPrefs.HasKey(OperationKey))return false;
             socialSpending=true;return true;
         }
         public void EndSocialSpend(int session,Snapshot value,AccountProfilePrefs.Entry[] submitted)
@@ -185,7 +187,7 @@ namespace Alterverse.Shop
         }
         public bool BeginPurchase(string sku)
         {
-            if (!Ready || spending || saving || refreshing || socialSpending || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
+            if (!Ready || AccountServerBootstrap.Instance?.Busy==true || spending || saving || refreshing || socialSpending || string.IsNullOrEmpty(sku) || PlayerPrefs.HasKey(OperationKey)) return false;
             // Persist the id before making the request. A restart retries the same operation,
             // including consumable purchases, rather than issuing a second debit.
             PlayerPrefs.SetString(OperationKey,JsonUtility.ToJson(new PurchaseOperation { id = Guid.NewGuid().ToString("N"),sku = sku }));
@@ -293,4 +295,5 @@ namespace Alterverse.Shop
         }
     }
 }
+
 

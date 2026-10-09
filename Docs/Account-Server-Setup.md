@@ -11,7 +11,7 @@ The code now synchronizes the complete typed DIMENSIONS FRONT profile under the 
 - Purchased shards remain in the Google-verified ledger. Earned shards remain in `DF_Shards` within the cloud profile. The player sees a single summed balance. Rewards only increase the earned part, so remote paid shards cannot accidentally be copied into local currency.
 - `/wallet/spend` derives prices and unlock writes from the shared catalog, computes the earned/paid split on the server, and commits the debit and inventory change atomically. Operation IDs persist before the request; retries, lost responses and consumable retries do not charge twice.
 - Legacy `/wallet/claim` and `/wallet/claim/ack` are disabled because transferring paid currency to independent device saves is unsafe. Existing historical claim rows are retained for reconciliation. **If an older commerce server actually handled payments, reconcile already delivered/pending legacy claims before migrating those users.** Previously consumed or spent local value cannot safely be reconstructed by guessing.
-- Google Play checkout stays disabled unless the account backend explicitly reports `billingReady`.
+- Google Play checkout stays disabled unless the current native Google player is verified as linked to the signed-in Unity identity and the account backend explicitly reports `billingReady`.
 - The Dedicated Server roster freezes when its plan is sent. Late participants are rejected rather than enlarging the ACK target. After 20 seconds, peers missing the plan ACK are disconnected and a plan is rebuilt for survivors. Client bootstrap failure clears network match authority and returns to the menu.
 
 The offline game continues to calculate XP, earned rewards and offline inventory on the client and syncs those values as player progress. This is account storage and conflict protection, **not server-validated anti-cheat for offline progress**. The verified paid ledger is never changed through profile-save input. Competitive progression would additionally require dedicated-server-issued result receipts and server validation of rewards.
@@ -42,9 +42,30 @@ In Unity, edit `Assets/Alterverse/Resources/Commerce/AccountServerConfig.json`:
 {"httpsEndpoint":"https://YOUR_ACCOUNT_SERVER"}
 ```
 
-The endpoint is intentionally empty in source because no deployed account-service address was supplied. `AccountServerBootstrap` automatically binds an authorized Unity login to the backend. Account-only hosting does not require Google merchant credentials.
+The source configuration currently points to `https://dimensions-front-purchase-server-1029475752167.europe-west1.run.app`. Its deployed revision and live account/billing configuration still need verification. `AccountServerBootstrap` automatically binds an authorized Unity login to the backend. Account-only hosting does not require Google merchant credentials.
 
-In Unity Dashboard → Authentication → Identity Providers, enable **Username & Password**. Profile → Account → **Secure Account** links a username/password to the existing guest identity, preserving its account ID and progress. **Sign In** loads the same identity on another device. An unlinked anonymous login is installation-bound and cannot restore the account on a different device after losing its Unity session token. Account changes are blocked during matches/parties and must flush the current cloud profile first.
+## Google Play Games account linking and restoration
+
+Profile → **GOOGLE ACCOUNT** replaces the extra username/password form. The editable player display name elsewhere in Profile remains a display name. Google Play Games authentication for a leaderboard alone does not link a Unity cloud account.
+
+- A fresh Android installation tries Google authorization first. `SignInWithGooglePlayGamesAsync` recovers the Unity player already associated with that Google player.
+- An installation with a cached Unity session keeps its current identity. `LinkWithGooglePlayGamesAsync` attaches Google to that identity, preserving its hashed wallet owner, profile and purchase records. Force-linking is never used.
+- The link is verified with `GetPlayerInfoAsync().GetGooglePlayGamesId()` against the current native Google player. Paid checkout requires that verified link and a synchronized billing-enabled backend. It stays blocked during account operations.
+- If Google already owns a different Unity account, **RESTORE GOOGLE** explicitly selects that existing account (`CreateAccount=false`) after saving the current cloud profile. Saves are not merged. An unlinked guest with paid history cannot be switched away through this flow; support reconciliation is required. A zero paid balance is still purchase history.
+- Account changes are blocked during matches, parties, outstanding payments and paid spending. The store rechecks account ownership before fulfillment and confirmation. Profile, paid wallet and unlocks are loaded under the restored Unity ID; leaderboard submission waits for that cloud profile.
+- The saved identity uses provider/player IDs, rather than a user-typed email address. The player's Google account is selected through Google Play Games. No Google password, server authorization code, client secret or email is written into the game profile.
+- Anonymous/offline play remains available when Google is unavailable; an unlinked installation cannot promise recovery after its session token is lost. Its real-money checkout is disabled.
+
+### Required configuration (not supplied by code)
+
+The checked-in `Assets/GooglePlayGames/Resources/PlayGamesSettings.asset` has empty `mAppId` and `mWebClientId` fields. Locate the plugin's settings asset if its path changes. The code reports the missing configuration and does not treat a leaderboard ID as sufficient setup.
+
+1. In the Google Play Games plugin's Android Setup, import the correct Play Console game resources/App ID and set the OAuth **Web Client ID** used for server-side authorization. Keep the existing application package ID.
+2. In Unity Dashboard → Authentication → Identity Providers, enable **Google Play Games** with the matching Web Client ID and server-side client secret. The secret belongs in the Dashboard, never in this repository or the Android client.
+3. Verify Play Console tester access and the actual Play App Signing certificate for the installed test build. Install the signed test build through the internal test track.
+4. Keep the persistent account endpoint/storage and Unity project ID configured as below. Deploy the repaired commerce backend before testing receipt replay.
+
+The legacy username/password service API remains for compatibility; the game no longer presents a second username/password account form. Google and Unity provider configuration must be completed in their own consoles. This source pass did not access or change those consoles.
 
 ## Enable paid shard packs
 
@@ -105,13 +126,13 @@ python -m pip install -r Server/commerce/requirements.txt
 python -m unittest discover -s Server/commerce -v
 ```
 
-Tests cover authentication forgery/expiry/wrong project, durable profiles/XP/settings after restart, account isolation, concurrent revision conflicts, mixed earned/paid spending, catalog prices, duplicate unlocks, concurrent consumable retries, rollback on insufficient funds, malformed payloads, no client credit to the paid ledger, legacy-claim rejection, purchase replay and Google outages. These use temporary databases and fake Google/JWKS transports; they do not prove live Google/Unity integration.
+Tests cover authentication forgery/expiry/wrong project, durable profiles/XP/settings after restart, account isolation, concurrent revision conflicts, mixed earned/paid spending, catalog prices, duplicate unlocks, concurrent consumable retries, rollback on insufficient funds, malformed payloads, no client credit to the paid ledger, legacy-claim rejection, purchase replay (including already consumed but previously credited receipts), zero-balance purchase history and Google outages. These use temporary databases and fake Google/JWKS transports; they do not prove live Google/Unity integration.
 
 The Unity editor/compiler and live two-client, Android, login and production-hosting checks must be run in the actual project environment. C# syntax parsing alone is not Unity type checking.
 
 Official references:
 
-- https://docs.unity.com/en-us/authentication/platform-signin/username-password
+- https://docs.unity.com/en-us/authentication/platform-signin/google-play-games
 - https://docs.unity.com/en-us/services-web-apis/client-auth
 - https://docs.unity.com/en-us/oas-player-auth-jwks/1.0.0
 
@@ -119,3 +140,4 @@ Official references:
 ## Friends, levels and clans
 
 The same persistent account backend now serves social routes, player-level rankings and clans. See [Social-System.md](Social-System.md) for behavior, limits, deployment and verification. Rebuild the backend image and configure the existing HTTPS endpoint to activate them.
+

@@ -122,7 +122,11 @@ namespace Alterverse.Multiplayer
                     await UnityServices.InitializeAsync();
                     servicesInitialized=true;
                 }
-                if(!AuthenticationService.Instance.IsSignedIn)
+                if(Alterverse.Profile.AccountServerBootstrap.Instance!=null)
+                {
+                    if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
+                }
+                else if(!AuthenticationService.Instance.IsSignedIn)
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 SetStatus("ONLINE READY");
                 return true;
@@ -745,7 +749,11 @@ namespace Alterverse.Multiplayer
                     await UnityServices.InitializeAsync();
                     servicesInitialized=true;
                 }
-                if(!AuthenticationService.Instance.IsSignedIn)
+                if(Alterverse.Profile.AccountServerBootstrap.Instance!=null)
+                {
+                    if(!await Alterverse.Profile.AccountServerBootstrap.Instance.EnsureAuthenticatedAsync())return false;
+                }
+                else if(!AuthenticationService.Instance.IsSignedIn)
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();
                 return true;
             }
@@ -933,4 +941,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

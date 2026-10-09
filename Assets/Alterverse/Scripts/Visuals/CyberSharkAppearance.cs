@@ -180,6 +180,7 @@ namespace Alterverse.Visuals
                 // fingers and thumb while keeping their roots intersecting the palm.
                 if (digits[i]) sourcePoint.z += .025f;
                 Vector3 sourceNormal = Point(data.normals, i * 3);
+                if(data.groups[i]==0)FitSilhouette(data,b,lookup,ref sourcePoint,ref sourceNormal);
                 Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
                 Vector3 n = rotations[b] * sourceNormal;
                 float blend = data.boneWeights2 != null ? data.boneWeights2[i] : 0f;
@@ -260,6 +261,7 @@ namespace Alterverse.Visuals
             };
             if (data.boneWeights2 != null) anatomy.quality = SkinQuality.Bone2;
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
+            BuildLeatherCuffs(model,anatomy,bones,lookup,heads,rotations,scales);
             // The inherited gauntlet renderer has its own FBX transform/root bone.
             // Keep the new anchor independent of the inherited gauntlet scale:
             // both new skins use the anatomy's coordinate frame and skeleton root.
@@ -283,6 +285,98 @@ namespace Alterverse.Visuals
             hookRenderer.updateWhenOffscreen = anatomy.updateWhenOffscreen;
             RendererGroup(hookRenderer, 1, anatomy.transform, vertices, normals, weights, bones, materials);
             return true;
+        }
+
+        // Deform mesh coordinates at build time. Joint positions and animation lengths stay intact.
+        private static void FitSilhouette(Geometry data,int bone,Dictionary<string,int> lookup,
+            ref Vector3 point,ref Vector3 normal)
+        {
+            string name=data.boneNames[bone];
+            if(name=="Head")
+            {
+                Vector3 pivot=Point(data.anchors[bone].head);
+                point=pivot+Vector3.Scale(point-pivot,new Vector3(1f,.74f,.84f));
+                normal=new Vector3(normal.x,normal.y/.74f,normal.z/.84f).normalized;
+                return;
+            }
+            if(!name.StartsWith("UpperArm",StringComparison.Ordinal)&&!name.StartsWith("Forearm",StringComparison.Ordinal))return;
+            string side=name.Substring(name.Length-1);
+            Vector3 a=Point(data.anchors[lookup["UpperArm"+side]].head);
+            Vector3 e=Point(data.anchors[lookup["Forearm"+side]].head);
+            Vector3 w=Point(data.anchors[lookup["Hand"+side]].head);
+            Vector3 upper=ClosestOnSegment(point,a,e),lower=ClosestOnSegment(point,e,w);
+            bool above=(point-upper).sqrMagnitude<(point-lower).sqrMagnitude;
+            Vector3 center=above?upper:lower,axis=(above?e-a:w-e).normalized;
+            point=center+(point-center)*.74f;
+            Vector3 axial=axis*Vector3.Dot(normal,axis);
+            normal=(axial+(normal-axial)/.74f).normalized;
+        }
+
+        private static Vector3 ClosestOnSegment(Vector3 point,Vector3 a,Vector3 b)
+        {
+            Vector3 axis=b-a;
+            return a+axis*Mathf.Clamp01(Vector3.Dot(point-a,axis)/Mathf.Max(axis.sqrMagnitude,.000001f));
+        }
+
+        private void BuildLeatherCuffs(Transform model,SkinnedMeshRenderer anatomy,Transform[] bones,
+            Dictionary<string,int> lookup,Vector3[] heads,Quaternion[] rotations,float[] scales)
+        {
+            var points=new List<Vector3>();var triangles=new List<int>();var weights=new List<BoneWeight>();
+            var uv=new List<Vector2>();
+            Matrix4x4 convert=anatomy.transform.worldToLocalMatrix*model.localToWorldMatrix;
+            const int sides=32;
+            // Four beveled outer rings and two inner rings form a closed, hollow leather wrap.
+            float[] along={.34f,.38f,.69f,.73f,.73f,.34f};
+            float[] radius={.096f,.097f,.092f,.089f,.087f,.094f};
+            foreach(string side in new[]{"L","R"})
+            {
+                int bone=lookup["Forearm"+side];
+                Vector3 e=Point(geometry.anchors[bone].head),w=Point(geometry.anchors[lookup["Hand"+side]].head);
+                Vector3 axis=(w-e).normalized,across=Vector3.Cross(axis,Vector3.forward).normalized;
+                Vector3 outward=Vector3.Cross(axis,across).normalized;
+                int start=points.Count;
+                for(int row=0;row<along.Length;row++)for(int s=0;s<=sides;s++)
+                {
+                    float angle=s*Mathf.PI*2f/sides;
+                    float gap=row<4?.005f:0f;
+                    Vector3 radial=across*Mathf.Cos(angle)+outward*(Mathf.Sin(angle)*.94f);
+                    Vector3 source=e+(w-e)*along[row]+radial*(radius[row]*.74f+gap);
+                    Vector3 p=heads[bone]+rotations[bone]*(source-e)*scales[bone];
+                    points.Add(convert.MultiplyPoint3x4(p));
+                    weights.Add(new BoneWeight{boneIndex0=bone,weight0=1f});
+                    uv.Add(new Vector2((float)s/sides,along[row]));
+                }
+                for(int row=0;row<along.Length;row++)for(int s=0;s<sides;s++)
+                {
+                    int a=start+row*(sides+1)+s,b=a+1;
+                    int c=start+((row+1)%along.Length)*(sides+1)+s,d=c+1;
+                    triangles.Add(a);triangles.Add(b);triangles.Add(c);
+                    triangles.Add(b);triangles.Add(d);triangles.Add(c);
+                }
+            }
+            var mesh=new Mesh{name="DF_Nerok_LeatherForearmWraps"};ownedMeshes.Add(mesh);
+            mesh.SetVertices(points);mesh.SetUVs(0,uv);mesh.SetTriangles(triangles,0);mesh.boneWeights=weights.ToArray();
+            var bindposes=new Matrix4x4[bones.Length];
+            for(int i=0;i<bones.Length;i++)bindposes[i]=bones[i].worldToLocalMatrix*anatomy.transform.localToWorldMatrix;
+            mesh.bindposes=bindposes;mesh.RecalculateNormals();mesh.RecalculateBounds();
+            var go=new GameObject("DF_Nerok_LeatherForearmWraps");go.layer=anatomy.gameObject.layer;
+            go.transform.SetParent(anatomy.transform,false);
+            var renderer=go.AddComponent<SkinnedMeshRenderer>();renderer.sharedMesh=mesh;renderer.bones=bones;
+            renderer.rootBone=anatomy.rootBone;renderer.quality=SkinQuality.Bone1;
+            renderer.sharedMaterial=Surface("Worn brown forearm leather",new Color(.19f,.085f,.035f),0f,.16f);
+            Bounds bounds=mesh.bounds;bounds.Expand(bounds.size*.45f);renderer.localBounds=bounds;
+        }
+
+        private static bool LegacyForearmAccessory(int index,int material)
+        {
+            string bone=geometry.boneNames[geometry.boneIndices[index]];
+            if(!bone.StartsWith("Forearm",StringComparison.Ordinal))return false;
+            if(material!=1)return true;
+            int hand=Array.IndexOf(geometry.boneNames,"Hand"+bone[bone.Length-1]);
+            Vector3 w=Point(geometry.anchors[hand].head);
+            return PlateVertex(Point(geometry.vertices,index*3),new[]{
+                new Vector2(w.x-.033f,w.y+.066f),new Vector2(w.x+.033f,w.y+.066f),
+                new Vector2(w.x+.033f,w.y+.021f),new Vector2(w.x-.033f,w.y+.021f)},.098f,.018f);
         }
 
         private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
@@ -401,6 +495,8 @@ namespace Alterverse.Visuals
                 {
                     int a = remap[sourceIndices[i]], b = remap[sourceIndices[i+1]], c = remap[sourceIndices[i+2]];
                     if (a < 0 || b < 0 || c < 0) continue;
+                    if(group==0&&LegacyForearmAccessory(sourceIndices[i],m)&&
+                        LegacyForearmAccessory(sourceIndices[i+1],m)&&LegacyForearmAccessory(sourceIndices[i+2],m))continue;
                     // The original nearly black fingers disappear beside the grey palm.
                     // Give only hand-bound armor-slot triangles the same shark-skin finish.
                     int material = m;
@@ -550,5 +646,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

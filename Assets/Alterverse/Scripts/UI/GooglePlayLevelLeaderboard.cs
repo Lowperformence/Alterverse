@@ -1,5 +1,6 @@
 using System;
 using Alterverse.Profile;
+using Alterverse.Shop;
 using UnityEngine;
 #if UNITY_ANDROID && !UNITY_EDITOR
 using GooglePlayGames;
@@ -84,38 +85,27 @@ namespace Alterverse.Online
             state=ConnectionState.Idle;status="Google Play Games is not connected.";
         }
 
-        public static void AuthenticateAndSync(bool interactive=false)
+        public static async void AuthenticateAndSync(bool interactive=false)
         {
             if(!IsConfigured){state=ConnectionState.NotConfigured;return;}
 #if UNITY_ANDROID && !UNITY_EDITOR
             if(authenticating)return;
-            PlayGamesPlatform.Activate();
             if(IsAuthenticated){SubmitCurrentScore();return;}
             authenticating=true;state=ConnectionState.Authenticating;
             status="Signing in to Google Play Games...";
             int requestGeneration=generation;
-            Action<SignInStatus> completed=result=>
+            bool success=await GooglePlayAccountSession.AuthenticateAsync(interactive);
+            if(requestGeneration!=generation)return;
+            authenticating=false;
+            if(!success)
             {
-                if(requestGeneration!=generation)return;
-                authenticating=false;
-                if(result!=SignInStatus.Success)
-                {
-                    openAfterAuthentication=false;
-                    Fail("Play Games sign-in failed ("+result+"). Tap CONNECT to retry; check the installed build's Play Games setup.");
-                    return;
-                }
-                state=ConnectionState.Ready;status="Google Play Games connected.";
-                SubmitCurrentScore();
-                if(openAfterAuthentication){openAfterAuthentication=false;ShowNativeLeaderboardUi();}
-            };
-            // Authenticate observes automatic sign-in. A user-requested retry must use
-            // ManuallyAuthenticate; repeating automatic authentication will not prompt.
-            try
-            {
-                if(interactive)PlayGamesPlatform.Instance.ManuallyAuthenticate(completed);
-                else PlayGamesPlatform.Instance.Authenticate(completed);
+                openAfterAuthentication=false;
+                Fail("Play Games sign-in failed. Tap CONNECT to retry; check the installed build's Play Games setup.");
+                return;
             }
-            catch(Exception e){authenticating=false;openAfterAuthentication=false;Fail("Play Games sign-in could not start: "+e.Message);}
+            state=ConnectionState.Ready;status="Google Play Games connected.";
+            SubmitCurrentScore();
+            if(openAfterAuthentication){openAfterAuthentication=false;ShowNativeLeaderboardUi();}
 #else
             Unsupported();
 #endif
@@ -126,6 +116,9 @@ namespace Alterverse.Online
             if(!IsConfigured)return;
 #if UNITY_ANDROID && !UNITY_EDITOR
             if(!IsAuthenticated){AuthenticateAndSync();return;}
+            if(AccountServerBootstrap.Instance?.GooglePlayAccountReady!=true||PaidShardCommerce.Instance?.Ready!=true||
+                !AccountProfilePrefs.Attached||AccountProfilePrefs.Account!=PaidShardCommerce.Instance.AccountHash)
+            {state=ConnectionState.Idle;status="Waiting for the linked Google cloud profile before syncing wins.";return;}
             if(submitting)return;
             string player=PlayGamesPlatform.Instance.localUser.id;
             if(lastSubmittedPlayer!=player){lastSubmittedPlayer=player;lastSubmittedScore=-1;}
@@ -192,3 +185,4 @@ namespace Alterverse.Online
         private static void Fail(string message){state=ConnectionState.Error;status=message;Debug.LogWarning("DIMENSIONS FRONT: "+message);}
     }
 }
+

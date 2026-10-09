@@ -10,7 +10,7 @@ namespace Alterverse.Match
         public static bool Leaving { get; private set; }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void Reset() => Leaving = false;
-        public static async Task ReturnToMenuAsync()
+        public static async Task ReturnToMenuAsync(string failureMessage=null)
         {
             if (Leaving) return;
             Leaving = true;
@@ -47,9 +47,12 @@ namespace Alterverse.Match
                 MatchClock.Set(PauseReason.Result, false); MatchClock.Set(PauseReason.Settings, false);
                 MatchClock.Set(PauseReason.Transition, false);
                 if (world != null) Object.Destroy(world);
+                Alterverse.Prototype.PrototypeBootstrap.RestoreTransitionFrame();
                 MainMenuController.ShowHome();
+                if(!string.IsNullOrEmpty(failureMessage))MainMenuController.ShowLaunchFailure(failureMessage);
                 Leaving = false;
             }
         }
     }
 }
+

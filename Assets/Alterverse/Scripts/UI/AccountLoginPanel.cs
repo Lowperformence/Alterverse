@@ -1,44 +1,43 @@
 using Alterverse.Profile;
 using Alterverse.Shop;
 using UnityEngine;
+
 namespace Alterverse.UI
 {
     internal static class AccountLoginPanel
     {
-        static bool open;
-        static string username="",password="";
-        static bool working;
+        static bool open,working;
         public static void Draw(FrontEndTheme theme,Rect area)
         {
             var service=AccountServerBootstrap.Instance;
-            string status=service!=null?service.Status:"Account unavailable.";
-            if(!open&&PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.Ready)status=PaidShardCommerce.Instance.Status;
-            theme.Label(new Rect(area.x,area.y,area.width-130,40),status,theme.Small,true);
-            if(theme.Action(new Rect(area.xMax-124,area.y,124,40),"ACCOUNT"))open=!open;
+            bool linked=service?.GooglePlayAccountReady==true;
+            string status=service==null?"Account service unavailable.":
+                linked&&!open&&PaidShardCommerce.Instance!=null?PaidShardCommerce.Instance.Status:service.GoogleStatus;
+            if(!GooglePlayAccountSession.Supported)status="Google account connection is available in the Android build.";
+            theme.Label(new Rect(area.x,area.y,area.width-174,40),status,theme.Small,true);
+            if(theme.Action(new Rect(area.xMax-168,area.y,168,40),"GOOGLE ACCOUNT"))open=!open;
             if(!open)return;
-            Rect panel=new(area.x,area.y-270,area.width,260);
+            Rect panel=new Rect(area.x,area.y-188,area.width,178);
             theme.Panel(panel);
-            theme.Label(new Rect(panel.x+16,panel.y+12,panel.width-32,28),"SAVE AND RESTORE YOUR ACCOUNT",theme.Heading);
-            theme.Label(new Rect(panel.x+16,panel.y+44,panel.width-32,24),"Username",theme.Small,true);
-            username=GUI.TextField(new Rect(panel.x+16,panel.y+70,panel.width-32,38),username,64,theme.Field);
-            theme.Label(new Rect(panel.x+16,panel.y+111,panel.width-32,24),"Password",theme.Small,true);
-            password=GUI.PasswordField(new Rect(panel.x+16,panel.y+137,panel.width-32,38),password,'•',128,theme.Field);
-            bool hasCredentials=!string.IsNullOrWhiteSpace(username)&&!string.IsNullOrEmpty(password);
-            bool enabled=!working&&service!=null&&!service.Busy&&hasCredentials;
-            float width=(panel.width-40)*.5f;
-            if(theme.Action(new Rect(panel.x+16,panel.y+186,width,40),"SIGN IN",true,enabled:enabled))Submit(false);
-            if(theme.Action(new Rect(panel.x+24+width,panel.y+186,width,40),"SECURE ACCOUNT",true,enabled:enabled))Submit(true);
-            theme.Label(new Rect(panel.x+16,panel.y+230,panel.width-32,24),
-                working||service!=null&&service.Busy?"Signing in…":
-                !hasCredentials?"Enter a username and password.":
-                service!=null?service.Status:"Account unavailable.",theme.Small,true);
+            theme.Label(new Rect(panel.x+16,panel.y+12,panel.width-32,28),"GOOGLE PLAY ACCOUNT",theme.Heading);
+            theme.Label(new Rect(panel.x+16,panel.y+48,panel.width-32,50),
+                service?.GoogleRestoreAvailable==true
+                    ?"Restore the selected Google account. The current save stays separate; accounts are not merged."
+                    :"Save and restore your progress and purchases with Google Play Games. No extra username or password.",theme.Small,true);
+            bool enabled=!working&&service!=null&&!service.Busy&&GooglePlayAccountSession.Supported;
+            bool restore=service?.GoogleRestoreAvailable==true;
+            if(theme.Action(new Rect(panel.x+16,panel.y+112,panel.width-32,44),
+                linked?"GOOGLE CONNECTED":restore?"RESTORE GOOGLE":"CONNECT GOOGLE",true,enabled:enabled&&!linked))Submit(restore);
         }
-        static async void Submit(bool register)
+        static async void Submit(bool restore)
         {
             working=true;
-            string secret=password;password="";
-            try{if(await AccountServerBootstrap.Instance.SignInAsync(username,secret,register))open=false;}
-            finally{secret=null;working=false;}
+            try
+            {
+                var service=AccountServerBootstrap.Instance;
+                if(service!=null&&await service.ConnectGoogleAsync(restore))open=false;
+            }
+            finally{working=false;}
         }
     }
 }

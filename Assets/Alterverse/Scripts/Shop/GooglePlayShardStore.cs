@@ -31,6 +31,9 @@ namespace Alterverse.Shop
 #if DF_GOOGLE_PLAY_SHARD_TEST
                 return status;
 #else
+                var account=Alterverse.Profile.AccountServerBootstrap.Instance;
+                if(account==null||!account.GooglePlayAccountReady)
+                    return account?.GoogleStatus??"Connect Google Play Games in Profile before purchasing shards.";
                 var backend=PaidShardCommerce.Instance;
                 if(backend==null)return Alterverse.Profile.AccountServerBootstrap.Instance?.Status??"Account service unavailable.";
                 if(!backend.Ready)return backend.Status;
@@ -53,8 +56,10 @@ namespace Alterverse.Shop
 
         public bool CanBuy(string id)
         {
-            bool productionReady=PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady;
-            return Ready&&!Busy&&!PendingRecovery&&prices.ContainsKey(id)&&(LocalBillingTestMode||productionReady);
+            bool productionReady=PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady&&
+                Alterverse.Profile.AccountServerBootstrap.Instance?.GooglePlayAccountReady==true;
+            return Ready&&!Busy&&!PendingRecovery&&Alterverse.Profile.AccountServerBootstrap.Instance?.Busy!=true&&
+                prices.ContainsKey(id)&&(LocalBillingTestMode||productionReady);
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -73,7 +78,8 @@ namespace Alterverse.Shop
 #if DF_GOOGLE_PLAY_SHARD_TEST
             return true;
 #else
-            return PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady;
+            return PaidShardCommerce.Instance!=null&&PaidShardCommerce.Instance.PurchasesReady&&
+                Alterverse.Profile.AccountServerBootstrap.Instance?.GooglePlayAccountReady==true;
 #endif
         }
 
@@ -83,7 +89,8 @@ namespace Alterverse.Shop
             return true;
 #else
             var backend=PaidShardCommerce.Instance;
-            return backend!=null&&backend.Ready&&backend.AccountHash==connectedAccount&&backend.SessionVersion==connectedSession;
+            return backend!=null&&backend.Ready&&backend.AccountHash==connectedAccount&&backend.SessionVersion==connectedSession&&
+                Alterverse.Profile.AccountServerBootstrap.Instance?.GooglePlayAccountReady==true;
 #endif
         }
 
@@ -100,7 +107,10 @@ namespace Alterverse.Shop
                 Ready=false;
                 if(processing.Count==0)
                 {
-                    Unbind();store=null;prices.Clear();unconfirmed.Clear();PendingRecovery=true;Busy=false;
+                    // Losing identity alone is not an outstanding payment. Keep actual recovery
+                    // state, otherwise a clean Google account switch can never be restored.
+                    PendingRecovery=PendingRecovery||unconfirmed.Count>0||Busy;
+                    Unbind();store=null;prices.Clear();unconfirmed.Clear();Busy=false;
                 }
             }
 
@@ -281,12 +291,12 @@ namespace Alterverse.Shop
 #else
                 var backend=PaidShardCommerce.Instance;
                 int session=connectedSession;
-                if(backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token))
+                if(!SessionMatches()||backend==null||backend.AccountHash!=connectedAccount||backend.SessionVersion!=session||!await backend.Fulfill(product,token))
                 {
                     Status="Verification pending. Retrying purchase recovery…";
                     ScheduleRetry();return;
                 }
-                if(this==null||store==null||backend==null||backend!=PaidShardCommerce.Instance||
+                if(this==null||store==null||!SessionMatches()||backend==null||backend!=PaidShardCommerce.Instance||
                    backend.AccountHash!=connectedAccount||backend.SessionVersion!=session)return;
 
                 // Server verified the token and durably credited the account wallet.
@@ -366,3 +376,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

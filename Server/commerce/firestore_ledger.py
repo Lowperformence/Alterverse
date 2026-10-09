@@ -96,9 +96,6 @@ class FirestoreLedger:
         quantity = verified.get("quantity", 1)
         if type(quantity) is not int or not 1 <= quantity <= 100:
             raise ValueError("Invalid quantity")
-        if verified.get("consumptionState", 0) != 0:
-            raise ValueError("Unknown consumed purchase requires reconciliation")
-
         token_id = hashlib.sha256(token.encode("utf-8")).hexdigest()
         purchase_ref = self.purchases.document(token_id)
         account_ref = self.accounts.document(account)
@@ -114,6 +111,10 @@ class FirestoreLedger:
                 if (previous.get("account"), previous.get("product"), previous.get("quantity")) != (account, product, quantity):
                     raise ValueError("Purchase token already bound")
                 return data
+            # A previously credited receipt may already be consumed at Google.
+            # Only an unknown consumed token needs manual reconciliation.
+            if verified.get("consumptionState", 0) != 0:
+                raise ValueError("Unknown consumed purchase requires reconciliation")
             amount = PACKS[product] * quantity
             if data["balance"] + amount > MAX_BALANCE:
                 raise ValueError("Wallet capacity exceeded")
@@ -282,3 +283,4 @@ class FirestoreLedger:
             return data
 
         return self._snapshot(account, buy_once(transaction))
+
