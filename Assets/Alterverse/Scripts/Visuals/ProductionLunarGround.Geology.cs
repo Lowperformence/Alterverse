@@ -156,7 +156,7 @@ namespace Alterverse.Visuals
         {
             if(perimeter==null)return;
             Material middle=Mat(ArenaVariantRuntime.IsMars?new Color(.23f,.085f,.055f):
-                ArenaVariantRuntime.IsGreenPlanet?new Color(.11f,.17f,.105f):
+                ArenaVariantRuntime.IsGreenPlanet?new Color(.16f,.23f,.23f):
                 ArenaVariantRuntime.IsNoxara?new Color(.035f,.06f,.15f):
                 ArenaVariantRuntime.IsKryon?new Color(.30f,.42f,.47f):new Color(.125f,.137f,.153f),0,.08f);
             surfaceMaterials.Apply(middle);
@@ -217,3 +217,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

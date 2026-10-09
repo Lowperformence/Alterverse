@@ -28,9 +28,9 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         root=new GameObject(rootName).transform;
         root.SetParent(transform,false);
         bool mars=ArenaVariantRuntime.IsMars,green=ArenaVariantRuntime.IsGreenPlanet,noxara=ArenaVariantRuntime.IsNoxara,kryon=ArenaVariantRuntime.IsKryon;
-        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.16f,.245f,.13f,1):noxara?new Color(.045f,.075f,.19f,1):kryon?new Color(.62f,.75f,.80f,1):new Color(.105f,.12f,.145f,1),.02f,kryon?.34f:.12f);
-        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.055f,.09f,.055f,1):noxara?new Color(.015f,.026f,.075f,1):kryon?new Color(.16f,.24f,.29f,1):new Color(.055f,.065f,.082f,1),.01f,kryon?.22f:.08f);
-        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.26f,.34f,.18f,1):noxara?new Color(.09f,.15f,.34f,1):kryon?new Color(.55f,.78f,.86f,1):new Color(.19f,.205f,.225f,1),.03f,kryon?.38f:.11f);
+        regolith=Mat(mars?new Color(.34f,.13f,.075f,1):green?new Color(.27f,.34f,.28f,1):noxara?new Color(.045f,.075f,.19f,1):kryon?new Color(.62f,.75f,.80f,1):new Color(.105f,.12f,.145f,1),.02f,kryon?.34f:.12f);
+        darkRegolith=Mat(mars?new Color(.16f,.055f,.035f,1):green?new Color(.12f,.19f,.20f,1):noxara?new Color(.015f,.026f,.075f,1):kryon?new Color(.16f,.24f,.29f,1):new Color(.055f,.065f,.082f,1),.01f,kryon?.22f:.08f);
+        rimMat=Mat(mars?new Color(.43f,.19f,.105f,1):green?new Color(.40f,.47f,.39f,1):noxara?new Color(.09f,.15f,.34f,1):kryon?new Color(.55f,.78f,.86f,1):new Color(.19f,.205f,.225f,1),.03f,kryon?.38f:.11f);
         if(ArenaVariantRuntime.IsExoplanet)
         {
             bool iron=ArenaVariantRuntime.IsWasp76b;
@@ -40,7 +40,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
             foreach(Material material in new[]{regolith,darkRegolith,rimMat})
             {material.SetFloat("_Metallic",iron?.48f:.02f);material.SetFloat("_Smoothness",iron?.34f:.30f);}
         }
-        if(green)alienMineral=Mat(new Color(.35f,.48f,.16f,1),.02f,.18f,true);
+        if(green)alienMineral=Mat(new Color(.30f,.55f,.57f,1),.02f,.18f,true);
         if(kryon)cryoIce=Mat(new Color(.26f,.90f,1f,1),.08f,.62f,true);
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
@@ -292,4 +292,5 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
+
 

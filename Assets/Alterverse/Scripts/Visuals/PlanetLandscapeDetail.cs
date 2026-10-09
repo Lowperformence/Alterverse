@@ -13,7 +13,7 @@ namespace Alterverse.Visuals
         readonly List<Mesh> ownedMeshes = new();
         readonly List<Material> ownedMaterials = new();
         readonly List<CombineInstance>[] batches = { new(), new(), new(), new() };
-        Mesh rock, column, crystal, leaf, beam, canopy, pool;
+        Mesh rock, column, crystal, leaf, beam, canopy, pool, alienCap;
         Material[] palette;
         ArenaVariant variant;
         Vector3 center;
@@ -50,6 +50,10 @@ namespace Alterverse.Visuals
             canopy = Own(SceneryMeshQuality.SoftProfile("RoundedCanopy", 16, new[] {
                 new Vector2(.16f,0), new Vector2(.38f,.10f), new Vector2(.50f,.36f),
                 new Vector2(.37f,.72f), new Vector2(.16f,.94f), new Vector2(.015f,1f) }));
+            if(variant==ArenaVariant.GreenPlanet)
+                alienCap=Own(SceneryMeshQuality.SoftProfile("AlienSporeCrown",20,new[]{
+                    new Vector2(.06f,0),new Vector2(.17f,.10f),new Vector2(.53f,.18f),
+                    new Vector2(.58f,.26f),new Vector2(.31f,.40f),new Vector2(.015f,.48f)}));
             palette = BuildPalette();
             foreach(Material material in palette)
                 if(material == null) { enabled = false; return; }
@@ -61,7 +65,7 @@ namespace Alterverse.Visuals
                 Flush(site);
             }
             // Input meshes are no longer needed after baking the regional batches.
-            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam,canopy,pool})
+            foreach(Mesh input in new[]{rock,column,crystal,leaf,beam,canopy,pool,alienCap})
             { if(input==null)continue;ownedMeshes.Remove(input); Destroy(input); }
         }
 
@@ -74,7 +78,7 @@ namespace Alterverse.Visuals
                 case ArenaVariant.Mars:
                     stone=new(.30f,.105f,.055f);edge=new(.62f,.30f,.14f);accent=new(.76f,.48f,.24f);organic=new(.18f,.085f,.055f);glow=0;break;
                 case ArenaVariant.GreenPlanet:
-                    stone=new(.075f,.15f,.085f);edge=new(.19f,.31f,.15f);accent=new(.52f,.72f,.12f);organic=new(.13f,.38f,.22f);break;
+                    stone=new(.16f,.23f,.22f);edge=new(.38f,.45f,.31f);accent=new(.37f,.67f,.73f);organic=new(.18f,.38f,.31f);glow=.08f;break;
                 case ArenaVariant.Noxara:
                     stone=new(.035f,.055f,.15f);edge=new(.11f,.19f,.37f);accent=new(.34f,.40f,.85f);organic=new(.085f,.12f,.28f);polish=.52f;break;
                 case ArenaVariant.Kryon:
@@ -166,15 +170,50 @@ namespace Alterverse.Visuals
 
         void AlienPocket(int seed)
         {
-            Add(rock,0,Vector3.zero,new Vector3(1.2f,.30f,.8f),Quaternion.identity);
-            for(int i=0;i<5;i++)
+            // Three unfamiliar growth forms in each paired outer pocket. No gameplay components.
+            Add(rock,0,Vector3.zero,new Vector3(1.2f,.15f,.8f),Quaternion.identity);
+            for(int plant=0;plant<3;plant++)
             {
-                float a=i*72f+seed*11;
-                Quaternion q=Quaternion.Euler(0,a,0);
-                Add(leaf,3,q*new Vector3(0,.12f,.28f),new Vector3(.7f,1.05f,.85f),q);
-                Vector3 p=q*new Vector3(0,0,.95f);
-                Add(column,1,p,new Vector3(.20f,.65f+(i%2)*.25f,.20f),Quaternion.Euler(0,a,12));
-                Add(crystal,2,p+Vector3.up*.65f,new Vector3(.23f,.26f,.23f),q);
+                Vector3 p=new Vector3((plant-1)*1.05f,.07f,plant==1?.48f:-.42f);
+                float yaw=seed*37+plant*71;
+                switch((plant+seed)%3)
+                {
+                    case 0:
+                        // Corkscrew tendril with a suspended blue seed lantern.
+                        Vector3 tip=p;
+                        for(int step=0;step<9;step++)
+                        {
+                            float a=(yaw+step*43)*Mathf.Deg2Rad,b=(yaw+(step+1)*43)*Mathf.Deg2Rad;
+                            Vector3 from=p+new Vector3(Mathf.Cos(a)*.16f,step*.16f,Mathf.Sin(a)*.16f);
+                            Vector3 to=p+new Vector3(Mathf.Cos(b)*.16f,(step+1)*.16f,Mathf.Sin(b)*.16f);
+                            Vector3 direction=to-from;
+                            Add(column,3,from,new Vector3(.09f,direction.magnitude,.09f),Quaternion.FromToRotation(Vector3.up,direction));
+                            if(step%3==0)Add(leaf,3,from,new Vector3(.38f,.50f,.56f),Quaternion.Euler(-22,yaw+step*43,32));
+                            tip=to;
+                        }
+                        Add(canopy,2,tip,new Vector3(.60f,.72f,.60f),Quaternion.Euler(0,yaw,12));
+                        break;
+                    case 1:
+                        // Split fan rosette: broad curled leaves with pale seed beads.
+                        for(int frond=0;frond<7;frond++)
+                        {
+                            Quaternion q=Quaternion.Euler(-18+(frond%2)*14,yaw+frond*137.5f,(frond%2==0?1:-1)*18);
+                            Add(leaf,3,p+Vector3.up*(frond%3)*.13f,new Vector3(.85f,1.1f,1.05f),q);
+                            if(frond%2==0)Add(canopy,2,p+q*new Vector3(0,.35f,.66f),new Vector3(.17f,.23f,.17f),q);
+                        }
+                        break;
+                    default:
+                        // Cluster of flared spore crowns, with hanging fronds instead of Earth shrubs.
+                        for(int stalk=0;stalk<3;stalk++)
+                        {
+                            Vector3 basePoint=p+new Vector3((stalk-1)*.26f,0,(stalk%2)*.20f);
+                            float height=.68f+stalk*.22f;
+                            Add(column,3,basePoint,new Vector3(.15f,height,.15f),Quaternion.Euler(0,yaw,(stalk-1)*8));
+                            Add(alienCap,stalk%2==0?3:2,basePoint+Vector3.up*height,new Vector3(.70f,.75f,.70f),Quaternion.Euler(0,yaw,4));
+                            Add(leaf,3,basePoint+Vector3.up*.35f,new Vector3(.36f,.65f,.62f),Quaternion.Euler(38,yaw+stalk*115,28));
+                        }
+                        break;
+                }
             }
         }
 
@@ -403,5 +442,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

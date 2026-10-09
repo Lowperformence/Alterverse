@@ -243,10 +243,7 @@ namespace Alterverse.Visuals
                 }
                 else if(ArenaVariantRuntime.IsGreenPlanet)
                 {
-                    float mineral=Mathf.Lerp(.94f,1.05f,Mathf.InverseLerp(.34f,.68f,tone));
-                    // Mossy stone instead of near-black green: more neutral mids make craters read as
-                    // recessed terrain rather than flat black holes.
-                    pixels[i]=new Color(value*.74f,value*.95f*mineral,value*.66f,1);
+                    pixels[i]=Hd137010Surface.ColorAt(wx,wz,tone);
                 }
                 else if(ArenaVariantRuntime.IsNoxara)
                 {
@@ -315,6 +312,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 
