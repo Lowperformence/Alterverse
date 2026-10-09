@@ -46,7 +46,7 @@ namespace Alterverse.Shop
             new(ArenaVariant.Noxara,"NOXARA","DEEP BLUE FRONT",NoxaraPrice,new Color(.16f,.36f,.92f)),
             new(ArenaVariant.Kryon,"LHS 1140 b","FROZEN FRONT",0,new Color(.52f,.90f,1f)),
             new(ArenaVariant.Earth,"EARTH","LIVING OVERGROWN FRONT",EarthPrice,new Color(.24f,.68f,.31f)),
-            new(ArenaVariant.Pyraxis,"PYRAXIS","VOLCANIC LAVA FRONT",PyraxisPrice,new Color(1f,.34f,.04f)),
+            new(ArenaVariant.Pyraxis,"Kepler-10b","VOLCANIC LAVA FRONT",PyraxisPrice,new Color(1f,.34f,.04f)),
             new(ArenaVariant.Neptune,"NEPTUNE","ABYSSAL BLUE FRONT",0,new Color(.05f,.25f,.72f)),
             new(ArenaVariant.Dark00,"TrES-2b","BLACKOUT INDUSTRIAL FRONT",Dark00Price,new Color(.92f,.08f,.08f)),
             new(ArenaVariant.DiamondCore,"PSR J1719-1438 b","SHATTERED CRYSTAL WORLD",PsrPrice,new Color(.62f,.90f,1f)),
