@@ -110,6 +110,7 @@ namespace Alterverse.UI
 
         private bool CanPreview()
         {
+            if(!Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp)return false;
             if (abilities == null || health == null || health.IsDead || Time.timeScale <= 0f) return false;
             Alterverse.Multiplayer.CoopHeroSlot coop = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
             return coop == null || !coop.IsHuman || coop.IsLocalHuman;

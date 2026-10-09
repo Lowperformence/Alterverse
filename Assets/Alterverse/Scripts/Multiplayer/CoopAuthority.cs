@@ -47,6 +47,7 @@ namespace Alterverse.Multiplayer
         {
             if(PreparedPlan==null)return false;
             ActivePlan=PreparedPlan;
+            if(ActivePlan is OnlineMatchPlan)ActivePlan.Difficulty=BotDifficultySettings.OnlineDifficulty;
             PreparedPlan=null;
             LocalIsHost=localIsHost;
 

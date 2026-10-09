@@ -14,9 +14,8 @@ namespace Alterverse.Characters
             if(slot==0)
             {
                 if(!ValidTarget(target,spec.Range)||!SharkSight(target))return false;
-                HeroCombatAudio.Windup(gameObject,1);
                 HeroSkillVfx.TargetWarning(gameObject,target,spec.Windup);
-                StartCoroutine(SharkHook(target,life));
+                HeroAttackDelivery.For(gameObject).Ability(this,slot,target,windup:spec.Windup);
             }
             else if(slot==1)
             {
@@ -53,30 +52,32 @@ namespace Alterverse.Characters
             if(ray.sqrMagnitude<.0001f)return true;
             int count=Physics.RaycastNonAlloc(from,ray.normalized,sightHits,ray.magnitude,
                 GameplayCollision.SightMask,QueryTriggerInteraction.Ignore);
-            if(count==sightHits.Length)return false;
+            RaycastHit[] hits=sightHits;
+            if(count==sightHits.Length)
+            {
+                hits=Physics.RaycastAll(from,ray.normalized,ray.magnitude,
+                    GameplayCollision.SightMask,QueryTriggerInteraction.Ignore);
+                count=hits.Length;
+            }
             for(int i=0;i<count;i++)
             {
-                Health owner=sightHits[i].collider.GetComponentInParent<Health>();
+                Health owner=hits[i].collider.GetComponentInParent<Health>();
                 if(owner!=self&&owner!=target&&owner?.GetComponent<HeroIdentity>()==null&&owner?.GetComponent<LaneMinion>()==null)return false;
             }
             return true;
         }
 
-        private IEnumerator SharkHook(Health target,int castLife)
+        internal bool CanReleasePresentedHit(int slot,Health target)
+            =>identity.Hero!=HeroId.Nerok||slot!=0||SharkSight(target);
+
+        internal void ResolveSharkHookHit(Health target,Vector3 launchOrigin)
         {
-            yield return new WaitForSeconds(kit.Q.Windup);
-            if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
-                !ValidTarget(target,kit.Q.Range)||!SharkSight(target))yield break;
-            float flight=Mathf.Clamp(HeroCombatRules.Distance(transform.position,target.transform.position)/18f,.08f,.35f);
-            HeroCombatAudio.Cast(gameObject,0);
-            HeroSkillVfx.SharkAnchor(gameObject,target.transform.position,flight);
-            Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,0,target.transform.position,0,flight);
-            yield return new WaitForSeconds(flight);
-            if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
-                !ValidTarget(target,kit.Q.Range+.25f)||!SharkSight(target))yield break;
+            // Once released, the anchor follows its selected target. Caster movement/stun
+            // must not unshoot it; real geometry along the flight path still blocks contact.
+            if(!HeroCombatRules.Enemy(gameObject,target)||!SharkSightFrom(launchOrigin,target))return;
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject,target,kit.Q.Power);
-            if(target.Current+target.Shield>=before)yield break;
+            if(target.Current+target.Shield>=before)return;
             HeroSkillVfx.Impact(gameObject,target,0);
             HeroCombatAudio.Impact(gameObject,0,target.transform.position);
             if(target.GetComponent<HeroIdentity>()!=null)
@@ -84,10 +85,10 @@ namespace Alterverse.Characters
                 self.AddShield(kit.Passive.Power,2f,false);
                 HeroSkillVfx.Support(gameObject,self,true,2f);
             }
-            if(target.IsDead||target.GetComponent<HeroIdentity>()==null&&target.GetComponent<LaneMinion>()==null)yield break;
+            if(target.IsDead||target.GetComponent<HeroIdentity>()==null&&target.GetComponent<LaneMinion>()==null)return;
             Vector3 delta=transform.position-target.transform.position;delta.y=0;
             float distance=Mathf.Min(4.2f,Mathf.Max(0,delta.magnitude-1.3f));
-            if(distance<.1f)yield break;
+            if(distance<.1f||!SharkSight(target))return;
             HeroLocomotion body=target.GetComponent<HeroLocomotion>()??target.gameObject.AddComponent<HeroLocomotion>();
             if(body.BeginForcedMove(target.transform.position+delta.normalized*distance,.35f))
             {

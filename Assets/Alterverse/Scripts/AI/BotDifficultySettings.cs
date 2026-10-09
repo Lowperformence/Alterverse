@@ -11,15 +11,33 @@ namespace Alterverse.AI
         private const string LossStreakKey="DF_BotAdaptiveLossStreak";
         private const string AdaptiveReceiptKey="DF_BotAdaptiveLastReceipt";
         public const int StreakThreshold=3;
+        public const BotDifficulty InitialDifficulty=BotDifficulty.Normal;
+        public const BotDifficulty Lowest=BotDifficulty.VeryEasy;
+        public const BotDifficulty Highest=BotDifficulty.Nightmare;
+        public const BotDifficulty OnlineDifficulty=BotDifficulty.Hard;
+
+        public static bool IsValid(BotDifficulty value)=>value>=Lowest&&value<=Highest;
+        public static BotDifficulty Clamp(BotDifficulty value)=>(BotDifficulty)Mathf.Clamp((int)value,(int)Lowest,(int)Highest);
+        public static BotDifficulty Cycle(BotDifficulty value,int direction)
+        {
+            int count=(int)Highest-(int)Lowest+1;
+            int index=(int)Clamp(value)-(int)Lowest+System.Math.Sign(direction);
+            return (BotDifficulty)((index%count+count)%count+(int)Lowest);
+        }
+        public static bool HoldAttackHelpAllowed(BotDifficulty value,bool multiplayer)
+            =>value==BotDifficulty.VeryEasy&&!multiplayer;
+        public static bool ShowHoldAttackHelp=>HoldAttackHelpAllowed(Current,
+            Alterverse.Multiplayer.CoopAuthority.Active||Alterverse.Multiplayer.CoopAuthority.PreparedPlan!=null);
 
         private static bool hasMatchOverride;
         private static BotDifficulty matchOverride;
-        public static BotDifficulty Current=>hasMatchOverride?matchOverride:Selected;
+        public static BotDifficulty Current=>Alterverse.Multiplayer.CoopAuthority.ActivePlan is Alterverse.Multiplayer.OnlineMatchPlan
+            ?OnlineDifficulty:hasMatchOverride?matchOverride:Selected;
         public static BotDifficulty Personal=>Selected;
 
         public static void BeginMatchOverride(BotDifficulty value)
         {
-            matchOverride=value<BotDifficulty.Easy||value>BotDifficulty.Nightmare?BotDifficulty.Normal:value;
+            matchOverride=IsValid(value)?value:BotDifficulty.Normal;
             hasMatchOverride=true;
         }
 
@@ -29,12 +47,14 @@ namespace Alterverse.AI
         {
             get
             {
-                int value=Alterverse.Profile.AccountProfilePrefs.GetInt(Key,(int)BotDifficulty.Normal);
-                return value>=(int)BotDifficulty.Easy&&value<=(int)BotDifficulty.Nightmare?(BotDifficulty)value:BotDifficulty.Normal;
+                // Use Normal only for a new profile or invalid data. Never reset a saved
+                // tier/streak at app startup, match end, or when leaving an online override.
+                int value=Alterverse.Profile.AccountProfilePrefs.GetInt(Key,(int)InitialDifficulty);
+                return IsValid((BotDifficulty)value)?(BotDifficulty)value:InitialDifficulty;
             }
             set
             {
-                if(value<BotDifficulty.Easy||value>BotDifficulty.Nightmare)value=BotDifficulty.Normal;
+                if(!IsValid(value))value=BotDifficulty.Normal;
                 Alterverse.Profile.AccountProfilePrefs.SetInt(Key,(int)value);Alterverse.Profile.AccountProfilePrefs.Save();
             }
         }
@@ -69,7 +89,7 @@ namespace Alterverse.AI
             }
             else if(losses>=StreakThreshold)
             {
-                if(tier>BotDifficulty.Easy){tier--;changed=true;}
+                if(tier>Lowest){tier--;changed=true;}
                 wins=0;losses=0;
             }
 
@@ -83,6 +103,7 @@ namespace Alterverse.AI
 
         public static string Label(BotDifficulty value)=>value switch
         {
+            BotDifficulty.VeryEasy=>"VERY EASY",
             BotDifficulty.Easy=>"EASY",
             BotDifficulty.Hard=>"HARD",
             BotDifficulty.Expert=>"EXPERT",

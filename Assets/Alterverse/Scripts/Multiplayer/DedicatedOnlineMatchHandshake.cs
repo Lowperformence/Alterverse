@@ -389,7 +389,7 @@ namespace Alterverse.Multiplayer
                 OnlineMatchPlan plan = OnlineMatchPlan.BuildDedicated(
                     matchId,
                     ArenaVariantRuntime.Selected,
-                    BotDifficultySettings.Selected,
+                    BotDifficultySettings.OnlineDifficulty,
                     members);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
@@ -453,7 +453,7 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int slotCount);
 
             bool valid = protocol == ProtocolVersion && slotCount == MatchSession.MaxPlayers &&
-                         Enum.IsDefined(typeof(ArenaVariant), arenaRaw) && Enum.IsDefined(typeof(BotDifficulty), difficultyRaw);
+                         Enum.IsDefined(typeof(ArenaVariant), arenaRaw) && difficultyRaw == (int)BotDifficultySettings.OnlineDifficulty;
             var slots = new MatchPlayerSlot[MatchSession.MaxPlayers];
 
             if (valid)

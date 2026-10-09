@@ -95,7 +95,8 @@ namespace Alterverse.Multiplayer
             if (previous?.Session == null || !previous.Session.IsFull || string.IsNullOrEmpty(id) || id == previous.MatchId)
                 throw new InvalidOperationException("Invalid next-round plan.");
             CoopMatchPlan next = previous is OnlineMatchPlan ? new OnlineMatchPlan() : new CoopMatchPlan();
-            next.MatchId = id; next.Arena = previous.Arena; next.Difficulty = previous.Difficulty;
+            next.MatchId = id; next.Arena = previous.Arena;
+            next.Difficulty = previous is OnlineMatchPlan ? BotDifficultySettings.OnlineDifficulty : previous.Difficulty;
             next.Session = new MatchSession(id, previous.Session.Mode);
             for (int i = 0; i < MatchSession.MaxPlayers; i++)
             {

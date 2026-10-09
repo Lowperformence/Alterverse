@@ -17,7 +17,7 @@ namespace Alterverse.Multiplayer
     public sealed class CoopHeroStateSync : MonoBehaviour
     {
         private static CoopHeroStateSync audioRelay;
-        private const string SharkEffectMessage="DF_COOP_SHARK_FX_V1";
+        private const string SharkEffectMessage="DF_COOP_SHARK_FX_V2";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V3";
@@ -177,7 +177,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(kind);
             writer.WriteValueSafe(center.x);writer.WriteValueSafe(center.y);writer.WriteValueSafe(center.z);
             writer.WriteValueSafe(radius);writer.WriteValueSafe(duration);
-            if(kind==6)
+            if(kind==0||kind==6)
             {
                 writer.WriteValueSafe(target!=null?target.GetComponent<CoopHeroSlot>()?.Slot??-1:-1);
                 FixedString128Bytes key=new(target!=null?target.GetComponent<CoopWorldEntityKey>()?.Key??"":"");
@@ -201,7 +201,7 @@ namespace Alterverse.Multiplayer
             GameObject actor=slots[slot].gameObject;
             if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Nerok)return;
             Vector3 center=new Vector3(x,y,z);
-            if(kind==6)
+            if(kind==0||kind==6)
             {
                 reader.ReadValueSafe(out int targetSlot);reader.ReadValueSafe(out FixedString128Bytes fixedKey);
                 Health target=null;
@@ -212,9 +212,9 @@ namespace Alterverse.Multiplayer
                     if(key.Length>0)foreach(Health candidate in Health.Active)
                         if(candidate!=null&&candidate.GetComponent<CoopWorldEntityKey>()?.Key==key){target=candidate;break;}
                 }
-                if(target!=null)Alterverse.Visuals.HeroSkillVfx.SharkPullChain(actor,target,duration);
+                if(kind==0)Alterverse.Visuals.HeroSkillVfx.SharkAnchor(actor,center,duration,target!=null?target.transform:null);
+                else if(target!=null)Alterverse.Visuals.HeroSkillVfx.SharkPullChain(actor,target,duration);
             }
-            else if(kind==0)Alterverse.Visuals.HeroSkillVfx.SharkAnchor(actor,center,duration);
             else if(kind==1)Alterverse.Visuals.HeroSkillVfx.SharkVortex(actor,center,radius,duration);
             else Alterverse.Visuals.HeroSkillVfx.Area(actor,center,radius,duration,kind!=5,false,kind==4?2:3);
         }

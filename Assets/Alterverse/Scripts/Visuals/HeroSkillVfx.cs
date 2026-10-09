@@ -362,12 +362,12 @@ namespace Alterverse.Visuals
             Fx(HeroFxShape.Hex,p,new Color(1,.48f,.16f),.82f,seconds,HeroFxMotion.Hold,actor:actor,follow:target.transform,warning:true);
             Fx(HeroFxShape.Rift,target.transform.position+Vector3.up*.25f,Accent(actor),.6f,seconds,HeroFxMotion.Contract,Face(actor.transform.position,target.transform.position),actor,target.transform,true);
         }
-        public static void SharkAnchor(GameObject actor,Vector3 impact,float flight)
+        public static void SharkAnchor(GameObject actor,Vector3 impact,float flight,Transform target=null)
         {
             Vector3 from=Muzzle(actor),to=impact+Vector3.up*.35f;
             Quaternion facing=Face(from,to);Color cyan=new Color(.04f,.70f,1f,.94f);
             HeroVfxPool.Emit(HeroFxShape.AnchorProjectile,from,to,Vector3.one*.78f,cyan,
-                flight,HeroFxMotion.TravelFixedFrame,facing,actor);
+                flight,HeroFxMotion.TravelFixedFrame,facing,actor,endFollow:target);
             float distance=Vector3.Distance(from,to);
             HeroVfxPool.Emit(HeroFxShape.Streak,to,to,new Vector3(.13f,.13f,distance/1.4f),
                 new Color(.34f,.77f,.95f,.65f),flight+.15f,HeroFxMotion.Hold,facing,actor);

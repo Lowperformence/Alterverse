@@ -1,6 +1,7 @@
 namespace Alterverse.AI
 {
-    public enum BotDifficulty { Easy = 0, Normal = 1, Hard = 2, Expert = 3, Nightmare = 4 }
+    // Preserve existing account/lobby tier ids while adding a tier below Easy.
+    public enum BotDifficulty { VeryEasy = -1, Easy = 0, Normal = 1, Hard = 2, Expert = 3, Nightmare = 4 }
 
     // Difficulty is driven by decision quality. Easy through Expert receive normal damage.
     // Nightmare is the explicit top-end challenge with 4% less incoming damage.
@@ -32,6 +33,9 @@ namespace Alterverse.AI
 
         public static BotDifficultyProfile For(BotDifficulty difficulty)=>difficulty switch
         {
+            // Beginner tier reacts more slowly, predicts less accurately and wastes more
+            // tactical/ability opportunities than Easy without changing combat damage.
+            BotDifficulty.VeryEasy=>new(1.20f,2.60f,3.50f,.12f,-.06f,.16f,.65f,.58f,.12f,.15f,.15f,.18f,.15f,.15f,.18f,1f),
             // Easy remains functional, but reacts late, groups inconsistently and misses tactical windows.
             BotDifficulty.Easy=>new(.75f,1.80f,2.40f,.28f,-.035f,.28f,1.10f,.38f,.25f,.30f,.30f,.34f,.32f,.28f,.32f,1f),
 

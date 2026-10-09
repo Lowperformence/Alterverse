@@ -28,7 +28,13 @@ namespace Alterverse.Characters
         private void Update()
         {
             bool stunned=!HeroCombatStatus.CanAct(gameObject);
-            if(stunned&&!wasStunned)CancelPending();
+            if(stunned&&!wasStunned)
+            {
+                // Interrupt preparation/channels, not projectiles already in flight or an
+                // incoming forced displacement owned by another hero (for example the hook).
+                GetComponent<HeroAttackDelivery>()?.CancelWindups();
+                life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
+            }
             wasStunned=stunned;
         }
         private void CancelPending() { GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
@@ -162,7 +168,7 @@ namespace Alterverse.Characters
                 position=sensor.ObservedTargetPosition;
                 MobaBotBrain brain=GetComponent<MobaBotBrain>();
                 quality=brain==null?.35f:brain.DifficultyLevel switch
-                {BotDifficulty.Easy=>.05f,BotDifficulty.Normal=>.35f,BotDifficulty.Hard=>.65f,_=>.8f};
+                {BotDifficulty.VeryEasy=>0f,BotDifficulty.Easy=>.05f,BotDifficulty.Normal=>.35f,BotDifficulty.Hard=>.65f,_=>.8f};
             }
             else
             {

@@ -204,7 +204,9 @@ namespace Alterverse.UI
         }
         private void BeginPress(int slot)
         {
-            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;pressStarted=Time.unscaledTime;
+            pressedSlot=slot;combatInside=true;
+            inspectedSlot=slot<4&&Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp?slot:-1;
+            pressStarted=Time.unscaledTime;
             if(slot==4)attack?.TryAttack();
         }
         private void EndPress(bool commit)
@@ -327,6 +329,7 @@ namespace Alterverse.UI
                 }
                 return;
             }
+            if(!Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp)return;
             Rect r=new Rect(layout.Width-418,layout.Height-386,394,130);theme.Panel(r);
             theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],theme.Button);
             theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
@@ -347,6 +350,7 @@ namespace Alterverse.UI
 
         private void DrawPreview()
         {
+            if(!Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp)return;
             // The smooth ground overlay owns range presentation; retain the legacy fallback only
             // for scenes without that component, avoiding two superimposed range outlines.
             AbilityRangePreviewOverlay overlay = health != null ? health.GetComponent<AbilityRangePreviewOverlay>() : null;

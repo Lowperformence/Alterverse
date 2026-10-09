@@ -123,7 +123,7 @@ namespace Alterverse.Multiplayer
             OnlineMatchPlan plan;
             try
             {
-                plan = OnlineMatchPlan.Build(matchId, ArenaVariantRuntime.Selected, BotDifficultySettings.Selected, online.Members);
+                plan = OnlineMatchPlan.Build(matchId, ArenaVariantRuntime.Selected, BotDifficultySettings.OnlineDifficulty, online.Members);
             }
             catch (Exception ex)
             {
@@ -182,7 +182,7 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int difficultyRaw);
             reader.ReadValueSafe(out uint hostFingerprint);
 
-            bool valid = protocol == ProtocolVersion;
+            bool valid = protocol == ProtocolVersion && difficultyRaw == (int)BotDifficultySettings.OnlineDifficulty;
             OnlineMatchPlan plan = null;
             if (valid)
             {

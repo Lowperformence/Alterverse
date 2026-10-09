@@ -28,6 +28,22 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile_value(restored,'DF_BattleItem_2'),2)
         self.assertEqual(profile_value(restored,'DF_MasterVolume'),.75)
         self.assertEqual(self.ledger.wallet('b')['profile'],[])
+    def test_adaptive_difficulty_and_streaks_survive_restart(self):
+        for tier in (-1, 0, 1, 2, 3, 4):
+            with self.subTest(tier=tier):
+                account = 'difficulty-' + str(tier)
+                entries = [number('DF_BotAdaptiveTier', tier),
+                           number('DF_BotAdaptiveWinStreak', 0),
+                           number('DF_BotAdaptiveLossStreak', 2),
+                           text('DF_BotAdaptiveLastReceipt', 'last-solo-match')]
+                self.ledger.save_profile(account, entries, 0)
+                restored = Ledger(self.path).wallet(account)
+                for entry in entries:
+                    self.assertEqual(profile_value(restored, entry['key']),
+                                     entry.get('number', entry.get('text')))
+                self.assertEqual(restored['balance'], 0)
+        self.assertEqual(self.ledger.wallet('another-player')['profile'], [])
+
     def test_daily_progression_restores_and_stays_account_scoped(self):
         entries=[number('DF_Shards',12),number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',4),number('DF_DailyQuestWonMaps_v1',31)]
         self.ledger.save_profile('a',entries,0)
@@ -186,4 +202,5 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
+
 

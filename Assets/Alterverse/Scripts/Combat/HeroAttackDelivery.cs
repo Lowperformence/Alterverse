@@ -15,7 +15,8 @@ namespace Alterverse.Combat
     {
         private struct Pending
         {
-            public bool Active,Launched,Basic,Volley;
+            public bool Active,Launched,Basic,Volley,Hook;
+            public Vector3 LaunchOrigin;
             public Health Target;
             public HeroAbilityExecution Execution;
             public int Slot;
@@ -96,7 +97,18 @@ namespace Alterverse.Combat
             hasPending=true;
             if(!volley)HeroCombatAudio.Windup(gameObject,slot+1);
             pending[i]=new Pending{Active=true,Slot=slot,Target=target,Execution=execution,Volley=volley,
+                Hook=identity.Hero==HeroId.Nerok&&slot==0,
                 Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
+        }
+        public void CancelWindups()
+        {
+            if(!hasPending)return;
+            hasPending=false;
+            for(int i=0;i<pending.Length;i++)
+            {
+                if(!pending[i].Launched)pending[i]=default;
+                hasPending|=pending[i].Active;
+            }
         }
         public void Cancel()
         {
@@ -110,7 +122,8 @@ namespace Alterverse.Combat
         {
             if(!hasPending||Time.timeScale<=0)return;
             if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||
-                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)){Cancel();return;}
+                self==null||self.IsDead){Cancel();return;}
+            if(!HeroCombatStatus.CanAct(gameObject))CancelWindups();
             for(int i=0;i<pending.Length;i++)
             {
                 Pending p=pending[i];if(!p.Active)continue;
@@ -123,13 +136,23 @@ namespace Alterverse.Combat
                     // Keep the originally selected target. Leaving the existing range can avoid contact.
                     if(HeroCombatRules.TargetDistance(transform.position,p.Target)>p.Range+p.Grace)
                     {pending[i]=default;continue;}
+                    if(!p.Basic&&!p.Execution.CanReleasePresentedHit(p.Slot,p.Target))
+                    {pending[i]=default;continue;}
                     Vector3 origin=GetComponent<HeroVisualMotion>()?.ReleasePoint??transform.position;
-                    float flight=Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
+                    float flight=p.Hook?Mathf.Clamp(HeroCombatRules.Distance(transform.position,p.Target.transform.position)/18f,.08f,.35f):
+                        Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
+                    p.LaunchOrigin=transform.position;
                     p.Launched=true;p.HitAt=Time.time+flight;
                     if(p.Basic)
                     {
                         HeroCombatAudio.Play(gameObject,0,false,origin);
                         HeroSkillVfx.Basic(gameObject,p.Target.transform.position,flight,p.Target.transform,false);
+                    }
+                    else if(p.Hook)
+                    {
+                        HeroCombatAudio.Cast(gameObject,p.Slot);
+                        HeroSkillVfx.SharkAnchor(gameObject,p.Target.transform.position,flight,p.Target.transform);
+                        Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,0,p.Target.transform.position,0,flight,p.Target);
                     }
                     else
                     {
@@ -141,8 +164,10 @@ namespace Alterverse.Combat
                 if(Time.time<p.HitAt)continue;
                 // Clear before callbacks (a hit can disable/destroy a component or trigger death).
                 pending[i]=default;
-                if(HeroCombatRules.TargetDistance(transform.position,p.Target)>p.Range+p.Grace)continue;
-                if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
+                // Range was validated at release. Presentation tracks the selected target,
+                // so walking out of the caster's range cannot erase an in-flight projectile.
+                if(p.Hook)p.Execution.ResolveSharkHookHit(p.Target,p.LaunchOrigin);
+                else if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
                 else p.Execution.ResolvePresentedHit(p.Slot,p.Target,p.Volley);
             }
             hasPending=false;

@@ -347,8 +347,7 @@ namespace Alterverse.Multiplayer
         public async Task<bool> CycleHostDifficultyAsync(int direction)
         {
             if(session==null||!IsHost||busy)return false;
-            int count=Enum.GetValues(typeof(BotDifficulty)).Length;
-            BotDifficulty next=(BotDifficulty)Mod((int)LobbyDifficulty+Math.Sign(direction),count);
+            BotDifficulty next=BotDifficultySettings.Cycle(LobbyDifficulty,direction);
             return await SetHostSettingAsync(DifficultyKey,((int)next).ToString(CultureInfo.InvariantCulture),
                 "AI DIFFICULTY • "+BotDifficultySettings.Label(next).ToUpperInvariant());
         }
@@ -424,8 +423,7 @@ namespace Alterverse.Multiplayer
         {
             get
             {
-                int max=Enum.GetValues(typeof(BotDifficulty)).Length-1;
-                return (BotDifficulty)Mathf.Clamp(ReadSessionInt(DifficultyKey,(int)BotDifficultySettings.Selected),0,max);
+                return BotDifficultySettings.Clamp((BotDifficulty)ReadSessionInt(DifficultyKey,(int)BotDifficultySettings.Selected));
             }
         }
 

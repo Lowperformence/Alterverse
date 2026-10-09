@@ -116,7 +116,7 @@ namespace Alterverse.Multiplayer
             {
                 MatchId = string.IsNullOrEmpty(matchId) ? Guid.NewGuid().ToString("N") : matchId,
                 Arena = arena,
-                Difficulty = difficulty,
+                Difficulty = BotDifficultySettings.OnlineDifficulty,
                 Session = session,
                 HumanCount = members.Count
             };
@@ -212,7 +212,7 @@ namespace Alterverse.Multiplayer
             {
                 MatchId = string.IsNullOrWhiteSpace(matchId) ? Guid.NewGuid().ToString("N") : matchId,
                 Arena = arena,
-                Difficulty = difficulty,
+                Difficulty = BotDifficultySettings.OnlineDifficulty,
                 Session = session,
                 HumanCount = humanCount
             };
@@ -270,7 +270,7 @@ namespace Alterverse.Multiplayer
             {
                 MatchId = string.IsNullOrWhiteSpace(matchId) ? session.SessionId : matchId,
                 Arena = arena,
-                Difficulty = difficulty,
+                Difficulty = BotDifficultySettings.OnlineDifficulty,
                 Session = session,
                 HumanCount = humans
             };
