@@ -71,9 +71,9 @@ namespace Alterverse.Characters
                     new("Wildsurge",58,58*1.08f,0,5f,.4f)),
                 HeroId.Rook=>new HeroAbilityLoadout(
                     new("Scrap recovery",0,.12f,0),
-                    new("Wreck Swing",7,34,2.9f),
+                    new("Wreck Swing",7,39,2.9f),
                     new("Armor Grip",13,30,0),
-                    new("Wreckstorm",10,28,0,2.8f,.30f),
+                    new("Wreckstorm",10,35,0,2.8f,.30f),
                     new("Orun Overdrive",52,48,0,3.2f,.50f)),
                 HeroId.Traveler=>new HeroAbilityLoadout(
                     new("Between seconds",0,0,0),
