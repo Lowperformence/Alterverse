@@ -11,7 +11,7 @@ namespace Alterverse.UI
         private void Update()
         {
             if(playerBuff!=null||Time.unscaledTime<nextFind)return;nextFind=Time.unscaledTime+.5f;
-            var player=FindAnyObjectByType<Alterverse.Characters.HeroRespawn>();if(player!=null)playerBuff=player.GetComponent<PlanetBuffReceiver>();
+            var player=Alterverse.Characters.LocalHeroContext.Find();if(player!=null)playerBuff=player.GetComponent<PlanetBuffReceiver>();
         }
         private void OnGUI()
         {

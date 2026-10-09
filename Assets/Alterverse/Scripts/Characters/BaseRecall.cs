@@ -63,6 +63,13 @@ namespace Alterverse.Characters
             }
             // A pause may start in the frame between completion and this resume.
             while(Time.timeScale<=0f)yield return null;
+            // Movement can arrive after the final progress sample, including the first
+            // foreground frame after a pause. Check it before completing the teleport.
+            if(health.IsDead||HorizontalDistance(channelStart,transform.position)>movementCancelDistance)
+            {
+                recallRoutine=null;Progress=0f;cosmeticVfx?.SetRecallState(false,0f);
+                DimensionAudio.Play(DimensionSound.RecallCancel,.45f);yield break;
+            }
             cosmeticVfx?.SetRecallState(false,1f);
             DimensionAudio.Play(RecallCosmeticEntitlement.Owned?DimensionSound.RealityShatter:DimensionSound.RecallComplete,RecallCosmeticEntitlement.Owned?.78f:.58f);
             OnboardingSessionGuard.Recall(this);

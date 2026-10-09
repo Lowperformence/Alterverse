@@ -44,7 +44,8 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Checks/Traveler premium hero definition")]
         public static void TravelerDefinition()
         {
-            Check(HeroIdentity.HeroCount==7,"hero count must include The Traveler");
+            Check(HeroIdentity.HeroCount==System.Enum.GetValues(typeof(HeroId)).Length,"hero count must match the complete roster");
+            Check((int)HeroId.Traveler<HeroIdentity.HeroCount&&HeroIdentity.NameFor(HeroId.Traveler)=="THE TRAVELER","Traveler definition missing");
             Check(HeroUnlockCatalog.Price(HeroId.Traveler)==10000,"Traveler price must stay at 10,000 shards");
             Check(HeroUnlockCatalog.Purchasable(HeroId.Traveler),"Traveler must be purchasable");
             HeroAbilityLoadout loadout=HeroAbilityKit.LoadoutFor(HeroId.Traveler);

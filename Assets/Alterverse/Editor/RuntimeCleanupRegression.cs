@@ -19,7 +19,7 @@ namespace Alterverse.EditorChecks
             Require(Application.isPlaying,"Enter Play Mode first.");
             CheckMaterials();
             foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))CheckColorways(hero);
-            Debug.Log("DIMENSIONS FRONT: material fallback and all seven weapon colorway checks passed.");
+            Debug.Log("DIMENSIONS FRONT: material fallback and all "+Enum.GetValues(typeof(HeroId)).Length+" hero weapon colorway checks passed.");
         }
 
         static void CheckMaterials()

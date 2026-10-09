@@ -70,18 +70,18 @@ class LedgerTests(unittest.TestCase):
         }
         for index,(sku,key) in enumerate(expected.items()):
             wallet=self.ledger.wallet('account-a')
-            result=self.ledger.purchase('account-a',sku,f'battle-op-{index}',wallet['profileRevision'])
+            result=self.ledger.purchase('account-a',sku,f'{index:032x}',wallet['profileRevision'])
             profile={entry['key']:entry for entry in result['profile']}
             self.assertEqual(profile[key]['number'],1)
         self.assertEqual(self.ledger.wallet('account-a')['balance'],100)
 
         wallet=self.ledger.wallet('account-a')
-        result=self.ledger.purchase('account-a','team_heal','battle-op-repeat',wallet['profileRevision'])
+        result=self.ledger.purchase('account-a','team_heal','f'*32,wallet['profileRevision'])
         profile={entry['key']:entry for entry in result['profile']}
         self.assertEqual(profile['DF_BattleItem_4']['number'],2)
         self.assertEqual(result['balance'],0)
 
-        retried=self.ledger.purchase('account-a','team_heal','battle-op-repeat',result['profileRevision'])
+        retried=self.ledger.purchase('account-a','team_heal','f'*32,result['profileRevision'])
         profile={entry['key']:entry for entry in retried['profile']}
         self.assertEqual(profile['DF_BattleItem_4']['number'],2)
         self.assertEqual(retried['balance'],0)

@@ -12,7 +12,7 @@ namespace Alterverse.Visuals
         private Material crestMaterial;
         private void Start()
         {
-            if (!FounderEntitlement.Owned || GetComponent<PlayerHeroAbilities>() == null) { enabled = false; return; }
+            if (!FounderEntitlement.Owned || !LocalHeroContext.IsLocal(gameObject)) { enabled = false; return; }
             health = GetComponent<Health>(); if (health == null) { enabled = false; return; }
             Transform root = transform.Find("DF_VisualRoot"); if (root == null) return;
             // Attached cosmetic insignia, never a floating primitive above the head.

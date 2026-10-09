@@ -35,7 +35,7 @@ namespace Alterverse.Audio
         void Planet(Vector3 position)=>Event();
         void End(int winner)
         {
-            var player=FindAnyObjectByType<Alterverse.Characters.HeroRespawn>();var team=player!=null?player.GetComponent<TeamMember>():null;
+            var team=Alterverse.Characters.LocalHeroContext.Member;
             result=team!=null&&winner==team.Team?4:5;
         }
         void Update()

@@ -58,15 +58,15 @@ BuildPrototype();
 }
 finally{MatchClock.Set(PauseReason.Transition,false);}
 }
-public void BuildPrototype()
+public bool BuildPrototype()
 {
-if(GameObject.Find("AV_Player")!=null||GameObject.Find("DF_MatchWorld")!=null)return;
+if(GameObject.Find("AV_Player")!=null||GameObject.Find("DF_MatchWorld")!=null)return true;
 
 bool coop=CoopAuthority.Active&&CoopAuthority.ActivePlan?.Session!=null;
 CoopMatchPlan coopPlan=coop?CoopAuthority.ActivePlan:null;
 int localSlot=coop?CoopRosterBuilder.FindLocalHumanSlot(coopPlan):-1;
 bool serverOnly=coop&&localSlot<0&&IsServerOnlyMatch();
-if(coop&&localSlot<0&&!serverOnly){Debug.LogError("DIMENSIONS FRONT CO-OP: local human slot missing.");return;}
+if(coop&&localSlot<0&&!serverOnly){Debug.LogError("DIMENSIONS FRONT CO-OP: local human slot missing.");RecoverFailedBuild();return false;}
 
 MatchPlayerSlot localSlotData=coop&&!serverOnly?coopPlan.Session.Slots[localSlot]:null;
 int localTeam=localSlotData?.Team??0;
@@ -123,7 +123,7 @@ if(!rosterBuilt)
 Debug.LogError(serverOnly
 ?"DIMENSIONS FRONT SERVER: authoritative roster build failed."
 :"DIMENSIONS FRONT CO-OP: deterministic roster build failed.");
-return;
+return false;
 }
 new GameObject("DF_CoopHeroStateSync").AddComponent<CoopHeroStateSync>();
 new GameObject("DF_CoopMatchStateSync").AddComponent<CoopMatchStateSync>();
@@ -158,6 +158,12 @@ pendingArenaCamera=UnityEngine.Camera.main;
 pendingArenaWorld=world;
 revealArenaFrame=Time.frameCount+1;
 }
+return true;
+}
+catch(System.Exception error)
+{
+Debug.LogException(error);
+return false;
 }
 finally
 {
@@ -165,8 +171,20 @@ finally
 // leak actors, HUDs or scenery into a later attempt. Destroy is deferred: hide now.
 foreach(GameObject created in gameObject.scene.GetRootGameObjects())
 if(created!=world&&!existing.Contains(created))created.transform.SetParent(world.transform,true);
-if(!completed){world.SetActive(false);Destroy(world);}
+if(!completed)
+{
+world.SetActive(false);Destroy(world);
+pendingArenaCamera=null;pendingArenaWorld=null;
+if(!serverOnly)RecoverFailedBuild();
 }
+}
+}
+
+private static void RecoverFailedBuild()
+{
+// Use the same session/network cleanup as a normal exit. Offline recovery finishes
+// synchronously; network recovery leaves through its owner before showing the menu.
+_ = MatchExit.ReturnToMenuAsync();
 }
 
 private static bool IsServerOnlyMatch()

@@ -54,9 +54,12 @@ namespace Alterverse.Multiplayer
             GameObject menu = GameObject.Find("DF_MainMenu");
             if (menu != null) menu.SetActive(false);
 
-            if (restarting) bootstrap.StartCoroutine(bootstrap.RestartPrototype());
-            else bootstrap.BuildPrototype();
-            return true;
+            if (restarting)
+            {
+                bootstrap.StartCoroutine(bootstrap.RestartPrototype());
+                return true; // The coroutine owns recovery if the next-round build fails.
+            }
+            return bootstrap.BuildPrototype();
         }
     }
 }

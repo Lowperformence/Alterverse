@@ -86,7 +86,7 @@ namespace Alterverse.Visuals
             SkinPreviewSelection preview=identity.GetComponent<SkinPreviewSelection>();
             int variant=preview!=null
                 ?preview.WeaponSkinVariant
-                :identity.GetComponent<HeroRespawn>()!=null
+                :LocalHeroContext.IsLocal(identity.gameObject)
                     ?WeaponSkinInventory.EquippedVariant(identity.Hero)
                     :-1;
             if(preview!=null&&preview.WeaponOverdrive&&variant<0)variant=0;

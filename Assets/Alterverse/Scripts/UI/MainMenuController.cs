@@ -1529,9 +1529,11 @@ namespace Alterverse.UI
             bool restarting=GameObject.Find("DF_MatchWorld")!=null;
             Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             launching=false;visible=false;MatchClock.Set(PauseReason.Result,false);MatchClock.Set(PauseReason.Menu,false);
+            // Hide before building: a failed build can synchronously restore this menu.
+            // Hiding afterwards would overwrite that recovery and leave a black screen.
+            gameObject.SetActive(false);
             if(restarting)bootstrap.StartCoroutine(bootstrap.RestartPrototype());
             else bootstrap.BuildPrototype();
-            gameObject.SetActive(false);
         }
     }
 }

@@ -182,7 +182,7 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
         bool own=e.Member==local;
         if(own)boardTheme.Frame(r,true);
         FrontEndTheme.Fill(new Rect(x+1,rowY+9,2,20),tint);
-        bool founder=e.Member.GetComponent<HeroRespawn>()!=null&&FounderEntitlement.Owned;
+        bool founder=LocalHeroContext.IsLocal(e.Member.gameObject)&&FounderEntitlement.Owned;
         boardTheme.FitLabel(new Rect(x+10,rowY,nameWidth-14,38),(founder?"◆ ":"")+e.Name,boardTheme.Small);
         string[] values={e.Kills.ToString(),e.Deaths.ToString(),e.Assists.ToString(),$"{Performance(e):0}"};
         for(int column=0;column<4;column++)
