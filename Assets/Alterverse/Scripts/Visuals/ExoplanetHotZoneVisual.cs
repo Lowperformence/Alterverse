@@ -107,12 +107,12 @@ namespace Alterverse.Visuals
 
         Transform Pivot(string label,Transform parent,Vector3 position)
         {var go=new GameObject(label);go.transform.SetParent(parent,false);go.transform.localPosition=position;return go.transform;}
-        void Part(string label,Transform parent,Mesh mesh,Material material,Vector3 position,Vector3 scale,Quaternion rotation=default)
+        void Part(string label,Transform parent,Mesh mesh,Material material,Vector3 position,Vector3 scale,Quaternion? rotation=null)
         {
-            if(rotation==default)rotation=Quaternion.identity;
             var key=(parent,material);
             if(!batches.TryGetValue(key,out var batch)){batch=new();batches.Add(key,batch);}
-            batch.Add(new CombineInstance{mesh=mesh,transform=Matrix4x4.TRS(position,rotation,scale)});
+            // An omitted rotation is identity, not the invalid all-zero default Quaternion.
+            batch.Add(new CombineInstance{mesh=mesh,transform=Matrix4x4.TRS(position,rotation??Quaternion.identity,scale)});
         }
         void Flush()
         {

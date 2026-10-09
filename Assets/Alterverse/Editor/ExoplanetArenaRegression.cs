@@ -59,10 +59,10 @@ namespace Alterverse.EditorChecks
                 try
                 {
                     host.AddComponent<Health>().Configure(680,true);
-                    var visual=host.AddComponent<ExoplanetHotZoneVisual>();visual.Build(variant,team);
+                    var visual=host.AddComponent<ExoplanetHotZoneVisual>();BuildWithoutErrors(visual,variant,team);
                     int count=host.GetComponentsInChildren<MeshRenderer>().Length;
                     Require(count>0&&count<=24&&visual.Muzzle!=null,"Monster body/socket missing or over batch budget");
-                    visual.Build(variant,team);
+                    BuildWithoutErrors(visual,variant,team);
                     Require(host.GetComponentsInChildren<MeshRenderer>().Length==count,"Duplicate visual build");
                     Require(host.GetComponentsInChildren<Collider>().Length==0&&host.GetComponentsInChildren<Light>().Length==0,"Visual changed gameplay collision or lighting");
                     int vertices=0;
@@ -122,6 +122,18 @@ namespace Alterverse.EditorChecks
                 Debug.Log("DIMENSIONS FRONT: both habitat guards preserve health, hitbox, articulated motion and their four detail batches.");
             }
             finally{ArenaVariantRuntime.BeginCoopMatch(previous);}
+        }
+        static void BuildWithoutErrors(ExoplanetHotZoneVisual visual,ArenaVariant variant,int team)
+        {
+            string error=null;
+            Application.LogCallback listener=(message,stack,type)=>
+            {
+                if(type==LogType.Error||type==LogType.Exception||type==LogType.Assert)error??=message;
+            };
+            Application.logMessageReceived+=listener;
+            try{visual.Build(variant,team);}
+            finally{Application.logMessageReceived-=listener;}
+            Require(error==null,"Monster construction emitted a Unity error: "+error);
         }
         static void Require(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
     }
