@@ -66,6 +66,17 @@ namespace Alterverse.EditorChecks
             }
             Require(checkedHeroes > 0, "No active grounded heroes found");
         }
+        [MenuItem("DIMENSIONS FRONT/Checks/Movement record all heroes for 15 seconds")]
+        public static void RecordAllHeroes()
+        {
+            if (!EditorApplication.isPlaying)
+                throw new InvalidOperationException("Start Play Mode, open the Game view, then record while moving and stopping your hero.");
+            if (UnityEngine.Object.FindFirstObjectByType<HeroMovementRecorder>() != null)
+                throw new InvalidOperationException("A movement recording is already running.");
+            var host = new GameObject("DF_EditorMovementRecorder");
+            host.hideFlags = HideFlags.DontSave;
+            host.AddComponent<HeroMovementRecorder>();
+        }
         private static void Require(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
     }
 }

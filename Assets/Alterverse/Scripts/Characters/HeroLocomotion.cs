@@ -182,16 +182,25 @@ namespace Alterverse.Characters
             }
 
             int count=Physics.CapsuleCastNonAlloc(castTop,castBottom,castRadius,direction,hits,distance+.025f,GameplayCollision.MovementMask,QueryTriggerInteraction.Ignore);
-            if(count==hits.Length){allowed=0;return;}
+            RaycastHit[] sweepHits=hits;
+            if(count==hits.Length)
+            {
+                // A saturated non-allocating query can omit the actual nearest blocker. Obtain
+                // the complete result only in this rare case, then apply the same filters;
+                // ignored unit/self/ground hits must not turn a crowded area into a movement wall.
+                sweepHits=Physics.CapsuleCastAll(castTop,castBottom,castRadius,direction,distance+.025f,GameplayCollision.MovementMask,QueryTriggerInteraction.Ignore);
+                count=sweepHits.Length;
+            }
             for(int i=0;i<count;i++)
             {
-                Collider other=hits[i].collider;
-                if(other==null||other.transform.IsChildOf(transform)||hits[i].normal.y>.65f)continue;
+                RaycastHit hit=sweepHits[i];
+                Collider other=hit.collider;
+                if(other==null||other.transform.IsChildOf(transform)||hit.normal.y>.65f)continue;
                 // Crowd spacing is owned by bot separation. Static structures remain solid.
                 if(other.GetComponentInParent<HeroIdentity>()!=null||other.GetComponentInParent<LaneMinion>()!=null||other.GetComponentInParent<TrenchSoldier>()!=null)continue;
-                if(Vector3.Dot(direction,hits[i].normal)>=-.001f)continue;
-                float travel=Mathf.Max(0,hits[i].distance-.025f);
-                if(travel<allowed){allowed=travel;normal=hits[i].normal;blocker=other;}
+                if(Vector3.Dot(direction,hit.normal)>=-.001f)continue;
+                float travel=Mathf.Max(0,hit.distance-.025f);
+                if(travel<allowed){allowed=travel;normal=hit.normal;blocker=other;}
             }
         }
 
@@ -271,4 +280,5 @@ namespace Alterverse.Characters
         }
     }
 }
+
 
