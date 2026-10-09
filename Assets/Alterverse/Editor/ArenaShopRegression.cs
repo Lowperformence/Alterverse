@@ -33,7 +33,7 @@ namespace Alterverse.EditorChecks
                 shuffle=new(ShuffleKey),lastShuffle=new(LastShuffleKey);
             try
             {
-                PlayerPrefs.SetInt(BalanceKey,1000);
+                PlayerPrefs.SetInt(BalanceKey,900);
                 PlayerPrefs.DeleteKey(NoxaraKey);
                 PlayerPrefs.DeleteKey(SelectedKey);
                 PlayerPrefs.DeleteKey(ShuffleKey);
@@ -42,10 +42,10 @@ namespace Alterverse.EditorChecks
 
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Moon),"Moon must always be free.");
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Mars),"Mars must always be free.");
-                Assert(ArenaShopCatalog.For(ArenaVariant.GreenPlanet).Price==800,"MOOR12C must cost 800 shards.");
+                Assert(ArenaShopCatalog.For(ArenaVariant.GreenPlanet).Price==900,"MOOR12C must cost 900 shards.");
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Kryon),"Kryon must always be free.");
                 Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara must start locked.");
-                Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==1000,"Noxara must cost exactly 1000 shards.");
+                Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==900,"Noxara must cost exactly 900 shards.");
 
                 Assert(ArenaVariantRuntime.Select(ArenaVariant.Mars)&&ArenaVariantRuntime.Selected==ArenaVariant.Mars,
                     "Free Mars must be selectable.");
@@ -56,8 +56,8 @@ namespace Alterverse.EditorChecks
                 Assert(!ArenaVariantRuntime.Select(ArenaVariant.Noxara),"Locked Noxara must not be selectable.");
 
                 Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.Purchased,
-                    "Noxara must unlock with 1000 shards.");
-                Assert(PlayerWallet.Balance==0,"Noxara must debit exactly 1000 shards.");
+                    "Noxara must unlock with 900 shards.");
+                Assert(PlayerWallet.Balance==0,"Noxara must debit exactly 900 shards.");
                 Assert(ArenaUnlockInventory.Owned(ArenaVariant.Noxara),"Noxara ownership must persist.");
                 Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.AlreadyOwned,
                     "Owned Noxara must not be purchasable twice.");
@@ -69,12 +69,12 @@ namespace Alterverse.EditorChecks
                 Assert(ArenaVariantRuntime.ShuffleEnabled,"Arena shuffle must persist when enabled.");
 
                 PlayerPrefs.DeleteKey(NoxaraKey);
-                PlayerPrefs.SetInt(BalanceKey,999);
+                PlayerPrefs.SetInt(BalanceKey,899);
                 PlayerPrefs.SetInt(SelectedKey,(int)ArenaVariant.Noxara);
                 PlayerPrefs.Save();
                 Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Noxara)==ArenaPurchaseResult.InsufficientShards,
-                    "Noxara must reject a balance below 1000.");
-                Assert(PlayerWallet.Balance==999&&!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),
+                    "Noxara must reject a balance below 900.");
+                Assert(PlayerWallet.Balance==899&&!ArenaUnlockInventory.Owned(ArenaVariant.Noxara),
                     "Failed Noxara purchase must change neither balance nor ownership.");
                 Assert(ArenaVariantRuntime.Selected==ArenaVariant.Moon,
                     "A stale locked Noxara selection must fall back to Moon.");

@@ -30,12 +30,12 @@ namespace Alterverse.Shop
     /// <summary>Premium arenas are persistent shard unlocks; zero-price arenas remain immediately available.</summary>
     public static class ArenaShopCatalog
     {
-        public const int MoorPrice=800;
-        public const int PyraxisPrice=800;
-        public const int PsrPrice=1200;
-        public const int NoxaraPrice=1000;
-        public const int EarthPrice=500;
-        public const int Dark00Price=1800;
+        public const int MoorPrice=900;
+        public const int PyraxisPrice=900;
+        public const int PsrPrice=900;
+        public const int NoxaraPrice=900;
+        public const int EarthPrice=900;
+        public const int Dark00Price=900;
         public static readonly ArenaShopItem[] Items=
         {
             new(ArenaVariant.Moon,"MOON","ORIGINAL BATTLEFIELD",0,new Color(.48f,.58f,.72f)),

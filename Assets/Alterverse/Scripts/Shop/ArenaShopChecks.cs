@@ -39,16 +39,16 @@ namespace Alterverse.Shop
             IntPrefSnapshot selected=new("DF_SelectedArenaVariant"),shuffle=new("DF_ArenaShuffle");
             try
             {
-                CheckPaidArena(ArenaVariant.GreenPlanet,ArenaUnlockInventory.MoorOwnedKey,800);
-                CheckPaidArena(ArenaVariant.Pyraxis,ArenaUnlockInventory.PyraxisOwnedKey,800);
-                CheckPaidArena(ArenaVariant.DiamondCore,ArenaUnlockInventory.PsrOwnedKey,1200);
+                CheckPaidArena(ArenaVariant.GreenPlanet,ArenaUnlockInventory.MoorOwnedKey,900);
+                CheckPaidArena(ArenaVariant.Pyraxis,ArenaUnlockInventory.PyraxisOwnedKey,900);
+                CheckPaidArena(ArenaVariant.DiamondCore,ArenaUnlockInventory.PsrOwnedKey,900);
                 CheckEarthPriceAndLock();
                 CheckEarthInsufficientShards();
                 CheckEarthExactPurchaseAndDuplicateProtection();
                 CheckDarkPriceAndLock();
                 CheckDarkInsufficientShards();
                 CheckDarkExactPurchaseAndDuplicateProtection();
-                Debug.Log("DIMENSIONS FRONT: MOOR12C 800, PYRAXIS 800, PSR 1200, Earth 500 and Dark 00 1800 purchase checks passed.");
+                Debug.Log("DIMENSIONS FRONT: MOOR12C 900, PYRAXIS 900, PSR 900, Earth 900 and Dark 00 900 purchase checks passed.");
             }
             finally
             {
@@ -83,31 +83,31 @@ namespace Alterverse.Shop
 
         private static void CheckEarthPriceAndLock()
         {
-            ResetArena(ArenaUnlockInventory.EarthOwnedKey,500);
+            ResetArena(ArenaUnlockInventory.EarthOwnedKey,900);
             ArenaShopItem earth=ArenaShopCatalog.For(ArenaVariant.Earth);
-            Assert(ArenaShopCatalog.EarthPrice==500,"EarthPrice must be exactly 500.");
-            Assert(earth.Price==500,"Earth shop card must display the 500-shard price.");
-            Assert(ArenaUnlockInventory.UnlockRequirement(ArenaVariant.Earth)=="500 SHARDS","Earth requirement text must show 500 SHARDS.");
+            Assert(ArenaShopCatalog.EarthPrice==900,"EarthPrice must be exactly 900.");
+            Assert(earth.Price==900,"Earth shop card must display the 900-shard price.");
+            Assert(ArenaUnlockInventory.UnlockRequirement(ArenaVariant.Earth)=="900 SHARDS","Earth requirement text must show 900 SHARDS.");
             Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Earth),"Earth must start locked without its entitlement.");
             Assert(!ArenaVariantRuntime.CanSelect(ArenaVariant.Earth),"Locked Earth must not be selectable for a match.");
-            Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==ArenaShopCatalog.NoxaraPrice&&ArenaShopCatalog.NoxaraPrice==1000,"Existing Noxara price must remain unchanged.");
+            Assert(ArenaShopCatalog.For(ArenaVariant.Noxara).Price==ArenaShopCatalog.NoxaraPrice&&ArenaShopCatalog.NoxaraPrice==900,"Noxara must cost exactly 900 shards.");
         }
 
         private static void CheckEarthInsufficientShards()
         {
-            ResetArena(ArenaUnlockInventory.EarthOwnedKey,499);
+            ResetArena(ArenaUnlockInventory.EarthOwnedKey,899);
             ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(ArenaVariant.Earth);
-            Assert(result==ArenaPurchaseResult.InsufficientShards,"499 shards must not unlock Earth.");
-            Assert(PlayerWallet.Balance==499,"Failed Earth purchase must not deduct shards.");
+            Assert(result==ArenaPurchaseResult.InsufficientShards,"899 shards must not unlock Earth.");
+            Assert(PlayerWallet.Balance==899,"Failed Earth purchase must not deduct shards.");
             Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Earth),"Failed Earth purchase must not grant ownership.");
         }
 
         private static void CheckEarthExactPurchaseAndDuplicateProtection()
         {
-            ResetArena(ArenaUnlockInventory.EarthOwnedKey,500);
+            ResetArena(ArenaUnlockInventory.EarthOwnedKey,900);
             ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(ArenaVariant.Earth);
-            Assert(result==ArenaPurchaseResult.Purchased,"500 shards must unlock Earth.");
-            Assert(PlayerWallet.Balance==0,"Earth purchase must deduct exactly 500 shards.");
+            Assert(result==ArenaPurchaseResult.Purchased,"900 shards must unlock Earth.");
+            Assert(PlayerWallet.Balance==0,"Earth purchase must deduct exactly 900 shards.");
             Assert(ArenaUnlockInventory.Owned(ArenaVariant.Earth),"Successful purchase must persist Earth ownership.");
             Assert(ArenaVariantRuntime.CanSelect(ArenaVariant.Earth),"Purchased Earth must become selectable immediately.");
 
@@ -120,28 +120,28 @@ namespace Alterverse.Shop
         {
             ResetArena(ArenaUnlockInventory.Dark00OwnedKey,ArenaShopCatalog.Dark00Price);
             ArenaShopItem dark=ArenaShopCatalog.For(ArenaVariant.Dark00);
-            Assert(ArenaShopCatalog.Dark00Price==1800,"Dark00Price must be exactly 1800.");
-            Assert(dark.Price==1800,"Dark 00 shop card must display the 1800-shard price.");
-            Assert(ArenaUnlockInventory.UnlockRequirement(ArenaVariant.Dark00)=="1800 SHARDS","Dark 00 requirement text must show 1800 SHARDS.");
+            Assert(ArenaShopCatalog.Dark00Price==900,"Dark00Price must be exactly 900.");
+            Assert(dark.Price==900,"Dark 00 shop card must display the 900-shard price.");
+            Assert(ArenaUnlockInventory.UnlockRequirement(ArenaVariant.Dark00)=="900 SHARDS","Dark 00 requirement text must show 900 SHARDS.");
             Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Dark00),"Dark 00 must start locked without its entitlement.");
             Assert(!ArenaVariantRuntime.CanSelect(ArenaVariant.Dark00),"Locked Dark 00 must not be selectable for a match.");
         }
 
         private static void CheckDarkInsufficientShards()
         {
-            ResetArena(ArenaUnlockInventory.Dark00OwnedKey,1799);
+            ResetArena(ArenaUnlockInventory.Dark00OwnedKey,899);
             ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(ArenaVariant.Dark00);
-            Assert(result==ArenaPurchaseResult.InsufficientShards,"1799 shards must not unlock Dark 00.");
-            Assert(PlayerWallet.Balance==1799,"Failed Dark 00 purchase must not deduct shards.");
+            Assert(result==ArenaPurchaseResult.InsufficientShards,"899 shards must not unlock Dark 00.");
+            Assert(PlayerWallet.Balance==899,"Failed Dark 00 purchase must not deduct shards.");
             Assert(!ArenaUnlockInventory.Owned(ArenaVariant.Dark00),"Failed Dark 00 purchase must not grant ownership.");
         }
 
         private static void CheckDarkExactPurchaseAndDuplicateProtection()
         {
-            ResetArena(ArenaUnlockInventory.Dark00OwnedKey,1800);
+            ResetArena(ArenaUnlockInventory.Dark00OwnedKey,900);
             ArenaPurchaseResult result=ArenaUnlockInventory.Purchase(ArenaVariant.Dark00);
-            Assert(result==ArenaPurchaseResult.Purchased,"1800 shards must unlock Dark 00.");
-            Assert(PlayerWallet.Balance==0,"Dark 00 purchase must deduct exactly 1800 shards.");
+            Assert(result==ArenaPurchaseResult.Purchased,"900 shards must unlock Dark 00.");
+            Assert(PlayerWallet.Balance==0,"Dark 00 purchase must deduct exactly 900 shards.");
             Assert(ArenaUnlockInventory.Owned(ArenaVariant.Dark00),"Successful purchase must persist Dark 00 ownership.");
             Assert(ArenaVariantRuntime.CanSelect(ArenaVariant.Dark00),"Purchased Dark 00 must become selectable immediately.");
 
