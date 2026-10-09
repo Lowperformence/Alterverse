@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Free KayKit source clips sampled into model-independent anatomical frames.</summary>
+    /// <summary>Free CC0 source clips sampled into model-independent anatomical frames.</summary>
     public static class LocomotionAnimationLibrary
     {
         [Serializable]
@@ -16,7 +16,8 @@ namespace Alterverse.Visuals
             public int frames;
             public float fps;
             public float stride;
-            public float[] rotations, positions, floor, heights;
+            public float sourceLegLength, pelvisMean;
+            public float[] rotations, positions, floor, heights, pelvisHeights;
             public int[] contacts;
             public Quaternion Rotation(int bone, float phase)
             {
@@ -45,6 +46,12 @@ namespace Alterverse.Visuals
                 float frame = Mathf.Repeat(phase, 1f) * (frames - 1);
                 int first = Mathf.FloorToInt(frame), next = Mathf.Min(first + 1, frames - 1);
                 return Mathf.Lerp(heights[first * 2 + side], heights[next * 2 + side], frame - first);
+            }
+            public float PelvisHeight(float phase)
+            {
+                float frame = Mathf.Repeat(phase, 1f) * (frames - 1);
+                int first = Mathf.FloorToInt(frame), next = Mathf.Min(first + 1, frames - 1);
+                return Mathf.Lerp(pelvisHeights[first], pelvisHeights[next], frame - first);
             }
         }
         [Serializable]
@@ -78,14 +85,14 @@ namespace Alterverse.Visuals
             if (attempted) return;
             attempted = true;
             TextAsset asset = Resources.Load<TextAsset>("LocomotionAnimation/Library");
-            if (asset == null) { Debug.LogError("DF: KayKit locomotion library is missing; reimport LocomotionAnimation/Library.bytes."); return; }
+            if (asset == null) { Debug.LogError("DF: locomotion library v2 is missing; reimport LocomotionAnimation/Library.bytes."); return; }
             try
             {
                 Bank loaded;
                 using (var input = new MemoryStream(asset.bytes))
                 using (var zip = new GZipStream(input, CompressionMode.Decompress))
                 using (var reader = new StreamReader(zip)) loaded = JsonUtility.FromJson<Bank>(reader.ReadToEnd());
-                if (loaded == null || loaded.version != 1 || loaded.bones == null || loaded.bones.Length != 6 ||
+                if (loaded == null || loaded.version != 2 || loaded.bones == null || loaded.bones.Length != 6 ||
                     loaded.restPositions == null || loaded.restPositions.Length != 18 || loaded.clips == null ||
                     !Finite(loaded.sourceLegLength) || loaded.sourceLegLength < .05f)
                     throw new InvalidDataException("Invalid locomotion schema");
@@ -95,10 +102,12 @@ namespace Alterverse.Visuals
                 {
                     if (clip == null || string.IsNullOrEmpty(clip.name) || clip.frames < 3 || !Finite(clip.fps) || clip.fps <= 0f ||
                         !Finite(clip.stride) || clip.stride < .3f || clip.stride > 5f ||
+                        !Finite(clip.sourceLegLength) || clip.sourceLegLength < .05f || !Finite(clip.pelvisMean) ||
                         clip.rotations == null || clip.rotations.Length != clip.frames * 24 ||
                         clip.positions == null || clip.positions.Length != clip.frames * 18 ||
                         clip.contacts == null || clip.contacts.Length != clip.frames * 2 || clip.floor == null || clip.floor.Length != 2 ||
-                        clip.heights == null || clip.heights.Length != clip.frames * 2)
+                        clip.heights == null || clip.heights.Length != clip.frames * 2 ||
+                        clip.pelvisHeights == null || clip.pelvisHeights.Length != clip.frames)
                         throw new InvalidDataException("Invalid locomotion clip");
                     for (int at = 0; at < clip.rotations.Length; at += 4)
                     {
@@ -109,6 +118,8 @@ namespace Alterverse.Visuals
                     foreach (float value in clip.positions) if (!Finite(value)) throw new InvalidDataException("Non-finite trajectory");
                     foreach (float value in clip.floor) if (!Finite(value)) throw new InvalidDataException("Non-finite foot floor");
                     foreach (float value in clip.heights) if (!Finite(value) || value < -.0001f) throw new InvalidDataException("Invalid foot lift");
+                    foreach (float value in clip.pelvisHeights) if (!Finite(value) || Mathf.Abs(value) > clip.sourceLegLength)
+                        throw new InvalidDataException("Invalid pelvis motion");
                     foreach (int value in clip.contacts) if (value != 0 && value != 1) throw new InvalidDataException("Invalid foot contact");
                     clips.Add(clip.name, clip);
                 }
@@ -116,7 +127,7 @@ namespace Alterverse.Visuals
                     if (!clips.ContainsKey(required)) throw new InvalidDataException("Missing directional locomotion clip: " + required);
                 bank = loaded;
             }
-            catch (Exception error) { bank = null; clips.Clear(); Debug.LogError("DF: KayKit locomotion failed; retaining existing pose fallback: " + error.Message); }
+            catch (Exception error) { bank = null; clips.Clear(); Debug.LogError("DF: locomotion library v2 failed; retaining existing pose fallback: " + error.Message); }
         }
     }
 }

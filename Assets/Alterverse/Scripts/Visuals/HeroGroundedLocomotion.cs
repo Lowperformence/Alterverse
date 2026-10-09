@@ -14,10 +14,12 @@ namespace Alterverse.Visuals
             public Transform hip, knee, foot;
             public Vector3 rest, plant, swingStart, target, normal = Vector3.up;
             public Quaternion restRotation;
-            public Quaternion rotation;
+            public Quaternion rotation, rotationBefore;
             public Vector3[] solePoints;
             public float length, sole, cycle, soleAdjustment;
-            public bool contact, initialized, authoredSample;
+            public bool contact, initialized, authoredSample, hasBendDirection, hasFootRotation;
+            public int footRotationFrame = -1;
+            public Vector3 bendDirection;
             public Vector3 authoredKneeHint, authoredTarget;
             public Quaternion authoredRotation;
             public float authoredLift;
@@ -31,7 +33,12 @@ namespace Alterverse.Visuals
         private Vector3 pelvisBefore, pelvisAfter;
         private bool correctedPelvis;
         private int appliedFrame = -1;
+        private int preparedPelvisFrame = -1;
         private float floorOffset;
+        private float displayedDrop;
+        private bool displayedDropReady;
+        private float terrainPelvisOffset;
+        private bool terrainOffsetReady;
         private bool reportedAuthoredContacts;
         public bool Ready => left != null && right != null;
         public float LegLength => Ready ? (left.length + right.length) * .5f : 1f;
@@ -77,7 +84,7 @@ namespace Alterverse.Visuals
             }
             if (!Ready) { Debug.LogError("DF: grounded locomotion cannot find both visible leg chains on " + name, this); return; }
             floorOffset = Mathf.Min(left.foot.position.y - left.sole, right.foot.position.y - right.sole) - transform.position.y;
-            Debug.Log("DF: grounded locomotion v1 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
+            Debug.Log("DF: grounded locomotion v2 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
         }
         private Leg Capture(Transform hip, Transform knee, Transform foot)
         {
@@ -87,6 +94,7 @@ namespace Alterverse.Visuals
             return new Leg { hip = hip, knee = knee, foot = foot, length = length,
                 rest = transform.InverseTransformPoint(foot.position),
                 restRotation = Quaternion.Inverse(transform.rotation) * foot.rotation,
+                rotation = foot.rotation, hasFootRotation = true,
                 sole = length * .075f };
         }
         private void CaptureSoles(Transform imported)
@@ -126,7 +134,7 @@ namespace Alterverse.Visuals
             }
             finally { if (Application.isPlaying) Destroy(baked); else DestroyImmediate(baked); }
         }
-        private void Update() => RestorePelvis();
+        private void Update() { RestorePelvis(); preparedPelvisFrame = -1; }
         private void OnDisable() { RestorePelvis(); ResetContacts(); }
         private void RestorePelvis()
         {
@@ -137,14 +145,41 @@ namespace Alterverse.Visuals
         }
         public void ResetContacts()
         {
-            RestorePelvis(); appliedFrame = -1;
-            if (left != null) { left.initialized = false; left.authoredSample = false; }
-            if (right != null) { right.initialized = false; right.authoredSample = false; }
+            RestorePelvis(); appliedFrame = preparedPelvisFrame = -1; displayedDrop = 0f; displayedDropReady = terrainOffsetReady = false;
+            if (left != null) { left.initialized = false; left.authoredSample = false; left.hasBendDirection = false; left.hasFootRotation = false; left.footRotationFrame = -1; }
+            if (right != null) { right.initialized = false; right.authoredSample = false; right.hasBendDirection = false; right.hasFootRotation = false; right.footRotationFrame = -1; }
         }
         private void LateUpdate()
         {
             // Imported heroes call us synchronously after the final combat pose.
             if (presentation == null) FinalizeFeet();
+        }
+        public void PrepareSourcePelvis()
+        {
+            if (!isActiveAndEnabled || !Ready || pelvis == null || preparedPelvisFrame == Time.frameCount) return;
+            preparedPelvisFrame = Time.frameCount;
+            RestorePelvis();
+            if (motion == null || motion.GroundingSuspended || !motion.isActiveAndEnabled) return;
+            Health health = GetComponent<Health>();
+            if (health != null && health.IsDead) return;
+            // Actor origin is one metre above the arena. Imported model offsets
+            // leave its bind soles above that floor; align once before gait/IK so
+            // each supporting-foot swap does not repeat this body correction.
+            float terrain = Mathf.Min(Ground(Nominal(left), left, out _).y - Nominal(left).y,
+                Ground(Nominal(right), right, out _).y - Nominal(right).y);
+            terrainPelvisOffset = !terrainOffsetReady ? terrain :
+                Mathf.MoveTowards(terrainPelvisOffset, terrain, LegLength * 3.5f * Mathf.Min(Time.deltaTime, .1f));
+            terrainOffsetReady = true;
+            OffsetPelvis(Vector3.up * terrainPelvisOffset);
+            if (clips == null) clips = GetComponent<HeroLocomotionAnimation>();
+            if (clips != null && clips.TryPelvisOffset(out float height)) OffsetPelvis(Vector3.up * height);
+        }
+        private void OffsetPelvis(Vector3 offset)
+        {
+            if (pelvis == null || offset.sqrMagnitude < .0000000001f) return;
+            if (!correctedPelvis) pelvisBefore = pelvis.localPosition;
+            pelvis.position += offset;
+            pelvisAfter = pelvis.localPosition; correctedPelvis = true;
         }
         public void FinalizeFeet()
         {
@@ -153,6 +188,11 @@ namespace Alterverse.Visuals
             appliedFrame = Time.frameCount;
             Health health = GetComponent<Health>();
             if (motion.GroundingSuspended || health != null && health.IsDead) { ResetContacts(); appliedFrame = Time.frameCount; return; }
+            // Imported heroes prepare before the hand/weapon solvers; standalone rigs
+            // prepare here. A second call in this frame must not apply the offset twice.
+            PrepareSourcePelvis();
+            Vector3 previousLeft = left.initialized ? left.target : left.foot.position;
+            Vector3 previousRight = right.initialized ? right.target : right.foot.position;
             float dt = Mathf.Min(Time.deltaTime, .1f), run = motion.RunBlend;
             bool moving = motion.PlanarSpeed > .08f;
             float cycle = Mathf.Repeat(motion.GaitPhase / (Mathf.PI * 2f), 1f);
@@ -163,7 +203,7 @@ namespace Alterverse.Visuals
             Vector3 leftOffset = Vector3.zero, rightOffset = Vector3.zero, leftHint = Vector3.zero, rightHint = Vector3.zero;
             Quaternion leftRotation = Quaternion.identity, rightRotation = Quaternion.identity;
             bool leftContact = false, rightContact = false;
-            bool sampled = moving && clips != null && clips.isActiveAndEnabled && clips.Ready && clips.Active &&
+            bool sampled = clips != null && clips.isActiveAndEnabled && clips.Ready && clips.Active &&
                 clips.TryFootSample(false, out leftOffset, out leftHint, out leftContact, out leftRotation) &&
                 clips.TryFootSample(true, out rightOffset, out rightHint, out rightContact, out rightRotation);
             if (sampled)
@@ -183,18 +223,21 @@ namespace Alterverse.Visuals
                 Plan(right, Mathf.Repeat(cycle + .5f, 1f), stance, run, direction, moving, dt);
             }
             PrepareFoot(left, stance, moving); PrepareFoot(right, stance, moving);
-            RestorePelvis();
-            float maxDrop = pelvis != null ? LegLength * .19f : 0f;
+            float maxDrop = pelvis != null ? LegLength * (sampled ? .12f : .19f) : 0f;
+            FitAuthoredTarget(left, maxDrop, stance, moving);
+            FitAuthoredTarget(right, maxDrop, stance, moving);
+            StabilizeAuthoredTarget(left, previousLeft, dt);
+            StabilizeAuthoredTarget(right, previousRight, dt);
             FitAuthoredTarget(left, maxDrop, stance, moving);
             FitAuthoredTarget(right, maxDrop, stance, moving);
             if (pelvis != null)
             {
                 float drop = Mathf.Min(Mathf.Max(RequiredDrop(left), RequiredDrop(right)), maxDrop);
-                if (drop > .00001f)
-                {
-                    pelvisBefore = pelvis.localPosition; pelvis.position -= Vector3.up * drop;
-                    pelvisAfter = pelvis.localPosition; correctedPelvis = true;
-                }
+                // The first frame aligns the bind pose to terrain. Later support
+                // changes must not move the pelvis by its whole correction at once.
+                displayedDrop = !displayedDropReady ? drop : Mathf.Max(drop, Mathf.Lerp(displayedDrop, drop, 1f - Mathf.Exp(-12f * dt)));
+                displayedDropReady = true;
+                if (displayedDrop > .00001f) OffsetPelvis(-Vector3.up * displayedDrop);
             }
             Solve(left, stance, moving); Solve(right, stance, moving);
         }
@@ -222,6 +265,15 @@ namespace Alterverse.Visuals
             leg.target.y -= leg.soleAdjustment; leg.soleAdjustment = 0f;
             Vector3 planarOffset = new Vector3(offset.x, 0f, offset.z);
             Vector3 sourceGround = Ground(Nominal(leg) + planarOffset, leg, out Vector3 normal);
+            // Preserve the animated native FK sole clearance above the terrain.
+            // Source shoes have different ankle/sole proportions; applying
+            // their clearance again would lift or squash the native leg pose.
+            float extent = SoleExtent(leg);
+            float lift = Mathf.Max(0f, Nominal(leg).y + offset.y - sourceGround.y - (extent - leg.sole));
+            // Human target rigs have longer shins than the cartoon source rig.
+            // Retargeting must limit clearance rather than carry its high kicks
+            // through a full-strength foot solve on every hero.
+            lift = Mathf.Min(lift, leg.length * Mathf.Lerp(.14f, .23f, motion.RunBlend));
             if (contact)
             {
                 if (!leg.initialized || !leg.contact || !leg.authoredSample)
@@ -232,28 +284,34 @@ namespace Alterverse.Visuals
             }
             else
             {
-                leg.target = sourceGround + Vector3.up * Mathf.Max(0f, offset.y);
+                leg.target = sourceGround + Vector3.up * lift;
                 leg.normal = normal;
             }
             leg.authoredSample = true; leg.authoredKneeHint = kneeHint;
             leg.authoredRotation = rotation;
-            leg.authoredLift = contact ? 0f : Mathf.Max(0f, offset.y);
+            leg.authoredLift = contact ? 0f : lift;
             leg.authoredTarget = sourceGround + Vector3.up * leg.authoredLift;
             leg.cycle = cycle; leg.contact = contact; leg.initialized = true;
-            // An abrupt turn cannot preserve a contact beyond the actual leg's reach.
-            Vector3 reachOffset = leg.target - leg.hip.position; reachOffset.y = 0f;
-            if (reachOffset.magnitude > leg.length * .68f)
-            {
-                leg.target = sourceGround + (contact ? Vector3.zero : Vector3.up * Mathf.Max(0f, offset.y));
-                leg.plant = sourceGround; leg.normal = normal;
-            }
+            // An unreachable plant is projected toward reach below. Never replace
+            // it with the opposite end of the source stride in a single frame.
+        }
+        private void StabilizeAuthoredTarget(Leg leg, Vector3 previous, float dt)
+        {
+            if (!leg.authoredSample) return;
+            float maxStep = Mathf.Max(leg.length * 6f, motion.PlanarSpeed * 1.7f) * dt;
+            leg.target = Vector3.MoveTowards(previous, leg.target, maxStep);
+            Vector3 floor = Ground(leg.target, leg, out Vector3 normal);
+            float minimum = floor.y + leg.soleAdjustment;
+            leg.target.y = Mathf.Max(minimum, leg.target.y);
+            leg.normal = normal;
+            leg.authoredLift = Mathf.Max(0f, leg.target.y - minimum);
+            if (leg.contact) leg.plant = leg.target - Vector3.up * leg.soleAdjustment;
         }
         private void FitAuthoredTarget(Leg leg, float maxDrop, float stance, bool moving)
         {
             if (!leg.authoredSample) return;
-            // Source pelvis motion is not copied to the target body. A valid source
-            // swing can therefore exceed the target's reach even after its allowed
-            // pelvis drop. Keep the sole on terrain and fit only the horizontal step.
+            // A planted world anchor can leave reach during a sharp turn. Preserve
+            // the native FK swing and fit only a contact that has become unreachable.
             for (int pass = 0; pass < 3; pass++)
             {
                 float reach = (Vector3.Distance(leg.hip.position, leg.knee.position) +
@@ -262,10 +320,10 @@ namespace Alterverse.Visuals
                 float budget = Mathf.Sqrt(Mathf.Max(0f, reach * reach - height * height));
                 Vector3 offset = leg.target - leg.hip.position; offset.y = 0f;
                 if (offset.sqrMagnitude <= budget * budget + .0000001f) return;
-                // Preserve a planted world anchor until it becomes unreachable;
-                // then acquire a reachable contact from this frame's source pose.
-                Vector3 candidate = pass == 0 && leg.contact ?
-                    leg.authoredTarget + Vector3.up * leg.soleAdjustment : leg.target;
+                // Project the existing anchor to the nearest reachable position.
+                // Reacquiring the source foot here caused meter-wide jumps while
+                // contact remained true, especially on turns and backsteps.
+                Vector3 candidate = leg.target;
                 height = Mathf.Max(0f, leg.hip.position.y - candidate.y - maxDrop);
                 budget = Mathf.Sqrt(Mathf.Max(0f, reach * reach - height * height));
                 offset = candidate - leg.hip.position; offset.y = 0f;
@@ -343,24 +401,59 @@ namespace Alterverse.Visuals
             }
             pitch *= motion.LocomotionWeight;
             Quaternion flat = motion.PresentedRotation * leg.restRotation;
-            leg.rotation = leg.authoredSample ?
+            Quaternion desiredRotation = leg.authoredSample ?
                 Quaternion.FromToRotation(Vector3.up, leg.normal) * leg.authoredRotation :
                 Quaternion.AngleAxis(pitch, motion.PresentedRotation * Vector3.right) *
                     Quaternion.FromToRotation(Vector3.up, leg.normal) * flat;
+            // A direction reversal can switch blend quadrants in one frame. Keep
+            // the final boot orientation continuous, also while clips fade out.
+            // Reach fitting calls this repeatedly; use one baseline per frame.
+            if (leg.footRotationFrame != Time.frameCount)
+            {
+                leg.rotationBefore = leg.hasFootRotation ? leg.rotation : leg.foot.rotation;
+                leg.hasFootRotation = true; leg.footRotationFrame = Time.frameCount;
+            }
+            leg.rotation = Quaternion.RotateTowards(leg.rotationBefore, desiredRotation,
+                720f * Mathf.Min(Time.deltaTime, .1f));
             leg.foot.rotation = leg.rotation;
             // Toe-off rotates around the ankle. Raise the ankle by the actual rotated
             // sole extent so the front of the boot cannot rotate through the floor.
             if (leg.solePoints != null && leg.solePoints.Length > 0)
             {
-                Matrix4x4 matrix = leg.foot.localToWorldMatrix; float low = float.PositiveInfinity;
-                foreach (Vector3 point in leg.solePoints) low = Mathf.Min(low, matrix.MultiplyVector(point).y);
-                leg.soleAdjustment = -low - leg.sole; leg.target.y += leg.soleAdjustment;
+                leg.soleAdjustment = SoleExtent(leg) - leg.sole; leg.target.y += leg.soleAdjustment;
             }
+        }
+        private static float SoleExtent(Leg leg)
+        {
+            if (leg.solePoints == null || leg.solePoints.Length == 0) return leg.sole;
+            Matrix4x4 matrix = leg.foot.localToWorldMatrix; float low = float.PositiveInfinity;
+            foreach (Vector3 point in leg.solePoints) low = Mathf.Min(low, matrix.MultiplyVector(point).y);
+            return -low;
         }
         private void Solve(Leg leg, float stance, bool moving)
         {
-            Vector3 hint = leg.authoredSample ? leg.authoredKneeHint :
-                leg.hip.position + motion.PresentedRotation * Vector3.forward * leg.length + Vector3.up * .10f;
+            Vector3 axis = (leg.target - leg.hip.position).normalized;
+            Vector3 forward = motion.PresentedRotation * Vector3.forward;
+            Vector3 pole = forward - axis * Vector3.Dot(forward, axis);
+            if (pole.sqrMagnitude < .0001f) pole = motion.PresentedRotation * Vector3.right;
+            pole.Normalize();
+            if (leg.authoredSample)
+            {
+                Vector3 source = leg.authoredKneeHint - leg.hip.position;
+                source -= axis * Vector3.Dot(source, axis);
+                // A nearly straight source knee can put its hint on either side
+                // of the target axis. Keep the anatomical forward bend dominant.
+                if (source.sqrMagnitude > leg.length * leg.length * .0004f)
+                    pole = Vector3.Lerp(pole, source.normalized, .25f).normalized;
+            }
+            if (leg.hasBendDirection)
+            {
+                Vector3 previous = leg.bendDirection - axis * Vector3.Dot(leg.bendDirection, axis);
+                if (previous.sqrMagnitude > .0001f)
+                    pole = Vector3.Lerp(previous.normalized, pole, 1f - Mathf.Exp(-24f * Mathf.Min(Time.deltaTime, .1f))).normalized;
+            }
+            leg.bendDirection = pole; leg.hasBendDirection = true;
+            Vector3 hint = leg.hip.position + pole * leg.length;
             // Repeat once for the existing nonuniform model scale; never translate the ankle bone.
             for (int i = 0; i < 2; i++) CombatMotion.Solve(leg.hip, leg.knee, leg.foot, leg.target, hint, .9999f);
             leg.foot.rotation = leg.rotation;

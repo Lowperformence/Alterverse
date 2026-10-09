@@ -21,12 +21,13 @@ def axis(q):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-root', type=Path, help='Optional extracted KayKit root, containing Animations/')
+    parser.add_argument('--ual-source-root', type=Path, help='Optional Quaternius Standard root, containing Godot/')
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[3]
     bank = json.loads(gzip.decompress((repo / 'Assets/Alterverse/Resources/LocomotionAnimation/Library.bytes').read_bytes()))
     report = json.loads((repo / 'ArtSource/Animations/Locomotion/sampling-report.json').read_text())
     expected_bones = ['ThighL', 'ShinL', 'FootL', 'ThighR', 'ShinR', 'FootR']
-    assert bank['version'] == 1 and bank['bones'] == expected_bones, 'Unexpected schema or bone order'
+    assert bank['version'] == 2 and bank['bones'] == expected_bones, 'Unexpected schema or bone order'
     assert bank['sourceLegLength'] > 0 and len(bank['restPositions']) == 18
     assert all(math.isfinite(x) for x in bank['restPositions'])
     assert {c['name'] for c in bank['clips']} == {'walk', 'run', 'left', 'right', 'back'}
@@ -36,10 +37,16 @@ def main():
         assert n > 2 and clip['fps'] > 0
         q, p, contact = clip['rotations'], clip['positions'], clip['contacts']
         heights = clip['heights']
+        pelvis = clip['pelvisHeights']
+        source_length = clip['sourceLegLength']
+        assert source_length > .05 and math.isfinite(clip['pelvisMean'])
+        assert len(pelvis) == n and all(math.isfinite(x) and abs(x) < source_length for x in pelvis)
+        assert abs(pelvis[0] - pelvis[-1]) < 1e-7, 'Pelvis loop seam differs'
+        assert max(pelvis) - min(pelvis) > .01, 'Source pelvis motion was omitted'
         assert len(heights) == n * 2 and all(math.isfinite(x) and x >= 0 for x in heights)
         assert distance(heights[:2], heights[-2:]) < 1e-6, 'World lift loop seam differs'
         for height, grounded in zip(heights, contact):
-            assert not grounded or height <= bank['sourceLegLength'] * by_name[clip['name']].get('contactTolerancePerLeg', .06) + 1e-7, 'Ground contact exceeds sole clearance threshold'
+            assert not grounded or height <= source_length * by_name[clip['name']].get('contactTolerancePerLeg', .06) + 1e-7, 'Ground contact exceeds sole clearance threshold'
         assert len(q) == n * 24 and len(p) == n * 18 and len(contact) == n * 2
         assert all(math.isfinite(x) for x in q + p + clip['floor'])
         assert len(clip['floor']) == 2 and .6 <= clip['stride'] <= 3.5
@@ -69,11 +76,12 @@ def main():
         both_airborne = sum(contact[i * 2] + contact[i * 2 + 1] == 0 for i in range(n - 1)) / (n - 1)
         for bone in (2, 5):
             height = [p[(frame * 6 + bone) * 3 + 1] for frame in range(n - 1)]
-            assert max(height) - min(height) > bank['sourceLegLength'] * .06, 'Static source foot'
+            assert max(height) - min(height) > source_length * .06, 'Static source foot'
         item = by_name[clip['name']]
         assert abs((n - 1) / clip['fps'] - item['duration']) < 1e-6, 'Source duration changed'
-        if args.source_root:
-            assert hashlib.sha256((args.source_root / item['source']).read_bytes()).hexdigest() == item['sha256']
+        source_root = args.ual_source_root if item['provider'] == 'Quaternius' else args.source_root
+        if source_root:
+            assert hashlib.sha256((source_root / item['source']).read_bytes()).hexdigest() == item['sha256']
         print('{}: {} frames; quaternion norm error {:.2g}; axis error {:.2g}; contacts L/R {:.3f}/{:.3f}; both airborne {:.3f}'.format(
             clip['name'], n, max_norm, max_axis, *fractions, both_airborne))
     print('PASS schema, geometry, normalized quaternions, loop seams, contact/swing variation and source duration' +

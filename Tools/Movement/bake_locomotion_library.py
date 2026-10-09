@@ -1,6 +1,6 @@
-"""Bake selected free KayKit 1.1 GLB clips to anatomical Unity frames.
+"""Bake selected free Quaternius/KayKit GLB clips to anatomical Unity frames.
 
-blender -b --python Tools/Movement/bake_locomotion_library.py -- KAYKIT_ROOT
+blender -b --python Tools/Movement/bake_locomotion_library.py -- KAYKIT_ROOT UAL_ROOT
 Source animation rotations/trajectories are sampled, never recreated from sine curves.
 """
 import bpy
@@ -14,6 +14,7 @@ from mathutils import Vector, Matrix
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(sys.argv[sys.argv.index('--') + 1])
+UAL_SOURCE = Path(sys.argv[sys.argv.index('--') + 2])
 OUT = ROOT / 'Assets/Alterverse/Resources/LocomotionAnimation'
 ART = ROOT / 'ArtSource/Animations/Locomotion'
 OUT.mkdir(parents=True, exist_ok=True)
@@ -41,8 +42,8 @@ def capture_sole_vertices():
         if obj.type != 'MESH':
             continue
         side_indices = []
-        for side in ('l', 'r'):
-            groups = {g.index for g in obj.vertex_groups if g.name in ('foot.' + side, 'toes.' + side)}
+        for side in range(2):
+            groups = {g.index for g in obj.vertex_groups if g.name in (SOURCE_NAMES[side * 3 + 2], TOE_NAMES[side])}
             indices = [v.index for v in obj.data.vertices
                        if sum(g.weight for g in v.groups if g.group in groups) >= .35]
             side_indices.append(indices)
@@ -74,8 +75,8 @@ def world_sole_heights(captures):
     return heights
 
 
-specs = {'MovementBasic': [('walk', 'Walking_A', (0, 0, 1)),
-                           ('run', 'Running_A', (0, 0, 1))],
+specs = {'QuaterniusMovement': [('walk', 'Walk_Loop', (0, 0, 1)),
+                              ('run', 'Sprint_Loop', (0, 0, 1))],
          'MovementAdvanced': [('left', 'Running_Strafe_Left', (-1, 0, 0)),
                               ('right', 'Running_Strafe_Right', (1, 0, 0)),
                               ('back', 'Walking_Backwards', (0, 0, -1))]}
@@ -85,7 +86,16 @@ source_length = None
 rest_positions = None
 for pack, selected in specs.items():
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    path = SOURCE / 'Animations/gltf/Rig_Medium' / ('Rig_Medium_' + pack + '.glb')
+    if pack == 'QuaterniusMovement':
+        provider, source_root = 'Quaternius', UAL_SOURCE
+        path = UAL_SOURCE / 'Godot/AnimationLibrary_Godot_Standard.glb'
+        SOURCE_NAMES = ['DEF-thigh.L', 'DEF-shin.L', 'DEF-foot.L', 'DEF-thigh.R', 'DEF-shin.R', 'DEF-foot.R']
+        TOE_NAMES, HIP_NAME = ['DEF-toe.L', 'DEF-toe.R'], 'DEF-hips'
+    else:
+        provider, source_root = 'KayKit', SOURCE
+        path = SOURCE / 'Animations/gltf/Rig_Medium' / ('Rig_Medium_' + pack + '.glb')
+        SOURCE_NAMES = ['upperleg.l', 'lowerleg.l', 'foot.l', 'upperleg.r', 'lowerleg.r', 'foot.r']
+        TOE_NAMES, HIP_NAME = ['toes.l', 'toes.r'], 'hips'
     bpy.ops.import_scene.gltf(filepath=str(path))
     rig = next(o for o in bpy.data.objects if o.type == 'ARMATURE')
     rig.animation_data_create()
@@ -99,14 +109,13 @@ for pack, selected in specs.items():
     rig.data.pose_position = 'POSE'
     bpy.context.view_layer.update()
     actions = {a.name: a for a in bpy.data.actions}
-    source_hips = C @ (rig.matrix_world @ rig.data.bones['hips'].head_local)
+    source_hips = C @ (rig.matrix_world @ rig.data.bones[HIP_NAME].head_local)
     rest = [C @ (rig.matrix_world @ rig.data.bones[n].head_local) - source_hips for n in SOURCE_NAMES]
     length = ((rest[0] - rest[1]).length + (rest[1] - rest[2]).length +
               (rest[3] - rest[4]).length + (rest[4] - rest[5]).length) / 2
     if source_length is None:
         source_length = length
         rest_positions = [round(v, 7) for p in rest for v in p]
-    assert abs(source_length - length) < .0001
     offsets = []
     rest_foot_axis_error = 0.
     for i, n in enumerate(SOURCE_NAMES):
@@ -135,12 +144,13 @@ for pack, selected in specs.items():
         blender_fps = bpy.context.scene.render.fps / bpy.context.scene.render.fps_base
         duration = (last - first) / blender_fps
         unique_frames = max(2, round(duration * 30))
-        rotations, positions, world_sole = [], [], []
+        rotations, positions, world_sole, pelvis_heights = [], [], [], []
         for frame in range(unique_frames):
             at = first + (last - first) * frame / unique_frames
             bpy.context.scene.frame_set(math.floor(at), subframe=at % 1)
             bpy.context.view_layer.update()
-            hips = C @ (rig.matrix_world @ rig.pose.bones['hips'].matrix).translation
+            hips = C @ (rig.matrix_world @ rig.pose.bones[HIP_NAME].matrix).translation
+            pelvis_heights.append(hips.y - source_hips.y)
             rotations.append([])
             positions.append([])
             world_sole.append(world_sole_heights(sole_vertices))
@@ -180,6 +190,7 @@ for pack, selected in specs.items():
         world_sole = world_sole[start:] + world_sole[:start]
         contacts = contacts[start:] + contacts[:start]
         contact_velocities = contact_velocities[start:] + contact_velocities[:start]
+        pelvis_heights = pelvis_heights[start:] + pelvis_heights[:start]
         heights = [[max(0., h[side] - low[side]) for side in (0, 1)]
                    for h in world_sole]
         # Estimate cycle travel from the source stance-foot velocity, not a guessed timer.
@@ -200,6 +211,7 @@ for pack, selected in specs.items():
         positions.append([p.copy() for p in positions[0]])
         contacts.append(contacts[0][:])
         heights.append(heights[0][:])
+        pelvis_heights.append(pelvis_heights[0])
         flat_rotation = []
         previous = [None] * 6
         for pose in rotations:
@@ -213,8 +225,11 @@ for pack, selected in specs.items():
         clips.append(dict(name=name, frames=unique_frames + 1, fps=unique_frames / duration,
                           rotations=flat_rotation, positions=flat_positions,
                           contacts=[v for c in contacts for v in c], heights=[round(v, 7) for h in heights for v in h], floor=low,
+                          pelvisHeights=[round(v, 7) for v in pelvis_heights],
+                          sourceLegLength=length, pelvisMean=sum(pelvis_heights[:-1]) / unique_frames,
                           stride=stride / length))
-        report.append(dict(name=name, action=action_name, source=str(path.relative_to(SOURCE)),
+        report.append(dict(name=name, action=action_name, source=str(path.relative_to(source_root)), provider=provider,
+                           sourceLegLength=length,
                            sha256=hashlib.sha256(path.read_bytes()).hexdigest(), duration=duration,
                            alignedStart=start, frames=unique_frames + 1, stridePerLeg=stride / length,
                            stanceFractions=[sum(c[s] for c in contacts[:-1]) / unique_frames for s in (0, 1)],
@@ -228,6 +243,7 @@ for pack, selected in specs.items():
                            maxRestFootAxisMatrixError=rest_foot_axis_error,
                            bothAirborneFraction=sum(not (c[0] or c[1]) for c in contacts[:-1]) / unique_frames,
                            maxSwingHeights=[max(h[s] for h in heights[:-1]) for s in (0, 1)],
+                           pelvisHeightDelta=[min(pelvis_heights), max(pelvis_heights)],
                            measuredStridePerLeg=speed * duration / length))
     # Keep the free GLB action subset as reproducible editable source, without mannequin meshes.
     rig.animation_data.action = None
@@ -243,9 +259,10 @@ for pack, selected in specs.items():
         if ob != rig:
             bpy.data.objects.remove(ob, do_unlink=True)
     bpy.ops.outliner.orphans_purge(do_recursive=True)
-    bpy.ops.wm.save_as_mainfile(filepath=str(ART / ('KayKit_' + pack + '.blend')), compress=True)
+    source_name = 'Quaternius_Movement' if provider == 'Quaternius' else 'KayKit_' + pack
+    bpy.ops.wm.save_as_mainfile(filepath=str(ART / (source_name + '.blend')), compress=True)
 
-bank = dict(version=1, bones=NAMES, sourceLegLength=source_length, restPositions=rest_positions, clips=clips)
+bank = dict(version=2, bones=NAMES, sourceLegLength=source_length, restPositions=rest_positions, clips=clips)
 raw = json.dumps(bank, separators=(',', ':')).encode()
 (OUT / 'Library.bytes').write_bytes(gzip.compress(raw, mtime=0))
 (ART / 'sampling-report.json').write_text(json.dumps(report, indent=2))

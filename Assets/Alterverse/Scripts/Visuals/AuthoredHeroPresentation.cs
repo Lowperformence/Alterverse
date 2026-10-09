@@ -952,6 +952,9 @@ namespace Alterverse.Visuals
                 if (binding.Extra != null) delta *= Quaternion.Inverse(binding.ExtraRest) * binding.Extra.localRotation;
                 binding.Bone.localRotation = binding.Rest * Quaternion.Inverse(binding.Basis) * delta * binding.Basis;
             }
+            // Pelvis motion belongs to the same source pose as the legs. Apply it
+            // before hand contacts and model-sibling weapon details are positioned.
+            GetComponent<HeroGroundedLocomotion>()?.PrepareSourcePelvis();
             ApplyModelGuard();
             if (GetComponent<MeleeBasicAttackAnimation>()?.OwnsPose != true) ApplyBrawlerPunch();
             ApplyWeaponGrips();
@@ -967,6 +970,7 @@ namespace Alterverse.Visuals
             // Grounding then corrects source contacts instead of replacing the source gait.
             GetComponent<HeroLocomotionAnimation>()?.ApplyLegs();
             GetComponent<HeroGroundedLocomotion>()?.FinalizeFeet();
+            FollowRifleDetails();
         }
     }
 }

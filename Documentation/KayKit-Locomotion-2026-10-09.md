@@ -1,89 +1,117 @@
-# Directional authored hero locomotion — 2026-10-09
+# Hero locomotion repair — 2026-10-09
 
-## Result
+## Problem and corrected behavior
 
-Moving imported heroes now use five real free KayKit animation clips on their
-visible thigh, shin and foot bones: forward walk/run, strafe left/right and
-backward walk. Directional weights blend continuously for diagonal movement.
-Cycle phase follows actual presented distance through the existing
-`HeroVisualMotion.GaitPhase`; it is not advanced by an independent timer.
+The supplied Unity video already showed the authored movement path was active.
+The defect was in pose transfer and final grounding, rather than a missing
+component. The old tests reused one CyberShark source skeleton under eight identity
+labels and accepted small IK errors. They did not establish correct movement for
+the distinct imported hero proportions.
 
-The new `HeroLocomotionAnimation` is initialized automatically when
-`AuthoredHeroPresentation` binds an imported model. The resource bank and its
-Unity metadata are committed. No Animator controller setup or manual component
-attachment is required.
+Generator-derived native fixtures reproduced a source-target disagreement up to
+32.8 cm, planted-foot jumps exceeding one metre in one frame, and knee-plane flips.
+The corrected path uses the actual retargeted FK pose, holds a reachable contact,
+projects an unreachable anchor to its nearest reachable position, and stabilizes
+both the knee bend direction and final boot orientation.
+
+Forward walk and sprint now use the free Quaternius Universal Animation Library
+Standard human clips. Free KayKit clips supply strafing and backsteps. The cartoon
+forward walk had much stronger knee lifts and a different leg/body ratio.
+Both packages are CC0; source notices and editable derived action files are in
+`ArtSource/Animations/Locomotion/`. No purchase is needed.
 
 ## Final pose ownership
 
-Previously, earlier lower-body work could be overwritten by the authored and
-combat pose layers, and procedural grounding reconstructed its own gait.
-The final synchronous order is now:
+1. Restore the prior visual pelvis correction.
+2. Prepare terrain alignment from the native bind soles and bounded source pelvis motion.
+3. Apply the existing authored upper-body guard, hands and weapons.
+4. Evaluate the existing melee pose.
+5. Apply the six authored leg rotations to the actual visible skeleton.
+6. Sample those resulting FK feet/knees in the same frame and finalize contact IK.
+7. Re-follow rifle details after the final body correction.
 
-1. Existing authored guard, upper body and weapon grip corrections.
-2. Existing `MeleeBasicAttackAnimation.EvaluatePose()`.
-3. New `HeroLocomotionAnimation.ApplyLegs()` on the actual imported bones.
-4. `HeroGroundedLocomotion.FinalizeFeet()` using that frame's source trajectories,
-   contact flags, knee hints and foot rotations.
+Actor travel/collision and input remain owned by their gameplay systems.
+The movement layer rotates six leg bones and offsets the visual pelvis; it does
+not move ankle local positions. The source pelvis replaces the old additional
+procedural movement bob. Rest offsets are restored each frame rather than accumulated.
 
-Grounding anchors supporting feet in world space. Swing feet follow the source
-trajectory and actual source sole clearance. Boot sole correction and the
-existing leg IK then adapt the pose to terrain. Stopping uses the existing smooth
-settle. Paused, dead or suspended movement cannot reuse stale clip samples.
+The v2 resource stores source leg length and pelvis motion separately per clip.
+Native stance velocity calibrates each hero's stride. Phase advances from actual
+presented distance. Contacts have a dead band for ambiguous directional blends.
+Stopping retains the clip while its weight fades, then settles both feet.
 
-Source hip sway is subtracted from foot trajectories before target rest placement
-is added, avoiding unreachable strides caused by transferring source pelvis
-motion without transferring the pelvis itself. Source and target foot rest axes
-match, avoiding an artificial extra boot pitch.
+Native sole clearance is measured relative to actual terrain. Boot extent uses
+the displayed foot matrix, including model scale. World contacts no longer reacquire
+the opposite end of a source stride during reach fitting. Foot targets have a
+bounded travel rate, knees retain an anatomical forward bend, and the final boot
+rotation has a persistent per-frame rotation budget.
 
-After sole compensation, authored targets are fitted to the actual three-
-dimensional leg reach within the existing pelvis-drop limit. A reachable stance
-anchor remains fixed; an unreachable one is replanted from the current source
-pose. Fitting preserves source swing lift and resamples terrain/sole compensation.
-This corrects overextension caused by keeping the target pelvis higher than the
-source clip's pelvis.
+## Verified outside Unity
 
-The new layer writes only six leg rotations; actor motion, collider dimensions,
-bone local positions, weapon grips, upper-body attacks and audio remain owned by
-their existing systems. A missing/invalid resource reports an explicit error and
-retains the prior pose path.
+- Source bank: all five clips, 145 loop-closed samples; schema, finite metadata,
+  anatomical axes, normalized rotations, pelvis seams, contacts and both source hashes pass.
+- Exact source sampling components plus extracted grounding methods:
+  71,983 native-fixture evaluations and 741,461 assertions pass.
+- Integrated checks cover all eight identities with seven distinct native rigs;
+  Nerok aliases the actual runtime Rook rig.
+- Additional continuity checks: 24,000 frames, 40 identity/scenario combinations,
+  no threshold violations.
+- In that continuity fixture: peak foot displacement 20.8 cm/frame at fast motion,
+  peak knee displacement 31.17 cm/frame, peak body displacement 14.66 cm/frame
+  during reversal, and peak final boot rotation 12 degrees/frame at 60 FPS.
+  Feet remain at least 41.73 cm below the hips; worst endpoint error is 1.2 mm;
+  worst sampled sole penetration is 0.6 mm.
+- Twelve isolated planner/rotation/stop transition checks pass.
+- The recorder source also passes a compile against a substitute Unity API with
+  obsolete instance-ID APIs treated as errors.
 
-## Source and checks
+These are mathematical/fixture results, not observed Unity or Android gameplay.
+Unity is unavailable in the execution environment. FBX import/default poses,
+SkinnedMeshRenderer deformation, custom model details, real ground raycasts,
+combat while moving and Android performance require native execution.
+The numerical bounds above are regression limits, not a visual quality guarantee.
 
-KayKit 1.1 free GLBs are CC0, including commercial use. Provenance, the original
-license, derived editable skeleton/action sources, sampling metadata and the
-reproducible baker are under `ArtSource/Animations/Locomotion/`.
+## Native acceptance and useful evidence
 
-The regression tools under `Tools/Movement/GroundedClipRegression/` check the
-real baked data, exact production sampling components and extracted production
-foot-planning methods. They cover cardinal/diagonal directions, walk/run blends,
-cycle seams, stop/contact transitions, continuous steering, foot clearance,
-finite rotations, planar target reach and distance-phase stability at
-30/60/120 FPS. Source hashes and both-leg support/swing are checked separately.
+Pull the latest `dev/vertical-slice`, allow Unity to import scripts and
+`Assets/Alterverse/Resources/LocomotionAnimation/Library.bytes`, then enter Play Mode.
 
-Final portable results: 208,272 assertions over 14,384 fixture evaluations;
-12 isolated foot-planner transition tests; all five source-bank validations pass.
-An integrated 4,800-frame run uses exact production finalization, pelvis-drop,
-foot-fit and leg-solve methods with actual Nerok foot-weighted sole points.
-Across 3,153 supporting-foot samples, maximum ankle-to-target error is 6.1 mm;
-no endpoint exceeds 35 mm. Before the reach fit, the same native sole fixture
-exposed up to 110 mm swing and 54 mm supporting-foot error. These numbers describe
-the substitute-runtime fixture, not observed Unity gameplay.
+The new console marker is:
 
-The C# runtime harness uses one native Nerok rest skeleton with its imported
-nonuniform model scale and eight hero identity profiles. It does **not** import
-eight independent hero meshes. Unity APIs are substituted; this is not a native
-Unity compile, physics, mesh-skinning, Android-performance or visual acceptance
-test. Unity is unavailable in this environment.
+```text
+DF: locomotion v2 coherent native FK active on ...
+```
 
-## In-engine acceptance
+The grounding component also logs `grounded locomotion v2 active`.
 
-Pull the newest `dev/vertical-slice`, let Unity import the committed scripts and
-`Library.bytes`, and play the game normally. The console should report
-`KayKit CC0 directional locomotion active` and, while moving,
-`authored locomotion foot trajectories and contacts active` for imported heroes.
+Inspect every available hero moving forward, backward and sideways while aiming,
+diagonals, sharp reversals, start/stop, moving attacks, terrain edges/slopes and crowds.
+Look for alternating strides, correct knee direction, no raised/flipping feet,
+no lasting ground penetration and smooth stopping.
 
-Check visible alternating strides for all available heroes, forward/backward and
-sideways movement while aiming, diagonal direction changes, start/stop, attack
-while moving, slopes and unit crowds. Supporting soles should remain planted
-until lift, with no persistent straight-legged glide or floor penetration. Real
-Unity compilation and this gameplay review remain the final acceptance checks.
+In Play Mode use:
+
+`DIMENSIONS FRONT > Checks > Movement record all heroes for 15 seconds`
+
+The recorder now writes an invariant-culture CSV to
+`Application.temporaryCachePath/DF-Movement-YYYYMMDD-HHMMSS.csv` and logs its exact path.
+Rows capture actor/presented travel, speed/weight/phase, active clip state,
+visual pelvis, all six native joint world positions/local rotations/scales,
+foot targets, contact flags and errors. It records the actual imported rig rather
+than inferred source skeletons. A new short gameplay video plus this CSV can
+distinguish importer/skin deformation from target/contact or pose-writer problems.
+
+## Primary references
+
+- Unity 6: 2D locomotion blending and velocity axes:
+  https://docs.unity3d.com/6000.0/Documentation/Manual/BlendTree-2DBlending.html
+- Unity 6: humanoid retargeting and Avatar setup:
+  https://docs.unity3d.com/6000.0/Documentation/Manual/Retargeting.html
+- Unity Animation Rigging: two-bone targets and knee hints:
+  https://docs.unity3d.com/Packages/com.unity.animation.rigging@1.3/manual/constraints/TwoBoneIKConstraint.html
+- Unity 6: nonuniform Transform scale:
+  https://docs.unity3d.com/6000.0/Documentation/Manual/class-Transform.html
+- Quaternius free animation library:
+  https://quaternius.com/packs/universalanimationlibrary.html
+- KayKit character animation source:
+  https://kaylousberg.itch.io/kaykit-character-animations

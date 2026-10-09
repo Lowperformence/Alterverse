@@ -1,29 +1,31 @@
 [
   {
     "name": "walk",
-    "action": "Walking_A",
-    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
-    "sha256": "11422afd50abf7e8c92ea107e2e0bc94abd38023d6d15f55ad580347efbfa29e",
-    "duration": 1.0666667620340984,
+    "action": "Walk_Loop",
+    "source": "Godot/AnimationLibrary_Godot_Standard.glb",
+    "provider": "Quaternius",
+    "sourceLegLength": 0.8297895947323071,
+    "sha256": "1b7bf67866360665426bb99e4c71bd619f19b408453c24e30f0c3071601eee5c",
+    "duration": 1.3333333333333333,
     "alignedStart": 0,
-    "frames": 33,
-    "stridePerLeg": 1.908353110298148,
+    "frames": 41,
+    "stridePerLeg": 1.5595623727291597,
     "stanceFractions": [
-      0.4375,
-      0.4375
+      0.625,
+      0.575
     ],
     "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
     "soleVertexCounts": [
-      794,
-      792
+      121,
+      121
     ],
     "contactTolerancePerLeg": 0.04,
     "contactVelocityMaxMetersPerSecond": 0.02,
     "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
-    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceWorldFloor": 0.0004614625941030681,
     "sourceMinAnimatedSole": [
-      -0.06145007163286209,
-      -0.06057697534561157
+      -0.02638590894639492,
+      -0.0068548694252967834
     ],
     "footCalibrationAxis": [
       0,
@@ -31,38 +33,44 @@
       1
     ],
     "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
-    "bothAirborneFraction": 0.125,
+    "bothAirborneFraction": 0.0,
     "maxSwingHeights": [
-      0.07738971153048624,
-      0.07655041107682337
+      0.09638389601605013,
+      0.08960222109453753
     ],
-    "measuredStridePerLeg": 1.908353110298148
+    "pelvisHeightDelta": [
+      -0.05156207084655762,
+      0.0010761022567749023
+    ],
+    "measuredStridePerLeg": 1.5595623727291597
   },
   {
     "name": "run",
-    "action": "Running_A",
-    "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementBasic.glb",
-    "sha256": "11422afd50abf7e8c92ea107e2e0bc94abd38023d6d15f55ad580347efbfa29e",
-    "duration": 0.8000000317891439,
-    "alignedStart": 2,
-    "frames": 25,
+    "action": "Sprint_Loop",
+    "source": "Godot/AnimationLibrary_Godot_Standard.glb",
+    "provider": "Quaternius",
+    "sourceLegLength": 0.8297895947323071,
+    "sha256": "1b7bf67866360665426bb99e4c71bd619f19b408453c24e30f0c3071601eee5c",
+    "duration": 0.6666666666666666,
+    "alignedStart": 0,
+    "frames": 21,
     "stridePerLeg": 3.5,
     "stanceFractions": [
-      0.20833333333333334,
-      0.20833333333333334
+      0.3,
+      0.25
     ],
     "contactBasis": "lowest evaluated skinned foot/toe world vertex (combined foot/toe weight >= 0.35)",
     "soleVertexCounts": [
-      794,
-      792
+      121,
+      121
     ],
     "contactTolerancePerLeg": 0.04,
     "contactVelocityMaxMetersPerSecond": 0.02,
     "contactVelocityMethod": "central periodic hips-relative ankle derivative along source travel direction",
-    "sourceWorldFloor": -2.6578100005281158e-05,
+    "sourceWorldFloor": 0.0004614625941030681,
     "sourceMinAnimatedSole": [
-      -0.010827958583831787,
-      -0.010827586054801941
+      -0.0005634797271341085,
+      -0.0005903792334720492
     ],
     "footCalibrationAxis": [
       0,
@@ -70,17 +78,23 @@
       1
     ],
     "maxRestFootAxisMatrixError": 1.1920928955078125e-07,
-    "bothAirborneFraction": 0.5833333333333334,
+    "bothAirborneFraction": 0.45,
     "maxSwingHeights": [
-      0.12235000172404398,
-      0.12234997192172159
+      0.30621444835560396,
+      0.2280021722544916
     ],
-    "measuredStridePerLeg": 6.955292306487719
+    "pelvisHeightDelta": [
+      -0.12166571617126465,
+      0.016521811485290527
+    ],
+    "measuredStridePerLeg": 6.318963869139674
   },
   {
     "name": "left",
     "action": "Running_Strafe_Left",
     "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "provider": "KayKit",
+    "sourceLegLength": 0.3765144641199448,
     "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
     "duration": 0.8000000317891439,
     "alignedStart": 2,
@@ -114,12 +128,18 @@
       0.10833960214404215,
       0.10831972399500955
     ],
+    "pelvisHeightDelta": [
+      -0.07112467288970947,
+      0.03149530291557312
+    ],
     "measuredStridePerLeg": 5.51731021711629
   },
   {
     "name": "right",
     "action": "Running_Strafe_Right",
     "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "provider": "KayKit",
+    "sourceLegLength": 0.3765144641199448,
     "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
     "duration": 0.8000000317891439,
     "alignedStart": 3,
@@ -153,12 +173,18 @@
       0.10832085648326029,
       0.10833936372546304
     ],
+    "pelvisHeightDelta": [
+      -0.07112467288970947,
+      0.03149530291557312
+    ],
     "measuredStridePerLeg": 5.64861444266909
   },
   {
     "name": "back",
     "action": "Walking_Backwards",
     "source": "Animations/gltf/Rig_Medium/Rig_Medium_MovementAdvanced.glb",
+    "provider": "KayKit",
+    "sourceLegLength": 0.3765144641199448,
     "sha256": "8b2317cf81e3f24149e4b791c27e1932bebd46cd378ed962e7d27d642fad8c56",
     "duration": 1.0666667620340984,
     "alignedStart": 18,
@@ -191,6 +217,10 @@
     "maxSwingHeights": [
       0.05510811323074449,
       0.05521066302208055
+    ],
+    "pelvisHeightDelta": [
+      -0.08022874593734741,
+      -0.02573370933532715
     ],
     "measuredStridePerLeg": 1.9100349573623074
   }

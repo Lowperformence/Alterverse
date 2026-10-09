@@ -7,7 +7,7 @@ using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Visuals;
 
-class RuntimeRegression
+partial class RuntimeRegression
 {
     static int assertions, evaluations;
     static string rigPath;
@@ -56,6 +56,7 @@ class RuntimeRegression
         }
         rig.legLength *= .5f;
         rig.motion.PresentedRotation = rig.actor.transform.rotation;
+        rig.motion.PresentedPosition = rig.actor.transform.position;
         rig.animation = HeroLocomotionAnimation.For(rig.actor, rig.model);
         Check(rig.animation.Ready, "Native rest fixture did not bind");
         return rig;
@@ -96,7 +97,8 @@ class RuntimeRegression
                     Vector3 offset, knee; bool contact; Quaternion rotation;
                     Check(rig.animation.TryFootSample(side == 1, out offset, out knee, out contact, out rotation), "Fresh sample unavailable");
                     Check(Finite(offset) && Finite(knee), "Non-finite source retargeting output");
-                    Check(offset.y >= -.00001f, "Source foot lift negative");
+                    Check(Vector3.Distance(rig.neutralFeet[side] + offset, rig.bones[LocomotionAnimationLibrary.Bones[side * 3 + 2]].position) < .001f,
+                        "Native foot sample replaced the actual retargeted FK pose");
                     Vector3 horizontalTarget = rig.neutralFeet[side] + offset - rig.bones[LocomotionAnimationLibrary.Bones[side * 3]].position;
                     horizontalTarget.y = 0;
                     Check(horizontalTarget.magnitude <= rig.legLength, "Source foot target exceeds complete planar leg reach: " + horizontalTarget.magnitude / rig.legLength + " for " + hero + " direction " + direction.x + "," + direction.z);
@@ -141,6 +143,7 @@ class RuntimeRegression
             }
             Check(clip.Contact(0, 0) >= .5f, "Cycle phase zero is not left contact");
             Check(Math.Abs(clip.Height(0, 0) - clip.Height(0, 1)) < .000001f, "Lift loop seam");
+            Check(Math.Abs(clip.PelvisHeight(0) - clip.PelvisHeight(1)) < .000001f, "Pelvis loop seam");
         }
     }
     static void IntegratedContacts()
@@ -177,6 +180,8 @@ class RuntimeRegression
             rig.motion.PlanarSpeed = 0;
             for (int frame = 0; frame < 180; frame++)
             {
+                rig.motion.LocomotionWeight *= Mathf.Exp(-20f * Time.deltaTime);
+                rig.motion.RunBlend *= Mathf.Exp(-9f * Time.deltaTime);
                 Time.frameCount++; ground.RebasePelvis(); Rebase(rig); rig.animation.ApplyLegs(); ground.FinalizeFeet();
             }
             Check(ground.Contact(false) && ground.Contact(true), "Stopped integrated feet did not regain both contacts");
@@ -209,7 +214,7 @@ class RuntimeRegression
         Time.frameCount++;
         Vector3 offset, knee; bool contact; Quaternion rotation;
         Check(!rig.animation.TryFootSample(false, out offset, out knee, out contact, out rotation), "Stale frame foot sample accepted");
-        foreach (string reason in new[] { "zeroWeight", "stopped", "paused", "dead", "suspended", "disabled" })
+        foreach (string reason in new[] { "zeroWeight", "paused", "dead", "suspended", "disabled" })
         {
             rig.motion.LocomotionWeight = reason == "zeroWeight" ? 0 : 1;
             rig.motion.PlanarSpeed = reason == "stopped" ? 0 : 6;
@@ -234,7 +239,7 @@ class RuntimeRegression
         }
         solePoints = new[] {points[0].ToArray(),points[1].ToArray()};
         Check(LocomotionAnimationLibrary.Ready, "Real source bank not loaded");
-        Matrix(); Continuity(); DistanceCadence(); Lifecycle(); IntegratedContacts();
+        Matrix(); Continuity(); DistanceCadence(); Lifecycle(); IntegratedContacts(); NativeContinuity();
         Console.WriteLine("PASS unchanged LocomotionAnimationLibrary + HeroLocomotionAnimation: " + evaluations + " native Nerok fixture evaluations across eight identity profiles; " + assertions + " assertions.");
         Console.WriteLine("Substitute Unity APIs/math and fixture-based JSON field assignment; no Unity mesh, physics or Android execution.");
     }

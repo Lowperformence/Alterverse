@@ -1,0 +1,1274 @@
+{
+  "productionCommit": "76f3938bb03d6cf1a8d2ad9ea5f28f907b88da3d",
+  "actorY": 1,
+  "groundY": -0.02,
+  "rootPosition": [
+    0,
+    0.32,
+    0
+  ],
+  "modelPosition": [
+    0,
+    -0.96,
+    0
+  ],
+  "framesPerCase": 400,
+  "coordinateConversion": "(x,z,-y)",
+  "NerokRig": "Rook",
+  "cases": [
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.19
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.193
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.156
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.156
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0046,
+      "contactTargetError": 0.0046,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.238
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0046,
+      "contactTargetError": 0.0046,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.238
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.237
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.237
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0057,
+      "contactTargetError": 0.0057,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 77.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.298
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 89.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.286
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0054,
+      "contactTargetError": 0.0054,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 78.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Nyra",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.294
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0053,
+      "contactTargetError": 0.0053,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 85.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.208
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 86.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.211
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 72.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.172
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 72.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.172
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0061,
+      "contactTargetError": 0.0061,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 81.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.328
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 94.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.315
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0057,
+      "contactTargetError": 0.0057,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 82.7,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.291
+    },
+    {
+      "hero": "Kaelon",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0054,
+      "contactTargetError": 0.0054,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.323
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.205
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 88.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.207
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 74.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.171
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 74.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.171
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 96.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 96.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 96.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 96.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0059,
+      "contactTargetError": 0.0059,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 83.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.325
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0051,
+      "contactTargetError": 0.0051,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 95.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.312
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0056,
+      "contactTargetError": 0.0056,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.4,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.289
+    },
+    {
+      "hero": "Nerok",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0053,
+      "contactTargetError": 0.0053,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 95.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.32
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.4,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.195
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.197
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.7,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.161
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.7,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.161
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.248
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.248
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.247
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.247
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0057,
+      "contactTargetError": 0.0057,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 77.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.306
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 89.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.295
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0054,
+      "contactTargetError": 0.0054,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 79.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.27
+    },
+    {
+      "hero": "Mira",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0051,
+      "contactTargetError": 0.0051,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 88.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.303
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.19
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.193
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.156
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.156
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0046,
+      "contactTargetError": 0.0046,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.238
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0046,
+      "contactTargetError": 0.0046,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.238
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.237
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 88.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.237
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0057,
+      "contactTargetError": 0.0057,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 77.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.298
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 89.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.286
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0054,
+      "contactTargetError": 0.0054,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 78.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Veyr",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 88.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.294
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.205
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 88.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.207
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 74.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.171
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 74.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.171
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 96.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 96.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.265
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 96.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 96.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.264
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0059,
+      "contactTargetError": 0.0059,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 83.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.325
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0051,
+      "contactTargetError": 0.0051,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 95.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.312
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0056,
+      "contactTargetError": 0.0056,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.4,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.289
+    },
+    {
+      "hero": "Rook",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0053,
+      "contactTargetError": 0.0053,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 95.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.32
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0053,
+      "contactTargetError": 0.0053,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.7,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.204
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 80.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.207
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.166
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 75.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.166
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 85.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.252
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0048,
+      "contactTargetError": 0.0048,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 85.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.252
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 85.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.251
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.5,
+      "maximumKneeFlexDegrees": 85.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.251
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0061,
+      "contactTargetError": 0.0061,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 75.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.317
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 87.2,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.305
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0057,
+      "contactTargetError": 0.0057,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 77.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.28
+    },
+    {
+      "hero": "Elyra",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0053,
+      "contactTargetError": 0.0053,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 86.4,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.313
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 84.6,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.2
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.0,
+        1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0044,
+      "contactTargetError": 0.0044,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 87.1,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.203
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 73.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.164
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.0,
+        -1.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0049,
+      "contactTargetError": 0.0049,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 73.5,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.164
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 92.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.248
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.0047,
+      "contactTargetError": 0.0047,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 92.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.248
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 0,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 92.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.247
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        -1.0,
+        0.0
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 92.3,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.247
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.006,
+      "contactTargetError": 0.006,
+      "minimumKneeFlexDegrees": 1.3,
+      "maximumKneeFlexDegrees": 81.0,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.312
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.005,
+      "contactTargetError": 0.005,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 93.8,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.3
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 0,
+      "finalTargetError": 0.0056,
+      "contactTargetError": 0.0056,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 82.4,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.276
+    },
+    {
+      "hero": "Traveler",
+      "direction": [
+        -0.7071068,
+        0.7071068
+      ],
+      "run": 1,
+      "finalTargetError": 0.0052,
+      "contactTargetError": 0.0052,
+      "minimumKneeFlexDegrees": 1.4,
+      "maximumKneeFlexDegrees": 92.9,
+      "sourceTargetVsRetargetedFootPlanarMismatch": 0.308
+    }
+  ],
+  "limitations": [
+    "Canonical source skeletons, not imported Unity FBX assets.",
+    "Only generated rounded boot vertices are used for sole samples; body/other foot-weighted details are excluded.",
+    "Unity physics, full presentation bob and retargeted pelvis motion are substituted/omitted.",
+    "Small final target errors do not measure source-pose preservation."
+  ]
+}

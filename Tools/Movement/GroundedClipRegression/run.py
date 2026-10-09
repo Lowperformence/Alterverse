@@ -26,9 +26,10 @@ def main():
     visuals = repo / 'Assets/Alterverse/Scripts/Visuals'
     source = (visuals / 'HeroGroundedLocomotion.cs').read_text()
     methods = '\n'.join(extract_block(source, token) for token in [
-        'private sealed class Leg', 'private void PlanAuthored(', 'private void Plan(', 'private void PrepareFoot('])
+        'private sealed class Leg', 'private void PlanAuthored(', 'private void Plan(', 'private void PrepareFoot(', 'private static float SoleExtent('])
     # Reuse the existing System.Numerics-backed quaternion/Transform substitute.
     stubs = (here.parent / 'UpperBodyRegression/EngineStubs.cs').read_text()
+    stubs = stubs.replace('public static class Time {', 'public static class Time { public static int frameCount;')
     stubs = stubs.replace('public const float PI=', 'public static float Exp(float x){return (float)Math.Exp(x);} public const float PI=')
     stubs = stubs.replace('public class Transform:Component {',
                           'public struct Matrix4x4 { public Vector3 MultiplyVector(Vector3 v){return v;} }\n'
@@ -41,6 +42,7 @@ using Alterverse.Visuals;
 partial class PlanHarness {
 public Transform transform=new GameObject("actor").transform;
 public HeroVisualMotion motion=new GameObject("motion").AddComponent<HeroVisualMotion>();
+private float floorOffset;
 private float CycleStride(float run){return 1f;}
 private Vector3 Nominal(Leg leg){return motion.PresentedPosition+leg.rest;}
 private Vector3 Ground(Vector3 point,Leg leg,out Vector3 normal){normal=Vector3.up;point.y=leg.sole;return point;}

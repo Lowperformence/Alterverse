@@ -1,6 +1,9 @@
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Visuals;
@@ -15,6 +18,7 @@ namespace Alterverse.EditorChecks
         private sealed class Sample
         {
             public HeroIdentity hero;
+            public Transform pelvis;
             public readonly Transform[] bones = new Transform[6];
             public readonly Quaternion[] referenceRotation = new Quaternion[6];
             public readonly Vector3[] referencePosition = new Vector3[6];
@@ -24,6 +28,8 @@ namespace Alterverse.EditorChecks
             public Vector3 lastActor, lastPresented;
             public float actorTravel, presentedTravel, maxBoneAngle, maxRelativeFootShift, maxContactError;
             public float maxReportedSpeed, maxSwingRise, walkingSeconds;
+            public float maxFootFrameJump;
+            public readonly Vector3[] lastWorldFeet = new Vector3[2];
             public readonly float[] boneRotationTravel = new float[2];
             public readonly float[] relativeFootTravel = new float[2];
             public readonly float[] maxLegAngle = new float[2];
@@ -39,11 +45,15 @@ namespace Alterverse.EditorChecks
         private double deadline;
         private bool finished;
         private int recordedFrames;
+        private StreamWriter trace;
+        private string tracePath;
+        private readonly StringBuilder traceRow = new StringBuilder(1200);
 
         private void Start()
         {
             deadline = EditorApplication.timeSinceStartup + 15d;
             EditorApplication.update += CheckDeadline;
+            OpenTrace();
             Debug.Log("DF Movement: recording all active heroes for 15 real-time seconds. Keep the Game view visible; move, turn, stop and attack. No gameplay values are changed.", this);
             StartCoroutine(Record());
         }
@@ -106,6 +116,7 @@ namespace Alterverse.EditorChecks
                     ", locomotion=" + (body == null ? "absent" : "enabled=" + body.isActiveAndEnabled + "/canMove=" + body.CanMove) +
                     ", alive=true, motion=" + (motion != null && motion.isActiveAndEnabled) +
                     ", last collision=" + (body != null && body.LastCollisionCollider != null ? body.LastCollisionCollider.name : "none");
+                TraceFrame(sample, motion, feet);
                 Vector3 actor = hero.transform.position;
                 bool motionActive = motion != null && motion.isActiveAndEnabled;
                 Vector3 presented = motionActive ? motion.PresentedPosition : actor;
@@ -118,6 +129,7 @@ namespace Alterverse.EditorChecks
                         {
                             sample.referenceRotation[i] = sample.lastRotation[i] = sample.bones[i].localRotation;
                             sample.referencePosition[i] = sample.lastRelativePosition[i] = Quaternion.Inverse(facing) * (sample.bones[i].position - presented);
+                            if (i == 2 || i == 5) sample.lastWorldFeet[i == 2 ? 0 : 1] = sample.bones[i].position;
                         }
                     continue;
                 }
@@ -141,8 +153,15 @@ namespace Alterverse.EditorChecks
                     float turn = Quaternion.Angle(sample.lastRotation[i], bone.localRotation);
                     if (i < 3) leftBoneTurn = Mathf.Max(leftBoneTurn, turn);
                     else rightBoneTurn = Mathf.Max(rightBoneTurn, turn);
-                    if (i == 2) leftFootTravel = Vector3.Distance(relative, sample.lastRelativePosition[i]);
-                    if (i == 5) rightFootTravel = Vector3.Distance(relative, sample.lastRelativePosition[i]);
+                    if (i == 2 || i == 5)
+                    {
+                        int side = i == 2 ? 0 : 1;
+                        float worldJump = Vector3.Distance(bone.position, sample.lastWorldFeet[side]);
+                        if (walking) sample.maxFootFrameJump = Mathf.Max(sample.maxFootFrameJump, worldJump);
+                        sample.lastWorldFeet[side] = bone.position;
+                        if (i == 2) leftFootTravel = Vector3.Distance(relative, sample.lastRelativePosition[i]);
+                        else rightFootTravel = Vector3.Distance(relative, sample.lastRelativePosition[i]);
+                    }
                     sample.lastRotation[i] = bone.localRotation; sample.lastRelativePosition[i] = relative;
                 }
                 if (!walking) continue;
@@ -180,18 +199,68 @@ namespace Alterverse.EditorChecks
             if (imported != null)
             {
                 foreach (Transform bone in imported.GetComponentsInChildren<Transform>(true))
+                {
+                    if (bone.name == "Hips") sample.pelvis = bone;
                     for (int i = 0; i < names.Length; i++) if (bone.name == names[i]) sample.bones[i] = bone;
+                }
             }
             else if (rig != null && rig.Ready)
             {
                 rig.GetLeg(false, out sample.bones[0], out sample.bones[1], out sample.bones[2]);
                 rig.GetLeg(true, out sample.bones[3], out sample.bones[4], out sample.bones[5]);
+                sample.pelvis = rig.Pelvis;
             }
             // Newly available bones need their own baseline, not zero quaternions/positions.
             int boundAfter = 0;
             foreach (Transform bone in sample.bones) if (bone != null) boundAfter++;
             if (boundAfter > boundBefore) sample.initialized = false;
         }
+        private void OpenTrace()
+        {
+            try
+            {
+                Directory.CreateDirectory(Application.temporaryCachePath);
+                tracePath = Path.Combine(Application.temporaryCachePath, "DF-Movement-" + System.DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + ".csv");
+                trace = new StreamWriter(tracePath, false, new UTF8Encoding(false), 65536);
+                var header = new StringBuilder("frame,time,actor,hero,speed,weight,run,phase,clipActive,actorX,actorY,actorZ,presentedX,presentedY,presentedZ,pelvisX,pelvisY,pelvisZ");
+                foreach (string bone in new[] { "ThighL", "ShinL", "FootL", "ThighR", "ShinR", "FootR" })
+                    foreach (string field in new[] { "X", "Y", "Z", "localQX", "localQY", "localQZ", "localQW", "scaleX", "scaleY", "scaleZ" })
+                        header.Append(',').Append(bone).Append(field);
+                header.Append(",leftTargetX,leftTargetY,leftTargetZ,rightTargetX,rightTargetY,rightTargetZ,leftContact,rightContact,leftError,rightError");
+                trace.WriteLine(header);
+            }
+            catch (System.Exception error) { trace?.Dispose(); trace = null; Debug.LogWarning("DF Movement: CSV capture could not start: " + error.Message, this); }
+        }
+        private void TraceFrame(Sample sample, HeroVisualMotion motion, HeroGroundedLocomotion feet)
+        {
+            if (trace == null) return;
+            try
+            {
+                var row = traceRow; row.Length = 0;
+                row.Append(Time.frameCount).Append(',').Append(Time.time.ToString("R", CultureInfo.InvariantCulture));
+                row.Append(',').Append('"').Append(sample.hero.name.Replace("\"", "\"\"")).Append('"');
+                row.Append(',').Append(sample.hero.Hero);
+                Number(motion != null ? motion.PlanarSpeed : 0f); Number(motion != null ? motion.LocomotionWeight : 0f);
+                Number(motion != null ? motion.RunBlend : 0f); Number(motion != null ? motion.GaitPhase : 0f);
+                Number(sample.hero.GetComponent<HeroLocomotionAnimation>()?.Active == true ? 1f : 0f);
+                Point(sample.hero.transform.position); Point(motion != null ? motion.PresentedPosition : sample.hero.transform.position);
+                Point(sample.pelvis != null ? sample.pelvis.position : Vector3.zero);
+                foreach (Transform bone in sample.bones)
+                {
+                    Point(bone != null ? bone.position : Vector3.zero);
+                    Quaternion rotation = bone != null ? bone.localRotation : Quaternion.identity;
+                    Number(rotation.x); Number(rotation.y); Number(rotation.z); Number(rotation.w);
+                    Point(bone != null ? bone.localScale : Vector3.zero);
+                }
+                Point(feet != null ? feet.LeftTarget : Vector3.zero); Point(feet != null ? feet.RightTarget : Vector3.zero);
+                Number(feet != null && feet.LeftContact ? 1f : 0f); Number(feet != null && feet.RightContact ? 1f : 0f);
+                Number(feet != null ? feet.LeftContactError : 0f); Number(feet != null ? feet.RightContactError : 0f);
+                trace.WriteLine(row);
+            }
+            catch (System.Exception error) { trace.Dispose(); trace = null; Debug.LogWarning("DF Movement: CSV capture stopped: " + error.Message, this); }
+        }
+        private void Number(float value) => traceRow.Append(',').Append(value.ToString("R", CultureInfo.InvariantCulture));
+        private void Point(Vector3 value) { Number(value.x); Number(value.y); Number(value.z); }
         private void Finish()
         {
             if (finished) return;
@@ -211,7 +280,7 @@ namespace Alterverse.EditorChecks
                     "m, presented travel=" + sample.presentedTravel.ToString("F2") + "m, walking frames=" + sample.walkingFrames +
                     ", avg leg motion=" + (Mathf.Max(sample.boneRotationTravel[0], sample.boneRotationTravel[1]) / Mathf.Max(.001f, sample.walkingSeconds)).ToString("F1") + "deg/s, max leg rotation=" + sample.maxBoneAngle.ToString("F1") + "deg, relative foot excursion=" + sample.maxRelativeFootShift.ToString("F3") +
                     "m, swing rise vs initial ankle=" + sample.maxSwingRise.ToString("F3") + "m, max stance error=" + sample.maxContactError.ToString("F3") +
-                    "m, max reported speed=" + sample.maxReportedSpeed.ToString("F2") + "m/s, input without travel frames=" + sample.inputBlockedFrames +
+                    "m, max foot jump/frame=" + sample.maxFootFrameJump.ToString("F3") + "m, max reported speed=" + sample.maxReportedSpeed.ToString("F2") + "m/s, input without travel frames=" + sample.inputBlockedFrames +
                     ", suspended/dead frames=" + sample.suspendedFrames + "/" + sample.deadFrames + ", relocations=" + sample.relocations + ". " + sample.state;
                 report += "\nPer leg L/R: motion=" + (sample.boneRotationTravel[0] / Mathf.Max(.001f, sample.walkingSeconds)).ToString("F1") + "/" +
                     (sample.boneRotationTravel[1] / Mathf.Max(.001f, sample.walkingSeconds)).ToString("F1") + "deg/s; rotation range=" +
@@ -223,10 +292,11 @@ namespace Alterverse.EditorChecks
             }
             if (recordedFrames < 20 || samples.Count == 0)
                 Debug.LogWarning("DF Movement: insufficient rendered samples or no live gameplay heroes. Keep the Game view visible, unpause Play Mode, then run the recorder again.");
+            if (trace != null) { trace.Dispose(); trace = null; Debug.Log("DF Movement: final-pose CSV saved to " + tracePath, this); }
             Debug.Log("DF Movement recording finished: " + samples.Count + " heroes, " + recordedFrames + " final rendered frames. Results are diagnostics, not visual acceptance.");
             Destroy(gameObject);
         }
-        private void OnDestroy() { EditorApplication.update -= CheckDeadline; }
+        private void OnDestroy() { EditorApplication.update -= CheckDeadline; trace?.Dispose(); trace = null; }
     }
 }
 #endif

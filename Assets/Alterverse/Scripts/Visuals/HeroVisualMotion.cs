@@ -323,7 +323,7 @@ namespace Alterverse.Visuals
             if(!GroundingSuspended)phase=Mathf.Repeat(phase+travel/Mathf.Max(.1f,strideLength)*Mathf.PI*2,Mathf.PI*2);
             // The articulated rig owns its feet and knees. Moving the legacy boot as well
             // would apply each stride twice and detach it from the ankle joint.
-            // The procedural joints own the legs and feet. No imported clip or secondary gait path.
+            // Authored directional clips own imported legs; the procedural rig is the fallback.
             // Guard remains the base; bounded upper-body motion shares the leg's distance phase.
             // Authored heroes receive their arm offsets after the final guard reset.
             // Never feed a later presentation component's pose back into next frame's smoothing.
@@ -335,6 +335,7 @@ namespace Alterverse.Visuals
             float t=Time.time;
             float idle=Mathf.Sin(t*1.8f)*.014f*(1-strideWeight);
             float bob=(1-Mathf.Cos(phase*2))*.035f*strideWeight*(heavy?.8f:1);
+            if (GetComponent<HeroLocomotionAnimation>()?.Active == true) bob = 0f;
             if(hero==HeroId.Elyra)idle+=Mathf.Sin(t*1.3f)*.018f;
             if(Time.time<windupUntil&&!HeroCombatStatus.CanAct(gameObject)){windupUntil=attackUntil=windupDuration=0;}
             float preparation=Time.time<windupUntil?1:0;
@@ -977,6 +978,7 @@ namespace Alterverse.Visuals
 
     }
 }
+
 
 
 

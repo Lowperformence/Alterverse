@@ -12,7 +12,8 @@ partial class PlanHarness {
  h.motion.PresentedPosition=new Vector3(.04f,0,.06f);hip.position+=h.motion.PresentedPosition;
  h.PlanAuthored(leg,new Vector3(0,0,.08f),hint,true,rotation,0f);Near(anchor,leg.target,"contact anchor moved through phase wrap");count++;
  h.PlanAuthored(leg,new Vector3(0,.12f,-.1f),hint,false,rotation,.25f);Near(leg.target,h.motion.PresentedPosition+new Vector3(side*.15f,.17f,-.1f),"swing source height/offset lost");count++;
- h.PrepareFoot(leg,.5f,true);Assert(Quaternion.Angle(foot.rotation,rotation)<.001f,"source foot rotation lost on level floor");count++;
+ for(int i=0;i<10;i++){Time.deltaTime=1f/60f;Time.frameCount++;var previous=foot.rotation;h.PrepareFoot(leg,.5f,true);Assert(Quaternion.Angle(previous,foot.rotation)<18f,"source boot rotation snapped");}
+ Assert(Quaternion.Angle(foot.rotation,rotation)<.001f,"source foot rotation failed to converge on level floor");count++;
  h.PlanAuthored(leg,new Vector3(0,0,.15f),hint,true,rotation,.6f);Near(leg.target,h.motion.PresentedPosition+new Vector3(side*.15f,.05f,.15f),"new contact did not land at sampled target");count++;
  var before=leg.target;h.Plan(leg,0,.5f,0,Vector3.forward,false,.001f);Assert(!leg.authoredSample&&leg.contact,"stop failed to restore fallback");Assert(Vector3.Distance(leg.target,before)<.003f,"stop snapped instead of settling");count++;
  for(int i=0;i<500;i++)h.Plan(leg,0,.5f,0,Vector3.forward,false,.016f);Near(leg.target,h.motion.PresentedPosition+new Vector3(side*.15f,.05f,0),"stop failed to settle");count++;
