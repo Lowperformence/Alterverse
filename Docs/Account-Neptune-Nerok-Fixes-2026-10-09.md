@@ -24,7 +24,7 @@ Zur Abnahme Neptune offline starten, Match verlassen und erneut starten; anschli
 
 ## Nerok
 
-Die Laufzeitgeometrie verwendet einen flacheren Kopf (Höhe ×0,74, Tiefe ×0,84) und schlankere Ober-/Unterarme (Dicke ×0,74). Die schwarzen Unterarmplatten samt Zubehör werden aus dem Körpermesh entfernt. Braune, geschlossene Lederbänder umschließen beide Unterarme und folgen den Unterarmknochen. Die Änderung wirkt im Menü und im Match. Die Blender-Quelldatei wurde nicht neu exportiert.
+Die Laufzeitgeometrie verwendet einen schmaleren, flacheren Kopf (Breite von links nach rechts ×0,70, Höhe ×0,74, Tiefe ×0,84) und schlankere Ober-/Unterarme (Dicke ×0,74). Die schwarzen Unterarmplatten samt Zubehör werden aus dem Körpermesh entfernt. Braune, geschlossene Lederbänder umschließen beide Unterarme und folgen den Unterarmknochen. Die Änderung wirkt im Menü und im Match. Die Blender-Quelldatei wurde nicht neu exportiert.
 
 Die Darstellung muss im Unity-Menü sowie bei Bewegung, Angriff und Fähigkeiten auf Clipping und Passform geprüft werden; hier war keine Unity-Bildausgabe verfügbar.
 

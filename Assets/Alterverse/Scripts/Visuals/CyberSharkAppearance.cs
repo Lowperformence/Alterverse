@@ -295,8 +295,8 @@ namespace Alterverse.Visuals
             if(name=="Head")
             {
                 Vector3 pivot=Point(data.anchors[bone].head);
-                point=pivot+Vector3.Scale(point-pivot,new Vector3(1f,.74f,.84f));
-                normal=new Vector3(normal.x,normal.y/.74f,normal.z/.84f).normalized;
+                point=pivot+Vector3.Scale(point-pivot,new Vector3(.70f,.74f,.84f));
+                normal=new Vector3(normal.x/.70f,normal.y/.74f,normal.z/.84f).normalized;
                 return;
             }
             if(!name.StartsWith("UpperArm",StringComparison.Ordinal)&&!name.StartsWith("Forearm",StringComparison.Ordinal))return;
