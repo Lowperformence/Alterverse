@@ -3,7 +3,7 @@ using Alterverse.Profile;
 using UnityEngine;
 namespace Alterverse.Audio
 {
-    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact,Explosion}
+    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact,Explosion,EnemyHeroDefeated}
     public sealed class DimensionAudio:MonoBehaviour
     {
         static DimensionAudio instance;
@@ -27,6 +27,16 @@ namespace Alterverse.Audio
             Alterverse.Match.DimensionPlanetDirector.PlanetArrived+=Planet;
         }
         static void Planet(Vector3 position)=>Play(DimensionSound.PlanetArrival,.65f);
+        public static void NotifyHeroDeath(Alterverse.Combat.Health victim)
+        {
+            if(victim==null||victim.GetComponent<Alterverse.Characters.HeroIdentity>()==null)return;
+            var local=Alterverse.Characters.LocalHeroContext.Member;
+            var defeated=victim.GetComponent<Alterverse.Combat.TeamMember>();
+            // A team-wide score cue, including allied kills and deaths outside the camera.
+            // No local hero exists on a dedicated server, so it stays silent there.
+            if(local!=null&&defeated!=null&&local.Team!=defeated.Team)
+                Play(DimensionSound.EnemyHeroDefeated,.18f);
+        }
         public static void PlayAt(DimensionSound sound,Vector3 position,float volume=.5f)
         {
             Camera camera=Camera.main;if(camera==null)return;Vector3 p=camera.WorldToViewportPoint(position);
@@ -91,6 +101,7 @@ namespace Alterverse.Audio
         }
         static int Priority(DimensionSound sound)=>sound switch
         {
+            DimensionSound.EnemyHeroDefeated=>2,
             DimensionSound.TowerTarget or DimensionSound.CoreHit or DimensionSound.MeteorImpact or
             DimensionSound.RealityShatter or DimensionSound.Overtime or DimensionSound.SuddenDeath or
             DimensionSound.Kill or DimensionSound.HeroDeath or DimensionSound.Victory or DimensionSound.Defeat=>3,
@@ -100,6 +111,7 @@ namespace Alterverse.Audio
         };
         static float Cooldown(DimensionSound sound)=>sound switch
         {
+            DimensionSound.EnemyHeroDefeated=>0f,
             DimensionSound.Explosion=>.12f,DimensionSound.Attack=>.12f,DimensionSound.HitLight=>.1f,DimensionSound.AbilityImpact=>.14f,
             DimensionSound.TowerShot or DimensionSound.TowerImpact=>.2f,
             DimensionSound.TowerTarget=>.65f,DimensionSound.UiConfirm or DimensionSound.UiBack=>.16f,
@@ -127,3 +139,4 @@ namespace Alterverse.Audio
         }
     }
 }
+

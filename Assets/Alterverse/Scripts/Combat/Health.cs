@@ -210,6 +210,7 @@ namespace Alterverse.Combat
                 if (GetComponent<Alterverse.Characters.HeroIdentity>() != null)
                 {
                     Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.HeroDeath, .78f);
+                    Alterverse.Audio.DimensionAudio.NotifyHeroDeath(this);
                     var killer = source != null ? source.GetComponentInParent<Alterverse.Characters.HeroIdentity>() : null;
                     if (killer != null && killer.gameObject != gameObject)
                         Alterverse.Audio.HeroCombatAudio.ConfirmedKill(killer.gameObject);
@@ -270,7 +271,10 @@ namespace Alterverse.Combat
 
             IsDead = dead || Current <= 0;
             if (!wasDead && IsDead && GetComponent<Alterverse.Characters.HeroIdentity>() != null)
+            {
                 Alterverse.Audio.DimensionAudio.Play(Alterverse.Audio.DimensionSound.HeroDeath, .78f);
+                Alterverse.Audio.DimensionAudio.NotifyHeroDeath(this);
+            }
             if (!IsDead && Current <= 0)
                 Current = Mathf.Min(1, maxHealth);
             Changed?.Invoke(Current, maxHealth);
@@ -290,6 +294,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 
