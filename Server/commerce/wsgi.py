@@ -1,7 +1,9 @@
 """Production entry point. Credentials stay on the server; storage must be durable."""
+import logging
 import os
 from pathlib import Path
 import google.auth
+from google.auth.exceptions import DefaultCredentialsError
 from google.auth.transport.requests import AuthorizedSession
 from authentication import UnityPlayerAuthenticator
 from application import CommerceApplication
@@ -12,7 +14,7 @@ from ledger import Ledger
 def create_application():
     unity_project_id=os.environ['DF_UNITY_PROJECT_ID']
     enabled=os.environ.get('DF_ENABLE_GOOGLE_PLAY','0')=='1'
-    package=os.environ['DF_ANDROID_PACKAGE_NAME'] if enabled else ''
+    package=os.environ.get('DF_ANDROID_PACKAGE_NAME','').strip() if enabled else ''
     storage=os.environ.get('DF_ACCOUNT_STORAGE','sqlite').strip().lower()
     if storage == 'firestore':
         ledger=FirestoreLedger(
@@ -24,10 +26,19 @@ def create_application():
         ledger=Ledger(database)
     else:
         raise ValueError('DF_ACCOUNT_STORAGE must be sqlite or firestore')
-    google=None
+    # Do not shadow the imported google module: the old local 'google=None'
+    # crashed service startup as soon as DF_ENABLE_GOOGLE_PLAY was enabled.
+    # Account/profile functionality must remain available if billing is misconfigured.
+    publisher_session=None
     if enabled:
-        credentials,_=google.auth.default(scopes=['https://www.googleapis.com/auth/androidpublisher'])
-        google=AuthorizedSession(credentials)
-    return CommerceApplication(ledger,UnityPlayerAuthenticator(unity_project_id),google,package)
+        if not package:
+            logging.error('Google Play billing disabled: DF_ANDROID_PACKAGE_NAME is missing')
+        else:
+            try:
+                credentials,_=google.auth.default(scopes=['https://www.googleapis.com/auth/androidpublisher'])
+                publisher_session=AuthorizedSession(credentials)
+            except DefaultCredentialsError:
+                logging.error('Google Play billing disabled: application credentials unavailable')
+    return CommerceApplication(ledger,UnityPlayerAuthenticator(unity_project_id),publisher_session,package)
 
 application=create_application()

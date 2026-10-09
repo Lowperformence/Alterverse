@@ -55,6 +55,47 @@ After the account service works:
 - Keep `ShardCatalog.json` in the backend image; client/server catalog versions must agree.
 - Run real license-tester purchases, cancellations, delayed payment, lost-response recovery, relaunch, account switching, refund/revocation handling and two-device restoration before enabling public payments. Refund/chargeback reconciliation is still separate work.
 
+### Google Cloud Run: resolve "account server billing is not enabled"
+
+The shipped Android app points to the Cloud Run account endpoint
+`https://dimensions-front-purchase-server-1029475752167.europe-west1.run.app`.
+This is **server-side Google Play Billing**, not the Google Cloud project's billing account.
+
+1. **Deploy the repaired `Server/commerce/wsgi.py` first.** The earlier code
+   assigned `google=None` inside `create_application()`, shadowed the imported
+   `google.auth` module, and would crash once `DF_ENABLE_GOOGLE_PLAY=1` was set.
+   Updating environment variables on an old deployment is not a fix.
+2. In **Google Cloud Console → Cloud Run → dimensions-front-purchase-server →
+   Edit & deploy new revision → Variables & Secrets**, configure:
+   - `DF_ENABLE_GOOGLE_PLAY=1`
+   - `DF_ANDROID_PACKAGE_NAME=com.lowperformence.dimensionsfront`
+   Preserve the existing `DF_UNITY_PROJECT_ID`, `DF_ACCOUNT_STORAGE`, Firestore
+   namespace/project, identity and data storage settings.
+3. Enable the **Google Play Android Developer API** for the appropriate Google
+   Cloud project, and make the Cloud Run runtime service account authorized to
+   access the app in the **Google Play Console** (API access / app permissions).
+   Use Application Default Credentials from that service account; do not embed
+   JSON keys or tokens in the repository or Android build.
+4. Deploy the new revision and check Cloud Run logs for billing initialization
+   errors. The authenticated `POST /wallet` response should have
+   `wallet.billingReady: true` (this confirms configuration, **not** the
+   Play Console product activation or a successful live purchase).
+5. Confirm that `dimensions_shards_500`, `dimensions_shards_1200`, and
+   `dimensions_shards_5500` are active one-time products for
+   `com.lowperformence.dimensionsfront`. Install the test build **through Google
+   Play** and use a licensed tester to check prices and an actual test checkout.
+
+If credentials are unavailable or the Android package name is blank, the
+patched backend stays up for account/profile access but reports
+`billingReady: false`. It never grants shards without Google token verification.
+A Google Publisher permission error might still occur at fulfillment even when
+`billingReady` is true: verify the Cloud Run service-account permissions and
+use a real licensed Play test purchase before public launch. Never turn on
+`DF_GOOGLE_PLAY_SHARD_TEST` for production as a workaround.
+
+Backend regression tests include `Server/commerce/test_wsgi_billing.py`.
+These tests do not check the deployed Google Cloud service or Play billing.
+
 ## Verification
 
 Run:
