@@ -11,7 +11,7 @@ namespace Alterverse.Audio
         AudioClip[] clips;AudioClip[][] heroClips;float[] nextCue;int variation;
         int[] heroVariation;
         readonly int[] actorKeys=new int[128],cueKeys=new int[128];
-        readonly float[] actorReady=new float[128];int actorCursor;float warningUntil;
+        readonly float[] actorReady=new float[128];int actorCursor;float warningUntil,duckGain=1f;
         readonly int[] importance=new int[VoiceCount],activeCue=new int[VoiceCount];
         readonly AudioSource[] voices=new AudioSource[VoiceCount];readonly float[] gains=new float[VoiceCount];
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -38,7 +38,7 @@ namespace Alterverse.Audio
                 Vector3 delta=position-ray.GetPoint(distance);delta.y=0;
                 attenuation=Mathf.Lerp(1f,.15f,Mathf.InverseLerp(3,28,delta.magnitude));
             }
-            if(instance==null)return;int cue=(int)sound;
+            if(instance==null)return;int cue=(int)sound;if(cue<0||cue>=instance.clips.Length)return;
             if(instance.clips[cue]!=null)PlayCue(instance.clips[cue],cue,volume*Gain(sound)*attenuation,1,Priority(sound),Cooldown(sound),Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f));
         }
         public static void Play(DimensionSound sound,float volume=1,float pitch=1)
@@ -87,7 +87,7 @@ namespace Alterverse.Audio
             voice.pitch=Mathf.Clamp(pitch*(1+variation*.018f),.8f,1.2f);
             instance.importance[slot]=priority;instance.activeCue[slot]=cue;voice.priority=priority==3?32:priority==2?64:priority==1?112:160;
             instance.gains[slot]=Mathf.Clamp01(volume)*(1+variation*.035f);
-            voice.volume=instance.gains[slot]*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume*(priority<3&&Time.unscaledTime<instance.warningUntil?.55f:1f);voice.Play();return true;
+            voice.volume=instance.gains[slot]*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume*(priority<3?instance.duckGain:1f);voice.Play();return true;
         }
         static int Priority(DimensionSound sound)=>sound switch
         {
@@ -112,7 +112,13 @@ namespace Alterverse.Audio
             DimensionSound.UiConfirm or DimensionSound.UiBack=>.8f,_=>1f
         };
 
-        void Update(){float volume=PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;for(int i=0;i<VoiceCount;i++)if(voices[i]!=null)voices[i].volume=gains[i]*volume*(importance[i]<3&&Time.unscaledTime<warningUntil?.55f:1f);}
+        void Update()
+        {
+            duckGain=AudioDuckEnvelope.Advance(duckGain,Time.unscaledTime<warningUntil,Time.unscaledDeltaTime);
+            float volume=PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
+            for(int i=0;i<VoiceCount;i++)if(voices[i]!=null)
+                voices[i].volume=gains[i]*volume*(importance[i]<3?duckGain:1f);
+        }
         void OnDestroy()
         {
             if(instance!=this)return;instance=null;

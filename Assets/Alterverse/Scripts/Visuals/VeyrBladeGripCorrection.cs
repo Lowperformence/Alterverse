@@ -79,7 +79,7 @@ namespace Alterverse.Visuals
             foreach (HeroIdentity key in stale)
                 if (!ReferenceEquals(key, null)) rigs.Remove(key);
 
-            foreach (HeroIdentity identity in Object.FindObjectsOfType<HeroIdentity>(true))
+            foreach (HeroIdentity identity in Object.FindObjectsByType<HeroIdentity>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {
                 if (identity == null || identity.Hero != HeroId.Veyr) continue;
                 // Authored rigs already fit the actual gold end to the palm and own

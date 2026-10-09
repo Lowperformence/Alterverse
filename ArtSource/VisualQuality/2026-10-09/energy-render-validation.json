@@ -1,0 +1,7 @@
+{
+  "renderer": "llvmpipe (LLVM 20.1.2, 256 bits)",
+  "scope": "Original HLSL compiled to SPIR-V/GLSL; substitute Unity Core matrices; controlled mesh fixtures. Not Unity or Android.",
+  "renders": 336,
+  "warning_max_error": 0,
+  "alpha_max_error": 0
+}

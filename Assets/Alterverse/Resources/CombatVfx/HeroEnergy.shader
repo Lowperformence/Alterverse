@@ -1,6 +1,6 @@
 Shader "DimensionsFront/HeroEnergy"
 {
- Properties { _Tint("Tint",Color)=(1,1,1,1) _Polish("Energy core",Range(0,1))=0 _Life("Normalized age",Range(0,1))=0 _SurfaceStyle("Surface response",Float)=0 }
+ Properties { _Tint("Tint",Color)=(1,1,1,1) _Polish("Energy core",Range(0,1))=0 _Life("Normalized age",Range(0,1))=0 _SurfaceStyle("Surface response",Float)=0 _DetailQuality("Surface detail budget",Range(0,1))=1 }
  SubShader
  {
   Tags { "Queue"="Transparent" "RenderType"="Transparent" "RenderPipeline"="UniversalPipeline" }
@@ -9,39 +9,45 @@ Shader "DimensionsFront/HeroEnergy"
    Blend SrcAlpha OneMinusSrcAlpha
    ZWrite Off ZTest LEqual Cull Off
    HLSLPROGRAM
+   #pragma target 3.0
    #pragma vertex vert
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-   struct A { float4 position:POSITION; half4 color:COLOR; };
-   struct V { float4 position:SV_POSITION; half4 color:COLOR; half heat:TEXCOORD0; float3 local:TEXCOORD1; };
+   #include "Assets/Alterverse/Resources/CombatVfx/HeroEnergySurface.hlsl"
+   struct A { float4 position:POSITION; half4 color:COLOR; float3 normal:NORMAL; };
+   struct V { float4 position:SV_POSITION; half4 color:COLOR; half heat:TEXCOORD0; float3 local:TEXCOORD1; float2 surfaceUV:TEXCOORD2; half facing:TEXCOORD3; };
    CBUFFER_START(UnityPerMaterial)
    half4 _Tint;
    half _Polish;
    half _Life;
    half _SurfaceStyle;
+   half _DetailQuality;
    CBUFFER_END
-   V vert(A i) { V o;o.position=TransformObjectToHClip(i.position.xyz);o.color=i.color*_Tint;o.heat=saturate((max(i.color.r,max(i.color.g,i.color.b))-1.0h)*2.5h);o.local=i.position.xyz;return o; }
+   V vert(A i)
+   {
+    V o;o.position=TransformObjectToHClip(i.position.xyz);o.color=i.color*_Tint;
+    o.heat=saturate((max(i.color.r,max(i.color.g,i.color.b))-1.0h)*2.5h);o.local=i.position.xyz;
+    float3 normalOS=SafeNormalize(i.normal);
+    float3 axis=abs(normalOS);
+    o.surfaceUV=axis.y>=max(axis.x,axis.z)?i.position.xz:axis.x>=axis.z?i.position.zy:i.position.xy;
+    // Orbs use their radial normal, including under nonuniform visual scale.
+    if(_SurfaceStyle==1)normalOS=SafeNormalize(i.position.xyz);
+    half3 normalWS=TransformObjectToWorldNormal(normalOS);
+    half3 view=GetWorldSpaceNormalizeViewDir(TransformObjectToWorld(i.position.xyz));
+    o.facing=saturate(abs(dot(normalWS,view)));return o;
+   }
    half4 frag(V i):SV_Target
    {
     // Only authored hot vertices approach white; silhouettes retain their hero hue.
     // Warning slots opt out, retaining their exact established alpha and shape.
     half core=i.heat*_Polish;
     half3 color=lerp(i.color.rgb,min(i.color.rgb+half3(.55h,.55h,.55h),1.8h),core*.62h);
-    // Object-space flowing filaments: no textures, screen distortion or additional lights.
-    // Age is supplied per pooled effect; paused gameplay freezes the surface too.
-    float flow=dot(i.local,float3(2.7,1.9,3.1))-_Life*1.7;
-    float stripe=abs(frac(flow)-.5)*2.0;
-    float width=max(fwidth(flow)*2.0,.055);
-    half filament=1.0-smoothstep(.10,.10+width,stripe);
-    half body=saturate(1.0-length(i.local)*.62);
-    half volume=_SurfaceStyle==1?body*body:0;
-    half shell=_SurfaceStyle==2?filament*.30h:0;
-    half release=1.0h-smoothstep(.0h,.24h,_Life);
-    half detail=_Polish*saturate(_SurfaceStyle);
-    color*=1.0h+detail*(filament*.16h+volume*.27h+shell);
-    color+=min(i.color.rgb,1.0h)*detail*(volume*.12h+core*release*.18h);
-    half alpha=i.color.a*lerp(1.0h,.86h+filament*.14h,detail);
-    return half4(color,alpha);
+    // Uniform warning branch bypasses every new surface response. Alpha is inherited
+    // from the original mesh, so small contours, dark portal cores and contact timing survive.
+    if(_Polish>0 && _SurfaceStyle>0)
+     color+=DFEnergySurface(i.local,i.surfaceUV,i.facing,i.heat,min(i.color.rgb,1.0h),
+       _Life,_SurfaceStyle,_DetailQuality)*_Polish;
+    return half4(color,i.color.a*DFEnergyOriginalOpacity(i.local,_Life,_SurfaceStyle,_Polish));
    }
    ENDHLSL
   }

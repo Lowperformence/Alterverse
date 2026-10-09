@@ -14,6 +14,7 @@ Shader "Alterverse/ScenerySurface"
         _RoughnessWeight("Texture finish weight",Range(0,1))=.3
         _RoughnessBias("Planet stone roughness adjustment",Range(-.3,.3))=0
         _Sheen("Leaf edge sheen",Range(0,.2))=0
+        _Transmission("Leaf backlight",Range(0,.12))=0
     }
     SubShader
     {
@@ -29,6 +30,7 @@ Shader "Alterverse/ScenerySurface"
             float _DetailScale;
             half _Metallic,_Smoothness,_Relief,_ValueContrast,_RoughnessWeight,_Sheen;
             half _RoughnessBias;
+            half _Transmission;
         CBUFFER_END
         struct Attributes
         {
@@ -103,6 +105,21 @@ Shader "Alterverse/ScenerySurface"
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,smooth,cavity,_EmissionColor.rgb,input.positionCS);
                 half rim=pow(1-saturate(dot(n,GetWorldSpaceNormalizeViewDir(input.positionWS))),4);
                 rgb+=albedo*rim*_Sheen;
+                if(_Transmission>0)
+                {
+                    // Thin foliage receives a restrained coloured backlight from the
+                    // existing main light. Keep its real shadow/distance attenuation.
+                    // Stone, bark, metal, ice and wet surfaces leave this branch disabled.
+                    #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
+                        float4 shadow=ComputeScreenPos(TransformWorldToHClip(input.positionWS));
+                    #else
+                        float4 shadow=TransformWorldToShadowCoord(input.positionWS);
+                    #endif
+                    Light key=GetMainLight(shadow);
+                    half back=saturate(dot(-n,key.direction));
+                    rgb+=albedo*key.color*(key.distanceAttenuation*key.shadowAttenuation)*
+                        (back*back)*(.5h+rim*.5h)*_Transmission;
+                }
                 return half4(MixFog(rgb,input.fog),1);
             }
             ENDHLSL

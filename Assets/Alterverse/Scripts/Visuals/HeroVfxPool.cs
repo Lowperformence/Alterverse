@@ -18,7 +18,7 @@ namespace Alterverse.Visuals
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
-            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning,CancelOnOwnerDeath;
+            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
             public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
@@ -33,9 +33,22 @@ namespace Alterverse.Visuals
         private int cursor;
         private static readonly int Life=Shader.PropertyToID("_Life"),SurfaceStyle=Shader.PropertyToID("_SurfaceStyle");
         private static readonly int Polish=Shader.PropertyToID("_Polish");
+        private static readonly int DetailQuality=Shader.PropertyToID("_DetailQuality");
         private static readonly int Tint=Shader.PropertyToID("_Tint"),BaseColor=Shader.PropertyToID("_BaseColor");
         public static void Warm()
         {if(instance==null)new GameObject("DF_HeroVfxPool").AddComponent<HeroVfxPool>();}
+        // Shared instantaneous world trace. Its geometry starts at the muzzle and
+        // ends at contact, even though the pool enlarges decorative cross-sections.
+        public static void Trace(Vector3 from,Vector3 to,Color color,float width,float duration)
+        {
+            Vector3 delta=to-from;
+            if(delta.sqrMagnitude<.0001f)return;
+            Vector3 center=from+delta*(1.4f/1.95f);
+            float crossSection=Mathf.Max(.006f,width)/.48f;
+            Vector3 up=Mathf.Abs(Vector3.Dot(delta.normalized,Vector3.up))>.999f?Vector3.forward:Vector3.up;
+            Emit(HeroFxShape.Bolt,center,center,new Vector3(crossSection,crossSection,delta.magnitude/1.95f),
+                color,duration,HeroFxMotion.Hold,Quaternion.LookRotation(delta,up));
+        }
         private void Awake()
         {
             instance=this;material=Resources.Load<Material>("CombatVfx/HeroEnergy");
@@ -91,9 +104,21 @@ namespace Alterverse.Visuals
                 int i=begin+(cursor+n)%(end-begin);
                 if(!slots[i].Active){slot=slots[i];cursor=(i-begin+1)%(end-begin);break;}
             }
+            // A core shot can reclaim an optional flourish when combat fills the pool.
+            // Warning slots are excluded, and a flourish never displaces another core.
+            if(slot==null&&!warning&&!decorative)
+            {
+                for(int i=0;i<end;i++)
+                {
+                    Slot candidate=slots[i];
+                    if(candidate.Active&&candidate.Decorative&&
+                        (slot==null||candidate.Start+candidate.Duration<slot.Start+slot.Duration))slot=candidate;
+                }
+                if(slot!=null)Hide(slot);
+            }
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
-            slot.Active=true;slot.Warning=warning;slot.CancelOnOwnerDeath=owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
+            slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
@@ -103,9 +128,12 @@ namespace Alterverse.Visuals
             slot.From=from;slot.To=to;slot.Size=size*(warning?1f:1.5f);slot.Color=color;slot.Motion=motion;
             // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
             if(!warning&&shape==HeroFxShape.Bolt&&motion==HeroFxMotion.Hold)slot.Size.z=size.z;
-            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Orb||shape==HeroFxShape.Seed?1f:
+            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Orb?1f:
+                shape==HeroFxShape.Seed||shape==HeroFxShape.Leaf||shape==HeroFxShape.Petals?4f:
                 shape==HeroFxShape.Shield||shape==HeroFxShape.Hex||shape==HeroFxShape.Runes?2f:3f;
-            slot.Rotation=rotation==default?Quaternion.identity:rotation;
+            // Quaternion == compares rotation dot products, so an all-zero optional
+            // argument does not even compare equal to itself. Check the sentinel components.
+            slot.Rotation=rotation.x==0f&&rotation.y==0f&&rotation.z==0f&&rotation.w==0f?Quaternion.identity:rotation;
             slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
             if (!warning && shape == HeroFxShape.AnchorProjectile && anchorMetal == null)
@@ -195,6 +223,7 @@ namespace Alterverse.Visuals
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
             s.Block.SetFloat(Life,t);s.Block.SetFloat(SurfaceStyle,s.SurfaceStyle);
+            s.Block.SetFloat(DetailQuality,s.Warning?0f:AdaptiveVfxBudget.SurfaceDetail);
             s.Block.SetFloat(Polish,s.Warning?0f:1f);s.Block.SetColor(Tint,color);s.Block.SetColor(BaseColor,color);s.Renderer.SetPropertyBlock(s.Block);s.Renderer.enabled=true;
         }
         private void OnDestroy()
@@ -435,7 +464,7 @@ namespace Alterverse.Visuals
                         Tri(d*.35f+s*.035f,d*.85f+s*.13f,d*1.1f+s*.21f);
                     }break;
             }
-            Mesh mesh=new Mesh{name="DF_AuthoredFx_"+shape};mesh.SetVertices(v);mesh.SetColors(colors);mesh.SetTriangles(triangles,0);mesh.RecalculateBounds();return mesh;
+            Mesh mesh=new Mesh{name="DF_AuthoredFx_"+shape};mesh.SetVertices(v);mesh.SetColors(colors);mesh.SetTriangles(triangles,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
         }
     }
 }

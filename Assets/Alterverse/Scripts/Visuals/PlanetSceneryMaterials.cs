@@ -55,6 +55,7 @@ namespace Alterverse.Visuals
             material.SetFloat("_ValueContrast",finish==SceneryFinish.Metal?.10f:finish==SceneryFinish.Ice?.08f:.25f);
             material.SetFloat("_RoughnessWeight",finish==SceneryFinish.Metal?.18f:finish==SceneryFinish.Ice?.18f:.35f);
             material.SetFloat("_Sheen",finish==SceneryFinish.Leaf?.07f:0f);
+            material.SetFloat("_Transmission",finish==SceneryFinish.Leaf?.065f:0f);
             material.SetFloat("_RoughnessBias",finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone||finish==SceneryFinish.Soil
                 ?PlanetSurfaceFinishProfile.For(planet).RoughnessBias:0f);
             if(finish==SceneryFinish.WetStone)material.SetFloat("_Smoothness",Mathf.Max(smooth,.42f));
