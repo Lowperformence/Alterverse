@@ -257,7 +257,10 @@ namespace Alterverse.Visuals
                 {
                     float frost=Mathf.Lerp(.48f,.80f,Mathf.InverseLerp(.30f,.68f,tone));
                     frost*=1f-dust*.025f;
-                    pixels[i]=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
+                    Color ground=new Color(frost*.88f,frost*.97f,Mathf.Min(1f,frost*1.08f),1);
+                    pixels[i]=KryonCentralIce.Sample(wx,wz,ground,out float iceRelief);
+                    // Etched ice normals are presentation only; Surface() and collision stay unchanged.
+                    heights[i]+=iceRelief;
                 }
                 else if(ArenaVariantRuntime.IsEarth)
                 {
@@ -312,5 +315,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
