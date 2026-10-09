@@ -130,8 +130,8 @@ namespace Alterverse.AI
             }
             return true;
         }
-        public static bool HotZoneAllowsTarget(bool hotZoneActive,bool heroTarget)
-            =>!hotZoneActive||heroTarget;
+        public static bool HotZoneAllowsTarget(bool hotZoneActive,bool heroTarget,bool planetTarget=false)
+            =>!hotZoneActive||heroTarget||planetTarget;
 
         private bool IsEnemy(Health candidate)
         {
@@ -139,10 +139,10 @@ namespace Alterverse.AI
                 !candidate.isActiveAndEnabled || teamMember == null) return false;
 
             HeroIdentity hero=candidate.GetComponent<HeroIdentity>();
-            hotZone??=FindAnyObjectByType<HotZoneDirector>();
-            if(!HotZoneAllowsTarget(hotZone!=null&&hotZone.IsActive,hero!=null))return false;
-
             DimensionPlanet planet = candidate.GetComponent<DimensionPlanet>();
+            hotZone??=FindAnyObjectByType<HotZoneDirector>();
+            if(!HotZoneAllowsTarget(hotZone!=null&&hotZone.IsActive,hero!=null,planet!=null))return false;
+
             if (planet != null) return planet.Available;
 
             // Reality cores and defensive structures are not bot combat objectives.

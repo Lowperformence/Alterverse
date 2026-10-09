@@ -88,6 +88,8 @@ namespace Alterverse.AI
             Vector3 destination = lanePlan.GetDestination(brain.State);
             float stopDistance = roamStopDistance;
             Health target = sensor != null ? sensor.CurrentTarget : null;
+            bool planetPriority=ShouldPursuePlanet(brain.State,target!=null,
+                objective!=null&&objective.Available&&ShouldRotate());
             if(brain.State!=MobaBotBrain.BotState.Fight){chaseTarget=null;chaseStarted=0;}
 
             if (target != null && !target.IsDead && brain.State == MobaBotBrain.BotState.Fight)
@@ -164,12 +166,12 @@ namespace Alterverse.AI
                 // is never consulted, so this behaves like human short-term memory rather than wall vision.
                 destination=sensor.LastKnownEnemyPosition;stopDistance=.75f;
             }
-            else if(ShouldPursueHotZone(brain.State,target!=null,hotZone!=null&&hotZone.IsActive)&&ShouldContestHotZone())
+            else if(planetPriority)
+            { destination=SpreadSharedDestination(objective.transform.position,1.35f);stopDistance=1.65f; }
+            else if(ShouldPursueHotZone(brain.State,target!=null,hotZone!=null&&hotZone.IsActive,planetPriority)&&ShouldContestHotZone())
             { destination=SpreadSharedDestination(hotZone.transform.position,2.4f);stopDistance=2.2f; }
             else if(brain.State==MobaBotBrain.BotState.Roam&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0&&sensor.NearbyEnemies>0)
             { destination=SpreadSharedDestination(sensor.RallyPosition,1.75f);stopDistance=1.55f; }
-            else if (brain.State == MobaBotBrain.BotState.Roam && objective != null && objective.Available && ShouldRotate())
-            { destination = SpreadSharedDestination(objective.transform.position,1.35f); stopDistance = 1.65f; }
 
             if(brain.State==MobaBotBrain.BotState.Fight&&brain.GroupWithAllies&&sensor!=null&&sensor.NearbyAllies>0
                 &&sensor.NearbyEnemies>sensor.NearbyAllies+1&&profile!=null&&profile.AttackRange>4f)
@@ -199,7 +201,8 @@ namespace Alterverse.AI
                         // Retreat/kiting still has priority when already inside the danger distance.
                         if(!keepingDistance&&CanRepositionTo(formed)){destination=formed;stopDistance=.3f;}
                     }
-                    else if(brain.State==MobaBotBrain.BotState.Roam||target==null)
+                    else if((brain.State==MobaBotBrain.BotState.Roam||target==null)&&
+                        ShouldFollowTeamObjective(planetPriority,brain.Tactics.IsHotZoneCall))
                     {
                         destination=brain.Tactics.Formation(brain,role,brain.Tactics.Destination,false);stopDistance=.75f;
                     }
@@ -250,11 +253,17 @@ namespace Alterverse.AI
             return Mathf.Max(fallback,Mathf.Max(extents.x,extents.z)+.78f);
         }
 
-        public static bool ShouldPursueHotZone(MobaBotBrain.BotState state,bool hasVisibleCombatTarget,bool hotZoneActive)
+        public static bool ShouldPursuePlanet(MobaBotBrain.BotState state,bool hasVisibleCombatTarget,bool eligiblePlanet)
+            =>eligiblePlanet&&state==MobaBotBrain.BotState.Roam&&!hasVisibleCombatTarget;
+
+        public static bool ShouldFollowTeamObjective(bool planetPriority,bool teamCallingHotZone)
+            =>!planetPriority||!teamCallingHotZone;
+
+        public static bool ShouldPursueHotZone(MobaBotBrain.BotState state,bool hasVisibleCombatTarget,bool hotZoneActive,bool planetPriority=false)
         {
             // Combat beats objectives. The explicit target guard closes the small decision-tick
             // window where perception may already see an enemy while the brain still reports Roam.
-            return hotZoneActive&&state==MobaBotBrain.BotState.Roam&&!hasVisibleCombatTarget;
+            return hotZoneActive&&!planetPriority&&state==MobaBotBrain.BotState.Roam&&!hasVisibleCombatTarget;
         }
 
         private bool ShouldContestHotZone()
@@ -271,8 +280,7 @@ namespace Alterverse.AI
             float deficit=enemy-own;
             float focus=brain.ObjectiveFocus*Mathf.Lerp(.70f,1.25f,brain.Difficulty.ObjectiveAwareness);
 
-            // The Hot Zone is now the main PvP magnet: even low-objective-focus teams send
-            // several heroes, while high-focus teams can commit all five.
+            // The Hot Zone remains the fallback event when no eligible planet takes priority.
             int slots=focus>.82f?5:focus>.58f?4:3;
             if(deficit>5f)slots=Mathf.Min(5,slots+1);
             else if(deficit<-14f)slots=Mathf.Max(3,slots-1);
@@ -286,7 +294,7 @@ namespace Alterverse.AI
             if(profile!=null&&profile.Hero==HeroId.Mira&&sensor!=null&&sensor.NearbyAllies==0&&sqr>8f*8f)
                 return false;
             float focus=brain.ObjectiveFocus*Mathf.Lerp(.55f,1.15f,brain.Difficulty.ObjectiveAwareness);
-            int slots=focus>.75f?4:focus>.55f?3:2;
+            int slots=focus>.75f?5:focus>.55f?4:3;
             return sqr <= 26f * 26f && (rotationSlot < slots || sqr < 10f * 10f);
         }
 

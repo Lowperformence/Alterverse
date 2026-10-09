@@ -45,6 +45,7 @@ namespace Alterverse.AI
         public int Revision { get; private set; }
         public bool CoreEmergency { get; private set; }
         public bool HasPlan { get; private set; }
+        public bool IsHotZoneCall { get; private set; }
         public float ChangedAt { get; private set; }
         public int AliveHeroes=>allyCount;
         public Health Focus=>Time.time<focusUntil?focus:null;
@@ -76,7 +77,7 @@ namespace Alterverse.AI
             allyCount=seenCount=deathCursor=previousDead=Revision=0;
             ChangedAt=0;
             nextTick=holdUntil=regroupUntil=tempoUntil=focusUntil=focusStarted=nextEventScan=0;
-            focus=null;ownCore=null;hotZone=null;HasPlan=CoreEmergency=false;
+            focus=null;ownCore=null;hotZone=null;HasPlan=CoreEmergency=IsHotZoneCall=false;
             Call=Intent.Roam;Destination=Home;centroid=Home;
             System.Array.Clear(allies,0,allies.Length);System.Array.Clear(seen,0,seen.Length);
             System.Array.Clear(reportedDeaths,0,reportedDeaths.Length);
@@ -240,10 +241,29 @@ namespace Alterverse.AI
             // A remembered enemy disappearing is NOT counted as a kill. Tempo requires a visible defeat.
             bool tempo=Time.time<tempoUntil&&EnemiesNear(centroid,11f)==0;
 
-            // The recurring Hot Zone is the primary non-combat rally point. Its transform moves
-            // every occurrence, so always use the live runtime position rather than a fixed centre.
+            // Team-wide planet buffs beat the Hot Zone. Availability comes from a recent sensor
+            // observation; never rotate to an unavailable planet or force a losing objective fight.
+            DimensionPlanet planetObjective=null;
+            Vector3 planetPosition=Vector3.zero;
+            float planetDistance=float.MaxValue;
+            for(int i=0;i<seenCount;i++)
+            {
+                var e=seen[i];if(e.Target==null||e.Target.IsDead)continue;
+                var planet=e.Target.GetComponent<DimensionPlanet>();
+                if(planet==null||!planet.Available)continue;
+                float distance=FlatSqr(e.Position-centroid);
+                if(distance>18f*18f||distance>=planetDistance||FightRatio(e.Position)<.9f)continue;
+                planetObjective=planet;planetPosition=e.Position;planetDistance=distance;
+            }
+            if(planetObjective!=null)
+            {
+                Commit(EnemiesNear(planetPosition,9f)>0?Intent.ContestObjective:Intent.TakeObjective,planetPosition,IsHotZoneCall);
+                return;
+            }
+
+            // No eligible planet: rally at the live position of the recurring Hot Zone.
             if(hotZone!=null&&hotZone.IsActive)
-            {Commit(Intent.ContestObjective,hotZone.transform.position,false);return;}
+            {Commit(Intent.ContestObjective,hotZone.transform.position,false,true);return;}
 
             if(!tempo&&allyCount>=3&&AlliesNear(centroid,10f)<Mathf.Min(3,allyCount))
             {
@@ -251,13 +271,6 @@ namespace Alterverse.AI
                 Vector3 rally=allies[0].Position;int connected=-1;
                 for(int i=0;i<allyCount;i++){int n=AlliesNear(allies[i].Position,10f);if(n>connected){connected=n;rally=allies[i].Position;}}
                 Commit(Intent.Group,rally,false);return;
-            }
-            // Neutral objective availability is accepted only when actually reported by a sensor.
-            for(int i=0;i<seenCount;i++)
-            {
-                var e=seen[i];if(e.Target==null||e.Target.GetComponent<DimensionPlanet>()==null)continue;
-                if(FlatSqr(e.Position-centroid)>18f*18f||FightRatio(e.Position)<.9f)continue;
-                Commit(EnemiesNear(e.Position,9f)>0?Intent.ContestObjective:Intent.TakeObjective,e.Position,false);return;
             }
             // No lane/tower fallback: when no fight or event is active, move through open
             // arena sectors to find the next PvP contact.
@@ -280,12 +293,13 @@ namespace Alterverse.AI
             return point;
         }
 
-        private void Commit(Intent intent,Vector3 destination,bool urgent)
+        private void Commit(Intent intent,Vector3 destination,bool urgent,bool hotZoneObjective=false)
         {
-            bool same=HasPlan&&Call==intent&&FlatSqr(destination-Destination)<4f;
+            bool same=HasPlan&&Call==intent&&IsHotZoneCall==hotZoneObjective&&FlatSqr(destination-Destination)<4f;
             if(same)return;
             if(HasPlan&&!urgent&&Time.time<holdUntil)return;
-            Call=intent;Destination=destination;holdUntil=Time.time+(intent==Intent.Disengage?2.5f:2f);
+            Call=intent;Destination=destination;IsHotZoneCall=hotZoneObjective;
+            holdUntil=Time.time+(intent==Intent.Disengage?2.5f:2f);
             ChangedAt=Time.time;Revision++;HasPlan=true;
 #if UNITY_EDITOR || DEBUG
             if(intent==Intent.Disengage)RegroupCalls++;
