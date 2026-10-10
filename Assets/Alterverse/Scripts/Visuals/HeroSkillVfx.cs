@@ -578,7 +578,19 @@ namespace Alterverse.Visuals
                     }
                     else Slash(actor,impact,slot);break;
                 case HeroId.Kaelon:
-                    if(slot==0){Ring(actor,Ground(impact),.9f,.24f,false,true);Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.75f,.22f);Shards(actor,impact,1,3);}break;
+                    if(slot==0){Ring(actor,Ground(impact),.9f,.24f,false,true);Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.75f,.22f);Shards(actor,impact,1,3);}
+                    else if(slot==2)
+                    {
+                        Vector3 start=Muzzle(actor),end=impact+Vector3.up*.55f;
+                        Camera view=Camera.main;
+                        Quaternion facing=view!=null?view.transform.rotation:Face(start,end);
+                        // Flight ends at the fixed Gravity Anchor warning center when its windup resolves.
+                        float flight=travelTime>0?travelTime:HeroAbilityKit.LoadoutFor(HeroId.Kaelon).E.Windup;
+                        HeroVfxPool.Emit(HeroFxShape.GravityEight,start,end,Vector3.one*.80f,
+                            new Color(.08f,.46f,1f,1f),flight,HeroFxMotion.TravelFixedFrame,
+                            facing,actor,cancelOnOwnerDeath:true);
+                    }
+                    break;
                 case HeroId.Rook:
                     if(slot==0)HeavyContact(actor,impact,slot);break;
                 case HeroId.Elyra:
