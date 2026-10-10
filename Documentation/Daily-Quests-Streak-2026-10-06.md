@@ -1,7 +1,7 @@
 # Daily map quest and login streak
 
 - New daily mission: win on five different arena variants, then claim 15 earned shards. Repeated victories on one map count once; defeats do not count. The active match arena is recorded, including shuffled and cooperative arenas.
-- Daily login rewards are granted automatically in the visible main menu: days 1–7 award 1, 3, 6, 12, 12, 12, 12 earned shards. Day 8 starts a new cycle. Missing a day resets the cycle.
+- Daily login rewards are granted automatically in the visible main menu: days 1–7 award 1, 3, 6, 12, 13, 14, 15 earned shards. Day 8 starts a new cycle. Missing a full Berlin calendar day resets the cycle to day 1. The display derives today's position from the last claim date, so a missed day also resets the visible series before today's automatic grant.
 - Both systems use midnight Europe/Berlin, including summer time. Moving the clock behind the stored day pauses new progress/rewards.
 
 ## Persistence and security

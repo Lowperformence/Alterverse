@@ -27,7 +27,17 @@ namespace Alterverse.Editor
             Check(LoginStreakProgress.NextDay(20260102, 20260101, 20251230, 4) == 1, "Missed day resets");
             Check(LoginStreakProgress.NextDay(20260102, 20260101, 20260101, 7) == 1, "Seven-day cycle resets");
             Check(LoginStreakProgress.NextDay(20260102, 20260101, 20260101, 99) == 1, "Corrupt streak resets");
-            int[] rewards = { 1, 3, 6, 12, 12, 12, 12 };
+            Check(LoginStreakProgress.NextDay(20260103, 20260102, 20260101, 6) == 1, "Exactly one missed day resets payout");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260101, 6) == 1, "Missed day resets display before grant");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 1) == 1, "Reset display remains day one after grant");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260102, 4) == 5, "Consecutive login displays next day before grant");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 5) == 5, "Same-day display preserves received day");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260102, 7) == 1, "Display wraps after seven days");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260104, 4) == 4, "Clock rollback preserves display without granting");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 0, 0) == 1, "New profile displays day one");
+            Check(LoginStreakProgress.NextDay(20260201, 20260131, 20260131, 4) == 5, "Month boundary continues");
+            Check(LoginStreakProgress.NextDay(20260101, 20251231, 20251231, 4) == 5, "Year boundary continues");
+            int[] rewards = { 1, 3, 6, 12, 13, 14, 15 };
             for (int i=0; i<rewards.Length; i++)
                 Check(LoginStreakProgress.RewardForDay(i+1) == rewards[i], "Reward schedule");
             Check(LoginStreakProgress.RewardForDay(0) == 0 && LoginStreakProgress.RewardForDay(8) == 0, "Invalid reward day");
