@@ -434,6 +434,14 @@ namespace Alterverse.Visuals
                 boundary.a=.70f;
                 Fx(HeroFxShape.Ring,ground,boundary,radius,Mathf.Max(.06f,duration),
                     HeroFxMotion.Hold,actor:actor,warning:true);
+                if(hero==HeroId.Kaelon&&slot==3)
+                {
+                    // Hollow yellow pulse travels from Auren to the exact Kest Citadel boundary.
+                    // RadialPulse keeps the supplied gameplay radius instead of the decorative 1.5x scale.
+                    HeroVfxPool.Emit(HeroFxShape.PressureWave,ground,ground,Vector3.one*radius,
+                        new Color(1f,.84f,.06f,.95f),Mathf.Max(.06f,duration),
+                        HeroFxMotion.RadialPulse,owner:actor,warning:true,cancelOnOwnerDeath:true);
+                }
                 // Traveler's sphere is launched by Spell and reaches this fixed warning center at resolution.
                 if(hero==HeroId.Traveler)return;
                 // A small elevated emblem identifies the caster while the boundary alone marks damage radius.
