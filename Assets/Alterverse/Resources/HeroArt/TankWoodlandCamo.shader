@@ -21,6 +21,7 @@ Shader "Alterverse/TankWoodlandCamo"
 
         HLSLINCLUDE
             #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -35,6 +36,35 @@ Shader "Alterverse/TankWoodlandCamo"
                 half _Smoothness;
                 half4 _EmissionColor;
             CBUFFER_END
+
+            half4 CamoSample(float2 uv)
+            {
+                half4 texel = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv);
+                float3 source = texel.rgb;
+                #ifndef UNITY_COLORSPACE_GAMMA
+                    source = LinearToSRGB(source);
+                #endif
+                // Keep the supplied woodland shapes and grain; replace their four pigment tones.
+                const float3 olive = float3(.3994, .4233, .2523);
+                const float3 brown = float3(.3807, .3276, .2710);
+                const float3 beige = float3(.6665, .6228, .5205);
+                const float3 dark = float3(.2572, .2502, .2345);
+                float3 a = source - olive, b = source - brown, c = source - beige, d = source - dark;
+                float4 squaredDistance = float4(dot(a,a), dot(b,b), dot(c,c), dot(d,d));
+                // Float precision avoids overflowing weights on exact palette matches on mobile GPUs.
+                float4 weight = rcp(max(squaredDistance, .0001));
+                weight *= weight; weight /= dot(weight, float4(1,1,1,1));
+                float3 color = float3(.48,.30,.65) * weight.x + float3(.23,.40,.65) * weight.y +
+                    beige * weight.z + float3(.16,.19,.27) * weight.w;
+                const float3 luminance = float3(.299,.587,.114);
+                float reference = dot(olive * weight.x + brown * weight.y + beige * weight.z + dark * weight.w, luminance);
+                color *= clamp(dot(source, luminance) / max(reference, .001), .6, 1.4);
+                #ifndef UNITY_COLORSPACE_GAMMA
+                    color = SRGBToLinear(color);
+                #endif
+                texel.rgb = color;
+                return texel;
+            }
 
             struct Attributes
             {
@@ -98,9 +128,9 @@ Shader "Alterverse/TankWoodlandCamo"
                 float3 weight=pow(abs(input.restNormal),4.0);
                 weight/=max(dot(weight,float3(1,1,1)),.0001);
                 half4 baseSample =
-                    SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.rest.yz*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.x+
-                    SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.rest.xz*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.y+
-                    SAMPLE_TEXTURE2D(_BaseMap,sampler_BaseMap,input.rest.xy*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.z;
+                    CamoSample(input.rest.yz*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.x+
+                    CamoSample(input.rest.xz*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.y+
+                    CamoSample(input.rest.xy*_BaseMap_ST.xy+_BaseMap_ST.zw)*weight.z;
                 half3 n = normalize(input.normalWS);
 
                 // Procedural lunar terrain supplies a runtime-generated RGB normal texture.
