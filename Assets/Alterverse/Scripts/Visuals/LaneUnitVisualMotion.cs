@@ -238,8 +238,10 @@ namespace Alterverse.Visuals
             Vector3 guard=arm.position-transform.up*reach*.55f+transform.forward*reach*.32f;
             if(machineGun!=null)
             {
-                float recoil=side>0?CombatMotion.Curve(Time.time-attackStarted,attackContact,attackDuration,0,.045f,.015f):0;
-                CombatMotion.Solve(arm,elbow,hand,guard-transform.forward*recoil,
+                // Solve() preserves the incoming wrist rotation: reset its basis before each solve to prevent drift.
+                hand.rotation=transform.rotation;
+                if(side>0&&machineGun.StableHoldReady)guard=machineGun.HoldingHandPosition;
+                CombatMotion.Solve(arm,elbow,hand,guard,
                     arm.position+transform.right*side*reach*.55f-transform.up*reach*.35f);
                 return;
             }

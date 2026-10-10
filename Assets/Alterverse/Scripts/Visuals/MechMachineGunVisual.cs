@@ -10,17 +10,21 @@ namespace Alterverse.Visuals
     {
         readonly List<Mesh> meshes=new();readonly List<Material> materials=new();
         Transform rotor,body;Vector3 bodyRest;float started=-100,contact=.22f;
-        Transform actor;Health victim;Vector3 aim;
+        Transform actor,weaponMount;Health victim;Vector3 aim,mountOffset,holdPoint,holdHandPoint;
+        Quaternion heldRotation;bool holdBound;
         public Transform Muzzle {get;private set;}
         public Transform EjectionPort {get;private set;}
         public bool BurstPresented {get;private set;}
         public float FlightDuration=>contact*.68f;
+        public bool StableHoldReady=>holdBound&&actor!=null;
+        public Vector3 HoldingHandPosition=>actor!=null?actor.TransformPoint(holdHandPoint):transform.position;
         public static MechMachineGunVisual Build(Transform mount,Vector3 position,float scale=1)
         {
             if(mount==null)return null;
             var root=new GameObject("DF_HeavyMachineGun").transform;root.SetParent(mount,false);
             root.localPosition=position;root.localScale=Vector3.one*scale;
             var gun=root.gameObject.AddComponent<MechMachineGunVisual>();gun.actor=mount.GetComponentInParent<Health>()?.transform;
+            gun.weaponMount=mount;gun.mountOffset=position;
             gun.BuildParts();return gun;
         }
         void BuildParts()
@@ -117,8 +121,19 @@ namespace Alterverse.Visuals
             float age=Time.time-started;
             if(actor!=null)
             {
+                if(!holdBound&&weaponMount!=null)
+                {
+                    // Capture after the first arm pose, then follow the actor instead of inherited wrist/bob motion.
+                    holdPoint=actor.InverseTransformPoint(weaponMount.TransformPoint(mountOffset));
+                    holdHandPoint=actor.InverseTransformPoint(weaponMount.position);
+                    heldRotation=Quaternion.LookRotation(actor.forward,actor.up);holdBound=true;
+                }
+                if(holdBound)transform.position=actor.TransformPoint(holdPoint);
                 Vector3 facing=age>=0&&age<contact+.35f?(victim!=null?victim.transform.position+Vector3.up*.55f:aim)-transform.position:actor.forward;
-                if(facing.sqrMagnitude>.0001f)transform.rotation=Quaternion.LookRotation(facing,actor.up);
+                facing=Vector3.ProjectOnPlane(facing,actor.up);
+                if(facing.sqrMagnitude>.0001f)
+                    heldRotation=Quaternion.Slerp(heldRotation,Quaternion.LookRotation(facing,actor.up),1f-Mathf.Exp(-18f*Time.deltaTime));
+                transform.rotation=heldRotation;
             }
             if(age>=0&&age<contact+.22f)
             {

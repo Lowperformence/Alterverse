@@ -13,6 +13,7 @@ namespace Alterverse.Visuals
         Health health; Vector3 aim; float started=-100,contact=.22f; int serial; bool posed;
         enum Shape { None,Scorpion,Spider,Bear,Octopus,Mech,Ferrox,Vespera }
         Shape shape;
+        MechMachineGunVisual machineGun;
         public float ContactTime=>contact;
         public float Age=>Time.time-started;
         public bool WindingUp=>Age>=0&&Age<contact;
@@ -27,7 +28,7 @@ namespace Alterverse.Visuals
         void Keep(Transform t){if(t!=null)owned.Add(new Pose{Bone=t,Rotation=t.localRotation,Position=t.localPosition});}
         void Bind()
         {
-            health=GetComponent<Health>();owned.Clear();
+            health=GetComponent<Health>();machineGun=GetComponentInChildren<MechMachineGunVisual>();owned.Clear();
             body=Find("DF_PyraxisScorpionPolished");
             left=Find("LeftClawRoot");right=Find("RightClawRoot");
             if(left!=null&&right!=null)
@@ -60,6 +61,7 @@ namespace Alterverse.Visuals
         void LateUpdate()
         {
             if(!Active||health!=null&&health.IsDead||!HeroCombatStatus.CanAct(gameObject)){Restore();return;}
+            if(shape==Shape.Mech&&machineGun!=null){Restore();return;} // The weapon owns firing recoil; no competing arm attack layer.
             if(body==null)return;
             // Stable authored basis on every frame, never multiply last frame's attack rotation.
             posed=true;Restore();posed=true;
