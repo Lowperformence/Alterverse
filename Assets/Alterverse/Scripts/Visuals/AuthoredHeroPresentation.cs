@@ -107,7 +107,8 @@ namespace Alterverse.Visuals
                 TravelerOrbAppearance.Apply(instance.transform);
             }
             HeroLimbTechDetails.Apply(instance.transform, hero);
-            SkinOrnamentPresentation.Apply(instance.transform);
+            SkinOrnamentPresentation.Apply(instance.transform,
+                hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
             HeroUndersuitFabric.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);

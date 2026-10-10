@@ -8,7 +8,7 @@ namespace Alterverse.Visuals
     {
         readonly List<Mesh> meshes=new();
         readonly List<Material> materials=new();
-        public static void Apply(Transform model)
+        public static void Apply(Transform model,Color? skinTint=null)
         {
             if(model.GetComponent<SkinOrnamentPresentation>()!=null)return;
             Shader shader=Resources.Load<Shader>("HeroArt/SkinOrnaments");
@@ -24,11 +24,11 @@ namespace Alterverse.Visuals
                     Material original=slots[i];if(original==null)continue;
                     string name=original.name.ToLowerInvariant();
                     if(!name.Contains("skin")&&!name.Contains("flesh"))continue;
-                    Color color=original.HasProperty("_BaseColor")?original.GetColor("_BaseColor"):
-                        original.HasProperty("_Color")?original.GetColor("_Color"):Color.white;
+                    Color color=skinTint??(original.HasProperty("_BaseColor")?original.GetColor("_BaseColor"):
+                        original.HasProperty("_Color")?original.GetColor("_Color"):Color.white);
                     Material copy=new Material(original){shader=shader,name=original.name+"_FineOrnaments"};
                     copy.SetColor("_BaseColor",color);
-                    // Keep texture, shading and skin tone; the shader adds dark ink only.
+                    // Keep texture and shading; an optional hero tint also covers the hands and elf ears.
                     if(original.HasProperty("_MainTex")&&original.GetTexture("_MainTex")!=null)
                         copy.SetTexture("_BaseMap",original.GetTexture("_MainTex"));
                     owner.materials.Add(copy);slots[i]=copy;changed=true;

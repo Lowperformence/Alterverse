@@ -142,7 +142,7 @@ namespace Alterverse.Visuals
                 Surface("Amber reactor", new Color(1f,.32f,.035f), .35f,.48f, true),
                 Surface("Exposed steel", new Color(.32f,.34f,.36f), .85f,.47f),
                 // Retain legacy material key for weapon-colorway exclusion; geometry now spells DF.
-                Surface("Shield DR", new Color(.36f,.16f,.055f), .12f,.30f),
+                Surface("Shield DR", new Color(1f,.92f,.025f), .12f,.30f, true, 2.5f),
                 Surface("Yellow head stripe", new Color(1f,.85f,.015f), .1f,.45f, true)
             };
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
@@ -180,9 +180,9 @@ namespace Alterverse.Visuals
             return material;
         }
 
-        private Material Surface(string name, Color color, float metal, float smooth, bool energy = false)
+        private Material Surface(string name, Color color, float metal, float smooth, bool energy = false, float emissionStrength = .75f)
         {
-            Material material = RuntimeShaderLibrary.Create(color, false, metal, smooth, energy ? color * .75f : Color.black);
+            Material material = RuntimeShaderLibrary.Create(color, false, metal, smooth, energy ? color * emissionStrength : Color.black);
             material.name = "DF_Kaelon_" + name;
             if (energy) material.EnableKeyword("_EMISSION");
             ownedMaterials.Add(material);
