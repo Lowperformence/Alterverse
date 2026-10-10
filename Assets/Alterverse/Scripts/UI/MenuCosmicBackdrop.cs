@@ -2,35 +2,17 @@ using UnityEngine;
 
 namespace Alterverse.UI
 {
-    /// <summary>Cached menu artwork with a single animated GPU pass; no scene objects or per-frame pixel uploads.</summary>
+    /// <summary>One opaque, cached texture. No particles, scene objects or per-frame pixel work.</summary>
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
         private readonly Texture2D texture;
         private readonly bool ownsTexture;
         private readonly Texture2D cards;
-        private readonly Material motion;
-        private readonly Texture2D motionNoise;
-        private static readonly int AnimationTime = Shader.PropertyToID("_AnimationTime");
-        private static readonly int MotionStrength = Shader.PropertyToID("_MotionStrength");
         public MenuCosmicBackdrop()
         {
             cards=Resources.Load<Texture2D>("FrontEnd/MenuCardAtlas");
             texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdrop");
-            if(texture!=null)
-            {
-                Shader shader=Resources.Load<Shader>("FrontEnd/MenuCosmosMotion");
-                if(shader!=null&&shader.isSupported)
-                {
-                    motionNoise=BuildMotionNoise();
-                    motion=new Material(shader){name="DF_MenuCosmosMotion",hideFlags=HideFlags.HideAndDontSave};
-                    motion.SetTexture("_NoiseTex",motionNoise);
-                    // Anchor effects to the existing artwork's 2:1 reference framing, so
-                    // resizing/cropping a phone or tablet keeps motion on the same subjects.
-                    Rect framing=Crop(texture.width/(float)texture.height,2f);
-                    motion.SetVector("_ReferenceCrop",new Vector4(framing.x,framing.y,framing.width,framing.height));
-                }
-                return;
-            }
+            if(texture!=null)return;
             ownsTexture=true;
             const int width=768,height=384;
             var pixels=new Color32[width*height];
@@ -76,50 +58,7 @@ namespace Alterverse.UI
             }
             return background+rim*(edge*.20f);
         }
-        private static Texture2D BuildMotionNoise()
-        {
-            const int size=96;
-            var pixels=new Color32[size*size];
-            for(int y=0;y<size;y++)for(int x=0;x<size;x++)
-            {
-                float u=x/(float)(size-1),v=y/(float)(size-1);
-                // Blend opposite edges to create a seamless, deterministic cloud tile.
-                float a=Mathf.PerlinNoise(u*4+13,v*4+7);
-                float b=Mathf.PerlinNoise((u-1)*4+13,v*4+7);
-                float c=Mathf.PerlinNoise(u*4+13,(v-1)*4+7);
-                float d=Mathf.PerlinNoise((u-1)*4+13,(v-1)*4+7);
-                float n=Mathf.Lerp(Mathf.Lerp(a,b,Mathf.SmoothStep(0,1,u)),
-                    Mathf.Lerp(c,d,Mathf.SmoothStep(0,1,u)),Mathf.SmoothStep(0,1,v));
-                byte value=(byte)Mathf.RoundToInt(Mathf.Clamp01(n)*255);
-                pixels[y*size+x]=new Color32(value,value,value,255);
-            }
-            var noise=new Texture2D(size,size,TextureFormat.RGBA32,true,true)
-            {name="DF_MenuCloudNoise",wrapMode=TextureWrapMode.Repeat,filterMode=FilterMode.Trilinear,hideFlags=HideFlags.HideAndDontSave};
-            noise.SetPixels32(pixels);noise.Apply(true,true);
-            return noise;
-        }
-
-        private static Rect Crop(float sourceAspect,float targetAspect)
-        {
-            float width=Mathf.Min(1f,targetAspect/sourceAspect);
-            float height=Mathf.Min(1f,sourceAspect/targetAspect);
-            return new Rect((1-width)*.5f,(1-height)*.5f,width,height);
-        }
-
-        public void Draw(Rect rect)
-        {
-            if(rect.width<=0||rect.height<=0||Event.current==null||Event.current.type!=EventType.Repaint)return;
-            if(motion==null)
-            {GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);return;}
-
-            // The menu pauses gameplay, so the animation must use an independent clock.
-            motion.SetFloat(AnimationTime,Time.unscaledTime);
-            float strength=Application.isMobilePlatform&&
-                Alterverse.Performance.MobilePerformanceProfile.Current==Alterverse.Performance.MobileQuality.Battery ? .65f : 1f;
-            motion.SetFloat(MotionStrength,strength);
-            Rect source=Crop(texture.width/(float)texture.height,rect.width/rect.height);
-            Graphics.DrawTexture(rect,texture,source,0,0,0,0,motion,0);
-        }
+        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
         public void DrawCard(Rect rect,int index)
         {
             Texture2D art=cards!=null?cards:texture;
@@ -132,12 +71,7 @@ namespace Alterverse.UI
             float v=Mathf.Clamp(.67f-height*.5f,0,1-height);
             GUI.DrawTextureWithTexCoords(rect,art,new Rect(u,v,width,height));
         }
-        public void Dispose()
-        {
-            if(motion!=null)Object.Destroy(motion);
-            if(motionNoise!=null)Object.Destroy(motionNoise);
-            if(ownsTexture&&texture!=null)Object.Destroy(texture);
-        }
+        public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
     }
 }
 

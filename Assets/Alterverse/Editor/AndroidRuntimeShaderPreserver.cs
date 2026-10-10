@@ -10,7 +10,7 @@ namespace Alterverse.EditorChecks
     /// <summary>
     /// Procedural visuals resolve URP shaders with Shader.Find at runtime. Unity can strip
     /// shaders that are not referenced by serialized scene/material assets, which turns
-    /// those objects magenta in Android players. Keep the runtime shaders used
+    /// those objects magenta in Android players. Keep the two runtime shader families used
     /// by DIMENSIONS FRONT in Android release builds.
     /// </summary>
     public sealed class AndroidRuntimeShaderPreserver : IPreprocessBuildWithReport
@@ -19,8 +19,7 @@ namespace Alterverse.EditorChecks
         {
             "Universal Render Pipeline/Lit",
             "Universal Render Pipeline/Unlit",
-            "DimensionsFront/HeroEnergy",
-            "Hidden/DimensionsFront/MenuCosmosMotion"
+            "DimensionsFront/HeroEnergy"
         };
 
         public int callbackOrder=>-100;
@@ -30,7 +29,6 @@ namespace Alterverse.EditorChecks
             if(report.summary.platform!=BuildTarget.Android)return;
             EnsureRequiredShaders(true);
             ValidateCombatMaterial();
-            ValidateMenuBackgroundShader();
             HeroPresentationChecks.CheckCombatLineTransforms();
         }
 
@@ -41,13 +39,6 @@ namespace Alterverse.EditorChecks
             if(material==null||shader==null||material.shader!=shader||
                 shader.name!="DimensionsFront/HeroEnergy"||ShaderUtil.ShaderHasError(shader))
                 throw new BuildFailedException("HeroEnergy material/shader is missing, mismatched or has compiler errors. Android spell VFX cannot be validated.");
-        }
-
-        private static void ValidateMenuBackgroundShader()
-        {
-            Shader shader=Resources.Load<Shader>("FrontEnd/MenuCosmosMotion");
-            if(shader==null||shader.name!="Hidden/DimensionsFront/MenuCosmosMotion"||ShaderUtil.ShaderHasError(shader))
-                throw new BuildFailedException("Animated menu background shader is missing or has compiler errors. Check FrontEnd/MenuCosmosMotion before building Android.");
         }
 
         [InitializeOnLoadMethod]
@@ -110,7 +101,7 @@ namespace Alterverse.EditorChecks
             if(!changed)return;
             serialized.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
-            Debug.Log("DIMENSIONS FRONT: preserved URP Lit/Unlit, HeroEnergy and animated menu shaders for Android visuals.");
+            Debug.Log("DIMENSIONS FRONT: preserved URP Lit/Unlit and HeroEnergy shaders for procedural Android visuals.");
         }
     }
 }
