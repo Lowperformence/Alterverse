@@ -146,7 +146,7 @@ class Regression
   Check(aim.Begin(1,new Vector2(700,100)),"recovered after cancel");a.AddComponent<HeroCombatStatus>().Stun(.1f);Call(aim,"LateUpdate");Check(!aim.Active,"stun clears held gesture");a.GetComponent<HeroCombatStatus>().Clear();
   Check(aim.Begin(1,new Vector2(700,100)),"begin after stun");Time.timeScale=0;Call(aim,"LateUpdate");Check(!aim.Active,"pause clears gesture");Time.timeScale=1;
   Check(aim.Begin(1,new Vector2(700,100)),"tap begins");Check(aim.Release(),"short tap can cast empty ground");
-  Reset();a=Hero(HeroId.Veyr,0,Vector3.zero);aim=ManualAiming.For(a);Check(!aim.Begin(4,new Vector2(800,100)),"basic cannot enter skill aiming");Check(!aim.Active,"basic has no preview pose");Check(a.GetComponent<BasicAttack>().TryAttack(),"basic tap can miss");
+  Reset();a=Hero(HeroId.Veyr,0,Vector3.zero);aim=ManualAiming.For(a);Check(!aim.Begin(4,new Vector2(800,100)),"basic cannot enter skill aiming");Check(!aim.Active,"basic has no preview pose");Check(!a.GetComponent<BasicAttack>().TryAttack(),"basic waits for a valid soft target");
   foreach(var dimensions in new[]{new Vector2(960,540),new Vector2(2340,1080),new Vector2(540,960)})
   {
    var l=new CombatHudLayout(new Rect(20,30,dimensions.x,dimensions.y));var button=l.Action(0);
@@ -197,7 +197,7 @@ class Regression
    float damage=a.GetComponent<HeroCombatProfile>().Attack*(hero==HeroId.Rook?1.05f:1f);
    Run(.4f);Near(1000-Total(enemy),damage*2,hero+" press plus hold delivers exactly two geometric hits");
   }
-  Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);var controller=HudFor(actor);var attack=actor.GetComponent<BasicAttack>();var buttonPoint=ButtonScreen(4);
+  Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);Hero(HeroId.Kaelon,1,Vector3.forward);var controller=HudFor(actor);var attack=actor.GetComponent<BasicAttack>();var buttonPoint=ButtonScreen(4);
   attack.TryAttack();float initial=attack.RemainingCooldown;
   Touch.activeTouches.Add(new Touch{touchId=7,phase=TouchPhase.Began,screenPosition=buttonPoint});Call(controller,"Update");Near(attack.RemainingCooldown,initial,"press during cooldown does not duplicate cast");
   Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Stationary,screenPosition=buttonPoint};Run(attack.AttackCooldown+.02f);Call(controller,"Update");Check(attack.RemainingCooldown>0,"hold started on cooldown resumes when ready");
@@ -206,13 +206,37 @@ class Regression
   Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Moved,screenPosition=buttonPoint};Call(controller,"Update");Check(attack.RemainingCooldown>0,"returning to held button resumes");
   Touch.activeTouches.Clear();Run(attack.AttackCooldown+.02f);Call(controller,"Update");Near(attack.RemainingCooldown,0,"lost pointer stops repeats");
   Touch.activeTouches.Add(new Touch{touchId=8,phase=TouchPhase.Began,screenPosition=ButtonScreen(0)});Call(controller,"Update");Check(actor.GetComponent<ManualAiming>().Active,"skill still begins aim after basic release");
-  Reset();actor=Hero(HeroId.Veyr,0,Vector3.zero);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();buttonPoint=ButtonScreen(4);
+  Reset();actor=Hero(HeroId.Veyr,0,Vector3.zero);Hero(HeroId.Kaelon,1,Vector3.forward);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();buttonPoint=ButtonScreen(4);
   Touch.activeTouches.Add(new Touch{touchId=7,phase=TouchPhase.Began,screenPosition=buttonPoint});Call(controller,"Update");
   Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Stationary,screenPosition=buttonPoint};actor.AddComponent<HeroCombatStatus>().Stun(.1f);Call(controller,"Update");Run(attack.AttackCooldown+.2f);Call(controller,"Update");Near(attack.RemainingCooldown,0,"stun interrupts held basic until a new press");
-  Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();Mouse.current=new Mouse();Mouse.current.position.Value=ButtonScreen(4);Mouse.current.leftButton.isPressed=true;Mouse.current.leftButton.wasPressedThisFrame=true;Call(controller,"Update");
+  Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);Hero(HeroId.Kaelon,1,Vector3.forward);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();Mouse.current=new Mouse();Mouse.current.position.Value=ButtonScreen(4);Mouse.current.leftButton.isPressed=true;Mouse.current.leftButton.wasPressedThisFrame=true;Call(controller,"Update");
   Check(attack.RemainingCooldown>0,"mouse basic fires on press");Check(!actor.GetComponent<ManualAiming>().Active,"mouse basic has no aim preview");
   Mouse.current.leftButton.wasPressedThisFrame=false;Run(attack.AttackCooldown+.02f);Call(controller,"Update");Check(attack.RemainingCooldown>0,"mouse hold repeats");
   Run(attack.AttackCooldown+.02f);Mouse.current.leftButton.isPressed=false;Mouse.current.leftButton.wasReleasedThisFrame=true;Call(controller,"Update");Near(attack.RemainingCooldown,0,"mouse release cannot double cast");
+ }
+ static void BasicSoftTargets()
+ {
+  foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))
+  {
+   Reset();var actor=Hero(hero,0,Vector3.zero);var chosen=Hero(HeroId.Kaelon,1,Vector3.right*1.6f);var ally=Hero(HeroId.Mira,0,Vector3.forward*.6f);
+   var soldier=new GameObject("enemy soldier");soldier.transform.position=Vector3.forward*.9f;soldier.AddComponent<TeamMember>().Initialize(1);soldier.AddComponent<Health>().Configure(1000);soldier.AddComponent<LaneMinion>().Team=1;
+   var basic=actor.GetComponent<BasicAttack>();var soft=actor.GetComponent<SoftTargeting>();
+   Check(basic.TryAttack(),hero+" basic automatically acquires sideways hero");Check(soft.Current==chosen.GetComponent<Health>(),hero+" basic restores hero priority over closer soldier");
+   Near(Vector3.Angle(actor.transform.forward,Vector3.right),0,hero+" basic faces selected target beyond skill assist window");Check(!ManualAiming.For(actor).Active,hero+" soft target does not enter manual aiming");
+   Run(basic.AttackCooldown+.02f);Check(Total(chosen)<1000,hero+" auto-selected hero receives geometric hit");Near(Total(ally),1000,hero+" auto selection excludes ally");Near(soldier.GetComponent<Health>().Current,1000,hero+" off-axis soldier not hit");
+   var closer=Hero(HeroId.Kaelon,1,Vector3.left*1.2f);
+   Check(basic.TryAttack(),hero+" second basic starts");Check(soft.Current==chosen.GetComponent<Health>(),hero+" sticky selection keeps valid hero");Run(basic.AttackCooldown+.02f);
+   chosen.GetComponent<Health>().TakeDamage(2000);Check(basic.TryAttack(),hero+" reacquires after target death");Check(soft.Current==closer.GetComponent<Health>(),hero+" dead soft target replaced by valid hero");
+  }
+  Reset();var a=Hero(HeroId.Veyr,0,Vector3.zero);Hero(HeroId.Mira,0,Vector3.forward);var far=Hero(HeroId.Kaelon,1,Vector3.forward*5);
+  Check(!a.GetComponent<BasicAttack>().TryAttack(),"out-of-range enemies and allies cannot start basic");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"no eligible soft target spends no cooldown");
+  far.transform.position=Vector3.forward*-1.6f;Check(a.GetComponent<BasicAttack>().TryAttack(),"basic acquires target behind player");far.transform.position=Vector3.forward*1.6f;Run(.5f);Near(Total(far),1000,"auto-selected melee target can dodge windup cone");
+  Reset();a=Hero(HeroId.Nyra,0,Vector3.zero);far=Hero(HeroId.Kaelon,1,Vector3.forward*4);
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"ranged basic starts with restored target");Run(.09f);far.transform.position=new Vector3(3,0,4);Run(.4f);Near(Total(far),1000,"restored soft target does not home after projectile release");
+  Reset();a=Hero(HeroId.Nyra,0,Vector3.zero);var hud=HudFor(a);var button=ButtonScreen(4);
+  Touch.activeTouches.Add(new Touch{touchId=9,phase=TouchPhase.Began,screenPosition=button});Call(hud,"Update");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"held basic waits without eligible target");
+  far=Hero(HeroId.Kaelon,1,Vector3.left*2);Touch.activeTouches[0]=new Touch{touchId=9,phase=TouchPhase.Stationary,screenPosition=button};Call(hud,"Update");
+  Check(a.GetComponent<BasicAttack>().RemainingCooldown>0,"held basic starts when a target enters range");Check(a.GetComponent<SoftTargeting>().Current==far.GetComponent<Health>(),"hold updates the visible soft target");
  }
  static void Network()
  {
@@ -231,6 +255,10 @@ class Regression
   Unlock(a.GetComponent<HeroAbilityExecution>());
   Check(a.GetComponent<PlayerHeroAbilities>().CastNetworkAuthoritative(0,new AimPose(Vector3.right,new Vector3(100,0,0))),"server accepts clamped ground intent");
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.magnitude,7.3f,"server clamps forged point to cast range");
+  CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;Hero(HeroId.Kaelon,1,Vector3.left*2);
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V4","auto-target basic retains V4 route");
+  reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out target);reader.ReadValueSafe(out dx);reader.ReadValueSafe(out dy);reader.ReadValueSafe(out dz);
+  Check(!target,"normal auto-target basic sends frozen direction without homing reference");Near(dx,-1,"network basic preserves automatic soft-target direction");
  }
  static void InterruptionsAndCapacity()
  {
@@ -277,7 +305,7 @@ class Regression
  }
  static void Main()
  {
-  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();Network();InterruptionsAndCapacity();
+  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" assertions: geometry, all 8 basics / 32 skills, dodges, AOE, gestures, multitouch, network direction/point, interrupts.");

@@ -20,6 +20,7 @@ namespace Alterverse.Combat
         private Health selfHealth;
         private HeroCombatProfile profile;
         private HeroIdentity identity;
+        private SoftTargeting targeting;
         private float nextAttackTime;
 
         private HeroCombatProfile Profile
@@ -53,7 +54,7 @@ namespace Alterverse.Combat
             selfHealth = GetComponent<Health>();
             profile = GetComponent<HeroCombatProfile>();
             identity = GetComponent<HeroIdentity>();
-            if (GetComponent<SoftTargeting>() == null) gameObject.AddComponent<SoftTargeting>();
+            targeting = GetComponent<SoftTargeting>() ?? gameObject.AddComponent<SoftTargeting>();
         }
 
         private void Update()
@@ -65,7 +66,18 @@ namespace Alterverse.Combat
         }
 
         public bool TryAttack()
-            => Aim.allowTapCast && TryAttackAimed(AimGeometry.TapPose(gameObject, Aim));
+        {
+            AimSpec spec = Aim;
+            if (!CanAttempt() || !spec.allowTapCast) return false;
+            // Restore the existing sticky, hero-prioritized selection for basic attacks only.
+            Health target = targeting.Acquire(spec.castRange, transform.forward);
+            if (target == null) return false;
+            AimPose pose = new AimPose(target.transform.position - transform.position, target.transform.position,
+                spec.targetingMode == TargetingMode.Homing ? target : null);
+            bool success = TryAttackAimed(pose);
+            if (success) targeting.RegisterOffensiveAction();
+            return success;
+        }
 
         public bool TryAttackAimed(AimPose pose)
         {

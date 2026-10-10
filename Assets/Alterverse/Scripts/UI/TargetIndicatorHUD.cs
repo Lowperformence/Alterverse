@@ -62,11 +62,13 @@ namespace Alterverse.UI
             Color tint = objective
                 ? new Color(StylizedArtDirection.WarmAccent.r, StylizedArtDirection.WarmAccent.g, StylizedArtDirection.WarmAccent.b, .88f)
                 : new Color(1f, .50f, .56f, .88f);
+            float opacity = Mathf.Clamp01(AimingSettings.Current.previewOpacity);
+            tint.a *= opacity;
 
             Vector2 center = new Vector2(screen.x, screen.y);
             // Vector-only marker: no runtime texture/quad, so there can never be an opaque red square.
             CombatGlyphs.Ring(center, radius, Mathf.Max(1.4f, 1.8f * scale), tint, 32);
-            Color soft = new Color(tint.r, tint.g, tint.b, .28f);
+            Color soft = new Color(tint.r, tint.g, tint.b, .28f * opacity);
             CombatGlyphs.Ring(center, radius + 3.5f * scale, Mathf.Max(.8f, 1.0f * scale), soft, 32);
 
             float tick = 7f * scale;

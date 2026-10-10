@@ -63,7 +63,9 @@ namespace Alterverse.UI
             materials[index].SetFloat(ConeId, Mathf.Cos(spec.coneAngle * .5f * Mathf.Deg2Rad));
             materials[index].SetFloat(WidthId, spec.projectileWidth / (range * 2f));
             bool directional = mode == 1 || mode == 2 && spec.aimType != AimType.Dash;
-            materials[index].SetFloat(OpacityId, directional ? Mathf.Clamp01(AimingSettings.Current.conePreviewOpacity) : 1f);
+            float opacity = Mathf.Clamp01(AimingSettings.Current.previewOpacity);
+            if (directional) opacity *= Mathf.Clamp01(AimingSettings.Current.conePreviewOpacity);
+            materials[index].SetFloat(OpacityId, opacity);
             shown |= 1 << index;
             if (!surfaces[index].activeSelf) surfaces[index].SetActive(true);
         }
