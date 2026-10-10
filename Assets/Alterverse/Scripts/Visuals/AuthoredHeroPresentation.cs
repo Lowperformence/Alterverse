@@ -96,6 +96,7 @@ namespace Alterverse.Visuals
             {
                 TahlaHandSymmetry.Apply(instance.transform);
                 HealerLegArmorAppearance.Apply(instance.transform);
+                TahlaHairline.Apply(instance.transform);
                 TahlaHalo.Apply(instance.transform);
             }
             if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
