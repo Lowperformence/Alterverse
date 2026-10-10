@@ -10,10 +10,10 @@ namespace Alterverse.Combat
     // Rewards are deliberately small so the drop creates a short skirmish without deciding the match by itself.
     public sealed class FractureCorePickup : MonoBehaviour
     {
-        public const float HealFraction=.05f;
-        public const float ShieldFraction=.20f;
+        public const float HealFraction=.07f;
+        public const float ShieldFraction=.28f;
         public const float ShieldDuration=2f;
-        public const float FrontInfluence=.20f;
+        public const float FrontInfluence=.28f;
         public const float PickupDelay=.40f;
         public const float Lifetime=8f;
         const float PickupRadius=1.35f;
