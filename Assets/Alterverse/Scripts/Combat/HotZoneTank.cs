@@ -11,7 +11,7 @@ namespace Alterverse.Combat
     [RequireComponent(typeof(Health),typeof(TeamMember))]
     public sealed class HotZoneTank:MonoBehaviour
     {
-        private const float MaxHp=680f;
+        private const float MaxHp=476f;
         private const float Damage=10f;
         private const float AttackRange=5.8f;
         private const float AttackCooldown=1.2f;

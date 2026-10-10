@@ -33,7 +33,7 @@ namespace Alterverse.Characters
             HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
             HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
             HeroId.Rook=>new HeroCombatStats(2.5f,.9f,6.9f,.45f,.7f),
-            HeroId.Traveler=>new HeroCombatStats(6.2f,.92f,6.3f,.62f,.10f),
+            HeroId.Traveler=>new HeroCombatStats(6.2f,.92f,5.67f,.62f,.10f),
             HeroId.Nerok=>new HeroCombatStats(2.6f,.98f,6.5f,.85f,.3f),
             _=>new HeroCombatStats(5.5f,1f,6f,.4f,.1f)
         };
