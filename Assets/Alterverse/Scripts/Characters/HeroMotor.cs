@@ -20,11 +20,13 @@ namespace Alterverse.Characters
         [SerializeField, Min(.1f)] private float fallbackMoveSpeed = 6.5f;
         [SerializeField, Min(.1f)] private float acceleration = 28f;
         [SerializeField, Min(.1f)] private float deceleration = 36f;
+        [SerializeField, Min(.1f)] private float turnAcceleration = 72f;
         [SerializeField, Range(0f, .35f)] private float inputDeadZone = .08f;
         [SerializeField, Range(0f, 1f)] private float attackMovementMultiplier = .88f;
 
         [Header("Rotation")]
         [SerializeField, Min(.1f)] private float rotationSharpness = 16f;
+        [SerializeField, Min(.1f)] private float steeringSharpness = 28f;
         [SerializeField] private Transform cameraTransform;
 
         [Header("Arena")]
@@ -161,10 +163,14 @@ namespace Alterverse.Characters
             if (desiredVelocity.sqrMagnitude <= .0001f) return deceleration;
             if (planarVelocity.sqrMagnitude <= .0001f) return acceleration;
 
-            // Reversals should not skate through zero. Brake first, then accelerate in the
-            // new direction. Normal acceleration remains soft and predictable.
-            if (Vector3.Dot(planarVelocity, desiredVelocity) < 0f) return Mathf.Max(acceleration, deceleration);
-            return desiredVelocity.sqrMagnitude > planarVelocity.sqrMagnitude ? acceleration : deceleration;
+            float rate = desiredVelocity.sqrMagnitude > planarVelocity.sqrMagnitude ? acceleration : deceleration;
+            if (Vector3.Dot(planarVelocity, desiredVelocity) < 0f) rate = Mathf.Max(acceleration, deceleration);
+
+            // Keep gentle corrections and starts soft, but shed the old direction promptly
+            // when steering through a turn. Blend from 30 to 120 degrees to avoid a threshold snap.
+            float alignment = Vector3.Dot(planarVelocity.normalized, desiredVelocity.normalized);
+            float turnWeight = Mathf.InverseLerp(.8660254f, -.5f, alignment);
+            return Mathf.Lerp(rate, Mathf.Max(rate, turnAcceleration), turnWeight);
         }
 
         private bool TryGetAttackFacing(out Vector3 facing)
@@ -206,10 +212,10 @@ namespace Alterverse.Characters
             // can strafe or backpedal without ever firing/punching over the shoulder.
             if (actionFacingActive)
                 facing = combatFacing;
-            else if (planarVelocity.sqrMagnitude > .01f)
-                facing = planarVelocity.normalized;
             else if (inputDirection.sqrMagnitude > .0001f)
                 facing = inputDirection.normalized;
+            else if (planarVelocity.sqrMagnitude > .01f)
+                facing = planarVelocity.normalized;
 
             if (facing.sqrMagnitude <= .0001f)
             {
@@ -218,7 +224,11 @@ namespace Alterverse.Characters
             }
 
             Quaternion targetRotation = Quaternion.LookRotation(facing, Vector3.up);
-            float slerpT = 1f - Mathf.Exp(-rotationSharpness * dt);
+            // Steering faces the current input instead of waiting for velocity to catch up.
+            // Attack target facing retains its existing response and priority.
+            float response = !actionFacingActive && inputDirection.sqrMagnitude > .0001f
+                ? Mathf.Max(rotationSharpness, steeringSharpness) : rotationSharpness;
+            float slerpT = 1f - Mathf.Exp(-response * dt);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, slerpT);
 
             // Keep the shared late-facing owner on the same priority rule. During combat the
