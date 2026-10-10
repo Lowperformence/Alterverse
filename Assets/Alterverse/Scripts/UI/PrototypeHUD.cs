@@ -136,8 +136,8 @@ namespace Alterverse.UI
                     else
                     {
                         Vector2 delta=Vector2.ClampMagnitude(point-joystickOrigin,Radius);joystickKnob=joystickCenter+delta;
-                        float magnitude=delta.magnitude/Radius;
-                        Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
+                        // HeroMotor applies the dead zone once; keep the HUD mapping linear.
+                        Vector2 input=delta/Radius;
                         motor?.SetMoveInput(new Vector2(input.x,-input.y));
                     }
                 }
@@ -185,8 +185,8 @@ namespace Alterverse.UI
                 {
                     Vector2 delta=Vector2.ClampMagnitude(point-joystickOrigin,Radius);
                     joystickKnob=joystickCenter+delta;
-                    float magnitude=delta.magnitude/Radius;
-                    Vector2 input=magnitude<=.08f?Vector2.zero:delta.normalized*Mathf.Clamp01((magnitude-.08f)/.92f);
+                    // Use the same single-dead-zone mapping as touch input.
+                    Vector2 input=delta/Radius;
                     motor?.SetMoveInput(new Vector2(input.x,-input.y));
                 }
                 if(mouse.leftButton.wasReleasedThisFrame)

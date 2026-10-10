@@ -25,7 +25,10 @@ namespace Alterverse.UI
         {Rect r=Action(slot);r.xMin-=20;r.yMin-=20;r.xMax+=20;r.yMax+=20;return r.Contains(point);}
         public const float JoystickRadius=74f, ThumbRadius=26f;
         public Vector2 JoystickIdle=>new Vector2(JoystickRadius+90f,Height-124f);
-        public Rect MoveCapture=>new Rect(0,Height-260,Mathf.Min(Width*.38f,360),260);
+        // Floating movement can start anywhere on the left screen half, including safe-area margins.
+        // Drawing still respects the safe area; PrototypeHUD gives combat buttons priority.
+        public Rect MoveCapture=>Rect.MinMaxRect(-Safe.x/Scale,(Safe.yMax-Screen.height)/Scale,
+            (Screen.width*.5f-Safe.x)/Scale,(Safe.yMax+1f)/Scale);
         public Matrix4x4 Matrix=>Matrix4x4.TRS(new Vector3(Safe.x,Screen.height-Safe.yMax,0),Quaternion.identity,Vector3.one*Scale);
     }
 }
