@@ -16,6 +16,7 @@ namespace Alterverse.Visuals
         Transform detailRoot;
         Transform builtWorld;
         Mesh crystalMesh;
+        SceneryBuildingClearance clearance;
         float nextBossScan;
 
         // Map crystals keep the supplied gemstone palette and transparent fluorescent look.
@@ -65,6 +66,7 @@ namespace Alterverse.Visuals
         {
             ClearMapVisuals();
             builtWorld=world;
+            clearance=new SceneryBuildingClearance();
 
             GameObject root=new("DF_PSRJ1719_CrystalPolish");
             detailRoot=root.transform;
@@ -198,7 +200,7 @@ namespace Alterverse.Visuals
             indices.Add(start);indices.Add(start+1);indices.Add(start+2);
         }
 
-        static GameObject CreateMeshObject(string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Mesh mesh,Material material)
+        GameObject CreateMeshObject(string name,Transform parent,Vector3 position,Vector3 scale,Quaternion rotation,Mesh mesh,Material material)
         {
             GameObject go=new(name);
             go.transform.SetParent(parent,false);
@@ -211,6 +213,7 @@ namespace Alterverse.Visuals
             renderer.sharedMaterial=material;
             renderer.shadowCastingMode=ShadowCastingMode.Off;
             renderer.receiveShadows=false;
+            clearance.RemoveIfBlocked(go);
             return go;
         }
 
