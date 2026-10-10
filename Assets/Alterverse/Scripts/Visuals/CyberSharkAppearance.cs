@@ -976,7 +976,8 @@ namespace Alterverse.Visuals
             if (motion == null) motion = GetComponentInParent<HeroVisualMotion>();
             if (combatPose == null) combatPose = GetComponentInParent<MeleeBasicAttackAnimation>();
             // The anchor uses the right-hand grip, so the left chain is Nerok's free arm.
-            // Match the marked guide: almost straight down, about ten degrees inward toward the torso.
+            // Keep the inset shoulder seated while the elbow and wrist hang beside the torso.
+            // A slight outward tilt keeps the free arm from disappearing into the jacket.
             // Only apply in the normal idle/guard state; attacks and abilities keep authored motion.
             if (combatPose == null || !combatPose.OwnsPose || combatPose.StrikeActive ||
                 motion != null && motion.AbilityActionActive) return;
@@ -991,9 +992,10 @@ namespace Alterverse.Visuals
             Vector3 forearmSpace = elbowParent != null ? elbowParent.InverseTransformVector(forearm) : forearm;
             freeForearm.localRotation = Quaternion.FromToRotation(forearmSpace, upperSpace) * freeForearm.localRotation;
 
-            // Then aim the complete straight arm along the user's red line.
+            // Aim the straight arm down and slightly outward in the actual model frame.
             Vector3 current = freeHand.position - freeUpperArm.position;
-            Vector3 desired = (-transform.up - transform.right * (freeArmSide * Mathf.Tan(10f * Mathf.Deg2Rad))).normalized;
+            Vector3 desired = transform.TransformVector(new Vector3(
+                freeArmSide * Mathf.Tan(12f * Mathf.Deg2Rad), -1f, 0f)).normalized;
             if (current.sqrMagnitude < .000001f) return;
             freeUpperArm.rotation = Quaternion.FromToRotation(current.normalized, desired) * freeUpperArm.rotation;
         }
