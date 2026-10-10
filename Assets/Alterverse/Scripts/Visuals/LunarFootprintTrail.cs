@@ -126,7 +126,7 @@ namespace Alterverse.Visuals
                 if(marks.Count==0)return;
                 Mark mark=marks[cursor++%marks.Count];
                 mark.GameObject.transform.SetPositionAndRotation(position,rotation);
-                mark.GameObject.transform.localScale=Vector3.one;
+                mark.GameObject.transform.localScale=Vector3.one*.70f;
                 mark.Born=Time.unscaledTime;
                 mark.Active=true;
                 mark.GameObject.SetActive(true);
