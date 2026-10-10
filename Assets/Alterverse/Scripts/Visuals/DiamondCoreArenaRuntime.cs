@@ -258,6 +258,7 @@ namespace Alterverse.Visuals
                 if(Mathf.Abs(p.x)<29f&&Mathf.Abs(p.z)<27f)continue;
                 GameObject shard=Crystal("DF_FloatingDiamondShard",p,new Vector3(.18f+(i%3)*.09f,.72f+(i%4)*.25f,.18f+(i%2)*.08f),Gem(colors[i%colors.Length],.38f));
                 shard.transform.rotation=Quaternion.Euler(i*13f,i*41f,18f-i*3f);
+                if(clearance.RemoveIfBlocked(shard))continue;
                 shard.AddComponent<DiamondShardDrift>().Configure(i);
             }
         }
