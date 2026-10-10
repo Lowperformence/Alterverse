@@ -11,6 +11,7 @@ namespace Alterverse.Combat
             Alterverse.Characters.HeroId.Nerok => 90f,
             Alterverse.Characters.HeroId.Veyr => 70f,
             Alterverse.Characters.HeroId.Kaelon => 70f,
+            Alterverse.Characters.HeroId.Rook => 80f,
             _ => 50f
         };
         private const float HeroBaseShieldRechargeDelay = 15f;

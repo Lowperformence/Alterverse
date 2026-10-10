@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Applies Brakk's gold suit and removes forearm plates and extra hand decorations.</summary>
+    /// <summary>Applies Brakk's gold suit, grey shoulder plates and simplified forearms.</summary>
     [DisallowMultipleComponent]
     public sealed class BrakkForearmTrim : MonoBehaviour
     {
@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
             BrakkForearmTrim owner = model.gameObject.AddComponent<BrakkForearmTrim>();
             SlimCalves(model, owner);
             RecolorSuit(model, owner);
+            RecolorShoulderPlates(model, owner);
             // Clone skin slots on this instance; Nerok shares the imported asset.
             foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -125,6 +126,108 @@ namespace Alterverse.Visuals
             }
         }
 
+
+        static void RecolorShoulderPlates(Transform model, BrakkForearmTrim owner)
+        {
+            foreach (var renderer in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (renderer.name != "DF_Anatomy") continue;
+                Mesh source = renderer.sharedMesh;
+                if (source == null || !source.isReadable) continue;
+                Vector3[] vertices = source.vertices;
+                BoneWeight[] weights = source.boneWeights;
+                if (weights.Length != vertices.Length) continue;
+                int upperL = Array.FindIndex(renderer.bones, b => b != null && b.name == "UpperArmL");
+                int upperR = Array.FindIndex(renderer.bones, b => b != null && b.name == "UpperArmR");
+                if (upperL < 0 && upperR < 0) continue;
+
+                // Imported shoulder cages share the suit's fabric material. Identify
+                // their separate, rigid upper-arm components before splitting a slot;
+                // the connected body has several bones and keeps its suit material.
+                int[] parent = new int[vertices.Length];
+                var referenced = new bool[vertices.Length];
+                var triangles = new int[source.subMeshCount][];
+                for (int i = 0; i < parent.Length; i++) parent[i] = i;
+                int Find(int index)
+                {
+                    while (parent[index] != index)
+                    { parent[index] = parent[parent[index]]; index = parent[index]; }
+                    return index;
+                }
+                void Join(int a, int b)
+                {
+                    int first = Find(a), second = Find(b);
+                    if (first != second) parent[second] = first;
+                }
+                for (int sub = 0; sub < triangles.Length; sub++)
+                {
+                    triangles[sub] = source.GetTriangles(sub);
+                    int[] indices = triangles[sub];
+                    for (int i = 0; i < indices.Length; i += 3)
+                    {
+                        int a = indices[i], b = indices[i + 1], c = indices[i + 2];
+                        referenced[a] = referenced[b] = referenced[c] = true;
+                        Join(a, b); Join(a, c);
+                    }
+                }
+                // FBX normals and UV seams can split indices along an otherwise
+                // connected part. Weld only the lookup, leaving all mesh data intact.
+                var coincident = new Dictionary<Vector3Int, int>();
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    if (!referenced[i]) continue;
+                    Vector3 p = vertices[i];
+                    var key = new Vector3Int(Mathf.RoundToInt(p.x * 100000f),
+                        Mathf.RoundToInt(p.y * 100000f), Mathf.RoundToInt(p.z * 100000f));
+                    if (coincident.TryGetValue(key, out int other)) Join(i, other);
+                    else coincident.Add(key, i);
+                }
+                float Influence(BoneWeight w, int bone) => bone < 0 ? 0f :
+                    (w.boneIndex0 == bone ? w.weight0 : 0f) + (w.boneIndex1 == bone ? w.weight1 : 0f) +
+                    (w.boneIndex2 == bone ? w.weight2 : 0f) + (w.boneIndex3 == bone ? w.weight3 : 0f);
+                int[] componentArm = new int[vertices.Length];
+                for (int i = 0; i < componentArm.Length; i++) componentArm[i] = -2;
+                for (int i = 0; i < vertices.Length; i++)
+                {
+                    if (!referenced[i]) continue;
+                    int root = Find(i);
+                    int arm = Influence(weights[i], upperL) > .95f ? upperL :
+                        Influence(weights[i], upperR) > .95f ? upperR : -1;
+                    if (componentArm[root] == -2) componentArm[root] = arm;
+                    else if (componentArm[root] != arm) componentArm[root] = -1;
+                }
+                Material[] materials = renderer.sharedMaterials;
+                var kept = new List<int>[triangles.Length];
+                var grey = new List<int>();
+                for (int sub = 0; sub < triangles.Length; sub++)
+                {
+                    kept[sub] = new List<int>();
+                    bool suit = sub < materials.Length && materials[sub] != null &&
+                        materials[sub].name.StartsWith("Obsidian fabric", StringComparison.OrdinalIgnoreCase);
+                    int[] indices = triangles[sub];
+                    for (int i = 0; i < indices.Length; i += 3)
+                    {
+                        List<int> target = suit && componentArm[Find(indices[i])] >= 0 ? grey : kept[sub];
+                        target.Add(indices[i]); target.Add(indices[i + 1]); target.Add(indices[i + 2]);
+                    }
+                }
+                if (grey.Count == 0) continue;
+                Material shoulder = RuntimeShaderLibrary.Create(new Color(.43f, .47f, .50f, 1f),
+                    metallic: .55f, smoothness: .30f);
+                if (shoulder == null) { Debug.LogError("DF: Brakk shoulder grey shader is missing.", model); continue; }
+                shoulder.name = "DF_Brakk_GreyShoulderPlates";
+                owner.ownedSkinMaterials.Add(shoulder);
+                Mesh mesh = Instantiate(source);
+                mesh.name = source.name + "_BrakkGreyShoulders";
+                mesh.subMeshCount = kept.Length + 1;
+                for (int sub = 0; sub < kept.Length; sub++) mesh.SetTriangles(kept[sub], sub, false);
+                mesh.SetTriangles(grey, kept.Length, false);
+                Array.Resize(ref materials, kept.Length + 1);
+                materials[kept.Length] = shoulder;
+                renderer.sharedMesh = mesh; renderer.sharedMaterials = materials;
+                owner.ownedMeshes.Add(mesh);
+            }
+        }
 
         static void RecolorSuit(Transform model, BrakkForearmTrim owner)
         {
