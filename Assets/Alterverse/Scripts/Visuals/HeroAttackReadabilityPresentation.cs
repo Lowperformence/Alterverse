@@ -138,6 +138,8 @@ namespace Alterverse.Visuals
         {
             // HeroSkillVfx owns Traveler's ability spheres; basic attack presentation stays unchanged.
             if(hero==HeroId.Traveler&&slot>=0)return;
+            // Prism Shot and Light Snare own their blue/white cast marks in HeroSkillVfx.
+            if(hero==HeroId.Nyra&&(slot==0||slot==2))return;
             Color color=hero==HeroId.Mira?(slot>=1?new Color(.22f,1f,.45f):new Color(1f,.72f,.28f)):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
             Vector3 origin=ReleasePoint();
             if(slot>=0)
@@ -286,3 +288,4 @@ namespace Alterverse.Visuals
 
     }
 }
+

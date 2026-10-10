@@ -42,13 +42,29 @@ namespace Alterverse.Visuals
         {
             HeroId h=Hero(actor);Color c=h==HeroId.Nyra?new Color(1f,.045f,.025f):Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
+            if(h==HeroId.Nyra&&slot==0)
+            {
+                PrismLaser(actor,start,end,travel,target);
+                return;
+            }
+            if(h==HeroId.Nyra&&slot==2)
+            {
+                // Light Snare replaces the red shot with one small white light sphere.
+                if(travel>0)
+                    HeroVfxPool.Emit(HeroFxShape.Orb,start,end,Vector3.one*.34f,Color.white,travel,
+                        HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+                else Fx(HeroFxShape.Orb,end,Color.white,.34f,.16f,HeroFxMotion.Contract,actor:actor);
+                Fx(HeroFxShape.Burst,start,Color.white,.16f,.09f,rotation:Face(start,end),actor:actor);
+                return;
+            }
             if(h==HeroId.Nyra&&slot==3)
             {
-                // Each confirmed Sightline Break shot owns one red spherical projectile.
+                // Three red spheres: 30% smaller and 30% transparent (70% opacity).
+                Color orbRed=new(c.r,c.g,c.b,.70f);
                 if(travel>0)
-                    HeroVfxPool.Emit(HeroFxShape.Orb,start,end,Vector3.one*.62f,c,travel,
+                    HeroVfxPool.Emit(HeroFxShape.Orb,start,end,Vector3.one*(.62f*.70f),orbRed,travel,
                         HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
-                else Fx(HeroFxShape.Orb,end,c,.62f,.16f,HeroFxMotion.Contract,actor:actor);
+                else Fx(HeroFxShape.Orb,end,orbRed,.62f*.70f,.16f,HeroFxMotion.Contract,actor:actor);
                 Fx(HeroFxShape.Burst,start,c,.22f,.09f,rotation:Face(start,end),actor:actor);
                 return;
             }
@@ -99,6 +115,21 @@ namespace Alterverse.Visuals
                 if(slot>=0)HeroVfxPool.Emit(HeroFxShape.Petals,start,end,Vector3.one*.52f*strength,
                     new Color(c.r,c.g,c.b,.80f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             }
+        }
+        private static Color SivraSkillColor(int slot)=>slot==0?new Color(.06f,.38f,1f,1f):
+            slot==2?Color.white:new Color(1f,.045f,.025f,1f);
+        private static void PrismLaser(GameObject actor,Vector3 start,Vector3 end,float travel,Transform target)
+        {
+            float range=HeroAbilityKit.LoadoutFor(HeroId.Nyra).Q.Range;
+            float duration=Mathf.Max(.12f,travel);
+            // No travelling shot: the full blue beam is visible from release through contact.
+            HeroVfxPool.Emit(HeroFxShape.Laser,start,end,new Vector3(.26f,.26f,1f),
+                SivraSkillColor(0),duration,HeroFxMotion.LaserBeam,owner:actor,follow:actor.transform,
+                endFollow:target,cancelOnOwnerDeath:true,maxRange:range);
+            HeroVfxPool.Emit(HeroFxShape.Laser,start,end,new Vector3(.075f,.075f,1f),
+                new Color(.50f,.78f,1f,.94f),duration,HeroFxMotion.LaserBeam,owner:actor,follow:actor.transform,
+                endFollow:target,cancelOnOwnerDeath:true,maxRange:range);
+            Fx(HeroFxShape.Burst,start,SivraSkillColor(0),.18f,.09f,actor:actor);
         }
         // Vertical portals and light arcs stay above the battlefield rather than covering the floor.
         private static void TravelerPortal(GameObject actor,Vector3 center,float size,float life,bool arrival=false)
@@ -276,10 +307,10 @@ namespace Alterverse.Visuals
                     break;
                 case HeroId.Nyra:
                     {
-                        Color sniperRed=new(1f,.045f,.025f);
-                        Fx(HeroFxShape.Bolt,p,Color.Lerp(sniperRed,Color.white,.40f),size*1.28f,.10f,HeroFxMotion.Contract,facing,actor);
-                        Fx(HeroFxShape.Burst,p,sniperRed,size*.86f,.09f,rotation:facing,actor:actor);
-                        Fx(HeroFxShape.Ring,p,new Color(sniperRed.r,sniperRed.g,sniperRed.b,.48f),size*.72f,.12f,HeroFxMotion.Contract,facing,actor);
+                        Color light=SivraSkillColor(slot);
+                        Fx(slot==2?HeroFxShape.Orb:HeroFxShape.Bolt,p,Color.Lerp(light,Color.white,.40f),size*1.28f,.10f,HeroFxMotion.Contract,facing,actor);
+                        Fx(HeroFxShape.Burst,p,light,size*.86f,.09f,rotation:facing,actor:actor);
+                        Fx(HeroFxShape.Ring,p,new Color(light.r,light.g,light.b,.48f),size*.72f,.12f,HeroFxMotion.Contract,facing,actor);
                         break;
                     }
                 case HeroId.Elyra:
@@ -652,7 +683,7 @@ namespace Alterverse.Visuals
         {
             if(!AdaptiveVfxBudget.AllowDecorative)return;
             Color tint=hero==HeroId.Rook?new Color(1f,.34f,.035f,.80f):
-                hero==HeroId.Nyra?new Color(1f,.08f,.03f,.80f):Accent(actor);
+                hero==HeroId.Nyra?(slot==0||slot==2?SivraSkillColor(slot):new Color(1f,.08f,.03f,.80f)):Accent(actor);
             tint.a=.68f;
             Quaternion face=Face(actor.transform.position,point);
             if(hero==HeroId.Mira||hero==HeroId.Elyra||hero==HeroId.Traveler)
@@ -691,6 +722,7 @@ namespace Alterverse.Visuals
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
+            if(hero==HeroId.Nyra&&(slot==0||slot==2))c=SivraSkillColor(slot);
             if(hero==HeroId.Traveler&&slot>=0)
             {
                 // Area abilities already own one central sphere; each victim gets only a small contact flash.
@@ -716,12 +748,12 @@ namespace Alterverse.Visuals
                     break;
                 case HeroId.Nyra:
                     {
-                        Color sniperRed=new(1f,.045f,.025f);
-                        Fx(HeroFxShape.Burst,p,sniperRed,strength*2.15f,.16f,rotation:Face(actor.transform.position,p));
-                        Fx(HeroFxShape.Halo,p,Color.Lerp(sniperRed,Color.white,.35f),strength*.92f,.17f,HeroFxMotion.Contract,actor:actor);
-                        if(slot==2)Fx(HeroFxShape.Runes,p,sniperRed,strength*1.5f,.24f,HeroFxMotion.Contract,actor:actor);
+                        Color light=SivraSkillColor(slot);
+                        Fx(HeroFxShape.Burst,p,light,strength*2.15f,.16f,rotation:Face(actor.transform.position,p));
+                        Fx(HeroFxShape.Halo,p,Color.Lerp(light,Color.white,.35f),strength*.92f,.17f,HeroFxMotion.Contract,actor:actor);
+                        if(slot==2)Fx(HeroFxShape.Runes,p,light,strength*1.5f,.24f,HeroFxMotion.Contract,actor:actor);
                         if(slot==3)Fx(HeroFxShape.Shard,p+Vector3.up*.20f,
-                            Color.Lerp(sniperRed,Color.white,.62f),strength*1.7f,.18f,HeroFxMotion.Contract,actor:actor);
+                            Color.Lerp(light,Color.white,.62f),strength*1.7f,.18f,HeroFxMotion.Contract,actor:actor);
                         break;
                     }
                 case HeroId.Elyra:
@@ -756,9 +788,8 @@ namespace Alterverse.Visuals
             ImpactAftermath(actor,p,hero,slot,strength);
             if(Hero(actor)==HeroId.Nyra&&slot==2)
             {
-                Color sniperRed=new(1f,.045f,.025f);
-                Fx(HeroFxShape.Ring,p,sniperRed,.67f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,0,0),actor,target.transform);
-                Fx(HeroFxShape.Ring,p,sniperRed,.70f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,70,0),actor,target.transform);
+                Fx(HeroFxShape.Ring,p,Color.white,.67f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,0,0),actor,target.transform);
+                Fx(HeroFxShape.Ring,p,Color.white,.70f,.5f,HeroFxMotion.Contract,Quaternion.Euler(65,70,0),actor,target.transform);
             }
             else if(slot>=0&&Hero(actor)==HeroId.Kaelon)
                 Fx(HeroFxShape.Hex,p+Vector3.up*.6f,c,.34f,.45f,HeroFxMotion.Orbit,actor:actor,follow:target.transform);
@@ -768,7 +799,7 @@ namespace Alterverse.Visuals
             // Short class silhouette around the contact core, stronger for an ultimate.
             float size=strength*(slot==3?2.05f:1.45f);
             HeroFxShape shape=hero==HeroId.Veyr?HeroFxShape.Slash:
-                hero==HeroId.Kaelon?HeroFxShape.Shield:hero==HeroId.Nyra?HeroFxShape.Bolt:
+                hero==HeroId.Kaelon?HeroFxShape.Shield:hero==HeroId.Nyra?(slot==2?HeroFxShape.Orb:HeroFxShape.Bolt):
                 hero==HeroId.Elyra?HeroFxShape.Runes:hero==HeroId.Mira?HeroFxShape.Petals:
                 hero==HeroId.Rook?HeroFxShape.ShockDome:HeroFxShape.Rift;
             Fx(shape,point+Vector3.up*.10f,new Color(accent.r,accent.g,accent.b,.84f),
@@ -897,6 +928,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -18,7 +18,7 @@ namespace Alterverse.Visuals
             public Transform Transform;public MeshRenderer Renderer;public MeshFilter Filter;
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
-            public Color Color;public float Start,Duration,SurfaceStyle;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
+            public Color Color;public float Start,Duration,SurfaceStyle,MaxRange;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
             public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
@@ -87,17 +87,17 @@ namespace Alterverse.Visuals
         internal static void Emit(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
             bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false,
-            float elapsed=0,bool cancelOnOwnerDeath=false)
+            float elapsed=0,bool cancelOnOwnerDeath=false,float maxRange=0)
         {
             // Warnings are never decorative; flourishes cannot consume the last core slots.
             if(warning)decorative=false;
             if(decorative&&!AdaptiveVfxBudget.AllowDecorative)return;
             Warm();if(instance==null||instance.material==null)return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath,maxRange);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative,
-            float elapsed,bool cancelOnOwnerDeath)
+            float elapsed,bool cancelOnOwnerDeath,float maxRange)
         {
             if(elapsed>=Mathf.Max(0,delay)+Mathf.Max(.04f,duration))return;
             int begin=warning?Capacity-WarningReserve:0;
@@ -128,6 +128,7 @@ namespace Alterverse.Visuals
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
+            slot.MaxRange=Mathf.Max(0,maxRange);
             // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
             slot.From=from;slot.To=to;slot.Size=size*(warning||motion==HeroFxMotion.RadialPulse?1f:1.5f);slot.Color=color;slot.Motion=motion;
             // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
@@ -193,6 +194,23 @@ namespace Alterverse.Visuals
             float scale=1;Quaternion rotation=s.Rotation;Vector3 drawnSize=s.Size;
             switch(s.Motion)
             {
+                case HeroFxMotion.LaserBeam:
+                    // The cached laser spans 0..1 on Z: keep both ends exact while tracking movement.
+                    if(s.Owner!=null)point=s.Owner.GetComponent<HeroVisualMotion>()?.ReleasePoint??point;
+                    Vector3 beamEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 rangeOrigin=s.Owner!=null?s.Owner.transform.position:point;
+                    Vector3 rangeDelta=beamEnd-rangeOrigin;rangeDelta.y=0;
+                    if(s.MaxRange>0&&rangeDelta.sqrMagnitude>s.MaxRange*s.MaxRange)
+                    {
+                        Vector3 limited=rangeOrigin+rangeDelta.normalized*s.MaxRange;
+                        beamEnd=new Vector3(limited.x,beamEnd.y,limited.z);
+                    }
+                    Vector3 beamDelta=beamEnd-point;
+                    if(beamDelta.sqrMagnitude<.0001f){s.Renderer.enabled=false;return;}
+                    Vector3 beamUp=Mathf.Abs(Vector3.Dot(beamDelta.normalized,Vector3.up))>.999f?Vector3.forward:Vector3.up;
+                    rotation=Quaternion.LookRotation(beamDelta,beamUp);
+                    drawnSize.z=beamDelta.magnitude;
+                    break;
                 case HeroFxMotion.Tether:
                     Vector3 tetherEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
                     Vector3 tetherDelta=tetherEnd-point;
@@ -244,7 +262,7 @@ namespace Alterverse.Visuals
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=drawnSize*scale;
             // Projectile cores remain readable until contact. Decorative flashes die away
             // smoothly; exact warning outlines retain their original size and opacity.
-            bool flight=s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral||s.Motion==HeroFxMotion.Lob;
+            bool flight=s.Motion==HeroFxMotion.LaserBeam||s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral||s.Motion==HeroFxMotion.Lob;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             if(s.Motion==HeroFxMotion.RadialPulse)fade=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.82f,1f,t));
             Color color=s.Color;
@@ -433,6 +451,13 @@ namespace Alterverse.Visuals
                         }
                         else Quad(new Vector3(x-.08f,y,0),new Vector3(x+.055f,y,0),new Vector3(-x+.09f,y+.33f,0),new Vector3(-x-.05f,y+.33f,0));
                     }break;
+                case HeroFxShape.Laser:
+                    // Straight, uniform-width light in two planes, from muzzle (Z=0) to endpoint (Z=1).
+                    SoftQuad(new Vector3(-.5f,0,0),Vector3.zero,Vector3.forward,new Vector3(-.5f,0,1),clear,hot);
+                    SoftQuad(Vector3.zero,new Vector3(.5f,0,0),new Vector3(.5f,0,1),Vector3.forward,hot,clear);
+                    SoftQuad(new Vector3(0,-.5f,0),Vector3.zero,Vector3.forward,new Vector3(0,-.5f,1),clear,hot);
+                    SoftQuad(Vector3.zero,new Vector3(0,.5f,0),new Vector3(0,.5f,1),Vector3.forward,hot,clear);
+                    break;
                 case HeroFxShape.Bolt:
                     // Crossed tapered luminous streaks remain visible from the gameplay camera.
                     SoftQuad(new Vector3(-.16f,0,-1.4f),new Vector3(0,0,-1.4f),new Vector3(0,0,.55f),new Vector3(-.025f,0,.55f),clear,hot);
@@ -530,6 +555,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 
