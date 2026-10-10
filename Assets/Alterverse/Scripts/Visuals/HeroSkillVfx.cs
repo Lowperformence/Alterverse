@@ -44,7 +44,8 @@ namespace Alterverse.Visuals
             float strength=slot<0?1:slot==3?1.9f:1.5f;
             if(h==HeroId.Traveler)
             {
-                TravelerProjectile(actor,start,end,slot,travel,target);
+                if(slot<0)TravelerBasicProjectile(actor,start,end,slot,travel,target,strength);
+                else TravelerProjectile(actor,start,end,slot,travel,target);
                 return;
             }
             if(travel<=0)
@@ -89,6 +90,52 @@ namespace Alterverse.Visuals
                     new Color(c.r,c.g,c.b,.80f),flight,HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
             }
         }
+        // Vertical portals and light arcs stay above the battlefield rather than covering the floor.
+        private static void TravelerPortal(GameObject actor,Vector3 center,float size,float life,bool arrival=false)
+        {
+            Color violet=new(.62f,.24f,1f,.88f);
+            Color pearl=new(.91f,.67f,1f,.91f);
+            Quaternion upright=Quaternion.LookRotation(actor.transform.forward)*Quaternion.Euler(90f,0f,0f);
+            Fx(HeroFxShape.Ring,center,violet,size,life,arrival?HeroFxMotion.Expand:HeroFxMotion.Contract,upright,actor);
+            Fx(HeroFxShape.Ring,center,pearl,size*.73f,life*.82f,HeroFxMotion.Contract,upright*Quaternion.Euler(0,0,38),actor);
+            Fx(HeroFxShape.Rift,center,DarkCore,size*.82f,life,HeroFxMotion.Contract,
+                Quaternion.LookRotation(actor.transform.forward),actor);
+            Fx(HeroFxShape.Slash,center+actor.transform.right*(size*.22f),pearl,size*.70f,life*.70f,
+                HeroFxMotion.Sweep,upright*Quaternion.Euler(0,0,38),actor);
+            Fx(HeroFxShape.Slash,center-actor.transform.right*(size*.22f),violet,size*.70f,life*.70f,
+                HeroFxMotion.Sweep,upright*Quaternion.Euler(0,0,-38),actor);
+        }
+        private static void TravelerBasicProjectile(GameObject actor,Vector3 start,Vector3 end,int slot,float travel,Transform target,float strength)
+        {
+            Color violet=new(.64f,.28f,1f,.98f);
+            Color white=new(.95f,.75f,1f,.96f);
+            Quaternion face=Face(start,end);
+            if(travel<=0)
+            {
+                Vector3 delta=end-start;
+                float distance=delta.magnitude;
+                if(distance<.001f)return;
+                Quaternion traceFacing=Quaternion.LookRotation(delta/distance);
+                // Fit the cached bolt's asymmetric -1.4..+.55 span to the actual endpoints.
+                // Strength widens the core, never stretches it past the selected target.
+                Vector3 center=start+delta*(1.4f/1.95f);
+                float width=(slot==0?.29f:.14f)*strength;
+                HeroVfxPool.Emit(HeroFxShape.Bolt,center,center,
+                    new Vector3(width,width,distance/1.95f),
+                    white,.14f,HeroFxMotion.Hold,traceFacing,actor);
+                HeroVfxPool.Emit(HeroFxShape.Halo,(start+end)*.5f,(start+end)*.5f,
+                    new Vector3(.27f*strength,.27f*strength,distance*.5f),
+                    violet,.17f,HeroFxMotion.Hold,traceFacing,actor);
+                TravelerPortal(actor,start,slot==0?.54f:.32f,.23f);
+                return;
+            }
+            HeroVfxPool.Emit(HeroFxShape.Bolt,start,end,new Vector3(.29f,.29f,.98f)*strength,
+                white,travel,HeroFxMotion.Travel,face,actor,endFollow:target);
+            HeroVfxPool.Emit(HeroFxShape.Halo,start,end,new Vector3(.43f,.43f,1.25f)*strength,
+                violet,travel,HeroFxMotion.Travel,face,actor,endFollow:target);
+            TravelerPortal(actor,start,slot==0?.55f:.35f,.24f);
+        }
+
         private static Color TravelerColor(int slot)=>slot==3?Color.white:
             slot==0||slot==1?new Color(1f,.82f,.08f,1f):new Color(.64f,.24f,1f,1f);
 
@@ -254,7 +301,8 @@ namespace Alterverse.Visuals
                         break;
                     }
                 case HeroId.Traveler:
-                    TravelerOrb(actor,p,slot,slot==3?.78f:.36f,slot==3?.30f:.18f);
+                    if(slot==1)TravelerPortal(actor,Chest(actor),.42f,.22f);
+                    else TravelerOrb(actor,p,slot,slot==3?.78f:.36f,slot==3?.30f:.18f);
                     return;
                 case HeroId.Nerok:
                     Fx(HeroFxShape.WaveCrest,p,Accent(actor),.75f,.22f,HeroFxMotion.Sweep,facing,actor);break;
@@ -598,7 +646,7 @@ namespace Alterverse.Visuals
             Vector3 p=target.transform.position+Vector3.up*.35f;Color c=Accent(actor);
             float strength=slot<0?.35f:slot==3?.90f:.62f;
             HeroId hero=Hero(actor);
-            if(hero==HeroId.Traveler)
+            if(hero==HeroId.Traveler&&slot>=0)
             {
                 // Area abilities already own one central sphere; each victim gets only a small contact flash.
                 TravelerOrb(actor,p,slot,slot==3?.42f:slot<0?.28f:.34f,.16f);
@@ -639,6 +687,16 @@ namespace Alterverse.Visuals
                     Fx(HeroFxShape.Seed,p,c,strength*2,.14f,HeroFxMotion.Contract,Face(actor.transform.position,p));
                     if(slot<0)Fx(HeroFxShape.Shard,p,Color.Lerp(c,Color.white,.40f),strength*.92f,.13f,HeroFxMotion.Contract,actor:actor);
                     break;
+                case HeroId.Traveler:
+                    {
+                        Color light=Color.Lerp(c,Color.white,.70f);
+                        Color red=new(.74f,.30f,1f,.86f);
+                        Fx(HeroFxShape.Halo,p,light,strength*1.55f,.13f,HeroFxMotion.Contract,actor:actor);
+                        Fx(HeroFxShape.Ring,p,c,strength*1.35f,.16f,HeroFxMotion.Contract,Face(actor.transform.position,p)*Quaternion.Euler(90,0,0),actor);
+                        Fx(HeroFxShape.Rift,p,DarkCore,strength*.85f,.13f,HeroFxMotion.Contract,Face(actor.transform.position,p),actor);
+                        if(slot>=0)Fx(HeroFxShape.Shard,p,red,strength*.65f,.12f,HeroFxMotion.Contract,actor:actor);
+                        break;
+                    }
                 case HeroId.Rook:
                     {
                         Color hot=new(1f,.34f,.035f);
@@ -763,13 +821,8 @@ namespace Alterverse.Visuals
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
             if(h==HeroId.Traveler)
             {
-                TravelerOrb(actor,from+Vector3.up*.55f,1,.38f,.20f);
-                TravelerOrb(actor,to+Vector3.up*.55f,1,.48f,.24f,HeroFxMotion.Expand);
-                for(int i=0;i<3;i++)
-                {
-                    Vector3 pos=Vector3.Lerp(from,to,(i+.5f)/3f)+Vector3.up*.50f;
-                    TravelerOrb(actor,pos,1,.18f,.14f);
-                }
+                TravelerPortal(actor,from+Vector3.up*.55f,.50f,.26f);
+                TravelerPortal(actor,to+Vector3.up*.55f,.58f,.28f,true);
                 actor.GetComponent<HeroVisualMotion>()?.PulseDash();
                 return;
             }

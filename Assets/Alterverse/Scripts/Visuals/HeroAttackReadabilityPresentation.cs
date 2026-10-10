@@ -136,9 +136,8 @@ namespace Alterverse.Visuals
 
         private void EmitPresentationVfx(HeroId hero,int slot,Vector3 target,float attackWindup,AbilitySpec spec)
         {
-            // HeroSkillVfx owns Traveler's spherical cast, flight and contact effects.
-            // Avoid layering legacy violet bolts and rifts over the white/yellow/lilac cores.
-            if(hero==HeroId.Traveler)return;
+            // HeroSkillVfx owns Traveler's ability spheres; basic attack presentation stays unchanged.
+            if(hero==HeroId.Traveler&&slot>=0)return;
             Color color=hero==HeroId.Mira?(slot>=1?new Color(.22f,1f,.45f):new Color(1f,.72f,.28f)):hero==HeroId.Traveler?new Color(.68f,.28f,1f):StylizedArtDirection.HeroAccent(hero);
             Vector3 origin=ReleasePoint();
             if(slot>=0)
