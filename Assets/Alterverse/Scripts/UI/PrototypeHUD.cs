@@ -239,7 +239,7 @@ namespace Alterverse.UI
         }
         private void DrawHealth()
         {
-            Rect r=new Rect(16,16,218,76);theme.Panel(r);
+            Rect r=new Rect(16,16,218,76);theme.HudPanel(r);
             FrontEndTheme.Fill(new Rect(r.x+12,r.y+3,r.width-24,1),FrontEndTheme.Accent);
             theme.Label(new Rect(r.x+12,r.y+5,194,24),heroName,centered);
             Rect bar=new Rect(r.x+12,r.y+34,194,9);

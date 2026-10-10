@@ -23,7 +23,7 @@ namespace Alterverse.Match
             {
                 GUI.matrix=Matrix4x4.TRS(new Vector3(safe.x,Screen.height-safe.yMax,0),Quaternion.identity,Vector3.one*scale);
                 theme??=new FrontEndTheme();centered??=new GUIStyle(theme.Body){alignment=TextAnchor.MiddleCenter,font=FrontEndTypography.Display};
-                Rect r=new Rect((width-420)*.5f,16,420,82);theme.Panel(r);
+                Rect r=new Rect((width-420)*.5f,16,420,82);theme.HudPanel(r);
                 FrontEndTheme.Fill(new Rect(r.x+14,r.y+3,r.width-28,1),FrontEndTheme.Accent);
                 int zero=MatchScoreboard.Instance!=null?MatchScoreboard.Instance.KillsForTeam(0):0;
                 int lumen=MatchScoreboard.Instance!=null?MatchScoreboard.Instance.KillsForTeam(1):0;

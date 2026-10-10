@@ -231,6 +231,13 @@ namespace Alterverse.UI
             RoundedOutline(rect, OutlineSoft);
         }
 
+        public void HudPanel(Rect rect)
+        {
+            // One fill at 40% opacity: a stacked shadow would make the backdrop less transparent.
+            RoundedFill(rect, new Color(Surface.r, Surface.g, Surface.b, .40f));
+            RoundedOutline(rect, OutlineSoft);
+        }
+
         public void StatusBadge(Rect rect, string text, Color tint)
         {
             RoundedFill(rect, new Color(tint.r, tint.g, tint.b, .12f));
