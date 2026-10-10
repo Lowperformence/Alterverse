@@ -13,7 +13,6 @@ namespace Alterverse.Combat
         public const float HealFraction=.07f;
         public const float ShieldFraction=.28f;
         public const float ShieldDuration=2f;
-        public const float FrontInfluence=.28f;
         public const float PickupDelay=.40f;
         public const float Lifetime=8f;
         const float PickupRadius=1.35f;
@@ -226,12 +225,12 @@ namespace Alterverse.Combat
 
                 Vector3 delta=health.transform.position-transform.position;delta.y=0;
                 if(delta.sqrMagnitude>radiusSqr)continue;
-                Claim(health,teamMember.Team);
+                Claim(health);
                 return;
             }
         }
 
-        void Claim(Health health,int team)
+        void Claim(Health health)
         {
             if(claimed||health==null||health.IsDead)return;
             claimed=true;
@@ -243,9 +242,6 @@ namespace Alterverse.Combat
             health.Heal(health.Max*HealFraction,false);
             health.AddShield(health.Max*ShieldFraction,ShieldDuration,false);
             HeroSkillVfx.Support(health.gameObject,health,true,ShieldDuration);
-
-            if(front==null)front=FindAnyObjectByType<DimensionsFront>();
-            if(front!=null&&!front.HasEnded)front.Push(team,FrontInfluence);
 
             // Clean, visual-only absorption cue; intentionally no repeated beep or looping audio.
             PrototypeVfx.Ring(health.transform.position,Color.Lerp(StylizedArtDirection.ZeroEnergy,StylizedArtDirection.LumenEnergy,.5f),1.25f,.24f);
