@@ -578,7 +578,22 @@ namespace Alterverse.Visuals
                     }
                     else Slash(actor,impact,slot);break;
                 case HeroId.Kaelon:
-                    if(slot==0){Ring(actor,Ground(impact),.9f,.24f,false,true);Fx(HeroFxShape.Cracks,Ground(impact),Accent(actor),.75f,.22f);Shards(actor,impact,1,3);}
+                    if(slot==0)
+                    {
+                        Vector3 direction=impact-actor.transform.position;direction.y=0f;
+                        if(direction.sqrMagnitude<.0001f)direction=actor.transform.forward;
+                        direction.y=0f;direction.Normalize();
+                        float range=HeroAbilityKit.LoadoutFor(HeroId.Kaelon).Q.Range;
+                        Vector3 start=Muzzle(actor),end=actor.transform.position+direction*range;
+                        end.y=start.y;
+                        Camera view=Camera.main;
+                        Quaternion facing=view!=null?view.transform.rotation:Face(start,end);
+                        float flight=Mathf.Max(.16f,Vector3.Distance(start,end)/14f);
+                        // Visual punch pulse continues to the true range limit even when the victim is closer.
+                        HeroVfxPool.Emit(HeroFxShape.AnchorStrikeZero,start,end,Vector3.one*.86f,
+                            new Color(.68f,.20f,1f,1f),flight,HeroFxMotion.TravelFixedFrame,
+                            facing,actor,cancelOnOwnerDeath:true);
+                    }
                     else if(slot==2)
                     {
                         Vector3 start=Muzzle(actor),end=impact+Vector3.up*.55f;

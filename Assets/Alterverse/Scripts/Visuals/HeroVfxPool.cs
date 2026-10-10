@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -376,6 +376,17 @@ namespace Alterverse.Visuals
                     // Circumscribed polygon: the outer edge never falls inside a radius-1 circle.
                     if(polished)FeatherBand(0,Mathf.PI*2,.90f,.965f,1.025f,64);
                     else Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
+                case HeroFxShape.AnchorStrikeZero:
+                    // Tall hollow zero in the local XY plane, with a bright rim and soft edges.
+                    for(int i=0;i<48;i++)
+                    {
+                        float a=i*Mathf.PI/24f,b=(i+1)*Mathf.PI/24f;
+                        Vector3 x=new Vector3(Mathf.Cos(a)*.28f,Mathf.Sin(a)*.44f,0f);
+                        Vector3 y=new Vector3(Mathf.Cos(b)*.28f,Mathf.Sin(b)*.44f,0f);
+                        SoftQuad(x*.76f,x*.90f,y*.90f,y*.76f,clear,hot);
+                        SoftQuad(x*.90f,x,y,y*.90f,hot,clear);
+                    }
+                    break;
                 case HeroFxShape.GravityEight:
                     // Upright numeral eight: two hollow, feathered loops in the local XY plane.
                     for(int lobe=-1;lobe<=1;lobe+=2)
