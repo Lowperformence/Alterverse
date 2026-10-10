@@ -70,8 +70,8 @@ namespace Alterverse.Audio
             if(!local&&(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f))return;
             float gain=phase==2?.32f:action==0?(phase==1?.48f:.58f):ultimate?(phase==1?.84f:.9f):(phase==1?.62f:.7f);
             gain*=CombatSoundPalette.For(identity.Hero).Gain;
-            // Traveler Q = Temporal Beam (+20%); E = Chrono Snare (-30%).
-            if(identity.Hero==HeroId.Traveler)gain*=action==1?1.20f:action==3?.70f:1f;
+            // Traveler Q = Temporal Beam (+20%); E = Chrono Snare (-30%); R = Paradox Collapse (+20%).
+            if(identity.Hero==HeroId.Traveler)gain*=action==1||action==4?1.20f:action==3?.70f:1f;
             if(hero==(int)HeroId.Nerok&&ultimate)gain*=.60f;
             // Other heroes start 30% quieter; distance attenuation is applied afterwards.
             float attenuation=local?1f:.70f;
