@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Alterverse.Combat;
-using Alterverse.Match;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -15,7 +14,9 @@ namespace Alterverse.Visuals
         private const float StepDistance=.72f;
         private const float HoldSeconds=2f;
         private const float FadeSeconds=.85f;
-        private const int PoolSize=44;
+        // Ten heroes at about 6.4 m/s need ~254 marks for the full hold and fade.
+        private const int PoolSize=256;
+        private static readonly Color FootprintColor=new(.40f,.40f,.40f,1f);
 
         private Health health;
         private Transform bootL,bootR;
@@ -156,11 +157,7 @@ namespace Alterverse.Visuals
             {
                 if(mark.Renderer==null)return;
                 block.Clear();
-                Color c=ArenaVariantRuntime.Current==ArenaVariant.Mars
-                    ?new Color(.09f,.035f,.018f,alpha)
-                    :ArenaVariantRuntime.Current==ArenaVariant.GreenPlanet
-                        ?new Color(.025f,.05f,.022f,alpha)
-                        :new Color(.025f,.03f,.038f,alpha);
+                Color c=FootprintColor;c.a=alpha;
                 block.SetColor(BaseColor,c);
                 block.SetColor(ColorId,c);
                 mark.Renderer.SetPropertyBlock(block);
@@ -199,7 +196,7 @@ namespace Alterverse.Visuals
                 Shader shader=Shader.Find("Universal Render Pipeline/Unlit")??Shader.Find("Unlit/Transparent");
                 if(shader==null)shader=Shader.Find("Sprites/Default");
                 Material material=new(shader){name="DF_LunarFootprintMaterial",renderQueue=(int)RenderQueue.Transparent};
-                Color baseColor=new(.025f,.03f,.038f,.52f);
+                Color baseColor=FootprintColor;baseColor.a=.52f;
                 if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",baseColor);
                 if(material.HasProperty("_Color"))material.SetColor("_Color",baseColor);
                 if(material.HasProperty("_Surface"))material.SetFloat("_Surface",1f);
