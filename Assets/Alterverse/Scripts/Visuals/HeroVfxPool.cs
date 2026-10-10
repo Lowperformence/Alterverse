@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -129,7 +129,7 @@ namespace Alterverse.Visuals
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
             // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
-            slot.From=from;slot.To=to;slot.Size=size*(warning?1f:1.5f);slot.Color=color;slot.Motion=motion;
+            slot.From=from;slot.To=to;slot.Size=size*(warning||motion==HeroFxMotion.RadialPulse?1f:1.5f);slot.Color=color;slot.Motion=motion;
             // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
             if(!warning&&shape==HeroFxShape.Bolt&&motion==HeroFxMotion.Hold)slot.Size.z=size.z;
             slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Orb?1f:
@@ -200,6 +200,9 @@ namespace Alterverse.Visuals
                     drawnSize.z=tetherDelta.magnitude;
                     break;
                 case HeroFxMotion.Expand:scale=Mathf.Lerp(.24f,1f,1f-Mathf.Pow(1f-t,3f));break;
+                case HeroFxMotion.RadialPulse:
+                    // Starts at the caster and visibly reaches the exact radius before fading.
+                    scale=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(t/.82f));break;
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
                 case HeroFxMotion.TravelFixedFrame:
                 case HeroFxMotion.Travel:
@@ -243,6 +246,7 @@ namespace Alterverse.Visuals
             // smoothly; exact warning outlines retain their original size and opacity.
             bool flight=s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral||s.Motion==HeroFxMotion.Lob;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
+            if(s.Motion==HeroFxMotion.RadialPulse)fade=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.82f,1f,t));
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
@@ -372,6 +376,9 @@ namespace Alterverse.Visuals
                     // Circumscribed polygon: the outer edge never falls inside a radius-1 circle.
                     if(polished)FeatherBand(0,Mathf.PI*2,.90f,.965f,1.025f,64);
                     else Band(0,Mathf.PI*2,.92f,1f/Mathf.Cos(Mathf.PI/48),48);break;
+                case HeroFxShape.PressureWave:
+                    // Hollow feathered band, with no vertices beyond the requested radius.
+                    FeatherBand(0,Mathf.PI*2,.86f,.95f,1f,64);break;
                 case HeroFxShape.Hex:
                     if(polished)FeatherBand(0,Mathf.PI*2,.86f,.94f,1.02f,6);
                     else Band(0,Mathf.PI*2,.89f,1,6);break;
@@ -497,6 +504,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

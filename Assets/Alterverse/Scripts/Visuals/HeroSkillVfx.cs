@@ -303,7 +303,13 @@ namespace Alterverse.Visuals
                     {
                         Color hot=new(1f,.34f,.035f);
                         Fx(HeroFxShape.Burst,p,hot,size*1.28f,.13f,rotation:facing,actor:actor);
-                        Fx(HeroFxShape.Ring,Ground(actor.transform.position),new Color(hot.r,hot.g,hot.b,.62f),size*.95f,.16f,HeroFxMotion.Expand,actor:actor);
+                        if(slot==3)
+                        {
+                            Vector3 center=Ground(actor.transform.position);
+                            OrunOverdrive(actor,center);
+                            Alterverse.Multiplayer.CoopHeroStateSync.BroadcastOrunOverdrive(actor,center);
+                        }
+                        else Fx(HeroFxShape.Ring,Ground(actor.transform.position),new Color(hot.r,hot.g,hot.b,.62f),size*.95f,.16f,HeroFxMotion.Expand,actor:actor);
                         Fx(HeroFxShape.Cracks,Ground(actor.transform.position),c,size*.92f,.18f,actor:actor);
                         break;
                     }
@@ -584,6 +590,15 @@ namespace Alterverse.Visuals
                     break;
             }
         }
+        public static void OrunOverdrive(GameObject actor,Vector3 center)
+        {
+            if(actor==null||Hero(actor)!=HeroId.Rook)return;
+            AbilitySpec ultimate=HeroAbilityKit.LoadoutFor(HeroId.Rook).Ultimate;
+            HeroVfxPool.Emit(HeroFxShape.PressureWave,Ground(center),Ground(center),Vector3.one*ultimate.Radius,
+                new Color(1f,.34f,.035f,.92f),Mathf.Max(.32f,ultimate.Windup),HeroFxMotion.RadialPulse,
+                owner:actor,cancelOnOwnerDeath:true);
+        }
+
         public static void Ultimate(GameObject actor,Vector3 target)
         {if(actor!=null)Cast(actor,3);}
         // A short second beat distinguishes metal, shadow, magic and sacred energy.
@@ -841,6 +856,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

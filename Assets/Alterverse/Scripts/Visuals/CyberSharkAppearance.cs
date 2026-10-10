@@ -261,6 +261,7 @@ namespace Alterverse.Visuals
             };
             if (data.boneWeights2 != null) anatomy.quality = SkinQuality.Bone2;
             RendererGroup(anatomy, 0, anatomy.transform, vertices, normals, weights, bones, materials);
+            BuildLeatherShoulders(model,anatomy,bones,lookup,heads,rotations,scales);
             BuildLeatherCuffs(model,anatomy,bones,lookup,heads,rotations,scales);
             // The inherited gauntlet renderer has its own FBX transform/root bone.
             // Keep the new anchor independent of the inherited gauntlet scale:
@@ -310,12 +311,159 @@ namespace Alterverse.Visuals
             point=center+(point-center)*.74f;
             Vector3 axial=axis*Vector3.Dot(normal,axis);
             normal=(axial+(normal-axial)/.74f).normalized;
+            if(name.StartsWith("UpperArm",StringComparison.Ordinal))
+            {
+                // Lower the visible shoulder, fading to the unchanged elbow half way down the arm.
+                Vector3 down=(e-a).normalized;
+                float length=(e-a).magnitude;
+                float t=Vector3.Dot(point-a,down)/length;
+                float blend=Mathf.Clamp01(t/.5f);
+                point.y-=.065f*(1f-Mathf.SmoothStep(0f,1f,blend));
+                float slope=t>0f&&t<.5f ? .065f*6f*blend*(1f-blend)/.5f : 0f;
+                Vector3 gradient=down*(slope/length);
+                normal=(normal-gradient*(normal.y/(1f+gradient.y))).normalized;
+            }
         }
 
         private static Vector3 ClosestOnSegment(Vector3 point,Vector3 a,Vector3 b)
         {
             Vector3 axis=b-a;
             return a+axis*Mathf.Clamp01(Vector3.Dot(point-a,axis)/Mathf.Max(axis.sqrMagnitude,.000001f));
+        }
+
+        private void BuildLeatherShoulders(Transform model,SkinnedMeshRenderer anatomy,Transform[] bones,
+            Dictionary<string,int> lookup,Vector3[] heads,Quaternion[] rotations,float[] scales)
+        {
+            var points=new List<Vector3>();var weights=new List<BoneWeight>();
+            var faces=new[]{new List<int>(),new List<int>(),new List<int>()};
+            Matrix4x4 convert=anatomy.transform.worldToLocalMatrix*model.localToWorldMatrix;
+            foreach(string side in new[]{"L","R"})
+            {
+                int bone=lookup["UpperArm"+side];
+                Vector3 a=Point(geometry.anchors[bone].head);
+                Vector3 axis=Point(geometry.anchors[lookup["Forearm"+side]].head)-a;
+                float length=axis.magnitude;axis/=length;
+                Vector3 front=Vector3.ProjectOnPlane(Vector3.forward,axis).normalized;
+                Vector3 outward=Vector3.Cross(front,axis).normalized*(side=="L"?-1f:1f);
+                Vector3 Radial(float angle)=>outward*Mathf.Cos(angle)+front*Mathf.Sin(angle);
+                Vector3 At(Vector2 p,float radius)=>a+axis*(p.y*length)+Radial(p.x)*radius;
+                void Tri(Vector3 p,Vector3 q,Vector3 r,int surface,Vector3 expected)
+                {
+                    if(Vector3.Dot(Vector3.Cross(q-p,r-p),expected)<0f){Vector3 temp=q;q=r;r=temp;}
+                    int first=points.Count;
+                    foreach(Vector3 source in new[]{p,q,r})
+                    {
+                        Vector3 fitted=source,normal=expected;
+                        FitSilhouette(geometry,bone,lookup,ref fitted,ref normal);
+                        points.Add(convert.MultiplyPoint3x4(heads[bone]+rotations[bone]*(fitted-a)*scales[bone]));
+                        weights.Add(new BoneWeight{boneIndex0=bone,weight0=1f});
+                    }
+                    faces[surface].Add(first);faces[surface].Add(first+1);faces[surface].Add(first+2);
+                }
+                void Panel(Vector2[] outline,float radius)
+                {
+                    Vector2 center=Vector2.zero;
+                    foreach(Vector2 p in outline)center+=p;
+                    center/=outline.Length;
+                    float Radius(Vector2 p)=>radius-.030f*Mathf.Clamp01(p.y);
+                    const int steps=4;
+                    for(int i=0;i<outline.Length;i++)
+                    {
+                        Vector2 p=outline[i],q=outline[(i+1)%outline.Length];
+                        Vector2 Param(int row,int column)=>center+(p-center)*((row-column)/(float)steps)+(q-center)*(column/(float)steps);
+                        Vector3 Sample(int row,int column,bool inner)
+                        {
+                            Vector2 uv=Param(row,column);
+                            return At(uv,Radius(uv)+(inner?-.012f:.008f*(1f-row/(float)steps)));
+                        }
+                        // Sample the curve instead of spanning it with flat chords through the arm.
+                        for(int row=0;row<steps;row++)for(int column=0;column<=row;column++)
+                        {
+                            Vector3 expected=Radial((Param(row,column).x+Param(row+1,column).x+Param(row+1,column+1).x)/3f);
+                            Tri(Sample(row,column,false),Sample(row+1,column,false),Sample(row+1,column+1,false),0,expected);
+                            Tri(Sample(row,column,true),Sample(row+1,column+1,true),Sample(row+1,column,true),1,-expected);
+                            if(column<row)
+                            {
+                                Tri(Sample(row,column,false),Sample(row+1,column+1,false),Sample(row,column+1,false),0,expected);
+                                Tri(Sample(row,column,true),Sample(row,column+1,true),Sample(row+1,column+1,true),1,-expected);
+                            }
+                        }
+                        for(int segment=0;segment<steps;segment++)
+                        {
+                            Vector2 u=Vector2.Lerp(p,q,segment/(float)steps),v=Vector2.Lerp(p,q,(segment+1f)/steps),mid=(u+v)*.5f;
+                            Vector3 tangent=-outward*Mathf.Sin(mid.x)+front*Mathf.Cos(mid.x);
+                            Vector3 edge=tangent*(mid.x-center.x)+axis*(mid.y-center.y);
+                            Vector3 op=At(u,Radius(u)),oq=At(v,Radius(v)),ip=At(u,Radius(u)-.012f),iq=At(v,Radius(v)-.012f);
+                            Tri(op,ip,iq,1,edge);Tri(op,iq,oq,1,edge);
+                        }
+                    }
+                }
+                void Rivet(float angle,float along,float radius)
+                {
+                    const int segments=8;
+                    Vector3 radial=Radial(angle),tangent=-outward*Mathf.Sin(angle)+front*Mathf.Cos(angle);
+                    Vector3 center=At(new Vector2(angle,along),radius-.030f*along+.002f);
+                    Vector3 Ring(int i,float depth)
+                    {
+                        float theta=i*Mathf.PI*2f/segments;
+                        return center+radial*depth+(axis*Mathf.Cos(theta)+tangent*Mathf.Sin(theta))*.007f;
+                    }
+                    for(int i=0;i<segments;i++)
+                    {
+                        Vector3 p=Ring(i,0),q=Ring(i+1,0),r=Ring(i+1,.004f),s=Ring(i,.004f);
+                        Vector3 edge=(p+q)*.5f-center;
+                        Tri(p,q,r,2,edge);Tri(p,r,s,2,edge);
+                        Tri(center,q,p,2,-radial);
+                        Tri(center+radial*.004f,s,r,2,radial);
+                    }
+                }
+                // Curved top plate and two overlapping leather lames, inspired by riveted pauldrons.
+                Panel(new[]{new Vector2(-1.5f,.07f),new Vector2(-.7f,-.035f),new Vector2(.7f,-.035f),
+                    new Vector2(1.5f,.07f),new Vector2(1.22f,.33f),new Vector2(.35f,.405f),
+                    new Vector2(-.35f,.405f),new Vector2(-1.22f,.33f)},.150f);
+                foreach(float angle in new[]{-1.1f,1.1f})
+                {Rivet(angle,.12f,.151f);Rivet(angle,.31f,.153f);}
+                for(int layer=0;layer<2;layer++)
+                {
+                    float t=.28f+layer*.16f,radius=.154f+layer*.003f;
+                    Panel(new[]{new Vector2(-1.28f,t),new Vector2(1.28f,t),new Vector2(1.12f,t+.19f),
+                        new Vector2(.35f,t+.25f),new Vector2(-.35f,t+.25f),new Vector2(-1.12f,t+.19f)},radius);
+                    foreach(float angle in new[]{-1f,1f})Rivet(angle,t+.08f,radius+.003f);
+                }
+            }
+            var mesh=new Mesh{name="DF_Nerok_LeatherShoulders"};ownedMeshes.Add(mesh);
+            mesh.SetVertices(points);mesh.subMeshCount=3;
+            for(int i=0;i<faces.Length;i++)mesh.SetTriangles(faces[i],i);
+            mesh.boneWeights=weights.ToArray();
+            var bindposes=new Matrix4x4[bones.Length];
+            for(int i=0;i<bones.Length;i++)bindposes[i]=bones[i].worldToLocalMatrix*anatomy.transform.localToWorldMatrix;
+            mesh.bindposes=bindposes;mesh.RecalculateNormals();mesh.RecalculateBounds();
+            var go=new GameObject(mesh.name);go.layer=anatomy.gameObject.layer;go.transform.SetParent(anatomy.transform,false);
+            var renderer=go.AddComponent<SkinnedMeshRenderer>();renderer.sharedMesh=mesh;renderer.bones=bones;
+            renderer.rootBone=anatomy.rootBone;renderer.quality=SkinQuality.Bone1;
+            renderer.sharedMaterials=new[]{
+                Surface("Brown shoulder leather",new Color(.28f,.14f,.075f),0f,.18f),
+                Surface("Shoulder leather cut edges",new Color(.12f,.052f,.023f),0f,.12f),
+                Surface("Shoulder brass rivets",new Color(.48f,.29f,.12f),.72f,.32f)};
+            Bounds bounds=mesh.bounds;bounds.Expand(bounds.size*.45f);renderer.localBounds=bounds;
+        }
+
+        private static bool LegacyShoulderAccessory(int index,int material)
+        {
+            int bone=geometry.boneIndices[index];string name=geometry.boneNames[bone];
+            if(!name.StartsWith("UpperArm",StringComparison.Ordinal))return false;
+            // The source upper-arm metal slots contain only the old pauldron, fin and brass teeth.
+            if(material==2||material==4)return true;
+            if(material!=1)return false;
+            Vector3 a=Point(geometry.anchors[bone].head),p=Point(geometry.vertices,index*3);
+            float sign=name.EndsWith("L",StringComparison.Ordinal)?-1f:1f;
+            for(int j=0;j<3;j++)
+            {
+                Vector3 start=new Vector3(a.x+sign*j*.035f,a.y+.025f,.11f);
+                Vector3 end=new Vector3(a.x+sign*(.015f+j*.035f),a.y-.065f,.104f);
+                if(Mathf.Abs(Vector3.Distance(p,ClosestOnSegment(p,start,end))-.006f)<.00015f)return true;
+            }
+            return false;
         }
 
         private void BuildLeatherCuffs(Transform model,SkinnedMeshRenderer anatomy,Transform[] bones,
@@ -497,6 +645,8 @@ namespace Alterverse.Visuals
                     if (a < 0 || b < 0 || c < 0) continue;
                     if(group==0&&LegacyForearmAccessory(sourceIndices[i],m)&&
                         LegacyForearmAccessory(sourceIndices[i+1],m)&&LegacyForearmAccessory(sourceIndices[i+2],m))continue;
+                    if(group==0&&LegacyShoulderAccessory(sourceIndices[i],m)&&
+                        LegacyShoulderAccessory(sourceIndices[i+1],m)&&LegacyShoulderAccessory(sourceIndices[i+2],m))continue;
                     // The original nearly black fingers disappear beside the grey palm.
                     // Give only hand-bound armor-slot triangles the same shark-skin finish.
                     int material = m;

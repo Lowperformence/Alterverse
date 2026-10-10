@@ -6,7 +6,13 @@ namespace Alterverse.Combat
 {
     public sealed class Health : MonoBehaviour
     {
-        private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero == Alterverse.Characters.HeroId.Nerok ? 90f : 50f;
+        private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero switch
+        {
+            Alterverse.Characters.HeroId.Nerok => 90f,
+            Alterverse.Characters.HeroId.Veyr => 70f,
+            Alterverse.Characters.HeroId.Kaelon => 70f,
+            _ => 50f
+        };
         private const float HeroBaseShieldRechargeDelay = 15f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
@@ -39,7 +45,7 @@ namespace Alterverse.Combat
         private float shield;
         private float shieldUntil;
 
-        // Every hero gets this independent 50 HP base shield.
+        // Independent rechargeable base shield; capacity depends on the hero.
         private bool heroBaseShieldEnabled;
         private float heroBaseShield;
         private float heroBaseShieldRechargeAt = -1f;
@@ -290,6 +296,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

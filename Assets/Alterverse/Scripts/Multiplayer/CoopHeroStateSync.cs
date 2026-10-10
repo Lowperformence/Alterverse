@@ -18,6 +18,7 @@ namespace Alterverse.Multiplayer
     {
         private static CoopHeroStateSync audioRelay;
         private const string SharkEffectMessage="DF_COOP_SHARK_FX_V2";
+        private const string OrunOverdriveMessage="DF_COOP_ORUN_OVERDRIVE_FX_V1";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
         private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V3";
@@ -102,6 +103,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
             messaging.RegisterNamedMessageHandler(KillSoundMessage,OnKillSound);
             messaging.RegisterNamedMessageHandler(SharkEffectMessage,OnSharkEffect);
+            messaging.RegisterNamedMessageHandler(OrunOverdriveMessage,OnOrunOverdrive);
             attached=true;
         }
 
@@ -113,6 +115,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
             messaging.UnregisterNamedMessageHandler(KillSoundMessage);
             messaging.UnregisterNamedMessageHandler(SharkEffectMessage);
+            messaging.UnregisterNamedMessageHandler(OrunOverdriveMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
             senderLastPoseAt.Clear();
@@ -165,6 +168,36 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int slot);
             if(slot>=0&&slot<slots.Length&&slots[slot]!=null)
                 Alterverse.Audio.HeroCombatAudio.ConfirmedKill(slots[slot].gameObject,false);
+        }
+
+        public static void BroadcastOrunOverdrive(GameObject actor,Vector3 center)
+        {
+            var service=audioRelay;var manager=NetworkManager.Singleton;
+            if(actor==null||service==null||service.messaging==null||!CoopAuthority.Active||
+                !CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer)return;
+            var slot=actor.GetComponent<CoopHeroSlot>();
+            if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers||actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Rook)return;
+            using FastBufferWriter writer=new(20,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot.Slot);
+            writer.WriteValueSafe(center.x);writer.WriteValueSafe(center.y);writer.WriteValueSafe(center.z);
+            foreach(ulong id in manager.ConnectedClientsIds)
+                if(id!=NetworkManager.ServerClientId)
+                    service.messaging.SendNamedMessage(OrunOverdriveMessage,id,writer,NetworkDelivery.ReliableSequenced);
+        }
+
+        private void OnOrunOverdrive(ulong sender,FastBufferReader reader)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||
+                sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(20))return;
+            if(!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            if(slot<0||slot>=slots.Length||slots[slot]==null||
+                float.IsNaN(x)||float.IsInfinity(x)||float.IsNaN(y)||float.IsInfinity(y)||float.IsNaN(z)||float.IsInfinity(z))return;
+            GameObject actor=slots[slot].gameObject;
+            if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Rook)return;
+            HeroSkillVfx.OrunOverdrive(actor,new Vector3(x,y,z));
         }
 
         public static void BroadcastSharkEffect(GameObject actor,int kind,Vector3 center,float radius,float duration,Health target=null)
@@ -423,5 +456,6 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 
 
