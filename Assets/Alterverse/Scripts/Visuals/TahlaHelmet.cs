@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Open-face mint helmet fitted to Tahla's head and attached to its animation bone.</summary>
+    /// <summary>Open-face golden helmet fitted to Tahla's head and attached to its animation bone.</summary>
     [DisallowMultipleComponent]
     public sealed class TahlaHelmet : MonoBehaviour
     {
@@ -23,13 +23,16 @@ namespace Alterverse.Visuals
             if(unit<.001f)return;
             var owner=model.gameObject.AddComponent<TahlaHelmet>();
             owner.materials=new[]{
-                RuntimeShaderLibrary.Create(new Color(.52f,.80f,.67f),false,.25f,.48f,Color.black),
+                RuntimeShaderLibrary.Create(new Color(.72f,.50f,.17f),false,.78f,.46f,Color.black),
                 RuntimeShaderLibrary.Create(new Color(.075f,.12f,.10f),false,.02f,.18f,Color.black),
-                RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.72f,.38f,Color.black)};
+                RuntimeShaderLibrary.Create(new Color(.65f,.47f,.23f),false,.72f,.38f,Color.black),
+                RuntimeShaderLibrary.Create(new Color(.12f,1f,.18f),false,.10f,.30f,new Color(.12f,1f,.18f)*2.5f)};
             foreach(var material in owner.materials)if(material==null){Destroy(owner);return;}
-            owner.materials[0].name="DF_Tahla_MintHelmetPaint";
+            owner.materials[0].name="DF_Tahla_GoldenHelmetShell";
             owner.materials[1].name="DF_Tahla_HelmetPadding";
             owner.materials[2].name="DF_Tahla_HelmetFasteners";
+            owner.materials[3].name="DF_Tahla_FluorescentGreenDF";
+            owner.materials[3].EnableKeyword("_EMISSION");
             Bounds skull=owner.FitAndRemoveHair(model,head,origin,unit);
             owner.Build(model,head,skull,origin,unit);
         }
@@ -89,7 +92,7 @@ namespace Alterverse.Visuals
 
         void Build(Transform model,Transform head,Bounds skull,Vector3 origin,float unit)
         {
-            var vertices=new List<Vector3>();var faces=new[]{new List<int>(),new List<int>(),new List<int>()};
+            var vertices=new List<Vector3>();var faces=new[]{new List<int>(),new List<int>(),new List<int>(),new List<int>()};
             Vector3 center=new Vector3(origin.x,origin.y+.26f*unit,skull.center.z);
             Vector3 radius=new Vector3(Mathf.Clamp(skull.extents.x/unit,.095f,.108f)+.014f,
                 Mathf.Max((skull.max.y-center.y)/unit+.018f,.13f),
@@ -180,9 +183,48 @@ namespace Alterverse.Visuals
                 Vector3 chin=new Vector3(origin.x,origin.y+.13f*unit,skull.max.z+.005f*unit);
                 Tube(hinge,jaw,.005f*unit,1);Tube(jaw,chin,.005f*unit,1);
             }
+            // Raised DF lettering follows the front curvature instead of sinking through the shell.
+            Vector3 Mark(Vector2 p,bool front)
+            {
+                float x=(p.x-center.x)/radius.x,y=(p.y-center.y)/radius.y;
+                return new Vector3(p.x,p.y,center.z+radius.z*Mathf.Sqrt(Mathf.Max(0f,1f-x*x-y*y))+(front?.002f:.0008f)*unit);
+            }
+            void LetterTile(Vector2 a,Vector2 b,Vector2 c,Vector2 d)
+            {
+                const int steps=4;
+                Vector2 UV(float u,float v)=>Vector2.Lerp(Vector2.Lerp(a,b,u),Vector2.Lerp(d,c,u),v);
+                for(int row=0;row<steps;row++)for(int col=0;col<steps;col++)
+                {
+                    Vector2 p=UV(col/(float)steps,row/(float)steps),q=UV((col+1f)/steps,row/(float)steps);
+                    Vector2 r=UV((col+1f)/steps,(row+1f)/steps),s=UV(col/(float)steps,(row+1f)/steps);
+                    Quad(Mark(p,true),Mark(q,true),Mark(r,true),Mark(s,true),3,Vector3.forward);
+                    Quad(Mark(p,false),Mark(s,false),Mark(r,false),Mark(q,false),3,Vector3.back);
+                }
+                Vector2 middle=(a+b+c+d)*.25f;Vector2[] corners={a,b,c,d};
+                for(int edge=0;edge<4;edge++)for(int i=0;i<steps;i++)
+                {
+                    Vector2 p=Vector2.Lerp(corners[edge],corners[(edge+1)%4],i/(float)steps);
+                    Vector2 q=Vector2.Lerp(corners[edge],corners[(edge+1)%4],(i+1f)/steps);
+                    Vector2 outwards=(p+q)*.5f-middle;
+                    Quad(Mark(p,true),Mark(p,false),Mark(q,false),Mark(q,true),3,new Vector3(outwards.x,outwards.y,0));
+                }
+            }
+            Vector2 Glyph(float offset,Vector2 p)=>new Vector2(center.x+(offset+p.x*.026f)*unit,center.y+(.080f+p.y*.034f)*unit);
+            Vector2[] outer={new Vector2(0,0),new Vector2(0,1),new Vector2(.58f,1),new Vector2(.90f,.82f),
+                new Vector2(1,.65f),new Vector2(1,.35f),new Vector2(.90f,.18f),new Vector2(.58f,0)};
+            Vector2[] inner={new Vector2(.22f,.22f),new Vector2(.22f,.78f),new Vector2(.54f,.78f),new Vector2(.68f,.68f),
+                new Vector2(.74f,.58f),new Vector2(.74f,.42f),new Vector2(.68f,.32f),new Vector2(.54f,.22f)};
+            for(int i=0;i<outer.Length;i++)
+            {
+                int next=(i+1)%outer.Length;
+                LetterTile(Glyph(-.030f,outer[i]),Glyph(-.030f,outer[next]),Glyph(-.030f,inner[next]),Glyph(-.030f,inner[i]));
+            }
+            void FBar(float x0,float y0,float x1,float y1)=>LetterTile(Glyph(.004f,new Vector2(x0,y0)),
+                Glyph(.004f,new Vector2(x1,y0)),Glyph(.004f,new Vector2(x1,y1)),Glyph(.004f,new Vector2(x0,y1)));
+            FBar(0,0,.23f,1);FBar(.23f,.78f,1,1);FBar(.23f,.34f,.78f,.56f);
             for(int i=0;i<vertices.Count;i++)vertices[i]=head.InverseTransformPoint(model.TransformPoint(vertices[i]));
-            var mesh=new Mesh{name="DF_Tahla_MintHelmet"};ownedMeshes.Add(mesh);
-            mesh.SetVertices(vertices);mesh.subMeshCount=3;
+            var mesh=new Mesh{name="DF_Tahla_GoldenHelmet"};ownedMeshes.Add(mesh);
+            mesh.SetVertices(vertices);mesh.subMeshCount=faces.Length;
             for(int i=0;i<faces.Length;i++)mesh.SetTriangles(faces[i],i);
             mesh.RecalculateNormals();mesh.RecalculateBounds();
             var go=new GameObject(mesh.name);go.layer=head.gameObject.layer;go.transform.SetParent(head,false);
