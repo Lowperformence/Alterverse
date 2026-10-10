@@ -54,6 +54,10 @@ namespace Alterverse.EditorChecks
                     if(heal)self.TakeDamage(200);
                     if(hero==HeroId.Mira&&(slot==1||slot==2||slot==3))ally.TakeDamage(300);
                     float before=target.Current+target.Shield,selfBefore=self.Current+self.Shield,allyBefore=ally.Current+ally.Shield;
+                    int sightlineHits=0;float sightlineDamage=0;
+                    Action<float,float,GameObject> countSightline=(damage,absorbed,source)=>
+                    {if(source==actor){sightlineHits++;sightlineDamage+=damage+absorbed;}};
+                    if(hero==HeroId.Nyra&&slot==3)target.Damaged+=countSightline;
                     Vector3 start=actor.transform.position;
                     Check(execution.TryCast(slot,target,Vector3.forward),hero+" slot "+slot+" rejects valid cast");
                     Check(execution.Remaining(slot)>0,hero+" slot "+slot+" has no cooldown");
@@ -66,6 +70,13 @@ namespace Alterverse.EditorChecks
                     else if(support)Check(ally.Current+ally.Shield>allyBefore,hero+" support did not affect ally");
                     else if(defensive)Check(self.Current+self.Shield>selfBefore,hero+" defensive skill blocked by base shield");
                     else Check(target.Current+target.Shield<before,hero+" slot "+slot+" did not damage enemy");
+                    if(hero==HeroId.Nyra&&slot==3)
+                    {
+                        target.Damaged-=countSightline;
+                        Check(sightlineHits==3,"Sightline Break must deliver exactly three hits");
+                        Check(Mathf.Abs(sightlineDamage-actor.GetComponent<HeroAbilityKit>().Ultimate.Power)<.01f,
+                            "Sightline Break changed total volley damage");
+                    }
                     Check(ally.Current+ally.Shield>=allyBefore,hero+" harmed ally");
                     ClearUnits();yield return null;
                 }

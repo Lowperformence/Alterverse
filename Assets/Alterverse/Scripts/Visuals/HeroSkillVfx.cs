@@ -42,6 +42,16 @@ namespace Alterverse.Visuals
         {
             HeroId h=Hero(actor);Color c=h==HeroId.Nyra?new Color(1f,.045f,.025f):Accent(actor);Vector3 start=Muzzle(actor);end+=Vector3.up*.25f;
             float strength=slot<0?1:slot==3?1.9f:1.5f;
+            if(h==HeroId.Nyra&&slot==3)
+            {
+                // Each confirmed Sightline Break shot owns one red spherical projectile.
+                if(travel>0)
+                    HeroVfxPool.Emit(HeroFxShape.Orb,start,end,Vector3.one*.62f,c,travel,
+                        HeroFxMotion.Travel,Face(start,end),actor,endFollow:target);
+                else Fx(HeroFxShape.Orb,end,c,.62f,.16f,HeroFxMotion.Contract,actor:actor);
+                Fx(HeroFxShape.Burst,start,c,.22f,.09f,rotation:Face(start,end),actor:actor);
+                return;
+            }
             if(h==HeroId.Traveler)
             {
                 if(slot<0)TravelerBasicProjectile(actor,start,end,slot,travel,target,strength);

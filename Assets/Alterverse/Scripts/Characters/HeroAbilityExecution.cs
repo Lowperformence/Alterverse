@@ -9,6 +9,7 @@ namespace Alterverse.Characters
     [RequireComponent(typeof(Health), typeof(HeroIdentity), typeof(HeroAbilityKit))]
     public sealed partial class HeroAbilityExecution : MonoBehaviour
     {
+        private const int SightlineBreakShots=3;
         private Health self;
         private HeroLocomotion locomotion;
         private HeroIdentity identity;
@@ -197,9 +198,9 @@ namespace Alterverse.Characters
         }
         private IEnumerator Volley(Health target, int castLife)
         {
-            // Existing four-shot cadence remains .18s; the first shot now has readable preparation.
+            // Three red shots keep the existing .18s spacing and initial preparation.
             yield return new WaitForSeconds(HeroAttackDelivery.Windup(identity.Hero,3));
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < SightlineBreakShots; i++)
             {
                 if (castLife != life || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || !ValidTarget(target, kit.Ultimate.Range)) yield break;
                 HeroAttackDelivery.For(gameObject).Ability(this,3,target,true,0);
@@ -210,7 +211,7 @@ namespace Alterverse.Characters
         {
             if(!volley){Hit(slot,target,true,true);return;}
             float before=target.Current+target.Shield;
-            HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power/4f);
+            HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power/SightlineBreakShots);
             if(target.Current+target.Shield<before)
             {
                 HeroSkillVfx.Impact(gameObject,target,3);

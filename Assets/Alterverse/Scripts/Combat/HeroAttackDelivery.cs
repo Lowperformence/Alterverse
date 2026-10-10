@@ -22,7 +22,7 @@ namespace Alterverse.Combat
             public int Slot;
             public float Damage,Range,Grace,ReleaseAt,HitAt;
         }
-        // Four volley shots + Q/W/E + one basic fit without growing the pool.
+        // Three volley shots + Q/W/E + one basic fit without growing the pool.
         private readonly Pending[] pending=new Pending[8];
         private Health self;
         private HeroIdentity identity;
