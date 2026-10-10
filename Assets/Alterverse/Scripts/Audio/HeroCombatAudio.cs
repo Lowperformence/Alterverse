@@ -72,6 +72,8 @@ namespace Alterverse.Audio
             gain*=CombatSoundPalette.For(identity.Hero).Gain;
             // Traveler Q = Temporal Beam (+20%); E = Chrono Snare (-30%); R = Paradox Collapse (+20%).
             if(identity.Hero==HeroId.Traveler)gain*=action==1||action==4?1.20f:action==3?.70f:1f;
+            // The reduced Nerok basic is the reference for all basic recordings.
+            if(hero==(int)HeroId.Nerok&&action==0)gain*=.70f;
             if(hero==(int)HeroId.Nerok&&ultimate)gain*=.60f;
             // Other heroes start 30% quieter; distance attenuation is applied afterwards.
             float attenuation=local?1f:.70f;
@@ -102,3 +104,4 @@ namespace Alterverse.Audio
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
     }
 }
+
