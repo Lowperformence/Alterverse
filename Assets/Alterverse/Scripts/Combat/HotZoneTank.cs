@@ -152,7 +152,31 @@ namespace Alterverse.Combat
         }
 
         private ReferenceMonsterRig referenceRig;
-        public void SetPresentationMuzzle(Transform muzzle) { if(muzzle!=null)barrelPivot=muzzle; }
+        private MechMachineGunVisual machineGun;
+        private Transform themedAttackSocket;
+        public void SetPresentationMuzzle(Transform muzzle)
+        {
+            if(muzzle==null)return;
+            barrelPivot=muzzle;referenceRig=muzzle.GetComponentInParent<ReferenceMonsterRig>()??referenceRig;
+        }
+        public Transform PresentationSocket
+        {
+            get
+            {
+                if(machineGun!=null)return machineGun.Muzzle;
+                if(referenceRig!=null)return referenceRig.AttackSocket;
+                if(ArenaVariantRuntime.IsNeptune||ArenaVariantRuntime.IsDark00)
+                {
+                    if(themedAttackSocket==null)
+                        foreach(var t in GetComponentsInChildren<Transform>(true))
+                            if(t.name==(ArenaVariantRuntime.IsDark00?"RedEye":"Tentacle_1")){themedAttackSocket=t;break;}
+                    if(themedAttackSocket!=null)return themedAttackSocket;
+                }
+                return barrelPivot;
+            }
+        }
+        public Vector3 PresentationMuzzle=>PresentationSocket!=null?PresentationSocket.position:
+            transform.position+Vector3.up*(ArenaVariantRuntime.IsDiamondCore?2.95f:.95f)+transform.forward*1.2f;
 
         private void Initialize(int assignedTeam,Vector3 spawn,bool skeleton,bool alien,bool spider,bool bear)
         {
@@ -333,14 +357,6 @@ namespace Alterverse.Combat
             CombatMotion.Begin(gameObject,ShotWindup,target);
             shotPending=true;shotTarget=target;shotAt=Time.time+ShotWindup;
             nextAttack=Time.time+AttackCooldown;
-            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=ArenaVariantRuntime.IsExoplanet?ExoplanetArenaProfile.Energy(ArenaVariantRuntime.Current):referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
-            bool creature=ArenaVariantRuntime.IsExoplanet||FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore&&barrelPivot==null?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
-            PrototypeVfx.Ring(muzzle,energy,kryonBear?.40f:noxaraSpider?.36f:xenoAlien?.32f:.34f,ShotWindup);
-            if(kryonBear)PrototypeVfx.Burst(muzzle,Color.Lerp(energy,Color.white,.35f),.15f,4);
-            else if(noxaraSpider)PrototypeVfx.Burst(muzzle,energy,.12f,3);
-            else if(xenoAlien)PrototypeVfx.Burst(muzzle,teamEnergy,.10f,2);
         }
 
         private void ResolveShot()
@@ -356,22 +372,10 @@ namespace Alterverse.Combat
             Vector3 delta=victim.transform.position-transform.position;delta.y=0;
             if(delta.sqrMagnitude>(AttackRange+.75f)*(AttackRange+.75f))return;
 
-            bool creature=ArenaVariantRuntime.IsExoplanet||FrontierPlanetLayout.Active||marsSkeleton||xenoAlien||noxaraSpider||kryonBear;
-            Vector3 muzzle=ArenaVariantRuntime.IsDiamondCore&&barrelPivot==null?transform.position+Vector3.up*2.95f:creature&&barrelPivot!=null?barrelPivot.position:(barrelPivot!=null?barrelPivot.TransformPoint(new Vector3(0,0,1.70f)):transform.position+transform.forward*1.7f+Vector3.up*.95f);
+            Vector3 muzzle=PresentationMuzzle;
             Vector3 hit=victim.transform.position+Vector3.up*.55f;
-            Color teamEnergy=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
-            Color energy=ArenaVariantRuntime.IsExoplanet?ExoplanetArenaProfile.Energy(ArenaVariantRuntime.Current):referenceRig!=null?referenceRig.EnergyColor:planetVisual!=null?planetVisual.EnergyColor:ArenaVariantRuntime.IsDiamondCore?new Color(.30f,.86f,1f):kryonBear?bearEnergyBase:noxaraSpider?spiderEnergyBase:xenoAlien?new Color(.62f,.90f,.18f):teamEnergy;
-            if(xenoAlien||ArenaVariantRuntime.IsTrappist1e)
-            {
-                PrototypeVfx.BioBolt(muzzle,hit,energy,teamEnergy);
-                xenoAttackKick=1f;
-            }
-            else
-            {
-                PrototypeVfx.ProjectileLine(muzzle,hit,energy,.13f);
-                PrototypeVfx.Burst(muzzle,energy,.28f,4);
-            }
-            if(barrelPivot!=null&&!creature)barrelPivot.localPosition=new Vector3(0,.08f,.48f);
+            if(xenoAlien)xenoAttackKick=1f;
+            MonsterAttackVfx.Resolve(gameObject,muzzle,hit);
             victim.TakeDamage(kryonBear?Damage+5f:Damage,gameObject);
         }
 
@@ -502,10 +506,17 @@ namespace Alterverse.Combat
             Part("MoonGuardAntenna",PrimitiveType.Cylinder,turretPivot,new Vector3(.50f,1.13f,-.48f),new Vector3(.025f,.50f,.025f),jointMat,Quaternion.Euler(0,0,-5));
             Part("MoonGuardAntennaTip",PrimitiveType.Sphere,turretPivot,new Vector3(.54f,1.65f,-.48f),new Vector3(.055f,.055f,.055f),energyMat,Quaternion.identity);
 
-            // Weapon emitter is integrated into the chest instead of a tank cannon.
-            barrelPivot=Pivot("DF_MoonGuardAttackSocket",turretPivot,new Vector3(0,-.12f,.72f),Quaternion.identity);
-            Part("MoonGuardEmitterHousing",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.15f,.055f,.15f),jointMat,Quaternion.Euler(90,0,0));
-            Part("MoonGuardEmitter",PrimitiveType.Sphere,barrelPivot,new Vector3(0,0,.07f),new Vector3(.13f,.10f,.08f),energyMat,Quaternion.identity);
+            if(ArenaVariantRuntime.Current==ArenaVariant.Moon||ArenaVariantRuntime.IsEarth)
+            {
+                machineGun=MechMachineGunVisual.Build(moonRightArm,new Vector3(0,-1.18f,.24f));
+                barrelPivot=machineGun!=null?machineGun.Muzzle:null;
+            }
+            else
+            {
+                barrelPivot=Pivot("DF_MoonGuardAttackSocket",turretPivot,new Vector3(0,-.12f,.72f),Quaternion.identity);
+                Part("MoonGuardEmitterHousing",PrimitiveType.Cylinder,barrelPivot,Vector3.zero,new Vector3(.15f,.055f,.15f),jointMat,Quaternion.Euler(90,0,0));
+                Part("MoonGuardEmitter",PrimitiveType.Sphere,barrelPivot,new Vector3(0,0,.07f),new Vector3(.13f,.10f,.08f),energyMat,Quaternion.identity);
+            }
 
             BuildMoonGuardLeg(-1f,shinPlate,footPlate);
             BuildMoonGuardLeg(1f,shinPlate,footPlate);
@@ -569,7 +580,7 @@ namespace Alterverse.Combat
             if(moonLeftLeg!=null)moonLeftLeg.localRotation=moonLeftLegBase*Quaternion.Euler(stride*34f,0,0);
             if(moonRightLeg!=null)moonRightLeg.localRotation=moonRightLegBase*Quaternion.Euler(-stride*34f,0,0);
             if(moonLeftArm!=null)moonLeftArm.localRotation=moonLeftArmBase*Quaternion.Euler(-stride*27f,0,0);
-            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*27f,0,0);
+            if(moonRightArm!=null)moonRightArm.localRotation=moonRightArmBase*Quaternion.Euler(stride*(machineGun!=null?5f:27f),0,0);
         }
 
         private void BuildSkeletonVisuals()
@@ -1416,7 +1427,7 @@ namespace Alterverse.Combat
                 Quaternion desired=Quaternion.LookRotation(flat.normalized,Vector3.up);
                 turretPivot.localRotation=Quaternion.Slerp(turretPivot.localRotation,desired,1f-Mathf.Exp(-9f*Time.deltaTime));
             }
-            if(barrelPivot!=null)
+            if(barrelPivot!=null&&machineGun==null)
             {
                 Vector3 rest=noxaraSpider?spiderBarrelRest:kryonBear?bearBarrelRest:new Vector3(0,.08f,.62f);
                 barrelPivot.localPosition=Vector3.Lerp(barrelPivot.localPosition,rest,1f-Mathf.Exp(-18f*Time.deltaTime));

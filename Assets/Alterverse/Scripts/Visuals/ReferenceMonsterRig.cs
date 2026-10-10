@@ -14,6 +14,8 @@ namespace Alterverse.Visuals
         private readonly bool[] swinging = new bool[2];
         private bool planted;
         public Transform Muzzle { get; private set; }
+        private Transform leftMuzzle;
+        public Transform AttackSocket=>(attackSerial&1)==0&&leftMuzzle!=null?leftMuzzle:Muzzle;
         public Color EnergyColor { get; private set; }
         public static ReferenceMonsterRig Build(Transform host, string resource, Transform visualParent = null)
         {
@@ -41,6 +43,9 @@ namespace Alterverse.Visuals
             rig.Muzzle = new GameObject("DF_ReferenceMonsterMuzzle").transform;
             rig.Muzzle.SetParent(rig.joints["Hips/Chest/ArmR/ElbowR/HandR"],false);
             rig.Muzzle.localPosition = new Vector3(0,-.10f,.28f);
+            rig.leftMuzzle=new GameObject("DF_ReferenceMonsterMuzzleL").transform;
+            rig.leftMuzzle.SetParent(rig.joints["Hips/Chest/ArmL/ElbowL/HandL"],false);
+            rig.leftMuzzle.localPosition=rig.Muzzle.localPosition;
             rig.previous = host.position; rig.PlaceOnSurface(); return rig;
         }
         float attackStarted=-100f,contact=.22f;int attackSerial;string species;

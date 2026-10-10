@@ -217,7 +217,9 @@ namespace Alterverse.Combat
             if(ArenaVariantRuntime.IsGreenPlanet)GreenAlienMechVisual.Build(mech.transform,team,false);
             else if(ArenaVariantRuntime.IsMars)MarsStoneGolemMechVisual.Build(mech.transform,team,false);
             else HealingGuardMech.BuildRobotVisual(mech.transform,team);
-            mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
+            var motion=mech.AddComponent<LaneUnitVisualMotion>();motion.ConfigureRobot();
+            if(!ArenaVariantRuntime.IsGreenPlanet&&!ArenaVariantRuntime.IsMars)
+                MechMachineGunVisual.Build(motion.RightAttackSocket,new Vector3(0,.17f,.12f),.82f);
 
             Destroy(mech,100);
 

@@ -15,6 +15,9 @@ namespace Alterverse.Visuals
         private bool configured, robot;
         private Transform attackElbowL,attackElbowR,attackHandL,attackHandR;
         private float attackContact=.18f,attackStarted=-100;private int attackSerial;
+        public Transform AttackSocket=>(attackSerial&1)==0?attackHandL:attackHandR;
+        public Transform RightAttackSocket=>attackHandR;
+        private MechMachineGunVisual machineGun;private bool weaponBound;
 
         public void ConfigureInfantry(Color armor, Color accent) => Configure(false, armor, accent);
         public void ConfigureRobot() => Configure(true, Color.gray, Color.white);
@@ -233,6 +236,13 @@ namespace Alterverse.Visuals
             elbow.localRotation=Quaternion.identity;
             float reach=Vector3.Distance(arm.position,elbow.position)+Vector3.Distance(elbow.position,hand.position);
             Vector3 guard=arm.position-transform.up*reach*.55f+transform.forward*reach*.32f;
+            if(machineGun!=null)
+            {
+                float recoil=side>0?CombatMotion.Curve(Time.time-attackStarted,attackContact,attackDuration,0,.045f,.015f):0;
+                CombatMotion.Solve(arm,elbow,hand,guard-transform.forward*recoil,
+                    arm.position+transform.right*side*reach*.55f-transform.up*reach*.35f);
+                return;
+            }
             Vector3 hit=arm.position+transform.forward*reach*.92f-transform.up*reach*.20f;
             Vector3 target=striking?CombatMotion.Path(Time.time-attackStarted,attackContact,attackDuration,guard,
                 arm.position-transform.up*reach*.3f-transform.forward*reach*.12f+transform.right*side*reach*.2f,hit,hit+transform.forward*reach*.02f):guard;
@@ -242,6 +252,7 @@ namespace Alterverse.Visuals
         private void LateUpdate()
         {
             if (!configured || visualRoot == null) return;
+            if(robot&&!weaponBound){weaponBound=true;machineGun=GetComponentInChildren<MechMachineGunVisual>();}
             float dt = Mathf.Max(Time.deltaTime, .0001f);
             if (Time.timeScale <= 0f) { lastPosition = transform.position; return; }
 
@@ -292,7 +303,7 @@ namespace Alterverse.Visuals
             Pose(shoulderL, shoulderRestL, -sway * .65f); Pose(shoulderR, shoulderRestR, -sway * .65f);
             Pose(head, headRest, -lean * .28f - sway * .2f);
 
-            float twist=CombatMotion.Curve(Time.time-attackStarted,attackContact,attackDuration,-14,12,20)*((attackSerial&1)==0?-1:1);
+            float twist=machineGun!=null?0:CombatMotion.Curve(Time.time-attackStarted,attackContact,attackDuration,-14,12,20)*((attackSerial&1)==0?-1:1);
             visualRoot.rotation=Quaternion.AngleAxis(twist,transform.up)*visualRoot.rotation;
             AttackArm(armL,attackElbowL,attackHandL,-1f,(attackSerial&1)==0);
             AttackArm(armR,attackElbowR,attackHandR,1f,(attackSerial&1)!=0);

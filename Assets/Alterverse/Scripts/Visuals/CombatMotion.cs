@@ -61,6 +61,13 @@ namespace Alterverse.Visuals
                 actor.GetComponentInChildren<ReferenceMonsterRig>()?.PulseAttack(windup);
                 actor.GetComponent<PlanetSentinelVisual>()?.PulseAttack(windup);
                 actor.GetComponent<LaneUnitVisualMotion>()?.PulseAttack(windup);
+                var gun=actor.GetComponentInChildren<MechMachineGunVisual>();
+                if(gun!=null){gun.SetAim(aim,target);gun.Pulse(windup);}
+                if(actor.GetComponent<HotZoneTank>()!=null||gun!=null&&actor.GetComponent<LaneMinion>()!=null)
+                {
+                    var cue=actor.GetComponent<MonsterAttackCue>()??actor.AddComponent<MonsterAttackCue>();
+                    cue.Begin(windup,aim,target);
+                }
             }
         }
     }

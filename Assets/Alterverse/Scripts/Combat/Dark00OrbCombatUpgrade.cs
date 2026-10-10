@@ -119,6 +119,7 @@ namespace Alterverse.Combat
             laserActive=true;
             EnsureLaserVisual();
             if(laserLine!=null)laserLine.enabled=true;
+            Alterverse.Visuals.MonsterAttackVfx.PublishLaser(gameObject,target,LaserDuration);
 
             float endsAt=Time.time+LaserDuration;
             while(Time.time<endsAt)
@@ -144,6 +145,7 @@ namespace Alterverse.Combat
             }
 
             if(laserLine!=null)laserLine.enabled=false;
+            Alterverse.Visuals.MonsterAttackVfx.PublishLaser(gameObject,null,0f);
 
             if(ArenaVariantRuntime.IsDark00&&
                Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState&&

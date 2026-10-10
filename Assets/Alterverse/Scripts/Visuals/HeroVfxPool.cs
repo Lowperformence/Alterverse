@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -29,6 +29,7 @@ namespace Alterverse.Visuals
         private readonly Mesh[] warningShapes=new Mesh[(int)HeroFxShape.Count];
         private Material material;
         private Material anchorMetal;
+        private Material monsterStone,monsterCrystal,monsterSlime;
         private bool ownsMaterial;
         private int cursor;
         private static readonly int Life=Shader.PropertyToID("_Life"),SurfaceStyle=Shader.PropertyToID("_SurfaceStyle");
@@ -85,17 +86,20 @@ namespace Alterverse.Visuals
         }
         internal static void Emit(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
             HeroFxMotion motion=HeroFxMotion.Expand,Quaternion rotation=default,GameObject owner=null,
-            bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false)
+            bool warning=false,Transform follow=null,Health shield=null,float delay=0,Transform endFollow=null,bool decorative=false,
+            float elapsed=0,bool cancelOnOwnerDeath=false)
         {
             // Warnings are never decorative; flourishes cannot consume the last core slots.
             if(warning)decorative=false;
             if(decorative&&!AdaptiveVfxBudget.AllowDecorative)return;
             Warm();if(instance==null||instance.material==null)return;
-            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative);
+            instance.Show(shape,from,to,size,color,duration,motion,rotation,owner,warning,follow,shield,delay,endFollow,decorative,elapsed,cancelOnOwnerDeath);
         }
         private void Show(HeroFxShape shape,Vector3 from,Vector3 to,Vector3 size,Color color,float duration,
-            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative)
+            HeroFxMotion motion,Quaternion rotation,GameObject owner,bool warning,Transform follow,Health shield,float delay,Transform endFollow,bool decorative,
+            float elapsed,bool cancelOnOwnerDeath)
         {
+            if(elapsed>=Mathf.Max(0,delay)+Mathf.Max(.04f,duration))return;
             int begin=warning?Capacity-WarningReserve:0;
             int end=warning?Capacity:Capacity-WarningReserve-(decorative?CoreReserve:0);
             Slot slot=null;
@@ -118,7 +122,7 @@ namespace Alterverse.Visuals
             }
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
-            slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
+            slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
@@ -134,13 +138,21 @@ namespace Alterverse.Visuals
             // Quaternion == compares rotation dot products, so an all-zero optional
             // argument does not even compare equal to itself. Check the sentinel components.
             slot.Rotation=rotation.x==0f&&rotation.y==0f&&rotation.z==0f&&rotation.w==0f?Quaternion.identity:rotation;
-            slot.Start=Time.time+Mathf.Max(0,delay);slot.Duration=Mathf.Max(.04f,duration);
+            slot.Start=Time.time+Mathf.Max(0,delay)-Mathf.Max(0,elapsed);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
             if (!warning && shape == HeroFxShape.AnchorProjectile && anchorMetal == null)
                 anchorMetal = NerokAnchorMaterial.Create(false);
-            slot.Renderer.sharedMaterial = !warning && shape == HeroFxShape.AnchorProjectile && anchorMetal != null
-                ? anchorMetal : material;
-            Draw(slot,0);if(delay>0)slot.Renderer.enabled=false;
+            Material surface=material;
+            if(!warning&&shape==HeroFxShape.AnchorProjectile&&anchorMetal!=null)surface=anchorMetal;
+            else if(!warning&&shape==HeroFxShape.MonsterRock)
+                surface=monsterStone??=RuntimeShaderLibrary.Create(Color.white,false,.04f,.18f);
+            else if(!warning&&shape==HeroFxShape.MonsterDiamond)
+                surface=monsterCrystal??=RuntimeShaderLibrary.Create(Color.white,false,.25f,.88f);
+            else if(!warning&&shape==HeroFxShape.MonsterSlime)
+                surface=monsterSlime??=RuntimeShaderLibrary.Create(Color.white,false,.02f,.78f);
+            slot.Renderer.sharedMaterial=surface!=null?surface:material;
+            Draw(slot,Mathf.Clamp01((Time.time-slot.Start)/slot.Duration));
+            if(Time.time<slot.Start)slot.Renderer.enabled=false;
         }
         public static void CancelWarnings(GameObject actor)
         {
@@ -152,6 +164,12 @@ namespace Alterverse.Visuals
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
                 if(slot!=null&&slot.Active&&slot.TracksEnd&&slot.Owner==actor)instance.Hide(slot);
+        }
+        internal static void CancelShape(GameObject actor,HeroFxShape shape)
+        {
+            if(instance==null)return;
+            foreach(Slot slot in instance.slots)
+                if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Filter.sharedMesh==instance.shapes[(int)shape])instance.Hide(slot);
         }
         private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.TracksEnd=false;}
         private void Update()
@@ -202,6 +220,12 @@ namespace Alterverse.Visuals
                     rotation*=Quaternion.Euler(t*140f,t*210f,t*85f);
                     scale=Mathf.Lerp(1f,.35f,t);
                     break;
+                case HeroFxMotion.Lob:
+                    Vector3 lobEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    point=Vector3.Lerp(s.From,lobEnd,t);
+                    point.y+=4f*t*(1f-t)*Mathf.Min(.85f,Vector3.Distance(s.From,lobEnd)*.18f);
+                    rotation*=Quaternion.Euler(t*115f,t*185f,t*65f);
+                    break;
                 case HeroFxMotion.Spiral:
                     Vector3 destination=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
                     Vector3 heading=destination-s.From;
@@ -217,7 +241,7 @@ namespace Alterverse.Visuals
             s.Transform.SetPositionAndRotation(point,rotation);s.Transform.localScale=drawnSize*scale;
             // Projectile cores remain readable until contact. Decorative flashes die away
             // smoothly; exact warning outlines retain their original size and opacity.
-            bool flight=s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral;
+            bool flight=s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral||s.Motion==HeroFxMotion.Lob;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
@@ -236,12 +260,17 @@ namespace Alterverse.Visuals
             }
             if(ownsMaterial&&material!=null)Destroy(material);
             if(anchorMetal!=null)Destroy(anchorMetal);
+            if(monsterStone!=null)Destroy(monsterStone);
+            if(monsterCrystal!=null)Destroy(monsterCrystal);
+            if(monsterSlime!=null)Destroy(monsterSlime);
         }
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Reset(){instance=null;}
 
         private static Mesh BuildShape(HeroFxShape shape,bool polished=true)
         {
+            if(shape==HeroFxShape.MonsterRock||shape==HeroFxShape.MonsterDiamond||shape==HeroFxShape.MonsterSlime||shape==HeroFxShape.MonsterBeam)
+                return MonsterEffectMeshes.Build(shape);
             if(shape==HeroFxShape.AnchorProjectile||shape==HeroFxShape.WaterSpiral||shape==HeroFxShape.WaveCrest||shape==HeroFxShape.AnchorChain)
                 return CyberSharkEffectMeshes.Load(shape.ToString());
             var v=new List<Vector3>();var colors=new List<Color>();var triangles=new List<int>();

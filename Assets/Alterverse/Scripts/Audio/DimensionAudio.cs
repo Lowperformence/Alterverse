@@ -3,7 +3,7 @@ using Alterverse.Profile;
 using UnityEngine;
 namespace Alterverse.Audio
 {
-    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact,Explosion}
+    public enum DimensionSound{HitLight,HitHeavy,RecallStart,RecallComplete,RecallCancel,RealityShatter,FrontShift,Overtime,SuddenDeath,Victory,Defeat,UiConfirm,UiBack,Attack,AbilityCast,Shield,Heal,HeroDeath,Kill,TowerTarget,TowerShot,TowerImpact,CoreHit,PlanetArrival,MeteorImpact,SiegeArrival,Purchase,MinionDeath,AbilityImpact,Explosion,MechGun}
     public sealed class DimensionAudio:MonoBehaviour
     {
         static DimensionAudio instance;
@@ -27,7 +27,7 @@ namespace Alterverse.Audio
             Alterverse.Match.DimensionPlanetDirector.PlanetArrived+=Planet;
         }
         static void Planet(Vector3 position)=>Play(DimensionSound.PlanetArrival,.65f);
-        public static void PlayAt(DimensionSound sound,Vector3 position,float volume=.5f)
+        public static void PlayAt(DimensionSound sound,Vector3 position,float volume=.5f,float elapsed=0)
         {
             Camera camera=Camera.main;if(camera==null)return;Vector3 p=camera.WorldToViewportPoint(position);
             if(p.z<=0||p.x<-.15f||p.x>1.15f||p.y<-.15f||p.y>1.15f)return;
@@ -39,7 +39,7 @@ namespace Alterverse.Audio
                 attenuation=Mathf.Lerp(1f,.15f,Mathf.InverseLerp(3,28,delta.magnitude));
             }
             if(instance==null)return;int cue=(int)sound;if(cue<0||cue>=instance.clips.Length)return;
-            if(instance.clips[cue]!=null)PlayCue(instance.clips[cue],cue,volume*Gain(sound)*attenuation,1,Priority(sound),Cooldown(sound),Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f));
+            if(instance.clips[cue]!=null)PlayCue(instance.clips[cue],cue,volume*Gain(sound)*attenuation,1,Priority(sound),Cooldown(sound),Mathf.Clamp((p.x-.5f)*1.1f,-.65f,.65f),offset:elapsed);
         }
         public static void Play(DimensionSound sound,float volume=1,float pitch=1)
         {
@@ -60,8 +60,9 @@ namespace Alterverse.Audio
             if(PlayCue(bank[variant],instance.clips.Length+cue,gain*.7f,pitch,priority,0,pan,false))
             {instance.actorReady[key]=Time.unscaledTime+cooldown;instance.heroVariation[cue]=(variant+1)%bank.Length;}
         }
-        static bool PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown,float pan=0,bool throttle=true)
+        static bool PlayCue(AudioClip clip,int cue,float volume,float pitch,int priority,float cooldown,float pan=0,bool throttle=true,float offset=0)
         {
+            if(offset>=clip.length)return false;
             if(throttle&&Time.unscaledTime<instance.nextCue[cue])return false;
             int budget=Mathf.Clamp(AudioStressBudget.RecommendedVoices,1,VoiceCount),slot=-1,overlap=0;
             for(int i=0;i<budget;i++)
@@ -79,7 +80,7 @@ namespace Alterverse.Audio
             if(slot<0)return false;
             if(throttle)instance.nextCue[cue]=Time.unscaledTime+cooldown;
             if(priority==3)instance.warningUntil=Time.unscaledTime+Mathf.Min(clip.length,.8f);
-            var voice=instance.voices[slot];voice.Stop();voice.clip=clip;
+            var voice=instance.voices[slot];voice.Stop();voice.clip=clip;voice.time=Mathf.Max(0,offset);
             // Reset on every pooled use, including centered UI/objective cues.
             voice.panStereo=Mathf.Clamp(pan,-.65f,.65f);
             // Deterministic presentation variation does not consume gameplay Random state.
@@ -100,14 +101,14 @@ namespace Alterverse.Audio
         };
         static float Cooldown(DimensionSound sound)=>sound switch
         {
-            DimensionSound.Explosion=>.12f,DimensionSound.Attack=>.12f,DimensionSound.HitLight=>.1f,DimensionSound.AbilityImpact=>.14f,
+            DimensionSound.Explosion=>.12f,DimensionSound.Attack or DimensionSound.MechGun=>.12f,DimensionSound.HitLight=>.1f,DimensionSound.AbilityImpact=>.14f,
             DimensionSound.TowerShot or DimensionSound.TowerImpact=>.2f,
             DimensionSound.TowerTarget=>.65f,DimensionSound.UiConfirm or DimensionSound.UiBack=>.16f,
             DimensionSound.Heal or DimensionSound.Shield=>.4f,_=>.075f
         };
         static float Gain(DimensionSound sound)=>sound switch
         {
-            DimensionSound.Attack=>.78f,DimensionSound.HitLight=>.82f,DimensionSound.HitHeavy=>.9f,
+            DimensionSound.MechGun=>.35f,DimensionSound.Attack=>.78f,DimensionSound.HitLight=>.82f,DimensionSound.HitHeavy=>.9f,
             DimensionSound.AbilityImpact=>.8f,DimensionSound.TowerShot=>.72f,DimensionSound.TowerImpact=>.8f,
             DimensionSound.UiConfirm or DimensionSound.UiBack=>.8f,_=>1f
         };

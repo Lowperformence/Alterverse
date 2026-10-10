@@ -22,6 +22,7 @@ namespace Alterverse.Combat
 
         private Health health,target;
         private LaneUnitVisualMotion visualMotion;
+        private MechMachineGunVisual machineGun;
         private int team;
         private Vector3 guardPost,healingPlate;
         private float nextAttack,nextScan;
@@ -63,7 +64,12 @@ namespace Alterverse.Combat
             else if(ArenaVariantRuntime.IsNeptune)NeptuneDiverMechVisual.Build(mech.transform,team);
             else BuildRobotVisual(mech.transform,zero,dark,energy);
             if(ArenaVariantRuntime.IsKryon)AddKryonFrost(mech.transform);
-            if(!FrontierPlanetLayout.Active)mech.AddComponent<LaneUnitVisualMotion>().ConfigureRobot();
+            if(!FrontierPlanetLayout.Active)
+            {
+                var motion=mech.AddComponent<LaneUnitVisualMotion>();motion.ConfigureRobot();
+                if(MonsterAttackVfx.StyleFor(mech)==MonsterAttackStyle.Mech)
+                    guard.machineGun=MechMachineGunVisual.Build(motion.RightAttackSocket,new Vector3(0,.17f,.12f),.82f);
+            }
 
             return mech;
         }
@@ -298,10 +304,14 @@ namespace Alterverse.Combat
                 if(Time.time>=nextAttack)
                 {
                     nextAttack=Time.time+attackCooldown;
-                    visualMotion?.PulseAttack();
-                    GetComponent<PlanetSentinelVisual>()?.PulseAttack();
+                    CombatMotion.Begin(gameObject,.18f,target);
+                    Vector3 from=transform.position+Vector3.up*.9f;
+                    if(visualMotion!=null&&visualMotion.AttackSocket!=null)from=visualMotion.AttackSocket.position;
+                    var sentinel=GetComponent<PlanetSentinelVisual>();
+                    if(sentinel!=null&&sentinel.Muzzle!=null)from=sentinel.Muzzle.position;
+                    if(machineGun!=null&&machineGun.Muzzle!=null)from=machineGun.Muzzle.position;
+                    MonsterAttackVfx.Resolve(gameObject,from,target.transform.position+Vector3.up*.65f);
                     target.TakeDamage(attackDamage,gameObject);
-                    PrototypeVfx.ProjectileLine(transform.position+Vector3.up*.9f,target.transform.position+Vector3.up*.65f,energy,.12f);
                 }
                 return;
             }

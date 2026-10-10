@@ -13,6 +13,8 @@ namespace Alterverse.Multiplayer
     public sealed class CoopWorldEventSync : MonoBehaviour
     {
         private const string AttackMotionMessage="DF_COOP_ATTACK_MOTION_V1";
+        private const string MonsterImpactMessage="DF_COOP_MONSTER_IMPACT_V1";
+        private const string MonsterLaserMessage="DF_COOP_MONSTER_LASER_V1";
         private const string HotOpenMessage="DF_COOP_HOT_OPEN_V2";
         private const string HotResolveMessage="DF_COOP_HOT_RESOLVE_V2";
         private const string PlanetMessage="DF_COOP_PLANET_V2";
@@ -59,6 +61,8 @@ namespace Alterverse.Multiplayer
             FractureCorePickup.NetworkSpawned+=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed+=OnHostFractureClaimed;
             Alterverse.Visuals.CombatMotion.Started+=OnAttackStarted;
+            Alterverse.Visuals.MonsterAttackVfx.Resolved+=OnMonsterImpact;
+            Alterverse.Visuals.MonsterAttackVfx.LaserChanged+=OnMonsterLaser;
             eventsBound=true;
         }
 
@@ -79,6 +83,8 @@ namespace Alterverse.Multiplayer
             FractureCorePickup.NetworkSpawned-=OnHostFractureSpawned;
             FractureCorePickup.NetworkClaimed-=OnHostFractureClaimed;
             Alterverse.Visuals.CombatMotion.Started-=OnAttackStarted;
+            Alterverse.Visuals.MonsterAttackVfx.Resolved-=OnMonsterImpact;
+            Alterverse.Visuals.MonsterAttackVfx.LaserChanged-=OnMonsterLaser;
             eventsBound=false;
         }
 
@@ -86,6 +92,8 @@ namespace Alterverse.Multiplayer
         {
             if(!CanBroadcast())return;
             var hero=actor.GetComponent<CoopHeroSlot>();var entity=actor.GetComponent<CoopWorldEntityKey>();
+            if(hero==null&&entity==null&&(actor.GetComponent<HotZoneTank>()!=null||actor.GetComponent<HealingGuardMech>()!=null))
+            {WorldKey(actor);entity=actor.GetComponent<CoopWorldEntityKey>();}
             if(hero==null&&entity==null)return;
             using FastBufferWriter writer=new(256,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
@@ -119,6 +127,86 @@ namespace Alterverse.Multiplayer
             actor.GetComponentInChildren<Alterverse.Visuals.ReferenceMonsterRig>()?.Seek(elapsed);
             actor.GetComponent<Alterverse.Visuals.PlanetSentinelVisual>()?.Seek(elapsed);
             actor.GetComponent<Alterverse.Visuals.LaneUnitVisualMotion>()?.Seek(elapsed);
+            actor.GetComponent<Alterverse.Visuals.MonsterAttackCue>()?.Seek(elapsed);
+            actor.GetComponentInChildren<Alterverse.Visuals.MechMachineGunVisual>()?.Seek(elapsed);
+        }
+        private static string WorldKey(GameObject actor)
+        {
+            var key=actor.GetComponent<CoopWorldEntityKey>()??actor.AddComponent<CoopWorldEntityKey>();
+            key.Configure();return key.Key;
+        }
+        private static GameObject FindWorldActor(string key)
+        {
+            for(int i=0;i<Health.Active.Count;i++)
+            {
+                var hp=Health.Active[i];if(hp==null)continue;
+                var entity=hp.GetComponent<CoopWorldEntityKey>();
+                if(entity!=null&&entity.Key==key)return hp.gameObject;
+            }
+            return null;
+        }
+        private void OnMonsterImpact(GameObject actor,Vector3 from,Vector3 to)
+        {
+            if(!CanBroadcast()||actor==null)return;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(new FixedString128Bytes(WorldKey(actor)));
+            writer.WriteValueSafe(from.x);writer.WriteValueSafe(from.y);writer.WriteValueSafe(from.z);
+            writer.WriteValueSafe(to.x);writer.WriteValueSafe(to.y);writer.WriteValueSafe(to.z);
+            writer.WriteValueSafe(NetworkManager.Singleton.ServerTime.Time);
+            SendAll(MonsterImpactMessage,writer);
+        }
+        private void OnMonsterImpactMessage(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out FixedString128Bytes key);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
+            reader.ReadValueSafe(out double sent);
+            if(!Finite(x)||!Finite(y)||!Finite(z)||!Finite(tx)||!Finite(ty)||!Finite(tz)||double.IsNaN(sent)||double.IsInfinity(sent))return;
+            float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
+            if(elapsed>.6f)return;
+            var actor=FindWorldActor(key.ToString());
+            if(actor==null)return;
+            var siege=actor.GetComponent<LaneMinion>();
+            if(actor.GetComponent<HotZoneTank>()==null&&actor.GetComponent<HealingGuardMech>()==null&&
+                !(siege!=null&&siege.IsSiegeUnit&&actor.GetComponentInChildren<Alterverse.Visuals.MechMachineGunVisual>()!=null))return;
+            Alterverse.Visuals.MonsterAttackVfx.PresentImpact(actor,new Vector3(x,y,z),new Vector3(tx,ty,tz),elapsed);
+        }
+        private void OnMonsterLaser(GameObject actor,Health target,float duration)
+        {
+            if(!CanBroadcast()||actor==null)return;
+            var hero=target!=null?target.GetComponent<CoopHeroSlot>():null;
+            using FastBufferWriter writer=new(384,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(new FixedString128Bytes(WorldKey(actor)));
+            writer.WriteValueSafe(hero!=null?hero.Slot:-1);
+            writer.WriteValueSafe(new FixedString128Bytes(target!=null&&hero==null?WorldKey(target.gameObject):""));
+            writer.WriteValueSafe(duration);writer.WriteValueSafe(NetworkManager.Singleton.ServerTime.Time);
+            SendAll(MonsterLaserMessage,writer);
+        }
+        private void OnMonsterLaserMessage(ulong sender,FastBufferReader reader)
+        {
+            if(!ValidServerMessage(sender)||!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out FixedString128Bytes key);reader.ReadValueSafe(out int slot);
+            reader.ReadValueSafe(out FixedString128Bytes targetKey);reader.ReadValueSafe(out float duration);
+            reader.ReadValueSafe(out double sent);
+            if(!Finite(duration)||duration<0||duration>2||double.IsNaN(sent)||double.IsInfinity(sent))return;
+            var actor=FindWorldActor(key.ToString());
+            if(actor==null||!ArenaVariantRuntime.IsDark00||actor.GetComponent<HotZoneTank>()==null)return;
+            Transform victim=null;
+            if(slot>=0)
+            {
+                for(int i=0;i<Health.Active.Count;i++)
+                {
+                    var hp=Health.Active[i];if(hp==null||hp.IsDead)continue;
+                    var hero=hp.GetComponent<CoopHeroSlot>();if(hero!=null&&hero.Slot==slot){victim=hp.transform;break;}
+                }
+            }
+            else {var target=FindWorldActor(targetKey.ToString());if(target!=null)victim=target.transform;}
+            float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
+            if(duration>0&&elapsed>=duration)return;
+            Alterverse.Visuals.MonsterAttackVfx.PresentLaser(actor,victim,duration,elapsed);
         }
         private static bool Finite(float value)=>!float.IsNaN(value)&&!float.IsInfinity(value);
 
@@ -384,6 +472,8 @@ namespace Alterverse.Multiplayer
             Detach();
             messaging=value;
             messaging.RegisterNamedMessageHandler(AttackMotionMessage,OnAttackMotion);
+            messaging.RegisterNamedMessageHandler(MonsterImpactMessage,OnMonsterImpactMessage);
+            messaging.RegisterNamedMessageHandler(MonsterLaserMessage,OnMonsterLaserMessage);
             messaging.RegisterNamedMessageHandler(HotOpenMessage,OnHotOpen);
             messaging.RegisterNamedMessageHandler(HotResolveMessage,OnHotResolve);
             messaging.RegisterNamedMessageHandler(PlanetMessage,OnPlanet);
@@ -404,6 +494,8 @@ namespace Alterverse.Multiplayer
         {
             if(!attached||messaging==null){messaging=null;attached=false;return;}
             messaging.UnregisterNamedMessageHandler(AttackMotionMessage);
+            messaging.UnregisterNamedMessageHandler(MonsterImpactMessage);
+            messaging.UnregisterNamedMessageHandler(MonsterLaserMessage);
             messaging.UnregisterNamedMessageHandler(HotOpenMessage);
             messaging.UnregisterNamedMessageHandler(HotResolveMessage);
             messaging.UnregisterNamedMessageHandler(PlanetMessage);

@@ -65,7 +65,7 @@ namespace Alterverse.Visuals
             posed=true;Restore();posed=true;
             Vector3 f=transform.forward,r=transform.right,u=transform.up;
             float side=(serial&1)==0?-1:1;
-            Rotate(body,u,C(-7*side,8*side,12*side));
+            Rotate(body,u,shape==Shape.Mech?C(-1,1.5f,2):C(-7*side,8*side,12*side));
             if(shape==Shape.Scorpion||shape==Shape.Spider)
             {
                 Transform upper=side>0?right:left,elbow=side>0?rightElbow:leftElbow,hand=side>0?rightHand:leftHand;
@@ -94,8 +94,9 @@ namespace Alterverse.Visuals
             }
             else if(shape==Shape.Mech)
             {
-                Rotate(right,u,C(-32,28,40));Rotate(right,r,C(-8,-16,-12));
-                Rotate(left,u,C(4,-5,-7));
+                // Keep a held machine gun aimed forward, with a small recoil instead of a punch.
+                Rotate(right,u,C(-1,1,1.5f));Rotate(right,r,C(-1,3,4));
+                Rotate(left,u,C(1,-1,-1.5f));
             }
             else if(shape==Shape.Ferrox)
             {
