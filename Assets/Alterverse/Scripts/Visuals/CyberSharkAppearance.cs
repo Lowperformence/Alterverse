@@ -43,6 +43,7 @@ namespace Alterverse.Visuals
         private Quaternion anchorGripRest;
         private Vector3 tailAxis;
         private float tailTime;
+        private float freeArmSide;
         private HeroVisualMotion motion;
         private MeleeBasicAttackAnimation combatPose;
 
@@ -141,6 +142,7 @@ namespace Alterverse.Visuals
                 Vector3.Distance(Point(data.anchors[lookup["Chest"]].head), Point(data.anchors[lookup["Head"]].head));
             if (unitScale < .01f || unitScale > 100f) return false;
             InsetShoulderJoints(model, bones, lookup, heads);
+            freeArmSide = SideFromTorso(heads[lookup["UpperArmL"]], heads[lookup["Chest"]]);
             Quaternion[] rotations = new Quaternion[map.Length];
             float[] scales = new float[map.Length];
             for (int i = 0; i < map.Length; i++)
@@ -181,7 +183,7 @@ namespace Alterverse.Visuals
                 // fingers and thumb while keeping their roots intersecting the palm.
                 if (digits[i]) sourcePoint.z += .025f;
                 Vector3 sourceNormal = Point(data.normals, i * 3);
-                if(data.groups[i]==0)FitSilhouette(data,b,lookup,ref sourcePoint,ref sourceNormal);
+                if(data.groups[i]==0)FitSilhouette(data,b,lookup,rotations[b],ref sourcePoint,ref sourceNormal);
                 Vector3 p = heads[b] + rotations[b] * (sourcePoint - Point(data.anchors[b].head)) * scales[b];
                 Vector3 n = rotations[b] * sourceNormal;
                 float blend = data.boneWeights2 != null ? data.boneWeights2[i] : 0f;
@@ -303,16 +305,19 @@ namespace Alterverse.Visuals
                     Point(geometry.anchors[elbow].head));
                 float armScale = Vector3.Distance(heads[upper], heads[elbow]) / sourceLength;
                 Vector3 position = heads[upper];
-                position.x -= (side == "L" ? -1f : 1f) * (.109f * .74f * armScale);
+                position.x -= SideFromTorso(position, heads[lookup["Chest"]]) * (.109f * .74f * armScale);
                 bones[upper].position = model.TransformPoint(position);
             }
             // Children inherit the inset, including elbows, palms and both weapon grips.
             for (int i = 0; i < heads.Length; i++) heads[i] = model.InverseTransformPoint(bones[i].position);
         }
 
+        // FBX root transforms can reverse model-space X relative to the L/R bone names.
+        private static float SideFromTorso(Vector3 shoulder, Vector3 chest) => shoulder.x < chest.x ? -1f : 1f;
+
         // Deform mesh coordinates at build time. Joint positions and animation lengths stay intact.
         private static void FitSilhouette(Geometry data,int bone,Dictionary<string,int> lookup,
-            ref Vector3 point,ref Vector3 normal)
+            Quaternion targetRotation,ref Vector3 point,ref Vector3 normal)
         {
             string name=data.boneNames[bone];
             if(name=="Head")
@@ -340,10 +345,13 @@ namespace Alterverse.Visuals
                 float length=(e-a).magnitude;
                 float t=Vector3.Dot(point-a,down)/length;
                 float blend=Mathf.Clamp01(t/.5f);
-                point.y-=.065f*(1f-Mathf.SmoothStep(0f,1f,blend));
-                float slope=t>0f&&t<.5f ? .065f*6f*blend*(1f-blend)/.5f : 0f;
+                // Lower in the visible model's down direction, including mirrored FBX rigs.
+                Vector3 displacement=Quaternion.Inverse(targetRotation)*Vector3.down*.065f;
+                point+=displacement*(1f-Mathf.SmoothStep(0f,1f,blend));
+                float slope=t>0f&&t<.5f ? -6f*blend*(1f-blend)/.5f : 0f;
                 Vector3 gradient=down*(slope/length);
-                normal=(normal-gradient*(normal.y/(1f+gradient.y))).normalized;
+                normal=(normal-gradient*(Vector3.Dot(displacement,normal)/
+                    (1f+Vector3.Dot(gradient,displacement)))).normalized;
             }
         }
 
@@ -389,7 +397,7 @@ namespace Alterverse.Visuals
                     Mathf.Atan2(Vector3.Dot(q-a,front),Vector3.Dot(q-a,across))));
                 int Add(Vector3 p)
                 {
-                    Vector3 n=(p-a).normalized;FitSilhouette(geometry,bone,lookup,ref p,ref n);
+                    Vector3 n=(p-a).normalized;FitSilhouette(geometry,bone,lookup,rotations[bone],ref p,ref n);
                     points.Add(convert.MultiplyPoint3x4(heads[bone]+rotations[bone]*(p-a)*scales[bone]));
                     weights.Add(new BoneWeight{boneIndex0=bone,weight0=1f});return points.Count-1;
                 }
@@ -442,6 +450,7 @@ namespace Alterverse.Visuals
             var faces = new[] { new List<int>(), new List<int>(), new List<int>(), new List<int>(), new List<int>() };
             var shared = new Dictionary<(int, int, Vector3Int), int>();
             Matrix4x4 convert = anatomy.transform.worldToLocalMatrix * model.localToWorldMatrix;
+            Matrix4x4 toNormal = convert.inverse.transpose;
             foreach (string side in new[] { "L", "R" })
             {
                 int bone = lookup["UpperArm" + side];
@@ -449,8 +458,14 @@ namespace Alterverse.Visuals
                 Vector3 axis = Point(geometry.anchors[lookup["Forearm" + side]].head) - a;
                 float length = axis.magnitude;
                 axis /= length;
-                Vector3 front = Vector3.ProjectOnPlane(Vector3.forward, axis).normalized;
-                Vector3 outward = Vector3.Cross(front, axis).normalized * (side == "L" ? -1f : 1f);
+                Vector3 targetAxis = (heads[lookup["Forearm" + side]] - heads[bone]).normalized;
+                Vector3 targetFront = Vector3.ProjectOnPlane(Vector3.forward, targetAxis).normalized;
+                float rigSide = SideFromTorso(heads[bone], heads[lookup["Chest"]]);
+                Quaternion inverseFit = Quaternion.Inverse(rotations[bone]);
+                // Resolve front and outside on the actual rig, then express them in
+                // source space for the shared skin fitting and shoulder dome.
+                Vector3 front = inverseFit * targetFront;
+                Vector3 outward = inverseFit * (Vector3.Cross(targetFront, targetAxis).normalized * rigSide);
                 Vector3 Radial(float angle) => outward * Mathf.Cos(angle) + front * Mathf.Sin(angle);
                 Vector3 ShellPoint(Vector2 uv, float radius)
                 {
@@ -473,10 +488,13 @@ namespace Alterverse.Visuals
                 {
                     if (Vector3.Dot(Vector3.Cross(q - p, r - p), expected) < 0f)
                     { Vector3 temp = q; q = r; r = temp; }
+                    int first = faces[surface].Count;
+                    Vector3 facing = Vector3.zero;
                     foreach (Vector3 source in new[] { p, q, r })
                     {
                         Vector3 fitted = source, normal = expected;
-                        FitSilhouette(geometry, bone, lookup, ref fitted, ref normal);
+                        FitSilhouette(geometry, bone, lookup, rotations[bone], ref fitted, ref normal);
+                        facing += toNormal.MultiplyVector(rotations[bone] * normal).normalized;
                         var key = (bone, surface, new Vector3Int(Mathf.RoundToInt(fitted.x * 1000000f),
                             Mathf.RoundToInt(fitted.y * 1000000f), Mathf.RoundToInt(fitted.z * 1000000f)));
                         if (!shared.TryGetValue(key, out int index))
@@ -488,6 +506,9 @@ namespace Alterverse.Visuals
                         }
                         faces[surface].Add(index);
                     }
+                    int i = faces[surface][first], j = faces[surface][first + 1], k = faces[surface][first + 2];
+                    if (Vector3.Dot(Vector3.Cross(points[j] - points[i], points[k] - points[i]), facing) < 0f)
+                    { faces[surface][first + 1] = k; faces[surface][first + 2] = j; }
                 }
                 void Tube(Vector3 p, Vector3 q, float radius, int surface)
                 {
@@ -972,7 +993,7 @@ namespace Alterverse.Visuals
 
             // Then aim the complete straight arm along the user's red line.
             Vector3 current = freeHand.position - freeUpperArm.position;
-            Vector3 desired = (-transform.up + transform.right * Mathf.Tan(10f * Mathf.Deg2Rad)).normalized;
+            Vector3 desired = (-transform.up - transform.right * (freeArmSide * Mathf.Tan(10f * Mathf.Deg2Rad))).normalized;
             if (current.sqrMagnitude < .000001f) return;
             freeUpperArm.rotation = Quaternion.FromToRotation(current.normalized, desired) * freeUpperArm.rotation;
         }

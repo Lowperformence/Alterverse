@@ -50,9 +50,11 @@ namespace Alterverse.Visuals
                 if (source == null || !source.isReadable) continue;
                 int left = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmL");
                 int right = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmR");
+                int upperL = Array.FindIndex(skin.bones, b => b != null && b.name == "UpperArmL");
+                int upperR = Array.FindIndex(skin.bones, b => b != null && b.name == "UpperArmR");
                 int handL = Array.FindIndex(skin.bones, b => b != null && b.name == "HandL");
                 int handR = Array.FindIndex(skin.bones, b => b != null && b.name == "HandR");
-                if (left < 0 && right < 0 && (!details || handL < 0 && handR < 0)) continue;
+                if (left < 0 && right < 0 && (!details || handL < 0 && handR < 0 && upperL < 0 && upperR < 0)) continue;
                 BoneWeight[] weights = source.boneWeights;
                 if (weights.Length != source.vertexCount) continue;
 
@@ -71,11 +73,15 @@ namespace Alterverse.Visuals
                         int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
                         bool onForearm = (Attached(a, left) && Attached(b, left) && Attached(c, left)) ||
                             (Attached(a, right) && Attached(b, right) && Attached(c, right));
+                        bool onUpperArm = (Attached(a, upperL) && Attached(b, upperL) && Attached(c, upperL)) ||
+                            (Attached(a, upperR) && Attached(b, upperR) && Attached(c, upperR));
                         bool onHand = (Attached(a, handL) && Attached(b, handL) && Attached(c, handL)) ||
                             (Attached(a, handR) && Attached(b, handR) && Attached(c, handR));
                         // The six imported gold pieces are in Anatomy. Additional
                         // wrist/knuckle plates are generated on the hand bones.
-                        if ((anatomy && gold && onForearm) || (details && (onForearm || onHand)) ||
+                        // The four bronze overlays are the detail pass's two upper-arm
+                        // plates per side. Remove their imported copies as well.
+                        if ((anatomy && gold && onForearm) || (details && (onUpperArm || onForearm || onHand)) ||
                             (techDetails && onForearm))
                         {
                             removed++;

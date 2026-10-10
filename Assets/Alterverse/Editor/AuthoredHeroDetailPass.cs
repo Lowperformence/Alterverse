@@ -81,7 +81,8 @@ namespace Alterverse.EditorTools
             bool heavy = hero == "Kaelon" || hero == "Rook";
             foreach (string side in new[] { "L", "R" })
             {
-                AddPlates("UpperArm" + side, "Forearm" + side, 2, false);
+                // Brakk's gold suit keeps its grey shoulder cages without bronze arm overlays.
+                if (hero != "Rook") AddPlates("UpperArm" + side, "Forearm" + side, 2, false);
                 if (hero != "Rook") AddPlates("Forearm" + side, "Hand" + side, heavy ? 3 : 2, false);
                 AddPlates("Thigh" + side, "Shin" + side, 2, false);
                 AddPlates("Hand" + side, null, 4, true);
