@@ -20,7 +20,6 @@ namespace Alterverse.Combat
         private Health selfHealth;
         private HeroCombatProfile profile;
         private HeroIdentity identity;
-        private SoftTargeting targeting;
         private float nextAttackTime;
 
         private HeroCombatProfile Profile
@@ -39,6 +38,13 @@ namespace Alterverse.Combat
         // Read-only HUD values; attack timing and execution are unchanged.
         public float RemainingCooldown => Mathf.Max(0, nextAttackTime - Time.time);
         public float AttackCooldown => Cooldown;
+        public AimSpec Aim
+        {
+            get
+            {
+                return AimingSettings.Current.For(identity != null ? identity.Hero : HeroId.Veyr, -1, Range);
+            }
+        }
 
         private void Awake()
         {
@@ -47,7 +53,7 @@ namespace Alterverse.Combat
             selfHealth = GetComponent<Health>();
             profile = GetComponent<HeroCombatProfile>();
             identity = GetComponent<HeroIdentity>();
-            targeting = GetComponent<SoftTargeting>() ?? gameObject.AddComponent<SoftTargeting>();
+            if (GetComponent<SoftTargeting>() == null) gameObject.AddComponent<SoftTargeting>();
         }
 
         private void Update()
@@ -59,39 +65,30 @@ namespace Alterverse.Combat
         }
 
         public bool TryAttack()
+            => Aim.allowTapCast && TryAttackAimed(AimGeometry.TapPose(gameObject, Aim));
+
+        public bool TryAttackAimed(AimPose pose)
         {
-            if (!CanAttempt()) return false;
-
-            Health target = targeting.Acquire(Range, transform.forward, true);
-            if (target == null) return false;
-
+            if (!CanAttempt() || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
             HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
             float windup = HeroAttackDelivery.Windup(hero);
-
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
-                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject, target)) return false;
-
+                if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject, pose)) return false;
                 nextAttackTime = Time.time + Cooldown;
-                targeting.RegisterOffensiveAction();
-
-                Vector3 predictedLook = target.transform.position - transform.position;
-                predictedLook.y = 0f;
-                locomotion.FaceAction(predictedLook);
-                motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), predictedLook);
-                CombatMotion.Begin(gameObject, windup, target);
+                locomotion.FaceAction(pose.Direction);
+                motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), pose.Direction);
+                CombatMotion.BeginAimed(gameObject, windup, transform.position + pose.Direction * Range);
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
-
-            return TryAttackAuthoritative(target);
+            return TryAttackAuthoritative(pose);
         }
 
         public bool TryAttackNetworkAuthoritative(Health requestedTarget)
-        {
-            if (!CanAttempt()) return false;
-            return TryAttackAuthoritative(requestedTarget);
-        }
+            => requestedTarget != null && TryAttackNetworkAuthoritative(new AimPose(requestedTarget.transform.position - transform.position, requestedTarget.transform.position));
+        public bool TryAttackNetworkAuthoritative(AimPose pose)
+            => CanAttempt() && AimGeometry.Finite(pose.Direction) && AimGeometry.Finite(pose.Point) && TryAttackAuthoritative(pose);
 
         private bool CanAttempt()
         {
@@ -102,23 +99,14 @@ namespace Alterverse.Combat
                    Time.time >= nextAttackTime;
         }
 
-        private bool TryAttackAuthoritative(Health target)
+        private bool TryAttackAuthoritative(AimPose pose)
         {
-            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || target == null ||
-                !HeroCombatRules.Enemy(gameObject, target) ||
-                HeroCombatRules.TargetDistance(transform.position, target) > Range)
-                return false;
-
-            HeroId hero = identity != null ? identity.Hero : HeroId.Veyr;
-            float windup = HeroAttackDelivery.Windup(hero);
-
+            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay ||
+                !HeroAttackDelivery.For(gameObject).BasicAimed(pose, Aim, Damage)) return false;
+            float windup = HeroAttackDelivery.Windup(identity != null ? identity.Hero : HeroId.Veyr);
             nextAttackTime = Time.time + Cooldown;
-            targeting.RegisterOffensiveAction();
-            Vector3 look = target.transform.position - transform.position;
-            look.y = 0f;
-            locomotion.FaceAction(look);
-            motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), look);
-            HeroCombatRules.BasicHit(gameObject, target, Damage);
+            locomotion.FaceAction(pose.Direction);
+            motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), pose.Direction);
             OnboardingSessionGuard.Attack(this);
             return true;
         }

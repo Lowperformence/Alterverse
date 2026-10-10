@@ -10,13 +10,13 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Routes non-server player combat intentions to the authoritative NGO server. The server
-    /// validates and executes the exact target selected by the client instead of re-targeting.
+    /// validates cast direction and ground position; only support/homing carry a target reference.
     /// Clients never directly mutate authoritative combat state.
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V3";
-        private const string AbilityMessage="DF_COOP_ABILITY_V3";
+        private const string BasicMessage="DF_COOP_BASIC_V4";
+        private const string AbilityMessage="DF_COOP_ABILITY_V4";
 
         private const int TargetNone=0;
         private const int TargetHero=1;
@@ -59,21 +59,20 @@ namespace Alterverse.Multiplayer
             return slot!=null&&slot.IsHuman&&slot.IsLocalHuman;
         }
 
-        public static bool TrySendBasic(GameObject actor,Health target)
-        {
-            CoopGameplayCommands service=Instance;
-            return service!=null&&service.SendCommand(actor,-1,target);
-        }
+        public static bool TrySendBasic(GameObject actor, Health target)
+            => target != null && TrySendBasic(actor, new AimPose(target.transform.position - actor.transform.position, target.transform.position));
+        public static bool TrySendBasic(GameObject actor, AimPose pose)
+            => Instance != null && Instance.SendCommand(actor, -1, pose);
+        public static bool TrySendAbility(GameObject actor, int abilitySlot, Health target)
+            => TrySendAbility(actor, abilitySlot, new AimPose(actor.transform.forward,
+                target != null ? target.transform.position : actor.transform.position, target));
+        public static bool TrySendAbility(GameObject actor, int abilitySlot, AimPose pose)
+            => abilitySlot >= 0 && abilitySlot <= 3 && Instance != null && Instance.SendCommand(actor, abilitySlot, pose);
 
-        public static bool TrySendAbility(GameObject actor,int abilitySlot,Health target)
+        private bool SendCommand(GameObject actor, int abilitySlot, AimPose pose)
         {
-            if(abilitySlot<0||abilitySlot>3)return false;
-            CoopGameplayCommands service=Instance;
-            return service!=null&&service.SendCommand(actor,abilitySlot,target);
-        }
-
-        private bool SendCommand(GameObject actor,int abilitySlot,Health target)
-        {
+            if (!AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
+            Health target = pose.Target;
             NetworkManager manager=NetworkManager.Singleton;
             if(manager==null||manager.IsServer||!manager.IsConnectedClient||messaging==null)return false;
             CoopHeroSlot heroSlot=actor!=null?actor.GetComponent<CoopHeroSlot>():null;
@@ -106,14 +105,9 @@ namespace Alterverse.Multiplayer
             }
 
             string message=abilitySlot<0?BasicMessage:AbilityMessage;
-            if(abilitySlot>=0)
-            {
-                writer.WriteValueSafe(abilitySlot);
-                HeroMotor motor=actor.GetComponent<HeroMotor>();
-                Vector3 direction=motor!=null&&motor.CurrentMoveDirection.sqrMagnitude>.0001f
-                    ?motor.CurrentMoveDirection.normalized:actor.transform.forward;
-                writer.WriteValueSafe(direction.x);writer.WriteValueSafe(direction.y);writer.WriteValueSafe(direction.z);
-            }
+            if (abilitySlot >= 0) writer.WriteValueSafe(abilitySlot);
+            writer.WriteValueSafe(pose.Direction.x); writer.WriteValueSafe(pose.Direction.y); writer.WriteValueSafe(pose.Direction.z);
+            writer.WriteValueSafe(pose.Point.x); writer.WriteValueSafe(pose.Point.y); writer.WriteValueSafe(pose.Point.z);
             messaging.SendNamedMessage(message,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
             return true;
         }
@@ -140,20 +134,30 @@ namespace Alterverse.Multiplayer
         {
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
-            actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(requestedTarget);
+            if (!TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
+            actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(pose);
         }
 
         private void OnAbility(ulong senderClientId,FastBufferReader reader)
         {
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
-            if (!reader.TryBeginRead(sizeof(int) + 3 * sizeof(float))) return;
+            if (!reader.TryBeginRead(sizeof(int))) return;
             reader.ReadValueSafe(out int slot);
-            reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);
-            if(slot<0||slot>3||!MatchNetworkProtocol.Finite(dx)||!MatchNetworkProtocol.Finite(dy)||!MatchNetworkProtocol.Finite(dz))return;
-            Vector3 requestedDirection=new(dx,dy,dz);requestedDirection.y=0f;
-            if(requestedDirection.sqrMagnitude>.0001f)requestedDirection.Normalize();
-            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot,requestedDirection,requestedTarget);
+            if (slot < 0 || slot > 3 || !TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
+            actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot, pose);
+        }
+
+        private static bool TryReadAim(ref FastBufferReader reader, Health target, out AimPose pose)
+        {
+            pose = default;
+            if (!reader.TryBeginRead(6 * sizeof(float))) return false;
+            reader.ReadValueSafe(out float dx); reader.ReadValueSafe(out float dy); reader.ReadValueSafe(out float dz);
+            reader.ReadValueSafe(out float px); reader.ReadValueSafe(out float py); reader.ReadValueSafe(out float pz);
+            Vector3 direction = new Vector3(dx, dy, dz), point = new Vector3(px, py, pz);
+            if (!AimGeometry.Finite(direction) || !AimGeometry.Finite(point) || AimGeometry.Flat(direction).sqrMagnitude < .0001f) return false;
+            pose = new AimPose(direction, point, target);
+            return true;
         }
 
         private static bool TryReadTarget(GameObject actor,ref FastBufferReader reader,out Health target)
@@ -179,7 +183,7 @@ namespace Alterverse.Multiplayer
                     CoopHeroSlot slot=heroes[i];
                     if(slot==null||slot.Slot!=heroSlot)continue;
                     Health health=slot.GetComponent<Health>();
-                    if(health!=null&&HeroCombatRules.Enemy(actor,health))target=health;
+                    if(health!=null&&!health.IsDead&&health.isActiveAndEnabled)target=health;
                     return true;
                 }
                 return true;
@@ -191,7 +195,7 @@ namespace Alterverse.Multiplayer
             for(int i=0;i<candidates.Count;i++)
             {
                 Health candidate=candidates[i];
-                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled||!HeroCombatRules.Enemy(actor,candidate))continue;
+                if(candidate==null||candidate.IsDead||!candidate.isActiveAndEnabled)continue;
                 if(!MatchesTargetKind(candidate,kind,targetTeam))continue;
                 Vector3 delta=candidate.transform.position-requestedPosition;delta.y=0f;
                 float sqr=delta.sqrMagnitude;

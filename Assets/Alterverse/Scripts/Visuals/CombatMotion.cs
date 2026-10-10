@@ -40,6 +40,11 @@ namespace Alterverse.Visuals
             hand.rotation=wrist;
         }
         public static event System.Action<GameObject,float,Vector3> Started;
+        public static void BeginAimed(GameObject actor,float windup,Vector3 point,bool relay=true)
+        {
+            Present(actor,windup,point);
+            if(relay)Started?.Invoke(actor,windup,point);
+        }
         public static void Begin(GameObject actor,float windup,Health target,bool relay=true)
         {
             Vector3 aim=target!=null?target.transform.position:actor.transform.position+actor.transform.forward;

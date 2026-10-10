@@ -5,30 +5,33 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
-    /// <summary>
-    /// Shared player/bot delivery for formerly instant targeted attacks. Balancing values still
-    /// come from their existing catalogs; only windup and flight timing are introduced here.
-    /// Fixed slots avoid an allocation/coroutine on each basic attack. No collision simulation.
-    /// </summary>
-    [RequireComponent(typeof(Health),typeof(HeroIdentity))]
+    // One geometric delivery path for player and bot attacks; target adapters freeze direction at cast.
+    [RequireComponent(typeof(Health), typeof(HeroIdentity))]
+    [DefaultExecutionOrder(120)]
     public sealed class HeroAttackDelivery : MonoBehaviour
     {
         private struct Pending
         {
-            public bool Active,Launched,Basic,Volley,Hook;
-            public Vector3 LaunchOrigin;
+            public bool Active, Launched, Basic, Volley, Hook;
+            public Vector3 Direction, Point, LaunchOrigin, Position;
             public Health Target;
             public HeroAbilityExecution Execution;
-            public int Slot;
-            public float Damage,Range,Grace,ReleaseAt,HitAt;
+            public AimSpec Spec;
+            public int Slot, VisualId;
+            public float Damage, ReleaseAt, SampleTime, Traveled;
         }
-        // Three volley shots + Q/W/E + one basic fit without growing the pool.
-        private readonly Pending[] pending=new Pending[8];
+        private Pending[] pending;
+        private readonly RaycastHit[] blockers = new RaycastHit[32];
         private Health self;
         private HeroIdentity identity;
         private bool hasPending;
-        private void Awake(){self=GetComponent<Health>();identity=GetComponent<HeroIdentity>();}
-        private void OnEnable(){self.Died-=Cancel;self.Died+=Cancel;}
+        internal Vector3? VisualOrigin { get; private set; }
+        private void Awake()
+        {
+            self = GetComponent<Health>(); identity = GetComponent<HeroIdentity>();
+            pending = new Pending[Mathf.Clamp(AimingSettings.Current.deliveryCapacity, 8, 64)];
+        }
+        private void OnEnable() { if (self != null) { self.Died -= Cancel; self.Died += Cancel; } }
         public static bool IsRanged(HeroId hero)=>hero==HeroId.Nyra||hero==HeroId.Elyra||hero==HeroId.Mira||hero==HeroId.Traveler;
         public static float Windup(HeroId hero,int slot=-1)
         {
@@ -69,109 +72,184 @@ namespace Alterverse.Combat
         }
         public static HeroAttackDelivery For(GameObject actor)
             =>actor.GetComponent<HeroAttackDelivery>()??actor.AddComponent<HeroAttackDelivery>();
-        private int FreeSlot()
+        public bool HasCapacity(int count = 1)
         {
-            for(int i=0;i<pending.Length;i++)if(!pending[i].Active)return i;
-            Debug.LogWarning("DIMENSIONS FRONT: attack delivery capacity exceeded.");return -1;
+            int free = 0;
+            for (int i = 0; i < pending.Length; i++) if (!pending[i].Active && ++free >= count) return true;
+            return false;
         }
-        public void Basic(Health target,float amount,float range)
+        private bool Queue(AimPose pose, AimSpec spec, int slot, float damage, HeroAbilityExecution execution, bool volley, float windup)
         {
-            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||!isActiveAndEnabled||
-                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
-                !HeroCombatRules.Enemy(gameObject,target)||HeroCombatRules.TargetDistance(transform.position,target)>range)return;
-            int i=FreeSlot();if(i<0)return;
-            float windup=Windup(identity.Hero);
-            hasPending=true;
-            pending[i]=new Pending{Active=true,Basic=true,Slot=-1,Target=target,Damage=amount,Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+windup};
-            HeroCombatAudio.Windup(gameObject,0);
-            CombatMotion.Begin(gameObject,windup,target);
+            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || !isActiveAndEnabled || self == null || self.IsDead ||
+                !HeroCombatStatus.CanAct(gameObject) || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
+            if (spec.targetingMode == TargetingMode.Homing && (!HeroCombatRules.Enemy(gameObject, pose.Target) ||
+                HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
+            for (int i = 0; i < pending.Length; i++)
+            {
+                if (pending[i].Active) continue;
+                pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
+                    Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
+                    Direction = pose.Direction, Point = pose.Point, Spec = spec,
+                    Target = spec.targetingMode == TargetingMode.Homing ? pose.Target : null, ReleaseAt = Time.time + windup };
+                hasPending = true;
+                if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
+                if (slot < 0) CombatMotion.BeginAimed(gameObject, windup, transform.position + pose.Direction * spec.castRange);
+                return true;
+            }
+            return false;
         }
-        public void Ability(HeroAbilityExecution execution,int slot,Health target,bool volley=false,float windup=-1)
+        public bool BasicAimed(AimPose pose, AimSpec spec, float amount)
+            => Queue(pose, spec, -1, amount, null, false, Windup(identity.Hero));
+        public bool AbilityAimed(HeroAbilityExecution execution, int slot, AimPose pose, bool volley = false, float windup = -1f)
         {
-            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||!isActiveAndEnabled||
-                self==null||self.IsDead||!HeroCombatStatus.CanAct(gameObject)||
-                execution==null||execution.gameObject!=gameObject||!execution.isActiveAndEnabled||slot<0||slot>3||!HeroCombatRules.Enemy(gameObject,target))return;
-            int i=FreeSlot();if(i<0||target==null)return;
-            float range=GetComponent<HeroAbilityKit>().Spec(slot).Range;
-            if(HeroCombatRules.TargetDistance(transform.position,target)>range)return;
-            hasPending=true;
-            if(!volley)HeroCombatAudio.Windup(gameObject,slot+1);
-            pending[i]=new Pending{Active=true,Slot=slot,Target=target,Execution=execution,Volley=volley,
-                Hook=identity.Hero==HeroId.Nerok&&slot==0,
-                Range=range,Grace=IsRanged(identity.Hero)?0:.25f,ReleaseAt=Time.time+(windup>=0?windup:Windup(identity.Hero,slot))};
+            if (execution == null || execution.gameObject != gameObject || !execution.isActiveAndEnabled || slot < 0 || slot > 3) return false;
+            AimSpec spec = AimingSettings.Current.For(identity.Hero, slot);
+            return Queue(pose, spec, slot, 0f, execution, volley,
+                windup >= 0f ? windup : AbilityWindup(identity.Hero, slot, GetComponent<HeroAbilityKit>().Spec(slot)));
+        }
+        public void Basic(Health target, float amount, float range)
+        {
+            if (!HeroCombatRules.Enemy(gameObject, target) || HeroCombatRules.TargetDistance(transform.position, target) > range) return;
+            AimSpec spec = AimingSettings.Current.For(identity.Hero, -1, range);
+            BasicAimed(new AimPose(target.transform.position - transform.position, target.transform.position, target), spec, amount);
+        }
+        public void Ability(HeroAbilityExecution execution, int slot, Health target, bool volley = false, float windup = -1f)
+        {
+            if (slot < 0 || slot > 3 || !HeroCombatRules.Enemy(gameObject, target) ||
+                HeroCombatRules.TargetDistance(transform.position, target) > GetComponent<HeroAbilityKit>().Spec(slot).Range) return;
+            AbilityAimed(execution, slot, new AimPose(target.transform.position - transform.position, target.transform.position, target), volley, windup);
         }
         public void CancelWindups()
         {
-            if(!hasPending)return;
-            hasPending=false;
-            for(int i=0;i<pending.Length;i++)
-            {
-                if(!pending[i].Launched)pending[i]=default;
-                hasPending|=pending[i].Active;
-            }
+            if (!hasPending) return;
+            for (int i = 0; i < pending.Length; i++) if (!pending[i].Launched) pending[i] = default;
+            Recount();
         }
         public void Cancel()
         {
-            if(!hasPending)return;
-            for(int i=0;i<pending.Length;i++)pending[i]=default;
-            hasPending=false;
-            HeroSkillVfx.CancelProjectiles(gameObject);
+            if (pending != null) for (int i = 0; i < pending.Length; i++) pending[i] = default;
+            hasPending = false; HeroSkillVfx.CancelProjectiles(gameObject);
         }
-        private void OnDisable(){if(self!=null)self.Died-=Cancel;Cancel();}
+        private void OnDisable() { if (self != null) self.Died -= Cancel; Cancel(); }
+        private void Recount()
+        { hasPending = false; for (int i = 0; i < pending.Length; i++) hasPending |= pending[i].Active; }
+        private float BlockDistance(Vector3 origin, Vector3 direction, float distance, float width)
+        {
+            if (distance <= .0001f) return distance;
+            int count = Physics.SphereCastNonAlloc(origin + Vector3.up * .5f, width * .5f, direction, blockers, distance,
+                GameplayCollision.SightMask, QueryTriggerInteraction.Ignore);
+            if (count == blockers.Length) return 0f; // Conservatively stop on a saturated query.
+            float closest = distance;
+            for (int i = 0; i < count; i++)
+            {
+                Health owner = blockers[i].collider.GetComponentInParent<Health>();
+                if (owner == self || owner != null && (owner.GetComponent<HeroIdentity>() != null ||
+                    owner.GetComponent<LaneMinion>() != null || HeroCombatRules.Enemy(gameObject, owner))) continue;
+                closest = Mathf.Min(closest, blockers[i].distance);
+            }
+            return closest;
+        }
+        private Health Contact(Pending p, Vector3 from, Vector3 to, bool moving, out float fraction, float motionFraction = 1f)
+        {
+            Health nearest = null; fraction = 2f;
+            for (int i = 0; i < Health.Active.Count; i++)
+            {
+                Health target = Health.Active[i];
+                if (!HeroCombatRules.Enemy(gameObject, target)) continue;
+                float t;
+                bool contact;
+                if (p.Spec.aimType == AimType.Melee)
+                {
+                    Vector3 delta = AimGeometry.Flat(target.transform.position - from);
+                    contact = HeroCombatRules.TargetDistance(from, target) <= p.Spec.castRange &&
+                        (delta.sqrMagnitude < .0001f || Vector3.Angle(p.Direction, delta) <= p.Spec.coneAngle * .5f);
+                    t = HeroCombatRules.TargetDistance(from, target) / Mathf.Max(.01f, p.Spec.castRange);
+                    if (contact) contact = BlockDistance(from, AimGeometry.Direction(delta), delta.magnitude, .01f) >= delta.magnitude - .01f;
+                }
+                else contact = AimGeometry.HitBody(target, from, to, p.Spec.projectileWidth, moving, out t, motionFraction);
+                if (contact && t < fraction) { nearest = target; fraction = t; }
+            }
+            return nearest;
+        }
+        private void Impact(Pending p, Health target)
+        {
+            if (p.Hook) p.Execution.ResolveSharkHookHit(target, p.LaunchOrigin);
+            else if (p.Basic) HeroCombatRules.ResolveBasicHit(gameObject, target, p.Damage);
+            else p.Execution.ResolvePresentedHit(p.Slot, target, p.Volley);
+        }
+        private int Present(Pending p, Vector3 endpoint, float flight)
+        {
+            int id = HeroVfxPool.BeginDelivery(); VisualOrigin = p.LaunchOrigin;
+            Transform follow = p.Spec.targetingMode == TargetingMode.Homing && p.Target != null ? p.Target.transform : null;
+            try
+            {
+            if (p.Basic)
+            {
+                HeroCombatAudio.Play(gameObject, 0, false, p.LaunchOrigin);
+                HeroSkillVfx.Basic(gameObject, endpoint, flight, follow, false);
+            }
+            else
+            {
+                HeroCombatAudio.Cast(gameObject, p.Slot);
+                if (p.Hook)
+                {
+                    HeroSkillVfx.SharkAnchor(gameObject, endpoint, flight, follow);
+                    Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject, 0, endpoint, 0, flight);
+                }
+                else HeroSkillVfx.Spell(gameObject, endpoint, p.Slot, flight, follow);
+            }
+            }
+            finally { VisualOrigin = null; HeroVfxPool.EndDelivery(); }
+            return id;
+        }
         private void Update()
         {
-            if(!hasPending||Time.timeScale<=0)return;
-            if(!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay||
-                self==null||self.IsDead){Cancel();return;}
-            if(!HeroCombatStatus.CanAct(gameObject))CancelWindups();
-            for(int i=0;i<pending.Length;i++)
+            if (!hasPending || Time.timeScale <= 0f) return;
+            if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || self == null || self.IsDead) { Cancel(); return; }
+            if (!HeroCombatStatus.CanAct(gameObject)) CancelWindups();
+            for (int i = 0; i < pending.Length; i++)
             {
-                Pending p=pending[i];if(!p.Active)continue;
-                if(!HeroCombatRules.Enemy(gameObject,p.Target)||
-                    !p.Basic&&(p.Execution==null||!p.Execution.isActiveAndEnabled))
-                {pending[i]=default;continue;}
-                if(!p.Launched)
+                Pending p = pending[i];
+                if (!p.Active) continue;
+                if (!p.Basic && (p.Execution == null || !p.Execution.isActiveAndEnabled)) { pending[i] = default; continue; }
+                if (!p.Launched)
                 {
-                    if(Time.time<p.ReleaseAt)continue;
-                    // Keep the originally selected target. Leaving the existing range can avoid contact.
-                    if(HeroCombatRules.TargetDistance(transform.position,p.Target)>p.Range+p.Grace)
-                    {pending[i]=default;continue;}
-                    if(!p.Basic&&!p.Execution.CanReleasePresentedHit(p.Slot,p.Target))
-                    {pending[i]=default;continue;}
-                    Vector3 origin=GetComponent<HeroVisualMotion>()?.ReleasePoint??transform.position;
-                    float flight=p.Hook?Mathf.Clamp(HeroCombatRules.Distance(transform.position,p.Target.transform.position)/18f,.08f,.35f):
-                        Flight(identity.Hero,origin,p.Target.transform.position+Vector3.up*.25f);
-                    p.LaunchOrigin=transform.position;
-                    p.Launched=true;p.HitAt=Time.time+flight;
-                    if(p.Basic)
+                    if (Time.time < p.ReleaseAt) continue;
+                    p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
+                    float length = BlockDistance(p.LaunchOrigin, p.Direction, p.Spec.castRange, p.Spec.projectileWidth);
+                    Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
+                    if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
                     {
-                        HeroCombatAudio.Play(gameObject,0,false,origin);
-                        HeroSkillVfx.Basic(gameObject,p.Target.transform.position,flight,p.Target.transform,false);
+                        float fraction; Health target = Contact(p, p.LaunchOrigin, endpoint, false, out fraction);
+                        if (target != null) endpoint = Vector3.Lerp(p.LaunchOrigin, endpoint, Mathf.Clamp01(fraction));
+                        Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
+                        pending[i] = default;
+                        if (target != null) Impact(p, target);
+                        continue;
                     }
-                    else if(p.Hook)
-                    {
-                        HeroCombatAudio.Cast(gameObject,p.Slot);
-                        HeroSkillVfx.SharkAnchor(gameObject,p.Target.transform.position,flight,p.Target.transform);
-                        Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,0,p.Target.transform.position,0,flight,p.Target);
-                    }
-                    else
-                    {
-                        HeroCombatAudio.Cast(gameObject,p.Slot);
-                        HeroSkillVfx.Spell(gameObject,p.Target.transform.position,p.Slot,flight,p.Target.transform);
-                    }
-                    pending[i]=p;
+                    // A fixed visual endpoint, never the selected enemy's transform.
+                    p.VisualId = Present(p, endpoint, Mathf.Max(.01f, length / p.Spec.projectileSpeed));
                 }
-                if(Time.time<p.HitAt)continue;
-                // Clear before callbacks (a hit can disable/destroy a component or trigger death).
-                pending[i]=default;
-                // Range was validated at release. Presentation tracks the selected target,
-                // so walking out of the caster's range cannot erase an in-flight projectile.
-                if(p.Hook)p.Execution.ResolveSharkHookHit(p.Target,p.LaunchOrigin);
-                else if(p.Basic)HeroCombatRules.ResolveBasicHit(gameObject,p.Target,p.Damage);
-                else p.Execution.ResolvePresentedHit(p.Slot,p.Target,p.Volley);
+                float dt = Mathf.Max(0f, Time.time - p.SampleTime); p.SampleTime = Time.time;
+                if (dt <= 0f) { pending[i] = p; continue; }
+                if (p.Spec.targetingMode == TargetingMode.Homing && HeroCombatRules.Enemy(gameObject, p.Target))
+                    p.Direction = AimGeometry.Direction(p.Target.transform.position - p.Position);
+                float step = Mathf.Min(p.Spec.castRange - p.Traveled, p.Spec.projectileSpeed * dt);
+                float allowed = BlockDistance(p.Position, p.Direction, step, p.Spec.projectileWidth);
+                Vector3 end = p.Position + p.Direction * allowed;
+                // A wall/range endpoint can end this frame's flight early. Do not sample later target movement.
+                float contactFraction; Health hit = Contact(p, p.Position, end, true, out contactFraction,
+                    allowed / Mathf.Max(.0001f, p.Spec.projectileSpeed * dt));
+                p.Traveled += allowed; p.Position = end;
+                if (hit != null || allowed < step - .0001f || p.Traveled >= p.Spec.castRange - .0001f)
+                {
+                    pending[i] = default;
+                    HeroVfxPool.CancelDelivery(p.VisualId);
+                    if (hit != null) Impact(p, hit);
+                }
+                else pending[i] = p;
             }
-            hasPending=false;
-            for(int i=0;i<pending.Length;i++)hasPending|=pending[i].Active;
+            Recount();
         }
     }
 }

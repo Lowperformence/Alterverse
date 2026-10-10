@@ -36,7 +36,9 @@ namespace Alterverse.Visuals
         private static Vector3 Muzzle(GameObject actor)
         {
             HeroVisualMotion motion=actor.GetComponent<HeroVisualMotion>();
-            return motion!=null?motion.ReleasePoint:Chest(actor)+actor.transform.forward*.5f;
+            Vector3 muzzle = motion!=null?motion.ReleasePoint:Chest(actor)+actor.transform.forward*.5f;
+            Vector3? origin = actor.GetComponent<HeroAttackDelivery>()?.VisualOrigin;
+            return origin.HasValue ? new Vector3(origin.Value.x,muzzle.y,origin.Value.z) : muzzle;
         }
         private static void Projectile(GameObject actor,Vector3 end,int slot,float travel=0,Transform target=null)
         {
@@ -124,10 +126,10 @@ namespace Alterverse.Visuals
             float duration=Mathf.Max(.12f,travel);
             // No travelling shot: the full blue beam is visible from release through contact.
             HeroVfxPool.Emit(HeroFxShape.Laser,start,end,new Vector3(.26f,.26f,1f),
-                SivraSkillColor(0),duration,HeroFxMotion.LaserBeam,owner:actor,follow:actor.transform,
+                SivraSkillColor(0),duration,HeroFxMotion.LaserBeam,owner:actor,follow:target!=null?actor.transform:null,
                 endFollow:target,cancelOnOwnerDeath:true,maxRange:range);
             HeroVfxPool.Emit(HeroFxShape.Laser,start,end,new Vector3(.075f,.075f,1f),
-                new Color(.50f,.78f,1f,.94f),duration,HeroFxMotion.LaserBeam,owner:actor,follow:actor.transform,
+                new Color(.50f,.78f,1f,.94f),duration,HeroFxMotion.LaserBeam,owner:actor,follow:target!=null?actor.transform:null,
                 endFollow:target,cancelOnOwnerDeath:true,maxRange:range);
             Fx(HeroFxShape.Burst,start,SivraSkillColor(0),.18f,.09f,actor:actor);
         }
@@ -626,10 +628,11 @@ namespace Alterverse.Visuals
                         direction.y=0f;direction.Normalize();
                         float range=HeroAbilityKit.LoadoutFor(HeroId.Kaelon).Q.Range;
                         Vector3 start=Muzzle(actor),end=actor.transform.position+direction*range;
+                        if (actor.GetComponent<HeroAttackDelivery>()?.VisualOrigin != null) end = impact;
                         end.y=start.y;
                         Camera view=Camera.main;
                         Quaternion facing=view!=null?view.transform.rotation:Face(start,end);
-                        float flight=Mathf.Max(.16f,Vector3.Distance(start,end)/14f);
+                        float flight=travelTime>0?travelTime:Mathf.Max(.16f,Vector3.Distance(start,end)/14f);
                         // Visual punch pulse continues to the true range limit even when the victim is closer.
                         HeroVfxPool.Emit(HeroFxShape.AnchorStrikeZero,start,end,Vector3.one*.86f,
                             new Color(.68f,.20f,1f,1f),flight,HeroFxMotion.TravelFixedFrame,

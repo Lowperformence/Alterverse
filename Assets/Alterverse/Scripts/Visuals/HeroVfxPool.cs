@@ -19,11 +19,23 @@ namespace Alterverse.Visuals
             public MaterialPropertyBlock Block;
             public Vector3 From,To,Size,Offset;public Quaternion Rotation;
             public Color Color;public float Start,Duration,SurfaceStyle,MaxRange;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
-            public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
+            public int DeliveryId;public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;
         }
         private static HeroVfxPool instance;
+        private static int nextDeliveryId, deliveryScope;
+        internal static int BeginDelivery() { deliveryScope = ++nextDeliveryId; return deliveryScope; }
+        internal static void EndDelivery() => deliveryScope = 0;
+        internal static void CancelDelivery(int id)
+        {
+            if (id <= 0 || instance == null) return;
+            foreach (Slot slot in instance.slots)
+                if (slot != null && slot.Active && slot.DeliveryId == id && IsProjectile(slot)) instance.Hide(slot);
+        }
+        private static bool IsProjectile(Slot slot) => slot.TracksEnd || slot.Motion == HeroFxMotion.Travel ||
+            slot.Motion == HeroFxMotion.TravelFixedFrame || slot.Motion == HeroFxMotion.LaserBeam ||
+            slot.Motion == HeroFxMotion.Spiral || slot.Motion == HeroFxMotion.Lob;
         private readonly Slot[] slots=new Slot[Capacity];
         private readonly Mesh[] shapes=new Mesh[(int)HeroFxShape.Count];
         private readonly Mesh[] warningShapes=new Mesh[(int)HeroFxShape.Count];
@@ -122,7 +134,7 @@ namespace Alterverse.Visuals
             }
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
-            slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
+            slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
             slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
@@ -164,7 +176,7 @@ namespace Alterverse.Visuals
         {
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
-                if(slot!=null&&slot.Active&&slot.TracksEnd&&slot.Owner==actor)instance.Hide(slot);
+                if(slot!=null&&slot.Active&&IsProjectile(slot)&&slot.Owner==actor)instance.Hide(slot);
         }
         internal static void CancelShape(GameObject actor,HeroFxShape shape)
         {
@@ -196,9 +208,9 @@ namespace Alterverse.Visuals
             {
                 case HeroFxMotion.LaserBeam:
                     // The cached laser spans 0..1 on Z: keep both ends exact while tracking movement.
-                    if(s.Owner!=null)point=s.Owner.GetComponent<HeroVisualMotion>()?.ReleasePoint??point;
+                    if(s.Follows&&s.Owner!=null)point=s.Owner.GetComponent<HeroVisualMotion>()?.ReleasePoint??point;
                     Vector3 beamEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
-                    Vector3 rangeOrigin=s.Owner!=null?s.Owner.transform.position:point;
+                    Vector3 rangeOrigin=s.Follows&&s.Owner!=null?s.Owner.transform.position:point;
                     Vector3 rangeDelta=beamEnd-rangeOrigin;rangeDelta.y=0;
                     if(s.MaxRange>0&&rangeDelta.sqrMagnitude>s.MaxRange*s.MaxRange)
                     {

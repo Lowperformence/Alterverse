@@ -94,19 +94,19 @@ namespace Alterverse.UI
             {
                 0=>"Strike that slows 35% for 1.5s and stuns for 0.55s.",
                 1=>"Grants Auren a 75-point shield for 4s.",
-                2=>"Targeted gravity field; damages and slows enemies 35% for 1.5s.",
+                2=>"Place a gravity field; damages and slows enemies 35% for 1.5s.",
                 _=>"Area slam: damages and slows enemies 50% for 2s; allies gain 60 shield for 3s."
             },
             HeroId.Nyra=>slot switch
             {
-                0=>"High-range precision shot.",
+                0=>"Aim a blue laser along a fixed direction.",
                 1=>"Reposition dash up to 3m.",
                 2=>"Damages and slows the target by 30% for 1.8s.",
-                _=>"Four-shot long-range volley; 64 total damage if all shots connect."
+                _=>"Three fixed-direction shots; 64 total damage if all shots connect."
             },
             HeroId.Elyra=>slot switch
             {
-                0=>"Targeted area burst after a short warning.",
+                0=>"Place an area burst; enemies can escape during the warning.",
                 1=>"Area burst that slows enemies 35% for 2s.",
                 2=>"Short phase dash up to 1.8m.",
                 _=>"Large delayed field: 72 damage and 45% slow for 2s."
@@ -114,8 +114,8 @@ namespace Alterverse.UI
             HeroId.Mira=>slot switch
             {
                 0=>"Damages and slows the target by 25% for 1.5s.",
-                1=>"Heals the most wounded ally in range.",
-                2=>"Shields a wounded ally for 4s.",
+                1=>"Aim toward an allied hero to heal them.",
+                2=>"Aim toward an allied hero to shield them for 4s.",
                 _=>"Large support field: heals nearby allies and grants 25 shield for 3s."
             },
             HeroId.Rook=>slot switch

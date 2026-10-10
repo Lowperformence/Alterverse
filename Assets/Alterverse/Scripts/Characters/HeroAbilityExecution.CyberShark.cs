@@ -8,14 +8,14 @@ namespace Alterverse.Characters
 {
     public sealed partial class HeroAbilityExecution
     {
-        private bool TryCastShark(int slot, Health target, ref float windup)
+        private bool TryCastShark(int slot, Health target, ref float windup, AimPose? aimed = null)
         {
             AbilitySpec spec=kit.Spec(slot);
             if(slot==0)
             {
-                if(!ValidTarget(target,spec.Range)||!SharkSight(target))return false;
-                HeroSkillVfx.TargetWarning(gameObject,target,spec.Windup);
-                HeroAttackDelivery.For(gameObject).Ability(this,slot,target,windup:spec.Windup);
+                if (!aimed.HasValue && (!ValidTarget(target,spec.Range)||!SharkSight(target))) return false;
+                AimPose pose = aimed ?? new AimPose(target.transform.position - transform.position, target.transform.position);
+                if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this,slot,pose,windup:spec.Windup)) return false;
             }
             else if(slot==1)
             {
@@ -30,12 +30,20 @@ namespace Alterverse.Characters
                 Vector3 center=transform.position;
                 if(slot==3)
                 {
-                    if(!ValidTarget(target,spec.Range)||!SharkSight(target))return false;
-                    center=PredictedAreaCenter(target,spec);
+                    if (aimed.HasValue)
+                    {
+                        center = aimed.Value.Point;
+                        if (!SharkSightPoint(transform.position, center)) return false;
+                    }
+                    else
+                    {
+                        if(!ValidTarget(target,spec.Range)||!SharkSight(target))return false;
+                        center=PredictedAreaCenter(target,spec);
+                    }
                 }
                 HeroCombatAudio.Windup(gameObject,slot+1);
-                HeroSkillVfx.Area(gameObject,center,spec.Radius,spec.Windup,true,false,slot);
-                Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,slot==3?2:4,center,spec.Radius,spec.Windup);
+                HeroSkillVfx.Area(gameObject,center,AimingSettings.Current.For(identity.Hero,slot).aoeRadius,spec.Windup,true,false,slot);
+                Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,slot==3?2:4,center,AimingSettings.Current.For(identity.Hero,slot).aoeRadius,spec.Windup);
                 if(slot==3)StartCoroutine(SharkVortex(center,life));
                 else StartCoroutine(ResolveArea(slot,center,life));
             }
@@ -47,8 +55,12 @@ namespace Alterverse.Characters
         private bool SharkSightFrom(Vector3 origin,Health target)
         {
             if(target==null)return false;
+            return SharkSightPoint(origin, target.transform.position, target);
+        }
+        private bool SharkSightPoint(Vector3 origin, Vector3 point, Health target = null)
+        {
             Vector3 from=origin+Vector3.up*.4f;
-            Vector3 ray=target.transform.position+Vector3.up*.4f-from;
+            Vector3 ray=point+Vector3.up*.4f-from;
             if(ray.sqrMagnitude<.0001f)return true;
             int count=Physics.RaycastNonAlloc(from,ray.normalized,sightHits,ray.magnitude,
                 GameplayCollision.SightMask,QueryTriggerInteraction.Ignore);
@@ -62,7 +74,7 @@ namespace Alterverse.Characters
             for(int i=0;i<count;i++)
             {
                 Health owner=hits[i].collider.GetComponentInParent<Health>();
-                if(owner!=self&&owner!=target&&owner?.GetComponent<HeroIdentity>()==null&&owner?.GetComponent<LaneMinion>()==null)return false;
+                if(owner!=self&&(target==null||owner!=target)&&owner?.GetComponent<HeroIdentity>()==null&&owner?.GetComponent<LaneMinion>()==null)return false;
             }
             return true;
         }
@@ -72,8 +84,8 @@ namespace Alterverse.Characters
 
         internal void ResolveSharkHookHit(Health target,Vector3 launchOrigin)
         {
-            // Once released, the anchor follows its selected target. Caster movement/stun
-            // must not unshoot it; real geometry along the flight path still blocks contact.
+            // Delivery calls this only after an actual anchor collision. Pull begins on contact.
+            // Released shots survive caster stun; walls still block the pull path.
             if(!HeroCombatRules.Enemy(gameObject,target)||!SharkSightFrom(launchOrigin,target))return;
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject,target,kit.Q.Power);
@@ -101,11 +113,12 @@ namespace Alterverse.Characters
         private IEnumerator SharkVortex(Vector3 center,int castLife)
         {
             AbilitySpec spec=kit.Ultimate;
+            AimSpec aim = AimingSettings.Current.For(identity.Hero, 3);
             yield return new WaitForSeconds(spec.Windup);
             if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))yield break;
             HeroCombatAudio.Cast(gameObject,3);
-            HeroSkillVfx.SharkVortex(gameObject,center,spec.Radius,3f);
-            Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,1,center,spec.Radius,3f);
+            HeroSkillVfx.SharkVortex(gameObject,center,aim.aoeRadius,3f);
+            Alterverse.Multiplayer.CoopHeroStateSync.BroadcastSharkEffect(gameObject,1,center,aim.aoeRadius,3f);
             // Register the current continuously; damage retains exactly six half-second ticks.
             float started=Time.time;
             int ticks=0;
@@ -122,14 +135,14 @@ namespace Alterverse.Characters
                     HeroLocomotion body=h.GetComponent<HeroLocomotion>();
                     Vector3 position=body!=null?body.FrameStartPosition:h.transform.position;
                     Vector3 delta=center-position;delta.y=0;
-                    if(delta.sqrMagnitude>spec.Radius*spec.Radius||!SharkSightFrom(center,h))continue;
+                    if(!AimGeometry.Circle(center, position, aim.aoeRadius)||!SharkSightFrom(center,h))continue;
                     float before=h.Current+h.Shield;
                     for(int tick=ticks;tick<due;tick++)HeroCombatRules.Damage(gameObject,h,spec.Power/6f);
                     confirmed|=h.Current+h.Shield<before;
                     if(!h.IsDead&&(h.GetComponent<HeroIdentity>()!=null||h.GetComponent<LaneMinion>()!=null))
                     {
                         body=body??h.gameObject.AddComponent<HeroLocomotion>();
-                        body.SetVortexPull(center,spec.Radius,Mathf.Min(Time.deltaTime*1.5f,Mathf.Max(0f,3f-elapsed)));
+                        body.SetVortexPull(center,aim.aoeRadius,Mathf.Min(Time.deltaTime*1.5f,Mathf.Max(0f,3f-elapsed)));
                     }
                 }
                 if(confirmed)HeroCombatAudio.Impact(gameObject,3,center);

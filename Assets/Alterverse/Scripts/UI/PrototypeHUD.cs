@@ -13,6 +13,7 @@ namespace Alterverse.UI
     {
         private Health health;
         private BasicAttack attack;
+        private ManualAiming aiming;
         private HeroMotor motor;
         private PlayerHeroAbilities abilities;
         private HeroIdentity identity;
@@ -41,7 +42,7 @@ namespace Alterverse.UI
             if (player.GetComponent<AbilityRangePreviewOverlay>() == null)
                 player.gameObject.AddComponent<AbilityRangePreviewOverlay>();
             attack=player.GetComponent<BasicAttack>();motor=player.GetComponent<HeroMotor>();
-            abilities=player.GetComponent<PlayerHeroAbilities>();identity=player.GetComponent<HeroIdentity>();view=Camera.main;
+            abilities=player.GetComponent<PlayerHeroAbilities>();aiming=ManualAiming.For(player.gameObject);identity=player.GetComponent<HeroIdentity>();view=Camera.main;
             heroName=identity!=null?identity.DisplayName.ToUpperInvariant():"HERO";
             accent=identity!=null?StylizedArtDirection.HeroAccent(identity.Hero):FrontEndTheme.Accent;
             damageTrail=health.Normalized;CacheAbilities();
@@ -53,7 +54,7 @@ namespace Alterverse.UI
             for(int i=0;i<4;i++)
             {
                 AbilitySpec spec=abilities.SpecFor(i);names[i]=spec.Name.ToUpperInvariant();descriptions[i]=abilities.Describe(i);
-                details[i]=$"RANGE {abilities.PreviewRange(i):0.#}m  ·  AUTO TARGET";glyphs[i]=GlyphFor(i);
+                details[i]=$"RANGE {abilities.PreviewRange(i):0.#}m  ·  DRAG TO AIM";glyphs[i]=GlyphFor(i);
             }
         }
         private CombatGlyph GlyphFor(int slot)
@@ -78,7 +79,7 @@ namespace Alterverse.UI
         private void OnDisable(){buttonView?.SetVisible(false);ResetInput();if(EnhancedTouchSupport.enabled)EnhancedTouchSupport.Disable();}
         private void OnApplicationFocus(bool value){focused=value;if(!value){buttonView?.SetVisible(false);ResetInput();}}
         private void OnApplicationPause(bool value){suspended=value;if(value){buttonView?.SetVisible(false);ResetInput();}}
-        private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;mouseJoystick=false;combatInside=false;motor?.SetMoveInput(Vector2.zero);}
+        private void ResetInput(){joystickFinger=combatFinger=pressedSlot=inspectedSlot=-1;mouseJoystick=false;combatInside=false;aiming?.Cancel();motor?.SetMoveInput(Vector2.zero);}
         private void Update()
         {
             layout=new CombatHudLayout(Screen.safeArea);
@@ -90,6 +91,8 @@ namespace Alterverse.UI
             if(hp<damageTrail&&Time.unscaledTime>=damageHold)damageTrail=Mathf.MoveTowards(damageTrail,hp,Time.unscaledDeltaTime*.7f);
             HeroCombatStatus status=health.GetComponent<HeroCombatStatus>();
             statusText=status!=null&&status.Stunned?"STUNNED":status!=null&&status.MoveMultiplier<.99f?"SLOWED":"";
+            if (!HeroCombatStatus.CanAct(health.gameObject))
+            { aiming?.Cancel(); pressedSlot = inspectedSlot = -1; combatInside = false; }
             HandleTouches();
             // A touch gesture exclusively owns touch controls; the mouse path is for editor/desktop testing.
             if(ETouch.activeTouches.Count==0&&combatFinger<0)HandleMouse();
@@ -150,13 +153,14 @@ namespace Alterverse.UI
                 if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began&&combatFinger<0&&pressedSlot<0)
                 {
                     int slot=layout.Hit(point);
-                    if(slot>=0){combatFinger=touch.touchId;BeginPress(slot);}
+                    if(slot>=0 && BeginPress(slot,touch.screenPosition)){combatFinger=touch.touchId;}
                 }
                 if(touch.touchId==combatFinger)
                 {
-                    foundCombat=true;combatInside=layout.ContainsWithMargin(pressedSlot,point);
+                    foundCombat=true;
+                    aiming?.Drag(touch.screenPosition,layout.Scale,layout.CancelZone.Contains(point));
+                    combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
                     if(ended||canceled){EndPress(!canceled&&combatInside);combatFinger=-1;}
-                    else if(pressedSlot==4&&combatInside)attack?.TryAttack();
                 }
             }
             if(!foundCombat&&combatFinger>=0){EndPress(false);combatFinger=-1;}
@@ -169,7 +173,7 @@ namespace Alterverse.UI
             if(mouse.leftButton.wasPressedThisFrame)
             {
                 int slot=layout.Hit(point);
-                if(slot>=0)BeginPress(slot);
+                if(slot>=0)BeginPress(slot,mouse.position.ReadValue());
                 else if(layout.MoveCapture.Contains(point))
                 {
                     mouseJoystick=true;
@@ -198,28 +202,26 @@ namespace Alterverse.UI
             }
 
             if(pressedSlot<0)return;
-            combatInside=layout.ContainsWithMargin(pressedSlot,point);
+            aiming?.Drag(mouse.position.ReadValue(),layout.Scale,layout.CancelZone.Contains(point));
+            combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
             if(mouse.leftButton.wasReleasedThisFrame)EndPress(combatInside);
-            else if(pressedSlot==4&&combatInside&&mouse.leftButton.isPressed)attack?.TryAttack();
         }
-        private void BeginPress(int slot)
+        private bool BeginPress(int slot,Vector2 screen)
         {
-            pressedSlot=slot;combatInside=true;
-            // Track the held skill in every mode; only DrawHint applies tutorial restrictions.
-            inspectedSlot=slot<4?slot:-1;
-            pressStarted=Time.unscaledTime;
-            if(slot==4)attack?.TryAttack();
+            if(aiming==null||!aiming.Begin(slot,screen))return false;
+            pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;
+            pressStarted=Time.unscaledTime;return true;
         }
         private void EndPress(bool commit)
         {
-            int slot=pressedSlot;pressedSlot=-1;inspectedSlot=-1;
-            if(!commit||slot<0||slot>3||abilities==null)return;
-            bool success=slot==0?abilities.CastQ():slot==1?abilities.CastW():slot==2?abilities.CastE():abilities.CastUltimate();
-            if(success){feedback=names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
+            int slot=pressedSlot;pressedSlot=inspectedSlot=-1;combatInside=false;
+            if(!commit||slot<0||slot>4||aiming==null){aiming?.Cancel();return;}
+            bool success=aiming.Release();
+            if(success){feedback=slot==4?"ATTACK":names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
             else if(!HeroCombatStatus.CanAct(health.gameObject))feedback="STUNNED — CANNOT CAST";
-            else if(abilities.RemainingFor(slot)>0)feedback="ABILITY RECHARGING";
-            else if(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shelter||glyphs[slot]==CombatGlyph.Shield||glyphs[slot]==CombatGlyph.Wildsurge)feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
-            else feedback="NO TARGET / PATH BLOCKED";
+            else if(slot<4&&abilities.RemainingFor(slot)>0||slot==4&&attack.RemainingCooldown>0)feedback="RECHARGING";
+            else if(slot<4&&(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shelter||glyphs[slot]==CombatGlyph.Shield||glyphs[slot]==CombatGlyph.Wildsurge))feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
+            else feedback="PATH BLOCKED";
             feedbackUntil=Time.unscaledTime+1.5f;nextReadout=0;
         }
         private void OnGUI()
@@ -233,7 +235,7 @@ namespace Alterverse.UI
             {
                 GUI.matrix=layout.Matrix;
                 if(Event.current.type!=EventType.Repaint)return;
-                DrawPreview();DrawHealth();DrawJoystick();DrawHint();
+                DrawHealth();DrawJoystick();DrawHint();DrawCancelZone();
             }
             finally{GUI.matrix=matrix;GUI.color=color;}
         }
@@ -334,97 +336,16 @@ namespace Alterverse.UI
             Rect r=new Rect(layout.Width-418,layout.Height-386,394,130);theme.Panel(r);
             theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],theme.Button);
             theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
-            string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DIRECTION: MOVE / AUTO EVADE · COLLISION MAY SHORTEN":details[inspectedSlot];
+            string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DRAG TO CHOOSE DIRECTION · COLLISION MAY SHORTEN":details[inspectedSlot];
             theme.Label(new Rect(r.x+12,r.y+80,r.width-24,18),detail,small,true);
-            theme.Label(new Rect(r.x+12,r.y+103,r.width-24,20),combatInside?"RELEASE TO CAST · DRAG OUT TO CANCEL":"RELEASE TO CANCEL",small);
+            theme.Label(new Rect(r.x+12,r.y+103,r.width-24,20),combatInside?"RELEASE TO CAST · DRAG TO CANCEL ZONE":"RELEASE TO CANCEL",small);
         }
-        private void ProjectLine(Vector3 from, Vector3 to, Color color, float width)
+        private void DrawCancelZone()
         {
-            Vector3 a = view.WorldToScreenPoint(from);
-            Vector3 b = view.WorldToScreenPoint(to);
-            if (a.z <= 0f || b.z <= 0f)
-                return;
-
-            CombatGlyphs.Line(layout.Point(new Vector2(a.x, a.y)),
-                layout.Point(new Vector2(b.x, b.y)), width, color);
-        }
-
-        private void DrawPreview()
-        {
-            // The smooth ground overlay owns range presentation; retain the legacy fallback only
-            // for scenes without that component, avoiding two superimposed range outlines.
-            AbilityRangePreviewOverlay overlay = health != null ? health.GetComponent<AbilityRangePreviewOverlay>() : null;
-            if (overlay != null && overlay.isActiveAndEnabled) return;
-            if (inspectedSlot < 0 || !combatInside || abilities == null)
-                return;
-            if (view == null)
-                view = Camera.main;
-            if (view == null)
-                return;
-
-            float range = abilities.PreviewRange(inspectedSlot);
-            if (range <= 0f)
-                return;
-
-            Vector3 center = health.transform.position;
-            center.y = .18f;
-            Color tint = (glyphs[inspectedSlot] == CombatGlyph.Heal ||
-                glyphs[inspectedSlot] == CombatGlyph.Shelter ||
-                glyphs[inspectedSlot] == CombatGlyph.Wildsurge)
-                ? new Color(.45f, .87f, .66f)
-                : FrontEndTheme.Accent;
-
-            if (glyphs[inspectedSlot] == CombatGlyph.Dash)
-            {
-                Vector3 direction = abilities.PreviewDirection(inspectedSlot);
-                direction.y = 0f;
-                direction.Normalize();
-                Vector3 end = center + direction * range;
-                Vector3 side = Vector3.Cross(Vector3.up, direction) * .42f;
-                Color glow = new Color(tint.r, tint.g, tint.b, .18f);
-                Color core = new Color(tint.r, tint.g, tint.b, .92f);
-                ProjectLine(center, end, glow, 10f);
-                ProjectLine(end, end - direction * .72f + side, glow, 10f);
-                ProjectLine(end, end - direction * .72f - side, glow, 10f);
-                ProjectLine(center, end, core, 3f);
-                ProjectLine(end, end - direction * .72f + side, core, 3f);
-                ProjectLine(end, end - direction * .72f - side, core, 3f);
-                return;
-            }
-
-            float pulse = .5f + .5f * Mathf.Sin(Time.unscaledTime * 5.5f);
-            Color outer = new Color(tint.r, tint.g, tint.b, .13f + pulse * .05f);
-            Color inner = new Color(tint.r, tint.g, tint.b, .84f);
-            const int segments = 40;
-            for (int i = 0; i < segments; i++)
-            {
-                float a = i * Mathf.PI * 2f / segments;
-                float b = (i + 1) * Mathf.PI * 2f / segments;
-                Vector3 p = center + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * range;
-                Vector3 q = center + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * range;
-                ProjectLine(p, q, outer, 9f);
-                ProjectLine(p, q, inner, 2.5f);
-            }
-
-            AbilitySpec spec = abilities.SpecFor(inspectedSlot);
-            if (spec.Radius > .01f)
-            {
-                Health target = GetComponent<SoftTargeting>()?.Current;
-                Vector3 areaCenter = target != null
-                    ? target.transform.position
-                    : center + transform.forward * Mathf.Min(range * .65f, range - spec.Radius);
-                areaCenter.y = .20f;
-                Color areaTint = new Color(tint.r, tint.g, tint.b, .75f);
-                for (int i = 0; i < 32; i++)
-                {
-                    float a = i * Mathf.PI * 2f / 32f;
-                    float b = (i + 1) * Mathf.PI * 2f / 32f;
-                    Vector3 p = areaCenter + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * spec.Radius;
-                    Vector3 q = areaCenter + new Vector3(Mathf.Cos(b), 0f, Mathf.Sin(b)) * spec.Radius;
-                    ProjectLine(p, q, new Color(tint.r, tint.g, tint.b, .12f), 7f);
-                    ProjectLine(p, q, areaTint, 2f);
-                }
-            }
+            if(aiming==null||!aiming.Active)return;
+            Rect zone=layout.CancelZone;
+            FrontEndTheme.Fill(zone,aiming.Cancelled?new Color(.9f,.2f,.18f,.8f):new Color(.12f,.15f,.2f,.8f));
+            theme.Label(zone,"CANCEL",centered);
         }
     }
 }

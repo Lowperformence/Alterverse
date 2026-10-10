@@ -23,7 +23,7 @@ namespace Alterverse.EditorChecks
             {
                 object entry=slots.GetValue(i);Type type=entry.GetType();
                 if(!(bool)type.GetField("Active").GetValue(entry))continue;
-                type.GetField(field).SetValue(entry,Time.time-1);
+                type.GetField(field=="HitAt"?"SampleTime":field).SetValue(entry,Time.time-1);
                 slots.SetValue(entry,i);
             }
         }
@@ -93,7 +93,7 @@ namespace Alterverse.EditorChecks
                         HeroCombatRules.BasicHit(source,target,power);Due(delivery,"ReleaseAt");Tick(delivery);
                         victim.transform.position=new Vector3(30,80,0);status.Stun(.5f);
                         Due(delivery,"HitAt");Tick(delivery);
-                        Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"released projectile disappeared on range loss or stun");
+                        Check(Mathf.Approximately(Total(target),baseline),"released projectile tracked a dodging enemy");
                         status.Clear();baseline=Fresh(target);victim.transform.position=new Vector3(1,80,0);
                     }
                     if(!HeroAttackDelivery.IsRanged((HeroId)hero))
@@ -102,7 +102,7 @@ namespace Alterverse.EditorChecks
                         baseline=Fresh(target);victim.transform.position=new Vector3(range-.05f,80,0);
                         HeroCombatRules.BasicHit(source,target,power);
                         victim.transform.position=new Vector3(range+.20f,80,0);Drain(delivery);
-                        Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"small windup range loss ignored melee grace");
+                        Check(Mathf.Approximately(Total(target),baseline),"melee hit beyond the displayed range");
                         baseline=Fresh(target);HeroCombatRules.BasicHit(source,target,power);Drain(delivery);
                         Check(Mathf.Approximately(Total(target),baseline),"grace allowed an initially invalid attack");
                         victim.transform.position=new Vector3(1,80,0);
@@ -141,13 +141,13 @@ namespace Alterverse.EditorChecks
                 var victimExecution=victim.AddComponent<HeroAbilityExecution>();
                 var target=victim.GetComponent<Health>();
                 var delivery=HeroAttackDelivery.For(source);
-                var status=source.GetComponent<HeroCombatStatus>();
+                var status=source.GetComponent<HeroCombatStatus>()??source.AddComponent<HeroCombatStatus>();
                 float before=Total(target),power=HeroAbilityKit.LoadoutFor(HeroId.Nerok).Q.Power;
                 delivery.Ability(execution,0,target,windup:0);Tick(delivery);
-                victim.transform.position=new Vector3(7,80,0);status.Stun(.5f);
+                status.Stun(.5f);
                 typeof(HeroAbilityExecution).GetMethod("Update",Hidden).Invoke(execution,null);
                 Due(delivery,"HitAt");Tick(delivery);
-                Check(Mathf.Abs(before-Total(target)-power)<.002f,"released hook cancelled on range loss/stun");
+                Check(Mathf.Abs(before-Total(target)-power)<.002f,"released hook cancelled on caster stun");
                 var body=victim.GetComponent<HeroLocomotion>();
                 Check(body.IsForcedMoving,"hook contact did not start pull");
                 victim.GetComponent<HeroCombatStatus>().Stun(.5f);

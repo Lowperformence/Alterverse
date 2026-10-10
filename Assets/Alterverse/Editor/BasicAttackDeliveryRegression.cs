@@ -51,6 +51,9 @@ namespace Alterverse.EditorChecks
                     Due(delivery, false);
                     Step(delivery);
                     Check(target.Current == target.Max, hero + ": leaving range avoids contact");
+                    // The missed shot still travels to its range limit; drain before returning the fixture.
+                    Due(delivery, true); Step(delivery);
+                    Check(target.Current == target.Max, hero + ": missed shot cannot track beyond range");
                     target.transform.position = origin + Vector3.forward;
                     delivery.Basic(target, 20f, 3f);
                     actor.gameObject.AddComponent<HeroCombatStatus>().Stun(.5f);
@@ -92,7 +95,7 @@ namespace Alterverse.EditorChecks
                 Type type = slot.GetType();
                 if (!(bool)type.GetField("Active").GetValue(slot)) continue;
                 type.GetField("ReleaseAt").SetValue(slot, Time.time - 1f);
-                if (arrival) type.GetField("HitAt").SetValue(slot, Time.time - 1f);
+                if (arrival) type.GetField("SampleTime").SetValue(slot, Time.time - 1f);
                 slots.SetValue(slot, i);
             }
         }
