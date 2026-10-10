@@ -368,8 +368,8 @@ namespace Alterverse.UI
                     service.Load("/social/clan/message/remove",new SocialService.Request{messageId=message.messageId});
             }
             if(count==0)theme.EmptyState(new Rect(Left,390,ContentWidth,140),"Start the conversation","Write a message below to coordinate with your clan.");
-            clanChatText=GUI.TextField(new Rect(Left,584,ContentWidth-166,36),clanChatText,240,theme.Field);
-            if(theme.Action(new Rect(Right-154,584,154,36),"SEND",true,enabled:!service.Busy&&!string.IsNullOrWhiteSpace(clanChatText)))
+            clanChatText=GUI.TextField(new Rect(Left,584,ContentWidth-166,42),clanChatText,240,theme.Field);
+            if(theme.Action(new Rect(Right-154,584,154,42),"SEND",true,enabled:!service.Busy&&!string.IsNullOrWhiteSpace(clanChatText)))
             {
                 string text=clanChatText.Trim();
                 if(clanPendingMessageText!=text||string.IsNullOrEmpty(clanPendingMessageId))

@@ -27,6 +27,7 @@ namespace Alterverse.UI
         private const float OutlineThickness = 1.2f;
         private const int SliceBorder = 15;
         private static GUIStyle roundedFillStyle, roundedOutlineStyle;
+        private static Texture2D fieldBackground;
 
         public readonly GUIStyle Title, Heading, Body, Small, Button, Field;
         private readonly GUIStyle centered, badge, monogram;
@@ -76,23 +77,37 @@ namespace Alterverse.UI
             {
                 font = FrontEndTypography.Body,
                 fontSize = 23,
-                padding = new RectOffset(14, 14, 10, 10),
+                padding = new RectOffset(14, 14, 4, 4),
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = false,
+                richText = false,
                 border = new RectOffset(SliceBorder, SliceBorder, SliceBorder, SliceBorder)
             };
-            Field.normal.textColor = Text;
-            Field.focused.textColor = Text;
-            // Give text fields the same rounded visual language. The stronger outer frame is drawn
-            // by callers where needed; this background removes the remaining square field corners.
-            Field.normal.background = roundedFillStyle.normal.background;
-            Field.focused.background = roundedFillStyle.normal.background;
+            // TextField draws its own background. Bake the dark tint into its texture so
+            // the white mask used by panels cannot hide the light text, including on focus.
+            foreach (GUIStyleState state in new[]
+            {
+                Field.normal, Field.hover, Field.active, Field.focused,
+                Field.onNormal, Field.onHover, Field.onActive, Field.onFocused
+            })
+            {
+                state.textColor = Text;
+                state.background = fieldBackground;
+#if UNITY_EDITOR
+                // Do not inherit a bright high-DPI background from the editor's skin.
+                state.scaledBackgrounds = Array.Empty<Texture2D>();
+#endif
+            }
         }
 
         private static void EnsureRoundedStyles()
         {
-            if (roundedFillStyle != null && roundedOutlineStyle != null) return;
+            if (roundedFillStyle != null && roundedOutlineStyle != null && fieldBackground != null) return;
 
-            Texture2D fill = BuildRoundedMask(false);
-            Texture2D outline = BuildRoundedMask(true);
+            Texture2D fill = BuildRoundedMask(false, Color.white);
+            Texture2D outline = BuildRoundedMask(true, Color.white);
+            fieldBackground = BuildRoundedMask(false, Raised);
+            fieldBackground.name = "DF_UI_FieldBackground";
             var border = new RectOffset(SliceBorder, SliceBorder, SliceBorder, SliceBorder);
 
             roundedFillStyle = new GUIStyle { border = border };
@@ -101,7 +116,7 @@ namespace Alterverse.UI
             roundedOutlineStyle.normal.background = outline;
         }
 
-        private static Texture2D BuildRoundedMask(bool outline)
+        private static Texture2D BuildRoundedMask(bool outline, Color tint)
         {
             var texture = new Texture2D(RoundedTextureSize, RoundedTextureSize, TextureFormat.RGBA32, false)
             {
@@ -112,6 +127,7 @@ namespace Alterverse.UI
             };
 
             var pixels = new Color32[RoundedTextureSize * RoundedTextureSize];
+            Color32 tintBytes = tint;
             float half = RoundedTextureSize * .5f;
 
             for (int y = 0; y < RoundedTextureSize; y++)
@@ -132,8 +148,8 @@ namespace Alterverse.UI
                     alpha = outerAlpha * (1f - innerAlpha);
                 }
 
-                byte a = (byte)Mathf.RoundToInt(alpha * 255f);
-                pixels[y * RoundedTextureSize + x] = new Color32(255, 255, 255, a);
+                byte a = (byte)Mathf.RoundToInt(alpha * tint.a * 255f);
+                pixels[y * RoundedTextureSize + x] = new Color32(tintBytes.r, tintBytes.g, tintBytes.b, a);
             }
 
             texture.SetPixels32(pixels);
