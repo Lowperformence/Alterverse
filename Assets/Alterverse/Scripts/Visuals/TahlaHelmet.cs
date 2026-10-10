@@ -210,14 +210,14 @@ namespace Alterverse.Visuals
                 }
             }
             Vector2 Glyph(float offset,Vector2 p)=>new Vector2(center.x+(offset+p.x*.026f)*unit,center.y+(.080f+p.y*.034f)*unit);
-            Vector2[] outer={new Vector2(0,0),new Vector2(0,1),new Vector2(.58f,1),new Vector2(.90f,.82f),
+            Vector2[] letterOutline={new Vector2(0,0),new Vector2(0,1),new Vector2(.58f,1),new Vector2(.90f,.82f),
                 new Vector2(1,.65f),new Vector2(1,.35f),new Vector2(.90f,.18f),new Vector2(.58f,0)};
-            Vector2[] inner={new Vector2(.22f,.22f),new Vector2(.22f,.78f),new Vector2(.54f,.78f),new Vector2(.68f,.68f),
+            Vector2[] letterCounter={new Vector2(.22f,.22f),new Vector2(.22f,.78f),new Vector2(.54f,.78f),new Vector2(.68f,.68f),
                 new Vector2(.74f,.58f),new Vector2(.74f,.42f),new Vector2(.68f,.32f),new Vector2(.54f,.22f)};
-            for(int i=0;i<outer.Length;i++)
+            for(int i=0;i<letterOutline.Length;i++)
             {
-                int next=(i+1)%outer.Length;
-                LetterTile(Glyph(-.030f,outer[i]),Glyph(-.030f,outer[next]),Glyph(-.030f,inner[next]),Glyph(-.030f,inner[i]));
+                int next=(i+1)%letterOutline.Length;
+                LetterTile(Glyph(-.030f,letterOutline[i]),Glyph(-.030f,letterOutline[next]),Glyph(-.030f,letterCounter[next]),Glyph(-.030f,letterCounter[i]));
             }
             void FBar(float x0,float y0,float x1,float y1)=>LetterTile(Glyph(.004f,new Vector2(x0,y0)),
                 Glyph(.004f,new Vector2(x1,y0)),Glyph(.004f,new Vector2(x1,y1)),Glyph(.004f,new Vector2(x0,y1)));
