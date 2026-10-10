@@ -3,13 +3,11 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
-    // Gesture state only. PrototypeHUD owns the touch pointer; combat and preview consume one pose.
+    // Skill gestures only. Basic attacks use tap/hold directly through BasicAttack.TryAttack.
     public sealed class ManualAiming : MonoBehaviour
     {
         private Health self;
         private PlayerHeroAbilities abilities;
-        private BasicAttack basic;
-        private HeroIdentity identity;
         private Camera view;
         private Vector2 pressOrigin;
         private Vector3 rawDirection;
@@ -22,15 +20,14 @@ namespace Alterverse.Combat
         public AimPose Pose { get; private set; }
         public static ManualAiming For(GameObject actor) => actor.GetComponent<ManualAiming>() ?? actor.AddComponent<ManualAiming>();
         private void Awake()
-        { self = GetComponent<Health>(); abilities = GetComponent<PlayerHeroAbilities>(); basic = GetComponent<BasicAttack>(); identity = GetComponent<HeroIdentity>(); }
+        { self = GetComponent<Health>(); abilities = GetComponent<PlayerHeroAbilities>(); }
         private bool Ready(int slot) => isActiveAndEnabled && self != null && !self.IsDead && Time.timeScale > 0f && HeroCombatStatus.CanAct(gameObject) &&
-            (slot == 4 ? basic != null && basic.isActiveAndEnabled && basic.RemainingCooldown <= 0f
-                : abilities != null && abilities.isActiveAndEnabled && abilities.RemainingFor(slot) <= 0f);
+            abilities != null && abilities.isActiveAndEnabled && abilities.RemainingFor(slot) <= 0f;
         public bool Begin(int slot, Vector2 screen)
         {
             Cancel();
-            if (slot < 0 || slot > 4 || !Ready(slot)) return false;
-            Spec = slot == 4 ? basic.Aim : abilities.AimFor(slot);
+            if (slot < 0 || slot > 3 || !Ready(slot)) return false;
+            Spec = abilities.AimFor(slot);
             Slot = slot; pressOrigin = screen; began = Time.unscaledTime; dragged = false; Cancelled = false;
             rawDirection = AimGeometry.Direction(transform.forward); distance = Spec.castRange * .65f;
             Rebuild();
@@ -79,7 +76,7 @@ namespace Alterverse.Combat
             bool commit = !Cancelled && Ready(slot) && (!tap || Spec.allowTapCast);
             Rebuild(); AimPose pose = Pose;
             Cancel();
-            return commit && (slot == 4 ? basic.TryAttackAimed(pose) : abilities.CastAimed(slot, pose));
+            return commit && abilities.CastAimed(slot, pose);
         }
         public void Cancel() { Slot = -1; Cancelled = false; }
         private void OnDisable() => Cancel();

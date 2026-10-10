@@ -39,6 +39,7 @@ namespace Alterverse.Combat
         public float projectileWidth = .30f, dragRadius = 96f, dragDeadZone = 10f, tapSeconds = .20f;
         public int deliveryCapacity = 16;
         public Color previewColor = new Color(1f, .94f, .56f, .22f);
+        [Range(0f, 1f)] public float conePreviewOpacity = .75f;
         public AttackOverride[] overrides = new AttackOverride[0];
         private static AimingSettings current;
         public static AimingSettings Current

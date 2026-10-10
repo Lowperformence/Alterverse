@@ -158,8 +158,16 @@ namespace Alterverse.UI
                 if(touch.touchId==combatFinger)
                 {
                     foundCombat=true;
-                    aiming?.Drag(touch.screenPosition,layout.Scale,layout.CancelZone.Contains(point));
-                    combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
+                    if(pressedSlot==4)
+                    {
+                        combatInside=layout.ContainsWithMargin(4,point);
+                        if(!ended&&!canceled&&combatInside)TryBasicPress();
+                    }
+                    else
+                    {
+                        aiming?.Drag(touch.screenPosition,layout.Scale,layout.CancelZone.Contains(point));
+                        combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
+                    }
                     if(ended||canceled){EndPress(!canceled&&combatInside);combatFinger=-1;}
                 }
             }
@@ -202,24 +210,49 @@ namespace Alterverse.UI
             }
 
             if(pressedSlot<0)return;
-            aiming?.Drag(mouse.position.ReadValue(),layout.Scale,layout.CancelZone.Contains(point));
-            combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
+            if(pressedSlot==4)
+            {
+                combatInside=layout.ContainsWithMargin(4,point);
+                if(mouse.leftButton.isPressed&&!mouse.leftButton.wasReleasedThisFrame&&combatInside)TryBasicPress();
+            }
+            else
+            {
+                aiming?.Drag(mouse.position.ReadValue(),layout.Scale,layout.CancelZone.Contains(point));
+                combatInside=aiming!=null&&aiming.Active&&!aiming.Cancelled;
+            }
             if(mouse.leftButton.wasReleasedThisFrame)EndPress(combatInside);
         }
         private bool BeginPress(int slot,Vector2 screen)
         {
+            if(slot==4)
+            {
+                if(attack==null||!attack.isActiveAndEnabled||health==null||health.IsDead||Time.timeScale<=0f||!HeroCombatStatus.CanAct(health.gameObject))return false;
+                aiming?.Cancel();
+                pressedSlot=4;combatInside=true;inspectedSlot=-1;pressStarted=Time.unscaledTime;
+                // Capture even during cooldown so a held press resumes at the next ready attack.
+                if(TryBasicPress())Alterverse.Audio.UiSoundRouter.Confirm();
+                return true;
+            }
             if(aiming==null||!aiming.Begin(slot,screen))return false;
             pressedSlot=slot;combatInside=true;inspectedSlot=slot<4?slot:-1;
             pressStarted=Time.unscaledTime;return true;
         }
+        private bool TryBasicPress()
+        {
+            if(attack==null||!attack.TryAttack())return false;
+            feedback="ATTACK";feedbackUntil=Time.unscaledTime+1.5f;nextReadout=0;
+            return true;
+        }
         private void EndPress(bool commit)
         {
             int slot=pressedSlot;pressedSlot=inspectedSlot=-1;combatInside=false;
-            if(!commit||slot<0||slot>4||aiming==null){aiming?.Cancel();return;}
+            // Basic attacks fire on press/hold; release must never queue another shot.
+            if(slot==4){aiming?.Cancel();return;}
+            if(!commit||slot<0||slot>3||aiming==null){aiming?.Cancel();return;}
             bool success=aiming.Release();
-            if(success){feedback=slot==4?"ATTACK":names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
+            if(success){feedback=names[slot];Alterverse.Audio.UiSoundRouter.Confirm();}
             else if(!HeroCombatStatus.CanAct(health.gameObject))feedback="STUNNED — CANNOT CAST";
-            else if(slot<4&&abilities.RemainingFor(slot)>0||slot==4&&attack.RemainingCooldown>0)feedback="RECHARGING";
+            else if(abilities.RemainingFor(slot)>0)feedback="RECHARGING";
             else if(slot<4&&(glyphs[slot]==CombatGlyph.Heal||glyphs[slot]==CombatGlyph.Shelter||glyphs[slot]==CombatGlyph.Shield||glyphs[slot]==CombatGlyph.Wildsurge))feedback="NO ELIGIBLE ALLY / ALREADY PROTECTED";
             else feedback="PATH BLOCKED";
             feedbackUntil=Time.unscaledTime+1.5f;nextReadout=0;

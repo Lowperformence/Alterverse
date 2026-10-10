@@ -21,4 +21,5 @@ MonoBehaviour:
   tapSeconds: 0.2
   deliveryCapacity: 16
   previewColor: {r: 1, g: 0.94, b: 0.56, a: 0.22}
+  conePreviewOpacity: 0.75
   overrides: []

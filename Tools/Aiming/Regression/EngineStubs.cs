@@ -49,7 +49,7 @@ namespace UnityEngine {
 }
 namespace UnityEngine.Rendering {public enum ShadowCastingMode{Off}}
 namespace UnityEngine.InputSystem {
- public enum TouchPhase{Began,Moved,Ended,Canceled}public class Button {public bool wasPressedThisFrame,wasReleasedThisFrame,isPressed;}public class PositionControl {public UnityEngine.Vector2 Value;public UnityEngine.Vector2 ReadValue()=>Value;}
+ public enum TouchPhase{Began,Moved,Ended,Canceled,Stationary}public class Button {public bool wasPressedThisFrame,wasReleasedThisFrame,isPressed;}public class PositionControl {public UnityEngine.Vector2 Value;public UnityEngine.Vector2 ReadValue()=>Value;}
  public class Keyboard {public static Keyboard current;public Button qKey=new(),eKey=new(),rKey=new(),fKey=new(),spaceKey=new();}public class Mouse {public static Mouse current;public Button leftButton=new();public PositionControl position=new();}
 }
 namespace UnityEngine.InputSystem.EnhancedTouch {public struct Touch {public int touchId;public UnityEngine.Vector2 screenPosition;public UnityEngine.InputSystem.TouchPhase phase;public static List<Touch> activeTouches=new();}public static class EnhancedTouchSupport {public static bool enabled;public static void Enable()=>enabled=true;public static void Disable()=>enabled=false;}}

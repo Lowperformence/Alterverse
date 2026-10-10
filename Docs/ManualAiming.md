@@ -1,6 +1,6 @@
 # DIMENSIONS FRONT – manuelles Zielen
 
-Stand: 2026-10-10. Basis: `dev/vertical-slice`, Commit `c9f60174fd4d6e99557843e41c080ca30a907484`.
+Stand: 2026-10-11. Basis des Gesamtumbaus: `dev/vertical-slice`, Commit `c9f60174fd4d6e99557843e41c080ca30a907484`.
 
 ## Analyse des bisherigen Systems
 
@@ -10,13 +10,14 @@ Die bestehenden Quellen bleiben maßgeblich: `HeroAbilityKit` definiert die 32 S
 
 ## Bedienung und gemeinsame Architektur
 
-- Linken Finger bewegen, rechten Finger auf einer Angriffstaste halten und ziehen. Bewegung läuft unabhängig weiter.
-- Die Vorschau erscheint sofort. Loslassen außerhalb der Abbruchzone führt den Angriff aus, auch wenn kein Gegner getroffen wird. Loslassen in der sichtbaren Abbruchzone oder ein verlorener/abgebrochener Touch verwirft die Geste ohne Cooldown.
-- Kurzer Tap verwendet die Blickrichtung mit begrenzter Zielhilfe. Halten benötigt keine Mindestwartezeit. Grundangriffe werden ebenfalls beim Loslassen ausgelöst; der bisherige Halte-Autofire entfällt.
+- Linken Finger bewegen, rechten Finger auf einer **Skilltaste** halten und ziehen. Bewegung läuft unabhängig weiter.
+- Für Skills erscheint die Vorschau sofort. Loslassen außerhalb der Abbruchzone führt den Skill aus, auch wenn kein Gegner getroffen wird. Loslassen in der sichtbaren Abbruchzone oder ein verlorener/abgebrochener Touch verwirft die Skill-Geste ohne Cooldown.
+- **Standardangriff:** Antippen startet sofort einen Angriff mit bestehendem Windup. Gedrückthalten wiederholt den Angriff jeweils nach dem bestehenden Cooldown. Er verwendet weder manuelles Ziehen noch Kegel-/Linienvorschau oder Abbruchzone. Loslassen, Verlassen der Taste (mit 20-Pixel-Toleranz) und verlorener Touch stoppen Wiederholungen; Loslassen erzeugt keinen zusätzlichen Schuss. Eine während Cooldown begonnene gehaltene Berührung greift an, sobald der Angriff bereit ist.
+- Ein kurzer Skill-Tap und jeder Standardangriff verwenden die Blickrichtung mit begrenzter Zielhilfe. Skills haben keine Mindesthaltezeit. Tatsächliche Kollisionen und Reichweiten entscheiden weiterhin über Treffer.
 - Stun, Tod, Pause, Fokusverlust, deaktivierte Steuerung und Safe-Area-Wechsel unterbrechen gehaltenes Zielen. Cooldowns werden erst bei erfolgreicher Ausführung beziehungsweise Client-Anforderung gestartet.
 - Tastatur-Taps und Mausgesten nutzen dieselbe Aiming-/Ausführungslogik.
 
-`ManualAiming` besitzt genau eine Geste und liefert einen `AimPose` aus Richtung, Bodenposition und optionalem Support-/Homing-Ziel. `PrototypeHUD` besitzt die Touch-IDs. `AbilityRangePreviewOverlay`, `BasicAttack` und `PlayerHeroAbilities` konsumieren diese gemeinsame Pose und den `AimSpec` aus `AimingSettings`.
+`ManualAiming` besitzt genau eine **Skill-Geste** (Slots 0–3) und liefert einen `AimPose` aus Richtung, Bodenposition und optionalem Support-/Homing-Ziel. `PrototypeHUD` besitzt die Touch-IDs. `AbilityRangePreviewOverlay` und `PlayerHeroAbilities` konsumieren diese gemeinsame Pose und den `AimSpec` aus `AimingSettings`. Die Standardangrifftaste (HUD-Slot 4) ruft bei Press/Hold direkt `BasicAttack.TryAttack()` auf; dort wird pro Angriff eine begrenzt unterstützte Tap-Pose erzeugt. Die gemeinsame Treffer-, VFX- und Multiplayer-Ausführung bleibt erhalten.
 
 `AimGeometry` berechnet ebene Kegel, Kreise, Reichweiten-Clamping, begrenzte Zielhilfe und kontinuierliche Projektilkontakte. `HeroAttackDelivery` verwaltet Windups und freigegebene Geschosse in einem begrenzten Array. Die bisherigen Bot-Methoden bleiben Adapter: Sie frieren die gewählte Richtung beim Cast ein und verwenden anschließend dieselbe geometrische Trefferprüfung. Es gibt keinen parallelen Soft-Target-Schadenspfad für diese Angriffe.
 
@@ -37,7 +38,7 @@ Normale offensive Posen geben keinen Gegner-Transform an die Projektil-VFX weite
 
 ## Vollständige Zuordnung
 
-Reichweiten und Radien unten sind die unveränderten Katalog-Ausgangswerte in Spieleinheiten. Kegelwinkel sind volle Öffnungswinkel. Bei Projektilen bezeichnet der Winkel die Zielhilfe, nicht die Schadensfläche. `Self` und `Ally` bewahren ihre Utility-Mechanik.
+Reichweiten und Radien unten sind die unveränderten Katalog-Ausgangswerte in Spieleinheiten. Kegelwinkel sind volle Öffnungswinkel. Bei Projektilen bezeichnet der Winkel die Zielhilfe, nicht die Schadensfläche. **Die Grundangriffstabelle beschreibt die Treffergeometrie; Standardangriffe zeigen keinen Kegel an.** `Self` und `Ally` bewahren ihre Utility-Mechanik.
 
 | Held / interne ID | Grundangriff | Reichweite |
 | --- | --- | ---: |
@@ -104,12 +105,13 @@ Das Unity-Asset liegt unter `Assets/Alterverse/Resources/Combat/AimingSettings.a
 | `dragRadius` / `dragDeadZone` | 96 / 10 logische HUD-Pixel, über Safe-Area-Skalierung auf Displaygröße angepasst |
 | `tapSeconds` | 0,20 s ohne Überschreiten der Drag-Deadzone |
 | Tap-AOE-Distanz ohne Zielhilfe | 65 % der Cast-Reichweite in Blickrichtung; beim Zurückziehen nach Drag kann der Mittelpunkt direkt auf dem Spieler liegen |
-| `castOnRelease` / `allowTapCast` | Standardmäßig beide `true`; Immediate-Cast und Tap-Sperre sind pro Attacke konfigurierbar |
+| `castOnRelease` / `allowTapCast` | Standardmäßig beide `true`; Release-/Immediate-Cast und Tap-Sperre für Skill-Gesten. Standardangriffe starten direkt bei Press/Hold und verwenden `allowTapCast`. |
 | `deliveryCapacity` | 16 gleichzeitig vorbereitete/fliegende Angriffe pro Figur, begrenzt auf 8–64; volle Queue verwirft den Cast vor dessen Cooldown |
 | `previewColor` | Hellgelb `(1, 0.94, 0.56, 0.22)`, transparenter Fill mit klarer Außenkante |
+| `conePreviewOpacity` | 0,75: Kegelfläche, Outlines und zugehörige Projektil-/Strahllinie haben gemeinsam 25 % weniger Deckkraft. Kreis- und Dash-Vorschauen bleiben unverändert. |
 | `aimType` / `targetingMode` | Getrennte Vorschau-/Geometrieklasse und explizite Zielreferenzberechtigung |
 
-`overrides` enthält vollständige `AimSpec`-Einträge mit `HeroId` und Slot: **-1** = Grundangriff, **0/1/2/3** = Q/W/E/Ult. Die HUD-Gestennummer **4** wird intern auf den Grundangriff abgebildet. Beim Einrichten eines Overrides zuerst den vorhandenen Spec übernehmen und dann die gewünschten Felder ändern; ein neuer leerer Spec ersetzt sonst auch Reichweite, Radius und boolesche Einstellungen. Die geometrische Form und die spezielle Utility-Mechanik eines bestehenden Skills sollten zusammenpassen. Ein `AreaCone`-Override eignet sich für offensive AOE-Skills; Heil-/Schild-/Dash-Spezialfälle bleiben ihre jeweilige Mechanik.
+`overrides` enthält vollständige `AimSpec`-Einträge mit `HeroId` und Slot: **-1** = Grundangriff, **0/1/2/3** = Q/W/E/Ult. Der HUD-Button **4** startet den direkten Standardangriff und gehört nicht zur manuellen Skill-Geste. Beim Einrichten eines Overrides zuerst den vorhandenen Spec übernehmen und dann die gewünschten Felder ändern; ein neuer leerer Spec ersetzt sonst auch Reichweite, Radius und boolesche Einstellungen. Die geometrische Form und die spezielle Utility-Mechanik eines bestehenden Skills sollten zusammenpassen. Ein `AreaCone`-Override eignet sich für offensive AOE-Skills; Heil-/Schild-/Dash-Spezialfälle bleiben ihre jeweilige Mechanik.
 
 `HeroAbilityKit`, `HeroCombatProfile` und `HeroIdentity` erhalten keine Änderungen an Schaden, Cooldowns, Reichweiten oder Basiswerten. Die neue Projektillogik ersetzt die bisherige zeitgesteuerte Treffergarantie bewusst durch tatsächliche Flugstrecke und Kontakte. Die neuen Trefferbreiten und mobil gewählten Kegel benötigen Balancing im Spiel.
 
@@ -121,13 +123,13 @@ Client und Server müssen gemeinsam aktualisiert werden: V3-Clients können die 
 
 ## Tests und verbleibende Geräteprüfung
 
-`Tools/Aiming/Regression/run.py` kompiliert die unveränderten produktiven Combat-, Kit-, Input-, Preview- und Command-Quellen mit deterministischen Unity-/NGO-Fixtures. Ergebnis: **406 Assertions bestanden**, zusätzlich beide bestehenden Editor-Regressionsläufe für Grundangriffe und All-Hero-Delivery. Abgedeckt sind alle acht Grundangriffe und 32 Skills, Winkel/Reichweiten, begrenzter Assist, Windup-/Flug-Dodge, erste Kollision, Wände, AOE-Eintritt/Austritt, Hook, Volley, Support, explizites Homing, volle Queue, Stun/Tod/Disable/Pause, Hold/Drag/Release/Cancel/Tap, parallele linke/rechte Touches, Safe-Area-Koordinaten und Netzwerk-Richtung/Bodenposition. Syntaxprüfung der vorhandenen lokalen C#-Quellen: keine Parse-Fehler.
+`Tools/Aiming/Regression/run.py` kompiliert die unveränderten produktiven Combat-, Kit-, Input-, Preview- und Command-Quellen mit deterministischen Unity-/NGO-Fixtures. Ergebnis: **483 Assertions bestanden**, zusätzlich beide bestehenden Editor-Regressionsläufe für Grundangriffe und All-Hero-Delivery. Abgedeckt sind alle acht Grundangriffe und 32 Skills, Winkel/Reichweiten, begrenzter Assist, Windup-/Flug-Dodge, erste Kollision, Wände, AOE-Eintritt/Austritt, Hook, Volley, Support, explizites Homing, volle Queue, Stun/Tod/Disable/Pause, Hold/Drag/Release/Cancel/Tap, parallele linke/rechte Touches, Safe-Area-Koordinaten und Netzwerk-Richtung/Bodenposition. Zusätzlich geprüft: Grundangriff bei Press, cooldowngebundene Wiederholung, Halten ab bestehendem Cooldown, keine manuelle Grundangriffsgeste, kein Zusatzschuss beim Loslassen, Bewegung parallel, Unterbrechung durch Stun/Verlassen der Taste/verlorenen Touch, anschließendes Skill-Zielen sowie Maus-Press/Hold/Release. Syntaxprüfung der vorhandenen lokalen C#-Quellen: keine Parse-Fehler.
 
 Diese Fixture-Läufe sind **kein Unity-Build**. In dieser Umgebung stehen weder Unity Editor noch Android-Gerät zur Verfügung. Shader-Import, reale VFX/Animation/Audio, Framezeit, tatsächliche Android-Multitouch-Ereignisse und mobile Ergonomie sind noch nicht visuell oder am Gerät verifiziert.
 
 Für die Abnahme in Unity 6000.6.1f1 und auf Android:
 
-1. Je Held Grundangriff und Q/W/E/Ult halten, ziehen, loslassen; Vorschau muss sofort verschwinden und bestehende VFX/Sounds müssen passen.
+1. Je Held Standardangriff antippen und halten: sofortiger Start, Wiederholung nur nach Cooldown, kein Kegel, kein Steuern durch Ziehen und kein Zusatzschuss bei Release. Q/W/E/Ult halten, ziehen, loslassen; die Skill-Vorschau muss sofort verschwinden. Kegelfläche und Outlines auf geringere Deckkraft prüfen; bestehende VFX/Sounds müssen passen.
 2. Seitlich vor und nach Projektilrelease ausweichen; im sichtbaren Zielkegel, aber außerhalb der schmalen Geschosslinie stehen; Nahkampfkegelgrenzen und Reichweiten prüfen.
 3. AOE nach links/rechts, bis Maximalreichweite und auf eigene Position setzen; Gegner verlassen vor Windup-Ende die Fläche. Nerok-Wirbel betreten/verlassen und sechs Ticks kontrollieren.
 4. Linken Joystick durchgehend bewegen, während der rechte Finger zielt, abbricht und schnell wechselnde Skills nutzt. Abbruch darf weder Angriff noch Cooldown auslösen.

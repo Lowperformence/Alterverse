@@ -146,7 +146,7 @@ class Regression
   Check(aim.Begin(1,new Vector2(700,100)),"recovered after cancel");a.AddComponent<HeroCombatStatus>().Stun(.1f);Call(aim,"LateUpdate");Check(!aim.Active,"stun clears held gesture");a.GetComponent<HeroCombatStatus>().Clear();
   Check(aim.Begin(1,new Vector2(700,100)),"begin after stun");Time.timeScale=0;Call(aim,"LateUpdate");Check(!aim.Active,"pause clears gesture");Time.timeScale=1;
   Check(aim.Begin(1,new Vector2(700,100)),"tap begins");Check(aim.Release(),"short tap can cast empty ground");
-  Reset();a=Hero(HeroId.Veyr,0,Vector3.zero);aim=ManualAiming.For(a);Check(aim.Begin(4,new Vector2(800,100)),"basic has same gesture");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"basic waits for release");Check(aim.Release(),"basic tap can miss");
+  Reset();a=Hero(HeroId.Veyr,0,Vector3.zero);aim=ManualAiming.For(a);Check(!aim.Begin(4,new Vector2(800,100)),"basic cannot enter skill aiming");Check(!aim.Active,"basic has no preview pose");Check(a.GetComponent<BasicAttack>().TryAttack(),"basic tap can miss");
   foreach(var dimensions in new[]{new Vector2(960,540),new Vector2(2340,1080),new Vector2(540,960)})
   {
    var l=new CombatHudLayout(new Rect(20,30,dimensions.x,dimensions.y));var button=l.Action(0);
@@ -166,6 +166,53 @@ class Regression
   Check(a.GetComponent<HeroMotor>().HasMoveInput,"left thumb still moves during aim");Check(a.GetComponent<ManualAiming>().Active,"drag outside attack button stays captured");
   Touch.activeTouches[1]=new Touch{touchId=2,phase=TouchPhase.Ended,screenPosition=button+new Vector2(96,0)};Call(hud,"Update");
   Check(a.GetComponent<PlayerHeroAbilities>().QRemaining>0,"HUD casts on release");Check(!a.GetComponent<ManualAiming>().Active,"HUD clears gesture");Check(a.GetComponent<HeroMotor>().HasMoveInput,"release preserves left thumb");
+ }
+ static Vector2 ButtonScreen(int slot)
+ {
+  var layout=new CombatHudLayout(Screen.safeArea);var button=layout.Action(slot);
+  return new Vector2(layout.Safe.x+button.center.x*layout.Scale,layout.Safe.yMax-button.center.y*layout.Scale);
+ }
+ static PrototypeHUD HudFor(GameObject a)
+ {
+  var hud=new GameObject("HUD").AddComponent<PrototypeHUD>();hud.Initialize(a.GetComponent<Health>(),null,null);return hud;
+ }
+ static void BasicHud()
+ {
+  foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))
+  {
+   Reset();var a=Hero(hero,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Vector3.forward);
+   var hud=HudFor(a);var basic=a.GetComponent<BasicAttack>();float interval=basic.AttackCooldown;
+   var point=ButtonScreen(4);
+   Touch.activeTouches.Add(new Touch{touchId=1,phase=TouchPhase.Began,screenPosition=new Vector2(140,140)});
+   Touch.activeTouches.Add(new Touch{touchId=2,phase=TouchPhase.Began,screenPosition=point});Call(hud,"Update");
+   Check(basic.RemainingCooldown>0,hero+" basic fires on press");Check(!a.GetComponent<ManualAiming>().Active,hero+" basic never opens preview");
+   float pressedCooldown=basic.RemainingCooldown;
+   Touch.activeTouches[0]=new Touch{touchId=1,phase=TouchPhase.Moved,screenPosition=new Vector2(195,140)};
+   Touch.activeTouches[1]=new Touch{touchId=2,phase=TouchPhase.Stationary,screenPosition=point};Call(hud,"Update");
+   Near(basic.RemainingCooldown,pressedCooldown,hero+" hold respects cooldown");Check(a.GetComponent<HeroMotor>().HasMoveInput,hero+" movement continues during basic hold");
+   Run(interval+.02f);Call(hud,"Update");Check(basic.RemainingCooldown>0,hero+" held basic repeats when ready");
+   // Release exactly when another attack could fire: it must stop, not add a third shot.
+   Run(interval+.02f);Touch.activeTouches[1]=new Touch{touchId=2,phase=TouchPhase.Ended,screenPosition=point};Call(hud,"Update");
+   Near(basic.RemainingCooldown,0,hero+" release never fires an extra attack");Check(a.GetComponent<HeroMotor>().HasMoveInput,hero+" release keeps movement");
+   float damage=a.GetComponent<HeroCombatProfile>().Attack*(hero==HeroId.Rook?1.05f:1f);
+   Run(.4f);Near(1000-Total(enemy),damage*2,hero+" press plus hold delivers exactly two geometric hits");
+  }
+  Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);var controller=HudFor(actor);var attack=actor.GetComponent<BasicAttack>();var buttonPoint=ButtonScreen(4);
+  attack.TryAttack();float initial=attack.RemainingCooldown;
+  Touch.activeTouches.Add(new Touch{touchId=7,phase=TouchPhase.Began,screenPosition=buttonPoint});Call(controller,"Update");Near(attack.RemainingCooldown,initial,"press during cooldown does not duplicate cast");
+  Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Stationary,screenPosition=buttonPoint};Run(attack.AttackCooldown+.02f);Call(controller,"Update");Check(attack.RemainingCooldown>0,"hold started on cooldown resumes when ready");
+  Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Moved,screenPosition=buttonPoint+new Vector2(-150,0)};Run(attack.AttackCooldown+.02f);Call(controller,"Update");
+  Near(attack.RemainingCooldown,0,"leaving basic button stops repeats");Check(!actor.GetComponent<ManualAiming>().Active,"dragging basic does not create aim");Near(Vector3.Angle(actor.transform.forward,Vector3.forward),0,"basic drag cannot steer attack");
+  Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Moved,screenPosition=buttonPoint};Call(controller,"Update");Check(attack.RemainingCooldown>0,"returning to held button resumes");
+  Touch.activeTouches.Clear();Run(attack.AttackCooldown+.02f);Call(controller,"Update");Near(attack.RemainingCooldown,0,"lost pointer stops repeats");
+  Touch.activeTouches.Add(new Touch{touchId=8,phase=TouchPhase.Began,screenPosition=ButtonScreen(0)});Call(controller,"Update");Check(actor.GetComponent<ManualAiming>().Active,"skill still begins aim after basic release");
+  Reset();actor=Hero(HeroId.Veyr,0,Vector3.zero);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();buttonPoint=ButtonScreen(4);
+  Touch.activeTouches.Add(new Touch{touchId=7,phase=TouchPhase.Began,screenPosition=buttonPoint});Call(controller,"Update");
+  Touch.activeTouches[0]=new Touch{touchId=7,phase=TouchPhase.Stationary,screenPosition=buttonPoint};actor.AddComponent<HeroCombatStatus>().Stun(.1f);Call(controller,"Update");Run(attack.AttackCooldown+.2f);Call(controller,"Update");Near(attack.RemainingCooldown,0,"stun interrupts held basic until a new press");
+  Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);controller=HudFor(actor);attack=actor.GetComponent<BasicAttack>();Mouse.current=new Mouse();Mouse.current.position.Value=ButtonScreen(4);Mouse.current.leftButton.isPressed=true;Mouse.current.leftButton.wasPressedThisFrame=true;Call(controller,"Update");
+  Check(attack.RemainingCooldown>0,"mouse basic fires on press");Check(!actor.GetComponent<ManualAiming>().Active,"mouse basic has no aim preview");
+  Mouse.current.leftButton.wasPressedThisFrame=false;Run(attack.AttackCooldown+.02f);Call(controller,"Update");Check(attack.RemainingCooldown>0,"mouse hold repeats");
+  Run(attack.AttackCooldown+.02f);Mouse.current.leftButton.isPressed=false;Mouse.current.leftButton.wasReleasedThisFrame=true;Call(controller,"Update");Near(attack.RemainingCooldown,0,"mouse release cannot double cast");
  }
  static void Network()
  {
@@ -230,7 +277,7 @@ class Regression
  }
  static void Main()
  {
-  Geometry();AttackCases();Kits();Gestures();TouchHud();Network();InterruptionsAndCapacity();
+  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();Network();InterruptionsAndCapacity();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   Console.WriteLine("PASS "+checks+" assertions: geometry, all 8 basics / 32 skills, dodges, AOE, gestures, multitouch, network direction/point, interrupts.");

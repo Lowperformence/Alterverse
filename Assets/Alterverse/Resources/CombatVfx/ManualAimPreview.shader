@@ -6,6 +6,7 @@ Shader "DimensionsFront/ManualAimPreview"
         _Mode ("Circle / cone / line", Float) = 0
         _ConeCos ("Cone half angle cosine", Float) = .707
         _Width ("Normalized line width", Float) = .02
+        _Opacity ("Preview opacity multiplier", Range(0,1)) = 1
     }
     SubShader
     {
@@ -24,7 +25,7 @@ Shader "DimensionsFront/ManualAimPreview"
             struct Varyings { float4 positionCS : SV_POSITION; float2 uv : TEXCOORD0; };
             CBUFFER_START(UnityPerMaterial)
                 half4 _Color;
-                float _Mode, _ConeCos, _Width;
+                float _Mode, _ConeCos, _Width, _Opacity;
             CBUFFER_END
             Varyings vert(Attributes v)
             { Varyings o; o.positionCS = TransformObjectToHClip(v.positionOS.xyz); o.uv = v.uv; return o; }
@@ -49,7 +50,7 @@ Shader "DimensionsFront/ManualAimPreview"
                     edge = max(edge,1-smoothstep(angularAA,angularAA*3,abs(alignment-_ConeCos)));
                 }
                 half4 c = _Color;
-                c.a = mask * lerp(c.a,min(1,c.a+ .55),edge);
+                c.a = mask * lerp(c.a,min(1,c.a+ .55),edge) * saturate(_Opacity);
                 return c;
             }
             ENDHLSL

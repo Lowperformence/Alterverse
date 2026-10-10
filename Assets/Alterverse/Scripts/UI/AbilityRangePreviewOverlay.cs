@@ -12,12 +12,13 @@ namespace Alterverse.UI
         private readonly GameObject[] surfaces = new GameObject[2];
         private readonly Material[] materials = new Material[2];
         private static readonly int ColorId = Shader.PropertyToID("_Color"), ModeId = Shader.PropertyToID("_Mode"),
-            ConeId = Shader.PropertyToID("_ConeCos"), WidthId = Shader.PropertyToID("_Width");
+            ConeId = Shader.PropertyToID("_ConeCos"), WidthId = Shader.PropertyToID("_Width"),
+            OpacityId = Shader.PropertyToID("_Opacity");
         private void LateUpdate()
         {
             shown = 0;
             aiming = aiming != null ? aiming : GetComponent<ManualAiming>();
-            if (aiming == null || !aiming.Active || aiming.Cancelled) { Hide(); return; }
+            if (aiming == null || !aiming.Active || aiming.Slot > 3 || aiming.Cancelled) { Hide(); return; }
             AimSpec spec = aiming.Spec; AimPose pose = aiming.Pose;
             Vector3 origin = transform.position;
             Color color = AimingSettings.Current.previewColor;
@@ -61,6 +62,8 @@ namespace Alterverse.UI
             materials[index].SetColor(ColorId, color); materials[index].SetFloat(ModeId, mode);
             materials[index].SetFloat(ConeId, Mathf.Cos(spec.coneAngle * .5f * Mathf.Deg2Rad));
             materials[index].SetFloat(WidthId, spec.projectileWidth / (range * 2f));
+            bool directional = mode == 1 || mode == 2 && spec.aimType != AimType.Dash;
+            materials[index].SetFloat(OpacityId, directional ? Mathf.Clamp01(AimingSettings.Current.conePreviewOpacity) : 1f);
             shown |= 1 << index;
             if (!surfaces[index].activeSelf) surfaces[index].SetActive(true);
         }
