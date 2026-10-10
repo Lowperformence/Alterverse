@@ -72,7 +72,7 @@ namespace Alterverse.Audio
             gain*=CombatSoundPalette.For(identity.Hero).Gain;
             // Traveler Q = Temporal Beam (+20%); E = Chrono Snare (-30%).
             if(identity.Hero==HeroId.Traveler)gain*=action==1?1.20f:action==3?.70f:1f;
-            if(hero==(int)HeroId.Nerok&&ultimate)gain*=.80f;
+            if(hero==(int)HeroId.Nerok&&ultimate)gain*=.60f;
             // Other heroes start 30% quieter; distance attenuation is applied afterwards.
             float attenuation=local?1f:.70f;
             Ray ray=camera.ViewportPointToRay(new Vector3(.5f,.5f,0));
