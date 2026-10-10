@@ -13,6 +13,9 @@ namespace Alterverse.UI
         private const int Width = 2048;
         private const int Height = 1152;
         private const float PixelsPerUnit = 144f;
+        // Lift shadow and midtone detail on small displays without doing per-pixel
+        // gamma calculations each time a hero's cached background is generated.
+        private static readonly byte[] DisplayCurve = BuildDisplayCurve();
 
         private readonly Texture2D[] textures = new Texture2D[HeroIdentity.HeroCount];
         private readonly Sprite[] sprites = new Sprite[HeroIdentity.HeroCount];
@@ -36,7 +39,8 @@ namespace Alterverse.UI
             WorldStyle style = StyleFor(hero);
             var pixels = new Color32[Width * Height];
 
-            // Background nebula. Kept deliberately dark in the centre so the hero silhouette stays readable.
+            // Broad coloured nebulae survive the downscale to a phone-sized hero card.
+            // Keep the centre calmer through reduced detail rather than crushing it to black.
             for (int y = 0; y < Height; y++)
             for (int x = 0; x < Width; x++)
             {
@@ -51,38 +55,39 @@ namespace Alterverse.UI
                 float filament = Mathf.Pow(Mathf.Clamp01(1f - Mathf.Abs(n2 - .55f) * 9f),3f)
                     * Mathf.Clamp01(n3 * 1.9f - .65f);
                 Color c = Color.Lerp(style.Bottom, style.Top, Mathf.SmoothStep(0, 1, v));
-                c += style.Haze * cloud * (.16f + n3 * .20f);
-                c += style.SecondaryHaze * filament * .20f;
-                c += style.Rim * Mathf.Clamp01(n4 - .66f) * cloud * .045f;
+                c = c * 1.65f + style.SecondaryHaze * .075f;
+                c += style.Haze * cloud * (.30f + n3 * .34f);
+                c += style.SecondaryHaze * filament * .34f;
+                c += style.Rim * Mathf.Clamp01(n4 - .66f) * cloud * .10f;
                 float edgeShade = Mathf.SmoothStep(0f,1f,Mathf.Min(Mathf.Min(u,1f-u),Mathf.Min(v,1f-v))*3.0f);
-                c *= .73f + edgeShade * .27f;
+                c *= .88f + edgeShade * .12f;
 
                 float heroClear = Mathf.Exp(-((u - .50f) * (u - .50f) * 13f + (v - .53f) * (v - .53f) * 8f));
-                c *= 1f - heroClear * .22f;
+                c *= 1f - heroClear * .08f;
                 c.a = 1f;
                 pixels[y * Width + x] = Clamp(c);
             }
 
             // Deterministic stars. System.Random keeps this cosmetic generator isolated from Unity gameplay RNG.
             var random = new System.Random(5107 + style.Seed * 97);
-            int starCount = 300 + (style.Seed % 71);
+            int starCount = 420 + (style.Seed % 71);
             for (int i = 0; i < starCount; i++)
             {
-                int x = random.Next(3, Width - 3);
-                int y = random.Next(4, Height - 4);
-                float brightness = .34f + (float)random.NextDouble() * .50f;
+                int x = random.Next(5, Width - 5);
+                int y = random.Next(5, Height - 5);
+                float brightness = .50f + (float)random.NextDouble() * .45f;
                 Color star = Color.Lerp(new Color(.66f, .78f, 1f), style.Rim, .18f) * brightness;
                 star.a = 1f;
                 pixels[y * Width + x] = Clamp(star);
-                if (i % 9 == 0)
+                if (i % 5 == 0)
                 {
-                    for(int oy=-2;oy<=2;oy++)
-                    for(int ox=-2;ox<=2;ox++)
+                    for(int oy=-4;oy<=4;oy++)
+                    for(int ox=-4;ox<=4;ox++)
                     {
                         if(ox==0&&oy==0)continue;
                         float falloff=1f/(1f+ox*ox+oy*oy);
                         int at=(y+oy)*Width+x+ox;
-                        Color halo=Color.Lerp(pixels[at],star,falloff*.45f);
+                        Color halo=Color.Lerp(pixels[at],star,falloff*.70f);
                         halo.a=1f;
                         pixels[at]=Clamp(halo);
                     }
@@ -112,7 +117,8 @@ namespace Alterverse.UI
                     {
                         float ringStrength = Mathf.Pow(1f - ringDistance / .11f,1.5f);
                         float grain = Mathf.PerlinNoise(u * 93f + style.Seed, v * 81f);
-                        c += style.Rim * ringStrength * (.11f + grain * .25f);
+                        float ringBands = .72f + .28f * Mathf.Sin(ringDistance * 240f + grain * 3f);
+                        c += style.Rim * ringStrength * ringBands * (.22f + grain * .40f);
                     }
                 }
 
@@ -126,13 +132,15 @@ namespace Alterverse.UI
                     float ridges = Mathf.PerlinNoise(u * 64f + style.Seed * .37f, v * 61f + 8f);
                     float detail = Mathf.PerlinNoise(u * 127f + 13f, v * 119f + style.Seed * .43f);
                     float plate = Mathf.Clamp01((terrain * .57f + ridges * .30f + detail * .13f - .36f) * 2.3f);
-                    float mix = Mathf.Clamp01(.12f + bands * style.Bands * .34f + plate * .58f);
+                    float mix = Mathf.Clamp01(.10f + bands * style.Bands * .32f + plate * .65f);
                     Color surface = Color.Lerp(style.PlanetB, style.PlanetA, mix);
-                    surface *= .30f + light * .81f;
+                    surface *= (.48f + light * .78f) * (1f + (ridges - .5f) * .40f + (detail - .5f) * .15f);
                     float fissure = Mathf.Pow(Mathf.Clamp01(1f-Mathf.Abs(ridges-.53f)*11f),3f)
                         * Mathf.Clamp01(terrain-.49f);
-                    surface += style.Haze * fissure * style.Storm * .26f;
-                    surface += style.Rim * Mathf.Clamp01(detail-.70f) * .035f;
+                    surface += style.Haze * fissure * style.Storm * .52f;
+                    surface += style.Rim * Mathf.Clamp01(detail-.70f) * .09f;
+                    float stormVeil = Mathf.Clamp01((terrain - ridges * .38f - .33f) * 3f) * style.Storm;
+                    surface = Color.Lerp(surface, style.Rim, stormVeil * .12f);
                     surface.a = 1f;
                     c = surface;
                 }
@@ -147,14 +155,18 @@ namespace Alterverse.UI
                 if (r >= 1f && r < 1.22f)
                 {
                     float atmosphere = 1f - (r - 1f) / .22f;
-                    c += style.Rim * atmosphere * atmosphere * .055f;
+                    c += style.Rim * atmosphere * atmosphere * .11f;
                 }
 
                 // Keep the central character area a little calmer even when a large planet crosses it.
                 float heroClear = Mathf.Exp(-((u - .50f) * (u - .50f) * 16f + (v - .52f) * (v - .52f) * 10f));
-                c *= 1f - heroClear * .12f;
+                c *= 1f - heroClear * .05f;
                 c.a = 1f;
-                pixels[p] = Clamp(c);
+                Color32 display = Clamp(c);
+                display.r = DisplayCurve[display.r];
+                display.g = DisplayCurve[display.g];
+                display.b = DisplayCurve[display.b];
+                pixels[p] = display;
             }
 
             var texture = new Texture2D(Width, Height, TextureFormat.RGBA32, false)
@@ -221,6 +233,14 @@ namespace Alterverse.UI
                         new Color(.12f, .15f, .20f), new Color(.025f, .025f, .045f),
                         new Color(.83f, .52f, 1f), new Vector2(.78f, .58f), .35f, 89, true, .08f, .72f);
             }
+        }
+
+        private static byte[] BuildDisplayCurve()
+        {
+            var curve = new byte[256];
+            for (int i = 0; i < curve.Length; i++)
+                curve[i] = (byte)Mathf.RoundToInt(Mathf.Clamp01(Mathf.Pow(i / 255f, .82f) * 1.12f) * 255f);
+            return curve;
         }
 
         private static Color32 Clamp(Color c)
