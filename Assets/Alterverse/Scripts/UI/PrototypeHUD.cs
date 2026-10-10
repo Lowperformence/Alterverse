@@ -205,7 +205,8 @@ namespace Alterverse.UI
         private void BeginPress(int slot)
         {
             pressedSlot=slot;combatInside=true;
-            inspectedSlot=slot<4&&Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp?slot:-1;
+            // Track the held skill in every mode; only DrawHint applies tutorial restrictions.
+            inspectedSlot=slot<4?slot:-1;
             pressStarted=Time.unscaledTime;
             if(slot==4)attack?.TryAttack();
         }
@@ -350,7 +351,6 @@ namespace Alterverse.UI
 
         private void DrawPreview()
         {
-            if(!Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp)return;
             // The smooth ground overlay owns range presentation; retain the legacy fallback only
             // for scenes without that component, avoiding two superimposed range outlines.
             AbilityRangePreviewOverlay overlay = health != null ? health.GetComponent<AbilityRangePreviewOverlay>() : null;
