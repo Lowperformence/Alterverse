@@ -284,9 +284,9 @@ namespace Alterverse.UI
             return rect;
         }
 
-        public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true)
+        public bool Action(Rect rect, string text, bool primary = false, bool selected = false, bool enabled = true, bool locked = false)
         {
-
+            enabled = enabled && !locked;
             // Buttons are menu actions, not paragraphs: normalize any legacy hard line break.
             text = (text ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
             rect = FitActionRect(rect, text);
@@ -321,12 +321,13 @@ namespace Alterverse.UI
             int originalFontSize = Button.fontSize;
             measuredText.text = text;
             float labelWidth = Button.CalcSize(measuredText).x;
-            float availableTextWidth = Mathf.Max(1f, rect.width - 14f);
+            Rect textRect = locked ? new Rect(rect.x + 36, rect.y, rect.width - 42, rect.height) : rect;
+            float availableTextWidth = Mathf.Max(1f, textRect.width - 14f);
             if (labelWidth > availableTextWidth)
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
             GUI.color *= !enabled ? Muted : primary ? new Color(1f,.91f,.75f) : Text;
-            GUI.Label(rect, text, Button);
+            GUI.Label(textRect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;
 
@@ -338,8 +339,17 @@ namespace Alterverse.UI
             }
 
             GUI.enabled = previous;
+            if (locked) DrawLock(new Rect(rect.x + 12, rect.center.y - 12, 24, 24));
             if (clicked) Alterverse.Audio.UiSoundRouter.Confirm();
             return clicked;
+        }
+
+        private static void DrawLock(Rect rect)
+        {
+            // Draw the padlock as geometry so every mobile font can display it.
+            RoundedOutline(new Rect(rect.x + 5, rect.y, 14, 17), Muted);
+            RoundedFill(new Rect(rect.x + 1, rect.y + 10, 22, 14), Muted);
+            if (CanPaintRounded()) Fill(new Rect(rect.x + 11, rect.y + 14, 2, 6), Surface);
         }
 
         public bool Navigation(Rect rect,string text,int icon,bool primary=false,bool selected=false)
@@ -372,5 +382,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-

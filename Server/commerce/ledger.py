@@ -182,6 +182,7 @@ class Ledger:
         """
         self.validate_operation(operation_id)
         if not isinstance(sku,str) or sku not in ITEMS: raise ValueError('Unknown item')
+        if ITEMS[sku].get('available', True) is not True: raise ValueError('Item is not released')
         if type(expected_revision) is not int or expected_revision < 0: raise ValueError('Invalid profile revision')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -229,6 +230,7 @@ class Ledger:
 
     def buy(self, account, sku):
         if sku not in COSMETICS or sku in CONSUMABLES: raise ValueError('Unknown cosmetic')
+        if ITEMS[sku].get('available', True) is not True: raise ValueError('Item is not released')
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             self.ensure(db, account)
@@ -239,6 +241,3 @@ class Ledger:
             if row.rowcount != 1: raise ValueError('Insufficient shards')
             db.execute('INSERT INTO cosmetic VALUES (?,?)', (account, sku))
             return self.snapshot(db, account)
-
-
-

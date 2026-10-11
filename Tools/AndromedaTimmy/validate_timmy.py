@@ -140,6 +140,21 @@ def check(label):
                 material_points.setdefault(name,[]).append(anatomy.matrix_world@v.co)
     def points_for(prefix):return [p for name,ps in material_points.items() if name.startswith(prefix) for p in ps]
     eyes=points_for('Timmy emerald eyes');nose_points=points_for('Timmy warm feline nose')
+    head_fur=points_for('Timmy orange tabby fur')
+    assert head_fur and max(p.z for p in head_fur)<1.716,(label,'no ears protrude above the enclosed cat head')
+    stripe_materials=[(i,m) for i,m in enumerate(anatomy.data.materials) if m.name.startswith('Timmy blue back stripe energy')]
+    assert len(stripe_materials)==1,(label,'dedicated blue back stripe material')
+    stripe_index,stripe_material=stripe_materials[0]
+    stripe_vertices={i for f in anatomy.data.polygons if f.material_index==stripe_index for i in f.vertices}
+    stripe_points=[anatomy.matrix_world@anatomy.data.vertices[i].co for i in stripe_vertices]
+    assert stripe_points and max(abs(p.x) for p in stripe_points)<.015 and min(p.y for p in stripe_points)>.265,(label,'stripe exposed on back of backpack')
+    assert max(p.z for p in stripe_points)-min(p.z for p in stripe_points)>.16,(label,'vertical blue back stripe')
+    for i in stripe_vertices:
+        v=anatomy.data.vertices[i]
+        assert len(v.groups)==1 and groups[v.groups[0].group]=='Chest',(label,'back stripe follows backpack')
+    stripe_bs=stripe_material.node_tree.nodes.get('Principled BSDF')
+    emission=stripe_bs.inputs.get('Emission Color',stripe_bs.inputs.get('Emission')).default_value
+    assert emission[2]>.3 and emission[2]>emission[0]*3 and stripe_bs.inputs['Emission Strength'].default_value>0,(label,'blue stripe emits light')
     for sign in (-1,1):
         eye_points=[p for p in eyes if sign*p.x>0]
         assert eye_points,(label,'two feline eyes')
@@ -149,7 +164,7 @@ def check(label):
     assert nose_points and max(p.z for p in nose_points)<min(p.z for p in eyes),(label,'small nose below the eyes')
     muzzle=[p for p in points_for('Timmy muzzle cream') if abs(p.x)<.09 and 1.46<p.z<1.53]
     assert min(p.y for p in muzzle)<min(p.y for p in eyes)-.025,(label,'projecting feline whisker pads')
-    return {'bones':len(rig.data.bones),'shared_hero_bones':19,'paws':paws,'feline_face_proportions':True,'tail_centered':True,'tail_vertices':len(tail_vertices),'jet_nozzle_sockets':2,'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi),'visor_opacity':round(alpha,2),'visor_head_bound':True,'covered_face_vertices':covered}
+    return {'bones':len(rig.data.bones),'shared_hero_bones':19,'paws':paws,'feline_face_proportions':True,'external_ears':False,'blue_emissive_back_stripe':True,'tail_centered':True,'tail_vertices':len(tail_vertices),'jet_nozzle_sockets':2,'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi),'visor_opacity':round(alpha,2),'visor_head_bound':True,'covered_face_vertices':covered}
 
 bpy.ops.wm.open_mainfile(filepath=str(ART/'AndromedaTimmy.blend'))
 source=check('Blender source')

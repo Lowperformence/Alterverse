@@ -10,8 +10,13 @@ namespace Alterverse.Shop
     {
         public const int TravelerPrice=1500;
         public const int NerokPrice=2200;
+        public const int TimmyPrice=1900;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
         public const string NerokOwnedKey="DF_HeroOwned_Nerok";
+        public const string TimmyOwnedKey="DF_HeroOwned_Timmy";
+        // Listed for preview, but purchase and deployment remain blocked until release.
+        public const bool TimmyReleased=false;
+        public static bool Released(HeroId hero)=>hero!=HeroId.Timmy||TimmyReleased;
 
         // The Traveler is a paid shard unlock in normal play.
         public const bool TravelerFreeTestAccess=false;
@@ -20,24 +25,26 @@ namespace Alterverse.Shop
         {
             HeroId.Traveler=>TravelerPrice,
             HeroId.Nerok=>NerokPrice,
+            HeroId.Timmy=>TimmyPrice,
             _=>0
         };
-        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok;
+        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok||hero==HeroId.Timmy;
         public static string OwnedKey(HeroId hero)=>hero==HeroId.Traveler?TravelerOwnedKey:
-            hero==HeroId.Nerok?NerokOwnedKey:null;
+            hero==HeroId.Nerok?NerokOwnedKey:hero==HeroId.Timmy?TimmyOwnedKey:null;
         public static string PurchaseSku(HeroId hero)=>hero==HeroId.Traveler?"hero_traveler":
-            hero==HeroId.Nerok?"hero_nerok":null;
+            hero==HeroId.Nerok?"hero_nerok":hero==HeroId.Timmy?"hero_timmy":null;
     }
 
     public static class HeroUnlockInventory
     {
         public static bool Owned(HeroId hero)
-            =>!HeroUnlockCatalog.Purchasable(hero)||
+            =>HeroUnlockCatalog.Released(hero)&&(!HeroUnlockCatalog.Purchasable(hero)||
               hero==HeroId.Traveler&&HeroUnlockCatalog.TravelerFreeTestAccess||
-              Alterverse.Profile.AccountProfilePrefs.GetInt(HeroUnlockCatalog.OwnedKey(hero),0)==1;
+              Alterverse.Profile.AccountProfilePrefs.GetInt(HeroUnlockCatalog.OwnedKey(hero),0)==1);
 
         public static HeroUnlockResult Purchase(HeroId hero)
         {
+            if(!HeroUnlockCatalog.Released(hero))return HeroUnlockResult.NotPurchasable;
             ProfileTransaction.Recover();
             if(!HeroUnlockCatalog.Purchasable(hero))return HeroUnlockResult.NotPurchasable;
             if(Owned(hero))return HeroUnlockResult.AlreadyOwned;

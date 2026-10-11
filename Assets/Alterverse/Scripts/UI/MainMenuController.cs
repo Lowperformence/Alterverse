@@ -423,18 +423,19 @@ namespace Alterverse.UI
 
             const float matchButtonGap = 8f;
             float matchButtonWidth = (w - matchButtonGap * 2) / 3f;
+            bool heroReleaseLocked = !HeroUnlockCatalog.Released(deploymentHero);
             bool matchButtonsEnabled = !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
                 !RankedPanel.Visible && RankedService.Instance?.Searching != true && RankedService.Instance?.Busy != true &&
                 (EdgegapOnlineFlow.Instance == null || !EdgegapOnlineFlow.Instance.Busy) &&
                 (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
                 (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
             if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
-                enabled:matchButtonsEnabled)) _ = BeginOnlineMatchmakingAsync();
+                enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOnlineMatchmakingAsync();
             if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
-                enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero)))
+                enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
             if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
-                enabled:matchButtonsEnabled)) _ = BeginOfflineMatchAsync();
+                enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
                 $"SELECTED ARENA  /  {ArenaShopCatalog.For(selectedArena).Name}",theme.Small,true);
@@ -622,12 +623,13 @@ namespace Alterverse.UI
                 if(theme.Action(row,"",selected:chosen))ChangeHero(i);
                 FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
                 theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?3f:5f),row.width-32,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
-                string subtitle=owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
+                string subtitle=!HeroUnlockCatalog.Released(rowHero)?"COMING SOON":owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
                 theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?25f:31f),row.width-32,rowStep<55f?17f:18f),subtitle,theme.Small,true);
             }
 
             HeroId heroId=(HeroId)selectedHero;
             bool heroOwned=HeroUnlockInventory.Owned(heroId);
+            bool heroReleaseLocked=!HeroUnlockCatalog.Released(heroId);
             Color accent=Alterverse.Visuals.StylizedArtDirection.HeroAccent(heroId);
             float portraitX=Left+rosterWidth+16;
             float portraitWidth=Mathf.Clamp(ContentWidth*.275f,292f,356f);
@@ -643,8 +645,8 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(portraitX,616,portraitWidth,24),
                 heroOwned?"EQUIPMENT  /  "+weaponStatus:$"PREMIUM HERO  /  {HeroUnlockCatalog.Price(heroId):N0} SHARDS",theme.Small,true);
 
-            string heroAction=heroOwned?"DEPLOY":"VIEW IN STORE";
-            if(theme.Action(new Rect(portraitX,646,portraitWidth,38),heroAction,true))
+            string heroAction=heroReleaseLocked||heroOwned?"DEPLOY":"VIEW IN STORE";
+            if(theme.Action(new Rect(portraitX,646,portraitWidth,38),heroAction,true,locked:heroReleaseLocked))
             {
                 if(heroOwned)SetPage(Page.Play);
                 else
@@ -759,36 +761,40 @@ namespace Alterverse.UI
         {
             HeroId hero=PremiumShopHero;
             bool owned=HeroUnlockInventory.Owned(hero);
+            bool releaseLocked=!HeroUnlockCatalog.Released(hero);
             int price=HeroUnlockCatalog.Price(hero);
             showcase.Present(hero,true,false,false,null);
 
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;
             theme.Panel(new Rect(Left,270,w,394));
             FrontEndTheme.Fill(new Rect(Left,270,5,394),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
-            float tabWidth=(w-52f)*.5f;
+            float tabWidth=(w-60f)/3f;
             if(theme.Action(new Rect(Left+22,282,tabWidth,32),"THE TRAVELER",selected:hero==HeroId.Traveler))
                 selectedHero=(int)HeroId.Traveler;
             if(theme.Action(new Rect(Left+30+tabWidth,282,tabWidth,32),"NEROK ABYSS",selected:hero==HeroId.Nerok))
                 selectedHero=(int)HeroId.Nerok;
+            if(theme.Action(new Rect(Left+38+tabWidth*2,282,tabWidth,32),"TIMMY",selected:hero==HeroId.Timmy))
+                selectedHero=(int)HeroId.Timmy;
             DrawPortrait(new Rect(Left+22,320,w-44,280));
-            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.Nerok?
+            theme.Center(new Rect(Left+22,614,w-44,34),hero==HeroId.Timmy?"PREMIUM HERO  •  FELINE ASSASSIN":hero==HeroId.Nerok?
                 "PREMIUM HERO  •  TIDAL BRUISER":"PREMIUM HERO  •  TEMPORAL SKIRMISHER");
 
             theme.Label(new Rect(x,276,rw,58),HeroIdentity.NameFor(hero).ToUpperInvariant(),theme.Title);
-            theme.Label(new Rect(x,342,rw,28),hero==HeroId.Nerok?
+            theme.Label(new Rect(x,342,rw,28),hero==HeroId.Timmy?"JETPACK / CLAWS / SINGLE TARGET":hero==HeroId.Nerok?
                 "ANCHOR / PULL / AREA CONTROL":"TIME / LIGHT / MOBILITY  •  NO COMBAT POWER ADVANTAGE",theme.Small,true);
             theme.Label(new Rect(x,384,rw,92),
-                hero==HeroId.Nerok?
+                hero==HeroId.Timmy?
+                "A small cat astronaut with suit claws and a twin-nozzle jetpack. Pounce into range, scratch one enemy and slip away. Coming soon.":hero==HeroId.Nerok?
                 "A shark bruiser with a heavy anchor. Hook enemies, protect yourself and draw opponents into an abyssal vortex.":
                 "A shadow moving between seconds. Bend chronolight, open paired rifts and control space with temporal fields. Premium presentation; balanced by the same combat budget as every hero.",
                 theme.Body,true);
             theme.Label(new Rect(x,494,rw,34),owned?"OWNED":$"{price:N0} SHARDS",theme.Heading);
             FrontEndTheme.Fill(new Rect(x,536,rw,3),Alterverse.Visuals.StylizedArtDirection.HeroAccent(hero));
 
-            string action=owned?"SELECT "+HeroIdentity.NameFor(hero).ToUpperInvariant():
+            string action=releaseLocked?$"UNLOCK {price:N0} SHARDS":owned?"SELECT "+HeroIdentity.NameFor(hero).ToUpperInvariant():
                 PlayerWallet.CanAfford(price)?$"UNLOCK {price:N0} SHARDS":$"NEED {price:N0} SHARDS";
             bool enabled=owned||PlayerWallet.CanAfford(price);
-            if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled))
+            if(theme.Action(new Rect(x,558,rw,62),action,true,enabled:enabled,locked:releaseLocked))
             {
                 if(owned)
                 {
@@ -812,6 +818,7 @@ namespace Alterverse.UI
                 }
             }
             theme.Label(new Rect(x,636,rw,38),shopMessage.Length>0?shopMessage:
+                releaseLocked?"COMING SOON  •  PURCHASE AND DEPLOYMENT LOCKED":
                 $"SHARDS {PlayerWallet.Balance:N0}  •  PRICE {price:N0}",theme.Small,true);
         }
 
@@ -1387,6 +1394,11 @@ namespace Alterverse.UI
                 return false;
             }
             HeroId requestedHero=(HeroId)selectedHero;
+            if(!HeroUnlockCatalog.Released(requestedHero))
+            {
+                launchMessage=HeroIdentity.NameFor(requestedHero).ToUpperInvariant()+" COMING SOON";
+                return false;
+            }
             if(!HeroUnlockInventory.Owned(requestedHero))
             {
                 launchMessage=HeroIdentity.NameFor(requestedHero).ToUpperInvariant()+

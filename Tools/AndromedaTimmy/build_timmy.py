@@ -67,6 +67,7 @@ stripe=fur_material('Timmy cinnamon tabby fur',(.13,.040,.012),(.39,.13,.028))
 nose=material('Timmy warm feline nose',(.22,.075,.045))
 nose.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=.65
 cyan=material('Timmy cyan energy',(.04,.68,1),.45,2)
+back_blue=material('Timmy blue back stripe energy',(.025,.22,1),.25,3)
 gold=material('Timmy jet amber energy',(1,.46,.075),.35,1.4)
 eye=material('Timmy emerald eyes',(.08,.49,.21),.25,.25)
 glass=material('Timmy light gray visor glass',VISOR_COLOR)
@@ -214,7 +215,7 @@ def face_mark(name,points,width):
     ob=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(ob)
     return finish(ob,name,stripe,'Head')
 
-# Compact, unmistakably feline astronaut: fur face/ears/tail remain visible.
+# Compact feline astronaut: the helmet encloses the head; no external ears.
 ellipsoid('Suit torso',(0,0,1.11),(.23,.16,.30),fabric,'Chest')
 ellipsoid('Flexible waist',(0,0,.86),(.20,.145,.12),navy,'Hips')
 for i in range(3):oval_band('Waist pressure fold'+str(i),(0,0,.86+i*.028),(.202,.147),.018,fabric,'Hips')
@@ -225,7 +226,7 @@ for i in range(3):box('Chest tactile switch'+str(i),(-.051+i*.052,-.198,1.086),(
 ellipsoid('Oxygen chest valve',(.064,-.202,1.145),(.018,.012,.018),gold,'Chest')
 box('Oxygen backpack',(0,.18,1.15),(.26,.14,.31),white,'Chest')
 box('Backpack center service hatch',(0,.257,1.16),(.12,.013,.20),navy,'Chest')
-box('Backpack power indicator',(0,.267,1.205),(.065,.008,.026),cyan,'Chest')
+box('Blue luminous back stripe',(0,.271,1.16),(.027,.010,.166),back_blue,'Chest')
 for side,k in ((-1,'L'),(1,'R')):
     tube('Chest harness seam'+k,[(side*.147,-.081,1.36),(side*.161,-.132,1.23),(side*.146,-.139,1.04),(side*.126,-.106,.96)],.010,navy,'Chest')
     box('Harness buckle'+k,(side*.145,-.151,1.018),(.042,.019,.042),white,'Chest')
@@ -253,8 +254,6 @@ for side,k in ((-1,'L'),(1,'R')):
     ellipsoid('Helmet hinge'+k,(side*.257,-.024,1.535),(.043,.065,.076),white,'Head')
     ellipsoid('Helmet hinge seal'+k,(side*.29,-.024,1.535),(.014,.046,.053),navy,'Head')
     ellipsoid('Helmet hinge light'+k,(side*.30,-.024,1.535),(.007,.026,.031),cyan,'Head')
-    triangle('Feline ear'+k,[(side*.063,-.053,1.645),(side*.19,-.018,1.79),(side*.193,-.03,1.621)],.065,fur,'Head')
-    triangle('Ear lining'+k,[(side*.095,-.088,1.658),(side*.181,-.053,1.761),(side*.178,-.064,1.647)],.009,cream,'Head')
     feline_eye('Almond eye socket'+k,side,.053,.029,-.219,navy)
     feline_eye('Almond eye'+k,side,.047,.023,-.222,eye)
     ellipsoid('Vertical pupil'+k,(side*.080,-.235,1.581),(.006,.004,.020),navy,'Head')
@@ -263,9 +262,6 @@ for side,k in ((-1,'L'),(1,'R')):
     face_mark('Tabby forehead M'+k,[(side*.075,1.628),(side*.052,1.648),(side*.027,1.612)],.006)
     for i in range(2):
         face_mark('Tabby cheek stripe'+k+str(i),[(side*.147,1.507+i*.024),(side*.126,1.498+i*.024),(side*.104,1.482+i*.024)],.006)
-    for i in range(4):
-        x=side*(.146+i*.005);z=1.752-i*.018
-        triangle('Short ear fur'+k+str(i),[(x,-.043,z),(x+side*.017,-.036,z+.017),(x+side*.014,-.031,z-.007)],.004,fur,'Head')
     ellipsoid('Shoulder'+k,(side*.26,0,1.28),(.12,.115,.13),white,'UpperArm'+k)
     ellipsoid('Upper suit arm'+k,(side*.29,-.01,1.15),(.08,.075,.17),fabric,'UpperArm'+k)
     for i in range(2):oval_band('Arm pressure fold'+k+str(i),(side*.30,-.01,1.08+i*.035),(.077,.073),.012,fabric,'UpperArm'+k)
@@ -362,7 +358,7 @@ bpy.ops.wm.save_as_mainfile(filepath=str(ART/'AndromedaTimmy.blend'),compress=Tr
 bpy.ops.export_scene.fbx(filepath=str(FBX),use_selection=True,object_types={'ARMATURE','MESH','EMPTY'},
     add_leaf_bones=False,bake_anim=False,axis_forward='-Z',axis_up='Y',use_mesh_modifiers=True)
 triangles=sum(sum(len(f.vertices)-2 for f in o.data.polygons) for o in [body,*weapons,visor])
-(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'shared_hero_bones':19,'tail_bones':1,'tail_centered':True,'triangles':triangles,'body_renderers':1,'claw_renderers':2,'visor_renderers':1,'visor_opacity':VISOR_OPACITY,'visor_color':VISOR_COLOR,'surface_texture_resolution':1024,'fur_and_fabric_normal_map':True,'jet_nozzle_sockets':2,'runtime_scale':.70,'original_geometry':True},indent=2)+'\n')
+(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'shared_hero_bones':19,'tail_bones':1,'tail_centered':True,'triangles':triangles,'body_renderers':1,'claw_renderers':2,'visor_renderers':1,'visor_opacity':VISOR_OPACITY,'visor_color':VISOR_COLOR,'surface_texture_resolution':1024,'fur_and_fabric_normal_map':True,'jet_nozzle_sockets':2,'runtime_scale':.70,'external_ears':False,'blue_emissive_back_stripe':True,'original_geometry':True},indent=2)+'\n')
 
 # CPU rendering also works on build machines without a display/GPU.
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=24

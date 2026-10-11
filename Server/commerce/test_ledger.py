@@ -1,13 +1,50 @@
 import tempfile, unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from ledger import Ledger
+from ledger import Ledger, ITEMS
 
 class LedgerTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.ledger=Ledger(Path(self.tmp.name)/'ledger.db')
         self.valid={'purchaseState':0,'obfuscatedExternalAccountId':'account-a','quantity':1,'consumptionState':0}
     def tearDown(self): self.tmp.cleanup()
+    def test_timmy_is_listed_at_1900_but_cannot_spend_or_unlock_before_release(self):
+        self.assertEqual(ITEMS['hero_timmy']['price'],1900)
+        self.assertIs(ITEMS['hero_timmy']['available'],False)
+        self.ledger.fulfill('account-a','dimensions_shards_5500','timmy-token',self.valid)
+        wallet=self.ledger.wallet('account-a')
+        wallet=self.ledger.save_profile('account-a',[{'key':'DF_Shards','kind':0,'number':2500}],wallet['profileRevision'])
+        before=self.ledger.wallet('account-a')
+        for attempt in (
+            lambda:self.ledger.purchase('account-a','hero_timmy','e'*32,before['profileRevision']),
+            lambda:self.ledger.buy('account-a','hero_timmy'),
+        ):
+            with self.assertRaisesRegex(ValueError,'not released'):attempt()
+            self.assertEqual(self.ledger.wallet('account-a'),before)
+        self.assertNotIn('hero_timmy',before['owned'])
+        self.assertNotIn('DF_HeroOwned_Timmy',{e['key'] for e in before['profile']})
+
+    def test_firestore_timmy_gate_rejects_before_accessing_database(self):
+        from firestore_ledger import FirestoreLedger
+        from unittest.mock import Mock
+        ledger=FirestoreLedger.__new__(FirestoreLedger)
+        ledger.client=Mock();ledger.accounts=Mock()
+        for attempt in (
+            lambda:ledger.purchase('account-a','hero_timmy','e'*32,0),
+            lambda:ledger.buy('account-a','hero_timmy'),
+        ):
+            with self.assertRaisesRegex(ValueError,'not released'):attempt()
+        ledger.client.transaction.assert_not_called()
+        ledger.accounts.document.assert_not_called()
+
+    def test_existing_premium_heroes_still_purchase_at_their_original_prices(self):
+        self.ledger.fulfill('account-a','dimensions_shards_5500','hero-token',self.valid)
+        for index,(sku,price,key) in enumerate((('hero_traveler',1500,'DF_HeroOwned_Traveler'),('hero_nerok',2200,'DF_HeroOwned_Nerok'))):
+            before=self.ledger.wallet('account-a')
+            after=self.ledger.purchase('account-a',sku,f'{index+100:032x}',before['profileRevision'])
+            self.assertEqual(after['balance'],before['balance']-price)
+            self.assertEqual({e['key']:e.get('number') for e in after['profile']}[key],1)
+
     def test_new_avatars_keep_price_and_ownership_after_restart(self):
         self.ledger.fulfill('account-a','dimensions_shards_5500','avatar-token',self.valid)
         for avatar_id in range(17,27):
@@ -89,5 +126,3 @@ class LedgerTests(unittest.TestCase):
     def test_unknown_consumed_token_does_not_credit(self):
         with self.assertRaises(ValueError):self.ledger.fulfill('account-a','dimensions_shards_500','token',dict(self.valid,consumptionState=1))
 if __name__=='__main__':unittest.main()
-
-

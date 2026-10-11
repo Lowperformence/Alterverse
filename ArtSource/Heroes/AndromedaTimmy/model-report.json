@@ -4,7 +4,7 @@
   "shared_hero_bones": 19,
   "tail_bones": 1,
   "tail_centered": true,
-  "triangles": 17884,
+  "triangles": 17788,
   "body_renderers": 1,
   "claw_renderers": 2,
   "visor_renderers": 1,
@@ -18,5 +18,7 @@
   "fur_and_fabric_normal_map": true,
   "jet_nozzle_sockets": 2,
   "runtime_scale": 0.7,
-  "original_geometry": true
+  "original_geometry": true,
+  "external_ears": false,
+  "blue_emissive_back_stripe": true
 }

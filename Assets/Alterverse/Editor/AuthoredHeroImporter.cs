@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 16 refreshes Timmy's visor at the requested 50% transparency.
+        // Version 17 refreshes Timmy's enclosed helmet and emissive blue back stripe.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 16;
+        public override uint GetVersion() => 17;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;

@@ -190,6 +190,8 @@ class FirestoreLedger:
         self.validate_operation(operation_id)
         if not isinstance(sku, str) or sku not in ITEMS:
             raise ValueError("Unknown item")
+        if ITEMS[sku].get("available", True) is not True:
+            raise ValueError("Item is not released")
         if type(expected_revision) is not int or expected_revision < 0:
             raise ValueError("Invalid profile revision")
         account_ref = self.accounts.document(account)
@@ -264,6 +266,8 @@ class FirestoreLedger:
     def buy(self, account, sku):
         if sku not in COSMETICS or sku in CONSUMABLES:
             raise ValueError("Unknown cosmetic")
+        if ITEMS[sku].get("available", True) is not True:
+            raise ValueError("Item is not released")
         account_ref = self.accounts.document(account)
         transaction = self.client.transaction()
 
@@ -283,4 +287,3 @@ class FirestoreLedger:
             return data
 
         return self._snapshot(account, buy_once(transaction))
-

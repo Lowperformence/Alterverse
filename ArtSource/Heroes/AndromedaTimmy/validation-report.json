@@ -19,10 +19,12 @@
       }
     },
     "feline_face_proportions": true,
+    "external_ears": false,
+    "blue_emissive_back_stripe": true,
     "tail_centered": true,
     "tail_vertices": 390,
     "jet_nozzle_sockets": 2,
-    "triangles": 17884,
+    "triangles": 17788,
     "renderers": 4,
     "bounds_min": [
       -0.4169999957084656,
@@ -58,10 +60,12 @@
       }
     },
     "feline_face_proportions": true,
+    "external_ears": false,
+    "blue_emissive_back_stripe": true,
     "tail_centered": true,
     "tail_vertices": 390,
     "jet_nozzle_sockets": 2,
-    "triangles": 17884,
+    "triangles": 17788,
     "renderers": 4,
     "bounds_min": [
       -0.4169999957084656,
