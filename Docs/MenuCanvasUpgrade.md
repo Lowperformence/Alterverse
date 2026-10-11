@@ -31,6 +31,13 @@ on stable pages and retired safely when their primitive type changes. Hidden pag
 active emitters and menu shutdown kills its tweens. Runtime-created textures and materials
 are destroyed with the renderer.
 
+The Canvas uses pixel-perfect alignment. Labels round their absolute screen bounds and
+render glyphs at integer screen sizes with an 11-pixel readability floor. The existing
+theme handles fitting; the Canvas no longer performs a second automatic best-fit shrink.
+Rajdhani body/display imports use HintedSmooth for clearer small glyph strokes.
+All three particle velocity axes explicitly use TwoConstants, including a zero Z range,
+preventing Unity's "Particle Velocity curves must all be in the same mode" simulation error.
+
 `Resources/FrontEnd/MenuUiVariants.shadervariants` retains the 20 required gradient/shiny,
 clipping and particle shader combinations in Android players. `MenuCanvasChecks` validates
 the shader assets before builds and is available in **DIMENSIONS FRONT → Checks → Menu
@@ -49,6 +56,8 @@ in the Unity Console without hiding failed imports, missing bones or shader erro
 The isolated C# regressions exercise production aiming/network code, motor/locomotion,
 Health shield rules, fitted shield orientation and Canvas geometry/pooling/lifecycle with
 substitute engine components. They are not a Unity build, rendered preview or Android test.
+The Canvas suite now checks fractional screen positions, the small-text floor, and the
+velocity curve-mode invariant. Its substitutes do not rasterize fonts or run native particles.
 
 The remaining native visual check is to open the project in Unity, run the menu asset check,
 then exercise Home, Play, Heroes, Store, Inventory, Profile, Settings and Co-op at 16:9 and

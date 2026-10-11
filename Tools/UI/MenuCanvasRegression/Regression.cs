@@ -21,6 +21,7 @@ static class Regression
         var renderer=new GameObject("menu").AddComponent<FrontEndCanvas>();
         var canvas=(Canvas)Member(renderer,"canvas");
         var group=(CanvasGroup)Member(renderer,"group");
+        Check(canvas.pixelPerfect,"menu glyphs use pixel-aligned native rendering");
         Check(!canvas.enabled&&!group.blocksRaycasts&&!group.interactable,"rendering surface cannot capture gameplay/menu input");
         Event.current.type=EventType.Layout;
         renderer.Begin(0); renderer.Rounded(Card,Color.white,false,false);renderer.PushClip(Card,true);renderer.Label(Card,"Layout",new GUIStyle());renderer.PopClip();renderer.End();
@@ -39,8 +40,10 @@ static class Regression
             Near(panel.anchoredPosition.x,54+100*scale,"safe-area x");Near(panel.anchoredPosition.y,-25-50*scale,"safe-area y");Near(panel.sizeDelta.x,200*scale,"scaled panel width");
             Near(Node<Image>(renderer,0,"Image").pixelsPerUnitMultiplier,1/scale,"corner radius tracks layout scale");
             var text=Node<Text>(renderer,2,"Label");var textRect=text.rectTransform;
-            Near(textRect.anchoredPosition.x,12*scale,"nested clip x");Near(textRect.anchoredPosition.y,-12*scale,"nested clip y");
+            Near(textRect.anchoredPosition.x,Mathf.RoundToInt(54+112*scale)-(54+100*scale),"nested clip x snaps to an absolute screen pixel");
+            Near(textRect.anchoredPosition.y,-(Mathf.RoundToInt(25+62*scale)-(25+50*scale)),"nested clip y snaps to an absolute screen pixel");
             Check(text.fontSize==Mathf.RoundToInt(24*scale),"native text follows authored font scale");
+            Check(!text.resizeTextForBestFit,"Canvas does not shrink text a second time after theme fitting");
             Check(!text.raycastTarget&&!Node<Image>(renderer,0,"Image").raycastTarget,"visual primitives do not swallow touch");
             Check(Node<Coffee.UISoftMask.SoftMask>(renderer,1,"SoftMask").enabled&&!Node<RectMask2D>(renderer,1,"HardMask").enabled,"rounded cards use addon masking");
             var first=Nodes(renderer)[0];
@@ -50,6 +53,13 @@ static class Regression
                 Check(ReferenceEquals(first,Nodes(renderer)[0])&&Nodes(renderer).Count==3,"stable page reuses graphics");
             }
         }
+
+        GUIUtility.Origin=new Vector2(54.35f,25.45f);GUIUtility.Scale=.73f;
+        renderer.Begin(2);renderer.Label(new Rect(112.6f,62.3f,160.7f,20.5f),"Readable detail",new GUIStyle{fontSize=12});renderer.End();
+        var small=Node<Text>(renderer,0,"Label");
+        Check(small.fontSize==11,"small menu detail retains an 11-screen-pixel readability floor");
+        Near(small.rectTransform.anchoredPosition.x,Mathf.RoundToInt(54.35f+112.6f*.73f),"fractional layout x aligns to a screen pixel");
+        Near(-small.rectTransform.anchoredPosition.y,Mathf.RoundToInt(25.45f+62.3f*.73f),"fractional layout y aligns to a screen pixel");
 
         GUIUtility.Origin=new Vector2(0,0);GUIUtility.Scale=1;
         var art=new Texture2D(400,200,TextureFormat.RGBA32,false);
@@ -72,6 +82,7 @@ static class Regression
         var particles=Node<ParticleSystem>(renderer,0,"Particles");
         Check(particles.isPlaying&&particles.main.useUnscaledTime&&particles.main.maxParticles==40,"bounded particles animate in paused menu");
         Check(!particles.useAutoRandomSeed&&particles.randomSeed==47021,"menu seed is independent of gameplay randomness");
+        Check(particles.velocityOverLifetime.x.mode==particles.velocityOverLifetime.y.mode&&particles.velocityOverLifetime.y.mode==particles.velocityOverLifetime.z.mode,"all velocity axes share Unity's required curve mode");
         Near(particles.transform.localPosition.x,100,"emitter centred x");Near(particles.transform.localPosition.y,-50,"emitter centred y");
         Event.current.type=EventType.MouseUp;renderer.Begin(0);renderer.Pulse(Card);renderer.End();
         Check(((Image)Member(renderer,"feedback")).enabled,"action feedback appears on input pass");

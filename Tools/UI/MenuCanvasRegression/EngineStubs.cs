@@ -116,7 +116,7 @@ namespace UnityEngine
     }
     public enum ScaleMode { StretchToFill,ScaleToFit,ScaleAndCrop }
     public enum RenderMode { ScreenSpaceOverlay }
-    public class Canvas : Behaviour { public RenderMode renderMode; public int sortingOrder; }
+    public class Canvas : Behaviour { public RenderMode renderMode; public int sortingOrder; public bool pixelPerfect; }
     public class CanvasGroup : Behaviour { public float alpha; public bool interactable,blocksRaycasts; }
     public class CanvasRenderer : Component { }
     public enum FontStyle { Normal,Bold }
@@ -155,18 +155,32 @@ namespace UnityEngine
     public enum ParticleSystemSimulationSpace { Local }
     public enum ParticleSystemScalingMode { Local }
     public enum ParticleSystemShapeType { Box }
+    public enum ParticleSystemCurveMode { Constant,Curve,TwoCurves,TwoConstants }
     public class ParticleSystem : Component
     {
-        public struct MinMaxCurve { public float min,max; public MinMaxCurve(float min,float max){this.min=min;this.max=max;} public static implicit operator MinMaxCurve(float value)=>new(value,value); }
+        public struct MinMaxCurve
+        {
+            public float min,max;
+            public ParticleSystemCurveMode mode;
+            public MinMaxCurve(float value){min=max=value;mode=ParticleSystemCurveMode.Constant;}
+            public MinMaxCurve(float min,float max){this.min=min;this.max=max;mode=ParticleSystemCurveMode.TwoConstants;}
+            public static implicit operator MinMaxCurve(float value)=>new(value);
+        }
         public class MainModule { public bool loop,playOnAwake,useUnscaledTime; public int maxParticles; public Color startColor; public MinMaxCurve startSize,startSpeed,startLifetime,startRotation; public ParticleSystemSimulationSpace simulationSpace; public ParticleSystemScalingMode scalingMode; }
         public class ShapeModule { public bool enabled; public Vector3 scale; public ParticleSystemShapeType shapeType; }
         public class EmissionModule { public MinMaxCurve rateOverTime; }
         public class ColorOverLifetimeModule { public bool enabled; public Gradient color; }
-        public class VelocityOverLifetimeModule { public bool enabled; public ParticleSystemSimulationSpace space; public MinMaxCurve x,y; }
+        public class VelocityOverLifetimeModule { public bool enabled; public ParticleSystemSimulationSpace space; public MinMaxCurve x,y,z; }
         public readonly MainModule main=new(); public readonly ShapeModule shape=new(); public readonly EmissionModule emission=new(); public readonly ColorOverLifetimeModule colorOverLifetime=new(); public readonly VelocityOverLifetimeModule velocityOverLifetime=new();
         public bool isPlaying,useAutoRandomSeed; public uint randomSeed;
         public void Stop(bool children,ParticleSystemStopBehavior behavior)=>isPlaying=false;
-        public void Play()=>isPlaying=true;
+        public void Play()
+        {
+            var v=velocityOverLifetime;
+            if(v.enabled&&(v.x.mode!=v.y.mode||v.x.mode!=v.z.mode))
+                throw new InvalidOperationException("Particle Velocity curves must all be in the same mode");
+            isPlaying=true;
+        }
     }
     public class ParticleSystemRenderer : Component { public Material sharedMaterial; }
     public struct GradientColorKey { public GradientColorKey(Color color,float time){ } }

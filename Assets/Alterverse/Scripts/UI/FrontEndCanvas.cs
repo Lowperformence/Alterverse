@@ -58,6 +58,7 @@ namespace Alterverse.UI
             root = surface.GetComponent<RectTransform>();
             canvas = surface.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.pixelPerfect = true;
             canvas.sortingOrder = 100;
             group = surface.GetComponent<CanvasGroup>();
             group.interactable = false;
@@ -255,12 +256,17 @@ namespace Alterverse.UI
         {
             if (!repaint || rect.width <= 0 || rect.height <= 0) return;
             Rect bounds = ScreenRect(rect);
+            float fontScale = bounds.height / rect.height;
+            // Render glyphs at their final integer screen size, on whole pixels. The theme has
+            // already fitted text; a second best-fit pass can shrink thin body text again.
+            bounds = Rect.MinMaxRect(Mathf.RoundToInt(bounds.x), Mathf.RoundToInt(bounds.y),
+                Mathf.RoundToInt(bounds.xMax), Mathf.RoundToInt(bounds.yMax));
             Node node = Take(Kind.Label, bounds);
             Text text = node.Label;
             text.text = value ?? string.Empty;
             text.font = style.font != null ? style.font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = Mathf.Max(1, Mathf.RoundToInt(style.fontSize * bounds.height / rect.height));
-            text.resizeTextForBestFit = true;
+            text.fontSize = Mathf.Max(11, Mathf.RoundToInt(style.fontSize * fontScale));
+            text.resizeTextForBestFit = false;
             text.resizeTextMaxSize = text.fontSize;
             text.resizeTextMinSize = Mathf.Min(text.fontSize, Mathf.Max(1, Mathf.RoundToInt(12 * bounds.height / rect.height)));
             text.fontStyle = style.fontStyle;
@@ -322,10 +328,13 @@ namespace Alterverse.UI
             main.startSpeed = 0;
             node.Particles.transform.localPosition = new Vector3(node.Rect.sizeDelta.x * .5f, -node.Rect.sizeDelta.y * .5f, 0);
             var velocity = node.Particles.velocityOverLifetime;
-            velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.Local;
             velocity.x = new ParticleSystem.MinMaxCurve(-2f * scale, 2f * scale);
             velocity.y = new ParticleSystem.MinMaxCurve(3f * scale, 8f * scale);
+            // Unity requires all three axes to use the same MinMaxCurve mode. The default
+            // Z axis is Constant, whereas the randomized X/Y axes are TwoConstants.
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            velocity.enabled = true;
             var shape = node.Particles.shape;
             shape.scale = new Vector3(node.Rect.sizeDelta.x * .8f, node.Rect.sizeDelta.y * .75f, 0);
             if (!node.Particles.isPlaying) node.Particles.Play();
