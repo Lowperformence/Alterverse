@@ -1,12 +1,12 @@
-# Andromeda Timmy — Season 2 test integration
+# Andromeda Timmy — Season 2 character
 
 Small orange tabby cat in a pearl astronaut suit, with visible ears/tail, cyan suit claws and jet backpack. Assassin: short melee reach, Zhaev's running speed, lower health, one-target interruptible ultimate. Existing eight hero IDs and their combat numbers are preserved; Timmy is appended as ID 8.
 
 ## Availability and trying the hero
 
-Open the project in Unity and let assets import. Enable **DIMENSIONS FRONT → Season 2 → Enable Timmy preview**, then select Andromeda Timmy in the existing Heroes menu and start a practice match. Disable that menu option to return to the normal roster. Run **DIMENSIONS FRONT → Checks → Andromeda Timmy integration (non-destructive)** to validate resources/catalogs in Unity.
+Open the project in Unity and let assets import. Select Andromeda Timmy directly in the existing Heroes menu and start a match. He is included in the regular nine-hero roster in both the editor and player builds; no preview switch is required. Run **DIMENSIONS FRONT → Checks → Andromeda Timmy integration (non-destructive)** to validate resources/catalogs in Unity.
 
-`Season2Content.Released` defaults to `false`: player builds keep the eight-hero Season 1 roster. The editor preview flag persists in EditorPrefs. Set `Released` to `true` only for the Season 2 release after native playtests; rebuild both clients and the authoritative server from the same version. Timmy has no purchasable cosmetics in this test integration.
+Timmy is currently selectable through the existing default free-hero ownership path. A future purchase restriction is intentionally left to the owner; no shard price, purchase SKU or currency debit is introduced. Timmy has no purchasable cosmetics yet. Rebuild clients and the authoritative server from the same version. `HeroIdentity.HeroCount` remains a compile-time constant, as required by the existing audio bank.
 
 ## Kit and balancing starting values
 
@@ -43,7 +43,7 @@ NGO command aiming intent is reused. The host rejects owner-position updates dur
 - Editable modeled icon illustrations: `AndromedaTimmy-icons.blend`. Five distinct 512px PNGs are loaded by AbilityButtonView: 0 Claw Swipe, 1 Stardust, 2 Jet Pounce, 3 Scratch, 4 Claw. The basic paw has no skill sweep; Scratch has an amber capture ring.
 - Studio reference: `AndromedaTimmy-preview.png`. This is a Blender render, not a screenshot of Unity gameplay.
 - Common animation/retarget pipeline is reused. Basic claws alternate the existing slash clip. Scratch uses four contact-synchronous channel pulses; its action lock cannot suppress its own pose. Stun/death still interrupt it.
-- Common pooled VFX are reused: cyan triple claw sweeps, stardust warning/impact circle, amber/cyan jet trail and landing ring, target warning and scratch impacts. No persistent new particles, duplicate attack scheduler, extra targeting loop or new animation controller is required. Existing audio palette supplies cast/impact cues.
+- Common pooled VFX are reused: cyan triple claw sweeps, stardust warning/impact circle, amber/cyan jet trail and landing ring, target warning and scratch impacts. No persistent new particles, duplicate attack scheduler, extra targeting loop or new animation controller is required. Timmy reuses Zhaev's authored fast-cut recordings through the existing audio dispatcher until dedicated recordings are supplied. All previous cue indices remain stable, and network sound events retain Timmy's actor identity.
 
 Rebuild assets from the repository root with Blender 4.5 LTS:
 
@@ -56,8 +56,8 @@ The generator uses original geometry/materials and CPU rendering. It writes mode
 
 ## Verification and release checks
 
-The production combat/input code is compiled against deterministic engine fixtures by `Tools/Aiming/Regression/run.py`, including the existing editor regressions. Timmy tests cover staged roster availability, point sum, Zhaev speed reference, short basic range, single-target Q, multi-target/dodgeable W, reverse E, first-frame hero selection despite a closer soldier, tap/cancel, fixed-end dodge, two-second grip/four ticks, counterattack permission, caster/victim death, stun, disable, forced movement, wall rejection, snapshot semantics and source-owned root cleanup. Gameplay-clock first-damage samples: basic ~167 ms, Q ~175–200 ms, W 300 ms, Scratch ~1.1 s from cast (warning + leap + first tick). Zero dash timing in the fixture measures acceptance, not native traversal.
+The production combat/input code is compiled against deterministic engine fixtures by `Tools/Aiming/Regression/run.py`, including the existing editor regressions. Timmy tests cover regular nine-hero availability, production audio compilation/dispatch and unchanged legacy cue indices, point sum, Zhaev speed reference, short basic range, single-target Q, multi-target/dodgeable W, reverse E, first-frame hero selection despite a closer soldier, tap/cancel, fixed-end dodge, two-second grip/four ticks, counterattack permission, caster/victim death, stun, disable, forced movement, wall rejection, snapshot semantics and source-owned root cleanup. Gameplay-clock first-damage samples: basic ~167 ms, Q ~175–200 ms, W 300 ms, Scratch ~1.1 s from cast (warning + leap + first tick). Zero dash timing in the fixture measures acceptance, not native traversal.
 
-Final deterministic combat/input run: **2,115 assertions passed**. The upper-body/attack-pose regression also passes for the existing eight heroes (**294,488 assertions**). Blender source/FBX round-trip checks and five icon renders were completed. These checks **do not constitute a Unity editor compile, native physics/rendering test, real multiplayer session or Android device test**.
+Final deterministic combat/input/audio run: **2,254 assertions passed**. The upper-body/attack-pose regression also passes for the existing eight heroes (**294,488 assertions**). Blender source/FBX round-trip checks and five icon renders were completed. These checks **do not constitute a Unity editor compile, native physics/rendering test, real multiplayer session or Android device test**.
 
 Before live release, run the Unity checks and playtest: short/reverse flick, moving basic/skills, each collision/dodge, grip for a full two seconds, immunity and all interruptions, repeated combos/passive cooldown, paused match, respawn, walls/arena edge, all icon sizes/aspect ratios, skin/paw contacts through clips, readable ground height, two-peer owner/caster/victim synchronization at latency, and matchups against every Season 1 hero. Rebalance only central Timmy values from those results.

@@ -68,7 +68,7 @@ namespace Alterverse.EditorChecks
                     Step(delivery);
                     Check(target.Current == target.Max, hero + ": death cancels pending damage");
                 }
-                Debug.Log("All 8 hero basics passed: windup, flight, single damage, range escape, stun/death cancellation.");
+                Debug.Log($"All {HeroIdentity.HeroCount} hero basics passed: windup, flight, single damage, range escape, stun/death cancellation.");
             }
             finally
             {

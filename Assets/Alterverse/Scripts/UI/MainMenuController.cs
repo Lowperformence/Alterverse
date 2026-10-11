@@ -848,7 +848,7 @@ namespace Alterverse.UI
             {
                 showcase.Present(hero,true);DrawPortrait(new Rect(Left,270,ContentWidth*.54f,340));
                 theme.Label(new Rect(Left+ContentWidth*.54f+32,282,ContentWidth*.46f-32,120),"ANDROMEDA TIMMY  /  ORIGINAL SUIT CLAWS",theme.Heading,true);
-                theme.Label(new Rect(Left+ContentWidth*.54f+32,412,ContentWidth*.46f-32,100),"Season 2 preview. Weapon cosmetics are not available yet.",theme.Body,true);
+                theme.Label(new Rect(Left+ContentWidth*.54f+32,412,ContentWidth*.46f-32,100),"Weapon cosmetics are not available yet.",theme.Body,true);
                 if(theme.Action(new Rect(Left,614,64,54),"<"))ChangeHero((selectedHero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);
                 if(theme.Action(new Rect(Right-64,614,64,54),">"))ChangeHero((selectedHero+1)%HeroIdentity.HeroCount);
                 return;

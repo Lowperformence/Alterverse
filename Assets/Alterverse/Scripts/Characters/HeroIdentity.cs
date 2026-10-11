@@ -6,7 +6,7 @@ public enum HeroRole{Assassin,Tank,Marksman,Mage,Support,Bruiser,Skirmisher}
 public sealed class HeroIdentity:MonoBehaviour
 {
 public const int CatalogHeroCount=9;
-public static int HeroCount=>Season2Content.TimmyAvailable?CatalogHeroCount:8;
+public const int HeroCount=CatalogHeroCount;
 public const float HeroCollisionRadius=.40f;
 public const float HeroCollisionHeight=2f;
 private Vector3 controllerBaseCenter,capsuleBaseCenter;private bool capturedControllerCenter,capturedCapsuleCenter;

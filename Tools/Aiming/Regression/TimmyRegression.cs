@@ -8,9 +8,24 @@ partial class Regression
  static void TimmyCases()
  {
   Check((int)HeroId.Timmy==8,"Timmy appends a stable hero ID");
-  Season2Content.EditorPreviewEnabled=false;Check(HeroIdentity.HeroCount==8,"Season 1 roster stays at eight");
-  Season2Content.EditorPreviewEnabled=true;Check(HeroIdentity.HeroCount==9,"editor can preview Timmy");
-  Season2Content.EditorPreviewEnabled=false;
+  Check(HeroIdentity.HeroCount==System.Enum.GetValues(typeof(HeroId)).Length,"regular roster contains every catalogued hero");
+  Check(HeroIdentity.HeroCount==9,"Timmy is available without a preview switch");
+  Check(Alterverse.Audio.HeroCombatAudio.CueCount==135,"production audio bank accepts the constant nine-hero roster");
+  for(int h=0;h<8;h++)for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
+  {
+   int expected=h==7?105+action*3+phase:phase==2?70+h*5+action:h*10+action*2+phase;
+   Check(Alterverse.Audio.HeroCombatAudio.Cue(h,action,phase)==expected,"existing audio cue indices are stable");
+  }
+  for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
+   Check(Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Timmy,action,phase)==Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Veyr,action,phase),"Timmy reuses an authored fast-cut cue");
+  Reset();var audioActor=Hero(HeroId.Timmy,0,Vector3.zero);
+  Camera.main=new GameObject("audio camera").AddComponent<Camera>();
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Play(audioActor,0,false,Vector3.zero);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==0,"Timmy basic reaches the real audio dispatcher");
+  Check(Alterverse.Multiplayer.CoopHeroStateSync.LastCombatSoundActor==audioActor,"audio relay retains Timmy's actor identity");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Impact(audioActor,3,Vector3.zero);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==9,"Scratch contact reaches an existing impact cue");
+  Camera.main=null;
   Check(TimmyBalance.TotalPoints==100,"provisional design budget totals 100");
   Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed,"Zhaev speed reference");
   Check(HeroIdentity.BaseHealth(HeroId.Timmy)<HeroIdentity.BaseHealth(HeroId.Veyr),"short-range assassin has lower health");
