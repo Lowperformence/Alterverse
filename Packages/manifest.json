@@ -53,10 +53,7 @@
     "com.unity.purchasing": "5.4.3",
     "com.unity.services.vivox": "16.12.1",
     "com.google.external-dependency-manager": "1.2.188",
-    "com.google.play.games": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1",
-    "com.coffee.ui-effect": "https://github.com/mob-sakai/UIEffect.git?path=Packages/src#5.11.7",
-    "com.coffee.ui-particle": "https://github.com/mob-sakai/ParticleEffectForUGUI.git?path=Packages/src#v4.14.1",
-    "com.coffee.softmask-for-ugui": "https://github.com/mob-sakai/SoftMaskForUGUI.git?path=Packages/src#3.6.5"
+    "com.google.play.games": "https://github.com/playgameservices/play-games-plugin-for-unity.git?path=/Assets/Public/GooglePlayGames/com.google.play.games#v2.2.1"
   },
   "scopedRegistries": [
     {

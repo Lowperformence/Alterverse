@@ -12,7 +12,6 @@ Shader "DimensionsFront/HeroSurface"
   Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
   HLSLINCLUDE
    #include "Assets/Resources/DF_SurfaceLighting.hlsl"
-   #include "Assets/Resources/DF_MaterialFinish.hlsl"
    struct A { float4 position:POSITION; float3 normal:NORMAL; half4 color:COLOR; half2 finish:TEXCOORD1; };
    struct V { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; half4 color:COLOR; half2 finish:TEXCOORD2; float4 shadow:TEXCOORD3; };
    CBUFFER_START(UnityPerMaterial)
@@ -63,7 +62,6 @@ Shader "DimensionsFront/HeroSurface"
     half3 painted=lerp(i.color.rgb,value*_WeaponTint.rgb,saturate(_WeaponTint.a));
     half3 albedo=lerp(painted,_BaseColor.rgb,saturate(_BaseColor.a));
     half metal=saturate(i.finish.x),smoothness=saturate(i.finish.y);
-    DFApplySharedFinish(TransformWorldToObject(i.world),n,metal,i.color.a,n,albedo,smoothness);
     // Filter narrow highlights on small distant hero surfaces to avoid sparkling edges.
     smoothness=saturate(smoothness-min(.20h,length(fwidth(n))*.18h));
     half3 worldLight=DFSurfaceLighting(i.world,n,albedo,metal,smoothness,1,half3(0,0,0),i.position);
@@ -127,5 +125,4 @@ Shader "DimensionsFront/HeroSurface"
         }
  }
 }
-
 

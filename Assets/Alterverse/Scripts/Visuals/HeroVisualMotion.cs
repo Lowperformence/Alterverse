@@ -619,7 +619,7 @@ namespace Alterverse.Visuals
                 // Animate the shared joints so the chest, shoulders, neck and face move together.
                 // Auren braces a rigid shield; chest rocking must not tilt that guard each frame.
                 float idleRock=attacking||Dashing||hero==HeroId.Nyra||hero==HeroId.Kaelon?0f:1f-strideWeight;
-                float rockForward=HeroIdleBreath.Sample(t+(int)hero*.31f)*idleRock;
+                float rockForward=Mathf.Sin(t*1.2f)*idleRock;
                 float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*1.2f+upperGait.chestPitch,
                     turnCounter*.22f+gaitSpineYaw+attackTwist+hitFromSide*hitWeight*7f+rockSide*.7f,
@@ -804,8 +804,7 @@ namespace Alterverse.Visuals
             trail.numCornerVertices=3;
             trail.numCapVertices=3;
             trail.alignment=LineAlignment.View;
-            Shader shader=Resources.Load<Shader>("DF_EnergyTrail");
-            if(shader==null||!shader.isSupported)shader=Shader.Find("Sprites/Default");
+            Shader shader=Shader.Find("Sprites/Default");
             if(shader!=null)
             {
                 if(veyrTrailMaterial==null)veyrTrailMaterial=new Material(shader){name="DF_OwnedVeyrTrail"};

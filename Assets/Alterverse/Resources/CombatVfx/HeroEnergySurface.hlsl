@@ -1,6 +1,5 @@
 #ifndef DF_HERO_ENERGY_SURFACE_INCLUDED
 #define DF_HERO_ENERGY_SURFACE_INCLUDED
-#include "Assets/Alterverse/Resources/CombatVfx/DF_VfxFlow.hlsl"
 
 // Preserve the previous mesh opacity exactly; modern detail changes RGB only.
 half DFEnergyOriginalOpacity(float3 local, half life, half style, half polish)
@@ -47,39 +46,12 @@ half3 DFEnergySurface(float3 local, float2 surfaceUV, half facing, half heat,
     // Cheap base detail remains on battery devices and during sustained overload.
     if (quality < .5h) return detail * quality;
 
-    half2 flow=DFVfxFlow(surfaceUV*.7,life,quality);
-    half billow=saturate(.5h+flow.x*2.0h);
-
     half rim = (1.0h - saturate(facing)) * (1.0h - saturate(facing));
-    if (style > 8.5h)
-    {
-        // Impact heat and jets cool smoothly; no extra flash, particle or clock.
-        half hot=DFEnergyFilament(local.z*1.8-life*.8+flow.y,.14);
-        detail+=hue*(hot*.18h+heat*release*.24h+billow*.06h);
-    }
-    else if (style > 7.5h)
-    {
-        // Portal seams travel along the existing surface, including dark cores.
-        half seam=DFEnergyFilament(local.y*2.1+flow.x*.7-life*.65,.07);
-        detail+=hue*(seam*.24h+rim*.17h)*(.65h+billow*.35h);
-    }
-    else if (style > 6.5h)
-    {
-        // Water ribbons use broken foam crests instead of a plasma grid.
-        half crest=DFEnergyFilament(surfaceUV.y*2.4+flow.y-life*.8,.16);
-        detail+=hue*(crest*.28h+rim*.10h)*(.55h+billow*.45h);
-    }
-    else if (style > 5.5h)
-    {
-        // Continuous beam energy: longitudinal bands retain the exact endpoints.
-        half beam=DFEnergyFilament(local.z*3.1-life*.55+flow.x,.14);
-        detail+=hue*(beam*.25h+heat*.15h+rim*.08h);
-    }
-    else if (style < 1.5h)
+    if (style < 1.5h)
     {
         half body = saturate(1.0h - length(local) * .92h);
         half arcs = DFEnergyFilament(local.y * 3.4 + local.x * local.z * 2.1 - life * .9, .075);
-        detail += hue * (body * body * (.17h+billow*.16h) + rim * .20h + arcs * .14h);
+        detail += hue * (body * body * .27h + rim * .20h + arcs * .14h);
     }
     else if (style < 2.5h)
     {
@@ -87,19 +59,19 @@ half3 DFEnergySurface(float3 local, float2 surfaceUV, half facing, half heat,
         // from plasma. Hexes never alter the authored silhouette or warning bounds.
         half cells = DFEnergyHex(surfaceUV * 4.2);
         half activation = DFEnergyFilament(local.y * .85 - life * 1.35, .16);
-        detail += hue * (cells * (.12h + activation * .20h) + rim * .12h + billow*activation*.035h);
+        detail += hue * (cells * (.16h + activation * .16h) + rim * .12h);
     }
     else if (style > 3.5h)
     {
         // Botanical seed/leaf: central vein and branches, without a shield grid.
         half vein = 1.0h - smoothstep(.018, .018 + max(fwidth(local.x), .015), abs(local.x));
         half branches = DFEnergyFilament(local.z * 4.0 + abs(local.x) * 6.0, .08);
-        detail += hue * (vein * .16h + branches * .11h + billow*.045h);
+        detail += hue * (vein * .16h + branches * .11h);
     }
     else
     {
         // A narrow hot first beat cools into coloured ribbons instead of a white tile.
-        detail += hue * (heat * release * .12h + filament*billow*.08h);
+        detail += hue * heat * release * .12h;
     }
     return detail * quality;
 }

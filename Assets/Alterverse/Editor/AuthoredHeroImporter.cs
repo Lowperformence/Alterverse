@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 18 adds baked secondary finishes and the reflection-preserving glass shader.
+        // Version 19 restores original material imports after removing graphics addons.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 18;
+        public override uint GetVersion() => 19;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -83,7 +83,6 @@ namespace Alterverse.EditorTools
                 if(normal!=null){material.SetTexture("_BumpMap",normal);material.SetFloat("_BumpScale",.5f);material.EnableKeyword("_NORMALMAP");}
                 material.SetFloat("_Metallic",0);material.SetFloat("_Smoothness",.18f);
             }
-            Alterverse.Visuals.GameMaterialFinishes.Apply(material);
         }
         private static void ConfigureTimmyVisor(Material material)
         {
@@ -149,5 +148,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
-
 

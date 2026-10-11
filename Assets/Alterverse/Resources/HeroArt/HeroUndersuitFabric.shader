@@ -21,7 +21,6 @@ Shader "Alterverse/HeroUndersuitFabric"
 
         HLSLINCLUDE
             #include "Assets/Resources/DF_SurfaceLighting.hlsl"
-            #include "Assets/Resources/DF_MaterialFinish.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -134,7 +133,6 @@ float Fabric(float3 p,float3 normal)
                 half weave=Fabric(input.rest,input.restNormal);
                 albedo*=weave;
                 smoothness=min(smoothness,.28h)*lerp(.85h,1.0h,saturate(weave-.5h));
-                DFApplySharedFinish(input.rest,n,0,0,n,albedo,smoothness);
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
                     smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
@@ -183,6 +181,5 @@ float Fabric(float3 p,float3 normal)
 
     Fallback Off
 }
-
 
 

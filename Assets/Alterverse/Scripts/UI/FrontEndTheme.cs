@@ -187,53 +187,9 @@ namespace Alterverse.UI
         {
             Color before = GUI.color;
             GUI.color = color * before;
-            DrawTexture(rect, Texture2D.whiteTexture);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = before;
         }
-
-        internal static Texture2D RoundedTexture(bool outline)
-        {
-            EnsureRoundedStyles();
-            return outline ? roundedOutlineStyle.normal.background : roundedFillStyle.normal.background;
-        }
-
-        public static void DrawTexture(Rect rect, Texture texture, ScaleMode mode = ScaleMode.StretchToFill, bool alphaBlend = true)
-        {
-            if (FrontEndCanvas.Current != null)
-                FrontEndCanvas.Current.Texture(rect, texture, mode, new Rect(0, 0, 1, 1));
-            else GUI.DrawTexture(rect, texture, mode, alphaBlend);
-        }
-
-        public static void DrawTextureWithTexCoords(Rect rect, Texture texture, Rect uv)
-        {
-            if (FrontEndCanvas.Current != null)
-                FrontEndCanvas.Current.Texture(rect, texture, ScaleMode.StretchToFill, uv);
-            else GUI.DrawTextureWithTexCoords(rect, texture, uv);
-        }
-
-        public static void DrawLabel(Rect rect, string text, GUIStyle style)
-        {
-            if (FrontEndCanvas.Current != null) FrontEndCanvas.Current.Label(rect, text, style);
-            else GUI.Label(rect, text, style);
-        }
-
-        public static void BeginGroup(Rect rect)
-        {
-            FrontEndCanvas.Current?.PushClip(rect, true);
-            GUI.BeginGroup(rect);
-        }
-
-        public static void EndGroup() { GUI.EndGroup(); FrontEndCanvas.Current?.PopClip(); }
-        public static Vector2 BeginScrollView(Rect rect, Vector2 scroll, Rect content, bool horizontal, bool vertical)
-        {
-            FrontEndCanvas.Current?.PushClip(rect, false);
-            return GUI.BeginScrollView(rect, scroll, content, horizontal, vertical);
-        }
-        public static void EndScrollView() { GUI.EndScrollView(); FrontEndCanvas.Current?.PopClip(); }
-        public static void PushClip(Rect rect) => FrontEndCanvas.Current?.PushClip(rect, true);
-        public static void PopClip() => FrontEndCanvas.Current?.PopClip();
-        public static void ActionFeedback(Rect rect) => FrontEndCanvas.Current?.Pulse(rect);
-        public static void AmbientParticles(Rect rect, Color tint) => FrontEndCanvas.Current?.Particles(rect, tint);
 
         private static bool CanPaintRounded()
         {
@@ -245,7 +201,6 @@ namespace Alterverse.UI
 
         private static void RoundedFill(Rect rect, Color color)
         {
-            if (FrontEndCanvas.Current != null) { FrontEndCanvas.Current.Rounded(rect, color, false, false); return; }
             if (!CanPaintRounded()) return;
             EnsureRoundedStyles();
             Color before = GUI.color;
@@ -254,9 +209,8 @@ namespace Alterverse.UI
             GUI.color = before;
         }
 
-        private static void RoundedOutline(Rect rect, Color color, bool emphasized = false)
+        private static void RoundedOutline(Rect rect, Color color)
         {
-            if (FrontEndCanvas.Current != null) { FrontEndCanvas.Current.Rounded(rect, color, true, emphasized); return; }
             if (!CanPaintRounded()) return;
             EnsureRoundedStyles();
             Color before = GUI.color;
@@ -267,7 +221,7 @@ namespace Alterverse.UI
 
         public void Frame(Rect rect,bool emphasized=false)
         {
-            RoundedOutline(rect,emphasized?OutlineSelected:OutlineSoft, emphasized);
+            RoundedOutline(rect,emphasized?OutlineSelected:OutlineSoft);
         }
 
         public void Panel(Rect rect)
@@ -318,7 +272,7 @@ namespace Alterverse.UI
             if(style.wordWrap&&rect.width>0&&rect.height>0)
                 while(style.fontSize>12&&style.CalcHeight(measuredText,rect.width)>rect.height+1)
                     style.fontSize--;
-            DrawLabel(rect, text, style);
+            GUI.Label(rect, text, style);
             style.fontSize=size;
             GUI.color = before;
         }
@@ -351,7 +305,7 @@ namespace Alterverse.UI
                     : selected
                         ? OutlineSelected
                         : Outline;
-            RoundedOutline(rect, border, GUI.enabled && (primary || selected));
+            RoundedOutline(rect, border);
 
             // Important/selected controls receive one inner ring rather than the old square side stripe.
             if ((selected || primary) && rect.width > 8 && rect.height > 8)
@@ -373,7 +327,7 @@ namespace Alterverse.UI
                 Button.fontSize = Mathf.Max(12, Mathf.FloorToInt(originalFontSize * availableTextWidth / labelWidth));
 
             GUI.color *= !enabled ? Muted : primary ? new Color(1f,.91f,.75f) : Text;
-            DrawLabel(textRect, text, Button);
+            GUI.Label(textRect, text, Button);
             GUI.color = before;
             Button.fontSize = originalFontSize;
 
@@ -386,7 +340,7 @@ namespace Alterverse.UI
 
             GUI.enabled = previous;
             if (locked) DrawLock(new Rect(rect.x + 12, rect.center.y - 12, 24, 24));
-            if (clicked) { ActionFeedback(rect); Alterverse.Audio.UiSoundRouter.Confirm(); }
+            if (clicked) Alterverse.Audio.UiSoundRouter.Confirm();
             return clicked;
         }
 

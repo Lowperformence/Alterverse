@@ -146,12 +146,7 @@ namespace Alterverse.Visuals
             slot.From=from;slot.To=to;slot.Size=size*(warning||shape==HeroFxShape.TimmyGrenade||motion==HeroFxMotion.RadialPulse||motion==HeroFxMotion.Sustained?1f:1.5f);slot.Color=color;slot.Motion=motion;
             // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
             if(!warning&&shape==HeroFxShape.Bolt&&motion==HeroFxMotion.Hold)slot.Size.z=size.z;
-            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Mist?5f:
-                motion==HeroFxMotion.AttachedJet||shape==HeroFxShape.Spark||shape==HeroFxShape.Streak||shape==HeroFxShape.ContactStar||shape==HeroFxShape.Burst?9f:
-                shape==HeroFxShape.Laser||shape==HeroFxShape.MonsterBeam?6f:
-                shape==HeroFxShape.WaterSpiral||shape==HeroFxShape.WaveCrest?7f:
-                shape==HeroFxShape.Rift||shape==HeroFxShape.RiftCross||shape==HeroFxShape.GravityEight||shape==HeroFxShape.EchoSickle?8f:
-                shape==HeroFxShape.Orb?1f:
+            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Mist?5f:shape==HeroFxShape.Orb?1f:
                 shape==HeroFxShape.Seed||shape==HeroFxShape.Leaf||shape==HeroFxShape.Petals?4f:
                 shape==HeroFxShape.Shield||shape==HeroFxShape.Hex||shape==HeroFxShape.Runes?2f:3f;
             // Quaternion == compares rotation dot products, so an all-zero optional

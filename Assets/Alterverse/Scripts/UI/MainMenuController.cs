@@ -43,7 +43,6 @@ namespace Alterverse.UI
         private bool shopPurchasePending;
         private string profileName, profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
         private FrontEndTheme theme;
-        private FrontEndCanvas menuCanvas;
         private GUIStyle homeLogo,homeSubtitle;
         private MenuCosmicBackdrop backdrop;
         private MenuBackgroundVideo backgroundVideo;
@@ -73,7 +72,6 @@ namespace Alterverse.UI
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
-            menuCanvas = gameObject.AddComponent<FrontEndCanvas>();
             backgroundVideo = gameObject.AddComponent<MenuBackgroundVideo>();
             collection=new CosmeticCollectionPanel();
             changeCollectionHero=ChangeHero;
@@ -142,11 +140,10 @@ namespace Alterverse.UI
             }
             if (focused && visible) { MatchClock.Set(PauseReason.Menu,true);collection?.Invalidate();showcase?.InvalidateLoadout(); }
         }
-        private void OnDisable() { menuCanvas?.SetVisible(false); FlushAudio(); CloseKeyboard(); }
+        private void OnDisable() { FlushAudio(); CloseKeyboard(); }
         private void OnDestroy() { collection?.Dispose();backdrop?.Dispose(); if (instance == this) instance = null; }
         private void Update()
         {
-            menuCanvas?.SetVisible(visible && !suspended && !OnlinePartyOverlay.IsOpen && !RankedPanel.Visible);
             if (!visible || suspended) return;
             LoginStreakProgress.GrantForToday();
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
@@ -193,12 +190,11 @@ namespace Alterverse.UI
         }
         private void OnGUI()
         {
-            if (!visible || suspended || OnlinePartyOverlay.IsOpen || RankedPanel.Visible) return;
+            if (!visible || OnlinePartyOverlay.IsOpen || RankedPanel.Visible) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
                 GUI.color = Color.white; GUI.enabled = !launching;
-                menuCanvas.Begin(launching ? -1 : (int)page);
                 backdrop ??= new MenuCosmicBackdrop();
                 backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),backgroundVideo?.Image);
                 Rect safe = Screen.safeArea;
@@ -214,7 +210,8 @@ namespace Alterverse.UI
                     FrontEndTheme.Fill(new Rect(0,0,menuWidth,MenuHeight),new Color(.008f,.014f,.025f,.52f));
                     DrawNavigation();
                 }
-                GUI.color = Color.white; // Canvas owns the unscaled page transition.
+                float reveal = Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-pageChangedAt)/.16f));
+                GUI.color = new Color(1,1,1,.65f+.35f*reveal);
                 if(shopPurchasePending)
                 {shopMessage=PaidShardCommerce.Instance?.Status??shopMessage;if(!PaidShardCommerce.Spending)shopPurchasePending=false;}
                 switch (page)
@@ -235,7 +232,7 @@ namespace Alterverse.UI
                     default: DrawPlay(); break;
                 }
             }
-            finally { menuCanvas?.End(); GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.enabled = oldEnabled; }
+            finally { GUI.matrix = oldMatrix; GUI.color = oldColor; GUI.enabled = oldEnabled; }
         }
         private void DrawNavigation()
         {
@@ -286,9 +283,7 @@ namespace Alterverse.UI
             float heroX=Left+ContentWidth*.62f;
             // Render the actual selected loadout over the environment, without an opaque card.
             if(showcase?.Image!=null)
-                FrontEndTheme.DrawTexture(new Rect(heroX,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
-            FrontEndTheme.AmbientParticles(new Rect(heroX+16,166,Right-heroX-32,420),
-                Alterverse.Visuals.StylizedArtDirection.HeroAccent((HeroId)selectedHero));
+                GUI.DrawTexture(new Rect(heroX,152,Right-heroX,450),showcase.Image,ScaleMode.ScaleToFit,true);
 
             homeLogo??=new GUIStyle(theme.Title){fontSize=64,fontStyle=FontStyle.Normal};
             theme.FitLabel(new Rect(Left,58,ContentWidth*.67f,80),"DIMENSIONS",homeLogo);
@@ -302,7 +297,7 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(profile.x+68,profile.y+8,196,25),PlayerProfile.PlayerName,theme.Body);
             theme.Label(new Rect(profile.x+68,profile.y+32,196,23),$"LEVEL {PlayerExperience.Level}  /  {PlayerWallet.Balance} SHARDS",theme.Small,true);
             theme.Progress(new Rect(profile.x+68,profile.y+60,194,3),PlayerExperience.LevelProgress);
-            if(GUI.Button(profile,GUIContent.none,GUIStyle.none)){FrontEndTheme.ActionFeedback(profile);SetPage(Page.Profile);}
+            if(GUI.Button(profile,GUIContent.none,GUIStyle.none))SetPage(Page.Profile);
 
             FrontEndTheme.Fill(new Rect(Left,246,1,276),new Color(.66f,.75f,.84f,.45f));
             int[] homeNavigation=HomeNavigation;
@@ -334,10 +329,8 @@ namespace Alterverse.UI
         private void DrawHomeCard(Rect rect,string eyebrow,string title,Page target)
         {
             theme.Panel(rect);
-            FrontEndTheme.PushClip(rect);
             backdrop.DrawCard(new Rect(rect.x+1,rect.y+1,rect.width-2,rect.height-2),target==Page.Play?0:target==Page.BattlePass?1:2);
             FrontEndTheme.Fill(new Rect(rect.x+1,rect.yMax-51,rect.width-2,50),new Color(.018f,.028f,.043f,.94f));
-            FrontEndTheme.PopClip();
             theme.Frame(rect,rect.Contains(Event.current.mousePosition));
             FrontEndTheme.Fill(new Rect(rect.x+14,rect.yMax-53,26,2),FrontEndTheme.Accent);
             theme.FitLabel(new Rect(rect.x+14,rect.yMax-48,rect.width-28,20),eyebrow,theme.Small,true);
@@ -345,7 +338,6 @@ namespace Alterverse.UI
             if(GUI.Button(rect,GUIContent.none,GUIStyle.none))
             {
                 Alterverse.Audio.UiSoundRouter.Confirm();
-                FrontEndTheme.ActionFeedback(rect);
                 SetPage(target);
             }
         }

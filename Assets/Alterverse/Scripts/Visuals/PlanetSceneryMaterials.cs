@@ -39,9 +39,7 @@ namespace Alterverse.Visuals
             string texturePath=finish==SceneryFinish.Concrete?"SurfaceMicro/Concrete":finish==SceneryFinish.Soil?"PlanetSurfaces/"+profile+"/Ground":
                 finish==SceneryFinish.Stone||finish==SceneryFinish.WetStone
                 ?"PlanetSurfaces/"+profile+"/Stone":"SceneryFinishes/"+finish;
-            Texture2D texture=finish==SceneryFinish.Metal||finish==SceneryFinish.Bark||finish==SceneryFinish.Leaf||finish==SceneryFinish.Ice
-                ?GameMaterialFinishes.Data(finish.ToString()):null;
-            if(texture==null)texture=Resources.Load<Texture2D>(texturePath);
+            Texture2D texture=Resources.Load<Texture2D>(texturePath);
             if(texture==null){Debug.LogWarning("Scenery finish missing: "+texturePath);return;}
             Color albedo=material.HasProperty("_BaseColor")?material.GetColor("_BaseColor"):material.color;
             Color emission=material.HasProperty("_EmissionColor")?material.GetColor("_EmissionColor"):Color.black;
@@ -70,8 +68,7 @@ namespace Alterverse.Visuals
 
         public static void ApplyMicro(Material material,PlanetSurfaceMicroProfile profile)
         {
-            Texture2D texture=profile.TextureName!=null?GameMaterialFinishes.Data(profile.TextureName):null;
-            if(texture==null&&profile.TextureName!=null)texture=Resources.Load<Texture2D>("SurfaceMicro/"+profile.TextureName);
+            Texture2D texture=profile.TextureName!=null?Resources.Load<Texture2D>("SurfaceMicro/"+profile.TextureName):null;
             material.SetTexture("_FineData",texture!=null?texture:Texture2D.grayTexture);
             material.SetFloat("_FineScale",profile.Scale);
             material.SetFloat("_FineRelief",texture!=null?profile.Relief:0f);

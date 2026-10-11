@@ -38,13 +38,11 @@ Shader "DimensionsFront/HeroEnergy"
    }
    half4 frag(V i):SV_Target
    {
-    if(_SurfaceStyle>4.5h && _SurfaceStyle<5.5h)
+    if(_SurfaceStyle>4.5h)
     {
      // Slow broad cloud billows, independent of decorative quality and global clocks.
      float2 p=i.local.xz;
      half cloud=saturate(.56h+.24h*sin(p.x*8.1+p.y*5.8+_Life*3.0)+.20h*cos(p.x*4.4-p.y*9.2-_Life*2.0));
-     half2 flow=DFVfxFlow(p*.7,_Life,_DetailQuality);
-     cloud=saturate(cloud+flow.x*.65h+flow.y*.30h);
      return half4(i.color.rgb*lerp(.72h,1.05h,cloud),i.color.a*lerp(.36h,1.0h,cloud));
     }
     // Only authored hot vertices approach white; silhouettes retain their hero hue.
