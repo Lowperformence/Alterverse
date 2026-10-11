@@ -19,7 +19,6 @@ namespace Alterverse.Visuals
         private readonly List<Binding> bindings = new List<Binding>();
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
         private readonly List<Mesh> rigidWeaponMeshes = new List<Mesh>();
-        private const float VeyrBladeTurnDegrees = 90f;
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
         private Transform rifleDetailsRoot;
         private Transform rifleDetailsGrip;
@@ -293,7 +292,6 @@ namespace Alterverse.Visuals
                 WeaponGrip grip = grips.Find(g => g.Bone != null && g.Bone.name == "WeaponGrip" + skin.name[skin.name.Length - 1]);
                 if (grip == null) continue;
                 if (!TryBladeBindMatrix(skin, grip.Bone, out Matrix4x4 toGrip)) continue;
-                toGrip = VeyrBladeTurnAtContact(grip) * toGrip;
                 var mesh = Instantiate(skin.sharedMesh);
                 mesh.name = skin.name + "_RigidGrip";
                 Matrix4x4 normalMatrix = toGrip.inverse.transpose;
@@ -311,8 +309,6 @@ namespace Alterverse.Visuals
                         mesh.SetTriangles(triangles, sub);
                     }
                 mesh.RecalculateBounds();
-                grip.WeaponCenterLocal = mesh.bounds.center;
-                grip.HasWeaponCenter = mesh.vertexCount > 0;
                 if (mesh.uv.Length == mesh.vertexCount) mesh.RecalculateTangents();
                 var blade = new GameObject(skin.name);
                 blade.layer = skin.gameObject.layer;
@@ -326,33 +322,9 @@ namespace Alterverse.Visuals
                 skin.name += "_SkinSource";
                 weaponRenderers[i] = renderer;
                 rigidWeaponMeshes.Add(mesh);
-                Debug.Log("DF: Zhaev blade bind-space v4 (90-degree horizontal palm axis): " + blade.name + " / " + mesh.vertexCount +
+                Debug.Log("DF: Zhaev blade bind-space v2: " + blade.name + " / " + mesh.vertexCount +
                     " vertices / local size " + mesh.bounds.size, this);
             }
-        }
-
-        // FitVeyrGoldEnd places this socket on the actual gold handle/palm contact.
-        // Turn the cloned blade around that contact, never the grip bone's origin.
-        // Turn both blades about the model's left-to-right axis through the palm.
-        // Work in model space so hand scaling cannot skew the 90-degree rotation;
-        // local hierarchy matrices also keep distant menu portraits precise.
-        private Matrix4x4 VeyrBladeTurnAtContact(WeaponGrip grip)
-        {
-            string side = grip.Bone.name == "WeaponGripL" ? "L" : "R";
-            Transform contact = null;
-            foreach (Transform socket in grip.Bone.GetComponentsInChildren<Transform>(true))
-                if (socket.name == "DF_HandleContact" + side) { contact = socket; break; }
-            if (contact == null)
-            {
-                Debug.LogError("DF: Zhaev blade turn requires DF_HandleContact" + side, this);
-                return Matrix4x4.identity;
-            }
-            Matrix4x4 toModel = RelativeMatrix(grip.Bone, model);
-            Vector3 pivot = RelativeMatrix(contact, model).MultiplyPoint3x4(Vector3.zero);
-            Quaternion turn = Quaternion.AngleAxis(VeyrBladeTurnDegrees, Vector3.right);
-            Matrix4x4 aroundContact = Matrix4x4.TRS(pivot, turn, Vector3.one) *
-                Matrix4x4.TRS(-pivot, Quaternion.identity, Vector3.one);
-            return toModel.inverse * aroundContact * toModel;
         }
 
         private static bool TryBladeBindMatrix(SkinnedMeshRenderer skin, Transform grip, out Matrix4x4 toGrip)
