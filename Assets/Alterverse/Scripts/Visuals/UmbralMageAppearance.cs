@@ -220,6 +220,8 @@ namespace Alterverse.Visuals
                 v.Add(convert.MultiplyPoint3x4(vertices[i]));
                 n.Add(normalMatrix.MultiplyVector(normals[i]).normalized); w.Add(weights[i]);
             }
+            var wristTriangles = new List<int>();
+            if (group == 0) AppendWristConnections(source, bones, v, n, w, wristTriangles);
             var mesh = new Mesh { name = "DF_Elyra_Siege_" + group };
             ownedMeshes.Add(mesh);
             mesh.SetVertices(v); mesh.SetNormals(n);
@@ -236,6 +238,7 @@ namespace Alterverse.Visuals
                     int a = remap[sourceIndices[i]], b = remap[sourceIndices[i+1]], c = remap[sourceIndices[i+2]];
                     if (a >= 0 && b >= 0 && c >= 0) { indices.Add(a); indices.Add(group == 2 ? c : b); indices.Add(group == 2 ? b : c); }
                 }
+                if (m == 0) indices.AddRange(wristTriangles);
                 mesh.SetTriangles(indices, m, false);
             }
             mesh.RecalculateBounds();
@@ -249,7 +252,72 @@ namespace Alterverse.Visuals
                 materials = independent;
             }
             renderer.sharedMesh = mesh; renderer.bones = bones; renderer.sharedMaterials = materials;
+            if (group == 0) renderer.quality = SkinQuality.Bone2;
             Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
+        }
+
+        private void AppendWristConnections(Transform source, Transform[] bones,
+            List<Vector3> vertices, List<Vector3> normals, List<BoneWeight> weights, List<int> triangles)
+        {
+            // The generated forearm stops before the wrist, and the palm starts beyond it.
+            // Join their interior surfaces with a flexible cuff in the body mesh. Its end
+            // rings belong to the respective bones, so hand resizing and wrist rotation
+            // cannot pull the connection away from either surface or from the held focus.
+            int chest = Array.FindIndex(bones, b => b != null && b.name == "Chest");
+            int head = Array.FindIndex(bones, b => b != null && b.name == "Head");
+            if (chest < 0 || head < 0) return;
+            float unitScale = Vector3.Distance(transform.InverseTransformPoint(bones[chest].position),
+                transform.InverseTransformPoint(bones[head].position)) /
+                Vector3.Distance(Point(geometry.anchors[chest].head), Point(geometry.anchors[head].head));
+            Matrix4x4 toMesh = source.worldToLocalMatrix * transform.localToWorldMatrix;
+            Matrix4x4 toNormal = toMesh.inverse.transpose;
+            const int segments = 16, rings = 5;
+            foreach (string side in new[] { "L", "R" })
+            {
+                int forearm = Array.FindIndex(bones, b => b != null && b.name == "Forearm" + side);
+                int hand = Array.FindIndex(bones, b => b != null && b.name == "Hand" + side);
+                if (forearm < 0 || hand < 0) continue;
+                Vector3 elbow = transform.InverseTransformPoint(bones[forearm].position);
+                Vector3 wrist = transform.InverseTransformPoint(bones[hand].position);
+                Vector3 reference = Point(geometry.anchors[hand].head) - Point(geometry.anchors[forearm].head);
+                Vector3 lowerArm = wrist - elbow;
+                if (lowerArm.sqrMagnitude < .000001f || reference.sqrMagnitude < .000001f) continue;
+                float forearmScale = lowerArm.magnitude / reference.magnitude;
+                Vector3 handAxis = Point(geometry.anchors[hand].tail) - Point(geometry.anchors[hand].head);
+                Quaternion handFit = Quaternion.FromToRotation(handAxis, lowerArm);
+                // Match the authored palm centre; both anchor rings are inside existing skin.
+                Vector3 palmOffset = new Vector3(side == "L" ? -.01424f : .01424f, -.05341f, .02576f);
+                Vector3 start = Vector3.Lerp(elbow, wrist, .84f);
+                Vector3 end = wrist + handFit * palmOffset * unitScale;
+                Vector3 axis = (end - start).normalized;
+                Vector3 across = Vector3.Cross(axis, Vector3.forward).normalized;
+                if (across.sqrMagnitude < .000001f) across = Vector3.Cross(axis, Vector3.up).normalized;
+                Vector3 around = Vector3.Cross(axis, across).normalized;
+                int first = vertices.Count;
+                for (int row = 0; row < rings; row++)
+                {
+                    float t = row / (float)(rings - 1);
+                    Vector3 center = Vector3.Lerp(start, end, t);
+                    float radius = Mathf.Lerp(.032f * forearmScale, .020f * unitScale, t);
+                    float handWeight = Mathf.SmoothStep(0f, 1f, t);
+                    bool handFirst = handWeight > .5f;
+                    for (int j = 0; j < segments; j++)
+                    {
+                        float angle = j * 2f * Mathf.PI / segments;
+                        Vector3 radial = across * Mathf.Cos(angle) + around * Mathf.Sin(angle);
+                        vertices.Add(toMesh.MultiplyPoint3x4(center + radial * radius));
+                        normals.Add(toNormal.MultiplyVector(radial).normalized);
+                        weights.Add(new BoneWeight { boneIndex0 = handFirst ? hand : forearm,
+                            weight0 = handFirst ? handWeight : 1f - handWeight,
+                            boneIndex1 = handFirst ? forearm : hand, weight1 = handFirst ? 1f - handWeight : handWeight });
+                        if (row == rings - 1) continue;
+                        int a = first + row * segments + j;
+                        int b = first + row * segments + (j + 1) % segments;
+                        triangles.Add(a); triangles.Add(b); triangles.Add(b + segments);
+                        triangles.Add(a); triangles.Add(b + segments); triangles.Add(a + segments);
+                    }
+                }
+            }
         }
 
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
