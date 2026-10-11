@@ -98,17 +98,29 @@ namespace Alterverse.Combat
                 : spec.aimAssistAngle > 0f ? Select(actor, direction, spec.castRange, spec.aimAssistAngle) : null;
             return target != null ? Direction(target.transform.position - actor.transform.position) : direction;
         }
+        public static bool UsesConeCapture(AimSpec spec)
+            => (spec.targetingMode == TargetingMode.Cone || spec.targetingMode == TargetingMode.Homing) &&
+                (spec.aimType == AimType.Melee || spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing);
+        public static Health CaptureConeTarget(GameObject actor, Vector3 direction, AimSpec spec)
+        {
+            SoftTargeting soft = actor.GetComponent<SoftTargeting>();
+            return soft != null ? soft.AcquireCone(spec.castRange, direction, spec.coneAngle)
+                : Select(actor, direction, spec.castRange, spec.coneAngle * .5f);
+        }
         public static AimPose TapPose(GameObject actor, AimSpec spec, bool shield = false)
         {
             Vector3 direction = Direction(actor.transform.forward); Health target = null;
             if (spec.aimType == AimType.Ally)
                 target = Select(actor, direction, spec.castRange, spec.coneAngle * .5f, true, shield);
+            else if (UsesConeCapture(spec)) target = CaptureConeTarget(actor, direction, spec);
             else if (spec.aimType != AimType.Dash && spec.aimType != AimType.Self && spec.aimType != AimType.SelfArea)
                 direction = Assist(actor, direction, spec, out target);
             Vector3 point = actor.transform.position + direction * spec.castRange * .65f;
             if (spec.aimType == AimType.Area && target != null) point = ClampPoint(actor.transform.position, target.transform.position, spec.castRange);
+            bool captured = spec.targetingMode == TargetingMode.Cone && target != null;
+            if (captured) point = ClampPoint(actor.transform.position, target.transform.position, spec.castRange);
             if (spec.aimType == AimType.SelfArea || spec.aimType == AimType.Self) point = actor.transform.position;
-            return new AimPose(direction, point, spec.targetingMode == TargetingMode.Ally || spec.targetingMode == TargetingMode.Homing ? target : null);
+            return new AimPose(direction, point, spec.targetingMode == TargetingMode.Ally || spec.targetingMode == TargetingMode.Homing ? target : null, captured);
         }
     }
 }

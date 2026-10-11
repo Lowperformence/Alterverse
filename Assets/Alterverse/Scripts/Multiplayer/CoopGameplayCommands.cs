@@ -15,8 +15,8 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V4";
-        private const string AbilityMessage="DF_COOP_ABILITY_V4";
+        private const string BasicMessage="DF_COOP_BASIC_V5";
+        private const string AbilityMessage="DF_COOP_ABILITY_V5";
 
         private const int TargetNone=0;
         private const int TargetHero=1;
@@ -60,7 +60,7 @@ namespace Alterverse.Multiplayer
         }
 
         public static bool TrySendBasic(GameObject actor, Health target)
-            => target != null && TrySendBasic(actor, new AimPose(target.transform.position - actor.transform.position, target.transform.position));
+            => target != null && TrySendBasic(actor, new AimPose(target.transform.position - actor.transform.position, target.transform.position, null, true));
         public static bool TrySendBasic(GameObject actor, AimPose pose)
             => Instance != null && Instance.SendCommand(actor, -1, pose);
         public static bool TrySendAbility(GameObject actor, int abilitySlot, Health target)
@@ -108,6 +108,7 @@ namespace Alterverse.Multiplayer
             if (abilitySlot >= 0) writer.WriteValueSafe(abilitySlot);
             writer.WriteValueSafe(pose.Direction.x); writer.WriteValueSafe(pose.Direction.y); writer.WriteValueSafe(pose.Direction.z);
             writer.WriteValueSafe(pose.Point.x); writer.WriteValueSafe(pose.Point.y); writer.WriteValueSafe(pose.Point.z);
+            writer.WriteValueSafe(pose.HasAimPoint);
             messaging.SendNamedMessage(message,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
             return true;
         }
@@ -151,12 +152,13 @@ namespace Alterverse.Multiplayer
         private static bool TryReadAim(ref FastBufferReader reader, Health target, out AimPose pose)
         {
             pose = default;
-            if (!reader.TryBeginRead(6 * sizeof(float))) return false;
+            if (!reader.TryBeginRead(6 * sizeof(float) + sizeof(bool))) return false;
             reader.ReadValueSafe(out float dx); reader.ReadValueSafe(out float dy); reader.ReadValueSafe(out float dz);
             reader.ReadValueSafe(out float px); reader.ReadValueSafe(out float py); reader.ReadValueSafe(out float pz);
+            reader.ReadValueSafe(out bool hasAimPoint);
             Vector3 direction = new Vector3(dx, dy, dz), point = new Vector3(px, py, pz);
             if (!AimGeometry.Finite(direction) || !AimGeometry.Finite(point) || AimGeometry.Flat(direction).sqrMagnitude < .0001f) return false;
-            pose = new AimPose(direction, point, target);
+            pose = new AimPose(direction, point, target, hasAimPoint);
             return true;
         }
 

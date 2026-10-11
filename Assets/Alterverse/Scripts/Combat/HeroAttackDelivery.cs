@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
-    // One geometric delivery path for player and bot attacks; target adapters freeze direction at cast.
+    // One geometric delivery path for player and bot attacks; captured points never follow normal targets.
     [RequireComponent(typeof(Health), typeof(HeroIdentity))]
     [DefaultExecutionOrder(120)]
     public sealed class HeroAttackDelivery : MonoBehaviour
     {
         private struct Pending
         {
-            public bool Active, Launched, Basic, Volley, Hook;
+            public bool Active, Launched, Basic, Volley, Hook, HasAimPoint;
             public Vector3 Direction, Point, LaunchOrigin, Position;
             public Health Target;
             public HeroAbilityExecution Execution;
@@ -90,11 +90,12 @@ namespace Alterverse.Combat
                 if (pending[i].Active) continue;
                 pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
-                    Direction = pose.Direction, Point = pose.Point, Spec = spec,
+                    Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
+                    Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
-                if (slot < 0) CombatMotion.BeginAimed(gameObject, windup, transform.position + pose.Direction * spec.castRange);
+                if (slot < 0) CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange);
                 return true;
             }
             return false;
@@ -112,13 +113,13 @@ namespace Alterverse.Combat
         {
             if (!HeroCombatRules.Enemy(gameObject, target) || HeroCombatRules.TargetDistance(transform.position, target) > range) return;
             AimSpec spec = AimingSettings.Current.For(identity.Hero, -1, range);
-            BasicAimed(new AimPose(target.transform.position - transform.position, target.transform.position, target), spec, amount);
+            BasicAimed(new AimPose(target.transform.position - transform.position, target.transform.position, target, true), spec, amount);
         }
         public void Ability(HeroAbilityExecution execution, int slot, Health target, bool volley = false, float windup = -1f)
         {
             if (slot < 0 || slot > 3 || !HeroCombatRules.Enemy(gameObject, target) ||
                 HeroCombatRules.TargetDistance(transform.position, target) > GetComponent<HeroAbilityKit>().Spec(slot).Range) return;
-            AbilityAimed(execution, slot, new AimPose(target.transform.position - transform.position, target.transform.position, target), volley, windup);
+            AbilityAimed(execution, slot, new AimPose(target.transform.position - transform.position, target.transform.position, target, true), volley, windup);
         }
         public void CancelWindups()
         {
@@ -152,7 +153,7 @@ namespace Alterverse.Combat
         }
         private Health Contact(Pending p, Vector3 from, Vector3 to, bool moving, out float fraction, float motionFraction = 1f)
         {
-            Health nearest = null; fraction = 2f;
+            Health nearest = null; fraction = 2f; float bestScore = float.MaxValue;
             for (int i = 0; i < Health.Active.Count; i++)
             {
                 Health target = Health.Active[i];
@@ -168,7 +169,9 @@ namespace Alterverse.Combat
                     if (contact) contact = BlockDistance(from, AimGeometry.Direction(delta), delta.magnitude, .01f) >= delta.magnitude - .01f;
                 }
                 else contact = AimGeometry.HitBody(target, from, to, p.Spec.projectileWidth, moving, out t, motionFraction);
-                if (contact && t < fraction) { nearest = target; fraction = t; }
+                float score = p.Spec.aimType == AimType.Melee && p.HasAimPoint
+                    ? AimGeometry.Flat(target.transform.position - p.Point).sqrMagnitude : t;
+                if (contact && score < bestScore) { nearest = target; fraction = t; bestScore = score; }
             }
             return nearest;
         }
@@ -217,12 +220,19 @@ namespace Alterverse.Combat
                 {
                     if (Time.time < p.ReleaseAt) continue;
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
+                    // Rebase once to the captured release-time point. Do not read a normal enemy's
+                    // transform here or during flight; moving targets can still dodge.
+                    if (p.HasAimPoint && (p.Spec.aimType != AimType.Melee || p.Basic))
+                        p.Direction = new AimPose(p.Direction, p.Point, null, true).CastDirection(p.LaunchOrigin);
                     float length = BlockDistance(p.LaunchOrigin, p.Direction, p.Spec.castRange, p.Spec.projectileWidth);
                     Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
                     if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
                     {
                         float fraction; Health target = Contact(p, p.LaunchOrigin, endpoint, false, out fraction);
-                        if (target != null) endpoint = Vector3.Lerp(p.LaunchOrigin, endpoint, Mathf.Clamp01(fraction));
+                        if (target != null) endpoint = p.Spec.aimType == AimType.Melee ? target.transform.position
+                            : Vector3.Lerp(p.LaunchOrigin, endpoint, Mathf.Clamp01(fraction));
+                        if (target != null && p.Spec.aimType == AimType.Melee)
+                            p.Direction = AimGeometry.Direction(endpoint - p.LaunchOrigin);
                         Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
                         pending[i] = default;
                         if (target != null) Impact(p, target);

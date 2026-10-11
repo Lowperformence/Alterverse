@@ -16,11 +16,17 @@ partial class Regression
  static void Call(object o,string method)=>GameObject.Invoke(o,method);
  static void Reset()
  {
-  foreach(var g in GameObject.All.ToArray())g.SetActive(false);
+  foreach(var g in GameObject.All.ToArray())
+  {
+   var commands=g.GetComponent<CoopGameplayCommands>();if(commands!=null)Call(commands,"OnDestroy");
+   g.SetActive(false);
+  }
   GameObject.All.Clear();Health.Active.Clear();Clock.Reset();Camera.main=null;Mouse.current=null;Keyboard.current=null;
   Touch.activeTouches.Clear();CoopAuthority.Active=false;CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.LocalIsHost=true;
   Unity.Netcode.NetworkManager.Singleton=null;
   AimingSettings.Current.overrides=new AimingSettings.AttackOverride[0];
+  AimingSettings.Current.rememberAimDirection=false;
+  Resources.PreviewShaderAvailable=false;Screen.width=960;Screen.height=540;
  }
  static GameObject Hero(HeroId id,int team,Vector3 p)
  {
@@ -51,13 +57,13 @@ partial class Regression
   {
    var entry=AimingSettings.Current.For(hero,slot);var baseline=HeroAbilityKit.LoadoutFor(hero).Spec(slot);
    Near(entry.castRange,baseline.Range,"cast range comes from catalog");Near(entry.aoeRadius,baseline.Radius,"AOE radius comes from catalog");
-   Near(entry.coneAngle,HeroAttackDelivery.IsRanged(hero)?45:80,"role-specific aim cone");
+   Near(entry.coneAngle,HeroAttackDelivery.IsRanged(hero)?35:70,"role-specific aim cone");
    Near(entry.aimAssistAngle,8,"central assist default");
   }
-  Check(AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(39,2),3,80),"80-degree melee interior");
-  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(41,2),3,80),"melee exterior");
-  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(24,2),3,45),"narrow ranged cone");
-  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Vector3.forward*3.01f,3,80),"range exact");
+  Check(AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(34,2),3,70),"70-degree melee interior");
+  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(36,2),3,70),"melee exterior");
+  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Angle(18,2),3,35),"narrow ranged cone");
+  Check(!AimGeometry.Cone(Vector3.zero,Vector3.forward,Vector3.forward*3.01f,3,70),"range exact");
   Check(AimGeometry.Circle(Vector3.zero,new Vector3(1,99,1),2),"area is planar");
   float fraction;
   Check(AimGeometry.Sweep(Vector3.zero,Vector3.forward*20,Vector3.forward*7,Vector3.forward*7,.55f,out fraction),"fast projectile cannot tunnel");
@@ -245,18 +251,18 @@ partial class Regression
   var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
   var pose=new AimPose(Vector3.right,new Vector3(5,0,1));Check(CoopGameplayCommands.TrySendAbility(a,0,pose),"network send aiming intent");
-  Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_ABILITY_V4","protocol revision updated");
+  Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_ABILITY_V5","protocol revision updated");
   var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out bool target);reader.ReadValueSafe(out int slot);
   reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);reader.ReadValueSafe(out float px);reader.ReadValueSafe(out float py);reader.ReadValueSafe(out float pz);
   Check(!target,"normal spell has no soft target reference");Near(dx,1,"network preserves chosen direction");Near(px,5,"network preserves ground x");Near(pz,1,"network preserves ground z");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V4"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.5f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.5f);
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.x,5,"server executes transmitted AOE point");Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.z,1,"server does not reacquire enemy");
   Unlock(a.GetComponent<HeroAbilityExecution>());
   Check(a.GetComponent<PlayerHeroAbilities>().CastNetworkAuthoritative(0,new AimPose(Vector3.right,new Vector3(100,0,0))),"server accepts clamped ground intent");
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.magnitude,7.3f,"server clamps forged point to cast range");
   CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;Hero(HeroId.Kaelon,1,Vector3.left*2);
-  Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V4","auto-target basic retains V4 route");
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V5","auto-target basic retains V5 route");
   reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out target);reader.ReadValueSafe(out dx);reader.ReadValueSafe(out dy);reader.ReadValueSafe(out dz);
   Check(!target,"normal auto-target basic sends frozen direction without homing reference");Near(dx,-1,"network basic preserves automatic soft-target direction");
  }
@@ -305,7 +311,7 @@ partial class Regression
  }
  static void Main(string[] args)
  {
-  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();
+  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));

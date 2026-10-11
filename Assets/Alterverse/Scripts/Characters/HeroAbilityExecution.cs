@@ -82,7 +82,7 @@ namespace Alterverse.Characters
         {
             if (slot < 0 || slot > 3 || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
             AimSpec aim = AimingSettings.Current.For(identity.Hero, slot);
-            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, aim.castRange), pose.Target);
+            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, aim.castRange), pose.Target, pose.HasAimPoint);
             return TryCastCore(slot, pose.Target, pose.Direction, pose);
         }
         private bool TryCastCore(int slot, Health target, Vector3 movement, AimPose? aimed)
@@ -92,7 +92,7 @@ namespace Alterverse.Characters
             float presentationWindup=spec.Windup;
             AimSpec aimSpec = AimingSettings.Current.For(hero, slot);
             AimPose attackAim = aimed ?? new AimPose(target != null ? target.transform.position - transform.position : movement,
-                target != null ? target.transform.position : transform.position);
+                target != null ? target.transform.position : transform.position, null, target != null);
             bool usesDelivery = aimSpec.aimType == AimType.Melee || aimSpec.aimType == AimType.Projectile ||
                 aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
@@ -173,7 +173,7 @@ namespace Alterverse.Characters
                 else if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this, slot, attackAim)) return false;
             }
             HeroSkillVfx.Cast(gameObject,slot);
-            if (!mobility) locomotion.FaceAction(attackAim.Direction);
+            if (!mobility) locomotion.FaceAction(attackAim.CastDirection(transform.position));
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,presentationWindup);
             return true;

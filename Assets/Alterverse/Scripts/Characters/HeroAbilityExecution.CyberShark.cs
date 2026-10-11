@@ -14,7 +14,7 @@ namespace Alterverse.Characters
             if(slot==0)
             {
                 if (!aimed.HasValue && (!ValidTarget(target,spec.Range)||!SharkSight(target))) return false;
-                AimPose pose = aimed ?? new AimPose(target.transform.position - transform.position, target.transform.position);
+                AimPose pose = aimed ?? new AimPose(target.transform.position - transform.position, target.transform.position, null, true);
                 if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this,slot,pose,windup:spec.Windup)) return false;
             }
             else if(slot==1)

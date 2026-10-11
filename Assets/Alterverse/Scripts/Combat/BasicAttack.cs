@@ -73,7 +73,7 @@ namespace Alterverse.Combat
             Health target = targeting.Acquire(spec.castRange, transform.forward);
             if (target == null) return false;
             AimPose pose = new AimPose(target.transform.position - transform.position, target.transform.position,
-                spec.targetingMode == TargetingMode.Homing ? target : null);
+                spec.targetingMode == TargetingMode.Homing ? target : null, true);
             bool success = TryAttackAimed(pose);
             if (success) targeting.RegisterOffensiveAction();
             return success;
@@ -88,9 +88,10 @@ namespace Alterverse.Combat
             {
                 if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendBasic(gameObject, pose)) return false;
                 nextAttackTime = Time.time + Cooldown;
-                locomotion.FaceAction(pose.Direction);
-                motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), pose.Direction);
-                CombatMotion.BeginAimed(gameObject, windup, transform.position + pose.Direction * Range);
+                Vector3 direction = pose.CastDirection(transform.position);
+                locomotion.FaceAction(direction);
+                motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), direction);
+                CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + direction * Range);
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
@@ -98,7 +99,7 @@ namespace Alterverse.Combat
         }
 
         public bool TryAttackNetworkAuthoritative(Health requestedTarget)
-            => requestedTarget != null && TryAttackNetworkAuthoritative(new AimPose(requestedTarget.transform.position - transform.position, requestedTarget.transform.position));
+            => requestedTarget != null && TryAttackNetworkAuthoritative(new AimPose(requestedTarget.transform.position - transform.position, requestedTarget.transform.position, null, true));
         public bool TryAttackNetworkAuthoritative(AimPose pose)
             => CanAttempt() && AimGeometry.Finite(pose.Direction) && AimGeometry.Finite(pose.Point) && TryAttackAuthoritative(pose);
 
@@ -117,8 +118,9 @@ namespace Alterverse.Combat
                 !HeroAttackDelivery.For(gameObject).BasicAimed(pose, Aim, Damage)) return false;
             float windup = HeroAttackDelivery.Windup(identity != null ? identity.Hero : HeroId.Veyr);
             nextAttackTime = Time.time + Cooldown;
-            locomotion.FaceAction(pose.Direction);
-            motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), pose.Direction);
+            Vector3 direction = pose.CastDirection(transform.position);
+            locomotion.FaceAction(direction);
+            motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), direction);
             OnboardingSessionGuard.Attack(this);
             return true;
         }

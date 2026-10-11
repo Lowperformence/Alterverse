@@ -33,9 +33,7 @@ namespace Alterverse.UI
             else
             {
                 Show(0, origin, pose.Direction, spec.castRange, spec.aimType == AimType.Dash ? 2 : 1, spec, color);
-                if (spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing)
-                    Show(1, origin, pose.Direction, spec.castRange, 2, spec, color);
-                else if (spec.aimType == AimType.Ally && pose.Target != null)
+                if (spec.aimType == AimType.Ally && pose.Target != null)
                     Show(1, pose.Target.transform.position, pose.Direction, .65f, 0, spec, color);
             }
             for (int i = 0; i < surfaces.Length; i++)

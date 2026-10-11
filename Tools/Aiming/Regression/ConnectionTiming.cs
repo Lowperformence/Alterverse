@@ -73,11 +73,12 @@ partial class Regression
  {
   foreach(float hold in new[]{0f,1f})
   {
-   Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Angle(20,4));
+   Reset();var actor=Hero(HeroId.Nyra,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Angle(16,4));
    var aim=ManualAiming.For(actor);aim.Begin(2,new Vector2(700,100));Clock.Advance(hold);aim.Drag(new Vector2(700,196),1,false);
    Check(AimGeometry.Cone(actor.transform.position,aim.Pose.Direction,enemy.transform.position,aim.Spec.castRange,aim.Spec.coneAngle),"enemy inside displayed aiming corridor");
-   Check(actor.GetComponent<SoftTargeting>().Current==null,"enemy beyond 8 degrees intentionally not captured");
-   Check(aim.Release(),"corridor release still casts");Run(1);Near(Total(enemy),1000,"wide guide is not projectile damage; slow hold cannot fix miss");
+   Check(actor.GetComponent<SoftTargeting>().Current==enemy.GetComponent<Health>(),"full displayed cone captures enemy beyond legacy 8-degree assist");
+   Check(aim.Pose.HasAimPoint,"cone freezes selected point");
+   Check(aim.Release(),"cone release casts");Run(1);Near(Total(enemy),980,"full cone capture connects for both fast and held releases");
   }
   foreach(bool strafe in new[]{false,true})
   {
@@ -93,9 +94,9 @@ partial class Regression
     if(strafe)actor.transform.position=Vector3.right*speed*Mathf.Min(frame,10)/60f;
     Step(1f/60);
    }
-   Near(Total(enemy),strafe?1000:982,"stationary target "+(strafe?"missed by shifted launch origin":"connected normally"));
+   Near(Total(enemy),982,"stationary captured point connects "+(strafe?"after caster strafe":"without caster motion"));
   }
-  if(print)Console.WriteLine("DIAGNOSIS,20-deg stationary target inside 45-deg guide misses after both 0 and 1000 ms holds; caster 0.765-m strafe during Mira Q windup also misses; no target-acquisition wait.");
+  if(print)Console.WriteLine("FIXED,16-deg stationary target inside 35-deg cone connects after both 0 and 1000 ms holds; caster 0.765-m strafe during Mira Q windup also connects; no target-acquisition wait.");
  }
  static void ConnectionTiming(bool print)
  {

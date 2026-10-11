@@ -2,7 +2,10 @@
 
 Stand: 11. Oktober 2026. Untersuchte Spielquellen: Commit `c41d6711304519e9441d0070e2338aaabd26d86b`, Branch `dev/vertical-slice`.
 
-## Ergebnis
+
+**Update: Korrektur umgesetzt.** Gerichtete Skills erfassen jetzt sofort einen Gegner im ganzen sichtbaren Kegel (Nahkampf 70°, Fernkampf 35°), ohne zusätzlichen Zielstrich. Der Zielpunkt wird beim Release eingefroren und beim Abschuss vom aktuellen Ursprung einmal angepeilt. Die beiden unten dokumentierten Ursachen wurden als Regressionen behoben: ein Gegner bei 16° innerhalb des neuen 35°-Kegels verbindet nach schneller oder langer Geste; Mira Q verbindet auch nach dem vorgegebenen Seitwärtsweg. Gegner können weiterhin ausweichen, Wände blockieren, AOE trifft mehrere Gegner. V5 überträgt den festen Punkt und `HasAimPoint`. Stand: **1562 Assertions bestanden**. Die nachstehenden Tabellen und ursprünglichen Miss-Befunde beschreiben die erste Untersuchung vor dieser Korrektur.
+
+## Ergebnis der ersten Prüfung
 
 Die Zielerfassung enthält keine Haltezeit oder Wartephase auf den Soft-Target-Marker. `PrototypeHUD` verarbeitet auch die letzte Fingerposition im `Ended`-Ereignis. `ManualAiming.Release()` prüft die Zielgeometrie synchron nochmals und stellt den Angriff sofort in die Ausführung. Der Marker ist keine Voraussetzung für den Treffer.
 
@@ -52,13 +55,13 @@ Nerok Q benötigt bei 5,89 m etwa **600 ms**. Das erklärt merklich spätere Ver
 
 **Eigene Bewegung während des Windups.** Die Richtung wird beim Cast fixiert, der Startpunkt dagegen erst am Ende der Ausholzeit aus der aktuellen Spielerposition gelesen. Ein bereits erfasster, stationärer Gegner kann dadurch verfehlt werden. Reproduktion: Mira Q, Gegner geradeaus bei 4 m, Seitwärtsbewegung während der 160-ms-Vorbereitung. Der Test liefert einen Weg mit `HeroCombatProfile.MoveSpeed * 0.88` (Standard-Angriffsbewegungsfaktor des Motors), insgesamt ca. 0,765 m bis zum Abschuss bei 60 FPS. Ohne diese Bewegung trifft Q, mit ihr verfehlt die parallel verschobene Projektilbahn den Gegner. Die native Beschleunigung/CharacterController-Bewegung wurde dabei nicht simuliert; die produktive Delivery erhält den kontrolliert vorgegebenen Bewegungsweg.
 
-## Ansatz für die anschließende Korrektur
+## Umgesetzte Korrektur
 
-Die Verbindung sollte nicht von einer länger sichtbaren Markierung abhängen. Für gerichtete Einzelangriffe lässt sich beim Loslassen sofort **ein** geeigneter Gegner aus dem dargestellten Zielkorridor auswählen und dessen damalige Position als Zielpunkt einfrieren. Beim Abschuss wird die Richtung vom aktuellen Ursprung zu diesem festen Punkt berechnet. Danach läuft das Projektil ohne Verfolgung und entscheidet weiter über die erste tatsächliche Kollision; der Gegner kann weiterhin ausweichen. Ohne geeigneten Gegner bleibt der manuell gewählte Schuss möglich.
+Die Verbindung sollte nicht von einer länger sichtbaren Markierung abhängen. Für gerichtete Einzelangriffe wird beim Loslassen sofort **ein** geeigneter Gegner aus dem dargestellten Zielkorridor ausgewählt und dessen damalige Position als Zielpunkt eingefroren. Beim Abschuss wird die Richtung vom aktuellen Ursprung zu diesem festen Punkt berechnet. Danach läuft das Projektil ohne Verfolgung und entscheidet weiter über die erste tatsächliche Kollision; der Gegner kann weiterhin ausweichen. Ohne geeigneten Gegner bleibt der manuell gewählte Schuss möglich.
 
-Die Erfassung aus dem gesamten Kegel wäre eine gezielte Änderung gegenüber der bisherigen 8°-Zielhilfe: 45°/80° Vorschau bedeuten bis zu 22,5°/40° Abweichung von der Mittelrichtung. Vorschau, Zielkorridor und Assist müssen deshalb ausdrücklich zusammen konfiguriert werden. AOE wählt weiterhin keinen einzelnen Gegner aus und prüft alle gültigen Körper innerhalb der wirklichen Fläche. Bestehende Schaden-, Reichweiten-, Windup- und Cooldownwerte sollten für diese Korrektur unverändert bleiben.
+Die Erfassung aus dem gesamten Kegel ist eine gezielte Änderung gegenüber der bisherigen 8°-Zielhilfe. Die schmaleren 35°/70°-Kegel erfassen maximal ±17,5°/±35° von der Mitte; derselbe `AimSpec.coneAngle` steuert Vorschau und Auswahl. `targetingMode = Cone` ist der Standard für alle elf gerichteten Skills; `Geometry` behält die begrenzte 8°-Hilfe für andere Geometrien. AOE wählt weiterhin keinen einzelnen Gegner aus und prüft alle gültigen Körper innerhalb der wirklichen Fläche. Bestehende Schaden-, Reichweiten-, Windup- und Cooldownwerte sollten für diese Korrektur unverändert bleiben.
 
-Diese Untersuchung ändert noch keine produktiven Trefferregeln oder Balancingwerte. Sie ergänzt reproduzierbare Messungen und dokumentiert den Befund entsprechend der Priorität „zuerst prüfen, wie schnell Angriffe verbinden“.
+Die erste Untersuchung änderte ausschließlich Tests und Dokumentation. Die anschließende Korrektur verändert Kegel-Erfassung und Schussausrichtung; Schaden, Reichweite, Windup, Cooldown und die bisherige 80°-Grundangriffsgeometrie bleiben erhalten. Die Laufrichtung bleibt der Start für schnelle Taps; der erste kleine Drag steuert den Kegel unabhängig davon in jede Richtung. `rememberAimDirection` ist eine optionale Alternative.
 
 ## Wiederholen
 
@@ -69,6 +72,6 @@ python3 Tools/Aiming/Regression/run.py \
   --connection-timing
 ```
 
-Die Ausgabe enthält CSV-Zeilen `TIMING` für alle acht Standards/32 Skills bei 30, 60 und 120 FPS, Fernkampf-Distanzproben und `GESTURE` für fünf Haltedauern. Auch ohne den Schalter werden die Assertions ausgeführt; der Schalter aktiviert nur die Messwertausgabe. Ergebnis: **1228 Assertions bestanden**, zusätzlich beide bestehenden Editor-Regressionssuiten. Die Miss-Reproduktionen prüfen ausdrücklich das aktuelle Verhalten und kennzeichnen keinen bereits behobenen Fehler.
+Die Ausgabe enthält CSV-Zeilen `TIMING` für alle acht Standards/32 Skills bei 30, 60 und 120 FPS, Fernkampf-Distanzproben und `GESTURE` für fünf Haltedauern. Auch ohne den Schalter werden die Assertions ausgeführt; der Schalter aktiviert nur die Messwertausgabe. Aktuelles Ergebnis: **1562 Assertions bestanden**, zusätzlich beide bestehenden Editor-Regressionssuiten. Die ehemalige 1228-Assertion-Untersuchung reproduzierte die oben beschriebenen Fehlschüsse; die aktuellen Tests erwarten stattdessen korrekt verbundene Kegel-Erfassungen und Schüsse trotz eigener Bewegung.
 
 Für eine echte Handyprüfung die Zeitpunkte von HUD-Release, Host-Cast-Empfang, Delivery-Launch und `Health.TakeDamage` mit korreliertem Cast protokollieren und die Aufnahme gleichzeitig mit sichtbarer Markierung/Animation vergleichen. Bei Host/Client müssen Uhren oder Cast-IDs berücksichtigt werden; `Time.time` zweier Geräte kann nicht direkt voneinander abgezogen werden.

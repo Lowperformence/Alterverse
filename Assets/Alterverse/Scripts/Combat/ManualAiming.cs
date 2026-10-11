@@ -12,7 +12,7 @@ namespace Alterverse.Combat
         private Vector2 pressOrigin;
         private Vector3 rawDirection;
         private float distance, began;
-        private bool dragged;
+        private bool dragged, hasDirection;
         public int Slot { get; private set; } = -1;
         public bool Active => Slot >= 0;
         public bool Cancelled { get; private set; }
@@ -29,7 +29,8 @@ namespace Alterverse.Combat
             if (slot < 0 || slot > 3 || !Ready(slot)) return false;
             Spec = abilities.AimFor(slot);
             Slot = slot; pressOrigin = screen; began = Time.unscaledTime; dragged = false; Cancelled = false;
-            rawDirection = AimGeometry.Direction(transform.forward); distance = Spec.castRange * .65f;
+            if (!AimingSettings.Current.rememberAimDirection || !hasDirection) rawDirection = AimGeometry.Direction(transform.forward);
+            distance = Spec.castRange * .65f;
             Rebuild();
             if (!Spec.castOnRelease) { Release(); return false; }
             return true;
@@ -40,13 +41,15 @@ namespace Alterverse.Combat
             if (!Ready(Slot)) { Cancel(); return; }
             Cancelled = inCancelZone;
             Vector2 delta = (screen - pressOrigin) / Mathf.Max(.01f, scale);
-            if (delta.magnitude >= AimingSettings.Current.dragDeadZone)
+            float deadZone = Spec.aimType == AimType.Area ? AimingSettings.Current.dragDeadZone : AimingSettings.Current.directionDeadZone;
+            if (delta.magnitude >= Mathf.Max(.1f, deadZone))
             {
                 dragged = true;
                 view = view != null ? view : Camera.main;
                 Vector3 right = view != null ? AimGeometry.Direction(view.transform.right) : Vector3.right;
                 Vector3 forward = view != null ? AimGeometry.Direction(view.transform.forward) : Vector3.forward;
                 rawDirection = AimGeometry.Direction(right * delta.x + forward * delta.y);
+                hasDirection = true;
                 distance = Mathf.Clamp01(delta.magnitude / Mathf.Max(1f, AimingSettings.Current.dragRadius)) * Spec.castRange;
             }
             else if (dragged && Spec.aimType == AimType.Area) distance = 0f;
@@ -59,14 +62,17 @@ namespace Alterverse.Combat
             Vector3 direction = rawDirection; Health target = null;
             if (Spec.aimType == AimType.Ally)
                 target = AimGeometry.Select(gameObject, direction, Spec.castRange, Spec.coneAngle * .5f, true, Slot == 2);
+            else if (AimGeometry.UsesConeCapture(Spec)) target = AimGeometry.CaptureConeTarget(gameObject, rawDirection, Spec);
             else if (Spec.aimType != AimType.Self && Spec.aimType != AimType.SelfArea && Spec.aimType != AimType.Dash)
                 direction = AimGeometry.Assist(gameObject, rawDirection, Spec, out target);
             Vector3 point = Spec.aimType == AimType.SelfArea || Spec.aimType == AimType.Self
                 ? transform.position : transform.position + direction * distance;
             if (!dragged && Spec.aimType == AimType.Area && target != null)
                 point = target.transform.position;
+            bool captured = Spec.targetingMode == TargetingMode.Cone && target != null;
+            if (captured) point = target.transform.position;
             Pose = new AimPose(direction, AimGeometry.ClampPoint(transform.position, point, Spec.castRange),
-                Spec.targetingMode == TargetingMode.Ally || Spec.targetingMode == TargetingMode.Homing ? target : null);
+                Spec.targetingMode == TargetingMode.Ally || Spec.targetingMode == TargetingMode.Homing ? target : null, captured);
         }
         public bool Release()
         {

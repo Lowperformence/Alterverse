@@ -5,6 +5,8 @@ namespace Alterverse.Combat
 {
 [SerializeField]private float stickSeconds=1.25f;private Health current,self;private float stickyUntil;private TeamMember team;public Health Current=>Valid(current)?current:null;private void Awake(){team=GetComponent<TeamMember>();self=GetComponent<Health>();}
 // Manual aiming deliberately bypasses sticky target binding. Eligibility is angular first.
+public Health AcquireCone(float range,Vector3 direction,float coneAngle)
+=>AcquireAssisted(range,direction,coneAngle*.5f);
 public Health AcquireAssisted(float range,Vector3 direction,float angle)
 {
 current=angle>0?AimGeometry.Select(gameObject,direction,range,angle):null;

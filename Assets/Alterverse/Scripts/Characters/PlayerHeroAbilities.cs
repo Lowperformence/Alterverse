@@ -71,7 +71,7 @@ namespace Alterverse.Characters
             if (h == HeroId.Kaelon && slot == 1) return $"Gain {s.Power:0} shield for 4s.";
             if (h == HeroId.Rook && slot == 1) return $"Recover {s.Power:0} HP and gain 20 shield for 3s.";
             if (h == HeroId.Kaelon && slot == 0) return $"{s.Power:0} damage and a 0.55s stun. Brief stun immunity follows.";
-            if (h == HeroId.Nyra && slot == 3) return $"Three fixed-direction shots, {s.Power:0} total damage. Enemies can dodge; stunning interrupts the volley.";
+            if (h == HeroId.Nyra && slot == 3) return $"Three shots at the captured position, {s.Power:0} total damage. Enemies can dodge; stunning interrupts the volley.";
             if (h == HeroId.Veyr && slot == 3) return $"{s.Power:0} damage after {s.Windup:0.##}s, up to 35% more against wounded heroes. Targets can leave the aimed cone.";
             if (s.Radius > 0)
                 return $"After {s.Windup:0.#}s: {s.Power:0} damage in {s.Radius:0.#}m." +
@@ -105,12 +105,12 @@ namespace Alterverse.Characters
             if (!isActiveAndEnabled || Time.timeScale <= 0f || slot < 0 || slot > 3 || execution == null || execution.Remaining(slot) > 0 ||
                 !HeroCombatStatus.CanAct(gameObject) || GetComponent<Health>().IsDead ||
                 !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
-            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, AimFor(slot).castRange), pose.Target);
+            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, AimFor(slot).castRange), pose.Target, pose.HasAimPoint);
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
                 if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(gameObject, slot, pose)) return false;
                 execution.MarkNetworkRequestCooldown(slot);
-                NotifyMotorAttack(slot, pose.Target, pose.Direction);
+                NotifyMotorAttack(slot, pose.Target, pose.CastDirection(transform.position));
                 Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
                 return true;
             }
@@ -133,7 +133,7 @@ namespace Alterverse.Characters
             bool success = execution.TryCastAimed(slot, pose);
             if (success)
             {
-                NotifyMotorAttack(slot, pose.Target, pose.Direction);
+                NotifyMotorAttack(slot, pose.Target, pose.CastDirection(transform.position));
                 Alterverse.Onboarding.OnboardingSessionGuard.Ability(this);
             }
             return success;

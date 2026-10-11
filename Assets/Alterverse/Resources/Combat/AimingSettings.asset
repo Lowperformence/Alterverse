@@ -12,12 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b842aa67bdb75a45afa6a5ba13245eba, type: 3}
   m_Name: AimingSettings
   m_EditorClassIdentifier:
-  meleeConeAngle: 80
-  rangedConeAngle: 45
+  meleeConeAngle: 70
+  rangedConeAngle: 35
+  basicMeleeConeAngle: 80
   aimAssistAngle: 8
   projectileWidth: 0.3
   dragRadius: 96
   dragDeadZone: 10
+  directionDeadZone: 2
+  rememberAimDirection: 0
   tapSeconds: 0.2
   deliveryCapacity: 16
   previewColor: {r: 1, g: 0.94, b: 0.56, a: 0.22}

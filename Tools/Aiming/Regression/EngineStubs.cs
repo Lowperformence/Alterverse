@@ -32,12 +32,12 @@ namespace UnityEngine {
  public class WaitForSeconds {public float Seconds;public WaitForSeconds(float s){Seconds=s;}}
  public static class Clock {private class Task {public MonoBehaviour Owner;public IEnumerator Routine;public float Due;}private static List<Task> tasks=new();public static void Start(MonoBehaviour owner,IEnumerator e){var t=new Task{Owner=owner,Routine=e};if(e.MoveNext()){t.Due=Time.time+(e.Current is WaitForSeconds w?w.Seconds:0);tasks.Add(t);}}public static void Stop(MonoBehaviour o)=>tasks.RemoveAll(t=>t.Owner==o);public static void Advance(float dt){Time.deltaTime=dt;Time.time+=dt;Time.unscaledTime+=dt;Time.frameCount++;foreach(var t in tasks.ToArray()){if(!t.Owner.isActiveAndEnabled){tasks.Remove(t);continue;}if(Time.time+.000001f<t.Due)continue;if(!t.Routine.MoveNext()){tasks.Remove(t);continue;}t.Due=Time.time+(t.Routine.Current is WaitForSeconds w?w.Seconds:0);}}public static void Reset(){tasks.Clear();Time.time=Time.unscaledTime=0;Time.timeScale=1;}}
  public static class Time {public static float time,unscaledTime,deltaTime=.016f,timeScale=1;public static float unscaledDeltaTime=>deltaTime;public static int frameCount;}
- public static class Resources {public static T Load<T>(string s)where T:class=>null;} public class Camera:Component {public static Camera main;public Vector3 WorldToScreenPoint(Vector3 p)=>p;}
+ public static class Resources {public static bool PreviewShaderAvailable;public static T Load<T>(string s)where T:class=>PreviewShaderAvailable&&typeof(T)==typeof(Shader)&&s=="CombatVfx/ManualAimPreview"?new Shader() as T:null;} public class Camera:Component {public static Camera main;public Vector3 WorldToScreenPoint(Vector3 p)=>p;}
  public static class Debug {public static void Log(object x)=>Console.WriteLine(x);public static void LogWarning(object x)=>Console.WriteLine(x);}
  public static class Application {public static bool isPlaying=true;}
  public static class Gizmos {public static void DrawWireSphere(Vector3 p,float r){}}
  public class Shader:Object {public static int PropertyToID(string s)=>s.GetHashCode();}
- public class Material:Object {public Material(Shader s){}public void SetColor(int p,Color c){}public void SetFloat(int p,float f){}}
+ public class Material:Object {public readonly Dictionary<int,float> Floats=new();public Material(Shader s){}public void SetColor(int p,Color c){}public void SetFloat(int p,float f){Floats[p]=f;}}
  public class MeshRenderer:Component {public Material sharedMaterial;public Rendering.ShadowCastingMode shadowCastingMode;public bool receiveShadows;}
  public class Texture2D:Object {public Texture2D(int w,int h,TextureFormat f,bool m,bool l){}public FilterMode filterMode;public TextureWrapMode wrapMode;public HideFlags hideFlags;public void SetPixels32(Color32[] p){}public void Apply(bool a,bool b){}}
  public enum TextureFormat{RGBA32}public enum FilterMode{Bilinear}public enum TextureWrapMode{Clamp}public enum HideFlags{HideAndDontSave}
