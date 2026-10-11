@@ -70,6 +70,7 @@ namespace Alterverse.Visuals
             instance.transform.localPosition = new Vector3(0, -.96f, 0);
             instance.transform.localRotation = Quaternion.identity;
             instance.transform.localScale = new Vector3(1.10f, 1f, 1.10f);
+            if (hero == HeroId.Timmy) instance.transform.localScale *= TimmyBalance.ModelScale;
             // A single final pose layer samples Blender clips; an imported Animator must not also write the same bones.
             foreach (Animator animator in instance.GetComponentsInChildren<Animator>(true)) animator.enabled = false;
             RestoreImportedBindPose(instance.transform, hero);
@@ -106,7 +107,7 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            HeroLimbTechDetails.Apply(instance.transform, hero);
+            if(hero != HeroId.Timmy) HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
                 hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
             HeroUndersuitFabric.Apply(instance.transform);
@@ -202,7 +203,7 @@ namespace Alterverse.Visuals
             // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
             // Zhaev/Veyr now also uses 1.6x hands: 60% larger than his previous 1x hands.
             // The palm offset and inverse grip scale below keep the original weapons fitted.
-            float scale = hero == HeroId.Mira || hero == HeroId.Nerok ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
+            float scale = hero == HeroId.Mira || hero == HeroId.Nerok || hero == HeroId.Timmy ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {

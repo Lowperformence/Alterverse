@@ -1,13 +1,15 @@
 using UnityEngine;
 namespace Alterverse.Characters
 {
-public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}
+public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy}
 public enum HeroRole{Assassin,Tank,Marksman,Mage,Support,Bruiser,Skirmisher}
 public sealed class HeroIdentity:MonoBehaviour
 {
-public const int HeroCount=8;
+public const int CatalogHeroCount=9;
+public static int HeroCount=>Season2Content.TimmyAvailable?CatalogHeroCount:8;
 public const float HeroCollisionRadius=.40f;
 public const float HeroCollisionHeight=2f;
+private Vector3 controllerBaseCenter,capsuleBaseCenter;private bool capturedControllerCenter,capturedCapsuleCenter;
 [SerializeField]private HeroId hero;[SerializeField]private HeroRole role;public HeroId Hero=>hero;public HeroRole Role=>role;public string DisplayName=>NameFor(hero);
 public void Configure(HeroId id)
 {
@@ -15,9 +17,9 @@ gameObject.layer=Alterverse.Combat.GameplayCollision.Units;hero=id;role=RoleFor(
 // Keep hero combat hitboxes slightly tighter than the visuals so dodges and close passes feel clean.
 // Unit-vs-unit hard collision is already disabled; this also makes targeting volumes less oversized.
 CharacterController controller=GetComponent<CharacterController>();
-if(controller!=null){controller.height=HeroCollisionHeight;controller.radius=HeroCollisionRadius;}
+if(controller!=null){controller.height=id==HeroId.Timmy?TimmyBalance.CollisionHeight:HeroCollisionHeight;controller.radius=id==HeroId.Timmy?TimmyBalance.CollisionRadius:HeroCollisionRadius;if(!capturedControllerCenter){controllerBaseCenter=controller.center;capturedControllerCenter=true;}controller.center=controllerBaseCenter+Vector3.up*(id==HeroId.Timmy?(TimmyBalance.CollisionHeight-HeroCollisionHeight)*.5f:0f);}
 CapsuleCollider capsule=GetComponent<CapsuleCollider>();
-if(capsule!=null){capsule.height=HeroCollisionHeight;capsule.radius=HeroCollisionRadius;}
+if(capsule!=null){capsule.height=id==HeroId.Timmy?TimmyBalance.CollisionHeight:HeroCollisionHeight;capsule.radius=id==HeroId.Timmy?TimmyBalance.CollisionRadius:HeroCollisionRadius;if(!capturedCapsuleCenter){capsuleBaseCenter=capsule.center;capturedCapsuleCenter=true;}capsule.center=capsuleBaseCenter+Vector3.up*(id==HeroId.Timmy?(TimmyBalance.CollisionHeight-HeroCollisionHeight)*.5f:0f);}
 // Tahla/Mira is procedurally assembled by StylizedHeroVisual. Install her dedicated visual
 // interceptor before that component builds so side mantle panels can be omitted before batching
 // and the feminine face polish is applied consistently in matches and menu previews.
@@ -46,15 +48,15 @@ gameObject.AddComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>();
 if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)
 gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
 }
-public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",HeroId.Nerok=>"Nerok Abyss",_=>"Unknown Hero"};
-public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,HeroId.Nerok=>HeroRole.Bruiser,_=>HeroRole.Skirmisher};
+public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",HeroId.Nerok=>"Nerok Abyss",HeroId.Timmy=>"Andromeda Timmy",_=>"Unknown Hero"};
+public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Timmy=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,HeroId.Nerok=>HeroRole.Bruiser,_=>HeroRole.Skirmisher};
 // Preserve the existing 15% durability adjustment and add 5% to current base HP.
 // The independent universal hero shield is configured by Health.
 public const float GlobalHealthMultiplier=1.15f*1.05f;
 // THE TRAVELER receives an additional 5% hero-specific health increase on top of the global multiplier.
 // Sivra's 185 HP and Ione's 200 HP are final in-game maxima.
 public static float BaseHealth(HeroId id)=>id==HeroId.Nyra?185f:id==HeroId.Elyra?200f:
-    (id switch{HeroId.Veyr=>200f,HeroId.Kaelon=>380f*1.05f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Kaelon=>17f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>22f,_=>17f};
+    (id switch{HeroId.Veyr=>200f,HeroId.Timmy=>TimmyBalance.RawHealth,HeroId.Kaelon=>380f*1.05f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
+public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>24f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>17f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>22f,_=>17f};
 }
 }

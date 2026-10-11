@@ -90,15 +90,18 @@ namespace UnityEngine {
  }
 }
 namespace Alterverse.Characters {
- public enum HeroId {Nyra,Kaelon,Nerok,Mira,Veyr,Rook,Elyra,Traveler}
+ public enum HeroId {Nyra,Kaelon,Nerok,Mira,Veyr,Rook,Elyra,Traveler,Timmy}
  public class HeroIdentity:UnityEngine.MonoBehaviour {public HeroId Hero;public string DisplayName=>Hero.ToString();}
  public class HeroLocomotion:UnityEngine.MonoBehaviour {public void FaceAction(UnityEngine.Vector3 v,float time){} }
  public static class HeroCombatProfile {public class Stats {public float AttackInterval=1f;}public static Stats StatsFor(HeroId h){return new Stats();}}
 }
+namespace Alterverse.Multiplayer {public static class CoopAuthority {public static bool CanSimulateHostGameplay=>true;}}
 namespace Alterverse.Combat {
+ public class LaneMinion:UnityEngine.MonoBehaviour {}
+ public class HotZoneTank:UnityEngine.MonoBehaviour {}
  public class BasicAttack:UnityEngine.MonoBehaviour {public float AttackCooldown=1f;}
  public class Health:UnityEngine.MonoBehaviour {public bool IsDead;}
- public static class HeroCombatStatus {public static bool CanAct(UnityEngine.GameObject g){return true;}}
+ public class HeroCombatStatus:UnityEngine.MonoBehaviour {public bool Stunned;public static bool CanAct(UnityEngine.GameObject g){return true;}}
 }
 namespace Alterverse.Visuals {
  public class HeroVisualMotion:UnityEngine.MonoBehaviour {public bool AbilityActionActive,ArmActionActive,Dashing,GroundingSuspended;
@@ -109,6 +112,8 @@ namespace Alterverse.Visuals {
   public void PulseBasic(float t){} }
  public class AuthoredHeroPresentation:UnityEngine.MonoBehaviour {public int finalized;public void FinalizeCombatGrip(bool b){finalized++;}}
  public class SiegeTankAppearance:UnityEngine.MonoBehaviour {public void OrientHammerGuard(UnityEngine.Transform actor,UnityEngine.Transform hand){} }
+ public class MechMachineGunVisual:UnityEngine.MonoBehaviour {public void SetAim(UnityEngine.Vector3 a,Alterverse.Combat.Health h){}public void Pulse(float t){}}
+ public class MonsterAttackCue:UnityEngine.MonoBehaviour {public void Begin(float t,UnityEngine.Vector3 a,Alterverse.Combat.Health h){}}
  public class CreatureAttackMotion:UnityEngine.MonoBehaviour {public void Begin(float t,UnityEngine.Vector3 v){} }
  public class ReferenceMonsterRig:UnityEngine.MonoBehaviour {public void PulseAttack(float t){} }
  public class PlanetSentinelVisual:UnityEngine.MonoBehaviour {public void PulseAttack(float t){} }

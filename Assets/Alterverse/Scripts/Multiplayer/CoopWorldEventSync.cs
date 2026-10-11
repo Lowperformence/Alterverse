@@ -1,4 +1,5 @@
 using Alterverse.Combat;
+using Alterverse.Characters;
 using Alterverse.Match;
 using Unity.Collections;
 using Unity.Netcode;
@@ -117,12 +118,17 @@ namespace Alterverse.Multiplayer
             {
                 var hp=Health.Active[i];if(hp==null||hp.IsDead)continue;
                 if(slot>=0)
-                {var hero=hp.GetComponent<CoopHeroSlot>();if(hero!=null&&hero.Slot==slot){if(hero.IsLocalHuman)return;actor=hp.gameObject;break;}}
+                {var hero=hp.GetComponent<CoopHeroSlot>();if(hero!=null&&hero.Slot==slot){if(hero.IsLocalHuman&&!(hp.GetComponent<HeroIdentity>()?.Hero==HeroId.Timmy&&windup<=.00101f))return;actor=hp.gameObject;break;}}
                 else {var entity=hp.GetComponent<CoopWorldEntityKey>();if(entity!=null&&entity.Key==key.ToString()){actor=hp.gameObject;break;}}
             }
             if(actor==null)return;
             Alterverse.Visuals.CombatMotion.Present(actor,windup,new Vector3(x,y,z));
             actor.GetComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>()?.Seek(elapsed);
+            if(actor.GetComponent<HeroIdentity>()?.Hero==HeroId.Timmy&&windup<=.00101f)
+            {
+                Alterverse.Visuals.HeroSkillVfx.Spell(actor,new Vector3(x,y,z),3);
+                Alterverse.Audio.HeroCombatAudio.Impact(actor,3,new Vector3(x,y,z));
+            }
             actor.GetComponent<Alterverse.Visuals.CreatureAttackMotion>()?.Seek(elapsed);
             actor.GetComponentInChildren<Alterverse.Visuals.ReferenceMonsterRig>()?.Seek(elapsed);
             actor.GetComponent<Alterverse.Visuals.PlanetSentinelVisual>()?.Seek(elapsed);

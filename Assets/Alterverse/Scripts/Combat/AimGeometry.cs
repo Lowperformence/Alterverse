@@ -45,7 +45,9 @@ namespace Alterverse.Combat
                 HeroLocomotion body = target.GetComponent<HeroLocomotion>();
                 Vector3 start = moving && body != null ? body.FrameStartPosition : end;
                 end = Vector3.Lerp(start, end, Mathf.Clamp01(motionFraction));
-                return Sweep(from, to, start, end, HeroIdentity.HeroCollisionRadius + width * .5f, out fraction);
+                HeroIdentity identity=target.GetComponent<HeroIdentity>();
+                float radius=identity!=null&&identity.Hero==HeroId.Timmy?TimmyBalance.CollisionRadius:HeroIdentity.HeroCollisionRadius;
+                return Sweep(from, to, start, end, radius + width * .5f, out fraction);
             }
             // Objective surfaces remain hittable without walking into their large visual models.
             Collider collider = target.GetComponent<Collider>() ?? target.GetComponentInChildren<Collider>();
@@ -64,7 +66,7 @@ namespace Alterverse.Combat
             return (collider.ClosestPoint(p) - p).sqrMagnitude <= width * width * .25f;
         }
 
-        public static Health Select(GameObject actor, Vector3 direction, float range, float angle, bool ally = false)
+        public static Health Select(GameObject actor, Vector3 direction, float range, float angle, bool ally = false, bool heroesOnly = false)
         {
             Health best = null; float bestScore = float.MaxValue;
             TeamMember team = actor.GetComponent<TeamMember>();
@@ -72,6 +74,7 @@ namespace Alterverse.Combat
             {
                 Health h = Health.Active[i];
                 if (h == null || h.IsDead || !h.isActiveAndEnabled) continue;
+                if (heroesOnly && h.GetComponent<HeroIdentity>() == null) continue;
                 if (ally)
                 {
                     TeamMember other = h.GetComponent<TeamMember>();
@@ -102,10 +105,13 @@ namespace Alterverse.Combat
         }
         public static bool UsesConeCapture(AimSpec spec)
             => (spec.targetingMode == TargetingMode.Cone || spec.targetingMode == TargetingMode.Homing) &&
-                (spec.aimType == AimType.Melee || spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing);
+                (spec.aimType == AimType.Melee || spec.aimType == AimType.Projectile || spec.aimType == AimType.Beam || spec.aimType == AimType.Homing || spec.aimType == AimType.Dash);
         public static Health CaptureConeTarget(GameObject actor, Vector3 direction, AimSpec spec)
         {
             SoftTargeting soft = actor.GetComponent<SoftTargeting>();
+            if(spec.aimType==AimType.Dash)
+                return soft != null ? soft.AcquireCone(spec.castRange,direction,spec.coneAngle,true)
+                    : Select(actor,direction,spec.castRange,spec.coneAngle*.5f,heroesOnly:true);
             return soft != null ? soft.AcquireCone(spec.castRange, direction, spec.coneAngle)
                 : Select(actor, direction, spec.castRange, spec.coneAngle * .5f);
         }

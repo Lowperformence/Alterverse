@@ -36,6 +36,12 @@ namespace Alterverse.Characters
         {
             return id switch
             {
+                HeroId.Timmy=>new HeroAbilityLoadout(
+                    new("Light Paws",0,0,0),
+                    new("Claw Swipe",TimmyBalance.ClawCooldown,TimmyBalance.ClawDamage,TimmyBalance.ClawRange),
+                    new("Stardust",TimmyBalance.DustCooldown,TimmyBalance.DustDamage,TimmyBalance.DustRange,TimmyBalance.DustRadius,TimmyBalance.DustWindup),
+                    new("Jet Pounce",TimmyBalance.JetCooldown,0,TimmyBalance.JetRange),
+                    new("Scratch",TimmyBalance.ScratchCooldown,TimmyBalance.ScratchDamage,TimmyBalance.ScratchRange,0,TimmyBalance.ScratchWindup)),
                 HeroId.Veyr=>new HeroAbilityLoadout(
                     new("Fractured edge",0,0,0),
                     new("Null Cut",7,38,3.1f),

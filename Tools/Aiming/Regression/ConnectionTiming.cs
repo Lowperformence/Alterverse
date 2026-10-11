@@ -28,22 +28,24 @@ partial class Regression
   var ally=Hero(HeroId.Mira,0,Vector3.forward*1.5f);
   actor.GetComponent<Health>().TakeDamage(200);ally.GetComponent<Health>().TakeDamage(300);
   AimSpec aim=AimingSettings.Current.For(hero,slot);
-  bool utility=aim.aimType==AimType.Dash||aim.aimType==AimType.Self||aim.aimType==AimType.Ally||hero==HeroId.Mira&&slot==3;
+  bool scratch=hero==HeroId.Timmy&&slot==3;
+  bool utility=!scratch&&aim.aimType==AimType.Dash||aim.aimType==AimType.Self||aim.aimType==AimType.Ally||hero==HeroId.Mira&&slot==3;
   var observed=aim.aimType==AimType.Ally||hero==HeroId.Mira&&slot==3?ally:utility?actor:enemy;
   float before=Total(observed),started=Time.time;Vector3 from=actor.transform.position;
   var pose=new AimPose(Vector3.forward,enemy.transform.position,aim.aimType==AimType.Ally?ally.GetComponent<Health>():null);
   bool cast=slot<0?actor.GetComponent<BasicAttack>().TryAttack():actor.GetComponent<PlayerHeroAbilities>().CastAimed(slot,pose);
   Check(cast,hero+" timing cast "+slot+" at "+fps+" FPS");
-  float result=FirstEffect(observed,before,started,1f/fps,aim.aimType==AimType.Dash?actor:null,from);
+  float result=FirstEffect(observed,before,started,1f/fps,aim.aimType==AimType.Dash&&!scratch?actor:null,from);
   Check(result>=0,hero+" timing effect reaches intended body "+slot);
   float windup=slot<0?HeroAttackDelivery.Windup(hero):HeroAttackDelivery.AbilityWindup(hero,slot,HeroAbilityKit.LoadoutFor(hero).Spec(slot));
   float expected=utility&&aim.aimType!=AimType.SelfArea?0:windup;
   if(aim.aimType==AimType.Projectile||aim.aimType==AimType.Homing)
    expected+=Mathf.Max(0,distance-(.4f+aim.projectileWidth*.5f))/aim.projectileSpeed;
   if(hero==HeroId.Nerok&&slot==3)expected+=.5f;
+  if(scratch)expected+=TimmyBalance.ScratchLeapSeconds+TimmyBalance.ScratchTickSeconds;
   // Windup and contact each round to a gameplay frame; coroutine fixture has 1 us tolerance.
   Check(result+1.1e-6f>=expected,hero+" no damage before windup / body contact "+slot);
-  Check(result<=expected+2f/fps+1.1e-5f,hero+" no unexplained acquisition delay "+slot);
+  Check(result<=expected+(scratch?3f:2f)/fps+1.1e-5f,hero+" no unexplained acquisition delay "+slot);
   return result;
  }
  static void FastReleaseTiming(bool print)
@@ -103,7 +105,7 @@ partial class Regression
   if(print)Console.WriteLine("TIMING,fps,hero,slot,attack,aimType,distance_m,first_effect_ms");
   foreach(int fps in timingFps)foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=-1;slot<4;slot++)
   {
-   float distance=2f;float seconds=MeasureAttack(hero,slot,fps,distance);
+   float distance=slot<0?Mathf.Min(2f,HeroCombatProfile.StatsFor(hero).AttackRange-.1f):2f;float seconds=MeasureAttack(hero,slot,fps,distance);
    if(print)Console.WriteLine("TIMING,"+fps+","+hero+","+slot+","+(slot<0?"Basic":HeroAbilityKit.LoadoutFor(hero).Spec(slot).Name)+","+AimingSettings.Current.For(hero,slot).aimType+","+Number(distance)+","+Number(seconds*1000));
   }
   // An extra 4 m sample exposes the distance-dependent portion of ranged basics.

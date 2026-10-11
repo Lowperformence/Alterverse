@@ -44,7 +44,8 @@ namespace Alterverse.UI
                 faces[i].anchorMin=faces[i].anchorMax=new Vector2(0,1);
                 faces[i].pivot=new Vector2(.5f,.5f);
                 var image=go.GetComponent<RawImage>();
-                Texture2D heroIcon=hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):null;
+                Texture2D heroIcon=hero==HeroId.Nerok?Resources.Load<Texture2D>("CyberShark/Icons/"+i):
+                    hero==HeroId.Timmy?Resources.Load<Texture2D>("AndromedaTimmy/Icons/"+i):null;
                 Texture2D art=heroIcon!=null?heroIcon:atlas;
                 image.texture=art;
                 image.raycastTarget=false;
@@ -102,7 +103,7 @@ namespace Alterverse.UI
             HeroId.Veyr=>new Color(.72f,.24f,1),HeroId.Kaelon=>new Color(1,.64f,.16f),
             HeroId.Nyra=>new Color(.12f,.78f,1),HeroId.Elyra=>new Color(.53f,.34f,1),
             HeroId.Mira=>new Color(.14f,1,.57f),HeroId.Rook=>new Color(1,.3f,.08f),
-            HeroId.Traveler=>new Color(.16f,.82f,1f),HeroId.Nerok=>new Color(.04f,.72f,1f),_=>Color.white
+            HeroId.Traveler=>new Color(.16f,.82f,1f),HeroId.Nerok=>new Color(.04f,.72f,1f),HeroId.Timmy=>new Color(.30f,.85f,1f),_=>Color.white
         };
 
         public void SetVisible(bool visible){if(canvas!=null&&canvas.enabled!=visible)canvas.enabled=visible;}

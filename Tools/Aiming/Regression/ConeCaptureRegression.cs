@@ -19,7 +19,7 @@ partial class Regression
   {
    AimSpec spec=AimingSettings.Current.For(hero,slot);
    bool single=spec.aimType==AimType.Melee||spec.aimType==AimType.Projectile||spec.aimType==AimType.Beam;
-   Check((spec.targetingMode==TargetingMode.Cone)==single,hero+" slot "+slot+" cone capture only for directed single-target skills");
+   Check((spec.targetingMode==TargetingMode.Cone)==(single||hero==HeroId.Timmy&&slot==3),hero+" slot "+slot+" cone capture only for directed single-target skills");
    if(!single)continue;
    Reset();var actor=Hero(hero,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Angle(spec.coneAngle*.5f-1,2));
    var aim=ManualAiming.For(actor);Check(aim.Begin(slot,new Vector2(700,100)),"cone begins "+hero+slot);

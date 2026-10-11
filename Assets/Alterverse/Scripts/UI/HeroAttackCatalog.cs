@@ -22,7 +22,7 @@ namespace Alterverse.UI
 
         private static HeroAttackCard[][] BuildAll()
         {
-            HeroAttackCard[][] all=new HeroAttackCard[HeroIdentity.HeroCount][];
+            HeroAttackCard[][] all=new HeroAttackCard[HeroIdentity.CatalogHeroCount][];
             for(int i=0;i<all.Length;i++)all[i]=Build((HeroId)i);
             return all;
         }
@@ -33,7 +33,7 @@ namespace Alterverse.UI
             HeroCombatStats stats=HeroCombatProfile.StatsFor(hero);
             return new[]
             {
-                new HeroAttackCard("BASIC","Basic Attack",
+                new HeroAttackCard("BASIC",hero==HeroId.Timmy?"Claw":"Basic Attack",
                     $"{HeroIdentity.AttackDamage(hero):0} DMG  •  RANGE {stats.AttackRange:0.##}  •  {stats.AttackInterval:0.##}s / SHOT  •  WINDUP {HeroAttackDelivery.Windup(hero):0.##}s",
                     BasicEffect(hero)),
                 Ability(hero,"SKILL 1",0,kit.Q),
@@ -71,6 +71,7 @@ namespace Alterverse.UI
         private static string BasicEffect(HeroId hero)=>hero switch
         {
             HeroId.Veyr=>"Fast melee pressure for finishing isolated targets.",
+            HeroId.Timmy=>$"Short-range claw strike. Light Paws grants {(TimmyBalance.PassiveSpeed-1f)*100:0}% speed for {TimmyBalance.PassiveSeconds:0.#}s after a damaging skill hit, at most once every {TimmyBalance.PassiveCooldown:0.#}s.",
             HeroId.Kaelon=>"Heavy frontline strike with short melee reach.",
             HeroId.Nyra=>"Rapid long-range rifle fire.",
             HeroId.Elyra=>"Ranged dimensional basic attack.",
@@ -83,6 +84,13 @@ namespace Alterverse.UI
 
         private static string Effect(HeroId hero,int slot)=>hero switch
         {
+            HeroId.Timmy=>slot switch
+            {
+                0=>"A stronger single-target claw swipe with short melee reach.",
+                1=>$"Place a stardust burst; damages enemies in the circle and slows them by {(1f-TimmyBalance.DustSlow)*100:0}% for {TimmyBalance.DustSlowSeconds:0.#}s.",
+                2=>$"Jet-assisted dash up to {TimmyBalance.JetRange:0.#}m in the chosen direction.",
+                _=>$"Leap up to {TimmyBalance.ScratchRange:0.#}m toward one aimed enemy's cast position. On contact, root that enemy for {TimmyBalance.ScratchHoldSeconds:0.#}s and deal {TimmyBalance.ScratchDamage:0} damage in {TimmyBalance.ScratchTicks} ticks. Timmy channels; the target can attack him."
+            },
             HeroId.Veyr=>slot switch
             {
                 0=>"Single-target slash.",

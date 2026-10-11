@@ -53,7 +53,7 @@ namespace Alterverse.Characters
         public Vector3 DashDestination=>transform.position+dashDirection*dashRemaining;
         public bool IsDashing => dashRemaining > .001f;
         public bool OwnsMovementFrame => IsForcedMoving || IsDashing || dashFrame == Time.frameCount;
-        public bool CanMove => isActiveAndEnabled && focused && health != null && !health.IsDead && !status.Stunned && Time.timeScale > 0;
+        public bool CanMove => isActiveAndEnabled && focused && health != null && !health.IsDead && !status.Stunned && !status.Rooted && Time.timeScale > 0;
         public float SpeedMultiplier => status.MoveMultiplier;
         public Vector3 Velocity { get; private set; }
         public Vector3 LastCollisionNormal { get; private set; }
@@ -108,7 +108,7 @@ namespace Alterverse.Characters
                 transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(facing),1080f*Time.deltaTime);
             moveFacing=Vector3.zero;
         }
-        public bool BeginDash(Vector3 end)
+        public bool BeginDash(Vector3 end, float duration = .16f)
         {
             if(!CanMove || OwnsMovementFrame)return false;
             Vector3 delta=end-transform.position;delta.y=0;
@@ -118,7 +118,7 @@ namespace Alterverse.Characters
             if(clearDistance<.1f)return false;
             dashRemaining=clearDistance;
             // Fixed readable traversal time; existing ability distance and cooldown remain intact.
-            dashSpeed=delta.magnitude/.16f; dashFrame=Time.frameCount;
+            dashSpeed=delta.magnitude/Mathf.Clamp(duration,.08f,.65f); dashFrame=Time.frameCount;
             return true;
         }
         public bool BeginForcedMove(Vector3 destination, float duration)

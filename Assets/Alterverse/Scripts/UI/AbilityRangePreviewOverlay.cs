@@ -34,7 +34,7 @@ namespace Alterverse.UI
                 Show(0, origin, pose.Direction, Mathf.Max(.7f, spec.aoeRadius), 0, spec, color);
             else
             {
-                Show(0, origin, pose.Direction, spec.castRange, spec.aimType == AimType.Dash ? 2 : 1, spec, color);
+                Show(0, origin, pose.Direction, spec.castRange, spec.aimType == AimType.Dash && spec.targetingMode != TargetingMode.Cone ? 2 : 1, spec, color);
                 if (spec.aimType == AimType.Ally && pose.Target != null)
                     Show(1, pose.Target.transform.position, pose.Direction, .65f, 0, spec, color);
             }

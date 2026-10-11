@@ -100,7 +100,8 @@ namespace Alterverse.AI
             // Mage follows visible CC after a human delay. Ordinary uncoordinated casts still work.
             if(coordinated&&h==HeroId.Elyra&&controlledTarget==target&&!followUp)return;
             if (TryCast(0,target)) return;
-            if ((h == HeroId.Veyr || h == HeroId.Elyra) && TryCast(1,target)) return;
+            if ((h == HeroId.Veyr || h == HeroId.Elyra || h == HeroId.Timmy) && TryCast(1,target)) return;
+            if(h==HeroId.Timmy&&safeEngage&&distance>TimmyBalance.ClawRange&&distance<6f)TryCast(2,target);
             if (h==HeroId.Traveler && distance<=kit.E.Range && TryCast(2,target)) return;
             if ((h == HeroId.Nerok || h == HeroId.Kaelon || h == HeroId.Nyra || h == HeroId.Rook) && distance <= Mathf.Max(kit.E.Range,kit.E.Radius)) TryCast(2,target);
         }
@@ -126,6 +127,7 @@ namespace Alterverse.AI
                 if(!controlled&&!group&&!sensor.HasSteadyMotion&&target.Current>spec.Power)return false;
             }
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
+            if(identity.Hero==HeroId.Timmy)direction=-direction;
             if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
             bool cast=execution.TryCast(slot,target,direction);
             if(cast&&slot==1&&identity.Hero==HeroId.Veyr&&brain!=null&&brain.Difficulty.Coordinated&&

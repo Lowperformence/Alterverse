@@ -28,17 +28,17 @@ namespace Alterverse.Characters
         }
         private void Update()
         {
-            bool stunned=!HeroCombatStatus.CanAct(gameObject);
+            bool stunned=GetComponent<HeroCombatStatus>()?.Stunned==true;
             if(stunned&&!wasStunned)
             {
                 // Interrupt preparation/channels, not projectiles already in flight or an
                 // incoming forced displacement owned by another hero (for example the hook).
                 GetComponent<HeroAttackDelivery>()?.CancelWindups();
-                life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
+                EndTimmyScratch();life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
             }
             wasStunned=stunned;
         }
-        private void CancelPending() { GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
+        private void CancelPending() { EndTimmyScratch();GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
@@ -97,7 +97,11 @@ namespace Alterverse.Characters
                 aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
-            if (hero == HeroId.Nerok)
+            if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
+            {
+                if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue))return false;
+            }
+            else if (hero == HeroId.Nerok)
             {
                 if(!TryCastShark(slot,target,ref presentationWindup,aimed))return false;
             }
@@ -287,6 +291,10 @@ namespace Alterverse.Characters
                 if(visual)HeroCombatAudio.Impact(gameObject,slot,target.transform.position);
                 switch (identity.Hero)
                 {
+                    case HeroId.Timmy:
+                        TriggerTimmyPassive();
+                        if(slot==1)HeroCombatStatus.Apply(target,TimmyBalance.DustSlow,TimmyBalance.DustSlowSeconds);
+                        break;
                     case HeroId.Veyr: if (slot == 1) HeroCombatStatus.Apply(target, .8f, 1.2f); break;
                     case HeroId.Kaelon: HeroCombatStatus.Apply(target, slot == 3 ? .5f : .65f, slot == 3 ? 2f : 1.5f, slot == 0 ? .55f : 0); break;
                     case HeroId.Nyra: if (slot == 2) HeroCombatStatus.Apply(target, .7f, 1.8f); break;

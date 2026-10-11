@@ -41,7 +41,7 @@ partial class Regression
  static float Total(GameObject g)=>g.GetComponent<Health>().Current+g.GetComponent<Health>().Shield;
  static void Step(float dt=.01f,Action movement=null)
  {
-  foreach(var g in GameObject.All.Where(g=>g.activeInHierarchy)) {var l=g.GetComponent<HeroLocomotion>();if(l!=null)l.FrameStartPosition=g.transform.position;}
+  foreach(var g in GameObject.All.Where(g=>g.activeInHierarchy)) {var l=g.GetComponent<HeroLocomotion>();if(l!=null){l.FrameStartPosition=g.transform.position;l.Advance(Time.time+dt);}}
   Clock.Advance(dt);
   movement?.Invoke();
   foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var e=g.GetComponent<HeroAbilityExecution>();if(e!=null)Call(e,"Update");}
@@ -116,6 +116,7 @@ partial class Regression
  {
   foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
   {
+   if(hero==HeroId.Timmy)continue; // Targeted leap/channel is covered by TimmyCases.
    Reset();var a=Hero(hero,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*2);var ally=Hero(HeroId.Mira,0,Vector3.forward*1.5f);
    a.GetComponent<Health>().TakeDamage(200);ally.GetComponent<Health>().TakeDamage(300);
    var execution=a.GetComponent<HeroAbilityExecution>();var spec=AimingSettings.Current.For(hero,slot);
@@ -430,10 +431,10 @@ partial class Regression
  }
  static void Main(string[] args)
  {
-  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();
+  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));
-  Console.WriteLine("PASS "+checks+" assertions: geometry, all 8 basics / 32 skills, dodges, AOE, gestures, multitouch, network direction/point, interrupts, connection timing at 30/60/120 FPS.");
+  Console.WriteLine("PASS "+checks+" assertions: existing 8 heroes, Timmy contact/root/channel, geometry, dodges, AOE, gestures, multitouch, network direction/point, interrupts and connection timing.");
  }
 }

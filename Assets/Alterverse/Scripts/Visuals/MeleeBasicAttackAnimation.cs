@@ -29,7 +29,7 @@ namespace Alterverse.Visuals
         private CombatAnimationLibrary.Clip clip;
         private float started = -100f, contact, duration, cancelStarted = -100f;
         private int serial;
-        private bool active, mirror;
+        private bool active, mirror, channelStrike;
         private bool reportedStandingPose;
         private float armGaitWeight = 1f;
         private Vector3 aim;
@@ -101,11 +101,13 @@ namespace Alterverse.Visuals
         public void Begin(float windup, Health attackTarget = null)
         {
             if (identity == null) return;
+            // Scratch ticks have already made contact: 1ms windup is a presentation-only channel pulse.
+            channelStrike = identity.Hero == HeroId.Timmy && windup <= .00101f;
             target = attackTarget; aim = target != null ? target.transform.position : transform.position + transform.forward;
             serial++; mirror = false;
             switch (identity.Hero)
             {
-                case HeroId.Veyr: clip = CombatAnimationLibrary.Find("slash_a"); mirror = serial % 2 == 0; break;
+                case HeroId.Veyr: case HeroId.Timmy: clip = CombatAnimationLibrary.Find("slash_a"); mirror = serial % 2 == 0; break;
                 case HeroId.Kaelon: case HeroId.Nerok: clip = CombatAnimationLibrary.Find("heavy_sweep"); break;
                 case HeroId.Rook: clip = CombatAnimationLibrary.Find(serial % 2 == 1 ? "jab" : "cross"); break;
                 case HeroId.Nyra: clip = null; break;
@@ -129,13 +131,14 @@ namespace Alterverse.Visuals
                 cancelStarted = Time.time;
                 for (int i = 0; i < bones.Length; i++) previousPose[i] = bones[i].LastLocal;
             }
-            active = false; target = null;
+            active = false; channelStrike = false; target = null;
         }
         private void OnDisable() { CancelStrike(); }
         private void Update()
         {
             if (!StrikeActive) return;
-            if ((health != null && health.IsDead) || !HeroCombatStatus.CanAct(gameObject)) { CancelStrike(); return; }
+            bool channelPose = channelStrike && (GetComponent<HeroCombatStatus>()?.Stunned != true || !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay);
+            if ((health != null && health.IsDead) || !HeroCombatStatus.CanAct(gameObject) && !channelPose) { CancelStrike(); return; }
             Vector3 facing = target != null ? target.transform.position - transform.position : aim - transform.position;
             if (locomotion == null) locomotion = GetComponent<HeroLocomotion>();
             locomotion?.FaceAction(facing, Mathf.Max(.02f, started + duration - Time.time));

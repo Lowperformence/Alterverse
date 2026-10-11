@@ -20,7 +20,7 @@ namespace Alterverse.UI
         private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "FRIENDS", "CLANS", "DAILY", "RANKING", "SETTINGS" };
         private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Friends, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
-        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER" };
+        private static readonly string[] Roles = { "ASSASSIN", "TANK", "MARKSMAN", "MAGE", "SUPPORT", "BRUISER", "TEMPORAL SKIRMISHER", "TIDAL BRUISER", "FELINE ASSASSIN" };
         private static readonly string[] RoleDescriptions = {
             "Close the distance. Isolate a vulnerable target, strike, then disengage.",
             "Hold the front. Shield your team and interrupt enemies at close range.",
@@ -29,8 +29,9 @@ namespace Alterverse.UI
             "Keep allies fighting. Heal, shield and slow enemies from the backline.",
             "Win the long fight. Trade at close range with heavy strikes and sustain.",
             "Slip between seconds. Reposition through rifts, control space and strike with chronolight.",
-            "Hook an enemy with your anchor. Shield yourself and control fights with a water vortex." };
-        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL" };
+            "Hook an enemy with your anchor. Shield yourself and control fights with a water vortex.",
+            "A small cat astronaut. Jet into range, scratch one enemy, then slip away." };
+        private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET" };
         private Page page = Page.Home;
         private bool visible = true, launching, coopLaunching, editingName, suspended;
         private bool choosingMatchMode;
@@ -611,17 +612,18 @@ namespace Alterverse.UI
         {
             Heading("Heroes",$"{HeroIdentity.HeroCount} heroes. Choose how you fight.");
             const float rosterWidth=244f;
+            float rowStep=HeroIdentity.HeroCount>8?48f:55f;
             for(int i=0;i<HeroIdentity.HeroCount;i++)
             {
-                Rect row=new Rect(Left,216+i*55,rosterWidth,50);
+                Rect row=new Rect(Left,216+i*rowStep,rosterWidth,rowStep-5f);
                 HeroId rowHero=(HeroId)i;
                 bool chosen=i==selectedHero;
                 bool owned=HeroUnlockInventory.Owned(rowHero);
                 if(theme.Action(row,"",selected:chosen))ChangeHero(i);
                 FrontEndTheme.Fill(new Rect(row.x+5,row.y+10,3,row.height-20),Alterverse.Visuals.StylizedArtDirection.HeroAccent(rowHero));
-                theme.Label(new Rect(row.x+18,row.y+5,row.width-32,24),HeroIdentity.NameFor(rowHero),theme.Body);
+                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?3f:5f),row.width-32,rowStep<55f?22f:24f),HeroIdentity.NameFor(rowHero),theme.Body);
                 string subtitle=owned?Roles[i]:$"LOCKED  •  {HeroUnlockCatalog.Price(rowHero):N0} SHARDS";
-                theme.Label(new Rect(row.x+18,row.y+31,row.width-32,18),subtitle,theme.Small,true);
+                theme.Label(new Rect(row.x+18,row.y+(rowStep<55f?25f:31f),row.width-32,rowStep<55f?17f:18f),subtitle,theme.Small,true);
             }
 
             HeroId heroId=(HeroId)selectedHero;
@@ -637,7 +639,7 @@ namespace Alterverse.UI
             DrawPortrait(new Rect(portraitX,282,portraitWidth,272));
             theme.Label(new Rect(portraitX,566,portraitWidth,46),RoleDescriptions[selectedHero],theme.Small,true);
             string weaponStatus=WeaponSkinInventory.Equipped(heroId)?WeaponSkinCatalog.For(heroId).Name:
-                heroId==HeroId.Veyr?"SHADOW STEEL":heroId==HeroId.Traveler?"CHRONOLUX FOCUS":heroId==HeroId.Nerok?"ABYSSAL ANCHOR":"ORIGINAL WEAPON";
+                heroId==HeroId.Veyr?"SHADOW STEEL":heroId==HeroId.Traveler?"CHRONOLUX FOCUS":heroId==HeroId.Nerok?"ABYSSAL ANCHOR":heroId==HeroId.Timmy?"SUIT CLAWS":"ORIGINAL WEAPON";
             theme.FitLabel(new Rect(portraitX,616,portraitWidth,24),
                 heroOwned?"EQUIPMENT  /  "+weaponStatus:$"PREMIUM HERO  /  {HeroUnlockCatalog.Price(heroId):N0} SHARDS",theme.Small,true);
 
@@ -842,6 +844,15 @@ namespace Alterverse.UI
             HeroId hero=(HeroId)selectedHero;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,weaponSkinVariant);
             bool heroAvailable=HeroUnlockInventory.Owned(hero);
+            if(hero==HeroId.Timmy)
+            {
+                showcase.Present(hero,true);DrawPortrait(new Rect(Left,270,ContentWidth*.54f,340));
+                theme.Label(new Rect(Left+ContentWidth*.54f+32,282,ContentWidth*.46f-32,120),"ANDROMEDA TIMMY  /  ORIGINAL SUIT CLAWS",theme.Heading,true);
+                theme.Label(new Rect(Left+ContentWidth*.54f+32,412,ContentWidth*.46f-32,100),"Season 2 preview. Weapon cosmetics are not available yet.",theme.Body,true);
+                if(theme.Action(new Rect(Left,614,64,54),"<"))ChangeHero((selectedHero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);
+                if(theme.Action(new Rect(Right-64,614,64,54),">"))ChangeHero((selectedHero+1)%HeroIdentity.HeroCount);
+                return;
+            }
             bool owned=WeaponSkinInventory.Owned(hero,weaponSkinVariant);
             bool equipped=WeaponSkinInventory.EquippedVariant(hero)==weaponSkinVariant;
             float w=ContentWidth*.54f,x=Left+w+32,rw=ContentWidth-w-32;

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     // Semantic effects facade shared by players, bots, support items and founder presentation.
-    public sealed class HeroSkillVfx:MonoBehaviour
+    public sealed partial class HeroSkillVfx:MonoBehaviour
     {
         private static readonly Color DarkCore=new Color(.018f,.009f,.035f,.96f);
         private static HeroId Hero(GameObject actor)=>actor!=null&&actor.TryGetComponent(out HeroIdentity id)?id.Hero:HeroId.Veyr;
@@ -295,6 +295,7 @@ namespace Alterverse.Visuals
         public static void Cast(GameObject actor,int slot)
         {
             if(actor==null)return;
+            if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);
             Quaternion facing=actor.transform.rotation;
             switch(h)
@@ -629,6 +630,7 @@ namespace Alterverse.Visuals
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
             if(actor==null)return;HeroId h=Hero(actor);
+            if(h==HeroId.Timmy){TimmyClaws(actor,impact,slot);return;}
             switch(h)
             {
                 case HeroId.Veyr:
@@ -905,6 +907,7 @@ namespace Alterverse.Visuals
         public static void Basic(GameObject actor,Vector3 impact,float travelTime=0,Transform target=null,bool animate=true)
         {
             if(actor==null)return;if(animate)actor.GetComponent<HeroVisualMotion>()?.PulseAttack(false);
+            if(Hero(actor)==HeroId.Timmy){TimmyClaws(actor,impact,-1);return;}
             switch(Hero(actor))
             {
                 case HeroId.Veyr:Slash(actor,impact,-1);break;
@@ -919,6 +922,7 @@ namespace Alterverse.Visuals
         public static void Dash(GameObject actor,Vector3 from,Vector3 to)
         {
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
+            if(h==HeroId.Timmy){TimmyJet(actor,from,to);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
             if(h==HeroId.Traveler)
             {

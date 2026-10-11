@@ -295,6 +295,7 @@ namespace Alterverse.Multiplayer
             CoopHeroSlot actor=rosterSlot>=0&&rosterSlot<slots.Length?slots[rosterSlot]:null;
             Health health=actor!=null?actor.GetComponent<Health>():null;
             if(actor==null||health==null||health.IsDead)return;
+            if(actor.GetComponent<HeroCombatStatus>()?.Rooted==true)return;
 
             Vector3 desired=GameplayCollision.ClampToRoundedArena(new Vector3(x,y,z),40f,33f);
             desired.y=actor.transform.position.y;
@@ -363,7 +364,7 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(health.Shield);
                 writer.WriteValueSafe(health.IsDead);
                 HeroCombatStatus status=slot.GetComponent<HeroCombatStatus>();
-                writer.WriteValueSafe(status!=null&&status.Stunned);
+                writer.WriteValueSafe(status!=null&&(status.Stunned||status.ActionLocked));
                 writer.WriteValueSafe(slot.GetComponent<HeroLocomotion>()?.IsForcedMoving==true);
                 writer.WriteValueSafe(status!=null?status.MoveMultiplier:1f);
                 HeroLocomotion body=slot.GetComponent<HeroLocomotion>();
@@ -425,7 +426,8 @@ namespace Alterverse.Multiplayer
                 Vector3 hostPosition=new(x,y,z);
                 bool localOwner=actor.IsLocalHuman;
                 float errorSqr=(actor.transform.position-hostPosition).sqrMagnitude;
-                if(!localOwner||dead||forcedMoving||errorSqr>36f)
+                bool timmyChannel=actor.GetComponent<HeroIdentity>()?.Hero==HeroId.Timmy&&stunned&&moveMultiplier<=.001f;
+                if(!localOwner||dead||forcedMoving||timmyChannel||(!stunned&&moveMultiplier<=.001f)||errorSqr>36f)
                     actor.transform.SetPositionAndRotation(hostPosition,Quaternion.Euler(0,yaw,0));
                 else if(localOwner&&errorSqr>.49f)
                     actor.transform.position=Vector3.Lerp(actor.transform.position,hostPosition,.42f);

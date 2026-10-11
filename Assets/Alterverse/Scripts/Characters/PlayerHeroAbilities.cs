@@ -54,6 +54,7 @@ namespace Alterverse.Characters
         {
             AbilitySpec s = kit.Spec(slot);
             HeroId h = identity.Hero;
+            if (h == HeroId.Timmy) return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect;
             if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2) || (h == HeroId.Traveler && slot == 1))
                 return h == HeroId.Traveler
                     ? $"Time-skip {s.Range:0.#}m through paired rifts. Drag to choose direction."

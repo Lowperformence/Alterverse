@@ -22,7 +22,8 @@ partial class Regression
   int stationaryMisses=0;
   foreach(int fps in timingFps)foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=-1;slot<4;slot++)
   {
-   Reset();var actor=Hero(hero,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*2);
+   if(hero==HeroId.Timmy&&slot==3)continue; // Fixed-end contact/channel has separate tests.
+   Reset();var actor=Hero(hero,0,Vector3.zero);float contact=hero==HeroId.Timmy&&(slot<0||slot==0)?1f:2f;var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*contact);
    var ally=Hero(HeroId.Mira,0,Vector3.forward*1.5f);actor.GetComponent<Health>().TakeDamage(200);ally.GetComponent<Health>().TakeDamage(300);
    var spec=AimingSettings.Current.For(hero,slot);
    bool utility=spec.aimType==AimType.Dash||spec.aimType==AimType.Self||spec.aimType==AimType.Ally||hero==HeroId.Mira&&slot==3;
@@ -42,7 +43,7 @@ partial class Regression
   int misses=0;
   foreach(int fps in timingFps)foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))
   {
-   Reset();var actor=Hero(hero,0,Vector3.zero);float distance=HeroAttackDelivery.IsRanged(hero)?4f:1.8f;
+   Reset();var actor=Hero(hero,0,Vector3.zero);float distance=HeroAttackDelivery.IsRanged(hero)?4f:Mathf.Min(1.8f,HeroCombatProfile.StatsFor(hero).AttackRange-.1f);
    var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*distance);
    var basic=actor.GetComponent<BasicAttack>();var hud=HudFor(actor);Vector2 point=ButtonScreen(4);
    Vector3 velocity=Vector3.right*actor.GetComponent<HeroCombatProfile>().MoveSpeed*.88f;
