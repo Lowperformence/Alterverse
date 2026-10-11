@@ -141,7 +141,7 @@ namespace Alterverse.Visuals
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
         }
         public void Empower(float seconds){empowerUntil=Time.time+Mathf.Max(0,seconds);}
-        public void PulseDash(){dashUntil=Time.time+.17f;}
+        public void PulseDash(float seconds=.17f){dashUntil=Time.time+Mathf.Max(.04f,seconds);}
         private Transform FindPart(string name)
         {
             if(authored!=null)return authored.Control(name);

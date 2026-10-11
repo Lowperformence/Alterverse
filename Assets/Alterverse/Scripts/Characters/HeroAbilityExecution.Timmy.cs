@@ -28,9 +28,9 @@ namespace Alterverse.Characters
             {
                 Vector3 from=transform.position;
                 Vector3 end=GameplayCollision.ClampToRoundedArena(from+direction*aim.castRange,40f,33f);
-                if(!locomotion.BeginDash(end))return false;
+                if(!locomotion.BeginDash(end,TimmyBalance.JetDashSeconds))return false;
                 HeroCombatAudio.Cast(gameObject,slot);
-                HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination);
+                HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,2,TimmyBalance.JetDashSeconds);
                 return true;
             }
             if(manuallyAimed)
@@ -67,7 +67,7 @@ namespace Alterverse.Characters
             if(!SharkSightPoint(from,endPoint,target)||!locomotion.BeginDash(endPoint,TimmyBalance.ScratchLeapSeconds))
             {EndTimmyScratch();yield break;}
             HeroCombatAudio.Cast(gameObject,3);
-            HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination);
+            HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,3,TimmyBalance.ScratchLeapSeconds);
             float leapDeadline=Time.time+TimmyBalance.ScratchLeapSeconds+.1f;
             while(locomotion.IsDashing&&Time.time<leapDeadline)
             {
@@ -110,6 +110,7 @@ namespace Alterverse.Characters
 
         private void EndTimmyScratch()
         {
+            if(identity!=null&&identity.Hero==HeroId.Timmy)HeroSkillVfx.CancelTimmyDash(gameObject);
             timmyHeldStatus?.ReleaseRoot(this);timmyChannelStatus?.ReleaseRoot(this);
             timmyHeldStatus=timmyChannelStatus=null;timmyScratchPending=false;
         }

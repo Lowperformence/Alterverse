@@ -21,6 +21,7 @@ partial class Regression
    var commands=g.GetComponent<CoopGameplayCommands>();if(commands!=null)Call(commands,"OnDestroy");
    g.SetActive(false);
   }
+  foreach(var g in GameObject.All.ToArray())if(g.GetComponent<Alterverse.Visuals.HeroVfxPool>()!=null)Call(g.GetComponent<Alterverse.Visuals.HeroVfxPool>(),"OnDestroy");
   GameObject.All.Clear();Health.Active.Clear();Clock.Reset();Camera.main=null;Mouse.current=null;Keyboard.current=null;
   Touch.activeTouches.Clear();CoopAuthority.Active=false;CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.LocalIsHost=true;
   Unity.Netcode.NetworkManager.Singleton=null;
@@ -45,7 +46,7 @@ partial class Regression
   Clock.Advance(dt);
   movement?.Invoke();
   foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var e=g.GetComponent<HeroAbilityExecution>();if(e!=null)Call(e,"Update");}
-  foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var d=g.GetComponent<HeroAttackDelivery>();if(d!=null)Call(d,"Update");}
+  foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var d=g.GetComponent<HeroAttackDelivery>();if(d!=null)Call(d,"Update");var fx=g.GetComponent<Alterverse.Visuals.HeroVfxPool>();if(fx!=null)Call(fx,"Update");}
  }
  static void Run(float seconds){for(float t=0;t<seconds-.000001f;t+=.01f)Step();}
  static AimPose Forward(GameObject a,float distance=4)=>new AimPose(Vector3.forward,a.transform.position+Vector3.forward*distance);
@@ -431,7 +432,7 @@ partial class Regression
  }
  static void Main(string[] args)
  {
-  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();
+  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));

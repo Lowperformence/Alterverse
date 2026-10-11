@@ -7,8 +7,8 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Count }
-    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Mist,Claw,TimmyGrenade,Count }
+    internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam,Sustained,AttachedJet }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
     {
@@ -41,6 +41,7 @@ namespace Alterverse.Visuals
         private readonly Mesh[] warningShapes=new Mesh[(int)HeroFxShape.Count];
         private Material material;
         private Material anchorMetal;
+        private Material timmyGrenadeMetal;
         private Material monsterStone,monsterCrystal,monsterSlime;
         private bool ownsMaterial;
         private int cursor;
@@ -142,21 +143,25 @@ namespace Alterverse.Visuals
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
             slot.MaxRange=Mathf.Max(0,maxRange);
             // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
-            slot.From=from;slot.To=to;slot.Size=size*(warning||motion==HeroFxMotion.RadialPulse?1f:1.5f);slot.Color=color;slot.Motion=motion;
+            slot.From=from;slot.To=to;slot.Size=size*(warning||shape==HeroFxShape.TimmyGrenade||motion==HeroFxMotion.RadialPulse||motion==HeroFxMotion.Sustained?1f:1.5f);slot.Color=color;slot.Motion=motion;
             // A hitscan bolt must end at contact even though other presentation dimensions are enlarged.
             if(!warning&&shape==HeroFxShape.Bolt&&motion==HeroFxMotion.Hold)slot.Size.z=size.z;
-            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Orb?1f:
+            slot.SurfaceStyle=warning?0f:shape==HeroFxShape.Mist?5f:shape==HeroFxShape.Orb?1f:
                 shape==HeroFxShape.Seed||shape==HeroFxShape.Leaf||shape==HeroFxShape.Petals?4f:
                 shape==HeroFxShape.Shield||shape==HeroFxShape.Hex||shape==HeroFxShape.Runes?2f:3f;
             // Quaternion == compares rotation dot products, so an all-zero optional
             // argument does not even compare equal to itself. Check the sentinel components.
             slot.Rotation=rotation.x==0f&&rotation.y==0f&&rotation.z==0f&&rotation.w==0f?Quaternion.identity:rotation;
+            if(motion==HeroFxMotion.AttachedJet&&follow!=null)
+            {slot.Offset=follow.InverseTransformPoint(from);slot.Rotation=Quaternion.Inverse(follow.rotation)*slot.Rotation;}
             slot.Start=Time.time+Mathf.Max(0,delay)-Mathf.Max(0,elapsed);slot.Duration=Mathf.Max(.04f,duration);
             slot.Filter.sharedMesh=warning?warningShapes[(int)shape]:shapes[(int)shape];slot.Renderer.enabled=false;
             if (!warning && shape == HeroFxShape.AnchorProjectile && anchorMetal == null)
                 anchorMetal = NerokAnchorMaterial.Create(false);
             Material surface=material;
             if(!warning&&shape==HeroFxShape.AnchorProjectile&&anchorMetal!=null)surface=anchorMetal;
+            else if(!warning&&shape==HeroFxShape.TimmyGrenade)
+                surface=timmyGrenadeMetal??=RuntimeShaderLibrary.Create(Color.white,false,.55f,.48f);
             else if(!warning&&shape==HeroFxShape.MonsterRock)
                 surface=monsterStone??=RuntimeShaderLibrary.Create(Color.white,false,.04f,.18f);
             else if(!warning&&shape==HeroFxShape.MonsterDiamond)
@@ -178,11 +183,12 @@ namespace Alterverse.Visuals
             foreach(Slot slot in instance.slots)
                 if(slot!=null&&slot.Active&&IsProjectile(slot)&&slot.Owner==actor)instance.Hide(slot);
         }
-        internal static void CancelShape(GameObject actor,HeroFxShape shape)
+        internal static void CancelShape(GameObject actor,HeroFxShape shape,HeroFxMotion? motion=null)
         {
             if(instance==null)return;
             foreach(Slot slot in instance.slots)
-                if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Filter.sharedMesh==instance.shapes[(int)shape])instance.Hide(slot);
+                if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Filter.sharedMesh==instance.shapes[(int)shape]&&
+                    (!motion.HasValue||slot.Motion==motion.Value))instance.Hide(slot);
         }
         private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.TracksEnd=false;}
         private void Update()
@@ -206,6 +212,11 @@ namespace Alterverse.Visuals
             float scale=1;Quaternion rotation=s.Rotation;Vector3 drawnSize=s.Size;
             switch(s.Motion)
             {
+                case HeroFxMotion.AttachedJet:
+                    if(s.Follow==null){s.Renderer.enabled=false;return;}
+                    point=s.Follow.TransformPoint(s.Offset);rotation=s.Follow.rotation*s.Rotation;
+                    scale=.92f+.08f*Mathf.Sin(t*Mathf.PI*12f);
+                    break;
                 case HeroFxMotion.LaserBeam:
                     // The cached laser spans 0..1 on Z: keep both ends exact while tracking movement.
                     if(s.Follows&&s.Owner!=null)point=s.Owner.GetComponent<HeroVisualMotion>()?.ReleasePoint??point;
@@ -277,6 +288,8 @@ namespace Alterverse.Visuals
             bool flight=s.Motion==HeroFxMotion.LaserBeam||s.Motion==HeroFxMotion.Tether||s.Motion==HeroFxMotion.Travel||s.Motion==HeroFxMotion.TravelFixedFrame||s.Motion==HeroFxMotion.Spiral||s.Motion==HeroFxMotion.Lob;
             float fade=s.Warning||flight?1f:1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.20f,1f,t));
             if(s.Motion==HeroFxMotion.RadialPulse)fade=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.82f,1f,t));
+            if(s.Motion==HeroFxMotion.Sustained||s.Motion==HeroFxMotion.AttachedJet)
+                fade=1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.90f,1f,t));
             Color color=s.Color;
             if(!s.Warning){color.r*=1.28f;color.g*=1.28f;color.b*=1.28f;}
             color.a*=fade;
@@ -294,6 +307,7 @@ namespace Alterverse.Visuals
             }
             if(ownsMaterial&&material!=null)Destroy(material);
             if(anchorMetal!=null)Destroy(anchorMetal);
+            if(timmyGrenadeMetal!=null)Destroy(timmyGrenadeMetal);
             if(monsterStone!=null)Destroy(monsterStone);
             if(monsterCrystal!=null)Destroy(monsterCrystal);
             if(monsterSlime!=null)Destroy(monsterSlime);
@@ -363,6 +377,49 @@ namespace Alterverse.Visuals
             }
             switch(shape)
             {
+                case HeroFxShape.TimmyGrenade:
+                    // Cached closed canister with bevelled shoulders and a narrower top cap.
+                    float[] heights={-.7f,-.6f,-.46f,.42f,.56f,.60f,.75f};
+                    float[] radii={.30f,.46f,.50f,.50f,.42f,.24f,.24f};
+                    for(int row=0;row<heights.Length-1;row++)for(int i=0;i<16;i++)
+                    {
+                        float a=i*Mathf.PI/8f,b=(i+1)*Mathf.PI/8f;
+                        Vector3 x=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),y=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
+                        Quad(x*radii[row]+Vector3.up*heights[row],x*radii[row+1]+Vector3.up*heights[row+1],
+                            y*radii[row+1]+Vector3.up*heights[row+1],y*radii[row]+Vector3.up*heights[row]);
+                    }
+                    for(int i=0;i<16;i++)
+                    {
+                        float a=i*Mathf.PI/8f,b=(i+1)*Mathf.PI/8f;
+                        Vector3 x=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),y=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
+                        Tri(Vector3.up*heights[0],x*radii[0]+Vector3.up*heights[0],y*radii[0]+Vector3.up*heights[0]);
+                        int last=heights.Length-1;
+                        Tri(Vector3.up*heights[last],y*radii[last]+Vector3.up*heights[last],x*radii[last]+Vector3.up*heights[last]);
+                    }
+                    break;
+                case HeroFxShape.Mist:
+                    // A cached, soft cloud surface; outer vertices stay inside radius one.
+                    for(int ring=0;ring<4;ring++)for(int i=0;i<48;i++)
+                    {
+                        float a=i*Mathf.PI/24f,b=(i+1)*Mathf.PI/24f;
+                        Vector3 x=new Vector3(Mathf.Cos(a),0,Mathf.Sin(a)),y=new Vector3(Mathf.Cos(b),0,Mathf.Sin(b));
+                        float inner=ring*.25f,outer=(ring+1)*.25f;
+                        float alphaInner=ring==0?.30f:ring==1?.75f:ring==2?.65f:.28f;
+                        float alphaOuter=ring==0?.75f:ring==1?.65f:ring==2?.28f:0;
+                        SoftQuad(x*inner,x*outer,y*outer,y*inner,new Color(1,1,1,alphaInner),new Color(1,1,1,alphaOuter));
+                    }
+                    break;
+                case HeroFxShape.Claw:
+                    // Curved blade with a fine luminous spine and a pointed tip, along +Z.
+                    for(int i=0;i<24;i++)
+                    {
+                        float t=i/24f,u=(i+1)/24f;
+                        Vector3 a=new Vector3(.26f*(1-t)*(1-t),0,Mathf.Lerp(-.8f,.8f,t));
+                        Vector3 b=new Vector3(.26f*(1-u)*(1-u),0,Mathf.Lerp(-.8f,.8f,u));
+                        Vector3 wa=Vector3.right*(.085f*Mathf.Sin(t*Mathf.PI)),wb=Vector3.right*(.085f*Mathf.Sin(u*Mathf.PI));
+                        SoftQuad(a-wa,a,b,b-wb,clear,hot);SoftQuad(a,a+wa,b+wb,b,hot,clear);
+                    }
+                    break;
                 case HeroFxShape.Streak:
                     // Crossed feathered ribbons taper to the actual projectile head at local Z=0.
                     foreach(Vector3 side in new[]{Vector3.right*.10f,Vector3.up*.10f})

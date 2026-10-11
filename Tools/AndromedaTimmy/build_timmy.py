@@ -1,10 +1,10 @@
-"""Original Season 2 cat astronaut, matching the existing 19-bone authored-hero rig.
+"""Original Season 2 cat astronaut: 19 shared hero bones plus one animated tail.
 Run: blender --background --python-exit-code 1 --python Tools/AndromedaTimmy/build_timmy.py
-Exports editable Blender source, Unity FBX, studio preview and five modeled ability icons.
+Exports editable Blender source, Unity FBX, baked surface textures and studio preview.
 All geometry/materials are original project work; no human base mesh is required.
 """
 from pathlib import Path
-import math, json, argparse, sys
+import math, json, argparse, sys, os
 import bpy
 from mathutils import Vector
 
@@ -14,8 +14,9 @@ OUT = ROOT / 'Assets/Alterverse/Resources/AndromedaTimmy/Icons'
 FBX = ROOT / 'Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx'
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--model-only',action='store_true',help='Rebuild model/preview without rewriting attack icons.')
+parser.add_argument('--prototype-icons',action='store_true',help='Render the old modeled icon prototypes into ArtSource only.')
 options=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-VISOR_OPACITY=.30 # 70% transparent; a single curved surface avoids doubled tint.
+VISOR_OPACITY=.20 # 80% transparent; a single curved surface avoids doubled tint.
 VISOR_COLOR=(.78,.80,.82)
 for p in (ART, OUT, FBX.parent): p.mkdir(parents=True, exist_ok=True)
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
@@ -30,8 +31,39 @@ def material(name, color, metal=0, glow=0):
 
 white=material('Timmy pearl space suit',(.74,.81,.84),.35)
 navy=material('Timmy graphite seals',(.025,.046,.085),.35)
-fur=material('Timmy orange tabby fur',(.72,.31,.095))
-cream=material('Timmy muzzle cream',(.91,.77,.52))
+fabric=material('Timmy woven astronaut fabric',(.84,.87,.88))
+nodes=fabric.node_tree.nodes;links=fabric.node_tree.links;bs=nodes.get('Principled BSDF')
+bs.inputs['Roughness'].default_value=.88
+coord=nodes.new('ShaderNodeTexCoord');weaves=[]
+for axis in ('X','Y'):
+    wave=nodes.new('ShaderNodeTexWave');wave.bands_direction=axis
+    wave.inputs['Scale'].default_value=180;wave.inputs['Distortion'].default_value=.3
+    links.new(coord.outputs['Generated'],wave.inputs['Vector']);weaves.append(wave)
+weave=nodes.new('ShaderNodeMath');weave.operation='MULTIPLY'
+for i,wave in enumerate(weaves):links.new(wave.outputs['Fac'],weave.inputs[i])
+ramp=nodes.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].color=(.68,.73,.75,1)
+ramp.color_ramp.elements[1].color=(.86,.89,.90,1)
+links.new(weave.outputs[0],ramp.inputs[0]);links.new(ramp.outputs['Color'],bs.inputs['Base Color'])
+bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.20;bump.inputs['Distance'].default_value=.001
+links.new(weave.outputs[0],bump.inputs['Height']);links.new(bump.outputs['Normal'],bs.inputs['Normal'])
+red=material('Timmy muted red suit bands',(.46,.075,.045))
+red.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=.75
+def fur_material(name,low,high):
+    m=material(name,high);nodes=m.node_tree.nodes;links=m.node_tree.links
+    bs=nodes.get('Principled BSDF');bs.inputs['Roughness'].default_value=.82
+    coord=nodes.new('ShaderNodeTexCoord');mapping=nodes.new('ShaderNodeVectorMath');mapping.operation='MULTIPLY'
+    mapping.inputs[1].default_value=(1,1,7);links.new(coord.outputs['Generated'],mapping.inputs[0])
+    fibers=nodes.new('ShaderNodeTexNoise');fibers.inputs['Scale'].default_value=62;fibers.inputs['Detail'].default_value=2
+    links.new(mapping.outputs['Vector'],fibers.inputs['Vector'])
+    ramp=nodes.new('ShaderNodeValToRGB');ramp.color_ramp.elements[0].position=.22;ramp.color_ramp.elements[0].color=(*low,1)
+    ramp.color_ramp.elements[1].position=.78;ramp.color_ramp.elements[1].color=(*high,1)
+    links.new(fibers.outputs['Fac'],ramp.inputs[0]);links.new(ramp.outputs['Color'],bs.inputs['Base Color'])
+    bump=nodes.new('ShaderNodeBump');bump.inputs['Strength'].default_value=.22;bump.inputs['Distance'].default_value=.0007
+    links.new(fibers.outputs['Fac'],bump.inputs['Height']);links.new(bump.outputs['Normal'],bs.inputs['Normal'])
+    return m
+fur=fur_material('Timmy orange tabby fur',(.48,.13,.022),(.98,.46,.12))
+cream=fur_material('Timmy muzzle cream',(.67,.48,.27),(.96,.86,.63))
+stripe=fur_material('Timmy cinnamon tabby fur',(.13,.040,.012),(.39,.13,.028))
 cyan=material('Timmy cyan energy',(.04,.68,1),.45,2)
 gold=material('Timmy jet amber energy',(1,.46,.075),.35,1.4)
 eye=material('Timmy emerald eyes',(.08,.49,.21),.25,.25)
@@ -75,10 +107,22 @@ def triangle(name,points,depth,mat,bone=None):
     faces=[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)]
     data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
     ob=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(ob);return finish(ob,name,mat,bone)
+def oval_band(name,p,r,height,mat,bone=None):
+    # Closed 16-sided molded seam/cuff, 128 triangles, with an oval XY profile.
+    segments=16;verts=[];faces=[]
+    for scale,z in ((.96,-height/2),(1,-height*.28),(1,height*.28),(.96,height/2)):
+        for i in range(segments):
+            a=i*math.tau/segments;verts.append((p[0]+r[0]*scale*math.cos(a),p[1]+r[1]*scale*math.sin(a),p[2]+z))
+    for row in range(4):
+        nxt=(row+1)%4
+        for i in range(segments):
+            j=(i+1)%segments;faces.append((row*segments+i,row*segments+j,nxt*segments+j,nxt*segments+i))
+    data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
+    ob=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(ob);return finish(ob,name,mat,bone)
 def visor_dome():
     # A circular spherical cap fitted inside the rim, in front of muzzle/whiskers.
     # Negative Y faces forward in the authored rig. Wind only the outside surface.
-    radius=.215;depth=.17;center=(0,-.167,1.55);segments=48;rings=12
+    radius=.255;depth=.205;center=(0,-.118,1.54);segments=48;rings=12
     sphere=(radius*radius+depth*depth)/(2*depth)
     verts=[(center[0],center[1]-depth,center[2])];faces=[]
     for row in range(1,rings+1):
@@ -96,45 +140,86 @@ def visor_dome():
     ob=bpy.data.objects.new('DF_Visor',data);bpy.context.collection.objects.link(ob)
     return finish(ob,'DF_Visor',glass,'Head')
 
+def face_mark(name,points,width):
+    # Thin fitted fur markings on the existing head surface, not metal bars.
+    verts=[]
+    for index,(x,z) in enumerate(points):
+        w=width*(.35+.65*math.sin((index+.5)/len(points)*math.pi))
+        for dx in (-w,w):
+            px=x+dx;r2=(px/.175)**2+((z-1.53)/.16)**2
+            y=-.086-.135*math.sqrt(max(.02,1-r2))-.001
+            verts.append((px,y,z))
+    faces=[(i*2,i*2+1,i*2+3,i*2+2) for i in range(len(points)-1)]
+    mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
+    ob=bpy.data.objects.new(name,mesh);bpy.context.collection.objects.link(ob)
+    return finish(ob,name,stripe,'Head')
+
 # Compact, unmistakably feline astronaut: fur face/ears/tail remain visible.
-ellipsoid('Suit torso',(0,0,1.11),(.23,.16,.30),white,'Chest')
+ellipsoid('Suit torso',(0,0,1.11),(.23,.16,.30),fabric,'Chest')
 ellipsoid('Flexible waist',(0,0,.86),(.20,.145,.12),navy,'Hips')
-box('Cyan chest display',(0,-.157,1.12),(.12,.028,.10),cyan,'Chest')
-box('Oxygen backpack',(0,.16,1.15),(.26,.14,.31),navy,'Chest')
+for i in range(3):oval_band('Waist pressure fold'+str(i),(0,0,.86+i*.028),(.202,.147),.018,fabric,'Hips')
+oval_band('Helmet neck seal',(0,0,1.35),(.13,.115),.03,navy,'Chest')
+box('Chest control housing',(0,-.170,1.12),(.19,.045,.16),white,'Chest')
+box('Cyan chest display',(-.026,-.197,1.145),(.085,.010,.055),cyan,'Chest')
+for i in range(3):box('Chest tactile switch'+str(i),(-.051+i*.052,-.198,1.086),(.026,.009,.014),navy,'Chest')
+ellipsoid('Oxygen chest valve',(.064,-.202,1.145),(.018,.012,.018),gold,'Chest')
+box('Oxygen backpack',(0,.18,1.15),(.26,.14,.31),white,'Chest')
+box('Backpack center service hatch',(0,.257,1.16),(.12,.013,.20),navy,'Chest')
+box('Backpack power indicator',(0,.267,1.205),(.065,.008,.026),cyan,'Chest')
+for side,k in ((-1,'L'),(1,'R')):
+    tube('Chest harness seam'+k,[(side*.147,-.081,1.36),(side*.161,-.132,1.23),(side*.146,-.139,1.04),(side*.126,-.106,.96)],.010,navy,'Chest')
+    box('Harness buckle'+k,(side*.145,-.151,1.018),(.042,.019,.042),white,'Chest')
+    tube('Oxygen hose'+k,[(side*.17,.23,1.23),(side*.235,.125,1.17),(side*.222,-.01,1.12),(side*.195,-.105,1.07)],.012,navy,'Chest')
 for side,k in ((-1,'L'),(1,'R')):
     ellipsoid('Jet housing'+k,(side*.13,.245,1.12),(.075,.07,.15),white,'Chest')
     ellipsoid('Jet nozzle'+k,(side*.13,.255,.99),(.043,.04,.025),cyan,'Chest')
-ellipsoid('Helmet back',(0,.035,1.54),(.235,.17,.23),white,'Head')
+ellipsoid('Helmet back',(0,.035,1.54),(.27,.18,.285),white,'Head')
 ellipsoid('Cat head',(0,-.086,1.53),(.175,.135,.16),fur,'Head')
 ellipsoid('Cream muzzle',(0,-.213,1.48),(.10,.028,.06),cream,'Head')
 triangle('Cat nose',[(-.020,-.244,1.50),(.020,-.244,1.50),(0,-.247,1.48)],.014,navy,'Head')
-ring('Visor rim',(0,-.167,1.55),.215,.016,white,'Head')
+ring('Visor rim',(0,-.118,1.54),.255,.018,white,'Head')
+box('Helmet chin guard',(0,-.145,1.306),(.31,.105,.085),white,'Head')
+box('Helmet chin vent',(0,-.201,1.309),(.16,.008,.032),navy,'Head')
 visor=visor_dome()
+face_mark('Tabby forehead center',[(-.007,1.656),(0,1.625),(.002,1.596)],.006)
 for side,k in ((-1,'L'),(1,'R')):
+    ellipsoid('Helmet hinge'+k,(side*.257,-.024,1.535),(.043,.065,.076),white,'Head')
+    ellipsoid('Helmet hinge seal'+k,(side*.29,-.024,1.535),(.014,.046,.053),navy,'Head')
+    ellipsoid('Helmet hinge light'+k,(side*.30,-.024,1.535),(.007,.026,.031),cyan,'Head')
     triangle('Feline ear'+k,[(side*.065,-.025,1.63),(side*.18,-.01,1.78),(side*.19,-.015,1.60)],.075,fur,'Head')
     triangle('Ear lining'+k,[(side*.097,-.066,1.635),(side*.166,-.063,1.73),(side*.172,-.063,1.63)],.009,cream,'Head')
     ellipsoid('Eye'+k,(side*.07,-.21,1.56),(.044,.014,.025),eye,'Head')
     ellipsoid('Vertical pupil'+k,(side*.07,-.225,1.56),(.009,.006,.023),navy,'Head')
     for i in range(3):
         tube('Whisker'+k+str(i),[(side*.065,-.238,1.48),(side*.14,-.239,1.48+(i-1)*.018)],.002,cream,'Head')
+    face_mark('Tabby forehead M'+k,[(side*.075,1.628),(side*.052,1.648),(side*.027,1.612)],.006)
     for i in range(2):
-        tube('Tabby cheek stripe'+k+str(i),[(side*.125,-.188,1.51+i*.025),(side*.151,-.176,1.49+i*.025)],.008,navy,'Head')
+        face_mark('Tabby cheek stripe'+k+str(i),[(side*.147,1.507+i*.024),(side*.126,1.498+i*.024),(side*.104,1.482+i*.024)],.006)
+    for i in range(4):
+        x=side*(.146+i*.005);z=1.752-i*.018
+        triangle('Short ear fur'+k+str(i),[(x,-.043,z),(x+side*.017,-.036,z+.017),(x+side*.014,-.031,z-.007)],.004,fur,'Head')
     ellipsoid('Shoulder'+k,(side*.26,0,1.28),(.12,.115,.13),white,'UpperArm'+k)
-    ellipsoid('Upper suit arm'+k,(side*.29,-.01,1.15),(.08,.075,.17),white,'UpperArm'+k)
+    ellipsoid('Upper suit arm'+k,(side*.29,-.01,1.15),(.08,.075,.17),fabric,'UpperArm'+k)
+    for i in range(2):oval_band('Arm pressure fold'+k+str(i),(side*.30,-.01,1.08+i*.035),(.077,.073),.012,fabric,'UpperArm'+k)
     ellipsoid('Elbow seal'+k,(side*.315,-.018,1.01),(.07,.073,.075),navy,'Forearm'+k)
     ellipsoid('Forearm gauntlet'+k,(side*.335,-.04,.91),(.082,.085,.125),white,'Forearm'+k)
     ellipsoid('Paw'+k,(side*.35,-.072,.79),(.087,.075,.083),fur,'Hand'+k)
     for i in range(3):
         x=side*.35+(i-1)*.038
         tube('Claw'+k+str(i),[(x,-.115,.79),(x,-.175,.775),(x,-.19,.745)],.006,cyan,'WeaponGrip'+k)
-    ellipsoid('Thigh suit'+k,(side*.13,0,.66),(.095,.09,.23),white,'Thigh'+k)
+    ellipsoid('Thigh suit'+k,(side*.13,0,.66),(.095,.09,.23),fabric,'Thigh'+k)
+    oval_band('Red thigh ID band'+k,(side*.13,0,.73),(.096,.091),.035,red,'Thigh'+k)
+    box('Thigh fabric pocket'+k,(side*.135,-.082,.615),(.11,.024,.105),fabric,'Thigh'+k)
+    box('Pocket closure'+k,(side*.135,-.097,.658),(.092,.008,.014),navy,'Thigh'+k)
+    for i in range(2):oval_band('Knee pressure fold'+k+str(i),(side*.139,-.01,.51+i*.025),(.077,.073),.012,fabric,'Thigh'+k)
     ellipsoid('Knee seal'+k,(side*.14,-.02,.46),(.079,.073,.075),navy,'Shin'+k)
-    ellipsoid('Shin suit'+k,(side*.14,0,.29),(.08,.072,.16),white,'Shin'+k)
+    ellipsoid('Shin suit'+k,(side*.14,0,.29),(.08,.072,.16),fabric,'Shin'+k)
+    tube('Shin seam'+k,[(side*.20,-.03,.40),(side*.203,-.048,.30),(side*.19,-.042,.20)],.006,navy,'Shin'+k)
     ellipsoid('Round space boot'+k,(side*.14,-.045,.095),(.105,.145,.085),navy,'Foot'+k)
     box('Boot toe cap'+k,(side*.14,-.14,.11),(.16,.10,.075),white,'Foot'+k)
-tail=[(0,.12,.86),(.10,.25,.82),(.22,.30,.72),(.31,.28,.66),(.37,.23,.72),(.38,.20,.81)]
-tube('Curved tabby tail',tail,.04,fur,'Hips')
-for i,p in enumerate(tail[1::2]):ellipsoid('Tail stripe'+str(i),p,(.043,.04,.045),navy,'Hips')
+tail=[(0,.12,.86),(0,.25,.83),(0,.39,.78),(0,.52,.75),(0,.64,.78),(0,.70,.85)]
+tube('Centered tabby tail',tail,.04,fur,'Tail')
+for i,p in enumerate(tail[1::2]):ellipsoid('Tail stripe'+str(i),p,(.042,.043,.041),stripe,'Tail')
 
 data=bpy.data.armatures.new('DF_Skeleton');rig=bpy.data.objects.new('DF_Skeleton',data)
 bpy.context.collection.objects.link(rig);bpy.context.view_layer.objects.active=rig;rig.select_set(True);bpy.ops.object.mode_set(mode='EDIT')
@@ -145,6 +230,7 @@ def bone(n,h,t,parent=None):
     bones[n]=b
 bone('Root',(0,0,0),(0,0,.15));bone('Hips',(0,0,.86),(0,0,1.02),'Root')
 bone('Spine',(0,0,1.02),(0,0,1.20),'Hips');bone('Chest',(0,0,1.20),(0,0,1.42),'Spine');bone('Head',(0,0,1.42),(0,0,1.75),'Chest')
+bone('Tail',(0,.12,.86),(0,.42,.80),'Hips')
 for s,k in ((-1,'L'),(1,'R')):
     shoulder=(s*.26,0,1.28);elbow=(s*.315,-.018,1.01);wrist=(s*.35,-.072,.79);tip=(s*.35,-.14,.74)
     bone('UpperArm'+k,shoulder,elbow,'Chest');bone('Forearm'+k,elbow,wrist,'UpperArm'+k)
@@ -163,6 +249,33 @@ def join(group,name):
     bpy.context.view_layer.objects.active=group[0];bpy.ops.object.join();ob=bpy.context.object;ob.name=name;return ob
 claw_groups={k:[o for o in meshes if o.name.startswith('Claw'+k)] for k in ('L','R')}
 body=join(body,'DF_Anatomy')
+
+# Bake fur fibers and woven suit into ordinary mobile URP textures. No hair particles.
+texture_dir=FBX.parent/'TimmyTextures';texture_dir.mkdir(parents=True,exist_ok=True)
+bpy.ops.object.select_all(action='DESELECT');body.select_set(True);bpy.context.view_layer.objects.active=body
+bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT')
+bpy.ops.uv.smart_project(angle_limit=math.radians(66),island_margin=.008);bpy.ops.object.mode_set(mode='OBJECT')
+scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=1
+scene.render.bake.margin=8;scene.render.bake.use_pass_direct=False;scene.render.bake.use_pass_indirect=False
+scene.render.bake.use_pass_color=True
+textures={}
+for kind,bake_type in [('Albedo','DIFFUSE'),('Normal','NORMAL')]:
+    img=bpy.data.images.new('Timmy surface '+kind,width=1024,height=1024,alpha=False)
+    if kind=='Normal':img.colorspace_settings.name='Non-Color'
+    for mat in body.data.materials:
+        node=mat.node_tree.nodes.new('ShaderNodeTexImage');node.image=img;mat.node_tree.nodes.active=node
+    bpy.ops.object.bake(type=bake_type)
+    img.filepath_raw=str(texture_dir/('TimmySurface_'+kind+'.png'));img.file_format='PNG';img.save()
+    img.pack() # Editable source remains usable even when opened outside this checkout.
+    img.filepath='//'+os.path.relpath(texture_dir/('TimmySurface_'+kind+'.png'),ART)
+    textures[kind]=img
+for mat in (fur,cream,stripe,fabric):
+    nodes=mat.node_tree.nodes;links=mat.node_tree.links;bs=nodes.get('Principled BSDF')
+    base=nodes.new('ShaderNodeTexImage');base.image=textures['Albedo'];links.new(base.outputs['Color'],bs.inputs['Base Color'])
+    normal=nodes.new('ShaderNodeTexImage');normal.image=textures['Normal']
+    normal_map=nodes.new('ShaderNodeNormalMap');normal_map.inputs['Strength'].default_value=.5
+    links.new(normal.outputs['Color'],normal_map.inputs['Color']);links.new(normal_map.outputs['Normal'],bs.inputs['Normal'])
+    nodes.active=base
 weapons=[]
 for k in ('L','R'):weapons.append(join(claw_groups[k],'DF_Weapon'+k))
 for k in ('L','R'):
@@ -171,12 +284,16 @@ for k in ('L','R'):
         socket.parent=rig;socket.parent_type='BONE';socket.parent_bone=parent+k
         bpy.context.view_layer.update();world=socket.matrix_world.copy()
         world.translation=Vector(((-.35 if k=='L' else .35),-.072,.79));socket.matrix_world=world
+    socket=bpy.data.objects.new('DF_TimmyJet'+k,None);bpy.context.collection.objects.link(socket)
+    socket.parent=rig;socket.parent_type='BONE';socket.parent_bone='Chest'
+    bpy.context.view_layer.update();world=socket.matrix_world.copy()
+    world.translation=Vector(((-.13 if k=='L' else .13),.255,.975));socket.matrix_world=world
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'AndromedaTimmy.blend'),compress=True)
 bpy.ops.export_scene.fbx(filepath=str(FBX),use_selection=True,object_types={'ARMATURE','MESH','EMPTY'},
     add_leaf_bones=False,bake_anim=False,axis_forward='-Z',axis_up='Y',use_mesh_modifiers=True)
 triangles=sum(sum(len(f.vertices)-2 for f in o.data.polygons) for o in [body,*weapons,visor])
-(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'triangles':triangles,'body_renderers':1,'claw_renderers':2,'visor_renderers':1,'visor_opacity':VISOR_OPACITY,'visor_color':VISOR_COLOR,'runtime_scale':.70,'original_geometry':True},indent=2)+'\n')
+(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'shared_hero_bones':19,'tail_bones':1,'tail_centered':True,'triangles':triangles,'body_renderers':1,'claw_renderers':2,'visor_renderers':1,'visor_opacity':VISOR_OPACITY,'visor_color':VISOR_COLOR,'surface_texture_resolution':1024,'fur_and_fabric_normal_map':True,'jet_nozzle_sockets':2,'runtime_scale':.70,'original_geometry':True},indent=2)+'\n')
 
 # CPU rendering also works on build machines without a display/GPU.
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=24
@@ -188,9 +305,10 @@ bpy.ops.object.camera_add(location=(2.5,-4,2.0));camera=bpy.context.object;camer
 for p,power,color in [((-3,-4,5),450,(.70,.86,1)),((3,-2,3),250,(1,.70,.42)),((1,3,4),500,(.20,.70,1))]:
     bpy.ops.object.light_add(type='AREA',location=p);light=bpy.context.object;light.data.energy=power;light.data.color=color;light.data.size=3;aim(light,(0,0,1))
 scene.render.filepath=str(ART/'AndromedaTimmy-preview.png');bpy.ops.render.render(write_still=True)
-if options.model_only:
-    print('TIMMY MODEL BUILD COMPLETE:',triangles,'triangles,',len(rig.data.bones),'bones, 70% transparent visor')
+if options.model_only or not options.prototype_icons:
+    print('TIMMY MODEL BUILD COMPLETE:',triangles,'triangles,',len(rig.data.bones),'bones, 80% transparent visor')
     sys.exit(0)
+OUT=ART/'PrototypeIcons';OUT.mkdir(parents=True,exist_ok=True)
 for ob in [body,*weapons,visor,rig,*[o for o in bpy.data.objects if o.type=='EMPTY']]:ob.hide_render=True
 camera.location=(0,-5,.25);camera.data.ortho_scale=2.2;aim(camera,(0,0,0))
 all_icon_objects=[]

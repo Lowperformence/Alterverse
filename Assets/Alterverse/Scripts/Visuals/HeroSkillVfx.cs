@@ -461,6 +461,11 @@ namespace Alterverse.Visuals
         {
             if(actor==null)return;
             HeroId hero=Hero(actor);
+            if(hero==HeroId.Timmy&&slot==1)
+            {
+                TimmyEffect(actor,warning?0:1,center,center,radius,warning?duration:TimmyBalance.DustVfxSeconds);
+                return;
+            }
             Color accent=hero==HeroId.Mira&&beneficial?new Color(.24f,1f,.42f):Accent(actor);
             Vector3 ground=Ground(center);
             if(hero==HeroId.Nerok&&!warning)
@@ -630,7 +635,12 @@ namespace Alterverse.Visuals
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
             if(actor==null)return;HeroId h=Hero(actor);
-            if(h==HeroId.Timmy){TimmyClaws(actor,impact,slot);return;}
+            if(h==HeroId.Timmy)
+            {
+                if(slot==0||slot==3)TimmyClaws(actor,impact,slot);
+                else if(slot==1&&travelTime>0)TimmyEffect(actor,5,Muzzle(actor),impact,0,travelTime);
+                return;
+            }
             switch(h)
             {
                 case HeroId.Veyr:
@@ -919,10 +929,10 @@ namespace Alterverse.Visuals
         }
         public static void Link(GameObject actor,Vector3 impact,bool ultimate=false)
         {Basic(actor,impact);if(ultimate)Spell(actor,impact,3);}
-        public static void Dash(GameObject actor,Vector3 from,Vector3 to)
+        public static void Dash(GameObject actor,Vector3 from,Vector3 to,int slot=2,float duration=.16f)
         {
             if(actor==null)return;Color c=Accent(actor);HeroId h=Hero(actor);
-            if(h==HeroId.Timmy){TimmyJet(actor,from,to);return;}
+            if(h==HeroId.Timmy){TimmyEffect(actor,slot==3?3:2,from,to,0,duration);return;}
             Quaternion face=Face(from,to);float distance=Vector3.Distance(from,to);
             if(h==HeroId.Traveler)
             {

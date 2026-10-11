@@ -57,6 +57,7 @@ partial class Regression
   var aim=AimingSettings.Current.For(HeroId.Timmy,3);
   Check(aim.aimType==AimType.Dash&&aim.targetingMode==TargetingMode.Cone,"Scratch uses a targeted cone leap");
   Check(AimingSettings.Current.For(HeroId.Timmy,1).aimType==AimType.Area,"Stardust has ground placement");
+  Near(AimingSettings.Current.For(HeroId.Timmy,1).aoeRadius,2f,"Stardust preview/catalog radius is two meters");
 
   Reset();var body=new GameObject("reconfigured collider");var cc=body.AddComponent<CharacterController>();cc.center=new Vector3(0,.1f,0);
   var identity=body.AddComponent<HeroIdentity>();identity.Configure(HeroId.Timmy);Near(cc.radius,.28f,"small Timmy collision radius");Near(cc.center.y,-.2f,"smaller capsule preserves ground baseline");
@@ -71,7 +72,7 @@ partial class Regression
   Near(HeroCombatStatus.Speed(a),TimmyBalance.PassiveSpeed,"damaging skill triggers passive speed");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*4);
-  other=Hero(HeroId.Kaelon,1,new Vector3(1,0,4));var outside=Hero(HeroId.Kaelon,1,new Vector3(1.7f,0,4));
+  other=Hero(HeroId.Kaelon,1,new Vector3(1,0,4));var outside=Hero(HeroId.Kaelon,1,new Vector3(2.1f,0,4));
   Camera.main=new GameObject("Stardust audio camera").AddComponent<Camera>();Alterverse.Audio.DimensionAudio.TimmyStardustPlays=0;
   a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a));Run(.2f);
   Check(Alterverse.Audio.DimensionAudio.TimmyStardustPlays==0,"Stardust recording waits for the existing warning");
@@ -79,6 +80,8 @@ partial class Regression
   Near(Total(b),1000-TimmyBalance.DustDamage,"Stardust first enemy");Near(Total(other),1000-TimmyBalance.DustDamage,"Stardust is genuinely AOE");Near(Total(outside),1000,"Stardust outside radius misses");
   Near(HeroCombatStatus.Speed(b),TimmyBalance.DustSlow,"Stardust slow");
   Run(.5f);Check(Alterverse.Audio.DimensionAudio.TimmyStardustPlays==1,"Stardust victims never restart the recording");
+  Run(1.35f);Near(HeroCombatStatus.Speed(b),TimmyBalance.DustSlow,"Stardust slow remains near two seconds");
+  Run(.1f);Near(HeroCombatStatus.Speed(b),1f,"Stardust slow expires after two seconds");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*4);
   a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a));b.transform.position+=Vector3.right*3;Run(.4f);Near(Total(b),1000,"Stardust can be dodged");
 

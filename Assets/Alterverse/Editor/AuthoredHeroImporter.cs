@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 14 also imports Timmy's visor as transparent URP glass.
+        // Version 15 refreshes Timmy's helmet, woven suit/fur textures, tail and nozzle sockets.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 14;
+        public override uint GetVersion() => 15;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -74,10 +74,19 @@ namespace Alterverse.EditorTools
             }
             if(Path.GetFileNameWithoutExtension(assetPath)=="Timmy"&&name.Contains("visor glass"))
                 ConfigureTimmyVisor(material);
+            if(Path.GetFileNameWithoutExtension(assetPath)=="Timmy"&&(name.Contains("tabby fur")||name.Contains("muzzle cream")||name.Contains("woven astronaut fabric")))
+            {
+                Texture2D albedo=AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"TimmyTextures/TimmySurface_Albedo.png");
+                Texture2D normal=AssetDatabase.LoadAssetAtPath<Texture2D>(Folder+"TimmyTextures/TimmySurface_Normal.png");
+                material.SetColor("_BaseColor",Color.white);material.SetColor("_Color",Color.white);
+                if(albedo!=null)material.SetTexture("_BaseMap",albedo);
+                if(normal!=null){material.SetTexture("_BumpMap",normal);material.SetFloat("_BumpScale",.5f);material.EnableKeyword("_NORMALMAP");}
+                material.SetFloat("_Metallic",0);material.SetFloat("_Smoothness",.18f);
+            }
         }
         private static void ConfigureTimmyVisor(Material material)
         {
-            Color glass=new Color(.78f,.80f,.82f,.30f); // 70% transparent.
+            Color glass=new Color(.78f,.80f,.82f,.20f); // 80% transparent.
             material.SetColor("_BaseColor",glass);
             material.SetColor("_Color",glass);
             material.SetFloat("_Metallic",0f);

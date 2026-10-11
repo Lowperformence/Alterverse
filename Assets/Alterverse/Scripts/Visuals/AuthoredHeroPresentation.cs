@@ -20,6 +20,10 @@ namespace Alterverse.Visuals
         private readonly List<Renderer> weaponRenderers = new List<Renderer>();
         private readonly List<Mesh> rigidWeaponMeshes = new List<Mesh>();
         private Transform model, muzzle, visualRoot, rifleSupport, leftPalm, rifleHandle;
+        private Transform timmyTail;
+        private Quaternion timmyTailRest;
+        private Vector3 timmyTailAxis;
+        private float timmyTailTime;
         private Transform rifleDetailsRoot;
         private Transform rifleDetailsGrip;
         private Vector3 rifleDetailsGripPosition;
@@ -256,6 +260,14 @@ namespace Alterverse.Visuals
                 if (renderer.name == "DF_WeaponL" || renderer.name == "DF_WeaponR" || renderer.name == "DF_GauntletL" || renderer.name == "DF_GauntletR")
                     weaponRenderers.Add(renderer);
             hero = GetComponent<HeroIdentity>().Hero;
+            if(hero==HeroId.Timmy)
+                foreach(Transform bone in model.GetComponentsInChildren<Transform>(true))
+                    if(bone.name=="Tail"&&bone.parent!=null)
+                    {
+                        timmyTail=bone;timmyTailRest=bone.localRotation;
+                        timmyTailAxis=bone.parent.InverseTransformDirection(model.up).normalized;
+                        break;
+                    }
             leftArm = CaptureArm("L"); rightArm = CaptureArm("R");
             BuildControls();
             Bind("Hips", "PelvisJoint");
@@ -975,6 +987,13 @@ namespace Alterverse.Visuals
             GetComponent<HeroLocomotionAnimation>()?.ApplyLegs();
             GetComponent<HeroGroundedLocomotion>()?.FinalizeFeet();
             FollowRifleDetails();
+            if(timmyTail!=null&&Time.deltaTime>0f)
+            {
+                // Like Nerok, begin centred and animate only the tail, independent of combat.
+                timmyTailTime+=Time.deltaTime;
+                timmyTail.localRotation=Quaternion.AngleAxis(TimmyBalance.TailSwayDegrees*
+                    Mathf.Sin(timmyTailTime*Mathf.PI*2f/TimmyBalance.TailSwaySeconds),timmyTailAxis)*timmyTailRest;
+            }
         }
     }
 }

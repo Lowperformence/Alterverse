@@ -1,16 +1,22 @@
 {
   "hero": "Andromeda Timmy",
-  "bones": 19,
-  "triangles": 10392,
+  "bones": 20,
+  "shared_hero_bones": 19,
+  "tail_bones": 1,
+  "tail_centered": true,
+  "triangles": 15548,
   "body_renderers": 1,
   "claw_renderers": 2,
   "visor_renderers": 1,
-  "visor_opacity": 0.3,
+  "visor_opacity": 0.2,
   "visor_color": [
     0.78,
     0.8,
     0.82
   ],
+  "surface_texture_resolution": 1024,
+  "fur_and_fabric_normal_map": true,
+  "jet_nozzle_sockets": 2,
   "runtime_scale": 0.7,
   "original_geometry": true
 }

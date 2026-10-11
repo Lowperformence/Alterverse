@@ -18,6 +18,7 @@ namespace Alterverse.Multiplayer
     {
         private static CoopHeroStateSync audioRelay;
         private const string SharkEffectMessage="DF_COOP_SHARK_FX_V2";
+        private const string TimmyEffectMessage="DF_COOP_TIMMY_FX_V1";
         private const string OrunOverdriveMessage="DF_COOP_ORUN_OVERDRIVE_FX_V1";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
@@ -103,6 +104,7 @@ namespace Alterverse.Multiplayer
             messaging.RegisterNamedMessageHandler(CombatSoundMessage,OnCombatSound);
             messaging.RegisterNamedMessageHandler(KillSoundMessage,OnKillSound);
             messaging.RegisterNamedMessageHandler(SharkEffectMessage,OnSharkEffect);
+            messaging.RegisterNamedMessageHandler(TimmyEffectMessage,OnTimmyEffect);
             messaging.RegisterNamedMessageHandler(OrunOverdriveMessage,OnOrunOverdrive);
             attached=true;
         }
@@ -115,6 +117,7 @@ namespace Alterverse.Multiplayer
             messaging.UnregisterNamedMessageHandler(CombatSoundMessage);
             messaging.UnregisterNamedMessageHandler(KillSoundMessage);
             messaging.UnregisterNamedMessageHandler(SharkEffectMessage);
+            messaging.UnregisterNamedMessageHandler(TimmyEffectMessage);
             messaging.UnregisterNamedMessageHandler(OrunOverdriveMessage);
             messaging=null;attached=false;
             senderOwners.Clear();
@@ -251,6 +254,41 @@ namespace Alterverse.Multiplayer
             else if(kind==1)Alterverse.Visuals.HeroSkillVfx.SharkVortex(actor,center,radius,duration);
             else Alterverse.Visuals.HeroSkillVfx.Area(actor,center,radius,duration,kind!=5,false,kind==4?2:3);
         }
+
+        public static void BroadcastTimmyEffect(GameObject actor,int kind,Vector3 from,Vector3 to,float radius,float duration)
+        {
+            var service=audioRelay;var manager=NetworkManager.Singleton;
+            if(actor==null||service==null||service.messaging==null||!CoopAuthority.Active||
+                !CoopAuthority.LocalHasServerAuthority||manager==null||!manager.IsServer||actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Timmy)return;
+            var slot=actor.GetComponent<CoopHeroSlot>();if(slot==null||slot.Slot<0||slot.Slot>=MatchSession.MaxPlayers)return;
+            using FastBufferWriter writer=new(52,Allocator.Temp);
+            writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
+            writer.WriteValueSafe(slot.Slot);writer.WriteValueSafe(kind);
+            writer.WriteValueSafe(from.x);writer.WriteValueSafe(from.y);writer.WriteValueSafe(from.z);
+            writer.WriteValueSafe(to.x);writer.WriteValueSafe(to.y);writer.WriteValueSafe(to.z);
+            writer.WriteValueSafe(radius);writer.WriteValueSafe(duration);writer.WriteValueSafe(manager.ServerTime.Time);
+            foreach(ulong id in manager.ConnectedClientsIds)
+                if(id!=NetworkManager.ServerClientId)
+                    service.messaging.SendNamedMessage(TimmyEffectMessage,id,writer,NetworkDelivery.ReliableSequenced);
+        }
+        private void OnTimmyEffect(ulong sender,FastBufferReader reader)
+        {
+            if(!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority||sender!=NetworkManager.ServerClientId||!reader.TryBeginRead(52))return;
+            if(!MatchNetworkProtocol.ReadRound(ref reader))return;
+            reader.ReadValueSafe(out int slot);reader.ReadValueSafe(out int kind);
+            reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
+            reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
+            reader.ReadValueSafe(out float radius);reader.ReadValueSafe(out float duration);reader.ReadValueSafe(out double sent);
+            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>5||
+                !TimmyFxFinite(x)||!TimmyFxFinite(y)||!TimmyFxFinite(z)||!TimmyFxFinite(tx)||!TimmyFxFinite(ty)||!TimmyFxFinite(tz)||
+                !TimmyFxFinite(radius)||radius<0||radius>6||!TimmyFxFinite(duration)||duration<0||duration>2.1f||
+                double.IsNaN(sent)||double.IsInfinity(sent))return;
+            GameObject actor=slots[slot].gameObject;if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Timmy)return;
+            float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
+            if(kind!=4&&(duration<=0||elapsed>=duration+(kind==2||kind==3?.12f:0)))return;
+            HeroSkillVfx.TimmyEffect(actor,kind,new Vector3(x,y,z),new Vector3(tx,ty,tz),radius,duration,false,elapsed);
+        }
+        private static bool TimmyFxFinite(float v)=>!float.IsNaN(v)&&!float.IsInfinity(v);
 
         private void SendOwnerPose(NetworkManager manager)
         {
