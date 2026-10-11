@@ -68,7 +68,7 @@ namespace Alterverse.Characters
                     new("Orbit Fracture",8,55,7.3f,2f,.38f),
                     new("Invert Field",12,26,6.5f,2.6f,.46f),
                     new("Phase Fold",16,0,1.8f),
-                    new("Impossible Center",58,72,7f,3.5f,.68f)),
+                    new("Impossible Center",58,72,7f,2.5f,.68f)),
                 HeroId.Mira=>new HeroAbilityLoadout(
                     new("Living memory",0,0,0),
                     new("Resonant Seed",7,30,6.5f),
