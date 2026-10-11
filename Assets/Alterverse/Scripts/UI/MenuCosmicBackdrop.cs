@@ -2,16 +2,21 @@ using UnityEngine;
 
 namespace Alterverse.UI
 {
-    /// <summary>Draws the menu video, with a cached still while playback prepares or is unavailable.</summary>
+    /// <summary>Draws a matching first-frame poster until the menu video is ready, then blends into playback.</summary>
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
+        private const float VideoRevealDuration = .15f;
         private readonly Texture2D texture;
+        private Texture activeVideo;
+        private float videoRevealedAt;
         private readonly bool ownsTexture;
         private readonly Texture2D cards;
         public MenuCosmicBackdrop()
         {
             cards=Resources.Load<Texture2D>("FrontEnd/MenuCardAtlas");
-            texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdrop");
+            // Use the exact first video frame, at the same aspect ratio and crop, during decoding.
+            texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdropAnimatedPoster");
+            if(texture==null)texture=Resources.Load<Texture2D>("FrontEnd/InterstellarBackdrop");
             if(texture!=null)return;
             ownsTexture=true;
             const int width=768,height=384;
@@ -58,7 +63,36 @@ namespace Alterverse.UI
             }
             return background+rim*(edge*.20f);
         }
-        public void Draw(Rect rect,Texture animated=null)=>GUI.DrawTexture(rect,animated!=null?animated:texture,ScaleMode.ScaleAndCrop,false);
+        public void Draw(Rect rect,Texture animated=null)
+        {
+            if(animated==null)
+            {
+                activeVideo=null;
+                GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+                return;
+            }
+            if(activeVideo!=animated)
+            {
+                activeVideo=animated;
+                videoRevealedAt=Time.unscaledTime;
+            }
+            // Unscaled time also works while MatchClock holds the menu paused.
+            float reveal=Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-videoRevealedAt)/VideoRevealDuration));
+            if(reveal>=1f)
+            {
+                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,false);
+                return;
+            }
+            GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+            if(reveal<=0f)return;
+            Color previous=GUI.color;
+            try
+            {
+                GUI.color=new Color(previous.r,previous.g,previous.b,previous.a*reveal);
+                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,true);
+            }
+            finally { GUI.color=previous; }
+        }
         public void DrawCard(Rect rect,int index)
         {
             Texture2D art=cards!=null?cards:texture;
