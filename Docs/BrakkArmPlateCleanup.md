@@ -29,9 +29,29 @@ are separate authored geometry and remain intact. Leg detail generation is prese
 Unreadable meshes now report the skipped runtime cleanup instead of silently leaving
 the old arm overlays visible.
 
-Validation: executable production import-detail generation for Brakk and a control
-hero, production runtime triangle filtering, and C# syntax checks. Native Unity
-import/skinning and visual verification remain pending. Pull the change outside
+## Remaining embedded plates
+
+The follow-up also handles imported bronze/enamel shells assigned to `UpperArm`,
+not just `Forearm`, and cached detail renderers with name suffixes. Bronze overlays
+are recognized by material family or bronze color; fabric, skin, grey shoulder cages
+and silver shoulder plates are excluded from removal.
+
+For any remaining recognizable bronze arm overlay (including renamed renderers and
+blended wrist weights), a runtime fallback fits it outside the actual fabric anatomy.
+Triangle-connected components are welded in the lookup across FBX normal/UV seams.
+Each whole plate translates along its outward radial direction until its innermost
+vertex clears the fabric support plane, with a small margin. Sparse fabric rings use
+the conservative whole-limb envelope. Plate topology, thickness and bone weights stay
+unchanged; already clear plates do not move. All mesh changes belong only to Brakk's
+instance, and the source mesh shared with Nerok remains unchanged.
+
+Validation: the complete production `BrakkForearmTrim` compiles and passes 343
+executable fixture checks, including both arms, FBX seam duplication, blended wrist
+weights, renamed bronze materials, sparse fabric rings, rigid imported upper-arm
+shells, suffixed cached detail renderers, unchanged fabric/gauntlets/grey shoulders,
+and source-mesh isolation from Nerok. The previous production version fails the
+embedded-plate clearance case. Native Unity import/skinning and visual verification
+remain pending. Pull the change outside
 Play mode, allow the model reimport to finish, then restart Play mode to recreate
 existing model instances. A Play-mode restart alone does not invalidate FBX cache.
 

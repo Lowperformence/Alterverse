@@ -42,9 +42,11 @@ namespace Alterverse.Visuals
             }
             foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                bool anatomy = skin.name == "DF_Anatomy";
-                bool details = skin.name == "DF_ArticulatedArmorDetails";
-                bool techDetails = skin.name == "DF_LimbTechDetails";
+                bool anatomy = skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal);
+                bool details = skin.name.StartsWith("DF_ArticulatedArmorDetails", StringComparison.Ordinal) ||
+                    skin.sharedMesh != null && skin.sharedMesh.name.StartsWith("DF_ArticulatedArmorDetails", StringComparison.Ordinal);
+                bool techDetails = skin.name.StartsWith("DF_LimbTechDetails", StringComparison.Ordinal) ||
+                    skin.sharedMesh != null && skin.sharedMesh.name.IndexOf("LimbMicroDetails", StringComparison.Ordinal) >= 0;
                 if (!anatomy && !details && !techDetails) continue;
                 Mesh source = skin.sharedMesh;
                 if (source == null) continue;
@@ -72,12 +74,9 @@ namespace Alterverse.Visuals
                 {
                     kept[sub] = new List<int>();
                     int[] triangles = source.GetTriangles(sub);
-                    // All three imported bracers per arm are separate armor shells:
-                    // the first uses metal, the other two use enamel. Removing only
-                    // metal left four shells that the forearm pass then colored gold.
-                    bool bracer = sub < materials.Length && materials[sub] != null &&
-                        (materials[sub].name.IndexOf("Champagne metal", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                         materials[sub].name.IndexOf("Signature enamel", StringComparison.OrdinalIgnoreCase) >= 0);
+                    // Imported overlays need not retain the original two material
+                    // names. Fabric, skin, grey cages and silver shoulders stay.
+                    bool bracer = sub < materials.Length && ArmOverlay(materials[sub]);
                     for (int i = 0; i < triangles.Length; i += 3)
                     {
                         int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
@@ -91,7 +90,9 @@ namespace Alterverse.Visuals
                         // anatomy. Wrist/knuckle plates are generated on hand bones.
                         // The four bronze overlays are the detail pass's two upper-arm
                         // plates per side. Remove their imported copies as well.
-                        if ((anatomy && bracer && onForearm) || (details && (onUpperArm || onForearm || onHand)) ||
+                        // An imported bronze shell can be assigned to UpperArm even
+                        // when the neutral guard pose places it over the forearm.
+                        if ((anatomy && bracer && (onForearm || onUpperArm)) || (details && (onUpperArm || onForearm || onHand)) ||
                             (techDetails && (onUpperArm || onForearm)))
                         {
                             removed++;
@@ -140,8 +141,175 @@ namespace Alterverse.Visuals
                     return influence > .95f;
                 }
             }
+            LiftRemainingArmPlates(model, owner);
         }
 
+        // Fallback for imported overlays with other material names or blended skin
+        // weights: translate the complete plate beyond the actual fabric surface.
+        // Keep its shape, thickness, fasteners, binding and animation intact.
+        static void LiftRemainingArmPlates(Transform model, BrakkForearmTrim owner)
+        {
+            SkinnedMeshRenderer anatomy = null;
+            foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                if (skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal) &&
+                    skin.sharedMesh != null && skin.sharedMesh.isReadable) { anatomy = skin; break; }
+            if (anatomy == null) return;
+            Mesh body = anatomy.sharedMesh;
+            Vector3[] bodyPoints = body.vertices;
+            BoneWeight[] bodyWeights = body.boneWeights;
+            if (bodyWeights.Length != bodyPoints.Length) return;
+            var fabricVertices = new HashSet<int>();
+            Material[] bodyMaterials = anatomy.sharedMaterials;
+            for (int sub = 0; sub < body.subMeshCount && sub < bodyMaterials.Length; sub++)
+            {
+                if (!Fabric(bodyMaterials[sub])) continue;
+                foreach (int vertex in body.GetTriangles(sub)) fabricVertices.Add(vertex);
+            }
+            if (fabricVertices.Count == 0) return;
+            foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh source = skin.sharedMesh;
+                if (source == null || !source.isReadable) continue;
+                Vector3[] points = source.vertices;
+                BoneWeight[] weights = source.boneWeights;
+                if (weights.Length != points.Length) continue;
+                int[] bones = new int[4];
+                string[] names = { "ForearmL", "ForearmR", "UpperArmL", "UpperArmR" };
+                for (int i = 0; i < bones.Length; i++)
+                    bones[i] = Array.FindIndex(skin.bones, b => b != null && b.name == names[i]);
+                int[] parent = new int[points.Length];
+                bool[] selected = new bool[points.Length];
+                for (int i = 0; i < parent.Length; i++) parent[i] = i;
+                int Find(int i)
+                {
+                    while (parent[i] != i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+                    return i;
+                }
+                void Join(int a, int b) { int x = Find(a), y = Find(b); if (x != y) parent[y] = x; }
+                float ArmWeight(int vertex)
+                {
+                    float total = 0f;
+                    foreach (int bone in bones) total += Influence(weights[vertex], bone);
+                    return total;
+                }
+                Material[] materials = skin.sharedMaterials;
+                for (int sub = 0; sub < source.subMeshCount && sub < materials.Length; sub++)
+                {
+                    if (!ArmOverlay(materials[sub])) continue;
+                    int[] triangles = source.GetTriangles(sub);
+                    for (int t = 0; t < triangles.Length; t += 3)
+                    {
+                        int a = triangles[t], b = triangles[t + 1], c = triangles[t + 2];
+                        if (ArmWeight(a) < .2f || ArmWeight(b) < .2f || ArmWeight(c) < .2f) continue;
+                        selected[a] = selected[b] = selected[c] = true;
+                        Join(a, b); Join(a, c);
+                    }
+                }
+                // Weld lookup indices across FBX face-normal/UV seams, so an entire
+                // closed plate moves as one object instead of separating its faces.
+                var seams = new Dictionary<Vector3Int, int>();
+                for (int i = 0; i < points.Length; i++)
+                {
+                    if (!selected[i]) continue;
+                    Vector3 p = points[i];
+                    var key = new Vector3Int(Mathf.RoundToInt(p.x * 100000f),
+                        Mathf.RoundToInt(p.y * 100000f), Mathf.RoundToInt(p.z * 100000f));
+                    if (seams.TryGetValue(key, out int other)) Join(i, other); else seams[key] = i;
+                }
+                var groups = new Dictionary<int, List<int>>();
+                for (int i = 0; i < points.Length; i++)
+                    if (selected[i])
+                    {
+                        int group = Find(i);
+                        if (!groups.TryGetValue(group, out var indices)) groups[group] = indices = new List<int>();
+                        indices.Add(i);
+                    }
+                int lifted = 0;
+                foreach (var indices in groups.Values)
+                {
+                    int bone = -1, arm = -1;
+                    float highest = 0f;
+                    for (int i = 0; i < bones.Length; i++)
+                    {
+                        float total = 0f;
+                        foreach (int v in indices) total += Influence(weights[v], bones[i]);
+                        if (total > highest) { highest = total; bone = bones[i]; arm = i; }
+                    }
+                    if (bone < 0 || bone >= source.bindposes.Length) continue;
+                    string nextName = arm < 2 ? "Hand" + names[arm][names[arm].Length - 1] :
+                        "Forearm" + names[arm][names[arm].Length - 1];
+                    int next = Array.FindIndex(skin.bones, b => b != null && b.name == nextName);
+                    int bodyBone = Array.FindIndex(anatomy.bones, b => b != null && b.name == names[arm]);
+                    if (next < 0 || next >= source.bindposes.Length || bodyBone < 0) continue;
+                    Vector3 start = source.bindposes[bone].inverse.MultiplyPoint3x4(Vector3.zero);
+                    Vector3 axis = source.bindposes[next].inverse.MultiplyPoint3x4(Vector3.zero) - start;
+                    float length = axis.magnitude;
+                    if (length < .001f) continue;
+                    axis /= length;
+                    Vector3 center = Vector3.zero;
+                    foreach (int v in indices) center += points[v];
+                    center /= indices.Count;
+                    Vector3 outwards = Vector3.ProjectOnPlane(center - start, axis).normalized;
+                    if (outwards.sqrMagnitude < .5f) continue;
+                    float low = float.PositiveInfinity, high = float.NegativeInfinity;
+                    float inside = float.PositiveInfinity;
+                    foreach (int v in indices)
+                    {
+                        Vector3 p = points[v] - start;
+                        float along = Vector3.Dot(p, axis);
+                        low = Mathf.Min(low, along); high = Mathf.Max(high, along);
+                        inside = Mathf.Min(inside, Vector3.Dot(p, outwards));
+                    }
+                    float surface = float.NegativeInfinity;
+                    for (int pass = 0; pass < 2 && float.IsNegativeInfinity(surface); pass++)
+                        foreach (int v in fabricVertices)
+                        {
+                            if (Influence(bodyWeights[v], bodyBone) < .2f) continue;
+                            Vector3 p = skin.transform.InverseTransformPoint(anatomy.transform.TransformPoint(bodyPoints[v])) - start;
+                            float along = Vector3.Dot(p, axis);
+                            // Sparse anatomy may have no ring at the plate's exact
+                            // height; then use the conservative whole-limb envelope.
+                            if (pass == 0 && (along < low - length * .10f || along > high + length * .10f)) continue;
+                            surface = Mathf.Max(surface, Vector3.Dot(p, outwards));
+                        }
+                    if (float.IsNegativeInfinity(surface)) continue;
+                    float offset = surface + length * .015f - inside;
+                    if (offset <= .00001f) continue;
+                    foreach (int v in indices) points[v] += outwards * offset;
+                    lifted++;
+                }
+                if (lifted == 0) continue;
+                Mesh fitted = Instantiate(source);
+                fitted.name = source.name + "_BrakkPlatesOutsideArm";
+                fitted.vertices = points;
+                fitted.RecalculateNormals(); fitted.RecalculateBounds();
+                skin.sharedMesh = fitted;
+                Bounds bounds = skin.localBounds; bounds.Encapsulate(fitted.bounds); skin.localBounds = bounds;
+                owner.ownedMeshes.Add(fitted);
+                Debug.Log("DF: Brakk lifted " + lifted + " remaining arm plates outside the fabric on " + skin.name, model);
+            }
+        }
+
+        static float Influence(BoneWeight w, int bone) => bone < 0 ? 0f :
+            (w.boneIndex0 == bone ? w.weight0 : 0f) + (w.boneIndex1 == bone ? w.weight1 : 0f) +
+            (w.boneIndex2 == bone ? w.weight2 : 0f) + (w.boneIndex3 == bone ? w.weight3 : 0f);
+
+        static bool Fabric(Material material) => material != null &&
+            (material.name.IndexOf("fabric", StringComparison.OrdinalIgnoreCase) >= 0 ||
+             material.name.StartsWith("DF_Brakk_GoldForearms", StringComparison.Ordinal));
+
+        static bool ArmOverlay(Material material)
+        {
+            if (material == null || Fabric(material)) return false;
+            string name = material.name.ToLowerInvariant();
+            if (name.Contains("skin") || name.Contains("flesh") || name.Contains("greyshoulder") ||
+                name.Contains("brushed silver")) return false;
+            if (name.Contains("bronze") || name.Contains("copper") || name.Contains("champagne") ||
+                name.Contains("enamel") || name.Contains("machined") || name.Contains("limb") || name.Contains("armor")) return true;
+            Color color = material.HasProperty("_BaseColor") ? material.GetColor("_BaseColor") :
+                material.HasProperty("_Color") ? material.GetColor("_Color") : new Color();
+            return color.r > .25f && color.g > .15f && color.b < color.g * .8f && color.r > color.g * 1.05f;
+        }
 
         static void RecolorShoulderPlates(Transform model, BrakkForearmTrim owner)
         {
