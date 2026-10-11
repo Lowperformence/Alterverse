@@ -326,13 +326,14 @@ namespace Alterverse.Visuals
                 skin.name += "_SkinSource";
                 weaponRenderers[i] = renderer;
                 rigidWeaponMeshes.Add(mesh);
-                Debug.Log("DF: Zhaev blade bind-space v3 (90-degree palm pivot): " + blade.name + " / " + mesh.vertexCount +
+                Debug.Log("DF: Zhaev blade bind-space v4 (90-degree horizontal palm axis): " + blade.name + " / " + mesh.vertexCount +
                     " vertices / local size " + mesh.bounds.size, this);
             }
         }
 
         // FitVeyrGoldEnd places this socket on the actual gold handle/palm contact.
         // Turn the cloned blade around that contact, never the grip bone's origin.
+        // Turn both blades about the model's left-to-right axis through the palm.
         // Work in model space so hand scaling cannot skew the 90-degree rotation;
         // local hierarchy matrices also keep distant menu portraits precise.
         private Matrix4x4 VeyrBladeTurnAtContact(WeaponGrip grip)
@@ -348,7 +349,7 @@ namespace Alterverse.Visuals
             }
             Matrix4x4 toModel = RelativeMatrix(grip.Bone, model);
             Vector3 pivot = RelativeMatrix(contact, model).MultiplyPoint3x4(Vector3.zero);
-            Quaternion turn = Quaternion.AngleAxis(side == "L" ? VeyrBladeTurnDegrees : -VeyrBladeTurnDegrees, Vector3.forward);
+            Quaternion turn = Quaternion.AngleAxis(VeyrBladeTurnDegrees, Vector3.right);
             Matrix4x4 aroundContact = Matrix4x4.TRS(pivot, turn, Vector3.one) *
                 Matrix4x4.TRS(-pivot, Quaternion.identity, Vector3.one);
             return toModel.inverse * aroundContact * toModel;
