@@ -200,9 +200,9 @@ namespace Alterverse.Visuals
         private static void ApplyHandSize(Transform imported, HeroId hero)
         {
             // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
-            // Veyr's closed fingers were authored around the gold-wrapped blade handles.
-            // Enlarging only the hand opens a visible gap while the weapon stays at its original size.
-            float scale = hero == HeroId.Veyr || hero == HeroId.Mira || hero == HeroId.Nerok ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
+            // Zhaev/Veyr now also uses 1.6x hands: 60% larger than his previous 1x hands.
+            // The palm offset and inverse grip scale below keep the original weapons fitted.
+            float scale = hero == HeroId.Mira || hero == HeroId.Nerok ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {

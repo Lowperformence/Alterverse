@@ -5,13 +5,14 @@ using UnityEngine;
 namespace Alterverse.Visuals
 {
     /// <summary>
-    /// Makes only Auren/Kaelon's forearm body 30% slimmer without changing bone lengths,
-    /// hand positions, shield/hammer size, or attack animation. The forearm cross-section
-    /// is scaled to 70% around the bind-pose forearm axis while its length is preserved.
+    /// Makes both Auren/Kaelon forearm bodies 40% slimmer than their previous appearance
+    /// without changing bone lengths, hand positions, shield/hammer size, or attack animation.
+    /// The previous 70% cross-section is multiplied by 60%, preserving forearm length.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class AurenForearmSlimmer : MonoBehaviour
     {
+        private const float ForearmThickness = .70f * .60f;
         private Mesh ownedMesh;
         private bool applied;
 
@@ -60,7 +61,7 @@ namespace Alterverse.Visuals
             axisL.Normalize(); axisR.Normalize();
 
             ownedMesh = Instantiate(source);
-            ownedMesh.name = source.name + "_AurenForearms70";
+            ownedMesh.name = source.name + "_AurenForearms42";
             Vector3[] vertices = ownedMesh.vertices;
             BoneWeight[] weights = ownedMesh.boneWeights;
             if (weights == null || weights.Length != vertices.Length) { Destroy(ownedMesh); ownedMesh = null; return; }
@@ -87,7 +88,7 @@ namespace Alterverse.Visuals
             ownedMesh.RecalculateBounds();
             anatomy.sharedMesh = ownedMesh;
             applied = true;
-            Debug.Log("DF: Auren forearm bodies reduced to 70% thickness; bone length and weapon grips unchanged.", this);
+            Debug.Log("DF: Both Auren forearm bodies reduced by another 40%; bone length and weapon grips unchanged.", this);
         }
 
         private static Vector3 SlimAroundAxis(Vector3 point, Vector3 origin, Vector3 axis)
@@ -95,7 +96,7 @@ namespace Alterverse.Visuals
             Vector3 delta = point - origin;
             Vector3 along = axis * Vector3.Dot(delta, axis);
             Vector3 radial = delta - along;
-            return origin + along + radial * .70f;
+            return origin + along + radial * ForearmThickness;
         }
 
         private static int BoneIndex(SkinnedMeshRenderer renderer, string name)
