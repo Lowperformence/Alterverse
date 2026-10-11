@@ -24,12 +24,17 @@ Dependencies are supplied separately; the runner does not install/download them.
 Its JSON reader defaults missing fields as Unity does, through Mono's XML bridge;
 .NET uses System.Text.Json. Neither substitutes a native Unity parser/build test.
 
-Latest local result: **86 checks passed** on Mono/Roslyn. `FailureRegression.cs`
+Latest local result: **105 checks passed** on Mono/Roslyn. `FailureRegression.cs`
 holds/reorders HTTP completions to exercise cancellation, account changes, aborted
 registration, missing ACKs and pre-start disconnects. It also verifies dedicated
 credentials, immutable result retry, the 60-second leaver boundary and retained
 Casual fallback. Restoring the old three production classes reproduces six failure
 scenarios. NGO byte transport and native scene transitions are not exercised.
+Recovery checks also cover linked Google/existing password accounts, rejecting
+unlinked guests before queue creation, verification failures, delayed verification
+after cancellation/account changes, and a new client with an empty rank cache
+loading the saved status/leaderboard with a new valid session. Native Google login
+and actual Android uninstall/reinstall are not substituted by these fixtures.
 
 Backend / deployment tools:
 
@@ -38,7 +43,7 @@ python -m unittest discover -s Server/commerce -q
 python -m unittest discover -s Tools/Ranked -p 'test_*.py' -q
 ```
 
-These pass **163** and **4** tests respectively. SQLite is real; Firestore uses
+These pass **168** and **4** tests respectively. SQLite is real; Firestore uses
 strict transactional fixtures. Install `Server/commerce/requirements.txt` and
 use a complete checkout including the Commerce JSON catalogs.
 See `Docs/RankedOnlineAudit-2026-10-11.md` for findings and outstanding live checks.

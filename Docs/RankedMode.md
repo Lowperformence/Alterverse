@@ -22,6 +22,44 @@
 6. Nur das Dedicated-Backend kann `/ranked/server/register`, `/ranked/server/result` und `/ranked/server/void` aufrufen: separater Bearer-Serverschlüssel. Spieler-JWTs sind dafür ungültig. Der serverseitige Match-Ende-Event entscheidet den Sieger.
 7. Rangpunkte aller zehn Accounts und die Match-Quittung werden in einer SQLite-/Firestore-Transaktion gespeichert. Wiederholung desselben Ergebnisses ist idempotent; widersprüchliches Ergebnis wird abgelehnt. Der Server wiederholt bei Ausfall dieselbe Quittung und wartet mit dem normalen Self-Stop bis zur Bestätigung. Ein externer harter Deployment-Stopp kann diese Wiederholung dennoch unterbrechen; solche Matches benötigen Betriebsprüfung. Es gibt noch keinen externen Ergebnis-Outbox-Worker.
 
+## App löschen, neu installieren und Rang wiederherstellen
+
+Rangpunkte, Saison, Rang, Platzierungsspiele, Spiele/Siege, letztes Ergebnis,
+Leaver-Sperren und die Saisonbestenliste gehören zum serverseitigen Unity-Account.
+Die App speichert keine maßgebliche lokale Kopie dieser Werte. Nach einer
+Neuinstallation mit **demselben verknüpften Google-Play-Games-Account** wird die
+bestehende Unity-Spieler-ID wieder angemeldet. Das Ranked-Menü lädt Status und
+Top 50 vom Account-Server. App-Löschung oder Gerätewechsel setzt keinen Rang und
+keine Sperre zurück; eine neue Saison bleibt ein eigener Rangdatensatz.
+
+Vor der Ranked-Suche prüft `GetPlayerInfoAsync` eine Google-Play-Games-Verknüpfung
+oder einen bestehenden Username/Password-Zugang. Reine Gastkonten dürfen weiter
+Casual/Offline spielen und Rangdaten lesen, aber keine Ranked-Suche starten:
+Ihr lokaler Sitzungstoken geht bei der Deinstallation verloren. Die Fehlermeldung
+verweist auf **PROFILE → GOOGLE ACCOUNT → CONNECT GOOGLE**. Das Verknüpfen eines
+Gasts erhält dessen Unity-ID und damit auch bereits vorhandene Rangdaten. Ein
+Google-Konto mit einem anderen bestehenden Spielaccount wird wie bisher über
+**RESTORE GOOGLE** ausgewählt; Accounts werden nicht automatisch zusammengelegt.
+Eine verspätete Account-Prüfung nach Abbruch oder Accountwechsel erstellt keine
+Suche. Bei einer fehlgeschlagenen Prüfung erfolgt ebenfalls kein Matchmaker-Aufruf.
+
+Voraussetzungen bleiben ein dauerhaft gespeicherter Account-Backend-Datenträger
+bzw. Firestore, dieselbe Unity-Projekt-ID und eingerichtetes Google Play Games /
+Unity Authentication. App-Löschung ist kein Löschen des serverseitigen Accounts.
+Ein bereits deinstallierter, zuvor nicht verknüpfter Gast kann ohne dessen
+verlorenen Sitzungstoken nicht durch den Google-Login wiederhergestellt werden.
+Siehe [Account-Server-Setup.md](Account-Server-Setup.md).
+
+Prüfung vom 11.10.2026: 168 Backend-Tests mit echter SQLite und Firestore-Fake
+sowie 105 C#-Prüfungen mit kontrollierten Auth-/HTTP-/Engine-Substituten bestanden.
+Neue Fälle prüfen frische Client-/Store-Instanzen, neue JWTs für denselben Account,
+vollständige Platzierungen/Bestenliste, persistierende Leaver-Sperren und den
+Schutz vor Gastzugängen, Abbruch und Accountwechsel während der Verknüpfungsprüfung.
+Eine echte Android-Deinstallation mit anschließendem Google-Login ist hier
+nicht ausgeführt; sie bleibt Teil der Geräteabnahme.
+
+Unity-Referenz: [Anonymous sign-in und verlorene Sitzungstoken](https://docs.unity.com/en-us/authentication/use-anon-sign-in).
+
 ## Bereitstellung – erforderlich, bevor es live spielbar ist
 
 Der Quellcode alleine aktiviert keinen Cloud-Dienst. Unity-/Android- und Linux-Dedicated-Builds sowie Edgegap-/Account-Konfiguration sind notwendig. Dedicated-Hello/Plan verwendet jetzt Protokoll **3**; Casual und Ranked müssen mit aktualisiertem Client und Server laufen.
@@ -98,6 +136,6 @@ docker push DEINE_REGISTRY/dimensions-front-server:RANKED_COMMIT
 
 `python -m unittest discover -s Tools/Ranked -p 'test_*.py' -q`: Bereitstellung auf den bestehenden Dienst, Erhalt anderer Account-Einstellungen und Ablehnung unsicherer Secret-/URL-Konfigurationen.
 
-`python Tools/Ranked/Regression/run.py --dotnet-root <.NET-8-Installationsverzeichnis>`: kompiliert neun echte C#-Klassen, einschließlich Ranked-Service, Reporter, Dedicated-Handshake und Panel, gegen Engine-/Netzwerk-Substitute; prüft jetzt 86 Roster-/Modus-/Abbruch-/Async-Invarianten. Alternativ `--mono-root <Mono-Verzeichnis> --roslyn <csc.exe>` verwenden; Abhängigkeiten und Grenzen stehen in `Tools/Ranked/Regression/README.md`. Dies ersetzt keinen Unity-Build, Matchmaker-Konfigurationsimport oder Test mit zehn echten Online-Clients.
+`python Tools/Ranked/Regression/run.py --dotnet-root <.NET-8-Installationsverzeichnis>`: kompiliert neun echte C#-Klassen, einschließlich Ranked-Service, Reporter, Dedicated-Handshake und Panel, gegen Engine-/Netzwerk-Substitute; prüft jetzt 105 Roster-/Modus-/Abbruch-/Async-/Recovery-Invarianten. Alternativ `--mono-root <Mono-Verzeichnis> --roslyn <csc.exe>` verwenden; Abhängigkeiten und Grenzen stehen in `Tools/Ranked/Regression/README.md`. Dies ersetzt keinen Unity-Build, Matchmaker-Konfigurationsimport oder Test mit zehn echten Online-Clients.
 
-Prüfung am 11.10.2026: 163 Backend-Tests, 4 Deployment-Tool-Tests und 86 C#-Prüfungen auf Mono/Roslyn bestanden. Behoben wurden Abbruch bei Matchmaker-Ausfall, Ablaufgrenze von Admissions, fehlende Startbestätigungen/Disconnects vor Ranked-Start, verspätete Registrierungen nach Abbruch und veraltete Antworten nach Accountwechsel. Casual-Neuaufbau, Elo-Werte und Leaver-Regeln bleiben erhalten. Details: [RankedOnlineAudit-2026-10-11.md](RankedOnlineAudit-2026-10-11.md). Unity-/Android-Build, produktiver Matchmaker-Import und Live-5v5 sind in dieser Arbeitsumgebung nicht ausgeführt.
+Prüfung am 11.10.2026: 168 Backend-Tests, 4 Deployment-Tool-Tests und 105 C#-Prüfungen auf Mono/Roslyn bestanden. Behoben wurden Abbruch bei Matchmaker-Ausfall, Ablaufgrenze von Admissions, fehlende Startbestätigungen/Disconnects vor Ranked-Start, verspätete Registrierungen nach Abbruch und veraltete Antworten nach Accountwechsel. Casual-Neuaufbau, Elo-Werte und Leaver-Regeln bleiben erhalten. Details: [RankedOnlineAudit-2026-10-11.md](RankedOnlineAudit-2026-10-11.md). Unity-/Android-Build, produktiver Matchmaker-Import und Live-5v5 sind in dieser Arbeitsumgebung nicht ausgeführt.

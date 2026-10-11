@@ -39,7 +39,7 @@ namespace Alterverse.UI
                 theme.Label(new Rect(48, 204, 312, 74), current?.placementsRemaining > 0
                     ? current.placementsRemaining + " placement matches remaining"
                     : "Win as a team to climb the ranks.", theme.Body, true);
-                theme.Label(new Rect(48, 284, 312, 120), "10 real players • no bot fill\nBronze → Dimensions Legend\nKills do not grant rank points.\nLeaving: point penalty + cooldown", theme.Small, true);
+                theme.Label(new Rect(48, 284, 312, 120), "10 real players • no bot fill\nBronze → Dimensions Legend\nRank saved to your linked account.\nLeaving: point penalty + cooldown", theme.Small, true);
                 if (current?.lastResult != null)
                     theme.Label(new Rect(48, 418, 312, 34), "LAST MATCH  " + (current.lastResult.delta >= 0 ? "+" : "") + current.lastResult.delta + " RP", theme.Body);
                 theme.Label(new Rect(48, 464, 312, 36), current == null ? "" : current.wins + " WINS / " + current.games + " MATCHES", theme.Small, true);

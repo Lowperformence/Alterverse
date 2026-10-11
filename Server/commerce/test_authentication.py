@@ -21,6 +21,12 @@ class AuthenticationTests(unittest.TestCase):
         return jwt.encode(claims,self.private,algorithm='RS256',headers={'kid':'test-key'})
     def test_valid_identity_matches_client_account_hash(self):
         self.assertEqual(self.authenticate('Bearer '+self.token()),hashlib.sha256(b'player-a').hexdigest())
+    def test_new_session_for_same_player_recovers_same_account(self):
+        original = self.token(jti='old-device-session')
+        restored = self.token(jti='reinstalled-app-session', exp=int(time.time())+120)
+        self.assertNotEqual(original, restored)
+        self.assertEqual(self.authenticate('Bearer '+original), self.authenticate('Bearer '+restored))
+        self.assertNotEqual(self.authenticate('Bearer '+restored), self.authenticate('Bearer '+self.token(sub='another-player')))
     def test_expired_wrong_issuer_project_and_not_yet_valid_rejected(self):
         for override in ({'exp':int(time.time())-10},{'nbf':int(time.time())+600},{'iss':'other'},{'project_id':'other'},{'sub':''}):
             self.assertIsNone(self.authenticate('Bearer '+self.token(**override)))

@@ -55,6 +55,7 @@ Profile → **GOOGLE ACCOUNT** replaces the extra username/password form. The ed
 - Account changes are blocked during matches, parties, outstanding payments and paid spending. The store rechecks account ownership before fulfillment and confirmation. Profile, paid wallet and unlocks are loaded under the restored Unity ID; leaderboard submission waits for that cloud profile.
 - The saved identity uses provider/player IDs, rather than a user-typed email address. The player's Google account is selected through Google Play Games. No Google password, server authorization code, client secret or email is written into the game profile.
 - Anonymous/offline play remains available when Google is unavailable; an unlinked installation cannot promise recovery after its session token is lost. Its real-money checkout is disabled.
+- Ranked search also requires a verified Google Play Games link or an existing username/password account. Rank points, placements, wins, leaderboard entries and leaver penalties are separate server records under the same Unity identity; they survive app removal and are read again after signing into that identity. Linking the current guest preserves its existing rank. A different Google account selects a separate save; no implicit rank merging occurs. See `RankedMode.md` for recovery tests and device acceptance.
 
 ### Required configuration (not supplied by code)
 

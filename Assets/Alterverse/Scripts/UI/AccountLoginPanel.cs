@@ -23,7 +23,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(panel.x+16,panel.y+48,panel.width-32,50),
                 service?.GoogleRestoreAvailable==true
                     ?"Restore the selected Google account. The current save stays separate; accounts are not merged."
-                    :"Save and restore your progress and purchases with Google Play Games. No extra username or password.",theme.Small,true);
+                    :"Restore progress, rank and purchases after reinstalling with the same Google Play Games account.",theme.Small,true);
             bool enabled=!working&&service!=null&&!service.Busy&&GooglePlayAccountSession.Supported;
             bool restore=service?.GoogleRestoreAvailable==true;
             if(theme.Action(new Rect(panel.x+16,panel.y+112,panel.width-32,44),

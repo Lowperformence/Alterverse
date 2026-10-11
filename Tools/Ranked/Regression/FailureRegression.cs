@@ -60,6 +60,74 @@ partial class Regression
  {
   int failures=0;
   async Task Case(string name,Func<Task> run){try{await run();}catch(Exception e){failures++;Console.WriteLine("FAIL "+name+": "+e.GetBaseException().Message);}}
+  await Case("unlinked guest cannot earn unrecoverable rank",async()=>
+  {
+   ResetFailures();var service=Component<RankedService>();int requests=0;
+   AuthenticationService.Instance.PlayerInfoRequest=()=>Task.FromResult(new PlayerInfo{Id="user"});
+   UnityWebRequest.Handler=r=>{requests++;return Reply(r,Assignment("signed"));};
+   Check(!await service.StartSearchAsync(),"guest must link a recoverable account before Ranked");
+   Check(requests==0&&CoopNetworkBootstrap.Connects==0,"guest rejection creates no queue or admission");
+   Check(!service.Busy&&!service.Searching,"guest rejection leaves the account-link controls usable");
+   Check(service.Status.Contains("PROFILE")&&service.Status.Contains("reinstall"),"guest is told how to preserve rank");
+  });
+  await Case("Google and existing password accounts remain playable",async()=>
+  {
+   foreach(bool google in new[]{true,false})
+   {
+    ResetFailures();var service=Component<RankedService>();Component<EdgegapMatchmakerClient>();
+    AuthenticationService.Instance.PlayerInfoRequest=()=>Task.FromResult(new PlayerInfo{Id="user",GooglePlayGamesId=google?"google-id":null,Username=google?null:"ExistingUsername"});
+    UnityWebRequest.Handler=r=>Reply(r,Assignment("signed"));
+    Check(await service.StartSearchAsync(),"recoverable sign-in can search: "+service.Status);
+    Check(CoopNetworkBootstrap.Connects==1,"verified account reaches existing connection path");service.MatchStarted();
+   }
+  });
+  await Case("account verification failure",async()=>
+  {
+   ResetFailures();var service=Component<RankedService>();int requests=0;
+   AuthenticationService.Instance.PlayerInfoRequest=()=>Task.FromException<PlayerInfo>(new Exception("Account verification unavailable"));
+   UnityWebRequest.Handler=r=>{requests++;return Reply(r,Assignment("signed"));};
+   Check(!await service.StartSearchAsync()&&requests==0,"failed identity verification cannot start or cancel a queue");
+   Check(!service.Busy&&!service.Searching,"verification failure is retryable");
+  });
+  await Case("account changes during recovery verification",async()=>
+  {
+   ResetFailures();var service=Component<RankedService>();var info=new TaskCompletionSource<PlayerInfo>();int requests=0;
+   AuthenticationService.Instance.PlayerInfoRequest=()=>info.Task;
+   UnityWebRequest.Handler=r=>{requests++;return Reply(r,Assignment("signed"));};
+   Task<bool> search=service.StartSearchAsync();AuthenticationService.Instance.PlayerId="new-user";
+   info.SetResult(new PlayerInfo{Id="user",GooglePlayGamesId="old-google"});
+   Check(!await search&&requests==0,"previous account's link cannot authorize a new account, even before Update");
+   Check(!service.Busy&&!service.Searching,"account switch during verification resets search state");
+  });
+  await Case("cancel during recovery verification",async()=>
+  {
+   ResetFailures();var service=Component<RankedService>();var info=new TaskCompletionSource<PlayerInfo>();int searches=0;
+   AuthenticationService.Instance.PlayerInfoRequest=()=>info.Task;
+   UnityWebRequest.Handler=r=>{if(r.url.EndsWith("/search"))searches++;return Reply(r,"{\"fulfilled\":true,\"ranked\":{}}");};
+   Task<bool> search=service.StartSearchAsync();await service.CancelAsync();
+   info.SetResult(new PlayerInfo{Id="user",GooglePlayGamesId="google"});
+   Check(!await search&&searches==0,"late verified identity cannot restart a cancelled search");
+   Check(!service.Busy&&!service.Searching,"verification cancellation restores menu controls");
+  });
+  await Case("fresh client restores rank from same authenticated account",async()=>
+  {
+   ResetFailures();int statuses=0,leaders=0;string restoredAuthorization=null;
+   UnityWebRequest.Handler=r=>
+   {
+    restoredAuthorization=r.Headers["Authorization"];
+    if(r.url.EndsWith("/status")){statuses++;return Reply(r,"{\"fulfilled\":true,\"ranked\":{\"season\":\"S1\",\"rank\":\"Gold 1\",\"points\":1375,\"games\":12,\"wins\":9,\"placementsRemaining\":0,\"cooldownUntil\":123456,\"lastResult\":{\"matchId\":\"saved-match\",\"delta\":-10,\"left\":true}}}");}
+    leaders++;return Reply(r,"{\"fulfilled\":true,\"ranked\":{\"leaders\":[{\"displayName\":\"Saved Hero\",\"rank\":\"Gold 1\",\"points\":1375,\"games\":12,\"wins\":9}]}}");
+   };
+   var original=Component<RankedService>();await original.RefreshAsync();Invoke(original,"OnDestroy");
+   AuthenticationService.Instance=new AuthenticationService{PlayerId="user",AccessToken="new-install-token"};
+   var fresh=Component<RankedService>();
+   Check(fresh.Current==null&&fresh.Leaderboard.Length==0,"new installation begins without a local ranked snapshot");
+   await fresh.RefreshAsync();
+   Check(statuses==2&&leaders==2&&restoredAuthorization=="Bearer new-install-token","restoration uses the new valid session against the backend");
+   Check(fresh.Current.points==1375&&fresh.Current.games==12&&fresh.Current.wins==9&&fresh.Current.placementsRemaining==0,"rank and completed placements are restored");
+   Check(fresh.Current.cooldownUntil==123456&&fresh.Current.lastResult.left&&fresh.Current.lastResult.matchId=="saved-match","uninstall does not clear penalties or saved results");
+   Check(fresh.Leaderboard.Length==1&&fresh.Leaderboard[0].displayName=="Saved Hero","season leaderboard is independent of the local installation");
+  });
   await Case("missing ACK",()=>
   {
    var handshake=PendingRanked(out var manager,out var reporter);int voids=0;

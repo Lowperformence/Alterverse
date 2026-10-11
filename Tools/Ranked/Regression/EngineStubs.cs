@@ -43,7 +43,8 @@ namespace UnityEngine.Networking {
  public class UnityWebRequest:IDisposable {public static Func<UnityWebRequest,UnityWebRequestAsyncOperation> Handler;public readonly string url,method;public readonly Dictionary<string,string> Headers=new();public enum Result {Success,ConnectionError};public Result result=Result.Success;public long responseCode=200;public string error;public int timeout;public UploadHandlerRaw uploadHandler;public DownloadHandlerBuffer downloadHandler;public UnityWebRequest(string u,string m){url=u;method=m;}public static UnityWebRequest Delete(string u)=>new(u,"DELETE");public static string EscapeURL(string s)=>Uri.EscapeDataString(s);public void SetRequestHeader(string n,string v){Headers[n]=v;}public UnityWebRequestAsyncOperation SendWebRequest()=>Handler?.Invoke(this)??new();public void Dispose(){}}
 }
 namespace Unity.Services.Authentication {
- public class AuthenticationService {public static AuthenticationService Instance=new();public bool IsAuthorized=true;public string PlayerId="user",AccessToken="jwt";}
+ public class PlayerInfo {public string Id,Username,GooglePlayGamesId;public string GetGooglePlayGamesId()=>GooglePlayGamesId;}
+ public class AuthenticationService {public static AuthenticationService Instance=new();public bool IsAuthorized=true;public string PlayerId="user",AccessToken="jwt";public Func<Task<PlayerInfo>> PlayerInfoRequest;public Task<PlayerInfo> GetPlayerInfoAsync()=>PlayerInfoRequest?.Invoke()??Task.FromResult(new PlayerInfo{Id=PlayerId,GooglePlayGamesId="linked-google"});}
 }
 namespace Unity.Collections {
  public enum Allocator {Temp}

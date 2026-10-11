@@ -101,11 +101,23 @@ namespace Alterverse.Multiplayer
             { Status = "Leave your party before Solo Ranked."; return false; }
             Busy = true; Searching = true; Admission = ""; ResultText = ""; resultGeneration++;
             int search = ++generation;
+            bool queueAttempted = false;
             try
             {
                 await Authenticate();
                 if (search != generation) return false;
+                // A guest's cached session disappears on uninstall. Verify a real
+                // recovery method before earning rank on an unrecoverable account.
+                var auth = AuthenticationService.Instance;
+                string account = owner;
+                var info = await auth.GetPlayerInfoAsync();
+                if (search != generation) return false;
+                if (!auth.IsAuthorized || auth.PlayerId != account || info?.Id != account)
+                    throw new InvalidOperationException("Ranked account changed. Sign in again.");
+                if (string.IsNullOrWhiteSpace(info.GetGooglePlayGamesId()) && string.IsNullOrWhiteSpace(info.Username))
+                    throw new InvalidOperationException("Connect Google Play Games in PROFILE before Ranked. Your rank will survive reinstalling.");
                 Status = "RANKED • SEARCHING FOR TEN PLAYERS…";
+                queueAttempted = true;
                 queueRequest = Request<Member>("/ranked/search", JsonUtility.ToJson(new Search { displayName = PlayerProfile.PlayerName }));
                 Member member = await queueRequest;
                 Busy = false;
@@ -140,7 +152,8 @@ namespace Alterverse.Multiplayer
                 if (search == generation)
                 {
                     Status = error.Message;
-                    try { await Request<Member>("/ranked/cancel", "{}"); } catch { }
+                    if (queueAttempted && AuthenticationService.Instance.IsAuthorized && AuthenticationService.Instance.PlayerId == owner)
+                        try { await Request<Member>("/ranked/cancel", "{}"); } catch { }
                     Searching = false; Admission = "";
                 }
                 return false;

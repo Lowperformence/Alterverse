@@ -58,6 +58,33 @@ class RankedTests(unittest.TestCase):
             list(pool.map(lambda _:self.ranked.settle(dict(matchId='m1', winner=0)), range(12)))
         self.assertEqual(self.ranked.status('a0')['games'], 1)
         self.assertEqual(self.ranked.status('a0')['points'], 1020)
+    def test_reinstall_relogin_keeps_rank_and_leaderboard(self):
+        for i in range(5):
+            self.match('reinstall-'+str(i))
+            self.ranked.settle(dict(matchId='reinstall-'+str(i), winner=0))
+        before = self.ranked.status('a0')
+        leaders = self.ranked.dispatch('a0', '/ranked/leaderboard', {})['leaders']
+        # New backend/store objects; client session, local preferences and display
+        # name are not inputs to rank recovery. Authentication supplies the account.
+        restored = Ranked(self.make_ledger(), self.gateway, 'a'*32, clock=lambda:self.now)
+        self.assertEqual(restored.status('a0'), before)
+        self.assertEqual(restored.dispatch('a0', '/ranked/leaderboard', {})['leaders'], leaders)
+        self.assertEqual(restored.status('a0')['placementsRemaining'], 0)
+        self.assertEqual(restored.status('different')['games'], 0)
+        restored.search('a0', 'New device name')
+        self.assertEqual(self.gateway.ratings[-1], before['points'])
+        restored.cancel('a0')
+        self.assertEqual(restored.status('a0'), before)
+    def test_reinstall_cannot_reset_leaver_points_or_cooldown(self):
+        self.match('left-before-uninstall')
+        self.ranked.settle(dict(matchId='left-before-uninstall', winner=0, leavers=['t1']))
+        before = self.ranked.status('a0')
+        self.assertTrue(before['lastResult']['left'])
+        self.assertGreater(before['cooldownUntil'], self.now)
+        restored = Ranked(self.make_ledger(), self.gateway, 'a'*32, clock=lambda:self.now)
+        self.assertEqual(restored.status('a0'), before)
+        with self.assertRaisesRegex(ValueError, 'cooldown'):
+            restored.search('a0', 'Reinstalled')
     def test_conflicting_result_never_overwrites(self):
         self.match(); self.ranked.settle(dict(matchId='m1', winner=0))
         with self.assertRaises(ValueError): self.ranked.settle(dict(matchId='m1', winner=1))
