@@ -220,7 +220,7 @@ namespace Alterverse.Visuals
             {
                 case HeroId.Rook: offset = new Vector3(side * .34f, -.76f, .04f); break;
                 case HeroId.Veyr: offset = new Vector3(side * .40f, -.73f, .06f); break;
-                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.34f, -.67f, .12f) : new Vector3(.43f, -.72f, .07f); break;
+                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.34f, -.67f, .12f) : new Vector3(.43f, -.72f, .38f); break;
                 case HeroId.Nerok: offset = new Vector3(side * .44f, -.73f, .06f); break;
                 case HeroId.Elyra: offset = new Vector3(side * .36f, -.76f, .05f); break;
                 case HeroId.Mira: offset = new Vector3(side * .35f, -.77f, .04f); break;
@@ -257,6 +257,9 @@ namespace Alterverse.Visuals
                 // Preserve the established shield guard, including its wrist orientation.
                 SolveArm(4, GuardPoint(4));
                 bones[6].Transform.rotation = model.rotation * bones[6].RestModel;
+                // Bring Auren's hammer hand forward with the whole arm chain. A wrist-only
+                // correction leaves the shaft behind his shoulder in the imported rest pose.
+                SolveArm(7, GuardPoint(7));
                 // Establish the hammer's grip orientation before GuardWorld is captured;
                 // attack/recovery then inherit it instead of a second LateUpdate fighting them.
                 model.GetComponent<SiegeTankAppearance>()?.OrientHammerGuard(transform, bones[9].Transform);

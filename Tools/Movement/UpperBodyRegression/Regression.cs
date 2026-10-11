@@ -11,7 +11,7 @@ partial class Regression {
  static int assertions,cases;static StreamWriter csv;static string fixture;
  static readonly int[] parents={-1,0,1,2,2,4,5,2,7,8,0,10,11,0,13,14};
  class Rig {public GameObject actor;public Transform model;public HeroVisualMotion motion;public MeleeBasicAttackAnimation melee;
-  public Transform[] bones=new Transform[16];public Quaternion[] rest=new Quaternion[16];public Transform[] grips=new Transform[2];}
+  public Transform[] bones=new Transform[16];public Quaternion[] rest=new Quaternion[16],guard=new Quaternion[16];public Transform[] grips=new Transform[2];}
  static void Check(bool condition,string message){assertions++;if(!condition)throw new Exception(message);}
  static void Near(float a,float b,float tolerance,string message){Check(Math.Abs(a-b)<=tolerance,message+": "+a+" != "+b);}
  static void SameQ(Quaternion a,Quaternion b,string m){Near(Quaternion.Angle(a,b),0,.0001f,m);}
@@ -19,7 +19,7 @@ partial class Regression {
  static void Call(object obj,string method){obj.GetType().GetMethod(method,BindingFlags.Instance|BindingFlags.NonPublic).Invoke(obj,null);}
  static float PrivateFloat(object obj,string name){return (float)obj.GetType().GetField(name,BindingFlags.Instance|BindingFlags.NonPublic).GetValue(obj);}
  static float F(string s){return float.Parse(s,CultureInfo.InvariantCulture);}
- static Rig Make(HeroId hero,bool native){
+ static Rig Make(HeroId hero,bool native,bool shortForearms=false){
   Time.time=10;Time.deltaTime=1f/60f;var r=new Rig();
   var parent=new GameObject("Parent").transform;parent.localRotation=Quaternion.Euler(13,47,-9);parent.localScale=new Vector3(1.07f,.93f,1.03f);
   r.actor=new GameObject("Actor");r.actor.transform.parent=parent;r.actor.transform.localPosition=new Vector3(3,0,-2);r.actor.transform.localRotation=Quaternion.Euler(0,-31,0);
@@ -41,14 +41,18 @@ partial class Regression {
     r.bones[i].localRotation=i==4?Quaternion.Euler(23,37,-58):i==7?Quaternion.Euler(-21,-33,61):i==5?Quaternion.Euler(-17,12,9):i==8?Quaternion.Euler(18,-14,-7):Quaternion.identity;}
    for(int g=0;g<2;g++){r.grips[g]=new GameObject("WeaponGrip"+g).transform;r.grips[g].parent=r.bones[g==0?6:9];r.grips[g].localPosition=new Vector3(.02f,-.03f,.04f);r.grips[g].localRotation=Quaternion.Euler(11,16,-19);}
   }
+  if(shortForearms){r.bones[6].localPosition*=.5f;r.bones[9].localPosition*=.5f;}
   for(int i=0;i<16;i++)r.rest[i]=r.bones[i].localRotation;
-  Call(r.melee,"Awake");Call(r.melee,"OnEnable");r.melee.InitializeRig(r.model);return r;
+  Call(r.melee,"Awake");Call(r.melee,"OnEnable");r.melee.InitializeRig(r.model);
+  CaptureGuard(r);return r;
  }
- static float ArmAngle(Rig r,int i){return Quaternion.Angle(r.rest[i],r.bones[i].localRotation);}
+ static float ArmAngle(Rig r,int i){return Quaternion.Angle(i>=7&&i<=9?r.guard[i]:r.rest[i],r.bones[i].localRotation);}
  // Reproduce AuthoredHeroPresentation's fresh Rest arm writes before its synchronous EvaluatePose.
  // Rifle socket writes are not present in the stub, so preserve its supplied socket-owned pose.
  static void EvaluateAuthoredFrame(Rig r){if(!r.motion.AbilityActionActive&&r.actor.GetComponent<HeroIdentity>().Hero!=HeroId.Nyra)
    for(int i=4;i<=9;i++)r.bones[i].localRotation=r.rest[i];r.melee.EvaluatePose();}
+ static void CaptureGuard(Rig r){float gait=r.motion.LocomotionWeight;r.motion.LocomotionWeight=0;EvaluateAuthoredFrame(r);
+  for(int i=0;i<16;i++)r.guard[i]=r.bones[i].localRotation;r.motion.LocomotionWeight=gait;}
  static void GuardEqualsFinal(Rig r){var field=typeof(MeleeBasicAttackAnimation).GetField("bones",BindingFlags.NonPublic|BindingFlags.Instance);var bones=(Array)field.GetValue(r.melee);
   for(int i=0;i<16;i++){object bone=bones.GetValue(i);var guard=(Quaternion)bone.GetType().GetField("GuardWorld").GetValue(bone);SameQ(guard,r.bones[i].rotation,"GuardWorld must capture final gait "+i);}}
  static void ProfileMatrix(){foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))foreach(bool native in new[]{false,true})foreach(string direction in new[]{"forward","back","strafe"})foreach(float run in new[]{0f,1f}){
@@ -85,20 +89,20 @@ partial class Regression {
    for(int repeat=0;repeat<720;repeat++){Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);for(int i=0;i<16;i++)SameQ(stable[i],r.bones[i].localRotation,"Cumulative drift "+hero+" "+i);}
    Time.deltaTime=0;for(int repeat=0;repeat<50;repeat++){EvaluateAuthoredFrame(r);for(int i=0;i<16;i++)SameQ(stable[i],r.bones[i].localRotation,"Paused repeat drift "+hero+" "+i);}Time.deltaTime=1f/60;
    Quaternion shieldL=r.bones[4].rotation,shieldWrist=r.bones[6].rotation;r.motion.LocomotionWeight=0;EvaluateAuthoredFrame(r);
-   if(hero!=HeroId.Nyra){SameQ(r.rest[7],r.bones[7].localRotation,"Weight zero right rest");SameQ(r.rest[8],r.bones[8].localRotation,"Weight zero right elbow rest");}
+   if(hero!=HeroId.Nyra){SameQ(r.guard[7],r.bones[7].localRotation,"Weight zero right guard");SameQ(r.guard[8],r.bones[8].localRotation,"Weight zero right elbow guard");}
    if(hero==HeroId.Kaelon){SameQ(shieldL,r.bones[4].rotation,"Shield independent of gait");SameQ(shieldWrist,r.bones[6].rotation,"Shield wrist independent of gait");}
    else if(hero!=HeroId.Nyra){SameQ(r.rest[4],r.bones[4].localRotation,"Weight zero left rest");SameQ(r.rest[5],r.bones[5].localRotation,"Weight zero left elbow rest");}
    r.motion.PlanarSpeed=0;for(int i=0;i<4;i++)r.bones[i].localRotation=r.rest[i]*Quaternion.Euler(2+i,3-i,-1);Quaternion[] body=new Quaternion[4];for(int i=0;i<4;i++)body[i]=r.bones[i].localRotation;
    EvaluateAuthoredFrame(r);for(int i=0;i<4;i++)SameQ(body[i],r.bones[i].localRotation,"Idle body was erased "+i);
-   r.motion.PlanarSpeed=6;r.motion.LocomotionWeight=1;r.motion.GroundingSuspended=true;EvaluateAuthoredFrame(r);
-   if(hero!=HeroId.Nyra)SameQ(r.rest[7],r.bones[7].localRotation,"Suspended grounding applied arm gait");r.motion.GroundingSuspended=false;
+   CaptureGuard(r);r.motion.PlanarSpeed=6;r.motion.LocomotionWeight=1;r.motion.GroundingSuspended=true;EvaluateAuthoredFrame(r);
+   if(hero!=HeroId.Nyra)SameQ(r.guard[7],r.bones[7].localRotation,"Suspended grounding applied arm gait");r.motion.GroundingSuspended=false;
    r.motion.AbilityActionActive=true;for(int i=0;i<16;i++)r.bones[i].localRotation=r.rest[i]*Quaternion.Euler(i*.3f,-i*.2f,i*.1f);Quaternion[] ability=new Quaternion[16];for(int i=0;i<16;i++)ability[i]=r.bones[i].localRotation;
    r.actor.transform.ClearWrites();EvaluateAuthoredFrame(r);for(int i=0;i<16;i++){SameQ(ability[i],r.bones[i].localRotation,"Ability overwritten "+i);Check(r.bones[i].rotationWrites+r.bones[i].positionWrites==0,"Ability early return wrote bones");}
    Near(PrivateFloat(r.melee,"armGaitWeight"),0,0,"Ability did not suppress gait");
    r.motion.AbilityActionActive=false;Time.time+=.20f;EvaluateAuthoredFrame(r);for(int k=0;k<10;k++){Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);}Near(PrivateFloat(r.melee,"armGaitWeight"),1,.0001f,"Gait recovery failed");
-   r.motion.ArmActionActive=true;float before=PrivateFloat(r.melee,"armGaitWeight");Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);Check(PrivateFloat(r.melee,"armGaitWeight")<before,"Arm action fade failed");
+   CaptureGuard(r);r.motion.ArmActionActive=true;float before=PrivateFloat(r.melee,"armGaitWeight");Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);Check(PrivateFloat(r.melee,"armGaitWeight")<before,"Arm action fade failed");
    for(int k=0;k<10;k++){Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);}Near(PrivateFloat(r.melee,"armGaitWeight"),0,.0001f,"Arm action never fades to zero");
-   if(hero!=HeroId.Nyra)SameQ(r.rest[7],r.bones[7].localRotation,"Arm action did not return guard");
+   if(hero!=HeroId.Nyra)SameQ(r.guard[7],r.bones[7].localRotation,"Arm action did not return guard");
    r.motion.ArmActionActive=false;for(int k=0;k<10;k++){Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);}Near(PrivateFloat(r.melee,"armGaitWeight"),1,.0001f,"Arm action recovery failed");
   }}
  static void Solver(){Rig r=Make(HeroId.Nerok,true);Transform upper=r.bones[7],elbow=r.bones[8],hand=r.bones[9];float length=Vector3.Distance(upper.position,elbow.position)+Vector3.Distance(elbow.position,hand.position);
@@ -106,6 +110,20 @@ partial class Regression {
   Quaternion wrist=hand.rotation;CombatMotion.Solve(upper,elbow,hand,point,elbow.position);SameQ(wrist,hand.rotation,"Original solver wrist preservation");
   Check(!float.IsNaN(hand.position.x)&&Vector3.Distance(hand.position,point)<.05f,"Original solver FK reach under nonuniform scale");
  }
+ static void HammerGuard(){foreach(bool native in new[]{false,true})foreach(bool shortened in new[]{false,true}){
+   Rig r=Make(HeroId.Kaelon,native,shortened);r.motion.PlanarSpeed=0;r.motion.LocomotionWeight=0;
+   Vector3 gripPosition=r.grips[1].localPosition;Quaternion gripRotation=r.grips[1].localRotation;
+   Vector3 upperRest=r.bones[7].localPosition,elbowRest=r.bones[8].localPosition,handRest=r.bones[9].localPosition;
+   for(int frame=0;frame<180;frame++){r.actor.transform.localRotation=Quaternion.Euler(0,frame*2f,0);Time.time+=Time.deltaTime;EvaluateAuthoredFrame(r);
+    Vector3 shoulder=r.bones[7].position,elbow=r.bones[8].position,hand=r.bones[9].position;
+    float reach=Vector3.Distance(shoulder,elbow)+Vector3.Distance(elbow,hand);
+    Check(Vector3.Dot(hand-shoulder,r.model.forward)>reach*.20f,"Auren hammer hand must stay ahead of the shoulder");
+    Check(Vector3.Dot(hand-shoulder,r.model.up)<-reach*.50f,"Auren hammer arm must rest below the shoulder");
+    Check(Vector3.Distance(shoulder,hand)<reach*.97f,"Auren hammer elbow must remain bent");
+    SameV(upperRest,r.bones[7].localPosition,"Hammer shoulder anchor preserved");SameV(elbowRest,r.bones[8].localPosition,"Hammer upper arm length preserved");SameV(handRest,r.bones[9].localPosition,"Hammer forearm length preserved");
+    SameV(gripPosition,r.grips[1].localPosition,"Hammer grip contact preserved");SameQ(gripRotation,r.grips[1].localRotation,"Hammer grip orientation preserved");
+   }
+  }}
  static void Steering(){foreach(HeroId hero in Enum.GetValues(typeof(HeroId))){var previous=HeroUpperBodyGait.Sample(hero,0,1,1,1,0);
    for(int degrees=1;degrees<=360;degrees++){float angle=degrees*Mathf.Deg2Rad;var current=HeroUpperBodyGait.Sample(hero,0,1,1,Mathf.Cos(angle),Mathf.Sin(angle));
     Check(Math.Abs(current.leftShoulder-previous.leftShoulder)<.55f,"Steering threshold snapped left arm");
@@ -116,13 +134,14 @@ partial class Regression {
    Time.deltaTime=0;for(int repeat=0;repeat<100;repeat++){r.melee.EvaluatePose();foreach(int i in new[]{4,5,6,7,8,9}){
      if(hero==HeroId.Kaelon&&i<=6)continue;SameQ(initial[i],r.bones[i].localRotation,"Gait chains drift without Authored rebase "+hero+" "+i);}}
   }}
- static void Main(string[] args){fixture=args[0];csv=new StreamWriter(args[1]);csv.WriteLine("hero,rig,direction,run,max_left_shoulder_deviation_from_rest_deg,max_right_shoulder_deviation_from_rest_deg,max_left_elbow_deviation_from_rest_deg,max_right_elbow_deviation_from_rest_deg");
+ static void Main(string[] args){fixture=args[0];csv=new StreamWriter(args[1]);csv.WriteLine("hero,rig,direction,run,max_left_shoulder_deviation_from_rest_deg,max_right_shoulder_deviation_from_guard_deg,max_left_elbow_deviation_from_rest_deg,max_right_elbow_deviation_from_guard_deg");
   Console.WriteLine("Isolated C# regression: unmodified HeroUpperBodyGait + full MeleeBasicAttackAnimation + original full CombatMotion.");
   Console.WriteLine("Substitute Unity Transform/math implemented with System.Numerics; clip library and presentation grips are stubs. No Unity, renderer or real attack-clip test.");
   try{ShieldGuardCases();Sampler();Steering();Console.WriteLine("PASS sampler: eight profiles, counterphase, exclusions, zero weight, forward/back/strafe and continuous 360-degree steering.");ProfileMatrix();Console.WriteLine("PASS final pipeline: "+cases+" evaluations, rotated synthetic axes and native Nerok source rest, parent rotation, imported 1.342/1.32 scale.");
    Lifecycle();Console.WriteLine("PASS lifecycle: drift, pause, zero weight, idle body, grounding suspend, ability early return, action fade/recovery, shield/rifle exceptions.");
    DirectGaitRepeat();Console.WriteLine("PASS repeated direct EvaluatePose: all gait-owned arm chains remain stable without Authored rebase; existing left shield IK excluded.");
    Solver();Console.WriteLine("PASS original CombatMotion.Solve: native Nerok source-rest reach and wrist preservation.");
+   HammerGuard();Console.WriteLine("PASS Auren hammer guard: forward relaxed arm, bent elbow, unchanged limb lengths and fitted grip through 360-degree turns, including half-length forearms.");
    Console.WriteLine("ALL PASS: "+assertions+" assertions.");}
   catch(Exception e){Console.WriteLine("FAIL: "+e);Environment.ExitCode=1;}finally{csv.Dispose();}
  }
