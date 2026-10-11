@@ -5,7 +5,7 @@ namespace Alterverse.Characters
     {
         public const int DamagePoints = 30, MobilityPoints = 28, ControlPoints = 24, DurabilityPoints = 10, UtilityPoints = 8;
         public const int TotalPoints = DamagePoints + MobilityPoints + ControlPoints + DurabilityPoints + UtilityPoints;
-        public const float RawHealth = 185f, BasicDamage = 22f, BasicRange = 1.6f, BasicInterval = .78f;
+        public const float RawHealth = 185f, BasicDamage = 25f, BasicRange = 1.6f, BasicInterval = .78f;
         public const float RawMoveSpeed = 7.1f * 1.05f * 1.05f;
         public const float BaseShield = 50f;
         public const float ModelScale = .70f, CollisionRadius = .28f, CollisionHeight = 1.4f;
