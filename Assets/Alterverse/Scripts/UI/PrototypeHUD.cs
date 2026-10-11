@@ -54,7 +54,11 @@ namespace Alterverse.UI
             for(int i=0;i<4;i++)
             {
                 AbilitySpec spec=abilities.SpecFor(i);names[i]=spec.Name.ToUpperInvariant();descriptions[i]=abilities.Describe(i);
-                details[i]=$"RANGE {abilities.PreviewRange(i):0.#}m  ·  DRAG TO AIM";glyphs[i]=GlyphFor(i);
+                AimSpec aim=abilities.AimFor(i);
+                details[i]=aim.aimType==AimType.Self ? "SELF  ·  TAP TO CAST" :
+                    aim.aimType==AimType.SelfArea ? $"RADIUS {aim.aoeRadius:0.#}m  ·  TAP TO CAST" :
+                    $"RANGE {abilities.PreviewRange(i):0.#}m  ·  DRAG TO AIM";
+                glyphs[i]=GlyphFor(i);
             }
         }
         private CombatGlyph GlyphFor(int slot)

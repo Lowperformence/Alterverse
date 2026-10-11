@@ -124,7 +124,14 @@ namespace Alterverse.Characters
             }
             else if (hero == HeroId.Mira && (slot == 1 || slot == 2))
             {
-                Health ally = aimed.HasValue ? aimed.Value.Target : WoundedAlly(spec.Range, slot == 2);
+                Health ally;
+                if (aimed.HasValue)
+                {
+                    ally = aimed.Value.Target;
+                    if (ally == null || ally == self)
+                        ally = AimGeometry.Select(gameObject, attackAim.Direction, aimSpec.castRange, aimSpec.coneAngle * .5f, true) ?? self;
+                }
+                else ally = WoundedAlly(spec.Range, slot == 2) ?? self;
                 if (ally == null || ally.IsDead || !ally.isActiveAndEnabled || ally.GetComponent<HeroIdentity>() == null) return false;
                 TeamMember team = GetComponent<TeamMember>(), member = ally.GetComponent<TeamMember>();
                 if (team == null || member == null || team.Team != member.Team ||

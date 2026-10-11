@@ -114,8 +114,8 @@ namespace Alterverse.UI
             HeroId.Mira=>slot switch
             {
                 0=>"Damages and slows the target by 25% for 1.5s.",
-                1=>"Aim toward an allied hero to heal them.",
-                2=>"Aim toward an allied hero to shield them for 4s.",
+                1=>"Heal the aimed allied hero; heal yourself when no teammate is aimed at.",
+                2=>"Shield the aimed allied hero for 4s; shield yourself when no teammate is aimed at.",
                 _=>"Large support field: heals nearby allies and grants 25 shield for 3s."
             },
             HeroId.Rook=>slot switch

@@ -61,7 +61,7 @@ namespace Alterverse.Combat
         {
             Vector3 direction = rawDirection; Health target = null;
             if (Spec.aimType == AimType.Ally)
-                target = AimGeometry.Select(gameObject, direction, Spec.castRange, Spec.coneAngle * .5f, true, Slot == 2);
+                target = AimGeometry.Select(gameObject, direction, Spec.castRange, Spec.coneAngle * .5f, true);
             else if (AimGeometry.UsesConeCapture(Spec)) target = AimGeometry.CaptureConeTarget(gameObject, rawDirection, Spec);
             else if (Spec.aimType != AimType.Self && Spec.aimType != AimType.SelfArea && Spec.aimType != AimType.Dash)
                 direction = AimGeometry.Assist(gameObject, rawDirection, Spec, out target);

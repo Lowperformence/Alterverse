@@ -20,6 +20,8 @@ namespace Alterverse.UI
             aiming = aiming != null ? aiming : GetComponent<ManualAiming>();
             if (aiming == null || !aiming.Active || aiming.Slot > 3 || aiming.Cancelled) { Hide(); return; }
             AimSpec spec = aiming.Spec; AimPose pose = aiming.Pose;
+            // Self-only abilities have no target geometry. Area effects still show their radius.
+            if (spec.aimType == AimType.Self) { Hide(); return; }
             Vector3 origin = transform.position;
             Color color = AimingSettings.Current.previewColor;
             if (spec.aimType == AimType.Area)
@@ -28,7 +30,7 @@ namespace Alterverse.UI
                 Show(0, origin, pose.Direction, spec.castRange, 0, spec, range);
                 Show(1, pose.Point, pose.Direction, spec.aoeRadius, 0, spec, color);
             }
-            else if (spec.aimType == AimType.SelfArea || spec.aimType == AimType.Self)
+            else if (spec.aimType == AimType.SelfArea)
                 Show(0, origin, pose.Direction, Mathf.Max(.7f, spec.aoeRadius), 0, spec, color);
             else
             {

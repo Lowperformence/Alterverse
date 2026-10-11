@@ -71,8 +71,8 @@ Reichweiten und Radien unten sind die unveränderten Katalog-Ausgangswerte in Sp
 | Elyra | E | Phase Fold | Dash-Richtung | 1,8 | — |
 | Elyra | Ult | Impossible Center | Platzierbarer AOE-Kreis | 7 | 3,5 |
 | Mira | Q | Resonant Seed | Projektil 35° | 6,5 | — |
-| Mira | W | Growth Veil | Gerichtete Verbündetenauswahl, Heal | 6,5 | — |
-| Mira | E | Venn Shelter | Gerichtete Verbündetenauswahl, Schild | 6,5 | — |
+| Mira | W | Growth Veil | Gerichtete Teampartnerauswahl, sonst eigener Heal | 6,5 | — |
+| Mira | E | Venn Shelter | Gerichtete Teampartnerauswahl, sonst eigener Schild | 6,5 | — |
 | Mira | Ult | Wildsurge | Selbst-AOE, Heal und Schild | 0 | 5 |
 | Rook | Q | Wreck Swing | Nahkampf 70° | 2,9 | — |
 | Rook | W | Armor Grip | Self, Heal und Schild | 0 | — |
@@ -86,6 +86,10 @@ Reichweiten und Radien unten sind die unveränderten Katalog-Ausgangswerte in Sp
 | Nerok | W | Pressure Hull | Self, Schild und Speed | 0 | — |
 | Nerok | E | Breaker Wave | Selbst-AOE | 0 | 2,8 |
 | Nerok | Ult | Abyssal Maelstrom | Platzierbarer persistenter AOE-Kreis | 6 | 3,2 |
+
+Tahla Venns Heilung und Schild wählen einen lebenden, aktiven Teampartner innerhalb der gerichteten Reichweite. Tahla selbst ist kein Kandidat dieser Zielauswahl. Nur wenn kein Teampartner anvisiert wird, wirkt die jeweilige Fähigkeit auf Tahla. Ein anvisierter Teampartner mit vollem Leben oder bestehendem temporärem Schild bleibt das Ziel; ein wirkungsloser Cast wird ohne Cooldown abgelehnt und nicht auf Tahla umgeleitet. Werte und Schilddauer bleiben unverändert.
+
+Alle ausschließlich auf den eigenen Helden wirkenden Fähigkeiten (`Self`) haben keine Zielvorschau und zeigen im HUD `SELF · TAP TO CAST`. Das gilt für Brakks Armor Grip, Lumen Wall und Pressure Hull. Selbstzentrierte Flächenfähigkeiten (`SelfArea`) zeigen weiterhin ihren Wirkungskreis und im HUD den Radius; sie verlangen keine Zielrichtung. Fähigkeiten mit Dash, Teampartnerauswahl oder Flächenwirkung behalten ihre passende Vorschau, auch wenn sie zusätzlich einen eigenen Schild gewähren.
 
 Temporal Beam behält trotz seines Namens die bestehende Orb-VFX mit Flugzeit. Sivras Q war bereits als Laser dargestellt und verwendet die Linienprüfung. Utility- und Mobilitätseffekte bleiben speziell behandelt; sie werden nicht in offensive Geschosse umgewandelt.
 

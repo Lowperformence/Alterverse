@@ -64,7 +64,7 @@ namespace Alterverse.Combat
             return (collider.ClosestPoint(p) - p).sqrMagnitude <= width * width * .25f;
         }
 
-        public static Health Select(GameObject actor, Vector3 direction, float range, float angle, bool ally = false, bool shield = false)
+        public static Health Select(GameObject actor, Vector3 direction, float range, float angle, bool ally = false)
         {
             Health best = null; float bestScore = float.MaxValue;
             TeamMember team = actor.GetComponent<TeamMember>();
@@ -75,8 +75,10 @@ namespace Alterverse.Combat
                 if (ally)
                 {
                     TeamMember other = h.GetComponent<TeamMember>();
-                    if (team == null || other == null || other.Team != team.Team || h.GetComponent<HeroIdentity>() == null ||
-                        (shield ? h.TemporaryShield > 5f : h.Normalized >= .95f)) continue;
+                    // Aimed support chooses another hero before considering self fallback.
+                    // Full health or an existing shield must not redirect an aimed cast to self.
+                    if (h.gameObject == actor || team == null || other == null || other.Team != team.Team ||
+                        h.GetComponent<HeroIdentity>() == null) continue;
                 }
                 else if (!HeroCombatRules.Enemy(actor, h)) continue;
                 float distance = HeroCombatRules.TargetDistance(actor.transform.position, h);
@@ -107,11 +109,11 @@ namespace Alterverse.Combat
             return soft != null ? soft.AcquireCone(spec.castRange, direction, spec.coneAngle)
                 : Select(actor, direction, spec.castRange, spec.coneAngle * .5f);
         }
-        public static AimPose TapPose(GameObject actor, AimSpec spec, bool shield = false)
+        public static AimPose TapPose(GameObject actor, AimSpec spec)
         {
             Vector3 direction = Direction(actor.transform.forward); Health target = null;
             if (spec.aimType == AimType.Ally)
-                target = Select(actor, direction, spec.castRange, spec.coneAngle * .5f, true, shield);
+                target = Select(actor, direction, spec.castRange, spec.coneAngle * .5f, true);
             else if (UsesConeCapture(spec)) target = CaptureConeTarget(actor, direction, spec);
             else if (spec.aimType != AimType.Dash && spec.aimType != AimType.Self && spec.aimType != AimType.SelfArea)
                 direction = Assist(actor, direction, spec, out target);

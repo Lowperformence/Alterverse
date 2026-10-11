@@ -65,8 +65,8 @@ namespace Alterverse.Characters
                 2 => $"{s.Power:0} area damage and 25% slow for 1.2s.",
                 _ => $"{s.Power:0} total damage over 3s in {s.Radius:0.#}m. Pulls mobile enemies inward at their running speed; running directly outward cancels the pull."
             };
-            if (h == HeroId.Mira && slot == 1) return $"Aim at an allied hero and heal them for {s.Power:0} HP.";
-            if (h == HeroId.Mira && slot == 2) return $"Aim at an allied hero and protect them with {s.Power:0} shield for 4s.";
+            if (h == HeroId.Mira && slot == 1) return $"Heal the aimed allied hero for {s.Power:0} HP. Without an aimed teammate, heal yourself.";
+            if (h == HeroId.Mira && slot == 2) return $"Give the aimed allied hero {s.Power:0} shield for 4s. Without an aimed teammate, shield yourself.";
             if (h == HeroId.Mira && slot == 3) return $"After {s.Windup:0.#}s: heal allied heroes in {s.Radius:0.#}m for {s.Power:0} and grant 25 shield.";
             if (h == HeroId.Kaelon && slot == 1) return $"Gain {s.Power:0} shield for 4s.";
             if (h == HeroId.Rook && slot == 1) return $"Recover {s.Power:0} HP and gain 20 shield for 3s.";
@@ -97,7 +97,7 @@ namespace Alterverse.Characters
         private bool Cast(int slot)
         {
             if (slot < 0 || slot > 3 || !AimFor(slot).allowTapCast) return false;
-            return CastAimed(slot, AimGeometry.TapPose(gameObject, AimFor(slot), slot == 2));
+            return CastAimed(slot, AimGeometry.TapPose(gameObject, AimFor(slot)));
         }
 
         public bool CastAimed(int slot, AimPose pose)

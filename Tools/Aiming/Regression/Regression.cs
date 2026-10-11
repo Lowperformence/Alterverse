@@ -314,9 +314,123 @@ partial class Regression
   Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(0,new AimPose(Vector3.forward,b.transform.position,b.GetComponent<Health>())),"explicit homing can acquire a target");
   Run(.32f);b.transform.position=new Vector3(2,0,4);Run(.4f);Near(Total(b),972,"only explicit homing follows the moving target");
  }
+ static void SupportTargeting()
+ {
+  foreach(int slot in new[]{1,2})
+  {
+   Reset();var actor=Hero(HeroId.Mira,0,Vector3.zero);var ally=Hero(HeroId.Nyra,0,Vector3.forward*3);
+   var self=actor.GetComponent<Health>();var friend=ally.GetComponent<Health>();self.TakeDamage(400);friend.TakeDamage(200);
+   var abilities=actor.GetComponent<PlayerHeroAbilities>();var spec=abilities.AimFor(slot);float power=abilities.SpecFor(slot).Power;
+   AimPose tap=AimGeometry.TapPose(actor,spec);
+   Check(tap.Target==friend,"Tahla targets teammate before wounded self, slot "+slot);
+   float selfBefore=Total(actor),allyBefore=Total(ally);
+   Check(slot==1?abilities.CastW():abilities.CastE(),"Tahla tap supports aimed teammate");
+   Near(Total(ally)-allyBefore,power,"support amount unchanged");Near(Total(actor),selfBefore,"aimed teammate receives support exclusively");
+   Check(abilities.RemainingFor(slot)>0,"support starts cooldown");
+   Check(!(slot==1?abilities.CastW():abilities.CastE()),"support cooldown prevents repeat");
+
+   foreach(bool explicitSelf in new[]{false,true})
+   {
+    Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);actor.GetComponent<Health>().TakeDamage(400);
+    ally=Hero(HeroId.Nyra,0,Vector3.forward*3);ally.GetComponent<Health>().TakeDamage(200);selfBefore=Total(actor);allyBefore=Total(ally);
+    Check(actor.GetComponent<PlayerHeroAbilities>().CastNetworkAuthoritative(slot,new AimPose(Vector3.forward,ally.transform.position,
+        explicitSelf?actor.GetComponent<Health>():null)),"authoritative support checks aimed teammate before self");
+    Near(Total(ally)-allyBefore,power,"direction-only or self-reference support reaches aimed teammate");
+    Near(Total(actor),selfBefore,"authoritative support cannot self-cast over an aimed teammate");
+   }
+
+   Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);ally=Hero(HeroId.Nyra,0,Vector3.right*3);
+   self=actor.GetComponent<Health>();friend=ally.GetComponent<Health>();self.TakeDamage(400);friend.TakeDamage(200);
+   var behind=Hero(HeroId.Rook,0,Vector3.left);behind.GetComponent<Health>().TakeDamage(600);
+   var aiming=ManualAiming.For(actor);Check(aiming.Begin(slot,new Vector2(700,100)),"Tahla support gesture begins");
+   aiming.Drag(new Vector2(796,100),1,false);Check(aiming.Pose.Target==friend,"drag selects teammate in chosen direction");
+   selfBefore=Total(actor);allyBefore=Total(ally);float behindBefore=Total(behind);
+   Check(aiming.Release(),"drag releases support");Near(Total(ally)-allyBefore,power,"dragged teammate gets support");
+   Near(Total(actor),selfBefore,"drag does not also support self");Near(Total(behind),behindBefore,"wounded teammate outside aim is untouched");
+
+   Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);self=actor.GetComponent<Health>();self.TakeDamage(400);
+   Hero(HeroId.Nyra,0,(-Vector3.forward)*2).GetComponent<Health>().TakeDamage(500);Hero(HeroId.Kaelon,1,Vector3.forward);
+   abilities=actor.GetComponent<PlayerHeroAbilities>();tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));
+   Check(tap.Target==null,"no aimed teammate leaves target empty");selfBefore=Total(actor);
+   Check(abilities.CastAimed(slot,tap),"no teammate applies support to self");Near(Total(actor)-selfBefore,power,"self fallback amount unchanged");
+
+   Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);self=actor.GetComponent<Health>();self.TakeDamage(400);
+   ally=Hero(HeroId.Nyra,0,Vector3.forward*3);friend=ally.GetComponent<Health>();
+   if(slot==2)friend.AddShield(50,4,false);
+   abilities=actor.GetComponent<PlayerHeroAbilities>();tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));
+   Check(tap.Target==friend,"full or shielded teammate remains the aimed recipient");selfBefore=Total(actor);allyBefore=Total(ally);
+   Check(!abilities.CastAimed(slot,tap),"support without benefit rejects cast");Near(Total(actor),selfBefore,"unneeded ally support never redirects to self");
+   Near(Total(ally),allyBefore,"rejected support does not alter recipient");Near(abilities.RemainingFor(slot),0,"rejected support spends no cooldown");
+
+   Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);self=actor.GetComponent<Health>();self.TakeDamage(400);
+   var dead=Hero(HeroId.Nyra,0,Vector3.forward);dead.GetComponent<Health>().TakeDamage(2000);
+   var inactive=Hero(HeroId.Nyra,0,Vector3.forward*2);inactive.SetActive(false);
+   var far=Hero(HeroId.Nyra,0,Vector3.forward*8);var minion=new GameObject("allied minion");minion.transform.position=Vector3.forward*2;
+   minion.AddComponent<Health>();minion.AddComponent<TeamMember>().Initialize(0);
+   abilities=actor.GetComponent<PlayerHeroAbilities>();tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));
+   Check(tap.Target==null,"dead, inactive, out-of-range and nonhero allies do not capture support");
+   Check(abilities.CastAimed(slot,tap),"no valid teammate still permits self fallback");
+
+   foreach(var position in new[]{Vector3.forward*8,(-Vector3.forward)*2})
+   {
+    Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);actor.GetComponent<Health>().TakeDamage(400);
+    ally=Hero(HeroId.Nyra,0,position);ally.GetComponent<Health>().TakeDamage(200);abilities=actor.GetComponent<PlayerHeroAbilities>();selfBefore=Total(actor);
+    Check(!abilities.CastAimed(slot,new AimPose(Vector3.forward,position,ally.GetComponent<Health>())),"explicit ally outside range or cone is rejected");
+    Near(Total(actor),selfBefore,"invalid explicit teammate cannot redirect support to self");Near(abilities.RemainingFor(slot),0,"invalid ally spends no cooldown");
+   }
+
+   foreach(bool aimAtAlly in new[]{true,false})
+   {
+    Reset();actor=Hero(HeroId.Mira,0,Vector3.zero);actor.AddComponent<CoopHeroSlot>().Slot=1;self=actor.GetComponent<Health>();self.TakeDamage(400);
+    ally=Hero(HeroId.Nyra,0,aimAtAlly?Vector3.forward*3:(-Vector3.forward)*3);ally.AddComponent<CoopHeroSlot>().Slot=2;
+    friend=ally.GetComponent<Health>();friend.TakeDamage(200);selfBefore=Total(actor);allyBefore=Total(ally);
+    var service=new GameObject("commands").AddComponent<CoopGameplayCommands>();
+    var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
+    CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
+    abilities=actor.GetComponent<PlayerHeroAbilities>();tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));
+    Check(abilities.CastAimed(slot,tap),"client routes support intent");Near(Total(actor),selfBefore,"client does not mutate self");Near(Total(ally),allyBefore,"client does not mutate ally");
+    Unlock(actor.GetComponent<HeroAbilityExecution>());CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
+    CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
+    manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+    Near(Total(actor)-selfBefore,aimAtAlly?0:power,"host self fallback matches transmitted aim");
+    Near(Total(ally)-allyBefore,aimAtAlly?power:0,"host teammate support matches transmitted aim");
+    Check(abilities.RemainingFor(slot)>0,"host support commits cooldown");
+   }
+  }
+ }
+ static void SelfShieldPreviews()
+ {
+  foreach(HeroId hero in new[]{HeroId.Rook,HeroId.Kaelon,HeroId.Nerok})
+  {
+   Reset();Resources.PreviewShaderAvailable=true;var actor=Hero(hero,0,Vector3.zero);actor.GetComponent<Health>().TakeDamage(200);
+   var enemy=Hero(HeroId.Nyra,1,Vector3.forward*2);var ally=Hero(HeroId.Mira,0,Vector3.right*2);
+   var abilities=actor.GetComponent<PlayerHeroAbilities>();var spec=abilities.AimFor(1);
+   Check(spec.aimType==AimType.Self,"defensive shield is self-only: "+hero);Check(spec.targetingMode==TargetingMode.Geometry,"self shield has no target capture");
+   var aiming=ManualAiming.For(actor);var overlay=actor.AddComponent<AbilityRangePreviewOverlay>();
+   Check(aiming.Begin(0,new Vector2(700,100)),"directed skill preview begins before self shield");Call(overlay,"LateUpdate");aiming.Cancel();
+   Check(aiming.Begin(1,new Vector2(700,100)),"self shield button begins");aiming.Drag(new Vector2(796,100),1,false);Call(overlay,"LateUpdate");
+   Check(aiming.Pose.Target==null,"self shield never selects another hero");
+   var surfaces=(GameObject[])typeof(AbilityRangePreviewOverlay).GetField("surfaces",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(overlay);
+   Check(surfaces.All(s=>s==null||!s.activeSelf),"self shield has no ground aim preview: "+hero);
+   float before=Total(actor);Check(aiming.Release(),"self shield works without a target");Check(Total(actor)>before,"self shield reaches actor");
+   Near(Total(enemy),1000,"self shield does not affect enemy");Near(Total(ally),1000,"self shield does not affect ally");
+   var hud=new GameObject("HUD").AddComponent<PrototypeHUD>();hud.Initialize(actor.GetComponent<Health>(),null,null);
+   var details=(string[])typeof(PrototypeHUD).GetField("details",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(hud);
+   Check(details[1]=="SELF  ·  TAP TO CAST","self shield HUD does not ask player to aim");
+  }
+  foreach(var entry in new[]{(HeroId.Mira,1),(HeroId.Rook,3),(HeroId.Kaelon,3)})
+  {
+   Reset();Resources.PreviewShaderAvailable=true;var actor=Hero(entry.Item1,0,Vector3.zero);var aiming=ManualAiming.For(actor);
+   var overlay=actor.AddComponent<AbilityRangePreviewOverlay>();Check(aiming.Begin(entry.Item2,new Vector2(700,100)),"targeted or area ability still begins");Call(overlay,"LateUpdate");
+   var surfaces=(GameObject[])typeof(AbilityRangePreviewOverlay).GetField("surfaces",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(overlay);
+   Check(surfaces[0]!=null&&surfaces[0].activeSelf,"teammate and area skills retain preview");
+   var material=surfaces[0].GetComponent<MeshRenderer>().sharedMaterial;
+   Near(material.Floats[Shader.PropertyToID("_Mode")],entry.Item1==HeroId.Mira?1:0,"only teammate aiming displays a cone; areas display a circle");
+  }
+ }
  static void Main(string[] args)
  {
-  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();
+  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));
