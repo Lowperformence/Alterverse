@@ -1,0 +1,38 @@
+{
+  "blender": "4.3.0",
+  "sourceObjects": 90,
+  "runtimeMeshes": 5,
+  "vertices": 13241,
+  "triangles": 7504,
+  "parts": [
+    {
+      "name": "Hull",
+      "vertices": 9241,
+      "triangles": 4904
+    },
+    {
+      "name": "Mechanics",
+      "vertices": 3196,
+      "triangles": 1872
+    },
+    {
+      "name": "Energy",
+      "vertices": 464,
+      "triangles": 280
+    },
+    {
+      "name": "ThrusterL",
+      "vertices": 170,
+      "triangles": 224
+    },
+    {
+      "name": "ThrusterR",
+      "vertices": 170,
+      "triangles": 224
+    }
+  ],
+  "rootScale": 0.78,
+  "forward": "+Z",
+  "thrusterSocketsUnchanged": true,
+  "gameplayChanged": false
+}

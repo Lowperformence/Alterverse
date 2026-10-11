@@ -339,6 +339,10 @@ namespace Alterverse.Combat
             visual.SetParent(transform,false);
             visual.localScale=Vector3.one*.78f;
 
+            // Replace geometry only. Banking, thruster pulse, audio and bomb gameplay
+            // continue to use the same visual root and engine sockets.
+            if(AuthoredBomberModel.TryBuild(visual,armor,dark,energy,out engineGlowL,out engineGlowR))return;
+
             // Compact layered silhouette: narrow fuselage and swept wings keep combat readable below.
             Part("Fuselage",PrimitiveType.Capsule,visual,new Vector3(0,0,.05f),new Vector3(.58f,1.52f,.58f),armor,Quaternion.Euler(90,0,0),true);
             Part("Nose",PrimitiveType.Sphere,visual,new Vector3(0,.02f,1.70f),new Vector3(.48f,.34f,.78f),armor,Quaternion.identity,true);
