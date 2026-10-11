@@ -54,7 +54,7 @@ namespace Alterverse.Characters
                 HeroId.Kaelon=>new HeroAbilityLoadout(
                     new("Frontline",0,0,0),
                     new("Anchor Strike",9,24,3.4f),
-                    new("Lumen Wall",14,75,0),
+                    new("Lumen Wall",14,50,0),
                     new("Gravity Anchor",12,20,5f,2.6f,.45f),
                     new("Kest Citadel",55,38,0,3.8f,.55f)),
                 HeroId.Nyra=>new HeroAbilityLoadout(

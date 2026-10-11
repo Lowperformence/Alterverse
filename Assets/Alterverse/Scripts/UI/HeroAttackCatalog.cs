@@ -102,7 +102,7 @@ namespace Alterverse.UI
             HeroId.Kaelon=>slot switch
             {
                 0=>"Strike that slows 35% for 1.5s and stuns for 0.55s.",
-                1=>"Grants Auren a 75-point shield for 4s.",
+                1=>"Grants Auren a 50-point shield for 4s.",
                 2=>"Place a gravity field; damages and slows enemies 35% for 1.5s.",
                 _=>"Area slam: damages and slows enemies 50% for 2s; allies gain 60 shield for 3s; Auren restores 50 HP."
             },
