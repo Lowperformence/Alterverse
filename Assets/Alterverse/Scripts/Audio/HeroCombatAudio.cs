@@ -9,12 +9,12 @@ namespace Alterverse.Audio
         public const int CueCount=HeroIdentity.HeroCount*15;
         static readonly string[] Heroes={"Veyr","Kaelon","Nyra","Elyra","Mira","Rook","Traveler","Nerok"};
         static readonly string[] Actions={"Basic","Q","W","E","R"};
-        // Timmy shares the existing fast-cut recordings until a dedicated sound bank is authored.
+        // Timmy has selected Q/W/R recordings; basic/E share the existing fast-cut bank.
         // Keep his gameplay/network identity intact and preserve every existing cue index.
-        static int RecordingHero(int hero)=>hero==(int)HeroId.Timmy?(int)HeroId.Veyr:hero;
+        static int RecordingHero(int hero,int action)=>hero==(int)HeroId.Timmy&&action!=1&&action!=2&&action!=4?(int)HeroId.Veyr:hero;
         // User-selected recordings are complete cues. Play them once at ability release,
         // not over the former synthesized preparation/impact layers (or once per AoE victim).
-        public static bool UsesSelectedRecording(int hero,int action)=>RecordingHero(hero) switch
+        public static bool UsesSelectedRecording(int hero,int action)=>RecordingHero(hero,action) switch
         {
             0=>action>=1&&action<=3,
             1=>action>=1&&action<=3,
@@ -24,16 +24,17 @@ namespace Alterverse.Audio
             5=>action>=1&&action<=3,
             6=>action>=1&&action<=3,
             7=>action>=1&&action<=4,
+            8=>action==1||action==2||action==4,
             _=>false
         };
-        public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero) switch
+        public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
         {
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
         }));
         public static bool HasWindup(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
         public static int VariantCount(int hero,int action,int phase)=>hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static int Cue(int hero,int action,int phase)
-        {hero=RecordingHero(hero);return hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
+        {hero=RecordingHero(hero,action);return hero==(int)HeroId.Timmy?120+action*3+phase:hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
         public static AudioClip[][] Load()
         {
             var clips=new AudioClip[CueCount][];
@@ -52,7 +53,16 @@ namespace Alterverse.Audio
                     if(clips[cue][v]==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
                 }
             }
+            LoadTimmyRecording(clips,1,"Audio/Heroes/Timmy/Q_Cast");
+            LoadTimmyRecording(clips,2,"Audio/Heroes/Timmy/W_Cast");
+            LoadTimmyRecording(clips,4,"Audio/Heroes/Timmy/Ultimate_Selected");
             return clips;
+        }
+        static void LoadTimmyRecording(AudioClip[][] clips,int action,string path)
+        {
+            var recording=Resources.Load<AudioClip>(path);
+            clips[Cue((int)HeroId.Timmy,action,0)]=new[]{recording};
+            if(recording==null)Debug.LogWarning("DIMENSIONS FRONT: missing combat audio: "+path);
         }
         public static bool IsLocal(GameObject actor)
         {
@@ -64,9 +74,9 @@ namespace Alterverse.Audio
         {
             if(actor==null||action<0||action>4)return;
             var identity=actor.GetComponent<HeroIdentity>();if(identity==null)return;
-            int hero=RecordingHero((int)identity.Hero);
+            int hero=RecordingHero((int)identity.Hero,action);
             if(hero==(int)HeroId.Nerok&&action==0&&phase!=1)return;
-            if(hero<0||hero>=Heroes.Length||phase==1&&!HasImpact(hero,action)||phase==2&&!HasWindup(hero,action))return;
+            if(hero<0||hero>=HeroIdentity.HeroCount||phase==1&&!HasImpact(hero,action)||phase==2&&!HasWindup(hero,action))return;
             if(relay)CoopHeroStateSync.BroadcastCombatSound(actor,action,phase,position);
             bool local=IsLocal(actor),ultimate=action==4;
             Camera camera=Camera.main;if(camera==null)return;

@@ -1,9 +1,16 @@
 {
   "hero": "Andromeda Timmy",
   "bones": 19,
-  "triangles": 9288,
+  "triangles": 10392,
   "body_renderers": 1,
   "claw_renderers": 2,
+  "visor_renderers": 1,
+  "visor_opacity": 0.3,
+  "visor_color": [
+    0.78,
+    0.8,
+    0.82
+  ],
   "runtime_scale": 0.7,
   "original_geometry": true
 }

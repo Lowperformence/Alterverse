@@ -15,7 +15,7 @@ def check(label):
     assert len(rigs)==1,(label,'one armature')
     rig=rigs[0];assert set(rig.data.bones.keys())==EXPECTED,(label,'19 named rig bones')
     meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
-    assert {o.name for o in meshes}=={'DF_Anatomy','DF_WeaponL','DF_WeaponR'},(label,'three skinned renderers')
+    assert {o.name for o in meshes}=={'DF_Anatomy','DF_WeaponL','DF_WeaponR','DF_Visor'},(label,'four skinned renderers')
     vertices=[];triangles=0
     for ob in meshes:
         assert any(m.type=='ARMATURE' and m.object==rig for m in ob.modifiers),(label,ob.name,'skin modifier')
@@ -25,6 +25,8 @@ def check(label):
             assert len(v.groups)>0 and abs(sum(g.weight for g in v.groups)-1)<1e-5,(label,ob.name,'normalized weights')
             if ob.name.startswith('DF_Weapon'):
                 assert len(v.groups)==1 and groups[v.groups[0].group]=='WeaponGrip'+ob.name[-1],(label,'rigid claw weights')
+            if ob.name=='DF_Visor':
+                assert len(v.groups)==1 and groups[v.groups[0].group]=='Head',(label,'visor follows only the head')
             p=ob.matrix_world@v.co;assert all(math.isfinite(c) for c in p),(label,'finite vertices');vertices.append(p)
         for f in ob.data.polygons:
             assert f.area>1e-12,(label,ob.name,'nondegenerate polygon')
@@ -36,7 +38,41 @@ def check(label):
     lo=Vector(tuple(min(v[i] for v in vertices) for i in range(3)))
     hi=Vector(tuple(max(v[i] for v in vertices) for i in range(3)))
     height=max(hi-lo);assert 1.4<height<2.2,(label,'meter scale',height)
-    return {'bones':len(rig.data.bones),'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi)}
+    visor=next(o for o in meshes if o.name=='DF_Visor')
+    assert len(visor.data.materials)==1,(label,'one glass material')
+    glass=visor.data.materials[0]
+    assert glass.name.startswith('Timmy light gray visor glass'),(label,'glass material identity')
+    alpha=glass.node_tree.nodes.get('Principled BSDF').inputs['Alpha'].default_value
+    assert abs(alpha-.30)<1e-5,(label,'70% glass transparency',alpha)
+    if label=='Blender source':
+        assert abs(glass.diffuse_color[3]-.30)<1e-5,(label,'viewport glass transparency')
+    assert max(glass.diffuse_color[:3])-min(glass.diffuse_color[:3])<.06,(label,'neutral light gray tint')
+    points=[visor.matrix_world@v.co for v in visor.data.vertices]
+    cx=(min(p.x for p in points)+max(p.x for p in points))/2
+    cz=(min(p.z for p in points)+max(p.z for p in points))/2
+    diameter_x=max(p.x for p in points)-min(p.x for p in points)
+    diameter_z=max(p.z for p in points)-min(p.z for p in points)
+    assert abs(diameter_x-diameter_z)<1e-5,(label,'round visor silhouette')
+    radius=diameter_x/2;rim_y=max(p.y for p in points);depth=rim_y-min(p.y for p in points)
+    assert .12<depth<.20,(label,'curved glass dome')
+    normals=visor.matrix_world.to_3x3().inverted().transposed()
+    assert all((normals@f.normal).normalized().y<-.2 for f in visor.data.polygons),(label,'one outward-facing glass surface')
+    # Verify actual muzzle/eyes/whisker vertices fit behind the dome, not just its center.
+    sphere=(radius*radius+depth*depth)/(2*depth);sphere_y=rim_y+sphere-depth
+    anatomy=next(o for o in meshes if o.name=='DF_Anatomy')
+    face_names=('Timmy orange tabby fur','Timmy muzzle cream','Timmy graphite seals','Timmy emerald eyes')
+    face_vertices={i for f in anatomy.data.polygons if anatomy.data.materials[f.material_index].name.startswith(face_names) for i in f.vertices}
+    groups={g.index:g.name for g in anatomy.vertex_groups};covered=0
+    for i in face_vertices:
+        v=anatomy.data.vertices[i]
+        if not any(groups[g.group]=='Head' and g.weight>.99 for g in v.groups):continue
+        p=anatomy.matrix_world@v.co;r2=(p.x-cx)**2+(p.z-cz)**2
+        if p.y>=rim_y or r2>=radius*radius:continue
+        glass_y=sphere_y-math.sqrt(max(0,sphere*sphere-r2))
+        assert p.y-glass_y>.001,(label,'face remains behind visor',tuple(p))
+        covered+=1
+    assert covered>100,(label,'visor covers the face')
+    return {'bones':len(rig.data.bones),'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi),'visor_opacity':round(alpha,2),'visor_head_bound':True,'covered_face_vertices':covered}
 
 bpy.ops.wm.open_mainfile(filepath=str(ART/'AndromedaTimmy.blend'))
 source=check('Blender source')
@@ -50,4 +86,4 @@ for i in range(5):
     bpy.data.images.remove(img)
 report={'source':source,'fbx_round_trip':fbx,'icons':5,'icon_resolution':512,'native_unity_import_tested':False}
 (ART/'validation-report.json').write_text(json.dumps(report,indent=2)+'\n')
-print('TIMMY ART PASS: source + FBX round trip, 19 bones, three weighted renderers, contact sockets, triangle budget, five 512px icons.')
+print('TIMMY ART PASS: source + FBX round trip, 19 bones, four weighted renderers, head-bound round visor at 70% transparency, covered face, contact sockets, triangle budget, five 512px icons.')

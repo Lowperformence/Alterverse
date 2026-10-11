@@ -16,15 +16,39 @@ partial class Regression
    int expected=h==7?105+action*3+phase:phase==2?70+h*5+action:h*10+action*2+phase;
    Check(Alterverse.Audio.HeroCombatAudio.Cue(h,action,phase)==expected,"existing audio cue indices are stable");
   }
-  for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
+  foreach(int action in new[]{0,3})for(int phase=0;phase<3;phase++)
    Check(Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Timmy,action,phase)==Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Veyr,action,phase),"Timmy reuses an authored fast-cut cue");
+  for(int phase=0;phase<3;phase++)
+   Check(Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Timmy,1,phase)==123+phase,"Claw Swipe has its own appended cue");
+  for(int phase=0;phase<3;phase++)
+   Check(Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Timmy,2,phase)==126+phase,"Stardust has its own appended cue");
+  for(int phase=0;phase<3;phase++)
+   Check(Alterverse.Audio.HeroCombatAudio.Cue((int)HeroId.Timmy,4,phase)==132+phase,"Scratch has an appended cue without changing legacy indices");
+  Resources.AudioClipsAvailable=true;Resources.LoadedAudioPaths.Clear();
+  var bank=Alterverse.Audio.HeroCombatAudio.Load();
+  Check(bank[123][0]?.name=="Audio/Heroes/Timmy/Q_Cast","Claw Swipe loads the supplied slicing recording");
+  Check(bank[126][0]?.name=="Audio/Heroes/Timmy/W_Cast","Stardust loads the supplied sci-fi recording");
+  Check(bank[132][0]?.name=="Audio/Heroes/Timmy/Ultimate_Selected","Scratch bank loads the supplied recording");
+  Resources.AudioClipsAvailable=false;Resources.LoadedAudioPaths.Clear();
   Reset();var audioActor=Hero(HeroId.Timmy,0,Vector3.zero);
   Camera.main=new GameObject("audio camera").AddComponent<Camera>();
   Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Play(audioActor,0,false,Vector3.zero);
   Check(Alterverse.Audio.DimensionAudio.LastCue==0,"Timmy basic reaches the real audio dispatcher");
   Check(Alterverse.Multiplayer.CoopHeroStateSync.LastCombatSoundActor==audioActor,"audio relay retains Timmy's actor identity");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Cast(audioActor,0);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==123,"Claw Swipe starts its selected recording on release");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Impact(audioActor,0,Vector3.zero);Alterverse.Audio.HeroCombatAudio.Windup(audioActor,1);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"Claw Swipe does not layer preparation or impact recordings");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Cast(audioActor,1);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==126,"Stardust starts its selected recording on release");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Impact(audioActor,1,Vector3.zero);Alterverse.Audio.HeroCombatAudio.Windup(audioActor,2);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"Stardust does not layer preparation or impact recordings");
+  Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Cast(audioActor,3);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==132,"Scratch starts the selected recording on release");
   Alterverse.Audio.DimensionAudio.LastCue=-1;Alterverse.Audio.HeroCombatAudio.Impact(audioActor,3,Vector3.zero);
-  Check(Alterverse.Audio.DimensionAudio.LastCue==9,"Scratch contact reaches an existing impact cue");
+  Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"Scratch ticks do not layer another impact recording");
+  Alterverse.Audio.HeroCombatAudio.Windup(audioActor,4);
+  Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"selected Scratch recording has no second preparation layer");
   Camera.main=null;
   Check(TimmyBalance.TotalPoints==100,"provisional design budget totals 100");
   Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed,"Zhaev speed reference");
@@ -48,21 +72,26 @@ partial class Regression
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*4);
   other=Hero(HeroId.Kaelon,1,new Vector3(1,0,4));var outside=Hero(HeroId.Kaelon,1,new Vector3(1.7f,0,4));
-  a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a));Run(.4f);
+  Camera.main=new GameObject("Stardust audio camera").AddComponent<Camera>();Alterverse.Audio.DimensionAudio.TimmyStardustPlays=0;
+  a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a));Run(.2f);
+  Check(Alterverse.Audio.DimensionAudio.TimmyStardustPlays==0,"Stardust recording waits for the existing warning");
+  Run(.2f);Check(Alterverse.Audio.DimensionAudio.TimmyStardustPlays==1,"multi-target Stardust starts the recording exactly once");
   Near(Total(b),1000-TimmyBalance.DustDamage,"Stardust first enemy");Near(Total(other),1000-TimmyBalance.DustDamage,"Stardust is genuinely AOE");Near(Total(outside),1000,"Stardust outside radius misses");
   Near(HeroCombatStatus.Speed(b),TimmyBalance.DustSlow,"Stardust slow");
+  Run(.5f);Check(Alterverse.Audio.DimensionAudio.TimmyStardustPlays==1,"Stardust victims never restart the recording");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*4);
   a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a));b.transform.position+=Vector3.right*3;Run(.4f);Near(Total(b),1000,"Stardust can be dodged");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);var execution=a.GetComponent<HeroAbilityExecution>();
   Check(execution.TryCastAimed(2,new AimPose((-Vector3.forward),(-Vector3.forward)*3.4f)),"Jet Pounce backwards");Near(a.transform.position.z,-TimmyBalance.JetRange,"Jet range");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);other=Hero(HeroId.Kaelon,1,new Vector3(.8f,0,6));execution=a.GetComponent<HeroAbilityExecution>();
+  Camera.main=new GameObject("Scratch audio camera").AddComponent<Camera>();Alterverse.Audio.DimensionAudio.TimmyUltimatePlays=0;
   Check(execution.TryCastAimed(3,Forward(a,9)),"Scratch acquires in the cast frame");Check(!execution.TryCastAimed(3,Forward(a,9)),"Scratch duplicate rejected");
-  Run(.65f);Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"Scratch holds after physical contact");
+  Run(.65f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"Scratch plays the supplied recording at leap start");Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"Scratch holds after physical contact");
   Check(!HeroCombatStatus.CanAct(a)&&HeroCombatStatus.CanAct(b),"channel locks Timmy but victim can counterattack");
   Check(!execution.TryCastAimed(0,Forward(a)),"channel rejects another skill");Near(Total(b),1000,"first scratch waits half a second");
   Run(1.9f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"hold lasts nearly two seconds");
-  Run(.2f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"Scratch applies all four ticks once");Near(Total(other),1000,"Scratch damages exactly one enemy");
+  Run(.2f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"four Scratch ticks never restart the selected recording");Near(Total(b),1000-TimmyBalance.ScratchDamage,"Scratch applies all four ticks once");Near(Total(other),1000,"Scratch damages exactly one enemy");
   Check(!b.GetComponent<HeroCombatStatus>().Rooted&&!a.GetComponent<HeroCombatStatus>().Rooted,"normal completion releases both roots");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();

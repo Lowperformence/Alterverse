@@ -13,15 +13,19 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 13 invalidates cached Rook models from the bronze arm-detail pass.
+        // Version 14 also imports Timmy's visor as transparent URP glass.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 13;
+        public override uint GetVersion() => 14;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
             string hero=Path.GetFileNameWithoutExtension(assetPath);
             if(hero=="Traveler")TravelerOrbImportPass.Apply(root);
             if(hero=="Mira"||hero=="Rook"||hero=="Veyr" )AuthoredHeroDetailPass.Apply(root,hero);
+            if(hero=="Timmy")
+                foreach(Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
+                    if(renderer.name=="DF_Visor")
+                    {renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;}
         }
         private void OnPreprocessModel()
         {
@@ -68,6 +72,38 @@ namespace Alterverse.EditorTools
                 material.EnableKeyword("_EMISSION");
                 material.SetColor("_EmissionColor", color * 2f);
             }
+            if(Path.GetFileNameWithoutExtension(assetPath)=="Timmy"&&name.Contains("visor glass"))
+                ConfigureTimmyVisor(material);
+        }
+        private static void ConfigureTimmyVisor(Material material)
+        {
+            Color glass=new Color(.78f,.80f,.82f,.30f); // 70% transparent.
+            material.SetColor("_BaseColor",glass);
+            material.SetColor("_Color",glass);
+            material.SetFloat("_Metallic",0f);
+            material.SetFloat("_Smoothness",.90f);
+            material.SetFloat("_Surface",1f);
+            material.SetFloat("_Blend",0f); // Ordinary alpha blending, one front surface.
+            material.SetFloat("_BlendModePreserveSpecular",0f);
+            material.SetFloat("_AlphaClip",0f);
+            material.SetFloat("_AlphaToMask",0f);
+            material.SetFloat("_SrcBlend",(float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetFloat("_DstBlend",(float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_SrcBlendAlpha",(float)UnityEngine.Rendering.BlendMode.One);
+            material.SetFloat("_DstBlendAlpha",(float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            material.SetFloat("_ZWrite",0f);
+            material.SetFloat("_Cull",(float)UnityEngine.Rendering.CullMode.Back);
+            material.SetFloat("_ReceiveShadows",0f);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            material.EnableKeyword("_RECEIVE_SHADOWS_OFF");
+            material.DisableKeyword("_ALPHATEST_ON");
+            material.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            material.DisableKeyword("_ALPHAMODULATE_ON");
+            material.SetOverrideTag("RenderType","Transparent");
+            material.renderQueue=(int)UnityEngine.Rendering.RenderQueue.Transparent;
+            material.SetShaderPassEnabled("ShadowCaster",false);
+            material.SetShaderPassEnabled("DepthOnly",false);
+            material.SetShaderPassEnabled("DepthNormals",false);
         }
         private static string StateName(string name)
         {

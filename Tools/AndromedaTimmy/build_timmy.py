@@ -4,7 +4,7 @@ Exports editable Blender source, Unity FBX, studio preview and five modeled abil
 All geometry/materials are original project work; no human base mesh is required.
 """
 from pathlib import Path
-import math, json
+import math, json, argparse, sys
 import bpy
 from mathutils import Vector
 
@@ -12,6 +12,11 @@ ROOT = Path(__file__).resolve().parents[2]
 ART = ROOT / 'ArtSource/Heroes/AndromedaTimmy'
 OUT = ROOT / 'Assets/Alterverse/Resources/AndromedaTimmy/Icons'
 FBX = ROOT / 'Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx'
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--model-only',action='store_true',help='Rebuild model/preview without rewriting attack icons.')
+options=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
+VISOR_OPACITY=.30 # 70% transparent; a single curved surface avoids doubled tint.
+VISOR_COLOR=(.78,.80,.82)
 for p in (ART, OUT, FBX.parent): p.mkdir(parents=True, exist_ok=True)
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
 
@@ -30,6 +35,14 @@ cream=material('Timmy muzzle cream',(.91,.77,.52))
 cyan=material('Timmy cyan energy',(.04,.68,1),.45,2)
 gold=material('Timmy jet amber energy',(1,.46,.075),.35,1.4)
 eye=material('Timmy emerald eyes',(.08,.49,.21),.25,.25)
+glass=material('Timmy light gray visor glass',VISOR_COLOR)
+glass.diffuse_color=(*VISOR_COLOR,VISOR_OPACITY)
+glass.use_backface_culling=True
+glass.surface_render_method='DITHERED'
+glass_bs=glass.node_tree.nodes.get('Principled BSDF')
+glass_bs.inputs['Base Color'].default_value=(*VISOR_COLOR,VISOR_OPACITY)
+glass_bs.inputs['Alpha'].default_value=VISOR_OPACITY
+glass_bs.inputs['Roughness'].default_value=.10
 meshes=[]
 
 def finish(ob,name,mat,bone=None):
@@ -62,6 +75,26 @@ def triangle(name,points,depth,mat,bone=None):
     faces=[(0,2,1),(3,4,5),(0,1,4,3),(1,2,5,4),(2,0,3,5)]
     data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
     ob=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(ob);return finish(ob,name,mat,bone)
+def visor_dome():
+    # A circular spherical cap fitted inside the rim, in front of muzzle/whiskers.
+    # Negative Y faces forward in the authored rig. Wind only the outside surface.
+    radius=.215;depth=.17;center=(0,-.167,1.55);segments=48;rings=12
+    sphere=(radius*radius+depth*depth)/(2*depth)
+    verts=[(center[0],center[1]-depth,center[2])];faces=[]
+    for row in range(1,rings+1):
+        r=radius*row/rings
+        y=center[1]-(math.sqrt(max(0,sphere*sphere-r*r))-(sphere-depth))
+        for i in range(segments):
+            a=i*math.tau/segments
+            verts.append((center[0]+r*math.cos(a),y,center[2]+r*math.sin(a)))
+    for i in range(segments):faces.append((0,1+i,1+(i+1)%segments))
+    for row in range(1,rings):
+        inner=1+(row-1)*segments;outer=1+row*segments
+        for i in range(segments):
+            n=(i+1)%segments;faces.append((inner+i,outer+i,outer+n,inner+n))
+    data=bpy.data.meshes.new('Timmy round visor');data.from_pydata(verts,[],faces);data.update()
+    ob=bpy.data.objects.new('DF_Visor',data);bpy.context.collection.objects.link(ob)
+    return finish(ob,'DF_Visor',glass,'Head')
 
 # Compact, unmistakably feline astronaut: fur face/ears/tail remain visible.
 ellipsoid('Suit torso',(0,0,1.11),(.23,.16,.30),white,'Chest')
@@ -75,7 +108,8 @@ ellipsoid('Helmet back',(0,.035,1.54),(.235,.17,.23),white,'Head')
 ellipsoid('Cat head',(0,-.086,1.53),(.175,.135,.16),fur,'Head')
 ellipsoid('Cream muzzle',(0,-.213,1.48),(.10,.028,.06),cream,'Head')
 triangle('Cat nose',[(-.020,-.244,1.50),(.020,-.244,1.50),(0,-.247,1.48)],.014,navy,'Head')
-ring('Open visor rim',(0,-.167,1.55),.215,.016,white,'Head')
+ring('Visor rim',(0,-.167,1.55),.215,.016,white,'Head')
+visor=visor_dome()
 for side,k in ((-1,'L'),(1,'R')):
     triangle('Feline ear'+k,[(side*.065,-.025,1.63),(side*.18,-.01,1.78),(side*.19,-.015,1.60)],.075,fur,'Head')
     triangle('Ear lining'+k,[(side*.097,-.066,1.635),(side*.166,-.063,1.73),(side*.172,-.063,1.63)],.009,cream,'Head')
@@ -122,7 +156,7 @@ for ob in meshes:
     g=ob.vertex_groups.new(name=ob['bone']);g.add(list(range(len(ob.data.vertices))),1,'REPLACE')
     ob.parent=rig;mod=ob.modifiers.new('Authored hero rig','ARMATURE');mod.object=rig
 
-body=[o for o in meshes if not o['bone'].startswith('WeaponGrip')]
+body=[o for o in meshes if not o['bone'].startswith('WeaponGrip') and o!=visor]
 def join(group,name):
     bpy.ops.object.select_all(action='DESELECT')
     for ob in group:ob.select_set(True)
@@ -141,8 +175,8 @@ bpy.ops.object.select_all(action='SELECT')
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'AndromedaTimmy.blend'),compress=True)
 bpy.ops.export_scene.fbx(filepath=str(FBX),use_selection=True,object_types={'ARMATURE','MESH','EMPTY'},
     add_leaf_bones=False,bake_anim=False,axis_forward='-Z',axis_up='Y',use_mesh_modifiers=True)
-triangles=sum(sum(len(f.vertices)-2 for f in o.data.polygons) for o in [body,*weapons])
-(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'triangles':triangles,'body_renderers':1,'claw_renderers':2,'runtime_scale':.70,'original_geometry':True},indent=2)+'\n')
+triangles=sum(sum(len(f.vertices)-2 for f in o.data.polygons) for o in [body,*weapons,visor])
+(ART/'model-report.json').write_text(json.dumps({'hero':'Andromeda Timmy','bones':len(rig.data.bones),'triangles':triangles,'body_renderers':1,'claw_renderers':2,'visor_renderers':1,'visor_opacity':VISOR_OPACITY,'visor_color':VISOR_COLOR,'runtime_scale':.70,'original_geometry':True},indent=2)+'\n')
 
 # CPU rendering also works on build machines without a display/GPU.
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.device='CPU';scene.cycles.samples=24
@@ -154,7 +188,10 @@ bpy.ops.object.camera_add(location=(2.5,-4,2.0));camera=bpy.context.object;camer
 for p,power,color in [((-3,-4,5),450,(.70,.86,1)),((3,-2,3),250,(1,.70,.42)),((1,3,4),500,(.20,.70,1))]:
     bpy.ops.object.light_add(type='AREA',location=p);light=bpy.context.object;light.data.energy=power;light.data.color=color;light.data.size=3;aim(light,(0,0,1))
 scene.render.filepath=str(ART/'AndromedaTimmy-preview.png');bpy.ops.render.render(write_still=True)
-for ob in [body,*weapons,rig,*[o for o in bpy.data.objects if o.type=='EMPTY']]:ob.hide_render=True
+if options.model_only:
+    print('TIMMY MODEL BUILD COMPLETE:',triangles,'triangles,',len(rig.data.bones),'bones, 70% transparent visor')
+    sys.exit(0)
+for ob in [body,*weapons,visor,rig,*[o for o in bpy.data.objects if o.type=='EMPTY']]:ob.hide_render=True
 camera.location=(0,-5,.25);camera.data.ortho_scale=2.2;aim(camera,(0,0,0))
 all_icon_objects=[]
 for slot in range(5):
