@@ -939,6 +939,7 @@ namespace Alterverse.UI
                 ArenaShopItem item=ArenaShopCatalog.PurchasableItems[index];
                 ArenaVariant arena=item.Variant;
                 bool owned=ArenaUnlockInventory.Owned(arena);
+                bool releaseLocked=!ArenaShopCatalog.PurchaseAvailable(arena);
                 float x=Left+slot*(cardW+gap);
 
                 theme.Panel(new Rect(x,356,cardW,274));
@@ -947,7 +948,7 @@ namespace Alterverse.UI
                 FrontEndTheme.Fill(new Rect(x+36,416,cardW-72,3),new Color(item.Accent.r,item.Accent.g,item.Accent.b,.72f));
 
                 theme.Label(new Rect(x+18,466,cardW-36,32),item.Name,theme.Heading);
-                theme.Label(new Rect(x+18,500,cardW-36,22),item.Subtitle,theme.Small,true);
+                theme.Label(new Rect(x+18,500,cardW-36,22),releaseLocked?"COMING SOON":item.Subtitle,theme.Small,true);
                 string status=owned
                     ?(item.Price>0?"OWNED":"FREE")
                     :item.Price+" SHARDS";
@@ -955,11 +956,12 @@ namespace Alterverse.UI
 
                 string action;
                 bool enabled=true;
-                if(owned){action=item.Price>0?"OWNED":"FREE";enabled=false;}
+                if(releaseLocked)action=$"UNLOCK {item.Price}";
+                else if(owned){action=item.Price>0?"OWNED":"FREE";enabled=false;}
                 else if(PlayerWallet.CanAfford(item.Price))action=$"UNLOCK {item.Price}";
                 else {action=$"NEED {item.Price} SHARDS";enabled=false;}
 
-                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled))
+                if(theme.Action(new Rect(x+18,572,cardW-36,44),action,enabled:enabled,locked:releaseLocked))
                 {
                     if(!owned)
                     {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise production hero purchase/selection gates with isolated profile/wallet fixtures.
+"""Exercise Timmy and WASP release gates with isolated profile/wallet fixtures.
 Not a Unity UI or live billing test. Requires Mono and Roslyn paths.
 """
 import argparse, os, subprocess, tempfile
@@ -13,7 +13,8 @@ root=Path(__file__).resolve().parents[3]
 fixture=r'''
 using System;
 using System.Collections.Generic;
-namespace UnityEngine {}
+namespace UnityEngine {public struct Color {public Color(float r,float g,float b,float a=1){}}}
+namespace Alterverse.Match {public enum ArenaVariant {Moon,Mars,GreenPlanet,Noxara,Kryon,Earth,Pyraxis,Neptune,Dark00,DiamondCore,GJ504b,Wasp76b,Trappist1e}}
 namespace Alterverse.Characters {public enum HeroId {Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy}}
 namespace Alterverse.Profile {
  public static class AccountProfilePrefs {
@@ -56,6 +57,28 @@ class Regression {
   }
   Check(Alterverse.Profile.ProfileTransaction.Commits==0&&Alterverse.Profile.ProfileTransaction.Recoveries==0,"locked purchase has no transaction side effects");
   Check(Alterverse.Profile.PlayerWallet.ServerPurchases==0,"locked purchase never invokes server debit");
+  var wasp=Alterverse.Match.ArenaVariant.Wasp76b;
+  Check(Alterverse.Shop.ArenaShopCatalog.For(wasp).Price==900,"WASP price remains 900");
+  Check(Array.Exists(Alterverse.Shop.ArenaShopCatalog.PurchasableItems,item=>item.Variant==wasp),"WASP stays in shop");
+  Check(!Alterverse.Shop.ArenaShopCatalog.PurchaseAvailable(wasp),"WASP purchase held");
+  Check(Alterverse.Shop.ArenaUnlockInventory.UnlockRequirement(wasp)=="COMING SOON","WASP release status");
+  foreach(bool online in new[]{false,true})foreach(int balance in new[]{0,899,900,5000})foreach(int owned in new[]{0,1}){
+   Alterverse.Shop.PaidShardCommerce.Instance=online?new Alterverse.Shop.PaidShardCommerce():null;
+   Alterverse.Profile.PlayerWallet.EarnedBalance=balance;
+   Alterverse.Profile.AccountProfilePrefs.Values["DF_ArenaOwned_Wasp76b"]=owned;
+   Check(Alterverse.Shop.ArenaUnlockInventory.Purchase(wasp)==Alterverse.Shop.ArenaPurchaseResult.NotPurchasable,"WASP purchase denied before release");
+   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==balance,"WASP hold preserves shards");
+   Check(Alterverse.Shop.ArenaUnlockInventory.Owned(wasp)==(owned==1),"WASP hold preserves existing ownership");
+  }
+  Check(Alterverse.Profile.ProfileTransaction.Commits==0&&Alterverse.Profile.PlayerWallet.ServerPurchases==0,"WASP hold causes no debit or unlock");
+  Alterverse.Shop.PaidShardCommerce.Instance=null;
+  foreach(var arena in new[]{Alterverse.Match.ArenaVariant.GreenPlanet,Alterverse.Match.ArenaVariant.Noxara,Alterverse.Match.ArenaVariant.Earth,Alterverse.Match.ArenaVariant.Pyraxis,Alterverse.Match.ArenaVariant.Dark00,Alterverse.Match.ArenaVariant.DiamondCore,Alterverse.Match.ArenaVariant.Trappist1e}){
+   Alterverse.Profile.PlayerWallet.EarnedBalance=900;
+   Check(Alterverse.Shop.ArenaShopCatalog.PurchaseAvailable(arena),"existing arena purchases remain available");
+   Check(Alterverse.Shop.ArenaUnlockInventory.Purchase(arena)==Alterverse.Shop.ArenaPurchaseResult.Purchased,"other paid arena purchases still work");
+   Check(Alterverse.Profile.PlayerWallet.EarnedBalance==0&&Alterverse.Shop.ArenaUnlockInventory.Owned(arena),"other arena costs 900 and unlocks");
+   Check(Alterverse.Shop.ArenaUnlockInventory.Purchase(arena)==Alterverse.Shop.ArenaPurchaseResult.AlreadyOwned,"arena duplicate never charges again");
+  }
   foreach(var free in new[]{Alterverse.Characters.HeroId.Veyr,Alterverse.Characters.HeroId.Kaelon,Alterverse.Characters.HeroId.Nyra,Alterverse.Characters.HeroId.Elyra,Alterverse.Characters.HeroId.Mira,Alterverse.Characters.HeroId.Rook}){
    Check(Alterverse.Shop.HeroUnlockInventory.Owned(free),"free hero remains available");
    Check(Alterverse.Characters.PlayerHeroSelection.Select(free),"free hero deploy allowed");
@@ -69,7 +92,7 @@ class Regression {
    Check(Alterverse.Profile.PlayerWallet.EarnedBalance==5000-price,"existing premium price unchanged");
    Check(Alterverse.Characters.PlayerHeroSelection.Select(premium),"owned premium deploy allowed");
   }
-  Console.WriteLine("PASS "+checks+" production hero release/purchase/selection assertions.");
+  Console.WriteLine("PASS "+checks+" production Timmy/WASP release, purchase, selection and unchanged arena assertions.");
  }
 }
 '''
@@ -77,5 +100,5 @@ env=dict(os.environ,MONO_PATH=str(args.mono_root/'usr/lib/mono/4.5')+':'+str(arg
 mono=args.mono_root/'usr/bin/mono-sgen'
 with tempfile.TemporaryDirectory(prefix='df-timmy-release-') as folder:
  folder=Path(folder);(folder/'Fixture.cs').write_text(fixture);binary=folder/'Release.exe'
- subprocess.run([str(mono),str(args.roslyn),'-nologo','-noconfig','-langversion:9','-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.dll'),'-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.Core.dll'),'-out:'+str(binary),str(folder/'Fixture.cs'),str(root/'Assets/Alterverse/Scripts/Shop/HeroUnlockCatalog.cs'),str(root/'Assets/Alterverse/Scripts/Characters/PlayerHeroSelection.cs')],env=env,check=True)
+ subprocess.run([str(mono),str(args.roslyn),'-nologo','-noconfig','-langversion:9','-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.dll'),'-r:'+str(args.mono_root/'usr/lib/mono/4.5/System.Core.dll'),'-out:'+str(binary),str(folder/'Fixture.cs'),str(root/'Assets/Alterverse/Scripts/Shop/HeroUnlockCatalog.cs'),str(root/'Assets/Alterverse/Scripts/Characters/PlayerHeroSelection.cs'),str(root/'Assets/Alterverse/Scripts/Shop/ArenaShopCatalog.cs')],env=env,check=True)
  subprocess.run([str(mono),str(binary)],env=env,check=True)

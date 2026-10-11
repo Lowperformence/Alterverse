@@ -45,6 +45,38 @@ class LedgerTests(unittest.TestCase):
             self.assertEqual(after['balance'],before['balance']-price)
             self.assertEqual({e['key']:e.get('number') for e in after['profile']}[key],1)
 
+    def test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement(self):
+        self.assertEqual(ITEMS['arena_Wasp76b']['price'],900)
+        self.assertIs(ITEMS['arena_Wasp76b']['available'],False)
+        for online in (False,True):
+            for owned in (False,True):
+                account=f'wasp-{online}-{owned}'
+                if online:self.ledger.fulfill(account,'dimensions_shards_1200',account,dict(self.valid,obfuscatedExternalAccountId=account))
+                wallet=self.ledger.wallet(account)
+                entries=[{'key':'DF_Shards','kind':0,'number':1800}]
+                if owned:entries.append({'key':'DF_ArenaOwned_Wasp76b','kind':0,'number':1})
+                self.ledger.save_profile(account,entries,wallet['profileRevision'])
+                before=self.ledger.wallet(account)
+                for attempt in (
+                    lambda:self.ledger.purchase(account,'arena_Wasp76b','f'*32,before['profileRevision']),
+                    lambda:self.ledger.buy(account,'arena_Wasp76b'),
+                ):
+                    with self.assertRaisesRegex(ValueError,'not released'):attempt()
+                    self.assertEqual(self.ledger.wallet(account),before)
+
+    def test_firestore_wasp_gate_rejects_before_accessing_database(self):
+        from firestore_ledger import FirestoreLedger
+        from unittest.mock import Mock
+        ledger=FirestoreLedger.__new__(FirestoreLedger)
+        ledger.client=Mock();ledger.accounts=Mock()
+        for attempt in (
+            lambda:ledger.purchase('account-a','arena_Wasp76b','e'*32,0),
+            lambda:ledger.buy('account-a','arena_Wasp76b'),
+        ):
+            with self.assertRaisesRegex(ValueError,'not released'):attempt()
+        ledger.client.transaction.assert_not_called()
+        ledger.accounts.document.assert_not_called()
+
     def test_new_avatars_keep_price_and_ownership_after_restart(self):
         self.ledger.fulfill('account-a','dimensions_shards_5500','avatar-token',self.valid)
         for avatar_id in range(17,27):

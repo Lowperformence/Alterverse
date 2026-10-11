@@ -91,6 +91,13 @@ class ProfileTests(unittest.TestCase):
                 self.ledger.fulfill(account,'dimensions_shards_500','token-'+arena,
                                     dict(self.valid,obfuscatedExternalAccountId=account))
                 self.ledger.save_profile(account,[number('DF_Shards',400)],0)
+                if arena=='Wasp76b':
+                    before=self.ledger.wallet(account)
+                    with self.assertRaisesRegex(ValueError,'not released'):
+                        self.ledger.purchase(account,sku,'c'*32,1)
+                    self.assertEqual(Ledger(self.path).wallet(account),before)
+                    self.assertIsNone(profile_value(before,key))
+                    continue
                 bought=self.ledger.purchase(account,sku,'c'*32,1)
                 self.assertEqual(bought['balance'],0)
                 self.assertEqual(profile_value(bought,'DF_Shards'),0)
@@ -121,6 +128,17 @@ class ProfileTests(unittest.TestCase):
             with self.subTest(arena=arena):
                 account='retry-'+arena
                 self.ledger.save_profile(account,[number('DF_Shards',1800)],0)
+                if arena=='Wasp76b':
+                    before=self.ledger.wallet(account)
+                    def rejected(_):
+                        try:self.ledger.purchase(account,'arena_'+arena,'f'*32,1)
+                        except ValueError as error:return str(error)
+                        return 'unexpected purchase'
+                    with ThreadPoolExecutor(max_workers=8) as pool:
+                        results=list(pool.map(rejected,range(24)))
+                    self.assertEqual(results,['Item is not released']*24)
+                    self.assertEqual(Ledger(self.path).wallet(account),before)
+                    continue
                 with ThreadPoolExecutor(max_workers=8) as pool:
                     list(pool.map(lambda _:self.ledger.purchase(account,'arena_'+arena,'f'*32,1),range(24)))
                 restored=Ledger(self.path).wallet(account)
@@ -261,5 +279,3 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
-
-

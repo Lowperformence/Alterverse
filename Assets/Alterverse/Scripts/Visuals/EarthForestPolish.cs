@@ -6,7 +6,7 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Extra Earth-only visual dressing: denser mixed forest, pointed conifers in several sizes,
-    /// worn brown soil around gameplay structures.
+    /// worn brown soil around towers; spawn cores retain the normal terrain.
     /// All generated dressing is collider-free and presentation-only.
     /// </summary>
     public sealed class EarthForestPolish : MonoBehaviour
@@ -158,14 +158,7 @@ namespace Alterverse.Visuals
                 AddSoilSite(tower.transform.position,8.2f,7.2f,"Tower");
             }
 
-            // Reality cores are the large team-base structures, so their worn soil area is wider.
-            RealityCoreShell[] cores=FindObjectsByType<RealityCoreShell>(FindObjectsSortMode.None);
-            for(int i=0;i<cores.Length;i++)
-            {
-                RealityCoreShell core=cores[i];
-                if(core==null||!IsUnderWorld(core.transform,world))continue;
-                AddSoilSite(core.transform.position,12.0f,10.2f,"Base");
-            }
+            // Both spawn cores keep the normal Earth terrain without a brown soil overlay.
         }
 
         static bool IsUnderWorld(Transform item,Transform world)
@@ -336,5 +329,3 @@ namespace Alterverse.Visuals
         void OnDestroy()=>ClearForest();
     }
 }
-
-

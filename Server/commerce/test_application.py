@@ -35,6 +35,17 @@ class ApplicationTests(unittest.TestCase):
             self.assertEqual(result['status'],'400 Bad Request')
             self.assertEqual(self.app.ledger.wallet('account-a'),before)
 
+    def test_wasp_purchase_is_unavailable_without_debiting_verified_shards(self):
+        self.request('/google-play/fulfill',{'productId':'dimensions_shards_1200','purchaseToken':'wasp-token'})
+        before=self.app.ledger.wallet('account-a')
+        for path,payload in (
+            ('/wallet/spend',{'cosmeticId':'arena_Wasp76b','operationId':'e'*32,'expectedProfileRevision':before['profileRevision']}),
+            ('/cosmetics/buy',{'cosmeticId':'arena_Wasp76b'}),
+        ):
+            result=self.request(path,payload)
+            self.assertEqual(result['status'],'400 Bad Request')
+            self.assertEqual(self.app.ledger.wallet('account-a'),before)
+
     def request(self, path, data=None, authorization='Bearer test-session', raw=None):
         body = json.dumps(data or {}).encode() if raw is None else raw
         env = {'REQUEST_METHOD': 'POST', 'PATH_INFO': path,

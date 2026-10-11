@@ -37,6 +37,8 @@ namespace Alterverse.Shop
         public const int EarthPrice=900;
         public const int Dark00Price=900;
         public const int Wasp76bPrice=900;
+        public const bool Wasp76bPurchasesEnabled=false;
+        public static bool PurchaseAvailable(ArenaVariant variant)=>variant!=ArenaVariant.Wasp76b||Wasp76bPurchasesEnabled;
         public const int Trappist1ePrice=900;
         public static readonly ArenaShopItem[] Items=
         {
@@ -117,12 +119,14 @@ namespace Alterverse.Shop
 
         public static string UnlockRequirement(ArenaVariant variant)
         {
+            if(!ArenaShopCatalog.PurchaseAvailable(variant))return "COMING SOON";
             int price=ArenaShopCatalog.For(variant).Price;
             return price>0?price+" SHARDS":"FREE";
         }
 
         public static ArenaPurchaseResult Purchase(ArenaVariant variant)
         {
+            if(!ArenaShopCatalog.PurchaseAvailable(variant))return ArenaPurchaseResult.NotPurchasable;
             ProfileTransaction.Recover();
             string ownedKey=OwnedKey(variant);
             int price=ArenaShopCatalog.For(variant).Price;
@@ -141,6 +145,3 @@ namespace Alterverse.Shop
         }
     }
 }
-
-
-

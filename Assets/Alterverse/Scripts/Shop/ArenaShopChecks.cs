@@ -45,7 +45,7 @@ namespace Alterverse.Shop
                 CheckPaidArena(ArenaVariant.GreenPlanet,ArenaUnlockInventory.MoorOwnedKey,900);
                 CheckPaidArena(ArenaVariant.Pyraxis,ArenaUnlockInventory.PyraxisOwnedKey,900);
                 CheckPaidArena(ArenaVariant.DiamondCore,ArenaUnlockInventory.PsrOwnedKey,900);
-                CheckPaidArena(ArenaVariant.Wasp76b,ArenaUnlockInventory.Wasp76bOwnedKey,900);
+                CheckWaspPurchaseHold();
                 CheckPaidArena(ArenaVariant.Trappist1e,ArenaUnlockInventory.Trappist1eOwnedKey,900);
                 CheckEarthPriceAndLock();
                 CheckEarthInsufficientShards();
@@ -53,7 +53,7 @@ namespace Alterverse.Shop
                 CheckDarkPriceAndLock();
                 CheckDarkInsufficientShards();
                 CheckDarkExactPurchaseAndDuplicateProtection();
-                Debug.Log("DIMENSIONS FRONT: arena purchases passed, including WASP-76b and TRAPPIST-1e at 900 shards each.");
+                Debug.Log("DIMENSIONS FRONT: arena purchases passed; WASP-76b remains listed at 900 shards with purchases held.");
             }
             finally
             {
@@ -81,6 +81,22 @@ namespace Alterverse.Shop
             Assert(AccountProfilePrefs.GetInt(key,0)==1,"Purchase must save the map entitlement: "+variant);
             Assert(ArenaVariantRuntime.Select(variant)&&ArenaVariantRuntime.Selected==variant,"Purchased map must be selectable.");
             Assert(ArenaUnlockInventory.Purchase(variant)==ArenaPurchaseResult.AlreadyOwned&&PlayerWallet.Balance==0,"Duplicate purchase must never debit again.");
+        }
+
+        private static void CheckWaspPurchaseHold()
+        {
+            Assert(ArenaShopCatalog.For(ArenaVariant.Wasp76b).Price==900,"WASP-76b retains its 900-shard price.");
+            Assert(System.Array.Exists(ArenaShopCatalog.PurchasableItems,item=>item.Variant==ArenaVariant.Wasp76b),"WASP-76b remains visible in STORE.");
+            Assert(!ArenaShopCatalog.PurchaseAvailable(ArenaVariant.Wasp76b),"WASP-76b purchase must remain held.");
+            Assert(ArenaUnlockInventory.UnlockRequirement(ArenaVariant.Wasp76b)=="COMING SOON","WASP-76b must show its release hold.");
+            foreach(int balance in new[]{0,899,900,2500})foreach(int owned in new[]{0,1})
+            {
+                ResetArena(ArenaUnlockInventory.Wasp76bOwnedKey,balance);
+                if(owned==1)AccountProfilePrefs.SetInt(ArenaUnlockInventory.Wasp76bOwnedKey,1);
+                Assert(ArenaUnlockInventory.Purchase(ArenaVariant.Wasp76b)==ArenaPurchaseResult.NotPurchasable,"Held WASP-76b purchase must be rejected.");
+                Assert(PlayerWallet.Balance==balance,"Held WASP-76b must not debit shards.");
+                Assert(ArenaUnlockInventory.Owned(ArenaVariant.Wasp76b)==(owned==1),"Purchase hold preserves existing ownership.");
+            }
         }
 
         private static void ResetArena(string ownedKey,int shards)
@@ -166,5 +182,3 @@ namespace Alterverse.Shop
     }
 }
 #endif
-
-
