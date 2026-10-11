@@ -47,7 +47,7 @@ namespace Alterverse.EditorTools
             WriteEdgegapDockerFiles(outputDirectory);
             Debug.Log($"DIMENSIONS FRONT SERVER BUILD READY: {executablePath} • {summary.totalSize} bytes • {summary.totalTime}");
             Debug.Log($"DIMENSIONS FRONT EDGEGAP: Dockerfile ready at {Path.Combine(outputDirectory,DockerfileName)}");
-            EditorUtility.RevealInFinder(outputDirectory);
+            if(!Application.isBatchMode) EditorUtility.RevealInFinder(outputDirectory);
         }
 
         private static void WriteEdgegapDockerFiles(string outputDirectory)

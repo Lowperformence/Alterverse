@@ -13,6 +13,9 @@ from ranked import Ranked, EdgegapRankedGateway
 
 
 def create_application():
+    if os.environ.get('DF_ENABLE_RANKED', '0') == '1':
+        from ranked_configuration import validate_ranked_environment
+        validate_ranked_environment(os.environ)
     unity_project_id=os.environ['DF_UNITY_PROJECT_ID']
     enabled=os.environ.get('DF_ENABLE_GOOGLE_PLAY','0')=='1'
     package=os.environ.get('DF_ANDROID_PACKAGE_NAME','').strip() if enabled else ''
