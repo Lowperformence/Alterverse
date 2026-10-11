@@ -64,11 +64,13 @@ partial class Regression
   jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"Scratch activates the same two nozzle cores and exhausts as Jet Pounce");
   var claws=VisibleFx(HeroFxShape.Claw);Check(claws.Length==3,"Scratch launches exactly three claws");
   Check(claws.All(f=>f.transform.position.x>.4f),"Scratch claws begin ahead of Timmy");
-  Step(.2f);Check(claws.All(f=>Math.Abs(f.transform.position.x-2.92f)<.01f),"three claws share the fixed leap flight time");
+  var clawStarts=claws.Select(f=>f.transform.position).ToArray();
+  actor.transform.position+=new Vector3(2,0,1);Step(.2f);
+  for(int i=0;i<claws.Length;i++)Check(Vector3.Distance(claws[i].transform.position,clawStarts[i]+new Vector3(2,0,1))<.01f,"Scratch claws follow the actor's actual curved leap");
   actor.transform.position+=Vector3.forward*3;Step(.1f);
   Check(VisibleFx(HeroFxShape.Streak).Length==4,"Scratch jets stay active through the leap");
-  Check(jets.All(f=>f.transform.position.z>2.7f),"Scratch exhaust follows Timmy while claws retain the fixed path");
-  Check(claws.All(f=>Math.Abs(f.transform.position.z)<=.21f),"claws cannot home after the leap is released");
+  Check(jets.All(f=>f.transform.position.z>2.7f),"Scratch exhaust follows Timmy's actual leap");
+  Check(claws.All(f=>Math.Abs(f.transform.position.z-4)<=.21f),"Scratch claws stay with Timmy when the leap changes direction");
   HeroVfxPool.Emit(HeroFxShape.Claw,Vector3.zero,Vector3.zero,Vector3.one,Color.white,.16f,HeroFxMotion.Sweep,owner:actor);
   HeroSkillVfx.CancelTimmyDash(actor);
   Check(VisibleFx(HeroFxShape.Claw).Length==1&&VisibleFx(HeroFxShape.Streak).Length==0,"interruption removes airborne claws and jets without deleting the final contact sweep");

@@ -47,9 +47,9 @@ def check(label):
     glass=visor.data.materials[0]
     assert glass.name.startswith('Timmy light gray visor glass'),(label,'glass material identity')
     alpha=glass.node_tree.nodes.get('Principled BSDF').inputs['Alpha'].default_value
-    assert abs(alpha-.20)<1e-5,(label,'80% glass transparency',alpha)
+    assert abs(alpha-.50)<1e-5,(label,'50% glass transparency',alpha)
     if label=='Blender source':
-        assert abs(glass.diffuse_color[3]-.20)<1e-5,(label,'viewport glass transparency')
+        assert abs(glass.diffuse_color[3]-.50)<1e-5,(label,'viewport glass transparency')
     assert max(glass.diffuse_color[:3])-min(glass.diffuse_color[:3])<.06,(label,'neutral light gray tint')
     points=[visor.matrix_world@v.co for v in visor.data.vertices]
     cx=(min(p.x for p in points)+max(p.x for p in points))/2
@@ -167,4 +167,4 @@ for i in range(5):
     bpy.data.images.remove(img)
 report={'source':source,'fbx_round_trip':fbx,'icons':5,'icon_resolution':1254,'runtime_icon_import_max_size':256,'native_unity_import_tested':False}
 (ART/'validation-report.json').write_text(json.dumps(report,indent=2)+'\n')
-print('TIMMY ART PASS: source + FBX round trip, 19 shared bones + tail, four weighted renderers, 80% transparent round visor, centered tail, nozzle/contact sockets, baked fur/fabric, triangle budget, five painted icons.')
+print('TIMMY ART PASS: source + FBX round trip, 19 shared bones + tail, four weighted renderers, 50% transparent round visor, centered tail, nozzle/contact sockets, baked fur/fabric, triangle budget, five painted icons.')

@@ -35,6 +35,7 @@ namespace Alterverse.Characters
 
         private HeroLocomotion body;
         private HeroCombatProfile profile;
+        private HeroIdentity identity;
         private PlanetBuffReceiver planetBuff;
         private SoftTargeting targeting;
         private Vector2 moveInput;
@@ -79,6 +80,7 @@ namespace Alterverse.Characters
         {
             body = GetComponent<HeroLocomotion>() ?? gameObject.AddComponent<HeroLocomotion>();
             profile = GetComponent<HeroCombatProfile>();
+            identity = GetComponent<HeroIdentity>();
             planetBuff = GetComponent<PlanetBuffReceiver>() ?? gameObject.AddComponent<PlanetBuffReceiver>();
             targeting = GetComponent<SoftTargeting>();
         }
@@ -119,7 +121,11 @@ namespace Alterverse.Characters
                 return;
             }
 
-            float stateMultiplier = State == FighterState.Attacking ? attackMovementMultiplier : 1f;
+            // Timmy has the same run speed as the assassin he chases. Slowing
+            // him for his claw animation pushes an accepted melee target out of
+            // reach and prevents the next held attack from ever starting.
+            float stateMultiplier = State == FighterState.Attacking && identity?.Hero != HeroId.Timmy
+                ? attackMovementMultiplier : 1f;
             Vector3 desiredVelocity = inputDirection * MoveSpeed * stateMultiplier;
             float rate = SelectVelocityRate(desiredVelocity);
             planarVelocity = Vector3.MoveTowards(planarVelocity, desiredVelocity, rate * dt);

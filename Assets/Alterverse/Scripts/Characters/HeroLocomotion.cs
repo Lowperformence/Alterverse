@@ -121,6 +121,20 @@ namespace Alterverse.Characters
             dashSpeed=delta.magnitude/Mathf.Clamp(duration,.08f,.65f); dashFrame=Time.frameCount;
             return true;
         }
+        // Only an already active dash may adjust its destination. Scratch uses
+        // the original cast deadline and field, so steering never starts a new
+        // dash or extends the leap through an obstacle.
+        public bool RetargetDash(Vector3 end,float remainingSeconds)
+        {
+            if(!IsDashing||!CanMove||IsForcedMoving)return false;
+            Vector3 delta=end-transform.position;delta.y=0;
+            if(delta.sqrMagnitude<.000001f){dashRemaining=0;return true;}
+            dashDirection=delta.normalized;
+            Sweep(transform.position,dashDirection,delta.magnitude,out float clearDistance,out _,out _);
+            dashRemaining=clearDistance;
+            dashSpeed=delta.magnitude/Mathf.Max(Time.deltaTime,remainingSeconds);
+            return true;
+        }
         public bool BeginForcedMove(Vector3 destination, float duration)
         {
             if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || health == null || health.IsDead ||

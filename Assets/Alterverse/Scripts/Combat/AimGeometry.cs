@@ -128,7 +128,8 @@ namespace Alterverse.Combat
             bool captured = spec.targetingMode == TargetingMode.Cone && target != null;
             if (captured) point = ClampPoint(actor.transform.position, target.transform.position, spec.castRange);
             if (spec.aimType == AimType.SelfArea || spec.aimType == AimType.Self) point = actor.transform.position;
-            return new AimPose(direction, point, spec.targetingMode == TargetingMode.Ally || spec.targetingMode == TargetingMode.Homing ? target : null, captured);
+            return new AimPose(direction, point, spec.targetingMode == TargetingMode.Ally || spec.targetingMode == TargetingMode.Homing ||
+                spec.aimType==AimType.Dash&&spec.targetingMode==TargetingMode.Cone ? target : null, captured);
         }
     }
 }

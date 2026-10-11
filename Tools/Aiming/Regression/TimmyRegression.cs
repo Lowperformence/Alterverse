@@ -99,8 +99,8 @@ partial class Regression
   Check(!b.GetComponent<HeroCombatStatus>().Rooted&&a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"normal completion releases only the victim root");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
-  execution.TryCastAimed(3,Forward(a,9));Run(.25f);b.transform.position+=Vector3.right*3;Run(2.7f);
-  Near(Total(b),1000,"Scratch leap does not home or guarantee damage");Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"miss does not root");Near(a.transform.position.x,0,"leap keeps captured endpoint");
+  execution.TryCastAimed(3,Forward(a,9));Run(.25f);b.transform.position+=Vector3.right*5;Run(2.7f);
+  Near(Total(b),1000,"leaving the original Scratch field avoids damage");Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"field exit does not root");
 
   for(int interruption=0;interruption<5;interruption++)
   {
@@ -200,5 +200,26 @@ partial class Regression
   Check(a.transform.position.z>5,"enemy leaving range during the warning does not cancel Scratch's leap");
   Near(Total(b),1000,"enemy leaving range during warning takes no Scratch damage");
   Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"enemy leaving range during warning is not held");
+
+  Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);a.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>().Slot=1;
+  b=Hero(HeroId.Kaelon,1,Angle(28,5));b.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>().Slot=2;
+  gesture=ManualAiming.For(a);gesture.Begin(3,new Vector2(700,100));gesture.Drag(new Vector2(700,196),1,false);
+  AimPose captured=gesture.Pose;gesture.Cancel();
+  Check(captured.Target==b.GetComponent<Health>(),"Scratch pose retains the marked hero identity");
+  var service=new GameObject("Timmy commands").AddComponent<Alterverse.Multiplayer.CoopGameplayCommands>();
+  var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
+  Alterverse.Multiplayer.CoopAuthority.Active=true;Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
+  Check(Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(a,3,captured),"Scratch sends the selected hero through V5");
+  var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);
+  reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out bool hasTarget);
+  reader.ReadValueSafe(out int kind);reader.ReadValueSafe(out int victimSlot);
+  Check(hasTarget&&kind==1&&victimSlot==2,"Scratch packet identifies the marked hero slot");
+  other=Hero(HeroId.Kaelon,1,Vector3.forward*3);other.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>().Slot=3;
+  Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
+  Alterverse.Multiplayer.CoopAuthority.ActivePlan.Session.Slots[1]=new Alterverse.Multiplayer.MatchPlayerSlot{PlayerId="test"};
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.7f);
+  Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"host jumps to the same marked enemy even if another enters the cone");
+  Check(other.GetComponent<HeroCombatStatus>()?.Rooted!=true,"host cannot silently swap Scratch victims");
+  Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");
  }
 }

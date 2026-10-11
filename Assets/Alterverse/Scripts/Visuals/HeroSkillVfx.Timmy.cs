@@ -43,6 +43,7 @@ namespace Alterverse.Visuals
             if(kind==4||kind==6)
             {
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.TravelFixedFrame);
+                HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.AttachedJet);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Streak,HeroFxMotion.AttachedJet);
                 if(kind==4)
                 {
@@ -121,13 +122,13 @@ namespace Alterverse.Visuals
             if(scratch)
             {
                 Vector3 right=facing*Vector3.right;
-                // Three parallel claws stay in front of Timmy on the same fixed leap path.
+                // Stay with the actual actor as Scratch steers toward its victim.
                 for(int i=-1;i<=1;i++)
                 {
                     Vector3 offset=right*(i*.20f)+Vector3.up*.36f+heading*.42f;
                     HeroVfxPool.Emit(HeroFxShape.Claw,from+offset,to+offset,
                         new Vector3(.72f,.72f,.60f),i==0?Color.Lerp(cyan,Color.white,.65f):cyan,
-                        duration,HeroFxMotion.TravelFixedFrame,facing,actor,elapsed:elapsed,cancelOnOwnerDeath:true);
+                        duration,HeroFxMotion.AttachedJet,facing,actor,follow:actor.transform,elapsed:elapsed,cancelOnOwnerDeath:true);
                 }
             }
             if(elapsed<duration)actor.GetComponent<HeroVisualMotion>()?.PulseDash(Mathf.Max(.04f,duration-elapsed));

@@ -89,6 +89,8 @@ namespace Alterverse.Characters {
    DashDestination=p;if(duration>.17f){dashFrom=transform.position;dashStarted=UnityEngine.Time.time;dashEnds=dashStarted+duration;IsDashing=true;}else transform.position=p;return true;
   }
   public void Advance(float time){if(!IsDashing)return;var s=GetComponent<Alterverse.Combat.HeroCombatStatus>();if(s!=null&&(s.Stunned||s.Rooted)){IsDashing=false;return;}transform.position=UnityEngine.Vector3.Lerp(dashFrom,DashDestination,UnityEngine.Mathf.Clamp01((time-dashStarted)/(dashEnds-dashStarted)));if(time>=dashEnds-.00001f)IsDashing=false;}
+  public bool RetargetDash(UnityEngine.Vector3 point,float remaining){if(!IsDashing)return false;dashFrom=transform.position;DashDestination=point;dashStarted=UnityEngine.Time.time;dashEnds=dashStarted+UnityEngine.Mathf.Max(UnityEngine.Time.deltaTime,remaining);return true;}
+  public UnityEngine.Vector3 Move(UnityEngine.Vector3 step,float w,float h,bool slide=true){var s=GetComponent<Alterverse.Combat.HeroCombatStatus>();if(s!=null&&(s.Stunned||s.Rooted))return UnityEngine.Vector3.zero;step.y=0;transform.position+=step;return step;}
   public bool BeginForcedMove(UnityEngine.Vector3 p,float s){IsForcedMoving=true;return true;}public void SetVortexPull(UnityEngine.Vector3 c,float r,float s){}
  }
  public class VeyrAbilities:UnityEngine.MonoBehaviour{}

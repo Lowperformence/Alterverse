@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 15 refreshes Timmy's helmet, woven suit/fur textures, tail and nozzle sockets.
+        // Version 16 refreshes Timmy's visor at the requested 50% transparency.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 15;
+        public override uint GetVersion() => 16;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -86,7 +86,7 @@ namespace Alterverse.EditorTools
         }
         private static void ConfigureTimmyVisor(Material material)
         {
-            Color glass=new Color(.78f,.80f,.82f,.20f); // 80% transparent.
+            Color glass=new Color(.78f,.80f,.82f,.50f); // 50% transparent.
             material.SetColor("_BaseColor",glass);
             material.SetColor("_Color",glass);
             material.SetFloat("_Metallic",0f);

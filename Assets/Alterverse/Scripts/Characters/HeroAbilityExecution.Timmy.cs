@@ -33,17 +33,36 @@ namespace Alterverse.Characters
                 HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,2,TimmyBalance.JetDashSeconds);
                 return true;
             }
-            if(manuallyAimed)
+            // The retained cone is the one the player actually saw. A captured
+            // target point must not rotate/narrow that field at release.
+            direction=AimGeometry.Direction(pose.Direction);
+            Vector3 fieldOrigin=transform.position;
+            if(manuallyAimed&&target==null)
                 target=AimGeometry.CaptureConeTarget(gameObject,direction,aim);
-            if(!ValidTarget(target,aim.castRange)||target.GetComponent<HeroIdentity>()==null)target=null;
+            if(!TimmyScratchInField(target,fieldOrigin,direction,aim))target=null;
             if(target!=null&&!SharkSight(target))return false;
             Vector3 jumpPoint=target!=null?target.transform.position:
                 transform.position+direction*aim.castRange;
             timmyScratchPending=true;
             HeroCombatAudio.Windup(gameObject,4);
             if(target!=null)HeroSkillVfx.TargetWarning(gameObject,target,TimmyBalance.ScratchWindup);
-            StartCoroutine(TimmyScratch(target,jumpPoint,life));
+            StartCoroutine(TimmyScratch(target,jumpPoint,fieldOrigin,direction,aim,life));
             return true;
+        }
+
+        private bool TimmyScratchInField(Health target,Vector3 origin,Vector3 direction,AimSpec aim)
+            =>HeroCombatRules.Enemy(gameObject,target)&&target.GetComponent<HeroIdentity>()!=null&&
+                AimGeometry.Cone(origin,direction,target.transform.position,aim.castRange,aim.coneAngle);
+
+        private bool TimmyScratchContact(Health target,int castLife)
+        {
+            if(!TimmyScratchValid(target,castLife,false)||!SharkSight(target))return false;
+            if(HeroCombatRules.TargetDistance(transform.position,target)<=TimmyBalance.ScratchContactRange)return true;
+            HeroLocomotion other=target.GetComponent<HeroLocomotion>();
+            float fraction;
+            return AimGeometry.Sweep(locomotion.FrameStartPosition,transform.position,
+                other!=null?other.FrameStartPosition:target.transform.position,target.transform.position,
+                TimmyBalance.ScratchContactRange,out fraction);
         }
 
         private bool TimmyScratchValid(Health target,int castLife,bool requireContact=true)
@@ -57,18 +76,23 @@ namespace Alterverse.Characters
                 (target.DamageGate==null||target.DamageGate())&&(!requireContact||SharkSight(target));
         }
 
-        private IEnumerator TimmyScratch(Health target,Vector3 jumpPoint,int castLife)
+        private IEnumerator TimmyScratch(Health target,Vector3 jumpPoint,Vector3 fieldOrigin,Vector3 fieldDirection,AimSpec aim,int castLife)
         {
-            yield return new WaitForSeconds(TimmyBalance.ScratchWindup);
+            float warningEnds=Time.time+TimmyBalance.ScratchWindup;
+            while(Time.time<warningEnds)
+            {
+                // Leaving the original field revokes this victim for the whole
+                // cast, including a later return. The directional leap remains.
+                if(target!=null&&!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim))target=null;
+                yield return null;
+            }
             if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))
             {EndTimmyScratch();yield break;}
             Vector3 from=transform.position;
             // An enemy leaving acquisition range does not cancel the committed
             // leap. Continue in the chosen direction, without any target hit.
-            if(!ValidTarget(target,TimmyBalance.ScratchRange)||!SharkSight(target))target=null;
-            // Refresh once at actual takeoff after the warning. The leap then
-            // remains fixed and dodgeable; it never steers after the target.
-            Vector3 endPoint=AimGeometry.ClampPoint(from,target!=null?target.transform.position:jumpPoint,TimmyBalance.ScratchRange);
+            if(!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim)||!SharkSight(target))target=null;
+            Vector3 endPoint=AimGeometry.ClampPoint(from,target!=null?target.transform.position:jumpPoint,aim.castRange);
             Vector3 approach=AimGeometry.Flat(endPoint-from);
             if(target!=null)endPoint-=AimGeometry.Direction(approach)*Mathf.Min(TimmyBalance.ScratchStandOff,approach.magnitude*.5f);
             bool touching=target!=null&&TimmyScratchValid(target,castLife);
@@ -76,19 +100,40 @@ namespace Alterverse.Characters
             {EndTimmyScratch();yield break;}
             HeroCombatAudio.Cast(gameObject,3);
             if(!touching)HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,3,TimmyBalance.ScratchLeapSeconds);
-            float leapDeadline=Time.time+TimmyBalance.ScratchLeapSeconds+.1f;
+            float leapEnds=Time.time+TimmyBalance.ScratchLeapSeconds;
+            float leapDeadline=leapEnds+.1f;
+            bool connected=touching;
             while(locomotion.IsDashing&&Time.time<leapDeadline)
             {
                 if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))
                 {locomotion.ResetMotion();EndTimmyScratch();yield break;}
-                // Connect when the selected body is reached along the path,
-                // instead of jumping past it and checking only the endpoint.
-                if(TimmyScratchValid(target,castLife))
-                {locomotion.ResetMotion();break;}
+                if(target!=null&&!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim))target=null;
+                if(TimmyScratchContact(target,castLife))
+                {connected=true;locomotion.ResetMotion();break;}
+                if(target!=null&&SharkSight(target))
+                {
+                    // Follow the chosen victim only while it remains inside
+                    // the original release field. Keep the original deadline.
+                    Vector3 delta=AimGeometry.Flat(target.transform.position-transform.position);
+                    Vector3 destination=target.transform.position-AimGeometry.Direction(delta)*Mathf.Min(TimmyBalance.ScratchStandOff,delta.magnitude*.5f);
+                    locomotion.RetargetDash(destination,Mathf.Max(0f,leapEnds-Time.time));
+                }
                 yield return null;
             }
             if(locomotion.IsDashing){locomotion.ResetMotion();EndTimmyScratch();yield break;}
-            if(!TimmyScratchValid(target,castLife)){EndTimmyScratch();yield break;}
+            if(target!=null&&!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim))target=null;
+            if(!connected)connected=TimmyScratchContact(target,castLife);
+            if(!connected&&Time.time+.000001f>=leapEnds&&TimmyScratchValid(target,castLife,false)&&SharkSight(target))
+            {
+                // A long landing frame can move the victim after locomotion
+                // reached the previous sample. Finish at the live victim using
+                // the normal collision sweep; never teleport through a wall.
+                Vector3 delta=AimGeometry.Flat(target.transform.position-transform.position);
+                Vector3 step=delta-AimGeometry.Direction(delta)*Mathf.Min(TimmyBalance.ScratchStandOff,delta.magnitude*.5f);
+                locomotion.Move(step,40f,33f,false);
+                connected=TimmyScratchContact(target,castLife);
+            }
+            if(!connected||!TimmyScratchValid(target,castLife,false)){EndTimmyScratch();yield break;}
             HeroSkillVfx.EndTimmyLeap(gameObject);
             timmyHeldStatus=target.GetComponent<HeroCombatStatus>()??target.gameObject.AddComponent<HeroCombatStatus>();
             if(!timmyHeldStatus.TryRoot(this,TimmyBalance.ScratchHoldSeconds))

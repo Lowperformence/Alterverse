@@ -34,7 +34,7 @@
       0.7429999709129333,
       1.8249999284744263
     ],
-    "visor_opacity": 0.2,
+    "visor_opacity": 0.5,
     "visor_head_bound": true,
     "covered_face_vertices": 1244
   },
@@ -73,7 +73,7 @@
       0.7429999709129333,
       1.8249999284744263
     ],
-    "visor_opacity": 0.2,
+    "visor_opacity": 0.5,
     "visor_head_bound": true,
     "covered_face_vertices": 1244
   },

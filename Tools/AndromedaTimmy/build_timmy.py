@@ -16,7 +16,7 @@ parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--model-only',action='store_true',help='Rebuild model/preview without rewriting attack icons.')
 parser.add_argument('--prototype-icons',action='store_true',help='Render the old modeled icon prototypes into ArtSource only.')
 options=parser.parse_args(sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else [])
-VISOR_OPACITY=.20 # 80% transparent; a single curved surface avoids doubled tint.
+VISOR_OPACITY=.50 # 50% transparent; a single curved surface avoids doubled tint.
 VISOR_COLOR=(.78,.80,.82)
 for p in (ART, OUT, FBX.parent): p.mkdir(parents=True, exist_ok=True)
 bpy.ops.object.select_all(action='SELECT'); bpy.ops.object.delete(use_global=False)
@@ -375,7 +375,7 @@ for p,power,color in [((-3,-4,5),450,(.70,.86,1)),((3,-2,3),250,(1,.70,.42)),((1
     bpy.ops.object.light_add(type='AREA',location=p);light=bpy.context.object;light.data.energy=power;light.data.color=color;light.data.size=3;aim(light,(0,0,1))
 scene.render.filepath=str(ART/'AndromedaTimmy-preview.png');bpy.ops.render.render(write_still=True)
 if options.model_only or not options.prototype_icons:
-    print('TIMMY MODEL BUILD COMPLETE:',triangles,'triangles,',len(rig.data.bones),'bones, 80% transparent visor')
+    print('TIMMY MODEL BUILD COMPLETE:',triangles,'triangles,',len(rig.data.bones),'bones, 50% transparent visor')
     sys.exit(0)
 OUT=ART/'PrototypeIcons';OUT.mkdir(parents=True,exist_ok=True)
 for ob in [body,*weapons,visor,rig,*[o for o in bpy.data.objects if o.type=='EMPTY']]:ob.hide_render=True

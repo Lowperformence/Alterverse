@@ -8,7 +8,7 @@
   "body_renderers": 1,
   "claw_renderers": 2,
   "visor_renderers": 1,
-  "visor_opacity": 0.2,
+  "visor_opacity": 0.5,
   "visor_color": [
     0.78,
     0.8,
