@@ -576,6 +576,7 @@ namespace Alterverse.Visuals
                 case HeroId.Traveler:
                     TravelerOrb(actor,contact+Vector3.up*.56f,slot,slot==3?1.35f:.58f,
                         slot==3?.40f:.28f,HeroFxMotion.Expand);
+                    if(slot==3)TimmyDust(actor,center,radius,TimmyBalance.DustVfxSeconds,false,0);
                     return;
                 default:
                     Fx(HeroFxShape.Burst,contact,accent,size,life,HeroFxMotion.Expand,actor:actor);
