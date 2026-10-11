@@ -47,7 +47,13 @@ namespace Alterverse.Visuals
                 bool techDetails = skin.name == "DF_LimbTechDetails";
                 if (!anatomy && !details && !techDetails) continue;
                 Mesh source = skin.sharedMesh;
-                if (source == null || !source.isReadable) continue;
+                if (source == null) continue;
+                if (!source.isReadable)
+                {
+                    Debug.LogWarning("DF: Brakk arm cleanup could not read " + skin.name +
+                        ". Reimport AuthoredHeroes/Rook.fbx with importer version 13.", model);
+                    continue;
+                }
                 int left = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmL");
                 int right = Array.FindIndex(skin.bones, b => b != null && b.name == "ForearmR");
                 int upperL = Array.FindIndex(skin.bones, b => b != null && b.name == "UpperArmL");
@@ -323,3 +329,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

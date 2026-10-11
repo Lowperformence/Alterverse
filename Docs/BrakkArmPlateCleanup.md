@@ -19,7 +19,19 @@ instance, so Nerok and other heroes retain their own appearance. Gameplay values
 are unchanged. The fix applies to both the menu model and gameplay through the
 shared `AuthoredHeroPresentation.TryCreate` path; no FBX regeneration is required.
 
-Validation: C# syntax parsing and an executable fixture of the production triangle
-filter against the imported six-bracer material layout, generated detail layers and
-preserved anatomy/shoulder/hand/leg cases. Unity visual verification remains pending.
-Reload the hero preview or restart Play mode to recreate existing model instances.
+The follow-up fixes a separate import-cache gap: the upper-arm generation change
+landed after importer version 12, without increasing `AuthoredHeroImporter.GetVersion`.
+Unity can therefore retain previously generated bronze plates in the imported Rook
+asset. Version 13 forces the authored FBX assets to reimport after compilation.
+The import pass also skips Brakk's additional hand/knuckle plates, whose fitting
+bounds can overlap the forearm. The original black gauntlet chassis and red knuckles
+are separate authored geometry and remain intact. Leg detail generation is preserved.
+Unreadable meshes now report the skipped runtime cleanup instead of silently leaving
+the old arm overlays visible.
+
+Validation: executable production import-detail generation for Brakk and a control
+hero, production runtime triangle filtering, and C# syntax checks. Native Unity
+import/skinning and visual verification remain pending. Pull the change outside
+Play mode, allow the model reimport to finish, then restart Play mode to recreate
+existing model instances. A Play-mode restart alone does not invalidate FBX cache.
+

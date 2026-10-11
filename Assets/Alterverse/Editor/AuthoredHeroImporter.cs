@@ -13,7 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        public override uint GetVersion() => 12;
+        // Version 13 invalidates cached Rook models from the bronze arm-detail pass.
+        // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
+        public override uint GetVersion() => 13;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -101,3 +103,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
+

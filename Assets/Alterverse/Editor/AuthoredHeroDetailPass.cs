@@ -85,7 +85,10 @@ namespace Alterverse.EditorTools
                 if (hero != "Rook") AddPlates("UpperArm" + side, "Forearm" + side, 2, false);
                 if (hero != "Rook") AddPlates("Forearm" + side, "Hand" + side, heavy ? 3 : 2, false);
                 AddPlates("Thigh" + side, "Shin" + side, 2, false);
-                AddPlates("Hand" + side, null, 4, true);
+                // These extra knuckle plates follow the hand, but their fitting
+                // bounds can extend back into Brakk's forearm. His authored black
+                // gauntlet chassis and red knuckles already supply the hand armor.
+                if (hero != "Rook") AddPlates("Hand" + side, null, 4, true);
                 AddPlates("Shin" + side, "Foot" + side, 2, false);
             }
             if (vertices.Count == 0) return;
@@ -187,3 +190,4 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
+
