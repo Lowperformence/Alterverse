@@ -13,6 +13,8 @@ namespace Alterverse.Visuals
         readonly List<Material> ownedSkinMaterials = new List<Material>();
         Material goldForearms;
         static readonly Color SuitGold = new Color(.82f, .56f, .18f, 1f);
+        static readonly Color ReactorRed = new Color(1f, .025f, .012f, 1f);
+        const float ReactorEmissionStrength = 6f;
 
         public static void Apply(Transform model, HeroId hero)
         {
@@ -143,6 +145,71 @@ namespace Alterverse.Visuals
             }
             RemoveRemainingArmAttachments(model, owner);
             RemoveRigidArmAttachments(model);
+            LightSpinalReactor(model, owner);
+        }
+
+        // The source FBX merges the rear reactor, chest relic and eye into one
+        // Energy slot. Give only the chest-bound rear geometry its own emission.
+        static void LightSpinalReactor(Transform model, BrakkForearmTrim owner)
+        {
+            Shader shader = RuntimeShaderLibrary.Lit;
+            if (shader == null) return;
+            int litTriangles = 0;
+            foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh source = skin.sharedMesh;
+                if (source == null || !source.isReadable ||
+                    !skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal)) continue;
+                int chest = Array.FindIndex(skin.bones, b => b != null && b.name == "Chest");
+                Vector3[] points = source.vertices;
+                BoneWeight[] weights = source.boneWeights;
+                if (chest < 0 || weights.Length != points.Length) continue;
+                Matrix4x4 toModel = model.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                Material[] slots = skin.sharedMaterials;
+                var materials = new List<Material>();
+                for (int sub = 0; sub < source.subMeshCount; sub++)
+                    materials.Add(sub < slots.Length ? slots[sub] : null);
+                var triangles = new List<int[]>();
+                var reactors = new List<int[]>();
+                for (int sub = 0; sub < source.subMeshCount; sub++)
+                {
+                    int[] original = source.GetTriangles(sub);
+                    Material material = sub < slots.Length ? slots[sub] : null;
+                    string name = material == null ? "" : material.name.ToLowerInvariant();
+                    if (!name.StartsWith("energy") && !name.Contains("spinal reactor"))
+                    { triangles.Add(original); continue; }
+                    var kept = new List<int>();
+                    var reactor = new List<int>();
+                    for (int t = 0; t < original.Length; t += 3)
+                    {
+                        int a = original[t], b = original[t + 1], c = original[t + 2];
+                        var target = RearReactor(a) && RearReactor(b) && RearReactor(c) ? reactor : kept;
+                        target.Add(a); target.Add(b); target.Add(c);
+                    }
+                    if (reactor.Count == 0) { triangles.Add(original); continue; }
+                    var glow = new Material(material) { shader = shader, name = "DF_Brakk_SpinalReactor_FluorescentRed" };
+                    glow.SetColor("_BaseColor", ReactorRed);
+                    glow.SetColor("_EmissionColor", ReactorRed * ReactorEmissionStrength);
+                    glow.SetFloat("_Metallic", .1f);
+                    glow.SetFloat("_Smoothness", .4f);
+                    glow.EnableKeyword("_EMISSION");
+                    owner.ownedSkinMaterials.Add(glow);
+                    materials.Add(glow);
+                    triangles.Add(kept.ToArray()); reactors.Add(reactor.ToArray());
+                    litTriangles += reactor.Count / 3;
+                }
+                if (reactors.Count == 0) continue;
+                // Clone once; preserve vertices, UVs, weights, bind poses and bounds.
+                Mesh mesh = Instantiate(source); mesh.name = source.name + "_GlowingSpinalReactor";
+                mesh.subMeshCount = triangles.Count + reactors.Count;
+                for (int sub = 0; sub < triangles.Count; sub++) mesh.SetTriangles(triangles[sub], sub, false);
+                for (int sub = 0; sub < reactors.Count; sub++) mesh.SetTriangles(reactors[sub], triangles.Count + sub, false);
+                skin.sharedMesh = mesh; skin.sharedMaterials = materials.ToArray(); owner.ownedMeshes.Add(mesh);
+
+                bool RearReactor(int vertex) => Influence(weights[vertex], chest) > .95f &&
+                    toModel.MultiplyPoint3x4(points[vertex]).z < -.04f;
+            }
+            if (litTriangles == 0) Debug.LogWarning("DF: Brakk's rear spinal reactor could not be identified in the imported model.", model);
         }
 
         // Delete complete attachment components, including renamed/silver pieces and

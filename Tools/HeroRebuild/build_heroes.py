@@ -447,7 +447,8 @@ def build(hero,female,color,label):
   for s,k in [(-1,'L'),(1,'R')]:
    ellipsoid('DF_Gauntlet'+k,(s*.39,-.025,1.02),(.125,.135,.145),accent,'Hand'+k)
    for j in range(4):ellipsoid('Knuckle', (s*.39+(j-1.5)*.04,-.155,1.02),(.027,.033,.045),steel,'Hand'+k)
-  tube('Spinal reactor',[(0,.135,1.14),(0,.135,1.40)],.05,energy)
+  reactor_energy=mat('Brakk spinal reactor energy',(1,.025,.012),.1,.4,6)
+  tube('Spinal reactor',[(0,.135,1.14),(0,.135,1.40)],.05,reactor_energy)
  elif hero=='Traveler':
   cape('Traveler coat',1.22,.80,.28,accent);tube('DF_WeaponR',[(.41,-.06,.78),(.41,-.06,1.04)],.023,gold,'HandR')
   ellipsoid('Chronosphere',(.41,-.06,1.22),(.11,.08,.11),energy,'HandR')
