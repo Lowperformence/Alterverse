@@ -622,15 +622,9 @@ namespace Alterverse.Visuals
                     new[]{.11f,.15f,.18f,.12f});
                 Sculpt("Vambrace"+s,fore,new Vector3(0,-.31f,.02f),new Vector3(1.24f,1f,1.18f),jointMetal,arm);
 
-                // Keep Brakk broad, but reduce the shoulder armor to 50% of the previous size
-                // so the torso, head and gauntlets remain readable from the gameplay camera.
-                Plate("BrakkShoulder"+s,new Vector3(side*.63f,.45f,.01f),.34f,.23f,.26f,yellow,side*-10);
-                Bind("BrakkShoulder"+s,"Arm"+s);
-                Detail("BrakkShoulderBearing"+s,new Vector3(side*.58f,.41f,.16f),new Vector3(.17f,.17f,.09f),jointMetal,default,"Arm"+s);
-                Detail("BrakkShoulderBearingLight"+s,new Vector3(side*.58f,.41f,.212f),new Vector3(.07f,.07f,.025f),reactor,default,"Arm"+s,true);
-                Detail("BrakkElbowPiston"+s,new Vector3(side*.56f,.06f,.12f),new Vector3(.11f,.22f,.10f),edgeMetal,new Vector3(0,0,side*12),"Arm"+s);
-                Detail("BrakkShoulderStripe"+s,new Vector3(side*.66f,.47f,.15f),new Vector3(.125f,.0225f,.015f),blackMetal,
-                    new Vector3(0,0,side*-14),"Arm"+s);
+                // Brakk keeps only the arm surfaces; no shoulder armor, bearings,
+                // elbow pistons or mounted stripes are built.
+
             }
 
             // Small armored mech head with a narrow orange visor. No human features.
@@ -1101,5 +1095,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

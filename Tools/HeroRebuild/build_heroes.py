@@ -726,6 +726,12 @@ def build(hero,female,color,label):
     pivot=Vector((side*.18,-.015,.08))
     for v in o.data.vertices:
      delta=v.co-pivot;v.co=pivot+Vector((delta.x*.80,delta.y*.80,delta.z*.90))
+ # Brakk's upper arms, forearms and shoulders retain only the anatomical body.
+ # Remove all attached arm objects before skin binding and export, independent
+ # of object/material names. Anatomical hand/weapon objects remain on Hand bones.
+ if hero=='Rook':
+  removed=[o for o in parts if o!=body and o.get('bone','').startswith(('UpperArm','Forearm'))]
+  for o in removed:parts.remove(o);bpy.data.objects.remove(o,do_unlink=True)
  # Remove the shared shoulder silhouette from robe and recon classes.
  if hero in ['Nyra','Elyra','Mira','Traveler']:
   removed=[o for o in parts if o.name.startswith('Layered pauldron')]
@@ -861,4 +867,5 @@ stats=[]
 for row in HEROES:
  if not selected or row[0] in selected:stats.append(build(*row))
 with open(os.path.join(ROOT,'manifest.json'),'w') as f:json.dump(stats,f,indent=2)
+
 

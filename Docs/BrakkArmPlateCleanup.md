@@ -1,57 +1,35 @@
-# Brakk Orun: embedded arm plates
+# Brakk Orun: bare upper arms, forearms and shoulders
 
-The highlighted arm plates came from two layers that survived the earlier cleanup:
+All additional geometry on Brakk's upper arms, forearms and shoulders is removed.
+This includes bronze/enamel bracers, silver shoulder plates, grey fabric-material
+shoulder cages, heat fins, generated armor panels, bearings, elbow pistons,
+stripes and fasteners. There is no fallback that lifts or preserves arm plates.
 
-- `DF_Anatomy` contains three imported bracer shells per arm. Only the first uses
-  `Champagne metal`; the other two use `Signature enamel`. The old filter removed
-  only the metal shell and recolored the four surviving enamel shells gold.
-- `HeroLimbTechDetails` generated upper-arm panels after import. The old runtime
-  cleanup removed its forearm panels but retained its upper-arm panels and fasteners.
+`BrakkForearmTrim` runs on Brakk's instance in the shared menu/gameplay creation
+path. The connected anatomical body retains its vertices, UVs, skin weights and
+existing skin/fabric materials and color treatment. Separate rigid arm components
+that share a fabric material are classified before removal. Other added surfaces
+are removed independently of their color or renderer name. Complete attachment
+components are matched across FBX normal/UV seams, including blended shoulder and
+wrist weights, so residual sides and back faces do not survive.
 
-`BrakkForearmTrim` now removes rigid forearm triangles in both imported bracer
-materials and cleans both upper-arm and forearm triangles from the tech-detail layer.
-`HeroLimbTechDetails` skips generating those arm panels for `HeroId.Rook` while
-retaining its leg details. Existing articulated-detail cleanup remains in place.
+Rigid renderers attached directly to UpperArm/Forearm bones are disabled without
+removing bones or pose controls. The hand/weapon-grip branches remain functional.
+Nerok shares the Rook source model: cleanup is restricted to `HeroId.Rook` and
+clones meshes/materials per instance. Source assets and other heroes are unchanged.
 
-The material and bone checks preserve the fabric anatomy, grey shoulder cages,
-gauntlets, leg armor, skeleton and animation bindings. Meshes are cloned per Brakk
-instance, so Nerok and other heroes retain their own appearance. Gameplay values
-are unchanged. The fix applies to both the menu model and gameplay through the
-shared `AuthoredHeroPresentation.TryCreate` path; no FBX regeneration is required.
+The procedural Brakk builder no longer creates shoulder armor, bearings, elbow
+pistons or shoulder stripes. The Blender source builder also excludes every
+non-anatomical UpperArm/Forearm object for Rook before skin binding and export.
+Existing import/runtime limb-detail generators already skip Brakk's arms.
 
-The follow-up fixes a separate import-cache gap: the upper-arm generation change
-landed after importer version 12, without increasing `AuthoredHeroImporter.GetVersion`.
-Unity can therefore retain previously generated bronze plates in the imported Rook
-asset. Version 13 forces the authored FBX assets to reimport after compilation.
-The import pass also skips Brakk's additional hand/knuckle plates, whose fitting
-bounds can overlap the forearm. The original black gauntlet chassis and red knuckles
-are separate authored geometry and remain intact. Leg detail generation is preserved.
-Unreadable meshes now report the skipped runtime cleanup instead of silently leaving
-the old arm overlays visible.
-
-## Remaining embedded plates
-
-The follow-up also handles imported bronze/enamel shells assigned to `UpperArm`,
-not just `Forearm`, and cached detail renderers with name suffixes. Bronze overlays
-are recognized by material family or bronze color; fabric, skin, grey shoulder cages
-and silver shoulder plates are excluded from removal.
-
-For any remaining recognizable bronze arm overlay (including renamed renderers and
-blended wrist weights), a runtime fallback fits it outside the actual fabric anatomy.
-Triangle-connected components are welded in the lookup across FBX normal/UV seams.
-Each whole plate translates along its outward radial direction until its innermost
-vertex clears the fabric support plane, with a small margin. Sparse fabric rings use
-the conservative whole-limb envelope. Plate topology, thickness and bone weights stay
-unchanged; already clear plates do not move. All mesh changes belong only to Brakk's
-instance, and the source mesh shared with Nerok remains unchanged.
-
-Validation: the complete production `BrakkForearmTrim` compiles and passes 343
-executable fixture checks, including both arms, FBX seam duplication, blended wrist
-weights, renamed bronze materials, sparse fabric rings, rigid imported upper-arm
-shells, suffixed cached detail renderers, unchanged fabric/gauntlets/grey shoulders,
-and source-mesh isolation from Nerok. The previous production version fails the
-embedded-plate clearance case. Native Unity import/skinning and visual verification
-remain pending. Pull the change outside
-Play mode, allow the model reimport to finish, then restart Play mode to recreate
-existing model instances. A Play-mode restart alone does not invalidate FBX cache.
-
+Pull outside Play mode and restart Play mode after compilation to recreate the
+hero instances. Runtime filtering works on readable imported models without a
+new FBX export. Unity/device rendered verification remains pending.
+Validation: the production cleanup compiles and passes fixture checks for silver,
+grey, bronze/enamel, dark and fabric-material attachments on both upper/lower arms;
+merged anatomical/accessory meshes; normal/UV seams; blended accessory weights;
+source mesh and body/material preservation; repeated application; and Nerok/hand
+isolation. The pre-change cleanup fails on retained silver shoulder plates. C#
+syntax and Blender-generator Python syntax/filter checks also pass. The fixture
+uses Unity stubs; it is not a rendered Unity acceptance test.
