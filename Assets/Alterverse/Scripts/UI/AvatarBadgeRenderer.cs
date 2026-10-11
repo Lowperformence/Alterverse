@@ -22,7 +22,7 @@ namespace Alterverse.UI
                     texture=Resources.Load<Texture2D>("Avatars/Avatar"+avatarId);
                     extra[avatarId]=texture;
                 }
-                if(texture!=null){Color previous=GUI.color;GUI.color=Color.white;GUI.DrawTexture(rect,texture,ScaleMode.ScaleToFit,true);GUI.color=previous;return;}
+                if(texture!=null){Color previous=GUI.color;GUI.color=Color.white;FrontEndTheme.DrawTexture(rect,texture,ScaleMode.ScaleToFit,true);GUI.color=previous;return;}
             }
             if(!loaded){atlas=Resources.Load<Texture2D>("Avatars/CosmicAtlas");loaded=true;}
             if(atlas==null)return;
@@ -32,7 +32,7 @@ namespace Alterverse.UI
             // Inset sample avoids adjacent-cell filtering. The atlas uses top-to-bottom art order.
             const float inset=.004f;
             Rect uv=new Rect(column/3f+inset,1-(row+1)/3f+inset,1/3f-2*inset,1/3f-2*inset);
-            Color before=GUI.color;GUI.color=Color.white;GUI.DrawTextureWithTexCoords(rect,atlas,uv);GUI.color=before;
+            Color before=GUI.color;GUI.color=Color.white;FrontEndTheme.DrawTextureWithTexCoords(rect,atlas,uv);GUI.color=before;
         }
 
         private static void DrawBetaCrown(Rect rect)
@@ -54,7 +54,7 @@ namespace Alterverse.UI
 
             betaLabel??=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,fontSize=10};
             Color before=GUI.color;GUI.color=Color.white;
-            GUI.Label(new Rect(rect.x,rect.yMax-rect.height*.28f,rect.width,rect.height*.20f),"BETA",betaLabel);
+            FrontEndTheme.DrawLabel(new Rect(rect.x,rect.yMax-rect.height*.28f,rect.width,rect.height*.20f),"BETA",betaLabel);
             GUI.color=before;
         }
     }

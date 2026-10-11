@@ -54,27 +54,27 @@ namespace Alterverse.UI
 
             // Clip everything to the authored card, then deliberately overscan the backdrop a little.
             // This prevents thin uncovered borders on differently shaped hero cards while keeping the hero undistorted.
-            GUI.BeginGroup(rect);
+            FrontEndTheme.BeginGroup(rect);
             Rect local=new Rect(0f,0f,rect.width,rect.height);
             Color oldColor=GUI.color;
             GUI.color=new Color(.010f,.014f,.024f,1f);
-            GUI.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
+            FrontEndTheme.DrawTexture(local,Texture2D.whiteTexture,ScaleMode.StretchToFill,false);
             GUI.color=oldColor;
 
             if(BackgroundImage!=null)
             {
                 float bleed=Mathf.Max(2f,Mathf.Min(rect.width,rect.height)*.025f);
                 Rect backdropRect=new Rect(-bleed,-bleed,rect.width+bleed*2f,rect.height+bleed*2f);
-                GUI.DrawTexture(backdropRect,BackgroundImage,ScaleMode.ScaleAndCrop,false);
+                FrontEndTheme.DrawTexture(backdropRect,BackgroundImage,ScaleMode.ScaleAndCrop,false);
             }
 
             if(Image!=null)
             {
                 float heroBleed=Mathf.Min(rect.width,rect.height)*.015f;
                 Rect heroRect=new Rect(-heroBleed,-heroBleed,rect.width+heroBleed*2f,rect.height+heroBleed*2f);
-                GUI.DrawTexture(heroRect,Image,ScaleMode.ScaleToFit,true);
+                FrontEndTheme.DrawTexture(heroRect,Image,ScaleMode.ScaleToFit,true);
             }
-            GUI.EndGroup();
+            FrontEndTheme.EndGroup();
         }
 
         public void Present(HeroId hero, bool visible, bool? skinOverride=null,bool? weaponOverride=null,

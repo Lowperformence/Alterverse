@@ -58,6 +58,7 @@ namespace Alterverse.UI
 
         private static string Primary(HeroId hero,int slot,AbilitySpec spec)
         {
+            if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
             if(hero==HeroId.Mira&&slot==1)return $"{spec.Power:0} HEAL";
@@ -117,7 +118,7 @@ namespace Alterverse.UI
             {
                 0=>"Place an area burst; enemies can escape during the warning.",
                 1=>"Area burst that slows enemies 35% for 2s.",
-                2=>"Short phase dash up to 1.8m.",
+                2=>$"Phase dash up to {HeroAbilityKit.LoadoutFor(HeroId.Elyra).E.Range:0.#}m; gain {HeroAbilityKit.PhaseFoldShield:0} shield for {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s.",
                 _=>"Large delayed field: 72 damage and 45% slow for 2s."
             },
             HeroId.Mira=>slot switch

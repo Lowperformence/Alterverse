@@ -7,7 +7,7 @@ using UnityEngine;
 using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Visuals;
-class Regression {
+partial class Regression {
  static int assertions,cases;static StreamWriter csv;static string fixture;
  static readonly int[] parents={-1,0,1,2,2,4,5,2,7,8,0,10,11,0,13,14};
  class Rig {public GameObject actor;public Transform model;public HeroVisualMotion motion;public MeleeBasicAttackAnimation melee;
@@ -119,7 +119,7 @@ class Regression {
  static void Main(string[] args){fixture=args[0];csv=new StreamWriter(args[1]);csv.WriteLine("hero,rig,direction,run,max_left_shoulder_deviation_from_rest_deg,max_right_shoulder_deviation_from_rest_deg,max_left_elbow_deviation_from_rest_deg,max_right_elbow_deviation_from_rest_deg");
   Console.WriteLine("Isolated C# regression: unmodified HeroUpperBodyGait + full MeleeBasicAttackAnimation + original full CombatMotion.");
   Console.WriteLine("Substitute Unity Transform/math implemented with System.Numerics; clip library and presentation grips are stubs. No Unity, renderer or real attack-clip test.");
-  try{Sampler();Steering();Console.WriteLine("PASS sampler: eight profiles, counterphase, exclusions, zero weight, forward/back/strafe and continuous 360-degree steering.");ProfileMatrix();Console.WriteLine("PASS final pipeline: "+cases+" evaluations, rotated synthetic axes and native Nerok source rest, parent rotation, imported 1.342/1.32 scale.");
+  try{ShieldGuardCases();Sampler();Steering();Console.WriteLine("PASS sampler: eight profiles, counterphase, exclusions, zero weight, forward/back/strafe and continuous 360-degree steering.");ProfileMatrix();Console.WriteLine("PASS final pipeline: "+cases+" evaluations, rotated synthetic axes and native Nerok source rest, parent rotation, imported 1.342/1.32 scale.");
    Lifecycle();Console.WriteLine("PASS lifecycle: drift, pause, zero weight, idle body, grounding suspend, ability early return, action fade/recovery, shield/rifle exceptions.");
    DirectGaitRepeat();Console.WriteLine("PASS repeated direct EvaluatePose: all gait-owned arm chains remain stable without Authored rebase; existing left shield IK excluded.");
    Solver();Console.WriteLine("PASS original CombatMotion.Solve: native Nerok source-rest reach and wrist preservation.");

@@ -1,11 +1,45 @@
 using System;
 using Alterverse.Characters;
 using Alterverse.Combat;
+using Alterverse.Multiplayer;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 partial class TimmyMovementRegression
 {
+    static void PhaseFoldCases()
+    {
+        foreach(int fps in new[]{30,60,120})foreach(Vector3 direction in new[]{Vector3.forward,Vector3.right,-Vector3.forward})
+        {
+            Reset();var actor=Hero(HeroId.Elyra,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*8);
+            var abilities=actor.GetComponent<PlayerHeroAbilities>();var health=actor.GetComponent<Health>();
+            Near(abilities.PreviewRange(2),2.3f,"Phase Fold preview "+fps);
+            Near(actor.GetComponent<HeroMotor>().MoveSpeed,5.9f*.93f*HeroCombatProfile.GlobalMoveSpeedMultiplier,"Ione seven percent speed reduction");
+            Vector3 start=actor.transform.position;
+            Check(abilities.CastAimed(2,new AimPose(direction,start+direction*99)),"Phase Fold accepts directional dash "+fps);
+            Near(health.TemporaryShield,20,"Phase Fold grants twenty shield once");
+            Near(abilities.RemainingFor(2),16,"Phase Fold cooldown");
+            Check(abilities.Describe(2).Contains("20 shield")&&abilities.Describe(2).Contains("2.3m"),"HUD describes range and shield");
+            Check(Alterverse.UI.HeroAttackCatalog.For(HeroId.Elyra)[3].Stats.Contains("20 SHIELD"),"menu presents shield as protection");
+            health.TakeDamage(7);Near(health.Current,1000,"Phase Fold shield absorbs damage");Near(health.TemporaryShield,13,"only absorbed damage consumes shield");
+            Check(!abilities.CastAimed(2,new AimPose(direction,start+direction)),"cooldown blocks repeat Phase Fold");
+            Near(health.TemporaryShield,13,"rejected cast cannot refill shield");
+            Run(.3f,fps,actor,enemy);
+            Near(Vector3.Dot(actor.transform.position-start,direction),2.3f,"production Phase Fold travels exactly 2.3m "+fps);
+            Near(Total(enemy),1000,"Phase Fold causes no enemy damage");
+        }
+        Reset();var stunned=Hero(HeroId.Elyra,0,Vector3.zero);
+        stunned.GetComponent<HeroCombatStatus>().Stun(.5f);
+        Check(!stunned.GetComponent<PlayerHeroAbilities>().CastE(),"stun blocks Phase Fold");
+        Near(stunned.GetComponent<Health>().TemporaryShield,0,"stunned Phase Fold grants no shield");
+        Reset();var client=Hero(HeroId.Elyra,0,Vector3.zero);
+        CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;
+        Check(!client.GetComponent<HeroAbilityExecution>().TryCastAimed(2,new AimPose(Vector3.forward,Vector3.forward*2.3f)),"client cannot grant authoritative Phase Fold shield");
+        Near(client.GetComponent<Health>().TemporaryShield,0,"client never duplicates the host shield");
+        Reset();Near(HeroCombatProfile.StatsFor(HeroId.Kaelon).MoveSpeed,6f,"Auren speed preserved");
+        Near(HeroCombatProfile.StatsFor(HeroId.Nyra).MoveSpeed,5.58f,"Sivras speed preserved");
+    }
+
     static float BasicDamage(HeroId hero)=>HeroIdentity.AttackDamage(hero)*(hero==HeroId.Rook?1.05f:1f);
     static void BasicMovementCases()
     {

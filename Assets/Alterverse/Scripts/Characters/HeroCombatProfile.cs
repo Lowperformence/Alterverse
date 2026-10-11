@@ -31,7 +31,7 @@ namespace Alterverse.Characters
             HeroId.Timmy=>new HeroCombatStats(TimmyBalance.BasicRange,TimmyBalance.BasicInterval,TimmyBalance.RawMoveSpeed,.8f,0f),
             HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,6.0f,1f,.8f),
             HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,5.58f,.3f,.05f),
-            HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f,.85f,.05f),
+            HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f*.93f,.85f,.05f),
             HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
             HeroId.Rook=>new HeroCombatStats(2.5f,.9f,6.9f,.45f,.7f),
             HeroId.Traveler=>new HeroCombatStats(6.2f,.92f,5.67f,.62f,.10f),

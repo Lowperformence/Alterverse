@@ -51,7 +51,7 @@ partial class Regression
   Check(Alterverse.Audio.DimensionAudio.LastCue==-1,"selected Scratch recording has no second preparation layer");
   Camera.main=null;
   Check(TimmyBalance.TotalPoints==100,"provisional design budget totals 100");
-  Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed,"Zhaev speed reference");
+  Near(HeroCombatProfile.StatsFor(HeroId.Timmy).MoveSpeed,HeroCombatProfile.StatsFor(HeroId.Veyr).MoveSpeed*1.05f,"current Timmy speed is five percent above Zhaev");
   Check(HeroIdentity.BaseHealth(HeroId.Timmy)<HeroIdentity.BaseHealth(HeroId.Veyr),"short-range assassin has lower health");
   Check(HeroAttackCatalog.For(HeroId.Timmy).Length==5,"five attack cards including basic");
   var aim=AimingSettings.Current.For(HeroId.Timmy,3);

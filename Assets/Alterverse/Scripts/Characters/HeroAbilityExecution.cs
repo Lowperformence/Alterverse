@@ -125,6 +125,11 @@ namespace Alterverse.Characters
                     self.AddShield(30f,2.25f,false);
                     HeroSkillVfx.Support(gameObject,self,true,2.25f);
                 }
+                else if(hero==HeroId.Elyra&&slot==2)
+                {
+                    self.AddShield(HeroAbilityKit.PhaseFoldShield,HeroAbilityKit.PhaseFoldShieldSeconds,false);
+                    HeroSkillVfx.Support(gameObject,self,true,HeroAbilityKit.PhaseFoldShieldSeconds);
+                }
             }
             else if (hero == HeroId.Mira && (slot == 1 || slot == 2))
             {

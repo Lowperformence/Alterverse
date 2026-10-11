@@ -136,7 +136,7 @@ namespace Alterverse.UI
                 if(GUI.Button(rect,GUIContent.none,GUIStyle.none)&&!state.Dragging)
                 {state.Selected=card.Definition.Id;state.DetailOpen=true;state.Message="";Alterverse.Audio.UiSoundRouter.Confirm();}
             }
-            GUI.EndScrollView();
+            FrontEndTheme.EndScrollView();
             theme.Label(new Rect(grid.x+12,grid.yMax-28,grid.width-24,22),ownedOnly?"ACCOUNT COLLECTION  •  EQUIP PER HERO":balanceLabel,theme.Small,true);
             if(!compact)DrawDetail(theme,detail,state,ownedOnly,showcase);
         }
@@ -227,7 +227,7 @@ namespace Alterverse.UI
                 if(GUI.Button(rect,GUIContent.none,GUIStyle.none)&&!bag.Dragging){selectedItem=slot.Item;bag.DetailOpen=true;bag.Message="";}
             }
             if(bagSlots.Count==0)theme.Label(new Rect(12,12,viewport.width-24,80),"Your bag is empty.\nEarn battle items in matches or visit Battle Supply.",theme.Body,true);
-            GUI.EndScrollView();
+            FrontEndTheme.EndScrollView();
             if(!compact)BagDetail(theme,new Rect(grid.xMax+16,area.y,area.width-width-16,area.height));
         }
         private void BagDetail(FrontEndTheme theme,Rect rect)
@@ -266,7 +266,7 @@ namespace Alterverse.UI
                 if(state.Dragging){GUIUtility.hotControl=0;e.Use();state.Dragging=false;}
             }
             state.Scroll.y=Mathf.Clamp(state.Scroll.y,0,Mathf.Max(0,contentHeight-viewport.height));
-            state.Scroll=GUI.BeginScrollView(viewport,state.Scroll,new Rect(0,0,viewport.width-20,Mathf.Max(viewport.height,contentHeight)),false,false);
+            state.Scroll=FrontEndTheme.BeginScrollView(viewport,state.Scroll,new Rect(0,0,viewport.width-20,Mathf.Max(viewport.height,contentHeight)),false,false);
         }
         private static void Outline(Rect r,Color color,float thickness)
         {

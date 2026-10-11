@@ -101,7 +101,7 @@ partial class Regression
     if(strafe)actor.transform.position=Vector3.right*speed*Mathf.Min(frame,10)/60f;
     Step(1f/60);
    }
-   Near(Total(enemy),982,"stationary captured point connects "+(strafe?"after caster strafe":"without caster motion"));
+   Near(Total(enemy),1000-HeroAbilityKit.LoadoutFor(HeroId.Mira).Q.Power,"stationary captured point connects "+(strafe?"after caster strafe":"without caster motion"));
   }
   if(print)Console.WriteLine("FIXED,16-deg stationary target inside 35-deg cone connects after both 0 and 1000 ms holds; caster 0.765-m strafe during Mira Q windup also connects; no target-acquisition wait.");
  }

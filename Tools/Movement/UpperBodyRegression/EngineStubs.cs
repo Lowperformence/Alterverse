@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NQ = System.Numerics.Quaternion;
 using NV = System.Numerics.Vector3;
 namespace UnityEngine {
+ public class Object {}
  [AttributeUsage(AttributeTargets.Class)] public class DisallowMultipleComponent:Attribute {}
  [AttributeUsage(AttributeTargets.Class)] public class DefaultExecutionOrder:Attribute { public DefaultExecutionOrder(int n){} }
  public static class Time { public static float time, deltaTime=1f/60f; }
@@ -56,7 +57,7 @@ namespace UnityEngine {
   public static Quaternion LookRotation(Vector3 f,Vector3 u){f=f.normalized;Vector3 r=Vector3.Cross(u,f).normalized;u=Vector3.Cross(f,r);
    var m=new System.Numerics.Matrix4x4(r.x,r.y,r.z,0,u.x,u.y,u.z,0,f.x,f.y,f.z,0,0,0,0,1);return From(NQ.CreateFromRotationMatrix(m));}
  }
- public class Component { public GameObject gameObject; public Transform transform=>gameObject.transform;
+ public class Component : Object { public GameObject gameObject; public Transform transform=>gameObject.transform;
   public T GetComponent<T>() where T:class{return gameObject.GetComponent<T>();}
   public T GetComponentInChildren<T>() where T:class{return gameObject.GetComponentInChildren<T>();}
   public T[] GetComponentsInChildren<T>(bool includeInactive=false) where T:class{return gameObject.GetComponentsInChildren<T>(includeInactive);}

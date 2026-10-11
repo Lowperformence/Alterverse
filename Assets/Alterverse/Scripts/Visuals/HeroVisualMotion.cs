@@ -178,7 +178,7 @@ namespace Alterverse.Visuals
                 enabled=false;
                 return;
             }
-            Debug.Log("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+"). Guard v2: one shoulder/weapon pose owner.",this);
+            HeroVisualDiagnostics.Trace("[Alterverse Movement] HeroVisualMotion active on '"+name+"' ("+identity?.Hero+"). Guard v2: one shoulder/weapon pose owner.",this);
             SetupCloth();
             basePosition=root.localPosition;rootScale=root.localScale;displayedScale=rootScale;displayedRotation=root.localRotation;lastPosition=transform.position;
             PresentedPosition=transform.position;PresentedRotation=transform.rotation;
@@ -617,7 +617,8 @@ namespace Alterverse.Visuals
                     -turnCounter*.16f-gaitHipYaw*.5f+hipTwist*.28f,
                     -sway*.24f-attackRoll*.30f+hitFromSide*hitWeight*3f);
                 // Animate the shared joints so the chest, shoulders, neck and face move together.
-                float idleRock=attacking||Dashing||hero==HeroId.Nyra?0f:1f-strideWeight;
+                // Auren braces a rigid shield; chest rocking must not tilt that guard each frame.
+                float idleRock=attacking||Dashing||hero==HeroId.Nyra||hero==HeroId.Kaelon?0f:1f-strideWeight;
                 float rockForward=HeroIdleBreath.Sample(t+(int)hero*.31f)*idleRock;
                 float rockSide=Mathf.Sin(t*1.2f+Mathf.PI*.5f)*idleRock;
                 Quaternion upperSpinePose=Quaternion.Euler(-lean*.24f+attackPitch*.72f-recoil*.85f-hitTorso*.90f+rockForward*1.2f+upperGait.chestPitch,

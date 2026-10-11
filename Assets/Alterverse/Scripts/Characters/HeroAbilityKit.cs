@@ -20,6 +20,8 @@ namespace Alterverse.Characters
     public sealed class HeroAbilityKit : MonoBehaviour
     {
         public const float UltimateInitialLock = 45f;
+        public const float PhaseFoldShield = 20f;
+        public const float PhaseFoldShieldSeconds = 2.25f;
         public HeroId Hero { get; private set; }
         public AbilitySpec Passive { get; private set; }
         public AbilitySpec Q { get; private set; }
@@ -67,7 +69,7 @@ namespace Alterverse.Characters
                     new("Field geometry",0,0,0),
                     new("Orbit Fracture",8,55,7.3f,2f,.38f),
                     new("Invert Field",12,26,6.5f,2.6f,.46f),
-                    new("Phase Fold",16,0,1.8f),
+                    new("Phase Fold",16,0,2.3f),
                     new("Impossible Center",58,72,7f,2.5f,.68f)),
                 HeroId.Mira=>new HeroAbilityLoadout(
                     new("Living memory",0,0,0),

@@ -13,7 +13,7 @@ namespace Alterverse.UI
             if (icons[index] == null) icons[index] = Build(index);
             Color before = GUI.color;
             GUI.color *= color;
-            GUI.DrawTexture(rect, icons[index], ScaleMode.ScaleToFit, true);
+            FrontEndTheme.DrawTexture(rect, icons[index], ScaleMode.ScaleToFit, true);
             GUI.color = before;
         }
 

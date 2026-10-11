@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_Name: MenuUiVariants
+  m_Shaders:
+  - first: {fileID: 4800000, guid: 96246b1ead49a4c5a996fd477bc5a117, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: UNITY_UI_ALPHACLIP UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: GRADATION_COLOR2
+        passType: 0
+      - keywords: GRADATION_COLOR2 UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: GRADATION_COLOR2 UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: GRADATION_COLOR2 UNITY_UI_ALPHACLIP UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: TRANSITION_SHINY
+        passType: 0
+      - keywords: TRANSITION_SHINY UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: TRANSITION_SHINY UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: TRANSITION_SHINY UNITY_UI_ALPHACLIP UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: GRADATION_COLOR2 TRANSITION_SHINY
+        passType: 0
+      - keywords: GRADATION_COLOR2 TRANSITION_SHINY UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: GRADATION_COLOR2 TRANSITION_SHINY UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: GRADATION_COLOR2 TRANSITION_SHINY UNITY_UI_ALPHACLIP UNITY_UI_CLIP_RECT
+        passType: 0
+  - first: {fileID: 4800000, guid: ecfa8f5732b504ef98fba10aa18d0326, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: UNITY_UI_ALPHACLIP
+        passType: 0
+      - keywords: UNITY_UI_CLIP_RECT
+        passType: 0
+      - keywords: UNITY_UI_ALPHACLIP UNITY_UI_CLIP_RECT
+        passType: 0

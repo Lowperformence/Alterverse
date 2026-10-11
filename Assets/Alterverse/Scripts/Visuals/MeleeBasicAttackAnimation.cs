@@ -189,7 +189,7 @@ namespace Alterverse.Visuals
             if (!reportedStandingPose && identity.Hero != HeroId.Nyra)
             {
                 reportedStandingPose = true;
-                Debug.Log("DF: imported rest pose RESET v5 active on " + identity.DisplayName +
+                HeroVisualDiagnostics.Trace("DF: imported rest pose RESET v5 active on " + identity.DisplayName +
                     (identity.Hero == HeroId.Kaelon ? " (left shield arm preserved)" : "") + ".", this);
             }
         }

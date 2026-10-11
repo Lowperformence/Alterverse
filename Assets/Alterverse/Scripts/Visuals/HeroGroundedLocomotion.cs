@@ -84,7 +84,7 @@ namespace Alterverse.Visuals
             }
             if (!Ready) { Debug.LogError("DF: grounded locomotion cannot find both visible leg chains on " + name, this); return; }
             floorOffset = Mathf.Min(left.foot.position.y - left.sole, right.foot.position.y - right.sole) - transform.position.y;
-            Debug.Log("DF: grounded locomotion v3 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
+            HeroVisualDiagnostics.Trace("DF: grounded locomotion v3 active on " + name + "; real leg length " + LegLength.ToString("F2") + "m", this);
         }
         private Leg Capture(Transform hip, Transform knee, Transform foot)
         {
@@ -134,7 +134,7 @@ namespace Alterverse.Visuals
             left.solePoints = new System.Collections.Generic.List<Vector3>(pointsL).ToArray();
             right.solePoints = new System.Collections.Generic.List<Vector3>(pointsR).ToArray();
             left.sole = SoleExtent(left); right.sole = SoleExtent(right);
-            Debug.Log("DF: grounded locomotion v3 bind-matrix soles on " + name +
+            HeroVisualDiagnostics.Trace("DF: grounded locomotion v3 bind-matrix soles on " + name +
                 "; points L/R=" + left.solePoints.Length + "/" + right.solePoints.Length +
                 "; sole L/R=" + left.sole.ToString("F3") + "/" + right.sole.ToString("F3") +
                 "m; rejected=" + rejected + "; unreadable=" + unreadable, this);
@@ -250,7 +250,7 @@ namespace Alterverse.Visuals
                 if (!reportedAuthoredContacts)
                 {
                     reportedAuthoredContacts = true;
-                    Debug.Log("DF: authored locomotion foot trajectories and contacts active on " + name, this);
+                    HeroVisualDiagnostics.Trace("DF: authored locomotion foot trajectories and contacts active on " + name, this);
                 }
                 PlanAuthored(left, leftOffset, leftHint, leftContact, leftRotation, cycle);
                 PlanAuthored(right, rightOffset, rightHint, rightContact, rightRotation, Mathf.Repeat(cycle + .5f, 1f));

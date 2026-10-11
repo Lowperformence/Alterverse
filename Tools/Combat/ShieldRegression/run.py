@@ -57,6 +57,12 @@ class ShieldRegression {
    var x=Hero(id);float expected=id==Alterverse.Characters.HeroId.Nerok?90:id==Alterverse.Characters.HeroId.Rook?80:id==Alterverse.Characters.HeroId.Veyr||id==Alterverse.Characters.HeroId.Kaelon?70:50;
    Near(x.HeroBaseShieldMax,expected,"hero capacity "+id);Near(x.Shield,expected,"spawn shield "+id);
   }
+  var ione=Hero(Alterverse.Characters.HeroId.Elyra);ione.AddShield(20,2.25f,false);
+  Near(ione.TemporaryShield,20,"Phase Fold adds a temporary 20 HP shield");Near(ione.Shield,70,"Phase Fold preserves Ione's permanent shield");
+  ione.TakeDamage(7);Near(ione.TemporaryShield,13,"incoming damage consumes Phase Fold first");Near(ione.HeroBaseShield,50,"Phase Fold protects the base shield");Near(ione.Current,200,"Phase Fold protects health");
+  Refresh(ione,2.249f);Near(ione.TemporaryShield,13,"Phase Fold remains before its duration ends");
+  Refresh(ione,2.25f);Near(ione.TemporaryShield,0,"Phase Fold expires on its duration boundary");Near(ione.HeroBaseShield,50,"expiry does not consume the permanent shield");
+  UnityEngine.Time.time=0;
   var h=Hero(Alterverse.Characters.HeroId.Timmy);h.TakeDamage(25);Near(h.Shield,25,"Timmy absorbs damage into his 50 HP base shield");Near(h.Current,200,"shield protects health");
   UnityEngine.Time.time=5;h.TakeDamage(10);Near(h.HeroBaseShieldRechargeRemaining,15,"another hit restarts recharge delay");
   Refresh(h,19.99f);Near(h.Shield,15,"no premature recharge");Refresh(h,20);Near(h.Shield,50,"full recharge after 15 damage-free seconds");
@@ -68,7 +74,7 @@ class ShieldRegression {
   h.TakeDamage(20);Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=false;Refresh(h,115);Near(h.Shield,30,"client cannot authoritatively regenerate shield");
   Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState=true;Refresh(h,115);Near(h.Shield,50,"host applies due recharge");
   var neutral=new UnityEngine.GameObject().AddComponent<Alterverse.Combat.Health>();neutral.Configure(200);Near(neutral.HeroBaseShieldMax,0,"non-hero does not acquire a base shield");
-  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: Timmy 50 HP, unchanged other heroes, absorption, recharge delay/reset, death/respawn and authority.");
+  System.Console.WriteLine("PASS "+checks+" production Health shield assertions: Phase Fold 20 HP / 2.25s, permanent shields, absorption, recharge delay/reset, death/respawn and authority.");
  }
 }
 '''

@@ -30,6 +30,7 @@ namespace Alterverse.Visuals
         private readonly List<Material> ownedMaterials = new List<Material>();
         private Transform calibratedHammerHand;
         private Quaternion hammerFrameInHand;
+        private readonly ShieldGuardFrame shieldGuard = new ShieldGuardFrame();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetCache() => geometry = null;
@@ -279,7 +280,9 @@ namespace Alterverse.Visuals
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
         {
             AlignHand(rightHand, "HammerGrip", "HammerTop", "HammerFront", true, model, weight);
-            AlignHand(leftHand, "ShieldCenter", "ShieldTop", "ShieldFront", false, model, 1f);
+            if (markers.TryGetValue("ShieldCenter", out var center) &&
+                markers.TryGetValue("ShieldTop", out var top) && markers.TryGetValue("ShieldFront", out var front))
+                shieldGuard.Orient(model, leftHand, center, top, front);
         }
         private void AlignHand(Transform hand, string center, string top, string front, bool hammer, Transform model, float weight)
         {

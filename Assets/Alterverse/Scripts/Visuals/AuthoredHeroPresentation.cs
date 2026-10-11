@@ -153,7 +153,7 @@ namespace Alterverse.Visuals
             // contact is away from the rest-pose hand. Fit the weapon itself to the
             // hand before Initialize records the grip's rest position.
             grip.position += rightHand.position - handle.position;
-            Debug.Log("DF: Sivra rifle trigger fitted to the right hand; muzzle and support sockets now follow the weapon.", model);
+            HeroVisualDiagnostics.Trace("DF: Sivra rifle trigger fitted to the right hand; muzzle and support sockets now follow the weapon.", model);
         }
 
         // FBX default transforms can contain an exported animation pose. They are NOT
@@ -335,7 +335,7 @@ namespace Alterverse.Visuals
                 skin.name += "_SkinSource";
                 weaponRenderers[i] = renderer;
                 rigidWeaponMeshes.Add(mesh);
-                Debug.Log("DF: Zhaev blade bind-space v2: " + blade.name + " / " + mesh.vertexCount +
+                HeroVisualDiagnostics.Trace("DF: Zhaev blade bind-space v2: " + blade.name + " / " + mesh.vertexCount +
                     " vertices / local size " + mesh.bounds.size, this);
             }
         }
@@ -668,7 +668,7 @@ namespace Alterverse.Visuals
                 if (meshCount != 3)
                     Debug.LogError("DF: Sivra rifle FBX imported " + meshCount + " mesh layers instead of 3.", this);
                 else
-                    Debug.Log("DF: Sivra Blender rifle attached to WeaponGripR (3 mesh layers).", this);
+                    HeroVisualDiagnostics.Trace("DF: Sivra Blender rifle attached to WeaponGripR (3 mesh layers).", this);
                 return;
             }
             Debug.LogError("DF: CyberRanger/SivraRifleDetails FBX is missing; showing emergency rifle details.", this);
@@ -710,7 +710,7 @@ namespace Alterverse.Visuals
                     DetailBox("Receiver fastener " + side + " " + i,
                         new Vector3(side * .073f, .058f, .005f + i * .110f),
                         new Vector3(.008f, .010f, .010f), dark);
-            Debug.Log("DF: Sivra rifle details attached to WeaponGripR (" +
+            HeroVisualDiagnostics.Trace("DF: Sivra rifle details attached to WeaponGripR (" +
                 rifleDetailsRoot.childCount + " pieces).", this);
         }
 

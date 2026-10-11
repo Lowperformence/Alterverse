@@ -68,7 +68,7 @@ namespace Alterverse.UI
             if(animated==null)
             {
                 activeVideo=null;
-                GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+                FrontEndTheme.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
                 return;
             }
             if(activeVideo!=animated)
@@ -80,16 +80,16 @@ namespace Alterverse.UI
             float reveal=Mathf.SmoothStep(0,1,Mathf.Clamp01((Time.unscaledTime-videoRevealedAt)/VideoRevealDuration));
             if(reveal>=1f)
             {
-                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,false);
+                FrontEndTheme.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,false);
                 return;
             }
-            GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+            FrontEndTheme.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
             if(reveal<=0f)return;
             Color previous=GUI.color;
             try
             {
                 GUI.color=new Color(previous.r,previous.g,previous.b,previous.a*reveal);
-                GUI.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,true);
+                FrontEndTheme.DrawTexture(rect,animated,ScaleMode.ScaleAndCrop,true);
             }
             finally { GUI.color=previous; }
         }
@@ -103,7 +103,7 @@ namespace Alterverse.UI
             // Crop, never stretch. Focus on the subject in the upper-middle of each panel.
             float u=Mathf.Clamp(index,0,2)/3f+(1f/3f-width)*.5f;
             float v=Mathf.Clamp(.67f-height*.5f,0,1-height);
-            GUI.DrawTextureWithTexCoords(rect,art,new Rect(u,v,width,height));
+            FrontEndTheme.DrawTextureWithTexCoords(rect,art,new Rect(u,v,width,height));
         }
         public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
     }

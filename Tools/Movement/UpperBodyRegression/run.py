@@ -37,7 +37,7 @@ def main():
         amplitudes = args.amplitudes.resolve() if args.amplitudes else Path(temporary) / 'amplitudes.csv'
         if args.amplitudes:
             amplitudes.parent.mkdir(parents=True, exist_ok=True)
-        files = [here / 'EngineStubs.cs', here / 'Regression.cs', source / 'HeroUpperBodyGait.cs',
+        files = [here / 'EngineStubs.cs', here / 'Regression.cs', here / 'ShieldGuardRegression.cs', source / 'ShieldGuardFrame.cs', source / 'HeroVisualDiagnostics.cs', source / 'HeroUpperBodyGait.cs',
                  source / 'MeleeBasicAttackAnimation.cs', source / 'CombatMotion.cs']
         subprocess.run(compiler + ['-langversion:latest', '-r:' + reference, '-out:' + str(binary)] +
                        [str(file) for file in files], check=True, env=env)

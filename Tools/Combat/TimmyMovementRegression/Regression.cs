@@ -62,6 +62,7 @@ partial class TimmyMovementRegression
     {for(int i=0;i<Mathf.CeilToInt(seconds*fps);i++)Step(1f/fps,a,ai,b,bi);}
     static void Main()
     {
+        PhaseFoldCases();
         BasicMovementCases();
         foreach(int fps in new[]{30,60,120})
         {

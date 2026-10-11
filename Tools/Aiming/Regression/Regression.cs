@@ -272,6 +272,14 @@ partial class Regression
   reader.ReadValueSafe(out int kind);reader.ReadValueSafe(out int targetSlot);reader.ReadValueSafe(out int targetTeam);reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
   Check(kind==1&&targetTeam==1,"automatic basic identifies an enemy hero");Near(tx,-2,"automatic basic transmits target lookup point");
   reader.ReadValueSafe(out dx);reader.ReadValueSafe(out dy);reader.ReadValueSafe(out dz);Near(dx,-1,"network basic preserves automatic soft-target direction");
+  Unlock(a.GetComponent<HeroAbilityExecution>());
+  Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(2,new AimPose(Vector3.right,new Vector3(100,0,0))),"client sends Phase Fold through normal ability command");
+  var phasePacket=manager.CustomMessagingManager.LastPacket;
+  Near(a.GetComponent<Health>().TemporaryShield,0,"client cooldown prediction does not grant shield");
+  CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;Unlock(a.GetComponent<HeroAbilityExecution>());
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(phasePacket));
+  Near(a.transform.position.x,2.3f,"host clamps Phase Fold to 2.3 meters");
+  Near(a.GetComponent<Health>().TemporaryShield,20,"host applies Phase Fold shield once");
  }
  static void InterruptionsAndCapacity()
  {

@@ -68,7 +68,7 @@ Reichweiten und Radien unten sind die unveränderten Katalog-Ausgangswerte in Sp
 | Nyra | Ult | Sightline Break | Drei Projektile 35° | 7,8 | — |
 | Elyra | Q | Orbit Fracture | Platzierbarer AOE-Kreis | 7,3 | 2 |
 | Elyra | W | Invert Field | Platzierbarer AOE-Kreis | 6,5 | 2,6 |
-| Elyra | E | Phase Fold | Dash-Richtung | 1,8 | — |
+| Elyra | E | Phase Fold | Dash-Richtung, 20 HP Schild für 2,25 s | 2,3 | — |
 | Elyra | Ult | Impossible Center | Platzierbarer AOE-Kreis | 7 | 3,5 |
 | Mira | Q | Resonant Seed | Projektil 35° | 6,5 | — |
 | Mira | W | Growth Veil | Gerichtete Teampartnerauswahl, sonst eigener Heal | 6,5 | — |

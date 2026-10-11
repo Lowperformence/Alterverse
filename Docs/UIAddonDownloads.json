@@ -1,0 +1,30 @@
+[
+  {
+    "name": "UIEffect",
+    "repo": "mob-sakai/UIEffect",
+    "tag": "5.11.7",
+    "sha256": "7b061973f70c8f2d5bbd92ef3041712a142e57b3c58fc6c1d01b95e7b60612de",
+    "bytes": 5534440
+  },
+  {
+    "name": "UIParticle",
+    "repo": "mob-sakai/ParticleEffectForUGUI",
+    "tag": "v4.14.1",
+    "sha256": "cbb625b0e3f282ed0d31e309f5e3ef34a6a0b234fe5fda20e568a64bb1f3a90b",
+    "bytes": 3861682
+  },
+  {
+    "name": "SoftMask",
+    "repo": "mob-sakai/SoftMaskForUGUI",
+    "tag": "3.6.5",
+    "sha256": "d838001fb846767e6974c7a806f8ae5c6fe4fc6930573e9e61e093f60bca9112",
+    "bytes": 4722958
+  },
+  {
+    "name": "DOTween",
+    "tag": "1.3.030",
+    "url": "https://dotween.demigiant.com/downloads/DOTween_1_3_030.zip",
+    "sha256": "62a0ececd274e1587eb0dea15f3afab392fbda5a0f8cac7287fbf7f64925a1ba",
+    "bytes": 227804
+  }
+]
