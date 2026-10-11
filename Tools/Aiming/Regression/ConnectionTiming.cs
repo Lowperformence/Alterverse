@@ -42,7 +42,12 @@ partial class Regression
   if(aim.aimType==AimType.Projectile||aim.aimType==AimType.Homing)
    expected+=Mathf.Max(0,distance-(.4f+aim.projectileWidth*.5f))/aim.projectileSpeed;
   if(hero==HeroId.Nerok&&slot==3)expected+=.5f;
-  if(scratch)expected+=TimmyBalance.ScratchLeapSeconds+TimmyBalance.ScratchTickSeconds;
+  if(scratch)
+  {
+   float leapDistance=distance-Mathf.Min(TimmyBalance.ScratchStandOff,distance*.5f);
+   float contactFraction=Mathf.Clamp01((distance-TimmyBalance.ScratchContactRange)/Mathf.Max(.001f,leapDistance));
+   expected+=TimmyBalance.ScratchLeapSeconds*contactFraction+TimmyBalance.ScratchTickSeconds;
+  }
   // Windup and contact each round to a gameplay frame; coroutine fixture has 1 us tolerance.
   Check(result+1.1e-6f>=expected,hero+" no damage before windup / body contact "+slot);
   Check(result<=expected+(scratch?3f:2f)/fps+1.1e-5f,hero+" no unexplained acquisition delay "+slot);

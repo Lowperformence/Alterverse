@@ -91,11 +91,12 @@ partial class Regression
   Camera.main=new GameObject("Scratch audio camera").AddComponent<Camera>();Alterverse.Audio.DimensionAudio.TimmyUltimatePlays=0;
   Check(execution.TryCastAimed(3,Forward(a,9)),"Scratch acquires in the cast frame");Check(!execution.TryCastAimed(3,Forward(a,9)),"Scratch duplicate rejected");
   Run(.65f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"Scratch plays the supplied recording at leap start");Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"Scratch holds after physical contact");
-  Check(!HeroCombatStatus.CanAct(a)&&HeroCombatStatus.CanAct(b),"channel locks Timmy but victim can counterattack");
-  Check(!execution.TryCastAimed(0,Forward(a)),"channel rejects another skill");Near(Total(b),1000,"first scratch waits half a second");
-  Run(1.9f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"hold lasts nearly two seconds");
-  Run(.2f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"four Scratch ticks never restart the selected recording");Near(Total(b),1000-TimmyBalance.ScratchDamage,"Scratch applies all four ticks once");Near(Total(other),1000,"Scratch damages exactly one enemy");
-  Check(!b.GetComponent<HeroCombatStatus>().Rooted&&!a.GetComponent<HeroCombatStatus>().Rooted,"normal completion releases both roots");
+  Check(HeroCombatStatus.CanAct(a)&&HeroCombatStatus.CanAct(b),"Scratch leaves Timmy and the victim able to attack");
+  Check(a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"Scratch never roots Timmy");
+  Near(HeroCombatStatus.Speed(a),1,"Scratch leaves Timmy's movement available");Near(Total(b),1000,"first scratch waits half a second");
+  Run(1.8f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"hold remains active before its contact-based expiry");
+  Run(.3f);Check(Alterverse.Audio.DimensionAudio.TimmyUltimatePlays==1,"four Scratch ticks never restart the selected recording");Near(Total(b),1000-TimmyBalance.ScratchDamage,"Scratch applies all four ticks once");Near(Total(other),1000,"Scratch damages exactly one enemy");
+  Check(!b.GetComponent<HeroCombatStatus>().Rooted&&a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"normal completion releases only the victim root");
 
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
   execution.TryCastAimed(3,Forward(a,9));Run(.25f);b.transform.position+=Vector3.right*3;Run(2.7f);
@@ -105,7 +106,7 @@ partial class Regression
   {
    Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
    execution.TryCastAimed(3,Forward(a,9));Run(.65f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"interruption starts during grip");
-   if(interruption==0)a.GetComponent<HeroCombatStatus>().Stun(.5f);
+   if(interruption==0)(a.GetComponent<HeroCombatStatus>()??a.AddComponent<HeroCombatStatus>()).Stun(.5f);
    else if(interruption==1)a.GetComponent<Health>().TakeDamage(2000);
    else if(interruption==2)a.SetActive(false);
    else if(interruption==3)a.GetComponent<HeroLocomotion>().BeginForcedMove(Vector3.right*3,.2f);
@@ -117,7 +118,9 @@ partial class Regression
   var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.position=new Vector3(0,.5f,3);wall.transform.localScale=new Vector3(2,2,.3f);
   Check(!a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch rejects through wall");Near(a.GetComponent<HeroAbilityExecution>().Remaining(3),0,"invalid Scratch spends no cooldown");
   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,(-Vector3.forward)*4);
-  Check(!a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch cannot capture behind cone");
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch without a cone target still leaps in the chosen direction");
+  Run(.7f);Near(Total(b),1000,"directional Scratch cannot hit a hero behind the cone");
+  Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"directional Scratch cannot root a hero behind the cone");
   var status=b.AddComponent<HeroCombatStatus>();status.ApplyNetworkSnapshot(false,0);
   Check(status.Rooted&&HeroCombatStatus.CanAct(b),"network victim root preserves attacks");Check(!b.GetComponent<HeroLocomotion>().BeginDash(Vector3.zero),"root blocks predicted escape dash");
   status.ApplyNetworkSnapshot(true,0);Check(!HeroCombatStatus.CanAct(b),"network channel blocks actions");status.ClearNetworkSnapshot();Check(!status.Rooted,"snapshot cleanup");
@@ -130,5 +133,72 @@ partial class Regression
   Resources.PreviewShaderAvailable=true;var overlay=a.AddComponent<AbilityRangePreviewOverlay>();Call(overlay,"LateUpdate");
   gesture.Cancel();Call(overlay,"LateUpdate");Near(a.GetComponent<HeroAbilityExecution>().Remaining(3),0,"Scratch cancel consumes no cooldown");
   Check(gesture.Begin(3,new Vector2(700,100))&&gesture.Release(),"Scratch tap captures the same hero");Run(2.8f);Near(Total(b),946,"Scratch tap still uses contact and timed ticks");Near(Total(minion),1000,"Scratch never hits the marked corridor's soldier");
+
+  foreach(int fps in new[]{30,60,120})
+  {
+   // Use the real automatic-basic entry point, not a fixed synthetic aim pose.
+   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*1.3f);
+   Check(a.GetComponent<BasicAttack>().TryAttack(),"Timmy auto claw starts "+fps);
+   for(int frame=0;frame<fps/2;frame++)
+   {
+    float angle=Mathf.Min(90,(frame+1)*90f/(fps*.15f));
+    Step(1f/fps,()=>b.transform.position=Angle(angle,1.3f));
+   }
+   Near(Total(b),1000-TimmyBalance.BasicDamage,"auto claw connects with the moving selected body at contact "+fps);
+
+   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*1.3f);
+   Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(0,Forward(a)),"Q release accepted "+fps);
+   for(int frame=0;frame<fps/2;frame++)Step(1f/fps,()=>{a.transform.position+=Vector3.right*.5f/fps;b.transform.position+=Vector3.right*.5f/fps;});
+   Near(Total(b),1000-TimmyBalance.ClawDamage,"Q co-moving contact resolves exactly once "+fps);
+
+   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*4);
+   Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(1,Forward(a)),"W release accepted "+fps);
+   for(int frame=0;frame<fps/2;frame++)Step(1f/fps);
+   Near(Total(b),1000-TimmyBalance.DustDamage,"W landing damage resolves exactly once "+fps);
+
+   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*2);
+   Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(2,Forward(a,3.4f)),"E movement starts "+fps);
+   Near(a.transform.position.z,TimmyBalance.JetRange,"E reaches its endpoint in the locomotion fixture "+fps);
+   Near(Total(b),1000,"E has no unintended damage connection "+fps);
+
+   Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);
+   Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch release accepted "+fps);
+   for(int frame=0;frame<(int)(fps*.3f);frame++)Step(1f/fps);
+   b.transform.position=Vector3.forward*2.5f;
+   for(int frame=0;frame<(int)(fps*.3f);frame++)Step(1f/fps);
+   Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"Scratch connects along the leap instead of passing the approaching enemy "+fps);
+   Check(a.GetComponent<HeroCombatStatus>()?.Rooted!=true,"Scratch path contact leaves Timmy free "+fps);
+  }
+
+  Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*.01f);
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"point-blank Scratch starts without requiring a nonzero dash");
+  Run(.25f);Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"point-blank Scratch connects after its warning");
+
+  Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);execution=a.GetComponent<HeroAbilityExecution>();
+  execution.TryCastAimed(3,Forward(a,9));Run(.65f);
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"Timmy can use his basic during the victim hold");
+  Check(execution.TryCastAimed(0,Forward(a)),"Timmy can use Claw Swipe during the victim hold");
+  Run(.3f);Near(Total(b),1000-TimmyBalance.BasicDamage-TimmyBalance.ClawDamage,"Scratch does not cancel queued claw hits");
+  a.transform.position+=Vector3.right*4;
+  Check(execution.TryCastAimed(2,new AimPose(Vector3.right,a.transform.position+Vector3.right*3.4f)),"Timmy can Jet Pounce while the victim is rooted");
+  Run(1.3f);Check(b.GetComponent<HeroCombatStatus>().Rooted,"moving away does not shorten the victim's two-second hold");
+  Check(HeroCombatStatus.CanAct(a)&&HeroCombatStatus.Speed(a)>0,"Timmy remains free after moving away");
+  Run(.5f);Near(Total(b),1000-TimmyBalance.BasicDamage-TimmyBalance.ClawDamage-TimmyBalance.ScratchDamage,"Scratch applies four ticks after caster movement without duplicate damage");
+  Check(!b.GetComponent<HeroCombatStatus>().Rooted,"victim hold ends on schedule after caster movement");
+  Near(TimmyBalance.BaseShield,50,"Timmy's rechargeable shield capacity is explicit");
+  Near(AimingSettings.Current.For(HeroId.Timmy,2).castRange,4.5f,"Jet Pounce execution and aim preview share the requested 4.5m range");
+
+  Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*10);
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch releases even when the enemy is already outside acquisition range");
+  Run(.7f);Near(a.transform.position.z,TimmyBalance.ScratchRange,"out-of-range Scratch still completes its directed leap");
+  Near(Total(b),1000,"out-of-range Scratch does not deal damage even if Timmy ends nearby");
+  Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"out-of-range Scratch does not apply a hold");
+
+  Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Kaelon,1,Vector3.forward*6);
+  Check(a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Forward(a,9)),"Scratch captures an initially eligible enemy");
+  Run(.1f);b.transform.position=Vector3.forward*12;Run(.6f);
+  Check(a.transform.position.z>5,"enemy leaving range during the warning does not cancel Scratch's leap");
+  Near(Total(b),1000,"enemy leaving range during warning takes no Scratch damage");
+  Check(b.GetComponent<HeroCombatStatus>()?.Rooted!=true,"enemy leaving range during warning is not held");
  }
 }

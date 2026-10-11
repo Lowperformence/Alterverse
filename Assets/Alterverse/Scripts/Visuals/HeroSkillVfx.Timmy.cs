@@ -6,11 +6,11 @@ namespace Alterverse.Visuals
     public sealed partial class HeroSkillVfx
     {
         private Transform timmyJetL,timmyJetR;
-        private bool timmyJetsFound;
         private void FindTimmyJets()
         {
-            if(timmyJetsFound)return;
-            timmyJetsFound=true;
+            // The imported model can appear after the first dash cue. Cache only
+            // complete live sockets, so later Scratch/Jet Pounce cues recover.
+            if(timmyJetL!=null&&timmyJetR!=null)return;
             foreach(Transform part in GetComponentsInChildren<Transform>(true))
             {
                 if(part.name=="DF_TimmyJetL")timmyJetL=part;
@@ -40,12 +40,15 @@ namespace Alterverse.Visuals
             bool relay=true,float elapsed=0)
         {
             if(actor==null||Hero(actor)!=HeroId.Timmy)return;
-            if(kind==4)
+            if(kind==4||kind==6)
             {
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Claw,HeroFxMotion.TravelFixedFrame);
                 HeroVfxPool.CancelShape(actor,HeroFxShape.Streak,HeroFxMotion.AttachedJet);
-                HeroVfxPool.CancelShape(actor,HeroFxShape.TimmyGrenade);
-                HeroVfxPool.CancelShape(actor,HeroFxShape.Halo);
+                if(kind==4)
+                {
+                    HeroVfxPool.CancelShape(actor,HeroFxShape.TimmyGrenade);
+                    HeroVfxPool.CancelShape(actor,HeroFxShape.Halo);
+                }
             }
             else if(kind==0||kind==1)TimmyDust(actor,to,radius,duration,kind==0,elapsed);
             else if(kind==2||kind==3)TimmyJet(actor,from,to,duration,kind==3,elapsed);
@@ -55,6 +58,8 @@ namespace Alterverse.Visuals
         }
         public static void CancelTimmyDash(GameObject actor)
         {if(actor!=null&&Hero(actor)==HeroId.Timmy)TimmyEffect(actor,4,Vector3.zero,Vector3.zero,0,0);}
+        public static void EndTimmyLeap(GameObject actor)
+        {if(actor!=null&&Hero(actor)==HeroId.Timmy)TimmyEffect(actor,6,Vector3.zero,Vector3.zero,0,0);}
         private static void TimmyGrenade(GameObject actor,Vector3 from,Vector3 to,float duration,float elapsed)
         {
             // Reach the locked ground point at the existing W windup deadline.

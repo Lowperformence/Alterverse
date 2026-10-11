@@ -61,14 +61,43 @@ partial class Regression
 
   Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
   HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.right*5,0,TimmyBalance.ScratchLeapSeconds);
+  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"Scratch activates the same two nozzle cores and exhausts as Jet Pounce");
   var claws=VisibleFx(HeroFxShape.Claw);Check(claws.Length==3,"Scratch launches exactly three claws");
   Check(claws.All(f=>f.transform.position.x>.4f),"Scratch claws begin ahead of Timmy");
   Step(.2f);Check(claws.All(f=>Math.Abs(f.transform.position.x-2.92f)<.01f),"three claws share the fixed leap flight time");
   actor.transform.position+=Vector3.forward*3;Step(.1f);
+  Check(VisibleFx(HeroFxShape.Streak).Length==4,"Scratch jets stay active through the leap");
+  Check(jets.All(f=>f.transform.position.z>2.7f),"Scratch exhaust follows Timmy while claws retain the fixed path");
   Check(claws.All(f=>Math.Abs(f.transform.position.z)<=.21f),"claws cannot home after the leap is released");
   HeroVfxPool.Emit(HeroFxShape.Claw,Vector3.zero,Vector3.zero,Vector3.one,Color.white,.16f,HeroFxMotion.Sweep,owner:actor);
   HeroSkillVfx.CancelTimmyDash(actor);
   Check(VisibleFx(HeroFxShape.Claw).Length==1&&VisibleFx(HeroFxShape.Streak).Length==0,"interruption removes airborne claws and jets without deleting the final contact sweep");
+
+  // A first cue before the authored model is attached must not permanently
+  // cache missing nozzle transforms. Verify recovery on the following leap.
+  Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
+  HeroSkillVfx.TimmyEffect(actor,2,Vector3.zero,Vector3.forward*3,0,.16f);
+  HeroSkillVfx.CancelTimmyDash(actor);
+  left=new GameObject("DF_TimmyJetL").transform;left.SetParent(actor.transform,true);left.position=new Vector3(-.2f,.5f,-.4f);
+  right=new GameObject("DF_TimmyJetR").transform;right.SetParent(actor.transform,true);right.position=new Vector3(.2f,.5f,-.4f);
+  HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*5,0,.4f);
+  jets=VisibleFx(HeroFxShape.Streak);Check(jets.Length==4,"Scratch recovers both late-imported nozzle sockets");
+  Check(jets.All(f=>Vector3.Distance(f.transform.position,left.position)<.01f||Vector3.Distance(f.transform.position,right.position)<.01f),"recovered exhaust begins at the actual backpack sockets");
+  Step(.39f);Check(VisibleFx(HeroFxShape.Streak).Length==4,"both Scratch nozzles remain active until landing");
+  Step(.02f);Check(VisibleFx(HeroFxShape.Claw).Length==0&&VisibleFx(HeroFxShape.Streak).Length==4,"Scratch claws end on landing while nozzle afterglow remains briefly");
+  Step(.12f);Check(VisibleFx(HeroFxShape.Streak).Length==0,"Scratch exhaust does not continue into the two-second grip");
+
+  Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
+  HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*5,0,.4f,false,.30f);
+  Check(VisibleFx(HeroFxShape.Streak).Length==4,"late Scratch cue still shows both jets for the remaining flight");
+  Step(.23f);Check(VisibleFx(HeroFxShape.Streak).Length==0,"late Scratch jets respect the original landing and expiry");
+
+  Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);
+  HeroSkillVfx.TimmyEffect(actor,5,Vector3.up*.5f,Vector3.forward*4,0,.3f);
+  HeroSkillVfx.TimmyEffect(actor,3,Vector3.zero,Vector3.forward*5,0,.4f);
+  HeroSkillVfx.EndTimmyLeap(actor);
+  Check(VisibleFx(HeroFxShape.Claw).Length==0&&VisibleFx(HeroFxShape.Streak).Length==0,"Scratch landing clears its own airborne effects");
+  Check(VisibleFx(HeroFxShape.TimmyGrenade).Length==1,"Scratch landing does not cancel a concurrently thrown Stardust grenade");
 
   Reset();actor=Hero(HeroId.Timmy,0,Vector3.zero);motion=actor.AddComponent<HeroVisualMotion>();
   HeroSkillVfx.TimmyEffect(actor,2,Vector3.zero,Vector3.forward*3,0,.16f,false,.22f);

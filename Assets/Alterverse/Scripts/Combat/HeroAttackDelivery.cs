@@ -238,8 +238,11 @@ namespace Alterverse.Combat
                         HeroLocomotion body = p.Target.GetComponent<HeroLocomotion>();
                         Vector3 velocity = body != null && AimGeometry.Finite(body.Velocity) ? body.Velocity : Vector3.zero;
                         float flight = HeroCombatRules.Distance(p.LaunchOrigin, p.Target.transform.position) / p.Spec.projectileSpeed;
-                        p.Point = HeroAimPrediction.Point(p.LaunchOrigin, p.Target.transform.position, velocity,
-                            flight, AimingSettings.Current.basicLeadQuality, p.Spec.castRange, false);
+                        // Timmy's short automatic claw tracks the selected body
+                        // until melee contact, without projectile leading.
+                        p.Point = p.Spec.aimType == AimType.Melee ? p.Target.transform.position :
+                            HeroAimPrediction.Point(p.LaunchOrigin, p.Target.transform.position, velocity,
+                                flight, AimingSettings.Current.basicLeadQuality, p.Spec.castRange, false);
                         p.HasAimPoint = true;
                     }
                     // Rebase melee as well: strafing during a longer preparation must not rotate

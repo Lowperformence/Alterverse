@@ -86,6 +86,7 @@ namespace Alterverse.Combat
             };
             if (hero == HeroId.Nerok && slot == 0) { spec.projectileSpeed = 18f; spec.projectileWidth = .45f; }
             if (hero == HeroId.Timmy && slot == 3) spec.targetingMode = TargetingMode.Cone;
+            if (hero == HeroId.Timmy && slot < 0) spec.targetingMode = TargetingMode.AutoBasic;
             if (hero == HeroId.Kaelon && slot == 0) { spec.projectileSpeed = 14f; spec.projectileWidth = .86f; }
             if (hero == HeroId.Veyr && slot == 1) { spec.projectileSpeed = 18f; spec.projectileWidth = .45f; }
             if (overrides != null)

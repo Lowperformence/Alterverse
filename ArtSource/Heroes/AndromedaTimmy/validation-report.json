@@ -2,46 +2,80 @@
   "source": {
     "bones": 20,
     "shared_hero_bones": 19,
+    "paws": {
+      "L": {
+        "length": 0.185,
+        "width": 0.1306,
+        "thickness": 0.074,
+        "toe_tips": 4,
+        "closed_surface": true
+      },
+      "R": {
+        "length": 0.185,
+        "width": 0.1306,
+        "thickness": 0.074,
+        "toe_tips": 4,
+        "closed_surface": true
+      }
+    },
+    "feline_face_proportions": true,
     "tail_centered": true,
     "tail_vertices": 390,
     "jet_nozzle_sockets": 2,
-    "triangles": 15548,
+    "triangles": 17884,
     "renderers": 4,
     "bounds_min": [
-      -0.43699997663497925,
+      -0.4169999957084656,
       -0.3230000138282776,
       0.009999990463256836
     ],
     "bounds_max": [
-      0.43699997663497925,
+      0.4169999957084656,
       0.7429999709129333,
       1.8249999284744263
     ],
     "visor_opacity": 0.2,
     "visor_head_bound": true,
-    "covered_face_vertices": 712
+    "covered_face_vertices": 1244
   },
   "fbx_round_trip": {
     "bones": 20,
     "shared_hero_bones": 19,
+    "paws": {
+      "L": {
+        "length": 0.185,
+        "width": 0.1306,
+        "thickness": 0.074,
+        "toe_tips": 4,
+        "closed_surface": true
+      },
+      "R": {
+        "length": 0.185,
+        "width": 0.1306,
+        "thickness": 0.074,
+        "toe_tips": 4,
+        "closed_surface": true
+      }
+    },
+    "feline_face_proportions": true,
     "tail_centered": true,
     "tail_vertices": 390,
     "jet_nozzle_sockets": 2,
-    "triangles": 15548,
+    "triangles": 17884,
     "renderers": 4,
     "bounds_min": [
-      -0.43699997663497925,
+      -0.4169999957084656,
       -0.3229999542236328,
       0.009999992325901985
     ],
     "bounds_max": [
-      0.43699997663497925,
+      0.4169999957084656,
       0.7429999709129333,
       1.8249999284744263
     ],
     "visor_opacity": 0.2,
     "visor_head_bound": true,
-    "covered_face_vertices": 712
+    "covered_face_vertices": 1244
   },
   "icons": 5,
   "icon_resolution": 1254,

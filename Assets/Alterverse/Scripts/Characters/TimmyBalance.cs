@@ -7,6 +7,7 @@ namespace Alterverse.Characters
         public const int TotalPoints = DamagePoints + MobilityPoints + ControlPoints + DurabilityPoints + UtilityPoints;
         public const float RawHealth = 185f, BasicDamage = 22f, BasicRange = 1.6f, BasicInterval = .78f;
         public const float RawMoveSpeed = 7.1f * 1.05f;
+        public const float BaseShield = 50f;
         public const float ModelScale = .70f, CollisionRadius = .28f, CollisionHeight = 1.4f;
         public const float TailSwayDegrees = 30f, TailSwaySeconds = 8f;
         public const float PassiveSpeed = 1.12f, PassiveSeconds = 1.2f, PassiveCooldown = 4f;
@@ -14,7 +15,7 @@ namespace Alterverse.Characters
         public const float DustDamage = 14f, DustRange = 4.5f, DustRadius = 2f, DustCooldown = 12f, DustWindup = .3f;
         public const float DustSlow = .8f, DustSlowSeconds = 2f;
         public const float DustVfxSeconds = 2f;
-        public const float JetRange = 3.4f, JetCooldown = 13f, JetDashSeconds = .16f;
+        public const float JetRange = 4.5f, JetCooldown = 13f, JetDashSeconds = .16f;
         public const float ScratchRange = 9f, ScratchCooldown = 52f, ScratchDamage = 54f, ScratchWindup = .2f;
         public const float ScratchLeapSeconds = .4f, ScratchHoldSeconds = 2f, ScratchContactRange = 1.35f;
         public const float ScratchStandOff = .75f;

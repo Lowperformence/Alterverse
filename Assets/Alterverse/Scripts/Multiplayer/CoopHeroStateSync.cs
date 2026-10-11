@@ -279,13 +279,13 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
             reader.ReadValueSafe(out float radius);reader.ReadValueSafe(out float duration);reader.ReadValueSafe(out double sent);
-            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>5||
+            if(slot<0||slot>=slots.Length||slots[slot]==null||kind<0||kind>6||
                 !TimmyFxFinite(x)||!TimmyFxFinite(y)||!TimmyFxFinite(z)||!TimmyFxFinite(tx)||!TimmyFxFinite(ty)||!TimmyFxFinite(tz)||
                 !TimmyFxFinite(radius)||radius<0||radius>6||!TimmyFxFinite(duration)||duration<0||duration>2.1f||
                 double.IsNaN(sent)||double.IsInfinity(sent))return;
             GameObject actor=slots[slot].gameObject;if(actor.GetComponent<HeroIdentity>()?.Hero!=HeroId.Timmy)return;
             float elapsed=Mathf.Max(0,(float)(NetworkManager.Singleton.ServerTime.Time-sent));
-            if(kind!=4&&(duration<=0||elapsed>=duration+(kind==2||kind==3?.12f:0)))return;
+            if(kind!=4&&kind!=6&&(duration<=0||elapsed>=duration+(kind==2||kind==3?.12f:0)))return;
             HeroSkillVfx.TimmyEffect(actor,kind,new Vector3(x,y,z),new Vector3(tx,ty,tz),radius,duration,false,elapsed);
         }
         private static bool TimmyFxFinite(float v)=>!float.IsNaN(v)&&!float.IsInfinity(v);

@@ -64,6 +64,8 @@ def fur_material(name,low,high):
 fur=fur_material('Timmy orange tabby fur',(.48,.13,.022),(.98,.46,.12))
 cream=fur_material('Timmy muzzle cream',(.67,.48,.27),(.96,.86,.63))
 stripe=fur_material('Timmy cinnamon tabby fur',(.13,.040,.012),(.39,.13,.028))
+nose=material('Timmy warm feline nose',(.22,.075,.045))
+nose.node_tree.nodes.get('Principled BSDF').inputs['Roughness'].default_value=.65
 cyan=material('Timmy cyan energy',(.04,.68,1),.45,2)
 gold=material('Timmy jet amber energy',(1,.46,.075),.35,1.4)
 eye=material('Timmy emerald eyes',(.08,.49,.21),.25,.25)
@@ -82,8 +84,8 @@ def finish(ob,name,mat,bone=None):
     for f in ob.data.polygons:f.use_smooth=True
     if bone:ob['bone']=bone
     meshes.append(ob);return ob
-def ellipsoid(name,p,s,mat,bone=None):
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=16,ring_count=8,radius=1,location=p)
+def ellipsoid(name,p,s,mat,bone=None,segments=16,rings=8):
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=segments,ring_count=rings,radius=1,location=p)
     ob=bpy.context.object;ob.scale=s
     bpy.ops.object.transform_apply(location=False,rotation=False,scale=True)
     return finish(ob,name,mat,bone)
@@ -119,6 +121,65 @@ def oval_band(name,p,r,height,mat,bone=None):
             j=(i+1)%segments;faces.append((row*segments+i,row*segments+j,nxt*segments+j,nxt*segments+i))
     data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
     ob=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(ob);return finish(ob,name,mat,bone)
+PAW_FORWARD=Vector((0,-.068,-.05)).normalized()
+PAW_DEPTH=Vector((0,-PAW_FORWARD.z,PAW_FORWARD.y))
+def feline_paw(side,k):
+    # One continuous, flattened forepaw: narrow wrist, oval palm and four
+    # scalloped toe tips. Avoid separate spherical knuckles or a human thumb.
+    outline=[(-.040,-.035),(-.049,-.015),(-.061,.029),(-.065,.070),
+             (-.064,.103),(-.055,.123),(-.043,.126),(-.035,.118),
+             (-.030,.133),(-.018,.145),(-.007,.138),(0,.126),
+             (.007,.138),(.018,.145),(.030,.133),(.035,.118),
+             (.043,.126),(.055,.123),(.064,.103),(.065,.070),
+             (.061,.029),(.049,-.015),(.040,-.035),(0,-.040)]
+    perimeter=[]
+    for i,p1 in enumerate(outline):
+        p0=Vector(outline[(i-1)%len(outline)]);p1=Vector(p1)
+        p2=Vector(outline[(i+1)%len(outline)]);p3=Vector(outline[(i+2)%len(outline)])
+        for t in (0,.5):
+            perimeter.append(.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t*t+(-p0+3*p1-3*p2+p3)*t*t*t))
+    wrist=Vector((side*.35,-.072,.79));center=.047;verts=[];faces=[]
+    for scale,depth in ((.32,.035),(.68,.029),(.91,.017),(1,0),(.91,-.017),(.68,-.029),(.32,-.035)):
+        for x,t in perimeter:
+            verts.append(tuple(wrist+Vector((side*x*scale,0,0))+PAW_FORWARD*(center+(t-center)*scale)+PAW_DEPTH*depth))
+    n=len(perimeter)
+    for row in range(6):
+        for i in range(n):
+            j=(i+1)%n;faces.append((row*n+i,row*n+j,(row+1)*n+j,(row+1)*n+i))
+    for row,depth in ((0,.037),(6,-.037)):
+        cap=len(verts);verts.append(tuple(wrist+PAW_FORWARD*center+PAW_DEPTH*depth))
+        for i in range(n):
+            j=(i+1)%n;faces.append((cap,row*n+j,row*n+i) if row==0 else (cap,row*n+i,row*n+j))
+    data=bpy.data.meshes.new('Feline forepaw'+k);data.from_pydata(verts,[],faces);data.update()
+    ob=bpy.data.objects.new('Paw'+k,data);bpy.context.collection.objects.link(ob)
+    # Mirror changes winding; recalculate before baking the normal atlas.
+    bpy.context.view_layer.objects.active=ob;ob.select_set(True)
+    bpy.ops.object.mode_set(mode='EDIT');bpy.ops.mesh.select_all(action='SELECT');bpy.ops.mesh.normals_make_consistent(inside=False)
+    bpy.ops.object.mode_set(mode='OBJECT');ob.select_set(False)
+    return finish(ob,'Paw'+k,fur,'Hand'+k)
+
+HEAD_CENTER=Vector((0,-.075,1.545))
+HEAD_RADII=Vector((.178,.145,.17))
+def head_width(z):
+    relative=(z-HEAD_CENTER.z)/HEAD_RADII.z
+    return 1+.12*math.exp(-((relative+.22)/.34)**2)-.13*max(0,-relative)-.10*max(0,relative)
+def head_surface_y(x,z):
+    r2=(x/(HEAD_RADII.x*head_width(z)))**2+((z-HEAD_CENTER.z)/HEAD_RADII.z)**2
+    return HEAD_CENTER.y-HEAD_RADII.y*math.sqrt(max(.02,1-r2))
+def feline_eye(name,side,width,height,front,mat):
+    # Pointed inner/outer corners, a domed surface and a raised outer corner.
+    segments=24;verts=[(side*.080,front-.010,1.581)];faces=[]
+    for scale in (.52,1):
+        for i in range(segments):
+            a=i*math.tau/segments;dx=width*math.cos(a)*scale
+            dz=height*math.sin(a)*abs(math.sin(a))**.35*scale+side*dx*.17
+            verts.append((side*.080+dx,front-.010*(1-scale*scale),1.581+dz))
+    for i in range(segments):
+        j=(i+1)%segments;faces.append((0,1+i,1+j));faces.append((1+i,1+segments+i,1+segments+j,1+j))
+    data=bpy.data.meshes.new(name);data.from_pydata(verts,[],faces);data.update()
+    ob=bpy.data.objects.new(name,data);bpy.context.collection.objects.link(ob)
+    return finish(ob,name,mat,'Head')
+
 def visor_dome():
     # A circular spherical cap fitted inside the rim, in front of muzzle/whiskers.
     # Negative Y faces forward in the authored rig. Wind only the outside surface.
@@ -146,8 +207,7 @@ def face_mark(name,points,width):
     for index,(x,z) in enumerate(points):
         w=width*(.35+.65*math.sin((index+.5)/len(points)*math.pi))
         for dx in (-w,w):
-            px=x+dx;r2=(px/.175)**2+((z-1.53)/.16)**2
-            y=-.086-.135*math.sqrt(max(.02,1-r2))-.001
+            px=x+dx;y=head_surface_y(px,z)-.001
             verts.append((px,y,z))
     faces=[(i*2,i*2+1,i*2+3,i*2+2) for i in range(len(points)-1)]
     mesh=bpy.data.meshes.new(name);mesh.from_pydata(verts,[],faces);mesh.update()
@@ -174,9 +234,16 @@ for side,k in ((-1,'L'),(1,'R')):
     ellipsoid('Jet housing'+k,(side*.13,.245,1.12),(.075,.07,.15),white,'Chest')
     ellipsoid('Jet nozzle'+k,(side*.13,.255,.99),(.043,.04,.025),cyan,'Chest')
 ellipsoid('Helmet back',(0,.035,1.54),(.27,.18,.285),white,'Head')
-ellipsoid('Cat head',(0,-.086,1.53),(.175,.135,.16),fur,'Head')
-ellipsoid('Cream muzzle',(0,-.213,1.48),(.10,.028,.06),cream,'Head')
-triangle('Cat nose',[(-.020,-.244,1.50),(.020,-.244,1.50),(0,-.247,1.48)],.014,navy,'Head')
+head=ellipsoid('Cat head',HEAD_CENTER,HEAD_RADII,fur,'Head',segments=32,rings=16)
+for v in head.data.vertices:v.co.x*=head_width(v.co.z+HEAD_CENTER.z)
+ellipsoid('Feline nose bridge',(0,-.208,1.542),(.032,.038,.056),fur,'Head')
+ellipsoid('Cream feline chin',(0,-.213,1.444),(.061,.035,.026),cream,'Head')
+for side,k in ((-1,'L'),(1,'R')):
+    ellipsoid('Whisker pad'+k,(side*.037,-.226,1.491),(.052,.048,.040),cream,'Head')
+triangle('Cat nose',[(-.019,-.267,1.524),(.019,-.267,1.524),(0,-.275,1.501)],.010,nose,'Head')
+tube('Nose to mouth',[(0,-.277,1.505),(0,-.270,1.487),(0,-.264,1.475)],.002,navy,'Head')
+for side,k in ((-1,'L'),(1,'R')):
+    tube('Feline mouth'+k,[(0,-.264,1.475),(side*.015,-.266,1.470),(side*.028,-.263,1.475)],.002,navy,'Head')
 ring('Visor rim',(0,-.118,1.54),.255,.018,white,'Head')
 box('Helmet chin guard',(0,-.145,1.306),(.31,.105,.085),white,'Head')
 box('Helmet chin vent',(0,-.201,1.309),(.16,.008,.032),navy,'Head')
@@ -186,12 +253,13 @@ for side,k in ((-1,'L'),(1,'R')):
     ellipsoid('Helmet hinge'+k,(side*.257,-.024,1.535),(.043,.065,.076),white,'Head')
     ellipsoid('Helmet hinge seal'+k,(side*.29,-.024,1.535),(.014,.046,.053),navy,'Head')
     ellipsoid('Helmet hinge light'+k,(side*.30,-.024,1.535),(.007,.026,.031),cyan,'Head')
-    triangle('Feline ear'+k,[(side*.065,-.025,1.63),(side*.18,-.01,1.78),(side*.19,-.015,1.60)],.075,fur,'Head')
-    triangle('Ear lining'+k,[(side*.097,-.066,1.635),(side*.166,-.063,1.73),(side*.172,-.063,1.63)],.009,cream,'Head')
-    ellipsoid('Eye'+k,(side*.07,-.21,1.56),(.044,.014,.025),eye,'Head')
-    ellipsoid('Vertical pupil'+k,(side*.07,-.225,1.56),(.009,.006,.023),navy,'Head')
+    triangle('Feline ear'+k,[(side*.063,-.053,1.645),(side*.19,-.018,1.79),(side*.193,-.03,1.621)],.065,fur,'Head')
+    triangle('Ear lining'+k,[(side*.095,-.088,1.658),(side*.181,-.053,1.761),(side*.178,-.064,1.647)],.009,cream,'Head')
+    feline_eye('Almond eye socket'+k,side,.053,.029,-.219,navy)
+    feline_eye('Almond eye'+k,side,.047,.023,-.222,eye)
+    ellipsoid('Vertical pupil'+k,(side*.080,-.235,1.581),(.006,.004,.020),navy,'Head')
     for i in range(3):
-        tube('Whisker'+k+str(i),[(side*.065,-.238,1.48),(side*.14,-.239,1.48+(i-1)*.018)],.002,cream,'Head')
+        tube('Whisker'+k+str(i),[(side*.062,-.268,1.491+(i-1)*.010),(side*.135,-.243,1.491+(i-1)*.020),(side*.193,-.183,1.484+(i-1)*.035)],.0015,cream,'Head')
     face_mark('Tabby forehead M'+k,[(side*.075,1.628),(side*.052,1.648),(side*.027,1.612)],.006)
     for i in range(2):
         face_mark('Tabby cheek stripe'+k+str(i),[(side*.147,1.507+i*.024),(side*.126,1.498+i*.024),(side*.104,1.482+i*.024)],.006)
@@ -203,10 +271,11 @@ for side,k in ((-1,'L'),(1,'R')):
     for i in range(2):oval_band('Arm pressure fold'+k+str(i),(side*.30,-.01,1.08+i*.035),(.077,.073),.012,fabric,'UpperArm'+k)
     ellipsoid('Elbow seal'+k,(side*.315,-.018,1.01),(.07,.073,.075),navy,'Forearm'+k)
     ellipsoid('Forearm gauntlet'+k,(side*.335,-.04,.91),(.082,.085,.125),white,'Forearm'+k)
-    ellipsoid('Paw'+k,(side*.35,-.072,.79),(.087,.075,.083),fur,'Hand'+k)
+    feline_paw(side,k)
     for i in range(3):
-        x=side*.35+(i-1)*.038
-        tube('Claw'+k+str(i),[(x,-.115,.79),(x,-.175,.775),(x,-.19,.745)],.006,cyan,'WeaponGrip'+k)
+        x=side*(.35+(i-1)*.038);t=.120
+        root=Vector((x,-.072,.79))+PAW_FORWARD*t-PAW_DEPTH*.004
+        tube('Claw'+k+str(i),[root,root+PAW_FORWARD*.038+PAW_DEPTH*.004,root+PAW_FORWARD*.062-PAW_DEPTH*.015],.006,cyan,'WeaponGrip'+k)
     ellipsoid('Thigh suit'+k,(side*.13,0,.66),(.095,.09,.23),fabric,'Thigh'+k)
     oval_band('Red thigh ID band'+k,(side*.13,0,.73),(.096,.091),.035,red,'Thigh'+k)
     box('Thigh fabric pocket'+k,(side*.135,-.082,.615),(.11,.024,.105),fabric,'Thigh'+k)

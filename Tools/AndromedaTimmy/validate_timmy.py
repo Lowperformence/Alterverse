@@ -66,6 +66,46 @@ def check(label):
     anatomy=next(o for o in meshes if o.name=='DF_Anatomy')
     assert anatomy.data.uv_layers.active is not None,(label,'surface texture UVs')
     groups={g.index:g.name for g in anatomy.vertex_groups}
+    paws={}
+    for side in ('L','R'):
+        hand=rig.data.bones['Hand'+side]
+        wrist=rig.matrix_world@hand.head_local
+        forward=(rig.matrix_world.to_3x3()@(hand.tail_local-hand.head_local)).normalized()
+        across=(rig.matrix_world.to_3x3()@Vector((1,0,0))).normalized()
+        depth=across.cross(forward).normalized()
+        paw={v.index:anatomy.matrix_world@v.co-wrist for v in anatomy.data.vertices
+             if any(groups[g.group]=='Hand'+side and g.weight>.99 for g in v.groups)}
+        assert len(paw)>100,(label,'authored forepaw',side)
+        lengths=[p.dot(forward) for p in paw.values()];widths=[p.dot(across) for p in paw.values()]
+        depths=[p.dot(depth) for p in paw.values()]
+        length=max(lengths)-min(lengths);width=max(widths)-min(widths);thickness=max(depths)-min(depths)
+        assert length/width>1.3 and thickness/width<.65,(label,'long flattened feline paw',side,length,width,thickness)
+        wrist_width=max(abs(p.dot(across)) for p in paw.values() if p.dot(forward)<0)*2
+        assert wrist_width<width*.80,(label,'paw narrows into wrist',side)
+        # The joined anatomy must retain one closed paw surface, not four
+        # disconnected round finger balls or an open seam at the wrist.
+        edges={};neighbors={i:set() for i in paw}
+        for f in anatomy.data.polygons:
+            if not all(i in paw for i in f.vertices):continue
+            indices=list(f.vertices)
+            for i,j in zip(indices,indices[1:]+indices[:1]):
+                key=tuple(sorted((i,j)));edges[key]=edges.get(key,0)+1
+                neighbors[i].add(j);neighbors[j].add(i)
+        assert edges and all(count==2 for count in edges.values()),(label,'closed manifold paw',side)
+        seen=set();pending=[next(iter(paw))]
+        while pending:
+            i=pending.pop()
+            if i in seen:continue
+            seen.add(i);pending.extend(neighbors[i]-seen)
+        assert len(seen)==len(paw),(label,'continuous paw surface',side)
+        rim={i:p for i,p in paw.items() if abs(p.dot(depth))<.00001}
+        tips=[i for i,p in rim.items() if p.dot(forward)>.12 and
+              all(p.dot(forward)>rim[j].dot(forward)+.000001 for j in neighbors[i] if j in rim)]
+        assert len(tips)==4,(label,'four scalloped feline toes',side,len(tips))
+        weapon=next(o for o in meshes if o.name=='DF_Weapon'+side)
+        assert min((weapon.matrix_world@v.co-(p+wrist)).length for v in weapon.data.vertices for p in paw.values())<.008,(label,'energy claws meet the paw',side)
+        paws[side]={'length':round(length,4),'width':round(width,4),'thickness':round(thickness,4),'toe_tips':len(tips),'closed_surface':True}
+    assert paws['L']==paws['R'],(label,'matching left/right paw proportions')
     tail_vertices=[anatomy.matrix_world@v.co for v in anatomy.data.vertices if any(groups[g.group]=='Tail' and g.weight>.99 for g in v.groups)]
     assert len(tail_vertices)>100 and max(abs(p.x) for p in tail_vertices)<.05,(label,'tail centered behind body')
     assert max(p.y for p in tail_vertices)>.68,(label,'tail extends backwards')
@@ -77,7 +117,7 @@ def check(label):
         assert albedo.type=='TEX_IMAGE' and albedo.image is not None,(label,mat.name,'baked albedo binding')
         assert tuple(albedo.image.size)==(1024,1024),(label,'loaded surface atlas')
         if label=='Blender source':assert albedo.image.packed_file is not None,(label,'self-contained packed texture')
-    face_names=('Timmy orange tabby fur','Timmy muzzle cream','Timmy graphite seals','Timmy emerald eyes')
+    face_names=('Timmy orange tabby fur','Timmy muzzle cream','Timmy graphite seals','Timmy emerald eyes','Timmy warm feline nose')
     face_vertices={i for f in anatomy.data.polygons if anatomy.data.materials[f.material_index].name.startswith(face_names) for i in f.vertices}
     groups={g.index:g.name for g in anatomy.vertex_groups};covered=0
     for i in face_vertices:
@@ -91,7 +131,25 @@ def check(label):
         assert p.y-glass_y>.001,(label,'face remains behind visor',tuple(p))
         covered+=1
     assert covered>100,(label,'visor covers the face')
-    return {'bones':len(rig.data.bones),'shared_hero_bones':19,'tail_centered':True,'tail_vertices':len(tail_vertices),'jet_nozzle_sockets':2,'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi),'visor_opacity':round(alpha,2),'visor_head_bound':True,'covered_face_vertices':covered}
+    material_points={}
+    for f in anatomy.data.polygons:
+        name=anatomy.data.materials[f.material_index].name
+        for i in f.vertices:
+            v=anatomy.data.vertices[i]
+            if any(groups[g.group]=='Head' and g.weight>.99 for g in v.groups):
+                material_points.setdefault(name,[]).append(anatomy.matrix_world@v.co)
+    def points_for(prefix):return [p for name,ps in material_points.items() if name.startswith(prefix) for p in ps]
+    eyes=points_for('Timmy emerald eyes');nose_points=points_for('Timmy warm feline nose')
+    for sign in (-1,1):
+        eye_points=[p for p in eyes if sign*p.x>0]
+        assert eye_points,(label,'two feline eyes')
+        ew=max(p.x for p in eye_points)-min(p.x for p in eye_points)
+        eh=max(p.z for p in eye_points)-min(p.z for p in eye_points)
+        assert ew/eh>1.6,(label,'almond eye proportions',ew,eh)
+    assert nose_points and max(p.z for p in nose_points)<min(p.z for p in eyes),(label,'small nose below the eyes')
+    muzzle=[p for p in points_for('Timmy muzzle cream') if abs(p.x)<.09 and 1.46<p.z<1.53]
+    assert min(p.y for p in muzzle)<min(p.y for p in eyes)-.025,(label,'projecting feline whisker pads')
+    return {'bones':len(rig.data.bones),'shared_hero_bones':19,'paws':paws,'feline_face_proportions':True,'tail_centered':True,'tail_vertices':len(tail_vertices),'jet_nozzle_sockets':2,'triangles':triangles,'renderers':len(meshes),'bounds_min':list(lo),'bounds_max':list(hi),'visor_opacity':round(alpha,2),'visor_head_bound':True,'covered_face_vertices':covered}
 
 bpy.ops.wm.open_mainfile(filepath=str(ART/'AndromedaTimmy.blend'))
 source=check('Blender source')

@@ -89,7 +89,7 @@ namespace Alterverse.UI
                 0=>"A stronger single-target claw swipe with short melee reach.",
                 1=>$"Place a stardust burst; damages enemies in the circle and slows them by {(1f-TimmyBalance.DustSlow)*100:0}% for {TimmyBalance.DustSlowSeconds:0.#}s.",
                 2=>$"Jet-assisted dash up to {TimmyBalance.JetRange:0.#}m in the chosen direction.",
-                _=>$"Leap up to {TimmyBalance.ScratchRange:0.#}m toward one aimed enemy's cast position. On contact, root that enemy for {TimmyBalance.ScratchHoldSeconds:0.#}s and deal {TimmyBalance.ScratchDamage:0} damage in {TimmyBalance.ScratchTicks} ticks. Timmy channels; the target can attack him."
+                _=>$"Leap up to {TimmyBalance.ScratchRange:0.#}m toward one aimed enemy. On contact, root only that enemy for {TimmyBalance.ScratchHoldSeconds:0.#}s and deal {TimmyBalance.ScratchDamage:0} damage in {TimmyBalance.ScratchTicks} ticks. Timmy can move and attack; the target can counterattack."
             },
             HeroId.Veyr=>slot switch
             {
