@@ -7,10 +7,11 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    /// <summary>Kaelon's woodland camouflage armor, shield and hammer, fitted to her existing skeleton.</summary>
+    /// <summary>Kaelon's woodland armor and original weapons, fitted to her rig with half-length forearms.</summary>
     [DisallowMultipleComponent]
     public sealed class SiegeTankAppearance : MonoBehaviour
     {
+        private const float ForearmLengthScale = .5f;
         [Serializable] private sealed class Anchor { public float[] head, tail; }
         [Serializable] private sealed class Marker { public string name, bone; public float[] position; }
         [Serializable] private sealed class Submesh { public int[] triangles; }
@@ -104,6 +105,11 @@ namespace Alterverse.Visuals
             float unitScale = Vector3.Distance(heads[lookup["Chest"]], heads[lookup["Head"]]) /
                 Vector3.Distance(Point(data.anchors[lookup["Chest"]].head), Point(data.anchors[lookup["Head"]].head));
             if (unitScale < .01f || unitScale > 100f) return false;
+            // Fit the shorter arm chain before mesh bind poses and animation rest poses
+            // are captured. Hands and their grip children move together without scaling.
+            ShortenForearms(all, bones, lookup);
+            for (int i = 0; i < heads.Length; i++)
+                heads[i] = model.InverseTransformPoint(bones[i].position);
             Quaternion[] rotations = new Quaternion[map.Length];
             float[] scales = new float[map.Length];
             for (int i = 0; i < map.Length; i++)
@@ -131,9 +137,21 @@ namespace Alterverse.Visuals
             for (int i = 0; i < count; i++)
             {
                 int b = data.boneIndices[i];
-                Vector3 p = heads[b] + rotations[b] * (Point(data.vertices, i * 3) - Point(data.anchors[b].head)) * scales[b];
+                Vector3 offset = Point(data.vertices, i * 3) - Point(data.anchors[b].head);
+                Vector3 normal = Point(data.normals, i * 3);
+                if (data.groups[i] == 0 && (data.boneNames[b] == "ForearmL" || data.boneNames[b] == "ForearmR"))
+                {
+                    Vector3 axis = (Point(data.anchors[b].tail) - Point(data.anchors[b].head)).normalized;
+                    Vector3 along = axis * Vector3.Dot(offset, axis);
+                    // scales[b] contains the halved length. Compensate across the axis
+                    // so the previous forearm thickness is retained, with correct normals.
+                    offset = along + (offset - along) / ForearmLengthScale;
+                    Vector3 axialNormal = axis * Vector3.Dot(normal, axis);
+                    normal = axialNormal / ForearmLengthScale + normal - axialNormal;
+                }
+                Vector3 p = heads[b] + rotations[b] * offset * scales[b];
                 vertices[i] = toMesh.MultiplyPoint3x4(p);
-                normals[i] = toNormal.MultiplyVector(rotations[b] * Point(data.normals, i * 3)).normalized;
+                normals[i] = toNormal.MultiplyVector(rotations[b] * normal).normalized;
                 weights[i] = new BoneWeight { boneIndex0 = map[b], weight0 = 1f };
             }
             Material[] materials = {
@@ -165,6 +183,26 @@ namespace Alterverse.Visuals
                     }
                 }
             return true;
+        }
+
+        private static void ShortenForearms(Transform[] parts, Transform[] bones, Dictionary<string, int> lookup)
+        {
+            foreach (string side in new[] { "L", "R" })
+            {
+                Transform forearm = bones[lookup["Forearm" + side]];
+                Transform hand = bones[lookup["Hand" + side]];
+                Transform grip = bones[lookup["WeaponGrip" + side]];
+                FollowSocket(parts, "DF_PalmGrip" + side, hand);
+                FollowSocket(parts, "DF_HandleContact" + side, grip);
+                if (side == "R") FollowSocket(parts, "DF_Muzzle", grip);
+                hand.position = Vector3.Lerp(forearm.position, hand.position, ForearmLengthScale);
+            }
+        }
+
+        private static void FollowSocket(Transform[] parts, string name, Transform parent)
+        {
+            Transform socket = Array.Find(parts, part => part.name == name);
+            if (socket != null && !socket.IsChildOf(parent)) socket.SetParent(parent, true);
         }
 
         private Material WoodlandArmor()
@@ -315,3 +353,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+
