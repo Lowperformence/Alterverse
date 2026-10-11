@@ -11,6 +11,7 @@ namespace Alterverse.EditorChecks
     /// <summary>Reproducible build entry point, not a claim of store approval.</summary>
     public sealed class AndroidReleaseBuild : IPreprocessBuildWithReport
     {
+        private const string AndroidApplicationId="com.lowperformence.dimensionsfront";
         private const string AppIconPath="Assets/Alterverse/Branding/DimensionsFrontAppIcon.png";
         private const string InterruptedBuildKey="DimensionsFront.AndroidBuildNeedsCleanRetry";
         public int callbackOrder=>0;
@@ -30,7 +31,7 @@ namespace Alterverse.EditorChecks
             if(EditorUserBuildSettings.activeBuildTarget!=BuildTarget.Android)errors.Add("Switch the active Build Profile to Android first.");
             string id=PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
             if(string.IsNullOrWhiteSpace(id)||id.Contains("UnityTechnologies")||id.Contains("DefaultCompany"))errors.Add("Replace the template application identifier.");
-            if(id!="com.lowperformence.dimensionsfront")errors.Add("Keep the existing Android application ID com.lowperformence.dimensionsfront stable.");
+            if(id!=AndroidApplicationId)errors.Add("Android application ID is '"+id+"'; expected '"+AndroidApplicationId+"'. Run DIMENSIONS FRONT > Release > Prepare Android upload to restore it.");
             if(PlayerSettings.productName!="DIMENSIONS FRONT")errors.Add("Product name must be DIMENSIONS FRONT.");
             if(PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)!=ScriptingImplementation.IL2CPP)errors.Add("Android requires IL2CPP for this release configuration.");
             if((PlayerSettings.Android.targetArchitectures&AndroidArchitecture.ARM64)==0)errors.Add("Enable ARM64.");
@@ -100,9 +101,18 @@ namespace Alterverse.EditorChecks
             Debug.Log("DIMENSIONS FRONT: Android compatibility baseline applied: Vulkan + OpenGLES3 fallback, no ES3.1+AEP/ES3.2 requirement.");
         }
 
+        private static void ApplyAndroidApplicationId()
+        {
+            string previous=PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android);
+            if(previous==AndroidApplicationId)return;
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,AndroidApplicationId);
+            Debug.Log("DIMENSIONS FRONT: restored Android application ID from '"+previous+"' to '"+AndroidApplicationId+"'.");
+        }
+
         [MenuItem("DIMENSIONS FRONT/Release/Prepare Android upload")]
         public static void Prepare()
         {
+            ApplyAndroidApplicationId();
             EnsureLauncherIcon();
             EditorUserBuildSettings.buildAppBundle=true;
             EditorUserBuildSettings.development=false;
@@ -133,6 +143,7 @@ namespace Alterverse.EditorChecks
             if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode)
                 throw new BuildFailedException("Wait for Unity to finish importing/compiling and leave Play Mode before building Android.");
 
+            ApplyAndroidApplicationId();
             EnsureLauncherIcon();
             EditorUserBuildSettings.buildAppBundle=true;
             EditorUserBuildSettings.development=false;
@@ -218,4 +229,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

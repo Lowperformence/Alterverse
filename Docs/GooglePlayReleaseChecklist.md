@@ -17,6 +17,7 @@ Stand: 2026-09-19. Branch: `dev/vertical-slice`. **CODE READY zur Unity-Validier
 - Kontowechsel während asynchronem Store-Verbindungsaufbau wird vor Produktabruf erneut geprüft; zerstörte Clientobjekte werden bei asynchroner Fehlerbehandlung berücksichtigt. Fehlgeschlagener externer Token-Getter propagiert nicht mehr aus Shop-Gettern; 401/403 sperrt das bezahlte Wallet bis zur erneuten Synchronisation.
 - Veraltete lokale Founder-/Recall-Entwicklungs-Gutschriftmethoden sind nur noch im Editor enthalten. Vorhandene lokale Entitlements bleiben kompatibel; sie sind kein sicherer Echtgeldnachweis. Founder-Echtgeldkauf bleibt nicht verfügbar. Shard-Sandbox ist ausschließlich Editor und isoliert vom echten Profil.
 - Release-Build-Einstieg erzwingt `BuildOptions.None` und deaktiviert Development, Script Debugging, Profiler-Verbindung und Deep Profiling. Preprocessor weist widersprüchliche Release-Optionen, falsches aktives Ziel, geänderte Package-ID, fehlende Szenen, ARM64/IL2CPP-/SDK-/Signing-Probleme zurück. Keystore muss existieren und außerhalb des Projektordners liegen. Private Schlüssel-/Umgebungsdateien werden zusätzlich ignoriert.
+- Android-App-ID-Korrektur (11.10.2026): `Prepare Android upload` und alle drei Bundle-Build-Einstiege stellen vor der Prüfung die bestehende ID `com.lowperformence.dimensionsfront` wieder her und speichern sie. Die reine Validierung und der Preprocessor ändern nichts und melden bei einer Abweichung den tatsächlichen Wert samt Reparatur-Menü. Signierung, Version und andere Plattform-IDs bleiben erhalten.
 - Player-facing Branding im geprüften Spielcode: DIMENSIONS FRONT; technische Namespaces/Ordner bleiben unverändert.
 
 ### Tatsächliche Android-Konfiguration
@@ -104,3 +105,4 @@ SDK-Evidenz: Purchasing-5.4.3-`package.json`, `Runtime/Stores/Data/Insights/Purc
 Nur **CODE READY zur weiteren Validierung** ist erreicht. **UNITY COMPILED**, **PLAY MODE TESTED**, **ANDROID BUILD TESTED**, **AAB GENERATED**, **DEVICE TESTED** und **GOOGLE PLAY UPLOADED** sind **nicht erreicht**.
 
 Bewusst verschoben: neue Features, zusätzliche Dekoration, weitere Skins/Heroes, neue Animationspipeline und freiwillige Detail-/Optimierungsrunden. Nach Sichern/Push endet dieser Pass.
+
