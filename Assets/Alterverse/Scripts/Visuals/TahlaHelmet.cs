@@ -209,7 +209,8 @@ namespace Alterverse.Visuals
                     Quad(Mark(p,true),Mark(p,false),Mark(q,false),Mark(q,true),3,new Vector3(outwards.x,outwards.y,0));
                 }
             }
-            Vector2 Glyph(float offset,Vector2 p)=>new Vector2(center.x+(offset+p.x*.026f)*unit,center.y+(.080f+p.y*.034f)*unit);
+            // Viewed from the front (+Z), positive model X is the reader's left.
+            Vector2 Glyph(float offset,Vector2 p)=>new Vector2(center.x-(offset+p.x*.026f)*unit,center.y+(.080f+p.y*.034f)*unit);
             Vector2[] letterOutline={new Vector2(0,0),new Vector2(0,1),new Vector2(.58f,1),new Vector2(.90f,.82f),
                 new Vector2(1,.65f),new Vector2(1,.35f),new Vector2(.90f,.18f),new Vector2(.58f,0)};
             Vector2[] letterCounter={new Vector2(.22f,.22f),new Vector2(.22f,.78f),new Vector2(.54f,.78f),new Vector2(.68f,.68f),
