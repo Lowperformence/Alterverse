@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 
 namespace Alterverse.Visuals
 {
-    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,Count }
+    internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
     public sealed class HeroVfxPool:MonoBehaviour
@@ -376,6 +376,11 @@ namespace Alterverse.Visuals
                     FeatherBand(-1.42f,1.42f,.70f,.84f,.92f,40,true);
                     FeatherBand(-1.20f,1.28f,.96f,.99f,1.025f,32,true);
                     break;
+                case HeroFxShape.EchoSickle:
+                    // Broad crescent blade in the ground-facing XZ plane, pointed at both ends.
+                    // Vertex-alpha feathering keeps the violet body translucent and its rim luminous.
+                    FeatherBand(-1.65f,1.65f,.48f,.78f,1f,48,true);
+                    break;
                 case HeroFxShape.Leaf:
                     // An asymmetric luminous leaf, with a fine central vein and soft contour.
                     SoftQuad(new Vector3(0,-.55f,0),new Vector3(-.22f,.05f,0),new Vector3(0,.10f,.035f),new Vector3(.055f,.50f,0),clear,hot);
@@ -567,8 +572,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-
-
-
-

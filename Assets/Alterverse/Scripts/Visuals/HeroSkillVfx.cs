@@ -605,6 +605,27 @@ namespace Alterverse.Visuals
                 violet,flight,HeroFxMotion.TravelFixedFrame,facing,actor,
                 endFollow:travelTime>0?target:null);
         }
+        private static void VacantEchoSickle(GameObject actor,Vector3 impact)
+        {
+            HeroAttackDelivery delivery=actor.GetComponent<HeroAttackDelivery>();
+            Vector3 origin=delivery?.VisualOrigin??actor.transform.position;
+            Vector3 direction=delivery?.VisualDirection??(impact-origin);
+            direction.y=0f;
+            if(direction.sqrMagnitude<.0001f)direction=actor.transform.forward;
+            direction.y=0f;
+            if(direction.sqrMagnitude<.0001f)direction=Vector3.forward;
+            direction.Normalize();
+            float range=AimingSettings.Current.For(HeroId.Veyr,3).castRange;
+            if(range<=0f)return;
+            Vector3 start=Muzzle(actor),end=origin+direction*range;
+            end.y=start.y;
+            float flight=Mathf.Max(.16f,Vector3.Distance(start,end)/18f);
+            // Presentation only: fixed aim and full range, even when melee contact is closer.
+            // No target following or new hitbox; the existing Vacant Echo hit still resolves immediately.
+            HeroVfxPool.Emit(HeroFxShape.EchoSickle,start,end,new Vector3(1.12f,.12f,1.12f),
+                new Color(.72f,.12f,1.35f,.55f),flight,HeroFxMotion.TravelFixedFrame,
+                Quaternion.LookRotation(direction),actor,cancelOnOwnerDeath:true);
+        }
         public static void Spell(GameObject actor,Vector3 impact,int slot,float travelTime=0,Transform target=null)
         {
             if(actor==null)return;HeroId h=Hero(actor);
@@ -614,6 +635,7 @@ namespace Alterverse.Visuals
                     if(slot==1)RiftScarProjectile(actor,impact,travelTime,target);
                     else if(slot==3)
                     {
+                        VacantEchoSickle(actor,impact);
                         Quaternion direction=Face(actor.transform.position,impact);
                         Fx(HeroFxShape.Slash,impact+Vector3.up*.25f,Accent(actor),1.5f,.18f,HeroFxMotion.Sweep,direction*Quaternion.Euler(45,0,25),actor);
                         Fx(HeroFxShape.Slash,impact+Vector3.up*.25f,Color.Lerp(Accent(actor),Color.white,.6f),1.35f,.16f,HeroFxMotion.Sweep,direction*Quaternion.Euler(-45,180,-25),actor);
@@ -931,8 +953,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-
-
-
-

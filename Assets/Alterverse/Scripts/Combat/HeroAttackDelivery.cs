@@ -26,6 +26,7 @@ namespace Alterverse.Combat
         private HeroIdentity identity;
         private bool hasPending;
         internal Vector3? VisualOrigin { get; private set; }
+        internal Vector3? VisualDirection { get; private set; }
         private void Awake()
         {
             self = GetComponent<Health>(); identity = GetComponent<HeroIdentity>();
@@ -179,7 +180,7 @@ namespace Alterverse.Combat
         }
         private int Present(Pending p, Vector3 endpoint, float flight)
         {
-            int id = HeroVfxPool.BeginDelivery(); VisualOrigin = p.LaunchOrigin;
+            int id = HeroVfxPool.BeginDelivery(); VisualOrigin = p.LaunchOrigin; VisualDirection = p.Direction;
             Transform follow = p.Spec.targetingMode == TargetingMode.Homing && p.Target != null ? p.Target.transform : null;
             try
             {
@@ -199,7 +200,7 @@ namespace Alterverse.Combat
                 else HeroSkillVfx.Spell(gameObject, endpoint, p.Slot, flight, follow);
             }
             }
-            finally { VisualOrigin = null; HeroVfxPool.EndDelivery(); }
+            finally { VisualOrigin = null; VisualDirection = null; HeroVfxPool.EndDelivery(); }
             return id;
         }
         private void Update()
