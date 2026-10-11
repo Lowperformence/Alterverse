@@ -186,6 +186,7 @@ namespace Alterverse.Combat
         private const float EndMargin=9f;
         private const float BombTelegraph=1.28f;
         private const float BombDamage=60f;
+        private const float FlybyVolume=.168f;
 
         private SpaceBomberDirector director;
         private Vector3 start,end;
@@ -268,7 +269,7 @@ namespace Alterverse.Combat
             if(clip==null)return;
             engineAudio=gameObject.AddComponent<AudioSource>();
             engineAudio.clip=clip;
-            engineAudio.loop=true;
+            engineAudio.loop=false;
             engineAudio.playOnAwake=false;
             // Distance is driven by the controlled hero, not by the elevated top-down camera/AudioListener.
             // This makes the fly-by audible only in the player's immediate battlefield area.
@@ -279,8 +280,9 @@ namespace Alterverse.Combat
             engineAudio.maxDistance=2f;
             engineAudio.spread=24f;
             engineAudio.priority=108;
-            engineAudio.volume=.154f*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
-            engineAudio.pitch=1.02f;
+            // Start silent; the player-distance and route fades supply the gain on Update.
+            engineAudio.volume=0f;
+            engineAudio.pitch=1f;
             engineAudio.Play();
         }
 
@@ -294,8 +296,7 @@ namespace Alterverse.Combat
                 localPlayer=FindAnyObjectByType<HeroMotor>();
             }
 
-            // Keep the pitch almost fixed. The generated clip carries the jet character.
-            engineAudio.pitch=1.02f+Mathf.Sin(Time.time*.92f)*.004f;
+            // The selected recording already contains the flyby/Doppler sweep; preserve its pitch.
 
             // Player-local audibility: full presence only when the craft is genuinely overhead/nearby,
             // then a smooth fade to complete silence outside the local combat area.
@@ -313,7 +314,7 @@ namespace Alterverse.Combat
             // Soft route-edge fade prevents a hard audio pop when the aircraft enters/exits the arena.
             float routeFade=Mathf.SmoothStep(0f,1f,Mathf.Clamp01(routeProgress/.10f))
                 *Mathf.SmoothStep(0f,1f,Mathf.Clamp01((1f-routeProgress)/.10f));
-            float gain=.168f*proximity*routeFade;
+            float gain=FlybyVolume*proximity*routeFade;
             engineAudio.volume=gain*PlayerProfile.MasterVolume*PlayerProfile.SfxVolume;
         }
 
