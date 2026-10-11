@@ -15,7 +15,7 @@ namespace Alterverse.Combat
         [SerializeField] private float hardReturnRadius=5.25f;
         [SerializeField] private float returnReleaseRadius=3.15f;
         [SerializeField] private float attackRange=4.6f;
-        [SerializeField] private float attackDamage=13f;
+        [SerializeField] private float attackDamage=20f;
         [SerializeField] private float attackCooldown=1.2f;
         [SerializeField] private float moveSpeed=1.55f;
         [SerializeField] private float scanInterval=.22f;
