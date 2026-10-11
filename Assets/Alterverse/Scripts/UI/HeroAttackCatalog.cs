@@ -146,7 +146,7 @@ namespace Alterverse.UI
                 0=>"Throw the anchor after a readable windup; 28 damage and pull mobile enemies up to 4.2m. Walls block the hook and pull.",
                 1=>"Gain 45 shield for 3s and 15% movement speed for 2s.",
                 2=>"Short-range pressure wave; 26 damage and 25% slow for 1.2s.",
-                _=>"After a warning, a fixed 3.2m vortex deals 60 total damage over 3s, draws mobile enemies inward at their running speed. Running directly outward cancels the pull."
+                _=>$"After a warning, a fixed {HeroAbilityKit.LoadoutFor(HeroId.Nerok).Ultimate.Radius:0.##}m vortex deals 60 total damage over 3s, draws mobile enemies inward at their running speed. Running directly outward cancels the pull."
             },
             _=>"Unknown effect."
         };
