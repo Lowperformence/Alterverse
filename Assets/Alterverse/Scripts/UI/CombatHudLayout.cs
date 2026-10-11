@@ -25,7 +25,8 @@ namespace Alterverse.UI
         {Rect r=Action(slot);r.xMin-=20;r.yMin-=20;r.xMax+=20;r.yMax+=20;return r.Contains(point);}
         public const float JoystickRadius=74f, ThumbRadius=26f;
         public Vector2 JoystickIdle=>new Vector2(JoystickRadius+90f,Height-124f);
-        public Rect CancelZone=>new Rect(Width-218f,Mathf.Max(34f,Height-400f),110f,72f);
+        // Anchor cancellation to the top of the safe area on every display aspect ratio.
+        public Rect CancelZone=>new Rect(Width-218f,16f,110f,72f);
         // Floating movement can start anywhere on the left screen half, including safe-area margins.
         // Drawing still respects the safe area; PrototypeHUD gives combat buttons priority.
         public Rect MoveCapture=>Rect.MinMaxRect(-Safe.x/Scale,(Safe.yMax-Screen.height)/Scale,
