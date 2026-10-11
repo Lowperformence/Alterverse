@@ -8,7 +8,7 @@ using Alterverse.Characters;
 using Alterverse.Combat;
 using Alterverse.Multiplayer;
 using Alterverse.UI;
-class Regression
+partial class Regression
 {
  static int checks;
  static void Check(bool yes,string reason){checks++;if(!yes)throw new Exception(reason);}
@@ -303,11 +303,12 @@ class Regression
   Check(a.GetComponent<PlayerHeroAbilities>().CastAimed(0,new AimPose(Vector3.forward,b.transform.position,b.GetComponent<Health>())),"explicit homing can acquire a target");
   Run(.32f);b.transform.position=new Vector3(2,0,4);Run(.4f);Near(Total(b),972,"only explicit homing follows the moving target");
  }
- static void Main()
+ static void Main(string[] args)
  {
   Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
-  Console.WriteLine("PASS "+checks+" assertions: geometry, all 8 basics / 32 skills, dodges, AOE, gestures, multitouch, network direction/point, interrupts.");
+  ConnectionTiming(args.Contains("--connection-timing"));
+  Console.WriteLine("PASS "+checks+" assertions: geometry, all 8 basics / 32 skills, dodges, AOE, gestures, multitouch, network direction/point, interrupts, connection timing at 30/60/120 FPS.");
  }
 }
