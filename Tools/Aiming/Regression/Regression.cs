@@ -26,6 +26,7 @@ partial class Regression
   Unity.Netcode.NetworkManager.Singleton=null;
   AimingSettings.Current.overrides=new AimingSettings.AttackOverride[0];
   AimingSettings.Current.rememberAimDirection=false;
+  AimingSettings.Current.basicLeadQuality=1f;
   Resources.PreviewShaderAvailable=false;Screen.width=960;Screen.height=540;
  }
  static GameObject Hero(HeroId id,int team,Vector3 p)
@@ -38,10 +39,11 @@ partial class Regression
  }
  static void Unlock(HeroAbilityExecution e)=>Array.Clear((float[])typeof(HeroAbilityExecution).GetField("ready",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(e),0,4);
  static float Total(GameObject g)=>g.GetComponent<Health>().Current+g.GetComponent<Health>().Shield;
- static void Step(float dt=.01f)
+ static void Step(float dt=.01f,Action movement=null)
  {
   foreach(var g in GameObject.All.Where(g=>g.activeInHierarchy)) {var l=g.GetComponent<HeroLocomotion>();if(l!=null)l.FrameStartPosition=g.transform.position;}
   Clock.Advance(dt);
+  movement?.Invoke();
   foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var e=g.GetComponent<HeroAbilityExecution>();if(e!=null)Call(e,"Update");}
   foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var d=g.GetComponent<HeroAttackDelivery>();if(d!=null)Call(d,"Update");}
  }
@@ -263,8 +265,11 @@ partial class Regression
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.magnitude,7.3f,"server clamps forged point to cast range");
   CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;Hero(HeroId.Kaelon,1,Vector3.left*2);
   Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V5","auto-target basic retains V5 route");
-  reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out target);reader.ReadValueSafe(out dx);reader.ReadValueSafe(out dy);reader.ReadValueSafe(out dz);
-  Check(!target,"normal auto-target basic sends frozen direction without homing reference");Near(dx,-1,"network basic preserves automatic soft-target direction");
+  reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out target);
+  Check(target,"automatic ranged basic sends selected target for launch-time refresh");
+  reader.ReadValueSafe(out int kind);reader.ReadValueSafe(out int targetSlot);reader.ReadValueSafe(out int targetTeam);reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
+  Check(kind==1&&targetTeam==1,"automatic basic identifies an enemy hero");Near(tx,-2,"automatic basic transmits target lookup point");
+  reader.ReadValueSafe(out dx);reader.ReadValueSafe(out dy);reader.ReadValueSafe(out dz);Near(dx,-1,"network basic preserves automatic soft-target direction");
  }
  static void InterruptionsAndCapacity()
  {
@@ -311,7 +316,7 @@ partial class Regression
  }
  static void Main(string[] args)
  {
-  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();
+  Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));

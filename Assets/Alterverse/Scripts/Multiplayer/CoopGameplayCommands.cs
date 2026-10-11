@@ -10,7 +10,8 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Routes non-server player combat intentions to the authoritative NGO server. The server
-    /// validates cast direction and ground position; only support/homing carry a target reference.
+    /// validates cast direction and ground position. Support, homing and automatic basics
+    /// carry a target reference; automatic basics only refresh their aim at launch.
     /// Clients never directly mutate authoritative combat state.
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
@@ -60,7 +61,7 @@ namespace Alterverse.Multiplayer
         }
 
         public static bool TrySendBasic(GameObject actor, Health target)
-            => target != null && TrySendBasic(actor, new AimPose(target.transform.position - actor.transform.position, target.transform.position, null, true));
+            => target != null && TrySendBasic(actor, new AimPose(target.transform.position - actor.transform.position, target.transform.position, target, true));
         public static bool TrySendBasic(GameObject actor, AimPose pose)
             => Instance != null && Instance.SendCommand(actor, -1, pose);
         public static bool TrySendAbility(GameObject actor, int abilitySlot, Health target)

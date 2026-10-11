@@ -73,7 +73,7 @@ namespace Alterverse.Combat
             Health target = targeting.Acquire(spec.castRange, transform.forward);
             if (target == null) return false;
             AimPose pose = new AimPose(target.transform.position - transform.position, target.transform.position,
-                spec.targetingMode == TargetingMode.Homing ? target : null, true);
+                spec.targetingMode == TargetingMode.Homing || spec.targetingMode == TargetingMode.AutoBasic ? target : null, true);
             bool success = TryAttackAimed(pose);
             if (success) targeting.RegisterOffensiveAction();
             return success;
@@ -99,7 +99,7 @@ namespace Alterverse.Combat
         }
 
         public bool TryAttackNetworkAuthoritative(Health requestedTarget)
-            => requestedTarget != null && TryAttackNetworkAuthoritative(new AimPose(requestedTarget.transform.position - transform.position, requestedTarget.transform.position, null, true));
+            => requestedTarget != null && TryAttackNetworkAuthoritative(new AimPose(requestedTarget.transform.position - transform.position, requestedTarget.transform.position, requestedTarget, true));
         public bool TryAttackNetworkAuthoritative(AimPose pose)
             => CanAttempt() && AimGeometry.Finite(pose.Direction) && AimGeometry.Finite(pose.Point) && TryAttackAuthoritative(pose);
 

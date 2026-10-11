@@ -15,6 +15,7 @@ MonoBehaviour:
   meleeConeAngle: 70
   rangedConeAngle: 35
   basicMeleeConeAngle: 80
+  basicLeadQuality: 1
   aimAssistAngle: 8
   projectileWidth: 0.3
   dragRadius: 96

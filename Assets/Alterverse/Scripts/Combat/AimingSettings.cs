@@ -4,7 +4,7 @@ using UnityEngine;
 namespace Alterverse.Combat
 {
     public enum AimType { Melee, Projectile, Beam, Area, AreaCone, SelfArea, Dash, Self, Ally, Homing }
-    public enum TargetingMode { Geometry, Ally, Homing, Cone }
+    public enum TargetingMode { Geometry, Ally, Homing, Cone, AutoBasic }
 
     [System.Serializable]
     public struct AimSpec
@@ -20,7 +20,7 @@ namespace Alterverse.Combat
         public readonly Vector3 Direction, Point;
         // A captured world point is independent of the preview direction and never follows a target.
         public readonly bool HasAimPoint;
-        // Only ally support and explicitly configured homing may consume this reference.
+        // Support/homing may follow this reference. Automatic basics use it once at launch.
         public readonly Health Target;
         public AimPose(Vector3 direction, Vector3 point, Health target = null, bool hasAimPoint = false)
         { Direction = AimGeometry.Direction(direction); Point = point; Target = target; HasAimPoint = hasAimPoint; }
@@ -44,6 +44,7 @@ namespace Alterverse.Combat
 
         public float meleeConeAngle = 70f, rangedConeAngle = 35f, aimAssistAngle = 8f;
         public float basicMeleeConeAngle = 80f;
+        [Range(0f, 1f)] public float basicLeadQuality = 1f;
         public float projectileWidth = .30f, dragRadius = 96f, dragDeadZone = 10f, tapSeconds = .20f;
         public float directionDeadZone = 2f;
         public bool rememberAimDirection;
@@ -73,7 +74,7 @@ namespace Alterverse.Combat
             AimType type = slot < 0 ? (ranged ? AimType.Projectile : AimType.Melee) : Classify(hero, slot, ability);
             AimSpec spec = new AimSpec
             {
-                aimType = type, targetingMode = type == AimType.Ally ? TargetingMode.Ally :
+                aimType = type, targetingMode = slot < 0 && ranged ? TargetingMode.AutoBasic : type == AimType.Ally ? TargetingMode.Ally :
                     slot >= 0 && (type == AimType.Melee || type == AimType.Projectile || type == AimType.Beam)
                         ? TargetingMode.Cone : TargetingMode.Geometry,
                 castRange = slot < 0 ? basicRange ?? HeroCombatProfile.StatsFor(hero).AttackRange : ability.Range,

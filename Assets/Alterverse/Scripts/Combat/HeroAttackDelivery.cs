@@ -85,6 +85,8 @@ namespace Alterverse.Combat
                 !HeroCombatStatus.CanAct(gameObject) || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
             if (spec.targetingMode == TargetingMode.Homing && (!HeroCombatRules.Enemy(gameObject, pose.Target) ||
                 HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
+            if (slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null &&
+                (!HeroCombatRules.Enemy(gameObject, pose.Target) || HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
             for (int i = 0; i < pending.Length; i++)
             {
                 if (pending[i].Active) continue;
@@ -92,7 +94,7 @@ namespace Alterverse.Combat
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
                     Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
                     Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
-                    Target = spec.targetingMode == TargetingMode.Homing ? pose.Target : null, ReleaseAt = Time.time + windup };
+                    Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
                 if (slot < 0) CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange);
@@ -140,14 +142,22 @@ namespace Alterverse.Combat
             if (distance <= .0001f) return distance;
             int count = Physics.SphereCastNonAlloc(origin + Vector3.up * .5f, width * .5f, direction, blockers, distance,
                 GameplayCollision.SightMask, QueryTriggerInteraction.Ignore);
-            if (count == blockers.Length) return 0f; // Conservatively stop on a saturated query.
+            RaycastHit[] hits = blockers;
+            if (count == blockers.Length)
+            {
+                // A full buffer can contain only ignored actor colliders, or omit the
+                // nearest wall. Like locomotion, obtain all hits only on this rare path.
+                hits = Physics.SphereCastAll(origin + Vector3.up * .5f, width * .5f, direction, distance,
+                    GameplayCollision.SightMask, QueryTriggerInteraction.Ignore);
+                count = hits.Length;
+            }
             float closest = distance;
             for (int i = 0; i < count; i++)
             {
-                Health owner = blockers[i].collider.GetComponentInParent<Health>();
+                Health owner = hits[i].collider.GetComponentInParent<Health>();
                 if (owner == self || owner != null && (owner.GetComponent<HeroIdentity>() != null ||
                     owner.GetComponent<LaneMinion>() != null || HeroCombatRules.Enemy(gameObject, owner))) continue;
-                closest = Mathf.Min(closest, blockers[i].distance);
+                closest = Mathf.Min(closest, hits[i].distance);
             }
             return closest;
         }
@@ -220,9 +230,21 @@ namespace Alterverse.Combat
                 {
                     if (Time.time < p.ReleaseAt) continue;
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
-                    // Rebase once to the captured release-time point. Do not read a normal enemy's
-                    // transform here or during flight; moving targets can still dodge.
-                    if (p.HasAimPoint && (p.Spec.aimType != AimType.Melee || p.Basic))
+                    // Automatic ranged basics refresh their selected target once when the shot
+                    // leaves the weapon. Use the existing bounded movement predictor, then freeze
+                    // the trajectory. Manual skills keep their release-time world point.
+                    if (p.Basic && p.Spec.targetingMode == TargetingMode.AutoBasic && HeroCombatRules.Enemy(gameObject, p.Target))
+                    {
+                        HeroLocomotion body = p.Target.GetComponent<HeroLocomotion>();
+                        Vector3 velocity = body != null && AimGeometry.Finite(body.Velocity) ? body.Velocity : Vector3.zero;
+                        float flight = HeroCombatRules.Distance(p.LaunchOrigin, p.Target.transform.position) / p.Spec.projectileSpeed;
+                        p.Point = HeroAimPrediction.Point(p.LaunchOrigin, p.Target.transform.position, velocity,
+                            flight, AimingSettings.Current.basicLeadQuality, p.Spec.castRange, false);
+                        p.HasAimPoint = true;
+                    }
+                    // Rebase melee as well: strafing during a longer preparation must not rotate
+                    // the captured stationary point outside a cone with an obsolete origin.
+                    if (p.HasAimPoint)
                         p.Direction = new AimPose(p.Direction, p.Point, null, true).CastDirection(p.LaunchOrigin);
                     float length = BlockDistance(p.LaunchOrigin, p.Direction, p.Spec.castRange, p.Spec.projectileWidth);
                     Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
