@@ -53,6 +53,7 @@ namespace Alterverse.Visuals
             if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",Mathf.Clamp01(metallic));
             if(material.HasProperty("_Smoothness"))material.SetFloat("_Smoothness",Mathf.Clamp01(smoothness));
             if(material.HasProperty("_EmissionColor"))material.SetColor("_EmissionColor",emission);
+            if(!useUnlit)GameMaterialFinishes.Apply(material);
             return material;
         }
 

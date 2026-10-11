@@ -23,6 +23,7 @@ Shader "DimensionsFront/WeaponEnergyOverlay"
    #pragma vertex vert
    #pragma fragment frag
    #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+   #include "Assets/Alterverse/Resources/CombatVfx/DF_VfxFlow.hlsl"
    struct Attributes { float4 position:POSITION; float3 normal:NORMAL; float3 pattern:TEXCOORD2; };
    struct Varyings { float4 position:SV_POSITION; float3 world:TEXCOORD0; half3 normal:TEXCOORD1; float3 pattern:TEXCOORD2; };
    CBUFFER_START(UnityPerMaterial)
@@ -76,6 +77,8 @@ float Ornament(float2 p)
     float marks=max(Engraving(i.pattern.xy),max(Engraving(i.pattern.yz),Engraving(i.pattern.zx)));
     half detail=saturate(marks)*_PatternStrength;
     half3 color=_GlowColor.rgb*lerp(1.05h,2.0h,rim);
+    half2 flow=DFVfxFlow(i.pattern.xy*2.4,frac(_Time.y*.07),.85h);
+    color*=1+flow.x*.12h;
     color=lerp(color,color*2.35h+half3(.28h,.30h,.34h),detail);
     // Detail changes brightness only; it never increases opacity.
     return half4(color,alpha);

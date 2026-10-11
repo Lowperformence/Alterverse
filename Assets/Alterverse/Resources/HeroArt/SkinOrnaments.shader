@@ -21,6 +21,7 @@ Shader "Alterverse/SkinOrnaments"
 
         HLSLINCLUDE
             #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+            #include "Assets/Resources/DF_MaterialFinish.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
@@ -132,6 +133,7 @@ float Ornament(float2 p)
                 half smoothness=_Smoothness;
                 float ink=Ornament(input.rest.xy*4);
                 albedo=lerp(albedo,half3(.065,.028,.023),ink*.82);
+                if(_Metallic>.35h)DFApplySharedFinish(input.rest,n,_Metallic,0,n,albedo,smoothness);
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
                     smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
@@ -180,4 +182,5 @@ float Ornament(float2 p)
 
     Fallback Off
 }
+
 

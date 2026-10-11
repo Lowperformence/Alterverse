@@ -1,0 +1,17 @@
+{
+  "size": [
+    128,
+    128
+  ],
+  "bakes": 2,
+  "addons": [
+    "Node Wrangler 3.55",
+    "TexTools 1.6.2"
+  ],
+  "sha256": "f0a76857e4e7fd2e354050dc801d5cdb1bea4c8724757b63821db6efab2b8994",
+  "channelStd": [
+    0.08651280403137207,
+    0.07233898341655731
+  ],
+  "scope": "Offline colour-detail texture; not a Unity/Android render or performance test."
+}

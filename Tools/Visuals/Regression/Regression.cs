@@ -141,6 +141,23 @@ public static class VisualRegression
         Check(AudioDuckEnvelope.Advance(.7f,true,float.NaN)==.7f,"invalid delta poisoned envelope");
         Check(AudioDuckEnvelope.Advance(float.NaN,false,0)==1,"invalid gain not recovered");
     }
+    private static void SurfaceStyleChecks()
+    {
+        var pool=Pool();var owner=new GameObject("style owner");owner.AddComponent<Alterverse.Combat.Health>();
+        HeroFxShape[] shapes={HeroFxShape.Laser,HeroFxShape.MonsterBeam,HeroFxShape.WaterSpiral,HeroFxShape.WaveCrest,HeroFxShape.Rift,HeroFxShape.EchoSickle,HeroFxShape.Spark,HeroFxShape.Mist};
+        int[] styles={6,6,7,7,8,8,9,5};
+        for(int i=0;i<shapes.Length;i++)foreach(bool warning in new[]{false,true})
+        {
+            HeroVfxPool.Emit(shapes[i],Vector3.zero,Vector3.forward*2,Vector3.one,new Color(.2f,.4f,.9f,.7f),1,HeroFxMotion.Hold,owner:owner,warning:warning);
+            object active=null;foreach(var slot in Slots(pool))if(Get<bool>(slot,"Active"))active=slot;
+            Check(active!=null,"effect not presented");
+            Check(Get<float>(active,"SurfaceStyle")== (warning?0:styles[i]),"style/category isolation");
+            Check(Get<float>(active,"Duration")==1,"style changed effect lifetime");
+            Check(Get<Color>(active,"Color").a==.7f,"style changed source opacity");
+            if(warning)Check(Get<Vector3>(active,"Size").x==1,"style changed warning bounds");
+            Time.time+=2;Invoke(pool,"Update");
+        }
+    }
     private static void MonitorChecks()
     {
         Application.isFocused=true;Application.isMobilePlatform=true;Time.timeScale=1;
@@ -170,7 +187,7 @@ public static class VisualRegression
     }
     public static void Main()
     {
-        BudgetChecks();AudioChecks();MonitorChecks();PoolChecks();TraceChecks();
+        BudgetChecks();AudioChecks();MonitorChecks();PoolChecks();TraceChecks();SurfaceStyleChecks();
         Console.WriteLine("PASS: "+checks+" assertions; production VFX scheduler/Draw/Trace, quality hysteresis and audio envelope. Mesh factory and engine substituted.");
     }
 }

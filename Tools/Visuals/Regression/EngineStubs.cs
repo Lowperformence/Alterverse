@@ -95,7 +95,7 @@ namespace UnityEngine {
  public enum RuntimeInitializeLoadType { SubsystemRegistration,AfterSceneLoad }
  [AttributeUsage(AttributeTargets.Method)] public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType type){} }
  public static class Application {public static bool isMobilePlatform=true,isFocused=true; public static int targetFrameRate=60;}
- public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;} }
+ public struct Color {public float r,g,b,a;public Color(float r,float g,float b,float a=1){this.r=r;this.g=g;this.b=b;this.a=a;}public static Color white=>new Color(1,1,1,1); }
  public class Shader:Object {public string name="DimensionsFront/HeroEnergy";public bool isSupported=true;private static Dictionary<string,int> ids=new Dictionary<string,int>();public static int PropertyToID(string n){if(!ids.ContainsKey(n))ids[n]=ids.Count+1;return ids[n];}}
  public class Material:Object {public string name;public Shader shader;public Material(Shader s){shader=s;} }
  public static class Resources {public static T Load<T>(string path) where T:class {if(typeof(T)==typeof(Material))return new Material(new Shader()) as T;if(typeof(T)==typeof(Shader))return new Shader() as T;return null;}}
@@ -105,7 +105,11 @@ namespace UnityEngine {
  public class MeshRenderer:Component {public Material sharedMaterial;public bool enabled,receiveShadows; public UnityEngine.Rendering.ShadowCastingMode shadowCastingMode;public UnityEngine.Rendering.LightProbeUsage lightProbeUsage;public UnityEngine.Rendering.ReflectionProbeUsage reflectionProbeUsage;public void SetPropertyBlock(MaterialPropertyBlock b){} }
 }
 namespace UnityEngine.Rendering {public enum ShadowCastingMode{Off} public enum LightProbeUsage{Off} public enum ReflectionProbeUsage{Off}}
-namespace Alterverse.Characters {public enum HeroId {Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok} public class HeroIdentity:UnityEngine.MonoBehaviour{public HeroId Hero;}}
+namespace Alterverse.Characters {public enum HeroId {Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy} public class HeroIdentity:UnityEngine.MonoBehaviour{public HeroId Hero;}}
 namespace Alterverse.Combat {public class Health:UnityEngine.MonoBehaviour {public bool IsDead;public float Shield=100;}}
 namespace Alterverse.Performance {public enum MobileQuality {Battery,Balanced,Performance} public static class MobilePerformanceProfile {public static MobileQuality Current=MobileQuality.Performance;} }
 namespace Alterverse.Visuals {public static class NerokAnchorMaterial {public static UnityEngine.Material Create(bool b){return new UnityEngine.Material(new UnityEngine.Shader());}} }
+namespace Alterverse.Visuals {
+ public static class RuntimeShaderLibrary {public static UnityEngine.Material Create(UnityEngine.Color color,bool unlit=false,float metal=0,float smooth=.2f){return new UnityEngine.Material(new UnityEngine.Shader());}}
+ public class HeroVisualMotion:UnityEngine.MonoBehaviour {public UnityEngine.Vector3 ReleasePoint=>transform.position;}
+}

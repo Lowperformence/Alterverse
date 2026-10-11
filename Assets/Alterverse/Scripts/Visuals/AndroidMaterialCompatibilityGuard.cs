@@ -70,9 +70,11 @@ namespace Alterverse.Visuals
             for(int i=0;i<materials.Length;i++)
             {
                 Material source=materials[i];
+                GameMaterialFinishes.Apply(source,renderer.name);
                 if(!NeedsRepair(source))continue;
                 Shader shader=PreferUnlit(renderer,source)?RuntimeShaderLibrary.Unlit:RuntimeShaderLibrary.Lit;
                 Material replacement=Replacement(source,shader);
+                GameMaterialFinishes.Apply(replacement,renderer.name);
                 if(replacement==source)continue;
                 materials[i]=replacement;
                 RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(replacement);
@@ -153,4 +155,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

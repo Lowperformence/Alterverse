@@ -9,6 +9,10 @@ Shader "Alterverse/RuntimeLit"
         _BumpScale("Normal Strength", Range(0,2)) = 0
         _Metallic("Metallic", Range(0,1)) = 0
         _Smoothness("Smoothness", Range(0,1)) = 0.2
+        _FinishData("Baked surface finish",2D)="gray" {}
+        _FinishScale("Object surface frequency",Float)=2
+        _FinishStrength("Baked relief strength",Range(0,.2))=0
+        _FinishRoughnessWeight("Baked finish response",Range(0,1))=0
         [HDR] _EmissionColor("Emission", Color) = (0,0,0,0)
     }
 
@@ -22,12 +26,14 @@ Shader "Alterverse/RuntimeLit"
 
         HLSLINCLUDE
             #include "Assets/Resources/DF_SurfaceLighting.hlsl"
+            #include "Assets/Resources/DF_MaterialFinish.hlsl"
             #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
             TEXTURE2D(_BumpMap);
             SAMPLER(sampler_BumpMap);
+            TEXTURE2D(_FinishData);SAMPLER(sampler_FinishData);
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
@@ -36,6 +42,9 @@ Shader "Alterverse/RuntimeLit"
                 half _NormalEncoding;
                 half _Metallic;
                 half _Smoothness;
+                float _FinishScale;
+                half _FinishStrength;
+                half _FinishRoughnessWeight;
                 half4 _EmissionColor;
             CBUFFER_END
 
@@ -117,6 +126,9 @@ Shader "Alterverse/RuntimeLit"
 
                 half3 albedo=baseSample.rgb*_BaseColor.rgb;
                 half smoothness=_Smoothness;
+                DFApplyBakedFinish(TEXTURE2D_ARGS(_FinishData,sampler_FinishData),
+                    TransformWorldToObject(input.positionWS),n,_FinishScale,_FinishStrength,
+                    _FinishRoughnessWeight,n,albedo,smoothness);
                 half3 rgb=DFSurfaceLighting(input.positionWS,n,albedo,_Metallic,
                     smoothness,1.0h,_EmissionColor.rgb,input.positionHCS);
                 rgb = MixFog(rgb, input.fogFactor);
