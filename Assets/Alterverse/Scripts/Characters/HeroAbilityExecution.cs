@@ -150,7 +150,7 @@ namespace Alterverse.Characters
             else if ((hero == HeroId.Kaelon || hero == HeroId.Rook) && slot == 1)
             {
                 if (hero == HeroId.Kaelon) { if (self.TemporaryShield > 5f) return false; HeroCombatAudio.Cast(gameObject,slot);self.AddShield(spec.Power, 4f,false); }
-                else { if (self.Normalized >= .95f) return false; HeroCombatAudio.Cast(gameObject,slot);self.Heal(spec.Power,false); self.AddShield(20, 3,false); }
+                else { if (self.Normalized >= .95f) return false; HeroCombatAudio.Cast(gameObject,slot);self.Heal(spec.Power,false); self.AddShield(30, 3,false); }
                 HeroSkillVfx.Support(gameObject,self,true,hero==HeroId.Kaelon?4f:3f);
                 if(hero==HeroId.Rook)HeroSkillVfx.Support(gameObject,self,false,.45f);
             }
@@ -271,6 +271,7 @@ namespace Alterverse.Characters
                     if(HeroCombatRules.Enemy(gameObject,h)){float before=h.Current+h.Shield;Hit(slot,h,false);confirmed|=h.Current+h.Shield<before;}
                 }
             }
+            if (identity.Hero == HeroId.Kaelon && slot == 3) { self.Heal(50, false);HeroSkillVfx.Support(gameObject,self,false,.45f); }
             if (identity.Hero == HeroId.Rook && slot == 3) { self.AddShield(65, 4,false);HeroSkillVfx.Support(gameObject,self,true,4); }
             if(confirmed)HeroCombatAudio.Impact(gameObject,slot,center);
             HeroSkillVfx.Area(gameObject, center, areaAim.aoeRadius, .3f, false,identity.Hero==HeroId.Mira,slot);

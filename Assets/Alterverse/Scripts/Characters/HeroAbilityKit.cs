@@ -71,14 +71,14 @@ namespace Alterverse.Characters
                     new("Impossible Center",58,72,7f,3.5f,.68f)),
                 HeroId.Mira=>new HeroAbilityLoadout(
                     new("Living memory",0,0,0),
-                    new("Resonant Seed",7,18,6.5f),
+                    new("Resonant Seed",7,30,6.5f),
                     new("Growth Veil",9,42*1.08f,6.5f),
                     new("Venn Shelter",13,50,6.5f),
                     new("Wildsurge",58,58*1.08f,0,5f,.4f)),
                 HeroId.Rook=>new HeroAbilityLoadout(
                     new("Scrap recovery",0,.12f,0),
                     new("Wreck Swing",7,39,2.9f),
-                    new("Armor Grip",13,30,0),
+                    new("Armor Grip",13,60,0),
                     new("Wreckstorm",10,35,0,2.8f,.30f),
                     new("Orun Overdrive",52,48,0,3.2f,.50f)),
                 HeroId.Traveler=>new HeroAbilityLoadout(

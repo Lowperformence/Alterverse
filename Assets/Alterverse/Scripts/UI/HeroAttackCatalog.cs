@@ -59,11 +59,12 @@ namespace Alterverse.UI
         private static string Primary(HeroId hero,int slot,AbilitySpec spec)
         {
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
+            if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
             if(hero==HeroId.Mira&&slot==1)return $"{spec.Power:0} HEAL";
             if(hero==HeroId.Mira&&slot==2)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Mira&&slot==3)return $"{spec.Power:0} HEAL + 25 SHIELD";
             if(hero==HeroId.Nerok&&slot==1)return $"{spec.Power:0} SHIELD / 3s";
-            if(hero==HeroId.Rook&&slot==1)return $"{spec.Power:0} HEAL + 20 SHIELD";
+            if(hero==HeroId.Rook&&slot==1)return $"{spec.Power:0} HEAL + 30 SHIELD";
             if(spec.Power<=0)return "";
             return $"{spec.Power:0} DMG";
         }
@@ -103,7 +104,7 @@ namespace Alterverse.UI
                 0=>"Strike that slows 35% for 1.5s and stuns for 0.55s.",
                 1=>"Grants Auren a 75-point shield for 4s.",
                 2=>"Place a gravity field; damages and slows enemies 35% for 1.5s.",
-                _=>"Area slam: damages and slows enemies 50% for 2s; allies gain 60 shield for 3s."
+                _=>"Area slam: damages and slows enemies 50% for 2s; allies gain 60 shield for 3s; Auren restores 50 HP."
             },
             HeroId.Nyra=>slot switch
             {
@@ -129,7 +130,7 @@ namespace Alterverse.UI
             HeroId.Rook=>slot switch
             {
                 0=>"Heavy melee hit that slows 20% for 1s.",
-                1=>"Restores 30 HP and grants 20 shield for 3s.",
+                1=>"Restores 60 HP and grants 30 shield for 3s.",
                 2=>"Short-windup 2.8m area smash.",
                 _=>"3.2m area burst; Brakk also gains 65 shield for 4s."
             },
