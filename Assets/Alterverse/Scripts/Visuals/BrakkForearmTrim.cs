@@ -66,8 +66,12 @@ namespace Alterverse.Visuals
                 {
                     kept[sub] = new List<int>();
                     int[] triangles = source.GetTriangles(sub);
-                    bool gold = sub < materials.Length && materials[sub] != null &&
-                        materials[sub].name.IndexOf("Champagne metal", StringComparison.OrdinalIgnoreCase) >= 0;
+                    // All three imported bracers per arm are separate armor shells:
+                    // the first uses metal, the other two use enamel. Removing only
+                    // metal left four shells that the forearm pass then colored gold.
+                    bool bracer = sub < materials.Length && materials[sub] != null &&
+                        (materials[sub].name.IndexOf("Champagne metal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                         materials[sub].name.IndexOf("Signature enamel", StringComparison.OrdinalIgnoreCase) >= 0);
                     for (int i = 0; i < triangles.Length; i += 3)
                     {
                         int a = triangles[i], b = triangles[i + 1], c = triangles[i + 2];
@@ -77,12 +81,12 @@ namespace Alterverse.Visuals
                             (Attached(a, upperR) && Attached(b, upperR) && Attached(c, upperR));
                         bool onHand = (Attached(a, handL) && Attached(b, handL) && Attached(c, handL)) ||
                             (Attached(a, handR) && Attached(b, handR) && Attached(c, handR));
-                        // The six imported gold pieces are in Anatomy. Additional
-                        // wrist/knuckle plates are generated on the hand bones.
+                        // Remove all six imported bracers, not the underlying fabric
+                        // anatomy. Wrist/knuckle plates are generated on hand bones.
                         // The four bronze overlays are the detail pass's two upper-arm
                         // plates per side. Remove their imported copies as well.
-                        if ((anatomy && gold && onForearm) || (details && (onUpperArm || onForearm || onHand)) ||
-                            (techDetails && onForearm))
+                        if ((anatomy && bracer && onForearm) || (details && (onUpperArm || onForearm || onHand)) ||
+                            (techDetails && (onUpperArm || onForearm)))
                         {
                             removed++;
                             continue;

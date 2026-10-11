@@ -37,8 +37,13 @@ namespace Alterverse.Visuals
             Matrix4x4[] bind=source.bindposes;
             foreach(string side in new[]{"L","R"})
             {
-                Panel("UpperArm"+side,"Forearm"+side,.64f,.16f);
-                Panel("Forearm"+side,"Hand"+side,.52f,.32f);
+                // Brakk's arms remain smooth; keep his leg details and the other
+                // heroes' arm panels. Nerok shares the asset, but has his own hero id.
+                if(hero!=HeroId.Rook)
+                {
+                    Panel("UpperArm"+side,"Forearm"+side,.64f,.16f);
+                    Panel("Forearm"+side,"Hand"+side,.52f,.32f);
+                }
                 Panel("Thigh"+side,"Shin"+side,.58f,.20f);
                 Panel("Shin"+side,"Foot"+side,.54f,.36f);
             }
