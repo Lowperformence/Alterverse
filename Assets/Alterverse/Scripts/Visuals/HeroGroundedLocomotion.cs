@@ -108,7 +108,7 @@ namespace Alterverse.Visuals
             foreach (SkinnedMeshRenderer skin in imported.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
                 Mesh mesh = skin.sharedMesh;
-                if (mesh == null) continue;
+                if (mesh == null || !skin.enabled || !skin.gameObject.activeInHierarchy) continue;
                 if (!mesh.isReadable) { unreadable++; continue; }
                 Transform[] bones = skin.bones;
                 int li = System.Array.IndexOf(bones, left.foot), ri = System.Array.IndexOf(bones, right.foot);
@@ -116,8 +116,13 @@ namespace Alterverse.Visuals
                 Vector3[] vertices = mesh.vertices;
                 BoneWeight[] weights = mesh.boneWeights;
                 Matrix4x4[] bind = mesh.bindposes;
+                // Removed imported footwear can leave unused vertices in a shared skin.
+                // Only rendered triangles define the visible sole and ground clearance.
+                var visible = new bool[vertices.Length];
+                foreach (int vertex in mesh.triangles) visible[vertex] = true;
                 for (int i = 0; i < vertices.Length && i < weights.Length; i++)
                 {
+                    if (!visible[i]) continue;
                     BoneWeight weight = weights[i];
                     bool onLeft = FootWeighted(weight, li), onRight = FootWeighted(weight, ri);
                     if (!onLeft && !onRight) continue;

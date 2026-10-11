@@ -114,6 +114,7 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);
             // Recolor after every generated detail and material pass so no gold forearm layer remains.
             BrakkForearmTrim.Apply(instance.transform, hero);
+            HeroBootPresentation.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }
