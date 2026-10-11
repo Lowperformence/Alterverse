@@ -95,7 +95,7 @@ class Ranked:
             if not hmac.compare_digest(signature, expected):
                 raise PermissionError('Invalid admission')
             data = json.loads(base64.urlsafe_b64decode(body + '=' * (-len(body) % 4)))
-            if data['season'] != self.season or data['exp'] < self.clock():
+            if data['season'] != self.season or data['exp'] <= self.clock():
                 raise PermissionError('Expired admission')
             identifier(data['account']); identifier(data['ticket'])
             return data
@@ -180,9 +180,11 @@ class Ranked:
         p = self.store.atomic(lambda tx: tx.get(self.pk(account)))
         active = p.get('active') if p else None
         if active:
+            # Revoke admission before a slow/failing external deletion. A cancelled
+            # player must never remain eligible for a delayed match registration.
+            self._release(account, active['reservation'])
             if active.get('group'):
                 self.gateway.cancel(active['group'])
-            self._release(account, active['reservation'])
         return {'status': 'CANCELLED'}
 
     def register(self, data):

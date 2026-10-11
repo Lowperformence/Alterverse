@@ -149,6 +149,8 @@ namespace Alterverse.Multiplayer
                 LaunchAuthoritativeMatch(manager);
             else if (Time.unscaledTime - planSentAt >= PlanAckTimeoutSeconds)
             {
+                if (RankedMatchReporter.RankedDeployment)
+                { AbortRanked(manager); return; }
                 // Evict peers that never accepted the plan, then rebuild for the survivors.
                 var stalled = new List<ulong>();
                 foreach (ulong id in pending.Keys)
@@ -415,6 +417,12 @@ namespace Alterverse.Multiplayer
             }
             catch (Exception ex)
             {
+                if (RankedMatchReporter.RankedDeployment)
+                {
+                    Debug.LogError("DIMENSIONS FRONT SERVER: ranked plan build failed: " + ex);
+                    AbortRanked(manager);
+                    return;
+                }
                 planSent = false;
                 CoopAuthority.ClearPrepared();
                 status = "DEDICATED PLAN BUILD FAILED";
@@ -620,11 +628,16 @@ namespace Alterverse.Multiplayer
 
         private void AbortRanked(NetworkManager manager)
         {
+            if (launched) return;
             launched = true;
             status = "RANKED START CANCELLED • NO POINTS CHANGED";
-            string abortedMatch = CoopAuthority.PreparedPlan?.MatchId ?? RankedMatchReporter.Instance?.MatchId;
-            if (RankedMatchReporter.Instance != null && !string.IsNullOrEmpty(abortedMatch))
-                _ = RankedMatchReporter.Instance.VoidAsync(abortedMatch);
+            string abortedMatch = CoopAuthority.PreparedPlan?.MatchId ?? RankedMatchReporter.Instance?.MatchId ??
+                EdgegapInjectedMatchContext.InjectedMatchId;
+            if (string.IsNullOrEmpty(abortedMatch))
+                foreach (var human in pending.Values)
+                    if (!string.IsNullOrEmpty(human.MatchId)) { abortedMatch = human.MatchId; break; }
+            if (!string.IsNullOrEmpty(abortedMatch))
+                _ = RankedMatchReporter.Ensure().VoidAsync(abortedMatch);
             var ids = new List<ulong>(pending.Keys);
             foreach (ulong id in ids) manager.DisconnectClient(id);
             CoopAuthority.ClearPrepared();
@@ -711,6 +724,10 @@ namespace Alterverse.Multiplayer
 
             if (remove.Count > 0 && planSent && !launched)
             {
+                // Ranked cannot rebuild a smaller roster. Keep the prepared match id
+                // until the abort has issued its tombstone, including in-flight register.
+                if (RankedMatchReporter.RankedDeployment)
+                { AbortRanked(manager); return; }
                 planSent = false; planSentAt = -1f; planAcks.Clear(); CoopAuthority.ClearPrepared();
             }
             for (int i = 0; i < remove.Count; i++)

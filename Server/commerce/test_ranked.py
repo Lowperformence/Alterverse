@@ -148,6 +148,20 @@ class RankedTests(unittest.TestCase):
         for points, expected in [(0,'Bronze 3'),(999,'Bronze 1'),(1000,'Silver 3'),(1200,'Gold 3'),(1400,'Platinum 3'),(1600,'Diamond 3'),(1800,'Master 3'),(2000,'Dimensions Legend')]:
             self.assertEqual(rating_view(dict(self.ranked.player('a0'),mmr=points,games=5))['rank'],expected)
 
+    def test_cancel_outage_invalidates_admission_before_gateway_cleanup(self):
+        roster = self.roster()
+        with patch.object(self.gateway, 'cancel', side_effect=RuntimeError('matchmaker outage')):
+            with self.assertRaises(RuntimeError): self.ranked.cancel('a0')
+        with self.assertRaises(ValueError): self.ranked.poll('a0')
+        with self.assertRaises(PermissionError): self.ranked.register(dict(matchId='cancelled', players=roster))
+        fresh = self.ranked.search('a0', 'Hero')
+        self.assertNotEqual(fresh['ticket_id'], roster[0]['ticket'])
+
+    def test_admission_is_invalid_at_its_expiration(self):
+        roster = self.roster()
+        self.now += 600
+        with self.assertRaises(PermissionError): self.ranked.register(dict(matchId='expired', players=roster))
+
 
 class RankedHttpTests(unittest.TestCase):
     setUp = RankedTests.setUp

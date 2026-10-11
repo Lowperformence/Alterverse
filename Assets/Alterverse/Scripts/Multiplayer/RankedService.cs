@@ -42,6 +42,7 @@ namespace Alterverse.Multiplayer
         public string ResultText { get; private set; } = "";
         string endpoint, owner;
         int generation;
+        int resultGeneration;
         Task<Member> queueRequest;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -55,7 +56,9 @@ namespace Alterverse.Multiplayer
         {
             if (owner != null && (!AuthenticationService.Instance.IsAuthorized || owner != AuthenticationService.Instance.PlayerId))
             {
-                generation++; Searching = false; Current = null; Admission = ""; owner = null;
+                generation++; resultGeneration++;
+                if (Searching) CoopNetworkBootstrap.CancelDedicatedConnection();
+                Searching = false; Busy = false; Current = null; Admission = ""; owner = null; queueRequest = null;
                 Leaderboard = Array.Empty<Snapshot>(); ResultText = "";
             }
         }
@@ -73,16 +76,22 @@ namespace Alterverse.Multiplayer
         public async Task RefreshAsync()
         {
             if (Busy) return;
+            int refresh = generation;
             Busy = true;
             try
             {
                 await Authenticate();
-                Current = await Request<Snapshot>("/ranked/status", "{}");
-                Leaderboard = (await Request<Leaders>("/ranked/leaderboard", "{}")).leaders ?? Array.Empty<Snapshot>();
+                if (refresh != generation) return;
+                Snapshot snapshot = await Request<Snapshot>("/ranked/status", "{}");
+                if (refresh != generation) return;
+                Leaders leaders = await Request<Leaders>("/ranked/leaderboard", "{}");
+                if (refresh != generation) return;
+                Current = snapshot;
+                Leaderboard = leaders.leaders ?? Array.Empty<Snapshot>();
                 if (!Searching) Status = "SOLO 5v5 • RANK POINTS FOR TEAM VICTORIES";
             }
-            catch (Exception error) { Status = error.Message; }
-            finally { Busy = false; }
+            catch (Exception error) { if (refresh == generation) Status = error.Message; }
+            finally { if (refresh == generation) Busy = false; }
         }
         public async Task<bool> StartSearchAsync()
         {
@@ -90,7 +99,7 @@ namespace Alterverse.Multiplayer
             if (OnlinePartyService.Instance?.InParty == true || CoopLobbyService.Instance?.InLobby == true ||
                 EdgegapOnlineFlow.Instance?.IsSearching == true)
             { Status = "Leave your party before Solo Ranked."; return false; }
-            Busy = true; Searching = true; Admission = ""; ResultText = "";
+            Busy = true; Searching = true; Admission = ""; ResultText = ""; resultGeneration++;
             int search = ++generation;
             try
             {
@@ -140,17 +149,22 @@ namespace Alterverse.Multiplayer
         }
         public async Task CancelAsync()
         {
-            generation++; Busy = true;
+            int cancel = ++generation;
+            string account = owner ?? AuthenticationService.Instance.PlayerId;
+            Task<Member> creation = queueRequest;
+            Busy = true;
             CoopNetworkBootstrap.CancelDedicatedConnection();
             try
             {
                 // Wait for queue creation so cancel cannot overtake the original HTTP request.
-                if (queueRequest != null) { try { await queueRequest; } catch { } }
+                if (creation != null) { try { await creation; } catch { } }
+                if (cancel != generation || !AuthenticationService.Instance.IsAuthorized ||
+                    AuthenticationService.Instance.PlayerId != account) return;
                 await Request<Member>("/ranked/cancel", "{}");
-                Status = "RANKED SEARCH CANCELLED";
+                if (cancel == generation) Status = "RANKED SEARCH CANCELLED";
             }
-            catch (Exception error) { Status = error.Message; }
-            finally { Searching = false; Admission = ""; Busy = false; queueRequest = null; }
+            catch (Exception error) { if (cancel == generation) Status = error.Message; }
+            finally { if (cancel == generation) { Searching = false; Admission = ""; Busy = false; queueRequest = null; } }
         }
         public void MatchStarted() { generation++; Searching = false; Busy = false; Admission = ""; Status = "RANKED MATCH LIVE"; }
         async Task MonitorConnectionAsync(int search)
@@ -164,17 +178,25 @@ namespace Alterverse.Multiplayer
             }
             if (search != generation) return;
             await CancelAsync();
-            Status = "Ranked start cancelled. No rank points changed. Search again.";
+            if (generation == search + 1) Status = "Ranked start cancelled. No rank points changed. Search again.";
         }
         public async Task RefreshResultAsync(string matchId)
         {
+            int result = ++resultGeneration;
+            string account = AuthenticationService.Instance.PlayerId;
+            bool CurrentAccount() => result == resultGeneration && AuthenticationService.Instance.IsAuthorized &&
+                AuthenticationService.Instance.PlayerId == account;
             ResultText = "RANKED • VERIFYING RESULT…";
             for (int i = 0; i < 40; i++)
             {
+                if (!CurrentAccount()) return;
                 try
                 {
                     await Authenticate();
-                    Current = await Request<Snapshot>("/ranked/status", "{}");
+                    if (!CurrentAccount()) return;
+                    Snapshot snapshot = await Request<Snapshot>("/ranked/status", "{}");
+                    if (!CurrentAccount()) return;
+                    Current = snapshot;
                     if (Current.lastResult?.matchId == matchId)
                     {
                         int delta = Current.lastResult.delta;
@@ -185,9 +207,10 @@ namespace Alterverse.Multiplayer
                     }
                 }
                 catch { }
+                if (!CurrentAccount()) return;
                 await Task.Delay(3000);
             }
-            ResultText = "RANKED RESULT PENDING • REFRESH IN THE RANKED MENU";
+            if (CurrentAccount()) ResultText = "RANKED RESULT PENDING • REFRESH IN THE RANKED MENU";
         }
         async Task<T> Request<T>(string path, string json)
         {
@@ -208,6 +231,6 @@ namespace Alterverse.Multiplayer
                 throw new InvalidOperationException(response?.message ?? "Ranked server unavailable. Try again.");
             return response.ranked;
         }
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy() { generation++; resultGeneration++; if (Instance == this) Instance = null; }
     }
 }

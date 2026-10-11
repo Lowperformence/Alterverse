@@ -4,7 +4,7 @@ using Alterverse.Multiplayer;
 using Alterverse.Characters;
 using Alterverse.AI;
 using Alterverse.Match;
-class Regression {
+partial class Regression {
  static int checks;
  static void Check(bool b,string message){checks++;if(!b)throw new Exception(message);}
  static void Rejected(Action a,string message){bool rejected=false;try{a();}catch(InvalidOperationException){rejected=true;}Check(rejected,message);}
@@ -28,6 +28,7 @@ class Regression {
   Rejected(()=>OnlineMatchPlan.FromAuthoritativeSlots("bad",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t1",SessionMode.OnlineRanked),"client rejects bot plan");
   var solo=OnlineMatchPlan.BuildDedicated("casual",ArenaVariant.Moon,BotDifficulty.Hard,players.GetRange(0,1));
   Check(solo.HumanCount==1&&solo.Session.IsFull,"casual bot fill preserved");
+  FailureCases().GetAwaiter().GetResult();
   Console.WriteLine(checks+" ranked C# checks passed; engine/network substitutes, not a Unity build.");
  }
 }

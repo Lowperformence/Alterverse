@@ -22,6 +22,8 @@ namespace Alterverse.Multiplayer
         readonly Dictionary<string, float> absent = new();
         readonly HashSet<string> leavers = new();
         bool finished;
+        int receiptGeneration;
+        Task voidRequest;
         public static bool RankedDeployment => Environment.GetEnvironmentVariable("DF_RANKED_SERVER") == "1";
 
         public static RankedMatchReporter Ensure()
@@ -33,9 +35,14 @@ namespace Alterverse.Multiplayer
         public async Task<bool> RegisterAsync(string matchId, Player[] roster)
         {
             if (Registered) return MatchId == matchId;
+            if (finished) return false;
             if (!DedicatedServerNetworkRuntime.Requested || !EdgegapInjectedMatchContext.IsEdgegapDeployment) return false;
+            int registration = receiptGeneration;
             string json = JsonUtility.ToJson(new Registration { matchId = matchId, players = roster });
             if (!await Send("/ranked/server/register", json)) return false;
+            // An abort may finish while this HTTP response is still in flight.
+            // The backend tombstone owns that race; never reactivate local state.
+            if (registration != receiptGeneration || finished) return false;
             MatchId = matchId; players = roster; Registered = true; finished = false;
             absent.Clear(); leavers.Clear();
             return true;
@@ -70,12 +77,19 @@ namespace Alterverse.Multiplayer
             }
             ResultPending = false;
         }
-        public async Task VoidAsync(string matchId)
+        public Task VoidAsync(string matchId)
         {
-            finished = true; ResultPending = true;
+            if (voidRequest != null) return voidRequest;
+            receiptGeneration++;
+            finished = true; Registered = false; ResultPending = true;
+            voidRequest = SendVoidAsync(matchId);
+            return voidRequest;
+        }
+        async Task SendVoidAsync(string matchId)
+        {
             string json = JsonUtility.ToJson(new Registration { matchId = matchId });
             while (!await Send("/ranked/server/void", json)) await Task.Delay(3000);
-            ResultPending = false; Registered = false;
+            ResultPending = false;
         }
         async Task<bool> Send(string path, string json)
         {
