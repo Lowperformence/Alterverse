@@ -77,7 +77,7 @@ namespace Alterverse.Characters
                     new("Orun Overdrive",52,48,0,3.2f,.50f)),
                 HeroId.Traveler=>new HeroAbilityLoadout(
                     new("Between seconds",0,0,0),
-                    new("Temporal Beam",8,30,7.2f),
+                    new("Temporal Beam",8,35,7.2f),
                     new("Rift Step",13,0,3.6f),
                     new("Chrono Snare",12,35,6.5f,2.2f,.38f),
                     new("Paradox Collapse",56,60,6.8f,3.2f,.68f)),
