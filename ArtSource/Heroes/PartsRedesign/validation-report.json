@@ -1,0 +1,128 @@
+{
+  "revision": "hero-parts-20261011-v1",
+  "baseCommit": "bd7756321a7ac0ac9e32275c67bc03461547d00e",
+  "models": {
+    "Sivra": {
+      "preservedVertices": 28338,
+      "removedVertices": 5594,
+      "newVertices": 7562,
+      "newTriangles": 14196,
+      "newParts": 73,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "d2bbd8ddea070735ae9da25229c1ff841f4dfe4d94751684c277aa4fc2cba003",
+      "blenderSourceAndSkinnedFbx": true,
+      "fbxRoundTrip": {
+        "bones": 16,
+        "bodyVertices": 35900,
+        "bodyFaces": 70282,
+        "skinningImported": true
+      }
+    },
+    "Ione": {
+      "preservedVertices": 12380,
+      "removedVertices": 1673,
+      "newVertices": 8438,
+      "newTriangles": 15944,
+      "newParts": 74,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "f97f7edda6c140c4802a731105b3a6e3981cae80f61bb783f0d3e6d0fd2370fa",
+      "blenderSourceAndSkinnedFbx": true,
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 20818,
+        "bodyFaces": 40035,
+        "skinningImported": true
+      }
+    },
+    "Nerok": {
+      "preservedVertices": 76896,
+      "removedVertices": 3330,
+      "newVertices": 5276,
+      "newTriangles": 9784,
+      "newParts": 144,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "4221260d086f88dae0d0f9a23aff2efa1f804cfba8911c963a2acaaeadb6aaaa",
+      "replacedParts": [
+        "pirate trouser thigh",
+        "pirate trouser thigh",
+        "leather cross-body baldric",
+        "baldric stud",
+        "baldric stud",
+        "baldric stud",
+        "baldric stud",
+        "baldric stud",
+        "open naval vest",
+        "vest brass lapel",
+        "vest gold braid",
+        "vest gold braid",
+        "vest gold braid",
+        "vest gold braid",
+        "split coat tail",
+        "coat tail piping",
+        "open naval vest",
+        "vest brass lapel",
+        "vest gold braid",
+        "vest gold braid",
+        "vest gold braid",
+        "vest gold braid",
+        "split coat tail",
+        "coat tail piping"
+      ],
+      "matchedOriginalTriangles": 1110,
+      "mouthTailAnchorAndHookExact": true,
+      "blenderSourceAndSkinnedFbx": true,
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 82172,
+        "bodyFaces": 34080,
+        "skinningImported": true
+      }
+    },
+    "Tahla": {
+      "removedShoulderIslands": 14,
+      "removedVertices": 990,
+      "preservedVertices": 17622,
+      "bodyPositionsExact": true,
+      "rigExact": true,
+      "originalActionsExact": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Run",
+        "Skill0",
+        "Skill1",
+        "Skill2",
+        "Ultimate"
+      ],
+      "newVertices": 8832,
+      "newTriangles": 17088,
+      "newParts": 60,
+      "fbxRoundTrip": {
+        "bones": 19,
+        "bodyVertices": 26454,
+        "bodyFaces": 33852,
+        "skinningImported": true,
+        "animationClipsImported": [
+          "DF_Skeleton|DF_Skeleton|Attack",
+          "DF_Skeleton|DF_Skeleton|Death",
+          "DF_Skeleton|DF_Skeleton|Hit",
+          "DF_Skeleton|DF_Skeleton|Idle",
+          "DF_Skeleton|DF_Skeleton|Run",
+          "DF_Skeleton|DF_Skeleton|Skill0",
+          "DF_Skeleton|DF_Skeleton|Skill1",
+          "DF_Skeleton|DF_Skeleton|Skill2",
+          "DF_Skeleton|DF_Skeleton|Ultimate"
+        ]
+      }
+    }
+  },
+  "validation": {
+    "runtimePayload": "passed",
+    "nativeFbxImport": "passed",
+    "UnityEditor": "not run in authoring runner"
+  }
+}
