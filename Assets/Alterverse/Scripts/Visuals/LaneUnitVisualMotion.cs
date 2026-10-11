@@ -14,6 +14,7 @@ namespace Alterverse.Visuals
         private float phase, gait, lean, attackUntil, attackDuration, attackWeight;
         private bool configured, robot;
         private Transform attackElbowL,attackElbowR,attackHandL,attackHandR;
+        private Quaternion attackHandRestL,attackHandRestR;
         private float attackContact=.18f,attackStarted=-100;private int attackSerial;
         public Transform AttackSocket=>(attackSerial&1)==0?attackHandL:attackHandR;
         public Transform RightAttackSocket=>attackHandR;
@@ -192,6 +193,7 @@ namespace Alterverse.Visuals
             shinRestL = Rest(shinL); shinRestR = Rest(shinR);
             footRestL = Rest(footL); footRestR = Rest(footR);
             armRestL = Rest(armL); armRestR = Rest(armR);
+            attackHandRestL = Rest(attackHandL); attackHandRestR = Rest(attackHandR);
             shoulderRestL = Rest(shoulderL); shoulderRestR = Rest(shoulderR); headRest = Rest(head);
         }
 
@@ -234,6 +236,10 @@ namespace Alterverse.Visuals
         {
             if(arm==null||elbow==null||hand==null)return;
             elbow.localRotation=Quaternion.identity;
+            // Solve preserves world wrist orientation and writes a local compensation.
+            // Restore the authored wrist before resetting/solving the arm each frame;
+            // otherwise the previous compensation accumulates into a spinning hand.
+            hand.localRotation=side<0?attackHandRestL:attackHandRestR;
             float reach=Vector3.Distance(arm.position,elbow.position)+Vector3.Distance(elbow.position,hand.position);
             Vector3 guard=arm.position-transform.up*reach*.55f+transform.forward*reach*.32f;
             if(machineGun!=null)
@@ -326,6 +332,8 @@ namespace Alterverse.Visuals
             if (armR != null) armR.localRotation = armRestR;
             if (shoulderL != null) shoulderL.localRotation = shoulderRestL;
             if (shoulderR != null) shoulderR.localRotation = shoulderRestR;
+            if (attackHandL != null) attackHandL.localRotation = attackHandRestL;
+            if (attackHandR != null) attackHandR.localRotation = attackHandRestR;
             if (head != null) head.localRotation = headRest;
         }
 
@@ -358,4 +366,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
