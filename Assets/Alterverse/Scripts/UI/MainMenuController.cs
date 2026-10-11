@@ -16,7 +16,7 @@ namespace Alterverse.UI
     {
         private enum Page { Home, Play, Heroes, Shop, Inventory, Profile, Quests, Leaderboard, Settings, Coop, BattlePass, Friends, Clans }
         private static MainMenuController instance;
-        public static bool IsVisible => instance != null && instance.visible;
+        public static bool IsVisible => instance != null && instance.visible && instance.isActiveAndEnabled;
         private static readonly string[] NavigationLabels = { "PLAY", "HEROES", "STORE", "INVENTORY", "BATTLE PASS", "PROFILE", "FRIENDS", "CLANS", "DAILY", "RANKING", "SETTINGS" };
         private static readonly Page[] NavigationPages = { Page.Play, Page.Heroes, Page.Shop, Page.Inventory, Page.BattlePass, Page.Profile, Page.Friends, Page.Clans, Page.Quests, Page.Leaderboard, Page.Settings };
         private static readonly int[] HomeNavigation={0,1,2,3,5};
@@ -125,7 +125,7 @@ namespace Alterverse.UI
                     coopLaunching=false;
                 }
             }
-            if (visible) MatchClock.Set(PauseReason.Menu,true);
+            if (visible && !CoopAuthority.Active) MatchClock.Set(PauseReason.Menu,true);
         }
         private void OnApplicationFocus(bool focused)
         {
@@ -187,7 +187,7 @@ namespace Alterverse.UI
         }
         private void OnGUI()
         {
-            if (!visible || OnlinePartyOverlay.IsOpen) return;
+            if (!visible || OnlinePartyOverlay.IsOpen || RankedPanel.Visible) return;
             Matrix4x4 oldMatrix = GUI.matrix; Color oldColor = GUI.color; bool oldEnabled = GUI.enabled;
             try
             {
@@ -419,14 +419,18 @@ namespace Alterverse.UI
             }
 
             const float matchButtonGap = 8f;
-            float matchButtonWidth = (w - matchButtonGap) * .5f;
+            float matchButtonWidth = (w - matchButtonGap * 2) / 3f;
             bool matchButtonsEnabled = !choosingMatchMode && !OnlinePlanHandshake.Preparing &&
+                !RankedPanel.Visible && RankedService.Instance?.Searching != true && RankedService.Instance?.Busy != true &&
                 (EdgegapOnlineFlow.Instance == null || !EdgegapOnlineFlow.Instance.Busy) &&
                 (OnlinePartyService.Instance == null || !OnlinePartyService.Instance.Busy) &&
                 (CoopLobbyService.Instance == null || !CoopLobbyService.Instance.Busy);
             if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
                 enabled:matchButtonsEnabled)) _ = BeginOnlineMatchmakingAsync();
-            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Play Offline",
+            if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
+                enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero)))
+            { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
+            if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
                 enabled:matchButtonsEnabled)) _ = BeginOfflineMatchAsync();
             theme.Label(new Rect(Left,684,w,22),launchMessage.Length>0?launchMessage:
                 arenaShuffle?"ARENA SHUFFLE  /  RANDOM OWNED MAP":
@@ -1386,6 +1390,7 @@ namespace Alterverse.UI
 
         private async System.Threading.Tasks.Task BeginOnlineMatchmakingAsync()
         {
+            if (RankedService.Instance?.Searching == true || RankedService.Instance?.Busy == true) return;
             if (launching || choosingMatchMode || !PrepareSelectedMatch()) return;
             var online=OnlinePartyService.Instance;
             if(online==null){launchMessage="Online service is initializing. Please try again.";return;}
@@ -1422,6 +1427,7 @@ namespace Alterverse.UI
 
         private async System.Threading.Tasks.Task BeginOfflineMatchAsync()
         {
+            if (RankedService.Instance?.Searching == true || RankedService.Instance?.Busy == true) return;
             if(launching || choosingMatchMode || !PrepareSelectedMatch())return;
             var online=OnlinePartyService.Instance;
             var coop=CoopLobbyService.Instance;

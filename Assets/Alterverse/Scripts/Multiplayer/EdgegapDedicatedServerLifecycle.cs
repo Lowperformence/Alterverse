@@ -55,11 +55,19 @@ namespace Alterverse.Multiplayer
             StartCoroutine(SelfStopAfterResults());
         }
 
+        public static void StopAbortedMatch()
+        {
+            var lifecycle = FindAnyObjectByType<EdgegapDedicatedServerLifecycle>();
+            if (lifecycle != null && !lifecycle.stopping && EdgegapInjectedMatchContext.IsEdgegapDeployment)
+            { lifecycle.stopping = true; lifecycle.StartCoroutine(lifecycle.SelfStopAfterResults()); }
+        }
         private IEnumerator SelfStopAfterResults()
         {
             Debug.Log($"DIMENSIONS FRONT SERVER: match ended; Edgegap self-stop scheduled in {ResultGraceSeconds:0}s.");
             float stopAt = Time.realtimeSinceStartup + ResultGraceSeconds;
             while (Time.realtimeSinceStartup < stopAt) yield return null;
+            // Keep the immutable ranked receipt alive until the account server commits it.
+            while (RankedMatchReporter.Instance?.ResultPending == true) yield return null;
 
             string url = Environment.GetEnvironmentVariable(DeleteUrlVariable) ?? "";
             string token = Environment.GetEnvironmentVariable(DeleteTokenVariable) ?? "";

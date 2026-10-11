@@ -2,12 +2,14 @@
 Never deploy with an authenticator that simply decodes an unsigned JWT or trusts a header ID.
 """
 import json
+import hmac
 from urllib.parse import quote
 from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 from social import Social, SocialForbidden
 
 class CommerceApplication:
-    def __init__(self, ledger_or_path, authenticate, google_session, package_name):
+    def __init__(self, ledger_or_path, authenticate, google_session, package_name, ranked=None, ranked_server_key=''):
+        self.ranked, self.ranked_server_key = ranked, ranked_server_key
         self.ledger = ledger_or_path if hasattr(ledger_or_path, 'wallet') else Ledger(ledger_or_path)
         if hasattr(self.ledger, 'connect'):
             self.social = Social(self.ledger)
@@ -23,11 +25,28 @@ class CommerceApplication:
             size = int(env.get('CONTENT_LENGTH') or '0')
             if size < 0 or size > 262144: raise ValueError('Request too large')
             # Must validate signature/issuer/audience/expiry and return the stable obfuscated account hash.
-            account = self.authenticate(env.get('HTTP_AUTHORIZATION', ''))
+            path = env.get('PATH_INFO', '')
+            server_ranked = path.startswith('/ranked/server/')
+            if server_ranked:
+                supplied = env.get('HTTP_AUTHORIZATION', '')
+                if not self.ranked_server_key or not hmac.compare_digest(supplied, 'Bearer ' + self.ranked_server_key):
+                    raise PermissionError('Server authentication required')
+                account = 'dedicated-server'
+            else:
+                account = self.authenticate(env.get('HTTP_AUTHORIZATION', ''))
             if not account: raise PermissionError('Authentication required')
             data = json.loads(env['wsgi.input'].read(size) or b'{}')
             if not isinstance(data, dict): raise ValueError('JSON object required')
             path = env.get('PATH_INFO')
+            if isinstance(path, str) and path.startswith('/ranked/'):
+                if self.ranked is None: raise RuntimeError('Ranked not configured')
+                if path == '/ranked/server/register': result = self.ranked.register(data)
+                elif path == '/ranked/server/result': result = self.ranked.settle(data)
+                elif path == '/ranked/server/void': result = self.ranked.void(data)
+                else: result = self.ranked.dispatch(account, path, data)
+                body = json.dumps({'fulfilled': True, 'ranked': result}).encode()
+                start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
+                return [body]
             if isinstance(path, str) and path.startswith('/social/'):
                 social = self.social.dispatch(account, path, data)
                 if social.get('wallet') is not None:
@@ -71,7 +90,7 @@ class CommerceApplication:
         except PermissionError:
             body = b'{"fulfilled":false}'; start_response('401 Unauthorized', [('Content-Type', 'application/json')])
         except (ValueError, KeyError) as error:
-            if isinstance(env.get('PATH_INFO'), str) and env['PATH_INFO'].startswith('/social/'):
+            if isinstance(env.get('PATH_INFO'), str) and env['PATH_INFO'].startswith(('/social/', '/ranked/')):
                 body = json.dumps({'fulfilled': False, 'message': str(error)}).encode()
                 start_response('400 Bad Request', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
                 return [body]

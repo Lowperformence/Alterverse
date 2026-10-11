@@ -57,7 +57,9 @@ namespace Alterverse.Match
             if (CoopAuthority.Active)
             {
                 var loop = NetworkRoundLoop.Instance;
-                text = loop != null && loop.Seconds >= 0 ? "NEXT ROUND IN " + loop.Seconds : loop?.Status ?? "WAITING FOR TEAM…";
+                text = CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked
+                    ? "RANKED COMPLETE • BACK TO MENU"
+                    : loop != null && loop.Seconds >= 0 ? "NEXT ROUND IN " + loop.Seconds : loop?.Status ?? "WAITING FOR TEAM…";
             }
             else text = restartAt < 0 ? "FINALIZING REWARDS…" : "NEXT ROUND IN " + Mathf.Max(0, Mathf.CeilToInt(restartAt - Time.unscaledTime));
             theme ??= new FrontEndTheme(); centered ??= new GUIStyle(theme.Small) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold };

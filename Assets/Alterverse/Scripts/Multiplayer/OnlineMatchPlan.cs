@@ -131,10 +131,15 @@ namespace Alterverse.Multiplayer
             string matchId,
             ArenaVariant arena,
             BotDifficulty difficulty,
-            IReadOnlyList<DedicatedMember> members)
+            IReadOnlyList<DedicatedMember> members,
+            SessionMode mode = SessionMode.OnlineCasual)
         {
             if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
                 throw new InvalidOperationException("Dedicated online match requires 1-10 human players.");
+            if (mode != SessionMode.OnlineCasual && mode != SessionMode.OnlineRanked)
+                throw new InvalidOperationException("Invalid online mode.");
+            if (mode == SessionMode.OnlineRanked && members.Count != MatchSession.MaxPlayers)
+                throw new InvalidOperationException("Ranked requires ten human players.");
 
             var teamKeys = new List<string>(2);
             var playersByTeam = new Dictionary<string, List<DedicatedMember>>(StringComparer.Ordinal);
@@ -163,7 +168,9 @@ namespace Alterverse.Multiplayer
             }
 
             teamKeys.Sort(StringComparer.Ordinal);
-            MatchSession session = new(matchId, SessionMode.OnlineCasual);
+            if (mode == SessionMode.OnlineRanked && (teamKeys.Count != 2 || playersByTeam[teamKeys[0]].Count != 5 || playersByTeam[teamKeys[1]].Count != 5))
+                throw new InvalidOperationException("Ranked requires five humans per team.");
+            MatchSession session = new(matchId, mode);
             int humanCount = 0;
 
             for (int team = 0; team < teamKeys.Count; team++)
@@ -177,7 +184,7 @@ namespace Alterverse.Multiplayer
                 {
                     DedicatedMember member = teamPlayers[row];
                     HeroId hero = member.Hero;
-                    if (!usedHeroes.Add(hero))
+                    if (!usedHeroes.Add(hero) && mode != SessionMode.OnlineRanked)
                     {
                         hero = PickBotHero(usedHeroes, ref replacementCursor);
                         usedHeroes.Add(hero);
@@ -228,12 +235,15 @@ namespace Alterverse.Multiplayer
             ArenaVariant arena,
             BotDifficulty difficulty,
             IReadOnlyList<MatchPlayerSlot> slots,
-            string localPlayerId)
+            string localPlayerId,
+            SessionMode mode = SessionMode.OnlineCasual)
         {
             if (slots == null || slots.Count != MatchSession.MaxPlayers)
                 throw new InvalidOperationException("Authoritative online roster must contain exactly ten slots.");
 
-            MatchSession session = new(matchId, SessionMode.OnlineCasual);
+            if (mode != SessionMode.OnlineCasual && mode != SessionMode.OnlineRanked)
+                throw new InvalidOperationException("Invalid authoritative online mode.");
+            MatchSession session = new(matchId, mode);
             int humans = 0;
             bool localFound = false;
 
@@ -242,6 +252,8 @@ namespace Alterverse.Multiplayer
                 MatchPlayerSlot source = slots[i];
                 if (source == null)
                     throw new InvalidOperationException($"Authoritative online roster slot {i} is empty.");
+                if (mode == SessionMode.OnlineRanked && source.IsBot)
+                    throw new InvalidOperationException("Ranked cannot start with bots.");
 
                 bool isLocal = !source.IsBot && !string.IsNullOrEmpty(localPlayerId) && source.PlayerId == localPlayerId;
                 MatchPlayerSlot copy = new()

@@ -32,6 +32,48 @@
           }
         }
       }
+    },
+    "dimensions-front-ranked": {
+      "ticket_expiration_period": "5m",
+      "ticket_removal_period": "1m",
+      "group_inactivity_removal_period": "5m",
+      "application": {
+        "name": "dimensions-front",
+        "version": "v0.1.1-ranked-server"
+      },
+      "rules": {
+        "initial": {
+          "match_size": {
+            "type": "player_count",
+            "attributes": {
+              "team_count": 2,
+              "min_team_size": 5,
+              "max_team_size": 5
+            }
+          },
+          "queue": {
+            "type": "string_equality"
+          },
+          "elo_rating": {
+            "type": "number_difference",
+            "attributes": {
+              "max_difference": 150
+            }
+          }
+        },
+        "expansions": {
+          "60": {
+            "elo_rating": {
+              "max_difference": 250
+            }
+          },
+          "120": {
+            "elo_rating": {
+              "max_difference": 400
+            }
+          }
+        }
+      }
     }
   }
 }

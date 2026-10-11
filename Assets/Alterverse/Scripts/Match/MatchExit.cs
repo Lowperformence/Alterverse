@@ -18,6 +18,7 @@ namespace Alterverse.Match
             if (world != null) world.SetActive(false);
             try
             {
+                if (RankedService.Instance?.Searching == true) await RankedService.Instance.CancelAsync();
                 // Wait for in-flight session/search mutations; otherwise Leave methods can ignore
                 // busy calls and leave stale Unity/Edgegap membership behind.
                 var online = OnlinePartyService.Instance;

@@ -148,17 +148,19 @@ namespace Alterverse.UI
         private void Header(MatchResultLayout layout,Color accent)
         {
             Rect r=layout.Header;
+            string ranked = Alterverse.Multiplayer.CoopAuthority.ActivePlan?.Session?.Mode == Alterverse.Multiplayer.SessionMode.OnlineRanked
+                ? Alterverse.Multiplayer.RankedService.Instance?.ResultText : null;
             theme.Panel(r);
             theme.Label(new Rect(r.x+16,r.y,layout.Stacked?r.width-32:r.width*.53f,48),data.Result,title);
             if(layout.Stacked)
             {
-                theme.Label(new Rect(r.x+16,r.y+48,r.width-32,24),data.ObjectivesText,small,true);
+                theme.Label(new Rect(r.x+16,r.y+48,r.width-32,24),string.IsNullOrEmpty(ranked)?data.ObjectivesText:ranked,small,true);
             }
             else
             {
                 float x=r.x+r.width*.57f,w=r.width*.43f-16;
                 theme.FitLabel(new Rect(x,r.y+3,w,23),data.Hero??"MATCH COMPLETE",label);
-                theme.FitLabel(new Rect(x,r.y+27,w,21),data.ObjectivesText,small,true);
+                theme.FitLabel(new Rect(x,r.y+27,w,21),string.IsNullOrEmpty(ranked)?data.ObjectivesText:ranked,small,true);
             }
             FrontEndTheme.Fill(new Rect(r.x+16,r.yMax-2,r.width-32,2),accent);
         }

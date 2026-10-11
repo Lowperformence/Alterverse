@@ -42,6 +42,13 @@ namespace Alterverse.Multiplayer
 
         private int waitGeneration;
 
+        public void AcceptRankedAssignment(string json)
+        {
+            CancelPendingAssignmentWait();
+            ResetLocalState();
+            ApplyMembershipResponse(JsonUtility.FromJson<MemberResponse>(json), "RANKED HOST ASSIGNED");
+        }
+
         public event Action Changed;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

@@ -33,6 +33,8 @@ namespace Alterverse.Multiplayer
         void Update()
         {
             if (MatchExit.Leaving || !CoopAuthority.Active) { Reset(); Detach(); return; }
+            if (CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked)
+            { Reset(); Detach(); Status = "RANKED COMPLETE • RETURN TO MENU"; return; }
             NetworkManager manager = NetworkManager.Singleton;
             if (manager == null || !manager.IsListening) return;
             Attach(manager.CustomMessagingManager);

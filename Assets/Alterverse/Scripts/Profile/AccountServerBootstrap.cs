@@ -109,6 +109,8 @@ namespace Alterverse.Profile
         }
         public async Task<bool> SignInAsync(string username,string password,bool register)
         {
+            if (Alterverse.Multiplayer.RankedService.Instance?.Searching == true || Alterverse.Multiplayer.RankedService.Instance?.Busy == true)
+            {Status="Cancel Ranked matchmaking before changing accounts.";return false;}
             if(Busy||string.IsNullOrWhiteSpace(username)||string.IsNullOrEmpty(password))return false;
             if(GooglePlayShardStore.Instance?.Busy==true||GooglePlayShardStore.Instance?.PendingRecovery==true||PaidShardCommerce.Spending)
             {Status="Finish purchase recovery before changing accounts.";return false;}
@@ -144,6 +146,8 @@ namespace Alterverse.Profile
 
         public async Task<bool> ConnectGoogleAsync(bool restore=false)
         {
+            if (Alterverse.Multiplayer.RankedService.Instance?.Searching == true || Alterverse.Multiplayer.RankedService.Instance?.Busy == true)
+            {GoogleStatus="Cancel Ranked matchmaking before connecting accounts.";return false;}
             if(Busy)return false;
             if(Alterverse.Multiplayer.CoopLobbyService.Instance?.Busy==true||Alterverse.Multiplayer.OnlinePartyService.Instance?.Busy==true||
                 Alterverse.Multiplayer.EdgegapOnlineFlow.Instance?.Busy==true||Alterverse.Multiplayer.CoopAuthority.Active||

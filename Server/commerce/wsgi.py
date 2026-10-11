@@ -9,6 +9,7 @@ from authentication import UnityPlayerAuthenticator
 from application import CommerceApplication
 from firestore_ledger import FirestoreLedger
 from ledger import Ledger
+from ranked import Ranked, EdgegapRankedGateway
 
 
 def create_application():
@@ -39,6 +40,14 @@ def create_application():
                 publisher_session=AuthorizedSession(credentials)
             except DefaultCredentialsError:
                 logging.error('Google Play billing disabled: application credentials unavailable')
-    return CommerceApplication(ledger,UnityPlayerAuthenticator(unity_project_id),publisher_session,package)
+    ranked = None
+    server_key = os.environ.get('DF_RANKED_SERVER_KEY', '')
+    if os.environ.get('DF_ENABLE_RANKED', '0') == '1':
+        if len(server_key) < 32: raise ValueError('DF_RANKED_SERVER_KEY must contain at least 32 characters')
+        ranked = Ranked(ledger, EdgegapRankedGateway(os.environ['DF_RANKED_MATCHMAKER_URL'],
+                        os.environ['DF_RANKED_MATCHMAKER_TOKEN']), os.environ['DF_RANKED_ADMISSION_KEY'],
+                        os.environ.get('DF_RANKED_SEASON', 'S1'))
+    return CommerceApplication(ledger,UnityPlayerAuthenticator(unity_project_id),publisher_session,package,
+                               **({'ranked': ranked, 'ranked_server_key': server_key} if ranked is not None else {}))
 
 application=create_application()

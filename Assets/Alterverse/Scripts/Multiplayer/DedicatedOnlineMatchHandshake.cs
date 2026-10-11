@@ -24,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
-        private const int ProtocolVersion = 2;
+        private const int ProtocolVersion = 3;
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
         private const float AuthenticationTimeoutSeconds = 10f;
@@ -39,6 +39,7 @@ namespace Alterverse.Multiplayer
             public string DisplayName;
             public HeroId Hero;
             public BattleItemType BattleItem;
+            public string Admission;
         }
 
         public static DedicatedOnlineMatchHandshake Instance { get; private set; }
@@ -49,6 +50,7 @@ namespace Alterverse.Multiplayer
         private bool helloSent;
         private bool planSent;
         private bool launched;
+        private bool registeringRanked;
         private float firstHelloAt = -1f;
         private uint planFingerprint;
         private float planSentAt = -1f;
@@ -136,6 +138,8 @@ namespace Alterverse.Multiplayer
                 if (edgegapAssigned > 0 && !allAssignedConnected && !graceElapsed)
                     status = $"WAITING FOR EDGEGAP PLAYERS • {pending.Count}/{edgegapAssigned}";
 
+                if (RankedMatchReporter.RankedDeployment && graceElapsed && !full)
+                { AbortRanked(manager); return; }
                 if (allAssignedConnected || full || graceElapsed)
                     BuildAndSendAuthoritativePlan(manager);
                 return;
@@ -217,7 +221,7 @@ namespace Alterverse.Multiplayer
                 return;
             }
 
-            using FastBufferWriter writer = new(768, Allocator.Temp);
+            using FastBufferWriter writer = new(6144, Allocator.Temp);
             writer.WriteValueSafe(ProtocolVersion);
             writer.WriteValueSafe(new FixedString128Bytes(edgegap.TicketId));
             writer.WriteValueSafe(new FixedString128Bytes(edgegap.TeamId));
@@ -226,6 +230,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(new FixedString64Bytes(SanitizeName(displayName)));
             writer.WriteValueSafe((int)hero);
             writer.WriteValueSafe((int)BattleItemInventory.Equipped);
+            writer.WriteValueSafe(new FixedString4096Bytes(RankedService.Instance?.Admission ?? ""));
             messaging.SendNamedMessage(HelloMessage, NetworkManager.ServerClientId, writer, NetworkDelivery.ReliableSequenced);
             helloSent = true;
             status = "PLAYER IDENTITY SENT TO DEDICATED SERVER";
@@ -266,6 +271,10 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out FixedString64Bytes fixedName);
             reader.ReadValueSafe(out int heroRaw);
             reader.ReadValueSafe(out int battleItemRaw);
+            reader.ReadValueSafe(out FixedString4096Bytes fixedAdmission);
+            string admission = fixedAdmission.ToString();
+            if (RankedMatchReporter.RankedDeployment != !string.IsNullOrEmpty(admission))
+            { RejectClient(manager, senderClientId, "ranked admission required for ranked deployment only"); return; }
 
             string ticketId = fixedTicket.ToString();
             string claimedTeamId = fixedTeam.ToString();
@@ -323,7 +332,8 @@ namespace Alterverse.Multiplayer
                 PlayerId = playerId,
                 DisplayName = SanitizeName(displayName),
                 Hero = (HeroId)heroRaw,
-                BattleItem = (BattleItemType)battleItemRaw
+                BattleItem = (BattleItemType)battleItemRaw,
+                Admission = admission
             };
             authorizedPlayers[senderClientId] = playerId;
             unauthenticatedSince.Remove(senderClientId);
@@ -390,7 +400,8 @@ namespace Alterverse.Multiplayer
                     matchId,
                     ArenaVariantRuntime.Selected,
                     BotDifficultySettings.OnlineDifficulty,
-                    members);
+                    members,
+                    RankedMatchReporter.RankedDeployment ? SessionMode.OnlineRanked : SessionMode.OnlineCasual);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();
@@ -419,6 +430,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(new FixedString128Bytes(plan.MatchId ?? ""));
             writer.WriteValueSafe((int)plan.Arena);
             writer.WriteValueSafe((int)plan.Difficulty);
+            writer.WriteValueSafe((int)plan.Session.Mode);
             writer.WriteValueSafe(new FixedString128Bytes(localPlayerId ?? ""));
             writer.WriteValueSafe(MatchSession.MaxPlayers);
 
@@ -449,11 +461,14 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out FixedString128Bytes fixedMatchId);
             reader.ReadValueSafe(out int arenaRaw);
             reader.ReadValueSafe(out int difficultyRaw);
+            reader.ReadValueSafe(out int modeRaw);
             reader.ReadValueSafe(out FixedString128Bytes fixedLocalPlayerId);
             reader.ReadValueSafe(out int slotCount);
 
             bool valid = protocol == ProtocolVersion && slotCount == MatchSession.MaxPlayers &&
-                         Enum.IsDefined(typeof(ArenaVariant), arenaRaw) && difficultyRaw == (int)BotDifficultySettings.OnlineDifficulty;
+                         Enum.IsDefined(typeof(ArenaVariant), arenaRaw) && difficultyRaw == (int)BotDifficultySettings.OnlineDifficulty &&
+                         (modeRaw == (int)SessionMode.OnlineCasual || modeRaw == (int)SessionMode.OnlineRanked) &&
+                         (modeRaw == (int)SessionMode.OnlineRanked) == !string.IsNullOrEmpty(RankedService.Instance?.Admission);
             var slots = new MatchPlayerSlot[MatchSession.MaxPlayers];
 
             if (valid)
@@ -498,7 +513,8 @@ namespace Alterverse.Multiplayer
                         (ArenaVariant)arenaRaw,
                         (BotDifficulty)difficultyRaw,
                         slots,
-                        localPlayerId);
+                        localPlayerId,
+                        (SessionMode)modeRaw);
                     valid = CoopPlanHandshake.Fingerprint(plan) == serverFingerprint;
                 }
                 catch (Exception ex)
@@ -567,12 +583,18 @@ namespace Alterverse.Multiplayer
         private void LaunchAuthoritativeMatch(NetworkManager manager)
         {
             if (launched || CoopAuthority.PreparedPlan is not OnlineMatchPlan plan || messaging == null) return;
+            if (plan.Session.Mode == SessionMode.OnlineRanked && RankedMatchReporter.Instance?.Registered != true)
+            {
+                if (!registeringRanked) _ = RegisterRankedAsync(manager, plan);
+                return;
+            }
 
             // Activate and construct the authoritative world first. Clients receive launch only
             // after the server has successfully entered the match, avoiding a client-only launch.
             if (!CoopAuthority.BeginPreparedMatch(false))
             {
                 status = "DEDICATED SERVER COULD NOT ACTIVATE PLAN";
+                if (plan.Session.Mode == SessionMode.OnlineRanked) AbortRanked(manager);
                 return;
             }
 
@@ -581,6 +603,7 @@ namespace Alterverse.Multiplayer
             {
                 CoopAuthority.EndMatch();
                 status = "DEDICATED SERVER MATCH BOOTSTRAP FAILED";
+                if (plan.Session.Mode == SessionMode.OnlineRanked) AbortRanked(manager);
                 return;
             }
 
@@ -593,6 +616,50 @@ namespace Alterverse.Multiplayer
 
             status = $"DEDICATED MATCH LIVE • {plan.HumanCount} HUMANS";
             Debug.Log($"DIMENSIONS FRONT SERVER: authoritative online match started with {plan.HumanCount} humans and bot fill.");
+        }
+
+        private void AbortRanked(NetworkManager manager)
+        {
+            launched = true;
+            status = "RANKED START CANCELLED • NO POINTS CHANGED";
+            string abortedMatch = CoopAuthority.PreparedPlan?.MatchId ?? RankedMatchReporter.Instance?.MatchId;
+            if (RankedMatchReporter.Instance != null && !string.IsNullOrEmpty(abortedMatch))
+                _ = RankedMatchReporter.Instance.VoidAsync(abortedMatch);
+            var ids = new List<ulong>(pending.Keys);
+            foreach (ulong id in ids) manager.DisconnectClient(id);
+            CoopAuthority.ClearPrepared();
+            EdgegapDedicatedServerLifecycle.StopAbortedMatch();
+        }
+
+        private async System.Threading.Tasks.Task RegisterRankedAsync(NetworkManager manager, OnlineMatchPlan plan)
+        {
+            registeringRanked = true;
+            try
+            {
+                if (pending.Count != MatchSession.MaxPlayers || planAcks.Count != MatchSession.MaxPlayers)
+                { AbortRanked(manager); return; }
+                var roster = new RankedMatchReporter.Player[MatchSession.MaxPlayers];
+                for (int i = 0; i < roster.Length; i++)
+                {
+                    MatchPlayerSlot slot = plan.Session.Slots[i];
+                    PendingHuman human = null;
+                    foreach (var candidate in pending.Values) if (candidate.TicketId == slot.PlayerId) { human = candidate; break; }
+                    if (human == null || slot.IsBot) { AbortRanked(manager); return; }
+                    roster[i] = new RankedMatchReporter.Player { ticket = human.TicketId, team = slot.Team, admission = human.Admission };
+                }
+                if (!await RankedMatchReporter.Ensure().RegisterAsync(plan.MatchId, roster))
+                {
+                    status = "RANKED REGISTRATION FAILED • RETRYING";
+                    if (Time.unscaledTime - planSentAt > 60) AbortRanked(manager);
+                    else await System.Threading.Tasks.Task.Delay(3000);
+                    return;
+                }
+                if (launched || manager == null || !manager.IsListening || CoopAuthority.PreparedPlan != plan ||
+                    pending.Count != 10 || planAcks.Count != 10)
+                { AbortRanked(manager); return; }
+                LaunchAuthoritativeMatch(manager);
+            }
+            finally { registeringRanked = false; }
         }
 
         private void OnLaunch(ulong senderClientId, FastBufferReader reader)
@@ -612,6 +679,7 @@ namespace Alterverse.Multiplayer
             if (!CoopAuthority.BeginPreparedMatch(false)) return;
             launched = true;
             EdgegapOnlineFlow.MarkMatchStarted();
+            if (plan.Session.Mode == SessionMode.OnlineRanked) RankedService.Instance?.MatchStarted();
             if (!OnlineMatchRuntime.Enter(plan))
             {
                 launched = false;

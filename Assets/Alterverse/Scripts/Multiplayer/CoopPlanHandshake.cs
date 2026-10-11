@@ -261,6 +261,7 @@ namespace Alterverse.Multiplayer
             builder.Append(plan.MatchId??"").Append('|')
                 .Append((int)plan.Arena).Append('|')
                 .Append((int)plan.Difficulty);
+            if (plan.Session.Mode == SessionMode.OnlineRanked) builder.Append("|ranked");
 
             for(int i=0;i<plan.Session.Slots.Length;i++)
             {

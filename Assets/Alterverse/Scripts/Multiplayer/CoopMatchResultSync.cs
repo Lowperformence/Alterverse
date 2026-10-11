@@ -94,6 +94,8 @@ namespace Alterverse.Multiplayer
         {
             if(!CoopAuthority.Active||!CoopAuthority.LocalHasServerAuthority||resultReady)return;
             CaptureHostResult(winner);
+            if (CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked)
+                _ = RankedMatchReporter.Instance?.SettleAsync(winner);
             BroadcastResult();
             CoopLobbyService lobby=CoopLobbyService.Instance;
             if(lobby!=null)_=lobby.EnterPostMatchAsync();
@@ -179,6 +181,8 @@ namespace Alterverse.Multiplayer
             winningTeam=Mathf.Clamp(winner,0,1);
             matchId=fixedMatchId.ToString();
             resultReady=!string.IsNullOrEmpty(matchId);
+            if (resultReady && CoopAuthority.ActivePlan?.Session?.Mode == SessionMode.OnlineRanked)
+                _ = RankedService.Instance?.RefreshResultAsync(matchId);
         }
 
         private void Attach(CustomMessagingManager value)
