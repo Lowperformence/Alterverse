@@ -1,15 +1,18 @@
-"""Render Nerok's five attack illustrations entirely in Blender.
+"""Render Nerok's legacy five attack illustrations entirely in Blender.
 Run: blender --background --python Tools/CyberShark/build_attack_icons.py
 Slots: Q anchor pull, W pressure hull, E tidal wave, R abyssal vortex, basic anchor strike.
 Illustrations use real shaded meshes rather than thin HUD glyphs. The supplied water vortex is used only as the background; foreground meshes are unchanged.
+The current painted HUD artwork is described in icon-prompts.json. Default legacy
+renders go to ArtSource, preserving the painted runtime icons. Set NEROK_ICON_OUTPUT
+explicitly only when intentionally restoring or comparing the legacy renders.
 """
 from pathlib import Path
 import math, random, os
 import bpy
 from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[2]
-OUT=Path(os.environ.get('NEROK_ICON_OUTPUT',str(ROOT/'Assets/Alterverse/Resources/CyberShark/Icons')))
 ART=ROOT/'ArtSource/Heroes/CyberShark'
+OUT=Path(os.environ.get('NEROK_ICON_OUTPUT',str(ART/'LegacyAttackIcons')))
 OUT.mkdir(parents=True,exist_ok=True);ART.mkdir(parents=True,exist_ok=True)
 bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
 random.seed(7402)
@@ -190,4 +193,3 @@ for gr in roots:
  for ob in gr.children_recursive:ob.hide_render=gr!=roots[0]
 bpy.ops.wm.save_as_mainfile(filepath=str(ART/'NerokAttackIcons.blend'),compress=True)
 print('NEROK_ATTACK_ICONS',OUT)
-
