@@ -44,6 +44,7 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private GUIStyle homeLogo,homeSubtitle;
         private MenuCosmicBackdrop backdrop;
+        private MenuBackgroundVideo backgroundVideo;
         private MenuHeroShowcase showcase;
         private CosmeticCollectionPanel collection;
         private System.Action<int> changeCollectionHero;
@@ -70,6 +71,7 @@ namespace Alterverse.UI
             profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
+            backgroundVideo = gameObject.AddComponent<MenuBackgroundVideo>();
             collection=new CosmeticCollectionPanel();
             changeCollectionHero=ChangeHero;
             UniversalCosmeticSelection.EnsureMigrated((HeroId)selectedHero);
@@ -193,7 +195,7 @@ namespace Alterverse.UI
             {
                 GUI.color = Color.white; GUI.enabled = !launching;
                 backdrop ??= new MenuCosmicBackdrop();
-                backdrop.Draw(new Rect(0,0,Screen.width,Screen.height));
+                backdrop.Draw(new Rect(0,0,Screen.width,Screen.height),backgroundVideo?.Image);
                 Rect safe = Screen.safeArea;
                 if (safe.width <= 0 || safe.height <= 0) return;
                 float scale = Mathf.Min(safe.height/MenuHeight,safe.width/1500f);
@@ -1551,7 +1553,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
-
-

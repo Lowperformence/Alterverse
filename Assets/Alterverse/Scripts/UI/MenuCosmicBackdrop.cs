@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Alterverse.UI
 {
-    /// <summary>One opaque, cached texture. No particles, scene objects or per-frame pixel work.</summary>
+    /// <summary>Draws the menu video, with a cached still while playback prepares or is unavailable.</summary>
     internal sealed class MenuCosmicBackdrop : System.IDisposable
     {
         private readonly Texture2D texture;
@@ -58,7 +58,7 @@ namespace Alterverse.UI
             }
             return background+rim*(edge*.20f);
         }
-        public void Draw(Rect rect)=>GUI.DrawTexture(rect,texture,ScaleMode.ScaleAndCrop,false);
+        public void Draw(Rect rect,Texture animated=null)=>GUI.DrawTexture(rect,animated!=null?animated:texture,ScaleMode.ScaleAndCrop,false);
         public void DrawCard(Rect rect,int index)
         {
             Texture2D art=cards!=null?cards:texture;
@@ -74,4 +74,3 @@ namespace Alterverse.UI
         public void Dispose(){if(ownsTexture&&texture!=null)Object.Destroy(texture);}
     }
 }
-
