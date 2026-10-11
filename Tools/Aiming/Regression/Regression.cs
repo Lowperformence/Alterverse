@@ -240,9 +240,9 @@ partial class Regression
   }
   Reset();var a=Hero(HeroId.Veyr,0,Vector3.zero);Hero(HeroId.Mira,0,Vector3.forward);var far=Hero(HeroId.Kaelon,1,Vector3.forward*5);
   Check(!a.GetComponent<BasicAttack>().TryAttack(),"out-of-range enemies and allies cannot start basic");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"no eligible soft target spends no cooldown");
-  far.transform.position=Vector3.forward*-1.6f;Check(a.GetComponent<BasicAttack>().TryAttack(),"basic acquires target behind player");far.transform.position=Vector3.forward*1.6f;Run(.5f);Near(Total(far),1000,"auto-selected melee target can dodge windup cone");
+  far.transform.position=Vector3.forward*-1.6f;Check(a.GetComponent<BasicAttack>().TryAttack(),"basic acquires target behind player");far.transform.position=Vector3.forward*1.6f;Run(.5f);Near(Total(far),1000-HeroIdentity.AttackDamage(HeroId.Veyr),"accepted melee basic retains its target during windup");
   Reset();a=Hero(HeroId.Nyra,0,Vector3.zero);far=Hero(HeroId.Kaelon,1,Vector3.forward*4);
-  Check(a.GetComponent<BasicAttack>().TryAttack(),"ranged basic starts with restored target");Run(.09f);far.transform.position=new Vector3(3,0,4);Run(.4f);Near(Total(far),1000,"restored soft target does not home after projectile release");
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"ranged basic starts with restored target");Run(.09f);far.transform.position=new Vector3(3,0,4);Run(.4f);Near(Total(far),978,"accepted ranged basic follows its selected target after release");
   Reset();a=Hero(HeroId.Nyra,0,Vector3.zero);var hud=HudFor(a);var button=ButtonScreen(4);
   Touch.activeTouches.Add(new Touch{touchId=9,phase=TouchPhase.Began,screenPosition=button});Call(hud,"Update");Near(a.GetComponent<BasicAttack>().RemainingCooldown,0,"held basic waits without eligible target");
   far=Hero(HeroId.Kaelon,1,Vector3.left*2);Touch.activeTouches[0]=new Touch{touchId=9,phase=TouchPhase.Stationary,screenPosition=button};Call(hud,"Update");

@@ -43,6 +43,8 @@ namespace Alterverse.Characters
         private Vector3 lastMoveDirection = Vector3.forward;
         private Vector3 attackFacing;
         private float attackUntil;
+        private Health basicFacingTarget;
+        private float basicFacingUntil;
         private int externalFrame = -1;
 
         public FighterState State { get; private set; } = FighterState.Idle;
@@ -182,6 +184,11 @@ namespace Alterverse.Characters
         private bool TryGetAttackFacing(out Vector3 facing)
         {
             facing = Vector3.zero;
+            if (Time.time < basicFacingUntil && HeroCombatRules.Enemy(gameObject, basicFacingTarget))
+            {
+                facing = AimGeometry.Flat(basicFacingTarget.transform.position - transform.position);
+                if (facing.sqrMagnitude > .0001f) return true;
+            }
             if (State != FighterState.Attacking) return false;
 
             // SoftTargeting can be added by the combat component after HeroMotor.Awake, so
@@ -240,7 +247,7 @@ namespace Alterverse.Characters
             // Keep the shared late-facing owner on the same priority rule. During combat the
             // action direction wins; otherwise movement owns facing as before.
             if (actionFacingActive)
-                body.FaceAction(transform.forward, Mathf.Max(.08f, dt * 2f));
+                body.FaceAction(combatFacing, Mathf.Max(.08f, dt * 2f));
             else
                 body.FaceMovement(transform.forward);
         }
@@ -287,6 +294,13 @@ namespace Alterverse.Characters
             State = FighterState.Attacking;
         }
 
+        public void TrackBasicTarget(Health target, float seconds)
+        {
+            if (!HeroCombatRules.Enemy(gameObject, target)) return;
+            basicFacingTarget = target;
+            basicFacingUntil = Time.time + Mathf.Max(.02f, seconds);
+        }
+
         public void ClearInput()
         {
             moveInput = Vector2.zero;
@@ -298,6 +312,8 @@ namespace Alterverse.Characters
             planarVelocity = Vector3.zero;
             attackFacing = Vector3.zero;
             attackUntil = 0f;
+            basicFacingTarget = null;
+            basicFacingUntil = 0f;
             State = FighterState.Idle;
         }
 

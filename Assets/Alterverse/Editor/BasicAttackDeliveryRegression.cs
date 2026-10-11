@@ -50,10 +50,12 @@ namespace Alterverse.EditorChecks
                     target.transform.position = origin + Vector3.forward * 10f;
                     Due(delivery, false);
                     Step(delivery);
-                    Check(target.Current == target.Max, hero + ": leaving range avoids contact");
-                    // The missed shot still travels to its range limit; drain before returning the fixture.
+                    if (HeroAttackDelivery.IsRanged(hero)) { Due(delivery, true); Step(delivery); }
+                    Check(Mathf.Abs(target.Max-target.Current-expected)<.001f, hero + ": accepted target survives retreat during windup");
+                    // Draining again must never duplicate an already committed strike.
                     Due(delivery, true); Step(delivery);
-                    Check(target.Current == target.Max, hero + ": missed shot cannot track beyond range");
+                    Check(Mathf.Abs(target.Max-target.Current-expected)<.001f, hero + ": accepted strike resolves once");
+                    target.RestoreFull();
                     target.transform.position = origin + Vector3.forward;
                     delivery.Basic(target, 20f, 3f);
                     actor.gameObject.AddComponent<HeroCombatStatus>().Stun(.5f);
@@ -68,7 +70,7 @@ namespace Alterverse.EditorChecks
                     Step(delivery);
                     Check(target.Current == target.Max, hero + ": death cancels pending damage");
                 }
-                Debug.Log($"All {HeroIdentity.HeroCount} hero basics passed: windup, flight, single damage, range escape, stun/death cancellation.");
+                Debug.Log($"All {HeroIdentity.HeroCount} hero basics passed: windup, flight, single damage, committed targets, stun/death cancellation.");
             }
             finally
             {

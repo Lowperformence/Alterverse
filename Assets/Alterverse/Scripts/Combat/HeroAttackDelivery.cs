@@ -5,20 +5,20 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
-    // One geometric delivery path for player and bot attacks; captured points never follow normal targets.
+    // Automatic basics commit to an in-range target; manual casts retain geometric delivery.
     [RequireComponent(typeof(Health), typeof(HeroIdentity))]
     [DefaultExecutionOrder(120)]
     public sealed class HeroAttackDelivery : MonoBehaviour
     {
         private struct Pending
         {
-            public bool Active, Launched, Basic, Volley, Hook, HasAimPoint;
+            public bool Active, Launched, Basic, Volley, Hook, HasAimPoint, TargetedBasic;
             public Vector3 Direction, Point, LaunchOrigin, Position;
             public Health Target;
             public HeroAbilityExecution Execution;
             public AimSpec Spec;
             public int Slot, VisualId;
-            public float Damage, ReleaseAt, SampleTime, Traveled;
+            public float Damage, ReleaseAt, SampleTime, Traveled, FlightDuration, FlightElapsed;
         }
         private Pending[] pending;
         private readonly RaycastHit[] blockers = new RaycastHit[32];
@@ -91,13 +91,19 @@ namespace Alterverse.Combat
             {
                 if (pending[i].Active) continue;
                 pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
+                    TargetedBasic = slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null,
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
                     Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
                     Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
-                if (slot < 0) CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange);
+                if (slot < 0)
+                {
+                    if (pose.Target != null && spec.targetingMode == TargetingMode.AutoBasic)
+                        CombatMotion.Begin(gameObject, windup, pose.Target);
+                    else CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + pose.Direction * spec.castRange);
+                }
                 return true;
             }
             return false;
@@ -163,6 +169,21 @@ namespace Alterverse.Combat
         }
         private Health Contact(Pending p, Vector3 from, Vector3 to, bool moving, out float fraction, float motionFraction = 1f)
         {
+            if (AutomaticBasic(p))
+            {
+                fraction = 0f;
+                if (!HeroCombatRules.Enemy(gameObject, p.Target)) return null;
+                if (p.Spec.aimType == AimType.Melee)
+                {
+                    // Range was validated when the attack was accepted. Walking away during
+                    // anticipation must not turn a valid standard strike into an empty swing.
+                    Vector3 delta = AimGeometry.Flat(p.Target.transform.position - from);
+                    return BlockDistance(from, AimGeometry.Direction(delta), delta.magnitude, .01f) >= delta.magnitude - .01f
+                        ? p.Target : null;
+                }
+                return AimGeometry.HitBody(p.Target, from, to, p.Spec.projectileWidth, moving, out fraction, motionFraction)
+                    ? p.Target : null;
+            }
             Health nearest = null; fraction = 2f; float bestScore = float.MaxValue;
             for (int i = 0; i < Health.Active.Count; i++)
             {
@@ -185,6 +206,19 @@ namespace Alterverse.Combat
             }
             return nearest;
         }
+        private static bool AutomaticBasic(Pending p)
+            => p.TargetedBasic;
+
+        private void FaceBasicTarget(Pending p, bool release = false)
+        {
+            Vector3 direction = AimGeometry.Flat(p.Target.transform.position - transform.position);
+            GetComponent<HeroLocomotion>()?.FaceAction(direction, .18f);
+            GetComponent<HeroMotor>()?.TrackBasicTarget(p.Target, .18f);
+            // Complete the turn by the contact/release frame, including attacks begun with
+            // the target directly behind the hero. Movement is still handled by the motor.
+            if (release && direction.sqrMagnitude > .0001f)
+                transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        }
         private void Impact(Pending p, Health target)
         {
             if (p.Hook) p.Execution.ResolveSharkHookHit(target, p.LaunchOrigin);
@@ -194,7 +228,7 @@ namespace Alterverse.Combat
         private int Present(Pending p, Vector3 endpoint, float flight)
         {
             int id = HeroVfxPool.BeginDelivery(); VisualOrigin = p.LaunchOrigin; VisualDirection = p.Direction;
-            Transform follow = p.Spec.targetingMode == TargetingMode.Homing && p.Target != null ? p.Target.transform : null;
+            Transform follow = (p.Spec.targetingMode == TargetingMode.Homing || AutomaticBasic(p)) && p.Target != null ? p.Target.transform : null;
             try
             {
             if (p.Basic)
@@ -226,30 +260,26 @@ namespace Alterverse.Combat
                 Pending p = pending[i];
                 if (!p.Active) continue;
                 if (!p.Basic && (p.Execution == null || !p.Execution.isActiveAndEnabled)) { pending[i] = default; continue; }
+                bool automatic = AutomaticBasic(p);
+                if (automatic && !HeroCombatRules.Enemy(gameObject, p.Target))
+                { pending[i] = default; HeroVfxPool.CancelDelivery(p.VisualId); continue; }
                 if (!p.Launched)
                 {
+                    if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
-                    // Automatic ranged basics refresh their selected target once when the shot
-                    // leaves the weapon. Use the existing bounded movement predictor, then freeze
-                    // the trajectory. Manual skills keep their release-time world point.
-                    if (p.Basic && p.Spec.targetingMode == TargetingMode.AutoBasic && HeroCombatRules.Enemy(gameObject, p.Target))
+                    if (automatic)
                     {
-                        HeroLocomotion body = p.Target.GetComponent<HeroLocomotion>();
-                        Vector3 velocity = body != null && AimGeometry.Finite(body.Velocity) ? body.Velocity : Vector3.zero;
-                        float flight = HeroCombatRules.Distance(p.LaunchOrigin, p.Target.transform.position) / p.Spec.projectileSpeed;
-                        // Timmy's short automatic claw tracks the selected body
-                        // until melee contact, without projectile leading.
-                        p.Point = p.Spec.aimType == AimType.Melee ? p.Target.transform.position :
-                            HeroAimPrediction.Point(p.LaunchOrigin, p.Target.transform.position, velocity,
-                                flight, AimingSettings.Current.basicLeadQuality, p.Spec.castRange, false);
+                        p.Point = p.Target.transform.position;
                         p.HasAimPoint = true;
+                        FaceBasicTarget(p, true);
                     }
                     // Rebase melee as well: strafing during a longer preparation must not rotate
                     // the captured stationary point outside a cone with an obsolete origin.
                     if (p.HasAimPoint)
                         p.Direction = new AimPose(p.Direction, p.Point, null, true).CastDirection(p.LaunchOrigin);
-                    float length = BlockDistance(p.LaunchOrigin, p.Direction, p.Spec.castRange, p.Spec.projectileWidth);
+                    float distance = automatic ? HeroCombatRules.Distance(p.LaunchOrigin, p.Point) : p.Spec.castRange;
+                    float length = BlockDistance(p.LaunchOrigin, p.Direction, distance, p.Spec.projectileWidth);
                     Vector3 endpoint = p.LaunchOrigin + p.Direction * length;
                     if (p.Spec.aimType == AimType.Melee || p.Spec.aimType == AimType.Beam)
                     {
@@ -263,21 +293,35 @@ namespace Alterverse.Combat
                         if (target != null) Impact(p, target);
                         continue;
                     }
-                    // A fixed visual endpoint, never the selected enemy's transform.
-                    p.VisualId = Present(p, endpoint, Mathf.Max(.01f, length / p.Spec.projectileSpeed));
+                    // Automatic visuals and gameplay share the same launch-distance flight
+                    // clock and live endpoint. Manual shots retain their fixed trajectory.
+                    p.FlightDuration = Mathf.Max(.01f, distance / p.Spec.projectileSpeed);
+                    p.VisualId = Present(p, automatic ? p.Point : endpoint,
+                        automatic ? p.FlightDuration : Mathf.Max(.01f, length / p.Spec.projectileSpeed));
                 }
                 float dt = Mathf.Max(0f, Time.time - p.SampleTime); p.SampleTime = Time.time;
                 if (dt <= 0f) { pending[i] = p; continue; }
-                if (p.Spec.targetingMode == TargetingMode.Homing && HeroCombatRules.Enemy(gameObject, p.Target))
+                if (!automatic && p.Spec.targetingMode == TargetingMode.Homing && HeroCombatRules.Enemy(gameObject, p.Target))
                     p.Direction = AimGeometry.Direction(p.Target.transform.position - p.Position);
-                float step = Mathf.Min(p.Spec.castRange - p.Traveled, p.Spec.projectileSpeed * dt);
+                Vector3 destination;
+                if (automatic)
+                {
+                    p.FlightElapsed += dt;
+                    destination = Vector3.Lerp(p.LaunchOrigin, p.Target.transform.position,
+                        Mathf.Clamp01(p.FlightElapsed / p.FlightDuration));
+                    destination.y = p.Position.y;
+                    p.Direction = AimGeometry.Direction(destination - p.Position);
+                }
+                else destination = p.Position + p.Direction * Mathf.Min(p.Spec.castRange - p.Traveled, p.Spec.projectileSpeed * dt);
+                float step = HeroCombatRules.Distance(p.Position, destination);
                 float allowed = BlockDistance(p.Position, p.Direction, step, p.Spec.projectileWidth);
                 Vector3 end = p.Position + p.Direction * allowed;
                 // A wall/range endpoint can end this frame's flight early. Do not sample later target movement.
                 float contactFraction; Health hit = Contact(p, p.Position, end, true, out contactFraction,
-                    allowed / Mathf.Max(.0001f, p.Spec.projectileSpeed * dt));
+                    allowed / Mathf.Max(.0001f, automatic ? step : p.Spec.projectileSpeed * dt));
                 p.Traveled += allowed; p.Position = end;
-                if (hit != null || allowed < step - .0001f || p.Traveled >= p.Spec.castRange - .0001f)
+                if (hit != null || allowed < step - .0001f ||
+                    (automatic ? p.FlightElapsed >= p.FlightDuration : p.Traveled >= p.Spec.castRange - .0001f))
                 {
                     pending[i] = default;
                     HeroVfxPool.CancelDelivery(p.VisualId);

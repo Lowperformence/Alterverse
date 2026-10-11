@@ -22,6 +22,7 @@ start = engine.index(' public class HeroMotor:')
 end = engine.index(' public class VeyrAbilities:', start)
 engine = engine[:start] + engine[end:]
 engine = engine.replace('public class SerializeField:Attribute{}', 'public class SerializeField:Attribute{} public class HeaderAttribute:Attribute{public HeaderAttribute(string s){}}')
+engine = engine.replace('public Vector3 position,forward=Vector3.forward,right=Vector3.right,localScale=Vector3.one;', 'public Vector3 position,localScale=Vector3.one;public Vector3 forward{get=>rotation*Vector3.forward;set=>rotation=Quaternion.LookRotation(value);}public Vector3 right=>rotation*Vector3.right;')
 engine = engine.replace('public Quaternion rotation=Quaternion.identity;public Transform parent;', 'public Quaternion rotation=Quaternion.identity;public Transform parent;public Vector3 lossyScale=>localScale;public Vector3 up=>Vector3.up;')
 engine = engine.replace('public float sqrMagnitude=>x*x+y*y;', 'public Vector2 normalized=>magnitude>.000001f?this/magnitude:zero;public float sqrMagnitude=>x*x+y*y;')
 engine = engine.replace('public static Vector3 Lerp(Vector3 a,Vector3 b,float t)', 'public static Vector3 MoveTowards(Vector3 a,Vector3 b,float d)=>a+ClampMagnitude(b-a,d);public static Vector3 ProjectOnPlane(Vector3 a,Vector3 n)=>a-n*Dot(a,n);public static Vector3 Lerp(Vector3 a,Vector3 b,float t)')
@@ -72,6 +73,6 @@ with tempfile.TemporaryDirectory(prefix='df-timmy-movement-') as d:
     subprocess.run([str(mono), str(a.roslyn), '-nologo', '-noconfig', '-langversion:9',
         '-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.dll'),
         '-r:'+str(a.mono_root/'usr/lib/mono/4.5/System.Core.dll'), '-out:'+str(binary),
-        str(d/'Engine.cs'), str(here/'Regression.cs'), *[str(src/n) for n in names]],
+        str(d/'Engine.cs'), str(here/'Regression.cs'), str(here/'BasicMovementRegression.cs'), *[str(src/n) for n in names]],
         env=env, check=True)
     subprocess.run([str(mono), str(binary)], env=env, check=True)

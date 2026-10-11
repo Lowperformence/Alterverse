@@ -20,7 +20,7 @@ namespace Alterverse.Combat
         public readonly Vector3 Direction, Point;
         // A captured world point is independent of the preview direction and never follows a target.
         public readonly bool HasAimPoint;
-        // Support/homing may follow this reference. Automatic basics use it once at launch.
+        // Support/homing and automatic basics may follow this reference.
         public readonly Health Target;
         public AimPose(Vector3 direction, Vector3 point, Health target = null, bool hasAimPoint = false)
         { Direction = AimGeometry.Direction(direction); Point = point; Target = target; HasAimPoint = hasAimPoint; }
@@ -74,7 +74,7 @@ namespace Alterverse.Combat
             AimType type = slot < 0 ? (ranged ? AimType.Projectile : AimType.Melee) : Classify(hero, slot, ability);
             AimSpec spec = new AimSpec
             {
-                aimType = type, targetingMode = slot < 0 && ranged ? TargetingMode.AutoBasic : type == AimType.Ally ? TargetingMode.Ally :
+                aimType = type, targetingMode = slot < 0 ? TargetingMode.AutoBasic : type == AimType.Ally ? TargetingMode.Ally :
                     slot >= 0 && (type == AimType.Melee || type == AimType.Projectile || type == AimType.Beam)
                         ? TargetingMode.Cone : TargetingMode.Geometry,
                 castRange = slot < 0 ? basicRange ?? HeroCombatProfile.StatsFor(hero).AttackRange : ability.Range,
@@ -86,7 +86,6 @@ namespace Alterverse.Combat
             };
             if (hero == HeroId.Nerok && slot == 0) { spec.projectileSpeed = 18f; spec.projectileWidth = .45f; }
             if (hero == HeroId.Timmy && slot == 3) spec.targetingMode = TargetingMode.Cone;
-            if (hero == HeroId.Timmy && slot < 0) spec.targetingMode = TargetingMode.AutoBasic;
             if (hero == HeroId.Kaelon && slot == 0) { spec.projectileSpeed = 14f; spec.projectileWidth = .86f; }
             if (hero == HeroId.Veyr && slot == 1) { spec.projectileSpeed = 18f; spec.projectileWidth = .45f; }
             if (overrides != null)

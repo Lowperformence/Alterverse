@@ -70,8 +70,9 @@ namespace Alterverse.EditorChecks
                     Check(target.Current==1000&&Mathf.Approximately(target.TemporaryShield,100-applied),"shield absorption changed");
 
                     baseline=Fresh(target);HeroCombatRules.BasicHit(source,target,power);
-                    victim.transform.position=new Vector3(30,80,0);Drain(delivery);
-                    Check(Mathf.Approximately(Total(target),baseline),"out-of-range attack connected");
+                    victim.transform.position=new Vector3(10,80,0);Drain(delivery);
+                    Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"accepted basic lost its target after retreat");
+                    baseline=Fresh(target);
                     victim.transform.position=new Vector3(1,80,0);
 
                     HeroCombatRules.BasicHit(source,target,power);
@@ -91,9 +92,9 @@ namespace Alterverse.EditorChecks
                     if(HeroAttackDelivery.IsRanged((HeroId)hero))
                     {
                         HeroCombatRules.BasicHit(source,target,power);Due(delivery,"ReleaseAt");Tick(delivery);
-                        victim.transform.position=new Vector3(30,80,0);status.Stun(.5f);
+                        victim.transform.position=new Vector3(10,80,0);status.Stun(.5f);
                         Due(delivery,"HitAt");Tick(delivery);
-                        Check(Mathf.Approximately(Total(target),baseline),"released projectile tracked a dodging enemy");
+                        Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"released automatic projectile lost its accepted target");
                         status.Clear();baseline=Fresh(target);victim.transform.position=new Vector3(1,80,0);
                     }
                     if(!HeroAttackDelivery.IsRanged((HeroId)hero))
@@ -102,7 +103,7 @@ namespace Alterverse.EditorChecks
                         baseline=Fresh(target);victim.transform.position=new Vector3(range-.05f,80,0);
                         HeroCombatRules.BasicHit(source,target,power);
                         victim.transform.position=new Vector3(range+.20f,80,0);Drain(delivery);
-                        Check(Mathf.Approximately(Total(target),baseline),"melee hit beyond the displayed range");
+                        Check(Mathf.Abs(Total(target)-(baseline-applied))<.002f,"accepted melee lost contact after retreat");
                         baseline=Fresh(target);HeroCombatRules.BasicHit(source,target,power);Drain(delivery);
                         Check(Mathf.Approximately(Total(target),baseline),"grace allowed an initially invalid attack");
                         victim.transform.position=new Vector3(1,80,0);

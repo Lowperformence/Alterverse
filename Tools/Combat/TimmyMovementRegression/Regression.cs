@@ -6,7 +6,7 @@ using Alterverse.Combat;
 using Alterverse.Multiplayer;
 using UnityEngine;
 
-class TimmyMovementRegression
+partial class TimmyMovementRegression
 {
     static int checks, failures;
     static void Check(bool ok,string reason)
@@ -53,6 +53,8 @@ class TimmyMovementRegression
             if(g.GetComponent<HeroAttackDelivery>() is HeroAttackDelivery d)Call(d,"Update");
         }
         Clock.Resume();
+        foreach(var g in GameObject.All.ToArray().Where(x=>x.activeInHierarchy))
+            if(g.GetComponent<HeroLocomotion>() is HeroLocomotion b)Call(b,"LateUpdate");
     }
     static AimPose Aim(GameObject a,GameObject b)=>new AimPose(b.transform.position-a.transform.position,b.transform.position,null,true);
     static bool Rooted(GameObject b)=>b.GetComponent<HeroCombatStatus>().Rooted;
@@ -60,6 +62,7 @@ class TimmyMovementRegression
     {for(int i=0;i<Mathf.CeilToInt(seconds*fps);i++)Step(1f/fps,a,ai,b,bi);}
     static void Main()
     {
+        BasicMovementCases();
         foreach(int fps in new[]{30,60,120})
         {
             Reset();var a=Hero(HeroId.Timmy,0,Vector3.zero);var b=Hero(HeroId.Veyr,1,Vector3.forward*5);
@@ -128,7 +131,7 @@ class TimmyMovementRegression
             Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Veyr,1,Vector3.forward*1.5f);
             Check(a.GetComponent<BasicAttack>().TryAttack(),"basic escape test cast "+fps);
             b.transform.position=Vector3.up+Vector3.forward*1.85f;Run(.4f,fps,a,b);
-            Near(Total(b),1000,"stationary claw cannot extend its contact range "+fps);
+            Near(Total(b),1000-TimmyBalance.BasicDamage,"accepted claw commits within its initial range "+fps);
             Reset();a=Hero(HeroId.Timmy,0,Vector3.zero);b=Hero(HeroId.Veyr,1,Vector3.forward*1.85f);
             Check(!a.GetComponent<BasicAttack>().TryAttack(),"Claw cannot acquire an out-of-range basic "+fps);
 

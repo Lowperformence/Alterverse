@@ -1,5 +1,9 @@
 # Attack connection while moving — 2026-10-11
 
+Historical launch-time prediction pass. Automatic basic behavior is superseded by
+`BasicAttackTargetCommitmentAudit.md`: all nine basics now retain their accepted
+target through contact. Manual skill geometry remains unchanged.
+
 ## Reproduced failures
 
 1. **Automatic ranged basics:** Sivra, Ione, Tahla and the Traveler retained the

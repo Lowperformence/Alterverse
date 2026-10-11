@@ -74,7 +74,7 @@ partial class Regression
    Reset();var actor=Hero(hero,0,Vector3.zero);var enemy=Hero(HeroId.Kaelon,1,Vector3.forward*4);
    Check(actor.GetComponent<BasicAttack>().TryAttack(),"auto basic starts for launch-time dodge check "+hero);
    Run(HeroAttackDelivery.Windup(hero)+.02f);enemy.transform.position+=Vector3.right*3;Run(.5f);
-   Near(Total(enemy),1000,"auto basic never follows target after launch "+hero);
+   Near(Total(enemy),1000-HeroIdentity.AttackDamage(hero),"accepted auto basic follows target after launch "+hero);
    Reset();actor=Hero(hero,0,Vector3.zero);enemy=Hero(HeroId.Kaelon,1,Vector3.forward*4);
    Check(actor.GetComponent<BasicAttack>().TryAttackAimed(new AimPose(Vector3.forward,enemy.transform.position,null,true)),"explicit fixed-point basic remains possible "+hero);
    enemy.transform.position+=Vector3.right*2;Run(.6f);Near(Total(enemy),1000,"fixed-point basic never silently reacquires "+hero);
@@ -88,7 +88,7 @@ partial class Regression
   AimingSettings.Current.basicLeadQuality=0;Vector3 movement=Vector3.right*4.5f;
   Check(caster.GetComponent<BasicAttack>().TryAttack(),"lead can be disabled centrally");
   for(int i=0;i<60;i++)WalkingStep(1f/60,caster,movement,foe,movement);
-  Near(Total(foe),1000,"disabled lead keeps a straight launch-time snapshot");
+  Near(Total(foe),1000-HeroIdentity.AttackDamage(HeroId.Elyra),"automatic lock is independent of legacy lead setting");
  }
  static void MovingBasicNetwork()
  {

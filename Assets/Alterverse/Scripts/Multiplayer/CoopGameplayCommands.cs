@@ -11,7 +11,7 @@ namespace Alterverse.Multiplayer
     /// <summary>
     /// Routes non-server player combat intentions to the authoritative NGO server. The server
     /// validates cast direction and ground position. Support, homing and automatic basics
-    /// carry a target reference; automatic basics only refresh their aim at launch.
+    /// carry a target reference; automatic basics retain the host-validated target through contact.
     /// Clients never directly mutate authoritative combat state.
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour

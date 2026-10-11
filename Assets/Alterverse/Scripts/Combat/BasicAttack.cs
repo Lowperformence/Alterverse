@@ -62,16 +62,22 @@ namespace Alterverse.Combat
             if (Time.timeScale <= 0f) return;
             Alterverse.Multiplayer.CoopHeroSlot slot = GetComponent<Alterverse.Multiplayer.CoopHeroSlot>();
             if (slot != null && !slot.IsLocalHuman) return;
-            if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame) TryAttack();
+            if (Keyboard.current != null && Keyboard.current.spaceKey.isPressed) TryAttack();
         }
 
         public bool TryAttack()
         {
             AimSpec spec = Aim;
-            if (!CanAttempt() || !spec.allowTapCast) return false;
+            if (!CanAct() || !spec.allowTapCast) return false;
             // Restore the existing sticky, hero-prioritized selection for basic attacks only.
             Health target = targeting.Acquire(spec.castRange, transform.forward);
             if (target == null) return false;
+            // Hold calls also arrive during cooldown. Keep facing the eligible target without
+            // restarting the attack animation, movement slowdown or cooldown.
+            Vector3 direction = target.transform.position - transform.position;
+            locomotion.FaceAction(direction, .08f);
+            motor?.TrackBasicTarget(target, .08f);
+            if (Time.time < nextAttackTime) return false;
             AimPose pose = new AimPose(target.transform.position - transform.position, target.transform.position,
                 spec.targetingMode == TargetingMode.Homing || spec.targetingMode == TargetingMode.AutoBasic ? target : null, true);
             bool success = TryAttackAimed(pose);
@@ -91,7 +97,9 @@ namespace Alterverse.Combat
                 Vector3 direction = pose.CastDirection(transform.position);
                 locomotion.FaceAction(direction);
                 motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), direction);
-                CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + direction * Range);
+                motor?.TrackBasicTarget(pose.Target, windup + .18f);
+                if (pose.Target != null) CombatMotion.Begin(gameObject, windup, pose.Target);
+                else CombatMotion.BeginAimed(gameObject, windup, pose.HasAimPoint ? pose.Point : transform.position + direction * Range);
                 OnboardingSessionGuard.Attack(this);
                 return true;
             }
@@ -103,14 +111,15 @@ namespace Alterverse.Combat
         public bool TryAttackNetworkAuthoritative(AimPose pose)
             => CanAttempt() && AimGeometry.Finite(pose.Direction) && AimGeometry.Finite(pose.Point) && TryAttackAuthoritative(pose);
 
-        private bool CanAttempt()
+        private bool CanAct()
         {
             return isActiveAndEnabled && Time.timeScale > 0f &&
                    selfHealth != null &&
                    !selfHealth.IsDead &&
-                   HeroCombatStatus.CanAct(gameObject) &&
-                   Time.time >= nextAttackTime;
+                   HeroCombatStatus.CanAct(gameObject);
         }
+
+        private bool CanAttempt() => CanAct() && Time.time >= nextAttackTime;
 
         private bool TryAttackAuthoritative(AimPose pose)
         {
@@ -118,9 +127,11 @@ namespace Alterverse.Combat
                 !HeroAttackDelivery.For(gameObject).BasicAimed(pose, Aim, Damage)) return false;
             float windup = HeroAttackDelivery.Windup(identity != null ? identity.Hero : HeroId.Veyr);
             nextAttackTime = Time.time + Cooldown;
-            Vector3 direction = pose.CastDirection(transform.position);
+            Vector3 direction = pose.Target != null ? AimGeometry.Direction(pose.Target.transform.position - transform.position)
+                : pose.CastDirection(transform.position);
             locomotion.FaceAction(direction);
             motor?.NotifyAttack(Mathf.Max(.18f, windup + .18f), direction);
+            motor?.TrackBasicTarget(pose.Target, windup + .18f);
             OnboardingSessionGuard.Attack(this);
             return true;
         }

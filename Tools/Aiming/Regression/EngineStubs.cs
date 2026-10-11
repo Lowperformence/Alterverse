@@ -76,7 +76,7 @@ namespace UnityEngine.InputSystem {
 }
 namespace UnityEngine.InputSystem.EnhancedTouch {public struct Touch {public int touchId;public UnityEngine.Vector2 screenPosition;public UnityEngine.InputSystem.TouchPhase phase;public static List<Touch> activeTouches=new();}public static class EnhancedTouchSupport {public static bool enabled;public static void Enable()=>enabled=true;public static void Disable()=>enabled=false;}}
 namespace Alterverse.Characters {
- public class HeroMotor:UnityEngine.MonoBehaviour {public UnityEngine.Vector2 MoveInput;public bool HasMoveInput=>MoveInput.sqrMagnitude>0;public UnityEngine.Vector3 CurrentMoveDirection=>new(MoveInput.x,0,MoveInput.y);public void SetMoveInput(UnityEngine.Vector2 v)=>MoveInput=v;public void NotifyAttack(float s,UnityEngine.Vector3 f){}}
+ public class HeroMotor:UnityEngine.MonoBehaviour {public UnityEngine.Vector2 MoveInput;public bool HasMoveInput=>MoveInput.sqrMagnitude>0;public UnityEngine.Vector3 CurrentMoveDirection=>new(MoveInput.x,0,MoveInput.y);public void SetMoveInput(UnityEngine.Vector2 v)=>MoveInput=v;public void NotifyAttack(float s,UnityEngine.Vector3 f){}public void TrackBasicTarget(Alterverse.Combat.Health t,float s){}}
  public class HeroLocomotion:UnityEngine.MonoBehaviour {
   public UnityEngine.Vector3 Velocity,FrameStartPosition,DashDestination;
   public bool IsForcedMoving,IsDashing;public bool OwnsMovementFrame=>IsForcedMoving||IsDashing;
@@ -110,7 +110,7 @@ namespace Alterverse.Visuals {
  public class MeleeBasicAttackAnimation:UnityEngine.MonoBehaviour{}
  public class HeroAbilityReadabilityBoost:UnityEngine.MonoBehaviour{}
  public class HeroVisualMotion:UnityEngine.MonoBehaviour {public UnityEngine.Vector3 ReleasePoint=>transform.position;public float DashSeconds;public void PulseAbility(int slot,float windup){}public void PulseDash(float seconds=.17f){DashSeconds=seconds;}}
- public static class CombatMotion {public static void BeginAimed(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p){}}
+ public static class CombatMotion {public static void BeginAimed(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p){}public static void Begin(UnityEngine.GameObject a,float w,Alterverse.Combat.Health t){}}
 
  public sealed partial class HeroSkillVfx:UnityEngine.MonoBehaviour {
   public static UnityEngine.Vector3 LastPoint;
@@ -131,7 +131,7 @@ namespace Alterverse.Visuals {
   public static void SupportLink(UnityEngine.GameObject a,Alterverse.Combat.Health h){}
   public static void Area(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,float w,bool warning,bool support,int s){LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1)TimmyEffect(a,warning?0:1,p,p,r,warning?w:Alterverse.Characters.TimmyBalance.DustVfxSeconds);}
   public static void Spell(UnityEngine.GameObject a,UnityEngine.Vector3 p,int s,float f=0,UnityEngine.Transform t=null){if(t!=null)throw new Exception("unintended homing visual");LastPoint=p;if(Hero(a)==Alterverse.Characters.HeroId.Timmy&&s==1&&f>0)TimmyEffect(a,5,Chest(a),p,0,f);}
-  public static void Basic(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f=0,UnityEngine.Transform t=null,bool animate=true){if(t!=null)throw new Exception("unintended homing basic");LastPoint=p;}
+  public static void Basic(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f=0,UnityEngine.Transform t=null,bool animate=true){if(t!=null&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.AutoBasic&&Alterverse.Combat.AimingSettings.Current.For(Hero(a),-1).targetingMode!=Alterverse.Combat.TargetingMode.Homing)throw new Exception("unintended homing basic");LastPoint=p;}
   public static void SharkAnchor(UnityEngine.GameObject a,UnityEngine.Vector3 p,float f,UnityEngine.Transform t=null){LastPoint=p;}
   public static void SharkPullChain(UnityEngine.GameObject a,Alterverse.Combat.Health t,float d){}
   public static void SharkVortex(UnityEngine.GameObject a,UnityEngine.Vector3 p,float r,float d){}

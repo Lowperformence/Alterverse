@@ -1,3 +1,5 @@
+Current automatic-basic behavior: see `Docs/BasicAttackTargetCommitmentAudit.md`. All nine heroes now commit to an eligible target at attack start; selected melee targets and ranged flights track through contact. Tests of explicit fixed-point casts still require geometric misses. Latest run: **2,609 assertions pass**, plus both editor delivery suites compiled under the fixtures. Historical counts and launch-time prediction descriptions below document earlier passes.
+
 # Manual aiming C# regression harness
 
 This harness compiles the production aiming, attack delivery, ability execution, HUD gesture and NGO command sources and the production combat-audio dispatcher, pooled VFX scheduler/mesh builder and Timmy VFX partial against deterministic engine fixtures. It also executes `BasicAttackDeliveryRegression.Run()` and `AttackDeliveryRegression.Run()` from the existing Unity editor checks.
