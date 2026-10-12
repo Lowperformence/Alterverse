@@ -21,6 +21,46 @@ namespace Alterverse.EditorChecks
                 throw new InvalidOperationException("Use a running disposable offline or host match.");
             new GameObject("DF_AbilityRegression").AddComponent<HeroAbilityExecutionRegression>().StartCoroutine("Run");
         }
+        [MenuItem("DIMENSIONS FRONT/Checks/Auren passive regeneration (Play mode)")]
+        public static void LaunchAurenPassive()
+        {
+            if(!Application.isPlaying||Time.timeScale<=0||!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay)
+                throw new InvalidOperationException("Use a running disposable offline or host match.");
+            new GameObject("DF_AurenPassiveRegression").AddComponent<HeroAbilityExecutionRegression>()
+                .StartCoroutine("RunAurenPassive");
+        }
+
+        private IEnumerator RunAurenPassive()
+        {
+            try
+            {
+                Vector3 p=new(0,80,0);
+                Health auren=Hero(HeroId.Kaelon,0,p).GetComponent<Health>();
+                Health sivra=Hero(HeroId.Nyra,0,p+Vector3.right*3).GetComponent<Health>();
+                auren.TakeDamage(200);
+                sivra.TakeDamage(200);
+                float tankStart=auren.Current, otherStart=sivra.Current;
+                Check(tankStart<auren.Max&&otherStart<sivra.Max,"regen fixture must be wounded");
+                yield return new WaitForSeconds(2.15f);
+                Check(Mathf.Abs((auren.Current-tankStart)-
+                    2f*HeroAbilityKit.AurenPassiveRegenPerSecond)<.05f,
+                    "Auren must restore exactly 2 HP/s while alive");
+                Check(Mathf.Abs(sivra.Current-otherStart)<.01f,
+                    "other heroes must not inherit Auren's passive");
+
+                auren.Heal(auren.Max,false);
+                yield return new WaitForSeconds(1.1f);
+                Check(Mathf.Abs(auren.Current-auren.Max)<.01f,
+                    "passive may not exceed maximum HP");
+                auren.TakeDamage(2000);
+                yield return new WaitForSeconds(1.1f);
+                Check(auren.IsDead&&auren.Current==0f,
+                    "passive may not heal or revive a dead Auren");
+                Debug.Log("DF: Auren 2 HP/s passive, hero isolation, maximum HP and death guard passed.");
+            }
+            finally {ClearUnits();Destroy(gameObject);}
+        }
+
         private GameObject Hero(HeroId id,int team,Vector3 position)
         {
             GameObject go=new("AbilityCheck_"+id);units.Add(go);go.transform.position=position;
