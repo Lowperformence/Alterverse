@@ -5,6 +5,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'Tools/HeroParts'))
 from build_parts import validate
 from shoulder_orientation import REVISION, REPORT, unchanged_geometry_hash, validate_outboard
+from arm_panel_removal import REVISION as ARM_REVISION, REPORT as ARM_REPORT, restore_pre_removal, unchanged_data_hash
 parser = argparse.ArgumentParser(description='Validate both integrated models or one corrected hero.')
 parser.add_argument('--hero', choices=['Sivra', 'Ione'])
 args = parser.parse_args()
@@ -19,12 +20,23 @@ for hero, kind in [('Sivra', 'CyberRanger'), ('Ione', 'UmbralMage')]:
     validate(data)
     archived = json.loads(((ROOT / 'ArtSource/Heroes/BuildPlans') / hero / 'validation.json').read_text())['checks']
     model_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+    shoulder_data = data
+    arm_correction = None
+    if hero == 'Ione' and data.get('armPanelRemovalRevision') == ARM_REVISION:
+        arm_correction = json.loads((ROOT / ARM_REPORT).read_text())
+        assert arm_correction['modelSha256'] == model_hash
+        assert arm_correction['unchangedDataSha256'] == unchanged_data_hash(data)
+        selected = np.zeros(len(data['boneIndices']), dtype=bool)
+        selected[arm_correction['unusedDetailVertices']] = True
+        for submesh in data['submeshes']:
+            assert not selected[np.asarray(submesh['triangles'], dtype=int)].any()
+        shoulder_data = restore_pre_removal(data, arm_correction)
     correction = None
     if hero == 'Ione' and data.get('shoulderOrientationRevision') == REVISION:
         correction = json.loads((ROOT / REPORT).read_text())
         assert correction['sourceModelSha256'] == archived['modelSha256']
-        assert correction['modelSha256'] == model_hash
-        assert correction['unchangedGeometrySha256'] == unchanged_geometry_hash(data, correction['ranges'])
+        assert correction['modelSha256'] == (arm_correction['sourceModelSha256'] if arm_correction is not None else model_hash)
+        assert correction['unchangedGeometrySha256'] == unchanged_geometry_hash(shoulder_data, correction['ranges'])
         validate_outboard(data, correction['ranges'])
     else:
         assert model_hash == archived['modelSha256']
@@ -56,6 +68,9 @@ for hero, kind in [('Sivra', 'CyberRanger'), ('Ione', 'UmbralMage')]:
     if correction is not None:
         entry['archivedModelHash'] = 'original export plus verified shoulder correction'
         entry['shoulderOrientationRevision'] = REVISION
+    if arm_correction is not None:
+        entry['archivedModelHash'] = 'original export plus verified shoulder correction and arm plaque removal'
+        entry['armPanelRemovalRevision'] = ARM_REVISION
 report_path.write_text(json.dumps(report, indent=2)+'\n')
 print(json.dumps(report, indent=2))
 

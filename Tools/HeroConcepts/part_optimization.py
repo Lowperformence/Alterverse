@@ -31,11 +31,14 @@ def optimize_parts(label,p,names,anchors,vertices,bones,groups=None):
             outline=[(upper[0]-width*.55,upper[1]),(upper[0]+width*.55,upper[1]),(c[0]+width,c[1]+length*.09),(lower[0]+width*.55,lower[1]),(lower[0]-width*.55,lower[1]),(c[0]-width,c[1]+length*.09)]
             guard_material=0 if label=='Nerok' and segment!='Thigh' else shell
             p.plate(label+' '+name+' separate formed guard',outline,z,.008,guard_material,bone)
-            p.plate(label+' '+name+' inset service panel',[(c[0]-width*.38,c[1]+length*.15),(c[0]+width*.38,c[1]+length*.15),(c[0]+width*.34,c[1]-length*.13),(c[0]-width*.34,c[1]-length*.13)],z+.009,.004,dark,bone)
-            p.tube(label+' '+name+' protected luminous channel',[[c[0],c[1]+length*.12,z+.015],[c[0],c[1]-length*.10,z+.015]],.0015,light,bone,6)
+            clean_arm=label=='Ione' and segment in ('UpperArm','Forearm')
+            if not clean_arm:
+                p.plate(label+' '+name+' inset service panel',[(c[0]-width*.38,c[1]+length*.15),(c[0]+width*.38,c[1]+length*.15),(c[0]+width*.34,c[1]-length*.13),(c[0]-width*.34,c[1]-length*.13)],z+.009,.004,dark,bone)
+                p.tube(label+' '+name+' protected luminous channel',[[c[0],c[1]+length*.12,z+.015],[c[0],c[1]-length*.10,z+.015]],.0015,light,bone,6)
             for dx in [-width*.62,width*.62]:bolt(label+' '+name,[c[0]+dx,c[1],z+.014],bone)
-            for dy in [-length*.10,0,length*.10]:
-                p.tube(label+' '+name+' inset vent',[[c[0]-width*.20,c[1]+dy,z+.016],[c[0]+width*.20,c[1]+dy,z+.016]],.0009,metal,bone,5)
+            if not clean_arm:
+                for dy in [-length*.10,0,length*.10]:
+                    p.tube(label+' '+name+' inset vent',[[c[0]-width*.20,c[1]+dy,z+.016],[c[0]+width*.20,c[1]+dy,z+.016]],.0009,metal,bone,5)
     chest=names.index('Chest');cy=float(anchors[chest]['head'][1]);q=points('Chest');w=min(float(np.ptp(q[:,0]))*.25,.105)
     # Two rear service shells with a central spine clearance, not one rigid torso bridge.
     for sign in [-1,1]:
@@ -173,3 +176,4 @@ def draw_svg(label,cat,v,f,path):
         out.append(f'<path d="{paths}" fill="none" stroke="#263b4b" stroke-width=".6" opacity=".65"/>')
         out.append(f'<text x="{panel*400+30}" y="550" font-family="sans-serif" font-size="14">Width {span[0]*1000:.2f} mm / Height {span[1]*1000:.2f} mm</text>')
     out.append('<text x="30" y="590" font-family="sans-serif" font-size="13">Measured authored geometry. Orthographic projections include rear edges. No perspective. Units: mm. Fit rig before assembly.</text></svg>');path.write_text('\n'.join(out)+'\n')
+

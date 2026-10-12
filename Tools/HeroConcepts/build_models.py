@@ -11,6 +11,7 @@ import numpy as np
 import bpy,bmesh
 from part_optimization import optimize_parts,optimize_weapon_parts,optimize_native_weapons,build_plans
 from shoulder_orientation import rotate_part_vertices
+from arm_panel_removal import legacy_arm_detail_vertices
 from mathutils import Vector,Matrix
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -63,6 +64,7 @@ def shoulder_lames(p,names,anchors,metal,accent,scale=1,outboard=False):
 def runtime_parts(label,data):
     p=Parts();names=data['boneNames'];idx=names.index;anchors=data['anchors'];v=np.asarray(data['vertices']).reshape(-1,3);bi=np.asarray(data['boneIndices']);groups=np.asarray(data.get('groups',[0]*len(v)))
     remove=np.zeros(len(v),bool)
+    if label=='Ione':remove[legacy_arm_detail_vertices(data)]=True
     def front(x,y,bone,fallback=.15):
         points=v[(bi==idx(bone))&(groups==0)];near=points[(np.abs(points[:,0]-x)<.023)&(np.abs(points[:,1]-y)<.024)]
         return float(np.max(near[:,2])+.006) if len(near) else fallback

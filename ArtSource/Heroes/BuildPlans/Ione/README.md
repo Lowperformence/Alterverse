@@ -6,6 +6,8 @@ Nachtrag Schulterausrichtung: Die aktuelle Laufzeitressource dreht seit `ione-ou
 
 ## Gestaltung
 
+Nachtrag Armflächen: Die vier vom Eigentümer markierten schwarzen Einsätze mit violetter Linie und Querstrichen an Ober-/Unterarmen sind aus der aktuellen Laufzeitressource entfernt. Die älteren Unterarm-Einsätze darunter wurden ebenfalls entfernt. Nachweis: `Docs/Ione-Arme-2026-10-12.md` und `ArtSource/Heroes/ConceptModels/Ione-arm-panel-removal-checks.json`. Der Generator erhält die weißen Schutzschalen und überspringt diese Details ausschließlich an Iones Armen. Die zuvor archivierten nativen Exporte zeigen den vorausgehenden Stand.
+
 | Baugruppe | Verbindliche Gestaltung |
 |---|---|
 | Kopf / Helm | Weiße geschlossene Keramikmaske, violette Optiken, Stirnraute und kompakter gestützter Orbitalbogen. |

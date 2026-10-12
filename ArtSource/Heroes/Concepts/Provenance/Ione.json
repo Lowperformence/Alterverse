@@ -87,14 +87,14 @@
     }
   ],
   "implementation": {
-    "fullConceptModel": "Runtime shoulder orientation corrected; archived Blender/FBX validation applies to the preceding export",
+    "fullConceptModel": "Runtime shoulder orientation corrected and four marked arm plaques removed; archived Blender/FBX validation applies to preceding exports",
     "previousValidatedReplacement": "detailed replacement head",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
     "revision": "hero-component-plans-20261012-v3",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Ione-model.blend",
     "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
-    "modelSha256": "f3238cdca5e491fa6fc34c326b03cdb04b5b34e2dc30bd8a2caf8ae49e74cc40",
+    "modelSha256": "b27ba2f8ffca4db8199c000292d2651bc42dbffb32859727ef37cad845c7d2f1",
     "runtimeShoulderCorrection": {
       "revision": "ione-outboard-shoulders-20261012-v1",
       "evidence": "ArtSource/Heroes/ConceptModels/Ione-shoulder-orientation-checks.json",
@@ -102,6 +102,15 @@
       "originalModelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
       "scope": "Six shoulder lamella packets, inset edges and fasteners only; original rig and focus preserved",
       "nativeExports": "Earlier Blender/FBX and part plans are archived preceding orientation; updated generator exports the corrected shells"
+    },
+    "runtimeArmPanelRemoval": {
+      "revision": "ione-clean-arm-panels-20261012-v1",
+      "evidence": "ArtSource/Heroes/ConceptModels/Ione-arm-panel-removal-checks.json",
+      "sourceCommit": "5a34bb40783db8b973e654cee44340322972513a",
+      "sourceModelSha256": "f3238cdca5e491fa6fc34c326b03cdb04b5b34e2dc30bd8a2caf8ae49e74cc40",
+      "markedPlaques": 4,
+      "scope": "Four marked arm plaques, their vertical emitters and crossbars; inherited forearm plaques beneath them. Ceramic guards and all other geometry retained.",
+      "nativeExports": "Earlier Blender/FBX and part plans remain archived preceding this edit; updated generator omits these arm details."
     }
   },
   "openEvidence": [
