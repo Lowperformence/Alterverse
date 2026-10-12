@@ -1,0 +1,7 @@
+2026-10-12
+59 meshes; 1372 vertices.
+PASS: finite coordinates, valid face indices, every individual mesh edge used twice.
+PASS: OBJ global indices valid.
+PASS: generator reproduced identical OBJ hashes.
+PASS: Python syntax compilation.
+Blender/Unity execution, rig, UV, animation and legal clearance NOT performed.
