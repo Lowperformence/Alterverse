@@ -289,13 +289,15 @@ class Social:
             self.ledger.validate_operation(operation)
             if type(opened) is not bool:
                 raise ValueError('Invalid join policy')
-            description = description_for(data)
-            # Retry identity binds only to the non-message settings. User-supplied
-            # names/tags are ignored and are never published.
-            fingerprint = hashlib.sha256(
-                json.dumps([description, opened], ensure_ascii=False).encode()).hexdigest()
+            # Retry old pending receipts before validating newly supported
+            # description settings: legacy requests could contain free text.
             previous = db.execute('SELECT fingerprint FROM social_creation WHERE account=? AND operation_id=?',
                                   (account, operation)).fetchone()
+            description = description_for(data) if not previous else None
+            # Only non-message settings bind new operations. Submitted names/tags
+            # never become visible or influence random name allocation.
+            fingerprint = hashlib.sha256(
+                json.dumps([description, opened], ensure_ascii=False).encode()).hexdigest()
             if previous:
                 # Accept old app versions' idempotency receipts without replaying
                 # old names, debits or creation.
@@ -311,7 +313,14 @@ class Social:
                         json.dumps([n, t, desc, opened], ensure_ascii=False).encode()).hexdigest()
                 except ValueError:
                     pass
-                if previous[0] not in (fingerprint, raw, canonical):
+                # New protocol receipts use the catalog description, not null.
+                try:
+                    preset = description_for(data)
+                    generated_receipt = hashlib.sha256(
+                        json.dumps([preset, opened], ensure_ascii=False).encode()).hexdigest()
+                except ValueError:
+                    generated_receipt = None
+                if previous[0] not in (generated_receipt, raw, canonical):
                     raise ValueError('Clan operation already bound')
                 return
             if member:
