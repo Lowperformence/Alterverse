@@ -70,7 +70,7 @@ class FirestoreSocial:
         if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
                 or route in ('/social/players', '/social/block', '/social/unblock',
                              '/social/clan/identity')):
-            raise ValueError('Player communication is disabled in this version.')
+            raise ValueError('Communication is disabled in this version.')
         self.ledger.wallet(account)
         # Shared rules own input validation and all account-derived authorization.
         @firestore.transactional
@@ -154,7 +154,7 @@ class FirestoreSocial:
                     raise ValueError('Clan identity allocation unavailable')
             elif route == '/social/clan/identity':
                 # Old identity endpoints are already denied, including on the server.
-                raise ValueError('Player communication is disabled in this version.')
+                raise ValueError('Communication is disabled in this version.')
             for clan in list(rows['social_clan'].values()):
                 lock_unique('name',clan['name_search']);lock_unique('tag',clan['tag'])
 
