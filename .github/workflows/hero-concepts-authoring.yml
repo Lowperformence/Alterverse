@@ -1,0 +1,52 @@
+name: Nine hero concept revisions
+on:
+  push:
+    branches: ['art/hero-concepts-provenance-20261012']
+    paths: ['Tools/HeroConcepts/**', '.github/workflows/hero-concepts-authoring.yml']
+permissions:
+  contents: write
+concurrency:
+  group: hero-concepts-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  author:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Blender LTS authoring runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+          python -m pip install bpy==4.5.14 numpy pillow
+      - name: Build and reimport all nine models
+        env:
+          OMP_NUM_THREADS: '2'
+        run: python Tools/HeroConcepts/build_concept_revision.py
+      - name: Archive original anatomy bundle notice and current output hashes
+        run: python Tools/Provenance/archive_build_evidence.py
+      - name: Keep native renders and validation available for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nine-hero-concept-models
+          path: |
+            ArtSource/Heroes/ConceptRebuild/
+            Documentation/Provenance/BuildEvidence.json
+            Documentation/Provenance/Licenses/Blender-Human-Base-Meshes/
+          if-no-files-found: ignore
+      - name: Commit validated geometry on the authorized art branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Assets/Alterverse/Resources/CyberRanger/Model.bytes Assets/Alterverse/Resources/UmbralMage/Model.bytes Assets/Alterverse/Resources/SiegeTank/Model.bytes Assets/Alterverse/Resources/ChronoTraveler/Model.bytes Assets/Alterverse/Resources/CyberShark/Model.bytes Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx ArtSource/Heroes/ConceptRebuild ArtSource/Heroes/Veyr.blend ArtSource/Heroes/Mira.blend ArtSource/Heroes/Rook.blend ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend Documentation/Provenance/BuildEvidence.json Documentation/Provenance/Licenses/Blender-Human-Base-Meshes
+          if ! git diff --cached --quiet; then
+            git commit -m 'Build and validate nine concept-guided hero geometry revisions'
+            git push origin HEAD:'${{ github.ref_name }}'
+          fi
