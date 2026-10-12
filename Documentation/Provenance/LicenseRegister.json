@@ -209,6 +209,118 @@
       "notes": "The existing file is named UltimateSpaceKit but its text says Ultimate Platformer Pack. Do not silently treat the wrong pack heading as an exact pack certificate."
     },
     {
+      "id": "woodland-original",
+      "title": "Auren user-supplied WoodlandCamo.png",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Assets/Alterverse/Scripts/Visuals/SiegeTankAppearance.cs",
+        "Documentation/Provenance/PriorAuditFindings.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open historical texture rights gap",
+      "notes": "Commit f2b2c5ff5511bb1ca549dec597f0feef7036b4f4 imported a supplied woodland image. The CC0 license for UrbanDigitalCamo does not cover this different image. A newly generated replacement, when committed, only resolves the active replacement, not this historical image."
+    },
+    {
+      "id": "ultimate-rook",
+      "title": "brakk ulti.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Rook; raw source SHA-256 b998cbcd8c89b188380eaeb532d31539edd6b2e3ce22a23175ff1b91c40ae9e9. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-mira",
+      "title": "heiler ulti.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Mira; raw source SHA-256 91037a5a859e90e1255757f9127782e661a764ff20a2a042bfb95d7b8e686734. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-elyra",
+      "title": "ione ulti.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Elyra; raw source SHA-256 6097c4b9350beb3f6af7cc078bc81c0dd28ba381315eca066063a1cf85507db2. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-nyra",
+      "title": "sivra ulti.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Nyra; raw source SHA-256 32fe8e4b6f40d44ab78b5599da01450ec44601fd4259821dcef5c258bec4bdd1. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-kaelon",
+      "title": "tank ulti.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Kaelon; raw source SHA-256 d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-traveler",
+      "title": "ulti traveler.wav",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Traveler; raw source SHA-256 d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
+      "id": "ultimate-veyr",
+      "title": "assasinen ulti.mp3",
+      "creator": "not established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/Audio/selected-ultimates-validation.json",
+        "Tools/Audio/import_selected_ultimates.py"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open license gap; exact original digest recorded",
+      "notes": "Hero Veyr; raw source SHA-256 a57a2611ad4484d1934d71b7a7a911cace8a0a91d1792f645f9d8199d65d507d. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
+    },
+    {
       "id": "font-rajdhani",
       "title": "Rajdhani",
       "creator": "Indian Type Foundry",

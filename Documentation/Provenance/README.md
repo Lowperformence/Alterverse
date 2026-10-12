@@ -22,7 +22,7 @@ Alle neun Konzeptblätter wurden am 12.10.2026 mit der eingebauten ChatGPT-Bildg
 
 ## Belegsammlung
 
-- [Lizenzregister](LicenseRegister.json): 44 Quellen-/Beleggruppen, einschließlich 22 identifizierter Pixabay-Aufnahmen.
+- [Lizenzregister](LicenseRegister.json): 52 Quellen-/Beleggruppen, einschließlich 22 identifizierter Pixabay-Aufnahmen.
 - [Lesbare Lizenzübersicht](LICENSES.md): Anbieter, Lizenz, Quelle, Belege und verbleibende Lücken.
 - [Assetregister](AssetRegister.json): 488 bestehende Mediendateien mit Git-Blob-Prüfsumme und Quellenstatus. Der Status „Zuordnung offen“ ist keine Freigabe.
 - [Repository-Snapshot](RepositorySnapshot.json): eingefrorener Dateibestand des geprüften `dev/vertical-slice`-Commits `3dc8d779893c33ce0826c0cc1fa21eefcf4c294b`.
@@ -38,12 +38,13 @@ Die anatomischen menschlichen Basismodelle sind laut ursprünglichem Builder-REA
 
 ## Was noch offen ist
 
-1. Ursprüngliche Quellen und Nutzungsrechte der früher eingebrachten Helden-Bildreferenzen; mehrere Builder nennen „supplied reference“, ohne die konkrete Bildquelle zu speichern.
-2. Herkunft/Nutzungsbeleg des hochgeladenen `Universe.png` sowie des Menüvideos/Posters und der Branding-Dateien, soweit keine vollständige Generierungsakte vorliegt.
-3. Kontogebundene ursprüngliche Downloadbelege, falls vorhanden, für Mixamo und Pixabay. Öffentliche Anbieter-Lizenzangaben wurden erfasst, aber historische persönliche Downloadnachweise sind nicht vorhanden.
-4. Der vorhandene Quaternius-SpaceKit-Beleg trägt im Text den Namen „Ultimate Platformer Pack“. Der packgenaue Originalbeleg muss ergänzt werden.
-5. Assetgenaue Auflösung weiterer Icons, Bilder und aktueller Audio-Overrides; das Assetregister benennt diese offen, statt allen Dateien automatisch CC0 zuzuweisen.
-6. Vollständige Notices der tatsächlich installierten Unity-/Serverpakete und zugehörige Kontonutzungsrechte.
+1. Originalquellen/Lizenzen der sieben generisch benannten Ultimate-Sounds: `brakk ulti.wav`, `heiler ulti.wav`, `ione ulti.wav`, `sivra ulti.wav`, `tank ulti.wav`, `ulti traveler.wav`, `assasinen ulti.mp3`. Die vorhandenen Hashes belegen die Dateizuordnung, keine Rechte. Details: [Ergänzung zur früheren Prüfung](PriorAuditFindings.md).
+2. Ursprüngliche Quellen und Nutzungsrechte der früher eingebrachten Helden-Bildreferenzen; mehrere Builder nennen „supplied reference“, ohne die konkrete Bildquelle zu speichern.
+3. Herkunft/Nutzungsbeleg des hochgeladenen `Universe.png` sowie des Menüvideos/Posters und der Branding-Dateien, soweit keine vollständige Generierungsakte vorliegt.
+4. Kontogebundene ursprüngliche Downloadbelege, falls vorhanden, für Mixamo und Pixabay. Öffentliche Anbieter-Lizenzangaben wurden erfasst, aber historische persönliche Downloadnachweise sind nicht vorhanden.
+5. Der vorhandene Quaternius-SpaceKit-Beleg trägt im Text den Namen „Ultimate Platformer Pack“. Der packgenaue Originalbeleg muss ergänzt werden.
+6. Assetgenaue Auflösung weiterer Icons, Bilder und aktueller Audio-Overrides; das Assetregister benennt diese offen, statt allen Dateien automatisch CC0 zuzuweisen.
+7. Vollständige Notices der tatsächlich installierten Unity-/Serverpakete und zugehörige Kontonutzungsrechte.
 
 ## Modellstatus
 

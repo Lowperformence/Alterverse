@@ -12,6 +12,7 @@ ROOT=Path(__file__).resolve().parents[2]
 OUT=ROOT/'ArtSource/Heroes/ConceptRebuild'
 BASE='396d3d0008d5557b5e014165594e1f9505bcb530'
 REVISION='hero-concepts-20261012-v1'
+ONLY=None
 sys.path.insert(0,str(ROOT/'Tools/HeroParts'))
 from build_parts import Parts, amend, validate, obj_source, PALETTES
 
@@ -28,6 +29,30 @@ def original(path):
 def preserve_signature(data):
     keys=['version','boneNames','anchors','markers','tailPivot','hookGrip']
     return {k:copy.deepcopy(data[k]) for k in keys if k in data}
+
+def fbx_geometry_digest(path):
+    import bpy
+    bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.fbx(filepath=str(path),use_anim=True)
+    signature=[]
+    for obj in sorted([o for o in bpy.data.objects if o.type=='MESH'],key=lambda o:o.name):
+        signature.append({'name':obj.name,'vertices':[[round(float(x),6) for x in obj.matrix_world@v.co] for v in obj.data.vertices],
+                          'faces':[[*p.vertices,p.material_index] for p in obj.data.polygons],
+                          'weights':[[[obj.vertex_groups[g.group].name,round(g.weight,6)] for g in v.groups] for v in obj.data.vertices],
+                          'materials':[[m.name,*[round(float(c),6) for c in m.diffuse_color]] if m else None for m in obj.data.materials]})
+    return digest(json.dumps(signature,sort_keys=True,separators=(',',':')).encode())
+
+def restore_matching_previews(slug):
+    """Reuse saved renders only after independent FBX geometry/material/skin comparison."""
+    import bpy
+    cache=ROOT/'.authoring-cache/ArtSource/Heroes/ConceptRebuild';old=cache/(slug+'.fbx')
+    if slug=='Auren-Kest' or not old.exists() or not all((cache/(slug+s)).exists() for s in ['-front.png','-rear.png']):return False
+    source=OUT/(slug+'.blend');old_digest=fbx_geometry_digest(old);new_digest=fbx_geometry_digest(OUT/(slug+'.fbx'))
+    bpy.ops.wm.open_mainfile(filepath=str(source))
+    if old_digest!=new_digest:return False
+    import shutil
+    for suffix in ['-front.png','-rear.png']:shutil.copy2(cache/(slug+suffix),OUT/(slug+suffix))
+    REPORT.setdefault('previewCache',{})[slug]={'sourceRun':38213251851,'fbxGeometrySkinMaterialDigest':new_digest,'matchingExportVerified':True}
+    print('MATCHING_NATIVE_PREVIEW_REUSED',slug,flush=True);return True
 
 def front_surface(data,x,y,back=False):
     """Ray intersect actual body triangles at a chosen torso x/y; no guessed depth."""
@@ -103,6 +128,7 @@ def authored_runtime(data,kind):
 def build_runtime():
     import blender_export as be
     for kind,slug in RUNTIME:
+        if ONLY and slug!=ONLY:continue
         resource=ROOT/f'Assets/Alterverse/Resources/{kind}/Model.bytes'
         raw=original(resource);data=json.loads(gzip.decompress(raw));before=preserve_signature(data)
         # The four previous replacements were committed in a distinct revision.
@@ -120,12 +146,20 @@ def build_runtime():
         while len(colors)<len(revised['submeshes']):colors.append((.15,.18,.20))
         obj_source(OUT/(slug+'-authored-details.obj'),p,[f'Surface_{i}' for i in range(len(colors))],colors)
         body,arm=be.runtime_scene(kind,revised)
+        if kind=='SiegeTank':
+            from build_original_armor_pattern import build
+            preview=build();image=be.bpy.data.images.load(str(preview),check_existing=True);image.pack()
+            mat=body.data.materials[1];nodes=mat.node_tree.nodes;tex=nodes.new('ShaderNodeTexImage');tex.image=image;tex.projection='BOX';tex.projection_blend=.15
+            coords=nodes.new('ShaderNodeTexCoord');mapping=nodes.new('ShaderNodeVectorMath');mapping.operation='SCALE';mapping.inputs[3].default_value=3.0
+            mat.node_tree.links.new(coords.outputs['Generated'],mapping.inputs[0]);mat.node_tree.links.new(mapping.outputs['Vector'],tex.inputs['Vector'])
+            mat.node_tree.links.new(tex.outputs['Color'],nodes.get('Principled BSDF').inputs['Base Color'])
         # Palette in native previews is descriptive; the production shader/material routing is unchanged.
         be.export_fbx(OUT/(slug+'.fbx'),arm)
-        be.studio();be.bpy.context.scene.cycles.samples=16
+        be.studio();be.bpy.context.scene.cycles.samples=8
         be.bpy.ops.wm.save_as_mainfile(filepath=str(OUT/(slug+'.blend')),compress=True)
-        be.render(OUT/(slug+'-front.png'),(0,0,1.0),2.65 if kind=='CyberShark' else 2.45,18)
-        be.render(OUT/(slug+'-rear.png'),(0,0,1.0),2.65 if kind=='CyberShark' else 2.45,162)
+        if not restore_matching_previews(slug):
+            be.render(OUT/(slug+'-front.png'),(0,0,1.0),2.65 if kind=='CyberShark' else 2.45,18)
+            be.render(OUT/(slug+'-rear.png'),(0,0,1.0),2.65 if kind=='CyberShark' else 2.45,162)
         checks.update({'concept':revised['conceptSource'],'sourceSha256':digest(raw),'runtimeOutput':resource.relative_to(ROOT).as_posix(),'outputSha256':digest(resource.read_bytes()),'authoredParts':[x['name'] for x in p.parts],'bodyReconstruction':'Existing silhouette/rig retained; new concept-specified chest and rear construction added.','UnityAndroid':'not run'})
         REPORT['heroes'][slug]=checks
         print('CONCEPT_RUNTIME_COMPLETE',slug,json.dumps(checks),flush=True)
@@ -164,7 +198,9 @@ def source_scene(slug,id):
         if hair:bmesh.ops.delete(bm,geom=hair,context='FACES')
         bm.to_mesh(body.data);bm.free();body.data.update()
     names=[b.name for b in arm.data.bones];chest=names.index('Chest');head=names.index('Head')
-    vertices=np.asarray([[v.co.x,v.co.z,-v.co.y] for v in body.data.vertices]);faces=[]
+    to_rig=arm.matrix_world.inverted()@body.matrix_world
+    local_vertices=[to_rig@v.co for v in body.data.vertices]
+    vertices=np.asarray([[v.x,v.z,-v.y] for v in local_vertices]);faces=[]
     for poly in body.data.polygons:
         for i in range(1,len(poly.vertices)-1):faces.append([poly.vertices[0],poly.vertices[i],poly.vertices[i+1]])
     temp={'vertices':vertices.ravel().tolist(),'submeshes':[{'triangles':np.asarray(faces).ravel().tolist()}]}
@@ -209,12 +245,13 @@ def source_scene(slug,id):
     bpy.ops.wm.save_as_mainfile(filepath=str(path),compress=True)
     for o in bpy.data.objects:
         if o.type in ['LIGHT','CAMERA']:o.hide_render=True
-    arm.data.pose_position='REST';be.studio();bpy.context.scene.cycles.samples=16
+    arm.data.pose_position='REST';be.studio();bpy.context.scene.cycles.samples=8
     bpy.ops.wm.save_as_mainfile(filepath=str(OUT/(slug+'.blend')),compress=True)
     scale=1.8 if id=='Timmy' else 2.4;target=(0,0,.70 if id=='Timmy' else 1.0)
-    be.render(OUT/(slug+'-front.png'),target,scale,18)
-    be.render(OUT/(slug+'-rear.png'),target,scale,162)
-    REPORT['heroes'][slug]={'concept':body['concept_source'],'sourceSha256':digest(raw),'runtimeOutput':resource.relative_to(ROOT).as_posix(),'outputSha256':digest(resource.read_bytes()),'rigExact':True,'animationActionDigestsExact':actions,'newVertices':len(p.v),'newTriangles':len(p.f),'newParts':[x['name'] for x in p.parts],'removedBrakkArmAttachmentVertices':removed,'bodyReconstruction':'Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.','UnityAndroid':'not run'}
+    if not restore_matching_previews(slug):
+        be.render(OUT/(slug+'-front.png'),target,scale,18)
+        be.render(OUT/(slug+'-rear.png'),target,scale,162)
+    REPORT['heroes'][slug]={'concept':f'ArtSource/Heroes/Concepts/2026-10-12/{slug}.png','sourceSha256':digest(raw),'runtimeOutput':resource.relative_to(ROOT).as_posix(),'outputSha256':digest(resource.read_bytes()),'rigExact':True,'animationActionDigestsExact':actions,'newVertices':len(p.v),'newTriangles':len(p.f),'newParts':[x['name'] for x in p.parts],'removedBrakkArmAttachmentVertices':removed,'bodyReconstruction':'Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.','UnityAndroid':'not run'}
     obj_source(OUT/(slug+'-authored-details.obj'),p,[f'Concept_{i}' for i in range(len(colors))],colors)
     print('CONCEPT_SOURCE_COMPLETE',slug,flush=True)
 
@@ -234,11 +271,17 @@ def verify_fbx():
 
 REPORT={'revision':REVISION,'inputCommit':BASE,'previousPartRevision':'8fa75d02f0964e9df149ed3c073259fc50248d78','heroes':{},'scope':'Geometry authoring and native FBX import checks; not Unity/Android acceptance'}
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--runtime-only',action='store_true');args=parser.parse_args()
+    global ONLY,REPORT
+    parser=argparse.ArgumentParser();parser.add_argument('--runtime-only',action='store_true');parser.add_argument('--hero');args=parser.parse_args()
+    ONLY=args.hero
+    if ONLY:
+        previous=OUT/'validation-report.json';assert previous.exists(),'A targeted correction requires the completed nine-hero baseline'
+        REPORT=json.loads(previous.read_text())
     OUT.mkdir(parents=True,exist_ok=True)
     build_runtime()
     if not args.runtime_only:
-        for slug,id in [('Zhaev-Null','Veyr'),('Tahla-Venn','Mira'),('Brakk-Orun','Rook'),('Andromeda-Timmy','Timmy')]:source_scene(slug,id)
+        for slug,id in [('Zhaev-Null','Veyr'),('Tahla-Venn','Mira'),('Brakk-Orun','Rook'),('Andromeda-Timmy','Timmy')]:
+            if not ONLY or slug==ONLY:source_scene(slug,id)
         verify_fbx();assert len(REPORT['heroes'])==9
     (OUT/'validation-report.json').write_text(json.dumps(REPORT,indent=2)+'\n')
     print('NINE_CONCEPT_MODELS_COMPLETE',json.dumps(REPORT),flush=True)

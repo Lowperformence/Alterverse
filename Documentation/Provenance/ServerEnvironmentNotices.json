@@ -1,0 +1,313 @@
+{
+  "scope": "Existing local validation/authoring environment, not proof of deployed server versions. Production requirements use version ranges; deployment lock/installed notices still need to be retained.",
+  "packages": [
+    {
+      "Name": "typing_extensions",
+      "Version": "4.16.0",
+      "License-Expression": "PSF-2.0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/typing_extensions-4.16.0.dist-info/licenses/LICENSE",
+          "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+        }
+      ]
+    },
+    {
+      "Name": "google-auth",
+      "Version": "2.61.0",
+      "License-Expression": null,
+      "License": "Apache 2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/google_auth-2.61.0.dist-info/licenses/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "Name": "PyJWT",
+      "Version": "2.15.1",
+      "License-Expression": "MIT",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/pyjwt-2.15.1.dist-info/licenses/LICENSE",
+          "sha256": "797a7a20231d4c433e9f1911db1731d06b5828b98f499819a034f7c0f56f5ce5"
+        }
+      ]
+    },
+    {
+      "Name": "pyasn1_modules",
+      "Version": "0.4.2",
+      "License-Expression": null,
+      "License": "BSD",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/pyasn1_modules-0.4.2.dist-info/licenses/LICENSE.txt",
+          "sha256": "2aad5fc00f705c4a1addb83eed10a6a75d286a3779f0cf8519d87e62bc4735fd"
+        }
+      ]
+    },
+    {
+      "Name": "grpcio-status",
+      "Version": "1.84.0",
+      "License-Expression": "Apache-2.0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/grpcio_status-1.84.0.dist-info/licenses/LICENSE",
+          "sha256": "58c86a3f2b5cca0ebdf9ed3e7f4e6dc38e3b38796d8c3dc92064c62a4e39d0dd"
+        }
+      ]
+    },
+    {
+      "Name": "charset-normalizer",
+      "Version": "3.5.2",
+      "License-Expression": null,
+      "License": "MIT",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/charset_normalizer-3.5.2.dist-info/licenses/LICENSE",
+          "sha256": "6d0d41bfe170ac6c7dc248c9a63e254d0fb45a60d50a8257d0af92c6e249b887"
+        }
+      ]
+    },
+    {
+      "Name": "idna",
+      "Version": "3.20",
+      "License-Expression": "BSD-3-Clause",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/idna-3.20.dist-info/licenses/LICENSE.md",
+          "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+        }
+      ]
+    },
+    {
+      "Name": "packaging",
+      "Version": "26.3",
+      "License-Expression": "Apache-2.0 OR BSD-2-Clause",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/packaging-26.3.dist-info/licenses/LICENSE.BSD",
+          "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+        },
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/packaging-26.3.dist-info/licenses/LICENSE",
+          "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48"
+        },
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/packaging-26.3.dist-info/licenses/LICENSE.APACHE",
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        }
+      ]
+    },
+    {
+      "Name": "cryptography",
+      "Version": "50.0.2",
+      "License-Expression": "Apache-2.0 OR BSD-3-Clause",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/cryptography-50.0.2.dist-info/licenses/LICENSE.BSD",
+          "sha256": "602c4c7482de6479dd2e9793cda275e5e63d773dacd1eca689232ab7008fb4fb"
+        },
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/cryptography-50.0.2.dist-info/licenses/LICENSE",
+          "sha256": "3e0c7c091a948b82533ba98fd7cbb40432d6f1a9acbf85f5922d2f99a93ae6bb"
+        },
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/cryptography-50.0.2.dist-info/licenses/LICENSE.APACHE",
+          "sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+        }
+      ]
+    },
+    {
+      "Name": "cffi",
+      "Version": "2.1.1",
+      "License-Expression": "MIT-0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/cffi-2.1.1.dist-info/licenses/LICENSE",
+          "sha256": "5ba24ddc57067f9249add644c3afc41a5d6dc37e23433ef759d95df370b0af63"
+        }
+      ]
+    },
+    {
+      "Name": "gunicorn",
+      "Version": "23.0.0",
+      "License-Expression": null,
+      "License": "MIT",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/gunicorn-23.0.0.dist-info/LICENSE",
+          "sha256": "6646cdbba2e99e3421dd18c22173579a1fde347e831dae6adee80eefe331e951"
+        }
+      ]
+    },
+    {
+      "Name": "google-cloud-core",
+      "Version": "2.8.0",
+      "License-Expression": null,
+      "License": "Apache 2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/google_cloud_core-2.8.0.dist-info/licenses/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "Name": "google-cloud-firestore",
+      "Version": "2.34.1",
+      "License-Expression": null,
+      "License": "Apache-2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/google_cloud_firestore-2.34.1.dist-info/licenses/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "Name": "pycparser",
+      "Version": "3.11",
+      "License-Expression": "BSD-3-Clause",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/pycparser-3.11.dist-info/licenses/LICENSE",
+          "sha256": "0a9e78156ae8b96caf1b4f11ac2df424b83de29736f9e757630548a6272fdf90"
+        }
+      ]
+    },
+    {
+      "Name": "protobuf",
+      "Version": "7.36.2",
+      "License-Expression": null,
+      "License": "3-Clause BSD License",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/protobuf-7.36.2.dist-info/LICENSE",
+          "sha256": "6e5e117324afd944dcf67f36cf329843bc1a92229a8cd9bb573d7a83130fea7d"
+        }
+      ]
+    },
+    {
+      "Name": "grpcio",
+      "Version": "1.84.0",
+      "License-Expression": "Apache-2.0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/grpcio-1.84.0.dist-info/licenses/LICENSE",
+          "sha256": "58c86a3f2b5cca0ebdf9ed3e7f4e6dc38e3b38796d8c3dc92064c62a4e39d0dd"
+        }
+      ]
+    },
+    {
+      "Name": "certifi",
+      "Version": "2026.7.22",
+      "License-Expression": null,
+      "License": "MPL-2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/certifi-2026.7.22.dist-info/licenses/LICENSE",
+          "sha256": "e93716da6b9c0d5a4a1df60fe695b370f0695603d21f6f83f053e42cfc10caf7"
+        }
+      ]
+    },
+    {
+      "Name": "googleapis-common-protos",
+      "Version": "1.75.5",
+      "License-Expression": "Apache-2.0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/googleapis_common_protos-1.75.5.dist-info/licenses/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "Name": "opentelemetry-api",
+      "Version": "1.45.1",
+      "License-Expression": "Apache-2.0",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/opentelemetry_api-1.45.1.dist-info/licenses/LICENSE",
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        }
+      ]
+    },
+    {
+      "Name": "urllib3",
+      "Version": "2.8.0",
+      "License-Expression": "MIT",
+      "License": null,
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/urllib3-2.8.0.dist-info/licenses/LICENSE.txt",
+          "sha256": "130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686"
+        }
+      ]
+    },
+    {
+      "Name": "requests",
+      "Version": "2.34.2",
+      "License-Expression": null,
+      "License": "Apache-2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/requests-2.34.2.dist-info/licenses/LICENSE",
+          "sha256": "09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b"
+        },
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/requests-2.34.2.dist-info/licenses/NOTICE",
+          "sha256": "f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc"
+        }
+      ]
+    },
+    {
+      "Name": "google-api-core",
+      "Version": "2.42.0",
+      "License-Expression": null,
+      "License": "Apache 2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/google_api_core-2.42.0.dist-info/licenses/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "Name": "proto-plus",
+      "Version": "1.29.0",
+      "License-Expression": null,
+      "License": "Apache 2.0",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/proto_plus-1.29.0.dist-info/licenses/LICENSE",
+          "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+        }
+      ]
+    },
+    {
+      "Name": "pyasn1",
+      "Version": "0.6.4",
+      "License-Expression": null,
+      "License": "BSD-2-Clause",
+      "notices": [
+        {
+          "path": "Documentation/Provenance/Licenses/ServerEnvironment/pyasn1-0.6.4.dist-info/licenses/LICENSE.rst",
+          "sha256": "2aad5fc00f705c4a1addb83eed10a6a75d286a3779f0cf8519d87e62bc4735fd"
+        }
+      ]
+    }
+  ]
+}

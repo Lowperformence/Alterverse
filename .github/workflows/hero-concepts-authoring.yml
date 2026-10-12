@@ -5,6 +5,7 @@ on:
     paths: ['Tools/HeroConcepts/**', '.github/workflows/hero-concepts-authoring.yml']
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: hero-concepts-${{ github.ref }}
   cancel-in-progress: true
@@ -20,6 +21,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Recover saved native sources for geometry-verified preview reuse
+        uses: actions/download-artifact@v4
+        with:
+          name: nine-hero-concept-models
+          run-id: 38213251851
+          github-token: ${{ github.token }}
+          path: .authoring-cache
       - name: Install Blender LTS authoring runtime
         run: |
           sudo apt-get update -qq
@@ -45,7 +53,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Assets/Alterverse/Resources/CyberRanger/Model.bytes Assets/Alterverse/Resources/UmbralMage/Model.bytes Assets/Alterverse/Resources/SiegeTank/Model.bytes Assets/Alterverse/Resources/ChronoTraveler/Model.bytes Assets/Alterverse/Resources/CyberShark/Model.bytes Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx ArtSource/Heroes/ConceptRebuild ArtSource/Heroes/Veyr.blend ArtSource/Heroes/Mira.blend ArtSource/Heroes/Rook.blend ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend Documentation/Provenance/BuildEvidence.json Documentation/Provenance/Licenses/Blender-Human-Base-Meshes
+          git add Assets/Alterverse/Resources/CyberRanger/Model.bytes Assets/Alterverse/Resources/UmbralMage/Model.bytes Assets/Alterverse/Resources/SiegeTank/Model.bytes Assets/Alterverse/Resources/ChronoTraveler/Model.bytes Assets/Alterverse/Resources/CyberShark/Model.bytes Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png ArtSource/Heroes/ConceptRebuild ArtSource/Heroes/Veyr.blend ArtSource/Heroes/Mira.blend ArtSource/Heroes/Rook.blend ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend Documentation/Provenance/BuildEvidence.json Documentation/Provenance/OriginalAurenCoating.json Documentation/Provenance/Licenses/Blender-Human-Base-Meshes
           if ! git diff --cached --quiet; then
             git commit -m 'Build and validate nine concept-guided hero geometry revisions'
             git push origin HEAD:'${{ github.ref_name }}'

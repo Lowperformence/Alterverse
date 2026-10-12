@@ -1,0 +1,16 @@
+{
+  "revision": "auren-own-coating-20261012-v1",
+  "createdOn": "2026-10-12",
+  "generation": "deterministic NumPy periodic synthesis; no external bitmap/reference input",
+  "seed": 20261012,
+  "size": [
+    1024,
+    1024
+  ],
+  "resource": "Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png",
+  "sha256": "03426cc4364c9e0cd1fd203f49d7936d9fdb7e47e7cc29f91f1fb2df2db98be9",
+  "generatorSha256": "37e7eb28b89e84f72af78fb7719f3c4639f77580b5389d51b5257c2ecefca9a9",
+  "existingMetaGuidPreserved": true,
+  "existingShaderColorwayPreserved": true,
+  "seamPixelsIdentical": true
+}

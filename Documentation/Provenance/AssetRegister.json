@@ -2145,11 +2145,9 @@
       "gitBlobSha1": "f00c89127891528e55aaf5d25b65ee4a947ea964",
       "size": 59888,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-elyra"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
@@ -2299,11 +2297,9 @@
       "gitBlobSha1": "8db76686f5a5427fd937a2d4f6ff9a18231aca12",
       "size": 55746,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-kaelon"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/W_Cast.ogg",
@@ -2453,11 +2449,9 @@
       "gitBlobSha1": "4f9f5dc25b065a048ea8e259b8efb495d15f1f2d",
       "size": 58986,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-mira"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
@@ -2728,11 +2722,9 @@
       "gitBlobSha1": "a7b994ff5a6379d1fc0f6a227e11d90060f8da0d",
       "size": 89689,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-nyra"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/W_Cast.ogg",
@@ -2882,11 +2874,9 @@
       "gitBlobSha1": "6ec253d33397bd04897f69c86fd2e65580faed64",
       "size": 23492,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-rook"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/W_Cast.ogg",
@@ -3069,11 +3059,9 @@
       "gitBlobSha1": "8748a746f09463341a188a197c1f442a846667ca",
       "size": 53070,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-traveler"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
@@ -3223,11 +3211,9 @@
       "gitBlobSha1": "8e30d260420ca4622b9935e223ded8115ed0e80e",
       "size": 28407,
       "sourceEvidence": [
-        "Docs/CombatAudioAssets.json",
-        "Docs/ThirdPartyAudioLicenses.md",
-        "ArtSource/Audio/HeroSelections/README.md"
+        "ultimate-veyr"
       ],
-      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+      "status": "open source/license gap"
     },
     {
       "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
@@ -4213,8 +4199,10 @@
       "path": "Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png",
       "gitBlobSha1": "74f8b29087aa9d4bd5a68c53331f02ef8a34ef5f",
       "size": 251389,
-      "sourceEvidence": [],
-      "status": "needs asset-specific source mapping"
+      "sourceEvidence": [
+        "woodland-original"
+      ],
+      "status": "open historical rights gap; see actual active replacement revision"
     },
     {
       "path": "Assets/Alterverse/Resources/KryonBear/Model.bytes",

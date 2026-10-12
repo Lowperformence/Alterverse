@@ -27,6 +27,10 @@ source('camo','Pixelated Camouflage Set / camouflage-grey.png','Angela Netzke (n
 source('wolfwoot','Archived RPG Male Adventurer voice','Brandon Song (wolfwoot)','CC0-1.0','https://opengameart.org/content/voice-clip-pack-male-adventurer-rpg',['Docs/HeroDeathVoiceLicense.md'],'archived; no longer active HeroDeath cue')
 source('mixkit','Open special box, asset 3190','Mixkit listing','Mixkit Sound Effects Free License','https://mixkit.co/license/modal/sfxFree/',['Docs/HeroDeathVoiceLicense.md'],'license page verified; source identity recorded in project','Finished-game incorporation and standalone/source-file redistribution are different permissions. Raw source is retained in this private repository.')
 source('spacekit','Ultimate Space Kit','Quaternius','CC0 claimed; pack-specific notice mismatch','https://quaternius.com/packs/ultimatespacekit.html',['Assets/Alterverse/ThirdParty/UltimateSpaceKit_LICENSE.txt'],'needs exact archive notice','The existing file is named UltimateSpaceKit but its text says Ultimate Platformer Pack. Do not silently treat the wrong pack heading as an exact pack certificate.')
+source('woodland-original','Auren user-supplied WoodlandCamo.png','not established','not established','',['Assets/Alterverse/Scripts/Visuals/SiegeTankAppearance.cs','Documentation/Provenance/PriorAuditFindings.md'],'open historical texture rights gap','Commit f2b2c5ff5511bb1ca549dec597f0feef7036b4f4 imported a supplied woodland image. The CC0 license for UrbanDigitalCamo does not cover this different image. A newly generated replacement, when committed, only resolves the active replacement, not this historical image.')
+ULTIMATES=[('Rook','brakk ulti.wav','b998cbcd8c89b188380eaeb532d31539edd6b2e3ce22a23175ff1b91c40ae9e9'),('Mira','heiler ulti.wav','91037a5a859e90e1255757f9127782e661a764ff20a2a042bfb95d7b8e686734'),('Elyra','ione ulti.wav','6097c4b9350beb3f6af7cc078bc81c0dd28ba381315eca066063a1cf85507db2'),('Nyra','sivra ulti.wav','32fe8e4b6f40d44ab78b5599da01450ec44601fd4259821dcef5c258bec4bdd1'),('Kaelon','tank ulti.wav','d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593'),('Traveler','ulti traveler.wav','d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593'),('Veyr','assasinen ulti.mp3','a57a2611ad4484d1934d71b7a7a911cace8a0a91d1792f645f9d8199d65d507d')]
+for hero,filename,sha in ULTIMATES:
+    source('ultimate-'+hero.lower(),filename,'not established','not established','',['Tools/Audio/selected-ultimates-validation.json','Tools/Audio/import_selected_ultimates.py'],'open license gap; exact original digest recorded',f'Hero {hero}; raw source SHA-256 {sha}. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests.')
 for name in ['Rajdhani','Orbitron']:
     source('font-'+name.lower(),name,'Indian Type Foundry' if name=='Rajdhani' else 'The Orbitron Project Authors','OFL-1.1','https://github.com/google/fonts/tree/main/ofl/'+name.lower(),['Documentation/Provenance/Licenses/'+name+'-OFL-1.1.txt'],'license text archived; font name-table checked','DimensionsDisplay-SemiBold.ttf identifies itself as a renamed Orbitron derivative in its copyright/name table.' if name=='Orbitron' else 'Rajdhani-Regular.ttf and Rajdhani-SemiBold.ttf retain their original copyright and OFL metadata.')
 source('google-play-games','Play Games plugin v2.2.1','Google','Apache-2.0','https://github.com/playgameservices/play-games-plugin-for-unity/tree/v2.2.1',['Documentation/Provenance/Licenses/GooglePlayGames-Apache-2.0.txt','Packages/manifest.json'])
@@ -69,6 +73,7 @@ for f in FILES:
     elif 'UrbanDigitalCamo' in name:refs=['camo'];status='exact source and recorded SHA-256'
     elif 'HeroDeathSpecialBox' in name:refs=['mixkit'];status='source hash and listing recorded'
     elif 'HeroDeathHa' in name:refs=['wolfwoot'];status='archived source'
+    elif name=='WoodlandCamo.png':refs=['woodland-original'];status='open historical rights gap; see actual active replacement revision'
     elif name=='Universe.png':refs=['universe-image'];status='open license/source gap'
     elif 'InterstellarBackdrop' in name:refs=['frontend-video'];status='open source/account evidence gap'
     elif '/MapPanoramas/' in p:refs=['Documentation/Map-Photo-Panoramas.md'];status='AI generation directions documented; exact historical generation record not complete'
@@ -83,6 +88,9 @@ for f in FILES:
         if re.search(r'(?<!\d)'+id+r'(?!\d)',name):refs=['pixabay-'+id];status='listing located; file relation based on supplied filename/id';break
     if '/Audio/' in p and '/Resources/' in p and not refs:
         refs=['Docs/CombatAudioAssets.json','Docs/ThirdPartyAudioLicenses.md','ArtSource/Audio/HeroSelections/README.md'];status='output requires current recipe/override resolution; do not assume all audio is CC0'
+    for hero,filename,sha in ULTIMATES:
+        if p==f'Assets/Alterverse/Resources/Audio/Heroes/{hero}/Ultimate_Selected.ogg':
+            refs=['ultimate-'+hero.lower()];status='open source/license gap';break
     e={**f,'sourceEvidence':refs,'status':status}
     if name in source_hashes:e['recordedOriginalSha256']=source_hashes[name]
     assets.append(e)
