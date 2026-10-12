@@ -90,16 +90,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": "detailed replacement head",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
-    "revision": "nine-hero-concepts-20261012-v1",
+    "revision": "nine-hero-concepts-20261012-v2",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Sivra-model.blend",
     "model": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
-    "modelSha256": "f6db57283937c2e008f2ebfa2791da57a85fe36bc3f33f1005427a83f154bb5a"
+    "modelSha256": "0a449e35dedaadb25a90a45e284a34780790dfbc7a274cdf237c82189c580887"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "revision": "nine-hero-concepts-20261012-v1",
+  "revision": "nine-hero-concepts-20261012-v2",
   "sourceRevision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
   "models": {
     "Sivra": {
@@ -426,8 +426,9 @@
         "animationClipsImported": [],
         "vertices": 40354
       },
-      "modelSha256": "f6db57283937c2e008f2ebfa2791da57a85fe36bc3f33f1005427a83f154bb5a",
-      "blenderSha256": "449379c3c8eaf6d12e419802b358a043403a5c97999aae7db78ca60f1603e0e8"
+      "fbxSha256": "24d83ae9a611c81acad9c968e8c6d8e89f973cf5bc41b1902ab2e3df2f39a5c4",
+      "modelSha256": "0a449e35dedaadb25a90a45e284a34780790dfbc7a274cdf237c82189c580887",
+      "blenderSha256": "8fc25df7d5033a213f5aa1ef9dae26207342de5f720c2899d43bf5de934b3d4f"
     },
     "Ione": {
       "preservedVertices": 20818,
@@ -917,8 +918,9 @@
         "animationClipsImported": [],
         "vertices": 28308
       },
-      "modelSha256": "64910c2535cd447bb38e1495ced250223cc1751ca61f784237037c680afc61fe",
-      "blenderSha256": "f012de711fa4dac1870e6bff344be4a5c287d883ce6ff5b44071a95e00b062af"
+      "fbxSha256": "8912303362f8c94e88c765f66e4af45e9517ccc18ba7c0ac40c851fd6a0819cc",
+      "modelSha256": "495e064bae31a0b1a42b97413b24957a403c1d81a19b9ce6e11355177c163d6a",
+      "blenderSha256": "4571a12b7bb5fd1d6e8ffc9281754ae436c3bd597c5ad84e36c958a5623d33b0"
     },
     "Nerok": {
       "preservedVertices": 82172,
@@ -1171,8 +1173,9 @@
         "animationClipsImported": [],
         "vertices": 85740
       },
-      "modelSha256": "1cc8ea981022fe3be5d46add9a76a0f2d90586fc0ca53202dff93ac8f56ba0b3",
-      "blenderSha256": "3ee7d35208380a7ca4c4267a8fc4d6176b0b4d64c98b67198c95b53318be78c7"
+      "fbxSha256": "f8fd0720e5e371913614f41d2d1f51f32280f44a74764485a4615991f47e54bd",
+      "modelSha256": "a1407f01b43ec897ade7ce00787e0a9d8b89f6e4dc4e8f64b84cd58ccccd9621",
+      "blenderSha256": "0235647975c0c55c540cec75d247996e1a83a5ec3d41ae699d83395ae8c8889e"
     },
     "Auren": {
       "preservedVertices": 26213,
@@ -1665,12 +1668,13 @@
         "animationClipsImported": [],
         "vertices": 31007
       },
-      "modelSha256": "faa040b29ad9819cc15357f1b6f8ac95771f6812ba6a743e86f47d92f0c5ddab",
-      "blenderSha256": "5ef8239535c99db17319aedfee1eb628c2b51d02361db537d093932891142f41"
+      "fbxSha256": "be1f795c06bededbed78a2c24d8e9e5baa423e1216045478db43d6988025a617",
+      "modelSha256": "5d60937717b1e8e04097c740442349ec85e14f9108fc1a5c3d8f87337b765044",
+      "blenderSha256": "9597842c39889f89dd1b627a4f56eb8c935b848f0353b4aef781b2b8632e7205"
     },
     "Traveler": {
-      "preservedVertices": 11285,
-      "removedVertices": 0,
+      "preservedVertices": 9941,
+      "removedVertices": 1344,
       "newVertices": 5028,
       "newTriangles": 9408,
       "newParts": [
@@ -2325,7 +2329,7 @@
       ],
       "rigAndMarkersPreserved": true,
       "bodyPositionsAndNormalsExact": true,
-      "preservedVertexDigest": "87738836fe1a0c82219bf2230c4b66f215dfb5f77d4a253a03f3aca464a7236a",
+      "preservedVertexDigest": "812996efa84a3ecd29c7888413476bd5f9e3ed84d6c9eed8307797ccad301515",
       "shippingModel": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
       "canonicalWeaponMarkersExact": true,
       "fbxRoundTrip": {
@@ -2333,15 +2337,106 @@
         "skinningImported": true,
         "normalizedWeights": true,
         "animationClipsImported": [],
-        "vertices": 16313
+        "vertices": 14969
       },
-      "modelSha256": "0e5b998eb8143403a9d0dd0b6bd6fefce339690de41e04dd5a4701749b41f53d",
-      "blenderSha256": "f4836dd5c0e3f2b97e81fe9575baaceb5217275364a7534382c2d8c8c246c059"
+      "fbxSha256": "e30b998fd5e4868ad6fab7095137ef8b0bf6d2bb3d2196d74cb5cfc0286f1403",
+      "modelSha256": "c7aa28e9118f1d72004df74e13996901754810be7e04f1f578da61dab5957c1a",
+      "blenderSha256": "6e0b1242601321aa84579852ae16c95532df69b79eabe633e8eccffd88d53a28"
     },
     "Zhaev": {
       "source": "ArtSource/Heroes/Veyr.blend",
       "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
       "removedComponents": [
+        {
+          "vertices": 152,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Champagne metal"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 152,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Champagne metal"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 128,
+          "materials": [
+            "Obsidian fabric"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 128,
+          "materials": [
+            "Obsidian fabric"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
         {
           "vertices": 18,
           "materials": [
@@ -2352,7 +2447,7 @@
           ]
         }
       ],
-      "preservedVertices": 24493,
+      "preservedVertices": 21773,
       "preservedPositionsExact": true,
       "rigExact": true,
       "originalActionsExact": [
@@ -2367,20 +2462,212 @@
         "Ultimate"
       ],
       "socketsExact": true,
-      "newVertices": 1928,
-      "newTriangles": 3716,
+      "newVertices": 4790,
+      "newTriangles": 9044,
       "newParts": [
         {
           "name": "single violet crown stripe",
           "first": 0,
-          "vertices": 360,
-          "triangles": 716,
+          "vertices": 420,
+          "triangles": 836,
           "bone": 4,
           "material": 3
         },
         {
+          "name": "three overlapping shoulder lames L0",
+          "first": 420,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 607,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 783,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 835,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 887,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 1074,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1250,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1302,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 1354,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 1541,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1717,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1769,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 1821,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 2008,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2184,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2236,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 2288,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 2475,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2651,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2703,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 2755,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 2942,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3118,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3170,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 3
+        },
+        {
           "name": "central oval violet chest reactor recessed housing",
-          "first": 360,
+          "first": 3222,
           "vertices": 266,
           "triangles": 528,
           "bone": 3,
@@ -2388,7 +2675,7 @@
         },
         {
           "name": "central oval violet chest reactor luminous ring",
-          "first": 626,
+          "first": 3488,
           "vertices": 232,
           "triangles": 448,
           "bone": 3,
@@ -2396,7 +2683,7 @@
         },
         {
           "name": "central oval violet chest reactor lens",
-          "first": 858,
+          "first": 3720,
           "vertices": 266,
           "triangles": 528,
           "bone": 3,
@@ -2404,7 +2691,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1124,
+          "first": 3986,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2412,7 +2699,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1140,
+          "first": 4002,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2420,7 +2707,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1156,
+          "first": 4018,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2428,7 +2715,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1172,
+          "first": 4034,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2436,7 +2723,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1188,
+          "first": 4050,
           "vertices": 13,
           "triangles": 22,
           "bone": 5,
@@ -2444,7 +2731,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1201,
+          "first": 4063,
           "vertices": 13,
           "triangles": 22,
           "bone": 5,
@@ -2452,7 +2739,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1214,
+          "first": 4076,
           "vertices": 13,
           "triangles": 22,
           "bone": 5,
@@ -2460,7 +2747,7 @@
         },
         {
           "name": "violet hip tab",
-          "first": 1227,
+          "first": 4089,
           "vertices": 13,
           "triangles": 22,
           "bone": 1,
@@ -2468,7 +2755,7 @@
         },
         {
           "name": "cape violet inner seam",
-          "first": 1240,
+          "first": 4102,
           "vertices": 196,
           "triangles": 388,
           "bone": 2,
@@ -2476,7 +2763,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1436,
+          "first": 4298,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2484,7 +2771,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1454,
+          "first": 4316,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2492,7 +2779,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1472,
+          "first": 4334,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2500,7 +2787,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1490,
+          "first": 4352,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2508,7 +2795,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1508,
+          "first": 4370,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2516,7 +2803,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1526,
+          "first": 4388,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2524,7 +2811,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1542,
+          "first": 4404,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2532,7 +2819,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1558,
+          "first": 4420,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2540,7 +2827,7 @@
         },
         {
           "name": "short chest vent rail",
-          "first": 1574,
+          "first": 4436,
           "vertices": 16,
           "triangles": 28,
           "bone": 3,
@@ -2548,7 +2835,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1590,
+          "first": 4452,
           "vertices": 13,
           "triangles": 22,
           "bone": 9,
@@ -2556,7 +2843,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1603,
+          "first": 4465,
           "vertices": 13,
           "triangles": 22,
           "bone": 9,
@@ -2564,7 +2851,7 @@
         },
         {
           "name": "three compact shoulder chevrons",
-          "first": 1616,
+          "first": 4478,
           "vertices": 13,
           "triangles": 22,
           "bone": 9,
@@ -2572,7 +2859,7 @@
         },
         {
           "name": "violet hip tab",
-          "first": 1629,
+          "first": 4491,
           "vertices": 13,
           "triangles": 22,
           "bone": 1,
@@ -2580,7 +2867,7 @@
         },
         {
           "name": "cape violet inner seam",
-          "first": 1642,
+          "first": 4504,
           "vertices": 196,
           "triangles": 388,
           "bone": 2,
@@ -2588,7 +2875,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1838,
+          "first": 4700,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2596,7 +2883,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1856,
+          "first": 4718,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2604,7 +2891,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1874,
+          "first": 4736,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2612,7 +2899,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1892,
+          "first": 4754,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2620,7 +2907,7 @@
         },
         {
           "name": "cape branched circuit embroidery",
-          "first": 1910,
+          "first": 4772,
           "vertices": 18,
           "triangles": 32,
           "bone": 2,
@@ -2642,10 +2929,11 @@
           "DF_Skeleton|DF_Skeleton|Skill2",
           "DF_Skeleton|DF_Skeleton|Ultimate"
         ],
-        "vertices": 26421
+        "vertices": 26563
       },
-      "modelSha256": "80287d34b48cce96ff7f0fd01f6643768f53da5047663693bde819600b6b17e8",
-      "blenderSha256": "c2824aad0dbd9712230fb1c318aa728a1b4abceaa8779124fdd7e16106345078"
+      "fbxSha256": "5c443b8ac0ae105aad657af2eb2b4ec8d460159e9472bfad7afcd02cccb88de2",
+      "modelSha256": "5c443b8ac0ae105aad657af2eb2b4ec8d460159e9472bfad7afcd02cccb88de2",
+      "blenderSha256": "f66601c5843ea083cbeff2cc0782b67462bf820cce614427d58d107564595140"
     },
     "Tahla": {
       "source": "ArtSource/Heroes/Mira.blend",
@@ -3277,8 +3565,9 @@
         ],
         "vertices": 28623
       },
-      "modelSha256": "d9910e58ad81614ac4df66f403418eb6402a240eecb15d4111fecdd69fb24937",
-      "blenderSha256": "97213621692f9f86cc17f7d9abf6f145805db2bb8e5798f26c94ed058e48c8e3"
+      "fbxSha256": "aec26af7e92bd85234145b5807b96ca0f50933df1ac4fd9f7ea8de544a92f074",
+      "modelSha256": "aec26af7e92bd85234145b5807b96ca0f50933df1ac4fd9f7ea8de544a92f074",
+      "blenderSha256": "90620fbf908e523c02983167f8940803ce90ea9ff70ca2e84cc40f4ea895449a"
     },
     "Brakk": {
       "source": "ArtSource/Heroes/Rook.blend",
@@ -3717,12 +4006,84 @@
           ]
         },
         {
-          "vertices": 12,
+          "vertices": 152,
           "materials": [
-            "Hair"
+            "Brushed silver"
           ],
           "bones": [
-            "Head"
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Champagne metal"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmL"
+          ]
+        },
+        {
+          "vertices": 152,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Champagne metal"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "ForearmR"
+          ]
+        },
+        {
+          "vertices": 360,
+          "materials": [
+            "Signature enamel"
+          ],
+          "bones": [
+            "UpperArmL"
           ]
         },
         {
@@ -3780,12 +4141,12 @@
           ]
         },
         {
-          "vertices": 12,
+          "vertices": 360,
           "materials": [
-            "Hair"
+            "Signature enamel"
           ],
           "bones": [
-            "Head"
+            "UpperArmR"
           ]
         },
         {
@@ -3819,13 +4180,139 @@
           "vertices": 12,
           "materials": [
             "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Obsidian fabric"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmL"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Obsidian fabric"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "UpperArmR"
+          ]
+        },
+        {
+          "vertices": 128,
+          "materials": [
+            "Brushed silver"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 96,
+          "materials": [
+            "Energy"
           ],
           "bones": [
             "Head"
           ]
         }
       ],
-      "preservedVertices": 20673,
+      "preservedVertices": 16305,
       "preservedPositionsExact": true,
       "rigExact": true,
       "originalActionsExact": [
@@ -4395,10 +4882,11 @@
           "DF_Skeleton|DF_Skeleton|Skill2",
           "DF_Skeleton|DF_Skeleton|Ultimate"
         ],
-        "vertices": 26285
+        "vertices": 21917
       },
-      "modelSha256": "31d3c77cf103be87930f77119f22558884047660712d85e46e5f21574b07c66e",
-      "blenderSha256": "ac62b33aeb52107a97a490cf2fddb1924ce55ddd5d7cb126dd7024c281860418"
+      "fbxSha256": "40b529332ceac327bf074283accd8d2b0cb14b6210150d0a3b00c437debc2859",
+      "modelSha256": "40b529332ceac327bf074283accd8d2b0cb14b6210150d0a3b00c437debc2859",
+      "blenderSha256": "9a073092b10d99dc44380264bcf4e2c01bd35117cbc9802970a345292a6981d0"
     },
     "Timmy": {
       "source": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
@@ -4572,8 +5060,9 @@
         "animationClipsImported": [],
         "vertices": 9848
       },
-      "modelSha256": "054d9d504cf62e41babc6ba27baeea1e4392bc085248f95881439b45acc12d90",
-      "blenderSha256": "02637e7ec7cbda341695a93a8e0f85b9b386689db7c0461c846c97472eb1ed35"
+      "fbxSha256": "a0b8f9d0574dfcde6495e2bf78457b67fa104a851260152e49d7fd326321f4ac",
+      "modelSha256": "a0b8f9d0574dfcde6495e2bf78457b67fa104a851260152e49d7fd326321f4ac",
+      "blenderSha256": "14b54af4b5fcec871427e50078db0df03182d4fd1f4884a9925665aecb324801"
     }
   },
   "validation": {

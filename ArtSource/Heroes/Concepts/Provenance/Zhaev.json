@@ -86,16 +86,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": null,
     "previousValidation": null,
-    "revision": "nine-hero-concepts-20261012-v1",
+    "revision": "nine-hero-concepts-20261012-v2",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Zhaev-model.blend",
     "model": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
-    "modelSha256": "80287d34b48cce96ff7f0fd01f6643768f53da5047663693bde819600b6b17e8"
+    "modelSha256": "5c443b8ac0ae105aad657af2eb2b4ec8d460159e9472bfad7afcd02cccb88de2"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]
 }

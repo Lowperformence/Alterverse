@@ -90,16 +90,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": null,
     "previousValidation": null,
-    "revision": "nine-hero-concepts-20261012-v1",
+    "revision": "nine-hero-concepts-20261012-v2",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Traveler-model.blend",
     "model": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
-    "modelSha256": "0e5b998eb8143403a9d0dd0b6bd6fefce339690de41e04dd5a4701749b41f53d"
+    "modelSha256": "c7aa28e9118f1d72004df74e13996901754810be7e04f1f578da61dab5957c1a"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]
 }
