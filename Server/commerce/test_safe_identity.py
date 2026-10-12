@@ -36,21 +36,29 @@ class SafeIdentityTests(unittest.TestCase):
         for bad in ('CUSTOM','c0000001','C00000012','C１２３４５６７'):
             self.assertFalse(valid_clan_tag(bad))
 
-    def test_unique_claims_rerolls_restarts_and_untrusted_text(self):
+    def test_unique_claims_stay_fixed_and_ignore_user_supplied_names(self):
         with tempfile.TemporaryDirectory() as folder,patch('google.cloud.firestore.transactional',transactional):
             client=Client()
             for factory in (lambda:Ledger(Path(folder)/'names.db'),lambda:FirestoreLedger(client=client)):
                 with self.subTest(adapter=type(factory()).__name__):
                     ledger=factory()
                     first=ledger.save_profile('a',with_player_name([], 'SolarFox0000001'),0)
-                    collided=ledger.save_profile('b',with_player_name([], 'SolarFox0000001'),0)
-                    self.assertTrue(valid_player_name(profile_name(collided['profile'])))
-                    self.assertNotEqual(profile_name(first['profile']),profile_name(collided['profile']))
-                    rerolled=ledger.save_profile('a',with_player_name(first['profile'],'LunarOwl0000002'),first['profileRevision'])
+                    second=ledger.save_profile('b',with_player_name([], 'SolarFox0000001'),0)
+                    first_name=profile_name(first['profile'])
+                    second_name=profile_name(second['profile'])
+                    self.assertTrue(valid_player_name(first_name))
+                    self.assertTrue(valid_player_name(second_name))
+                    self.assertNotEqual(first_name,second_name)
+                    updated=ledger.save_profile('a',with_player_name(
+                        first['profile']+[{'key':'DF_Shards','kind':0,'number':17}],
+                        'LunarOwl0000002'),first['profileRevision'])
+                    self.assertEqual(profile_name(updated['profile']),first_name)
                     third=ledger.save_profile('c',with_player_name([],'SolarFox0000001'),0)
-                    self.assertEqual(profile_name(third['profile']),'SolarFox0000001')
-                    unsafe=ledger.save_profile('a',with_player_name(rerolled['profile'],'https://discord.gg/test'),rerolled['profileRevision'])
-                    self.assertEqual(profile_name(unsafe['profile']),'LunarOwl0000002')
+                    self.assertTrue(valid_player_name(profile_name(third['profile'])))
+                    self.assertEqual(len({first_name,second_name,profile_name(third['profile'])}),3)
+                    unsafe=ledger.save_profile('a',with_player_name(
+                        updated['profile'],'https://discord.gg/test'),updated['profileRevision'])
+                    self.assertEqual(profile_name(unsafe['profile']),first_name)
                     self.assertEqual(factory().wallet('a'),unsafe)
                     with self.assertRaises(ProfileConflict):
                         ledger.save_profile('a',first['profile'],first['profileRevision'])

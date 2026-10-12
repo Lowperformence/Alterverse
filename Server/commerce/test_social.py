@@ -71,49 +71,29 @@ class SocialTests(unittest.TestCase):
         self.assertEqual(self.call('b')['me']['xp'], MAX_XP)
         self.assertEqual(self.call('b')['me']['level'], 1000)
 
-    def test_search_duplicate_names_ids_and_no_sql_wildcards(self):
-        results = self.call('c', '/social/players', query='solarfox')['players']
-        self.assertEqual(len(results), 2)
-        self.assertNotEqual(results[0]['playerId'], results[1]['playerId'])
-        self.assertEqual(self.call('a', '/social/players', query=self.ids['b'])['players'][0]['playerId'], self.ids['b'])
-        self.assertEqual(self.call('a', '/social/players', query="%' OR 1=1--")['players'], [])
-        with self.assertRaises(ValueError): self.call('a', '/social/players', query='a')
-
-    def test_friend_request_accept_retry_remove_and_self_rejection(self):
-        for _ in range(2): self.call('a','/social/friend/request',playerId=self.ids['b'])
-        self.assertEqual(len(self.call('b')['incoming']), 1)
-        self.assertEqual(len(self.call('a')['outgoing']), 1)
-        with self.assertRaises(ValueError): self.call('a','/social/friend/accept',playerId=self.ids['b'])
-        for _ in range(2): self.call('b','/social/friend/accept',playerId=self.ids['a'])
-        self.assertEqual(len(self.call('a')['friends']), 1)
-        self.assertEqual(len(self.call('b')['friends']), 1)
-        self.call('a','/social/friend/remove',playerId=self.ids['b'])
-        self.assertEqual(self.call('b')['friends'], [])
-        with self.assertRaises(ValueError): self.call('a','/social/friend/request',playerId=self.ids['a'])
-
-    def test_decline_cancel_and_crossed_requests_require_explicit_accept(self):
-        self.call('a','/social/friend/request',playerId=self.ids['b'])
-        self.call('b','/social/friend/request',playerId=self.ids['a'])
-        self.assertEqual(self.call('a')['friends'], [])
-        self.call('b','/social/friend/remove',playerId=self.ids['a'])
-        self.assertEqual(self.call('a')['outgoing'], [])
-        self.call('a','/social/friend/request',playerId=self.ids['b'])
-        self.call('a','/social/friend/remove',playerId=self.ids['b'])
-        self.assertEqual(self.call('b')['incoming'], [])
-
-    def test_block_removes_relationship_hides_search_and_prevents_requests_both_ways(self):
-        self.call('a','/social/friend/request',playerId=self.ids['b'])
-        self.call('b','/social/friend/accept',playerId=self.ids['a'])
-        self.call('b','/social/block',playerId=self.ids['a'])
-        self.assertEqual(self.call('a')['friends'], [])
-        self.assertEqual(self.call('a','/social/players',query=self.ids['b'])['players'], [])
-        self.assertEqual(self.call('b','/social/players',query=self.ids['a'])['players'], [])
-        for who, target in [('a','b'),('b','a')]:
-            with self.assertRaises(ValueError): self.call(who,'/social/friend/request',playerId=self.ids[target])
-        self.call('b','/social/unblock',playerId=self.ids['a'])
-        self.assertEqual(self.call('b')['blocked'], [])
-        self.call('a','/social/friend/request',playerId=self.ids['b'])
-
+    def test_player_directory_is_disabled(self):
+        for who in 'abc':
+            for query in ('solarfox', self.ids['b'], "https://discord.gg/test"):
+                with self.assertRaisesRegex(ValueError, 'disabled'):
+                    self.call(who, '/social/players', query=query)
+    def test_friend_requests_and_actions_are_disabled(self):
+        for action in ('request', 'accept', 'remove'):
+            with self.assertRaisesRegex(ValueError, 'disabled'):
+                self.call('a', '/social/friend/' + action, playerId=self.ids['b'])
+        for key in ('friends', 'incoming', 'outgoing', 'blocked'):
+            self.assertEqual(self.call('a')[key], [])
+    def test_no_friend_requests_even_with_both_players_consent(self):
+        for who, target in (('a', 'b'), ('b', 'a')):
+            with self.assertRaisesRegex(ValueError, 'disabled'):
+                self.call(who, '/social/friend/request', playerId=self.ids[target])
+            self.assertEqual(self.call(who)['incoming'], [])
+            self.assertEqual(self.call(who)['outgoing'], [])
+    def test_block_and_unblock_routes_cannot_be_communication(self):
+        for route in ('/social/block', '/social/unblock'):
+            with self.assertRaisesRegex(ValueError, 'disabled'):
+                self.call('a', route, playerId=self.ids['b'])
+        for key in ('friends','incoming','outgoing','blocked'):
+            self.assertEqual(self.call('b')[key], [])
     def test_levels_order_tie_break_pagination_and_saved_profile_updates(self):
         self.ledger.save_profile('b',self.profile('Beta',103),1)
         rows=self.call('a','/social/levels')
@@ -124,10 +104,15 @@ class SocialTests(unittest.TestCase):
         rows=self.call('a','/social/levels')['players']
         self.assertEqual([p['playerId'] for p in rows[1:]], sorted([self.ids['a'],self.ids['b']]))
 
-    def test_clan_create_case_insensitive_uniqueness_and_open_join(self):
+    def test_clan_names_are_server_assigned_unique_and_open_join_works(self):
         clan=self.create()
-        for name,tag in [('Solar Guard 0000001','C0000002'),('Lunar Crew 0000002','C0000001')]:
-            with self.assertRaises(ValueError): self.create('b',name,tag)
+        first=self.call('a')['clan']
+        other=self.create('c','Solar Guard 0000001','C0000001')
+        second=self.call('c')['clan']
+        self.assertNotEqual(first['name'],second['name'])
+        self.assertNotEqual(first['tag'],second['tag'])
+        self.assertTrue(valid_clan_name(first['name']))
+        self.assertTrue(valid_clan_tag(first['tag']))
         self.call('b','/social/clan/join',clanId=clan)
         self.call('b','/social/clan/join',clanId=clan)
         state=self.call('a')
@@ -220,19 +205,16 @@ class SocialTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as pool:
             self.assertEqual(sum(pool.map(join,[clan,second])),1)
 
-    def test_pending_and_friend_caps_and_rate_limit(self):
-        with patch('social.MAX_REQUESTS',1):
-            self.call('a','/social/friend/request',playerId=self.ids['b'])
-            with self.assertRaises(ValueError): self.call('c','/social/friend/request',playerId=self.ids['b'])
-        self.call('b','/social/friend/accept',playerId=self.ids['a'])
-        with patch('social.MAX_FRIENDS',1):
-            with self.assertRaises(ValueError): self.call('c','/social/friend/request',playerId=self.ids['b'])
-        with patch('social.time.time',return_value=100000):
-            for _ in range(30): self.call('c','/social/unblock',playerId=self.ids['a'])
-            with self.assertRaisesRegex(ValueError,'Too many actions'): self.call('c','/social/unblock',playerId=self.ids['a'])
-        with patch('social.time.time',return_value=100060):
-            self.call('c','/social/unblock',playerId=self.ids['a'])
-
+    def test_clan_action_rate_limit_without_friend_routes(self):
+        clan = self.create('a')
+        # A harmless, repeatable server-authorized clan cancel counts as an action.
+        with patch('social.time.time', return_value=100000):
+            for _ in range(30):
+                self.call('c', '/social/clan/cancel', clanId=clan)
+            with self.assertRaisesRegex(ValueError, 'Too many actions'):
+                self.call('c', '/social/clan/cancel', clanId=clan)
+        with patch('social.time.time', return_value=100060):
+            self.call('c', '/social/clan/cancel', clanId=clan)
     def test_input_validation(self):
         for data in ({'offset':True},{'offset':-1},{'offset':[]},{'offset':1000001}):
             with self.assertRaises(ValueError): self.social.dispatch('a','/social/levels',data)
@@ -265,7 +247,8 @@ class SocialTests(unittest.TestCase):
         self.assertEqual(first['clan']['clanId'],second['clan']['clanId'])
         self.assertEqual(second['wallet']['balance'],200)
         self.assertEqual(first['wallet']['profileRevision'],second['wallet']['profileRevision'])
-        with self.assertRaises(ValueError): self.social.dispatch('a','/social/clan/create',dict(data,name='Other Clan'))
+        repeated=self.social.dispatch('a','/social/clan/create',dict(data,name='Other Clan',tag='CUSTOM'))
+        self.assertEqual(repeated['clan']['clanId'],first['clan']['clanId'])
         self.assertEqual(self.ledger.wallet('b')['balance'],0)
 
     def test_creation_failure_and_profile_conflict_never_debit(self):
@@ -337,26 +320,20 @@ class SocialTests(unittest.TestCase):
         else:
             self.assertEqual(self.client.data[ref.path]['text'],raw[4])
 
-    def test_leader_can_reroll_identity_and_only_select_preset_descriptions(self):
+    def test_clan_identity_is_immutable_after_creation(self):
         clan=self.create()
         self.call('b','/social/clan/join',clanId=clan)
-        data=dict(name='Lunar Crew 7654321',tag='C7654321',descriptionId=3)
-        before=self.ledger.wallet('a')
-        with self.assertRaises(SocialForbidden): self.call('b','/social/clan/identity',**data)
-        changed=self.call('a','/social/clan/identity',**data)
-        self.assertEqual(changed['clan']['clanId'],clan)
-        self.assertEqual(changed['clan']['name'],data['name'])
-        self.assertEqual(changed['clan']['tag'],data['tag'])
-        self.assertEqual(changed['clan']['description'],DESCRIPTIONS[3])
-        self.assertEqual(changed['clan']['memberCount'],2)
-        self.assertEqual(self.ledger.wallet('a'),before)
-        for bad in (dict(data,name='Custom Clan'),dict(data,tag='CUSTOM'),
-                    dict(data,description='https://discord.gg/example'),dict(data,descriptionId=True),
-                    dict(data,descriptionId=len(DESCRIPTIONS))):
-            with self.assertRaises(ValueError): self.call('a','/social/clan/identity',**bad)
-        restored=self.make_social(self.make_ledger()).dispatch('b','/social/state',{})
-        self.assertEqual(restored['clan'],changed['clan'])
-
+        before=self.call('a')['clan']
+        wallet=self.ledger.wallet('a')
+        for data in (
+            dict(name='Lunar Crew 7654321',tag='C7654321',descriptionId=3),
+            dict(name='Custom Clan',tag='CUSTOM',description='https://discord.gg/example'),
+        ):
+            for who in ('a','b'):
+                with self.assertRaisesRegex(ValueError,'disabled'):
+                    self.call(who,'/social/clan/identity',**data)
+        self.assertEqual(self.call('a')['clan'],before)
+        self.assertEqual(self.ledger.wallet('a'),wallet)
     def test_legacy_clan_metadata_migrates_without_charging_or_losing_members(self):
         clan=self.create()
         self.call('b','/social/clan/join',clanId=clan)
@@ -379,15 +356,14 @@ class SocialTests(unittest.TestCase):
         self.assertEqual(self.ledger.wallet('a'),before)
         self.assertEqual(self.call('a')['clan'],restored['clan'])
 
-    def test_rerolled_clan_identity_still_enforces_global_uniqueness(self):
-        self.create()
-        other=self.create('c','Lunar Crew 0000002','C0000002')
-        with self.assertRaises(ValueError):
+    def test_clan_names_are_unique_and_cannot_be_renamed(self):
+        first=self.create()
+        second=self.create('c','Lunar Crew 0000002','C0000002')
+        self.assertNotEqual(first,second)
+        self.assertNotEqual(self.call('a')['clan']['name'], self.call('c')['clan']['name'])
+        with self.assertRaisesRegex(ValueError,'disabled'):
             self.call('a','/social/clan/identity',name='Lunar Crew 0000002',tag='C0000003',descriptionId=0)
-        with self.assertRaises(ValueError):
-            self.call('a','/social/clan/identity',name='Nova Fleet 0000003',tag='C0000002',descriptionId=0)
-        self.assertEqual(self.call('c')['clan']['clanId'],other)
-
+        self.assertEqual(self.call('c')['clan']['clanId'],second)
     def test_creation_retry_after_leaving_does_not_create_or_charge_again(self):
         revision=self.ledger.wallet('a')['profileRevision']
         data={'name':'Solar Guard 0000001','tag':'C0000001','operationId':uuid.uuid4().hex,'expectedProfileRevision':revision}

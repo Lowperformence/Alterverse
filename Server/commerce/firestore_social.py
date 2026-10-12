@@ -12,7 +12,7 @@ import secrets
 import tempfile
 import unicodedata
 from safe_identity import (DESCRIPTIONS, valid_clan_name, valid_clan_tag,
-                           generate_clan_name, generate_clan_tag)
+                           valid_player_name, profile_name, generate_clan_name, generate_clan_tag)
 from pathlib import Path
 from google.cloud import firestore
 from ledger import Ledger
@@ -65,7 +65,11 @@ class FirestoreSocial:
         sync(self.client.transaction())
 
     def dispatch(self, account, route, data):
-        if route.startswith(('/social/clan/message', '/social/message')):
+        # No chat, player discovery, friend requests or editable clan identities.
+        # Enforce this on the server as well as hiding controls in the Unity UI.
+        if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
+                or route in ('/social/players', '/social/block', '/social/unblock',
+                             '/social/clan/identity')):
             raise ValueError('Communication is disabled in this version.')
         self.ledger.wallet(account)
         # Shared rules own input validation and all account-derived authorization.
@@ -135,12 +139,22 @@ class FirestoreSocial:
                 snap = ref.get(transaction=tx)
                 unique_refs[unique_id] = (ref,snap.to_dict() if snap.exists else None)
                 return snap.to_dict() if snap.exists else None
-            if route in ('/social/clan/create', '/social/clan/identity'):
-                name,tag = data.get('name'),data.get('tag')
-                if isinstance(name,str) and isinstance(tag,str):
-                    for kind,value in [('name',unicodedata.normalize('NFKC',name).strip().casefold()),('tag',tag.upper())]:
-                        locked = lock_unique(kind,value)
-                        if locked: read('social_clan',locked['clan'])
+            generated_clan_identity = None
+            if route == '/social/clan/create':
+                # The request may contain a fabricated name, but only this
+                # server-generated pair is used by shared rules and unique claims.
+                for _ in range(64):
+                    name, tag = generate_clan_name(), generate_clan_tag()
+                    name_claim = lock_unique('name', name.casefold())
+                    tag_claim = lock_unique('tag', tag)
+                    if not name_claim and not tag_claim:
+                        generated_clan_identity = (name, tag)
+                        break
+                if generated_clan_identity is None:
+                    raise ValueError('Clan identity allocation unavailable')
+            elif route == '/social/clan/identity':
+                # Old identity endpoints are already denied, including on the server.
+                raise ValueError('Communication is disabled in this version.')
             for clan in list(rows['social_clan'].values()):
                 lock_unique('name',clan['name_search']);lock_unique('tag',clan['tag'])
 
@@ -177,12 +191,18 @@ class FirestoreSocial:
                 rows['social_clan'][identifier] = clan
             with tempfile.TemporaryDirectory(prefix='df-social-') as directory:
                 ledger = Ledger(Path(directory)/'scope.sqlite3')
-                rules = Social(ledger)
+                rules = Social(ledger, generated_clan_identity=generated_clan_identity)
                 with ledger.connect() as db:
                     for table,columns in TABLES.items():
                         for row in rows[table].values():
                             db.execute('INSERT INTO '+table+' ('+','.join(columns)+') VALUES ('+','.join('?' for _ in columns)+')',tuple(row[c] for c in columns))
                     db.execute('INSERT INTO profile(account,revision,data) VALUES(?,?,?)',(account,caller_account['profileRevision'],json.dumps(caller_profile)))
+                    # Scoped SQLite must honor the cloud server's existing name
+                    # rather than generating a new name for each Firestore request.
+                    cloud_name = profile_name(caller_profile)
+                    if valid_player_name(cloud_name):
+                        db.execute('INSERT INTO safe_player_name(account,name) VALUES(?,?)',
+                                   (account, cloud_name))
                     db.execute('INSERT INTO wallet(account,balance,revision) VALUES(?,?,?)',(account,caller_account['balance'],caller_account['revision']))
                     for sku in caller_account['owned']:
                         db.execute('INSERT INTO cosmetic(account,sku) VALUES(?,?)',(account,sku))

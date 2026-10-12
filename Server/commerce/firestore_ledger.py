@@ -35,7 +35,9 @@ class FirestoreLedger:
 
     def _reserve_name(self, tx, account, data, preferred=None):
         old = profile_name(data['profile'])
-        candidate = preferred if valid_player_name(preferred) else old if valid_player_name(old) else fallback_player_name(account)
+        # The submitted profile never chooses the account name.
+        # Preserve only an identity already stored by the account server.
+        candidate = old if valid_player_name(old) else generate_player_name()
         for _ in range(64):
             ref = self.name_claims.document(candidate)
             snap = ref.get(transaction=tx)

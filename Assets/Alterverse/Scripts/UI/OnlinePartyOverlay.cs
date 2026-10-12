@@ -16,7 +16,6 @@ namespace Alterverse.UI
         public static bool IsOpen => instance != null && instance.open && MainMenuController.IsVisible;
         private FrontEndTheme theme;
         private bool open;
-        private string joinCodeInput = "";
         private const float ReferenceHeight = 720f;
         private const float ReferenceWidth = 1500f;
 
@@ -104,7 +103,7 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(left + 28f, 70f, width - 220f, 38f), "MATCHMAKING", theme.Title);
             theme.Label(new Rect(left + 30f, 110f, width - 250f, 24f),
-                "5v5 • Play solo or bring your friends. Ready up and find your next match.",
+                "5v5 • Automatic matchmaking • No player messaging or invites.",
                 theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 158f, 72f, 126f, 42f), "CLOSE"))
@@ -124,52 +123,18 @@ namespace Alterverse.UI
 
         private void DrawEntry(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
-            float gap = 22f;
-            float panelW = (width - 76f - gap) * .5f;
-            float firstX = left + 27f;
-            float secondX = firstX + panelW + gap;
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
-
-            theme.Panel(new Rect(firstX, 158f, panelW, 318f));
-            theme.StatusBadge(new Rect(firstX+panelW-128,178,104,26),"1–5 PLAYERS",FrontEndTheme.Positive);
-            theme.Label(new Rect(firstX + 24f, 176f, panelW - 164f, 30f), "YOUR PARTY", theme.Heading);
-            theme.Label(new Rect(firstX + 24f, 214f, panelW - 48f, 66f),
-                "Create a party, share your code and choose your heroes together.",
-                theme.Body, true);
-            if (theme.Action(new Rect(firstX + 24f, 302f, panelW - 48f, 54f),
-                busy ? "CONNECTING..." : "CREATE PRIVATE PARTY", true, enabled: !busy))
-                _ = online.CreatePrivatePartyAsync();
-
-            theme.Label(new Rect(firstX + 24f, 378f, panelW - 48f, 22f), "JUST YOU? JUMP STRAIGHT IN", theme.Small, true);
-            if (theme.Action(new Rect(firstX + 24f, 410f, panelW - 48f, 44f),
-                busy ? "SEARCHING..." : "QUICK SEARCH", enabled: !busy && edgegap != null))
+            theme.Panel(new Rect(left+27,158,width-54,362));
+            theme.Label(new Rect(left+54,184,width-108,36),"AUTOMATIC MATCHMAKING",theme.Heading);
+            theme.Label(new Rect(left+54,242,width-108,72),
+                "Join a 5v5 match automatically. Private rooms, codes, invites, chat and voice are disabled.",
+                theme.Body,true);
+            if(theme.Action(new Rect(left+54,346,width-108,60),
+                busy?"SEARCHING...":"FIND MATCH",true,enabled:!busy && edgegap!=null))
                 _ = edgegap.QuickSearchAsync();
-
-            theme.Panel(new Rect(secondX, 158f, panelW, 318f));
-            theme.Label(new Rect(secondX + 24f, 176f, panelW - 48f, 30f), "JOIN FRIEND", theme.Heading);
-            theme.Label(new Rect(secondX + 24f, 214f, panelW - 48f, 48f),
-                "Enter the private party code your friend sent you.", theme.Body, true);
-
-            GUI.SetNextControlName("DF_OnlineJoinCode");
-            joinCodeInput = OnlinePartyService.NormalizeJoinCode(
-                GUI.TextField(new Rect(secondX + 24f, 286f, panelW - 48f, 52f), joinCodeInput, 12, theme.Field));
-            theme.Center(new Rect(secondX + 24f, 344f, panelW - 48f, 22f),
-                string.IsNullOrEmpty(joinCodeInput) ? "ENTER CODE" : joinCodeInput);
-
-            if (theme.Action(new Rect(secondX + 24f, 390f, panelW - 48f, 64f),
-                busy ? "CONNECTING..." : "JOIN PRIVATE PARTY", true,
-                enabled: !busy && joinCodeInput.Length >= 4))
-                _ = online.JoinByCodeAsync(joinCodeInput);
-
-            string state = edgegap != null && (edgegap.Busy || edgegap.IsSearching || !string.IsNullOrEmpty(edgegap.LastError))
-                ? edgegap.Status
-                : online.Status;
-            theme.Panel(new Rect(left+27,494,width-54,114));
-            theme.StatusBadge(new Rect(left+48,510,126,28),busy?"CONNECTING":"READY TO PLAY",busy?FrontEndTheme.Warning:FrontEndTheme.Positive);
-            theme.Label(new Rect(left + 194f, 508f, width - 242f, 36f), state, theme.Small, true);
-            theme.Label(new Rect(left + 28f, 552f, width - 56f, 54f),
-                "PRIVATE PARTY  •  5v5 MATCHES  •  YOUR FRIENDS STAY ON THE SAME TEAM",
-                theme.Small, true);
+            theme.Label(new Rect(left+54,452,width-108,36),
+                "Generated player names only. No way to send messages to other players.",
+                theme.Small,true);
         }
 
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
@@ -178,22 +143,16 @@ namespace Alterverse.UI
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
 
             theme.Panel(new Rect(left + 26f, 150f, width - 52f, 84f));
-            theme.Label(new Rect(left + 46f, 164f, 190f, 20f), online.IsHost ? "PARTY LEADER" : "FRIEND PARTY", theme.Small, true);
-            theme.Label(new Rect(left + 46f, 188f, 300f, 30f), "CODE  " + online.JoinCode, theme.Heading);
-
-            if (theme.Action(new Rect(left + 354f, 172f, 122f, 42f), "COPY CODE",
-                enabled: !string.IsNullOrEmpty(online.JoinCode) && !edgegapSearching))
-            {
-                GUIUtility.systemCopyBuffer = online.JoinCode;
-                joinCodeInput = online.JoinCode;
-            }
+            theme.Label(new Rect(left + 46f, 164f, 420f, 20f), "MATCH STATUS", theme.Small, true);
+            theme.Label(new Rect(left + 46f, 188f, 420f, 30f),
+                edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARING MATCH", theme.Heading);
 
             theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
-                $"FRIENDS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
+                $"PLAYERS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
             theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
                 "5v5  •  AUTO TEAM FILL", theme.Small, true);
             theme.StatusBadge(new Rect(left + 758f, 176f, 198f, 26f),
-                edgegapSearching ? "FINDING YOUR MATCH" : "PRIVATE PARTY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
+                edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
                 busy ? "PLEASE WAIT" : "LEAVE PARTY", enabled: !busy))
@@ -218,12 +177,12 @@ namespace Alterverse.UI
                     theme.Label(new Rect(x + 10f, 262f, playerW - 20f, 20f), $"SLOT {slot + 1}", theme.Small, true);
                     theme.Center(new Rect(x + 10f, 312f, playerW - 20f, 30f), edgegapSearching ? "RESERVED" : "OPEN SLOT");
                     theme.Label(new Rect(x + 10f, 382f, playerW - 20f, 20f),
-                        edgegapSearching ? "FINDING A MATCH" : "SHARE YOUR PARTY CODE", theme.Small, true);
+                        edgegapSearching ? "FINDING A MATCH" : "WAITING FOR PLAYERS", theme.Small, true);
                     continue;
                 }
 
                 OnlinePartyService.MemberView member = members[slot];
-                string role = member.IsHost ? "LEADER" : $"FRIEND {slot + 1}";
+                string role = member.IsHost ? "HOST" : $"PLAYER {slot + 1}";
                 if (member.IsLocal) role += " • YOU";
                 if(member.IsLocal)theme.Frame(new Rect(x,250,playerW,190),true);
                 theme.Label(new Rect(x + 10f, 262f, playerW - 20f, 20f), role, theme.Small, true);
@@ -294,12 +253,12 @@ namespace Alterverse.UI
             theme.StatusBadge(new Rect(startX, actionY+12, 208f, 30f),autoText,edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             string partyState = online.HasHeroConflict
-                ? "FRIEND PARTY: CHOOSE DIFFERENT HEROES"
+                ? "CHOOSE DIFFERENT HEROES"
                 : edgegapSearching
-                    ? "FINDING OPPONENTS • YOUR PARTY STAYS TOGETHER"
+                    ? "FINDING OPPONENTS"
                     : online.AllPresentPlayersReady
                         ? "ALL FRIENDS READY • START MATCHMAKING"
-                        : "PRIVATE PARTY • INVITE FRIENDS AND READY UP";
+                        : "MATCH LOBBY • READY UP";
             theme.Label(new Rect(left + 48f, 470f, width - 560f, 26f), partyState, theme.Small, true);
             theme.Label(new Rect(left + 48f, 502f, width - 560f, 22f),
                 $"PARTY {online.PartyPlayerCount}/{online.PartyCapacity}  •  TWO TEAMS OF FIVE",

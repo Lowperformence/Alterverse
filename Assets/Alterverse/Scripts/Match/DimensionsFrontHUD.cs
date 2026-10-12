@@ -1,4 +1,3 @@
-using Alterverse.Multiplayer;
 using Alterverse.UI;
 using UnityEngine;
 namespace Alterverse.Match
@@ -46,31 +45,7 @@ namespace Alterverse.Match
                     theme.Center(supply,supplies.Status);
                 }
 
-                if(CoopAuthority.Active)
-                {
-                    CoopVoiceChatService voice=CoopVoiceChatService.Instance;
-                    float micW=150f;
-                    Rect micRect=new Rect(width-micW-16,16,micW,42);
-                    string micLabel=voice==null?"VOICE...":
-                        voice.PermissionDenied||!voice.HasMicrophonePermission?"ENABLE MIC":
-                        !voice.IsConnected?"VOICE...":
-                        voice.IsMuted?"MIC OFF":"MIC ON";
-                    bool micOn=voice!=null&&voice.IsConnected&&!voice.IsMuted;
-                    if(theme.Action(micRect,micLabel,selected:micOn,enabled:voice!=null&&!voice.Busy))
-                    {
-                        if(voice.PermissionDenied||!voice.HasMicrophonePermission||!voice.IsConnected)
-                            voice.RequestMicrophoneAndJoin();
-                        else voice.ToggleMute();
-                    }
 
-                    if(voice!=null)
-                    {
-                        string voiceLine=voice.IsConnected
-                            ?$"CO-OP VOICE  •  {voice.ParticipantCount} CONNECTED"
-                            :voice.Status;
-                        theme.Label(new Rect(width-260,62,244,20),voiceLine,theme.Small,true);
-                    }
-                }
             }
             finally{GUI.matrix=previous;GUI.color=color;}
         }

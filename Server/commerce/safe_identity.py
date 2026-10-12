@@ -75,11 +75,12 @@ def with_player_name(entries, name):
 def reserve_player_name(db, account, preferred=None):
     """Claim current names atomically using SQLite's UNIQUE index.
 
-Invalid legacy/client text cannot replace an assigned name. A collision selects
-another catalog name; only current claims are retained, so rerolls release names.
+Client-provided names cannot replace a server-assigned name. Name claims
+stay fixed for the account, and collisions result in fresh random names.
 """
     current = db.execute('SELECT name FROM safe_player_name WHERE account=?', (account,)).fetchone()
-    candidate = preferred if valid_player_name(preferred) else current[0] if current else generate_player_name()
+    # Ignore every submitted name; only names already claimed by the server persist.
+    candidate = current[0] if current else generate_player_name()
     for _ in range(64):
         owner = db.execute('SELECT account FROM safe_player_name WHERE name=?', (candidate,)).fetchone()
         if not owner or owner[0] == account:
