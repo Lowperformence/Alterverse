@@ -65,7 +65,7 @@ namespace Alterverse.EditorTools
             if (Path.GetFileNameWithoutExtension(assetPath) == "Veyr")
             {
                 // Stable authored palette IDs survive FBX shader-node differences.
-                string palette = material.name.Split(\' \')[0];
+                string palette = material.name.Split(' ')[0];
                 switch (palette)
                 {
                     case "fabric": color = new Color(23f/255f,32f/255f,43f/255f,1); break;
