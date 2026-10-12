@@ -1,0 +1,166 @@
+{
+  "hero": "Zhaev",
+  "units": "metres",
+  "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+  "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+  "components": [
+    {
+      "part": "Leg_L",
+      "vertices": 1502,
+      "triangles": 2914,
+      "boundsBlenderMetres": [
+        [
+          -0.23420526,
+          -0.17072411,
+          0.02468395
+        ],
+        [
+          -0.00531109,
+          0.12659314,
+          1.10656309
+        ]
+      ],
+      "dimensionsMm": [
+        228.89,
+        297.32,
+        1081.88
+      ]
+    },
+    {
+      "part": "Head_Helmet",
+      "vertices": 9633,
+      "triangles": 19080,
+      "boundsBlenderMetres": [
+        [
+          -0.15745001,
+          -0.19681643,
+          1.42202556
+        ],
+        [
+          0.14899001,
+          0.21322168,
+          1.9130584
+        ]
+      ],
+      "dimensionsMm": [
+        306.44,
+        410.04,
+        491.03
+      ]
+    },
+    {
+      "part": "Torso_Armor",
+      "vertices": 8257,
+      "triangles": 16468,
+      "boundsBlenderMetres": [
+        [
+          -0.35673001,
+          -0.24031623,
+          0.17916346
+        ],
+        [
+          0.35673001,
+          0.25142029,
+          1.55141997
+        ]
+      ],
+      "dimensionsMm": [
+        713.46,
+        491.74,
+        1372.26
+      ]
+    },
+    {
+      "part": "Arm_L",
+      "vertices": 3417,
+      "triangles": 6494,
+      "boundsBlenderMetres": [
+        [
+          -0.43185475,
+          -0.16460444,
+          0.88047951
+        ],
+        [
+          -0.08781078,
+          0.15476598,
+          1.54494929
+        ]
+      ],
+      "dimensionsMm": [
+        344.04,
+        319.37,
+        664.47
+      ]
+    },
+    {
+      "part": "Leg_R",
+      "vertices": 1502,
+      "triangles": 2914,
+      "boundsBlenderMetres": [
+        [
+          0.00550252,
+          -0.17072411,
+          0.02468395
+        ],
+        [
+          0.23420526,
+          0.12659377,
+          1.10163379
+        ]
+      ],
+      "dimensionsMm": [
+        228.7,
+        297.32,
+        1076.95
+      ]
+    },
+    {
+      "part": "Arm_R",
+      "vertices": 3420,
+      "triangles": 6498,
+      "boundsBlenderMetres": [
+        [
+          0.08413889,
+          -0.1650489,
+          0.87965268
+        ],
+        [
+          0.42584822,
+          0.1542737,
+          1.5408262
+        ]
+      ],
+      "dimensionsMm": [
+        341.71,
+        319.32,
+        661.17
+      ]
+    },
+    {
+      "part": "Weapons",
+      "vertices": 1512,
+      "triangles": 2928,
+      "boundsBlenderMetres": [
+        [
+          -0.76120365,
+          -0.13739309,
+          0.54593736
+        ],
+        [
+          0.76120365,
+          0.12134833,
+          1.03130054
+        ]
+      ],
+      "dimensionsMm": [
+        1522.41,
+        258.74,
+        485.36
+      ]
+    }
+  ],
+  "checks": {
+    "sourceTriangles": 57296,
+    "partTriangles": 57296
+  }
+}

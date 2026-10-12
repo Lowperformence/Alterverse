@@ -5080,8 +5080,8 @@
         "Ultimate"
       ],
       "socketsExact": true,
-      "newVertices": 4790,
-      "newTriangles": 9044,
+      "newVertices": 6286,
+      "newTriangles": 11708,
       "newParts": [
         {
           "name": "single violet crown stripe",
@@ -5530,8 +5530,844 @@
           "triangles": 32,
           "bone": 2,
           "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmL separate formed guard",
+          "first": 4790,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 5,
+          "material": 1
+        },
+        {
+          "name": "Zhaev UpperArmL inset service panel",
+          "first": 4809,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 5,
+          "material": 0
+        },
+        {
+          "name": "Zhaev UpperArmL protected luminous channel",
+          "first": 4822,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "Zhaev UpperArmL countersunk fastener",
+          "first": 4834,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmL countersunk fastener",
+          "first": 4868,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmL inset vent",
+          "first": 4902,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmL inset vent",
+          "first": 4912,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmL inset vent",
+          "first": 4922,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmL separate formed guard",
+          "first": 4932,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 6,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ForearmL inset service panel",
+          "first": 4951,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 6,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ForearmL protected luminous channel",
+          "first": 4964,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 6,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ForearmL countersunk fastener",
+          "first": 4976,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 6,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmL countersunk fastener",
+          "first": 5010,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 6,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmL inset vent",
+          "first": 5044,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 6,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmL inset vent",
+          "first": 5054,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 6,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmL inset vent",
+          "first": 5064,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 6,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighL separate formed guard",
+          "first": 5074,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 13,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ThighL inset service panel",
+          "first": 5093,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ThighL protected luminous channel",
+          "first": 5106,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 13,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ThighL countersunk fastener",
+          "first": 5118,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighL countersunk fastener",
+          "first": 5152,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighL inset vent",
+          "first": 5186,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighL inset vent",
+          "first": 5196,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighL inset vent",
+          "first": 5206,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinL separate formed guard",
+          "first": 5216,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 14,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ShinL inset service panel",
+          "first": 5235,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ShinL protected luminous channel",
+          "first": 5248,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 14,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ShinL countersunk fastener",
+          "first": 5260,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinL countersunk fastener",
+          "first": 5294,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinL inset vent",
+          "first": 5328,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinL inset vent",
+          "first": 5338,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinL inset vent",
+          "first": 5348,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmR separate formed guard",
+          "first": 5358,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 9,
+          "material": 1
+        },
+        {
+          "name": "Zhaev UpperArmR inset service panel",
+          "first": 5377,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 9,
+          "material": 0
+        },
+        {
+          "name": "Zhaev UpperArmR protected luminous channel",
+          "first": 5390,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "Zhaev UpperArmR countersunk fastener",
+          "first": 5402,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmR countersunk fastener",
+          "first": 5436,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmR inset vent",
+          "first": 5470,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmR inset vent",
+          "first": 5480,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "Zhaev UpperArmR inset vent",
+          "first": 5490,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmR separate formed guard",
+          "first": 5500,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ForearmR inset service panel",
+          "first": 5519,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 10,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ForearmR protected luminous channel",
+          "first": 5532,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 10,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ForearmR countersunk fastener",
+          "first": 5544,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmR countersunk fastener",
+          "first": 5578,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmR inset vent",
+          "first": 5612,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmR inset vent",
+          "first": 5622,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ForearmR inset vent",
+          "first": 5632,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighR separate formed guard",
+          "first": 5642,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 16,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ThighR inset service panel",
+          "first": 5661,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 16,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ThighR protected luminous channel",
+          "first": 5674,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 16,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ThighR countersunk fastener",
+          "first": 5686,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 16,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighR countersunk fastener",
+          "first": 5720,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 16,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighR inset vent",
+          "first": 5754,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 16,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighR inset vent",
+          "first": 5764,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 16,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ThighR inset vent",
+          "first": 5774,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 16,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinR separate formed guard",
+          "first": 5784,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 17,
+          "material": 1
+        },
+        {
+          "name": "Zhaev ShinR inset service panel",
+          "first": 5803,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 17,
+          "material": 0
+        },
+        {
+          "name": "Zhaev ShinR protected luminous channel",
+          "first": 5816,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 17,
+          "material": 3
+        },
+        {
+          "name": "Zhaev ShinR countersunk fastener",
+          "first": 5828,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 17,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinR countersunk fastener",
+          "first": 5862,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 17,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinR inset vent",
+          "first": 5896,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 17,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinR inset vent",
+          "first": 5906,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 17,
+          "material": 2
+        },
+        {
+          "name": "Zhaev ShinR inset vent",
+          "first": 5916,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 17,
+          "material": 2
+        },
+        {
+          "name": "Zhaev back service shell",
+          "first": 5926,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 1
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 5942,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 5954,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 5966,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev rear panel countersunk fastener",
+          "first": 5978,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "Zhaev rear panel countersunk fastener",
+          "first": 6012,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "Zhaev back service shell",
+          "first": 6046,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 1
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 6062,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 6074,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev back exhaust vent",
+          "first": 6086,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Zhaev rear panel countersunk fastener",
+          "first": 6098,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "Zhaev rear panel countersunk fastener",
+          "first": 6132,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "Zhaev occipital helmet cassette",
+          "first": 6166,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "Zhaev helmet cooling slot",
+          "first": 6182,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 0
+        },
+        {
+          "name": "Zhaev helmet cooling slot",
+          "first": 6194,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 0
+        },
+        {
+          "name": "Zhaev helmet cooling slot",
+          "first": 6206,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 0
+        },
+        {
+          "name": "Zhaev helmet countersunk fastener",
+          "first": 6218,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Zhaev helmet countersunk fastener",
+          "first": 6252,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 4,
+          "material": 2
         }
       ],
+      "weaponDetail": [
+        {
+          "object": "DF_WeaponL",
+          "addedVertices": 48,
+          "addedTriangles": 80,
+          "originalVerticesExact": true
+        },
+        {
+          "object": "DF_WeaponR",
+          "addedVertices": 48,
+          "addedTriangles": 80,
+          "originalVerticesExact": true
+        }
+      ],
+      "assembly": {
+        "hero": "Zhaev",
+        "units": "metres",
+        "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+        "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+        "components": [
+          {
+            "part": "Leg_L",
+            "vertices": 1502,
+            "triangles": 2914,
+            "boundsBlenderMetres": [
+              [
+                -0.23420526,
+                -0.17072411,
+                0.02468395
+              ],
+              [
+                -0.00531109,
+                0.12659314,
+                1.10656309
+              ]
+            ],
+            "dimensionsMm": [
+              228.89,
+              297.32,
+              1081.88
+            ]
+          },
+          {
+            "part": "Head_Helmet",
+            "vertices": 9633,
+            "triangles": 19080,
+            "boundsBlenderMetres": [
+              [
+                -0.15745001,
+                -0.19681643,
+                1.42202556
+              ],
+              [
+                0.14899001,
+                0.21322168,
+                1.9130584
+              ]
+            ],
+            "dimensionsMm": [
+              306.44,
+              410.04,
+              491.03
+            ]
+          },
+          {
+            "part": "Torso_Armor",
+            "vertices": 8257,
+            "triangles": 16468,
+            "boundsBlenderMetres": [
+              [
+                -0.35673001,
+                -0.24031623,
+                0.17916346
+              ],
+              [
+                0.35673001,
+                0.25142029,
+                1.55141997
+              ]
+            ],
+            "dimensionsMm": [
+              713.46,
+              491.74,
+              1372.26
+            ]
+          },
+          {
+            "part": "Arm_L",
+            "vertices": 3417,
+            "triangles": 6494,
+            "boundsBlenderMetres": [
+              [
+                -0.43185475,
+                -0.16460444,
+                0.88047951
+              ],
+              [
+                -0.08781078,
+                0.15476598,
+                1.54494929
+              ]
+            ],
+            "dimensionsMm": [
+              344.04,
+              319.37,
+              664.47
+            ]
+          },
+          {
+            "part": "Leg_R",
+            "vertices": 1502,
+            "triangles": 2914,
+            "boundsBlenderMetres": [
+              [
+                0.00550252,
+                -0.17072411,
+                0.02468395
+              ],
+              [
+                0.23420526,
+                0.12659377,
+                1.10163379
+              ]
+            ],
+            "dimensionsMm": [
+              228.7,
+              297.32,
+              1076.95
+            ]
+          },
+          {
+            "part": "Arm_R",
+            "vertices": 3420,
+            "triangles": 6498,
+            "boundsBlenderMetres": [
+              [
+                0.08413889,
+                -0.1650489,
+                0.87965268
+              ],
+              [
+                0.42584822,
+                0.1542737,
+                1.5408262
+              ]
+            ],
+            "dimensionsMm": [
+              341.71,
+              319.32,
+              661.17
+            ]
+          },
+          {
+            "part": "Weapons",
+            "vertices": 1512,
+            "triangles": 2928,
+            "boundsBlenderMetres": [
+              [
+                -0.76120365,
+                -0.13739309,
+                0.54593736
+              ],
+              [
+                0.76120365,
+                0.12134833,
+                1.03130054
+              ]
+            ],
+            "dimensionsMm": [
+              1522.41,
+              258.74,
+              485.36
+            ]
+          }
+        ],
+        "checks": {
+          "sourceTriangles": 57296,
+          "partTriangles": 57296
+        }
+      },
       "fbxRoundTrip": {
         "bones": 19,
         "skinningImported": true,
@@ -5547,11 +6383,11 @@
           "DF_Skeleton|DF_Skeleton|Skill2",
           "DF_Skeleton|DF_Skeleton|Ultimate"
         ],
-        "vertices": 26563
+        "vertices": 28059
       },
-      "fbxSha256": "5c443b8ac0ae105aad657af2eb2b4ec8d460159e9472bfad7afcd02cccb88de2",
-      "modelSha256": "5c443b8ac0ae105aad657af2eb2b4ec8d460159e9472bfad7afcd02cccb88de2",
-      "blenderSha256": "f66601c5843ea083cbeff2cc0782b67462bf820cce614427d58d107564595140"
+      "fbxSha256": "78cc531c758a8945fd8ed0479b019c2ad0dc4c895d010cba34dc8133c09e8b69",
+      "modelSha256": "78cc531c758a8945fd8ed0479b019c2ad0dc4c895d010cba34dc8133c09e8b69",
+      "blenderSha256": "5f429aee6ab37512afbe39934b4aa9fad45781cc7ee3e8a47fd01ce90d81dc4f"
     },
     "Tahla": {
       "source": "ArtSource/Heroes/Mira.blend",
