@@ -155,11 +155,8 @@ class Social:
         return result
 
     def snapshot(self, db, account):
-        friends, incoming, outgoing = [], [], []
-        for a, b, sender, accepted in db.execute('SELECT a,b,sender,accepted FROM social_friend WHERE a=? OR b=? ORDER BY a,b', (account, account)):
-            other = b if a == account else a
-            (friends if accepted else outgoing if sender == account else incoming).append(self.player(db, other))
-        blocked = [self.player(db, row[0]) for row in db.execute('SELECT target FROM social_block WHERE account=? ORDER BY target', (account,))]
+        # Never expose historic friendships or blocks in the no-communication build.
+        friends, incoming, outgoing, blocked = [], [], [], []
         member = self.membership(db, account)
         clan = self.clan(db, member[0]) if member else None
         applications = []
