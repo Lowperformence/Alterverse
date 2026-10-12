@@ -1,0 +1,2100 @@
+{
+  "revision": "hero-component-plans-20261012-v3",
+  "hero": "Brakk",
+  "checks": {
+    "source": "ArtSource/Heroes/Rook.blend",
+    "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+    "removedComponents": [
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 28,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 152,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Champagne metal"
+        ],
+        "bones": [
+          "ForearmL"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "ForearmL"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "ForearmL"
+        ]
+      },
+      {
+        "vertices": 152,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Champagne metal"
+        ],
+        "bones": [
+          "ForearmR"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "ForearmR"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "ForearmR"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 360,
+        "materials": [
+          "Signature enamel"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 12,
+        "materials": [
+          "Hair"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Obsidian fabric"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmL"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Obsidian fabric"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "UpperArmR"
+        ]
+      },
+      {
+        "vertices": 128,
+        "materials": [
+          "Brushed silver"
+        ],
+        "bones": [
+          "Head"
+        ]
+      },
+      {
+        "vertices": 96,
+        "materials": [
+          "Energy"
+        ],
+        "bones": [
+          "Head"
+        ]
+      }
+    ],
+    "preservedVertices": 16305,
+    "preservedPositionsExact": true,
+    "rigExact": true,
+    "originalActionsExact": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Run",
+      "Skill0",
+      "Skill1",
+      "Skill2",
+      "Ultimate"
+    ],
+    "socketsExact": true,
+    "newVertices": 6988,
+    "newTriangles": 13068,
+    "newParts": [
+      {
+        "name": "three overlapping shoulder lames L0",
+        "first": 0,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L0",
+        "first": 187,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 363,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 415,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames L1",
+        "first": 467,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L1",
+        "first": 654,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 830,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 882,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames L2",
+        "first": 934,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L2",
+        "first": 1121,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1297,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1349,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames R0",
+        "first": 1401,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R0",
+        "first": 1588,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1764,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1816,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames R1",
+        "first": 1868,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R1",
+        "first": 2055,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2231,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2283,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames R2",
+        "first": 2335,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R2",
+        "first": 2522,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2698,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2750,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "warm industrial chest reactor recessed housing",
+        "first": 2802,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "warm industrial chest reactor luminous ring",
+        "first": 3068,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "warm industrial chest reactor lens",
+        "first": 3300,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "split copper chest flange",
+        "first": 3566,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3582,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3603,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3624,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3645,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3666,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3687,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3708,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3729,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3750,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 3771,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "bronze communications earcup",
+        "first": 3792,
+        "vertices": 366,
+        "triangles": 728,
+        "bone": 4,
+        "material": 4
+      },
+      {
+        "name": "earcup amber inset",
+        "first": 4158,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 4390,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 4410,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 6,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 4424,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 4444,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 6,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 4458,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 4478,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 6,
+        "material": 3
+      },
+      {
+        "name": "split copper chest flange",
+        "first": 4492,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4508,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4529,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4550,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4571,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4592,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4613,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4634,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4655,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4676,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "short grey beard clump",
+        "first": 4697,
+        "vertices": 21,
+        "triangles": 38,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "bronze communications earcup",
+        "first": 4718,
+        "vertices": 366,
+        "triangles": 728,
+        "bone": 4,
+        "material": 4
+      },
+      {
+        "name": "earcup amber inset",
+        "first": 5084,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 5316,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 5336,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 5350,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 5370,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "gauntlet three-step dorsal ridge",
+        "first": 5384,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "gauntlet amber channel",
+        "first": 5404,
+        "vertices": 14,
+        "triangles": 24,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "headset microphone arm",
+        "first": 5418,
+        "vertices": 30,
+        "triangles": 56,
+        "bone": 4,
+        "material": 4
+      },
+      {
+        "name": "headset microphone",
+        "first": 5448,
+        "vertices": 164,
+        "triangles": 324,
+        "bone": 4,
+        "material": 0
+      },
+      {
+        "name": "Brakk UpperArmL separate formed guard",
+        "first": 5612,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Brakk UpperArmL inset service panel",
+        "first": 5631,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 5,
+        "material": 0
+      },
+      {
+        "name": "Brakk UpperArmL protected luminous channel",
+        "first": 5644,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "Brakk UpperArmL countersunk fastener",
+        "first": 5656,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmL countersunk fastener",
+        "first": 5690,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmL inset vent",
+        "first": 5724,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmL inset vent",
+        "first": 5734,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmL inset vent",
+        "first": 5744,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmL separate formed guard",
+        "first": 5754,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 6,
+        "material": 2
+      },
+      {
+        "name": "Brakk ForearmL inset service panel",
+        "first": 5773,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 6,
+        "material": 0
+      },
+      {
+        "name": "Brakk ForearmL protected luminous channel",
+        "first": 5786,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 6,
+        "material": 3
+      },
+      {
+        "name": "Brakk ForearmL countersunk fastener",
+        "first": 5798,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmL countersunk fastener",
+        "first": 5832,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmL inset vent",
+        "first": 5866,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmL inset vent",
+        "first": 5876,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmL inset vent",
+        "first": 5886,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 6,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighL separate formed guard",
+        "first": 5896,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Brakk ThighL inset service panel",
+        "first": 5915,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 13,
+        "material": 0
+      },
+      {
+        "name": "Brakk ThighL protected luminous channel",
+        "first": 5928,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 13,
+        "material": 3
+      },
+      {
+        "name": "Brakk ThighL countersunk fastener",
+        "first": 5940,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 13,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighL countersunk fastener",
+        "first": 5974,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 13,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighL inset vent",
+        "first": 6008,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighL inset vent",
+        "first": 6018,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighL inset vent",
+        "first": 6028,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinL separate formed guard",
+        "first": 6038,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Brakk ShinL inset service panel",
+        "first": 6057,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 0
+      },
+      {
+        "name": "Brakk ShinL protected luminous channel",
+        "first": 6070,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 14,
+        "material": 3
+      },
+      {
+        "name": "Brakk ShinL countersunk fastener",
+        "first": 6082,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinL countersunk fastener",
+        "first": 6116,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinL inset vent",
+        "first": 6150,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinL inset vent",
+        "first": 6160,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinL inset vent",
+        "first": 6170,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmR separate formed guard",
+        "first": 6180,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 9,
+        "material": 2
+      },
+      {
+        "name": "Brakk UpperArmR inset service panel",
+        "first": 6199,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 9,
+        "material": 0
+      },
+      {
+        "name": "Brakk UpperArmR protected luminous channel",
+        "first": 6212,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 9,
+        "material": 3
+      },
+      {
+        "name": "Brakk UpperArmR countersunk fastener",
+        "first": 6224,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmR countersunk fastener",
+        "first": 6258,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmR inset vent",
+        "first": 6292,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmR inset vent",
+        "first": 6302,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "Brakk UpperArmR inset vent",
+        "first": 6312,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 9,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmR separate formed guard",
+        "first": 6322,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Brakk ForearmR inset service panel",
+        "first": 6341,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 10,
+        "material": 0
+      },
+      {
+        "name": "Brakk ForearmR protected luminous channel",
+        "first": 6354,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "Brakk ForearmR countersunk fastener",
+        "first": 6366,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmR countersunk fastener",
+        "first": 6400,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmR inset vent",
+        "first": 6434,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmR inset vent",
+        "first": 6444,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "Brakk ForearmR inset vent",
+        "first": 6454,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighR separate formed guard",
+        "first": 6464,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 16,
+        "material": 2
+      },
+      {
+        "name": "Brakk ThighR inset service panel",
+        "first": 6483,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 16,
+        "material": 0
+      },
+      {
+        "name": "Brakk ThighR protected luminous channel",
+        "first": 6496,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 16,
+        "material": 3
+      },
+      {
+        "name": "Brakk ThighR countersunk fastener",
+        "first": 6508,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 16,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighR countersunk fastener",
+        "first": 6542,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 16,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighR inset vent",
+        "first": 6576,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 16,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighR inset vent",
+        "first": 6586,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 16,
+        "material": 4
+      },
+      {
+        "name": "Brakk ThighR inset vent",
+        "first": 6596,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 16,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinR separate formed guard",
+        "first": 6606,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Brakk ShinR inset service panel",
+        "first": 6625,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 17,
+        "material": 0
+      },
+      {
+        "name": "Brakk ShinR protected luminous channel",
+        "first": 6638,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 3
+      },
+      {
+        "name": "Brakk ShinR countersunk fastener",
+        "first": 6650,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 17,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinR countersunk fastener",
+        "first": 6684,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 17,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinR inset vent",
+        "first": 6718,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinR inset vent",
+        "first": 6728,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 4
+      },
+      {
+        "name": "Brakk ShinR inset vent",
+        "first": 6738,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 17,
+        "material": 4
+      },
+      {
+        "name": "Brakk back service shell",
+        "first": 6748,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6764,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6776,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6788,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk rear panel countersunk fastener",
+        "first": 6800,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "Brakk rear panel countersunk fastener",
+        "first": 6834,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "Brakk back service shell",
+        "first": 6868,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6884,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6896,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk back exhaust vent",
+        "first": 6908,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Brakk rear panel countersunk fastener",
+        "first": 6920,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 4
+      },
+      {
+        "name": "Brakk rear panel countersunk fastener",
+        "first": 6954,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 4
+      }
+    ],
+    "weaponDetail": [],
+    "assembly": {
+      "hero": "Brakk",
+      "units": "metres",
+      "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+      "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+      "components": [
+        {
+          "part": "Leg_L",
+          "vertices": 1498,
+          "triangles": 2909,
+          "boundsBlenderMetres": [
+            [
+              -0.35202178,
+              -0.25235137,
+              0.01872003
+            ],
+            [
+              0.00692596,
+              0.1716678,
+              1.09848928
+            ]
+          ],
+          "dimensionsMm": [
+            358.95,
+            424.02,
+            1079.77
+          ]
+        },
+        {
+          "part": "Head_Helmet",
+          "vertices": 7649,
+          "triangles": 15355,
+          "boundsBlenderMetres": [
+            [
+              -0.19912736,
+              -0.186,
+              1.44990849
+            ],
+            [
+              0.2118265,
+              0.14500369,
+              1.85510445
+            ]
+          ],
+          "dimensionsMm": [
+            410.95,
+            331.0,
+            405.2
+          ]
+        },
+        {
+          "part": "Torso_Armor",
+          "vertices": 5482,
+          "triangles": 11017,
+          "boundsBlenderMetres": [
+            [
+              -0.33867922,
+              -0.35901052,
+              0.79112411
+            ],
+            [
+              0.33867922,
+              0.27815047,
+              1.58184004
+            ]
+          ],
+          "dimensionsMm": [
+            677.36,
+            637.16,
+            790.72
+          ]
+        },
+        {
+          "part": "Weapons",
+          "vertices": 5847,
+          "triangles": 11826,
+          "boundsBlenderMetres": [
+            [
+              -0.87999994,
+              -0.39410001,
+              0.78727996
+            ],
+            [
+              0.87999994,
+              0.19589765,
+              1.55279791
+            ]
+          ],
+          "dimensionsMm": [
+            1760.0,
+            590.0,
+            765.52
+          ]
+        },
+        {
+          "part": "Arm_L",
+          "vertices": 2516,
+          "triangles": 4671,
+          "boundsBlenderMetres": [
+            [
+              -0.68734187,
+              -0.26587316,
+              0.96217543
+            ],
+            [
+              -0.13030891,
+              0.25965059,
+              1.5767988
+            ]
+          ],
+          "dimensionsMm": [
+            557.03,
+            525.52,
+            614.62
+          ]
+        },
+        {
+          "part": "Leg_R",
+          "vertices": 1496,
+          "triangles": 2908,
+          "boundsBlenderMetres": [
+            [
+              -0.00691293,
+              -0.25219211,
+              0.01872003
+            ],
+            [
+              0.35202178,
+              0.17166646,
+              1.0987066
+            ]
+          ],
+          "dimensionsMm": [
+            358.93,
+            423.86,
+            1079.99
+          ]
+        },
+        {
+          "part": "Arm_R",
+          "vertices": 2518,
+          "triangles": 4672,
+          "boundsBlenderMetres": [
+            [
+              0.13022198,
+              -0.26508674,
+              0.96220624
+            ],
+            [
+              0.68707335,
+              0.25910166,
+              1.57207692
+            ]
+          ],
+          "dimensionsMm": [
+            556.85,
+            524.19,
+            609.87
+          ]
+        }
+      ],
+      "checks": {
+        "sourceTriangles": 53358,
+        "partTriangles": 53358
+      }
+    },
+    "fbxRoundTrip": {
+      "bones": 19,
+      "skinningImported": true,
+      "normalizedWeights": true,
+      "animationClipsImported": [
+        "DF_Skeleton|DF_Skeleton|Attack",
+        "DF_Skeleton|DF_Skeleton|Death",
+        "DF_Skeleton|DF_Skeleton|Hit",
+        "DF_Skeleton|DF_Skeleton|Idle",
+        "DF_Skeleton|DF_Skeleton|Run",
+        "DF_Skeleton|DF_Skeleton|Skill0",
+        "DF_Skeleton|DF_Skeleton|Skill1",
+        "DF_Skeleton|DF_Skeleton|Skill2",
+        "DF_Skeleton|DF_Skeleton|Ultimate"
+      ],
+      "vertices": 23293
+    },
+    "fbxSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697",
+    "modelSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697",
+    "blenderSha256": "e35163bec0b4a7a258d17e4fcd987c0329ea45066d47bfdef5018873239c9679"
+  },
+  "UnityEditor": "not run",
+  "Android": "not run"
+}

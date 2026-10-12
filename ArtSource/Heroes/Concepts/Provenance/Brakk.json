@@ -86,16 +86,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": null,
     "previousValidation": null,
-    "revision": "nine-hero-concepts-20261012-v2",
+    "revision": "hero-component-plans-20261012-v3",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Brakk-model.blend",
     "model": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
-    "modelSha256": "40b529332ceac327bf074283accd8d2b0cb14b6210150d0a3b00c437debc2859"
+    "modelSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]
