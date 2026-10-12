@@ -86,16 +86,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": "three-layer gold/ivory shoulder plates",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
-    "revision": "nine-hero-concepts-20261012-v2",
+    "revision": "hero-component-plans-20261012-v3",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Tahla-model.blend",
     "model": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
-    "modelSha256": "aec26af7e92bd85234145b5807b96ca0f50933df1ac4fd9f7ea8de544a92f074"
+    "modelSha256": "56f9fbdbb5556db4ec9eccde7a481a145be0a693f88634b2d4e664dbfc9e605e"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]
