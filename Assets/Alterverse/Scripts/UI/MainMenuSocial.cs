@@ -7,12 +7,11 @@ namespace Alterverse.UI
 {
     public sealed partial class MainMenuController
     {
-        int rankingTab,friendTab,friendOffset,clanTab,memberOffset;
+        int rankingTab,clanTab,memberOffset;
         string socialIdentity,lastClanIdentity;
         bool clanApplications,clanOpen=true;
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
-        string clanIdentityDraftFor;
-        string playerQuery="",clanQuery="",clanName="",clanTag="";
+        string clanQuery="",clanName="",clanTag="";
         string confirmRoute,confirmPlayer,confirmLabel;
         static readonly SocialService.Player[] NoPlayers=Array.Empty<SocialService.Player>();
         static readonly SocialService.Clan[] NoClans=Array.Empty<SocialService.Clan>();
@@ -25,14 +24,14 @@ namespace Alterverse.UI
                 string identity=service.State?.me?.playerId;
                 if(identity!=null&&identity!=socialIdentity)
                 {
-                    socialIdentity=identity;lastClanIdentity=null;clanDetailTab=0;clanIdentityDraftFor=null;clanDescriptionIndex=0;confirmRoute=confirmPlayer=confirmLabel=null;
-                    friendOffset=memberOffset=0;playerQuery=clanQuery="";
+                    socialIdentity=identity;lastClanIdentity=null;clanDetailTab=0;clanDescriptionIndex=0;confirmRoute=confirmPlayer=confirmLabel=null;
+                    memberOffset=0;clanQuery="";
                     clanName=clanTag="";
                 }
                 return true;
             }
             theme.Panel(new Rect(Left,272,ContentWidth,170));
-            theme.Label(new Rect(Left+24,292,ContentWidth-48,48),"Connect your account to load players, friends and clans.",theme.Heading);
+            theme.Label(new Rect(Left+24,292,ContentWidth-48,48),"Connect your account to load rankings and clans.",theme.Heading);
             theme.Label(new Rect(Left+24,348,ContentWidth-48,36),AccountServerBootstrap.Instance?.Status??"Account service unavailable.",theme.Body,true);
             if(theme.Action(new Rect(Left+24,394,200,40),"OPEN ACCOUNT"))SetPage(Page.Profile);
             return false;
@@ -46,8 +45,6 @@ namespace Alterverse.UI
                 if(page==Page.Leaderboard&&rankingTab>0)
                     service.Load(rankingTab==1?"/social/levels":"/social/clan-levels",new SocialService.Request{offset=RankingOffset()});
                 else if(service.State==null)service.Load("/social/state");
-                else if(page==Page.Friends&&friendTab==4&&playerQuery.Trim().Length>=2)
-                    service.Load("/social/players",new SocialService.Request{query=playerQuery,offset=service.Search?.offset??0});
                 else if(page==Page.Clans&&clanTab==0)
                     service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=service.Clans?.offset??0});
                 else service.Load("/social/state");
@@ -137,72 +134,6 @@ namespace Alterverse.UI
             SocialFooter();return true;
         }
 
-        void DrawFriends()
-        {
-            Heading("Friends","Your crew, requests and new connections — all in one place.");
-            string[] tabs={"FRIENDS","REQUESTS","SENT","BLOCKED","FIND PLAYERS"};
-            float tabWidth=(ContentWidth-32f)/tabs.Length;
-            for(int i=0;i<tabs.Length;i++)
-                if(theme.Action(new Rect(Left+i*(tabWidth+8),212,tabWidth,40),tabs[i],selected:friendTab==i))
-                {friendTab=i;friendOffset=0;confirmRoute=null;}
-            if(!SocialReady()){SocialFooter();return;}
-            var service=SocialService.Instance;
-            var state=service.State;
-            if(DrawSocialConfirmation())return;
-            if(state==null){SocialFooter();return;}
-            theme.Panel(new Rect(Left,262,ContentWidth,36));
-            theme.FitLabel(new Rect(Left+14,262,ContentWidth-168,36),"PLAYER ID  "+state.me?.playerId,theme.Small,true);
-            if(theme.Action(new Rect(Right-138,264,132,32),"COPY ID",enabled:!string.IsNullOrEmpty(state.me?.playerId)))
-                GUIUtility.systemCopyBuffer=state.me.playerId;
-            SocialService.Player[] rows;
-            const int friendPageSize=6;
-            friendOffset=Mathf.Min(friendOffset,Mathf.Max(0,((friendTab==0?state.friends:friendTab==1?state.incoming:friendTab==2?state.outgoing:state.blocked)?.Length??0)-1)/friendPageSize*friendPageSize);
-            int start=friendOffset;
-            if(friendTab==4)
-            {
-                playerQuery=GUI.TextField(new Rect(Left,306,ContentWidth-190,40),playerQuery,40,theme.Field);
-                if(theme.Action(new Rect(Right-178,306,178,40),"SEARCH",enabled:!service.Busy&&playerQuery.Trim().Length>=2))
-                {service.Load("/social/players",new SocialService.Request{query=playerQuery});}
-                rows=service.Search?.players??NoPlayers;start=0;
-            }
-            else rows=(friendTab==0?state.friends:friendTab==1?state.incoming:friendTab==2?state.outgoing:state.blocked)??NoPlayers;
-            int count=Mathf.Min(friendPageSize,Mathf.Max(0,rows.Length-start));
-            for(int i=0;i<count;i++)
-            {
-                var p=rows[start+i];float y=(friendTab==4?354:308)+i*44;
-                theme.Panel(new Rect(Left,y,ContentWidth,42));
-                theme.IdentityTile(new Rect(Left+8,y+5,32,32),p.name,p.playerId==state.me?.playerId);
-                theme.FitLabel(new Rect(Left+52,y+3,ContentWidth-330,21),p.name,theme.Body);
-                theme.FitLabel(new Rect(Left+52,y+23,ContentWidth-330,17),$"LEVEL {p.level}  •  {p.playerId}",theme.Small,true);
-                if(friendTab==0)
-                {
-                    SocialButton(new Rect(Right-252,y+4,120,34),"REMOVE","/social/friend/remove",p.playerId);
-                    SocialButton(new Rect(Right-124,y+4,120,34),"BLOCK","/social/block",p.playerId);
-                }
-                else if(friendTab==1)
-                {
-                    SocialButton(new Rect(Right-252,y+4,120,34),"ACCEPT","/social/friend/accept",p.playerId);
-                    SocialButton(new Rect(Right-124,y+4,120,34),"DECLINE","/social/friend/remove",p.playerId);
-                }
-                else if(friendTab==2)SocialButton(new Rect(Right-124,y+4,120,34),"CANCEL","/social/friend/remove",p.playerId);
-                else if(friendTab==3)SocialButton(new Rect(Right-124,y+4,120,34),"UNBLOCK","/social/unblock",p.playerId);
-                else
-                {
-                    bool friends=Array.Exists(state.friends??NoPlayers,x=>x.playerId==p.playerId);
-                    bool sent=Array.Exists(state.outgoing??NoPlayers,x=>x.playerId==p.playerId);
-                    bool incoming=Array.Exists(state.incoming??NoPlayers,x=>x.playerId==p.playerId);
-                    SocialButton(new Rect(Right-252,y+4,120,34),friends?"FRIENDS":sent?"SENT":incoming?"ACCEPT":"ADD",
-                        incoming?"/social/friend/accept":"/social/friend/request",p.playerId,enabled:!friends&&!sent);
-                    SocialButton(new Rect(Right-124,y+4,120,34),"BLOCK","/social/block",p.playerId);
-                }
-            }
-            if(friendTab==4)
-                DrawSocialPager(service.Search?.offset??0,count,offset=>{service.Load("/social/players",new SocialService.Request{query=playerQuery,offset=offset});},pageSize:friendPageSize);
-            else DrawSocialPager(friendOffset,count,offset=>friendOffset=offset,rows.Length,pageSize:friendPageSize);
-            if(count==0)theme.EmptyState(new Rect(Left,364,ContentWidth,132),friendTab==4?"Find your next teammate":"No players here yet",
-                friendTab==4?"Search by name or paste a player ID to connect.":friendTab==0?"Open FIND PLAYERS to send your first friend request.":"New requests and players will appear in this list.");
-            SocialFooter();
-        }
 
         void DrawClans()
         {
@@ -218,7 +149,7 @@ namespace Alterverse.UI
             string currentClan=state.clan?.clanId;
             if(currentClan!=lastClanIdentity)
             {
-                lastClanIdentity=currentClan;memberOffset=0;clanDetailTab=0;clanIdentityDraftFor=null;clanDescriptionIndex=0;
+                lastClanIdentity=currentClan;memberOffset=0;clanDetailTab=0;clanDescriptionIndex=0;
                 clanTab=currentClan!=null?1:0;
             }
             if(clanTab==0)DrawClanBrowser(service,state);
@@ -228,9 +159,7 @@ namespace Alterverse.UI
         }
         void DrawClanBrowser(SocialService service,SocialService.Snapshot state)
         {
-            clanQuery=GUI.TextField(new Rect(Left,270,ContentWidth-190,40),clanQuery,40,theme.Field);
-            if(theme.Action(new Rect(Right-178,270,178,40),"SEARCH",enabled:!service.Busy))
-            {service.Load("/social/clans",new SocialService.Request{query=clanQuery});}
+            theme.Label(new Rect(Left,270,ContentWidth,40),"Browse clans below. Names are assigned automatically.",theme.Small,true);
             var rows=service.Clans?.clans??NoClans;
             int count=Mathf.Min(6,rows.Length);
             for(int i=0;i<count;i++)
@@ -245,14 +174,14 @@ namespace Alterverse.UI
                 SocialButton(new Rect(Right-160,y+4,156,36),pending?"CANCEL REQUEST":c.open?"JOIN":"APPLY",
                     pending?"/social/clan/cancel":"/social/clan/join",clanId:c.clanId,enabled:state.clan==null&&(pending||c.memberCount<50));
             }
-            if(count==0)theme.EmptyState(new Rect(Left,336,ContentWidth,134),"Find your crew","Search for a clan or open CREATE CLAN to build your own.");
+            if(count==0)theme.EmptyState(new Rect(Left,336,ContentWidth,134),"Find your crew","Browse the clan directory or create your own.");
             DrawSocialPager(service.Clans?.offset??0,count,offset=>{service.Load("/social/clans",new SocialService.Request{query=clanQuery,offset=offset});},pageSize:6);
         }
         void DrawGeneratedClanFields(bool enabled)
         {
             if(!SafeIdentityCatalog.IsClanName(clanName))clanName=SafeIdentityCatalog.GenerateClanName();
             if(!SafeIdentityCatalog.IsClanTag(clanTag))clanTag=SafeIdentityCatalog.GenerateClanTag();
-            clanDescriptionIndex=Mathf.Clamp(clanDescriptionIndex,0,SafeIdentityCatalog.Descriptions.Count-1);
+            clanDescriptionIndex=0;
             bool old=GUI.enabled;GUI.enabled=old&&enabled;
             theme.Label(new Rect(Left,276,170,36),"CLAN NAME",theme.Small);
             theme.FitLabel(new Rect(Left+180,270,ContentWidth-350,42),clanName,theme.Body);
@@ -262,9 +191,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+180,328,ContentWidth-180,42),clanTag,theme.Body);
             theme.Label(new Rect(Left,392,170,36),"DESCRIPTION",theme.Small);
             theme.Label(new Rect(Left+180,384,ContentWidth-180,60),SafeIdentityCatalog.Descriptions[clanDescriptionIndex],theme.Body,true);
-            if(theme.Action(new Rect(Left+180,450,100,36),"PREVIOUS"))clanDescriptionIndex=(clanDescriptionIndex-1+SafeIdentityCatalog.Descriptions.Count)%SafeIdentityCatalog.Descriptions.Count;
-            theme.Center(new Rect(Left+292,450,150,36),$"{clanDescriptionIndex+1} / {SafeIdentityCatalog.Descriptions.Count}");
-            if(theme.Action(new Rect(Left+454,450,100,36),"NEXT"))clanDescriptionIndex=(clanDescriptionIndex+1)%SafeIdentityCatalog.Descriptions.Count;
+            // No user-selectable text, including preset descriptions.
             GUI.enabled=old;
         }
         void DrawCreateClan(SocialService service,SocialService.Snapshot state)
@@ -277,7 +204,7 @@ namespace Alterverse.UI
                 // render free text from a legacy request pending on this device.
                 if(SafeIdentityCatalog.IsClanName(pending.name))clanName=pending.name;
                 if(SafeIdentityCatalog.IsClanTag(pending.tag))clanTag=pending.tag;
-                clanDescriptionIndex=Mathf.Clamp(pending.descriptionId,0,SafeIdentityCatalog.Descriptions.Count-1);
+                clanDescriptionIndex=0;
                 clanOpen=pending.open;
             }
             theme.Panel(new Rect(Left-8,262,ContentWidth+16,390));
@@ -290,22 +217,10 @@ namespace Alterverse.UI
             if(!supported)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),"Update the account server to enable generated clan identities.",theme.Small,true);
             else if(PlayerWallet.Balance<500&&!service.HasPendingClanCreation)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),$"You need {500-PlayerWallet.Balance} more Shards.",theme.Small,true);
         }
-        void DrawClanIdentity(SocialService service,SocialService.Snapshot state)
-        {
-            if(clanIdentityDraftFor!=state.clan.name)
-            {clanIdentityDraftFor=state.clan.name;clanName=state.clan.name;clanTag=state.clan.tag;clanDescriptionIndex=state.clan.descriptionId;}
-            theme.Panel(new Rect(Left-8,262,ContentWidth+16,390));
-            DrawGeneratedClanFields(!service.Busy);
-            theme.Label(new Rect(Left,508,ContentWidth,48),"Only the leader can reroll the clan name or change its preset description. Members, progress and the clan image stay with the clan.",theme.Small,true);
-            if(theme.Action(new Rect(Left,584,280,48),"SAVE CLAN IDENTITY",true,enabled:!service.Busy&&state.clanProtocolVersion>=3))
-                service.Load("/social/clan/identity",new SocialService.Request{name=clanName,tag=clanTag,descriptionId=clanDescriptionIndex});
-            if(theme.Action(new Rect(Left+300,584,180,48),"BACK"))clanDetailTab=0;
-        }
         void DrawMyClan(SocialService service,SocialService.Snapshot state)
         {
             var clan=state.clan;
             if(clan==null){theme.EmptyState(new Rect(Left,272,ContentWidth,154),"Your clan starts here","Join a crew from FIND CLANS, or create a clan for 500 Shards.");return;}
-            if(clanDetailTab==4&&state.role=="leader"){DrawClanIdentity(service,state);return;}
             theme.Panel(new Rect(Left-8,262,ContentWidth+16,78));
             AvatarBadgeRenderer.Draw(new Rect(Left,268,66,66),Mathf.Max(0,clan.avatar),Texture2D.whiteTexture,Time.unscaledTime);
             theme.FitLabel(new Rect(Left+80,268,ContentWidth-270,30),$"[{clan.tag}] {clan.name}",theme.Heading);
@@ -320,7 +235,6 @@ namespace Alterverse.UI
             if(manages&&theme.Action(new Rect(Left+180,346,220,34),"APPLICATIONS",selected:clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
             if(state.role=="leader"&&theme.Action(new Rect(Left+410,346,190,34),"CLAN IMAGE",selected:clanDetailTab==3))
             {clanDetailTab=3;clanIconIndex=0;}
-            if(state.role=="leader"&&theme.Action(new Rect(Left+610,346,170,34),"CLAN IDENTITY",selected:clanDetailTab==4))clanDetailTab=4;
             if(clanDetailTab==3){DrawClanImage(service,state);return;}
             var rows=(clanApplications?state.applications:clan.members)??NoPlayers;
             memberOffset=Mathf.Min(memberOffset,Mathf.Max(0,rows.Length-1)/5*5);
