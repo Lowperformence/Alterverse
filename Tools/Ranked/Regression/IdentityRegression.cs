@@ -24,14 +24,31 @@ partial class Regression
   AccountProfilePrefs.Attach("identity-first",0,initial);
   Check(AccountProfilePrefs.GetInt("DF_Shards")==240,"initial server identity preserves first local progress import");
   Check(PlayerProfile.PlayerName=="SolarFox0000001","server identity wins over old local text");
-  PlayerProfile.RerollName();string rerolled=PlayerProfile.PlayerName;
-  Check(rerolled!=initial[0].text&&SafeIdentityCatalog.IsPlayerName(rerolled),"profile reroll saved");
+  PlayerProfile.RerollName();
+  Check(PlayerProfile.PlayerName==initial[0].text,"registered player cannot reroll name");
+  AccountProfilePrefs.SetString("DF_PlayerName","LunarOwl0000002");
+  AccountProfilePrefs.DeleteKey("DF_PlayerName");
+  Check(PlayerProfile.PlayerName==initial[0].text,"registered identity is immutable");
   AccountProfilePrefs.Attach("identity-other",0,new[]{new AccountProfilePrefs.Entry{key="DF_PlayerName",kind=1,text="LunarOwl0000002"}});
   Check(PlayerProfile.PlayerName=="LunarOwl0000002"&&AccountProfilePrefs.GetInt("DF_Shards")==0,"identity and progress isolated between accounts");
+  // Older devices may have a dirty cached name; the first cloud assignment wins.
+  var stale=new AccountProfilePrefs.State{dirty=true,revision=0,profile=new[]{
+   new AccountProfilePrefs.Entry{key="DF_PlayerName",kind=1,text="LunarOwl1234567"},
+   new AccountProfilePrefs.Entry{key="DF_Shards",kind=0,number=240}}};
+  PlayerPrefs.SetString("DF_AccountProfileCache_identity-first",JsonUtility.ToJson(stale));
   AccountProfilePrefs.Attach("identity-first",0,initial);
-  Check(PlayerProfile.PlayerName==rerolled,"pending account reroll survives switching accounts");
+  Check(PlayerProfile.PlayerName==initial[0].text,"first server-assigned name survives stale offline cache");
+  Check(AccountProfilePrefs.GetInt("DF_Shards")==240,"offline progress preserved without replacing name");
+  var submitted=AccountProfilePrefs.Capture();
+  AccountProfilePrefs.SetInt("DF_Shards",241);
+  AccountProfilePrefs.ApplyRemote(1,new[]{
+   new AccountProfilePrefs.Entry{key="DF_PlayerName",kind=1,text="SolarFox0000001"},
+   new AccountProfilePrefs.Entry{key="DF_Shards",kind=0,number=240}},submitted);
+  Check(PlayerProfile.PlayerName==initial[0].text&&AccountProfilePrefs.GetInt("DF_Shards")==241,
+   "cloud reconciliation retains permanent name and concurrent progress");
   AccountProfilePrefs.Attach("identity-legacy",5,new[]{new AccountProfilePrefs.Entry{key="DF_PlayerName",kind=1,text="https://example.com"}});
-  Check(SafeIdentityCatalog.IsPlayerName(PlayerProfile.PlayerName)&&AccountProfilePrefs.Dirty,"legacy profile migrates to safe name");
+  Check(PlayerProfile.PlayerName=="CONNECTING..."&&!AccountProfilePrefs.Dirty,
+   "legacy text is not published or replaced with a client-generated account name");
   var legacy=new SocialService.Snapshot{
    me=new SocialService.Player{playerId="legacy-player",name="Old name"},
    clan=new SocialService.Clan{clanId="legacy-clan",name="Old clan",tag="FREE",description="https://discord.gg/test",
