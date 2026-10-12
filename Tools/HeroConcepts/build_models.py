@@ -330,6 +330,7 @@ def native_source(label,hero,source):
     arm.data.pose_position='REST';studio();return body,arm
 
 def previews(label,arm):
+    if bpy.context.scene.camera is None:studio()
     scene=bpy.context.scene;scene.cycles.samples=12;scene.render.resolution_x=660;scene.render.resolution_y=880
     arm.data.pose_position='REST'
     bpy.ops.wm.save_as_mainfile(filepath=str(ART/(label+'-model.blend')),compress=True)
