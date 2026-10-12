@@ -46,7 +46,7 @@ namespace Alterverse.Online
             get
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
-                string name=IsAuthenticated?PlayerProfile.PlayerName:null;
+                string name=IsAuthenticated?Alterverse.Profile.PlayerProfile.PlayerName:null;
                 return string.IsNullOrWhiteSpace(name)?"Not signed in":name;
 #else
                 return "Not signed in";
