@@ -1,0 +1,45 @@
+name: Zhaev original model build
+on:
+  push:
+    branches: ['art/zhaev-original-20261012']
+    paths: ['Tools/Zhaev/**', '.github/workflows/zhaev-original.yml']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install native authoring runtime
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
+          python -m pip install bpy==4.5.14
+      - name: Create new geometry and validate native exports
+        env:
+          OMP_NUM_THREADS: '2'
+        run: |
+          python Tools/Zhaev/build.py
+          python Tools/Zhaev/export_blender.py
+          python Tools/Zhaev/provenance.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zhaev-original-model
+          path: |
+            ArtSource/Heroes/ZhaevOriginal/
+            Documentation/ZhaevOriginal/
+            Tools/Zhaev/
+      - name: Retain validated assets on isolated art branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add ArtSource/Heroes/ZhaevOriginal Documentation/ZhaevOriginal
+          if ! git diff --cached --quiet; then
+            git commit -m 'Retain new Zhaev modular native model and validation evidence'
+            git push origin HEAD:'${{ github.ref_name }}'
+          fi
