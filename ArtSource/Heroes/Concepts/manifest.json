@@ -25,10 +25,9 @@
     "hero": "Ione Vaska",
     "heroId": "Elyra",
     "key": "Ione",
-    "concept": "ArtSource/Heroes/Concepts/Ione-concept-v1.png",
-    "gitBlob": "6aacffd94e0837a6ec934b07ef92ab9ccabaf361",
-    "sha256": "7fb57ed17bc7fee5427a70032922898a77be94ec41c123349365a9c57d8ddec4",
-    "bytes": 2142918,
+    "concept": "ArtSource/Heroes/Concepts/Ione-concept-v2.png",
+    "sha256": "08c6979b8487428bab93b06574f36727d8def7d2928ee7d2e83fa636c8da39be",
+    "bytes": 2111191,
     "tool": "OpenAI built-in image_gen",
     "base_model_revision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
     "reference_role": "existing project model used for basic shapes and proportions",
@@ -36,12 +35,15 @@
     "prompt_record": "Tools/HeroConcepts/prompts.json#Ione",
     "embedded_c2pa_present": true,
     "embedded_timestamps": [
-      "2026-10-12T06:25:19.840842422Z",
-      "2026-10-12T06:25:19.841876424Z",
-      "2026-10-12T06:25:19.841877660Z"
+      "2026-10-12T07:13:23.216243820Z",
+      "2026-10-12T07:13:23.217352217Z",
+      "2026-10-12T07:13:23.217354668Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "concept created; model implementation pending",
+    "revision_reason": "User clarified forward weapon request refers to Ione. Weapon now points horizontally forward.",
+    "previous_concept": "ArtSource/Heroes/Concepts/Archive/Ione-weapon-up-draft-20261012.png",
+    "gitBlob": "c5e3dbd5d4dfa6d0477b716b6b375afe8193b548"
   },
   {
     "hero": "Tahla Venn",
