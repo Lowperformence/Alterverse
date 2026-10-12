@@ -36,6 +36,35 @@ class SafeIdentityTests(unittest.TestCase):
         for bad in ('CUSTOM','c0000001','C00000012','C１２３４５６７'):
             self.assertFalse(valid_clan_tag(bad))
 
+    def test_first_login_saves_name_and_restores_it_on_any_device(self):
+        # Calling /wallet on first sign-in must allocate & durably store identity
+        # before any profile-save request or local client preference exists.
+        with tempfile.TemporaryDirectory() as folder,patch('google.cloud.firestore.transactional',transactional):
+            client=Client()
+            for factory in (lambda:Ledger(Path(folder)/'first-login.db'),
+                            lambda:FirestoreLedger(client=client)):
+                with self.subTest(adapter=type(factory()).__name__):
+                    first_device=factory()
+                    first=first_device.wallet('first-account')
+                    assigned=profile_name(first['profile'])
+                    self.assertTrue(valid_player_name(assigned))
+                    self.assertEqual(first['profileRevision'],0)
+                    # A second device uses the same cloud account, without its
+                    # first device's PlayerPrefs or cached profile.
+                    second_device=factory()
+                    restored=second_device.wallet('first-account')
+                    self.assertEqual(profile_name(restored['profile']),assigned)
+                    self.assertEqual(restored['profileRevision'],first['profileRevision'])
+                    # A forged/new local name submitted later cannot rename it.
+                    changed=second_device.save_profile(
+                        'first-account',
+                        with_player_name(restored['profile'],'LunarOwl0000002'),
+                        restored['profileRevision'])
+                    self.assertEqual(profile_name(changed['profile']),assigned)
+                    self.assertEqual(profile_name(factory().wallet('first-account')['profile']),assigned)
+                    other=factory().wallet('different-account')
+                    self.assertNotEqual(profile_name(other['profile']),assigned)
+
     def test_unique_claims_stay_fixed_and_ignore_user_supplied_names(self):
         with tempfile.TemporaryDirectory() as folder,patch('google.cloud.firestore.transactional',transactional):
             client=Client()
