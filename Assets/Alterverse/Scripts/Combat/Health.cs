@@ -17,6 +17,7 @@ namespace Alterverse.Combat
             _ => 50f
         };
         private const float HeroBaseShieldRechargeDelay = 15f;
+        private const float AurenPassiveTickSeconds = 1f;
 
         private static readonly System.Collections.Generic.List<Health> active = new(128);
         public static System.Collections.Generic.IReadOnlyList<Health> Active => active;
@@ -39,7 +40,11 @@ namespace Alterverse.Combat
                 active.Add(this);
         }
 
-        private void OnDisable() => active.Remove(this);
+        private void OnDisable()
+        {
+            aurenPassiveElapsed = 0f;
+            active.Remove(this);
+        }
 
         [SerializeField, Min(1f)] private float maxHealth = 100f;
         [SerializeField] private bool destroyOnDeath;
@@ -52,6 +57,10 @@ namespace Alterverse.Combat
         private bool heroBaseShieldEnabled;
         private float heroBaseShield;
         private float heroBaseShieldRechargeAt = -1f;
+
+        // Separate from the rechargeable base shield; this passive restores health only.
+        private bool aurenPassiveEnabled;
+        private float aurenPassiveElapsed;
 
         private float TransientShield => Time.time < shieldUntil ? shield : 0f;
         /// <summary>Ability shield only, excluding the permanent regenerating hero shield.</summary>
@@ -90,7 +99,10 @@ namespace Alterverse.Combat
 
         private void ConfigureHeroBaseShield(bool full)
         {
-            heroBaseShieldEnabled = GetComponent<Alterverse.Characters.HeroIdentity>() != null;
+            var hero = GetComponent<Alterverse.Characters.HeroIdentity>();
+            heroBaseShieldEnabled = hero != null;
+            aurenPassiveEnabled = hero != null && hero.Hero == Alterverse.Characters.HeroId.Kaelon;
+            aurenPassiveElapsed = 0f;
             heroBaseShield = heroBaseShieldEnabled && full ? HeroBaseShieldCapacity : 0f;
             heroBaseShieldRechargeAt = -1f;
         }
@@ -128,7 +140,31 @@ namespace Alterverse.Combat
             ConfigureHeroBaseShield(true);
         }
 
-        private void Update() => RefreshHeroBaseShield();
+        private void Update()
+        {
+            RefreshHeroBaseShield();
+            RefreshAurenPassive();
+        }
+
+        private void RefreshAurenPassive()
+        {
+            // Paused time, dead heroes, remote clients and full health never grant regeneration.
+            // An elapsed-time accumulator keeps healing at 1 tick/second and avoids per-frame
+            // Changed events, telemetry writes and network state churn.
+            if (!aurenPassiveEnabled || IsDead ||
+                !Alterverse.Multiplayer.CoopAuthority.CanMutateAuthoritativeState ||
+                Current >= maxHealth)
+            {
+                aurenPassiveElapsed = 0f;
+                return;
+            }
+
+            aurenPassiveElapsed += Time.deltaTime;
+            if (aurenPassiveElapsed < AurenPassiveTickSeconds) return;
+            int ticks = Mathf.FloorToInt(aurenPassiveElapsed / AurenPassiveTickSeconds);
+            aurenPassiveElapsed -= ticks * AurenPassiveTickSeconds;
+            Heal(ticks * Alterverse.Characters.HeroAbilityKit.AurenPassiveRegenPerSecond, false);
+        }
 
         public void Configure(float newMaxHealth, bool shouldDestroyOnDeath = false)
         {
