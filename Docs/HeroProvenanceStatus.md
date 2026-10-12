@@ -6,17 +6,17 @@ Alle neun neuen Konzeptbilder sind als unveränderte Original-PNGs archiviert. `
 
 | Held | Detailnachweis | Neues Konzept | Bisherige Modelländerung | Vollständige Konzeptumsetzung |
 | --- | --- | --- | --- | --- |
-| Sivra Quell | [Sivra](../ArtSource/Heroes/Concepts/Provenance/Sivra.json) | gespeichert | detailed replacement head | offen |
-| Ione Vaska | [Ione](../ArtSource/Heroes/Concepts/Provenance/Ione.json) | gespeichert | detailed replacement head | offen |
-| Tahla Venn | [Tahla](../ArtSource/Heroes/Concepts/Provenance/Tahla.json) | gespeichert | three-layer gold/ivory shoulder plates | offen |
-| Nerok Abyss | [Nerok](../ArtSource/Heroes/Concepts/Provenance/Nerok.json) | gespeichert | tailored jacket and trousers | offen |
-| Zhaev Null | [Zhaev](../ArtSource/Heroes/Concepts/Provenance/Zhaev.json) | gespeichert | keine neue Umsetzung validiert | offen |
-| Auren Kest | [Auren](../ArtSource/Heroes/Concepts/Provenance/Auren.json) | gespeichert | keine neue Umsetzung validiert | offen |
-| Brakk Orun | [Brakk](../ArtSource/Heroes/Concepts/Provenance/Brakk.json) | gespeichert | keine neue Umsetzung validiert | offen |
-| THE TRAVELER | [Traveler](../ArtSource/Heroes/Concepts/Provenance/Traveler.json) | gespeichert | keine neue Umsetzung validiert | offen |
-| Andromeda Timmy | [Timmy](../ArtSource/Heroes/Concepts/Provenance/Timmy.json) | gespeichert | keine neue Umsetzung validiert | offen |
+| Sivra Quell | [Sivra](../ArtSource/Heroes/Concepts/Provenance/Sivra.json) | gespeichert | detailed replacement head | geprüft |
+| Ione Vaska | [Ione](../ArtSource/Heroes/Concepts/Provenance/Ione.json) | gespeichert | detailed replacement head | geprüft |
+| Tahla Venn | [Tahla](../ArtSource/Heroes/Concepts/Provenance/Tahla.json) | gespeichert | three-layer gold/ivory shoulder plates | geprüft |
+| Nerok Abyss | [Nerok](../ArtSource/Heroes/Concepts/Provenance/Nerok.json) | gespeichert | tailored jacket and trousers | geprüft |
+| Zhaev Null | [Zhaev](../ArtSource/Heroes/Concepts/Provenance/Zhaev.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Auren Kest | [Auren](../ArtSource/Heroes/Concepts/Provenance/Auren.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Brakk Orun | [Brakk](../ArtSource/Heroes/Concepts/Provenance/Brakk.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| THE TRAVELER | [Traveler](../ArtSource/Heroes/Concepts/Provenance/Traveler.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
+| Andromeda Timmy | [Timmy](../ArtSource/Heroes/Concepts/Provenance/Timmy.json) | gespeichert | keine neue Umsetzung validiert | geprüft |
 
-Die vollständige Gestaltung aller neun 3D-Modelle nach diesen Konzepten ist noch nicht abgeschlossen. Die vier genannten Teile sind bereits als echte Geometrie gebaut und mit Blender/FBX geprüft. Das ersetzt keinen Unity- oder Gerätetest.
+Alle neun 3D-Modelle wurden nach den archivierten Konzepten ergänzt bzw. umgestaltet und mit Blender/FBX geprüft. Die renderbare Geometrie behält die ausdrücklich erlaubten vorhandenen Grundformen. Unity und Android wurden nicht geprüft. Die vier genannten Teile sind bereits als echte Geometrie gebaut und mit Blender/FBX geprüft. Das ersetzt keinen Unity- oder Gerätetest.
 
 ## Nachgewiesene Quellen und Grenzen
 

@@ -1,0 +1,4586 @@
+{
+  "revision": "nine-hero-concepts-20261012-v1",
+  "sourceRevision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
+  "models": {
+    "Sivra": {
+      "preservedVertices": 35900,
+      "removedVertices": 0,
+      "newVertices": 4454,
+      "newTriangles": 8408,
+      "newParts": [
+        {
+          "name": "twin forearm ceramic rails L",
+          "first": 0,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset L",
+          "first": 104,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "twin forearm ceramic rails L",
+          "first": 182,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset L",
+          "first": 286,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "split knee diamond L",
+          "first": 364,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "knee light inlay L",
+          "first": 377,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 3
+        },
+        {
+          "name": "separate thigh armor leaf L",
+          "first": 390,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "separate thigh armor leaf L",
+          "first": 403,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "twin forearm ceramic rails R",
+          "first": 416,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset R",
+          "first": 520,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "twin forearm ceramic rails R",
+          "first": 598,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset R",
+          "first": 702,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "split knee diamond R",
+          "first": 780,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "knee light inlay R",
+          "first": 793,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 3
+        },
+        {
+          "name": "separate thigh armor leaf R",
+          "first": 806,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "separate thigh armor leaf R",
+          "first": 819,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "contoured breast pod titanium cradle",
+          "first": 832,
+          "vertices": 350,
+          "triangles": 696,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1182,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1194,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1206,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "contoured breast pod titanium cradle",
+          "first": 1218,
+          "vertices": 350,
+          "triangles": 696,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1568,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1580,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "chest machined vent",
+          "first": 1592,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "waist emerald routed seam",
+          "first": 1604,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "waist emerald routed seam",
+          "first": 1628,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L0",
+          "first": 1652,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 1839,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2015,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2067,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 2119,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 2306,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2482,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2534,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 2586,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 2773,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2949,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3001,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 3053,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 3240,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3416,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3468,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 3520,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 3707,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3883,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3935,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 3987,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 4174,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4350,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4402,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 2
+        }
+      ],
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "50d2a7b36b05c0f284868f984ee54a762b9227759fc5422cbe515e9bfa41c37b",
+      "shippingModel": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+      "canonicalWeaponMarkersExact": true,
+      "nativeRifleForwardAxis": [
+        0,
+        0,
+        1
+      ],
+      "fbxRoundTrip": {
+        "bones": 16,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 40354
+      },
+      "modelSha256": "f6db57283937c2e008f2ebfa2791da57a85fe36bc3f33f1005427a83f154bb5a",
+      "blenderSha256": "449379c3c8eaf6d12e419802b358a043403a5c97999aae7db78ca60f1603e0e8"
+    },
+    "Ione": {
+      "preservedVertices": 20818,
+      "removedVertices": 0,
+      "newVertices": 7490,
+      "newTriangles": 14388,
+      "newParts": [
+        {
+          "name": "twin forearm ceramic rails L",
+          "first": 0,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset L",
+          "first": 104,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "twin forearm ceramic rails L",
+          "first": 182,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset L",
+          "first": 286,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "split knee diamond L",
+          "first": 364,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "knee light inlay L",
+          "first": 377,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 3
+        },
+        {
+          "name": "separate thigh armor leaf L",
+          "first": 390,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "separate thigh armor leaf L",
+          "first": 403,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "twin forearm ceramic rails R",
+          "first": 416,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 12,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset R",
+          "first": 520,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 12,
+          "material": 3
+        },
+        {
+          "name": "twin forearm ceramic rails R",
+          "first": 598,
+          "vertices": 104,
+          "triangles": 204,
+          "bone": 12,
+          "material": 2
+        },
+        {
+          "name": "forearm luminous inset R",
+          "first": 702,
+          "vertices": 78,
+          "triangles": 152,
+          "bone": 12,
+          "material": 3
+        },
+        {
+          "name": "split knee diamond R",
+          "first": 780,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 15,
+          "material": 2
+        },
+        {
+          "name": "knee light inlay R",
+          "first": 793,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 15,
+          "material": 3
+        },
+        {
+          "name": "separate thigh armor leaf R",
+          "first": 806,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "separate thigh armor leaf R",
+          "first": 819,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "triangular chest resonance emitter 0 recessed housing",
+          "first": 832,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "triangular chest resonance emitter 0 luminous ring",
+          "first": 1098,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "triangular chest resonance emitter 0 lens",
+          "first": 1330,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "triangular chest resonance emitter 1 recessed housing",
+          "first": 1596,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "triangular chest resonance emitter 1 luminous ring",
+          "first": 1862,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "triangular chest resonance emitter 1 lens",
+          "first": 2094,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "triangular chest resonance emitter 2 recessed housing",
+          "first": 2360,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "triangular chest resonance emitter 2 luminous ring",
+          "first": 2626,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "triangular chest resonance emitter 2 lens",
+          "first": 2858,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "chest triangular violet circuit",
+          "first": 3124,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "chest triangular violet circuit",
+          "first": 3136,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "chest triangular violet circuit",
+          "first": 3148,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L0",
+          "first": 3160,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 3347,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3523,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3575,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 3627,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 3814,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3990,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4042,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 4094,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 4281,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4457,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4509,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 4561,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 4748,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4924,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4976,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 5028,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 5215,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 5391,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 5443,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 5495,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 5682,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 5858,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 5910,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "hip orbit reactor recessed housing",
+          "first": 5962,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 0,
+          "material": 1
+        },
+        {
+          "name": "hip orbit reactor luminous ring",
+          "first": 6228,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 0,
+          "material": 3
+        },
+        {
+          "name": "hip orbit reactor lens",
+          "first": 6460,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 0,
+          "material": 3
+        },
+        {
+          "name": "hip orbit reactor recessed housing",
+          "first": 6726,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 0,
+          "material": 1
+        },
+        {
+          "name": "hip orbit reactor luminous ring",
+          "first": 6992,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 0,
+          "material": 3
+        },
+        {
+          "name": "hip orbit reactor lens",
+          "first": 7224,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 0,
+          "material": 3
+        }
+      ],
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "cfbe49fc33fe637f6d9905fac87c19bd7b607ce9c9ac8d91371a3a8d65ec4be1",
+      "shippingModel": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+      "canonicalWeaponMarkersExact": true,
+      "forwardWeaponAxis": [
+        0.0,
+        0.0,
+        1.0
+      ],
+      "fbxRoundTrip": {
+        "bones": 18,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 28308
+      },
+      "modelSha256": "64910c2535cd447bb38e1495ced250223cc1751ca61f784237037c680afc61fe",
+      "blenderSha256": "f012de711fa4dac1870e6bff344be4a5c287d883ce6ff5b44071a95e00b062af"
+    },
+    "Nerok": {
+      "preservedVertices": 82172,
+      "removedVertices": 0,
+      "newVertices": 3568,
+      "newTriangles": 6876,
+      "newParts": [
+        {
+          "name": "brass jacket toggle loop",
+          "first": 0,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 32,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "brass jacket toggle loop",
+          "first": 48,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 80,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "brass jacket toggle loop",
+          "first": 96,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 128,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "brass jacket toggle loop",
+          "first": 144,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 176,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "brass jacket toggle loop",
+          "first": 192,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 224,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "brass jacket toggle loop",
+          "first": 240,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "dark jacket toggle",
+          "first": 272,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "harbor trident central stem",
+          "first": 288,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "harbor three-prong insignia",
+          "first": 304,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "harbor three-prong insignia",
+          "first": 328,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "harbor three-prong insignia",
+          "first": 352,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "harbor trident curved crossbar",
+          "first": 376,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands L",
+          "first": 400,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge L",
+          "first": 664,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands L",
+          "first": 928,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge L",
+          "first": 1192,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands L",
+          "first": 1456,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge L",
+          "first": 1720,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands R",
+          "first": 1984,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge R",
+          "first": 2248,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands R",
+          "first": 2512,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge R",
+          "first": 2776,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 4
+        },
+        {
+          "name": "three leather cuff bands R",
+          "first": 3040,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 0
+        },
+        {
+          "name": "cuff brass stitch edge R",
+          "first": 3304,
+          "vertices": 264,
+          "triangles": 512,
+          "bone": 12,
+          "material": 4
+        }
+      ],
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "fe437976e8744b6613590dcfe3941521018cb6ca7f95d59ca7d5e664706f7499",
+      "shippingModel": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+      "canonicalWeaponMarkersExact": true,
+      "fbxRoundTrip": {
+        "bones": 18,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 85740
+      },
+      "modelSha256": "1cc8ea981022fe3be5d46add9a76a0f2d90586fc0ca53202dff93ac8f56ba0b3",
+      "blenderSha256": "3ee7d35208380a7ca4c4267a8fc4d6176b0b4d64c98b67198c95b53318be78c7"
+    },
+    "Auren": {
+      "preservedVertices": 26213,
+      "removedVertices": 96,
+      "newVertices": 4794,
+      "newTriangles": 9028,
+      "newParts": [
+        {
+          "name": "segmented sunburst shield boss",
+          "first": 0,
+          "vertices": 482,
+          "triangles": 960,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "shield sunburst inner ring",
+          "first": 482,
+          "vertices": 296,
+          "triangles": 576,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 778,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 794,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 810,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 826,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 842,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 858,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 874,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 890,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 906,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 922,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 938,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "twelve segmented sunburst rays",
+          "first": 954,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 970,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 983,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 996,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1009,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1022,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "scalloped bronze shin ridge",
+          "first": 1035,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1051,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 8,
+          "material": 4
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1067,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 8,
+          "material": 4
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1083,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 8,
+          "material": 4
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1099,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1112,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1125,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1138,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "amber chest vent rail",
+          "first": 1151,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "scalloped bronze shin ridge",
+          "first": 1164,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 15,
+          "material": 2
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1180,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 15,
+          "material": 4
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1196,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 15,
+          "material": 4
+        },
+        {
+          "name": "shin industrial machined joint",
+          "first": 1212,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 15,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames L0",
+          "first": 1228,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 1415,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1591,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1643,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 1695,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 1882,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2058,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2110,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 2162,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 2349,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2525,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2577,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 2629,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 2816,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2992,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3044,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 3096,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 3283,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3459,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3511,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 3563,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 11,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 3750,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3926,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3978,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "abdomen amber reactor recessed housing",
+          "first": 4030,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "abdomen amber reactor luminous ring",
+          "first": 4296,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "abdomen amber reactor lens",
+          "first": 4528,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 1,
+          "material": 3
+        }
+      ],
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "249adea2091d10185007ee0bf5d6fd7619fea687a6d36aa710c1b2e5d3bef55f",
+      "shippingModel": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+      "canonicalWeaponMarkersExact": true,
+      "fbxRoundTrip": {
+        "bones": 18,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 31007
+      },
+      "modelSha256": "faa040b29ad9819cc15357f1b6f8ac95771f6812ba6a743e86f47d92f0c5ddab",
+      "blenderSha256": "5ef8239535c99db17319aedfee1eb628c2b51d02361db537d093932891142f41"
+    },
+    "Traveler": {
+      "preservedVertices": 11285,
+      "removedVertices": 0,
+      "newVertices": 5028,
+      "newTriangles": 9408,
+      "newParts": [
+        {
+          "name": "single horizontal time slit",
+          "first": 0,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "temple clock tick",
+          "first": 20,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 32,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 44,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 56,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 68,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 80,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 92,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 104,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 116,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 128,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 140,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 152,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 164,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "temple clock tick",
+          "first": 176,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "compass disc recessed housing",
+          "first": 188,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass disc luminous ring",
+          "first": 454,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "compass disc lens",
+          "first": 686,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "compass radial scale",
+          "first": 952,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 962,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 972,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 982,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 992,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1002,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1012,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1022,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "compass disc recessed housing",
+          "first": 1032,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass disc luminous ring",
+          "first": 1298,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "compass disc lens",
+          "first": 1530,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1796,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1806,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1816,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1826,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1836,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1846,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1856,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "compass radial scale",
+          "first": 1866,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "outer-thigh chronometer phone casing",
+          "first": 1876,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 1
+        },
+        {
+          "name": "blue chronometer screen",
+          "first": 1889,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 3
+        },
+        {
+          "name": "display telemetry row",
+          "first": 1902,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 1912,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 1922,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 1932,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "three chronometer insulated cables L",
+          "first": 1942,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 7,
+          "material": 0
+        },
+        {
+          "name": "three chronometer insulated cables L",
+          "first": 1974,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 7,
+          "material": 0
+        },
+        {
+          "name": "three chronometer insulated cables L",
+          "first": 2006,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 7,
+          "material": 0
+        },
+        {
+          "name": "chronometer knee chevron",
+          "first": 2038,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "outer-thigh chronometer phone casing",
+          "first": 2051,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 1
+        },
+        {
+          "name": "blue chronometer screen",
+          "first": 2064,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 3
+        },
+        {
+          "name": "display telemetry row",
+          "first": 2077,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 2087,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 2097,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "display telemetry row",
+          "first": 2107,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "three chronometer insulated cables R",
+          "first": 2117,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 13,
+          "material": 0
+        },
+        {
+          "name": "three chronometer insulated cables R",
+          "first": 2149,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 13,
+          "material": 0
+        },
+        {
+          "name": "three chronometer insulated cables R",
+          "first": 2181,
+          "vertices": 32,
+          "triangles": 60,
+          "bone": 13,
+          "material": 0
+        },
+        {
+          "name": "chronometer knee chevron",
+          "first": 2213,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "three overlapping shoulder lames L0",
+          "first": 2226,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 2413,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2589,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2641,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 2693,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 2880,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3056,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3108,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 3160,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 3347,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3523,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3575,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 3627,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 3814,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 3990,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4042,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 4094,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 4281,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4457,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4509,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 4561,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 4748,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4924,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 4976,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 10,
+          "material": 5
+        }
+      ],
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "87738836fe1a0c82219bf2230c4b66f215dfb5f77d4a253a03f3aca464a7236a",
+      "shippingModel": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+      "canonicalWeaponMarkersExact": true,
+      "fbxRoundTrip": {
+        "bones": 16,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 16313
+      },
+      "modelSha256": "0e5b998eb8143403a9d0dd0b6bd6fefce339690de41e04dd5a4701749b41f53d",
+      "blenderSha256": "f4836dd5c0e3f2b97e81fe9575baaceb5217275364a7534382c2d8c8c246c059"
+    },
+    "Zhaev": {
+      "source": "ArtSource/Heroes/Veyr.blend",
+      "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+      "removedComponents": [
+        {
+          "vertices": 18,
+          "materials": [
+            "Null dark gunmetal helmet"
+          ],
+          "bones": [
+            "Head"
+          ]
+        }
+      ],
+      "preservedVertices": 24493,
+      "preservedPositionsExact": true,
+      "rigExact": true,
+      "originalActionsExact": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Run",
+        "Skill0",
+        "Skill1",
+        "Skill2",
+        "Ultimate"
+      ],
+      "socketsExact": true,
+      "newVertices": 1928,
+      "newTriangles": 3716,
+      "newParts": [
+        {
+          "name": "single violet crown stripe",
+          "first": 0,
+          "vertices": 360,
+          "triangles": 716,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "central oval violet chest reactor recessed housing",
+          "first": 360,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "central oval violet chest reactor luminous ring",
+          "first": 626,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "central oval violet chest reactor lens",
+          "first": 858,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1124,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1140,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1156,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1172,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1188,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1201,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1214,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "violet hip tab",
+          "first": 1227,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "cape violet inner seam",
+          "first": 1240,
+          "vertices": 196,
+          "triangles": 388,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1436,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1454,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1472,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1490,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1508,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1526,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1542,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1558,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short chest vent rail",
+          "first": 1574,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1590,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1603,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "three compact shoulder chevrons",
+          "first": 1616,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 9,
+          "material": 3
+        },
+        {
+          "name": "violet hip tab",
+          "first": 1629,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "cape violet inner seam",
+          "first": 1642,
+          "vertices": 196,
+          "triangles": 388,
+          "bone": 2,
+          "material": 3
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1838,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1856,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1874,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1892,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "cape branched circuit embroidery",
+          "first": 1910,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 2,
+          "material": 2
+        }
+      ],
+      "fbxRoundTrip": {
+        "bones": 19,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [
+          "DF_Skeleton|DF_Skeleton|Attack",
+          "DF_Skeleton|DF_Skeleton|Death",
+          "DF_Skeleton|DF_Skeleton|Hit",
+          "DF_Skeleton|DF_Skeleton|Idle",
+          "DF_Skeleton|DF_Skeleton|Run",
+          "DF_Skeleton|DF_Skeleton|Skill0",
+          "DF_Skeleton|DF_Skeleton|Skill1",
+          "DF_Skeleton|DF_Skeleton|Skill2",
+          "DF_Skeleton|DF_Skeleton|Ultimate"
+        ],
+        "vertices": 26421
+      },
+      "modelSha256": "80287d34b48cce96ff7f0fd01f6643768f53da5047663693bde819600b6b17e8",
+      "blenderSha256": "c2824aad0dbd9712230fb1c318aa728a1b4abceaa8779124fdd7e16106345078"
+    },
+    "Tahla": {
+      "source": "ArtSource/Heroes/Mira.blend",
+      "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+      "removedComponents": [
+        {
+          "vertices": 108,
+          "materials": [
+            "Tahla pink flower"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 108,
+          "materials": [
+            "Tahla pink flower"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 108,
+          "materials": [
+            "Tahla pink flower"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 108,
+          "materials": [
+            "Tahla pink flower"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 108,
+          "materials": [
+            "Tahla pink flower"
+          ],
+          "bones": [
+            "Head"
+          ]
+        }
+      ],
+      "preservedVertices": 25914,
+      "preservedPositionsExact": true,
+      "rigExact": true,
+      "originalActionsExact": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Run",
+        "Skill0",
+        "Skill1",
+        "Skill2",
+        "Ultimate"
+      ],
+      "socketsExact": true,
+      "newVertices": 2709,
+      "newTriangles": 5122,
+      "newParts": [
+        {
+          "name": "open-face golden brow diadem",
+          "first": 0,
+          "vertices": 30,
+          "triangles": 56,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 30,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 66,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 102,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 138,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 174,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 210,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 246,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 282,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 318,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 354,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 390,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 426,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 462,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 475,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 488,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "ivory tunic gold seam",
+          "first": 501,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "split ivory leaf hip mantle",
+          "first": 525,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 1
+        },
+        {
+          "name": "split ivory leaf hip mantle raised central vein",
+          "first": 538,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "emerald leaf mantle inset",
+          "first": 550,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "emerald leaf mantle inset raised central vein",
+          "first": 563,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "split ivory leaf hip mantle",
+          "first": 575,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 1
+        },
+        {
+          "name": "split ivory leaf hip mantle raised central vein",
+          "first": 588,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "emerald leaf mantle inset",
+          "first": 600,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "emerald leaf mantle inset raised central vein",
+          "first": 613,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "open-face golden brow diadem",
+          "first": 625,
+          "vertices": 30,
+          "triangles": 56,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 655,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 691,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 727,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 763,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 799,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 835,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 871,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 907,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 943,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 979,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 1015,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "flowing swept white hair strand",
+          "first": 1051,
+          "vertices": 36,
+          "triangles": 68,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 1087,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 1100,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "branching chest botanical filigree",
+          "first": 1113,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "ivory tunic gold seam",
+          "first": 1126,
+          "vertices": 24,
+          "triangles": 44,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "split ivory leaf hip mantle",
+          "first": 1150,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 1
+        },
+        {
+          "name": "split ivory leaf hip mantle raised central vein",
+          "first": 1163,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "emerald leaf mantle inset",
+          "first": 1175,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "emerald leaf mantle inset raised central vein",
+          "first": 1188,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "split ivory leaf hip mantle",
+          "first": 1200,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 1
+        },
+        {
+          "name": "split ivory leaf hip mantle raised central vein",
+          "first": 1213,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "emerald leaf mantle inset",
+          "first": 1225,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 1,
+          "material": 3
+        },
+        {
+          "name": "emerald leaf mantle inset raised central vein",
+          "first": 1238,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 1,
+          "material": 2
+        },
+        {
+          "name": "emerald diadem stone recessed housing",
+          "first": 1250,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald diadem stone luminous ring",
+          "first": 1516,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald diadem stone lens",
+          "first": 1748,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "thin golden leaf halo",
+          "first": 2014,
+          "vertices": 520,
+          "triangles": 1024,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2534,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2547,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2559,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2572,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2584,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2597,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2609,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2622,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2634,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2647,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2659,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2672,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "emerald halo leaf",
+          "first": 2684,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "emerald halo leaf raised central vein",
+          "first": 2697,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 2
+        }
+      ],
+      "fbxRoundTrip": {
+        "bones": 19,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [
+          "DF_Skeleton|DF_Skeleton|Attack",
+          "DF_Skeleton|DF_Skeleton|Death",
+          "DF_Skeleton|DF_Skeleton|Hit",
+          "DF_Skeleton|DF_Skeleton|Idle",
+          "DF_Skeleton|DF_Skeleton|Run",
+          "DF_Skeleton|DF_Skeleton|Skill0",
+          "DF_Skeleton|DF_Skeleton|Skill1",
+          "DF_Skeleton|DF_Skeleton|Skill2",
+          "DF_Skeleton|DF_Skeleton|Ultimate"
+        ],
+        "vertices": 28623
+      },
+      "modelSha256": "d9910e58ad81614ac4df66f403418eb6402a240eecb15d4111fecdd69fb24937",
+      "blenderSha256": "97213621692f9f86cc17f7d9abf6f145805db2bb8e5798f26c94ed058e48c8e3"
+    },
+    "Brakk": {
+      "source": "ArtSource/Heroes/Rook.blend",
+      "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+      "removedComponents": [
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 28,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        },
+        {
+          "vertices": 12,
+          "materials": [
+            "Hair"
+          ],
+          "bones": [
+            "Head"
+          ]
+        }
+      ],
+      "preservedVertices": 20673,
+      "preservedPositionsExact": true,
+      "rigExact": true,
+      "originalActionsExact": [
+        "Attack",
+        "Death",
+        "Hit",
+        "Idle",
+        "Run",
+        "Skill0",
+        "Skill1",
+        "Skill2",
+        "Ultimate"
+      ],
+      "socketsExact": true,
+      "newVertices": 5612,
+      "newTriangles": 10620,
+      "newParts": [
+        {
+          "name": "three overlapping shoulder lames L0",
+          "first": 0,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L0",
+          "first": 187,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 363,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 415,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames L1",
+          "first": 467,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L1",
+          "first": 654,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 830,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 882,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames L2",
+          "first": 934,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge L2",
+          "first": 1121,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1297,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1349,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 5,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames R0",
+          "first": 1401,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R0",
+          "first": 1588,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1764,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 1816,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames R1",
+          "first": 1868,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R1",
+          "first": 2055,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2231,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2283,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "three overlapping shoulder lames R2",
+          "first": 2335,
+          "vertices": 187,
+          "triangles": 320,
+          "bone": 9,
+          "material": 2
+        },
+        {
+          "name": "shoulder inset edge R2",
+          "first": 2522,
+          "vertices": 176,
+          "triangles": 348,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2698,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "shoulder recessed rivet",
+          "first": 2750,
+          "vertices": 52,
+          "triangles": 100,
+          "bone": 9,
+          "material": 4
+        },
+        {
+          "name": "warm industrial chest reactor recessed housing",
+          "first": 2802,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 3,
+          "material": 4
+        },
+        {
+          "name": "warm industrial chest reactor luminous ring",
+          "first": 3068,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "warm industrial chest reactor lens",
+          "first": 3300,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "split copper chest flange",
+          "first": 3566,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3582,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3603,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3624,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3645,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3666,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3687,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3708,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3729,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3750,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 3771,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "bronze communications earcup",
+          "first": 3792,
+          "vertices": 366,
+          "triangles": 728,
+          "bone": 4,
+          "material": 4
+        },
+        {
+          "name": "earcup amber inset",
+          "first": 4158,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 4390,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 6,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 4410,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 6,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 4424,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 6,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 4444,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 6,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 4458,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 6,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 4478,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 6,
+          "material": 3
+        },
+        {
+          "name": "split copper chest flange",
+          "first": 4492,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4508,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4529,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4550,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4571,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4592,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4613,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4634,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4655,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4676,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "short grey beard clump",
+          "first": 4697,
+          "vertices": 21,
+          "triangles": 38,
+          "bone": 4,
+          "material": 5
+        },
+        {
+          "name": "bronze communications earcup",
+          "first": 4718,
+          "vertices": 366,
+          "triangles": 728,
+          "bone": 4,
+          "material": 4
+        },
+        {
+          "name": "earcup amber inset",
+          "first": 5084,
+          "vertices": 232,
+          "triangles": 448,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 5316,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 10,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 5336,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 10,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 5350,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 10,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 5370,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 10,
+          "material": 3
+        },
+        {
+          "name": "gauntlet three-step dorsal ridge",
+          "first": 5384,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 10,
+          "material": 4
+        },
+        {
+          "name": "gauntlet amber channel",
+          "first": 5404,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 10,
+          "material": 3
+        },
+        {
+          "name": "headset microphone arm",
+          "first": 5418,
+          "vertices": 30,
+          "triangles": 56,
+          "bone": 4,
+          "material": 4
+        },
+        {
+          "name": "headset microphone",
+          "first": 5448,
+          "vertices": 164,
+          "triangles": 324,
+          "bone": 4,
+          "material": 0
+        }
+      ],
+      "fbxRoundTrip": {
+        "bones": 19,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [
+          "DF_Skeleton|DF_Skeleton|Attack",
+          "DF_Skeleton|DF_Skeleton|Death",
+          "DF_Skeleton|DF_Skeleton|Hit",
+          "DF_Skeleton|DF_Skeleton|Idle",
+          "DF_Skeleton|DF_Skeleton|Run",
+          "DF_Skeleton|DF_Skeleton|Skill0",
+          "DF_Skeleton|DF_Skeleton|Skill1",
+          "DF_Skeleton|DF_Skeleton|Skill2",
+          "DF_Skeleton|DF_Skeleton|Ultimate"
+        ],
+        "vertices": 26285
+      },
+      "modelSha256": "31d3c77cf103be87930f77119f22558884047660712d85e46e5f21574b07c66e",
+      "blenderSha256": "ac62b33aeb52107a97a490cf2fddb1924ce55ddd5d7cb126dd7024c281860418"
+    },
+    "Timmy": {
+      "source": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
+      "shippingModel": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+      "removedComponents": [],
+      "preservedVertices": 8584,
+      "preservedPositionsExact": true,
+      "rigExact": true,
+      "originalActionsExact": [],
+      "socketsExact": true,
+      "newVertices": 1264,
+      "newTriangles": 2440,
+      "newParts": [
+        {
+          "name": "cyan comet chest badge",
+          "first": 0,
+          "vertices": 266,
+          "triangles": 528,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "comet badge three tails",
+          "first": 266,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "comet badge three tails",
+          "first": 280,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "comet badge three tails",
+          "first": 294,
+          "vertices": 14,
+          "triangles": 24,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "chest telemetry casing",
+          "first": 308,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "blue telemetry display",
+          "first": 321,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "telemetry two gold buttons",
+          "first": 334,
+          "vertices": 114,
+          "triangles": 224,
+          "bone": 3,
+          "material": 4
+        },
+        {
+          "name": "telemetry two gold buttons",
+          "first": 448,
+          "vertices": 114,
+          "triangles": 224,
+          "bone": 3,
+          "material": 4
+        },
+        {
+          "name": "cyan domed visor gasket",
+          "first": 562,
+          "vertices": 520,
+          "triangles": 1024,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "white forearm layered edge",
+          "first": 1082,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 6,
+          "material": 1
+        },
+        {
+          "name": "white knee enamel layer",
+          "first": 1100,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 15,
+          "material": 1
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1113,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1133,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1153,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "white forearm layered edge",
+          "first": 1173,
+          "vertices": 18,
+          "triangles": 32,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "white knee enamel layer",
+          "first": 1191,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 18,
+          "material": 1
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1204,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1224,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        },
+        {
+          "name": "jetpack cyan exhaust grille",
+          "first": 1244,
+          "vertices": 20,
+          "triangles": 36,
+          "bone": 3,
+          "material": 3
+        }
+      ],
+      "fbxRoundTrip": {
+        "bones": 20,
+        "skinningImported": true,
+        "normalizedWeights": true,
+        "animationClipsImported": [],
+        "vertices": 9848
+      },
+      "modelSha256": "054d9d504cf62e41babc6ba27baeea1e4392bc085248f95881439b45acc12d90",
+      "blenderSha256": "02637e7ec7cbda341695a93a8e0f85b9b386689db7c0461c846c97472eb1ed35"
+    }
+  },
+  "validation": {
+    "runtimePayload": "passed",
+    "nativeFbxImport": "passed",
+    "rigsAndSourceActions": "preserved",
+    "UnityEditor": "not run",
+    "Android": "not run"
+  }
+}

@@ -66,15 +66,20 @@
     }
   ],
   "implementation": {
-    "fullConceptModel": "pending",
+    "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": null,
-    "previousValidation": null
+    "previousValidation": null,
+    "revision": "nine-hero-concepts-20261012-v1",
+    "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
+    "nativeSource": "ArtSource/Heroes/ConceptModels/Timmy-model.blend",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+    "modelSha256": "054d9d504cf62e41babc6ba27baeea1e4392bc085248f95881439b45acc12d90"
   },
   "openEvidence": [
-    "full new-concept model and render/FBX validation",
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
-    "unresolved selected-audio source and license records"
+    "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification"
   ],
   "releaseFlagChanged": false
 }

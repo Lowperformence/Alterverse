@@ -1,0 +1,30 @@
+newmtl Tahla_surface_0
+Kd 0.02 0.1 0.06
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Tahla_surface_1
+Kd 0.92 0.87 0.72
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Tahla_surface_2
+Kd 0.65 0.39 0.1
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Tahla_surface_3
+Kd 0.04 0.38 0.16
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Tahla_surface_4
+Kd 0.48 0.31 0.13
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Tahla_surface_5
+Kd 0.97 0.97 0.96
+Ks 0.25 0.25 0.25
+Ns 90
+
