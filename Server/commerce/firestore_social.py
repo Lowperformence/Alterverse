@@ -65,8 +65,12 @@ class FirestoreSocial:
         sync(self.client.transaction())
 
     def dispatch(self, account, route, data):
-        if route.startswith(('/social/clan/message', '/social/message')):
-            raise ValueError('Communication is disabled in this version.')
+        # No chat, player discovery, friend requests or editable clan identities.
+        # Enforce this on the server as well as hiding controls in the Unity UI.
+        if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
+                or route in ('/social/players', '/social/block', '/social/unblock',
+                             '/social/clan/identity')):
+            raise ValueError('Player communication is disabled in this version.')
         self.ledger.wallet(account)
         # Shared rules own input validation and all account-derived authorization.
         @firestore.transactional
