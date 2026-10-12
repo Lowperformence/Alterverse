@@ -80,6 +80,8 @@ namespace Alterverse.UI
         }
         public static void ShowHome()
         {
+            // Hide any previous arena camera before exposing the menu's first rendered frame.
+            Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
             instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Home;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
@@ -100,6 +102,7 @@ namespace Alterverse.UI
 
         public static void ShowCoopAfterMatch(string message="")
         {
+            Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
             if(instance==null)new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
             if(instance==null)return;
             instance.visible=true;instance.launching=false;instance.coopLaunching=false;instance.page=Page.Play;
