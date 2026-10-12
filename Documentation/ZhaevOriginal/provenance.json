@@ -1,0 +1,114 @@
+{
+  "generatedAtUTC": "2026-10-12T10:43:15.281743+00:00",
+  "method": "AI-assisted new mathematical geometry from recorded source",
+  "externalCharacterAssetInputs": [],
+  "ownershipCertificate": false,
+  "files": [
+    {
+      "path": "Tools/Zhaev/build.py",
+      "sha256": "d58954bb8d4060450abca4af4d358fc303b062d18987ab44c90b2211f09ba2d7",
+      "bytes": 12440
+    },
+    {
+      "path": "Tools/Zhaev/export_blender.py",
+      "sha256": "e62d88e2ff345b27d7d8bccaaa3c25e07574efdb35f4208b22b807b13a931a95",
+      "bytes": 7303
+    },
+    {
+      "path": "Tools/Zhaev/provenance.py",
+      "sha256": "cb416cfb57816951afd30143fa5b9cff0ca768f7e0596f7434bacceb225aa797",
+      "bytes": 812
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Assembly-exploded.svg",
+      "sha256": "06535870aee442a32c82dd06eee4d78e6fe0c1f1d63583595c2bdf1bf5c73e3c",
+      "bytes": 1005644
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Exploded-armor.svg",
+      "sha256": "e4ba5664be230cbe32afc123f9ba30bc947c4b6eef8ad6d272b29e606e2b518a",
+      "bytes": 134136
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Exploded-clothes.svg",
+      "sha256": "4046a652c269474b442507d6c12235d28b4518834229cad6cd283b8d3f2c0475",
+      "bytes": 787684
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Exploded-head.svg",
+      "sha256": "3301d903aa020ea07d8697d14dce3694290345740dc8707e39ab943292f82a8f",
+      "bytes": 85250
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Exploded-helmet.svg",
+      "sha256": "7a186431432562c7ca93cc3c27aafa667764f1353f5dbedbc6bc4ed54a7d555a",
+      "bytes": 79434
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Exploded-weapon.svg",
+      "sha256": "c3e87e8a59bb1d3bdce2ccb72d4651a57ea53163d813d88ee201d05c4571c866",
+      "bytes": 30946
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Orthographic.svg",
+      "sha256": "ace07520aefc996dd798c01b46292828e1a45dcb8e1bb9a9f090a03db1281f69",
+      "bytes": 3041966
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Veyr.fbx",
+      "sha256": "008d06ada7ed47e9b780604a88825a8e0d29c388dadfc308eb6c6523530f70a8",
+      "bytes": 1570940
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Zhaev.blend",
+      "sha256": "864d783fadd0abe30c5cb9d73f6cdb757677993af28a0f435f48d9c55bc25e7c",
+      "bytes": 231532
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Zhaev.mtl",
+      "sha256": "1dcb7723cf6157ec8ebef8cf7e32f26a1323237fc7ce01da4a09c0578c403d94",
+      "bytes": 432
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/Zhaev.obj",
+      "sha256": "6391b6df64aaed9af2120e13fc9a148bd57079524645ea8657a6d8aa4d8e8125",
+      "bytes": 313699
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/back.png",
+      "sha256": "ea4aeeef3276ff2bf9d059dd225f8a93f044f91bec0be42e07be542d7b3b5733",
+      "bytes": 903741
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/front.png",
+      "sha256": "77281e90f9f3e6afd4abbc18fdd55718fb73c0aaab2b4b19923046fe2097345d",
+      "bytes": 922931
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/geometry-validation.json",
+      "sha256": "96cda27e0834c218ab486b02c21cd1f59022fb9e8fcbedc6374312126984c17b",
+      "bytes": 302
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/native-validation.json",
+      "sha256": "f1a7f74232b05cae654517c57e26ecbcfd1096b7ee9ad6a7f9603be05d6934da",
+      "bytes": 410
+    },
+    {
+      "path": "ArtSource/Heroes/ZhaevOriginal/parts.json",
+      "sha256": "42f51ddeeb21b07fcfaf25132f5458f63710320a09b64cced52f9a0168c2e447",
+      "bytes": 382691
+    },
+    {
+      "path": "Documentation/ZhaevOriginal/README.md",
+      "sha256": "2674510741649192ade46af2f2d5a589ce7b8b909dfe4d65bb0d6d95eb703c44",
+      "bytes": 4704
+    },
+    {
+      "path": "Documentation/ZhaevOriginal/prompts.md",
+      "sha256": "8363e2fe3096bcb10e4235c2692bb5141bff8da0e57f4cb7b4f1a5a43b5bb306",
+      "bytes": 1848
+    }
+  ],
+  "unityAndroidVerified": false
+}

@@ -1,0 +1,24 @@
+{
+  "Blender": "4.5.14 LTS",
+  "fbxReimport": true,
+  "bones": 19,
+  "meshes": [
+    "DF_Anatomy",
+    "DF_WeaponL",
+    "DF_WeaponR"
+  ],
+  "clips": [
+    "Attack",
+    "Death",
+    "Hit",
+    "Idle",
+    "Run",
+    "Skill0",
+    "Skill1",
+    "Skill2",
+    "Ultimate"
+  ],
+  "weightsNormalized": true,
+  "UnityAndroid": "not executed",
+  "status": "native model validated; engine/device acceptance pending"
+}

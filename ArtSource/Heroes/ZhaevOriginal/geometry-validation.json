@@ -1,0 +1,15 @@
+{
+  "parts": 104,
+  "vertices": 5068,
+  "triangles": 9720,
+  "bones": 19,
+  "checks": [
+    "finite vertices",
+    "closed two-face edge incidence per part",
+    "unique part IDs"
+  ],
+  "nativeBlender": "pending",
+  "UnityAndroid": "not executed",
+  "freshGeometry": true,
+  "externalMeshInputs": []
+}
