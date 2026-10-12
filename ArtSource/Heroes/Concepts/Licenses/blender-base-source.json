@@ -1,0 +1,15 @@
+{
+  "declaredSource": "Blender Human Base Meshes 1.4.1",
+  "declarationFile": "Tools/HeroRebuild/README.md",
+  "status": "source notice retrieval pending",
+  "attempts": [
+    {
+      "url": "https://download.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip",
+      "error": "HTTP Error 403: Forbidden"
+    },
+    {
+      "url": "https://mirror.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip",
+      "error": "HTTP Error 403: Forbidden"
+    }
+  ]
+}
