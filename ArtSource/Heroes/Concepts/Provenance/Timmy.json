@@ -73,12 +73,13 @@
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Timmy-model.blend",
     "model": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
-    "modelSha256": "55f536f95a9c83f4df60aabe7f4810c34522721519564e491cfe64b0322542b3"
+    "modelSha256": "b884776beaa108cb97bf940e3dbd1a676bcb6ae865b948f6c84e2bafe75299ca"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification",

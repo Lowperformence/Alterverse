@@ -8173,6 +8173,7 @@
           "material": 2
         }
       ],
+      "visorOpacity": 0.12,
       "weaponDetail": [
         {
           "object": "DF_WeaponL",
@@ -8211,8 +8212,8 @@
             ],
             "dimensionsMm": [
               492.87,
-              529,
-              670
+              529.0,
+              670.0
             ]
           },
           {
@@ -8232,9 +8233,9 @@
               ]
             ],
             "dimensionsMm": [
-              614,
-              538,
-              570
+              614.0,
+              538.0,
+              570.0
             ]
           },
           {
@@ -8254,7 +8255,7 @@
               ]
             ],
             "dimensionsMm": [
-              277,
+              277.0,
               306.78,
               714.37
             ]
@@ -8276,9 +8277,9 @@
               ]
             ],
             "dimensionsMm": [
-              211,
-              290,
-              880
+              211.0,
+              290.0,
+              880.0
             ]
           },
           {
@@ -8298,7 +8299,7 @@
               ]
             ],
             "dimensionsMm": [
-              277,
+              277.0,
               306.78,
               714.37
             ]
@@ -8320,9 +8321,9 @@
               ]
             ],
             "dimensionsMm": [
-              211,
-              290,
-              880
+              211.0,
+              290.0,
+              880.0
             ]
           },
           {
@@ -8342,7 +8343,7 @@
               ]
             ],
             "dimensionsMm": [
-              84,
+              84.0,
               631.99,
               189.98
             ]
@@ -8353,7 +8354,7 @@
             "triangles": 312,
             "boundsBlenderMetres": [
               [
-                -0.39400002,
+                -0.39567238,
                 -0.23009755,
                 0.68911874
               ],
@@ -8364,7 +8365,7 @@
               ]
             ],
             "dimensionsMm": [
-              788,
+              789.67,
               63.09,
               37.45
             ]
@@ -8382,9 +8383,9 @@
         "animationClipsImported": [],
         "vertices": 11224
       },
-      "fbxSha256": "55f536f95a9c83f4df60aabe7f4810c34522721519564e491cfe64b0322542b3",
-      "modelSha256": "55f536f95a9c83f4df60aabe7f4810c34522721519564e491cfe64b0322542b3",
-      "blenderSha256": "2b403e829aed3b6280c6f5c16eb2d9a589535aa35553591b021bfd9bfab4ce24"
+      "fbxSha256": "b884776beaa108cb97bf940e3dbd1a676bcb6ae865b948f6c84e2bafe75299ca",
+      "modelSha256": "b884776beaa108cb97bf940e3dbd1a676bcb6ae865b948f6c84e2bafe75299ca",
+      "blenderSha256": "7d2ad1d74021e0d63f2cbd5183dc4e0af39ef6092096fe00010ee168df1eafa5"
     }
   },
   "validation": {
