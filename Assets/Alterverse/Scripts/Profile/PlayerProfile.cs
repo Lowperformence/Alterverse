@@ -14,16 +14,17 @@ namespace Alterverse.Profile
             {
                 string value=AccountProfilePrefs.GetString(NameKey, "");
                 if (SafeIdentityCatalog.IsPlayerName(value)) return value;
+                // When signed in, wait for the server-assigned name. Never invent
+                // and save a second identity locally for a connected account.
+                if (AccountProfilePrefs.Attached) return "CONNECTING...";
                 value=SafeIdentityCatalog.GeneratePlayerName();
                 AccountProfilePrefs.SetString(NameKey,value); AccountProfilePrefs.Save();
                 return value;
             }
         }
-        public static void RerollName()
-        {
-            AccountProfilePrefs.SetString(NameKey,SafeIdentityCatalog.GeneratePlayerName(PlayerName));
-            AccountProfilePrefs.Save();
-        }
+        // Retained as a compatibility entry point for older callers.
+        // Registered players must keep their original assigned name forever.
+        public static void RerollName() { }
         public static string SanitizeName(string value) => SafeIdentityCatalog.DisplayPlayerName(value);
         public static bool IsValidName(string value) => SafeIdentityCatalog.IsPlayerName(value);
         public static int Avatar

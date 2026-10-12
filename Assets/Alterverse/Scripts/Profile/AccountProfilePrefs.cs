@@ -90,6 +90,13 @@ namespace Alterverse.Profile
             catch (Exception) { }
             Account = account; Revision = revision; HadConflict = false;
             Entry[] source = remote ?? Array.Empty<Entry>();
+            // Cloud identity is authoritative from the very first sign-in.
+            // An old offline cache must never replace the account's assigned name.
+            Entry serverName = null;
+            foreach (Entry entry in source)
+                if (entry != null && entry.key == "DF_PlayerName" && entry.kind == 1 &&
+                    SafeIdentityCatalog.IsPlayerName(entry.text))
+                { serverName = Clone(entry); break; }
             bool pending = cache != null && cache.dirty && cache.profile != null;
             Dirty = pending && cache.revision == revision;
             if (Dirty) source = cache.profile;
@@ -112,7 +119,9 @@ namespace Alterverse.Profile
                 PlayerPrefs.SetString(ImportKey, account);
             }
             values.Clear();
-            foreach (Entry e in source) if (ProfileKey(e.key)) values[e.key] = Clone(e);
+            foreach (Entry e in source) if (e != null && ProfileKey(e.key)) values[e.key] = Clone(e);
+            if (serverName != null) values["DF_PlayerName"] = serverName;
+            else values.Remove("DF_PlayerName"); // Never keep invalid legacy identity text.
             Persist();
         }
         public static void Detach()
@@ -138,8 +147,10 @@ namespace Alterverse.Profile
             foreach (Entry e in submitted ?? Array.Empty<Entry>()) before[e.key] = e;
             var changed = new List<Entry>(); var deleted = new List<string>();
             foreach (Entry e in values.Values)
-                if (!before.TryGetValue(e.key, out Entry old) || !Same(e,old)) changed.Add(Clone(e));
-            foreach (string key in before.Keys) if (!values.ContainsKey(key)) deleted.Add(key);
+                if (e.key != "DF_PlayerName" &&
+                    (!before.TryGetValue(e.key, out Entry old) || !Same(e,old))) changed.Add(Clone(e));
+            foreach (string key in before.Keys)
+                if (key != "DF_PlayerName" && !values.ContainsKey(key)) deleted.Add(key);
             values.Clear();
             foreach (Entry e in remote ?? Array.Empty<Entry>()) if (ProfileKey(e.key)) values[e.key] = Clone(e);
             foreach (Entry e in changed)
@@ -184,10 +195,17 @@ namespace Alterverse.Profile
             values[value.key] = value; Dirty = true; return true;
         }
         public static void SetInt(string key, int value) { if (!Store(new Entry {key=key,kind=0,number=value})) PlayerPrefs.SetInt(DeviceKey(key),value); }
-        public static void SetString(string key, string value) { if (!Store(new Entry {key=key,kind=1,text=value})) PlayerPrefs.SetString(DeviceKey(key),value); }
+        public static void SetString(string key, string value)
+        {
+            // An account's generated identity can only be assigned by the server.
+            if (Attached && key == "DF_PlayerName") return;
+            if (!Store(new Entry {key=key,kind=1,text=value}))
+                PlayerPrefs.SetString(DeviceKey(key),value);
+        }
         public static void SetFloat(string key, float value) { if (!Store(new Entry {key=key,kind=2,real=value})) PlayerPrefs.SetFloat(DeviceKey(key),value); }
         public static void DeleteKey(string key)
         {
+            if (Attached && key == "DF_PlayerName") return;
             if (Attached && ProfileKey(key)) { if (values.Remove(key)) Dirty = true; }
             else PlayerPrefs.DeleteKey(DeviceKey(key));
         }
