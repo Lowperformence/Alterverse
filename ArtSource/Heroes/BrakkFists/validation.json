@@ -1,16 +1,16 @@
 {
-  "revision": "brakk-forge-grip-v2-20261012",
+  "revision": "brakk-forge-grip-v2-hand-fit-20261012",
   "blenderVersion": "4.0.2",
   "sourceSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
   "partsPerHand": 34,
   "hands": {
     "L": {
-      "vertices": 8701,
-      "triangles": 4347
+      "vertices": 8746,
+      "triangles": 4364
     },
     "R": {
-      "vertices": 8701,
-      "triangles": 4347
+      "vertices": 8746,
+      "triangles": 4364
     }
   },
   "sourceActions": [
@@ -29,6 +29,44 @@
   "checks": {
     "finiteGeometryValidIndicesNonzeroTriangles": true,
     "rigidHandWeights": true,
+    "doubleSizeAndPalmFit": {
+      "L": {
+        "previousDimensionsMetres": [
+          0.23566481471061707,
+          0.2350001037120819,
+          0.23200008273124695
+        ],
+        "newDimensionsMetres": [
+          0.4713296592235565,
+          0.4700002670288086,
+          0.46400022506713867
+        ],
+        "ratio": [
+          2.000000126460636,
+          2.0000002536366743,
+          2.0000002569164805
+        ],
+        "palmCentreErrorMetres": 1.1470023034766802e-07
+      },
+      "R": {
+        "previousDimensionsMetres": [
+          0.23566481471061707,
+          0.2350001037120819,
+          0.23200008273124695
+        ],
+        "newDimensionsMetres": [
+          0.4713296592235565,
+          0.4700002670288086,
+          0.46400022506713867
+        ],
+        "ratio": [
+          2.000000126460636,
+          2.0000002536366743,
+          2.0000002569164805
+        ],
+        "palmCentreErrorMetres": 1.1470023034766802e-07
+      }
+    },
     "sourceAnimationAttachmentSamples": 27,
     "legacyGauntletsExcludedFromNewAsset": true,
     "fbxReimport": {
@@ -45,5 +83,5 @@
     },
     "exactLeftRightMirrorAt10MicrometrePrecision": true
   },
-  "runtimeSha256": "b48f8061bf0de63fceac10a9a1984cc4755a554eba15670204baa2440d6d6785"
+  "runtimeSha256": "e8164f97a6e366a972eafd339748aeec9da77c00acc576d5aa3812ea0b22de5a"
 }

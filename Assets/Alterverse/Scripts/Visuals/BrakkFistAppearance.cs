@@ -16,7 +16,7 @@ namespace Alterverse.Visuals
         [Serializable] sealed class Hand
         {
             public string side;
-            public float[] vertices, normals, uv;
+            public float[] vertices, normals, uv, pivot;
             public Submesh[] submeshes;
         }
         [Serializable] sealed class Surface
@@ -36,7 +36,7 @@ namespace Alterverse.Visuals
         readonly List<Mesh> meshes = new List<Mesh>();
         readonly List<Material> materials = new List<Material>();
         readonly List<GameObject> fists = new List<GameObject>();
-        public const string Revision = "brakk-forge-grip-v2-20261012";
+        public const string Revision = "brakk-forge-grip-v2-hand-fit-20261012";
 
         public static void Apply(Transform model, HeroId hero)
         {
@@ -53,12 +53,13 @@ namespace Alterverse.Visuals
             }
             var bones = new Transform[2];
             var toHand = new Matrix4x4[2];
+            var palms = new Vector3[2];
             for (int i = 0; i < 2; i++)
             {
                 string name = "Hand" + data.hands[i].side;
                 foreach (Transform candidate in model.GetComponentsInChildren<Transform>(true))
                     if (candidate.name == name) { bones[i] = candidate; break; }
-                if (bones[i] == null || !TryBindMatrix(model, bones[i], out toHand[i]))
+                if (bones[i] == null || !TryBindMatrix(model, bones[i], out toHand[i], out palms[i]))
                 {
                     Debug.LogError("DF: Forge Grip cannot resolve the bind pose for " + name + ".", model);
                     return;
@@ -79,7 +80,7 @@ namespace Alterverse.Visuals
                     if (glow) material.EnableKeyword("_EMISSION");
                     owner.materials.Add(material);
                 }
-                for (int i = 0; i < 2; i++) owner.CreateHand(data.hands[i], bones[i], toHand[i], model.gameObject.layer);
+                for (int i = 0; i < 2; i++) owner.CreateHand(data.hands[i], bones[i], toHand[i], palms[i], model.gameObject.layer);
                 foreach (Renderer renderer in old)
                 {
                     renderer.enabled = false;
@@ -129,11 +130,13 @@ namespace Alterverse.Visuals
                 if (hand == null || (hand.side != "L" && hand.side != "R") || !sides.Add(hand.side) ||
                     hand.vertices == null || hand.vertices.Length == 0 || hand.vertices.Length % 3 != 0 ||
                     hand.normals == null || hand.normals.Length != hand.vertices.Length || hand.uv == null ||
+                    hand.pivot == null || hand.pivot.Length != 3 ||
                     hand.uv.Length != hand.vertices.Length / 3 * 2 || hand.submeshes == null ||
                     hand.submeshes.Length != data.materials.Length) return false;
                 foreach (float v in hand.vertices) if (!Finite(v)) return false;
                 foreach (float n in hand.normals) if (!Finite(n)) return false;
                 foreach (float uv in hand.uv) if (!Finite(uv)) return false;
+                foreach (float pivot in hand.pivot) if (!Finite(pivot)) return false;
                 int count = hand.vertices.Length / 3;
                 foreach (Submesh submesh in hand.submeshes)
                 {
@@ -145,38 +148,77 @@ namespace Alterverse.Visuals
         }
         static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
 
-        static bool TryBindMatrix(Transform model, Transform hand, out Matrix4x4 toHand)
+        static bool TryBindMatrix(Transform model, Transform hand, out Matrix4x4 toHand, out Vector3 palm)
         {
             toHand = Matrix4x4.identity;
+            palm = Vector3.zero;
             foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
-                if (!skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal) || skin.sharedMesh == null) continue;
+                if (!skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal) || skin.sharedMesh == null || !skin.sharedMesh.isReadable) continue;
                 int index = Array.IndexOf(skin.bones, hand);
                 Matrix4x4[] bind = skin.sharedMesh.bindposes;
                 if (index < 0 || index >= bind.Length) continue;
-                // Use the imported skin's bind transform, not FBX bone-axis assumptions or the current animated pose.
+                // Only the linear bind frame transfers the authored orientation.
+                // The imported anatomy itself supplies the actual palm location.
                 Matrix4x4 handToModel = model.worldToLocalMatrix * skin.transform.localToWorldMatrix * bind[index].inverse;
                 if (Mathf.Abs(handToModel.determinant) < 1e-10f) continue;
+                BoneWeight[] weights = skin.sharedMesh.boneWeights;
+                var baked = new Mesh();
+                bool found = false;
+                Bounds handBounds = default;
+                try
+                {
+                    // Bake after ApplyHandSize so mixed hand/forearm weights and the
+                    // current imported pose are included in the actual visible palm.
+                    skin.BakeMesh(baked);
+                    Vector3[] vertices = baked.vertices;
+                    if (weights.Length != vertices.Length) continue;
+                    var referenced = new bool[vertices.Length];
+                    foreach (int vertex in skin.sharedMesh.triangles) referenced[vertex] = true;
+                    Matrix4x4 bakedToHand = hand.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                    for (int vertex = 0; vertex < vertices.Length; vertex++)
+                    {
+                        if (!referenced[vertex]) continue;
+                        BoneWeight w = weights[vertex];
+                        float influence = (w.boneIndex0 == index ? w.weight0 : 0f) +
+                            (w.boneIndex1 == index ? w.weight1 : 0f) +
+                            (w.boneIndex2 == index ? w.weight2 : 0f) +
+                            (w.boneIndex3 == index ? w.weight3 : 0f);
+                        if (influence <= .5f) continue;
+                        Vector3 point = bakedToHand.MultiplyPoint3x4(vertices[vertex]);
+                        if (!found) { handBounds = new Bounds(point, Vector3.zero); found = true; }
+                        else handBounds.Encapsulate(point);
+                    }
+                }
+                finally { Destroy(baked); }
+                if (!found) continue;
+                palm = handBounds.center;
                 toHand = handToModel.inverse;
                 return true;
             }
             return false;
         }
 
-        void CreateHand(Hand data, Transform hand, Matrix4x4 toHand, int layer)
+        void CreateHand(Hand data, Transform hand, Matrix4x4 toHand, Vector3 palm, int layer)
         {
             int count = data.vertices.Length / 3;
             var points = new Vector3[count];
             var normals = new Vector3[count];
             var uv = new Vector2[count];
+            var pivot = new Vector3(data.pivot[0], data.pivot[1], data.pivot[2]);
             Matrix4x4 normalMatrix = toHand.inverse.transpose;
             for (int i = 0; i < count; i++)
             {
                 int p = i * 3;
-                points[i] = toHand.MultiplyPoint3x4(new Vector3(data.vertices[p], data.vertices[p + 1], data.vertices[p + 2]));
+                // Source-model translation must never move the fist away from the hand.
+                points[i] = toHand.MultiplyVector(new Vector3(data.vertices[p], data.vertices[p + 1], data.vertices[p + 2]) - pivot);
                 normals[i] = normalMatrix.MultiplyVector(new Vector3(data.normals[p], data.normals[p + 1], data.normals[p + 2])).normalized;
                 uv[i] = new Vector2(data.uv[i * 2], data.uv[i * 2 + 1]);
             }
+            var centered = new Bounds(points[0], Vector3.zero);
+            for (int i = 1; i < count; i++) centered.Encapsulate(points[i]);
+            Vector3 shift = palm - centered.center;
+            for (int i = 0; i < count; i++) points[i] += shift;
             var mesh = new Mesh { name = "DF_Brakk_ForgeGripV2_" + data.side,
                 indexFormat = count > 65535 ? IndexFormat.UInt32 : IndexFormat.UInt16 };
             meshes.Add(mesh);

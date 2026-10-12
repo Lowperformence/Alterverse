@@ -2,6 +2,8 @@
 
 Stand: 12.10.2026. Spiel-ID: `HeroId.Rook`. Auftrag: eigene neue Faustpanzer entwerfen, mit Sprengzeichnung in Blender umsetzen und die bisherigen Modelle an beiden Händen ersetzen.
 
+Korrektur nach dem Spiel-Screenshot: Alle drei Abmessungen der neuen Fäuste sind gegenüber dem ersten Forge-Grip-V2-Stand verdoppelt. Der Mittelpunkt jeder Faust wird direkt auf die tatsächliche Handfläche der importierten Anatomie gesetzt. Die Geometrie bleibt am jeweiligen Handknochen befestigt.
+
 Die neuen Fäuste bestehen je Seite aus 34 benannten, geschlossenen Bauteilen: profilierter Graphit-Grundkörper, vier getrennte Knöchelpanzer, vier gefaltete Fingersegmente mit Schutzplatten, Daumenschale mit Gelenk, abgeschrägte Handrückenplatte mit Einlagen, seitliche Halteschienen und Außenschale, kurze offene Manschette und vier versenkte Schrauben. Gold, Graphit und dunkler Stahl bilden die Hauptflächen; zwei eingelassene Kanäle leuchten bernsteinfarben. Links ist die Geometrie der rechten Faust gespiegelt. Gelenke und Hände folgen dem bisherigen Rig.
 
 ## Dateien
@@ -33,7 +35,7 @@ Die neuen Fäuste bestehen je Seite aus 34 benannten, geschlossenen Bauteilen: p
 
 `BrakkFistAppearance.Apply` läuft nach `ApplyHandSize` und `BrakkForearmTrim`, vor der Erfassung der Waffenrenderer in `AuthoredHeroPresentation`. Die neuen zusammengefassten MeshRenderer heißen weiterhin `DF_GauntletL` und `DF_GauntletR`, damit Waffen-Skins und Effekte sie wie bisher erreichen. Die ursprünglichen Renderer werden erst nach erfolgreicher Erstellung beider Ersatzmodelle deaktiviert und in `DF_LegacyGauntletL/R` umbenannt.
 
-Die neue Geometrie wird mit den echten Bind-Matrizen der importierten Anatomie in den jeweiligen Handraum übertragen. Sie benötigt keine geratenen FBX-Knochenachsen und folgt der Handgröße sowie allen bestehenden Handanimationen. Der Ersatz gilt ausschließlich für `HeroId.Rook`. Das gemeinsam verwendete Rook-FBX, Neroks Hände, Anatomie, Animationen und Gameplay-Kollisionskörper werden nicht verändert.
+Die Orientierung wird mit dem linearen Teil der Bind-Matrizen in den jeweiligen Handraum übertragen. Die Position kommt aus den tatsächlich sichtbaren, handgewichteten Vertices der importierten Anatomie. Der alte Versatz der Modellkoordinaten wird dabei verworfen; der neue Mesh-Mittelpunkt liegt auf der Handfläche. Die Faustmaße sind in der Quellgeometrie um Faktor 2 vergrößert, der vorhandene Handfaktor 0,8 bleibt erhalten. Der Ersatz gilt ausschließlich für `HeroId.Rook`. Das gemeinsam verwendete Rook-FBX, Neroks Hände, Anatomie, Animationen und Gameplay-Kollisionskörper werden nicht verändert.
 
 ## Herkunft und Prüfung
 

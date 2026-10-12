@@ -20,10 +20,20 @@ arm=next(o for o in bpy.data.objects if o.type=='ARMATURE')
 arm.data.pose_position='REST';bpy.context.view_layer.update()
 originals={s:bpy.data.objects['DF_Gauntlet'+s] for s in ['L','R']}
 bind={s:arm.matrix_world@arm.data.bones['Hand'+s].matrix_local for s in ['L','R']}
+FIST_SIZE=2.0
+body=bpy.data.objects['DF_Anatomy']
+handGroup=body.vertex_groups['HandR'].index
+handPoints=[bind['R'].inverted()@(body.matrix_world@v.co) for v in body.data.vertices
+            if any(g.group==handGroup and g.weight>.5 for g in v.groups)]
+assert handPoints
+palmR=Vector(tuple((min(p[k] for p in handPoints)+max(p[k] for p in handPoints))*.5 for k in range(3)))
+palms={'R':palmR,'L':Vector((-palmR.x,palmR.y,palmR.z))}
 contract={'sourcePath':'ArtSource/Heroes/Rook.blend','sourceGitBlob':'98629c674d44af3832bfb51cda004d1575c18c14',
           'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),
           'sourceRevision':'954f9cecb201260da40b507f93216f3f91b909d6',
-          'handBindMatrices':{s:[list(r) for r in bind[s]] for s in bind},'runtimeHandScale':.8}
+          'handBindMatrices':{s:[list(r) for r in bind[s]] for s in bind},'runtimeHandScale':.8,
+          'gauntletSizeRelativeToInitialV2':FIST_SIZE,'handPalmLocal':{s:list(palms[s]) for s in palms},
+          'runtimeAttachment':'mesh centre aligned to baked visible anatomy palm in the actual hand space after hand sizing'}
 (ART/'fit-contract.json').write_text(json.dumps(contract,indent=2)+'\n')
 conversion=Matrix(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
 palette=[('Graphite',(.027,.033,.038),.32,.42),('Forge gold',(.82,.56,.18),.78,.29),
@@ -168,10 +178,32 @@ def mesh_data(objects):
             slots[ob['material_slot']]['triangles'].extend(dst)
         part_table.append({'id':ob['part_id'],'group':ob['assembly_group'],'material':ob['material_slot'],
                            'firstVertex':start,'vertexCount':len(vertices)//3-start,'triangles':exportedTriangles})
-    return {'side':objects[0]['side'],'vertices':vertices,'normals':normals,'uv':uv,'submeshes':slots,'parts':part_table}
+    side=objects[0]['side'];pivot=conversion@(bind[side]@palms[side])
+    return {'side':side,'vertices':vertices,'normals':normals,'uv':uv,'pivot':list(pivot),'submeshes':slots,'parts':part_table}
 
+# Double all three dimensions about the fist centre and seat that centre on the palm.
+# This removes the initial source-model offset instead of scaling it along with the fist.
+sizeChecks={}
+for side in ['L','R']:
+    objects=[o for o in parts if o['side']==side];inverse=bind[side].inverted()
+    before=[inverse@v.co for ob in objects for v in ob.data.vertices]
+    low=Vector(tuple(min(p[k] for p in before) for k in range(3)))
+    high=Vector(tuple(max(p[k] for p in before) for k in range(3)))
+    center=(low+high)*.5;oldSize=high-low
+    for ob in objects:
+        for v in ob.data.vertices:v.co=bind[side]@(palms[side]+FIST_SIZE*(inverse@v.co-center))
+        ob.data.update()
+    after=[inverse@v.co for ob in objects for v in ob.data.vertices]
+    newLow=Vector(tuple(min(p[k] for p in after) for k in range(3)))
+    newHigh=Vector(tuple(max(p[k] for p in after) for k in range(3)))
+    newSize=newHigh-newLow
+    assert (newSize-oldSize*FIST_SIZE).length<2e-6
+    assert ((newLow+newHigh)*.5-palms[side]).length<1e-6
+    sizeChecks[side]={'previousDimensionsMetres':list(oldSize),'newDimensionsMetres':list(newSize),
+                      'ratio':[newSize[k]/oldSize[k] for k in range(3)],'palmCentreErrorMetres':((newLow+newHigh)*.5-palms[side]).length}
 hands=[mesh_data([o for o in parts if o['side']==side]) for side in ['L','R']]
-data={'version':1,'revision':'brakk-forge-grip-v2-20261012','coordinateSpace':'authored-model-metres',
+data={'version':1,'revision':'brakk-forge-grip-v2-hand-fit-20261012','coordinateSpace':'authored-model-metres',
+      'sizeRelativeToInitialV2':FIST_SIZE,
       'hands':hands,'materials':[{'name':x[0],'color':list(x[1]),'metallic':x[2],'smoothness':1-x[3]} for x in palette]}
 raw=json.dumps(data,separators=(',',':')).encode();(RES/'Model.bytes').write_bytes(gzip.compress(raw,mtime=0))
 localBounds={}
@@ -208,6 +240,7 @@ for h in hands:
         assert all(len(v.groups)==1 and abs(v.groups[0].weight-1)<1e-6 for v in ob.data.vertices)
 report['checks']['finiteGeometryValidIndicesNonzeroTriangles']=True
 report['checks']['rigidHandWeights']=True
+report['checks']['doubleSizeAndPalmFit']=sizeChecks
 samples=0;arm.data.pose_position='POSE'
 for action in bpy.data.actions:
     arm.animation_data.action=action
@@ -270,15 +303,15 @@ for ob in parts:
     for v in ob.data.vertices:v.co=bind['R'].inverted()@v.co
 scene.world.color=(.24,.24,.24)
 def aim(ob,p):ob.rotation_euler=(Vector(p)-ob.location).to_track_quat('-Z','Y').to_euler()
-bpy.ops.object.camera_add(location=(.43,.57,.38));cam=bpy.context.object;aim(cam,(0,.09,-.035));cam.data.type='ORTHO';cam.data.ortho_scale=.47;scene.camera=cam
+bpy.ops.object.camera_add(location=(.43,.57,.38));cam=bpy.context.object;aim(cam,(0,.09,-.035));cam.data.type='ORTHO';cam.data.ortho_scale=.47*FIST_SIZE;scene.camera=cam
 for name,loc,energy,size in [('Key',(.2,.2,.6),16,.42),('Fill',(-.3,.1,.3),10,.36),('Rim',(.2,-.3,.2),12,.30)]:
     bpy.ops.object.light_add(type='AREA',location=loc);light=bpy.context.object;light.name=name;light.data.energy=energy;light.data.shape='DISK';light.data.size=size;aim(light,(0,.09,-.03))
 scene.render.resolution_x=1100;scene.render.resolution_y=1000
 scene.render.filepath=str(ART/'BrakkFists-assembled.png');bpy.ops.render.render(write_still=True)
 shifts={'core':(0,0,0),'wrist':(0,-.14,0),'dorsal':(0,0,.115),'knuckles':(0,.115,0),
         'fingers':(0,0,-.09),'thumb':(-.125,0,0),'rails':(.125,0,0),'hardware':(0,0,.20)}
-for ob in right:ob.location=Vector(shifts[ob['assembly_group']])
-cam.location=(.65,.80,.63);aim(cam,(0,.08,.006));cam.data.ortho_scale=.79
+for ob in right:ob.location=Vector(shifts[ob['assembly_group']])*FIST_SIZE
+cam.location=(.65,.80,.63);aim(cam,(0,.08,.006));cam.data.ortho_scale=.79*FIST_SIZE
 scene.render.filepath=str(ART/'BrakkFists-exploded.png');bpy.ops.render.render(write_still=True)
 for ob in list(parts):
     if ob['side']=='L':bpy.data.objects.remove(ob,do_unlink=True)

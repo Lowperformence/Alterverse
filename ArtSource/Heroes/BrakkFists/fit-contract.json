@@ -57,5 +57,19 @@
       ]
     ]
   },
-  "runtimeHandScale": 0.8
+  "runtimeHandScale": 0.8,
+  "gauntletSizeRelativeToInitialV2": 2.0,
+  "handPalmLocal": {
+    "R": [
+      -0.01649998128414154,
+      0.07744066417217255,
+      -0.04529295116662979
+    ],
+    "L": [
+      0.01649998128414154,
+      0.07744066417217255,
+      -0.04529295116662979
+    ]
+  },
+  "runtimeAttachment": "mesh centre aligned to baked visible anatomy palm in the actual hand space after hand sizing"
 }

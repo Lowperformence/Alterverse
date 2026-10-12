@@ -8,6 +8,7 @@ ART=ROOT/'ArtSource/Heroes/BrakkFists'
 d=json.loads(gzip.decompress((ROOT/'Assets/Alterverse/Resources/BrakkFists/Model.bytes').read_bytes()))
 fit=json.loads((ART/'fit-contract.json').read_text())
 h=next(h for h in d['hands'] if h['side']=='R')
+sizeFactor=d.get('sizeRelativeToInitialV2',1.0)
 v=np.array(h['vertices']).reshape(-1,3)
 # Convert Unity model axes back to native Blender, then to the actual wrist frame.
 C=np.array([[1,0,0],[0,0,-1],[0,1,0]])
@@ -49,7 +50,7 @@ def draw(points,axes,center,scale):
         out.append(f'<polygon points="{poly}" fill="rgb{color}" stroke="rgb{color}" stroke-width=".35"/>')
     return projected
 exploded=v.copy()
-for group,indices in groups.items():exploded[indices]+=np.array(shifts[group])
+for group,indices in groups.items():exploded[indices]+=np.array(shifts[group])*sizeFactor
 projected=project(exploded,iso)[:,:2]
 span=projected.max(0)-projected.min(0)
 explScale=min(900/span[0],455/span[1])
@@ -69,10 +70,11 @@ views=[('HANDRUECKEN',np.array([[1,0,0],[0,-1,0],[0,0,-1]]),(270,944)),
        ('FAUSTFRONT',np.array([[-1,0,0],[0,0,-1],[0,-1,0]]),(1250,944))]
 for name,axes,center in views:
     p=project(v,axes);mid=(p[:,:2].min(0)+p[:,:2].max(0))/2
-    adjusted=(center[0]-mid[0]*850,center[1]-mid[1]*850)
-    draw(v,axes,adjusted,850)
+    viewScale=850/sizeFactor
+    adjusted=(center[0]-mid[0]*viewScale,center[1]-mid[1]*viewScale)
+    draw(v,axes,adjusted,viewScale)
     text(center[0]-120,803,name,'section')
-    low=p[:,:2].min(0)*850+adjusted;high=p[:,:2].max(0)*850+adjusted
+    low=p[:,:2].min(0)*viewScale+adjusted;high=p[:,:2].max(0)*viewScale+adjusted
     yy=high[1]+28
     out.append(f'<path class="dim" d="M{low[0]},{high[1]+7} V{yy+8} M{high[0]},{high[1]+7} V{yy+8} M{low[0]},{yy} H{high[0]}"/>')
     text((low[0]+high[0])/2-35,yy-5,f'{(p[:,0].max()-p[:,0].min())*1000:.1f} mm','small')

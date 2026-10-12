@@ -1,5 +1,5 @@
 {
-  "revision": "brakk-forge-grip-v2-20261012",
+  "revision": "brakk-forge-grip-v2-hand-fit-20261012",
   "hands": [
     {
       "side": "L",
@@ -41,14 +41,14 @@
           "group": "dorsal",
           "material": 2,
           "firstVertex": 2212,
-          "vertexCount": 354,
-          "triangles": 180
+          "vertexCount": 390,
+          "triangles": 194
         },
         {
           "id": "06_knuckle_1",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 2566,
+          "firstVertex": 2602,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -56,7 +56,7 @@
           "id": "07_knuckle_inset_1",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 2782,
+          "firstVertex": 2818,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -64,7 +64,7 @@
           "id": "08_folded_finger_1",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 2998,
+          "firstVertex": 3034,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -72,7 +72,7 @@
           "id": "09_finger_guard_1",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 3214,
+          "firstVertex": 3250,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -80,7 +80,7 @@
           "id": "06_knuckle_2",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 3430,
+          "firstVertex": 3466,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -88,7 +88,7 @@
           "id": "07_knuckle_inset_2",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 3646,
+          "firstVertex": 3682,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -96,7 +96,7 @@
           "id": "08_folded_finger_2",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 3862,
+          "firstVertex": 3898,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -104,7 +104,7 @@
           "id": "09_finger_guard_2",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 4078,
+          "firstVertex": 4114,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -112,7 +112,7 @@
           "id": "06_knuckle_3",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 4294,
+          "firstVertex": 4330,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -120,7 +120,7 @@
           "id": "07_knuckle_inset_3",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 4510,
+          "firstVertex": 4546,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -128,7 +128,7 @@
           "id": "08_folded_finger_3",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 4726,
+          "firstVertex": 4762,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -136,7 +136,7 @@
           "id": "09_finger_guard_3",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 4942,
+          "firstVertex": 4978,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -144,7 +144,7 @@
           "id": "06_knuckle_4",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 5158,
+          "firstVertex": 5194,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -152,7 +152,7 @@
           "id": "07_knuckle_inset_4",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 5374,
+          "firstVertex": 5410,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -160,7 +160,7 @@
           "id": "08_folded_finger_4",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 5590,
+          "firstVertex": 5626,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -168,7 +168,7 @@
           "id": "09_finger_guard_4",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 5806,
+          "firstVertex": 5842,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -176,7 +176,7 @@
           "id": "10_thumb_core",
           "group": "thumb",
           "material": 0,
-          "firstVertex": 6022,
+          "firstVertex": 6058,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -184,7 +184,7 @@
           "id": "11_thumb_guard",
           "group": "thumb",
           "material": 1,
-          "firstVertex": 6238,
+          "firstVertex": 6274,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -192,7 +192,7 @@
           "id": "12_thumb_joint",
           "group": "thumb",
           "material": 2,
-          "firstVertex": 6454,
+          "firstVertex": 6490,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -200,7 +200,7 @@
           "id": "13_retaining_rail_-1",
           "group": "rails",
           "material": 2,
-          "firstVertex": 6670,
+          "firstVertex": 6706,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -208,7 +208,7 @@
           "id": "14_recessed_amber_-1",
           "group": "dorsal",
           "material": 3,
-          "firstVertex": 6886,
+          "firstVertex": 6922,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -216,7 +216,7 @@
           "id": "13_retaining_rail_1",
           "group": "rails",
           "material": 2,
-          "firstVertex": 7102,
+          "firstVertex": 7138,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -224,7 +224,7 @@
           "id": "14_recessed_amber_1",
           "group": "dorsal",
           "material": 3,
-          "firstVertex": 7318,
+          "firstVertex": 7354,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -232,7 +232,7 @@
           "id": "15_flush_bolt_1",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7534,
+          "firstVertex": 7570,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -240,7 +240,7 @@
           "id": "15_flush_bolt_2",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7678,
+          "firstVertex": 7714,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -248,7 +248,7 @@
           "id": "15_flush_bolt_3",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7822,
+          "firstVertex": 7858,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -256,7 +256,7 @@
           "id": "15_flush_bolt_4",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7966,
+          "firstVertex": 8002,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -264,7 +264,7 @@
           "id": "16_outer_wrap_shell",
           "group": "rails",
           "material": 1,
-          "firstVertex": 8110,
+          "firstVertex": 8146,
           "vertexCount": 324,
           "triangles": 164
         },
@@ -272,9 +272,9 @@
           "id": "17_outer_recess",
           "group": "rails",
           "material": 2,
-          "firstVertex": 8434,
-          "vertexCount": 267,
-          "triangles": 133
+          "firstVertex": 8470,
+          "vertexCount": 276,
+          "triangles": 136
         }
       ]
     },
@@ -318,14 +318,14 @@
           "group": "dorsal",
           "material": 2,
           "firstVertex": 2212,
-          "vertexCount": 354,
-          "triangles": 180
+          "vertexCount": 390,
+          "triangles": 194
         },
         {
           "id": "06_knuckle_1",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 2566,
+          "firstVertex": 2602,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -333,7 +333,7 @@
           "id": "07_knuckle_inset_1",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 2782,
+          "firstVertex": 2818,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -341,7 +341,7 @@
           "id": "08_folded_finger_1",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 2998,
+          "firstVertex": 3034,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -349,7 +349,7 @@
           "id": "09_finger_guard_1",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 3214,
+          "firstVertex": 3250,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -357,7 +357,7 @@
           "id": "06_knuckle_2",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 3430,
+          "firstVertex": 3466,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -365,7 +365,7 @@
           "id": "07_knuckle_inset_2",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 3646,
+          "firstVertex": 3682,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -373,7 +373,7 @@
           "id": "08_folded_finger_2",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 3862,
+          "firstVertex": 3898,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -381,7 +381,7 @@
           "id": "09_finger_guard_2",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 4078,
+          "firstVertex": 4114,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -389,7 +389,7 @@
           "id": "06_knuckle_3",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 4294,
+          "firstVertex": 4330,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -397,7 +397,7 @@
           "id": "07_knuckle_inset_3",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 4510,
+          "firstVertex": 4546,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -405,7 +405,7 @@
           "id": "08_folded_finger_3",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 4726,
+          "firstVertex": 4762,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -413,7 +413,7 @@
           "id": "09_finger_guard_3",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 4942,
+          "firstVertex": 4978,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -421,7 +421,7 @@
           "id": "06_knuckle_4",
           "group": "knuckles",
           "material": 1,
-          "firstVertex": 5158,
+          "firstVertex": 5194,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -429,7 +429,7 @@
           "id": "07_knuckle_inset_4",
           "group": "knuckles",
           "material": 2,
-          "firstVertex": 5374,
+          "firstVertex": 5410,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -437,7 +437,7 @@
           "id": "08_folded_finger_4",
           "group": "fingers",
           "material": 0,
-          "firstVertex": 5590,
+          "firstVertex": 5626,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -445,7 +445,7 @@
           "id": "09_finger_guard_4",
           "group": "fingers",
           "material": 1,
-          "firstVertex": 5806,
+          "firstVertex": 5842,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -453,7 +453,7 @@
           "id": "10_thumb_core",
           "group": "thumb",
           "material": 0,
-          "firstVertex": 6022,
+          "firstVertex": 6058,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -461,7 +461,7 @@
           "id": "11_thumb_guard",
           "group": "thumb",
           "material": 1,
-          "firstVertex": 6238,
+          "firstVertex": 6274,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -469,7 +469,7 @@
           "id": "12_thumb_joint",
           "group": "thumb",
           "material": 2,
-          "firstVertex": 6454,
+          "firstVertex": 6490,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -477,7 +477,7 @@
           "id": "13_retaining_rail_-1",
           "group": "rails",
           "material": 2,
-          "firstVertex": 6670,
+          "firstVertex": 6706,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -485,7 +485,7 @@
           "id": "14_recessed_amber_-1",
           "group": "dorsal",
           "material": 3,
-          "firstVertex": 6886,
+          "firstVertex": 6922,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -493,7 +493,7 @@
           "id": "13_retaining_rail_1",
           "group": "rails",
           "material": 2,
-          "firstVertex": 7102,
+          "firstVertex": 7138,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -501,7 +501,7 @@
           "id": "14_recessed_amber_1",
           "group": "dorsal",
           "material": 3,
-          "firstVertex": 7318,
+          "firstVertex": 7354,
           "vertexCount": 216,
           "triangles": 108
         },
@@ -509,7 +509,7 @@
           "id": "15_flush_bolt_1",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7534,
+          "firstVertex": 7570,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -517,7 +517,7 @@
           "id": "15_flush_bolt_2",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7678,
+          "firstVertex": 7714,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -525,7 +525,7 @@
           "id": "15_flush_bolt_3",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7822,
+          "firstVertex": 7858,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -533,7 +533,7 @@
           "id": "15_flush_bolt_4",
           "group": "hardware",
           "material": 2,
-          "firstVertex": 7966,
+          "firstVertex": 8002,
           "vertexCount": 144,
           "triangles": 68
         },
@@ -541,7 +541,7 @@
           "id": "16_outer_wrap_shell",
           "group": "rails",
           "material": 1,
-          "firstVertex": 8110,
+          "firstVertex": 8146,
           "vertexCount": 324,
           "triangles": 164
         },
@@ -549,9 +549,9 @@
           "id": "17_outer_recess",
           "group": "rails",
           "material": 2,
-          "firstVertex": 8434,
-          "vertexCount": 267,
-          "triangles": 133
+          "firstVertex": 8470,
+          "vertexCount": 276,
+          "triangles": 136
         }
       ]
     }
@@ -559,26 +559,26 @@
   "dimensionsLocalMetres": {
     "L": {
       "min": [
-        -0.09200003743171692,
-        -0.019000206142663956,
-        -0.16250000894069672
+        -0.2191648781299591,
+        -0.1575595736503601,
+        -0.27729302644729614
       ],
       "max": [
-        0.14366477727890015,
-        0.21599990129470825,
-        0.06950006633996964
+        0.2521647810935974,
+        0.3124406933784485,
+        0.18670719861984253
       ]
     },
     "R": {
       "min": [
-        -0.14366477727890015,
-        -0.019000206142663956,
-        -0.16250000894069672
+        -0.2521647810935974,
+        -0.1575595736503601,
+        -0.27729302644729614
       ],
       "max": [
-        0.09200003743171692,
-        0.21599990129470825,
-        0.06950006633996964
+        0.2191648781299591,
+        0.3124406933784485,
+        0.18670719861984253
       ]
     }
   }

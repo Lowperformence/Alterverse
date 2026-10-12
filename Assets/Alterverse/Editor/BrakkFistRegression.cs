@@ -48,6 +48,8 @@ namespace Alterverse.EditorTools
                     Require(mesh.vertexCount > 0 && mesh.subMeshCount == 5, "Fist mesh is empty.");
                     Require(mesh.vertices.All(v => Finite(v.x) && Finite(v.y) && Finite(v.z)), "Non-finite geometry.");
                     Transform hand = fist.transform.parent;
+                    Require(Vector3.Distance(mesh.bounds.center, BakedPalm(brak.transform, hand)) < .0002f,
+                        "Fist is offset from the actual imported hand.");
                     Quaternion rotation = hand.localRotation;
                     Vector3 contact = mesh.bounds.center;
                     hand.localRotation *= Quaternion.Euler(21f, -16f, 8f);
@@ -75,6 +77,42 @@ namespace Alterverse.EditorTools
         static void Require(bool condition, string message)
         { if (!condition) throw new InvalidOperationException("Brakk Forge Grip: " + message); }
         static bool Finite(float value) => !float.IsNaN(value) && !float.IsInfinity(value);
+        // Independent check against Unity's baked skin, rather than the authored mesh origin.
+        static Vector3 BakedPalm(Transform model, Transform hand)
+        {
+            foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                if (!skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal) || skin.sharedMesh == null) continue;
+                int bone = Array.IndexOf(skin.bones, hand);
+                if (bone < 0) continue;
+                var baked = new Mesh();
+                try
+                {
+                    skin.BakeMesh(baked);
+                    Vector3[] vertices = baked.vertices;
+                    BoneWeight[] weights = skin.sharedMesh.boneWeights;
+                    var referenced = new bool[vertices.Length];
+                    foreach (int vertex in skin.sharedMesh.triangles) referenced[vertex] = true;
+                    Matrix4x4 toHand = hand.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                    Bounds bounds = default;
+                    bool found = false;
+                    for (int i = 0; i < vertices.Length; i++)
+                    {
+                        if (!referenced[i]) continue;
+                        BoneWeight w = weights[i];
+                        float weight = (w.boneIndex0 == bone ? w.weight0 : 0f) + (w.boneIndex1 == bone ? w.weight1 : 0f) +
+                            (w.boneIndex2 == bone ? w.weight2 : 0f) + (w.boneIndex3 == bone ? w.weight3 : 0f);
+                        if (weight <= .5f) continue;
+                        Vector3 point = toHand.MultiplyPoint3x4(vertices[i]);
+                        if (!found) { bounds = new Bounds(point, Vector3.zero); found = true; }
+                        else bounds.Encapsulate(point);
+                    }
+                    if (found) return bounds.center;
+                }
+                finally { UnityEngine.Object.DestroyImmediate(baked); }
+            }
+            throw new InvalidOperationException("Brakk Forge Grip: could not locate the actual baked palm.");
+        }
     }
 }
 #endif
