@@ -1,8 +1,8 @@
-name: Sequential hero component optimization
+name: Hero component optimization (Auren and Tahla excluded)
 on:
   push:
     branches: ['art/hero-parts-redesign-20261011']
-    paths: ['Tools/HeroConcepts/build_models.py', 'Tools/HeroConcepts/part_optimization.py', '.github/workflows/hero-concept-authoring.yml']
+    paths: ['Tools/HeroConcepts/build_models.py', 'Tools/HeroConcepts/part_optimization.py']
 permissions:
   contents: write
 concurrency:
@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          for hero in Sivra Ione Tahla Nerok Zhaev Auren Brakk Traveler Timmy; do
+          for hero in Sivra Ione Nerok Zhaev Brakk Traveler Timmy; do
             python Tools/HeroConcepts/build_models.py --hero "$hero"
             git add Assets/Alterverse/Resources ArtSource/Heroes Docs/HeroProvenanceStatus.md
             if ! git diff --cached --quiet; then

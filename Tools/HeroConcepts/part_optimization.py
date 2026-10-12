@@ -29,7 +29,8 @@ def optimize_parts(label,p,names,anchors,vertices,bones,groups=None):
             z=face_z(c[0],c[1],name)
             # Leaf profiles match Tahla; industrial stepped faces match the mechanical heroes.
             outline=[(upper[0]-width*.55,upper[1]),(upper[0]+width*.55,upper[1]),(c[0]+width,c[1]+length*.09),(lower[0]+width*.55,lower[1]),(lower[0]-width*.55,lower[1]),(c[0]-width,c[1]+length*.09)]
-            p.plate(label+' '+name+' separate formed guard',outline,z,.008,shell,bone)
+            guard_material=0 if label=='Nerok' and segment!='Thigh' else shell
+            p.plate(label+' '+name+' separate formed guard',outline,z,.008,guard_material,bone)
             p.plate(label+' '+name+' inset service panel',[(c[0]-width*.38,c[1]+length*.15),(c[0]+width*.38,c[1]+length*.15),(c[0]+width*.34,c[1]-length*.13),(c[0]-width*.34,c[1]-length*.13)],z+.009,.004,dark,bone)
             p.tube(label+' '+name+' protected luminous channel',[[c[0],c[1]+length*.12,z+.015],[c[0],c[1]-length*.10,z+.015]],.0015,light,bone,6)
             for dx in [-width*.62,width*.62]:bolt(label+' '+name,[c[0]+dx,c[1],z+.014],bone)
@@ -65,22 +66,25 @@ def category(bone):
     if bone=='Tail':return 'Tail'
     return 'Torso_Armor'
 
-def optimize_weapon_parts(label,p,names,vertices,bones,groups):
-    """Fit collars, service panels and protected channels to existing weapon bounds."""
-    v=np.asarray(vertices).reshape(-1,3);bi=np.asarray(bones);groups=np.asarray(groups);p.weapon_ranges=[]
+def optimize_weapon_parts(label,p,names,vertices,bones,groups,faces):
+    """Place shallow fittings INSIDE actual surface triangles, never on bounding-box planes."""
+    v=np.asarray(vertices).reshape(-1,3);bi=np.asarray(bones);groups=np.asarray(groups);faces=np.asarray(faces).reshape(-1,3);p.weapon_ranges=[]
     metal=4 if label=='Nerok' else 2;light=3
     for group in sorted(set(groups)-{0}):
-        ids=np.flatnonzero(groups==group);q=v[ids]
-        if len(q)<8:continue
-        bone=int(np.bincount(bi[ids]).argmax());lo=q.min(0);hi=q.max(0);c=(lo+hi)*.5;span=hi-lo;axis=int(span.argmax());others=[i for i in range(3) if i!=axis]
-        # Hardware stays within the existing silhouette plus a shallow surface offset.
-        for j,t in enumerate([.36,.48,.60]):
-            pos=c.copy();pos[axis]=lo[axis]+span[axis]*t;pos[others[1]]=hi[others[1]]+.004
-            start=pos.copy();end=pos.copy();start[others[0]]-=span[others[0]]*.20;end[others[0]]+=span[others[0]]*.20
-            first=len(p.v);p.tube(label+' weapon recessed service rib '+str(group)+'-'+str(j),[start,end],.002,metal,bone,6);p.weapon_ranges.append((first,len(p.v),int(group)))
-            if j==1:
-                a=pos.copy();b=pos.copy();a[axis]-=span[axis]*.08;b[axis]+=span[axis]*.08;a[others[1]]+=.004;b[others[1]]+=.004
-                first=len(p.v);p.tube(label+' weapon protected energy rail '+str(group),[a,b],.0015,light,bone,6);p.weapon_ranges.append((first,len(p.v),int(group)))
+        selected=faces[(groups[faces]==group).all(1)]
+        if not len(selected):continue
+        tri=v[selected];cross=np.cross(tri[:,1]-tri[:,0],tri[:,2]-tri[:,0]);area=np.linalg.norm(cross,axis=1)
+        order=np.argsort(area)[::-1];used=[]
+        for i in order:
+            if area[i]<.0001:break
+            center=tri[i].mean(0)
+            if any(np.linalg.norm(center-c)<.045 for c in used):continue
+            used.append(center);normal=cross[i]/area[i];bone=int(np.bincount(bi[selected[i]]).argmax())
+            edge=tri[i,1]-tri[i,0];edge/=max(np.linalg.norm(edge),1e-9)
+            radius=min(.014,math.sqrt(area[i])*.07)
+            a=center-edge*radius+normal*.0018;b=center+edge*radius+normal*.0018
+            first=len(p.v);p.tube(label+' weapon seated surface fitting '+str(group)+'-'+str(len(used)),[a,b],.0012,metal if len(used)!=2 else light,bone,6);p.weapon_ranges.append((first,len(p.v),int(group)))
+            if len(used)==3:break
 
 def optimize_native_weapons(label,arm):
     import bpy
@@ -91,7 +95,8 @@ def optimize_native_weapons(label,arm):
         if weapon.type!='MESH' or not weapon.name.startswith('DF_Weapon'):continue
         v=np.array([tuple(a.co) for a in weapon.data.vertices]);p=Parts();names=[g.name for g in weapon.vertex_groups]
         dominant=max(((sum(g.weight for a in weapon.data.vertices for g in a.groups if g.group==i),i) for i in range(len(names))),default=(0,0))[1]
-        optimize_weapon_parts(label,p,['Weapon'],v,[0]*len(v),[1]*len(v))
+        weapon.data.calc_loop_triangles();faces=[list(t.vertices) for t in weapon.data.loop_triangles]
+        optimize_weapon_parts(label,p,['Weapon'],v,[0]*len(v),[1]*len(v),faces)
         if not p.v:continue
         palette=[(.025,.035,.05),(.15,.18,.20),(.5,.55,.56),(.02,.65,.36),(.48,.29,.12)]
         if label=='Zhaev':palette[3]=(.54,.075,.83)

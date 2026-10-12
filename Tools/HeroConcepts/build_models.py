@@ -171,7 +171,7 @@ def runtime_parts(label,data):
                 center=a+(w-a)*t;p.ring('three leather cuff bands '+side,center,.099-.012*t,.006,0,fore,axis,32)
                 p.ring('cuff brass stitch edge '+side,center+[0,-.006,.0],.101-.012*t,.0011,4,fore,axis,32)
     optimize_parts(label,p,names,anchors,v,bi,groups)
-    optimize_weapon_parts(label,p,names,v,bi,groups)
+    optimize_weapon_parts(label,p,names,v,bi,groups,[f for sub in data['submeshes'] for f in np.asarray(sub['triangles']).reshape(-1,3)])
     return p,remove
 
 def forward_ione(data):
@@ -358,6 +358,14 @@ def native_source(label,hero,source):
     for name,pos in sockets.items():assert np.allclose(bpy.data.objects[name].matrix_world.translation,pos,atol=1e-7),name
     body['concept_revision']=REVISION;obj_source(ART/(label+'-new-parts.obj'),p,[f'{label}_surface_{i}' for i in range(len(colors))],colors)
     REPORT['models'][label]={'source':source,'shippingModel':f'Assets/Alterverse/Resources/AuthoredHeroes/{hero}.fbx','removedComponents':removed,'preservedVertices':len(preserved),'preservedPositionsExact':True,'rigExact':True,'originalActionsExact':list(actions),'socketsExact':True,'newVertices':len(p.v),'newTriangles':len(p.f),'newParts':p.parts}
+    if label=='Timmy':
+        for mat in body.data.materials:
+            if mat and ('visor' in mat.name.lower() or 'glass' in mat.name.lower()):
+                mat.diffuse_color=(*mat.diffuse_color[:3],.14)
+                if mat.use_nodes:
+                    bsdf=mat.node_tree.nodes.get('Principled BSDF')
+                    if bsdf:
+                        bsdf.inputs['Alpha'].default_value=.14;bsdf.inputs['Roughness'].default_value=.06;bsdf.inputs['Transmission Weight'].default_value=.80;bsdf.inputs['IOR'].default_value=1.15
     REPORT['models'][label]['weaponDetail']=optimize_native_weapons(label,arm)
     export_fbx(RESOURCE/'AuthoredHeroes'/(hero+'.fbx'),arm,bool(actions));bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/source),compress=True)
     for o in bpy.data.objects:
