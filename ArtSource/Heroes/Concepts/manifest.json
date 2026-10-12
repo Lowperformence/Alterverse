@@ -19,7 +19,10 @@
       "2026-10-12T06:37:22.137718545Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Ione Vaska",
@@ -40,10 +43,13 @@
       "2026-10-12T07:13:23.217354668Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending",
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
     "revision_reason": "User clarified forward weapon request refers to Ione. Weapon now points horizontally forward.",
     "previous_concept": "ArtSource/Heroes/Concepts/Archive/Ione-weapon-up-draft-20261012.png",
-    "gitBlob": "c5e3dbd5d4dfa6d0477b716b6b375afe8193b548"
+    "gitBlob": "c5e3dbd5d4dfa6d0477b716b6b375afe8193b548",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Tahla Venn",
@@ -65,7 +71,10 @@
       "2026-10-12T06:26:52.181729062Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Nerok Abyss",
@@ -87,7 +96,10 @@
       "2026-10-12T06:27:41.603462573Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Zhaev Null",
@@ -109,7 +121,10 @@
       "2026-10-12T06:34:02.120807048Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Auren Kest",
@@ -131,7 +146,10 @@
       "2026-10-12T06:34:55.298567165Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Brakk Orun",
@@ -153,7 +171,10 @@
       "2026-10-12T06:35:34.170974684Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "THE TRAVELER",
@@ -175,7 +196,10 @@
       "2026-10-12T06:36:15.394636177Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   },
   {
     "hero": "Andromeda Timmy",
@@ -197,6 +221,9 @@
       "2026-10-12T06:36:42.373870156Z"
     ],
     "c2pa_signature_validation": "not performed",
-    "status": "concept created; model implementation pending"
+    "status": "3D model revised on retained basic forms; Blender/FBX checks passed; Unity/device check pending",
+    "model_revision": "nine-hero-concepts-20261012-v2",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+    "validation_report": "ArtSource/Heroes/ConceptModels/validation-report.json"
   }
 ]
