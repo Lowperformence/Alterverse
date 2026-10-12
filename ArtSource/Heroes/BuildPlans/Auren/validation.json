@@ -1,0 +1,1387 @@
+{
+  "revision": "hero-component-plans-20261012-v3",
+  "hero": "Auren",
+  "checks": {
+    "preservedVertices": 26213,
+    "removedVertices": 96,
+    "newVertices": 6386,
+    "newTriangles": 11852,
+    "newParts": [
+      {
+        "name": "segmented sunburst shield boss",
+        "first": 0,
+        "vertices": 482,
+        "triangles": 960,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "shield sunburst inner ring",
+        "first": 482,
+        "vertices": 296,
+        "triangles": 576,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 778,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 794,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 810,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 826,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 842,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 858,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 874,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 890,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 906,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 922,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 938,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "twelve segmented sunburst rays",
+        "first": 954,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 970,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 983,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 996,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1009,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1022,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "scalloped bronze shin ridge",
+        "first": 1035,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1051,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 8,
+        "material": 4
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1067,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 8,
+        "material": 4
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1083,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 8,
+        "material": 4
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1099,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1112,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1125,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1138,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "amber chest vent rail",
+        "first": 1151,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "scalloped bronze shin ridge",
+        "first": 1164,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1180,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 15,
+        "material": 4
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1196,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 15,
+        "material": 4
+      },
+      {
+        "name": "shin industrial machined joint",
+        "first": 1212,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 15,
+        "material": 4
+      },
+      {
+        "name": "three overlapping shoulder lames L0",
+        "first": 1228,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L0",
+        "first": 1415,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1591,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 1643,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames L1",
+        "first": 1695,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L1",
+        "first": 1882,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2058,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2110,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames L2",
+        "first": 2162,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L2",
+        "first": 2349,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2525,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2577,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames R0",
+        "first": 2629,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R0",
+        "first": 2816,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2992,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3044,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames R1",
+        "first": 3096,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R1",
+        "first": 3283,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3459,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3511,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames R2",
+        "first": 3563,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R2",
+        "first": 3750,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3926,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3978,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "abdomen amber reactor recessed housing",
+        "first": 4030,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "abdomen amber reactor luminous ring",
+        "first": 4296,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 1,
+        "material": 3
+      },
+      {
+        "name": "abdomen amber reactor lens",
+        "first": 4528,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 1,
+        "material": 3
+      },
+      {
+        "name": "Auren UpperArmL separate formed guard",
+        "first": 4794,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "Auren UpperArmL inset service panel",
+        "first": 4813,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 4,
+        "material": 0
+      },
+      {
+        "name": "Auren UpperArmL protected luminous channel",
+        "first": 4826,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "Auren UpperArmL countersunk fastener",
+        "first": 4838,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmL countersunk fastener",
+        "first": 4872,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmL inset vent",
+        "first": 4906,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmL inset vent",
+        "first": 4916,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmL inset vent",
+        "first": 4926,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmL separate formed guard",
+        "first": 4936,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 5,
+        "material": 1
+      },
+      {
+        "name": "Auren ForearmL inset service panel",
+        "first": 4955,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 5,
+        "material": 0
+      },
+      {
+        "name": "Auren ForearmL protected luminous channel",
+        "first": 4968,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "Auren ForearmL countersunk fastener",
+        "first": 4980,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmL countersunk fastener",
+        "first": 5014,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmL inset vent",
+        "first": 5048,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmL inset vent",
+        "first": 5058,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmL inset vent",
+        "first": 5068,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighL separate formed guard",
+        "first": 5078,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 7,
+        "material": 1
+      },
+      {
+        "name": "Auren ThighL inset service panel",
+        "first": 5097,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "Auren ThighL protected luminous channel",
+        "first": 5110,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 7,
+        "material": 3
+      },
+      {
+        "name": "Auren ThighL countersunk fastener",
+        "first": 5122,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighL countersunk fastener",
+        "first": 5156,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighL inset vent",
+        "first": 5190,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighL inset vent",
+        "first": 5200,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighL inset vent",
+        "first": 5210,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinL separate formed guard",
+        "first": 5220,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 8,
+        "material": 1
+      },
+      {
+        "name": "Auren ShinL inset service panel",
+        "first": 5239,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 0
+      },
+      {
+        "name": "Auren ShinL protected luminous channel",
+        "first": 5252,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 8,
+        "material": 3
+      },
+      {
+        "name": "Auren ShinL countersunk fastener",
+        "first": 5264,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinL countersunk fastener",
+        "first": 5298,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinL inset vent",
+        "first": 5332,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinL inset vent",
+        "first": 5342,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinL inset vent",
+        "first": 5352,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmR separate formed guard",
+        "first": 5362,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 11,
+        "material": 1
+      },
+      {
+        "name": "Auren UpperArmR inset service panel",
+        "first": 5381,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 11,
+        "material": 0
+      },
+      {
+        "name": "Auren UpperArmR protected luminous channel",
+        "first": 5394,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "Auren UpperArmR countersunk fastener",
+        "first": 5406,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmR countersunk fastener",
+        "first": 5440,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmR inset vent",
+        "first": 5474,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmR inset vent",
+        "first": 5484,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Auren UpperArmR inset vent",
+        "first": 5494,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmR separate formed guard",
+        "first": 5504,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 12,
+        "material": 1
+      },
+      {
+        "name": "Auren ForearmR inset service panel",
+        "first": 5523,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 12,
+        "material": 0
+      },
+      {
+        "name": "Auren ForearmR protected luminous channel",
+        "first": 5536,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 12,
+        "material": 3
+      },
+      {
+        "name": "Auren ForearmR countersunk fastener",
+        "first": 5548,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmR countersunk fastener",
+        "first": 5582,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmR inset vent",
+        "first": 5616,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmR inset vent",
+        "first": 5626,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Auren ForearmR inset vent",
+        "first": 5636,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighR separate formed guard",
+        "first": 5646,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 14,
+        "material": 1
+      },
+      {
+        "name": "Auren ThighR inset service panel",
+        "first": 5665,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 0
+      },
+      {
+        "name": "Auren ThighR protected luminous channel",
+        "first": 5678,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 14,
+        "material": 3
+      },
+      {
+        "name": "Auren ThighR countersunk fastener",
+        "first": 5690,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighR countersunk fastener",
+        "first": 5724,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighR inset vent",
+        "first": 5758,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighR inset vent",
+        "first": 5768,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Auren ThighR inset vent",
+        "first": 5778,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinR separate formed guard",
+        "first": 5788,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 15,
+        "material": 1
+      },
+      {
+        "name": "Auren ShinR inset service panel",
+        "first": 5807,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 0
+      },
+      {
+        "name": "Auren ShinR protected luminous channel",
+        "first": 5820,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 15,
+        "material": 3
+      },
+      {
+        "name": "Auren ShinR countersunk fastener",
+        "first": 5832,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinR countersunk fastener",
+        "first": 5866,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinR inset vent",
+        "first": 5900,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinR inset vent",
+        "first": 5910,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Auren ShinR inset vent",
+        "first": 5920,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Auren back service shell",
+        "first": 5930,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 1
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 5946,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 5958,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 5970,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren rear panel countersunk fastener",
+        "first": 5982,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Auren rear panel countersunk fastener",
+        "first": 6016,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Auren back service shell",
+        "first": 6050,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 1
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 6066,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 6078,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren back exhaust vent",
+        "first": 6090,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Auren rear panel countersunk fastener",
+        "first": 6102,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Auren rear panel countersunk fastener",
+        "first": 6136,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Auren occipital helmet cassette",
+        "first": 6170,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 1
+      },
+      {
+        "name": "Auren helmet cooling slot",
+        "first": 6186,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Auren helmet cooling slot",
+        "first": 6198,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Auren helmet cooling slot",
+        "first": 6210,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Auren helmet countersunk fastener",
+        "first": 6222,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Auren helmet countersunk fastener",
+        "first": 6256,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon recessed service rib 1-0",
+        "first": 6290,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon recessed service rib 1-1",
+        "first": 6302,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon protected energy rail 1",
+        "first": 6314,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "Auren weapon recessed service rib 1-2",
+        "first": 6326,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon recessed service rib 2-0",
+        "first": 6338,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon recessed service rib 2-1",
+        "first": 6350,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Auren weapon protected energy rail 2",
+        "first": 6362,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 3
+      },
+      {
+        "name": "Auren weapon recessed service rib 2-2",
+        "first": 6374,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      }
+    ],
+    "rigAndMarkersPreserved": true,
+    "bodyPositionsAndNormalsExact": true,
+    "preservedVertexDigest": "249adea2091d10185007ee0bf5d6fd7619fea687a6d36aa710c1b2e5d3bef55f",
+    "shippingModel": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+    "canonicalWeaponMarkersExact": true,
+    "assembly": {
+      "hero": "Auren",
+      "units": "metres",
+      "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+      "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+      "components": [
+        {
+          "part": "Torso_Armor",
+          "vertices": 6815,
+          "triangles": 13191,
+          "boundsBlenderMetres": [
+            [
+              -0.28999999,
+              -0.223,
+              0.86000001
+            ],
+            [
+              0.28999999,
+              0.24136969,
+              1.63999999
+            ]
+          ],
+          "dimensionsMm": [
+            580.0,
+            464.37,
+            780.0
+          ]
+        },
+        {
+          "part": "Head_Helmet",
+          "vertices": 1370,
+          "triangles": 2593,
+          "boundsBlenderMetres": [
+            [
+              -0.146,
+              -0.153929,
+              1.53100002
+            ],
+            [
+              0.146,
+              0.15652169,
+              1.85940695
+            ]
+          ],
+          "dimensionsMm": [
+            292.0,
+            310.45,
+            328.41
+          ]
+        },
+        {
+          "part": "Arm_L",
+          "vertices": 4151,
+          "triangles": 7917,
+          "boundsBlenderMetres": [
+            [
+              -0.65544999,
+              -0.20864095,
+              0.90616
+            ],
+            [
+              -0.13115001,
+              0.1608,
+              1.68980002
+            ]
+          ],
+          "dimensionsMm": [
+            524.3,
+            369.44,
+            783.64
+          ]
+        },
+        {
+          "part": "Leg_L",
+          "vertices": 2316,
+          "triangles": 4382,
+          "boundsBlenderMetres": [
+            [
+              -0.36399999,
+              -0.28795001,
+              -0.0054
+            ],
+            [
+              -0.055,
+              0.142,
+              1.046
+            ]
+          ],
+          "dimensionsMm": [
+            309.0,
+            429.95,
+            1051.4
+          ]
+        },
+        {
+          "part": "Arm_R",
+          "vertices": 4151,
+          "triangles": 7917,
+          "boundsBlenderMetres": [
+            [
+              0.13115001,
+              -0.20564096,
+              0.90616
+            ],
+            [
+              0.65544999,
+              0.1608,
+              1.68980002
+            ]
+          ],
+          "dimensionsMm": [
+            524.3,
+            366.44,
+            783.64
+          ]
+        },
+        {
+          "part": "Leg_R",
+          "vertices": 2316,
+          "triangles": 4382,
+          "boundsBlenderMetres": [
+            [
+              0.055,
+              -0.28795001,
+              -0.0054
+            ],
+            [
+              0.36399999,
+              0.142,
+              1.046
+            ]
+          ],
+          "dimensionsMm": [
+            309.0,
+            429.95,
+            1051.4
+          ]
+        },
+        {
+          "part": "Weapons",
+          "vertices": 11340,
+          "triangles": 22260,
+          "boundsBlenderMetres": [
+            [
+              -0.88945001,
+              -0.4957,
+              0.138
+            ],
+            [
+              0.95545,
+              0.0183,
+              2.03399992
+            ]
+          ],
+          "dimensionsMm": [
+            1844.9,
+            514.0,
+            1896.0
+          ]
+        }
+      ],
+      "checks": {
+        "sourceTriangles": 62642,
+        "partTriangles": 62642
+      }
+    },
+    "fbxRoundTrip": {
+      "bones": 18,
+      "skinningImported": true,
+      "normalizedWeights": true,
+      "animationClipsImported": [],
+      "vertices": 32599
+    },
+    "fbxSha256": "6628ef017f1fb7d36a7df3c8165e497f5530a7f7ddf788a5d39927f85679327c",
+    "modelSha256": "2f33a8e13d1d8e72d9f71391b0ee30f31332be6c180daa088b12f143caf37617",
+    "blenderSha256": "91abd757ea6e6be61283b358bd093f816c87d993f2edecf197eeee7d32497421"
+  },
+  "UnityEditor": "not run",
+  "Android": "not run"
+}
