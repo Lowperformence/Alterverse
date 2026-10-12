@@ -1,0 +1,35 @@
+newmtl Concept_0
+Kd 0.03 0.04 0.05
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_1
+Kd 0.39 0.24 0.085
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_2
+Kd 0.045 0.73 0.5
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_3
+Kd 0.57 0.07 0.91
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_4
+Kd 1 0.45 0.025
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_5
+Kd 1 0.018 0.008
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Concept_6
+Kd 0.015 0.76 0.91
+Ks 0.25 0.25 0.25
+Ns 90
+

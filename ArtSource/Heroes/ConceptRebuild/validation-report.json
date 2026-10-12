@@ -1,0 +1,359 @@
+{
+  "revision": "hero-concepts-20261012-v1",
+  "inputCommit": "396d3d0008d5557b5e014165594e1f9505bcb530",
+  "previousPartRevision": "8fa75d02f0964e9df149ed3c073259fc50248d78",
+  "heroes": {
+    "Sivra-Quell": {
+      "preservedVertices": 35900,
+      "removedVertices": 0,
+      "newVertices": 380,
+      "newTriangles": 744,
+      "newParts": 4,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "50d2a7b36b05c0f284868f984ee54a762b9227759fc5422cbe515e9bfa41c37b",
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Sivra-Quell.png",
+      "sourceSha256": "2b4040d4041ece9cd25208a020452478e97a9c2d0dfa809c818783430d4d6c7d",
+      "runtimeOutput": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+      "outputSha256": "d272745d3b7aa401be2c6119ee1b147849eebac6e866096a74ac169f28166a5e",
+      "authoredParts": [
+        "emerald split-arrow chest tracer",
+        "emerald split-arrow chest tracer",
+        "paired rear circuit rail",
+        "paired rear circuit rail"
+      ],
+      "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 16,
+        "bodyVertices": 36280,
+        "bodyFaces": 71026,
+        "skinningImported": true
+      },
+      "modelSha256": "0de820f9e99fc162f85d112a20c0a785098e49d0a5feb243b483fd4ae7ec9d07",
+      "sourceBlendSha256": "2ebda1dca8475749ba1573f8008cf4f2700e4bb05430ee195f6c0774bd043126",
+      "conceptSha256": "1f1893bdd767bd3885c3e988acc2465efa8e1a9131f6f161e13c5cf28cf46444"
+    },
+    "Ione-Vaska": {
+      "preservedVertices": 20818,
+      "removedVertices": 0,
+      "newVertices": 91,
+      "newTriangles": 154,
+      "newParts": 7,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "cfbe49fc33fe637f6d9905fac87c19bd7b607ce9c9ac8d91371a3a8d65ec4be1",
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Ione-Vaska.png",
+      "sourceSha256": "477af92aaf29453797d135aa8cd46f60e14102b9e98e9f68d685d514f0ea46c4",
+      "runtimeOutput": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+      "outputSha256": "47b7faf0a1cf1ad402e6ff678e07650ba05c7ca64941d627552f8554c3dea7a6",
+      "authoredParts": [
+        "violet sternum sensor left",
+        "violet sternum sensor right",
+        "violet sternum sensor left",
+        "violet sternum sensor right",
+        "violet sternum sensor left",
+        "violet sternum sensor right",
+        "cyan crown diamond"
+      ],
+      "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 20909,
+        "bodyFaces": 40189,
+        "skinningImported": true
+      },
+      "modelSha256": "847adb867b3433573cd92d997a03a046775294dd3a37bc42050d2308118ebe0c",
+      "sourceBlendSha256": "42e62d6e3d1983d675c5be924e6b9b53ded5840b5c0ac6357c323242de77ce1f",
+      "conceptSha256": "f93b6ce4b857a97c97caecd5116bc8d8dd03c9f2f83a5b73d8ed3cbed76608eb"
+    },
+    "Auren-Kest": {
+      "preservedVertices": 26309,
+      "removedVertices": 0,
+      "newVertices": 360,
+      "newTriangles": 708,
+      "newParts": 3,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "838fd3331a1572a9ac3d59e8e3318938bb0ac67957d7b0b11842d8626796f942",
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Auren-Kest.png",
+      "sourceSha256": "1062f5a5d34809fe94b993f2db2c2429d9a67e726bd3bc8790a3075d174f15b7",
+      "runtimeOutput": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+      "outputSha256": "af32de7ff1b65fa582cfab14ef504a91c01d9ea1da5e0d8ff946e9493bba6baa",
+      "authoredParts": [
+        "three amber sternum vent bars",
+        "three amber sternum vent bars",
+        "three amber sternum vent bars"
+      ],
+      "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 26669,
+        "bodyFaces": 51678,
+        "skinningImported": true
+      },
+      "modelSha256": "dbc56937c4b01ef35a689fec7e5bb63dd26cf10e0c33ac886f67b32ac35dc682",
+      "sourceBlendSha256": "011d3676786dc7ed1321e3e4dcbebda30e56566ce4af7b49fb022248d7d96d7d",
+      "conceptSha256": "e000f5fc5faa1aa96f54ff59ac4acec14c69ea3de1cfdc8574d7b8188be47bba"
+    },
+    "The-Traveler": {
+      "preservedVertices": 11285,
+      "removedVertices": 0,
+      "newVertices": 1596,
+      "newTriangles": 3128,
+      "newParts": 7,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "87738836fe1a0c82219bf2230c4b66f215dfb5f77d4a253a03f3aca464a7236a",
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/The-Traveler.png",
+      "sourceSha256": "c9e91ddad30e7a3159b79f275a1c772af3cc8ba321fa9a102d917e32ccfdf0eb",
+      "runtimeOutput": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+      "outputSha256": "513669b739e627ba7a3a38f1e1630d7f8685c9ff887c9cd6bc767669ce4dce3f",
+      "authoredParts": [
+        "concentric cyan time lens",
+        "concentric cyan time lens",
+        "concentric cyan time lens",
+        "split clock needle",
+        "split clock needle",
+        "cyan rear timing rail",
+        "cyan rear timing rail"
+      ],
+      "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 16,
+        "bodyVertices": 12881,
+        "bodyFaces": 25012,
+        "skinningImported": true
+      },
+      "modelSha256": "fb059949fb8e7986d86a35e28d5eb35f1a09ede4505c9649096444f1590b0371",
+      "sourceBlendSha256": "c348a773eb58c4823177155cbbf338a09f5f5e4ed770e023f1683fc18f523141",
+      "conceptSha256": "f10371b89cd425365095aadb7d7be7f3ced450587abebcc1ca43036747c33d86"
+    },
+    "Nerok-Abyss": {
+      "preservedVertices": 82172,
+      "removedVertices": 0,
+      "newVertices": 156,
+      "newTriangles": 264,
+      "newParts": 12,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "fe437976e8744b6613590dcfe3941521018cb6ca7f95d59ca7d5e664706f7499",
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Nerok-Abyss.png",
+      "sourceSha256": "43ca581c00cc9d6c54ca883e8aa342f06a7134397bd7b5ba36dd08f2f9a2ef80",
+      "runtimeOutput": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+      "outputSha256": "c69dee71fe58db9e3ca9063029f30aca088cef5527a44b1fefdc5cefb2a9f463",
+      "authoredParts": [
+        "bronze jacket clasp left",
+        "bronze jacket clasp right",
+        "cyan clasp inset left",
+        "cyan clasp inset right",
+        "bronze jacket clasp left",
+        "bronze jacket clasp right",
+        "cyan clasp inset left",
+        "cyan clasp inset right",
+        "bronze jacket clasp left",
+        "bronze jacket clasp right",
+        "cyan clasp inset left",
+        "cyan clasp inset right"
+      ],
+      "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 82328,
+        "bodyFaces": 34344,
+        "skinningImported": true
+      },
+      "modelSha256": "0d4350891b9177adf4e8822cf7600efccaeaf4987baba7139b7fa041c910e1b0",
+      "sourceBlendSha256": "08b3dcdefeaaa2a5e73a55fb55d33c8f1b75e3a3fc368993ef8c668cc045df4d",
+      "conceptSha256": "0ec92ab79ac7e3741e06d81d06ea81703405a4d303dceff2521bbdc4736d17f5"
+    },
+    "Zhaev-Null": {
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Zhaev-Null.png",
+      "sourceSha256": "e28920324f5534259cd53ada94c3ac33266fcb5a293bb5d7f9f4f9b96b31cb65",
+      "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+      "outputSha256": "98cf049305d9bf83833e5a60626d7e1698aaa843ae92c0ef31d28da2f4169a3e",
+      "rigExact": true,
+      "animationActionDigestsExact": {
+        "Attack": "6bc28bc3d06834d9c692f9e4bd756d0fb814a757d2cad1d39e13f4bf971000f9",
+        "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+        "Hit": "b65de7e2cb656da74801d76deab66c103436ad671d4a7f401f39b76b7640a2de",
+        "Idle": "39147aa8295ec9b91d65c86a824a607f05ff261bd71b4bcfc930143fb77365b1",
+        "Run": "1d180587aed94c4047ac3bd8412c70ee37c3bbd5994c60d5c42e43c89a1e92bb",
+        "Skill0": "e8ce233d0643ebdb914e78665a986d5ff17ecf350367eeba5ed6595951a1f28b",
+        "Skill1": "28e2193fc7f849518d1e48ec21821affe95de1db59466db134d7fb83458dd2d5",
+        "Skill2": "3b6712cd26c1f6aa64c548a9409deab626690eb915cb71479c96a7c2dbdd52fe",
+        "Ultimate": "514bd1b24a905119a930da93c629edebe55addd3b0c3c66ac5e5ab9248993d33"
+      },
+      "newVertices": 360,
+      "newTriangles": 708,
+      "newParts": [
+        "three-prong violet chest sensor",
+        "three-prong violet chest sensor",
+        "three-prong violet chest sensor"
+      ],
+      "removedBrakkArmAttachmentVertices": 0,
+      "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 19,
+        "bodyVertices": 24871,
+        "bodyFaces": 24518,
+        "skinningImported": true
+      },
+      "modelSha256": "993493762f4fafbc35757e46e0c615570841a3c5904f3d61ec3bbed50b614251",
+      "sourceBlendSha256": "2ed66eb5e06be8aee4ee5516f4e9b6e40de65b8f2cce720b54c1a6895459c949",
+      "conceptSha256": "93d10103a66c736799682ecb867fd12fba6dcba9d35de98c21ff93eea51b3e14"
+    },
+    "Tahla-Venn": {
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Tahla-Venn.png",
+      "sourceSha256": "ff6a57530b38eefec7950dcb756173a07909d7235116525b72888fb8b82f2cc9",
+      "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+      "outputSha256": "27e46ece2f905110d9479a8ad173b2b52d71c779828a52ec0496f1178e58f851",
+      "rigExact": true,
+      "animationActionDigestsExact": {
+        "Attack": "74818c57eb96d9d7d57d797a575290cf4b5493012c2bdafb6ef72762c6e3bc1f",
+        "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+        "Hit": "c45087f89667feeeb0df25d6d5eaf134c733fac00eb0bdc77591a625b9b30b7f",
+        "Idle": "2af9e88f10ea4e9c8279c8e14cac484fccbbce53b0f0d0899be9f00511ac82de",
+        "Run": "289eea9c4b2ba5d63096405aefed0945bb2061e2798c7424fdbf510577be2d16",
+        "Skill0": "2441b1bed2c8becff6061be43fbf01b4d534fa4b9d646cf3259e69527372e6aa",
+        "Skill1": "3b68be8e2028bbd34cea190e2a075b08e1b8eb346a088c76a7d90b960891962f",
+        "Skill2": "9f83db73bc01c370dec9016d5284ed999aad2d63e11908baedc457ef7c781319",
+        "Ultimate": "97a2eef562d0c89da64fb15f0de4597a711c5533d6f1b3330315d7fdf1e07423"
+      },
+      "newVertices": 73,
+      "newTriangles": 134,
+      "newParts": [
+        "emerald leaf restoration inlay",
+        "gold leaf chest bezel",
+        "gold leaf chest bezel"
+      ],
+      "removedBrakkArmAttachmentVertices": 0,
+      "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 19,
+        "bodyVertices": 26527,
+        "bodyFaces": 33986,
+        "skinningImported": true
+      },
+      "modelSha256": "22840992bd5c9aeb4da989cf1361e781fd773c77f7a8a520fd4f2472795d3530",
+      "sourceBlendSha256": "4168478d796a9628e83426ae6448688d738beaf243a9784a00559c1cb4af488c",
+      "conceptSha256": "0e745714f93ab7dab41d159e92cdd60c1c3f15745e3a2acc23bff83f8559b881"
+    },
+    "Brakk-Orun": {
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Brakk-Orun.png",
+      "sourceSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+      "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+      "outputSha256": "4c60f8f2c593197dae037afd0bb80374c016ed0412f0b308f515094722c61b20",
+      "rigExact": true,
+      "animationActionDigestsExact": {
+        "Attack": "bd6cc6657ba13d52dbde69218d8a8639ca65f76d79f4dbce2ae0f2a1572a9ae0",
+        "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+        "Hit": "ee2c34f2f334f5c56a2b552b4e641e0d63c8ebe63c62d63a730d7a0f55821195",
+        "Idle": "00f31c0a5885b6c01d446357d9198dbce6ad999fb95d5b74cfb415e01c158be2",
+        "Run": "8b66b7ed5e5bcf07242f187ba106b0a6e8b4ccb023c973d8b54cbfd1c5b146ea",
+        "Skill0": "a88fc159b2452db774c1304d7abca76a94cf0438145aeda4901f286547e595fb",
+        "Skill1": "2e1e143eb32d11c24f74fd2025a06d5a893224e5ad4ee9212df2a850394d52a7",
+        "Skill2": "c4859e1f15a561d5dcdfcb27a3cd37bc1998ec74639d8812203c8bd8ef0db8a5",
+        "Ultimate": "bad652d746d0c10987c484211ac88e9b08471b76ae2b8edab3f8fbf03d4f2781"
+      },
+      "newVertices": 143,
+      "newTriangles": 242,
+      "newParts": [
+        "staggered orange torso plate left",
+        "staggered orange torso plate right",
+        "staggered orange torso plate left",
+        "staggered orange torso plate right",
+        "staggered orange torso plate left",
+        "staggered orange torso plate right",
+        "red rear spinal reactor cell",
+        "red rear spinal reactor cell",
+        "red rear spinal reactor cell",
+        "red rear spinal reactor cell",
+        "red rear spinal reactor cell"
+      ],
+      "removedBrakkArmAttachmentVertices": 4144,
+      "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 19,
+        "bodyVertices": 17428,
+        "bodyFaces": 16640,
+        "skinningImported": true
+      },
+      "modelSha256": "1d00df6b402b8c42bffe2cd5f8a2a5ef7b04bfa7cf80d84331f74f088efa986a",
+      "sourceBlendSha256": "7f283d776b34cfe91cd12f7bedeaa169fb55a20b08a1ba4bfd06b83ca447f9b5",
+      "conceptSha256": "a73dea67c8d5d604cc341c387f7875c004bafc6a9bfe13dc4431e9739bd493e8"
+    },
+    "Andromeda-Timmy": {
+      "concept": "ArtSource/Heroes/Concepts/2026-10-12/Andromeda-Timmy.png",
+      "sourceSha256": "4075a06f8cc92ef4a202e162fbd81ed89afd16044d401515f3aa4956172762c9",
+      "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+      "outputSha256": "a0307b313b4f3bebb6f39b07456aa4ee3539ce11316e32db293681fa6e48c1e5",
+      "rigExact": true,
+      "animationActionDigestsExact": {},
+      "newVertices": 39,
+      "newTriangles": 66,
+      "newParts": [
+        "cyan chest level indicator",
+        "cyan chest level indicator",
+        "cyan chest level indicator"
+      ],
+      "removedBrakkArmAttachmentVertices": 0,
+      "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+      "UnityAndroid": "not run",
+      "fbxRoundTrip": {
+        "bones": 20,
+        "bodyVertices": 8623,
+        "bodyFaces": 9113,
+        "skinningImported": true
+      },
+      "modelSha256": "88d8170ad9e38334a28fd58d727e61d2038a84eeeeaad1d87fa6dd55e71317dd",
+      "sourceBlendSha256": "c366b6a17c59e47625cafce1b40f3e6ccfbbe39ea5c8a83a3d7b95b66e13b5e1",
+      "conceptSha256": "cb1ae67c3dcb8b5b1f8b25dc7df6704d74dc7e756abe351a9c1597c7cf505166"
+    }
+  },
+  "scope": "Geometry authoring and native FBX import checks; not Unity/Android acceptance",
+  "previewCache": {
+    "Sivra-Quell": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "34dd27eae965aef68d617b47f79e6b805ff644a5c2c30bafad535deaa6c6aeb3",
+      "matchingExportVerified": true
+    },
+    "Ione-Vaska": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "5ca2329e11b3aea5581bd09754769e441ecc7e5a7e770fb1ac2c53546d61206c",
+      "matchingExportVerified": true
+    },
+    "The-Traveler": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "da5a68c6def4a2dda6f655026ac85bd14531940b72c116ee8472529dd4f4c3e8",
+      "matchingExportVerified": true
+    },
+    "Nerok-Abyss": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "9986834ef5fd3c9150100b21e7b1407f4b56bf7c7b30294db890e679abd64d08",
+      "matchingExportVerified": true
+    },
+    "Zhaev-Null": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "b4bf2aa02ddc360d3df5b6ac37a97e3d5c5c36a84ae864c41aa40f74dd6f768c",
+      "matchingExportVerified": true
+    },
+    "Tahla-Venn": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "f820628a3394f7087477ae44a83a2a56624249727b2dacef1736ed049b15f74b",
+      "matchingExportVerified": true
+    },
+    "Brakk-Orun": {
+      "sourceRun": 38213251851,
+      "fbxGeometrySkinMaterialDigest": "63fbe50fce97beb5f59eaa72eec8f7304d8a67de460f97ebb13918a664e6b05a",
+      "matchingExportVerified": true
+    }
+  }
+}

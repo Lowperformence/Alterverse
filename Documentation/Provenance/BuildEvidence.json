@@ -1,0 +1,3213 @@
+{
+  "retrievedAtUtc": "2026-10-12T07:09:29.754626+00:00",
+  "anatomyBundleUrl": "https://mirror.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip",
+  "anatomyNoticeStatus": "archive retrieved but no matching text notice",
+  "mediaFiles": [
+    {
+      "path": "Assets/Alterverse/Branding/DimensionsFrontAppIcon.png",
+      "bytes": 6091,
+      "sha256": "bf7cd2545853a8fa25e556265f2f69480794648afc9f8c1e09599999055ccfbf"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/0.png",
+      "bytes": 2869310,
+      "sha256": "6a305c2904866c40861ebff917290465ab518bed2f3bd799aa5708d263da6242"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/1.png",
+      "bytes": 2749633,
+      "sha256": "3fd12094d76e89ca634e8ed626d1873886cceab508897bb2be3cde60584ed09f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/2.png",
+      "bytes": 2854459,
+      "sha256": "520fde4afabc2a9689de73ef0b616257b0c10bd57a766823bbe5907b162f0752"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/3.png",
+      "bytes": 2675189,
+      "sha256": "a0eb53005934e3197f720702a83a5b1fe5a5b7c5a4cb6e6f6fd03ffe629ea39d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/4.png",
+      "bytes": 2501861,
+      "sha256": "ab2a83ebf121c2103e53430a47aac8f141e5a3c0413c7ada3d42bcb4c4394feb"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/BombJetFlyby.ogg",
+      "bytes": 88027,
+      "sha256": "6a007a408c422b96cbe7ad56bb3b4d0b80cb76ccd8cbd4fdb22f79461f4bb9a7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast.ogg",
+      "bytes": 5295,
+      "sha256": "7e925b2c744dc5b44f7a580d6c2d8cad4ae5f4856febb2f465b2cc2985d849b2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast_v2.ogg",
+      "bytes": 5362,
+      "sha256": "5b83dde79cd928691920e5f6e47c5108c87911bfe728a26900d88a667971086e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast_v3.ogg",
+      "bytes": 5329,
+      "sha256": "79f699438ecc20a54e8d8efdd87a2b19fb1b4bf17e9bfe37fa62429c9f954e5f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact.ogg",
+      "bytes": 5637,
+      "sha256": "abca3334bf997e7bd6678e71d64bc856c98a412617a31c4b01a2a6e33b9ff1e0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact_v2.ogg",
+      "bytes": 5529,
+      "sha256": "6697e7b0d535bbad2d5a665aaa4786be36969af7a50276993d3388a8a423234c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact_v3.ogg",
+      "bytes": 5863,
+      "sha256": "7b26d7c211b2397ec0d8ce0600378e8586622cfdf6045bd130c9c8ee6f9701a1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Windup.ogg",
+      "bytes": 4581,
+      "sha256": "9a5e3ae7a54b7b7ff07e0989b58245046612d15edcacd6a4654f5c0aa798b797"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+      "bytes": 8066,
+      "sha256": "e35ec020ce9b836b207f3a0599358fc3a2ddb1dcd779ccc92712121a6bdf8398"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+      "bytes": 32405,
+      "sha256": "129e48c3b4f56ecf0b21ed2a8934d13c3e14a4ce6281975a0d7ac3606c512239"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Cast.ogg",
+      "bytes": 6699,
+      "sha256": "d91e0b1476a0869481123cec69907de02b9eb2c006529cd087b3ccb3d0c41bea"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Impact.ogg",
+      "bytes": 6484,
+      "sha256": "d1a327955581c96547424212c8b7e40dca8d6a758cb37c615dfa59937523b788"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Windup.ogg",
+      "bytes": 6212,
+      "sha256": "15f7884a7793b8bdd3abd7a5e640445a1908ea2190d93e3f25556c0d1d82d7ae"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg",
+      "bytes": 59888,
+      "sha256": "b04b144f24e589d621def1d4ea6163fc728785d7b7ddbf00a03f5f8c9dadd7d4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+      "bytes": 32199,
+      "sha256": "4fb56eae51fab873ea6bbd087900578cc2eb8127b117f521db10493ab7c6ee13"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast.ogg",
+      "bytes": 5763,
+      "sha256": "008405b694fbf3de72d40961929d18b45876b840fd8241e28b1f22434fef16ba"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast_v2.ogg",
+      "bytes": 5471,
+      "sha256": "85086ac71c74ba5a3c3beba272f6cd80db47a720f96ddf2f436523d0cd605a32"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast_v3.ogg",
+      "bytes": 5251,
+      "sha256": "dde681b82706f1e8324f98107f2d44ebec9bfff63e4a45f0fee7b6fec2f9b09b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact.ogg",
+      "bytes": 5859,
+      "sha256": "f188ad4a0ccdcb7c336f158f0621ec884e9ea8d919d7a36890fc6151a64b92e8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact_v2.ogg",
+      "bytes": 5926,
+      "sha256": "29307589a322ab5e82ee854757f5313183d8be100953582af5cd7809f3ab6765"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact_v3.ogg",
+      "bytes": 5930,
+      "sha256": "c58869e606ad449ed41e4b72ca79fd54794551b1e5ecb410e538b190218db3b6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Windup.ogg",
+      "bytes": 3659,
+      "sha256": "f4eefd3ff9538c5d0cdb2e5c279bb04430497afc591425cd81c4b161502b8d3d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+      "bytes": 17842,
+      "sha256": "0e9e742bf1139796d9572de560c86544c2881f67e0d91e888239c89ce57ce7da"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+      "bytes": 18428,
+      "sha256": "458e3d3fbde7bf984f5d6c8267eaa62f51e4eaf87a3053338864132f089919ec"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Cast.ogg",
+      "bytes": 7514,
+      "sha256": "3ee10aac24858303386e252b93444a5a358134cbce86b8f25d1addf8947883fc"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Impact.ogg",
+      "bytes": 7428,
+      "sha256": "e66acb569e5e726b203e26ba9e3a200107247561975801ac8fd2dff9428a61c3"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Windup.ogg",
+      "bytes": 3685,
+      "sha256": "44dc404c8c1ac8f9acb080979953a03318ff019d3c1c49afa240c6d9a4edba50"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg",
+      "bytes": 55746,
+      "sha256": "3539487b57f1d8ba88c4cd987955a720020d8e36e05eff881f795e3fd3a67aa8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/W_Cast.ogg",
+      "bytes": 32405,
+      "sha256": "447ca4efe4cf5e905e17781ac43a313caeec5b20534526f22285965059af5f0c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast.ogg",
+      "bytes": 6355,
+      "sha256": "f95e16ec22ded0062d192e74fed641c569227f826ed202c7902c211802d34c5d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast_v2.ogg",
+      "bytes": 6809,
+      "sha256": "64ca44778d1f1b938a3820b9ceeae55f9368fcb078baf2d7cb02e604b69e11c8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast_v3.ogg",
+      "bytes": 5833,
+      "sha256": "32ff06f8478e35f441d046a2a2f710b293655f5f1e556d5f056a7a9399eb4f52"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact.ogg",
+      "bytes": 5466,
+      "sha256": "b7d8fc7bc46d47a9abd2aeac96552c54e6d8ebfb57b895018bf50fbbaca80d23"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact_v2.ogg",
+      "bytes": 5514,
+      "sha256": "5c3de2aab10b53125127b0fce514c28332ac60ff3abc23982bc8c920944a9535"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact_v3.ogg",
+      "bytes": 5268,
+      "sha256": "a64c0d9848529ed0ace98db3c154fe2bc05c7cca7a3e3e906d9d91ec0237a1c2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Windup.ogg",
+      "bytes": 4875,
+      "sha256": "efea87aa3e8df2ea8737e78252d0a51c3a82d2ed4c0239256af989b25510ce3c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+      "bytes": 32405,
+      "sha256": "dd3d73f3ec759c418704adee4daac0e95badedce270175940ffb3f1c80df5615"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+      "bytes": 15541,
+      "sha256": "aac291d62cf71b514b60bab87fa897dd1d99eb682b3a080cad00a7b0e8d12894"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Cast.ogg",
+      "bytes": 7569,
+      "sha256": "9d5628897aeb96f2676e14a97d2106d4f11c78ab00f7ccb24d83c843b030eb3c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Impact.ogg",
+      "bytes": 6020,
+      "sha256": "39ab256cf3f99070bfb35b959f84729778eeaaf7d4cc04459ec024fe0e31d8a6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Windup.ogg",
+      "bytes": 7336,
+      "sha256": "a9d8aef66e185510cd0934a1f1c6dd675c71e2bb58d96a927bd3f4fcdfb2573e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg",
+      "bytes": 58986,
+      "sha256": "99a7023ad5f5c0e44d7aacf1e63572b67a4f561e69a3f2458abcb5120dbb9d7f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+      "bytes": 71991,
+      "sha256": "97b06497f6ae112f3949511b4966e6e9ea4847d8f39a430ea7ec510c6009ed17"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Cast.wav",
+      "bytes": 8422,
+      "sha256": "9c1852d2eb570bedaae5cd649e6017c7688cb436c47c5eca8e5714b5022d6708"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Impact.wav",
+      "bytes": 156720,
+      "sha256": "916664ce966f359652349a98c2d470b6b7c0870c87425115c189f336f4413be5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Windup.wav",
+      "bytes": 7100,
+      "sha256": "b683f410a5f84eb3a4a48dec1a05418886064658951cd080383f5cbf68d8a3ef"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/E_Cast.ogg",
+      "bytes": 19593,
+      "sha256": "1240f4a5892ab043c67d3d1a8eed79425720dbe118c44d1efd1c0059272689bc"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Q_Cast.mp3",
+      "bytes": 40845,
+      "sha256": "b57de4de8edf4d49b0a904271b9a04ce07ee1c969b4887d38c29bd0d042e37e6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Ultimate_Selected.mp3",
+      "bytes": 184365,
+      "sha256": "289eea139d9eac4d8115112a27e41a693f636e00cc261d384f4556bbab0f2e0f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/W_Cast.ogg",
+      "bytes": 32405,
+      "sha256": "aafba67d2cdad1ae91ea5d0e4e6d5446ee100073fd83a4e88d83089516b89ae9"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast.ogg",
+      "bytes": 7057,
+      "sha256": "052f91beba24468631970e48435d9c62e1e9c04df8381a0987e144350812a243"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast_v2.ogg",
+      "bytes": 6706,
+      "sha256": "f604bf028ae2c21ab58304cce4a83026049607c7926d036b0cd3e8130cecccb5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast_v3.ogg",
+      "bytes": 6666,
+      "sha256": "c5e2ceae37282f41c901c92610924ba36b7d0243f078fc4f6dd52962bedf612e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact.ogg",
+      "bytes": 5178,
+      "sha256": "cd441e41822ff69f81c34c59abc23516924f3388c3e68bb4a08fe9fb69deb687"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact_v2.ogg",
+      "bytes": 5198,
+      "sha256": "d01c530cc9d5f10214428e2d3494e1ee1984e113f0d376b88482a7537df55c4a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact_v3.ogg",
+      "bytes": 5249,
+      "sha256": "dc58fac2f879fec75e09a52196b05de1aa541b6676c4718d6ff408da30769835"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Windup.ogg",
+      "bytes": 4900,
+      "sha256": "c0cc343dd1c03f6f8f86f207dd39a78e9c060c9add4faa2df27665aa65ef81b1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+      "bytes": 16399,
+      "sha256": "a65271a5763ab86ec819cbd66f5bbb5c79965d15cfe227d7b4325c685230ec0d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+      "bytes": 11495,
+      "sha256": "8afb643707e0df475510ae63114a97f8e1e7f1f6a1471d02abce7b08810383f0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast.ogg",
+      "bytes": 5848,
+      "sha256": "1cf9113dfeb9ffce604a8aa0c2f6a32e5406595df49eae7f4aab823e24f7c3a1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast_v2.ogg",
+      "bytes": 5466,
+      "sha256": "b23d105b0cec1383f9bdb379a6c8c4763c93aec1a07643c03169d9de7df6207d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast_v3.ogg",
+      "bytes": 5466,
+      "sha256": "a54f8b21957cb950897128b6b448bc5f655c0f984f7ad40771e88b353b3de346"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact.ogg",
+      "bytes": 5357,
+      "sha256": "93e21811b0078470231bbea145dc4e0f562082aa671aec554605a11c3382a86c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact_v2.ogg",
+      "bytes": 5182,
+      "sha256": "95fe931bf09f7c04c89f3be7685e9b67f3e10b3721a2ef7f44197eb68ccda1dc"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact_v3.ogg",
+      "bytes": 4936,
+      "sha256": "31251dafb3252fc02e18742f5d6c7d3da8e7a3e8100f8b361d11d0b56cabcdd4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Windup.ogg",
+      "bytes": 5528,
+      "sha256": "1631c051ab1010213216036cced058f0f3239e0bb081e2a089613db4278cbda4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg",
+      "bytes": 89689,
+      "sha256": "fad998ab6857c604c709c409dcc5da3ddb55163c17cd9b5618015f88e45a6103"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/W_Cast.ogg",
+      "bytes": 8286,
+      "sha256": "1f78eb33f2cc8fb6bd03df2bf3309fb525c8fa91d9a5c43b9979fa055206fd55"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast.ogg",
+      "bytes": 6691,
+      "sha256": "a2eb37b90ee409ac6bef9435f1e9fd7f414186767fac15969c095de648b04617"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast_v2.ogg",
+      "bytes": 6600,
+      "sha256": "b9ab1168e3c66a71e8ff8d9674e8b7a2f620f1fb815e5b19bde6e9a97d06b823"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast_v3.ogg",
+      "bytes": 6904,
+      "sha256": "a5ee1586f259b203cb96491566ecd947ad9f8b48d13a22f3031d67751fb0a605"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact.ogg",
+      "bytes": 6027,
+      "sha256": "7ca1e294973818b042a149a776cbdfa249a53102ef697a6a0f8735dd1a11523c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact_v2.ogg",
+      "bytes": 5631,
+      "sha256": "893956797bb0cdf0e58f77d81978990ba52c137d11c6f3120267cfbbddc7bc97"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact_v3.ogg",
+      "bytes": 5924,
+      "sha256": "677c02ba2586420c74ed87a59236ed0e0ed29f58d3f07a54386cdfbe63461c98"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Windup.ogg",
+      "bytes": 4289,
+      "sha256": "79f619f60b5086ed2301f52dec5cf5e41be8a6769409d4c8622f070fd6c1614c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+      "bytes": 28858,
+      "sha256": "6fbaee36b00550ec51acde8d5d8c11298dce42db7dfb4b240602880b73fa469d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg",
+      "bytes": 33267,
+      "sha256": "a89075b96ccdf4ac480efba784214b4beb94d86fb658271ab72d8d3a394878eb"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Cast.ogg",
+      "bytes": 8014,
+      "sha256": "7a62d3cd6398e3583c8bf1397c86cc1405c65610099d21bfe134f0754a7bc809"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Impact.ogg",
+      "bytes": 5543,
+      "sha256": "77964834e6196b40bc784c73bb221a5748871739d1a18dba8dc3705a28445278"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Windup.ogg",
+      "bytes": 4559,
+      "sha256": "54f5de078a3c28945d01f2a924799930000c70164a4251505cefdc5ddd0aad9a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg",
+      "bytes": 23492,
+      "sha256": "c7b442b078b55d4a36ed880987055f954c622bb08d3427e0c30d949ce68abfba"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/W_Cast.ogg",
+      "bytes": 32405,
+      "sha256": "79b1fad5911fb274c045f9ce4e73e5f7b4f2ad1b87b0cc4578a1bcb2d5e6ffec"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Q_Cast.mp3",
+      "bytes": 39936,
+      "sha256": "e026bc6d36a046a89fb65e172209dea98f40173a37f97ace9a55dfc97ed37d9d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3",
+      "bytes": 96768,
+      "sha256": "2f95cbf207a8cf8172a66c881b0f0605b6932886238957dcc6dc66121369dfa0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/W_Cast.mp3",
+      "bytes": 127488,
+      "sha256": "a29259ef2b34ce9acd2729923d581532af0b0ee84ba2581ec8c26d482e2ccf35"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast.ogg",
+      "bytes": 6588,
+      "sha256": "0c91518365999c039c95ae77cc1ffb9da0826c7943f45d3e2dc3d724ba495062"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast_v2.ogg",
+      "bytes": 6566,
+      "sha256": "725ce35d0c646a914757c8807f36849a1e3a2c77d3eea96c8462a5433ad7255f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast_v3.ogg",
+      "bytes": 6624,
+      "sha256": "d2379f9ce094d2dc6c5b5aed8495fa6bcb694a8740922b8d8c276885710bf725"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact.ogg",
+      "bytes": 6133,
+      "sha256": "5927b49736a8647647ef557778c0418a7a7d8bb88fc72803993566f941e2abe1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact_v2.ogg",
+      "bytes": 5799,
+      "sha256": "173ed7294a9aea19592f7c4c33e54afe438775222b7d153e0a7c64eac8f1dbba"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact_v3.ogg",
+      "bytes": 6135,
+      "sha256": "ea9dbeb5c52eb8611de23e7e4ad3c4178a96c5212a3bab2a7c4c958466594105"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Windup.ogg",
+      "bytes": 4963,
+      "sha256": "8695bf53dcacc641a84bfc3ff71116034470b12dbd931570ccfcdbcda793785e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Cast.ogg",
+      "bytes": 15265,
+      "sha256": "2d33546db78cd162510ba4b715e2f1597db958053c74b3543cb930e55a422778"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Q_Cast.ogg",
+      "bytes": 48701,
+      "sha256": "00fc76874ab3bb917eb6c1df4865405e8ed123719bd309bfb609c5d0f77620e5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Cast.ogg",
+      "bytes": 7879,
+      "sha256": "0adc9ae4eda9cf630c4414226478e9a39116d9f397770cc804d20ad10826222b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Impact.ogg",
+      "bytes": 6752,
+      "sha256": "0329321c3970c954f35a2764dc632b9a57eabc44f4c76b16758d5999203c6f15"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Windup.ogg",
+      "bytes": 6879,
+      "sha256": "5aabfc176d507fcfd6b74e4210c8e2ac01a2dbe94c8f06d42cd2f2ffcd92a1d0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg",
+      "bytes": 53070,
+      "sha256": "d37093c79c254320edb98ea01b782dd643a97539b49cfacb53e82372c160b153"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
+      "bytes": 8286,
+      "sha256": "339dc23d917a8d85edf30e8eac58e17d4e3987b4503d28e6051cb41fdd814950"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast.ogg",
+      "bytes": 7114,
+      "sha256": "b0a7c5088d2c40345a5dfa0d38a23dac0c6e9675c11fdc622d3e6e084e002f95"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast_v2.ogg",
+      "bytes": 6275,
+      "sha256": "7ae4fc85acbcc905a1c9529ba51020d006537c49862550bee979167ca216e399"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast_v3.ogg",
+      "bytes": 6466,
+      "sha256": "fdf5c2c50643051c142f586ae156ff11d04301ddb2b2b090742124f9ecfcf68f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact.ogg",
+      "bytes": 6508,
+      "sha256": "97380371c1c5ddaf03e737c36c383e7cd2aa42d710b2c9dcafcfc81f64107c95"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact_v2.ogg",
+      "bytes": 6465,
+      "sha256": "7a109c3f651aaedf06ad77136529e632df063834dfae382d504923f2c8e598a4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact_v3.ogg",
+      "bytes": 6303,
+      "sha256": "116183639b3d61fac6e564c5343246ec16442422df004a468c5423196aade1a6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Windup.ogg",
+      "bytes": 4741,
+      "sha256": "41e0420534f0bcc4d42013615664f8af56da98fbe5e704983e33895c8fd32b66"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+      "bytes": 8286,
+      "sha256": "ba0c1e366b32acef14f7fe282d1c5d631e4cd49545275afa48460dc1cf6b81d9"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+      "bytes": 20697,
+      "sha256": "b54950ef69374c5666ceeb6895007c2892e5e1cd303f3647ad581fafad8b60f1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Cast.ogg",
+      "bytes": 8242,
+      "sha256": "4c318a6cc818c748356892d0a12e00d9218f89bf7d859c2cef47a33171098da0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Impact.ogg",
+      "bytes": 6888,
+      "sha256": "5a5a64b2e36c28d46509a84d9344518380e29d6a3840a5cd65d91a912e17354a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Windup.ogg",
+      "bytes": 7244,
+      "sha256": "5e199da858a1dceac5691f427f9c5590b89ae437029e1becccb397aef544984c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg",
+      "bytes": 28407,
+      "sha256": "30c2a344be162b00b6f05caaffa3a24c9ea2a68d03c6c48b258933a88e22ef2b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+      "bytes": 20840,
+      "sha256": "aa15b1ab09a12b9a1ba1ec6259fc3a64510bafa005aa369de80fad03948715f4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Music/Match.ogg",
+      "bytes": 2146528,
+      "sha256": "885d667497ebf802833e637dda22358111b3d204f470c572cbea8494c7b3a051"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Music/Menu.ogg",
+      "bytes": 970565,
+      "sha256": "1759265b58e5cb83b695ced9eaf96e4dc7ef7cd637e3f548a0877898493f596c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/AbilityCast.ogg",
+      "bytes": 5535,
+      "sha256": "f059146474c896184862e24cccdc70216579cd0a8ca683f52eb593029f428552"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/AbilityImpact.ogg",
+      "bytes": 5814,
+      "sha256": "3e281d628b342329ee035f1523a681a031411d6e0e7d7be7c025e557542a9ca2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Attack.ogg",
+      "bytes": 6057,
+      "sha256": "4eb691b2376b85b0fdf00c9d0057e7209893a1527714281955ed2e7fa5797a6b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/CoreHit.ogg",
+      "bytes": 6752,
+      "sha256": "8ebd0feb239b96a04921e36c5c5cf37d9614fb7fe5316092f4ca5f2d50063808"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Defeat.ogg",
+      "bytes": 10870,
+      "sha256": "abfa3af5cc203b32fb9dc4b22b64c97ee56146bab00b0a5fce7b024bae243b97"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Explosion.wav",
+      "bytes": 220014,
+      "sha256": "7a35aa295279b8f49d3ae0cd85a927a88c5c495afcefe1f79f7f8e61d081a60c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/FrontShift.ogg",
+      "bytes": 5591,
+      "sha256": "2cfdbe794922bed8e6c1561529fe77f3b4545942e468c0ce77d65133f62e70c7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Heal.ogg",
+      "bytes": 6709,
+      "sha256": "14dc148a841a941fdd32f49d2e4cf72f26a545063c8fafad2393f05f9856a9ba"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HeroDeath.ogg",
+      "bytes": 8995,
+      "sha256": "07121af61f9a6f9cd2d59770404c3550144b20592e3e0e2ade6656c221bd332d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HitHeavy.ogg",
+      "bytes": 5543,
+      "sha256": "3226a5c846690df144dfc77bf4ad931ee177cdb27e863a9ca8da9f067543d6d8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HitLight.ogg",
+      "bytes": 5249,
+      "sha256": "e41c5fe069b863799bf43e248229ad93f68b8ad0f0f8eff3e9a6c69b74c6b358"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Kill.ogg",
+      "bytes": 5840,
+      "sha256": "59733531fde8bba06718b708b7e4c31e7afb5205163415f412bde3f711796e48"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MechGun.ogg",
+      "bytes": 7904,
+      "sha256": "608601a01889db3937d506f2a9f634508616b88fbed5863459c1257454508c8c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MeteorImpact.ogg",
+      "bytes": 7428,
+      "sha256": "0ae50387bbd6cef0b0535547e073531fd7475444c45f0d20b48262663add1d94"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MinionDeath.ogg",
+      "bytes": 5249,
+      "sha256": "49aa15eecc19901379b719585ad9f4578c014fc128ec0b7fa57602e111adab95"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Overtime.ogg",
+      "bytes": 7168,
+      "sha256": "22b72c0122880b6db2a3c28de22965aec473ebe377f98bedbc5aa70df3caf583"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/PlanetArrival.ogg",
+      "bytes": 17368,
+      "sha256": "076f2a06d572fc21d74e71f187bf0b9f91ce5ecd64b3c7d2ecb8c529fa6ba46d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Purchase.ogg",
+      "bytes": 6707,
+      "sha256": "36078254d034130a8703e792271828e13e9a55b03941b947408928312fbe638e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RealityShatter.ogg",
+      "bytes": 12709,
+      "sha256": "2284aec4557284e688a0fec07c6c2a4a24b0a1f50b57bcc20469fa43d3853796"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallCancel.ogg",
+      "bytes": 5843,
+      "sha256": "d119eae81e546e252c42c3660a8dd79bc368283d3f356ad4fc70ff974df90f93"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallComplete.ogg",
+      "bytes": 6932,
+      "sha256": "a758750ba0089c2d65dbaf78dd91403a619957dd7e217144b635ef0ae1aef057"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallStart.ogg",
+      "bytes": 7346,
+      "sha256": "27c696ae765d4d86d5cade2369f73760f76e1b71a2f09b2095988d2ec8fbabae"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Shield.ogg",
+      "bytes": 4662,
+      "sha256": "becbe4620cd3e6b77f0bf1fbeb7d765544bffc4cbaa9afb3b43af5794f9da702"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/SiegeArrival.ogg",
+      "bytes": 15225,
+      "sha256": "b9359ff88d6733231f329e6271623e050ff160687d18a4df89e168b519aa050d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/SuddenDeath.ogg",
+      "bytes": 4954,
+      "sha256": "dd2a9d8f31eddb372144ff6b8d09e6bcbc8d4db19c14ce98d1ea8326fe7ecde0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerImpact.ogg",
+      "bytes": 6127,
+      "sha256": "12e7a1e11e31b82126ea819f3a470d6d1d8827b9d03afc9ede072a0030257c60"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerShot.ogg",
+      "bytes": 5071,
+      "sha256": "1866f7f233f079741c7a0ea8e76fe2bcfad05fc94a8b08348266bb02e67249c4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerTarget.ogg",
+      "bytes": 4099,
+      "sha256": "2c9d115925d6e6c19019aec2b45efe424dad6b66812a962d13191bab0cc5a5d5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/UiBack.ogg",
+      "bytes": 3947,
+      "sha256": "751a62fbb3d856852c4a625031177fc641b0ef752718e98d880d89e319bedf38"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/UiConfirm.ogg",
+      "bytes": 3900,
+      "sha256": "3c466a3b60e0642ca5a055caf2d4425afef85cf2eab7f15b18783660f0cdb32f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Victory.ogg",
+      "bytes": 7640,
+      "sha256": "a3e2c40dba94bf1c705802c45b2fd140c35b883e9036a4971f25876872e4fd2c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBomber/Model.bytes",
+      "bytes": 142900,
+      "sha256": "3ef1c456ba86786af9b0cc507437037b2ebc73490da2fbe9c0cc7df5ad51c69d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/ConcreteNormal.png",
+      "bytes": 103611,
+      "sha256": "5e4d330431c332fb2905f29c5cd9fbce8aab49d4bcd01821e4f293cb2d5d0a19"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/ConcreteSurface.png",
+      "bytes": 35381,
+      "sha256": "6ab383097253823f265bd9501a5e3ef5305a167a0256a702626a757d9102bca3"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/MetalNormal.png",
+      "bytes": 6117,
+      "sha256": "ff996b01183dfd3bebc158239fc28ac8725824b3e65cdcf7ebaeacc057efe400"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/MetalSurface.png",
+      "bytes": 1725,
+      "sha256": "69797831a10b3691869ce4463c38f11c9280fd412041a4b3494df16e6fe31bfe"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Elyra.fbx",
+      "bytes": 2300556,
+      "sha256": "e9b5f60c5910b7c7b3dba04c3ec8352f221e2746ac8be80fa2e8d22bf940209b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Kaelon.fbx",
+      "bytes": 2172620,
+      "sha256": "ee68a5425934d97118cd58e7c79c8f1639aaa2d5babbeecc77fd987d22afe79f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+      "bytes": 2509980,
+      "sha256": "27e46ece2f905110d9479a8ad173b2b52d71c779828a52ec0496f1178e58f851"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Nyra.fbx",
+      "bytes": 2252188,
+      "sha256": "473468404990ec7927be9466f389f85d628b5362845f03f5ab9051a92f0fa7e8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+      "bytes": 2174060,
+      "sha256": "4c60f8f2c593197dae037afd0bb80374c016ed0412f0b308f515094722c61b20"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+      "bytes": 615036,
+      "sha256": "a0307b313b4f3bebb6f39b07456aa4ee3539ce11316e32db293681fa6e48c1e5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Albedo.png",
+      "bytes": 828845,
+      "sha256": "6269da8ac5864ca2f252e065c0b572adedfda401a46ce03e98dad6f85e68fa4a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Normal.png",
+      "bytes": 431796,
+      "sha256": "ce50c05421ab135776867e5d59b1455f59b57c1ab10537f84a4eabb96e9cbb5a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Traveler.fbx",
+      "bytes": 2266140,
+      "sha256": "19f10629334d4ca43daa2a8999446b6ad13ab22153942e061777bc08d1dfbd99"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+      "bytes": 2379916,
+      "sha256": "98cf049305d9bf83833e5a60626d7e1698aaa843ae92c0ef31d28da2f4169a3e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/CrystalNormal.png",
+      "bytes": 74910,
+      "sha256": "49e11bc365ba33a6be8bd468a43d6960a09b113b201b8e4266aa843815c196ed"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/CrystalSurface.png",
+      "bytes": 44942,
+      "sha256": "4861360039cc6a494bbf521497e7e7151ac6006a4101a7dbc90cd7ca233e7155"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/IceNormal.png",
+      "bytes": 74910,
+      "sha256": "49e11bc365ba33a6be8bd468a43d6960a09b113b201b8e4266aa843815c196ed"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/IceSurface.png",
+      "bytes": 44942,
+      "sha256": "4861360039cc6a494bbf521497e7e7151ac6006a4101a7dbc90cd7ca233e7155"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/MachineNormal.png",
+      "bytes": 57749,
+      "sha256": "7a893bec907bd53d665e96145fe90dfff34616b14435eeb88cee55cfe1cb887d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/MachineSurface.png",
+      "bytes": 35162,
+      "sha256": "7d1db8457b9468a8e3302ca7f68a62d847c3fdce7a75e0f226b6fb114ef2b986"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SandstoneNormal.png",
+      "bytes": 74910,
+      "sha256": "49e11bc365ba33a6be8bd468a43d6960a09b113b201b8e4266aa843815c196ed"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SandstoneSurface.png",
+      "bytes": 44942,
+      "sha256": "4861360039cc6a494bbf521497e7e7151ac6006a4101a7dbc90cd7ca233e7155"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SkeletonNormal.png",
+      "bytes": 57749,
+      "sha256": "7a893bec907bd53d665e96145fe90dfff34616b14435eeb88cee55cfe1cb887d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SkeletonSurface.png",
+      "bytes": 35162,
+      "sha256": "7d1db8457b9468a8e3302ca7f68a62d847c3fdce7a75e0f226b6fb114ef2b986"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SpiderNormal.png",
+      "bytes": 79507,
+      "sha256": "00e69fe31b071bf01d5b71d4b0200dd90239712d52f7569e33b4a4b8f82ef889"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SpiderSurface.png",
+      "bytes": 46676,
+      "sha256": "53a6dd8ac40cdcabd3d4461e66c3fd5ec0076bb0bc8118671ad9a1fc48a4d6ff"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/XenoNormal.png",
+      "bytes": 79507,
+      "sha256": "00e69fe31b071bf01d5b71d4b0200dd90239712d52f7569e33b4a4b8f82ef889"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/XenoSurface.png",
+      "bytes": 46676,
+      "sha256": "53a6dd8ac40cdcabd3d4461e66c3fd5ec0076bb0bc8118671ad9a1fc48a4d6ff"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar17.jpg",
+      "bytes": 109619,
+      "sha256": "5bbd5e9f874faa7ef98d2b4bc540a38f18ce14d805cecb493f44cd2df2602678"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar18.jpg",
+      "bytes": 117453,
+      "sha256": "844eb85b5645d643f517dec0ffb337f3e9685041ea5e97a2434169633d664368"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar19.jpg",
+      "bytes": 116543,
+      "sha256": "d439e1d28b6d0e81fc6151249dcc1c84b84e21b6a8d98b331ced7423556bfe94"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar20.jpg",
+      "bytes": 120223,
+      "sha256": "1c439709212aa73734dc6e8e1fb4e01644e7ea5684289cf1c80710752030f832"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar21.jpg",
+      "bytes": 124231,
+      "sha256": "fc12a2e4a13656e9db25fb0e5da34465f1f6ff3a5c7d6a2162c2d8170259e240"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar22.jpg",
+      "bytes": 127353,
+      "sha256": "d0a3b16120783f0546920e009b3fe6c5a67f99229974e7c22b1a7f30ed7262f4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar23.jpg",
+      "bytes": 132025,
+      "sha256": "65f7e2cd7e3a592967207e2df4a14071a485c1369d085609070dcf325bd9f06d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar24.jpg",
+      "bytes": 140345,
+      "sha256": "50126881302fdb3f55c2f3dcaef1d5ccd7b98bae4f69d64aacb2b5830324fa49"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar25.jpg",
+      "bytes": 133589,
+      "sha256": "a797bc128cec8ab32b0884218ac556b3698463c05f94a6b95cf8a06a2690e4c7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar26.jpg",
+      "bytes": 114594,
+      "sha256": "33391f15562a6f8472771f4305eec718356ba256f58ad8c1aae6933fd7884943"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar32.jpg",
+      "bytes": 126949,
+      "sha256": "5d1203fda3e0d299aee5f145c1231f54625424ecd461d8f3702d275e22d916bd"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar33.jpg",
+      "bytes": 106922,
+      "sha256": "03130a370f5afa78677fb2c5129656ba82aba9d4e29184ce2e97377bba99e7a2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar34.jpg",
+      "bytes": 120443,
+      "sha256": "637acd945f50ec6898f1fb617d7579cb44ef1d375cf5ff54ea1373524c3563da"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar35.jpg",
+      "bytes": 110834,
+      "sha256": "d8bfa827b70781ad0a33c6660dcdff1e1f9eda636f0fceb06a493925265792f4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar36.jpg",
+      "bytes": 111103,
+      "sha256": "db5f8ace23aa4da2dcbb32bef157d3d218dd019476efd42a7740bd40341d378b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar38.jpg",
+      "bytes": 144480,
+      "sha256": "5d2eeaead6fc68af98dc5b7005f7f0b34218b946a1cee6c4c9cb2806b6a82f94"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar39.jpg",
+      "bytes": 124366,
+      "sha256": "52b7c0a12e2a28123b9b605e9aa890b52107a9cadcfacc1585fb77e33078fcae"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar40.jpg",
+      "bytes": 120341,
+      "sha256": "08f12ef5ed5dc34fe383011688968389459284b1b6de3d5fbb51870a58d59ed3"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar41.jpg",
+      "bytes": 94981,
+      "sha256": "3eb0b0fe0e32f319f61a555b4c9f572a225882f8538a68ecc33bccde17aa13e9"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar42.jpg",
+      "bytes": 123237,
+      "sha256": "5717a20cfc5bd4e17ad0dfc16417252b9147afdb797ea2340641c47b19921608"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/CosmicAtlas.jpg",
+      "bytes": 398471,
+      "sha256": "04927bf34cc2fdcb08a961d58c5199e8f59178f62a16fcbde20ea97fddd3bba2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+      "bytes": 254692,
+      "sha256": "513669b739e627ba7a3a38f1e1630d7f8685c9ff887c9cd6bc767669ce4dce3f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CombatAnimation/Library.bytes",
+      "bytes": 56593,
+      "sha256": "961b293c3d05eb32b04b27fea25016cc73f00eba7fba4f7033ed9eef288acf53"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CombatUI/AbilityAtlas.png",
+      "bytes": 2490582,
+      "sha256": "9cd8a94b5aac9331c8868811a88b47e3f8ac24a82c40cd8511eb1f1fbf25b734"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+      "bytes": 915679,
+      "sha256": "d272745d3b7aa401be2c6119ee1b147849eebac6e866096a74ac169f28166a5e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberRanger/SivraRifleDetails.fbx",
+      "bytes": 103548,
+      "sha256": "af802f753b5eb2aa051541f036c19a4ad2c2d367f2fd11e7e935c1177c1500e1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/AnchorChain.bytes",
+      "bytes": 150258,
+      "sha256": "4b1da92662942bef2c8d28160d48819cde9a122ec534f06af619e4d60f10c068"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/AnchorProjectile.bytes",
+      "bytes": 166041,
+      "sha256": "57dd55ff3498ad0afd5610aa3e6e72cbba4ae169ddc6dcba9a81a13167cdfe9d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/0.png",
+      "bytes": 2693133,
+      "sha256": "c21ff6e0540e3b11ae4cbc03ae1161a4a9e13150113c79c2f763498fc7d870b7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/1.png",
+      "bytes": 2721774,
+      "sha256": "aa59a1023c55dba55d88273d94b303c524db37a5d6f8433445609b833b664448"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/2.png",
+      "bytes": 2555453,
+      "sha256": "25b74c829e48cb4209f866ba1af52d07b66fe2f815ff1ff145b5076bc8fa2c3e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/3.png",
+      "bytes": 2721178,
+      "sha256": "c5ebf721c4fe772cac99f657af35ffb21bb3b7f6172a0db063743c641ae1af88"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/4.png",
+      "bytes": 2672651,
+      "sha256": "3725daf67ec8b1623c81e33eac9624e2c11e43663363e81770bd37dbfece25f7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/Background.png",
+      "bytes": 583608,
+      "sha256": "790c5e1676397717071a08c4e75c8dbd7fb1bd419db7f813ccb4a1c2127d2ae2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+      "bytes": 1330913,
+      "sha256": "c69dee71fe58db9e3ca9063029f30aca088cef5527a44b1fefdc5cefb2a9f463"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/WaterSpiral.bytes",
+      "bytes": 47893,
+      "sha256": "356683e95e1cfc1678ad62838e1c270151fe7f9572f662bde84ad329dd0a0707"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/WaveCrest.bytes",
+      "bytes": 15133,
+      "sha256": "fe30f4bb2cf4de56525c8fd9e3194a2894f898595fb5d5cbd72e1b8871111108"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/DimensionsDisplay-SemiBold.ttf",
+      "bytes": 16024,
+      "sha256": "8cab3973349edc19407b923f3e80984fa99688e63f77326c3dc153d8c7e6e5b6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdrop.png",
+      "bytes": 2108334,
+      "sha256": "4a1e740c21cad3f65bf6b92a69fcb09d4b5ec10c2ca474c97092422543294770"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdropAnimated.mp4",
+      "bytes": 2238864,
+      "sha256": "11dc20f75cc277b4a7dda0b3bbfb623ae23d4c980c899c3ffe2939052f2a41e8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdropAnimatedPoster.png",
+      "bytes": 2481373,
+      "sha256": "a6a3bf5f64d49ee9731d00797d706c1aa45c83cf9c95f506fdad105c748afb68"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/MenuCardAtlas.png",
+      "bytes": 2666921,
+      "sha256": "25f0930641dea5303e4dbfc0257e6f4733f38005464d907de5ae8c01a439a18c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/Rajdhani-Regular.ttf",
+      "bytes": 66196,
+      "sha256": "25037d9e6431348aafc80e91ad4fa6b07c230aa5cf579672da9edf2783fa3125"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/Rajdhani-SemiBold.ttf",
+      "bytes": 68308,
+      "sha256": "bedd0f3f3875c97e467e9ac60b0cf94e7cd62c0acc33d025343318a605b43c54"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GJMagentaGolem/Model.bytes",
+      "bytes": 394882,
+      "sha256": "c4c69aba4c9650c94d87aa4e18553d6df21bf3a471d9a8c3b86e475fc15fa86c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GJMagentaGolem/SkinUV.bytes",
+      "bytes": 343543,
+      "sha256": "f06018cc871267f411fbce844af9333c6a65b646a0e8a9ebe904fb2f72ffa13c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GreenStalker/Model.bytes",
+      "bytes": 102437,
+      "sha256": "60b5a58d03d51e09d2e3cfddb2f5f8d7782dac1a2c6ce72b3ab82f118bd9e692"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GreenStalker/SkinUV.bytes",
+      "bytes": 97609,
+      "sha256": "7f739bccc64abe5325f129c3b4b36b1f24a6a85800c105757aa241e745770ebe"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/UrbanDigitalCamo.png",
+      "bytes": 230973,
+      "sha256": "cbb7581dd90d8be0018cd4eb669212248c1de6aa22b08e5d4cec5272d5bbf99e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png",
+      "bytes": 159759,
+      "sha256": "03426cc4364c9e0cd1fd203f49d7936d9fdb7e47e7cc29f91f1fb2df2db98be9"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/KryonBear/Model.bytes",
+      "bytes": 359940,
+      "sha256": "c1337739f6997f8ce0700143afab140d0bffef284a9d38e0e4876d5dc31cb6d1"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/KryonBear/SkinUV.bytes",
+      "bytes": 372263,
+      "sha256": "84eccf9da9e53de810449900e154dcb2463dbbb6206371f7a79d22a283978e0c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/LocomotionAnimation/Library.bytes",
+      "bytes": 23586,
+      "sha256": "befc96579ecaf787e9df52d2192eb9b6dbca122fd701b5bb2bb3a8a52ddae640"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Dark00.png",
+      "bytes": 2069322,
+      "sha256": "7310a619bf61096359e54e40e1209b25044c85582a304003e0e2b9a5d1a03269"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/DiamondCore.png",
+      "bytes": 2456717,
+      "sha256": "da31a0f2d90fb4d6819cf5269e5af6a7cf199fdb9c807886a360a2fed84575ce"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Earth.png",
+      "bytes": 2457000,
+      "sha256": "fb44bb641a6a480f32d31a9dc10d93a47f6fb27c6dc1caf9bff6b94b5c08990e"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/GJ504b.png",
+      "bytes": 2321276,
+      "sha256": "ac913cc0c392e8e4a7a0e31c7ee69aabef9077080a4f100d331f4e4e5c8c4558"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/GreenPlanet.png",
+      "bytes": 2225864,
+      "sha256": "3f77f9e301ba0d855bf11eeafd5b0a7c1120ea9344f109001e90d79597759bec"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Kryon.png",
+      "bytes": 2287045,
+      "sha256": "bfc86a8b4ac36ccfa6675ad98c6568139ba991b374e45f822a34977660a0211d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Mars.png",
+      "bytes": 2181416,
+      "sha256": "6d75ef5af57808fe91a787ae6d4b17ee593662a31fef95c668886c81e0fece21"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Moon.png",
+      "bytes": 2480041,
+      "sha256": "ca9dab79af0c1dc05be34c860cab99b288299a4442771bd3539c706384b6ce5a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Neptune.png",
+      "bytes": 2087816,
+      "sha256": "280c6b79ce38ac605595fe7de201c28d0c9fb852714908fc0de899530261d701"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Noxara.png",
+      "bytes": 2374894,
+      "sha256": "a4680733107917ed8c3bd5600a8ba23752f26b71d41ee701222bcea188dea23a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Pyraxis.png",
+      "bytes": 2033185,
+      "sha256": "2760412fcabd4e6d67838d16a62b26c02e92e60ad0d222dcc8bb8f291615028b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Universe.png",
+      "bytes": 1811278,
+      "sha256": "c81c5ada576e71b0b76ee0a42ce73061e9f3e18bfd695068b1c8ad3bfcb35f79"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MarsSkeleton/Model.bytes",
+      "bytes": 491431,
+      "sha256": "d6e051d7bcb82a1f1cfc1919a0025ddfb40427983dc8c084df74d0f211fda24b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MarsSkeleton/SkinUV.bytes",
+      "bytes": 556419,
+      "sha256": "67b362aa8154685247dacd3f97be5ab2353a0a445a1de8dade30655ee61db293"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MechanicalScorpion/Model.bytes",
+      "bytes": 509807,
+      "sha256": "8c8dca8789b8535a84aa633c3615d12d5903477a25665723d30860ff5109cc6d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MechanicalScorpion/SkinUV.bytes",
+      "bytes": 712143,
+      "sha256": "7d1c30fd649ad9b2729624982980170ceade11c33e1ec5d86c8311b1bd310cf6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/NoxaraClockworkSpider/Model.bytes",
+      "bytes": 393349,
+      "sha256": "9840dcb848bdb3d4d5f65a2d364d39b474b0809e4bf1564fd7c552e17d25afb3"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/NoxaraClockworkSpider/SkinUV.bytes",
+      "bytes": 648206,
+      "sha256": "c86dc8b6776f6edb9f5b82b26058cfffbc4f794f588de6faa28de2d565c958ba"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PSRCrystalTitan/Model.bytes",
+      "bytes": 351190,
+      "sha256": "cfc547b48e5a9629ee5cba3ccd68d5fdf73f916bfd5e08c2d45d6b70a0e01b44"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PSRCrystalTitan/SkinUV.bytes",
+      "bytes": 303075,
+      "sha256": "da2e456a1b03ce724d3479c74e67150acc711d86468774ad80e7bb64a28d5764"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Ground.png",
+      "bytes": 752943,
+      "sha256": "436f8da8ead84277ac03f494930679dd8454f4738978f0a12ef66cb54f2f474c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Macro.png",
+      "bytes": 646678,
+      "sha256": "b1f5a02abd3e342fd2c632034bd524d879def9bc5125497f4bca4d3bb28196e4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Stone.png",
+      "bytes": 750449,
+      "sha256": "d64c6cef386b5d5fe6616090f31045fa989a2a5c4aa83891f1664a3c1a374166"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Ground.png",
+      "bytes": 806530,
+      "sha256": "0b65d3a3dd1f04bfd236b5bbe67e20e55409dc16bc9cb4819f91116c04ba8420"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Macro.png",
+      "bytes": 649877,
+      "sha256": "3a99dafece87bd0b53971aea3b92f4cd07a8d0c70179074477ca3dbbeb7ae432"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Stone.png",
+      "bytes": 618167,
+      "sha256": "72e8f521cda287e0df6f34a976a39903d26ebd4620d1e7c12c9f6c42432876a8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Ground.png",
+      "bytes": 811498,
+      "sha256": "d652ccdb72b5d882d93791b9ed56fc87b2a7c54e19042f8171e955ca5e1d2333"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Macro.png",
+      "bytes": 552423,
+      "sha256": "9839886b84fb12ca6306367b5b261e4dffcb51ff494a7d87db59c2edba9563b4"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Stone.png",
+      "bytes": 811617,
+      "sha256": "543398250d9153a523d517d3d4e39c05b891adb0f6215f717791a04656c75bb2"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Ground.png",
+      "bytes": 872405,
+      "sha256": "9824b6d805331f01c55aa7583b2a37faeb6e615b2b5768d5c66285896b75f411"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Macro.png",
+      "bytes": 559332,
+      "sha256": "0c442750d2b117248e98b7e75eecc7232863c761f79ef507f4b98e0673dc627a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Stone.png",
+      "bytes": 867083,
+      "sha256": "c6fe41b036a23dcb25ac7bc4414ce59a432d9b0f0b085a1563d0f6c69d137d3d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Ground.png",
+      "bytes": 830192,
+      "sha256": "7f67ea0bbfcd8384a47e44e76a668dc03a9c1d12559e8a2d0c6351c87ab23db6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Macro.png",
+      "bytes": 528313,
+      "sha256": "e312a5eab6a7878c7e8aa8bd5639df3b4949d88b89d52abaa9116303d431b340"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Stone.png",
+      "bytes": 817355,
+      "sha256": "ccb3d89aa50269bea92cf4a23483e32d8106a8dfe8ef09fb8c1a6ebdae97de82"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Ground.png",
+      "bytes": 745116,
+      "sha256": "882e6a38aa58f17aa167d948299322b48362bb21dc37d4f64b4e95c6e3c7fc1c"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Macro.png",
+      "bytes": 574404,
+      "sha256": "bf979a8ba9ea19abb03017deec963baa9bdb0863218f9d0effbfcabb304c4cc6"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Stone.png",
+      "bytes": 692570,
+      "sha256": "78766d06d3a0756bc76cfb46c6480a81af1f58fd1f8677e40da90843565dd123"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Ground.png",
+      "bytes": 827060,
+      "sha256": "d7458fb5557143143cc558fa2a6cd6fefe5be7c32732d6022d2217762b8b17cb"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Macro.png",
+      "bytes": 558042,
+      "sha256": "ff232de37ae4c760daf5444cf0d27bcb6d88915f27d6b2a052abc025d3203334"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Stone.png",
+      "bytes": 832693,
+      "sha256": "3903a14cab58a7e63b5ae2c60e0439e9a0cf2f543e1a0b388758180eabdaed42"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Ground.png",
+      "bytes": 757685,
+      "sha256": "5d5299d5348acb35196a0ac353f449f0362dc06d8b280c3d6615b38b62fd5870"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Macro.png",
+      "bytes": 633439,
+      "sha256": "e93906bf7a18af7e3d0b767fe5b4c1141a05e0e6360a8ec0049ed783c33e11f7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Stone.png",
+      "bytes": 757880,
+      "sha256": "2e45fedc1070980f1b4017ab403dfa0bbfb45216d7c8c12b9180d9cb33f98d33"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Ground.png",
+      "bytes": 788088,
+      "sha256": "e0c442b9f7d9c9f1abe60c03456b6f55ebec56ae59c9017dedd8c072252c1bc5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Macro.png",
+      "bytes": 531646,
+      "sha256": "ca7622b4dc9dbd986a5f41e6e52ce50fe366cad9d510358513279c74e0f183fb"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Stone.png",
+      "bytes": 740904,
+      "sha256": "9358c84d33c50972981e163e949cc29fcf70f3a7b73b6195761eef1d233bbf1a"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Ground.png",
+      "bytes": 883774,
+      "sha256": "dcdfa64340d2e993f808bd3807ee4461aeb98092c3035b2634823d1ed034ea65"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Macro.png",
+      "bytes": 595319,
+      "sha256": "74a145d3d4f22360bc2295b9a261ae1dab4d5bbbf4e93a674af16c6856b16216"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Stone.png",
+      "bytes": 758458,
+      "sha256": "9b0ad46bcc3274c53b77872d7fb0902df2ab20f4bb3a9af55c0e9c89fb8f8e4b"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Ground.png",
+      "bytes": 869666,
+      "sha256": "f9aa21ae163347d861a5ee8033f8026cee267d7509a63f6a470d9c91ef487278"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Macro.png",
+      "bytes": 625132,
+      "sha256": "34f63014d91ac104b65bf9fb48cf88a80cf8eb72ca2b88eb1f550bbd4755f96d"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Stone.png",
+      "bytes": 830441,
+      "sha256": "76a675a87f1b925699a475cd7e504da3e611eb51e74b5047389181bbae1d8850"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Bark.png",
+      "bytes": 120596,
+      "sha256": "d60dcffcdeffad1ec777fa584fbe5919c60d9d472f8780c119333b59581e66da"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Ice.png",
+      "bytes": 115400,
+      "sha256": "d481d6a07972a3dc83bbff94d1affa07b883d24738697d9cb73af542d3d57828"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Leaf.png",
+      "bytes": 139192,
+      "sha256": "db2de4b493696aa55159f3c2c7a0d5c3cd637b70a5fd4c84030aa52316a249d7"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Metal.png",
+      "bytes": 122041,
+      "sha256": "a3017d5ca5b50085ae1a1013977870f444a8ae74a650cdbaf51ff574a8d86155"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+      "bytes": 448404,
+      "sha256": "af32de7ff1b65fa582cfab14ef504a91c01d9ea1da5e0d8ff946e9493bba6baa"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Concrete.png",
+      "bytes": 146668,
+      "sha256": "a15a8e3b2d09b78357103196d09da89f6791e09b93658e8e3f05f46819f5ba5f"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Sand.png",
+      "bytes": 169031,
+      "sha256": "9310848aebdc05961fb5fdd8e346161fec282715ad48b35a4a2231ba780c59a5"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Soil.png",
+      "bytes": 126703,
+      "sha256": "3e3266f13c3dc2283c4a2852d8f272d4caf44a18addffbcd71a935bdddd04600"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Stone.png",
+      "bytes": 119339,
+      "sha256": "ed8761c36b3c48824377530226c91a5c67e9295fcc683706f81ccdeaf277d4e8"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+      "bytes": 523823,
+      "sha256": "47b7faf0a1cf1ad402e6ff678e07650ba05c7ca64941d627552f8554c3dea7a6"
+    },
+    {
+      "path": "Assets/TutorialInfo/Icons/URP.png",
+      "bytes": 24069,
+      "sha256": "1d17a9ff3537859abe2c008603d29d90cf43191ae77aa386167cc65e53ba03d9"
+    },
+    {
+      "path": "ArtSource/Animations/CombatSourceUAL1.blend",
+      "bytes": 558380,
+      "sha256": "a73733a9d57a74659a3a5b99f79d68fee7cb05f34397e2dc106b5574299716e5"
+    },
+    {
+      "path": "ArtSource/Animations/CombatSourceUAL2.blend",
+      "bytes": 566681,
+      "sha256": "5262340a26f94b31dd102007a5283ee87080c0dc263a5b3089b79f7ad84de1dc"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/KayKit_MovementAdvanced.blend",
+      "bytes": 206270,
+      "sha256": "9723198dad0a3c93c2dc3bee159846546cdf36a3ba9cdc183ba322721abe7f37"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/KayKit_MovementBasic.blend",
+      "bytes": 167956,
+      "sha256": "6229598fc4cc82ed42a656467273f06f417b7e4f7ba6de7cf52d9327c932bcd0"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/Quaternius_Movement.blend",
+      "bytes": 441451,
+      "sha256": "28b6fc63e0326b33a734fa4290620aa13e8e9f8dac49b840ceb8df5546fcc3fd"
+    },
+    {
+      "path": "ArtSource/Animations/StandingIdle.fbx.gz",
+      "bytes": 213982,
+      "sha256": "35c04d5f0878e756d1574493531b22685e121ecd674c552bb9d6e0ff8d9d5e85"
+    },
+    {
+      "path": "ArtSource/Audio/Bomber/mightuser-fighter-jet-powerful-low-flyby-sfx-337205.mp3",
+      "bytes": 473856,
+      "sha256": "d82a4c7963ffb560eb0fe8b499f272795694423173f61df8fbb8ab5abc4fa1d7"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Explosion.wav",
+      "bytes": 439916,
+      "sha256": "864acabf77381af337e995049de939f1f5129163d0eb8e395d5cba7c09853444"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/HeroDeathHa.wav",
+      "bytes": 14114,
+      "sha256": "5f8b8fabb2e7d41040675611751fbb41bd1c7c4b75c6088512d3bf402a0f1bf5"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/HeroDeathSpecialBox.wav",
+      "bytes": 530932,
+      "sha256": "ed09d1f36af5f74734afffe5e6797db4b251b139e30c47c8e6945af265f5af89"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Defeat.ogg",
+      "bytes": 11185,
+      "sha256": "780da8f26ed9c1760f20dfbfdbfd2e44fdf6aca1de20e72aea72d0e7e59424bc"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/FrontShift.ogg",
+      "bytes": 5834,
+      "sha256": "baa2673b1c781648d225873b417ec3cc84f2518a1c031be4efc5653b0c61b9fd"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Kill.ogg",
+      "bytes": 4804,
+      "sha256": "64a1fe52b514e7fadf1e70ca87262a791eda4ca7dc1fc75d39428d7710fe04ea"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Overtime.ogg",
+      "bytes": 9054,
+      "sha256": "9e1e97517fcdfe3f169f2728e31a08bef57d6e46c207f64615a68382f1f6c8ec"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/PlanetArrival.ogg",
+      "bytes": 17638,
+      "sha256": "58968f7a4db468268d37554dcb3c3d973d2f7c32468755ddaec4994e02771535"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Purchase.ogg",
+      "bytes": 7796,
+      "sha256": "57ff9611d95a947ef7772061b6ae6274ac251fa39cd2ece46da8228b343b935e"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RealityShatter.ogg",
+      "bytes": 12890,
+      "sha256": "e4faaca64754bb938b8630d89c83b8903d2ea5302360121df1455f94a198d4bf"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallCancel.ogg",
+      "bytes": 5563,
+      "sha256": "b611a08e2c60545e94c9f07377049665ed147d30cc16f04088fc5801d80c91ce"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallComplete.ogg",
+      "bytes": 8356,
+      "sha256": "402cbc025f91295ca85d008aaa039ebabfddb186465dcd42684e30a3d1386593"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallStart.ogg",
+      "bytes": 9125,
+      "sha256": "0c23f55d2c06c13f8219a984fcc321aafca98ab0f08fd193ace9da3cc15bbcf5"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/SiegeArrival.ogg",
+      "bytes": 15436,
+      "sha256": "386211c7987cfd56037a5782ad75bf1370955989cccb5fe6f34aa4b618c1dc9a"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/SuddenDeath.ogg",
+      "bytes": 5339,
+      "sha256": "e71f9571ea80d1665c677505c0688371849227fe429d498e0918200ca054c5d5"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/TowerTarget.ogg",
+      "bytes": 4045,
+      "sha256": "99dbe51477c3882520c6d851d1347d28d30641a2339c770ac064cb4d21123372"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/UiBack.ogg",
+      "bytes": 3691,
+      "sha256": "473f7a65b25a4f451b6f1bac634dd726822d7a70c350fa05a51d1973f59cd817"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/UiConfirm.ogg",
+      "bytes": 3648,
+      "sha256": "e5b6c5edd789e33e589af792eb757cbdc1fd864f8a9769173a5f6aeda674faa4"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Victory.ogg",
+      "bytes": 9472,
+      "sha256": "a9d9ffda3f9af572519c4b8ee48dc22316aebb9271950426b7293871db9298a8"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookClose.ogg",
+      "bytes": 9292,
+      "sha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip1.ogg",
+      "bytes": 18248,
+      "sha256": "fa81ac2fedc8c641661b87e349630a36c9800e795e0c800e029214efdbe26a7d"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip2.ogg",
+      "bytes": 12393,
+      "sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip3.ogg",
+      "bytes": 9077,
+      "sha256": "c85db5dceb3f1df073e960630277eaa88a5afda0477c1ddd68dad707621767be"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookOpen.ogg",
+      "bytes": 8273,
+      "sha256": "953390534377222bee89ac8cd9e60a58fdc037c71a4d7c18c43cd647c7f34ba8"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookPlace2.ogg",
+      "bytes": 11185,
+      "sha256": "831874e8fd142d4d0a03ff009f1f83966338a7878c0f6f38c613ae5b80dd731e"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/chop.ogg",
+      "bytes": 9370,
+      "sha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth1.ogg",
+      "bytes": 16508,
+      "sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth2.ogg",
+      "bytes": 11787,
+      "sha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth4.ogg",
+      "bytes": 11043,
+      "sha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak1.ogg",
+      "bytes": 15761,
+      "sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak2.ogg",
+      "bytes": 19012,
+      "sha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak3.ogg",
+      "bytes": 10408,
+      "sha256": "f9638787f95004b9d2d06f8eff8e99d4e594c21b51947daf562856fbcec905d1"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife1.ogg",
+      "bytes": 11134,
+      "sha256": "276403e72c3b71c47bc24db3083970c23f8e5551ffa78f436f83483c56f3f0bb"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife2.ogg",
+      "bytes": 12395,
+      "sha256": "d5df6a4130cbb016f97b4883769a418917b9629cb4c21717030b186e0c73281a"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife3.ogg",
+      "bytes": 12726,
+      "sha256": "a11ae62fb1a628425769d11a9de394980ad8909c31f4c9a4316f226963e21caf"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/dropLeather.ogg",
+      "bytes": 11695,
+      "sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_000.ogg",
+      "bytes": 13915,
+      "sha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_002.ogg",
+      "bytes": 9252,
+      "sha256": "a4171ed1a4a17fb858a38de1c59b5b42e50d8f046c525706c0e3ac8671f189f5"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_004.ogg",
+      "bytes": 6529,
+      "sha256": "49fe4fafa2001bd0d312976796824571ca8429851f285997e1327d17bb34fd00"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_000.ogg",
+      "bytes": 7403,
+      "sha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_002.ogg",
+      "bytes": 7661,
+      "sha256": "4978654ac840ad519692d5d5ba48a8101cabce13b9a577be73ad589185e5e9ed"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_004.ogg",
+      "bytes": 8300,
+      "sha256": "c7742b0e33c1733ddaf902aa68464a4f5364e4d4cb6ff11b76a7aa4151a138dd"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_000.ogg",
+      "bytes": 6526,
+      "sha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_002.ogg",
+      "bytes": 6562,
+      "sha256": "710db7451bb7857b9140dfe6afe4621ea2188ad65eda3919c569d1bb285b933d"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_004.ogg",
+      "bytes": 6641,
+      "sha256": "f535b7cb7835400d8d28bcf9e1cf047ce3c0eb7a6456bdb1a4a27acbec1ed2cb"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_001.ogg",
+      "bytes": 8605,
+      "sha256": "d3d806cb3012c9ddd87010b30295ccb74d6d8b690077d19e67afd09a9d8feb03"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_003.ogg",
+      "bytes": 8596,
+      "sha256": "dccea1ecc3d942ee5fd217c684632638f6c039c97cd3ae59c75ab15d0c3f0b59"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_004.ogg",
+      "bytes": 8397,
+      "sha256": "853fe77ad46bd0cf106e40e741b039e15b90f73edecd92cde524fbad9e3ebe00"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_000.ogg",
+      "bytes": 6110,
+      "sha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_002.ogg",
+      "bytes": 5634,
+      "sha256": "b914c8f1eb7c0f34bb165d7c77f4be0351f6be0660c13c53e65424e262e2c093"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_004.ogg",
+      "bytes": 5788,
+      "sha256": "6d65b463c0555dd5be16b8db6d2cbe23a94e07a4637779b8ad17d0db3e500a87"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_000.ogg",
+      "bytes": 12035,
+      "sha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_002.ogg",
+      "bytes": 11235,
+      "sha256": "059558ec751115ca6b1441e00f0adc837c1a3eeb0a066b109e0fd879fc5d0b0c"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_004.ogg",
+      "bytes": 11668,
+      "sha256": "8ca3a99d85d845751ad8ce7b40509da58263a62e48cde70e5a30b5ccef4c9a3b"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_000.ogg",
+      "bytes": 10032,
+      "sha256": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_002.ogg",
+      "bytes": 10188,
+      "sha256": "b0cab75d1befa32b4cf215d8ee7e1c400a39182e8b105963b8e310f825b198a1"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_004.ogg",
+      "bytes": 11092,
+      "sha256": "e31bfec90630155bcc6af541d1d14ae8202c435c52b42e6b6183fdb6ffb248b0"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_000.ogg",
+      "bytes": 11617,
+      "sha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_002.ogg",
+      "bytes": 9025,
+      "sha256": "7993dd4c156b9979ad69f17be5ebe31850b16039a3857f8477141be54dfee1b3"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_004.ogg",
+      "bytes": 10452,
+      "sha256": "f4c0c3eb8ab6517583b8218ed03f28923d1b687379aab4c1d5a6d4c10cf8e500"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_medium_001.ogg",
+      "bytes": 8701,
+      "sha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_medium_003.ogg",
+      "bytes": 9509,
+      "sha256": "2d7c719c05999e0532f4384e1018e04cd916db715140bf16dee2dff3f820e908"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_000.ogg",
+      "bytes": 6570,
+      "sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_001.ogg",
+      "bytes": 6689,
+      "sha256": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_002.ogg",
+      "bytes": 6749,
+      "sha256": "d130ae541951243d3f6ed963d0057450a445ffe117fbf9a084d34eb1635cb563"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_003.ogg",
+      "bytes": 6665,
+      "sha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_004.ogg",
+      "bytes": 6478,
+      "sha256": "e008f0b6b14f62339c8fe9f9b45cbd6317ba4f66604c4899053b8017020a36f0"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_001.ogg",
+      "bytes": 6239,
+      "sha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_002.ogg",
+      "bytes": 6146,
+      "sha256": "ce1e06f2a05f2634c645cb72f6a1623e64bc2d92be34917430a61031fb6597d4"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_003.ogg",
+      "bytes": 6181,
+      "sha256": "af07511902b309b3f6d8f0e1fafbe93869127fb88099ebdc0aa6a00a98dc3cb0"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/knifeSlice.ogg",
+      "bytes": 15532,
+      "sha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/knifeSlice2.ogg",
+      "bytes": 15099,
+      "sha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalClick.ogg",
+      "bytes": 13615,
+      "sha256": "9851a69d0c613e13bceef08060ecc4148f098ef487927cbebe270d642398a3b3"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalLatch.ogg",
+      "bytes": 10208,
+      "sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalPot2.ogg",
+      "bytes": 22471,
+      "sha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalPot3.ogg",
+      "bytes": 23142,
+      "sha256": "d306e5b848f6843332d0ca19f8f7dfe5796aeb56d8273902b085df463273f1dc"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_M21.wav",
+      "bytes": 41678,
+      "sha256": "df251e29b946df9d3ae3290d9fc6164e15780ec41130cca597336dc1b95200ee"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_T17.wav",
+      "bytes": 41678,
+      "sha256": "c4e12acd964d4698c32afd664492e7eaeed1168d1d2dd53a33cf2e07182c2927"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_T27.wav",
+      "bytes": 41678,
+      "sha256": "f3971a04feddc45411d6775b83bc3ac0e7a6a34a467950af79a24fcfc852bac0"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-009-426481.mp3",
+      "bytes": 76032,
+      "sha256": "5e14be6ffde96bd5f8ce191d8789f12c6deef417df0ee675f5449555dc7f14fe"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-014-445104.mp3",
+      "bytes": 53760,
+      "sha256": "7914552fd9dd48f3899d5e24265fc28475e6a20f88325bcba3606cc7be571e1f"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+      "bytes": 129024,
+      "sha256": "c3d99885f1177d1af1fcac0454a5e0e1f5be0939a5c4308510d604845c240ca0"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-elemental-spell-impact-water-478377.mp3",
+      "bytes": 182784,
+      "sha256": "3bda79219d71c0557cc605509e7e0540664a07963423c62970ebea556ff6cfab"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-2-393845.mp3",
+      "bytes": 70217,
+      "sha256": "abcd14bd051183b3812fd68e87a87ab30116f30514c6328a108a36eb2863a8e3"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-393847(1).mp3",
+      "bytes": 70217,
+      "sha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+      "bytes": 49152,
+      "sha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+      "bytes": 62976,
+      "sha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-funny-swish-101878(1).mp3",
+      "bytes": 12960,
+      "sha256": "0601948ad6e4937cc6bca126f0decb2218037f39f6f7dc99cee359efdb66212b"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-power-down-7103.mp3",
+      "bytes": 36480,
+      "sha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-steel-chain-dragged-shower-reverb-106252 (1).mp3",
+      "bytes": 39360,
+      "sha256": "dca9119831eab25855d5796eed845f381875ddcb90d52d389467243010ce650a"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+      "bytes": 129024,
+      "sha256": "b8ce670d121a46265231d53223deba4ed9456804caf5a4b44e3168ea48ddf2a1"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-sci-fi-gun-shot-312659(1).mp3",
+      "bytes": 62976,
+      "sha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/universfield-sci-fi-blaster-shot-229313(1).mp3",
+      "bytes": 27648,
+      "sha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-healing-magic-2-378663(1).mp3",
+      "bytes": 257280,
+      "sha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-1-482495.mp3",
+      "bytes": 96768,
+      "sha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+      "bytes": 96768,
+      "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500(1).mp3",
+      "bytes": 96768,
+      "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500.mp3",
+      "bytes": 96768,
+      "sha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/Mechs/freesound_community-heathers-gunshot-effect2-100653.mp3",
+      "bytes": 38880,
+      "sha256": "3fdad50468ad70e38d2fcfb84879f546c44073a752d2eb584f6b147f8c67526b"
+    },
+    {
+      "path": "ArtSource/Audio/Nerok/BasicHit.mp3",
+      "bytes": 56832,
+      "sha256": "d1049baadd775504482c73b8d0d0af39e37d274e935757bcf99c6ce7780edb2d"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerDetails.blend",
+      "bytes": 376164,
+      "sha256": "0a00153c8b43959f6961c51f50f907173a8081ccc6cfd65a075e4e12b924d89c"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerDetails.fbx",
+      "bytes": 216780,
+      "sha256": "5b42ae8d87e5da2c10e456af217fca0571e8945958aece27372379d4a985546e"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerPreview.png",
+      "bytes": 1172004,
+      "sha256": "3f33e57135ada5666ad25cc4c2b67e6fe3c68edbb453f99374fc9997c154c618"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerRearPreview.png",
+      "bytes": 1132607,
+      "sha256": "89aa8bdc3bc49839aa1a70f4117094f89c177d5288a453d3764162a035768b88"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy-icons.blend",
+      "bytes": 269249,
+      "sha256": "f501b38382a5d8a7317e990d69c5ca62045c4ed4581bb3e37e7489cc59b521b2"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy-preview.png",
+      "bytes": 291626,
+      "sha256": "c866535721354c018d46cf03d30360921f660296d9a564bdad4ceaddf189e8be"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
+      "bytes": 1756011,
+      "sha256": "a2581c092cc14dccb6c5c4bcedcd3ebf56e7eef74f651b123f318af7f1d88ebb"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/TravelerDetails.blend",
+      "bytes": 427681,
+      "sha256": "7cae64d97c8b5993cec1bef61983b529aacad64066d4184d48271fbdd086fa73"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/back.png",
+      "bytes": 116395,
+      "sha256": "bd6bd6e95df54aa2ca04815dcb5d1cc518f05f9e79b9b093c3474b477453023d"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/front.png",
+      "bytes": 143376,
+      "sha256": "4f1d57a85c954650fe2f90339fd019c030f7b93cbd469a7854611e007edd956d"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Andromeda-Timmy-authored-details.obj",
+      "bytes": 4376,
+      "sha256": "f230961a0ee61bf1028ff361028f20150a232f010badf9a51c4aa13407b990f8"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Andromeda-Timmy-front.png",
+      "bytes": 803191,
+      "sha256": "e122d341ff78ab50cd94c8291a2aa9ad0c68158b0b69ba6d21c3ef33d215bbaa"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Andromeda-Timmy-rear.png",
+      "bytes": 785300,
+      "sha256": "1220966d5617c287cc38532135a92152d3800cd9ce8e28d750a2f0c6c884fe71"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Andromeda-Timmy.blend",
+      "bytes": 1757950,
+      "sha256": "c366b6a17c59e47625cafce1b40f3e6ccfbbe39ea5c8a83a3d7b95b66e13b5e1"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Andromeda-Timmy.fbx",
+      "bytes": 615036,
+      "sha256": "88d8170ad9e38334a28fd58d727e61d2038a84eeeeaad1d87fa6dd55e71317dd"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-Kest-authored-details.obj",
+      "bytes": 45629,
+      "sha256": "32acecae1eaa765d95310b24cf72f462afffc68a743d710276f125090433311e"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-Kest-front.png",
+      "bytes": 1014018,
+      "sha256": "837f0c1f7d7e559cabaa78583addab9bab63a2a89b22ed011dc1ec236f703880"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-Kest-rear.png",
+      "bytes": 902282,
+      "sha256": "564a3430a5c3e99921fdc5e81ea90f2bedaa0b5676837ea2c7d2729569fef3b6"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-Kest.blend",
+      "bytes": 1419721,
+      "sha256": "011d3676786dc7ed1321e3e4dcbebda30e56566ce4af7b49fb022248d7d96d7d"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-Kest.fbx",
+      "bytes": 1082972,
+      "sha256": "dbc56937c4b01ef35a689fec7e5bb63dd26cf10e0c33ac886f67b32ac35dc682"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Auren-original-coating.png",
+      "bytes": 146098,
+      "sha256": "0e6a3c1fe273ea892f3cb9acc24677299f63171696a89c115473a9599a4100a0"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Brakk-Orun-authored-details.obj",
+      "bytes": 16501,
+      "sha256": "cfee262f2e4da4c65444e52d952d48495b2e646a7ecc1b0c648089869c13e243"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Brakk-Orun-front.png",
+      "bytes": 814799,
+      "sha256": "aa366aef80d4e2e63861cc9a4e4d4121e7601f65c63f104b65a09b48f9b136f8"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Brakk-Orun-rear.png",
+      "bytes": 756351,
+      "sha256": "954fc2892420300362738256e2ea3ee7bc5aa5fbc36552d02372b81cf81e6b55"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Brakk-Orun.blend",
+      "bytes": 1225370,
+      "sha256": "7f283d776b34cfe91cd12f7bedeaa169fb55a20b08a1ba4bfd06b83ca447f9b5"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Brakk-Orun.fbx",
+      "bytes": 2174060,
+      "sha256": "1d00df6b402b8c42bffe2cd5f8a2a5ef7b04bfa7cf80d84331f74f088efa986a"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Ione-Vaska-authored-details.obj",
+      "bytes": 10181,
+      "sha256": "b3b33652da758d69e700c3b067394749ad70200e84808e277bc094952bf2b77a"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Ione-Vaska-front.png",
+      "bytes": 801819,
+      "sha256": "5ca3518b6553a1e39da80eaddcecebe41da1941b683dcd80879a3be518d65231"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Ione-Vaska-rear.png",
+      "bytes": 768152,
+      "sha256": "acd239ff18ee1328bbf992064f169067c152abbd336e70086ba630d1151c8818"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Ione-Vaska.blend",
+      "bytes": 1057198,
+      "sha256": "42e62d6e3d1983d675c5be924e6b9b53ded5840b5c0ac6357c323242de77ce1f"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Ione-Vaska.fbx",
+      "bytes": 894780,
+      "sha256": "847adb867b3433573cd92d997a03a046775294dd3a37bc42050d2308118ebe0c"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Nerok-Abyss-authored-details.obj",
+      "bytes": 18073,
+      "sha256": "61564f0266dd5da5dda6738784af5191e36e97184d7125d29552fb2f7753e142"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Nerok-Abyss-front.png",
+      "bytes": 849338,
+      "sha256": "85075d9088fab3ee59f1191c8f364e39e8d812370dcfe2c01e464a800a8aa1ee"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Nerok-Abyss-rear.png",
+      "bytes": 800770,
+      "sha256": "437971e2b6c508666f7ead3072add641819dce058493fa1290c1fe3d2b2600d2"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Nerok-Abyss.blend",
+      "bytes": 1426486,
+      "sha256": "08b3dcdefeaaa2a5e73a55fb55d33c8f1b75e3a3fc368993ef8c668cc045df4d"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Nerok-Abyss.fbx",
+      "bytes": 1834316,
+      "sha256": "0d4350891b9177adf4e8822cf7600efccaeaf4987baba7139b7fa041c910e1b0"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Sivra-Quell-authored-details.obj",
+      "bytes": 48499,
+      "sha256": "9dd9e9dcf4877e9acb1fa3fc9a9340be20ece230163266ffa852d7b34f2b2296"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Sivra-Quell-front.png",
+      "bytes": 768272,
+      "sha256": "fe0a4a62ecf3c40c314d8133243329864ec9e0c920f337d7d2e87d8f81b2922d"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Sivra-Quell-rear.png",
+      "bytes": 726371,
+      "sha256": "4fdc8682e834807f85e41500dd08e743d09c5c3183b06adf3c5c7a0598e7e36e"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Sivra-Quell.blend",
+      "bytes": 1791925,
+      "sha256": "2ebda1dca8475749ba1573f8008cf4f2700e4bb05430ee195f6c0774bd043126"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Sivra-Quell.fbx",
+      "bytes": 1554284,
+      "sha256": "0de820f9e99fc162f85d112a20c0a785098e49d0a5feb243b483fd4ae7ec9d07"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Tahla-Venn-authored-details.obj",
+      "bytes": 8438,
+      "sha256": "700a3c73a1d5af37fbed36c52aaa02ec7e2a2a36894dc9e76771adcf8850cd54"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Tahla-Venn-front.png",
+      "bytes": 794372,
+      "sha256": "cfa28588874e40ad98115920c81b7665ca5157777be7c0838ce64264574134eb"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Tahla-Venn-rear.png",
+      "bytes": 712808,
+      "sha256": "667e557e6e856db2a9a9813a90b17c4d5f9640a10a1c3077f2b65937c1bbd7eb"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Tahla-Venn.blend",
+      "bytes": 1669058,
+      "sha256": "4168478d796a9628e83426ae6448688d738beaf243a9784a00559c1cb4af488c"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Tahla-Venn.fbx",
+      "bytes": 2509980,
+      "sha256": "22840992bd5c9aeb4da989cf1361e781fd773c77f7a8a520fd4f2472795d3530"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/The-Traveler-authored-details.obj",
+      "bytes": 213520,
+      "sha256": "426c2d5d59bb6f73ffdb415250fda4d773c7d156cb0ce19f1343c08e2ca1383a"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/The-Traveler-front.png",
+      "bytes": 770346,
+      "sha256": "d21967ba87b13df963d24e2f9edf33c3feca15d676eb31a3a41772a8d777c2b4"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/The-Traveler-rear.png",
+      "bytes": 731157,
+      "sha256": "0f51bcac4d65f87d5ebb2764b8c5424572d64540082c6771cbd24131eeae0589"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/The-Traveler.blend",
+      "bytes": 682281,
+      "sha256": "c348a773eb58c4823177155cbbf338a09f5f5e4ed770e023f1683fc18f523141"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/The-Traveler.fbx",
+      "bytes": 560796,
+      "sha256": "fb059949fb8e7986d86a35e28d5eb35f1a09ede4505c9649096444f1590b0371"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Zhaev-Null-authored-details.obj",
+      "bytes": 45632,
+      "sha256": "1199fd6efaa686bf3b51cece677578f084e474ecc9245ff40038618330f4fa31"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Zhaev-Null-front.png",
+      "bytes": 805262,
+      "sha256": "981faa4e4cbe1147877cc9fe82cb629c3522b67a80de9ed0427a1d65bba0727c"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Zhaev-Null-rear.png",
+      "bytes": 749042,
+      "sha256": "4c113396dd8ba3cc247473cccf0f5ad1bd127c994c51be4ada968aa36ca80915"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Zhaev-Null.blend",
+      "bytes": 1347147,
+      "sha256": "2ed66eb5e06be8aee4ee5516f4e9b6e40de65b8f2cce720b54c1a6895459c949"
+    },
+    {
+      "path": "ArtSource/Heroes/ConceptRebuild/Zhaev-Null.fbx",
+      "bytes": 2379916,
+      "sha256": "993493762f4fafbc35757e46e0c615570841a3c5904f3d61ec3bbed50b614251"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Andromeda-Timmy.png",
+      "bytes": 2291481,
+      "sha256": "cb1ae67c3dcb8b5b1f8b25dc7df6704d74dc7e756abe351a9c1597c7cf505166"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Archive/Auren-Kest-v1-olive.png",
+      "bytes": 2272059,
+      "sha256": "bf37cbd968e5ec884f3cc29d2f579243120073d6fa39326eab6d9904edce7a9d"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Auren-Kest.png",
+      "bytes": 2271827,
+      "sha256": "e000f5fc5faa1aa96f54ff59ac4acec14c69ea3de1cfdc8574d7b8188be47bba"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Brakk-Orun.png",
+      "bytes": 1912564,
+      "sha256": "a73dea67c8d5d604cc341c387f7875c004bafc6a9bfe13dc4431e9739bd493e8"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Ione-Vaska.png",
+      "bytes": 2017086,
+      "sha256": "f93b6ce4b857a97c97caecd5116bc8d8dd03c9f2f83a5b73d8ed3cbed76608eb"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Nerok-Abyss.png",
+      "bytes": 2368039,
+      "sha256": "0ec92ab79ac7e3741e06d81d06ea81703405a4d303dceff2521bbdc4736d17f5"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Andromeda-Timmy.png",
+      "bytes": 291626,
+      "sha256": "c866535721354c018d46cf03d30360921f660296d9a564bdad4ceaddf189e8be"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Auren-Kest.png",
+      "bytes": 278496,
+      "sha256": "ead85a6313bca725375579d96d25884ddf3ae76e7f6d1973aca1310c7ea8158d"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Brakk-Orun.png",
+      "bytes": 700506,
+      "sha256": "abb2b4ed336a6c54419f8c2f6ff460f3f96499ac863b0474dfdb649f3f40b9a4"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Ione-Vaska.png",
+      "bytes": 808648,
+      "sha256": "282d03381ba8ae6aebb7579890b4da0525ac39d3257d4b13c85f11f64c2026d6"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Nerok-Abyss.png",
+      "bytes": 845863,
+      "sha256": "a3d39515172904ef4b060c968c8e8e11332ef1c5ad272e6acc0da86088aa3cc4"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Sivra-Quell.png",
+      "bytes": 774072,
+      "sha256": "788f058a2224563415328709a8965757c0ca9096ce0f6a20a207621cf16fd1b3"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Tahla-Venn.png",
+      "bytes": 804651,
+      "sha256": "86ce8d28cd061700b086a1d0bb10c6752878d4aa04f6bc8ac614398052a98398"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/The-Traveler.png",
+      "bytes": 143376,
+      "sha256": "4f1d57a85c954650fe2f90339fd019c030f7b93cbd469a7854611e007edd956d"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/References/Zhaev-Null.png",
+      "bytes": 689972,
+      "sha256": "461310b6a09ed585b894f496813d3e32b61da86917031978de5fec192bd4509d"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Sivra-Quell.png",
+      "bytes": 2074245,
+      "sha256": "1f1893bdd767bd3885c3e988acc2465efa8e1a9131f6f161e13c5cf28cf46444"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Tahla-Venn.png",
+      "bytes": 2016174,
+      "sha256": "0e745714f93ab7dab41d159e92cdd60c1c3f15745e3a2acc23bff83f8559b881"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/The-Traveler.png",
+      "bytes": 2144629,
+      "sha256": "f10371b89cd425365095aadb7d7be7f3ced450587abebcc1ca43036747c33d86"
+    },
+    {
+      "path": "ArtSource/Heroes/Concepts/2026-10-12/Zhaev-Null.png",
+      "bytes": 2274966,
+      "sha256": "93d10103a66c736799682ecb867fd12fba6dcba9d35de98c21ff93eea51b3e14"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Blender_Preview.png",
+      "bytes": 641247,
+      "sha256": "6e449ca5a70dfb591d54c21f134ee377847bd007b61879ee4b9ba540cff2bf88"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Quell.blend",
+      "bytes": 1110470,
+      "sha256": "60c32b1a0b9c051000a78a3e4ffcc9d91c00ce80e365562cc5f337f277cda16f"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Rifle_Details.png",
+      "bytes": 592237,
+      "sha256": "da5cfd76f4fbd351160ed03efe1f44aeeaae7da17486cf3c36f8423d5663dbbc"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/back.png",
+      "bytes": 112677,
+      "sha256": "7e70a3e42166dd66eef28da3a9e691dbdc887afc9d1ec6310d6a1f5f2bee5a34"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/front.png",
+      "bytes": 139071,
+      "sha256": "fd9f8d99543b02da3240ebd733601efae5b8885131b8b3e6c05b2f52fe7bbb1f"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/NerokAttackIcons.blend",
+      "bytes": 937190,
+      "sha256": "a1ee450a478e9be907a3b9272182583c4ca89505f1940c5d52347feb46031c19"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/NerokCyberShark.blend",
+      "bytes": 792787,
+      "sha256": "423e1219dfded9235516ef35e9ad8d91218ae2383a3a5a79eae34f33775a6a26"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/attack_icons_preview.png",
+      "bytes": 861686,
+      "sha256": "440e87c164a3e7aaac140f5f79c9e6233be3900f8d65a6f247e2dcdcf8b024ca"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-front.png",
+      "bytes": 1003742,
+      "sha256": "b227ee9a1e0fc6f2ac85a3961b20b01d8daeb48fc64e87c08af08edfe0e64faa"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-side.png",
+      "bytes": 942276,
+      "sha256": "be877103e76231afc8970ba51fd0bdf9c1ec9553b0325e7efc07ef24695af372"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-three-quarter.png",
+      "bytes": 1016447,
+      "sha256": "ac09dc7e8197f2d5e1b51881cf87b754934800a9033dec420e6cd44641273a29"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/preview.png",
+      "bytes": 630790,
+      "sha256": "91a5bc9e95c6e35d03938b34058042cdec02350ef05be8cc1e8d2ea73ba04cc3"
+    },
+    {
+      "path": "ArtSource/Heroes/Elyra.blend",
+      "bytes": 1267479,
+      "sha256": "e6095a0a206b9f80c9c606111d7ae5faccb677fd0ec9020164a706a399f9e8b7"
+    },
+    {
+      "path": "ArtSource/Heroes/Kaelon.blend",
+      "bytes": 1242416,
+      "sha256": "8de3bd256d1978d88883637cfbb94eca599616d66c4e2beed391fe3eceb07ca4"
+    },
+    {
+      "path": "ArtSource/Heroes/Mira-light-armor.png",
+      "bytes": 354064,
+      "sha256": "fd4f0e66b598518dd1886dd7bcf2fee825fd3c03ea0203822242ac8899edf2cd"
+    },
+    {
+      "path": "ArtSource/Heroes/Mira.blend",
+      "bytes": 1668389,
+      "sha256": "e3407d316aeda73835f9aa6d988573857bfb9806ab8066ee8c939902a84731cc"
+    },
+    {
+      "path": "ArtSource/Heroes/Nyra.blend",
+      "bytes": 1262643,
+      "sha256": "7ad7913593a910529b5b6ec017575e7d411154079009688ab583a3300d5bff28"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Ione-body.png",
+      "bytes": 808648,
+      "sha256": "282d03381ba8ae6aebb7579890b4da0525ac39d3257d4b13c85f11f64c2026d6"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Ione-head.obj",
+      "bytes": 1166337,
+      "sha256": "e0812931af1c74faeb47f437198e0064123b31e89c8badca2ac8b5a419c965b2"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Ione-head.png",
+      "bytes": 877713,
+      "sha256": "4dbafdaec667fcbcaa8db968e7a46f4ba66fe0337133c961e49af38da15e4754"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Ione-model.blend",
+      "bytes": 1050317,
+      "sha256": "bced1fc21bbbeb95d4e570c371988db322474c79a078a104e89cd45d02691866"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Ione-model.fbx",
+      "bytes": 891276,
+      "sha256": "480778e7d54d6bdeca9cd2b3985dec29fc4da3d056b1cb6a01c2e5a9560db5ff"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-body.png",
+      "bytes": 845863,
+      "sha256": "a3d39515172904ef4b060c968c8e8e11332ef1c5ad272e6acc0da86088aa3cc4"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-clothes.obj",
+      "bytes": 718623,
+      "sha256": "09cc68107f79b1e32f88f0729f5cb3e20fce684b2077dafd6b90d4f8f166bb9d"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-model.blend",
+      "bytes": 1414104,
+      "sha256": "e74e267db6bd7a88da7913c312ddb249c42eb5658e830eacd11e0e974080dd03"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-model.fbx",
+      "bytes": 1828540,
+      "sha256": "15ed1e8b46bba21fcad3a14d6db677c24852f8f76433792dc310bde252b4d9a3"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-outfit-back.png",
+      "bytes": 835838,
+      "sha256": "11e01f839ad229d53e069001a920830dea8fa378deac042507fb6bee2818c11e"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Nerok-outfit-front.png",
+      "bytes": 929078,
+      "sha256": "7306e05fc35808e4d3e0147e66df2b947acda67c54a84555355a30c9d265457c"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Sivra-body.png",
+      "bytes": 774072,
+      "sha256": "788f058a2224563415328709a8965757c0ca9096ce0f6a20a207621cf16fd1b3"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Sivra-head.obj",
+      "bytes": 1040408,
+      "sha256": "734abce342b292b5f2397ac163d6a8d7ded9f598a9d11a50ad61233a1adb871f"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Sivra-head.png",
+      "bytes": 867578,
+      "sha256": "dc4ee34d7277e382a3b1fe548711ede5a108ee80170d4e7368ec33f4ce430b24"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Sivra-model.blend",
+      "bytes": 1768632,
+      "sha256": "eed699423b7b55578f1d7ea11b4378cd46fe934c2d34482fc3c5d84f238e190b"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Sivra-model.fbx",
+      "bytes": 1538812,
+      "sha256": "31f0d25b8ce755dc4c8eeb78fa639d056f1b2926beabd36806e6e1d152e772ad"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Tahla-body.png",
+      "bytes": 804651,
+      "sha256": "86ce8d28cd061700b086a1d0bb10c6752878d4aa04f6bc8ac614398052a98398"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Tahla-shoulders.obj",
+      "bytes": 1230375,
+      "sha256": "b352fe86cfa5ef49c0dee31479f25df10906c2326676b64e202102eacddb129c"
+    },
+    {
+      "path": "ArtSource/Heroes/PartsRedesign/Tahla-shoulders.png",
+      "bytes": 925973,
+      "sha256": "a7b945e17528751417fd576148259c336a965bc151d842bd8fda5b88478c82b3"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Elyra-GripCheck.png",
+      "bytes": 713037,
+      "sha256": "4be0c0c1123bdefa190385773d71aff1ee65c1eee033080126f5fbbb8bed3295"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Elyra.png",
+      "bytes": 714573,
+      "sha256": "e602878c8295b74186f4ca7802ba2d64c1504e55164735ebe352c28715965dd2"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/HeroLineup.png",
+      "bytes": 643779,
+      "sha256": "60ebb0082fa1f8b85ccdf7b2e10afc747014e984a5fcb3c7dfc523fefd955d2a"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Kaelon-GripCheck.png",
+      "bytes": 712181,
+      "sha256": "b60f8cb2475385aa312f37659e73b1376980363dab7abeda5e345e9139902223"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Kaelon.png",
+      "bytes": 713094,
+      "sha256": "23c51d21be00c31d872c344c2d684d4fdb621e06f041521aba4fb7a9217a5b71"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Lineup.png",
+      "bytes": 526690,
+      "sha256": "bdfa4fe2953b5076d9b26a12e841011bf2ef419db7501922bf90b955fe743280"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Mira-GripCheck.png",
+      "bytes": 690053,
+      "sha256": "6098126191c3bd7adf14eb1fdc57f23491df80031e93849cf9f16aa7c8229dc9"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Mira.png",
+      "bytes": 692471,
+      "sha256": "5bff7224c110b6c8625a434df3425fcfb7e00db9c5b57aa3ef95e39e169fa459"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Nyra-GripCheck.png",
+      "bytes": 659268,
+      "sha256": "20d09a3506d2e0a3239c337d4510e8dc7a8c3ca286cf3a59b3a9be8e01c41e1d"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Nyra.png",
+      "bytes": 658693,
+      "sha256": "12ce2e17c7b6e1725144ade577b07d5fb89784473277b36cf116d6da5d4c4c54"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Rook-GripCheck.png",
+      "bytes": 702116,
+      "sha256": "2e16a1c4083e807052be66cac93428a8f3bbff4900296982947a36830c2b2c7a"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Rook.png",
+      "bytes": 700506,
+      "sha256": "abb2b4ed336a6c54419f8c2f6ff460f3f96499ac863b0474dfdb649f3f40b9a4"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Traveler-GripCheck.png",
+      "bytes": 681696,
+      "sha256": "bd3791ed63e7c875e189f542448a601664acbf69e4a79a2afadf320e3af00663"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Traveler.png",
+      "bytes": 682621,
+      "sha256": "ae7fc5ae345c98abb95ca3ed4a66e2860b7a64d89b7ce6dbcde1cc06b72b2edb"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Veyr-GripCheck.png",
+      "bytes": 688974,
+      "sha256": "a593d8b1863f31e5dc44f8671a98d76da95e8ebc7281a02efb3064cffa90062d"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Veyr.png",
+      "bytes": 689972,
+      "sha256": "461310b6a09ed585b894f496813d3e32b61da86917031978de5fec192bd4509d"
+    },
+    {
+      "path": "ArtSource/Heroes/Rook.blend",
+      "bytes": 1234319,
+      "sha256": "7d534413fb62babda754448d9c87268b01c24a5de8d1014689e5f2988db3ff1d"
+    },
+    {
+      "path": "ArtSource/Heroes/SiegeTank/back.png",
+      "bytes": 223888,
+      "sha256": "e67375aba39f6f599538715d139a4baabcccc6139bbe9b6582aa30cdd2162075"
+    },
+    {
+      "path": "ArtSource/Heroes/SiegeTank/front.png",
+      "bytes": 278496,
+      "sha256": "ead85a6313bca725375579d96d25884ddf3ae76e7f6d1973aca1310c7ea8158d"
+    },
+    {
+      "path": "ArtSource/Heroes/TahlaHalo.blend",
+      "bytes": 104836,
+      "sha256": "93b9f3aa21c6fafae61a4deaf76b2c1569f405744d6722cfe2161cfc137361ca"
+    },
+    {
+      "path": "ArtSource/Heroes/Traveler.blend",
+      "bytes": 1343880,
+      "sha256": "dbfd59187ff657c6584b0ca72713baecf714c6e4f58d63c68d0eda78462b56b5"
+    },
+    {
+      "path": "ArtSource/Heroes/UmbralMage/back.png",
+      "bytes": 130176,
+      "sha256": "e7109d08c9745698066e43107c746e7ec6f53a0d3d13b313a796ad1134cc5468"
+    },
+    {
+      "path": "ArtSource/Heroes/UmbralMage/front.png",
+      "bytes": 145571,
+      "sha256": "bbe3e930b87feaffa04bd2f8bd645e0886c400b4e3061a3ccae3060a711644c2"
+    },
+    {
+      "path": "ArtSource/Heroes/Veyr.blend",
+      "bytes": 1347736,
+      "sha256": "99828f6346ff1bf3eb0d7afc5e5c5b5c311f1276036dbd3d0ab86ea9455ca1ba"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GJMagentaGolem/back.png",
+      "bytes": 113417,
+      "sha256": "bc716889b4534730240d7204d8ac09060ef07cca857a6ed526dfefb67135ebd7"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GJMagentaGolem/front.png",
+      "bytes": 124409,
+      "sha256": "572c5f8838bda4a26f788a6668ad4eaf3d6d4b6636e9f8b9b2c15b5cfff69754"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GreenStalker/back.png",
+      "bytes": 162872,
+      "sha256": "9835d3c1f02ca35a16ab66f2b519949e30fab09e7a8bec7490dd7bd48fd2f34d"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GreenStalker/front.png",
+      "bytes": 180662,
+      "sha256": "2a1fafaf78aa3ec726b540fc21fd12cf6459b63cd01206e2d6b2034d9e878a22"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneParts.blend",
+      "bytes": 1627001,
+      "sha256": "6a45ba2d825ec7fa63b3bd861fcad0f2d1a567d1ba2793d4a26a0a5bcb141101"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneParts.fbx",
+      "bytes": 334092,
+      "sha256": "06afaaaeb3cb6f250edf444239b0410ce9c1c81ed634a7e51f8886f2a8635864"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneSkinnedSurfaces.blend",
+      "bytes": 7383261,
+      "sha256": "76bbc59f8c00d40c4b886c1457947a249fa2cc40133160aab6ba6edc3aae7e1b"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/KryonBear/KryonFrostBear.blend",
+      "bytes": 236405,
+      "sha256": "1717e99bbc4446274faf6306c5182458cb7add6d8e64480a8e51d45d4921cf0d"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/KryonBear/preview.png",
+      "bytes": 900984,
+      "sha256": "3679e52e3b9b7e48f8a0ec4faefe7dafde845a910430870b62fb5b5e34b6cfe1"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MarsSkeleton/back.png",
+      "bytes": 194623,
+      "sha256": "ed377e6dbd0fc6aaaefce7943b15ce028da8e344b0b8cb5e997c48d4174fd87a"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MarsSkeleton/front.png",
+      "bytes": 211582,
+      "sha256": "b6453e3fff9ed1550fd8e150930e3ab7cce68cc4954cf944eccf5164018581ae"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MechanicalScorpion/back.png",
+      "bytes": 172718,
+      "sha256": "9396ca315ca9552d6114d2a8a9c97b39027987d067307c99e3d247c76b1e24e8"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MechanicalScorpion/front.png",
+      "bytes": 182391,
+      "sha256": "107c637930faa531d3293a22d988a62362439b708ccc886f0b42541fe263afc1"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/NoxaraClockworkSpider/back.png",
+      "bytes": 189848,
+      "sha256": "7ddd2b394cdd31ab9afa88a4c70365bcbd5e829d865934c4431b84d4f782e56a"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/NoxaraClockworkSpider/front.png",
+      "bytes": 192346,
+      "sha256": "6a87e3be03980530343fe737f59d2f58ea31b26f1c7df0355c98e95c2b70a056"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PSRCrystalTitan/back.png",
+      "bytes": 114004,
+      "sha256": "bff4e006b0966453531ba40cdf5dc666df8bf4fe2d4f2e18e1a1972e4a48501b"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PSRCrystalTitan/front.png",
+      "bytes": 132413,
+      "sha256": "2e6c44991e5b70e178eed72206a873839fe8176aa8c81ffcae1f4eec2632ab59"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PartsPreview.png",
+      "bytes": 1399275,
+      "sha256": "b1b3c67a5388d17f8cb7746f6d8da0857d7c4c3d65ab4d083b216e08a6e09806"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/2026-10-09/material-comparison.png",
+      "bytes": 205742,
+      "sha256": "c02249cce9cb776cdf208583806bc668c24542cb7df325d728529d69e8d4044a"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/SurfaceStudy.blend",
+      "bytes": 3935823,
+      "sha256": "44873741304c95694244fbbffec6e0e725455bf551824423cbc40d1badc960f0"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/SurfaceStudy.png",
+      "bytes": 3409704,
+      "sha256": "7186440cbdf255fc2191592334c3201492c6bfab87eb315365d87170bfcb6031"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.blend",
+      "bytes": 432449,
+      "sha256": "021accd832d703aa6f3735ed67522e32f2a60d47eda4c8dce57cba94f2ad12fa"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.fbx",
+      "bytes": 1638428,
+      "sha256": "ffd061bfe7bad94c8bdfaa63f185cf48c22a857ca8f4fc8114d455c981ebafed"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.png",
+      "bytes": 1358246,
+      "sha256": "cb1d28e926734d29a806f3015ff25ceb329e62d6292453916b56fc418406373c"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomber.blend",
+      "bytes": 211502,
+      "sha256": "27ef8daa59e0133e05cdbe3b30134a4bf6645108b1a642380f205e68e65c802b"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomber.fbx",
+      "bytes": 405452,
+      "sha256": "55f5929b3aae397b790067594c66474a08c4b7c32f292c4b6cb289cc4b410f5f"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomberPreview.png",
+      "bytes": 684495,
+      "sha256": "7e0a6702dc9f228c7211b68e7e652557e2998e7f848ad3797cb17e095fb950d8"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomberTop.png",
+      "bytes": 698301,
+      "sha256": "57cfe897f41e6a3b73e0556c390f5721bf4f5c0f5f40712869d74d25ce95c390"
+    },
+    {
+      "path": "ArtSource/VisualQuality/2026-10-09/energy-material-comparison.png",
+      "bytes": 66437,
+      "sha256": "491d905b7eecaf37a661b37e3875f4bfe233b60d5159f000b6de92239097e5b7"
+    }
+  ],
+  "anatomyBundleSha256": "811f43accbb31a88266d932f8f5563b2d13586fca0ba2693aad1f5fe582b3515",
+  "anatomyNotices": [],
+  "modelValidation": {
+    "revision": "hero-concepts-20261012-v1",
+    "inputCommit": "396d3d0008d5557b5e014165594e1f9505bcb530",
+    "previousPartRevision": "8fa75d02f0964e9df149ed3c073259fc50248d78",
+    "heroes": {
+      "Sivra-Quell": {
+        "preservedVertices": 35900,
+        "removedVertices": 0,
+        "newVertices": 380,
+        "newTriangles": 744,
+        "newParts": 4,
+        "rigAndMarkersPreserved": true,
+        "bodyPositionsAndNormalsExact": true,
+        "preservedVertexDigest": "50d2a7b36b05c0f284868f984ee54a762b9227759fc5422cbe515e9bfa41c37b",
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Sivra-Quell.png",
+        "sourceSha256": "2b4040d4041ece9cd25208a020452478e97a9c2d0dfa809c818783430d4d6c7d",
+        "runtimeOutput": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+        "outputSha256": "d272745d3b7aa401be2c6119ee1b147849eebac6e866096a74ac169f28166a5e",
+        "authoredParts": [
+          "emerald split-arrow chest tracer",
+          "emerald split-arrow chest tracer",
+          "paired rear circuit rail",
+          "paired rear circuit rail"
+        ],
+        "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 16,
+          "bodyVertices": 36280,
+          "bodyFaces": 71026,
+          "skinningImported": true
+        },
+        "modelSha256": "0de820f9e99fc162f85d112a20c0a785098e49d0a5feb243b483fd4ae7ec9d07",
+        "sourceBlendSha256": "2ebda1dca8475749ba1573f8008cf4f2700e4bb05430ee195f6c0774bd043126",
+        "conceptSha256": "1f1893bdd767bd3885c3e988acc2465efa8e1a9131f6f161e13c5cf28cf46444"
+      },
+      "Ione-Vaska": {
+        "preservedVertices": 20818,
+        "removedVertices": 0,
+        "newVertices": 91,
+        "newTriangles": 154,
+        "newParts": 7,
+        "rigAndMarkersPreserved": true,
+        "bodyPositionsAndNormalsExact": true,
+        "preservedVertexDigest": "cfbe49fc33fe637f6d9905fac87c19bd7b607ce9c9ac8d91371a3a8d65ec4be1",
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Ione-Vaska.png",
+        "sourceSha256": "477af92aaf29453797d135aa8cd46f60e14102b9e98e9f68d685d514f0ea46c4",
+        "runtimeOutput": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+        "outputSha256": "47b7faf0a1cf1ad402e6ff678e07650ba05c7ca64941d627552f8554c3dea7a6",
+        "authoredParts": [
+          "violet sternum sensor left",
+          "violet sternum sensor right",
+          "violet sternum sensor left",
+          "violet sternum sensor right",
+          "violet sternum sensor left",
+          "violet sternum sensor right",
+          "cyan crown diamond"
+        ],
+        "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 18,
+          "bodyVertices": 20909,
+          "bodyFaces": 40189,
+          "skinningImported": true
+        },
+        "modelSha256": "847adb867b3433573cd92d997a03a046775294dd3a37bc42050d2308118ebe0c",
+        "sourceBlendSha256": "42e62d6e3d1983d675c5be924e6b9b53ded5840b5c0ac6357c323242de77ce1f",
+        "conceptSha256": "f93b6ce4b857a97c97caecd5116bc8d8dd03c9f2f83a5b73d8ed3cbed76608eb"
+      },
+      "Auren-Kest": {
+        "preservedVertices": 26309,
+        "removedVertices": 0,
+        "newVertices": 360,
+        "newTriangles": 708,
+        "newParts": 3,
+        "rigAndMarkersPreserved": true,
+        "bodyPositionsAndNormalsExact": true,
+        "preservedVertexDigest": "838fd3331a1572a9ac3d59e8e3318938bb0ac67957d7b0b11842d8626796f942",
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Auren-Kest.png",
+        "sourceSha256": "1062f5a5d34809fe94b993f2db2c2429d9a67e726bd3bc8790a3075d174f15b7",
+        "runtimeOutput": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+        "outputSha256": "af32de7ff1b65fa582cfab14ef504a91c01d9ea1da5e0d8ff946e9493bba6baa",
+        "authoredParts": [
+          "three amber sternum vent bars",
+          "three amber sternum vent bars",
+          "three amber sternum vent bars"
+        ],
+        "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 18,
+          "bodyVertices": 26669,
+          "bodyFaces": 51678,
+          "skinningImported": true
+        },
+        "modelSha256": "dbc56937c4b01ef35a689fec7e5bb63dd26cf10e0c33ac886f67b32ac35dc682",
+        "sourceBlendSha256": "011d3676786dc7ed1321e3e4dcbebda30e56566ce4af7b49fb022248d7d96d7d",
+        "conceptSha256": "e000f5fc5faa1aa96f54ff59ac4acec14c69ea3de1cfdc8574d7b8188be47bba"
+      },
+      "The-Traveler": {
+        "preservedVertices": 11285,
+        "removedVertices": 0,
+        "newVertices": 1596,
+        "newTriangles": 3128,
+        "newParts": 7,
+        "rigAndMarkersPreserved": true,
+        "bodyPositionsAndNormalsExact": true,
+        "preservedVertexDigest": "87738836fe1a0c82219bf2230c4b66f215dfb5f77d4a253a03f3aca464a7236a",
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/The-Traveler.png",
+        "sourceSha256": "c9e91ddad30e7a3159b79f275a1c772af3cc8ba321fa9a102d917e32ccfdf0eb",
+        "runtimeOutput": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+        "outputSha256": "513669b739e627ba7a3a38f1e1630d7f8685c9ff887c9cd6bc767669ce4dce3f",
+        "authoredParts": [
+          "concentric cyan time lens",
+          "concentric cyan time lens",
+          "concentric cyan time lens",
+          "split clock needle",
+          "split clock needle",
+          "cyan rear timing rail",
+          "cyan rear timing rail"
+        ],
+        "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 16,
+          "bodyVertices": 12881,
+          "bodyFaces": 25012,
+          "skinningImported": true
+        },
+        "modelSha256": "fb059949fb8e7986d86a35e28d5eb35f1a09ede4505c9649096444f1590b0371",
+        "sourceBlendSha256": "c348a773eb58c4823177155cbbf338a09f5f5e4ed770e023f1683fc18f523141",
+        "conceptSha256": "f10371b89cd425365095aadb7d7be7f3ced450587abebcc1ca43036747c33d86"
+      },
+      "Nerok-Abyss": {
+        "preservedVertices": 82172,
+        "removedVertices": 0,
+        "newVertices": 156,
+        "newTriangles": 264,
+        "newParts": 12,
+        "rigAndMarkersPreserved": true,
+        "bodyPositionsAndNormalsExact": true,
+        "preservedVertexDigest": "fe437976e8744b6613590dcfe3941521018cb6ca7f95d59ca7d5e664706f7499",
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Nerok-Abyss.png",
+        "sourceSha256": "43ca581c00cc9d6c54ca883e8aa342f06a7134397bd7b5ba36dd08f2f9a2ef80",
+        "runtimeOutput": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+        "outputSha256": "c69dee71fe58db9e3ca9063029f30aca088cef5527a44b1fefdc5cefb2a9f463",
+        "authoredParts": [
+          "bronze jacket clasp left",
+          "bronze jacket clasp right",
+          "cyan clasp inset left",
+          "cyan clasp inset right",
+          "bronze jacket clasp left",
+          "bronze jacket clasp right",
+          "cyan clasp inset left",
+          "cyan clasp inset right",
+          "bronze jacket clasp left",
+          "bronze jacket clasp right",
+          "cyan clasp inset left",
+          "cyan clasp inset right"
+        ],
+        "bodyReconstruction": "Existing silhouette/rig retained; new concept-specified chest and rear construction added.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 18,
+          "bodyVertices": 82328,
+          "bodyFaces": 34344,
+          "skinningImported": true
+        },
+        "modelSha256": "0d4350891b9177adf4e8822cf7600efccaeaf4987baba7139b7fa041c910e1b0",
+        "sourceBlendSha256": "08b3dcdefeaaa2a5e73a55fb55d33c8f1b75e3a3fc368993ef8c668cc045df4d",
+        "conceptSha256": "0ec92ab79ac7e3741e06d81d06ea81703405a4d303dceff2521bbdc4736d17f5"
+      },
+      "Zhaev-Null": {
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Zhaev-Null.png",
+        "sourceSha256": "e28920324f5534259cd53ada94c3ac33266fcb5a293bb5d7f9f4f9b96b31cb65",
+        "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+        "outputSha256": "98cf049305d9bf83833e5a60626d7e1698aaa843ae92c0ef31d28da2f4169a3e",
+        "rigExact": true,
+        "animationActionDigestsExact": {
+          "Attack": "6bc28bc3d06834d9c692f9e4bd756d0fb814a757d2cad1d39e13f4bf971000f9",
+          "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+          "Hit": "b65de7e2cb656da74801d76deab66c103436ad671d4a7f401f39b76b7640a2de",
+          "Idle": "39147aa8295ec9b91d65c86a824a607f05ff261bd71b4bcfc930143fb77365b1",
+          "Run": "1d180587aed94c4047ac3bd8412c70ee37c3bbd5994c60d5c42e43c89a1e92bb",
+          "Skill0": "e8ce233d0643ebdb914e78665a986d5ff17ecf350367eeba5ed6595951a1f28b",
+          "Skill1": "28e2193fc7f849518d1e48ec21821affe95de1db59466db134d7fb83458dd2d5",
+          "Skill2": "3b6712cd26c1f6aa64c548a9409deab626690eb915cb71479c96a7c2dbdd52fe",
+          "Ultimate": "514bd1b24a905119a930da93c629edebe55addd3b0c3c66ac5e5ab9248993d33"
+        },
+        "newVertices": 360,
+        "newTriangles": 708,
+        "newParts": [
+          "three-prong violet chest sensor",
+          "three-prong violet chest sensor",
+          "three-prong violet chest sensor"
+        ],
+        "removedBrakkArmAttachmentVertices": 0,
+        "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 19,
+          "bodyVertices": 24871,
+          "bodyFaces": 24518,
+          "skinningImported": true
+        },
+        "modelSha256": "993493762f4fafbc35757e46e0c615570841a3c5904f3d61ec3bbed50b614251",
+        "sourceBlendSha256": "2ed66eb5e06be8aee4ee5516f4e9b6e40de65b8f2cce720b54c1a6895459c949",
+        "conceptSha256": "93d10103a66c736799682ecb867fd12fba6dcba9d35de98c21ff93eea51b3e14"
+      },
+      "Tahla-Venn": {
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Tahla-Venn.png",
+        "sourceSha256": "ff6a57530b38eefec7950dcb756173a07909d7235116525b72888fb8b82f2cc9",
+        "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+        "outputSha256": "27e46ece2f905110d9479a8ad173b2b52d71c779828a52ec0496f1178e58f851",
+        "rigExact": true,
+        "animationActionDigestsExact": {
+          "Attack": "74818c57eb96d9d7d57d797a575290cf4b5493012c2bdafb6ef72762c6e3bc1f",
+          "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+          "Hit": "c45087f89667feeeb0df25d6d5eaf134c733fac00eb0bdc77591a625b9b30b7f",
+          "Idle": "2af9e88f10ea4e9c8279c8e14cac484fccbbce53b0f0d0899be9f00511ac82de",
+          "Run": "289eea9c4b2ba5d63096405aefed0945bb2061e2798c7424fdbf510577be2d16",
+          "Skill0": "2441b1bed2c8becff6061be43fbf01b4d534fa4b9d646cf3259e69527372e6aa",
+          "Skill1": "3b68be8e2028bbd34cea190e2a075b08e1b8eb346a088c76a7d90b960891962f",
+          "Skill2": "9f83db73bc01c370dec9016d5284ed999aad2d63e11908baedc457ef7c781319",
+          "Ultimate": "97a2eef562d0c89da64fb15f0de4597a711c5533d6f1b3330315d7fdf1e07423"
+        },
+        "newVertices": 73,
+        "newTriangles": 134,
+        "newParts": [
+          "emerald leaf restoration inlay",
+          "gold leaf chest bezel",
+          "gold leaf chest bezel"
+        ],
+        "removedBrakkArmAttachmentVertices": 0,
+        "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 19,
+          "bodyVertices": 26527,
+          "bodyFaces": 33986,
+          "skinningImported": true
+        },
+        "modelSha256": "22840992bd5c9aeb4da989cf1361e781fd773c77f7a8a520fd4f2472795d3530",
+        "sourceBlendSha256": "4168478d796a9628e83426ae6448688d738beaf243a9784a00559c1cb4af488c",
+        "conceptSha256": "0e745714f93ab7dab41d159e92cdd60c1c3f15745e3a2acc23bff83f8559b881"
+      },
+      "Brakk-Orun": {
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Brakk-Orun.png",
+        "sourceSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+        "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+        "outputSha256": "4c60f8f2c593197dae037afd0bb80374c016ed0412f0b308f515094722c61b20",
+        "rigExact": true,
+        "animationActionDigestsExact": {
+          "Attack": "bd6cc6657ba13d52dbde69218d8a8639ca65f76d79f4dbce2ae0f2a1572a9ae0",
+          "Death": "654453c8c370e79738309ff1339222e0de8d61d7279164a00b35456ad98bd963",
+          "Hit": "ee2c34f2f334f5c56a2b552b4e641e0d63c8ebe63c62d63a730d7a0f55821195",
+          "Idle": "00f31c0a5885b6c01d446357d9198dbce6ad999fb95d5b74cfb415e01c158be2",
+          "Run": "8b66b7ed5e5bcf07242f187ba106b0a6e8b4ccb023c973d8b54cbfd1c5b146ea",
+          "Skill0": "a88fc159b2452db774c1304d7abca76a94cf0438145aeda4901f286547e595fb",
+          "Skill1": "2e1e143eb32d11c24f74fd2025a06d5a893224e5ad4ee9212df2a850394d52a7",
+          "Skill2": "c4859e1f15a561d5dcdfcb27a3cd37bc1998ec74639d8812203c8bd8ef0db8a5",
+          "Ultimate": "bad652d746d0c10987c484211ac88e9b08471b76ae2b8edab3f8fbf03d4f2781"
+        },
+        "newVertices": 143,
+        "newTriangles": 242,
+        "newParts": [
+          "staggered orange torso plate left",
+          "staggered orange torso plate right",
+          "staggered orange torso plate left",
+          "staggered orange torso plate right",
+          "staggered orange torso plate left",
+          "staggered orange torso plate right",
+          "red rear spinal reactor cell",
+          "red rear spinal reactor cell",
+          "red rear spinal reactor cell",
+          "red rear spinal reactor cell",
+          "red rear spinal reactor cell"
+        ],
+        "removedBrakkArmAttachmentVertices": 4144,
+        "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 19,
+          "bodyVertices": 17428,
+          "bodyFaces": 16640,
+          "skinningImported": true
+        },
+        "modelSha256": "1d00df6b402b8c42bffe2cd5f8a2a5ef7b04bfa7cf80d84331f74f088efa986a",
+        "sourceBlendSha256": "7f283d776b34cfe91cd12f7bedeaa169fb55a20b08a1ba4bfd06b83ca447f9b5",
+        "conceptSha256": "a73dea67c8d5d604cc341c387f7875c004bafc6a9bfe13dc4431e9739bd493e8"
+      },
+      "Andromeda-Timmy": {
+        "concept": "ArtSource/Heroes/Concepts/2026-10-12/Andromeda-Timmy.png",
+        "sourceSha256": "4075a06f8cc92ef4a202e162fbd81ed89afd16044d401515f3aa4956172762c9",
+        "runtimeOutput": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+        "outputSha256": "a0307b313b4f3bebb6f39b07456aa4ee3539ce11316e32db293681fa6e48c1e5",
+        "rigExact": true,
+        "animationActionDigestsExact": {},
+        "newVertices": 39,
+        "newTriangles": 66,
+        "newParts": [
+          "cyan chest level indicator",
+          "cyan chest level indicator",
+          "cyan chest level indicator"
+        ],
+        "removedBrakkArmAttachmentVertices": 0,
+        "bodyReconstruction": "Existing licensed/project anatomy retained; concept-specified geometry built and source/FBX re-exported.",
+        "UnityAndroid": "not run",
+        "fbxRoundTrip": {
+          "bones": 20,
+          "bodyVertices": 8623,
+          "bodyFaces": 9113,
+          "skinningImported": true
+        },
+        "modelSha256": "88d8170ad9e38334a28fd58d727e61d2038a84eeeeaad1d87fa6dd55e71317dd",
+        "sourceBlendSha256": "c366b6a17c59e47625cafce1b40f3e6ccfbbe39ea5c8a83a3d7b95b66e13b5e1",
+        "conceptSha256": "cb1ae67c3dcb8b5b1f8b25dc7df6704d74dc7e756abe351a9c1597c7cf505166"
+      }
+    },
+    "scope": "Geometry authoring and native FBX import checks; not Unity/Android acceptance",
+    "previewCache": {
+      "Sivra-Quell": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "34dd27eae965aef68d617b47f79e6b805ff644a5c2c30bafad535deaa6c6aeb3",
+        "matchingExportVerified": true
+      },
+      "Ione-Vaska": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "5ca2329e11b3aea5581bd09754769e441ecc7e5a7e770fb1ac2c53546d61206c",
+        "matchingExportVerified": true
+      },
+      "The-Traveler": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "da5a68c6def4a2dda6f655026ac85bd14531940b72c116ee8472529dd4f4c3e8",
+        "matchingExportVerified": true
+      },
+      "Nerok-Abyss": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "9986834ef5fd3c9150100b21e7b1407f4b56bf7c7b30294db890e679abd64d08",
+        "matchingExportVerified": true
+      },
+      "Zhaev-Null": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "b4bf2aa02ddc360d3df5b6ac37a97e3d5c5c36a84ae864c41aa40f74dd6f768c",
+        "matchingExportVerified": true
+      },
+      "Tahla-Venn": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "f820628a3394f7087477ae44a83a2a56624249727b2dacef1736ed049b15f74b",
+        "matchingExportVerified": true
+      },
+      "Brakk-Orun": {
+        "sourceRun": 38213251851,
+        "fbxGeometrySkinMaterialDigest": "63fbe50fce97beb5f59eaa72eec8f7304d8a67de460f97ebb13918a664e6b05a",
+        "matchingExportVerified": true
+      }
+    }
+  }
+}

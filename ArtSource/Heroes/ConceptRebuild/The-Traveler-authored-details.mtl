@@ -1,0 +1,30 @@
+newmtl Surface_0
+Kd 0.018 0.024 0.029
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Surface_1
+Kd 0.062 0.082 0.1
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Surface_2
+Kd 0.3 0.38 0.42
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Surface_3
+Kd 0.02 0.65 0.94
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Surface_4
+Kd 0.003 0.008 0.012
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Surface_5
+Kd 0.025 0.18 1
+Ks 0.25 0.25 0.25
+Ns 90
+
