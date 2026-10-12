@@ -23,7 +23,7 @@ namespace Alterverse.UI
                 GUI.matrix=layout.Matrix;
                 if(Time.unscaledTime<DimensionPlanetDirector.AnnouncementUntil&&!string.IsNullOrEmpty(DimensionPlanetDirector.Announcement))
                 {
-                    Rect r=new Rect((layout.Width-440)*.5f,86,440,52);theme.Panel(r);
+                    Rect r=new Rect((layout.Width-440)*.5f,86,440,52);theme.HudPanel(r,.50f);
                     theme.Label(new Rect(r.x+12,r.y+4,r.width-24,r.height-8),DimensionPlanetDirector.Announcement,notice);
                 }
                 if(!string.IsNullOrEmpty(DimensionPlanetDirector.NextEventLabel))
@@ -44,6 +44,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
-
