@@ -10691,14 +10691,14 @@
       "weaponDetail": [
         {
           "object": "DF_WeaponL",
-          "addedVertices": 48,
-          "addedTriangles": 80,
+          "addedVertices": 36,
+          "addedTriangles": 60,
           "originalVerticesExact": true
         },
         {
           "object": "DF_WeaponR",
-          "addedVertices": 48,
-          "addedTriangles": 80,
+          "addedVertices": 36,
+          "addedTriangles": 60,
           "originalVerticesExact": true
         }
       ],
@@ -10864,30 +10864,30 @@
           },
           {
             "part": "Weapons",
-            "vertices": 240,
-            "triangles": 352,
+            "vertices": 216,
+            "triangles": 312,
             "boundsBlenderMetres": [
               [
                 -0.39400002,
                 -0.23009755,
-                0.69076949
+                0.68911874
               ],
               [
                 0.39400002,
                 -0.16700682,
-                0.73587006
+                0.72657102
               ]
             ],
             "dimensionsMm": [
               788.0,
               63.09,
-              45.1
+              37.45
             ]
           }
         ],
         "checks": {
-          "sourceTriangles": 22836,
-          "partTriangles": 22836
+          "sourceTriangles": 22796,
+          "partTriangles": 22796
         }
       },
       "fbxRoundTrip": {
@@ -10897,9 +10897,9 @@
         "animationClipsImported": [],
         "vertices": 11224
       },
-      "fbxSha256": "982c6d84cb4726db425909535617f914f52efe4893e6942f30327ca94fc4f1a2",
-      "modelSha256": "982c6d84cb4726db425909535617f914f52efe4893e6942f30327ca94fc4f1a2",
-      "blenderSha256": "9abe358a435a0b06db7d9e6a2ecc15edcac8f6c2c45b6c36a7e27489c950e150"
+      "fbxSha256": "55f536f95a9c83f4df60aabe7f4810c34522721519564e491cfe64b0322542b3",
+      "modelSha256": "55f536f95a9c83f4df60aabe7f4810c34522721519564e491cfe64b0322542b3",
+      "blenderSha256": "2b403e829aed3b6280c6f5c16eb2d9a589535aa35553591b021bfd9bfab4ce24"
     }
   },
   "validation": {
