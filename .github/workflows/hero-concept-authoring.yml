@@ -1,17 +1,17 @@
-name: Nine hero concept models
+name: Sequential hero component optimization
 on:
   push:
     branches: ['art/hero-parts-redesign-20261011']
-    paths: ['Tools/HeroConcepts/build_models.py', '.github/workflows/hero-concept-authoring.yml']
+    paths: ['Tools/HeroConcepts/build_models.py', 'Tools/HeroConcepts/part_optimization.py', '.github/workflows/hero-concept-authoring.yml']
 permissions:
   contents: write
 concurrency:
   group: hero-concept-models-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   author:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,32 +20,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install Blender LTS authoring runtime
+      - name: Install Blender authoring runtime
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libx11-6 libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libsm6
           python -m pip install bpy==4.5.14 numpy pillow
-      - name: Build nine models, render front and back, validate FBX rigs
+      - name: Finish and commit each hero before starting the next
         env:
           OMP_NUM_THREADS: '2'
-        run: python Tools/HeroConcepts/build_models.py
-      - name: Retain actual model renders and validation
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for hero in Sivra Ione Tahla Nerok Zhaev Auren Brakk Traveler Timmy; do
+            python Tools/HeroConcepts/build_models.py --hero "$hero"
+            git add Assets/Alterverse/Resources ArtSource/Heroes Docs/HeroProvenanceStatus.md
+            if ! git diff --cached --quiet; then
+              git commit -m "Complete $hero component geometry, Blender plans and validated game exports"
+              git fetch origin '${{ github.ref_name }}'
+              git rebase 'origin/${{ github.ref_name }}'
+              git push origin HEAD:'${{ github.ref_name }}'
+            fi
+          done
+      - name: Preserve exact model renders, construction plans and checks
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nine-hero-model-review
+          name: hero-component-review
           path: |
             ArtSource/Heroes/ConceptModels/*.png
             ArtSource/Heroes/ConceptModels/validation-report.json
+            ArtSource/Heroes/BuildPlans/
           if-no-files-found: ignore
-      - name: Commit validated assets on the authorized art branch
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Assets/Alterverse/Resources/CyberRanger/Model.bytes Assets/Alterverse/Resources/UmbralMage/Model.bytes Assets/Alterverse/Resources/CyberShark/Model.bytes Assets/Alterverse/Resources/SiegeTank/Model.bytes Assets/Alterverse/Resources/ChronoTraveler/Model.bytes Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx Assets/Alterverse/Resources/HeroConcepts Assets/Alterverse/Resources/HeroConcepts.meta ArtSource/Heroes/Veyr.blend ArtSource/Heroes/Mira.blend ArtSource/Heroes/Rook.blend ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend ArtSource/Heroes/ConceptModels ArtSource/Heroes/Concepts/Provenance Docs/HeroProvenanceStatus.md
-          if ! git diff --cached --quiet; then
-            git commit -m 'Build and validate all nine concept hero models with editable sources'
-            git fetch origin '${{ github.ref_name }}'
-            git rebase 'origin/${{ github.ref_name }}'
-            git push origin HEAD:'${{ github.ref_name }}'
-          fi

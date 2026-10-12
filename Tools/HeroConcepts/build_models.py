@@ -6,9 +6,10 @@ The runtime payload's canonical weapon coordinates remain compatible with its
 existing fitter; the editable Ione scene shows the actual forward-facing focus.
 """
 from pathlib import Path
-import copy,gzip,hashlib,json,math,subprocess,sys,tempfile
+import argparse,copy,gzip,hashlib,json,math,subprocess,sys,tempfile
 import numpy as np
 import bpy,bmesh
+from part_optimization import optimize_parts,optimize_weapon_parts,optimize_native_weapons,build_plans
 from mathutils import Vector,Matrix
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -17,7 +18,7 @@ from build_parts import Parts,amend,validate,unit,PALETTES,obj_source
 from blender_export import xyz,material,reset,mesh_object,skin,parent_name,studio,render,export_fbx,rig_signature,action_signature,runtime_scene
 
 BASE='a605c0635eaccd57dc48e0e60a6a344170153a1e'
-REVISION='nine-hero-concepts-20261012-v2'
+REVISION='hero-component-plans-20261012-v3'
 ART=ROOT/'ArtSource/Heroes/ConceptModels'
 RESOURCE=ROOT/'Assets/Alterverse/Resources'
 KINDS={'Sivra':'CyberRanger','Ione':'UmbralMage','Nerok':'CyberShark','Auren':'SiegeTank','Traveler':'ChronoTraveler'}
@@ -169,6 +170,8 @@ def runtime_parts(label,data):
             for j,t in enumerate([.50,.63,.76]):
                 center=a+(w-a)*t;p.ring('three leather cuff bands '+side,center,.099-.012*t,.006,0,fore,axis,32)
                 p.ring('cuff brass stitch edge '+side,center+[0,-.006,.0],.101-.012*t,.0011,4,fore,axis,32)
+    optimize_parts(label,p,names,anchors,v,bi,groups)
+    optimize_weapon_parts(label,p,names,v,bi,groups)
     return p,remove
 
 def forward_ione(data):
@@ -205,7 +208,7 @@ def runtime_source(label,kind,data):
         # Keep the original rifle mesh and materials in the editable full-character source.
         existing_objects=set(bpy.data.objects)
         with tempfile.TemporaryDirectory() as tmp:
-            path=Path(tmp)/'Nyra.blend';path.write_bytes(original('ArtSource/Heroes/Nyra.blend'))
+            path=Path(tmp)/'Nyra.blend';path.write_bytes((ROOT/'ArtSource/Heroes/Nyra.blend').read_bytes())
             with bpy.data.libraries.load(str(path),link=False) as (src,dst):dst.objects=['DF_WeaponR','DF_HandleContactR','DF_Muzzle']
             objects={o.name:o for o in dst.objects if o};weapon=objects['DF_WeaponR']
             # Appended bone-parented sockets have not been evaluated until their
@@ -309,6 +312,9 @@ def native_parts(label,arm,body):
             p.tube('white forearm layered edge',[a+(b-a)*.21+[0,0,.068],a+(b-a)*.75+[0,0,.068]],.005,1,fore,9)
             c=np.array(anchors[idx('Shin'+side)]['head'])+[0,-.013,.104];diamond(p,'white knee enamel layer',c,.055,.039,1,idx('Shin'+side),.012)
             for dy in [-.034,0,.034]:p.tube('jetpack cyan exhaust grille',[[sign*.093,1.09+dy,-.252],[sign*.172,1.09+dy,-.252]],.004,3,chest,10)
+    vertices=[game(body.matrix_world@v.co).tolist() for v in body.data.vertices]
+    bones=[idx(max(((g.weight,body.vertex_groups[g.group].name) for g in v.groups if body.vertex_groups[g.group].name in names),default=(1,'Chest'))[1]) for v in body.data.vertices]
+    optimize_parts(label,p,names,anchors,vertices,bones)
     return p,names,anchors
 
 def remove_native_obsolete(label,body):
@@ -352,6 +358,7 @@ def native_source(label,hero,source):
     for name,pos in sockets.items():assert np.allclose(bpy.data.objects[name].matrix_world.translation,pos,atol=1e-7),name
     body['concept_revision']=REVISION;obj_source(ART/(label+'-new-parts.obj'),p,[f'{label}_surface_{i}' for i in range(len(colors))],colors)
     REPORT['models'][label]={'source':source,'shippingModel':f'Assets/Alterverse/Resources/AuthoredHeroes/{hero}.fbx','removedComponents':removed,'preservedVertices':len(preserved),'preservedPositionsExact':True,'rigExact':True,'originalActionsExact':list(actions),'socketsExact':True,'newVertices':len(p.v),'newTriangles':len(p.f),'newParts':p.parts}
+    REPORT['models'][label]['weaponDetail']=optimize_native_weapons(label,arm)
     export_fbx(RESOURCE/'AuthoredHeroes'/(hero+'.fbx'),arm,bool(actions));bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/source),compress=True)
     for o in bpy.data.objects:
         if o.type in ('LIGHT','CAMERA'):o.hide_render=True
@@ -396,20 +403,40 @@ def finish_provenance():
     status.write_text(text)
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--hero',choices=list(KINDS)+list(NATIVE));args=parser.parse_args()
     ART.mkdir(parents=True,exist_ok=True)
     for label,kind in KINDS.items():
+        if args.hero and args.hero!=label:continue
         data=json.loads(gzip.decompress(original(f'Assets/Alterverse/Resources/{kind}/Model.bytes')));p,remove=runtime_parts(label,data);changed,checks=amend(data,remove,p)
         if label=='Auren':
             a,b=p.shield_range;first=checks['preservedVertices'];changed['groups'][first+a:first+b]=[1]*(b-a)
-        if label=='Nerok':changed['clothingVertices']=sorted(set(changed['clothingVertices'])|set(range(checks['preservedVertices'],len(changed['boneIndices']))))
+        for a,b,group in p.weapon_ranges:
+            first=checks['preservedVertices'];changed['groups'][first+a:first+b]=[group]*(b-a)
+        if label=='Nerok':changed['clothingVertices']=sorted(set(changed['clothingVertices'])|{i for i in range(checks['preservedVertices'],len(changed['boneIndices'])) if changed['groups'][i]==0})
         changed['designRevision']=REVISION
         if label=='Traveler':changed['legEquipmentAuthored']=True
         validate(changed);destination=RESOURCE/kind/'Model.bytes';destination.write_bytes(gzip.compress(json.dumps(changed,separators=(',',':')).encode(),mtime=0))
         checks.update(shippingModel=destination.relative_to(ROOT).as_posix(),newParts=p.parts,canonicalWeaponMarkersExact=True);REPORT['models'][label]=checks
         obj_source(ART/(label+'-new-parts.obj'),p,[f'{label}_surface_{i}' for i in range(len(PALETTES[kind]))],PALETTES[kind])
-        body,arm=runtime_source(label,kind,changed);previews(label,arm);print('MODELED',label,flush=True)
-    for label,(hero,source) in NATIVE.items():body,arm=native_source(label,hero,source);previews(label,arm);print('MODELED',label,flush=True)
+        if label=='Sivra':
+            with tempfile.TemporaryDirectory() as tmp:
+                path=Path(tmp)/'Nyra.blend';path.write_bytes(original('ArtSource/Heroes/Nyra.blend'));bpy.ops.wm.open_mainfile(filepath=str(path))
+            source_arm=bpy.data.objects['DF_Skeleton'];signature=rig_signature(source_arm);actions=action_signature();weapon_checks=optimize_native_weapons(label,source_arm)
+            assert rig_signature(source_arm)==signature and action_signature()==actions
+            bpy.context.preferences.filepaths.save_version=0
+            export_fbx(RESOURCE/'AuthoredHeroes/Nyra.fbx',source_arm,bool(actions));bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'ArtSource/Heroes/Nyra.blend'),compress=True)
+            REPORT['models'][label]['weaponDetail']=weapon_checks
+        body,arm=runtime_source(label,kind,changed);REPORT['models'][label]['assembly']=build_plans(label,body,arm,ROOT/'ArtSource/Heroes/BuildPlans'/label);previews(label,arm);print('MODELED',label,flush=True)
+    for label,(hero,source) in NATIVE.items():
+        if args.hero and args.hero!=label:continue
+        body,arm=native_source(label,hero,source);REPORT['models'][label]['assembly']=build_plans(label,body,arm,ROOT/'ArtSource/Heroes/BuildPlans'/label);previews(label,arm);print('MODELED',label,flush=True)
     validate_exports();REPORT['validation']={'runtimePayload':'passed','nativeFbxImport':'passed','rigsAndSourceActions':'preserved','UnityEditor':'not run','Android':'not run'}
-    (ART/'validation-report.json').write_text(json.dumps(REPORT,indent=2)+'\n');finish_provenance();print('NINE_HEROES_COMPLETE',flush=True)
+    report_path=ART/'validation-report.json'
+    cumulative=json.loads(report_path.read_text()) if report_path.exists() else {}
+    cumulative.setdefault('models',{}).update(REPORT['models']);cumulative.update({k:v for k,v in REPORT.items() if k!='models'})
+    report_path.write_text(json.dumps(cumulative,indent=2)+'\n');finish_provenance()
+    for label,entry in REPORT['models'].items():
+        (ROOT/'ArtSource/Heroes/BuildPlans'/label/'validation.json').write_text(json.dumps({'revision':REVISION,'hero':label,'checks':entry,'UnityEditor':'not run','Android':'not run'},indent=2)+'\n')
+    print('HERO_COMPONENT_COMPLETE',args.hero or 'all',flush=True)
 
 if __name__=='__main__':main()
