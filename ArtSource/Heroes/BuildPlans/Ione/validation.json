@@ -4,8 +4,8 @@
   "checks": {
     "preservedVertices": 20818,
     "removedVertices": 0,
-    "newVertices": 9034,
-    "newTriangles": 17132,
+    "newVertices": 9022,
+    "newTriangles": 17112,
     "newParts": [
       {
         "name": "twin forearm ceramic rails L",
@@ -1128,7 +1128,7 @@
         "material": 2
       },
       {
-        "name": "Ione weapon recessed service rib 2-0",
+        "name": "Ione weapon seated surface fitting 2-1",
         "first": 8986,
         "vertices": 12,
         "triangles": 20,
@@ -1136,24 +1136,16 @@
         "material": 2
       },
       {
-        "name": "Ione weapon recessed service rib 2-1",
+        "name": "Ione weapon seated surface fitting 2-2",
         "first": 8998,
-        "vertices": 12,
-        "triangles": 20,
-        "bone": 17,
-        "material": 2
-      },
-      {
-        "name": "Ione weapon protected energy rail 2",
-        "first": 9010,
         "vertices": 12,
         "triangles": 20,
         "bone": 17,
         "material": 3
       },
       {
-        "name": "Ione weapon recessed service rib 2-2",
-        "first": 9022,
+        "name": "Ione weapon seated surface fitting 2-3",
+        "first": 9010,
         "vertices": 12,
         "triangles": 20,
         "bone": 17,
@@ -1288,13 +1280,13 @@
         },
         {
           "part": "Weapons",
-          "vertices": 812,
-          "triangles": 1504,
+          "vertices": 800,
+          "triangles": 1484,
           "boundsBlenderMetres": [
             [
               -0.60478097,
               -0.52182001,
-              0.71676695
+              0.72606599
             ],
             [
               -0.094759,
@@ -1305,7 +1297,7 @@
           "dimensionsMm": [
             510.02,
             503.0,
-            516.99
+            507.69
           ]
         },
         {
@@ -1332,8 +1324,8 @@
         }
       ],
       "checks": {
-        "sourceTriangles": 57167,
-        "partTriangles": 57167
+        "sourceTriangles": 57147,
+        "partTriangles": 57147
       }
     },
     "fbxRoundTrip": {
@@ -1341,11 +1333,11 @@
       "skinningImported": true,
       "normalizedWeights": true,
       "animationClipsImported": [],
-      "vertices": 29852
+      "vertices": 29840
     },
-    "fbxSha256": "1e2444daf337eed8812aa89d87f60faeced6541350a8006dd311eadca4cce56f",
-    "modelSha256": "efdb80fa127836d086abbff41d50e889f40450f71ace5981fdc8e172825524eb",
-    "blenderSha256": "4a612544a47ec23d8be4f6e7148ac02007bdeef6806524f5bd56a0b3fdc3b2ed"
+    "fbxSha256": "f7331a4ede51af16dfd1d310a0973ebe1dc7aad67aa22deefc176904f01fe995",
+    "modelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
+    "blenderSha256": "1ed1fd5dcb9fa6b51771b452b26a0ac61e3a0a807c2daf06f93d57a6d50ca60a"
   },
   "UnityEditor": "not run",
   "Android": "not run"

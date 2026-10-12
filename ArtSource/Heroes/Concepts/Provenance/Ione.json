@@ -94,12 +94,13 @@
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Ione-model.blend",
     "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
-    "modelSha256": "efdb80fa127836d086abbff41d50e889f40450f71ace5981fdc8e172825524eb"
+    "modelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"

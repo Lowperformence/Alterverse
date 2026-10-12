@@ -116,13 +116,13 @@
     },
     {
       "part": "Weapons",
-      "vertices": 812,
-      "triangles": 1504,
+      "vertices": 800,
+      "triangles": 1484,
       "boundsBlenderMetres": [
         [
           -0.60478097,
           -0.52182001,
-          0.71676695
+          0.72606599
         ],
         [
           -0.094759,
@@ -133,7 +133,7 @@
       "dimensionsMm": [
         510.02,
         503.0,
-        516.99
+        507.69
       ]
     },
     {
@@ -160,7 +160,7 @@
     }
   ],
   "checks": {
-    "sourceTriangles": 57167,
-    "partTriangles": 57167
+    "sourceTriangles": 57147,
+    "partTriangles": 57147
   }
 }
