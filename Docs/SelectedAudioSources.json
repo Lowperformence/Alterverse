@@ -892,7 +892,7 @@
           "hero": "Timmy",
           "slot": "R",
           "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3",
-          "note": "runtime MP3 has same Git blob as archived original"
+          "note": "Filename/catalog match; byte identity was not established. See decoded-audio audit."
         }
       ]
     },
@@ -972,7 +972,22 @@
       ]
     }
   ],
-  "unresolved": [
+  "existingOtherEvidence": [
+    "Docs/ThirdPartyAudioLicenses.md",
+    "Docs/AudioLicenses/Kenney-SciFi-CC0.txt",
+    "Docs/AudioLicenses/Kenney-RPG-CC0.txt",
+    "Docs/AudioLicenses/Kenney-Impact-CC0.txt",
+    "ArtSource/Audio/Combat/sources.json",
+    "Docs/HeroDeathVoiceLicense.md"
+  ],
+  "notes": [
+    "Pixabay sources here were published after 2019-01-09, so are not labeled CC0.",
+    "Seven renamed ultimate slots correspond to six unique uploaded hashes: Auren and Traveler share one input hash.",
+    "Historical manifest mappings can be superseded by Brakk/shared-slot overrides documented in ArtSource/Audio/HeroSelections/README.md.",
+    "Creator provenance is based on primary publisher statements, not a guarantee about all underlying third-party rights.",
+    "The nine unverified inputs are retired; current replacements and licensed inputs are recorded in AudioReplacements.json. Git history preserves old revisions without assigning them a retrospective license."
+  ],
+  "retiredUnverified": [
     {
       "heroId": "Rook",
       "role": "Ultimate",
@@ -1088,19 +1103,6 @@
       "status": "generic source filename; origin not yet verified"
     }
   ],
-  "existingOtherEvidence": [
-    "Docs/ThirdPartyAudioLicenses.md",
-    "Docs/AudioLicenses/Kenney-SciFi-CC0.txt",
-    "Docs/AudioLicenses/Kenney-RPG-CC0.txt",
-    "Docs/AudioLicenses/Kenney-Impact-CC0.txt",
-    "ArtSource/Audio/Combat/sources.json",
-    "Docs/HeroDeathVoiceLicense.md"
-  ],
-  "notes": [
-    "Pixabay sources here were published after 2019-01-09, so are not labeled CC0.",
-    "Existing source hashes and paths remain unchanged; no sound replacement performed by this audit.",
-    "Seven renamed ultimate slots correspond to six unique uploaded hashes: Auren and Traveler share one input hash.",
-    "Historical manifest mappings can be superseded by Brakk/shared-slot overrides documented in ArtSource/Audio/HeroSelections/README.md.",
-    "Creator provenance is based on primary publisher statements, not a guarantee about all underlying third-party rights."
-  ]
+  "replacementEvidence": "Docs/HeroAssets/AudioReplacements.json",
+  "unresolved": []
 }
