@@ -1,16 +1,33 @@
 from pathlib import Path
-import sys, json, gzip, hashlib, math
+import argparse, sys, json, gzip, hashlib, math
 import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'Tools/HeroParts'))
 from build_parts import validate
-report = {'heroes': {}, 'Unity': 'not run', 'Android': 'not run'}
+from shoulder_orientation import REVISION, REPORT, unchanged_geometry_hash, validate_outboard
+parser = argparse.ArgumentParser(description='Validate both integrated models or one corrected hero.')
+parser.add_argument('--hero', choices=['Sivra', 'Ione'])
+args = parser.parse_args()
+report_path = ROOT / 'ArtSource/Heroes/ConceptModels/Sivra-Ione-integration-checks.json'
+report = json.loads(report_path.read_text()) if args.hero and report_path.exists() else {'heroes': {}, 'Unity': 'not run', 'Android': 'not run'}
+report['lastValidatedHeroes'] = [args.hero] if args.hero else ['Sivra', 'Ione']
 for hero, kind in [('Sivra', 'CyberRanger'), ('Ione', 'UmbralMage')]:
+    if args.hero and hero != args.hero:
+        continue
     path = (ROOT / 'Assets/Alterverse/Resources') / kind / 'Model.bytes'
     data = json.loads(gzip.decompress(path.read_bytes()))
     validate(data)
     archived = json.loads(((ROOT / 'ArtSource/Heroes/BuildPlans') / hero / 'validation.json').read_text())['checks']
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == archived['modelSha256']
+    model_hash = hashlib.sha256(path.read_bytes()).hexdigest()
+    correction = None
+    if hero == 'Ione' and data.get('shoulderOrientationRevision') == REVISION:
+        correction = json.loads((ROOT / REPORT).read_text())
+        assert correction['sourceModelSha256'] == archived['modelSha256']
+        assert correction['modelSha256'] == model_hash
+        assert correction['unchangedGeometrySha256'] == unchanged_geometry_hash(data, correction['ranges'])
+        validate_outboard(data, correction['ranges'])
+    else:
+        assert model_hash == archived['modelSha256']
     v = np.asarray(data['vertices']).reshape(-1, 3)
     n = np.asarray(data['normals']).reshape(-1, 3)
     assert np.isfinite(v).all() and np.isfinite(n).all()
@@ -36,5 +53,9 @@ for hero, kind in [('Sivra', 'CyberRanger'), ('Ione', 'UmbralMage')]:
         assert axis[2] > .97 and abs(axis[1]) < .05
         entry['fittedFocusAxis'] = axis.tolist()
     report['heroes'][hero] = entry
-(ROOT / 'ArtSource/Heroes/ConceptModels/Sivra-Ione-integration-checks.json').write_text(json.dumps(report, indent=2)+'\n')
+    if correction is not None:
+        entry['archivedModelHash'] = 'original export plus verified shoulder correction'
+        entry['shoulderOrientationRevision'] = REVISION
+report_path.write_text(json.dumps(report, indent=2)+'\n')
 print(json.dumps(report, indent=2))
+

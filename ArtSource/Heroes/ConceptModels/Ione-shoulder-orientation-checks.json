@@ -1,0 +1,190 @@
+{
+  "revision": "ione-outboard-shoulders-20261012-v1",
+  "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+  "sourceCommit": "954f9cecb201260da40b507f93216f3f91b909d6",
+  "sourceModelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
+  "modelSha256": "f3238cdca5e491fa6fc34c326b03cdb04b5b34e2dc30bd8a2caf8ae49e74cc40",
+  "ranges": [
+    {
+      "side": "L",
+      "sign": -1,
+      "layer": 0,
+      "bone": 4,
+      "first": 23978,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        -0.22265,
+        1.6425299999999998,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        -0.22265,
+        1.59153,
+        -0.014139999999999998
+      ],
+      "yawDegrees": -45,
+      "seatingDropMetres": 0.051
+    },
+    {
+      "side": "L",
+      "sign": -1,
+      "layer": 1,
+      "bone": 4,
+      "first": 24445,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        -0.22265,
+        1.6028499999999999,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        -0.22265,
+        1.55185,
+        -0.014139999999999998
+      ],
+      "yawDegrees": -45,
+      "seatingDropMetres": 0.051
+    },
+    {
+      "side": "L",
+      "sign": -1,
+      "layer": 2,
+      "bone": 4,
+      "first": 24912,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        -0.22265,
+        1.56317,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        -0.22265,
+        1.51217,
+        -0.014139999999999998
+      ],
+      "yawDegrees": -45,
+      "seatingDropMetres": 0.051
+    },
+    {
+      "side": "R",
+      "sign": 1,
+      "layer": 0,
+      "bone": 11,
+      "first": 25379,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        0.22265,
+        1.6425299999999998,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        0.22265,
+        1.59153,
+        -0.014139999999999998
+      ],
+      "yawDegrees": 45,
+      "seatingDropMetres": 0.051
+    },
+    {
+      "side": "R",
+      "sign": 1,
+      "layer": 1,
+      "bone": 11,
+      "first": 25846,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        0.22265,
+        1.6028499999999999,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        0.22265,
+        1.55185,
+        -0.014139999999999998
+      ],
+      "yawDegrees": 45,
+      "seatingDropMetres": 0.051
+    },
+    {
+      "side": "R",
+      "sign": 1,
+      "layer": 2,
+      "bone": 11,
+      "first": 26313,
+      "count": 467,
+      "shellCount": 187,
+      "pivot": [
+        0.22265,
+        1.56317,
+        -0.014139999999999998
+      ],
+      "targetPivot": [
+        0.22265,
+        1.51217,
+        -0.014139999999999998
+      ],
+      "yawDegrees": 45,
+      "seatingDropMetres": 0.051
+    }
+  ],
+  "changedVertices": 2802,
+  "vertices": 29840,
+  "triangles": 57147,
+  "unchangedGeometrySha256": "338d90deb49eb3d5f9b867db1de461c6625b7f1a3a6bc8bd08e8f34bf4cef3f2",
+  "nonShoulderDataExact": true,
+  "oldOrientationRejected": true,
+  "outboardChecks": [
+    {
+      "side": "L",
+      "layer": 0,
+      "meanOutwardNormal": 0.33348205618247534,
+      "innerEdgeMetres": 0.1857217458536452
+    },
+    {
+      "side": "L",
+      "layer": 1,
+      "meanOutwardNormal": 0.33348205618247534,
+      "innerEdgeMetres": 0.1857217458536452
+    },
+    {
+      "side": "L",
+      "layer": 2,
+      "meanOutwardNormal": 0.33348205618247534,
+      "innerEdgeMetres": 0.1857217458536452
+    },
+    {
+      "side": "R",
+      "layer": 0,
+      "meanOutwardNormal": 0.3316705508206755,
+      "innerEdgeMetres": 0.1857217458536452
+    },
+    {
+      "side": "R",
+      "layer": 1,
+      "meanOutwardNormal": 0.3316705508206755,
+      "innerEdgeMetres": 0.1857217458536452
+    },
+    {
+      "side": "R",
+      "layer": 2,
+      "meanOutwardNormal": 0.3316705508206755,
+      "innerEdgeMetres": 0.1857217458536452
+    }
+  ],
+  "UnityEditor": "not run",
+  "Android": "not run",
+  "nativeExports": "Earlier Blender/FBX exports remain archived; regenerate with build_models.py for the corrected orientation.",
+  "generatorMatchesRuntime": true,
+  "rigidJointPoseConfigurations": 30,
+  "triangleWindingMatchesNormals": true,
+  "preview": {
+    "file": "ArtSource/Heroes/ConceptModels/Ione-shoulders-front.png",
+    "sha256": "36af0fb4f5a60ee95489cd57f9e8938078bb90d6a8ee886d71183ae2ae9fdf26",
+    "method": "exact resource triangle software rasterization; canonical weapon coordinates; not a Unity screenshot"
+  }
+}

@@ -87,14 +87,22 @@
     }
   ],
   "implementation": {
-    "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
+    "fullConceptModel": "Runtime shoulder orientation corrected; archived Blender/FBX validation applies to the preceding export",
     "previousValidatedReplacement": "detailed replacement head",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
     "revision": "hero-component-plans-20261012-v3",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Ione-model.blend",
     "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
-    "modelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26"
+    "modelSha256": "f3238cdca5e491fa6fc34c326b03cdb04b5b34e2dc30bd8a2caf8ae49e74cc40",
+    "runtimeShoulderCorrection": {
+      "revision": "ione-outboard-shoulders-20261012-v1",
+      "evidence": "ArtSource/Heroes/ConceptModels/Ione-shoulder-orientation-checks.json",
+      "sourceCommit": "954f9cecb201260da40b507f93216f3f91b909d6",
+      "originalModelSha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
+      "scope": "Six shoulder lamella packets, inset edges and fasteners only; original rig and focus preserved",
+      "nativeExports": "Earlier Blender/FBX and part plans are archived preceding orientation; updated generator exports the corrected shells"
+    }
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",

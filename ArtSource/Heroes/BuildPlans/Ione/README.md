@@ -2,6 +2,8 @@
 
 Stand: 12.10.2026. Spiel-ID: `Elyra`. Revision: `hero-component-plans-20261012-v3`.
 
+Nachtrag Schulterausrichtung: Die aktuelle Laufzeitressource dreht seit `ione-outboard-shoulders-20261012-v1` die sechs Lamellenpakete auf die jeweilige Schulteraußenseite und setzt sie auf die Gelenke. Nachweis: `Docs/Ione-Schultern-2026-10-12.md` und `ArtSource/Heroes/ConceptModels/Ione-shoulder-orientation-checks.json`. Die hier archivierten Blender-/OBJ-/SVG-Exporte und die ursprüngliche `validation.json` zeigen den vorausgehenden Exportstand; der aktualisierte Generator erzeugt die neue Orientierung bei einem erneuten Blender-Bau.
+
 ## Gestaltung
 
 | Baugruppe | Verbindliche Gestaltung |
@@ -45,3 +47,4 @@ Das Bild entstand mit OpenAI-Bildgenerierung aus dem bestehenden projektinternen
 ## Abschlusskriterien
 
 Konzepttafel archiviert; Bauteile und echte Projektionen vorhanden; Spielmodell exportiert; Rig-/FBX-Prüfungen bestanden. Unity-Editor, Kampfanimationen im Spiel, Android-Clipping und Geräteprofiling sind separat zu prüfen und werden bis zur tatsächlichen Durchführung als offen geführt.
+

@@ -10,6 +10,7 @@ import argparse,copy,gzip,hashlib,json,math,subprocess,sys,tempfile
 import numpy as np
 import bpy,bmesh
 from part_optimization import optimize_parts,optimize_weapon_parts,optimize_native_weapons,build_plans
+from shoulder_orientation import rotate_part_vertices
 from mathutils import Vector,Matrix
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -46,16 +47,18 @@ def leaf(p,name,a,b,width,mat,bone,vein=None):
     p.plate(name,[(v[0],v[1]) for v in outline],float(mid[2]),.004,mat,bone)
     if vein is not None:p.tube(name+' raised central vein',[a+[0,0,.008],b+[0,0,.008]],.0013,vein,bone,6)
 
-def shoulder_lames(p,names,anchors,metal,accent,scale=1):
+def shoulder_lames(p,names,anchors,metal,accent,scale=1,outboard=False):
     for side,sign in [('L',-1),('R',1)]:
         bone=names.index('UpperArm'+side);head=np.array(anchors[bone]['head'])
         for layer in range(3):
+            first=len(p.v)
             center=head+[sign*.026,-.018-layer*.032*scale,.006]
             radii=np.array([.091,.052,.094])*scale
             p.patch('three overlapping shoulder lames '+side+str(layer),center,radii,(.12,1.80),(-1.13,1.13),metal,bone,10,16)
             line=[center+radii*np.array([math.sin(1.78)*math.sin(a),math.cos(1.78),math.sin(1.78)*math.cos(a)])+[0,0,.002] for a in np.linspace(-1.10,1.10,22)]
             p.tube('shoulder inset edge '+side+str(layer),line,.0022*scale,accent,bone,8)
             for point in [line[2],line[-3]]:p.ellipsoid('shoulder recessed rivet',point,[.003,.003,.002],accent,bone,10,6)
+            if outboard:rotate_part_vertices(p,first,center,sign)
 
 def runtime_parts(label,data):
     p=Parts();names=data['boneNames'];idx=names.index;anchors=data['anchors'];v=np.asarray(data['vertices']).reshape(-1,3);bi=np.asarray(data['boneIndices']);groups=np.asarray(data.get('groups',[0]*len(v)))
@@ -102,7 +105,8 @@ def runtime_parts(label,data):
                 bone=idx('UpperArm'+side);points=v[(bi==bone)&(groups==0)&(v[:,1]>anchors[bone]['head'][1]-.080)]
                 lo=points.min(0);hi=points.max(0)
                 cap_anchors[bone]['head']=[float((lo[0]+hi[0])*.5),float(hi[1]+.011),float((lo[2]+hi[2])*.5)]
-            shoulder_lames(p,names,cap_anchors,2,3,1.24)
+            # Cover the outside of each shoulder, not the front/inner collar.
+            shoulder_lames(p,names,cap_anchors,2,3,1.24,outboard=True)
             for sign in [-1,1]:node(p,'hip orbit reactor',[sign*.151,anchors[hips]['head'][1]-.01,.125],.038,1,3,hips)
     elif label=='Auren':
         # Replace the old emissive letter glyph without disturbing shield metal.
@@ -449,3 +453,4 @@ def main():
     print('HERO_COMPONENT_COMPLETE',args.hero or 'all',flush=True)
 
 if __name__=='__main__':main()
+

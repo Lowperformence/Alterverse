@@ -11,17 +11,21 @@
     "Ione": {
       "vertices": 29840,
       "triangles": 57147,
-      "sha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
+      "sha256": "f3238cdca5e491fa6fc34c326b03cdb04b5b34e2dc30bd8a2caf8ae49e74cc40",
       "jointPoseConfigurations": 27,
       "geometry": "passed",
-      "archivedModelHash": "matched",
+      "archivedModelHash": "original export plus verified shoulder correction",
       "fittedFocusAxis": [
         -0.0,
         -0.0,
         1.0
-      ]
+      ],
+      "shoulderOrientationRevision": "ione-outboard-shoulders-20261012-v1"
     }
   },
   "Unity": "not run",
-  "Android": "not run"
+  "Android": "not run",
+  "lastValidatedHeroes": [
+    "Ione"
+  ]
 }
