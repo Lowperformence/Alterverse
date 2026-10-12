@@ -57,9 +57,21 @@ partial class Regression
             pose.OrientHammerGuard(actor,hand);
             Vector3 shaft=(top.position-grip.position).normalized;
             Check(Vector3.Dot(shaft,actor.up)>.85f,"Hammer stays above its hand");
-            Check(Vector3.Dot(shaft,actor.right)>.25f,"Hammer clears the head toward the weapon side");
-            Check(Vector3.Dot(shaft,actor.forward)>.24f,"Hammer stays in front of the shoulder");
+            Check(Vector3.Dot(shaft,-actor.right)>.18f,"Hammer head tilts toward screen-right of the front portrait");
+            Check(Vector3.Dot(shaft,actor.forward)>.18f,"Hammer stays in front of the shoulder");
             Near(Vector3.Dot(shaft,SiegeTankAppearance.HammerGuardShaft(actor)),1,.00001f,"Fitted shaft matches shared recovery axis");
+            // MenuHeroShowcase puts its camera at local +Z and faces the actor at -24 degrees.
+            // Unity camera right is -world X here; a positive actor-right tilt went to screen-left.
+            var cameraRight=-Vector3.right;
+            var portraitActor=new GameObject("Portrait facing").transform;portraitActor.rotation=Quaternion.Euler(0,-24,0);
+            Vector3 portraitShaft=SiegeTankAppearance.HammerGuardShaft(portraitActor);
+            Check(Vector3.Dot(portraitShaft,cameraRight)>.25f,"Marked hammer head moves right in the actual portrait camera projection");
+            Vector3 upper=portraitActor.TransformPoint(new Vector3(.19f,1.5f,0));
+            Vector3 wrist=upper+portraitActor.TransformDirection(SiegeTankAppearance.GuardHandOffset(false))*.45f;
+            Vector3 portraitTop=wrist+portraitShaft*.65f;
+            Vector3 head=portraitActor.TransformPoint(new Vector3(0,1.7f,0));
+            Check(Vector3.Dot(portraitTop-head,cameraRight)>.20f,"Hammer head clears the head on the marked image side");
+
             // The presentation/preview runs this later alignment after its pose solver.
             // It used to rotate the new diagonal back into the old upright frame.
             pose.AlignGuard(actor,null,hand,1f);

@@ -290,7 +290,7 @@ namespace Alterverse.Visuals
         }
 
         public static Vector3 GuardHandOffset(bool shield) => shield
-            ? new Vector3(-.16f, -.44f, .44f) : new Vector3(.34f, -.53f, .42f);
+            ? new Vector3(-.16f, -.44f, .44f) : new Vector3(-.60f, -.53f, .42f);
 
         public static Vector3 GuardHandTarget(Transform model, Transform upper, Transform elbow, Transform hand, bool shield)
         {
@@ -298,10 +298,11 @@ namespace Alterverse.Visuals
             return upper.position + model.TransformDirection(GuardHandOffset(shield)) * reach;
         }
 
-        // Keep the head above and outside the right shoulder, as in the marked guard.
+        // The portrait camera faces game -Z: screen-right is opposite actor.right.
+        // Bring the weapon hand across the torso and the hammer head to the marked side.
         // Shared with strike recovery so the weapon returns to this exact diagonal.
         public static Vector3 HammerGuardShaft(Transform actor) =>
-            (actor.up * .90f + actor.right * .32f + actor.forward * .30f).normalized;
+            (actor.up * .95f - actor.right * .20f + actor.forward * .20f).normalized;
 
         /// <summary>Set the right-hand guard from a fixed weapon frame, before strike sampling.</summary>
         public void OrientHammerGuard(Transform actor, Transform hand)

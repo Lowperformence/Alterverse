@@ -189,7 +189,7 @@ namespace Alterverse.Visuals
             {
                 reportedStandingPose = true;
                 HeroVisualDiagnostics.Trace("DF: imported rest pose RESET v5 active on " + identity.DisplayName +
-                    (identity.Hero == HeroId.Kaelon ? " — AUREN GUARD v2: shield forward, hammer diagonal" : "") + ".", this);
+                    (identity.Hero == HeroId.Kaelon ? " — AUREN GUARD v3: hammer on marked portrait side" : "") + ".", this);
             }
         }
         public string StandingPoseStatus()
@@ -206,7 +206,7 @@ namespace Alterverse.Visuals
                 Quaternion desired = bones[i].GuardWorld;
                 largest = Mathf.Max(largest, Quaternion.Angle(bones[i].Transform.rotation, desired));
             }
-            return (identity.Hero == HeroId.Kaelon ? "AUREN GUARD v2" : "Imported rest pose RESET v5") +
+            return (identity.Hero == HeroId.Kaelon ? "AUREN GUARD v3" : "Imported rest pose RESET v5") +
                 "; final arm deviation " + largest.ToString("F2") + " degrees";
         }
         private void RememberPose() { for (int i = 0; i < bones.Length; i++) bones[i].LastLocal = bones[i].Transform.localRotation; }
