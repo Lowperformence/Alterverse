@@ -191,6 +191,7 @@ def runtime_source(label,kind,data):
         obj=mesh_object('DF_WeaponR',[xyz(v) for v in p.v],p.f,p.m,list(body.data.materials),[xyz(n) for n in p.normals()]);skin(obj,arm,display['boneNames'],p.b)
     if label=='Sivra':
         # Keep the original rifle mesh and materials in the editable full-character source.
+        existing_objects=set(bpy.data.objects)
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'Nyra.blend';path.write_bytes(original('ArtSource/Heroes/Nyra.blend'))
             with bpy.data.libraries.load(str(path),link=False) as (src,dst):dst.objects=['DF_WeaponR','DF_HandleContactR','DF_Muzzle']
@@ -200,8 +201,10 @@ def runtime_source(label,kind,data):
             weapon.matrix_world=Matrix.Identity(4);weapon.parent=None
             for modifier in list(weapon.modifiers):weapon.modifiers.remove(modifier)
             weapon.vertex_groups.clear();bpy.context.collection.objects.link(weapon);skin(weapon,arm,['HandR'],[0]*len(weapon.data.vertices))
-            for o in objects.values():
-                if o!=weapon:bpy.data.objects.remove(o,do_unlink=True)
+            # Blender also appends dependency objects such as the old armature.
+            # Remove them after transferring the rifle to this source skeleton.
+            for o in list(bpy.data.objects):
+                if o not in existing_objects and o!=weapon:bpy.data.objects.remove(o,do_unlink=True)
         REPORT['models'][label]['nativeRifleForwardAxis']=[0,0,1]
     body['concept_revision']=REVISION
     return body,arm
