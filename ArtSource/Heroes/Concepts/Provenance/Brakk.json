@@ -90,12 +90,13 @@
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Brakk-model.blend",
     "model": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
-    "modelSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697"
+    "modelSha256": "22475eb5b4db2ae248eff55159993b4f9885697dc3cb597c8106e0675da83689"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"

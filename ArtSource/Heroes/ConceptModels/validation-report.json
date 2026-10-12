@@ -9911,9 +9911,9 @@
         ],
         "vertices": 23293
       },
-      "fbxSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697",
-      "modelSha256": "256776f2f9b37d63d027579c1e0628164f172c27515597db0908f04dab229697",
-      "blenderSha256": "e35163bec0b4a7a258d17e4fcd987c0329ea45066d47bfdef5018873239c9679"
+      "fbxSha256": "22475eb5b4db2ae248eff55159993b4f9885697dc3cb597c8106e0675da83689",
+      "modelSha256": "22475eb5b4db2ae248eff55159993b4f9885697dc3cb597c8106e0675da83689",
+      "blenderSha256": "429c170de1ea0004cc4c3d6afc67979d6deaf9998ce9e963fa1cb478c4b87b2e"
     },
     "Timmy": {
       "source": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
