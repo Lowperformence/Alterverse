@@ -1,0 +1,638 @@
+{
+  "checkedOn": "2026-10-12",
+  "scope": "all repository media assets plus package lock; evidence register, not blanket clearance",
+  "sources": [
+    {
+      "id": "blender-anatomy",
+      "title": "Human Base Meshes 1.4.1",
+      "creator": "Blender Studio / individual mesh authors",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://www.blender.org/download/demo-files/",
+      "evidence": [
+        "Tools/HeroRebuild/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record; upstream original bundle notice to be archived",
+      "notes": "Anatomy is third-party. Costumes/weapons/rig edits are documented project work, not evidence that the anatomy was built from scratch."
+    },
+    {
+      "id": "quaternius-combat",
+      "title": "Universal Animation Library 1 and 2, free Standard",
+      "creator": "Quaternius",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://quaternius.itch.io/universal-animation-library",
+      "evidence": [
+        "ArtSource/Animations/README.md",
+        "ArtSource/Animations/Quaternius-CC0.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "quaternius-locomotion",
+      "title": "Universal Animation Library Standard",
+      "creator": "Quaternius",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "evidence": [
+        "ArtSource/Animations/Locomotion/README.md",
+        "ArtSource/Animations/Locomotion/License-Quaternius.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "kaykit",
+      "title": "Character Animations 1.1",
+      "creator": "Kay Lousberg",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://kaylousberg.itch.io/kaykit-character-animations",
+      "evidence": [
+        "ArtSource/Animations/Locomotion/README.md",
+        "ArtSource/Animations/Locomotion/License-KayKit.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "mixamo",
+      "title": "User-supplied Standing Idle (1).fbx",
+      "creator": "Adobe Mixamo",
+      "license": "Mixamo terms; NOT CC0",
+      "sourceUrl": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html",
+      "evidence": [
+        "ArtSource/Animations/README.md",
+        "ArtSource/Animations/mixamo-standing-idle-report.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "source documented; original user download receipt not available",
+      "notes": "A provider declaration and a source-file digest are distinct from the account download record. No claim of CC0 or permission to resell standalone source files."
+    },
+    {
+      "id": "kenney-scifi",
+      "title": "SciFi audio",
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://kenney.nl/assets/sci-fi-sounds",
+      "evidence": [
+        "Docs/AudioLicenses/Kenney-SciFi-CC0.txt",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "kenney-impact",
+      "title": "Impact audio",
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+      "evidence": [
+        "Docs/AudioLicenses/Kenney-Impact-CC0.txt",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "kenney-rpg",
+      "title": "RPG audio",
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+      "evidence": [
+        "Docs/AudioLicenses/Kenney-RPG-CC0.txt",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "firearm",
+      "title": "The Free Firearm Sound Library",
+      "creator": "Ben Jaszczak, Brian Nelson, Kevin Heras, Matthew Nanney",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/the-free-firearm-sound-library",
+      "evidence": [
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "music-menu",
+      "title": "Another space background track",
+      "creator": "yd",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/another-space-background-track",
+      "evidence": [
+        "Docs/ThirdPartyAudioLicenses.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "music-match",
+      "title": "Space Music: Out There",
+      "creator": "yd",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/space-music-out-there",
+      "evidence": [
+        "Docs/ThirdPartyAudioLicenses.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "camo",
+      "title": "Pixelated Camouflage Set / camouflage-grey.png",
+      "creator": "Angela Netzke (netzapps)",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/pixelated-camouflage-set",
+      "evidence": [
+        "Documentation/UrbanDigitalCamo-LICENSE.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "wolfwoot",
+      "title": "Archived RPG Male Adventurer voice",
+      "creator": "Brandon Song (wolfwoot)",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/voice-clip-pack-male-adventurer-rpg",
+      "evidence": [
+        "Docs/HeroDeathVoiceLicense.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "archived; no longer active HeroDeath cue",
+      "notes": ""
+    },
+    {
+      "id": "mixkit",
+      "title": "Open special box, asset 3190",
+      "creator": "Mixkit listing",
+      "license": "Mixkit Sound Effects Free License",
+      "sourceUrl": "https://mixkit.co/license/modal/sfxFree/",
+      "evidence": [
+        "Docs/HeroDeathVoiceLicense.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "license page verified; source identity recorded in project",
+      "notes": "Finished-game incorporation and standalone/source-file redistribution are different permissions. Raw source is retained in this private repository."
+    },
+    {
+      "id": "spacekit",
+      "title": "Ultimate Space Kit",
+      "creator": "Quaternius",
+      "license": "CC0 claimed; pack-specific notice mismatch",
+      "sourceUrl": "https://quaternius.com/packs/ultimatespacekit.html",
+      "evidence": [
+        "Assets/Alterverse/ThirdParty/UltimateSpaceKit_LICENSE.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "needs exact archive notice",
+      "notes": "The existing file is named UltimateSpaceKit but its text says Ultimate Platformer Pack. Do not silently treat the wrong pack heading as an exact pack certificate."
+    },
+    {
+      "id": "font-rajdhani",
+      "title": "Rajdhani",
+      "creator": "Indian Type Foundry",
+      "license": "OFL-1.1",
+      "sourceUrl": "https://github.com/google/fonts/tree/main/ofl/rajdhani",
+      "evidence": [
+        "Documentation/Provenance/Licenses/Rajdhani-OFL-1.1.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "license text archived; font name-table checked",
+      "notes": "Rajdhani-Regular.ttf and Rajdhani-SemiBold.ttf retain their original copyright and OFL metadata."
+    },
+    {
+      "id": "font-orbitron",
+      "title": "Orbitron",
+      "creator": "The Orbitron Project Authors",
+      "license": "OFL-1.1",
+      "sourceUrl": "https://github.com/google/fonts/tree/main/ofl/orbitron",
+      "evidence": [
+        "Documentation/Provenance/Licenses/Orbitron-OFL-1.1.txt"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "license text archived; font name-table checked",
+      "notes": "DimensionsDisplay-SemiBold.ttf identifies itself as a renamed Orbitron derivative in its copyright/name table."
+    },
+    {
+      "id": "google-play-games",
+      "title": "Play Games plugin v2.2.1",
+      "creator": "Google",
+      "license": "Apache-2.0",
+      "sourceUrl": "https://github.com/playgameservices/play-games-plugin-for-unity/tree/v2.2.1",
+      "evidence": [
+        "Documentation/Provenance/Licenses/GooglePlayGames-Apache-2.0.txt",
+        "Packages/manifest.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "google-edm",
+      "title": "External Dependency Manager v1.2.188",
+      "creator": "Google",
+      "license": "Apache-2.0",
+      "sourceUrl": "https://github.com/googlesamples/unity-jar-resolver/tree/v1.2.188",
+      "evidence": [
+        "Documentation/Provenance/Licenses/ExternalDependencyManager-Apache-2.0.txt",
+        "Packages/packages-lock.json"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "project-record-and-provider-declaration",
+      "notes": ""
+    },
+    {
+      "id": "pixabay-337205",
+      "title": "fighter-jet-powerful-low-flyby-sfx",
+      "creator": "MIGHTUSER",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-fighter-jet-powerful-low-flyby-sfx-337205/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-100653",
+      "title": "heathers-gunshot-effect2",
+      "creator": "okieactor (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/heathers-gunshot-effect2-100653/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-426481",
+      "title": "big-robot-footstep-009",
+      "creator": "AudioPapkin",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-009-426481/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-445104",
+      "title": "big-robot-footstep-014",
+      "creator": "AudioPapkin",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-014-445104/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-416172",
+      "title": "boom-swoosh-01",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-boom-swoosh-01-416172/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-478377",
+      "title": "elemental-spell-impact-water",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-elemental-spell-impact-water-478377/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-393845",
+      "title": "sword-slice-2",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-2-393845/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-393847",
+      "title": "sword-slice",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-234631",
+      "title": "swing-whoosh-metal-hit-14",
+      "creator": "floraphonic",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-234636",
+      "title": "swing-whoosh-metal-hit-19",
+      "creator": "floraphonic",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-19-234636/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-101878",
+      "title": "funny-swish",
+      "creator": "deleted_user_6479820 (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-funny-swish-101878/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-7103",
+      "title": "power-down",
+      "creator": "noirenex (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-power-down-7103/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-106252",
+      "title": "steel-chain-dragged-shower-reverb",
+      "creator": "ani_music (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-steel-chain-dragged-shower-reverb-106252/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-442015",
+      "title": "cinematic-hit-shot",
+      "creator": "SoundReality",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-cinematic-hit-shot-442015/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-312659",
+      "title": "sci-fi-gun-shot",
+      "creator": "SoundReality",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-gun-shot-312659/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-229313",
+      "title": "sci-fi-blaster-shot",
+      "creator": "Universfield",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-blaster-shot-229313/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-378663",
+      "title": "healing-magic-2",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-healing-magic-2-378663/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-482495",
+      "title": "short-energy-beam-shot-1",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/technology-short-energy-beam-shot-1-482495/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-482500",
+      "title": "short-energy-beam-shot-4",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-short-energy-beam-shot-4-482500/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-352708",
+      "title": "sword-blade-slicing-flesh",
+      "creator": "Universfield",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-blade-slicing-flesh-352708/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-202030",
+      "title": "sci-fi-sound-effect-designed-circuits-sfx-29",
+      "creator": "GregorQuendel",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-sound-effect-designed-circuits-sfx-29-202030/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-450253",
+      "title": "a-massive-axe-impact-hitting-metal-2",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/a-massive-axe-impact-hitting-metal-2-450253/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "universe-image",
+      "title": "User-supplied Universe.png",
+      "creator": "not yet established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Documentation/Universe-Backdrop.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open provenance gap",
+      "notes": "An upload or project commit is not by itself a license grant. Keep generated concepts dated separately from historical references."
+    },
+    {
+      "id": "reference-images",
+      "title": "Historical character reference images",
+      "creator": "not yet established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Tools/HeroRebuild/README.md",
+        "ArtSource/Heroes/UmbralMage/README.md",
+        "Documentation/CyberShark.md",
+        "Docs/AndromedaTimmy-Season2.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open provenance gap",
+      "notes": "An upload or project commit is not by itself a license grant. Keep generated concepts dated separately from historical references."
+    },
+    {
+      "id": "frontend-video",
+      "title": "Interstellar menu video/poster and branding",
+      "creator": "not yet established",
+      "license": "not established",
+      "sourceUrl": "",
+      "evidence": [
+        "Docs/Production-Frontend-Pass.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "open provenance gap",
+      "notes": "An upload or project commit is not by itself a license grant. Keep generated concepts dated separately from historical references."
+    }
+  ]
+}

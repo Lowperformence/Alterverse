@@ -1,0 +1,338 @@
+{
+  "checkedOn": "2026-10-12",
+  "licenseUrl": "https://pixabay.com/service/license-summary/",
+  "bindingTermsUrl": "https://pixabay.com/service/terms/",
+  "verification": "Public listing title/creator/item id and Content License designation checked with web retrieval. No account download certificate or historical license snapshot is fabricated.",
+  "items": [
+    {
+      "id": "pixabay-337205",
+      "title": "fighter-jet-powerful-low-flyby-sfx",
+      "creator": "MIGHTUSER",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-fighter-jet-powerful-low-flyby-sfx-337205/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-100653",
+      "title": "heathers-gunshot-effect2",
+      "creator": "okieactor (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/heathers-gunshot-effect2-100653/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-426481",
+      "title": "big-robot-footstep-009",
+      "creator": "AudioPapkin",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-009-426481/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-445104",
+      "title": "big-robot-footstep-014",
+      "creator": "AudioPapkin",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-big-robot-footstep-014-445104/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-416172",
+      "title": "boom-swoosh-01",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-boom-swoosh-01-416172/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-478377",
+      "title": "elemental-spell-impact-water",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-elemental-spell-impact-water-478377/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-393845",
+      "title": "sword-slice-2",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-2-393845/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-393847",
+      "title": "sword-slice",
+      "creator": "DRAGON-STUDIO",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-slice-393847/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-234631",
+      "title": "swing-whoosh-metal-hit-14",
+      "creator": "floraphonic",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-14-234631/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-234636",
+      "title": "swing-whoosh-metal-hit-19",
+      "creator": "floraphonic",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-swing-whoosh-metal-hit-19-234636/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-101878",
+      "title": "funny-swish",
+      "creator": "deleted_user_6479820 (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-funny-swish-101878/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-7103",
+      "title": "power-down",
+      "creator": "noirenex (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-power-down-7103/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-106252",
+      "title": "steel-chain-dragged-shower-reverb",
+      "creator": "ani_music (Freesound), via freesound_community",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-steel-chain-dragged-shower-reverb-106252/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-442015",
+      "title": "cinematic-hit-shot",
+      "creator": "SoundReality",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-cinematic-hit-shot-442015/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-312659",
+      "title": "sci-fi-gun-shot",
+      "creator": "SoundReality",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-gun-shot-312659/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-229313",
+      "title": "sci-fi-blaster-shot",
+      "creator": "Universfield",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-blaster-shot-229313/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-378663",
+      "title": "healing-magic-2",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-healing-magic-2-378663/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-482495",
+      "title": "short-energy-beam-shot-1",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/technology-short-energy-beam-shot-1-482495/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-482500",
+      "title": "short-energy-beam-shot-4",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-short-energy-beam-shot-4-482500/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-352708",
+      "title": "sword-blade-slicing-flesh",
+      "creator": "Universfield",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sword-blade-slicing-flesh-352708/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-202030",
+      "title": "sci-fi-sound-effect-designed-circuits-sfx-29",
+      "creator": "GregorQuendel",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/film-special-effects-sci-fi-sound-effect-designed-circuits-sfx-29-202030/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    },
+    {
+      "id": "pixabay-450253",
+      "title": "a-massive-axe-impact-hitting-metal-2",
+      "creator": "Yodguard",
+      "license": "Pixabay Content License; NOT CC0",
+      "sourceUrl": "https://pixabay.com/sound-effects/a-massive-axe-impact-hitting-metal-2-450253/",
+      "evidence": [
+        "Documentation/Provenance/Pixabay-Evidence.json",
+        "ArtSource/Audio/HeroSelections/manifest.json",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "checkedOn": "2026-10-12",
+      "status": "provider page located and license declaration observed; user download certificate not archived",
+      "notes": "The supplied filename/id links the local recording to this listing. Provider-file byte identity was not independently established. Account-specific download dates/certificates are not invented."
+    }
+  ]
+}

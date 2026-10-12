@@ -1,0 +1,4806 @@
+{
+  "snapshotCommit": "3dc8d779893c33ce0826c0cc1fa21eefcf4c294b",
+  "inventoryCompleteForExtensions": [
+    ".blend",
+    ".bytes",
+    ".fbx",
+    ".gz",
+    ".jpeg",
+    ".jpg",
+    ".mp3",
+    ".mp4",
+    ".obj",
+    ".ogg",
+    ".otf",
+    ".png",
+    ".ttf",
+    ".wav"
+  ],
+  "assetCount": 488,
+  "hashType": "git blob SHA-1 from pinned GitHub tree; do not confuse with raw-file SHA-256",
+  "items": [
+    {
+      "path": "ArtSource/Animations/CombatSourceUAL1.blend",
+      "gitBlobSha1": "3bf433c70a53a48b9a5736737b763cdbdecd88d1",
+      "size": 558380,
+      "sourceEvidence": [
+        "quaternius-combat"
+      ],
+      "status": "provider/source documented"
+    },
+    {
+      "path": "ArtSource/Animations/CombatSourceUAL2.blend",
+      "gitBlobSha1": "d75f1156f4c3792447ed4622a4f44c7d2faa0049",
+      "size": 566681,
+      "sourceEvidence": [
+        "quaternius-combat"
+      ],
+      "status": "provider/source documented"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/KayKit_MovementAdvanced.blend",
+      "gitBlobSha1": "a77bed49d10311e9343309bf3815dcfab652f9f7",
+      "size": 206270,
+      "sourceEvidence": [
+        "kaykit"
+      ],
+      "status": "provider/source documented"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/KayKit_MovementBasic.blend",
+      "gitBlobSha1": "4820206e0c81b72a93afb7a94f84dcd9182d9088",
+      "size": 167956,
+      "sourceEvidence": [
+        "kaykit"
+      ],
+      "status": "provider/source documented"
+    },
+    {
+      "path": "ArtSource/Animations/Locomotion/Quaternius_Movement.blend",
+      "gitBlobSha1": "42f8edac8ab8912b1a765cd49394280206985d83",
+      "size": 441451,
+      "sourceEvidence": [
+        "quaternius-locomotion"
+      ],
+      "status": "provider/source documented"
+    },
+    {
+      "path": "ArtSource/Animations/StandingIdle.fbx.gz",
+      "gitBlobSha1": "43132b2d1269421353a0af2e26147e4972c0bfd3",
+      "size": 213982,
+      "sourceEvidence": [
+        "mixamo"
+      ],
+      "status": "source and mapping recorded; original user receipt missing"
+    },
+    {
+      "path": "ArtSource/Audio/Bomber/mightuser-fighter-jet-powerful-low-flyby-sfx-337205.mp3",
+      "gitBlobSha1": "666053cac1f14caeee627cae1fca44da1d13d012",
+      "size": 473856,
+      "sourceEvidence": [
+        "pixabay-337205"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Explosion.wav",
+      "gitBlobSha1": "8ccfcac38a88187352a69cfbeff8a3dea34e398e",
+      "size": 439916,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/HeroDeathHa.wav",
+      "gitBlobSha1": "dd2230de3ca6ffa3c6ba3a8e531069240f53b82c",
+      "size": 14114,
+      "sourceEvidence": [
+        "wolfwoot"
+      ],
+      "status": "archived source"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/HeroDeathSpecialBox.wav",
+      "gitBlobSha1": "ba204838c7035b50a24b63a452633206485d4004",
+      "size": 530932,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://mixkit.co/free-sound-effects/hit/?page=4",
+          "license": "Mixkit Sound Effects Free License",
+          "recordedOriginalSha256": "ed09d1f36af5f74734afffe5e6797db4b251b139e30c47c8e6945af265f5af89"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Defeat.ogg",
+      "gitBlobSha1": "3a5f019acd07940b99ff358ed5d4cb60a2e78bcd",
+      "size": 11185,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/FrontShift.ogg",
+      "gitBlobSha1": "7c0db30e6cd39d4034bac20e192a6e1494751c2b",
+      "size": 5834,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Kill.ogg",
+      "gitBlobSha1": "eb3337329b4bb5b2eee8841d4acd9d4df12245ba",
+      "size": 4804,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Overtime.ogg",
+      "gitBlobSha1": "e264b4f16e226b65ebd9dbbf56c4c7f9c9286b8a",
+      "size": 9054,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/PlanetArrival.ogg",
+      "gitBlobSha1": "3c8232359987c92e31365e230110f4f3e8dc835e",
+      "size": 17638,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Purchase.ogg",
+      "gitBlobSha1": "c4251e354c8dca01d684573430216083a5af489b",
+      "size": 7796,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RealityShatter.ogg",
+      "gitBlobSha1": "b6abd852f75132183e90d19d77e2e0a8f5e95ee4",
+      "size": 12890,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallCancel.ogg",
+      "gitBlobSha1": "f0386f8052e42eb26f7ecd14e5bd3839f1db2007",
+      "size": 5563,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallComplete.ogg",
+      "gitBlobSha1": "4b1b54c84c7e6be4eeb2e15af4f7f3e318fa302d",
+      "size": 8356,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/RecallStart.ogg",
+      "gitBlobSha1": "b6d93ef156129ff0fe6b8e624edc86c10132fa79",
+      "size": 9125,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/SiegeArrival.ogg",
+      "gitBlobSha1": "3a8d7a469d384bdd95dd796d96d7c1609c6c09f4",
+      "size": 15436,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/SuddenDeath.ogg",
+      "gitBlobSha1": "3da27af5f64284aeff264ad9c4e8e5143a2d3c7d",
+      "size": 5339,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/TowerTarget.ogg",
+      "gitBlobSha1": "d59a41c6c4749b4cb09ca0f1a9141029e79274fd",
+      "size": 4045,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/UiBack.ogg",
+      "gitBlobSha1": "55e6f96e44fe62a37c8f80002c26e6e529fae271",
+      "size": 3691,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/UiConfirm.ogg",
+      "gitBlobSha1": "e6ef1a68417289a56186b7ef8253634969fbdc8b",
+      "size": 3648,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/Warnings/Victory.ogg",
+      "gitBlobSha1": "5757de2c633bccc21f8048186dc3997fb74238eb",
+      "size": 9472,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookClose.ogg",
+      "gitBlobSha1": "c52092880893760b90a473c4c894b486da63bdbc",
+      "size": 9292,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip1.ogg",
+      "gitBlobSha1": "7c0e80b9133df8bb4d451528d31cb0725ca44984",
+      "size": 18248,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "fa81ac2fedc8c641661b87e349630a36c9800e795e0c800e029214efdbe26a7d"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip2.ogg",
+      "gitBlobSha1": "f02b05344dadd15b3056cfc8445b585869cc8072",
+      "size": 12393,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookFlip3.ogg",
+      "gitBlobSha1": "f229a27e6b18156447f3c24c630eee7b6b9394b1",
+      "size": 9077,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "c85db5dceb3f1df073e960630277eaa88a5afda0477c1ddd68dad707621767be"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookOpen.ogg",
+      "gitBlobSha1": "acdd2721f125f5254e43cd6d169f7177672a02f5",
+      "size": 8273,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "953390534377222bee89ac8cd9e60a58fdc037c71a4d7c18c43cd647c7f34ba8"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/bookPlace2.ogg",
+      "gitBlobSha1": "6636f8a66fb66792951c82c17c512aacf93e03bc",
+      "size": 11185,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "831874e8fd142d4d0a03ff009f1f83966338a7878c0f6f38c613ae5b80dd731e"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/chop.ogg",
+      "gitBlobSha1": "a9d991f2c9d652e25f0b07244267a036204a909f",
+      "size": 9370,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d00c2b3c9fff07e376145c8c8c45c90e5084ec192f6ce0387db233f7b86f1486"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth1.ogg",
+      "gitBlobSha1": "b76853a893383a0facfb230a368404d136eff1a3",
+      "size": 16508,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth2.ogg",
+      "gitBlobSha1": "45e783913da1c3022c72a52fdda6e6101f98b8fd",
+      "size": 11787,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "8a7451193c38bc05483aec25dd193e163a15d44cf7fff04ac7912573231b0201"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/cloth4.ogg",
+      "gitBlobSha1": "a7ad4aa5512927563e17c92d03cffec82a9e09c3",
+      "size": 11043,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "e7ab9a6c4466dea874196c61f59bf1da05cfe58748f42fadd695d441a154a99b"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak1.ogg",
+      "gitBlobSha1": "4f6de6f87f75d9fef18123886f3b908cbad2fe93",
+      "size": 15761,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak2.ogg",
+      "gitBlobSha1": "bfa3045a0acf7c5961f50e3dc68cb74b65eaac7b",
+      "size": 19012,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/creak3.ogg",
+      "gitBlobSha1": "0673845d05323fd4ed5b0ec73458ac383d0214c6",
+      "size": 10408,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "f9638787f95004b9d2d06f8eff8e99d4e594c21b51947daf562856fbcec905d1"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife1.ogg",
+      "gitBlobSha1": "4141dbf41af81a4e7013a09692f4ac9000d885eb",
+      "size": 11134,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "276403e72c3b71c47bc24db3083970c23f8e5551ffa78f436f83483c56f3f0bb"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife2.ogg",
+      "gitBlobSha1": "012be8598c920f51b992fb34c4825d4c70f0b7ba",
+      "size": 12395,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d5df6a4130cbb016f97b4883769a418917b9629cb4c21717030b186e0c73281a"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/drawKnife3.ogg",
+      "gitBlobSha1": "49edc994f4f41c92d035d8ca4907a760b2582448",
+      "size": 12726,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "a11ae62fb1a628425769d11a9de394980ad8909c31f4c9a4316f226963e21caf"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/dropLeather.ogg",
+      "gitBlobSha1": "83e3cf68b4d29a7ab2188d09fc5575b85da3f28f",
+      "size": 11695,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_000.ogg",
+      "gitBlobSha1": "20299c4ce77ffd2110cf6c768111afe787e3f043",
+      "size": 13915,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "94b8bb5f2d43ab65e4bcc32b28562416e9bc2c51d9fd4be1e333660ee52f977f"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_002.ogg",
+      "gitBlobSha1": "b1bf91f15024c4add55e44c2753c49330326c822",
+      "size": 9252,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "a4171ed1a4a17fb858a38de1c59b5b42e50d8f046c525706c0e3ac8671f189f5"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactBell_heavy_004.ogg",
+      "gitBlobSha1": "6760793c5f97f8f564a1b90b407cfe05e1560d9f",
+      "size": 6529,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "49fe4fafa2001bd0d312976796824571ca8429851f285997e1327d17bb34fd00"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_000.ogg",
+      "gitBlobSha1": "b9cbaad034d2da26dffcfbc0bead1abcf595f560",
+      "size": 7403,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "b44b39a940e8948e74b9bd3776bff980df43cf220abdaf0d467dc4c43c0244a5"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_002.ogg",
+      "gitBlobSha1": "0d65bd0c5fee5ea783845a0963a03cc5d16084cf",
+      "size": 7661,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "4978654ac840ad519692d5d5ba48a8101cabce13b9a577be73ad589185e5e9ed"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_heavy_004.ogg",
+      "gitBlobSha1": "94d6fdc6b30c2096027176931acae7ed3809bc0c",
+      "size": 8300,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "c7742b0e33c1733ddaf902aa68464a4f5364e4d4cb6ff11b76a7aa4151a138dd"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_000.ogg",
+      "gitBlobSha1": "d59cffe03da391e6e7b802185c7990f2f2504557",
+      "size": 6526,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_002.ogg",
+      "gitBlobSha1": "4ec4d868be35048578a02ec5b4a41045c21be843",
+      "size": 6562,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "710db7451bb7857b9140dfe6afe4621ea2188ad65eda3919c569d1bb285b933d"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_light_004.ogg",
+      "gitBlobSha1": "0115fe4d4dded6213892810c27956d9501c7472b",
+      "size": 6641,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "f535b7cb7835400d8d28bcf9e1cf047ce3c0eb7a6456bdb1a4a27acbec1ed2cb"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_001.ogg",
+      "gitBlobSha1": "16ebe0914dd4553a1df7b9170567be9bb26ece10",
+      "size": 8605,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d3d806cb3012c9ddd87010b30295ccb74d6d8b690077d19e67afd09a9d8feb03"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_003.ogg",
+      "gitBlobSha1": "3fafe97885233153ec7e784f3b897396ab6e35eb",
+      "size": 8596,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "dccea1ecc3d942ee5fd217c684632638f6c039c97cd3ae59c75ab15d0c3f0b59"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactGlass_medium_004.ogg",
+      "gitBlobSha1": "dcf063a910d438333319becf66430265e0ed938c",
+      "size": 8397,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "853fe77ad46bd0cf106e40e741b039e15b90f73edecd92cde524fbad9e3ebe00"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_000.ogg",
+      "gitBlobSha1": "d4432f48b6ff5b4a501045ef0b8068963ef5530d",
+      "size": 6110,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "e07045693e4a2b3d165c424e3dab4c781d9ff8880a386880ac89a51315d7f831"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_002.ogg",
+      "gitBlobSha1": "c7571219ca1de805962b755672b39b80c6a08cc5",
+      "size": 5634,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "b914c8f1eb7c0f34bb165d7c77f4be0351f6be0660c13c53e65424e262e2c093"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMetal_heavy_004.ogg",
+      "gitBlobSha1": "2a9612f2a8ec48d642a22fe588399399cabe917c",
+      "size": 5788,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "6d65b463c0555dd5be16b8db6d2cbe23a94e07a4637779b8ad17d0db3e500a87"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_000.ogg",
+      "gitBlobSha1": "3346d1a9c624d31cdb6d4a67f2b0b405110880eb",
+      "size": 12035,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "36b4ea107222d073c67ca64dde26944975609202d5090b2f2021213c1a7e35cd"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_002.ogg",
+      "gitBlobSha1": "5bd4f3582815fe023c5ab347f03f66cedab3c46b",
+      "size": 11235,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "059558ec751115ca6b1441e00f0adc837c1a3eeb0a066b109e0fd879fc5d0b0c"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactMining_004.ogg",
+      "gitBlobSha1": "ff732a8983b7d1966d3b9ccb2e1a8b7d98aeac79",
+      "size": 11668,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "8ca3a99d85d845751ad8ce7b40509da58263a62e48cde70e5a30b5ccef4c9a3b"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_000.ogg",
+      "gitBlobSha1": "ac09f229be6ed3bacc23becd7d1394b360b04654",
+      "size": 10032,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_002.ogg",
+      "gitBlobSha1": "ebdca4561aa516489cac72afb2a7a93e8a7838ed",
+      "size": 10188,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "b0cab75d1befa32b4cf215d8ee7e1c400a39182e8b105963b8e310f825b198a1"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPlate_heavy_004.ogg",
+      "gitBlobSha1": "ad14e8e30c4e1b8a670e748d653dbc8ed9d6d0d8",
+      "size": 11092,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "e31bfec90630155bcc6af541d1d14ae8202c435c52b42e6b6183fdb6ffb248b0"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_000.ogg",
+      "gitBlobSha1": "55e70b52ca082c89326bac62a02505c0ba750260",
+      "size": 11617,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "b33a8f14068aec24ec69ba85e5e87fdc41228975f6a1a3e44a6e7d6fc3d9f8d8"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_002.ogg",
+      "gitBlobSha1": "8573e89e477b9a2041a8a496ae28d138a064ba8e",
+      "size": 9025,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "7993dd4c156b9979ad69f17be5ebe31850b16039a3857f8477141be54dfee1b3"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_heavy_004.ogg",
+      "gitBlobSha1": "e7ceea06ba3c4c53075944b769b87350d1256f7f",
+      "size": 10452,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "f4c0c3eb8ab6517583b8218ed03f28923d1b687379aab4c1d5a6d4c10cf8e500"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_medium_001.ogg",
+      "gitBlobSha1": "33080462eeb8bc99025e669abfef610a6e630815",
+      "size": 8701,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "e71d23abcc3f10d9d6bc9615b2a431fff70b12333a5fcdd9964457564ace4349"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactPunch_medium_003.ogg",
+      "gitBlobSha1": "32ac6c2cfff71da3a07f87a134c95d3dd353f413",
+      "size": 9509,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "2d7c719c05999e0532f4384e1018e04cd916db715140bf16dee2dff3f820e908"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_000.ogg",
+      "gitBlobSha1": "1c321ef698c367144d0d55b52d7a680a4b8e5958",
+      "size": 6570,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_001.ogg",
+      "gitBlobSha1": "d7fbb0fcbcad9f9eda0dc81db113bbb03f3ebae6",
+      "size": 6689,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "4d0096364ba9e46119d2ff6df493fdc101bd2e1efae061da5e5f77a53b3fdcb6"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_002.ogg",
+      "gitBlobSha1": "4748c691d2687d9ca74757aca424023eb7f5ecdf",
+      "size": 6749,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d130ae541951243d3f6ed963d0057450a445ffe117fbf9a084d34eb1635cb563"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_003.ogg",
+      "gitBlobSha1": "417cacc126afeeb18da7cc5067b6b60d9978000f",
+      "size": 6665,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d00286a2dc62ee5cb4d42bf56120e7050a855f69e655fc1294410aadd337eba3"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactSoft_heavy_004.ogg",
+      "gitBlobSha1": "c42b1d52554e1056da37e3a2410e91733d970e02",
+      "size": 6478,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "e008f0b6b14f62339c8fe9f9b45cbd6317ba4f66604c4899053b8017020a36f0"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_001.ogg",
+      "gitBlobSha1": "1ec513e8064c2f6148078daad7a7b4da65a49538",
+      "size": 6239,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "f1b07a53ac10c615fff9ba470511fdeb722b5902e1a8520759fc20ad6f546015"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_002.ogg",
+      "gitBlobSha1": "17f4e310d406ebe5a732a2fad72e42465f64b1dc",
+      "size": 6146,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "ce1e06f2a05f2634c645cb72f6a1623e64bc2d92be34917430a61031fb6597d4"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/impactWood_heavy_003.ogg",
+      "gitBlobSha1": "fb6e75fad5fce4623e558a3677a94987d77c0cd4",
+      "size": 6181,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/impact-sounds",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "af07511902b309b3f6d8f0e1fafbe93869127fb88099ebdc0aa6a00a98dc3cb0"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/knifeSlice.ogg",
+      "gitBlobSha1": "86338431259517417132d9b1aaa28eb9a9f36d95",
+      "size": 15532,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "4cd96dc630bed9840c15f1dd2306da2cc56a4da26a5d3f1a03c5a7265ac5e54f"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/knifeSlice2.ogg",
+      "gitBlobSha1": "cf6098e7395fcfeb537fa83ba41ba9ec0606e362",
+      "size": 15099,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "6c2064d0ef988d1ec3d56868e823ea8823a5cac00f2742560052633529407def"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalClick.ogg",
+      "gitBlobSha1": "1a9ee4bd7384ab493b89df0ff10ee142959490be",
+      "size": 13615,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "9851a69d0c613e13bceef08060ecc4148f098ef487927cbebe270d642398a3b3"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalLatch.ogg",
+      "gitBlobSha1": "509c68f75a53b3b1fa7954be8cc854101c76802d",
+      "size": 10208,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalPot2.ogg",
+      "gitBlobSha1": "1be507859bf30a8db94fd72e8dc23f21d5e39617",
+      "size": 22471,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "8e1f820d217d380fde10e969d109db34303e3f4d11c3951926eddef813d04ae2"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/metalPot3.ogg",
+      "gitBlobSha1": "e97002e600461d5c784800e04e94069a877d3265",
+      "size": 23142,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://kenney.nl/assets/rpg-audio",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "d306e5b848f6843332d0ca19f8f7dfe5796aeb56d8273902b085df463273f1dc"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_M21.wav",
+      "gitBlobSha1": "79cb4ac47e5fdd29da04347fbfe6519443d49ac1",
+      "size": 41678,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://opengameart.org/content/the-free-firearm-sound-library",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "970ed2322ba61579dc8afaefb4f25e6ae791a3acb1e6e23372ea948cfe2a97b3"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_T17.wav",
+      "gitBlobSha1": "e2d2d0713d0e71cac51dda0998e1ce2698cc0810",
+      "size": 41678,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://opengameart.org/content/the-free-firearm-sound-library",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "73021a3fc6d90372986f14c5db63f80bae10241c263d2911ea68c49f72fafe46"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/Combat/rifle_T27.wav",
+      "gitBlobSha1": "726af320ed1e8cb794b9a38fe33ff64b8112ad8b",
+      "size": 41678,
+      "sourceEvidence": [
+        {
+          "sourceUrl": "https://opengameart.org/content/the-free-firearm-sound-library",
+          "license": "CC0-1.0",
+          "recordedOriginalSha256": "92296c320f7854da29ff28d1687da21a110cb1242bb03e5e1e62f6a4e7f79f3b"
+        }
+      ],
+      "status": "exact input mapped by existing source manifest"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-009-426481.mp3",
+      "gitBlobSha1": "10861b8c243281527e30028d584e567b9c9e087b",
+      "size": 76032,
+      "sourceEvidence": [
+        "pixabay-426481"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "5e14be6ffde96bd5f8ce191d8789f12c6deef417df0ee675f5449555dc7f14fe"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/audiopapkin-big-robot-footstep-014-445104.mp3",
+      "gitBlobSha1": "85cbf4159dff6fa67214394f27592eef3a570a27",
+      "size": 53760,
+      "sourceEvidence": [
+        "pixabay-445104"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "7914552fd9dd48f3899d5e24265fc28475e6a20f88325bcba3606cc7be571e1f"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-boom-swoosh-01-416172(1).mp3",
+      "gitBlobSha1": "c333bdfd037d98f1644468409bf2b5df432d31eb",
+      "size": 129024,
+      "sourceEvidence": [
+        "pixabay-416172"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-elemental-spell-impact-water-478377.mp3",
+      "gitBlobSha1": "abbe4793c508263a6f48cc603c528889585a7db1",
+      "size": 182784,
+      "sourceEvidence": [
+        "pixabay-478377"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-2-393845.mp3",
+      "gitBlobSha1": "b9cb837b8d5b984d1f30a92451af3743d7d42e61",
+      "size": 70217,
+      "sourceEvidence": [
+        "pixabay-393845"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "abcd14bd051183b3812fd68e87a87ab30116f30514c6328a108a36eb2863a8e3"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/dragon-studio-sword-slice-393847(1).mp3",
+      "gitBlobSha1": "29d9cf739f9d11055cbb172e6c879f53f00a3827",
+      "size": 70217,
+      "sourceEvidence": [
+        "pixabay-393847"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "f8f92bb55fd1e0b9c45b131f323fdfd705e01ba3bb87ca42a1d52d9e73fd3d8b"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-14-234631.mp3",
+      "gitBlobSha1": "181d810945098451b1369f1448c4cfd12d0a8203",
+      "size": 49152,
+      "sourceEvidence": [
+        "pixabay-234631"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "53d0e74685f4594f99b4b3708e369c7d9f2830943cc82bd68baec1cf248fff0f"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/floraphonic-swing-whoosh-metal-hit-19-234636.mp3",
+      "gitBlobSha1": "b231cfacc4c15a02b5b492a81abec67ef83b8cef",
+      "size": 62976,
+      "sourceEvidence": [
+        "pixabay-234636"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "6efaf7eaa45342c6d8267118694ea169b0e6d3c62a51745eca434b61869c0fd3"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-funny-swish-101878(1).mp3",
+      "gitBlobSha1": "345df594854599bceb076d99f0680abfe03be412",
+      "size": 12960,
+      "sourceEvidence": [
+        "pixabay-101878"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "0601948ad6e4937cc6bca126f0decb2218037f39f6f7dc99cee359efdb66212b"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-power-down-7103.mp3",
+      "gitBlobSha1": "16882235827db26f6ebe7c890aae6cd4b249f96e",
+      "size": 36480,
+      "sourceEvidence": [
+        "pixabay-7103"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "0306117013c4d78cd3ee99b2fdadd478fbe12a7f18a46f533ac599e31c8854e7"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/freesound_community-steel-chain-dragged-shower-reverb-106252 (1).mp3",
+      "gitBlobSha1": "e80f0c1c27aed44ad3a4716a1e4a6e15ecc21e92",
+      "size": 39360,
+      "sourceEvidence": [
+        "pixabay-106252"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-cinematic-hit-shot-442015(1).mp3",
+      "gitBlobSha1": "20fa42dd9d09fde66cf379886354ea899ec98eb0",
+      "size": 129024,
+      "sourceEvidence": [
+        "pixabay-442015"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/soundreality-sci-fi-gun-shot-312659(1).mp3",
+      "gitBlobSha1": "f1970533f9b11bb44e40003688fade3a1d608fe6",
+      "size": 62976,
+      "sourceEvidence": [
+        "pixabay-312659"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "6ff15c97783a79640ed13da7237228318ae81581b62e32970286d064f79f7d75"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/universfield-sci-fi-blaster-shot-229313(1).mp3",
+      "gitBlobSha1": "64762f218f1d5a6d5a726c486a401988c0b89f60",
+      "size": 27648,
+      "sourceEvidence": [
+        "pixabay-229313"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "2816aa3a9e943f668b99850494401c0dbb73c351eb6546cbc3663c10040006a8"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-healing-magic-2-378663(1).mp3",
+      "gitBlobSha1": "6b249bcfe410e72fe1b1c366d4cba2aed4668e79",
+      "size": 257280,
+      "sourceEvidence": [
+        "pixabay-378663"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "2285c7be860fc2f563298e3cd930acf24d0533dcec528d4881cb3735c1d898fb"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-1-482495.mp3",
+      "gitBlobSha1": "1014699a9db262de77094c3c3a224ec2fec739c1",
+      "size": 96768,
+      "sourceEvidence": [
+        "pixabay-482495"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "f929dccdff1dc1a3f406179a53c9341bc3fe76d4084de374a617cdae69657a6a"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500 (1).mp3",
+      "gitBlobSha1": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+      "size": 96768,
+      "sourceEvidence": [
+        "pixabay-482500"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500(1).mp3",
+      "gitBlobSha1": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+      "size": 96768,
+      "sourceEvidence": [
+        "pixabay-482500"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/HeroSelections/Originals/yodguard-short-energy-beam-shot-4-482500.mp3",
+      "gitBlobSha1": "ff42e59fd4135bda83df6d08127d0d82bfe760e3",
+      "size": 96768,
+      "sourceEvidence": [
+        "pixabay-482500"
+      ],
+      "status": "listing located; file relation based on supplied filename/id",
+      "recordedOriginalSha256": "9112dafdc637026a4696fa82265bac57b8769a8201a89b100442d693304bd1ba"
+    },
+    {
+      "path": "ArtSource/Audio/Mechs/freesound_community-heathers-gunshot-effect2-100653.mp3",
+      "gitBlobSha1": "4208fb925214dfe2ba93401f54ee0a4d46f5d077",
+      "size": 38880,
+      "sourceEvidence": [
+        "pixabay-100653"
+      ],
+      "status": "listing located; file relation based on supplied filename/id"
+    },
+    {
+      "path": "ArtSource/Audio/Nerok/BasicHit.mp3",
+      "gitBlobSha1": "bd50343741b4c93e9d0db09ca11dab1f7f8a0ea3",
+      "size": 56832,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerDetails.blend",
+      "gitBlobSha1": "ac0befdde9bee723c6a51ae655c4cc71f7a14723",
+      "size": 376164,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerDetails.fbx",
+      "gitBlobSha1": "ecbb3f8a2ed05722d75b93d4e57d5a0133c2a2d7",
+      "size": 216780,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerPreview.png",
+      "gitBlobSha1": "92c223e027166bf83a43d8f69ba8859ef4dbaeb7",
+      "size": 1172004,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Bunker/BunkerRearPreview.png",
+      "gitBlobSha1": "cf09cf1c8f7ae9addaec59de0b3873dfca79c7f7",
+      "size": 1132607,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy-icons.blend",
+      "gitBlobSha1": "0979fcbb9cb8bf822998d7e3324a9fa339c1692b",
+      "size": 269249,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy-preview.png",
+      "gitBlobSha1": "ded4e4401422102f011fbb1d2d100449518972aa",
+      "size": 291626,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
+      "gitBlobSha1": "3ce01a3d148a1cfbf12cdc5a6c1a54580edb7f70",
+      "size": 1740533,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/TravelerDetails.blend",
+      "gitBlobSha1": "71937119dd5f21ec13352f1cea26c84a55917977",
+      "size": 427681,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/back.png",
+      "gitBlobSha1": "de0bfca55769cb88a4e2fb62d87f9efdf7d4f17a",
+      "size": 116395,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/ChronoTraveler/front.png",
+      "gitBlobSha1": "5824e9677503b7404e872ca7b1628ec96d826268",
+      "size": 143376,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Blender_Preview.png",
+      "gitBlobSha1": "cefc47217f0de29cd361ba002ff9bd67f52bfd5b",
+      "size": 641247,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Quell.blend",
+      "gitBlobSha1": "e2effe77f0df46c2c48ce72a5fb39c1fcff076a1",
+      "size": 1110470,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/Sivra_Rifle_Details.png",
+      "gitBlobSha1": "f591ef5be61d9a9271a34ca0c02ffc39ba665c80",
+      "size": 592237,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/back.png",
+      "gitBlobSha1": "419ece3e163f64ead5a101212f1177b26ebb9558",
+      "size": 112677,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberRanger/front.png",
+      "gitBlobSha1": "ca65939bd4a02a9fb4b1888a8c89cb3e68951b55",
+      "size": 139071,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/NerokAttackIcons.blend",
+      "gitBlobSha1": "9afd973a18b3204acb36e396f95ef6e275354f3b",
+      "size": 937190,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/NerokCyberShark.blend",
+      "gitBlobSha1": "9968fdacc14615646d9d3a21c1da85fe0604c692",
+      "size": 792787,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/attack_icons_preview.png",
+      "gitBlobSha1": "737767b07170bc12d4cc249b2938b0fa6875446f",
+      "size": 861686,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-front.png",
+      "gitBlobSha1": "b359102094f5ca2c5323a8b8a3bcc7f0cee61e47",
+      "size": 1003742,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-side.png",
+      "gitBlobSha1": "3e49395c3571f65b981ad6a4ffa4830d31e77362",
+      "size": 942276,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/head-three-quarter.png",
+      "gitBlobSha1": "6ab8438e79f7b0cf8c3384943694ccdb4e626792",
+      "size": 1016447,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/CyberShark/preview.png",
+      "gitBlobSha1": "fce5b52978225ed667cb53111dc12669c3c9ae8e",
+      "size": 630790,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Elyra.blend",
+      "gitBlobSha1": "b7c71e1ad299ebe3f9cbeb6c0c448676da5693a0",
+      "size": 1267479,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Kaelon.blend",
+      "gitBlobSha1": "b59aedfd9d6e16afa97a09eeda82bc728e1d1397",
+      "size": 1242416,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Mira-light-armor.png",
+      "gitBlobSha1": "74bcb498b5d5c73e11c64a817c32facfa9a1bef2",
+      "size": 354064,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Mira.blend",
+      "gitBlobSha1": "83082f00d25a432baead0b1d688e8b85ded744c8",
+      "size": 1183207,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Nyra.blend",
+      "gitBlobSha1": "a5e5bffe11af3dc2d8d2c05e3fc1b36a65bda1af",
+      "size": 1262643,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Elyra-GripCheck.png",
+      "gitBlobSha1": "84ebac2b64d863dcdae0562a0be70857db77a20a",
+      "size": 713037,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Elyra.png",
+      "gitBlobSha1": "85a927e51fb5f683651338631ddf379b859ec5e9",
+      "size": 714573,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/HeroLineup.png",
+      "gitBlobSha1": "1d0b284c11dd11d8bdb61ce516d7a1911ccfca17",
+      "size": 643779,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Kaelon-GripCheck.png",
+      "gitBlobSha1": "06f5c0bc620d5f56787b644d5e06aa7def4e1c63",
+      "size": 712181,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Kaelon.png",
+      "gitBlobSha1": "114e5786715549815fcfffb631a1e2b7ff3499ad",
+      "size": 713094,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Lineup.png",
+      "gitBlobSha1": "f879734c40f553433cf21fd03a1d527f3392d675",
+      "size": 526690,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Mira-GripCheck.png",
+      "gitBlobSha1": "e82b2b277283df20ab86541bfd7582bfa2feeb4a",
+      "size": 690053,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Mira.png",
+      "gitBlobSha1": "d8adfed266b34acc4c0af2464cf5d8bec9b61c18",
+      "size": 692471,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Nyra-GripCheck.png",
+      "gitBlobSha1": "c298e3b53035371bba97dd1c18bbafc107ad9f4f",
+      "size": 659268,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Nyra.png",
+      "gitBlobSha1": "a04a098860c3c11d95565c9f8989ca932fe49bf4",
+      "size": 658693,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Rook-GripCheck.png",
+      "gitBlobSha1": "ca71023c37cceaf58c1f1d18edb4c900bc4a1e9c",
+      "size": 702116,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Rook.png",
+      "gitBlobSha1": "2f2f6d502ad31c6b60404abafb18ca89a2943adc",
+      "size": 700506,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Traveler-GripCheck.png",
+      "gitBlobSha1": "033a36b63f87001201be00dce56cb55594dd3640",
+      "size": 681696,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Traveler.png",
+      "gitBlobSha1": "4aaf91d329ac53d143efccafc7f4ad3105f22e4f",
+      "size": 682621,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Veyr-GripCheck.png",
+      "gitBlobSha1": "15f722c2b14cfdfcbab9713d39ecbce413a4a561",
+      "size": 688974,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Preview/Veyr.png",
+      "gitBlobSha1": "709357114ebc1aa5095693b5cb7b00a1c20f303a",
+      "size": 689972,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Rook.blend",
+      "gitBlobSha1": "98629c674d44af3832bfb51cda004d1575c18c14",
+      "size": 1303673,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/SiegeTank/back.png",
+      "gitBlobSha1": "426990b4dd21b621a10ab40115466354d7d7a0b7",
+      "size": 223888,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/SiegeTank/front.png",
+      "gitBlobSha1": "269a9adae4ad76a10188044d158171604f4799fc",
+      "size": 278496,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/TahlaHalo.blend",
+      "gitBlobSha1": "b7ea3c41f9a6b90ea7f7d1fb1b4a9c0df8f89f22",
+      "size": 104836,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Traveler.blend",
+      "gitBlobSha1": "98781a2be0515948da73ab9bfc73c94e2229c1e7",
+      "size": 1343880,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/UmbralMage/back.png",
+      "gitBlobSha1": "c5dbd3da8d124da35141a884fd4f8d43017b3791",
+      "size": 130176,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/UmbralMage/front.png",
+      "gitBlobSha1": "100dca804a7eb14bd33741ae26d508cbd6a3e3b2",
+      "size": 145571,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/Heroes/Veyr.blend",
+      "gitBlobSha1": "294883050040858dee40bdd06c2b24f6d225daa5",
+      "size": 1305984,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GJMagentaGolem/back.png",
+      "gitBlobSha1": "1c4dc70375dd29e72d0181de7227a1339f133831",
+      "size": 113417,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GJMagentaGolem/front.png",
+      "gitBlobSha1": "afdabda81ff4650ef9b6c9c622c22cd9b83984ac",
+      "size": 124409,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GreenStalker/back.png",
+      "gitBlobSha1": "83049ff7338d37cc4b091d20b527a9e3ce251595",
+      "size": 162872,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/GreenStalker/front.png",
+      "gitBlobSha1": "7c50110f750ea8924efed6e41a57609705d7de0b",
+      "size": 180662,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneParts.blend",
+      "gitBlobSha1": "25f31bd1d4d20781a2c14299c42e58b93e0efc0a",
+      "size": 1627001,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneParts.fbx",
+      "gitBlobSha1": "1d6c61aa9cc67f40a56b0abd1dcbbf4dc060c081",
+      "size": 334092,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/HotZoneSkinnedSurfaces.blend",
+      "gitBlobSha1": "6bf7a2dc6e778dcbdd173ac5a31f460ee6707aa8",
+      "size": 7383261,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/KryonBear/KryonFrostBear.blend",
+      "gitBlobSha1": "15dc06e2c2f4b2fd52674c5f4a6e3f0c452e01ca",
+      "size": 236405,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/KryonBear/preview.png",
+      "gitBlobSha1": "6f9ef6df1cf5a23c31afbd4d2c48785bd3a2ae69",
+      "size": 900984,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MarsSkeleton/back.png",
+      "gitBlobSha1": "3d32412fb1ec34c3b9415e20ff8a8c50dadfb03e",
+      "size": 194623,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MarsSkeleton/front.png",
+      "gitBlobSha1": "77b3228f87fab10edd4a57a65c05417042722a98",
+      "size": 211582,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MechanicalScorpion/back.png",
+      "gitBlobSha1": "28478ac0c71d2927a002c35456befe2dd6826b87",
+      "size": 172718,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/MechanicalScorpion/front.png",
+      "gitBlobSha1": "9aa52f2efb7bbffde939035b08401d4851df5165",
+      "size": 182391,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/NoxaraClockworkSpider/back.png",
+      "gitBlobSha1": "40abfc00d774c31af562f74105dc028aa286d55c",
+      "size": 189848,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/NoxaraClockworkSpider/front.png",
+      "gitBlobSha1": "8c3108aeec9a71054943d681a5c417e5478952f3",
+      "size": 192346,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PSRCrystalTitan/back.png",
+      "gitBlobSha1": "504154efb4ca9c8060a3045f1981112c24275269",
+      "size": 114004,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PSRCrystalTitan/front.png",
+      "gitBlobSha1": "df1832804227148a27bd9e9e1346377bc9eab803",
+      "size": 132413,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/HotZoneMonsters/PartsPreview.png",
+      "gitBlobSha1": "bd2ff4720cf61a477d58a730c4773f56bc092f41",
+      "size": 1399275,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/2026-10-09/material-comparison.png",
+      "gitBlobSha1": "29e66ad3cfd7afbfa88b7768965f3e53857f1c9a",
+      "size": 205742,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/SurfaceStudy.blend",
+      "gitBlobSha1": "90d052e18c57ae856384296df7420907fadc8b42",
+      "size": 3935823,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/SurfaceStudy.png",
+      "gitBlobSha1": "f7a12b145d960186fc97905df3361a229c945600",
+      "size": 3409704,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.blend",
+      "gitBlobSha1": "6acd51ddd8f2e2a456246036d309f0686eef6504",
+      "size": 432449,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.fbx",
+      "gitBlobSha1": "7f500b11a538ff6ad5f4c7c727d7cc0568fe350c",
+      "size": 1638428,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/PlanetSurfaces/UniversalBorder.png",
+      "gitBlobSha1": "3125a26a6ccc30bc4ac0a9a28d5320e2a31d0caf",
+      "size": 1358246,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomber.blend",
+      "gitBlobSha1": "09996c9d3d3196c7e2e8a8de0ebe97ffd3b35973",
+      "size": 211502,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomber.fbx",
+      "gitBlobSha1": "0940b316026fe27380a688c416788a9bea9113e4",
+      "size": 405452,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomberPreview.png",
+      "gitBlobSha1": "b65e196b82da8787bb39d95aa2e26543e3de148d",
+      "size": 684495,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/SpaceBomber/SpaceBomberTop.png",
+      "gitBlobSha1": "e669452b268a39762009de8b840db5cce331e230",
+      "size": 698301,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "ArtSource/VisualQuality/2026-10-09/energy-material-comparison.png",
+      "gitBlobSha1": "8a2af43071814c01283b02e4bd63d9d2b84f2772",
+      "size": 66437,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Branding/DimensionsFrontAppIcon.png",
+      "gitBlobSha1": "05cfaaf51eb41840ac96f2ed88e0521a46ea64fa",
+      "size": 6091,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/0.png",
+      "gitBlobSha1": "c84de2a3aa9fe69580dfff695f2bcbd0250d96b7",
+      "size": 2869310,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/1.png",
+      "gitBlobSha1": "42be816640e249484a946454fbd5d47a2d3a074f",
+      "size": 2749633,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/2.png",
+      "gitBlobSha1": "2441d7793184b91c38bc280ef1db9498ba3e1138",
+      "size": 2854459,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/3.png",
+      "gitBlobSha1": "c2e819eea92ac7ea21673d6ae6ed89f82f4e6d30",
+      "size": 2675189,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AndromedaTimmy/Icons/4.png",
+      "gitBlobSha1": "76d5d36b9c48d7087a23c362f3926714bc02a389",
+      "size": 2501861,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/BombJetFlyby.ogg",
+      "gitBlobSha1": "f12edeff22e6a60329c71fda0e461dca3489c73c",
+      "size": 88027,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast.ogg",
+      "gitBlobSha1": "6586cc3024f7b1af1e1dc78ce242c0cde5698853",
+      "size": 5295,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "8d6fa5accbda941f6b77e0a4d09e0e95b2e752de",
+      "size": 5362,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "2c956a4f30c19ff4c3d9f27f2e3f23c95782c0e9",
+      "size": 5329,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact.ogg",
+      "gitBlobSha1": "8b1390ecc993fa5d0c3a532402b8b4e864c7bc9f",
+      "size": 5637,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "152974dfcc1e190a5b8f1004ed89ef85685ca959",
+      "size": 5529,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "a255fd1e8fa38f49102b5df6e018cd29591618d7",
+      "size": 5863,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Basic_Windup.ogg",
+      "gitBlobSha1": "779e3e10985f65ece2cba0e220025f111e4525fb",
+      "size": 4581,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/E_Cast.ogg",
+      "gitBlobSha1": "bdc5e4468c81cfbbec65641b62d93f68da0b138c",
+      "size": 8066,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Q_Cast.ogg",
+      "gitBlobSha1": "00c447611573cec6791c84d37f42275d0601dbe3",
+      "size": 32405,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Cast.ogg",
+      "gitBlobSha1": "b2e75b410b7d6f38a097b1023b949957423305d7",
+      "size": 6699,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Impact.ogg",
+      "gitBlobSha1": "ec433dfe85e621cf3baeffbe69b2e63e5f1d40bf",
+      "size": 6484,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/R_Windup.ogg",
+      "gitBlobSha1": "6a5a0229d0db3160e3ff0adf48ef3212e0b1dc3d",
+      "size": 6212,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg",
+      "gitBlobSha1": "f00c89127891528e55aaf5d25b65ee4a947ea964",
+      "size": 59888,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/W_Cast.ogg",
+      "gitBlobSha1": "5fa05aa1bcbcce7ce46241b1faf67da8009da13a",
+      "size": 32199,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast.ogg",
+      "gitBlobSha1": "9f779d174d7f78545189384612055e2e3da1b76e",
+      "size": 5763,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "d39bd277aff8bb402258483fda3846af0ad639e5",
+      "size": 5471,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "a06ce1210c18a8c18b8fb3eb791d17bf7425c8f7",
+      "size": 5251,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact.ogg",
+      "gitBlobSha1": "e49645ef356fb8273eea9ea7c676fdbd5eb23801",
+      "size": 5859,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "10f887070143b6c43af49a641d0bad9e32f7f78e",
+      "size": 5926,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "bbca1ed1871717dff3bc795ba2620e05e43e592e",
+      "size": 5930,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Basic_Windup.ogg",
+      "gitBlobSha1": "cf55374ee3992fd3f87609505860b857ed3d5f54",
+      "size": 3659,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/E_Cast.ogg",
+      "gitBlobSha1": "8f0d9751f06f077b186bb2199dd68eb881a293f9",
+      "size": 17842,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Q_Cast.ogg",
+      "gitBlobSha1": "46f51965026f6d8648e288490773b264e324b39a",
+      "size": 18428,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Cast.ogg",
+      "gitBlobSha1": "c3d5b2e779e4de52786ec5bec4dee06be6c31caa",
+      "size": 7514,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Impact.ogg",
+      "gitBlobSha1": "4f924065830999c9662d30af00ddf03944383e8c",
+      "size": 7428,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/R_Windup.ogg",
+      "gitBlobSha1": "13c3b71748e6b51c862a8cad0fe8c0ebdd917a34",
+      "size": 3685,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg",
+      "gitBlobSha1": "8db76686f5a5427fd937a2d4f6ff9a18231aca12",
+      "size": 55746,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/W_Cast.ogg",
+      "gitBlobSha1": "e9a7f5d1700fceb81f08dd4bf8f51d9cd43529bc",
+      "size": 32405,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast.ogg",
+      "gitBlobSha1": "e3e2ee8aca4f7a19e65d0ac8b5cb6c92d110c676",
+      "size": 6355,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "237c8b25dc9457aa34e1e2a450a79a8fa33a1038",
+      "size": 6809,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "c1a365ce6608137e75b1d0494c902c573559703b",
+      "size": 5833,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact.ogg",
+      "gitBlobSha1": "143253dd98b21e36eaa8bcc5f590e7463a3f159d",
+      "size": 5466,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "0b004a6ed35ebe322698f597d54c546aad1333eb",
+      "size": 5514,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "bf5bbf3570a1924bd10c59f90cc09488ebecf60d",
+      "size": 5268,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Basic_Windup.ogg",
+      "gitBlobSha1": "b761af357f7a468001d3b690c0abca65112d0109",
+      "size": 4875,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/E_Cast.ogg",
+      "gitBlobSha1": "30cc6993ddc49575ca0d6a6dc1f5b98d48c30a8a",
+      "size": 32405,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Q_Cast.ogg",
+      "gitBlobSha1": "3b12518b3776ff94ccbc02588c43421945f24300",
+      "size": 15541,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Cast.ogg",
+      "gitBlobSha1": "7a0bf0089cc9bf2d9da0807ed20442a46b1b3e0f",
+      "size": 7569,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Impact.ogg",
+      "gitBlobSha1": "2b858cd73a82433f0fb47c095cac35d6a3bd4ea0",
+      "size": 6020,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/R_Windup.ogg",
+      "gitBlobSha1": "2337af827e2700e5aba41d2605613fd0946ee7de",
+      "size": 7336,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg",
+      "gitBlobSha1": "4f9f5dc25b065a048ea8e259b8efb495d15f1f2d",
+      "size": 58986,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/W_Cast.ogg",
+      "gitBlobSha1": "31f42f9e30b1a2f562b9334dfa8c4e734ecedddf",
+      "size": 71991,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Cast.wav",
+      "gitBlobSha1": "bf85542e668909e4543add17db6126af1885afd3",
+      "size": 8422,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Impact.wav",
+      "gitBlobSha1": "eb2f252506defb5228ab6cff7f3f785a100d24c3",
+      "size": 156720,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Basic_Windup.wav",
+      "gitBlobSha1": "010f1de8bb2fcc15b5519aad824ebfbd4010c808",
+      "size": 7100,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/E_Cast.ogg",
+      "gitBlobSha1": "60b57edbf474b103234fe975071a121717ff0b62",
+      "size": 19593,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Q_Cast.mp3",
+      "gitBlobSha1": "df3c96fcfb4fe264218ff2e14e6de05b9d3d92ee",
+      "size": 40845,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/Ultimate_Selected.mp3",
+      "gitBlobSha1": "726f979ff1f57d6648253f98d66a19e7e3cb3305",
+      "size": 184365,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nerok/W_Cast.ogg",
+      "gitBlobSha1": "a0fbfbaaf078f752249bf0564b1061cf45eb51b8",
+      "size": 32405,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast.ogg",
+      "gitBlobSha1": "72c1a14595c63373dfc2b56f7b3ef76a4a830553",
+      "size": 7057,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "6687c6f4f9a10a7ccf458bac3efc6db6d456dffb",
+      "size": 6706,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "93318e77938c6f31a6e3eecaeb015f16c67f5708",
+      "size": 6666,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact.ogg",
+      "gitBlobSha1": "87b2b1cd16e8927ee6cfde6b88603e31404588e1",
+      "size": 5178,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "44dd0b73b6bc09cf916f15702bf9a353dec3e33f",
+      "size": 5198,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "1c9a24b28e686aeb97cfa99a7334d2d479494000",
+      "size": 5249,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Basic_Windup.ogg",
+      "gitBlobSha1": "4a86bac03993a53a7ca24837c5290592aae7fa80",
+      "size": 4900,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/E_Cast.ogg",
+      "gitBlobSha1": "0095c9921ab0c155cfdbeed7b8510e13e14e1a86",
+      "size": 16399,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Q_Cast.ogg",
+      "gitBlobSha1": "244b4811e08d5db60abaffd5faf53fcf8cd7db74",
+      "size": 11495,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast.ogg",
+      "gitBlobSha1": "4a12594a1dce12f925b5beafe0900523b191eb83",
+      "size": 5848,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast_v2.ogg",
+      "gitBlobSha1": "db7850786e8c6ca590533adb0d0d768c736235f0",
+      "size": 5466,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Cast_v3.ogg",
+      "gitBlobSha1": "4c66a1a8c2fdb7213af044167c4cb63154f680cc",
+      "size": 5466,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact.ogg",
+      "gitBlobSha1": "6204a319270570e29efc64ea7a1d1a5fc3d334f2",
+      "size": 5357,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact_v2.ogg",
+      "gitBlobSha1": "af19853d55361cd4cff707883da885a4e425eb32",
+      "size": 5182,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Impact_v3.ogg",
+      "gitBlobSha1": "1981ec04f2b172d2545e2751cb9d10ad72e4c03f",
+      "size": 4936,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/R_Windup.ogg",
+      "gitBlobSha1": "65c3dc5ad741b5188ba3df66ae874a63dc534cb7",
+      "size": 5528,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg",
+      "gitBlobSha1": "a7b994ff5a6379d1fc0f6a227e11d90060f8da0d",
+      "size": 89689,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/W_Cast.ogg",
+      "gitBlobSha1": "1a909dceace7e0dc483fffc6f59fd35a6eb5c7ab",
+      "size": 8286,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast.ogg",
+      "gitBlobSha1": "b55d91d019504a581e71a2ccd7ce00bfc9275285",
+      "size": 6691,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "abb36a7a8842799dcef6103f30cb941aea666e95",
+      "size": 6600,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "807c426092a40785318258ca6b171555bbafc041",
+      "size": 6904,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact.ogg",
+      "gitBlobSha1": "eeaa9ffc38a92693710588af96a20e9fd4ea98f9",
+      "size": 6027,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "dbc0c1f4869b5671de21212c1daed5c7d21b51df",
+      "size": 5631,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "03a7bddbd832c541eb34f9e06db38600a4d03c9c",
+      "size": 5924,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Basic_Windup.ogg",
+      "gitBlobSha1": "e932faaf00d251b5f910c1a1f05f9a30f89e8d98",
+      "size": 4289,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/E_Cast.ogg",
+      "gitBlobSha1": "da2c59d55e4beaf2533d9eece9a58e00e7bb4752",
+      "size": 28858,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Q_Cast.ogg",
+      "gitBlobSha1": "222f459e0f492061f370990bf0fa013d09976084",
+      "size": 33267,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Cast.ogg",
+      "gitBlobSha1": "bcc12a4eb87f1bfa3afc54ccad6a2903617b91f7",
+      "size": 8014,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Impact.ogg",
+      "gitBlobSha1": "50924b09fce27cdc3377bfdbf3a8a023d2af0b0e",
+      "size": 5543,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/R_Windup.ogg",
+      "gitBlobSha1": "ab80fceb7b0ee63482b3a1847aac84b9939d6d02",
+      "size": 4559,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg",
+      "gitBlobSha1": "6ec253d33397bd04897f69c86fd2e65580faed64",
+      "size": 23492,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/W_Cast.ogg",
+      "gitBlobSha1": "ae232bdd6c59bd42bd81a3f01b7e1cabbab4e290",
+      "size": 32405,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Q_Cast.mp3",
+      "gitBlobSha1": "3166c3a96e86e74d423bbd9a14fa005f37b7db8c",
+      "size": 39936,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3",
+      "gitBlobSha1": "c9a20c0ce5a2e2865ec23444684da1d79a09921e",
+      "size": 96768,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Timmy/W_Cast.mp3",
+      "gitBlobSha1": "e1aadabc2b609b0645bad6e2f3fd901b66ebc147",
+      "size": 127488,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast.ogg",
+      "gitBlobSha1": "4615751012baf47813808417a318525e926489cb",
+      "size": 6588,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "c4c2e090aeae1694d5bed3a6301c936b1b12caa2",
+      "size": 6566,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "d8e9d99105a120a7ae2937048bcadc74bdcc2826",
+      "size": 6624,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact.ogg",
+      "gitBlobSha1": "33df73afc8be72fb86aaf5ed2fad88faa11c9956",
+      "size": 6133,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "bf7f0c4464b6307d6d6d843c1d2d927d77b07c90",
+      "size": 5799,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "18a90d29cc54c8d3fd499bdb0f50fc61871a95cb",
+      "size": 6135,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Basic_Windup.ogg",
+      "gitBlobSha1": "ed500c1eb5b2b4048ca4ce430935b9692261e7e6",
+      "size": 4963,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/E_Cast.ogg",
+      "gitBlobSha1": "a8ddee595b4cd6580b0acdaacc61e51b812dd8c7",
+      "size": 15265,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Q_Cast.ogg",
+      "gitBlobSha1": "32aac25f418babf553ae8645d512812d591998eb",
+      "size": 48701,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Cast.ogg",
+      "gitBlobSha1": "fe486c43dae2edbb633a1d0344e8714f17e9c545",
+      "size": 7879,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Impact.ogg",
+      "gitBlobSha1": "21ed684e154fe4f57c2e094221c7a1de698ccee2",
+      "size": 6752,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/R_Windup.ogg",
+      "gitBlobSha1": "9861960d7c28b8b41b6e8e40b495d33a72ad4756",
+      "size": 6879,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg",
+      "gitBlobSha1": "8748a746f09463341a188a197c1f442a846667ca",
+      "size": 53070,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/W_Cast.ogg",
+      "gitBlobSha1": "f6365b69f04c178c2884ddedeccebbf84fa0d3a0",
+      "size": 8286,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast.ogg",
+      "gitBlobSha1": "fe07d396cf99646ff5b0428ca694d90a87894a7c",
+      "size": 7114,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast_v2.ogg",
+      "gitBlobSha1": "f60add1839ebb4edbfc2297b20458591fcc0cca2",
+      "size": 6275,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Cast_v3.ogg",
+      "gitBlobSha1": "e0fca4040888d61459a958644167072b719b16cd",
+      "size": 6466,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact.ogg",
+      "gitBlobSha1": "182c73171b02076c637e33c8b7140a47f19f8d33",
+      "size": 6508,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact_v2.ogg",
+      "gitBlobSha1": "758a26d5140583a98da91bbfce24e3cac45c242e",
+      "size": 6465,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Impact_v3.ogg",
+      "gitBlobSha1": "c0fbd9e4f7c5a48b04959c2ea10029f43c60d59b",
+      "size": 6303,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Basic_Windup.ogg",
+      "gitBlobSha1": "a3749549c233c45afb1fe67eef60ee9c850081ca",
+      "size": 4741,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/E_Cast.ogg",
+      "gitBlobSha1": "93908cf1a1e5c96a7d8acbcf41a400db24a9001b",
+      "size": 8286,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Q_Cast.ogg",
+      "gitBlobSha1": "f28df249dd5d760728453a9ff50aa7dc4f46f6f3",
+      "size": 20697,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Cast.ogg",
+      "gitBlobSha1": "b53da1693a46552db2eef5640bc311aeaddab977",
+      "size": 8242,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Impact.ogg",
+      "gitBlobSha1": "386960d91c8d8920b77b5b2b607cab5a36db44c1",
+      "size": 6888,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/R_Windup.ogg",
+      "gitBlobSha1": "52be6c3365f7fea292cd45a09fa63f8a54a92d11",
+      "size": 7244,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg",
+      "gitBlobSha1": "8e30d260420ca4622b9935e223ded8115ed0e80e",
+      "size": 28407,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/W_Cast.ogg",
+      "gitBlobSha1": "d3238d65c445abc30a7b37a95291b3ddfc135ad9",
+      "size": 20840,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Music/Match.ogg",
+      "gitBlobSha1": "a26a5d455e6444b01a0dfaf1733bd34092d87cef",
+      "size": 2146528,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/Music/Menu.ogg",
+      "gitBlobSha1": "cac913e0a6623aba8bc81417c316a671734c30d0",
+      "size": 970565,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/AbilityCast.ogg",
+      "gitBlobSha1": "1db2ae9f369e222b165f5c45ed071bb2ab77e443",
+      "size": 5535,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/AbilityImpact.ogg",
+      "gitBlobSha1": "7bb22f21de55f9c37dd7b672b6505460d98a8c82",
+      "size": 5814,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Attack.ogg",
+      "gitBlobSha1": "ba4397b2fdc032ced7bc9811b2eb982130f7e46b",
+      "size": 6057,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/CoreHit.ogg",
+      "gitBlobSha1": "69e992114188cd03b81947f1d8b689c192171d81",
+      "size": 6752,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Defeat.ogg",
+      "gitBlobSha1": "b7c02d3686609f2b6968cb3868aa00a6f1db4a8a",
+      "size": 10870,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Explosion.wav",
+      "gitBlobSha1": "e2294c6bc346ee29f784b5207aa4d90073e5c008",
+      "size": 220014,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/FrontShift.ogg",
+      "gitBlobSha1": "ef33c0bb90054485b314e64bb84434744ad730fb",
+      "size": 5591,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Heal.ogg",
+      "gitBlobSha1": "7c740a5b5a6ae96dc7dbc8eb65e4e1100ff8b1c7",
+      "size": 6709,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HeroDeath.ogg",
+      "gitBlobSha1": "1e3f4c43a9ddda15c581f2f138eb29d252ce2b72",
+      "size": 8995,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HitHeavy.ogg",
+      "gitBlobSha1": "c01ae699c9523826b0e55013fe208ccf874e3e44",
+      "size": 5543,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/HitLight.ogg",
+      "gitBlobSha1": "b9514816037fc0771b1754eacbc657a8cc46c340",
+      "size": 5249,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Kill.ogg",
+      "gitBlobSha1": "cd5739325dc66cbcfa03593dd44375e70278876a",
+      "size": 5840,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MechGun.ogg",
+      "gitBlobSha1": "a3ce88fc3e12b0edee990e4e8b7189a4775f55e8",
+      "size": 7904,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MeteorImpact.ogg",
+      "gitBlobSha1": "945ccf570f00880683f6ca66007c28576e95154e",
+      "size": 7428,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/MinionDeath.ogg",
+      "gitBlobSha1": "779d2f889c34e5c4149517c6a0af62f2a3ec43e2",
+      "size": 5249,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Overtime.ogg",
+      "gitBlobSha1": "8ab4ee62d6c88ee12f9c67b7acc33e697ae45b5e",
+      "size": 7168,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/PlanetArrival.ogg",
+      "gitBlobSha1": "e34596e79eaf817b82f6c085ce4162d352e448af",
+      "size": 17368,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Purchase.ogg",
+      "gitBlobSha1": "2ede2c379b77d25e1309be468449aa9140256eeb",
+      "size": 6707,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RealityShatter.ogg",
+      "gitBlobSha1": "2c8e7cb6bca003c1f5223ed2aa4fa467610fe09a",
+      "size": 12709,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallCancel.ogg",
+      "gitBlobSha1": "b6d109b9f9bdd36f13689383975217ac136574f8",
+      "size": 5843,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallComplete.ogg",
+      "gitBlobSha1": "3dd675da9148d3040e54cdeba4cbbf1ef3ee1f2e",
+      "size": 6932,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/RecallStart.ogg",
+      "gitBlobSha1": "cbecb0759f18c5232e48886a5db174ab4258c9db",
+      "size": 7346,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Shield.ogg",
+      "gitBlobSha1": "36a6985a7338c1920cb4cfd1ae6bb10a8ac1ff0d",
+      "size": 4662,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/SiegeArrival.ogg",
+      "gitBlobSha1": "a7f6cce91ebfeabb2f7621cc8b9ec4117b8b3348",
+      "size": 15225,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/SuddenDeath.ogg",
+      "gitBlobSha1": "e2a36428d70c61cb162c8663c209d61d05e9c7ca",
+      "size": 4954,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerImpact.ogg",
+      "gitBlobSha1": "e9a6d39b12ce07533201d19c3af720bd84cadd6a",
+      "size": 6127,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerShot.ogg",
+      "gitBlobSha1": "4533283e7e41900177a038a2ca983d2eade1611e",
+      "size": 5071,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/TowerTarget.ogg",
+      "gitBlobSha1": "9b87ffcc226180bab4fe5cce4983f17599245e15",
+      "size": 4099,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/UiBack.ogg",
+      "gitBlobSha1": "ac9159fa874a921b7ce9d079c183cab5312d89ac",
+      "size": 3947,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/UiConfirm.ogg",
+      "gitBlobSha1": "5d222515c55b77b4daabfc19fb21b749c1a44a4a",
+      "size": 3900,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Audio/SFX/Victory.ogg",
+      "gitBlobSha1": "125445e82b86e731f6a2c7c649850a4e6b25952d",
+      "size": 7640,
+      "sourceEvidence": [
+        "Docs/CombatAudioAssets.json",
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/HeroSelections/README.md"
+      ],
+      "status": "output requires current recipe/override resolution; do not assume all audio is CC0"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBomber/Model.bytes",
+      "gitBlobSha1": "6376f3488a9ddf348985d77964bdd86a1c436c7a",
+      "size": 142900,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/ConcreteNormal.png",
+      "gitBlobSha1": "90277fe7e185ef27c7e869393a4fcd1a294e53ff",
+      "size": 103611,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/ConcreteSurface.png",
+      "gitBlobSha1": "a6dd0a6b4fe800112bdfcd1b397867e6600e7994",
+      "size": 35381,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/MetalNormal.png",
+      "gitBlobSha1": "9c8756f73c02b164de4b47b05319000425e78504",
+      "size": 6117,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredBunker/MetalSurface.png",
+      "gitBlobSha1": "49abe570dcb8b35d4168114261934e58b61bce74",
+      "size": 1725,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Elyra.fbx",
+      "gitBlobSha1": "1fe91b086e441ddd129da8b41707c9750700e410",
+      "size": 2300556,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Kaelon.fbx",
+      "gitBlobSha1": "7c6b50f411c5632c9856429a5fe2be0f1dd61aa7",
+      "size": 2172620,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+      "gitBlobSha1": "cdcccdf5f92f901f56ddef57d36dfc043ae068a0",
+      "size": 2084860,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Nyra.fbx",
+      "gitBlobSha1": "9b4c183eecf4e1777fa163853d5af26e9681bc02",
+      "size": 2252188,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Rook.fbx",
+      "gitBlobSha1": "91ddcc76e1d796503d1157ab2c124296ddad2b8f",
+      "size": 2276636,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Timmy.fbx",
+      "gitBlobSha1": "c7a9c534561c815982e7e99bfc0bfd9619daecce",
+      "size": 563164,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Albedo.png",
+      "gitBlobSha1": "77cf6b64211a24065b9e9eca8d2dcbb8fe88894a",
+      "size": 828845,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/TimmyTextures/TimmySurface_Normal.png",
+      "gitBlobSha1": "fef43ea654629c8b344ede6aeee763ab5ffe3bff",
+      "size": 431796,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Traveler.fbx",
+      "gitBlobSha1": "7852e51442c87649e8033fca362a802bf154d572",
+      "size": 2266140,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx",
+      "gitBlobSha1": "70c4d1501d534df5c606fd6941950dd27c9c8ca5",
+      "size": 2235628,
+      "sourceEvidence": [
+        "Tools/HeroRebuild/README.md",
+        "HistoricalCommits.json",
+        "blender-anatomy"
+      ],
+      "status": "project model lineage documented; historical visual reference rights unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/CrystalNormal.png",
+      "gitBlobSha1": "0caef1e222ea36c48e5716ab24c5ff45a61b9206",
+      "size": 74910,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/CrystalSurface.png",
+      "gitBlobSha1": "e043a0fd9ad82abc6336adee210add3ecdfe06ea",
+      "size": 44942,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/IceNormal.png",
+      "gitBlobSha1": "0caef1e222ea36c48e5716ab24c5ff45a61b9206",
+      "size": 74910,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/IceSurface.png",
+      "gitBlobSha1": "e043a0fd9ad82abc6336adee210add3ecdfe06ea",
+      "size": 44942,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/MachineNormal.png",
+      "gitBlobSha1": "ca3f0d98f3692fe2674d0657647a86d4021ca551",
+      "size": 57749,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/MachineSurface.png",
+      "gitBlobSha1": "681c646fcef00901070e4f2c4cf8af979f92e847",
+      "size": 35162,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SandstoneNormal.png",
+      "gitBlobSha1": "0caef1e222ea36c48e5716ab24c5ff45a61b9206",
+      "size": 74910,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SandstoneSurface.png",
+      "gitBlobSha1": "e043a0fd9ad82abc6336adee210add3ecdfe06ea",
+      "size": 44942,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SkeletonNormal.png",
+      "gitBlobSha1": "ca3f0d98f3692fe2674d0657647a86d4021ca551",
+      "size": 57749,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SkeletonSurface.png",
+      "gitBlobSha1": "681c646fcef00901070e4f2c4cf8af979f92e847",
+      "size": 35162,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SpiderNormal.png",
+      "gitBlobSha1": "cff827ef9030992b4e15b5074f412eb8d034853d",
+      "size": 79507,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/SpiderSurface.png",
+      "gitBlobSha1": "a81662df5c86a15ea0a6c3657a6795154145e42c",
+      "size": 46676,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/XenoNormal.png",
+      "gitBlobSha1": "cff827ef9030992b4e15b5074f412eb8d034853d",
+      "size": 79507,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/AuthoredHotZone/XenoSurface.png",
+      "gitBlobSha1": "a81662df5c86a15ea0a6c3657a6795154145e42c",
+      "size": 46676,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar17.jpg",
+      "gitBlobSha1": "8473d698fe1a86d0005d985fd4a7389de407d22e",
+      "size": 109619,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar18.jpg",
+      "gitBlobSha1": "3b6c733739150a7e8f3ec9fd1247db54e7ad8265",
+      "size": 117453,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar19.jpg",
+      "gitBlobSha1": "f5b5dac00abd2ee58d85a819f043af8a3e187480",
+      "size": 116543,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar20.jpg",
+      "gitBlobSha1": "689d6fc84e049a53f3ec806baa7d4b90f95289c7",
+      "size": 120223,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar21.jpg",
+      "gitBlobSha1": "bf304b13075baf0560648bde2f04f4f0777b16ee",
+      "size": 124231,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar22.jpg",
+      "gitBlobSha1": "a3e218c6915d3134bd0174636d7ed7f72b081bd8",
+      "size": 127353,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar23.jpg",
+      "gitBlobSha1": "c18f5f07a04bb3e1988928577d0bc1a3543e3828",
+      "size": 132025,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar24.jpg",
+      "gitBlobSha1": "53ecc0db72152ef3293d757b73f7f2c48d1d6bb2",
+      "size": 140345,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar25.jpg",
+      "gitBlobSha1": "175e78f11f8a0334560186cf25141458a66b234a",
+      "size": 133589,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar26.jpg",
+      "gitBlobSha1": "9069d8519d2793d6ce9ddcee05c2b03090d3195d",
+      "size": 114594,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar32.jpg",
+      "gitBlobSha1": "024c4cd7e235a88aa04a95130ceb10fa8dc3dd59",
+      "size": 126949,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar33.jpg",
+      "gitBlobSha1": "2d08371059c7e3e5c6527ca2b349907c746f7005",
+      "size": 106922,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar34.jpg",
+      "gitBlobSha1": "bf38ce28c113a56065383ba9e431f79c48a642c1",
+      "size": 120443,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar35.jpg",
+      "gitBlobSha1": "9a47073098c8abdfc4b155332cd373418744c0ac",
+      "size": 110834,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar36.jpg",
+      "gitBlobSha1": "ab6a8c80e7ffab17a3643183ef337c91efd7ee98",
+      "size": 111103,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar38.jpg",
+      "gitBlobSha1": "687f605bd369eb877aa843dd8e2c445306c43dd1",
+      "size": 144480,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar39.jpg",
+      "gitBlobSha1": "38e9c73d987f8a52a031787dd9f0d13a1fc5d44f",
+      "size": 124366,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar40.jpg",
+      "gitBlobSha1": "7082f9fc556c103e40f277170c3edfb2da52db56",
+      "size": 120341,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar41.jpg",
+      "gitBlobSha1": "3da16830d9f8c4e67fd1ecf34ba9b9c276bd6d06",
+      "size": 94981,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/Avatar42.jpg",
+      "gitBlobSha1": "c6920370b015ff7c51126564515b61948af7d569",
+      "size": 123237,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/Avatars/CosmicAtlas.jpg",
+      "gitBlobSha1": "8afbbfb93d1189423b006aade4b1adb959c73469",
+      "size": 398471,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+      "gitBlobSha1": "4e596d0b366428f2a16969a74945f23fc2727194",
+      "size": 204220,
+      "sourceEvidence": [
+        "Tools/ChronoTraveler",
+        "HistoricalCommits.json"
+      ],
+      "status": "procedurally authored project resource; historical reference identity unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CombatAnimation/Library.bytes",
+      "gitBlobSha1": "e86098f00efc65e1df1038cd653b8df43ae1314d",
+      "size": 56593,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CombatUI/AbilityAtlas.png",
+      "gitBlobSha1": "c647f8abd8a10830dd6033d4735fcdc74f212fec",
+      "size": 2490582,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
+      "gitBlobSha1": "39ceab7abd1857e60817a6dfff8bee2e79ea24bc",
+      "size": 760532,
+      "sourceEvidence": [
+        "Tools/CyberRanger",
+        "HistoricalCommits.json"
+      ],
+      "status": "procedurally authored project resource; historical reference identity unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberRanger/SivraRifleDetails.fbx",
+      "gitBlobSha1": "d2e24fe6a405ea1ffef036ce4b9f6f27dcb5474b",
+      "size": 103548,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/AnchorChain.bytes",
+      "gitBlobSha1": "15de785c2eedefafc9367343257a6f7062820281",
+      "size": 150258,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/AnchorProjectile.bytes",
+      "gitBlobSha1": "f84cad6b5bc14b3873849d22a4cdd2cd9ba8e7d2",
+      "size": 166041,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/0.png",
+      "gitBlobSha1": "f8dce86658351196ef236ab77f6850f3e10b67b8",
+      "size": 2693133,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/1.png",
+      "gitBlobSha1": "681dee11070642990499fd0c4ff243eca5405f0f",
+      "size": 2721774,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/2.png",
+      "gitBlobSha1": "32777166a529fc664a06c7176c3ca76ab7188ab0",
+      "size": 2555453,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/3.png",
+      "gitBlobSha1": "13d63533b5690e6b3bbf8b20b24672e39f99561e",
+      "size": 2721178,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/4.png",
+      "gitBlobSha1": "fecb9dc3673a34489b37795297c115cbbd7a15cb",
+      "size": 2672651,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Icons/Background.png",
+      "gitBlobSha1": "1f25ad9e42da47783dd7645f6ddc30789150d08d",
+      "size": 583608,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
+      "gitBlobSha1": "9688d9805bdabe41e5890a8a26e60f042b760c5e",
+      "size": 1124963,
+      "sourceEvidence": [
+        "Tools/CyberShark",
+        "HistoricalCommits.json"
+      ],
+      "status": "procedurally authored project resource; historical reference identity unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/WaterSpiral.bytes",
+      "gitBlobSha1": "4d38c6d20952fd85fb55ae8fdff578fbdb6255d3",
+      "size": 47893,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/CyberShark/WaveCrest.bytes",
+      "gitBlobSha1": "b0fae42306991d6534ba8edea2f9ec3059386cb9",
+      "size": 15133,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/DimensionsDisplay-SemiBold.ttf",
+      "gitBlobSha1": "62e1cb098be52def2989f8735f7f987e3e74ee4a",
+      "size": 16024,
+      "sourceEvidence": [
+        "font-orbitron"
+      ],
+      "status": "renamed derivative; metadata and notice"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdrop.png",
+      "gitBlobSha1": "a5dfdee3ff88741215528262d35af71d113335c5",
+      "size": 2108334,
+      "sourceEvidence": [
+        "frontend-video"
+      ],
+      "status": "open source/account evidence gap"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdropAnimated.mp4",
+      "gitBlobSha1": "8ed6dea7f22505ff5d6efe1899b50ca8f01b4126",
+      "size": 2238864,
+      "sourceEvidence": [
+        "frontend-video"
+      ],
+      "status": "open source/account evidence gap"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/InterstellarBackdropAnimatedPoster.png",
+      "gitBlobSha1": "5a5e931ec600f1c2321d29b87aae4c5be8b1354c",
+      "size": 2481373,
+      "sourceEvidence": [
+        "frontend-video"
+      ],
+      "status": "open source/account evidence gap"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/MenuCardAtlas.png",
+      "gitBlobSha1": "c18eb57738c86b5bec57ff03a7064d6894650466",
+      "size": 2666921,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/Rajdhani-Regular.ttf",
+      "gitBlobSha1": "43c270af97a9a1d9e34dda301a3ac88baa303af5",
+      "size": 66196,
+      "sourceEvidence": [
+        "font-rajdhani"
+      ],
+      "status": "font metadata and notice"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/FrontEnd/Rajdhani-SemiBold.ttf",
+      "gitBlobSha1": "8d378d9b3927db5e612c763c1fa5d8b21fa9f8cb",
+      "size": 68308,
+      "sourceEvidence": [
+        "font-rajdhani"
+      ],
+      "status": "font metadata and notice"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GJMagentaGolem/Model.bytes",
+      "gitBlobSha1": "24f371c383d7410ede2d0c99b3ab5d7690546752",
+      "size": 394882,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GJMagentaGolem/SkinUV.bytes",
+      "gitBlobSha1": "48d8665f048047abedc2381e4a428d9d60b80586",
+      "size": 343543,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GreenStalker/Model.bytes",
+      "gitBlobSha1": "9c919a59119711a0780cf1ce92549e76cfc0526b",
+      "size": 102437,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/GreenStalker/SkinUV.bytes",
+      "gitBlobSha1": "2dff251c6d8bcdd196d563de43d806fdb4309f3e",
+      "size": 97609,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/UrbanDigitalCamo.png",
+      "gitBlobSha1": "c6105914d28eeb2b3a37e561489cc69046fcef4f",
+      "size": 230973,
+      "sourceEvidence": [
+        "camo"
+      ],
+      "status": "exact source and recorded SHA-256"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/HeroArt/WoodlandCamo.png",
+      "gitBlobSha1": "74f8b29087aa9d4bd5a68c53331f02ef8a34ef5f",
+      "size": 251389,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/KryonBear/Model.bytes",
+      "gitBlobSha1": "489a9d63927a5b51bdd15d59e5301ae09c10bb2c",
+      "size": 359940,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/KryonBear/SkinUV.bytes",
+      "gitBlobSha1": "b5cebb232c010d93f6d8e0acfb060cb5b04e07a1",
+      "size": 372263,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/LocomotionAnimation/Library.bytes",
+      "gitBlobSha1": "5abcde4ecbde468b418ca79af19ec3537885c80e",
+      "size": 23586,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Dark00.png",
+      "gitBlobSha1": "1cb7a4ba80dd17f65a6d7084156b93146601ddee",
+      "size": 2069322,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/DiamondCore.png",
+      "gitBlobSha1": "107eb5cc60291c93e7e6460305fcf6e1717ab2ae",
+      "size": 2456717,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Earth.png",
+      "gitBlobSha1": "18eac63c04206d37b1040c27c2a8486bf2672102",
+      "size": 2457000,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/GJ504b.png",
+      "gitBlobSha1": "46709dc9ac2c0fed43c4f259c08ab051dbe05b12",
+      "size": 2321276,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/GreenPlanet.png",
+      "gitBlobSha1": "9dd146e4786039937b4b012380e33b26f68bb8cf",
+      "size": 2225864,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Kryon.png",
+      "gitBlobSha1": "93888e0473016f3a203d083c2e5c1e98252b3972",
+      "size": 2287045,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Mars.png",
+      "gitBlobSha1": "61aadd5d42018243a9ee185e29eb7b90d7ba1d79",
+      "size": 2181416,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Moon.png",
+      "gitBlobSha1": "771954dbd97aafea4029aa8754404f72b5650a17",
+      "size": 2480041,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Neptune.png",
+      "gitBlobSha1": "0edd94958021e2182ed4f9f2607c90a9d6ef03d3",
+      "size": 2087816,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Noxara.png",
+      "gitBlobSha1": "b9fd506965d5386c2948502a2fd76237193021b0",
+      "size": 2374894,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Pyraxis.png",
+      "gitBlobSha1": "284115f9fe7327e258341e395624673f57d8cbd3",
+      "size": 2033185,
+      "sourceEvidence": [
+        "Documentation/Map-Photo-Panoramas.md"
+      ],
+      "status": "AI generation directions documented; exact historical generation record not complete"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MapPanoramas/Universe.png",
+      "gitBlobSha1": "174adb66f5ecc1a674f62f78de2915e7ca6b711f",
+      "size": 1811278,
+      "sourceEvidence": [
+        "universe-image"
+      ],
+      "status": "open license/source gap"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MarsSkeleton/Model.bytes",
+      "gitBlobSha1": "55fbb4268ecf5ce9472caf46a9c3702af586b792",
+      "size": 491431,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MarsSkeleton/SkinUV.bytes",
+      "gitBlobSha1": "abc531113f790a6eab088a76c96bd20f9062a728",
+      "size": 556419,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MechanicalScorpion/Model.bytes",
+      "gitBlobSha1": "a8c55c49122719e06d007c1bf9b9a2d6d614b15b",
+      "size": 509807,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/MechanicalScorpion/SkinUV.bytes",
+      "gitBlobSha1": "a7258a182b8e542d07f612100597d4a84a20b285",
+      "size": 712143,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/NoxaraClockworkSpider/Model.bytes",
+      "gitBlobSha1": "87c1b5ec5a04cc0d009155f02a3a9b2b2e129a41",
+      "size": 393349,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/NoxaraClockworkSpider/SkinUV.bytes",
+      "gitBlobSha1": "b8d5fb56da6016d6ec6670c0bf7c41e3cea7e03e",
+      "size": 648206,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PSRCrystalTitan/Model.bytes",
+      "gitBlobSha1": "daca0c9f86463f15b9ba7764954ae0d1226f9fbd",
+      "size": 351190,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PSRCrystalTitan/SkinUV.bytes",
+      "gitBlobSha1": "3722d878e0a4ad6a0a6ddaf112cad747df9a0124",
+      "size": 303075,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Ground.png",
+      "gitBlobSha1": "68c95f0d8aabfd677708e49f53a7803a29382cb5",
+      "size": 752943,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Macro.png",
+      "gitBlobSha1": "f63da89a0c7c214b7387fd110970dd951d9674a5",
+      "size": 646678,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Dark00/Stone.png",
+      "gitBlobSha1": "cc75e98603b53b91602c2ecb23cca27d10e545ee",
+      "size": 750449,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Ground.png",
+      "gitBlobSha1": "e27a3d6a75a9bc6396822caa024f1d87b942d796",
+      "size": 806530,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Macro.png",
+      "gitBlobSha1": "c06c2c79035ca7504d7535f427c8561c6966e1b9",
+      "size": 649877,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/DiamondCore/Stone.png",
+      "gitBlobSha1": "083fa669060646ceaac23d126a0b2e9b339b2f01",
+      "size": 618167,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Ground.png",
+      "gitBlobSha1": "74629023eb510cb206aa9d189cd16fa0b9ef7a61",
+      "size": 811498,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Macro.png",
+      "gitBlobSha1": "89c421c534a25c50744b53332f98d4f8c208ec24",
+      "size": 552423,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Earth/Stone.png",
+      "gitBlobSha1": "9bcff1f533939c816edbce5ce3a9ef647e772a7d",
+      "size": 811617,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Ground.png",
+      "gitBlobSha1": "50dce6175f9dd0a9f606b127c710205a2f12c4d1",
+      "size": 872405,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Macro.png",
+      "gitBlobSha1": "97996587e6ac6c37c6baffb5982523e6b06ef154",
+      "size": 559332,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GJ504b/Stone.png",
+      "gitBlobSha1": "53651352e299cb97e3128759a9e5caf141cbbe77",
+      "size": 867083,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Ground.png",
+      "gitBlobSha1": "1826c289a6d2640f1d10c730dc243346122c2609",
+      "size": 830192,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Macro.png",
+      "gitBlobSha1": "d7975d8876f30370b4fd9269e24d2b7d4440ee0b",
+      "size": 528313,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/GreenPlanet/Stone.png",
+      "gitBlobSha1": "7640e0d5db0b7124a3a7261345d32ef75c18a9a4",
+      "size": 817355,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Ground.png",
+      "gitBlobSha1": "142ef2d2a9eb09ad55ea434e3c8be89a5477021c",
+      "size": 745116,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Macro.png",
+      "gitBlobSha1": "e56d396f6b940e1a0ef4aafe4c3693cbbe64f15f",
+      "size": 574404,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Kryon/Stone.png",
+      "gitBlobSha1": "b200ea73b48f53034a537f39a84f24994707a89e",
+      "size": 692570,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Ground.png",
+      "gitBlobSha1": "245a2820c02b71de84a840587246a0bd9131a184",
+      "size": 827060,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Macro.png",
+      "gitBlobSha1": "5d98e7a861f7dc35dd123e50b9758d1f2b5d2521",
+      "size": 558042,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Mars/Stone.png",
+      "gitBlobSha1": "534d10f03fb4f545ac264968d3672bf0521ad210",
+      "size": 832693,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Ground.png",
+      "gitBlobSha1": "4a02dc3f0217687abd41d1452ca2354c00ae0fd8",
+      "size": 757685,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Macro.png",
+      "gitBlobSha1": "8b860515359a6674605e962440aab94018f8d1ff",
+      "size": 633439,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Moon/Stone.png",
+      "gitBlobSha1": "21ef67bbf64b91cd3ec0f22cdf636241a3649e1d",
+      "size": 757880,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Ground.png",
+      "gitBlobSha1": "a41d0eda5d8a03fb4d08c38e8263e4e8f3c1b82a",
+      "size": 788088,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Macro.png",
+      "gitBlobSha1": "3662a108bbf103003dc0345164464ab8afe1bb5d",
+      "size": 531646,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Neptune/Stone.png",
+      "gitBlobSha1": "5b6b745c002fe56f8ed0bdf0417f8d762e099bdc",
+      "size": 740904,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Ground.png",
+      "gitBlobSha1": "21b0ca3a8ce6db9a6fcd9069502bc2c02f611eb1",
+      "size": 883774,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Macro.png",
+      "gitBlobSha1": "01e3b12b2f8216a25c83d0994b23a9e05397eb04",
+      "size": 595319,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Noxara/Stone.png",
+      "gitBlobSha1": "c111b561dadb087331ac791dbadd8c62f48cd0bf",
+      "size": 758458,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Ground.png",
+      "gitBlobSha1": "bcff3cd09aacbd6f4d9e36f2e791b6282915f12a",
+      "size": 869666,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Macro.png",
+      "gitBlobSha1": "bd282e9239f34d826028f2c7403811b2a475ff35",
+      "size": 625132,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/PlanetSurfaces/Pyraxis/Stone.png",
+      "gitBlobSha1": "fefabd6fdc136489e5a1ab647ff24fd6fae227a2",
+      "size": 830441,
+      "sourceEvidence": [
+        "Documentation/Blender-Visual-Refinement.md"
+      ],
+      "status": "procedural material generation documented"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Bark.png",
+      "gitBlobSha1": "44848f84b53a398698a410eb58c107c7363684f1",
+      "size": 120596,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Ice.png",
+      "gitBlobSha1": "4d26b4ddbc0bac2b9a9b8a6c0361988641d3a80f",
+      "size": 115400,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Leaf.png",
+      "gitBlobSha1": "bbc2f273b4b51e539c908b407e07e16c73047f98",
+      "size": 139192,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SceneryFinishes/Metal.png",
+      "gitBlobSha1": "a37f1bf6f00ccd95933867d2965f8e581e64ee80",
+      "size": 122041,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SiegeTank/Model.bytes",
+      "gitBlobSha1": "0b960e7b7590febe6967c2abfa13aa72f0de62f4",
+      "size": 432454,
+      "sourceEvidence": [
+        "Tools/SiegeTank",
+        "HistoricalCommits.json"
+      ],
+      "status": "procedurally authored project resource; historical reference identity unresolved"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Concrete.png",
+      "gitBlobSha1": "2bcde2a8ec0a98dd1ecb60edaef58cea75d1c7a4",
+      "size": 146668,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Sand.png",
+      "gitBlobSha1": "e8e9cd2279e7fa96438c801418f807656e6692cc",
+      "size": 169031,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Soil.png",
+      "gitBlobSha1": "4fcdcd7a5900f1df5b49b8c931e5bec9033e11d7",
+      "size": 126703,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/SurfaceMicro/Stone.png",
+      "gitBlobSha1": "96b53542e811eaec0ce244cac7926f34b950476f",
+      "size": 119339,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+      "gitBlobSha1": "a075fcaffb6c6c292fbbc79675a26afda573f8d9",
+      "size": 277866,
+      "sourceEvidence": [
+        "Tools/UmbralMage",
+        "HistoricalCommits.json"
+      ],
+      "status": "procedurally authored project resource; historical reference identity unresolved"
+    },
+    {
+      "path": "Assets/TutorialInfo/Icons/URP.png",
+      "gitBlobSha1": "6194a807e27158f864a7c7677f4cbf62d8b94503",
+      "size": 24069,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Docs/Combat-Audio-Audition.mp3",
+      "gitBlobSha1": "b358a3f82fa4723fed40706a4e378d2bec65338f",
+      "size": 337257,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Docs/Combat-Audio-Audition.ogg",
+      "gitBlobSha1": "61df7c63e79881ddc61a9c8963b7c5f0bdc2c9ff",
+      "size": 212264,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    },
+    {
+      "path": "Documentation/ability-ui-preview.png",
+      "gitBlobSha1": "8874e1a6c36eb5d11bd3f2ccb802b891c33b1a2b",
+      "size": 453377,
+      "sourceEvidence": [],
+      "status": "needs asset-specific source mapping"
+    }
+  ]
+}
