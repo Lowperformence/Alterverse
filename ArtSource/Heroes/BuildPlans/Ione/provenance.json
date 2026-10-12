@@ -1,0 +1,46 @@
+{
+  "hero": "Ione Vaska",
+  "heroId": "Elyra",
+  "key": "Ione",
+  "created": "2026-10-12",
+  "generator": "OpenAI built-in image_gen",
+  "AI_generated": true,
+  "prompt": "Use case: stylized-concept. Create one original, premium detailed CHARACTER PARTS DESIGN SHEET for DIMENSIONS FRONT, for Blender artists. Reference image is the current project model, used for identity, proportions, basic forms and weapon envelope. Improve every visible surface: designed layered construction, credible bevels, recessed vents, seams, fasteners, articulations, material contrast. Keep the hero recognizable. Light warm-gray drafting background, clean large landscape 3:2 composition, polished colored 3D concept illustration. Layout: left third full body FRONT and BACK aligned neutral A pose, weapons displayed separately. Right two-thirds five clearly separated generously sized panels: HEAD front/profile/back; TORSO shell front/back with exploded outer layer; ARM shoulder/upper arm/elbow/forearm/hand separated; LEG thigh/knee/shin/foot separated; WEAPON side/top and exploded main components. Show real thick buildable forms, precise assembly leaders; no invented numeric measurements, unreadable paragraphs, logos or legal claims. Only short headings HEAD, TORSO, ARMS, LEGS, WEAPON and exact hero name. Keep exposed joints free to bend, no plates bridging joints. Detail must read at mobile-game scale. This is an artistic concept, not a certified dimensioned engineering drawing. Feminine arcane mechanical knight with broad spherical shoulders, narrow waist, angular pearl-white chest plates, layered black abdominal ribs, white thigh/shin plates and violet accents. White enclosed mask with sculpted split cheek armor, narrow violet optics, tapered nasal bridge and three chin vents, violet forehead diamond, two short temple vanes and one compact mechanically supported orbital arc above and behind the head. Original 'Orbit Weaver' armor with three violet constellation emitters on the chest, triangular pearl tracing, layered shoulder petals, amethyst orbital hip rings and diamond knee inlays. Black circular joints and clean ceramic panel seams. Large black/pearl folded-fin arcane focus with violet core held at one hand, its existing overall shape and size. No human face or cloth robe. Name 'IONE VASKA'. Upgrade: use a consistent hierarchy of broad clean shells, secondary inset panels and restrained small hardware; add rear service panels, protected cable routing, articulated limb guards and individually shaped material edges. Preserve weapon class and hero colors. For Ione the focus emitter axis must point HORIZONTALLY FORWARD, never upward. For Timmy improve transparent visor clarity so tabby face is clearly visible; no guns. For Traveler keep orb and no staff.",
+  "reference": {
+    "role": "Existing project model render; preserve proportions and identity",
+    "repositoryPath": "ArtSource/Heroes/ConceptModels/Ione-front.png",
+    "revision": "6ee1e11917e18d0c8fa7d3a3fccd8062602291ce"
+  },
+  "output": {
+    "file": "Ione-component-concept.png",
+    "status": "concept generated, model validation separately reported",
+    "sha256": "6418f397b702017d86588833696744cd9b028489044aeb2cf9e17ca9fc285aba",
+    "bytes": 2281407,
+    "embeddedC2PAPresent": true,
+    "referenceSha256": "f7c9a88f05759e6cf22c738b1fccbebb9840fe264edab1b70676acfcd26cc48c",
+    "gitBlob": "e4640229aa5986d83c74cd06ff85be39c3429554",
+    "C2PASignatureValidation": "not performed"
+  },
+  "rights": {
+    "newOutput": "OpenAI Europe Terms of Use, Content / Ownership of content",
+    "source": "https://openai.com/policies/eu-terms-of-use/",
+    "checked": "2026-10-12",
+    "updated": "2026-01-16",
+    "inheritedEvidence": "ArtSource/Heroes/Concepts/Provenance/Ione.json",
+    "allThirdPartyRightsCleared": false
+  },
+  "model": {
+    "generator": "Tools/HeroConcepts/build_models.py",
+    "componentGenerator": "Tools/HeroConcepts/part_optimization.py",
+    "validation": "validation.json",
+    "UnityEditor": "not run",
+    "Android": "not run"
+  },
+  "scopeExclusions": [
+    "Auren Kest",
+    "Tahla Venn",
+    "Nerok Abyss",
+    "Brakk Orun",
+    "THE TRAVELER"
+  ]
+}

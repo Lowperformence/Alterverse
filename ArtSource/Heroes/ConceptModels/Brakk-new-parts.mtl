@@ -1,0 +1,30 @@
+newmtl Brakk_surface_0
+Kd 0.025 0.032 0.05
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Brakk_surface_1
+Kd 0.3 0.34 0.36
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Brakk_surface_2
+Kd 0.54 0.2 0.07
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Brakk_surface_3
+Kd 1 0.38 0.05
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Brakk_surface_4
+Kd 0.46 0.32 0.16
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Brakk_surface_5
+Kd 0.26 0.27 0.25
+Ks 0.25 0.25 0.25
+Ns 90
+

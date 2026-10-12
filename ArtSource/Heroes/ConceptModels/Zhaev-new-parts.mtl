@@ -1,0 +1,30 @@
+newmtl Zhaev_surface_0
+Kd 0.018 0.024 0.035
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Zhaev_surface_1
+Kd 0.039 0.046 0.061
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Zhaev_surface_2
+Kd 0.44 0.36 0.21
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Zhaev_surface_3
+Kd 0.54 0.075 0.83
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Zhaev_surface_4
+Kd 0.47 0.32 0.14
+Ks 0.25 0.25 0.25
+Ns 90
+
+newmtl Zhaev_surface_5
+Kd 0.19 0.21 0.22
+Ks 0.25 0.25 0.25
+Ns 90
+

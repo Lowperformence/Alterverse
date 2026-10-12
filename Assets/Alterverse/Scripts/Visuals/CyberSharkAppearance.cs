@@ -26,6 +26,7 @@ namespace Alterverse.Visuals
             public float[] boneWeights2;
             public int[] tailVertices;
             public int[] mouthVertices;
+            public int[] clothingVertices;
             public float[] tailPivot;
             public float[] hookGrip;
             public Marker[] markers;
@@ -94,6 +95,15 @@ namespace Alterverse.Visuals
             if (data.mouthVertices != null)
                 foreach (int index in data.mouthVertices)
                     if (index < 0 || index >= data.boneIndices.Length) return false;
+            if (data.clothingVertices != null)
+            {
+                int previous = -1;
+                foreach (int index in data.clothingVertices)
+                {
+                    if (index <= previous || index >= data.boneIndices.Length || data.groups[index] != 0) return false;
+                    previous = index;
+                }
+            }
             foreach (Anchor a in data.anchors)
                 if (a == null || a.head == null || a.tail == null || a.head.Length != 3 || a.tail.Length != 3) return false;
             foreach (int group in data.groups) if (group < 0 || group > 2) return false;
@@ -662,6 +672,7 @@ namespace Alterverse.Visuals
 
         private static bool LegacyShoulderAccessory(int index,int material)
         {
+            if (AuthoredClothingVertex(index)) return false;
             int bone=geometry.boneIndices[index];string name=geometry.boneNames[bone];
             if(!name.StartsWith("UpperArm",StringComparison.Ordinal))return false;
             // The source upper-arm metal slots contain only the old pauldron, fin and brass teeth.
@@ -729,6 +740,7 @@ namespace Alterverse.Visuals
 
         private static bool LegacyForearmAccessory(int index,int material)
         {
+            if (AuthoredClothingVertex(index)) return false;
             string bone=geometry.boneNames[geometry.boneIndices[index]];
             if(!bone.StartsWith("Forearm",StringComparison.Ordinal))return false;
             if(material!=1)return true;
@@ -768,11 +780,17 @@ namespace Alterverse.Visuals
             return material;
         }
 
-        // The resource has six authored material slots. Its vest and tails share slot 2
-        // with metal armor. Match their exact source plate vertices rather than a broad
-        // bounding box, which would also recolor nearby armor or shark skin.
+        // Garments share authored slot 2 with armor. Explicit sorted source indices
+        // identify the new outfit; the plate fallback supports older model resources.
+        private static bool AuthoredClothingVertex(int index)
+        {
+            return geometry.clothingVertices != null &&
+                Array.BinarySearch(geometry.clothingVertices, index) >= 0;
+        }
+
         private static bool JacketVertex(int index)
         {
+            if (AuthoredClothingVertex(index)) return true;
             string bone = geometry.boneNames[geometry.boneIndices[index]];
             Vector3 p = Point(geometry.vertices, index * 3);
             p.x = Mathf.Abs(p.x);
@@ -1011,6 +1029,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-
-

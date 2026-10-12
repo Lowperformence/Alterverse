@@ -1,0 +1,102 @@
+{
+  "hero": "Tahla Venn",
+  "heroId": "Mira",
+  "key": "Tahla",
+  "asOf": "2026-10-12",
+  "concept": {
+    "file": "ArtSource/Heroes/Concepts/Tahla-concept-v1.png",
+    "sha256": "5d36c907161109004c7da01a2a66012222e8da128ed9d6aacd0daa7670a3b5a9",
+    "gitBlob": "0d8ee03cc99988cbb8d731e785c27f891a5796f8",
+    "promptRecord": "Tools/HeroConcepts/prompts.json#Tahla",
+    "generator": "OpenAI built-in image_gen",
+    "AI_generated": true,
+    "embeddedC2PA": true,
+    "C2PASignatureValidated": false,
+    "status": "original final PNG and exact final-generation/edit prompts archived"
+  },
+  "retainedInputs": [
+    {
+      "file": "ArtSource/Heroes/Mira.blend",
+      "sha256": "ff6a57530b38eefec7950dcb756173a07909d7235116525b72888fb8b82f2cc9",
+      "revision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
+      "role": "adapted Blender Human Base Meshes 1.4.1 anatomy and original project costume/rig"
+    },
+    {
+      "file": "Tools/HeroRebuild/build_heroes.py",
+      "role": "existing project authoring generator"
+    }
+  ],
+  "licenses": [
+    {
+      "id": "Blender-Human-Base-Meshes-1.4.1",
+      "license": "CC0-1.0",
+      "role": "inherited anatomy in applicable native bases and shared rigs",
+      "evidence": "ArtSource/Heroes/Concepts/Licenses/blender-base-source.json",
+      "status": "official version-specific listing verified; original bundle README still not retrieved"
+    },
+    {
+      "id": "OpenAI-output",
+      "role": "new AI concept images and code-assisted design work",
+      "license": "OpenAI Europe Terms of Use; not a CC0 declaration",
+      "source": "https://openai.com/policies/eu-terms-of-use/",
+      "termsUpdated": "2026-01-16",
+      "checked": "2026-10-12",
+      "status": "Content clauses verified; output rights subject to terms and applicable law"
+    },
+    {
+      "id": "locomotion-CC0",
+      "role": "shared movement animation bank",
+      "license": "CC0-1.0",
+      "evidence": [
+        "ArtSource/Animations/Locomotion/License-KayKit.txt",
+        "ArtSource/Animations/Locomotion/License-Quaternius.txt",
+        "ArtSource/Animations/Locomotion/README.md"
+      ],
+      "status": "original provider notices already preserved"
+    },
+    {
+      "id": "combat-Quaternius",
+      "role": "combat animation source bank",
+      "license": "CC0-1.0 declared for free Standard packages",
+      "evidence": "ArtSource/Animations/README.md",
+      "status": "source mapping documented; separate Mixamo idle must not be labeled CC0"
+    },
+    {
+      "id": "Mixamo-idle",
+      "role": "standing idle for seven heroes, excluding Sivra; applicability to Timmy not asserted",
+      "license": "Adobe/Mixamo terms, not CC0",
+      "evidence": [
+        "ArtSource/Animations/README.md",
+        "ArtSource/Animations/mixamo-standing-idle-report.json"
+      ],
+      "status": "user-supplied source and mapping recorded; exact download-license evidence not archived"
+    },
+    {
+      "id": "hero-audio",
+      "role": "basic/ability/death effects",
+      "evidence": [
+        "Docs/ThirdPartyAudioLicenses.md",
+        "ArtSource/Audio/Combat/sources.json",
+        "ArtSource/Audio/HeroSelections/manifest.json"
+      ],
+      "status": "mixed: some preserved CC0 notices; selected recordings have unresolved source/license evidence"
+    }
+  ],
+  "implementation": {
+    "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
+    "previousValidatedReplacement": "three-layer gold/ivory shoulder plates",
+    "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
+    "revision": "nine-hero-concepts-20261012-v2",
+    "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
+    "nativeSource": "ArtSource/Heroes/ConceptModels/Tahla-model.blend",
+    "model": "Assets/Alterverse/Resources/AuthoredHeroes/Mira.fbx",
+    "modelSha256": "aec26af7e92bd85234145b5807b96ca0f50933df1ac4fd9f7ea8de544a92f074"
+  },
+  "openEvidence": [
+    "historical user-supplied design-reference image sources were not recovered",
+    "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
+    "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
+    "Unity editor and device visual verification"
+  ]
+}

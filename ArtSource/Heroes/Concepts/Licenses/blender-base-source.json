@@ -1,0 +1,23 @@
+{
+  "declaredSource": "Blender Human Base Meshes 1.4.1",
+  "license": "CC0-1.0",
+  "publisher": "Blender Studio and community contributions",
+  "declarationFile": "Tools/HeroRebuild/README.md",
+  "officialListing": "https://www.blender.org/download/demo-files/",
+  "listingUpdated": "2025-01-20",
+  "checked": "2026-10-12",
+  "status": "version-specific CC0 listing verified; original bundle notice retrieval remains pending",
+  "verificationMethod": "official publisher page text retrieved through web search indexing; direct page fetch returned 402",
+  "shortPublisherExcerpt": "Human Base Meshes v1.4.1 — by Blender Studio and community contributions. 49 MB – CC0",
+  "bundleReadmeArchived": false,
+  "previousAttempts": [
+    {
+      "url": "https://download.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip",
+      "error": "HTTP 403"
+    },
+    {
+      "url": "https://mirror.blender.org/demo/asset-bundles/human-base-meshes/human-base-meshes-bundle-v1.4.1.zip",
+      "error": "HTTP 403"
+    }
+  ]
+}

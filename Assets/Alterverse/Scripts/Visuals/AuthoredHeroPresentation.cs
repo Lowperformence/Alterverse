@@ -80,7 +80,8 @@ namespace Alterverse.Visuals
             RestoreImportedBindPose(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
-            if (hero == HeroId.Veyr)
+            bool conceptStyle = Resources.Load<TextAsset>("HeroConcepts/StyleVersion") != null;
+            if (hero == HeroId.Veyr && !conceptStyle)
             {
                 AssassinVioletHeadStripe.Apply(instance.transform);
                 AssassinShoulderStripes.Apply(instance.transform);
@@ -100,18 +101,19 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Mira)
             {
                 TahlaHandSymmetry.Apply(instance.transform);
+                // Tahla retains her original presentation even when other heroes use concept models.
                 HealerLegArmorAppearance.Apply(instance.transform);
                 TahlaHelmet.Apply(instance.transform);
                 TahlaHalo.Apply(instance.transform);
             }
-            if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
+            if (hero == HeroId.Rook && !conceptStyle) BrakkWrestlingMask.Apply(instance.transform);
             if (hero == HeroId.Nerok) CyberSharkAppearance.Apply(instance.transform);
             if (hero == HeroId.Traveler)
             {
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            if(hero != HeroId.Timmy) HeroLimbTechDetails.Apply(instance.transform, hero);
+            if(hero != HeroId.Timmy && (!conceptStyle || hero == HeroId.Mira)) HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
                 hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
             HeroUndersuitFabric.Apply(instance.transform);
@@ -119,7 +121,8 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);
             // Recolor after every generated detail and material pass so no gold forearm layer remains.
             BrakkForearmTrim.Apply(instance.transform, hero);
-            HeroBootPresentation.Apply(instance.transform, hero);
+            if (!conceptStyle || hero == HeroId.Mira) HeroBootPresentation.Apply(instance.transform, hero);
+            if (hero == HeroId.Mira) TahlaGoldJewelry.Apply(instance.transform);
             presentation.Initialize(root, instance.transform);
             return true;
         }
@@ -997,5 +1000,4 @@ namespace Alterverse.Visuals
         }
     }
 }
-
 

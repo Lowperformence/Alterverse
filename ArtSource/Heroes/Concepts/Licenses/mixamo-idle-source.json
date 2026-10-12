@@ -1,0 +1,16 @@
+{
+  "source": "Standing Idle (1).fbx",
+  "preservedFile": "ArtSource/Animations/StandingIdle.fbx.gz",
+  "sourceSha256": "b59749cecb378f835918d0ed801541edfca6aae09d4e4736ad52b2a337ec36c3",
+  "sourceRole": "user-supplied Mixamo starting pose, retargeted from first animated frame",
+  "sourceMapping": "ArtSource/Animations/mixamo-standing-idle-report.json",
+  "provider": "Adobe Mixamo",
+  "license": "Mixamo terms; not CC0",
+  "officialUsageFAQ": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html",
+  "FAQUpdated": "2021-09-14",
+  "checked": "2026-10-12",
+  "providerUsageStatementVerified": true,
+  "usageSummary": "Adobe's official FAQ permits royalty-free use of characters and animations in personal, commercial and nonprofit projects, including video games.",
+  "personalDownloadReceiptArchived": false,
+  "sourceVerification": "user-supplied file, Mixamo action name and original SHA-256 retained; an individual download receipt has not been recovered"
+}
