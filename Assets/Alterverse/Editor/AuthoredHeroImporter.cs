@@ -15,7 +15,7 @@ namespace Alterverse.EditorTools
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
         // Version 19 restores original material imports after removing graphics addons.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 20;
+        public override uint GetVersion() => 21;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -62,6 +62,20 @@ namespace Alterverse.EditorTools
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) return;
             Color color = material.HasProperty("_Color") ? material.GetColor("_Color") : material.color;
+            if (Path.GetFileNameWithoutExtension(assetPath) == "Veyr")
+            {
+                // Stable authored palette IDs survive FBX shader-node differences.
+                string palette = material.name.Split(\' \')[0];
+                switch (palette)
+                {
+                    case "fabric": color = new Color(23f/255f,32f/255f,43f/255f,1); break;
+                    case "metal": color = new Color(64f/255f,77f/255f,96f/255f,1); break;
+                    case "edge": color = new Color(128f/255f,144f/255f,165f/255f,1); break;
+                    case "energy": color = new Color(173f/255f,86f/255f,1,1); break;
+                    case "skin": color = new Color(146f/255f,117f/255f,103f/255f,1); break;
+                    case "black": color = new Color(9f/255f,14f/255f,24f/255f,1); break;
+                }
+            }
             material.shader = shader;
             material.SetColor("_BaseColor", color);
             string name = material.name.ToLowerInvariant();

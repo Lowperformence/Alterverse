@@ -56,12 +56,19 @@ arms=[o for o in bpy.data.objects if o.type=='ARMATURE'];meshes=[o for o in bpy.
 for ob in meshes:
  for v in ob.data.vertices:assert v.groups and abs(sum(g.weight for g in v.groups)-1)<1e-5
 names={a.name.split('|')[-1] for a in bpy.data.actions};assert {'Idle','Run','Attack','Skill0','Skill1','Skill2','Ultimate','Hit','Death'}<=names,names
-report={'Blender':bpy.app.version_string,'fbxReimport':True,'bones':19,'meshes':[o.name for o in meshes],'clips':sorted(names),'weightsNormalized':True,'UnityAndroid':'not executed','status':'native model validated; engine/device acceptance pending'}
+# FBX material import can omit shader-node colors: restore the authored palette by stable material ID.
+for m in bpy.data.materials:
+ key=m.name.split(' ')[0]
+ if key not in s['colors']:continue
+ c=s['colors'][key];rgb=tuple(int(c[i:i+2],16)/255 for i in (1,3,5));m.diffuse_color=(*rgb,1);m.use_nodes=True;node=m.node_tree.nodes.get('Principled BSDF');node.inputs['Base Color'].default_value=(*rgb,1);node.inputs['Metallic'].default_value=.65 if key in ['metal','edge'] else 0;node.inputs['Roughness'].default_value=.3 if key in ['metal','edge'] else .65
+ if key=='energy':node.inputs['Emission Color'].default_value=(*rgb,1);node.inputs['Emission Strength'].default_value=2
+ assert max(abs(node.inputs['Base Color'].default_value[i]-rgb[i]) for i in range(3))<1e-5
+report={'paletteRestoredByMaterialId':True,'Blender':bpy.app.version_string,'fbxReimport':True,'bones':19,'meshes':[o.name for o in meshes],'clips':sorted(names),'weightsNormalized':True,'UnityAndroid':'not executed','status':'native model validated; engine/device acceptance pending'}
 (O/'native-validation.json').write_text(json.dumps(report,indent=2))
 # Native render of actual geometry, rather than a separately imagined illustration.
 scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.samples=16;scene.cycles.device='CPU';scene.render.resolution_x=900;scene.render.resolution_y=1100;scene.render.resolution_percentage=100;scene.world=bpy.data.worlds.new('Studio World');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.18,.18,.18,1)
 from mathutils import Vector
-for pos,power,size in [((3,-4,5),1300,4),((-3,-2,3),900,3),((0,3,4),1400,3)]:
+for pos,power,size in [((3,-4,5),450,4),((-3,-2,3),250,3),((0,3,4),500,3)]:
  d=bpy.data.lights.new('Studio','AREA');d.energy=power;d.shape='DISK';d.size=size;o=bpy.data.objects.new('Studio',d);scene.collection.objects.link(o);o.location=pos;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()
 camdata=bpy.data.cameras.new('Camera');cam=bpy.data.objects.new('Camera',camdata);scene.collection.objects.link(cam);scene.camera=cam;camdata.type='ORTHO';camdata.ortho_scale=2.35
 for name,pos in [('front',(2,-5,2.4)),('back',(-2,5,2.4))]:
