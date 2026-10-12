@@ -82,11 +82,12 @@ namespace Alterverse.Characters
         internal bool CanReleasePresentedHit(int slot,Health target)
             =>identity.Hero!=HeroId.Nerok||slot!=0||SharkSight(target);
 
-        internal void ResolveSharkHookHit(Health target,Vector3 launchOrigin)
+        internal void ResolveSharkHookHit(Health target)
         {
-            // Delivery calls this only after an actual anchor collision. Pull begins on contact.
-            // Released shots survive caster stun; walls still block the pull path.
-            if(!HeroCombatRules.Enemy(gameObject,target)||!SharkSightFrom(launchOrigin,target))return;
+            // The delivery sweep already confirmed projectile contact after wall clipping.
+            // A second ray from the old launch point to the target's newer position
+            // incorrectly invalidates valid hits. The pull still checks current LOS.
+            if(!HeroCombatRules.Enemy(gameObject,target))return;
             float before=target.Current+target.Shield;
             HeroCombatRules.Damage(gameObject,target,kit.Q.Power);
             if(target.Current+target.Shield>=before)return;

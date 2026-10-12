@@ -80,6 +80,42 @@ namespace Alterverse.EditorChecks
                     Check(ally.Current+ally.Shield>=allyBefore,hero+" harmed ally");
                     ClearUnits();yield return null;
                 }
+                // The hook retains a legitimate target capture through windup and must
+                // still hit/pull after a lateral movement before launch.
+                GameObject nerok=Hero(HeroId.Nerok,0,new Vector3(0,80,0));
+                nerok.transform.rotation=Quaternion.LookRotation(Vector3.right);
+                Health runner=Hero(HeroId.Nyra,1,new Vector3(5,80,0)).GetComponent<Health>();
+                var nerokCast=nerok.GetComponent<HeroAbilityExecution>();
+                float runnerHealth=runner.Current+runner.Shield;
+                Check(nerokCast.TryCastAimed(0,new AimPose(Vector3.right,runner.transform.position,runner,true)),
+                    "Nerok captured hook rejects cast");
+                yield return new WaitForSeconds(.15f);
+                runner.transform.position+=Vector3.forward*1.2f;
+                yield return new WaitForSeconds(1.1f);
+                Check(runner.Current+runner.Shield<runnerHealth,"Nerok hook missed target moving during windup");
+                Check(HeroCombatRules.Distance(nerok.transform.position,runner.transform.position)<3.5f,
+                    "Nerok confirmed hook failed to pull");
+                ClearUnits();yield return null;
+
+                // A solid wall must still prevent anchor contact and damage.
+                nerok=Hero(HeroId.Nerok,0,new Vector3(0,80,0));
+                runner=Hero(HeroId.Nyra,1,new Vector3(5,80,0)).GetComponent<Health>();
+                GameObject wall=GameObject.CreatePrimitive(PrimitiveType.Cube);
+                wall.name="NerokHookBlockingWall";
+                wall.layer=GameplayCollision.Structures;
+                wall.transform.position=new Vector3(2.5f,80.5f,0);
+                wall.transform.localScale=new Vector3(.7f,3f,3f);
+                Physics.SyncTransforms();
+                runnerHealth=runner.Current+runner.Shield;
+                Check(nerok.GetComponent<HeroAbilityExecution>().TryCastAimed(0,
+                    new AimPose(Vector3.right,runner.transform.position,runner,true)),
+                    "Nerok blocked shot rejected cast");
+                yield return new WaitForSeconds(1f);
+                Check(Mathf.Approximately(runner.Current+runner.Shield,runnerHealth),
+                    "Nerok anchor penetrated a wall");
+                Destroy(wall);
+                ClearUnits();yield return null;
+
                 GameObject mage=Hero(HeroId.Elyra,0,new Vector3(0,80,0));
                 Health victim=Hero(HeroId.Nyra,1,new Vector3(2,83,0)).GetComponent<Health>();
                 var cast=mage.GetComponent<HeroAbilityExecution>();

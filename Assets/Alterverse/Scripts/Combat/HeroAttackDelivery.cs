@@ -87,15 +87,21 @@ namespace Alterverse.Combat
                 HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
             if (slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null &&
                 (!HeroCombatRules.Enemy(gameObject, pose.Target) || HeroCombatRules.TargetDistance(transform.position, pose.Target) > spec.castRange)) return false;
+            bool hook = identity.Hero == HeroId.Nerok && slot == 0;
+            // Do not blindly trust client-provided targets. A real in-cone capture
+            // permits one aim correction at launch, not homing during flight.
+            bool capturedHook = hook && pose.HasAimPoint && HeroCombatRules.Enemy(gameObject, pose.Target) &&
+                HeroCombatRules.TargetDistance(transform.position, pose.Target) <= spec.castRange &&
+                Vector3.Angle(pose.Direction, AimGeometry.Flat(pose.Target.transform.position - transform.position)) <= spec.coneAngle * .5f;
             for (int i = 0; i < pending.Length; i++)
             {
                 if (pending[i].Active) continue;
                 pending[i] = new Pending { Active = true, Basic = slot < 0, Slot = slot, Damage = damage,
                     TargetedBasic = slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null,
-                    Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
+                    Execution = execution, Volley = volley, Hook = hook,
                     Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
                     Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
-                    Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
+                    Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic || capturedHook ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
                 if (slot < 0)
@@ -221,7 +227,7 @@ namespace Alterverse.Combat
         }
         private void Impact(Pending p, Health target)
         {
-            if (p.Hook) p.Execution.ResolveSharkHookHit(target, p.LaunchOrigin);
+            if (p.Hook) p.Execution.ResolveSharkHookHit(target);
             else if (p.Basic) HeroCombatRules.ResolveBasicHit(gameObject, target, p.Damage);
             else p.Execution.ResolvePresentedHit(p.Slot, target, p.Volley);
         }
@@ -273,6 +279,23 @@ namespace Alterverse.Combat
                         p.Point = p.Target.transform.position;
                         p.HasAimPoint = true;
                         FaceBasicTarget(p, true);
+                    }
+                    // Target capture can go stale during the 0.30s hook windup.
+                    // Refresh it once at release, with bounded velocity lead. The actual
+                    // projectile still travels straight and stops at walls.
+                    if (p.Hook && HeroCombatRules.Enemy(gameObject, p.Target) &&
+                        HeroCombatRules.TargetDistance(p.LaunchOrigin, p.Target) <= p.Spec.castRange)
+                    {
+                        Vector3 toward = AimGeometry.Flat(p.Target.transform.position - p.LaunchOrigin);
+                        if (toward.sqrMagnitude > .0001f &&
+                            Vector3.Angle(p.Direction, toward) <= p.Spec.coneAngle * .5f + 10f)
+                        {
+                            HeroLocomotion targetBody = p.Target.GetComponent<HeroLocomotion>();
+                            Vector3 velocity = targetBody != null ? targetBody.Velocity : Vector3.zero;
+                            p.Point = HeroAimPrediction.Point(p.LaunchOrigin, p.Target.transform.position, velocity,
+                                toward.magnitude / p.Spec.projectileSpeed, .65f, p.Spec.castRange, false);
+                            p.HasAimPoint = true;
+                        }
                     }
                     // Rebase melee as well: strafing during a longer preparation must not rotate
                     // the captured stationary point outside a cone with an obsolete origin.

@@ -71,9 +71,11 @@ namespace Alterverse.Combat
                 point = target.transform.position;
             bool captured = Spec.targetingMode == TargetingMode.Cone && target != null;
             if (captured) point = target.transform.position;
+            bool capturedHook = GetComponent<HeroIdentity>()?.Hero == HeroId.Nerok &&
+                Spec.aimType == AimType.Projectile && Spec.targetingMode == TargetingMode.Cone;
             Pose = new AimPose(direction, AimGeometry.ClampPoint(transform.position, point, Spec.castRange),
                 Spec.targetingMode == TargetingMode.Ally || Spec.targetingMode == TargetingMode.Homing ||
-                Spec.aimType==AimType.Dash&&Spec.targetingMode==TargetingMode.Cone ? target : null, captured);
+                Spec.aimType==AimType.Dash&&Spec.targetingMode==TargetingMode.Cone || capturedHook ? target : null, captured);
         }
         public bool Release()
         {

@@ -128,8 +128,11 @@ namespace Alterverse.Combat
             bool captured = spec.targetingMode == TargetingMode.Cone && target != null;
             if (captured) point = ClampPoint(actor.transform.position, target.transform.position, spec.castRange);
             if (spec.aimType == AimType.SelfArea || spec.aimType == AimType.Self) point = actor.transform.position;
+            // Keep Nerok's captured hook target through its windup; flight remains a straight skillshot.
+            bool capturedHook = actor.GetComponent<HeroIdentity>()?.Hero == HeroId.Nerok &&
+                spec.aimType == AimType.Projectile && spec.targetingMode == TargetingMode.Cone;
             return new AimPose(direction, point, spec.targetingMode == TargetingMode.Ally || spec.targetingMode == TargetingMode.Homing ||
-                spec.aimType==AimType.Dash&&spec.targetingMode==TargetingMode.Cone ? target : null, captured);
+                spec.aimType==AimType.Dash&&spec.targetingMode==TargetingMode.Cone || capturedHook ? target : null, captured);
         }
     }
 }
