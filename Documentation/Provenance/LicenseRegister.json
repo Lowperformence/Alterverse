@@ -230,10 +230,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Rook; raw source SHA-256 b998cbcd8c89b188380eaeb532d31539edd6b2e3ce22a23175ff1b91c40ae9e9. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -244,10 +245,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Mira; raw source SHA-256 91037a5a859e90e1255757f9127782e661a764ff20a2a042bfb95d7b8e686734. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -258,10 +260,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Elyra; raw source SHA-256 6097c4b9350beb3f6af7cc078bc81c0dd28ba381315eca066063a1cf85507db2. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -272,10 +275,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Nyra; raw source SHA-256 32fe8e4b6f40d44ab78b5599da01450ec44601fd4259821dcef5c258bec4bdd1. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -286,10 +290,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Kaelon; raw source SHA-256 d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -300,10 +305,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Traveler; raw source SHA-256 d1eb06ceff0c8e6475cb7cdda9d8c1f379855656a2491a4ce8718b05572a4593. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -314,10 +320,11 @@
       "sourceUrl": "",
       "evidence": [
         "Tools/Audio/selected-ultimates-validation.json",
-        "Tools/Audio/import_selected_ultimates.py"
+        "Tools/Audio/import_selected_ultimates.py",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json"
       ],
       "checkedOn": "2026-10-12",
-      "status": "open license gap; exact original digest recorded",
+      "status": "historical-source unresolved; active Ultimate_Selected replaced with archived CC0 sources on 2026-10-12",
       "notes": "Hero Veyr; raw source SHA-256 a57a2611ad4484d1934d71b7a7a911cace8a0a91d1792f645f9d8199d65d507d. File hashes and successful audio conversion do not grant rights. Kaelon/Traveler originals have identical digests."
     },
     {
@@ -745,6 +752,71 @@
       "checkedOn": "2026-10-12",
       "status": "open provenance gap",
       "notes": "An upload or project commit is not by itself a license grant. Keep generated concepts dated separately from historical references."
+    },
+    {
+      "id": "ultimate-replacement-1",
+      "title": "Sci-Fi Sounds",
+      "creator": "Kenney",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/sci-fi-sounds",
+      "status": "provider declaration checked; downloaded originals archived and hashed",
+      "checkedOn": "2026-10-12",
+      "evidence": [
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/README.md"
+      ]
+    },
+    {
+      "id": "ultimate-replacement-2",
+      "title": "60 CC0 Sci-Fi SFX",
+      "creator": "rubberduck",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/node/97882",
+      "status": "provider declaration checked; downloaded originals archived and hashed",
+      "checkedOn": "2026-10-12",
+      "evidence": [
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/README.md"
+      ]
+    },
+    {
+      "id": "ultimate-replacement-3",
+      "title": "Spell sounds",
+      "creator": "Augmentality (Brandon Morris), submitted by HaelDB",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/spell-sounds",
+      "status": "provider declaration checked; downloaded originals archived and hashed",
+      "checkedOn": "2026-10-12",
+      "evidence": [
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/README.md"
+      ]
+    },
+    {
+      "id": "ultimate-replacement-4",
+      "title": "Magic Spell SFX",
+      "creator": "JaggedStone",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/magic-spell-sfx",
+      "status": "provider declaration checked; downloaded originals archived and hashed",
+      "checkedOn": "2026-10-12",
+      "evidence": [
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/README.md"
+      ]
+    },
+    {
+      "id": "ultimate-replacement-5",
+      "title": "Teleport Spell",
+      "creator": "Ogrebane",
+      "license": "CC0-1.0",
+      "sourceUrl": "https://opengameart.org/content/teleport-spell",
+      "status": "provider declaration checked; downloaded originals archived and hashed",
+      "checkedOn": "2026-10-12",
+      "evidence": [
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+        "ArtSource/Audio/UltimateReplacements/2026-10-12/README.md"
+      ]
     }
   ]
 }

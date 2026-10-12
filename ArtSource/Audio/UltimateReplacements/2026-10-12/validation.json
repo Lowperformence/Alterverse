@@ -1,0 +1,293 @@
+{
+  "date": "2026-10-12",
+  "status": "offline-validated replacement revision; Unity/Android and subjective listening not run",
+  "oldAudioUsedAsSample": false,
+  "sourceManifest": "ArtSource/Audio/UltimateReplacements/2026-10-12/sources.json",
+  "generatorSha256": "36fbbb60500e1d4784afc49d827f141809ec81a7016af4f76158fd26b05fe576",
+  "ffmpegVersion": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "clips": [
+    {
+      "hero": "Rook",
+      "name": "Brakk-Orun",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Brakk-Orun.mp3",
+      "sources": [
+        "explosionCrunch_004.ogg",
+        "laserLarge_001.ogg"
+      ],
+      "processing": [
+        {
+          "source": "laserLarge_001.ogg",
+          "start": 0,
+          "level": 0.32,
+          "trimStart": 0,
+          "trimLength": 0.6,
+          "atempo": 1
+        },
+        {
+          "source": "explosionCrunch_004.ogg",
+          "start": 0.55,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 1.45,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -23.053189010928364,
+      "duration": 2.0,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -3.2402603660422926,
+      "truePeakDbtp": -3.21,
+      "integratedLufs": -19.04,
+      "sha256": "224e3606a4d0f24ed56648dc3a83ce04d8043319f2c043c2089af9c67a05ac71"
+    },
+    {
+      "hero": "Mira",
+      "name": "Tahla-Venn",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Tahla-Venn.mp3",
+      "sources": [
+        "healing.ogg",
+        "magical_1.ogg"
+      ],
+      "processing": [
+        {
+          "source": "magical_1.ogg",
+          "start": 0,
+          "level": 0.22,
+          "trimStart": 0,
+          "trimLength": 2.8,
+          "atempo": 1
+        },
+        {
+          "source": "healing.ogg",
+          "start": 0.48,
+          "level": 1,
+          "trimStart": 19.85,
+          "trimLength": 1.85,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -22.823189010928363,
+      "duration": 3.7539909297052154,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -4.619430530343876,
+      "truePeakDbtp": -4.62,
+      "integratedLufs": -18.81,
+      "sha256": "2bbdebe7512d91b10888e2ce40cfdede457170908bd11ceb1342c9afab7d6cdc"
+    },
+    {
+      "hero": "Elyra",
+      "name": "Ione-Vaska",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Ione-Vaska.mp3",
+      "sources": [
+        "spaceEngineLow_000.ogg"
+      ],
+      "processing": [
+        {
+          "source": "spaceEngineLow_000.ogg",
+          "start": 0,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 3.46943,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -23.023189010928366,
+      "duration": 3.4694331065759636,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -12.951729588585676,
+      "truePeakDbtp": -12.95,
+      "integratedLufs": -19.01,
+      "sha256": "3c856d7c48b05608be6f08e5ec10d86bb17a8dd602de38411d066c488418a40d"
+    },
+    {
+      "hero": "Nyra",
+      "name": "Sivra-Quell",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Sivra-Quell.mp3",
+      "sources": [
+        "laserLarge_001.ogg",
+        "spaceEngineLarge_000.ogg"
+      ],
+      "processing": [
+        {
+          "source": "spaceEngineLarge_000.ogg",
+          "start": 0,
+          "level": 0.38,
+          "trimStart": 0,
+          "trimLength": 5,
+          "atempo": 1
+        },
+        {
+          "source": "laserLarge_001.ogg",
+          "start": 0.6,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 0.72,
+          "atempo": 1
+        },
+        {
+          "source": "laserLarge_001.ogg",
+          "start": 0.78,
+          "level": 0.68,
+          "trimStart": 0,
+          "trimLength": 0.72,
+          "atempo": 1
+        },
+        {
+          "source": "laserLarge_001.ogg",
+          "start": 0.96,
+          "level": 0.48,
+          "trimStart": 0,
+          "trimLength": 0.72,
+          "atempo": 1
+        },
+        {
+          "source": "laserLarge_001.ogg",
+          "start": 1.14,
+          "level": 0.32,
+          "trimStart": 0,
+          "trimLength": 0.72,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -22.993189010928365,
+      "duration": 6.036485260770975,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -2.9454452446029173,
+      "truePeakDbtp": -2.94,
+      "integratedLufs": -18.98,
+      "sha256": "f0cd2765d1dceec0b394a3559d723f3e367eebba922cef89e4c293e8bb1e12b3"
+    },
+    {
+      "hero": "Kaelon",
+      "name": "Auren-Kest",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Auren-Kest.mp3",
+      "sources": [
+        "explosionCrunch_001.ogg",
+        "lowFrequency_explosion_000.ogg"
+      ],
+      "processing": [
+        {
+          "source": "explosionCrunch_001.ogg",
+          "start": 0,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 1.36,
+          "atempo": 1
+        },
+        {
+          "source": "lowFrequency_explosion_000.ogg",
+          "start": 0,
+          "level": 0.7,
+          "trimStart": 0,
+          "trimLength": 2,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -22.993189010928365,
+      "duration": 2.7125850340136055,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -7.004155660977268,
+      "truePeakDbtp": -6.98,
+      "integratedLufs": -18.98,
+      "sha256": "1a4af0828c8117aa3ece82071830241f14bd375e65cd6d9e1d22b77e9adca6ca"
+    },
+    {
+      "hero": "Traveler",
+      "name": "The-Traveler",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/The-Traveler.mp3",
+      "sources": [
+        "explosionCrunch_001.ogg",
+        "lowFrequency_explosion_000.ogg",
+        "spaceEngineLow_000.ogg",
+        "teleport.wav"
+      ],
+      "processing": [
+        {
+          "source": "teleport.wav",
+          "start": 0,
+          "level": 0.6,
+          "trimStart": 0,
+          "trimLength": 1.62,
+          "atempo": 1
+        },
+        {
+          "source": "spaceEngineLow_000.ogg",
+          "start": 0.1,
+          "level": 0.18,
+          "trimStart": 0,
+          "trimLength": 5,
+          "atempo": 1
+        },
+        {
+          "source": "explosionCrunch_001.ogg",
+          "start": 1.05,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 1.36,
+          "atempo": 1
+        },
+        {
+          "source": "lowFrequency_explosion_000.ogg",
+          "start": 1.05,
+          "level": 0.7,
+          "trimStart": 0,
+          "trimLength": 2,
+          "atempo": 1
+        }
+      ],
+      "runtimeGain": 0.756,
+      "outputLufs": -22.89956408997587,
+      "duration": 7.248027210884354,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -4.307402129631638,
+      "truePeakDbtp": -4.24,
+      "integratedLufs": -20.47,
+      "sha256": "60f3aaf683565d330cc38e013adf061fc6b3192794ef8c6a7d767189895ec9cf"
+    },
+    {
+      "hero": "Veyr",
+      "name": "Zhaev-Null",
+      "path": "Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg",
+      "preview": "ArtSource/Audio/UltimateReplacements/2026-10-12/Previews/Zhaev-Null.mp3",
+      "sources": [
+        "sfx_06.ogg"
+      ],
+      "processing": [
+        {
+          "source": "sfx_06.ogg",
+          "start": 0,
+          "level": 1,
+          "trimStart": 0,
+          "trimLength": 2.24,
+          "atempo": 1.429
+        }
+      ],
+      "runtimeGain": 0.63,
+      "outputLufs": -23.013189010928365,
+      "duration": 1.5673469387755101,
+      "channels": 2,
+      "sampleRate": 44100,
+      "peakDbfs": -6.662699947754229,
+      "truePeakDbtp": -6.63,
+      "integratedLufs": -19.0,
+      "sha256": "0ab2bbde6499f23b10549ffb3ebbecb369c5e4c78e66d3779774b018271d0b16"
+    }
+  ]
+}

@@ -22,7 +22,7 @@ Alle neun Konzeptblätter wurden am 12.10.2026 mit der eingebauten ChatGPT-Bildg
 
 ## Belegsammlung
 
-- [Lizenzregister](LicenseRegister.json): 52 Quellen-/Beleggruppen, einschließlich 22 identifizierter Pixabay-Aufnahmen.
+- [Lizenzregister](LicenseRegister.json): 57 Quellen-/Beleggruppen, einschließlich 22 identifizierter Pixabay-Aufnahmen.
 - [Lesbare Lizenzübersicht](LICENSES.md): Anbieter, Lizenz, Quelle, Belege und verbleibende Lücken.
 - [Assetregister](AssetRegister.json): 488 bestehende Mediendateien mit Git-Blob-Prüfsumme und Quellenstatus. Der Status „Zuordnung offen“ ist keine Freigabe.
 - [Repository-Snapshot](RepositorySnapshot.json): eingefrorener Dateibestand des geprüften `dev/vertical-slice`-Commits `3dc8d779893c33ce0826c0cc1fa21eefcf4c294b`.
@@ -38,7 +38,7 @@ Die anatomischen menschlichen Basismodelle sind laut ursprünglichem Builder-REA
 
 ## Was noch offen ist
 
-1. Originalquellen/Lizenzen der sieben generisch benannten Ultimate-Sounds: `brakk ulti.wav`, `heiler ulti.wav`, `ione ulti.wav`, `sivra ulti.wav`, `tank ulti.wav`, `ulti traveler.wav`, `assasinen ulti.mp3`. Die vorhandenen Hashes belegen die Dateizuordnung, keine Rechte. Details: [Ergänzung zur früheren Prüfung](PriorAuditFindings.md).
+1. Historische Originalquellen/Lizenzen der sieben generisch benannten Ultimate-Sounds: `brakk ulti.wav`, `heiler ulti.wav`, `ione ulti.wav`, `sivra ulti.wav`, `tank ulti.wav`, `ulti traveler.wav`, `assasinen ulti.mp3`. Die vorhandenen Hashes belegen die Dateizuordnung, keine Rechte. Die sieben aktuellen Ultimate_Selected-Ressourcen wurden am 12.10.2026 mit archivierten CC0-Downloads ersetzt. [Ersatzclips, Quellen und Hörproben](../../ArtSource/Audio/UltimateReplacements/2026-10-12/README.md). Die historische Quellenlücke wird dadurch nicht rückwirkend geschlossen. Details: [Ergänzung zur früheren Prüfung](PriorAuditFindings.md).
 2. Ursprüngliche Quellen und Nutzungsrechte der früher eingebrachten Helden-Bildreferenzen; mehrere Builder nennen „supplied reference“, ohne die konkrete Bildquelle zu speichern.
 3. Herkunft/Nutzungsbeleg des hochgeladenen `Universe.png` sowie des Menüvideos/Posters und der Branding-Dateien, soweit keine vollständige Generierungsakte vorliegt.
 4. Kontogebundene ursprüngliche Downloadbelege, falls vorhanden, für Mixamo und Pixabay. Öffentliche Anbieter-Lizenzangaben wurden erfasst, aber historische persönliche Downloadnachweise sind nicht vorhanden.
@@ -51,3 +51,4 @@ Die anatomischen menschlichen Basismodelle sind laut ursprünglichem Builder-REA
 Die neuen Konzepte sind gespeichert. Die bisherigen vier Modelländerungen vom 11.10.2026 werden als historische Revision gesichert. Ein abgeschlossenes neues Blender-/FBX-/Runtime-Build wird erst durch das jeweilige neue Export- und Validierungsprotokoll belegt. Ein Konzeptbild oder ein Commit dieser Dokumentation allein bedeutet nicht, dass alle neun Spielmodelle fertig umgebaut oder in Unity/Android geprüft sind.
 
 Die Nachweise werden nicht rückdatiert, und bestehende Quellenlücken werden nicht durch nachträglich erstellte Bilder ersetzt.
+
