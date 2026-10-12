@@ -48,7 +48,9 @@ namespace Alterverse.Match
                 MatchClock.Set(PauseReason.Result, false); MatchClock.Set(PauseReason.Settings, false);
                 MatchClock.Set(PauseReason.Transition, false);
                 if (world != null) Object.Destroy(world);
-                Alterverse.Prototype.PrototypeBootstrap.RestoreTransitionFrame();
+                // Keep the old battlefield/skybox hidden while the menu poster and video warm up.
+                // Gameplay camera visibility is restored by the next arena build, not by menu exit.
+                Alterverse.Prototype.PrototypeBootstrap.PrepareTransitionFrame();
                 MainMenuController.ShowHome();
                 if(!string.IsNullOrEmpty(failureMessage))MainMenuController.ShowLaunchFailure(failureMessage);
                 Leaving = false;
