@@ -92,6 +92,14 @@ for s,k in [(-1,'L'),(1,'R')]:
  prism('Null blade forged core '+k,'weapon','WeaponGrip'+k,outline,.02,.019,'metal')
  prism('Null blade cutting bevel '+k,'weapon','WeaponGrip'+k,[(x+s*.04,.51),(x+s*.15,.43),(x+s*.13,.60),(x+s*.113,.597)],.02,.024,'edge')
  prism('Null blade energy vein '+k,'weapon','WeaponGrip'+k,[(x+s*.002,.738),(x+s*.018,.736),(x+s*.102,.589),(x+s*.096,.559)],.033,.004,'energy')
+# Orient every closed source part outward, including mirrored blade profiles.
+for p in P:
+ volume=0
+ for f in p['faces']:
+  a,b,c=[p['vertices'][i] for i in f]
+  volume+=a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0])
+ assert abs(volume)>1e-10,p['name']
+ if volume<0:p['faces']=[tuple(reversed(f)) for f in p['faces']]
 # Serialize all authored parts; enough to reconstruct every output without an external asset.
 spec={'revision':'Zhaev-original-v1','hero':'Veyr','units':'metres','axes':'X right Y forward Z up','colors':COLORS,'bones':B,'parts':P}
 (O/'parts.json').write_text(json.dumps(spec,separators=(',',':')))
@@ -103,10 +111,10 @@ for p in P:
  obj += ['f '+' '.join(str(i+off) for i in f) for f in p['faces']];off+=len(p['vertices'])
 (O/'Zhaev.obj').write_text('\n'.join(obj)+'\n');(O/'Zhaev.mtl').write_text(mtl)
 # Deterministic projections from exact geometry: front/back/side and exploded part sheets.
-def polys(p,proj,dx=0,dz=0,scale=260):
+def polys(p,proj,dx=0,dz=0,scale=260,depth_axis=1,depth_sign=1):
  v=p['vertices'];items=[]
  for f in p['faces']:
-  points=[proj(v[i]) for i in f];depth=sum(v[i][1] for i in f)/3
+  points=[proj(v[i]) for i in f];depth=depth_sign*sum(v[i][depth_axis] for i in f)/3
   pts=' '.join(f'{x*scale+dx:.2f},{-z*scale+dz:.2f}' for x,z in points)
   items.append((depth,f'<polygon points="{pts}" fill="{COLORS[p["material"]]}" stroke="#080e17" stroke-width=".45"/>'))
  return items
@@ -114,7 +122,7 @@ header='<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1100" viewB
 def title(text,sub):return f'<text x="45" y="50" font-size="30" font-weight="bold">{text}</text><text x="45" y="82" font-size="15">{sub}</text>'
 svg=header+title('ZHAEV NULL / ORIGINAL V1','Geometry-derived orthographic plan | metres | 2026-10-12')
 for label,dx,proj in [('FRONT',300,lambda v:(v[0],v[2])),('BACK',700,lambda v:(-v[0],v[2])),('SIDE',1120,lambda v:(v[1],v[2]))]:
- items=[q for p in P if p['category']!='head' for q in polys(p,proj,dx,920,420)]
+ items=[q for p in P if p['category']!='head' for q in polys(p,proj,dx,920,420,0 if label=='SIDE' else 1,-1 if label=='BACK' else 1)]
  svg+=''.join(q[1] for q in sorted(items,key=lambda q:q[0]))+f'<text x="{dx-40}" y="990" font-size="20">{label}</text>'
 svg+='</g></svg>';(O/'Orthographic.svg').write_text(svg)
 for cat in ['armor','weapon','head','helmet','clothes']:
