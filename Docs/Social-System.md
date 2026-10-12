@@ -23,6 +23,8 @@ Leaders can choose one of their purchased shop icons as a clan image. The server
 
 Members can send text through MY CLAN → CLAN CHAT. The last 50 messages are retained, ordered by server timestamps. Message length is 240 characters and the existing mutation rate limit applies. Retried IDs do not duplicate a retained message. Authors and the leader can delete messages. Only members receive the chat history; clan search and ranking do not expose it. New messages from other devices load through REFRESH; chat is not a push/realtime transport.
 
+The server rejects messages matched by the offline German/English chat rules before storage and masks matched legacy messages and sender names when returning chat history. The existing client displays the rejection and retains the draft for correction. See [Chat-Filter.md](Chat-Filter.md) for rule coverage, source provenance, tests and server activation.
+
 The state response includes explicit `hasClan`, `clanProtocolVersion` and `clanCreationCost` fields. The client also requires a nonempty server-issued clan ID before treating a deserialized clan object as membership, because Unity's inline JSON serializer can materialize null reference fields as empty objects. A fresh account is never assigned to a clan automatically. Client creation is disabled until the backend advertises the 500-Shard protocol, preventing a newer client from using the older free-create endpoint.
 
 ## Hosting and activation

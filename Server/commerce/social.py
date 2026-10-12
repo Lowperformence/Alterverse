@@ -10,6 +10,7 @@ import time
 import unicodedata
 
 from ledger import ITEMS, ProfileConflict
+from chat_filter import require_allowed, visible_name, visible_text
 
 CLAN_CREATION_COST = 500
 MAX_MESSAGES = 50
@@ -165,7 +166,7 @@ class Social:
         messages = []
         if member:
             records = db.execute('SELECT id,account,name,text,created_at FROM social_message WHERE clan=? ORDER BY created_at DESC,id DESC LIMIT ?', (member[0],MAX_MESSAGES)).fetchall()
-            messages = [{'messageId':r[0], 'playerId':self.player(db,r[1])['playerId'], 'name':r[2], 'text':r[3], 'createdAt':r[4]} for r in reversed(records)]
+            messages = [{'messageId':r[0], 'playerId':self.player(db,r[1])['playerId'], 'name':visible_name(r[2]), 'text':visible_text(r[3]), 'createdAt':r[4]} for r in reversed(records)]
         return {'hasClan':member is not None,'clanCreationCost':CLAN_CREATION_COST,'clanProtocolVersion':2,'messages':messages, 'me': self.player(db, account), 'friends': friends, 'incoming': incoming,
                 'outgoing': outgoing, 'blocked': blocked, 'clan': clan, 'role': member[1] if member else '',
                 'applications': applications, 'pendingClans': pending}
@@ -360,6 +361,7 @@ class Social:
             text = text.strip()
             if not 1 <= len(text) <= 240 or any(unicodedata.category(c).startswith('C') for c in text):
                 raise ValueError('Messages need 1–240 printable characters')
+            require_allowed(text)
             old = db.execute('SELECT account,clan,text FROM social_message WHERE id=?',(message_id,)).fetchone()
             if old:
                 if old != (account,identifier,text): raise ValueError('Message ID already bound')

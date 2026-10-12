@@ -10,6 +10,7 @@ from unittest.mock import patch
 from application import CommerceApplication
 from ledger import Ledger
 from social import Social, SocialForbidden, MAX_XP, level_for_xp
+from chat_filter import HIDDEN_MESSAGE, HIDDEN_NAME, REJECTION_MESSAGE
 
 
 class SocialTests(unittest.TestCase):
@@ -332,6 +333,49 @@ class SocialTests(unittest.TestCase):
             self.assertEqual([m['text'] for m in rows],['Message 1','Message 2','Message 3'])
             self.assertEqual([m['createdAt'] for m in rows],sorted(set(m['createdAt'] for m in rows)))
 
+    def test_chat_filter_rejects_before_storage_and_allows_corrected_retry(self):
+        clan = self.create()
+        self.call('b', '/social/clan/join', clanId=clan)
+        message_id = uuid.uuid4().hex
+        for text in ('Du bist ein 1d10t', 'send nudes', 'heil hitler',
+                     'kill yourself', 'f.u.c.k'):
+            with self.subTest(text=text), self.assertRaisesRegex(ValueError, '^Message blocked:'):
+                self.call('a', '/social/clan/message', messageId=message_id,
+                          text=text, filterEnabled=False, moderated=True)
+            self.assertEqual(self.call('b')['messages'], [])
+        for _ in range(2):
+            state = self.call('a', '/social/clan/message', messageId=message_id,
+                              text='GG, well played!')
+        self.assertEqual(len(state['messages']), 1)
+        self.assertEqual(state['messages'][0]['text'], 'GG, well played!')
+
+    def test_chat_filter_hides_retained_abuse_and_sender_without_deleting_history(self):
+        clan = self.create()
+        self.call('b', '/social/clan/join', clanId=clan)
+        message_id = uuid.uuid4().hex
+        raw = (message_id, clan, 'a', 'Hurensohn', 'send nudes', 1000)
+        if hasattr(self.ledger, 'connect'):
+            with self.ledger.connect() as db:
+                db.execute('INSERT INTO social_message VALUES(?,?,?,?,?,?)', raw)
+        else:
+            ref = self.social.collections['social_message'].document(message_id)
+            self.client.data[ref.path] = dict(zip(
+                ('id', 'clan', 'account', 'name', 'text', 'created_at'), raw))
+        restored = self.make_social(self.make_ledger()).dispatch('b', '/social/state', {})
+        message = restored['messages'][0]
+        self.assertEqual(message['text'], HIDDEN_MESSAGE)
+        self.assertEqual(message['name'], HIDDEN_NAME)
+        self.assertEqual(message['messageId'], message_id)
+        self.assertEqual(message['createdAt'], 1000)
+        if hasattr(self.ledger, 'connect'):
+            with self.ledger.connect() as db:
+                self.assertEqual(db.execute('SELECT text FROM social_message WHERE id=?',
+                                            (message_id,)).fetchone()[0], 'send nudes')
+        else:
+            self.assertEqual(self.client.data[ref.path]['text'], 'send nudes')
+        self.call('a', '/social/clan/message/remove', messageId=message_id)
+        self.assertEqual(self.call('b')['messages'], [])
+
     def test_creation_retry_after_leaving_does_not_create_or_charge_again(self):
         revision=self.ledger.wallet('a')['profileRevision']
         data={'name':'Once Only','tag':'ONCE','operationId':uuid.uuid4().hex,'expectedProfileRevision':revision}
@@ -390,6 +434,24 @@ class SocialHttpTests(unittest.TestCase):
         forbidden=self.request('b','/social/clan/kick',{'playerId':c['me']['playerId'],'account':'a'})
         self.assertEqual(forbidden['status'],'403 Forbidden')
         self.assertEqual(self.request('c','/social/state')['body']['social']['clan']['memberCount'],3)
+
+    def test_chat_filter_http_error_and_no_message_written(self):
+        self.app.ledger.save_profile('a', [{'key':'DF_Shards','kind':0,'number':1000}], 0)
+        self.request('a', '/social/clan/create', {
+            'name':'HTTP Clan', 'tag':'HTTP', 'operationId':uuid.uuid4().hex,
+            'expectedProfileRevision':1})
+        message_id = uuid.uuid4().hex
+        rejected = self.request('a', '/social/clan/message', {
+            'messageId':message_id, 'text':'send nudes', 'filterEnabled':False})
+        self.assertEqual(rejected['status'], '400 Bad Request')
+        self.assertFalse(rejected['body']['fulfilled'])
+        self.assertEqual(rejected['body']['message'], REJECTION_MESSAGE)
+        self.assertNotIn('send nudes', json.dumps(rejected['body']))
+        self.assertEqual(self.request('a', '/social/state')['body']['social']['messages'], [])
+        accepted = self.request('a', '/social/clan/message', {
+            'messageId':message_id, 'text':'GG, well played!'})
+        self.assertEqual(accepted['status'], '200 OK')
+        self.assertEqual(len(accepted['body']['social']['messages']), 1)
 
     def test_paid_creation_response_contains_only_callers_wallet_and_conflict_is_409(self):
         self.app.ledger.save_profile('a',[{'key':'DF_Shards','kind':0,'number':700}],0)
