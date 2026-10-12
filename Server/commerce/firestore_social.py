@@ -11,6 +11,8 @@ import json
 import secrets
 import tempfile
 import unicodedata
+from safe_identity import (DESCRIPTIONS, valid_clan_name, valid_clan_tag,
+                           generate_clan_name, generate_clan_tag)
 from pathlib import Path
 from google.cloud import firestore
 from ledger import Ledger
@@ -25,11 +27,10 @@ TABLES = {
     'social_application': ('account','clan'),
     'social_rate': ('account','window','count'),
     'social_creation': ('account','operation_id','clan_id','fingerprint','cost'),
-    'social_message': ('id','clan','account','name','text','created_at'),
 }
 KEYS = {'social_player':('account',),'social_friend':('a','b'),'social_block':('account','target'),
         'social_clan':('id',),'social_member':('account',),'social_application':('account','clan'),
-        'social_rate':('account',),'social_creation':('account','operation_id'),'social_message':('id',)}
+        'social_rate':('account',),'social_creation':('account','operation_id')}
 READ_ROUTES = {'/social/state','/social/players','/social/levels','/social/clans','/social/clan-levels'}
 
 
@@ -50,19 +51,23 @@ class FirestoreSocial:
 
     def sync_wallet(self, account, wallet=None):
         """Read current committed profile, so an older HTTP reply cannot rewind directory XP."""
+        self.ledger.wallet(account)
         @firestore.transactional
         def sync(tx):
             profile = self.ledger.accounts.document(account).get(transaction=tx)
             ref = self.collections['social_player'].document(account)
             snap = ref.get(transaction=tx)
             old = snap.to_dict() if snap.exists else {}
-            values = public_values(self.ledger._data(profile)['profile'])
+            values = public_values(self.ledger._data(profile)['profile'], account)
             row = dict(zip(TABLES['social_player'], (account,old.get('player_id') or secrets.token_hex(10),*values)))
             if row != old:
                 tx.set(ref,row)
         sync(self.client.transaction())
 
     def dispatch(self, account, route, data):
+        if route.startswith(('/social/clan/message', '/social/message')):
+            raise ValueError('Communication is disabled in this version.')
+        self.ledger.wallet(account)
         # Shared rules own input validation and all account-derived authorization.
         @firestore.transactional
         def apply(tx):
@@ -101,8 +106,6 @@ class FirestoreSocial:
                 query('social_application','account',who)
             read('social_rate',account)
             query('social_creation','account',account)
-            message_id=data.get('messageId')
-            if isinstance(message_id,str) and len(message_id)==32: read('social_message',message_id)
             clans = {r['clan'] for r in rows['social_member'].values()}
             identifier = data.get('clanId')
             if isinstance(identifier,str) and len(identifier)==20: clans.add(identifier)
@@ -110,14 +113,12 @@ class FirestoreSocial:
                 read('social_clan',identifier)
                 query('social_member','clan',identifier)
                 query('social_application','clan',identifier)
-                query('social_message','clan',identifier)
             # Applicants and friends need public values, not another account's private profile.
             accounts = set(actors)
             for relation in rows['social_friend'].values(): accounts.update((relation['a'],relation['b']))
             for relation in rows['social_block'].values(): accounts.update((relation['account'],relation['target']))
             for relation in rows['social_member'].values(): accounts.add(relation['account'])
             for relation in rows['social_application'].values(): accounts.add(relation['account'])
-            for message in rows['social_message'].values(): accounts.add(message['account'])
             for who in accounts:
                 read('social_player',who)
                 # Required to enforce one-clan membership when accepting an applicant.
@@ -134,7 +135,7 @@ class FirestoreSocial:
                 snap = ref.get(transaction=tx)
                 unique_refs[unique_id] = (ref,snap.to_dict() if snap.exists else None)
                 return snap.to_dict() if snap.exists else None
-            if route == '/social/clan/create':
+            if route in ('/social/clan/create', '/social/clan/identity'):
                 name,tag = data.get('name'),data.get('tag')
                 if isinstance(name,str) and isinstance(tag,str):
                     for kind,value in [('name',unicodedata.normalize('NFKC',name).strip().casefold()),('tag',tag.upper())]:
@@ -144,6 +145,36 @@ class FirestoreSocial:
                 lock_unique('name',clan['name_search']);lock_unique('tag',clan['tag'])
 
             before = {table:dict(values) for table,values in rows.items()}
+            staged_names = {c['name_search'] for c in rows['social_clan'].values()}
+            staged_tags = {c['tag'] for c in rows['social_clan'].values()}
+            # Lazily migrate legacy clan metadata in the same transaction as its
+            # globally indexed name/tag claims. No public free text survives reads.
+            for identifier, original in list(rows['social_clan'].items()):
+                clan = dict(original)
+                if not valid_clan_name(clan['name']):
+                    for _ in range(64):
+                        candidate = generate_clan_name()
+                        locked = lock_unique('name', candidate.casefold())
+                        if (not locked or locked['clan'] == identifier) and candidate.casefold() not in staged_names:
+                            staged_names.add(candidate.casefold())
+                            clan['name'] = candidate
+                            clan['name_search'] = candidate.casefold()
+                            break
+                    else:
+                        raise ValueError('Clan name allocation unavailable')
+                if not valid_clan_tag(clan['tag']):
+                    for _ in range(64):
+                        candidate = generate_clan_tag()
+                        locked = lock_unique('tag', candidate)
+                        if (not locked or locked['clan'] == identifier) and candidate not in staged_tags:
+                            staged_tags.add(candidate)
+                            clan['tag'] = candidate
+                            break
+                    else:
+                        raise ValueError('Clan tag allocation unavailable')
+                if clan['description'] not in DESCRIPTIONS:
+                    clan['description'] = DESCRIPTIONS[0]
+                rows['social_clan'][identifier] = clan
             with tempfile.TemporaryDirectory(prefix='df-social-') as directory:
                 ledger = Ledger(Path(directory)/'scope.sqlite3')
                 rules = Social(ledger)
@@ -181,16 +212,21 @@ class FirestoreSocial:
                 for identifier in clans:
                     row = after['social_clan'].get(identifier)
                     if row: tx.set(self.collections['social_clan'].document(identifier),row)
-            for identifier in before['social_clan'].keys()-after['social_clan'].keys():
-                clan = before['social_clan'][identifier]
-                for kind,value in [('name',clan['name_search']),('tag',clan['tag'])]:
-                    unique_id = kind+'-'+hashlib.sha256(value.encode()).hexdigest()
-                    tx.delete(unique_refs[unique_id][0])
-            for identifier in after['social_clan'].keys()-before['social_clan'].keys():
-                clan = after['social_clan'][identifier]
-                for kind,value in [('name',clan['name_search']),('tag',clan['tag'])]:
-                    unique_id = kind+'-'+hashlib.sha256(value.encode()).hexdigest()
-                    tx.set(unique_refs[unique_id][0],{'clan':identifier})
+            for identifier in before['social_clan'].keys() | after['social_clan'].keys():
+                old, new = before['social_clan'].get(identifier), after['social_clan'].get(identifier)
+                for kind, field in (('name', 'name_search'), ('tag', 'tag')):
+                    old_value = old[field] if old else None
+                    new_value = new[field] if new else None
+                    if old_value == new_value:
+                        continue
+                    if old_value is not None:
+                        unique_id = kind+'-'+hashlib.sha256(old_value.encode()).hexdigest()
+                        ref, claim = unique_refs[unique_id]
+                        if claim and claim.get('clan') == identifier:
+                            tx.delete(ref)
+                    if new_value is not None:
+                        unique_id = kind+'-'+hashlib.sha256(new_value.encode()).hexdigest()
+                        tx.set(unique_refs[unique_id][0], {'clan':identifier})
             return result
         return apply(self.client.transaction())
 

@@ -99,10 +99,16 @@ namespace Alterverse.Profile
                 PlayerPrefs.SetString("DF_AccountProfileConflict_" + account, JsonUtility.ToJson(cache));
                 HadConflict = true;
             }
-            if (source.Length == 0 && !pending && !PlayerPrefs.HasKey(CacheKey(account)) &&
+            bool initialIdentityOnly = revision == 0 && Array.TrueForAll(source, e => e.key == "DF_PlayerName");
+            if (initialIdentityOnly && !pending && !PlayerPrefs.HasKey(CacheKey(account)) &&
                 string.IsNullOrEmpty(PlayerPrefs.GetString(ImportKey, "")))
             {
-                source = ExportLocal(); Dirty = source.Length > 0;
+                var merged = new Dictionary<string, Entry>();
+                Entry[] local = ExportLocal();
+                foreach (Entry e in local) merged[e.key] = e;
+                // The initial server identity must not suppress importing local progress.
+                foreach (Entry e in source) merged[e.key] = e;
+                source = new List<Entry>(merged.Values).ToArray(); Dirty = local.Length > 0;
                 PlayerPrefs.SetString(ImportKey, account);
             }
             values.Clear();

@@ -6,10 +6,25 @@ using System.Threading.Tasks;
 using UnityEngine;
 namespace UnityEngine {
  public class Object { public static void Destroy(Object o){} public static void DontDestroyOnLoad(Object o){} public static T FindAnyObjectByType<T>() where T:class=>null; }
- public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public bool isActiveAndEnabled=true; public void StartCoroutine(IEnumerator e){} }
+ public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public bool isActiveAndEnabled=true; public void StartCoroutine(IEnumerator e){} public void StopAllCoroutines(){} }
  public class GameObject:Object { public GameObject(string n=""){} public T AddComponent<T>() where T:new(){var o=new T();typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;} }
  public class TextAsset {public string text;}
- public static class Resources {public static TextAsset AccountConfig, RankedConfig; public static T Load<T>(string s) where T:class=>(s == "RankedAvailability" ? RankedConfig : AccountConfig) as T;}
+ public static class Resources {
+  public static TextAsset AccountConfig, RankedConfig;
+  public static T Load<T>(string s) where T:class => (s=="Social/SafeIdentityCatalog" ? new TextAsset{text=System.IO.File.ReadAllText(Environment.GetEnvironmentVariable("DF_TEST_IDENTITY_CATALOG"))} : s=="Commerce/LegacyProfileKeys" ? null : s=="RankedAvailability" ? RankedConfig : AccountConfig) as T;
+ }
+ public static class PlayerPrefs {
+  static readonly Dictionary<string,object> values=new();
+  public static bool HasKey(string key)=>values.ContainsKey(key);
+  public static string GetString(string key,string fallback="")=>values.TryGetValue(key,out var v)&&v is string s?s:fallback;
+  public static int GetInt(string key,int fallback=0)=>values.TryGetValue(key,out var v)&&v is int n?n:fallback;
+  public static float GetFloat(string key,float fallback=0)=>values.TryGetValue(key,out var v)&&v is float n?n:fallback;
+  public static void SetString(string key,string value)=>values[key]=value;
+  public static void SetInt(string key,int value)=>values[key]=value;
+  public static void SetFloat(string key,float value)=>values[key]=value;
+  public static void DeleteKey(string key)=>values.Remove(key);
+  public static void Save(){}
+ }
  public static class JsonUtility {
 #if MONO_FIXTURE
  public static string ToJson(object o){using var stream=new System.IO.MemoryStream();new System.Runtime.Serialization.Json.DataContractJsonSerializer(o.GetType()).WriteObject(stream,o);return System.Text.Encoding.UTF8.GetString(stream.ToArray());}
@@ -62,7 +77,7 @@ namespace Unity.Netcode {
 namespace Alterverse.AI {public enum BotDifficulty {Easy,Medium,Hard} public static class BotDifficultySettings {public const BotDifficulty OnlineDifficulty=BotDifficulty.Hard;}}
 namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}public static class PlayerHeroSelection {public static HeroId Selected;}}
 namespace Alterverse.Match {public enum ArenaVariant{Moon,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Selected;}public class DimensionsFront {public event Action<int> MatchEnded;}public static class MatchExit {public static Task ReturnToMenuAsync()=>Task.CompletedTask;}}
-namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public static class PlayerProfile {public static string PlayerName="Hero";}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
+namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
 namespace Alterverse.UI {public static class MainMenuController {public static bool IsVisible=true;}public class FrontEndTheme {public static object Background;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
 namespace Alterverse.Multiplayer {
  public class CoopMatchPlan {public string MatchId;public Alterverse.Match.ArenaVariant Arena;public Alterverse.AI.BotDifficulty Difficulty;public MatchSession Session;public int HumanCount;}
@@ -75,4 +90,18 @@ namespace Alterverse.Multiplayer {
  public static class CoopNetworkBootstrap {public static Unity.Netcode.NetworkManager Manager;public static string DirectServerStatus="";public static int Connects,Cancels;public static bool ConnectToDedicatedServer(string s,ushort p){Connects++;return true;}public static void CancelDedicatedConnection(){Cancels++;}}
  public static class EdgegapOnlineFlow {public static Flow Instance;public static void MarkMatchStarted(){}public class Flow {public bool IsSearching;}}
  public static class OnlineMatchRuntime {public static bool Enter(OnlineMatchPlan p)=>true;}
+}
+
+namespace Alterverse.Shop {
+ public static class AvatarInventory {public static bool IsOwned(int id)=>id==0;}
+ public static class FounderEntitlement {public static bool Owned=>false;}
+ public static class FounderPackCatalog {public const string FounderTitle="FOUNDER";}
+ public class PaidShardCommerce {
+  public class Snapshot {public string accountHash;}
+  public static PaidShardCommerce Instance;public bool Ready;public string AccountHash;public int SessionVersion;
+  public System.Threading.Tasks.Task<bool> FlushProfileAsync()=>System.Threading.Tasks.Task.FromResult(true);
+  public bool TryBeginSocialSpend()=>true;
+  public void EndSocialSpend(int session,Snapshot wallet,Alterverse.Profile.AccountProfilePrefs.Entry[] entries){}
+  public void Refresh(){}
+ }
 }

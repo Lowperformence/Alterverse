@@ -22,7 +22,7 @@ namespace Alterverse.UI
         private bool confirmLeave;
         private bool leaving;
         private bool audioDirty;
-        private float master, music, sfx, voice;
+        private float master, music, sfx;
         private Texture2D settingsGearIcon;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -37,7 +37,6 @@ namespace Alterverse.UI
             master = PlayerProfile.MasterVolume;
             music = PlayerProfile.MusicVolume;
             sfx = PlayerProfile.SfxVolume;
-            voice = PlayerProfile.VoiceChatVolume;
         }
 
         private void Update()
@@ -67,7 +66,6 @@ namespace Alterverse.UI
             master = PlayerProfile.MasterVolume;
             music = PlayerProfile.MusicVolume;
             sfx = PlayerProfile.SfxVolume;
-            voice = PlayerProfile.VoiceChatVolume;
             audioDirty = false;
             confirmLeave = false;
             IsOpen = true;
@@ -106,17 +104,13 @@ namespace Alterverse.UI
         {
             if (!audioDirty) return;
             // Saving either preference group flushes all current PlayerPrefs, so persist once here.
-            PlayerProfile.SetAudioVolumes(master, music, sfx, false);
-            PlayerProfile.SetVoiceChatVolume(voice, true);
+            PlayerProfile.SetAudioVolumes(master, music, sfx, true);
             audioDirty = false;
         }
 
         private void ApplyAudioLive()
         {
             PlayerProfile.SetAudioVolumes(master, music, sfx, false);
-            PlayerProfile.SetVoiceChatVolume(voice, false);
-            // This changes incoming Vivox playback only. It never changes microphone gain.
-            CoopVoiceChatService.Instance?.RefreshOutputVolume();
             audioDirty = true;
         }
 
@@ -261,7 +255,7 @@ namespace Alterverse.UI
         {
             FrontEndTheme.Fill(new Rect(0, 0, layout.Width, layout.Height), new Color(.008f, .012f, .02f, .82f));
 
-            // Fit all four audio controls and the leave/resume actions inside a 16:9 mobile safe area.
+            // Fit all three audio controls and the leave/resume actions inside a 16:9 mobile safe area.
             float width = Mathf.Min(720f, layout.Width - 28f);
             float height = Mathf.Min(520f, layout.Height - 16f);
             Rect panel = new Rect((layout.Width - width) * .5f, (layout.Height - height) * .5f, width, height);
@@ -274,17 +268,13 @@ namespace Alterverse.UI
                 : "MATCH PAUSED";
             theme.Label(new Rect(panel.x + 24, panel.y + 50, panel.width - 48, 22), state, theme.Small, true);
 
-            float previousMaster = master, previousMusic = music, previousSfx = sfx, previousVoice = voice;
+            float previousMaster = master, previousMusic = music, previousSfx = sfx;
             const float rowStart = 78f;
             const float rowStep = 64f;
             DrawVolume(new Rect(panel.x + 24, panel.y + rowStart, panel.width - 48, 60), "Master Volume", ref master);
             DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep, panel.width - 48, 60), "Music", ref music);
             DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 2f, panel.width - 48, 60), "Sound Effects", ref sfx);
-            DrawVolume(new Rect(panel.x + 24, panel.y + rowStart + rowStep * 3f, panel.width - 48, 60), "Voice Chat Volume", ref voice);
-            theme.Label(new Rect(panel.x + 88, panel.y + rowStart + rowStep * 4f - 3f, panel.width - 176, 20),
-                "Incoming co-op voices only • microphone level remains unchanged", theme.Small, true);
-
-            if (previousMaster != master || previousMusic != music || previousSfx != sfx || previousVoice != voice)
+            if (previousMaster != master || previousMusic != music || previousSfx != sfx)
                 ApplyAudioLive();
 
             if (!confirmLeave)

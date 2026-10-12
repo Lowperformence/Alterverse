@@ -2,9 +2,9 @@ name: Ranked and account regression
 on:
   push:
     branches: ['dev/vertical-slice']
-    paths: ['Assets/Alterverse/Scripts/**', 'Server/**', 'Tools/Ranked/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', '.github/workflows/ranked-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Scripts/**', 'Server/**', 'Tools/Ranked/**', '.github/workflows/ranked-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Social/**', 'Server/**', 'Tools/Ranked/**', '.github/workflows/ranked-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -20,3 +20,4 @@ jobs:
       - run: python -m unittest discover -s Server/commerce -q
       - run: python -m unittest discover -s Tools/Ranked -p 'test_*.py' -q
       - run: python Tools/Ranked/Regression/run.py --dotnet-root "$DOTNET_ROOT"
+

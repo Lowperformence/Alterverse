@@ -9,6 +9,7 @@ partial class Regression {
  static void Check(bool b,string message){checks++;if(!b)throw new Exception(message);}
  static void Rejected(Action a,string message){bool rejected=false;try{a();}catch(InvalidOperationException){rejected=true;}Check(rejected,message);}
  static void Main(){
+  IdentityCases();
   var players=new List<OnlineMatchPlan.DedicatedMember>();
   for(int i=0;i<10;i++) players.Add(new(){PlayerId="t"+i,DisplayName="Hero"+i,TeamId=i<5?"red":"blue",Hero=HeroId.Veyr});
   var plan=OnlineMatchPlan.BuildDedicated("match",ArenaVariant.Moon,BotDifficulty.Hard,players,SessionMode.OnlineRanked);
@@ -29,6 +30,6 @@ partial class Regression {
   var solo=OnlineMatchPlan.BuildDedicated("casual",ArenaVariant.Moon,BotDifficulty.Hard,players.GetRange(0,1));
   Check(solo.HumanCount==1&&solo.Session.IsFull,"casual bot fill preserved");
   FailureCases().GetAwaiter().GetResult();
-  Console.WriteLine(checks+" ranked C# checks passed; engine/network substitutes, not a Unity build.");
+  Console.WriteLine(checks+" C# identity and ranked checks passed; engine/network substitutes, not a Unity build.");
  }
 }

@@ -16,13 +16,13 @@ if not a.dotnet_root and not (a.mono_root and a.roslyn):
 here=Path(__file__).resolve().parent
 root=here.parents[2]
 source=root/'Assets/Alterverse/Scripts'
-names=['Multiplayer/MatchSession.cs','Multiplayer/OnlineMatchPlan.cs','Multiplayer/CoopPlanHandshake.cs',
+names=['Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/AccountProfilePrefs.cs','Profile/SocialService.cs','Multiplayer/MatchSession.cs','Multiplayer/OnlineMatchPlan.cs','Multiplayer/CoopPlanHandshake.cs',
        'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
        'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     if not a.dotnet_root:
         runtime=a.mono_root/'usr/lib/mono/4.5'
-        env=dict(os.environ, MONO_PATH=str(runtime)+':'+str(runtime/'Facades'),
+        env=dict(os.environ, DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json'), MONO_PATH=str(runtime)+':'+str(runtime/'Facades'),
                  MONO_CFG_DIR=str(a.mono_root/'etc'),
                  LD_LIBRARY_PATH=str(a.mono_root/'usr/lib')+':'+str(a.mono_root/'usr/lib/x86_64-linux-gnu'))
         output=Path(directory)/'RankedRegression.exe'
@@ -31,7 +31,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
             '-r:'+str(runtime/'System.dll'),'-r:'+str(runtime/'System.Core.dll'),
             '-r:'+str(runtime/'System.Runtime.Serialization.dll'),
             '-r:'+str(runtime/'System.Xml.dll'),
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),
+            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),
             *[str(source/name) for name in names]],env=env,check=True)
         subprocess.run([str(a.mono_root/'usr/bin/mono-sgen'),str(output)],env=env,check=True)
         raise SystemExit(0)
@@ -40,8 +40,8 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     output=Path(directory)/'RankedRegression.dll'
     response=Path(directory)/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0067','-target:exe','-langversion:9','-out:'+str(output),
-        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),
+        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),
         *[str(source/name) for name in names]]))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
-    subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],check=True)
+    subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],env=dict(os.environ,DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json')),check=True)

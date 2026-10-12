@@ -7,6 +7,7 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 import sqlite3
 from pathlib import Path
+from safe_identity import NAME_KEY, profile_name, reserve_player_name, normalize_sqlite_profile
 
 CATALOG_PATH = Path(__file__).resolve().parents[2] / 'Assets/Alterverse/Resources/Commerce/ShardCatalog.json'
 CATALOG = json.loads(CATALOG_PATH.read_text())
@@ -49,6 +50,7 @@ def validate_profile(entries):
             value['real'] = real
         else: raise ValueError('Invalid profile type')
         if key == 'DF_Shards' and kind != 0: raise ValueError('Invalid earned balance type')
+        if key == NAME_KEY and kind != 1: raise ValueError('Invalid player name type')
         if key in ('DF_LoginStreakDay_v1', 'DF_LoginStreakIndex_v1', 'DF_DailyQuestWonMaps_v1'):
             if kind != 0: raise ValueError('Invalid daily progression type')
             if key == 'DF_LoginStreakIndex_v1' and not 1 <= number <= 7:
@@ -88,6 +90,9 @@ class Ledger:
                 local_contribution INTEGER NOT NULL, kind TEXT NOT NULL,
                 PRIMARY KEY(account,id)
             );
+            CREATE TABLE IF NOT EXISTS safe_player_name (
+                account TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE
+            );
             ''')
     def connect(self):
         db = sqlite3.connect(self.path, timeout=15)
@@ -100,6 +105,7 @@ class Ledger:
         db.execute('INSERT OR IGNORE INTO profile(account) VALUES (?)', (account,))
     @staticmethod
     def snapshot(db, account):
+        normalize_sqlite_profile(db, account)
         balance, revision = db.execute('SELECT balance,revision FROM wallet WHERE account=?', (account,)).fetchone()
         owned = [r[0] for r in db.execute('SELECT sku FROM cosmetic WHERE account=?', (account,))]
         profile_revision, profile_data = db.execute('SELECT revision,data FROM profile WHERE account=?', (account,)).fetchone()
@@ -156,6 +162,8 @@ class Ledger:
             if current[0] != expected_revision: raise ProfileConflict()
             by_key = {e['key']:e for e in entries}
             saved = {e['key']:e for e in json.loads(current[1])}
+            name = reserve_player_name(db, account, profile_name(entries))
+            by_key[NAME_KEY] = {'key': NAME_KEY, 'kind': 1, 'text': name}
             daily_day, daily_index = 'DF_LoginStreakDay_v1', 'DF_LoginStreakIndex_v1'
             if daily_day not in by_key and daily_index not in by_key:
                 for key in (daily_day, daily_index):

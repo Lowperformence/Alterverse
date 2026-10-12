@@ -9,6 +9,8 @@ import json
 from datetime import datetime, timezone
 
 from google.cloud import firestore
+from safe_identity import (NAME_KEY, profile_name, with_player_name, valid_player_name,
+                           generate_player_name, fallback_player_name)
 
 from ledger import (
     CONSUMABLES,
@@ -29,6 +31,31 @@ class FirestoreLedger:
         prefix = namespace.strip().lower().replace("/", "-")
         self.accounts = self.client.collection(prefix + "-accounts")
         self.purchases = self.client.collection(prefix + "-purchase-tokens")
+        self.name_claims = self.client.collection(prefix + "-player-names")
+
+    def _reserve_name(self, tx, account, data, preferred=None):
+        old = profile_name(data['profile'])
+        candidate = preferred if valid_player_name(preferred) else old if valid_player_name(old) else fallback_player_name(account)
+        for _ in range(64):
+            ref = self.name_claims.document(candidate)
+            snap = ref.get(transaction=tx)
+            owner = (snap.to_dict() or {}).get('account') if snap.exists else None
+            if owner in (None, account):
+                old_ref = None
+                if valid_player_name(old) and old != candidate:
+                    previous = self.name_claims.document(old)
+                    previous_snap = previous.get(transaction=tx)
+                    if previous_snap.exists and (previous_snap.to_dict() or {}).get('account') == account:
+                        old_ref = previous
+                return candidate, ref, old_ref
+            candidate = generate_player_name(candidate)
+        raise ValueError('Name allocation unavailable; try again')
+
+    @staticmethod
+    def _write_name_claim(tx, account, ref, previous):
+        tx.set(ref, {'account': account})
+        if previous is not None:
+            tx.delete(previous)
 
     @staticmethod
     def _empty():
@@ -78,11 +105,17 @@ class FirestoreLedger:
         @firestore.transactional
         def load(tx):
             snap = ref.get(transaction=tx)
-            if not snap.exists:
-                data = self._empty()
+            data = self._data(snap)
+            name, claim, previous = self._reserve_name(tx, account, data)
+            clean = with_player_name(data['profile'], name)
+            changed = clean != data['profile']
+            if changed:
+                data['profileRevision'] += int(bool(data['profile']))
+                data['profile'] = clean
+            self._write_name_claim(tx, account, claim, previous)
+            if not snap.exists or changed:
                 tx.set(ref, data)
-                return data
-            return self._data(snap)
+            return data
 
         return self._snapshot(account, load(transaction))
 
@@ -96,6 +129,7 @@ class FirestoreLedger:
         quantity = verified.get("quantity", 1)
         if type(quantity) is not int or not 1 <= quantity <= 100:
             raise ValueError("Invalid quantity")
+        self.wallet(account)
         token_id = hashlib.sha256(token.encode("utf-8")).hexdigest()
         purchase_ref = self.purchases.document(token_id)
         account_ref = self.accounts.document(account)
@@ -158,6 +192,8 @@ class FirestoreLedger:
                 raise ProfileConflict()
             by_key = {e["key"]: e for e in entries}
             saved = {e["key"]: e for e in data["profile"]}
+            name, claim, previous = self._reserve_name(tx, account, data, profile_name(entries))
+            by_key[NAME_KEY] = {'key': NAME_KEY, 'kind': 1, 'text': name}
             daily_day, daily_index = "DF_LoginStreakDay_v1", "DF_LoginStreakIndex_v1"
             if daily_day not in by_key and daily_index not in by_key:
                 for key in (daily_day, daily_index):
@@ -176,6 +212,7 @@ class FirestoreLedger:
                     if "Owned" in write["key"] or write["key"] == "DF_BP_BETA01_Premium":
                         by_key[write["key"]] = write
             profile = sorted(by_key.values(), key=lambda e: e["key"])
+            self._write_name_claim(tx, account, claim, previous)
             if json.dumps(profile, separators=(",", ":"), sort_keys=True) != json.dumps(data["profile"], separators=(",", ":"), sort_keys=True):
                 data["profile"] = profile
                 data["profileRevision"] += 1
@@ -194,6 +231,7 @@ class FirestoreLedger:
             raise ValueError("Item is not released")
         if type(expected_revision) is not int or expected_revision < 0:
             raise ValueError("Invalid profile revision")
+        self.wallet(account)
         account_ref = self.accounts.document(account)
         operation_ref = account_ref.collection("operations").document(operation_id)
         transaction = self.client.transaction()
@@ -268,6 +306,7 @@ class FirestoreLedger:
             raise ValueError("Unknown cosmetic")
         if ITEMS[sku].get("available", True) is not True:
             raise ValueError("Item is not released")
+        self.wallet(account)
         account_ref = self.accounts.document(account)
         transaction = self.client.transaction()
 

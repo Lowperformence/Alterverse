@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import Mock
 from ledger import Ledger, ProfileConflict, MAX_BALANCE
 from application import CommerceApplication
+from safe_identity import NAME_KEY, valid_player_name
 
 
 def number(key,value): return {'key':key,'kind':0,'number':value}
@@ -27,7 +28,8 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(profile_value(restored,'DF_AccountXP'),'12345')
         self.assertEqual(profile_value(restored,'DF_BattleItem_2'),2)
         self.assertEqual(profile_value(restored,'DF_MasterVolume'),.75)
-        self.assertEqual(self.ledger.wallet('b')['profile'],[])
+        self.assertEqual([e['key'] for e in self.ledger.wallet('b')['profile']],[NAME_KEY])
+        self.assertTrue(valid_player_name(profile_value(self.ledger.wallet('b'),NAME_KEY)))
     def test_adaptive_difficulty_and_streaks_survive_restart(self):
         for tier in (-1, 0, 1, 2, 3, 4):
             with self.subTest(tier=tier):
@@ -42,21 +44,24 @@ class ProfileTests(unittest.TestCase):
                     self.assertEqual(profile_value(restored, entry['key']),
                                      entry.get('number', entry.get('text')))
                 self.assertEqual(restored['balance'], 0)
-        self.assertEqual(self.ledger.wallet('another-player')['profile'], [])
+        self.assertEqual([e['key'] for e in self.ledger.wallet('another-player')['profile']],[NAME_KEY])
+        self.assertTrue(valid_player_name(profile_value(self.ledger.wallet('another-player'),NAME_KEY)))
 
     def test_daily_progression_restores_and_stays_account_scoped(self):
         entries=[number('DF_Shards',12),number('DF_LoginStreakDay_v1',20260101),number('DF_LoginStreakIndex_v1',4),number('DF_DailyQuestWonMaps_v1',31)]
         self.ledger.save_profile('a',entries,0)
         restored=Ledger(self.path).wallet('a')
         for entry in entries: self.assertEqual(profile_value(restored,entry['key']),entry['number'])
-        self.assertEqual(self.ledger.wallet('b')['profile'],[])
+        self.assertEqual([e['key'] for e in self.ledger.wallet('b')['profile']],[NAME_KEY])
+        self.assertTrue(valid_player_name(profile_value(self.ledger.wallet('b'),NAME_KEY)))
         self.assertEqual(restored['balance'],0) # daily rewards never credit the Google-paid wallet
 
     def test_invalid_daily_progression_rejected(self):
         invalid=[number('DF_LoginStreakIndex_v1',0),number('DF_LoginStreakIndex_v1',8),number('DF_LoginStreakIndex_v1',True),text('DF_LoginStreakIndex_v1','7'),number('DF_DailyQuestWonMaps_v1',-1),number('DF_DailyQuestWonMaps_v1',8192),text('DF_DailyQuestWonMaps_v1','31'),number('DF_LoginStreakDay_v1',20260230),number('DF_LoginStreakDay_v1',99991231)]
         for entry in invalid:
             with self.subTest(entry=entry), self.assertRaises(ValueError): self.ledger.save_profile('a',[entry],0)
-        self.assertEqual(self.ledger.wallet('a')['profile'],[])
+        self.assertEqual([e['key'] for e in self.ledger.wallet('a')['profile']],[NAME_KEY])
+        self.assertTrue(valid_player_name(profile_value(self.ledger.wallet('a'),NAME_KEY)))
 
     def test_exoplanet_selection_and_wins_survive_restart(self):
         for arena in (11, 12):
@@ -264,7 +269,8 @@ class ProfileHttpTests(unittest.TestCase):
         self.assertEqual(self.request('/profile/save',data,auth='')['status'],'401 Unauthorized')
         self.assertEqual(self.request('/profile/save',data)['status'],'200 OK')
         self.assertEqual(self.request('/profile/save',data)['status'],'409 Conflict')
-        self.assertEqual(self.app.ledger.wallet('b')['profile'],[])
+        self.assertEqual([e['key'] for e in self.app.ledger.wallet('b')['profile']],[NAME_KEY])
+        self.assertTrue(valid_player_name(profile_value(self.app.ledger.wallet('b'),NAME_KEY)))
     def test_spend_ignores_client_price_amount_and_unlock_payload(self):
         self.app.ledger.save_profile('a',[number('DF_Shards',500)],0)
         data={'cosmeticId':'avatar_10','operationId':'a'*32,'expectedProfileRevision':1,'price':1,'amount':999999,'localContribution':999999,'writes':[number('DF_Shards',999999)]}

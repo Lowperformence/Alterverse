@@ -380,7 +380,7 @@ namespace Alterverse.Multiplayer
                     memberBuffer.Add(new MemberView
                     {
                         PlayerId=player.Id,
-                        DisplayName=ReadPlayer(player,PlayerNameKey,"TRAVELER"),
+                        DisplayName=SafeIdentityCatalog.DisplayPlayerName(ReadPlayer(player,PlayerNameKey,"TRAVELER"),player.Id),
                         Hero=(HeroId)ReadIntPlayer(player,PlayerHeroKey,(int)HeroId.Veyr),
                         BattleItem=(BattleItemType)Mathf.Clamp(ReadIntPlayer(player,PlayerBattleItemKey,0),0,4),
                         Ready=ReadPlayer(player,PlayerReadyKey,"0")=="1",
@@ -909,11 +909,7 @@ namespace Alterverse.Multiplayer
             return new string(buffer,0,n);
         }
 
-        private static string SanitizeDisplayName(string raw)
-        {
-            string value=string.IsNullOrWhiteSpace(raw)?"TRAVELER":raw.Trim();
-            return value.Length<=PlayerProfile.MaxNameLength?value:value.Substring(0,PlayerProfile.MaxNameLength);
-        }
+        private static string SanitizeDisplayName(string raw) => SafeIdentityCatalog.DisplayPlayerName(raw);
 
         private static int Mod(int value,int count)
         {

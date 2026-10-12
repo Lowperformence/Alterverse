@@ -33,7 +33,7 @@ namespace Alterverse.UI
             "A small cat astronaut. Jet into range, scratch one enemy, then slip away." };
         private static readonly string[] Strengths = { "BURST / MOBILITY", "PROTECTION / CONTROL", "RANGE / SUSTAINED DAMAGE", "AREA DAMAGE / CONTROL", "HEALING / PROTECTION", "MELEE / ENDURANCE", "MOBILITY / CONTROL", "PULL / AREA CONTROL", "MOBILITY / SINGLE TARGET" };
         private Page page = Page.Home;
-        private bool visible = true, launching, coopLaunching, editingName, suspended;
+        private bool visible = true, launching, coopLaunching, nameRerollBusy, suspended;
         private bool choosingMatchMode;
         private int selectedHero, shopAvatarIndex, battlePassPageStart=1, battlePassPreviewLevel=1, weaponSkinVariant;
         private int playArenaBrowseIndex=-1,mapShopPageStart;
@@ -41,7 +41,7 @@ namespace Alterverse.UI
         private bool skinShop=true,shardShop,itemShop,weaponShop,mapShop,battlePassShop,heroShop,cosmeticBusy;
         private float pageChangedAt, launchAt, menuWidth = 1280;
         private bool shopPurchasePending;
-        private string profileName, profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
+        private string profileMessage = "", shopMessage = "", launchMessage = "", joinCodeInput = "";
         private FrontEndTheme theme;
         private GUIStyle homeLogo,homeSubtitle;
         private MenuCosmicBackdrop backdrop;
@@ -49,7 +49,6 @@ namespace Alterverse.UI
         private MenuHeroShowcase showcase;
         private CosmeticCollectionPanel collection;
         private System.Action<int> changeCollectionHero;
-        private TouchScreenKeyboard nameKeyboard;
         private float master, music, sfx;
         private bool audioDirty;
         private const float MenuHeight = 720;
@@ -69,7 +68,6 @@ namespace Alterverse.UI
             selectedHero = Mathf.Clamp((int)PlayerHeroSelection.Selected,0,HeroIdentity.HeroCount-1);
             playArenaBrowseIndex=ArenaShopCatalog.IndexOf(ArenaVariantRuntime.Selected);
             mapShopPageStart=Mathf.Max(0,playArenaBrowseIndex-1);
-            profileName = PlayerProfile.PlayerName;
             master = PlayerProfile.MasterVolume; music = PlayerProfile.MusicVolume; sfx = PlayerProfile.SfxVolume;
             showcase = gameObject.AddComponent<MenuHeroShowcase>();
             backgroundVideo = gameObject.AddComponent<MenuBackgroundVideo>();
@@ -83,7 +81,6 @@ namespace Alterverse.UI
         {
             if (instance == null) { new GameObject("DF_MainMenu").AddComponent<MainMenuController>(); return; }
             instance.visible = true; instance.launching = false; instance.coopLaunching=false; instance.page = Page.Home;
-            instance.editingName = false; instance.profileName = PlayerProfile.PlayerName;
             instance.profileMessage = ""; instance.shopMessage = ""; instance.pageChangedAt = Time.unscaledTime;
             instance.collection?.Invalidate();
             instance.showcase?.InvalidateLoadout();
@@ -105,7 +102,7 @@ namespace Alterverse.UI
             if(instance==null)new GameObject("DF_MainMenu").AddComponent<MainMenuController>();
             if(instance==null)return;
             instance.visible=true;instance.launching=false;instance.coopLaunching=false;instance.page=Page.Coop;
-            instance.editingName=false;instance.profileName=PlayerProfile.PlayerName;
+            instance.nameRerollBusy=false;
             instance.profileMessage="";instance.shopMessage="";instance.launchMessage=message??"";
             instance.pageChangedAt=Time.unscaledTime;
             instance.collection?.Invalidate();instance.showcase?.InvalidateLoadout();
@@ -140,7 +137,7 @@ namespace Alterverse.UI
             }
             if (focused && visible) { MatchClock.Set(PauseReason.Menu,true);collection?.Invalidate();showcase?.InvalidateLoadout(); }
         }
-        private void OnDisable() { FlushAudio(); CloseKeyboard(); }
+        private void OnDisable() { FlushAudio(); }
         private void OnDestroy() { collection?.Dispose();backdrop?.Dispose(); if (instance == this) instance = null; }
         private void Update()
         {
@@ -164,17 +161,9 @@ namespace Alterverse.UI
                 previewWeapon?(bool?)true:null,
                 previewSkin?(UniversalHeroCosmetic?)collection.Preview(false):previewInventory?(UniversalHeroCosmetic?)collection.Preview(true):null,
                 previewWeapon?weaponSkinVariant:(int?)null);
-            if (nameKeyboard != null)
-            {
-                profileName = nameKeyboard.text;
-                if (nameKeyboard.status == TouchScreenKeyboard.Status.Done) { SaveName(); CloseKeyboard(); }
-                else if (nameKeyboard.status == TouchScreenKeyboard.Status.Canceled || nameKeyboard.status == TouchScreenKeyboard.Status.LostFocus)
-                { CancelName(); }
-            }
             if (!OnlinePartyOverlay.IsOpen && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                if (editingName) CancelName();
-                else if (launching) launching = false;
+                if (launching) launching = false;
                 else SetPage(Page.Home);
             }
             if (launching && Time.unscaledTime-launchAt >= .55f) EnterMatch();
@@ -182,7 +171,7 @@ namespace Alterverse.UI
         private void SetPage(Page next)
         {
             if (page == next || launching) return;
-            FlushAudio(); CancelName(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
+            FlushAudio(); collection?.Invalidate();showcase?.InvalidateLoadout(); page = next; pageChangedAt = Time.unscaledTime;
             profileMessage = ""; shopMessage = ""; GUI.FocusControl(null);
             confirmRoute=confirmPlayer=confirmLabel=null;
             if(next==Page.Leaderboard)GooglePlayLevelLeaderboard.AuthenticateAndSync();
@@ -501,19 +490,6 @@ namespace Alterverse.UI
             }
             theme.Label(new Rect(Left+500,246,150,22),$"PLAYERS  {coop.PlayerCount} / {coop.MaxPlayers}",theme.Small,true);
 
-            CoopVoiceChatService voice=CoopVoiceChatService.Instance;
-            string micLabel=voice==null?"VOICE...":
-                voice.PermissionDenied||!voice.HasMicrophonePermission?"ENABLE MIC":
-                voice.IsMuted?"MIC OFF":"MIC ON";
-            bool micSelected=voice!=null&&voice.IsConnected&&!voice.IsMuted;
-            if(theme.Action(new Rect(Right-322,244,142,44),micLabel,selected:micSelected,
-                enabled:voice!=null&&!voice.Busy))
-            {
-                if(voice.PermissionDenied||!voice.HasMicrophonePermission||!voice.IsConnected)
-                    voice.RequestMicrophoneAndJoin();
-                else voice.ToggleMute();
-            }
-
             if(theme.Action(new Rect(Right-170,244,170,44),coop.Busy?"PLEASE WAIT":"LEAVE LOBBY",enabled:!coop.Busy))
                 _=coop.LeaveLobbyAsync();
 
@@ -599,14 +575,11 @@ namespace Alterverse.UI
             string state=!string.IsNullOrEmpty(launchMessage)?launchMessage:
                 coop.HasHeroConflict?"CHOOSE DIFFERENT HEROES":
                 !string.IsNullOrEmpty(coop.LastError)?coop.LastError:coop.Status;
-            string voiceState=CoopVoiceChatService.Instance!=null
-                ?CoopVoiceChatService.Instance.Status
-                :"VOICE INITIALIZING";
             theme.Label(new Rect(Left,646,ContentWidth,28),state+"  •  "+coop.NetworkLinkState,theme.Small,true);
             theme.Label(new Rect(Left,678,ContentWidth,20),
                 (coop.IsStaging
                     ?$"PLAN SYNC  /  {CoopPlanHandshake.HandshakeStatus}"
-                    :"PRIVATE SESSION + RELAY ACTIVE")+"  •  "+voiceState,theme.Small,true);
+                    :"PRIVATE SESSION + RELAY ACTIVE"),theme.Small,true);
         }
 
         private void DrawHeroes()
@@ -1202,19 +1175,9 @@ namespace Alterverse.UI
             theme.Progress(new Rect(Left+24,348,identityWidth-48,6),PlayerExperience.LevelProgress);
             theme.Label(new Rect(Left+24,364,identityWidth-48,28),XpLabel(),theme.Small,true);
             theme.Label(new Rect(Left+24,412,identityWidth-48,24),"DISPLAY NAME",theme.Small,true);
-            if (editingName && nameKeyboard==null)
-                profileName=GUI.TextField(new Rect(Left+24,446,identityWidth-224,54),profileName,PlayerProfile.MaxNameLength,theme.Field);
-            else theme.Label(new Rect(Left+24,446,identityWidth-224,54),editingName?profileName:PlayerProfile.PlayerName,theme.Body);
-            if (!editingName)
-            {
-                if (theme.Action(new Rect(Left+identityWidth-176,446,152,54),"EDIT NAME")) BeginNameEdit();
-            }
-            else
-            {
-                if (theme.Action(new Rect(Left+identityWidth-176,446,152,54),"SAVE",true)) SaveName();
-                if (theme.Action(new Rect(Left+identityWidth-176,510,152,48),"CANCEL")) CancelName();
-            }
-            theme.Label(new Rect(Left+24,510,identityWidth-224,58),profileMessage.Length>0?profileMessage:"3–16 characters: letters, numbers, spaces, _ or -.",theme.Small,true);
+            theme.FitLabel(new Rect(Left+24,446,identityWidth-224,54),PlayerProfile.PlayerName,theme.Body);
+            if (theme.Action(new Rect(Left+identityWidth-176,446,152,54),nameRerollBusy?"SAVING…":"REROLL NAME",enabled:!nameRerollBusy)) RerollPlayerName();
+            theme.Label(new Rect(Left+24,510,identityWidth-48,58),profileMessage.Length>0?profileMessage:"Generated from approved English names. Reroll to choose another.",theme.Small,true);
             int count=FounderEntitlement.Owned?3:2;
             for(int i=0;i<count;i++)
             {
@@ -1275,21 +1238,23 @@ namespace Alterverse.UI
             theme.Label(new Rect(x+w*.6f,y,w*.4f,40),value,theme.Heading);
             FrontEndTheme.Fill(new Rect(x,y+47,w,1),FrontEndTheme.Raised);
         }
-        private void BeginNameEdit()
+        private async void RerollPlayerName()
         {
-            editingName=true; profileMessage=""; profileName=PlayerProfile.PlayerName;
-            if (TouchScreenKeyboard.isSupported)
-                nameKeyboard=TouchScreenKeyboard.Open(profileName,TouchScreenKeyboardType.Default,false,false,false,false,"Display name",PlayerProfile.MaxNameLength);
+            if(nameRerollBusy)return;
+            nameRerollBusy=true;profileMessage="Saving your generated name…";
+            string account=AccountProfilePrefs.Account;
+            try
+            {
+                PlayerProfile.RerollName();
+                var commerce=PaidShardCommerce.Instance;
+                bool saved=commerce?.Ready==true&&await commerce.FlushProfileAsync();
+                if(account!=AccountProfilePrefs.Account)return;
+                profileMessage=saved?"Name saved.":"Name saved on this device. Account synchronization pending.";
+                if(saved)SocialService.Instance?.Load("/social/state");
+            }
+            catch(Exception){if(account==AccountProfilePrefs.Account)profileMessage="Name synchronization pending. Try again.";}
+            finally{nameRerollBusy=false;}
         }
-        private void SaveName()
-        {
-            if (nameKeyboard!=null) profileName=nameKeyboard.text;
-            if (!PlayerProfile.IsValidName(profileName)) { profileMessage="Use 3–16 valid characters."; return; }
-            PlayerProfile.PlayerName=profileName; profileName=PlayerProfile.PlayerName;
-            editingName=false; profileMessage="Name saved."; CloseKeyboard();
-        }
-        private void CancelName() { CloseKeyboard(); editingName=false; profileName=PlayerProfile.PlayerName; }
-        private void CloseKeyboard() { if (nameKeyboard!=null) { nameKeyboard.active=false; nameKeyboard=null; } }
         private void DrawLeaderboard()
         {
             if(DrawRankingTabs())return;
@@ -1345,7 +1310,7 @@ namespace Alterverse.UI
                 PlayerProfile.SetAudioVolumes(master,music,sfx,false);
             float x=Left+w+32,rw=ContentWidth-w-32;
             theme.Label(new Rect(x,250,rw,38),"MATCH OPTIONS",theme.Heading);
-            // Voice-chat controls occupy the right-column slot at y=306.
+            // Remaining audio controls keep their existing layout.
             theme.Label(new Rect(x,452,rw,28),"Language: "+PlayerProfile.Language,theme.Small,true);
             theme.Label(new Rect(x,492,rw,48),"Progress and settings are saved on this device.",theme.Small,true);
         }

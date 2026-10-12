@@ -7,13 +7,12 @@ import json
 import re
 import secrets
 import time
-import unicodedata
 
 from ledger import ITEMS, ProfileConflict
-from chat_filter import require_allowed, visible_name, visible_text
+from safe_identity import (DESCRIPTIONS, normalize_sqlite_profile,
+                           visible_player_name, validate_clan_identity, migrate_sqlite_clans)
 
 CLAN_CREATION_COST = 500
-MAX_MESSAGES = 50
 MAX_MEMBERS = 50
 MAX_FRIENDS = 100
 MAX_REQUESTS = 50
@@ -35,12 +34,10 @@ def level_for_xp(xp):
     return lo
 
 
-def public_values(entries):
+def public_values(entries, identity='player'):
     entries = {e['key']: e for e in entries}
     name = entries.get('DF_PlayerName', {}).get('text', 'Traveler')
-    name = ''.join(c for c in name if c.isalnum() or c in '_- ')[:16].strip()
-    if len(name) < 3:
-        name = 'Traveler'
+    name = visible_player_name(name, identity)
     raw = entries.get('DF_AccountXP', {}).get('text', '0')
     try:
         # Bound parsing before integer conversion of potentially huge profile strings.
@@ -54,7 +51,9 @@ def public_values(entries):
 
 
 def sync_player(db, account, encoded):
-    name, name_search, xp, level, avatar = public_values(json.loads(encoded))
+    name = normalize_sqlite_profile(db, account)
+    entries = json.loads(db.execute('SELECT data FROM profile WHERE account=?', (account,)).fetchone()[0])
+    name, name_search, xp, level, avatar = public_values(entries, account)
     db.execute('''INSERT INTO social_player(account,player_id,name,name_search,xp,level,avatar)
                   VALUES(?,?,?,?,?,?,?) ON CONFLICT(account) DO UPDATE SET
                   name=excluded.name,name_search=excluded.name_search,xp=excluded.xp,
@@ -96,13 +95,16 @@ class Social:
                 db.execute('ALTER TABLE social_clan ADD COLUMN avatar INTEGER NOT NULL DEFAULT -1')
             for account, encoded in db.execute('SELECT account,data FROM profile').fetchall():
                 sync_player(db, account, encoded)
+            migrate_sqlite_clans(db)
 
     @staticmethod
     def player(db, account):
         row = db.execute('SELECT player_id,name,level,xp,avatar FROM social_player WHERE account=?', (account,)).fetchone()
         if not row:
             raise ValueError('Player not found')
-        return dict(zip(('playerId','name','level','xp','avatar'), row))
+        result = dict(zip(('playerId','name','level','xp','avatar'), row))
+        result['name'] = visible_player_name(result['name'], result['playerId'])
+        return result
 
     @staticmethod
     def target(db, data):
@@ -145,6 +147,7 @@ class Social:
             raise ValueError('Clan not found')
         result = dict(zip(('clanId','name','tag','description','open','avatar'), row))
         result['open'] = bool(result['open'])
+        result['descriptionId'] = DESCRIPTIONS.index(result['description'])
         members = []
         for account, role in db.execute("SELECT account,role FROM social_member WHERE clan=? ORDER BY CASE role WHEN 'leader' THEN 0 WHEN 'officer' THEN 1 ELSE 2 END,account", (identifier,)):
             members.append(dict(self.player(db, account), role=role))
@@ -163,15 +166,15 @@ class Social:
         if member and member[1] in ('leader', 'officer'):
             applications = [self.player(db, row[0]) for row in db.execute('SELECT account FROM social_application WHERE clan=? ORDER BY account', (member[0],))]
         pending = [row[0] for row in db.execute('SELECT clan FROM social_application WHERE account=? ORDER BY clan', (account,))]
-        messages = []
-        if member:
-            records = db.execute('SELECT id,account,name,text,created_at FROM social_message WHERE clan=? ORDER BY created_at DESC,id DESC LIMIT ?', (member[0],MAX_MESSAGES)).fetchall()
-            messages = [{'messageId':r[0], 'playerId':self.player(db,r[1])['playerId'], 'name':visible_name(r[2]), 'text':visible_text(r[3]), 'createdAt':r[4]} for r in reversed(records)]
-        return {'hasClan':member is not None,'clanCreationCost':CLAN_CREATION_COST,'clanProtocolVersion':2,'messages':messages, 'me': self.player(db, account), 'friends': friends, 'incoming': incoming,
+        return {'hasClan':member is not None,'clanCreationCost':CLAN_CREATION_COST,'clanProtocolVersion':3,
+                'identityProtocolVersion':1,'chatEnabled':False,'clanDescriptions':list(DESCRIPTIONS),
+                'me': self.player(db, account), 'friends': friends, 'incoming': incoming,
                 'outgoing': outgoing, 'blocked': blocked, 'clan': clan, 'role': member[1] if member else '',
                 'applications': applications, 'pendingClans': pending}
 
     def dispatch(self, account, route, data):
+        if route.startswith(('/social/clan/message', '/social/message')):
+            raise ValueError('Communication is disabled in this version.')
         with self.ledger.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             self.ledger.ensure(db, account)
@@ -217,7 +220,7 @@ class Social:
                        '/social/block','/social/unblock','/social/clan/create','/social/clan/join',
                        '/social/clan/cancel','/social/clan/accept','/social/clan/reject','/social/clan/leave',
                        '/social/clan/kick','/social/clan/role','/social/clan/transfer',
-                       '/social/clan/icon','/social/clan/message','/social/clan/message/remove'}
+                       '/social/clan/icon','/social/clan/identity'}
             if route not in allowed:
                 raise ValueError('Unknown social route')
             now = int(time.time()) // 60
@@ -280,24 +283,23 @@ class Social:
         if route == '/social/clan/create':
             name, tag, description = data.get('name'), data.get('tag'), data.get('description', '')
             opened = data.get('open', True)
-            if not isinstance(name, str):
-                raise ValueError('Invalid clan name')
-            name = unicodedata.normalize('NFKC', name).strip()
-            if not 3 <= len(name) <= 24 or any(not(c.isalnum() or c in ' _-') for c in name):
-                raise ValueError('Clan name must have 3–24 letters, digits, spaces, _ or -')
-            if not isinstance(tag, str) or not re.fullmatch('[A-Za-z0-9]{2,5}', tag):
-                raise ValueError('Clan tag must have 2–5 letters or digits')
-            if not isinstance(description, str) or len(description) > 160 or any(unicodedata.category(c).startswith('C') for c in description):
-                raise ValueError('Description must have at most 160 printable characters')
-            if type(opened) is not bool:
-                raise ValueError('Invalid join policy')
             operation = data.get('operationId')
             self.ledger.validate_operation(operation)
-            fingerprint = hashlib.sha256(json.dumps([name,tag.upper(),description,opened],ensure_ascii=False).encode()).hexdigest()
             previous = db.execute('SELECT fingerprint FROM social_creation WHERE account=? AND operation_id=?',(account,operation)).fetchone()
+            # Confirm an already committed legacy request without replaying its
+            # old free text, debit or creation. Preserve the original fingerprint.
             if previous:
-                if previous[0] != fingerprint: raise ValueError('Clan operation already bound')
+                legacy_tag = tag.upper() if isinstance(tag, str) else tag
+                raw_fingerprint = hashlib.sha256(json.dumps([name,legacy_tag,description,opened],ensure_ascii=False).encode()).hexdigest()
+                if previous[0] != raw_fingerprint:
+                    name, tag, description = validate_clan_identity(data)
+                    fingerprint = hashlib.sha256(json.dumps([name,tag,description,opened],ensure_ascii=False).encode()).hexdigest()
+                    if previous[0] != fingerprint: raise ValueError('Clan operation already bound')
                 return
+            name, tag, description = validate_clan_identity(data)
+            if type(opened) is not bool:
+                raise ValueError('Invalid join policy')
+            fingerprint = hashlib.sha256(json.dumps([name,tag,description,opened],ensure_ascii=False).encode()).hexdigest()
             if member:
                 raise ValueError('Leave your current clan first')
             identifier = secrets.token_hex(10)
@@ -343,6 +345,15 @@ class Social:
         if not member:
             raise ValueError('Clan membership required')
         identifier, role = member
+        if route == '/social/clan/identity':
+            if role != 'leader': raise SocialForbidden('Leader required')
+            name, tag, description = validate_clan_identity(data)
+            if db.execute('SELECT 1 FROM social_clan WHERE id<>? AND (name_search=? OR tag=?)',
+                          (identifier,name.casefold(),tag)).fetchone():
+                raise ValueError('Clan name or tag already in use; reroll again')
+            db.execute('UPDATE social_clan SET name=?,name_search=?,tag=?,description=? WHERE id=?',
+                       (name,name.casefold(),tag,description,identifier))
+            return
         if route == '/social/clan/icon':
             if role != 'leader': raise SocialForbidden('Leader required')
             avatar = data.get('avatar')
@@ -352,31 +363,6 @@ class Social:
             owned = entries.get('DF_AvatarOwned_'+str(avatar),{}).get('number') == 1 or db.execute('SELECT 1 FROM cosmetic WHERE account=? AND sku=?',(account,'avatar_'+str(avatar))).fetchone()
             if not owned: raise ValueError('Purchase this icon before choosing it for your clan')
             db.execute('UPDATE social_clan SET avatar=? WHERE id=?',(avatar,identifier))
-            return
-        if route == '/social/clan/message':
-            message_id = data.get('messageId')
-            self.ledger.validate_operation(message_id)
-            text = data.get('text')
-            if not isinstance(text,str): raise ValueError('Enter a clan message')
-            text = text.strip()
-            if not 1 <= len(text) <= 240 or any(unicodedata.category(c).startswith('C') for c in text):
-                raise ValueError('Messages need 1–240 printable characters')
-            require_allowed(text)
-            old = db.execute('SELECT account,clan,text FROM social_message WHERE id=?',(message_id,)).fetchone()
-            if old:
-                if old != (account,identifier,text): raise ValueError('Message ID already bound')
-                return
-            latest = db.execute('SELECT COALESCE(MAX(created_at),0) FROM social_message WHERE clan=?',(identifier,)).fetchone()[0]
-            timestamp = max(int(time.time()*1000),latest+1)
-            db.execute('INSERT INTO social_message VALUES(?,?,?,?,?,?)',(message_id,identifier,account,self.player(db,account)['name'],text,timestamp))
-            db.execute('DELETE FROM social_message WHERE clan=? AND id NOT IN (SELECT id FROM social_message WHERE clan=? ORDER BY created_at DESC,id DESC LIMIT ?)',(identifier,identifier,MAX_MESSAGES))
-            return
-        if route == '/social/clan/message/remove':
-            message_id = data.get('messageId')
-            self.ledger.validate_operation(message_id)
-            old = db.execute('SELECT account FROM social_message WHERE id=? AND clan=?',(message_id,identifier)).fetchone()
-            if old and role != 'leader' and old[0] != account: raise SocialForbidden('Only the author or clan leader can remove this message')
-            db.execute('DELETE FROM social_message WHERE id=? AND clan=?',(message_id,identifier))
             return
         if route == '/social/clan/leave':
             count = db.execute('SELECT COUNT(*) FROM social_member WHERE clan=?', (identifier,)).fetchone()[0]

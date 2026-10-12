@@ -53,7 +53,7 @@ namespace Alterverse.UI
                 {
                     scroll = GUI.BeginScrollView(new Rect(420, 148, 492, 352), scroll, new Rect(0, 0, 470, leaders.Length * 40));
                     for (int i = 0; i < leaders.Length; i++)
-                        theme.Label(new Rect(4, i * 40, 456, 36), (i+1) + ". " + leaders[i].displayName + "  •  " + leaders[i].points + " RP", theme.Body);
+                        theme.Label(new Rect(4, i * 40, 456, 36), (i+1) + ". " + Alterverse.Profile.SafeIdentityCatalog.DisplayPlayerName(leaders[i].displayName) + "  •  " + leaders[i].points + " RP", theme.Body);
                     GUI.EndScrollView();
                 }
                 theme.Label(new Rect(28, 528, 900, 38), service?.Status ?? "Ranked is initializing…", theme.Small, true);

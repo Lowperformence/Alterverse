@@ -404,6 +404,7 @@ namespace Alterverse.Multiplayer
                     BotDifficultySettings.OnlineDifficulty,
                     members,
                     RankedMatchReporter.RankedDeployment ? SessionMode.OnlineRanked : SessionMode.OnlineCasual);
+                foreach(var slot in plan.Session.Slots)slot.DisplayName=SanitizeName(slot.DisplayName);
                 CoopAuthority.Prepare(plan);
                 planFingerprint = CoopPlanHandshake.Fingerprint(plan);
                 planAcks.Clear();
@@ -497,7 +498,7 @@ namespace Alterverse.Multiplayer
                     slots[i] = new MatchPlayerSlot
                     {
                         PlayerId = fixedPlayerId.ToString(),
-                        DisplayName = fixedName.ToString(),
+                        DisplayName = SanitizeName(fixedName.ToString()),
                         Team = team,
                         Hero = Enum.IsDefined(typeof(HeroId), heroRaw) ? (HeroId)heroRaw : HeroId.Veyr,
                         BattleItem = Enum.IsDefined(typeof(BattleItemType), battleItemRaw) ? (BattleItemType)battleItemRaw : BattleItemType.None,
@@ -761,12 +762,7 @@ namespace Alterverse.Multiplayer
             }
         }
 
-        private static string SanitizeName(string value)
-        {
-            string name = string.IsNullOrWhiteSpace(value) ? "TRAVELER" : value.Trim();
-            if (name.Length > 20) name = name.Substring(0, 20);
-            return name;
-        }
+        private static string SanitizeName(string value) => Alterverse.Profile.SafeIdentityCatalog.DisplayPlayerName(value);
 
         private void Attach(CustomMessagingManager value)
         {

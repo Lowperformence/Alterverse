@@ -20,32 +20,27 @@ namespace Alterverse.Profile
         {
             public string clanId,name,tag,description;
             public bool open;
-            public int memberCount,totalLevel,rank,avatar;
+            public int memberCount,totalLevel,rank,avatar,descriptionId;
             public Player[] members;
-        }
-        [Serializable] public sealed class Message
-        {
-            public string messageId,playerId,name,text;
-            public long createdAt;
         }
         [Serializable] public sealed class Snapshot
         {
             public Player me;
-            public Message[] messages;
             public PaidShardCommerce.Snapshot wallet;
             public Player[] friends,incoming,outgoing,blocked,applications,players;
             public Clan clan;
             public Clan[] clans;
             public string role;
             public string[] pendingClans;
-            public int selfRank,total,offset,clanCreationCost,clanProtocolVersion;
+            public string[] clanDescriptions;
+            public int selfRank,total,offset,clanCreationCost,clanProtocolVersion,identityProtocolVersion;
             public bool hasClan;
         }
         [Serializable] public sealed class Request
         {
-            public string playerId,clanId,query,name,tag,description,role,operationId,messageId,text;
+            public string playerId,clanId,query,name,tag,description,role,operationId;
             public long expectedProfileRevision;
-            public int avatar;
+            public int avatar,descriptionId;
             public int offset;
             public bool open=true;
         }
@@ -59,7 +54,6 @@ namespace Alterverse.Profile
         public string Status { get; private set; }="Sign in to load friends and clans.";
         public bool Busy { get; private set; }
         public bool Connected=>!string.IsNullOrEmpty(endpoint)&&!string.IsNullOrEmpty(Credential());
-        public string LastSentMessageId { get; private set; }
         string ClanOperationKey=>"DF_CommerceClanCreate_"+PaidShardCommerce.Instance?.AccountHash;
         public bool HasPendingClanCreation=>PaidShardCommerce.Instance!=null&&!string.IsNullOrEmpty(PaidShardCommerce.Instance.AccountHash)&&PlayerPrefs.HasKey(ClanOperationKey);
         public Request PendingClanCreation
@@ -101,7 +95,7 @@ namespace Alterverse.Profile
         void ResetCache()
         {
             if(clanSpending)PaidShardCommerce.Instance?.EndSocialSpend(clanSpendSession,null,null);
-            clanSpending=false;clanSubmitted=null;LastSentMessageId=null;
+            clanSpending=false;clanSubmitted=null;
             generation++;StopAllCoroutines();Busy=false;
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
@@ -116,7 +110,7 @@ namespace Alterverse.Profile
         public void CreateClan(Request draft)
         {
             if(Busy||!Connected||PaidShardCommerce.Instance?.Ready!=true)return;
-            if(State?.clanCreationCost!=500){Status="Update the account server to enable 500-Shard clan creation.";return;}
+            if(State?.clanCreationCost!=500||State.clanProtocolVersion<3){Status="Update the account server to enable generated clan identities.";return;}
             Request body=PendingClanCreation??draft;
             if(string.IsNullOrEmpty(body.operationId))body.operationId=Guid.NewGuid().ToString("N");
             PlayerPrefs.SetString(ClanOperationKey,JsonUtility.ToJson(body));PlayerPrefs.Save();
@@ -191,7 +185,7 @@ namespace Alterverse.Profile
                 {Status="Clan response incomplete. Refresh your account before retrying.";commerce?.Refresh();Busy=false;yield break;}
                 PlayerPrefs.DeleteKey(ClanOperationKey);PlayerPrefs.Save();
             }
-            if(route=="/social/clan/message")LastSentMessageId=body.messageId;
+            CleanSnapshot(response.social);
             if(route=="/social/players")Search=response.social;
             else if(route=="/social/levels")Levels=response.social;
             else if(route=="/social/clans")Clans=response.social;
@@ -203,6 +197,29 @@ namespace Alterverse.Profile
                 if(route!="/social/state"){Levels=ClanLevels=Clans=Search=null;}
             }
             Status="Synchronized.";Busy=false;
+        }
+        // Also protects displays during a staggered client/server rollout.
+        internal static void CleanSnapshot(Snapshot value)
+        {
+            void CleanPlayer(Player player)
+            {if(player!=null)player.name=SafeIdentityCatalog.DisplayPlayerName(player.name,player.playerId);}
+            void CleanPlayers(Player[] players)
+            {if(players!=null)foreach(var player in players)CleanPlayer(player);}
+            void CleanClan(Clan clan)
+            {
+                if(clan==null)return;
+                clan.name=SafeIdentityCatalog.DisplayClanName(clan.name,clan.clanId);
+                clan.tag=SafeIdentityCatalog.DisplayClanTag(clan.tag,clan.clanId);
+                clan.descriptionId=SafeIdentityCatalog.DescriptionIndex(clan.description);
+                clan.description=SafeIdentityCatalog.Descriptions[clan.descriptionId];
+                CleanPlayers(clan.members);
+            }
+            CleanPlayer(value.me);CleanPlayers(value.friends);CleanPlayers(value.incoming);
+            CleanPlayers(value.outgoing);CleanPlayers(value.blocked);CleanPlayers(value.applications);CleanPlayers(value.players);
+            CleanClan(value.clan);
+            if(value.clans!=null)foreach(var clan in value.clans)CleanClan(clan);
+            value.clanDescriptions=new string[SafeIdentityCatalog.Descriptions.Count];
+            for(int i=0;i<value.clanDescriptions.Length;i++)value.clanDescriptions[i]=SafeIdentityCatalog.Descriptions[i];
         }
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }

@@ -8,6 +8,7 @@ import re
 import time
 import uuid
 from ranked_store import SQLiteRankedStore, FirestoreRankedStore
+from safe_identity import profile_name, visible_player_name
 
 PROFILE = 'dimensions-front-ranked'
 PLACEMENTS = 5
@@ -67,6 +68,7 @@ class Ranked:
         if len(signing_key) < 32:
             raise ValueError('Ranked admission key must contain at least 32 characters')
         self.store = SQLiteRankedStore(ledger.path) if hasattr(ledger, 'path') else FirestoreRankedStore(ledger)
+        self.ledger = ledger
         self.gateway, self.key, self.season, self.clock = gateway, signing_key.encode(), identifier(season), clock
 
     def player(self, account):
@@ -104,6 +106,7 @@ class Ranked:
 
     def search(self, account, name):
         now, reservation = int(self.clock()), uuid.uuid4().hex
+        assigned_name = profile_name(self.ledger.wallet(account)['profile'])
         def reserve(tx):
             p = tx.get(self.pk(account)) or self.player(account)
             if p.get('activeMatch'):
@@ -117,7 +120,7 @@ class Ranked:
             if active and active['expires'] > now:
                 return p, False
             p['active'] = dict(reservation=reservation, expires=now + 600)
-            p['displayName'] = name.strip()[:20] if isinstance(name, str) and name.strip() else 'TRAVELER'
+            p['displayName'] = assigned_name
             tx.set(self.pk(account), p)
             return p, True
         player, create = self.store.atomic(reserve)
@@ -276,7 +279,7 @@ class Ranked:
         if path == '/ranked/poll': return self.poll(account)
         if path == '/ranked/cancel': return self.cancel(account)
         if path == '/ranked/leaderboard':
-            return {'season': self.season, 'leaders': [dict(displayName=p['displayName'], **rating_view(p)) for p in self.store.leaders(self.season)]}
+            return {'season': self.season, 'leaders': [dict(displayName=visible_player_name(p['displayName'], p['account']), **rating_view(p)) for p in self.store.leaders(self.season)]}
         raise ValueError('Unknown ranked route')
 
     def void(self, data):
