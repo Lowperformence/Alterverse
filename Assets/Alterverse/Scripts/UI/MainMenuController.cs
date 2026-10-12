@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Alterverse.AI;
 using Alterverse.Characters;
@@ -1131,7 +1132,7 @@ namespace Alterverse.UI
                 "Lifetime match victories place you on the global leaderboard.", theme.Body, true);
 
             theme.Label(new Rect(Left + 28, 410, leftWidth - 56, 22), "GOOGLE PLAY GAMES ACCOUNT", theme.Small, true);
-            theme.Label(new Rect(Left + 28, 440, leftWidth - 56, 32), GooglePlayLevelLeaderboard.PlayerName, theme.Heading);
+            theme.Label(new Rect(Left + 28, 440, leftWidth - 56, 32), PlayerProfile.PlayerName, theme.Heading);
             theme.Label(new Rect(Left + 28, 484, leftWidth - 56, 54), GooglePlayLevelLeaderboard.Status, theme.Small, true);
 
             bool configured = GooglePlayLevelLeaderboard.IsConfigured;
@@ -1380,7 +1381,7 @@ namespace Alterverse.UI
             }
             else if(!CoopAuthority.Active||CoopAuthority.ActivePlan?.Session==null)
             {
-                launching=false;coopLaunching=false;page=Page.Coop;launchMessage="Co-op session was lost before launch.";return;
+                launching=false;coopLaunching=false;page=Page.Play;launchMessage="Co-op session was lost before launch.";return;
             }
 
             var bootstrap=FindAnyObjectByType<Alterverse.Prototype.PrototypeBootstrap>();
