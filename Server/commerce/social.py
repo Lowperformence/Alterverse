@@ -10,7 +10,8 @@ import time
 
 from ledger import ITEMS, ProfileConflict
 from safe_identity import (DESCRIPTIONS, normalize_sqlite_profile,
-                           visible_player_name, validate_clan_identity, migrate_sqlite_clans)
+                           visible_player_name, validate_clan_identity, migrate_sqlite_clans,
+                           generate_clan_name, generate_clan_tag, description_for)
 
 CLAN_CREATION_COST = 500
 MAX_MEMBERS = 50
@@ -62,8 +63,9 @@ def sync_player(db, account, encoded):
 
 
 class Social:
-    def __init__(self, ledger):
+    def __init__(self, ledger, generated_clan_identity=None):
         self.ledger = ledger
+        self.generated_clan_identity = generated_clan_identity
         with ledger.connect() as db:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS social_player(
@@ -282,44 +284,79 @@ class Social:
     def clan_action(self, db, account, route, data):
         member = self.membership(db, account)
         if route == '/social/clan/create':
-            name, tag, description = data.get('name'), data.get('tag'), data.get('description', '')
             opened = data.get('open', True)
             operation = data.get('operationId')
             self.ledger.validate_operation(operation)
-            previous = db.execute('SELECT fingerprint FROM social_creation WHERE account=? AND operation_id=?',(account,operation)).fetchone()
-            # Confirm an already committed legacy request without replaying its
-            # old free text, debit or creation. Preserve the original fingerprint.
-            if previous:
-                legacy_tag = tag.upper() if isinstance(tag, str) else tag
-                raw_fingerprint = hashlib.sha256(json.dumps([name,legacy_tag,description,opened],ensure_ascii=False).encode()).hexdigest()
-                if previous[0] != raw_fingerprint:
-                    name, tag, description = validate_clan_identity(data)
-                    fingerprint = hashlib.sha256(json.dumps([name,tag,description,opened],ensure_ascii=False).encode()).hexdigest()
-                    if previous[0] != fingerprint: raise ValueError('Clan operation already bound')
-                return
-            name, tag, description = validate_clan_identity(data)
             if type(opened) is not bool:
                 raise ValueError('Invalid join policy')
-            fingerprint = hashlib.sha256(json.dumps([name,tag,description,opened],ensure_ascii=False).encode()).hexdigest()
+            description = description_for(data)
+            # Retry identity binds only to the non-message settings. User-supplied
+            # names/tags are ignored and are never published.
+            fingerprint = hashlib.sha256(
+                json.dumps([description, opened], ensure_ascii=False).encode()).hexdigest()
+            previous = db.execute('SELECT fingerprint FROM social_creation WHERE account=? AND operation_id=?',
+                                  (account, operation)).fetchone()
+            if previous:
+                # Accept old app versions' idempotency receipts without replaying
+                # old names, debits or creation.
+                legacy_name, legacy_tag = data.get('name'), data.get('tag')
+                legacy_description = data.get('description', '')
+                raw = hashlib.sha256(json.dumps(
+                    [legacy_name, legacy_tag.upper() if isinstance(legacy_tag, str) else legacy_tag,
+                     legacy_description, opened], ensure_ascii=False).encode()).hexdigest()
+                canonical = None
+                try:
+                    n, t, desc = validate_clan_identity(data)
+                    canonical = hashlib.sha256(
+                        json.dumps([n, t, desc, opened], ensure_ascii=False).encode()).hexdigest()
+                except ValueError:
+                    pass
+                if previous[0] not in (fingerprint, raw, canonical):
+                    raise ValueError('Clan operation already bound')
+                return
             if member:
                 raise ValueError('Leave your current clan first')
-            identifier = secrets.token_hex(10)
-            if db.execute('SELECT 1 FROM social_clan WHERE name_search=? OR tag=?', (name.casefold(), tag.upper())).fetchone():
-                raise ValueError('Clan name or tag already in use')
             revision = data.get('expectedProfileRevision')
-            if type(revision) is not int or revision < 0: raise ValueError('Invalid profile revision')
-            current_revision,encoded = db.execute('SELECT revision,data FROM profile WHERE account=?',(account,)).fetchone()
-            if revision != current_revision: raise ProfileConflict()
-            entries = {e['key']:e for e in json.loads(encoded)}
-            earned = entries.get('DF_Shards',{}).get('number',0)
-            contribution = min(earned,CLAN_CREATION_COST)
-            paid = CLAN_CREATION_COST-contribution
-            debit = db.execute('UPDATE wallet SET balance=balance-?,revision=revision+1 WHERE account=? AND balance>=?',(paid,account,paid))
-            if debit.rowcount != 1: raise ValueError('Clan creation costs 500 Shards; insufficient balance')
+            if type(revision) is not int or revision < 0:
+                raise ValueError('Invalid profile revision')
+            current_revision, encoded = db.execute(
+                'SELECT revision,data FROM profile WHERE account=?', (account,)).fetchone()
+            if revision != current_revision:
+                raise ProfileConflict()
+            # This is the only assignment path. The Firestore adapter reserves
+            # the generated pair transactionally; SQLite uses its UNIQUE indices.
+            if self.generated_clan_identity is not None:
+                name, tag = self.generated_clan_identity
+                if db.execute('SELECT 1 FROM social_clan WHERE name_search=? OR tag=?',
+                              (name.casefold(), tag)).fetchone():
+                    raise ValueError('Generated clan identity is unavailable; retry')
+            else:
+                for _ in range(64):
+                    name, tag = generate_clan_name(), generate_clan_tag()
+                    if not db.execute('SELECT 1 FROM social_clan WHERE name_search=? OR tag=?',
+                                      (name.casefold(), tag)).fetchone():
+                        break
+                else:
+                    raise ValueError('Clan identity allocation unavailable')
+            identifier = secrets.token_hex(10)
+            entries = {e['key']: e for e in json.loads(encoded)}
+            earned = entries.get('DF_Shards', {}).get('number', 0)
+            contribution = min(earned, CLAN_CREATION_COST)
+            paid = CLAN_CREATION_COST - contribution
+            debit = db.execute(
+                'UPDATE wallet SET balance=balance-?,revision=revision+1 WHERE account=? AND balance>=?',
+                (paid, account, paid))
+            if debit.rowcount != 1:
+                raise ValueError('Clan creation costs 500 Shards; insufficient balance')
             entries['DF_Shards'] = {'key':'DF_Shards','kind':0,'number':earned-contribution}
-            db.execute('UPDATE profile SET data=?,revision=revision+1 WHERE account=?',(json.dumps(sorted(entries.values(),key=lambda e:e['key']),separators=(',',':'),sort_keys=True),account))
-            db.execute('INSERT INTO social_creation VALUES(?,?,?,?,?)',(account,operation,identifier,fingerprint,CLAN_CREATION_COST))
-            db.execute('INSERT INTO social_clan(id,name,name_search,tag,description,open) VALUES(?,?,?,?,?,?)', (identifier, name, name.casefold(), tag.upper(), description, int(opened)))
+            db.execute('UPDATE profile SET data=?,revision=revision+1 WHERE account=?',
+                       (json.dumps(sorted(entries.values(),key=lambda e:e['key']),
+                                   separators=(',',':'),sort_keys=True),account))
+            db.execute('INSERT INTO social_creation VALUES(?,?,?,?,?)',
+                       (account,operation,identifier,fingerprint,CLAN_CREATION_COST))
+            db.execute(
+                'INSERT INTO social_clan(id,name,name_search,tag,description,open) VALUES(?,?,?,?,?,?)',
+                (identifier, name, name.casefold(), tag, description, int(opened)))
             self.add_member(db, account, identifier, 'leader')
             return
         if route in ('/social/clan/join', '/social/clan/cancel'):
