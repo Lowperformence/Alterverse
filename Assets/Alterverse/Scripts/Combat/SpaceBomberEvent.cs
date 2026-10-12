@@ -138,7 +138,7 @@ namespace Alterverse.Combat
         private void BuildSharedMaterials()
         {
             Shader lit=Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard");
-            Shader unlit=Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
+            Shader unlit=Resources.Load<Shader>("DF_TargetRing")??Shader.Find("Universal Render Pipeline/Particles/Unlit")??Shader.Find("Sprites/Default");
             if(lit==null||unlit==null)return;
 
             bool kryon=ArenaVariantRuntime.IsKryon;
@@ -435,7 +435,7 @@ namespace Alterverse.Combat
                 warning=new GameObject("DF_BombWarning");warning.transform.SetParent(world,false);
                 warningLine=warning.AddComponent<LineRenderer>();warningLine.sharedMaterial=warningMaterial;warningLine.loop=true;
                 warningLine.useWorldSpace=true;warningLine.positionCount=36;warningLine.widthMultiplier=.065f;
-                Color warningColor=ArenaVariantRuntime.IsKryon?new Color(.34f,.95f,1f,.98f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.98f):new Color(1f,.22f,.07f,.95f);
+                Color warningColor=ArenaVariantRuntime.IsKryon?new Color(.34f,.95f,1f,.5f):ArenaVariantRuntime.IsNoxara?new Color(1f,.72f,.02f,.5f):new Color(1f,.22f,.07f,.5f);
                 warningLine.startColor=warningLine.endColor=warningColor;
                 warningLine.shadowCastingMode=ShadowCastingMode.Off;warningLine.receiveShadows=false;
                 for(int i=0;i<36;i++)

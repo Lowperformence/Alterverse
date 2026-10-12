@@ -101,7 +101,7 @@ namespace Alterverse.Combat
         private static readonly Color PoisonGreenHot=new(.62f,1f,.08f,1f);
 
         private readonly Collider[] hitBuffer=new Collider[HitBufferSize];
-        private Material warningInk,rockMaterial;
+        private Material warningInk,warningRingInk,rockMaterial;
         private Mesh meteorMesh;
         private LineRenderer warningLine,trail;
         private float spawnAt,hitAt,damage;
@@ -145,6 +145,7 @@ namespace Alterverse.Combat
             if(ink==null||rock==null)return;
 
             warningInk=new Material(ink){name="DF_NoxaraMeteorWarningInk",color=PoisonGreen};
+            warningRingInk=new Material(Resources.Load<Shader>("DF_TargetRing")??ink){name="DF_NoxaraMeteorTargetRing",color=PoisonGreen};
             rockMaterial=new Material(rock){name="DF_NoxaraMeteorRock",color=new Color(.055f,.075f,.045f,1f)};
             if(rockMaterial.HasProperty("_BaseColor"))rockMaterial.SetColor("_BaseColor",new Color(.055f,.075f,.045f,1f));
             if(rockMaterial.HasProperty("_Smoothness"))rockMaterial.SetFloat("_Smoothness",.10f);
@@ -157,12 +158,14 @@ namespace Alterverse.Combat
             warning=new GameObject("DF_NoxaraMeteorWarning");
             if(world!=null)warning.transform.SetParent(world,false);
             warningLine=warning.AddComponent<LineRenderer>();
-            warningLine.sharedMaterial=warningInk;
+            warningLine.sharedMaterial=warningRingInk;
             warningLine.loop=true;
             warningLine.useWorldSpace=true;
             warningLine.positionCount=48;
             warningLine.widthMultiplier=.075f;
-            warningLine.startColor=warningLine.endColor=PoisonGreenHot;
+            Color warningColor=PoisonGreenHot;
+            warningColor.a=.5f;
+            warningLine.startColor=warningLine.endColor=warningColor;
             warningLine.shadowCastingMode=ShadowCastingMode.Off;
             warningLine.receiveShadows=false;
 
@@ -269,6 +272,7 @@ namespace Alterverse.Combat
             if(warning!=null)Destroy(warning);
             if(meteor!=null)Destroy(meteor);
             if(warningInk!=null)Destroy(warningInk);
+            if(warningRingInk!=null)Destroy(warningRingInk);
             if(rockMaterial!=null)Destroy(rockMaterial);
             if(meteorMesh!=null)Destroy(meteorMesh);
         }

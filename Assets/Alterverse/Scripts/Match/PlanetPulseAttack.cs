@@ -37,7 +37,7 @@ namespace Alterverse.Match
         {
             planet = GetComponent<DimensionPlanet>();
             health = GetComponent<Health>();
-            telegraphMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(warning,.08f,.72f,.045f);
+            telegraphMaterial=RuntimeShaderLibrary.CreateGroundTelegraph(warning,.08f,.5f,.045f);
             BuildTelegraphVisual();
             nextPulse = Time.time + 2.5f;
         }
@@ -123,7 +123,7 @@ namespace Alterverse.Match
             {
                 telegraphMaterial.SetColor("_BaseColor",warning);
                 telegraphMaterial.SetFloat("_FillAlpha",.075f);
-                telegraphMaterial.SetFloat("_RingAlpha",.72f);
+                telegraphMaterial.SetFloat("_RingAlpha",.5f);
                 telegraphMaterial.SetFloat("_RingWidth",.042f);
             }
             if(announceNetwork&&Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
@@ -139,7 +139,7 @@ namespace Alterverse.Match
                 float beat=.5f+.5f*Mathf.Sin(Time.time*(5.5f+progress*7f));
                 telegraphMaterial.SetColor("_BaseColor",warning);
                 telegraphMaterial.SetFloat("_FillAlpha",Mathf.Lerp(.075f,.19f,progress)+beat*.018f);
-                telegraphMaterial.SetFloat("_RingAlpha",Mathf.Lerp(.72f,.98f,progress));
+                telegraphMaterial.SetFloat("_RingAlpha",.5f);
                 telegraphMaterial.SetFloat("_RingWidth",Mathf.Lerp(.040f,.072f,progress));
             }
             return progress;
@@ -170,7 +170,7 @@ namespace Alterverse.Match
                 // Keep the same programmed warning colour during the brief detonation flash.
                 telegraphMaterial.SetColor("_BaseColor",warning);
                 telegraphMaterial.SetFloat("_FillAlpha",.24f);
-                telegraphMaterial.SetFloat("_RingAlpha",1f);
+                telegraphMaterial.SetFloat("_RingAlpha",.5f);
                 telegraphMaterial.SetFloat("_RingWidth",.085f);
             }
 
