@@ -11,7 +11,7 @@ namespace Alterverse.UI
         string socialIdentity,lastClanIdentity;
         bool clanApplications,clanOpen=true;
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
-        string clanQuery="",clanName="",clanTag="";
+        string clanQuery="";
         string confirmRoute,confirmPlayer,confirmLabel;
         static readonly SocialService.Player[] NoPlayers=Array.Empty<SocialService.Player>();
         static readonly SocialService.Clan[] NoClans=Array.Empty<SocialService.Clan>();
@@ -26,7 +26,6 @@ namespace Alterverse.UI
                 {
                     socialIdentity=identity;lastClanIdentity=null;clanDetailTab=0;clanDescriptionIndex=0;confirmRoute=confirmPlayer=confirmLabel=null;
                     memberOffset=0;clanQuery="";
-                    clanName=clanTag="";
                 }
                 return true;
             }
@@ -179,20 +178,18 @@ namespace Alterverse.UI
         }
         void DrawGeneratedClanFields(bool enabled)
         {
-            if(!SafeIdentityCatalog.IsClanName(clanName))clanName=SafeIdentityCatalog.GenerateClanName();
-            if(!SafeIdentityCatalog.IsClanTag(clanTag))clanTag=SafeIdentityCatalog.GenerateClanTag();
-            clanDescriptionIndex=0;
-            bool old=GUI.enabled;GUI.enabled=old&&enabled;
+            // The server assigns names and tags at creation, never the client.
             theme.Label(new Rect(Left,276,170,36),"CLAN NAME",theme.Small);
-            theme.FitLabel(new Rect(Left+180,270,ContentWidth-350,42),clanName,theme.Body);
-            if(theme.Action(new Rect(Right-150,270,150,42),"REROLL NAME"))
-            {clanName=SafeIdentityCatalog.GenerateClanName(clanName);clanTag=SafeIdentityCatalog.GenerateClanTag();}
-            theme.Label(new Rect(Left,334,170,36),"GENERATED TAG",theme.Small);
-            theme.Label(new Rect(Left+180,328,ContentWidth-180,42),clanTag,theme.Body);
+            theme.FitLabel(new Rect(Left+180,270,ContentWidth-210,42),
+                "AUTOMATICALLY GENERATED",theme.Body);
+            theme.Label(new Rect(Left,334,170,36),"CLAN TAG",theme.Small);
+            theme.Label(new Rect(Left+180,328,ContentWidth-180,42),
+                "AUTOMATICALLY GENERATED",theme.Body);
             theme.Label(new Rect(Left,392,170,36),"DESCRIPTION",theme.Small);
-            theme.Label(new Rect(Left+180,384,ContentWidth-180,60),SafeIdentityCatalog.Descriptions[clanDescriptionIndex],theme.Body,true);
-            // No user-selectable text, including preset descriptions.
-            GUI.enabled=old;
+            theme.Label(new Rect(Left+180,384,ContentWidth-180,60),
+                SafeIdentityCatalog.Descriptions[0],theme.Body,true);
+            theme.Label(new Rect(Left+180,450,ContentWidth-180,36),
+                "No editable names, tags, descriptions or messages.",theme.Small,true);
         }
         void DrawCreateClan(SocialService service,SocialService.Snapshot state)
         {
@@ -202,8 +199,6 @@ namespace Alterverse.UI
             {
                 // Retain the original request for receipt confirmation, but never
                 // render free text from a legacy request pending on this device.
-                if(SafeIdentityCatalog.IsClanName(pending.name))clanName=pending.name;
-                if(SafeIdentityCatalog.IsClanTag(pending.tag))clanTag=pending.tag;
                 clanDescriptionIndex=0;
                 clanOpen=pending.open;
             }
@@ -213,7 +208,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left,548,ContentWidth,38),pending!=null?"Previous request pending. Retry to confirm its result; you will not be charged twice.":"500 Shards • 50 members • Generated English names and preset descriptions",theme.Small,true);
             bool supported=state.clanCreationCost==500&&state.clanProtocolVersion>=3;
             if(theme.Action(new Rect(Left,596,300,48),service.HasPendingClanCreation?"RETRY CLAN CREATION":"CREATE  /  500 SHARDS",true,enabled:!service.Busy&&supported&&(service.HasPendingClanCreation||PlayerWallet.Balance>=500)))
-                service.CreateClan(new SocialService.Request{name=clanName,tag=clanTag,descriptionId=clanDescriptionIndex,open=clanOpen});
+                service.CreateClan(new SocialService.Request{descriptionId=0,open=clanOpen});
             if(!supported)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),"Update the account server to enable generated clan identities.",theme.Small,true);
             else if(PlayerWallet.Balance<500&&!service.HasPendingClanCreation)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),$"You need {500-PlayerWallet.Balance} more Shards.",theme.Small,true);
         }
