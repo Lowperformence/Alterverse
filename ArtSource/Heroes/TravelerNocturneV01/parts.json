@@ -1,0 +1,1861 @@
+[
+  {
+    "id": "T02_PelvicPressureSuit",
+    "group": "Torso",
+    "suggested_bone": "Hips",
+    "material": "PressureWeave",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalPressureSuit",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "PressureWeave",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_ThoracicPressureSuit",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "PressureWeave",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "H03_NeckSeal",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "SealRubber",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      0.0,
+      0.17,
+      0.0
+    ]
+  },
+  {
+    "id": "H01_HelmetShell",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackCeramic",
+    "vertices": 610,
+    "triangles": 1216,
+    "explode_offset_m": [
+      0.0,
+      0.48,
+      0.0
+    ]
+  },
+  {
+    "id": "H02_SmokedVisor",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "Obsidian",
+    "vertices": 482,
+    "triangles": 960,
+    "explode_offset_m": [
+      0.0,
+      0.48,
+      0.29
+    ]
+  },
+  {
+    "id": "H03_CollarGasket_0",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackMetal",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.14,
+      0.0
+    ]
+  },
+  {
+    "id": "H03_CollarGasket_1",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackMetal",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.22000000000000003,
+      0.0
+    ]
+  },
+  {
+    "id": "H01_Temple_L",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.22,
+      0.48,
+      0.0
+    ]
+  },
+  {
+    "id": "H01_OffsetBrow_L",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackCeramic",
+    "vertices": 14,
+    "triangles": 24,
+    "explode_offset_m": [
+      -0.1,
+      0.58,
+      0.08
+    ]
+  },
+  {
+    "id": "H01_Temple_R",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.22,
+      0.48,
+      0.0
+    ]
+  },
+  {
+    "id": "H01_OffsetBrow_R",
+    "group": "Helmet",
+    "suggested_bone": "Head",
+    "material": "BlackCeramic",
+    "vertices": 14,
+    "triangles": 24,
+    "explode_offset_m": [
+      0.1,
+      0.58,
+      0.08
+    ]
+  },
+  {
+    "id": "T01_SteppedBreastplate_1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackCeramic",
+    "vertices": 23,
+    "triangles": 42,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.28
+    ]
+  },
+  {
+    "id": "T01_Fastener_0_-1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.28
+    ]
+  },
+  {
+    "id": "T01_Fastener_0_1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.28
+    ]
+  },
+  {
+    "id": "T01_SteppedBreastplate_2",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "BlackCeramic",
+    "vertices": 23,
+    "triangles": 42,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.4
+    ]
+  },
+  {
+    "id": "T01_Fastener_1_-1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.4
+    ]
+  },
+  {
+    "id": "T01_Fastener_1_1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.4
+    ]
+  },
+  {
+    "id": "T01_SteppedBreastplate_3",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "BlackCeramic",
+    "vertices": 23,
+    "triangles": 42,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.52
+    ]
+  },
+  {
+    "id": "T01_Fastener_2_-1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.52
+    ]
+  },
+  {
+    "id": "T01_Fastener_2_1",
+    "group": "Torso",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.52
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_0",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_1",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_2",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_3",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_4",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_5",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_AbdominalRib_6",
+    "group": "Torso",
+    "suggested_bone": "Spine",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T02_BackpackBase",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      -0.32
+    ]
+  },
+  {
+    "id": "T02_CirculationHousing_-1",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_0",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_1",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_2",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_3",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_4",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_-1_5",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CirculationHousing_1",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_0",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_1",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_2",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_3",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_4",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T02_CoolingSlat_1_5",
+    "group": "Backpack",
+    "suggested_bone": "Chest",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.14,
+      0.0,
+      -0.46
+    ]
+  },
+  {
+    "id": "T03_WaistSeal",
+    "group": "Torso",
+    "suggested_bone": "Hips",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "T03_BeltBuckle",
+    "group": "Torso",
+    "suggested_bone": "Hips",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.0,
+      0.0,
+      0.24
+    ]
+  },
+  {
+    "id": "A01_UpperArm_L",
+    "group": "ArmL",
+    "suggested_bone": "UpperArmL",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_Forearm_L",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_ShoulderShell_L",
+    "group": "ArmL",
+    "suggested_bone": "UpperArmL",
+    "material": "BlackCeramic",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      -0.64,
+      0.1,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_ShoulderLouver_0",
+    "group": "ArmL",
+    "suggested_bone": "UpperArmL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.64,
+      0.1,
+      0.04
+    ]
+  },
+  {
+    "id": "A01_ShoulderLouver_1",
+    "group": "ArmL",
+    "suggested_bone": "UpperArmL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.64,
+      0.1,
+      0.08
+    ]
+  },
+  {
+    "id": "Seal_Elbow_L",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_L_0",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_L_1",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_L_2",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_L_3",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_L_4",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "Seal_Wrist_L",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_L_0",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_L_1",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_L_2",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_L_3",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_L_4",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "Seal_Knee_L",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_L_0",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_L_1",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_L_2",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_L_3",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_L_4",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A02_BicepArmor_L",
+    "group": "ArmL",
+    "suggested_bone": "UpperArmL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.23
+    ]
+  },
+  {
+    "id": "A03_Gauntlet_L",
+    "group": "ArmL",
+    "suggested_bone": "ForearmL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.23
+    ]
+  },
+  {
+    "id": "A04_Glove_L",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "PressureWeave",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_L_0",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_L_0",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_L_1",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_L_1",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_L_2",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_L_2",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_L_3",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_L_3",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Thumb_L",
+    "group": "ArmL",
+    "suggested_bone": "HandL",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L01_ThighSuit_L",
+    "group": "LegL",
+    "suggested_bone": "ThighL",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L01_ShinSuit_L",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L02_ThighArmor_L",
+    "group": "LegL",
+    "suggested_bone": "ThighL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L03_KneeArmor_L",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L04_ShinArmor_L",
+    "group": "LegL",
+    "suggested_bone": "ShinL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L05_Boot_L",
+    "group": "LegL",
+    "suggested_bone": "FootL",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_BootSole_L",
+    "group": "LegL",
+    "suggested_bone": "FootL",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      -0.11,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_L_0",
+    "group": "LegL",
+    "suggested_bone": "FootL",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_L_1",
+    "group": "LegL",
+    "suggested_bone": "FootL",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_L_2",
+    "group": "LegL",
+    "suggested_bone": "FootL",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      -0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_UpperArm_R",
+    "group": "ArmR",
+    "suggested_bone": "UpperArmR",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_Forearm_R",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A01_ShoulderShell_R",
+    "group": "ArmR",
+    "suggested_bone": "UpperArmR",
+    "material": "BlackCeramic",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.64,
+      0.1,
+      0.0
+    ]
+  },
+  {
+    "id": "Seal_Elbow_R",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_R_0",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_R_1",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_R_2",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_R_3",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Elbow_R_4",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "Seal_Wrist_R",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_R_0",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_R_1",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_R_2",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_R_3",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Wrist_R_4",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "Seal_Knee_R",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_R_0",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_R_1",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_R_2",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_R_3",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "SealRib_Knee_R_4",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "SealRubber",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A02_BicepArmor_R",
+    "group": "ArmR",
+    "suggested_bone": "UpperArmR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.23
+    ]
+  },
+  {
+    "id": "A03_Gauntlet_R",
+    "group": "ArmR",
+    "suggested_bone": "ForearmR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.23
+    ]
+  },
+  {
+    "id": "A04_Glove_R",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "PressureWeave",
+    "vertices": 266,
+    "triangles": 528,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_R_0",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_R_0",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_R_1",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_R_1",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_R_2",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_R_2",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Finger_R_3",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Knuckle_R_3",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "A04_Thumb_R",
+    "group": "ArmR",
+    "suggested_bone": "HandR",
+    "material": "SealRubber",
+    "vertices": 22,
+    "triangles": 40,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L01_ThighSuit_R",
+    "group": "LegR",
+    "suggested_bone": "ThighR",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L01_ShinSuit_R",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "PressureWeave",
+    "vertices": 34,
+    "triangles": 64,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.0
+    ]
+  },
+  {
+    "id": "L02_ThighArmor_R",
+    "group": "LegR",
+    "suggested_bone": "ThighR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L03_KneeArmor_R",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L04_ShinArmor_R",
+    "group": "LegR",
+    "suggested_bone": "ShinR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      0.0,
+      0.25
+    ]
+  },
+  {
+    "id": "L05_Boot_R",
+    "group": "LegR",
+    "suggested_bone": "FootR",
+    "material": "BlackCeramic",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_BootSole_R",
+    "group": "LegR",
+    "suggested_bone": "FootR",
+    "material": "SealRubber",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      -0.11,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_R_0",
+    "group": "LegR",
+    "suggested_bone": "FootR",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_R_1",
+    "group": "LegR",
+    "suggested_bone": "FootR",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "L05_ToeBand_R_2",
+    "group": "LegR",
+    "suggested_bone": "FootR",
+    "material": "BlackMetal",
+    "vertices": 26,
+    "triangles": 48,
+    "explode_offset_m": [
+      0.43,
+      -0.055,
+      0.0
+    ]
+  },
+  {
+    "id": "W01_OrbCore",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "Obsidian",
+    "vertices": 482,
+    "triangles": 960,
+    "explode_offset_m": [
+      1.05,
+      0.12,
+      0.0
+    ]
+  },
+  {
+    "id": "W03_OrbShell_1",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      1.292487113059643,
+      0.12,
+      0.13999999999999999
+    ]
+  },
+  {
+    "id": "W03_OrbShell_2",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      1.05,
+      0.12,
+      0.28
+    ]
+  },
+  {
+    "id": "W03_OrbShell_3",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      0.8075128869403572,
+      0.12,
+      0.13999999999999999
+    ]
+  },
+  {
+    "id": "W03_OrbShell_4",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      0.8075128869403572,
+      0.12,
+      -0.13999999999999993
+    ]
+  },
+  {
+    "id": "W03_OrbShell_5",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      1.05,
+      0.12,
+      -0.28
+    ]
+  },
+  {
+    "id": "W03_OrbShell_6",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackCeramic",
+    "vertices": 234,
+    "triangles": 464,
+    "explode_offset_m": [
+      1.292487113059643,
+      0.12,
+      -0.14000000000000012
+    ]
+  },
+  {
+    "id": "W02_OrbStabilizer",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackMetal",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      1.05,
+      0.36,
+      0.0
+    ]
+  },
+  {
+    "id": "W02_PolarCollar_-1",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackMetal",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      1.05,
+      -0.12,
+      0.0
+    ]
+  },
+  {
+    "id": "W02_PolarCollar_1",
+    "group": "Weapon",
+    "suggested_bone": "WeaponGripR",
+    "material": "BlackMetal",
+    "vertices": 288,
+    "triangles": 576,
+    "explode_offset_m": [
+      1.05,
+      0.36,
+      0.0
+    ]
+  }
+]

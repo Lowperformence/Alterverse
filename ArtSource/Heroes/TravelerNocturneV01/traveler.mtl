@@ -1,0 +1,24 @@
+newmtl PressureWeave
+Kd 0.018 0.018 0.018
+Ks .25 .25 .25
+Ns 14
+
+newmtl BlackCeramic
+Kd 0.035 0.035 0.035
+Ks .25 .25 .25
+Ns 79
+
+newmtl SealRubber
+Kd 0.009 0.009 0.009
+Ks .25 .25 .25
+Ns 6
+
+newmtl Obsidian
+Kd 0.012 0.012 0.012
+Ks .25 .25 .25
+Ns 104
+
+newmtl BlackMetal
+Kd 0.052 0.052 0.052
+Ks .25 .25 .25
+Ns 81
