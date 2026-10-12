@@ -9,7 +9,7 @@ namespace UnityEngine {
  public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public bool isActiveAndEnabled=true; public void StartCoroutine(IEnumerator e){} }
  public class GameObject:Object { public GameObject(string n=""){} public T AddComponent<T>() where T:new(){var o=new T();typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;} }
  public class TextAsset {public string text;}
- public static class Resources {public static TextAsset AccountConfig; public static T Load<T>(string s) where T:class=>AccountConfig as T;}
+ public static class Resources {public static TextAsset AccountConfig, RankedConfig; public static T Load<T>(string s) where T:class=>(s == "RankedAvailability" ? RankedConfig : AccountConfig) as T;}
  public static class JsonUtility {
 #if MONO_FIXTURE
  public static string ToJson(object o){using var stream=new System.IO.MemoryStream();new System.Runtime.Serialization.Json.DataContractJsonSerializer(o.GetType()).WriteObject(stream,o);return System.Text.Encoding.UTF8.GetString(stream.ToArray());}

@@ -95,6 +95,7 @@ namespace Alterverse.Multiplayer
         }
         public async Task<bool> StartSearchAsync()
         {
+            if (!RankedAvailability.Enabled) { Status = RankedAvailability.LockedMessage; return false; }
             if (Busy || Searching || CoopAuthority.Active) return false;
             if (OnlinePartyService.Instance?.InParty == true || CoopLobbyService.Instance?.InLobby == true ||
                 EdgegapOnlineFlow.Instance?.IsSearching == true)

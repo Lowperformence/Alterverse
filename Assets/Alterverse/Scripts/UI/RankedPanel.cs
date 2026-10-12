@@ -12,13 +12,14 @@ namespace Alterverse.UI
         public static bool Visible => instance != null;
         public static void Show()
         {
+            if (!RankedAvailability.Enabled) return;
             if (instance == null) new GameObject("DF_RankedPanel").AddComponent<RankedPanel>();
             if (RankedService.Instance != null) _ = RankedService.Instance.RefreshAsync();
         }
         void Awake() { instance = this; }
         void OnGUI()
         {
-            if (!MainMenuController.IsVisible || CoopAuthority.Active) { Destroy(gameObject); return; }
+            if (!RankedAvailability.Enabled || !MainMenuController.IsVisible || CoopAuthority.Active) { Destroy(gameObject); return; }
             theme ??= new FrontEndTheme();
             Matrix4x4 old = GUI.matrix; int depth = GUI.depth;
             Rect safe = Screen.safeArea;

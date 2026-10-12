@@ -17,7 +17,7 @@ here=Path(__file__).resolve().parent
 root=here.parents[2]
 source=root/'Assets/Alterverse/Scripts'
 names=['Multiplayer/MatchSession.cs','Multiplayer/OnlineMatchPlan.cs','Multiplayer/CoopPlanHandshake.cs',
-       'Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
+       'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
        'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     if not a.dotnet_root:

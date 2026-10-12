@@ -432,7 +432,7 @@ namespace Alterverse.UI
             if (theme.Action(new Rect(Left,620,matchButtonWidth,58),"Play Online",true,
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOnlineMatchmakingAsync();
             if (theme.Action(new Rect(Left+matchButtonWidth+matchButtonGap,620,matchButtonWidth,58),"Ranked",true,
-                enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked))
+                enabled:matchButtonsEnabled && HeroUnlockInventory.Owned((HeroId)selectedHero),locked:heroReleaseLocked || !RankedAvailability.Enabled))
             { PlayerHeroSelection.Select((HeroId)selectedHero); RankedPanel.Show(); }
             if (theme.Action(new Rect(Left+2*(matchButtonWidth+matchButtonGap),620,matchButtonWidth,58),"Play Offline",
                 enabled:matchButtonsEnabled,locked:heroReleaseLocked)) _ = BeginOfflineMatchAsync();

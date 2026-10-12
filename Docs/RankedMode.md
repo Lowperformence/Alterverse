@@ -1,5 +1,23 @@
 # Dimensions Front – Online-Ranked, Version 1
 
+## Vorläufig gesperrt – Freigabe
+
+Ranked bleibt im PLAY-Menü sichtbar, zeigt das vorhandene Schloss und lässt
+sich nicht auswählen. Auch direkte Aufrufe des Panels oder der Suche sind
+gesperrt. Casual und Offline bleiben unabhängig davon nutzbar.
+
+Zentraler Client-Schalter: `Assets/Resources/RankedAvailability.json`.
+Für die spätere Freigabe `"enabled": false` auf `"enabled": true` ändern
+und einen neuen Android-/Client-Build veröffentlichen. Fehlende oder ungültige
+Konfiguration hält Ranked gesperrt. Es gibt keinen Freigabeknopf für Spieler.
+
+Der vorhandene serverseitige Schalter `DF_ENABLE_RANKED` bleibt zusätzlich
+maßgeblich: Bis zur Live-Freigabe auf `0` lassen/setzen, zur Freigabe auf `1`
+setzen, nachdem die unten beschriebenen Online-Voraussetzungen erfüllt sind.
+Die Datei allein ändert keinen bereits installierten Build und keine
+Cloud-Konfiguration. Ein produktiver Server wurde bei dieser Änderung nicht
+umkonfiguriert.
+
 ## Spielregeln
 
 - Eigener **Solo-5v5-Modus** neben Casual und Offline. Zehn echte Spieler müssen verbunden sein und den Start bestätigen. Kein Bot-Fill beim Ranked-Start; bei fehlenden Spielern wird ohne Punkte abgebrochen.

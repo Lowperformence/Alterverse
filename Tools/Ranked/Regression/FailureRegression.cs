@@ -26,6 +26,7 @@ partial class Regression
   var reporter=RankedMatchReporter.Instance;if(reporter!=null)Invoke(reporter,"OnDestroy");
   var handshake=DedicatedOnlineMatchHandshake.Instance;if(handshake!=null)Invoke(handshake,"OnDestroy");
   var service=RankedService.Instance;if(service!=null)Invoke(service,"OnDestroy");
+  Resources.RankedConfig=new TextAsset{text="{\"enabled\":true}"};
   UnityWebRequest.Handler=null;CoopAuthority.Active=false;CoopAuthority.PreparedPlan=null;
   CoopNetworkBootstrap.Connects=CoopNetworkBootstrap.Cancels=0;CoopNetworkBootstrap.DirectServerStatus="";
   typeof(EdgegapMatchmakerClient).GetProperty("Instance").SetValue(null,null);
@@ -58,6 +59,19 @@ partial class Regression
  }
  static async Task FailureCases()
  {
+  {
+   ResetFailures(); var service=Component<RankedService>(); int requests=0;
+   UnityWebRequest.Handler=r=>{requests++;return Reply(r,"{}");};
+   Resources.RankedConfig=null;
+   Check(!RankedAvailability.Enabled,"missing release config locks Ranked");
+   Resources.RankedConfig=new TextAsset{text="{\"enabled\":false}"};
+   Check(!await service.StartSearchAsync(),"locked Ranked rejects direct queue calls");
+   Check(requests==0 && !service.Searching && !service.Busy,"locked queue makes no HTTP calls or state changes");
+   Alterverse.UI.RankedPanel.Show();
+   Check(!Alterverse.UI.RankedPanel.Visible,"locked Ranked cannot open its panel");
+   Resources.RankedConfig=new TextAsset{text="{\"enabled\":true}"};
+   Check(RankedAvailability.Enabled,"single release setting enables Ranked");
+  }
   int failures=0;
   async Task Case(string name,Func<Task> run){try{await run();}catch(Exception e){failures++;Console.WriteLine("FAIL "+name+": "+e.GetBaseException().Message);}}
   await Case("unlinked guest cannot earn unrecoverable rank",async()=>
