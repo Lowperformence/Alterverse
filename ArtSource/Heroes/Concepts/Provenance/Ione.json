@@ -90,16 +90,17 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": "detailed replacement head",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
-    "revision": "nine-hero-concepts-20261012-v2",
+    "revision": "hero-component-plans-20261012-v3",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Ione-model.blend",
     "model": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
-    "modelSha256": "495e064bae31a0b1a42b97413b24957a403c1d81a19b9ce6e11355177c163d6a"
+    "modelSha256": "efdb80fa127836d086abbff41d50e889f40450f71ace5981fdc8e172825524eb"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]

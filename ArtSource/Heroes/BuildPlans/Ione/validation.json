@@ -1,0 +1,1352 @@
+{
+  "revision": "hero-component-plans-20261012-v3",
+  "hero": "Ione",
+  "checks": {
+    "preservedVertices": 20818,
+    "removedVertices": 0,
+    "newVertices": 9034,
+    "newTriangles": 17132,
+    "newParts": [
+      {
+        "name": "twin forearm ceramic rails L",
+        "first": 0,
+        "vertices": 104,
+        "triangles": 204,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "forearm luminous inset L",
+        "first": 104,
+        "vertices": 78,
+        "triangles": 152,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "twin forearm ceramic rails L",
+        "first": 182,
+        "vertices": 104,
+        "triangles": 204,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "forearm luminous inset L",
+        "first": 286,
+        "vertices": 78,
+        "triangles": 152,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "split knee diamond L",
+        "first": 364,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "knee light inlay L",
+        "first": 377,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 3
+      },
+      {
+        "name": "separate thigh armor leaf L",
+        "first": 390,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "separate thigh armor leaf L",
+        "first": 403,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "twin forearm ceramic rails R",
+        "first": 416,
+        "vertices": 104,
+        "triangles": 204,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "forearm luminous inset R",
+        "first": 520,
+        "vertices": 78,
+        "triangles": 152,
+        "bone": 12,
+        "material": 3
+      },
+      {
+        "name": "twin forearm ceramic rails R",
+        "first": 598,
+        "vertices": 104,
+        "triangles": 204,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "forearm luminous inset R",
+        "first": 702,
+        "vertices": 78,
+        "triangles": 152,
+        "bone": 12,
+        "material": 3
+      },
+      {
+        "name": "split knee diamond R",
+        "first": 780,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "knee light inlay R",
+        "first": 793,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 3
+      },
+      {
+        "name": "separate thigh armor leaf R",
+        "first": 806,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "separate thigh armor leaf R",
+        "first": 819,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "triangular chest resonance emitter 0 recessed housing",
+        "first": 832,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "triangular chest resonance emitter 0 luminous ring",
+        "first": 1098,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "triangular chest resonance emitter 0 lens",
+        "first": 1330,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "triangular chest resonance emitter 1 recessed housing",
+        "first": 1596,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "triangular chest resonance emitter 1 luminous ring",
+        "first": 1862,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "triangular chest resonance emitter 1 lens",
+        "first": 2094,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "triangular chest resonance emitter 2 recessed housing",
+        "first": 2360,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "triangular chest resonance emitter 2 luminous ring",
+        "first": 2626,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "triangular chest resonance emitter 2 lens",
+        "first": 2858,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "chest triangular violet circuit",
+        "first": 3124,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "chest triangular violet circuit",
+        "first": 3136,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "chest triangular violet circuit",
+        "first": 3148,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames L0",
+        "first": 3160,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L0",
+        "first": 3347,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3523,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3575,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames L1",
+        "first": 3627,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L1",
+        "first": 3814,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3990,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4042,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames L2",
+        "first": 4094,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge L2",
+        "first": 4281,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4457,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4509,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames R0",
+        "first": 4561,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R0",
+        "first": 4748,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4924,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4976,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames R1",
+        "first": 5028,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R1",
+        "first": 5215,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 5391,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 5443,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "three overlapping shoulder lames R2",
+        "first": 5495,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "shoulder inset edge R2",
+        "first": 5682,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 5858,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 5910,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "hip orbit reactor recessed housing",
+        "first": 5962,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 0,
+        "material": 1
+      },
+      {
+        "name": "hip orbit reactor luminous ring",
+        "first": 6228,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 0,
+        "material": 3
+      },
+      {
+        "name": "hip orbit reactor lens",
+        "first": 6460,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 0,
+        "material": 3
+      },
+      {
+        "name": "hip orbit reactor recessed housing",
+        "first": 6726,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 0,
+        "material": 1
+      },
+      {
+        "name": "hip orbit reactor luminous ring",
+        "first": 6992,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 0,
+        "material": 3
+      },
+      {
+        "name": "hip orbit reactor lens",
+        "first": 7224,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 0,
+        "material": 3
+      },
+      {
+        "name": "Ione UpperArmL separate formed guard",
+        "first": 7490,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmL inset service panel",
+        "first": 7509,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 4,
+        "material": 0
+      },
+      {
+        "name": "Ione UpperArmL protected luminous channel",
+        "first": 7522,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "Ione UpperArmL countersunk fastener",
+        "first": 7534,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmL countersunk fastener",
+        "first": 7568,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmL inset vent",
+        "first": 7602,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmL inset vent",
+        "first": 7612,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmL inset vent",
+        "first": 7622,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL separate formed guard",
+        "first": 7632,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL inset service panel",
+        "first": 7651,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 5,
+        "material": 0
+      },
+      {
+        "name": "Ione ForearmL protected luminous channel",
+        "first": 7664,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "Ione ForearmL countersunk fastener",
+        "first": 7676,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL countersunk fastener",
+        "first": 7710,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL inset vent",
+        "first": 7744,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL inset vent",
+        "first": 7754,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmL inset vent",
+        "first": 7764,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL separate formed guard",
+        "first": 7774,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL inset service panel",
+        "first": 7793,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "Ione ThighL protected luminous channel",
+        "first": 7806,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 7,
+        "material": 3
+      },
+      {
+        "name": "Ione ThighL countersunk fastener",
+        "first": 7818,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL countersunk fastener",
+        "first": 7852,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL inset vent",
+        "first": 7886,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL inset vent",
+        "first": 7896,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighL inset vent",
+        "first": 7906,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL separate formed guard",
+        "first": 7916,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL inset service panel",
+        "first": 7935,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 0
+      },
+      {
+        "name": "Ione ShinL protected luminous channel",
+        "first": 7948,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 8,
+        "material": 3
+      },
+      {
+        "name": "Ione ShinL countersunk fastener",
+        "first": 7960,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL countersunk fastener",
+        "first": 7994,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL inset vent",
+        "first": 8028,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL inset vent",
+        "first": 8038,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinL inset vent",
+        "first": 8048,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR separate formed guard",
+        "first": 8058,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR inset service panel",
+        "first": 8077,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 11,
+        "material": 0
+      },
+      {
+        "name": "Ione UpperArmR protected luminous channel",
+        "first": 8090,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "Ione UpperArmR countersunk fastener",
+        "first": 8102,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR countersunk fastener",
+        "first": 8136,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR inset vent",
+        "first": 8170,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR inset vent",
+        "first": 8180,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione UpperArmR inset vent",
+        "first": 8190,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR separate formed guard",
+        "first": 8200,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR inset service panel",
+        "first": 8219,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 12,
+        "material": 0
+      },
+      {
+        "name": "Ione ForearmR protected luminous channel",
+        "first": 8232,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 12,
+        "material": 3
+      },
+      {
+        "name": "Ione ForearmR countersunk fastener",
+        "first": 8244,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR countersunk fastener",
+        "first": 8278,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR inset vent",
+        "first": 8312,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR inset vent",
+        "first": 8322,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ForearmR inset vent",
+        "first": 8332,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 12,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR separate formed guard",
+        "first": 8342,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR inset service panel",
+        "first": 8361,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 0
+      },
+      {
+        "name": "Ione ThighR protected luminous channel",
+        "first": 8374,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 14,
+        "material": 3
+      },
+      {
+        "name": "Ione ThighR countersunk fastener",
+        "first": 8386,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR countersunk fastener",
+        "first": 8420,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR inset vent",
+        "first": 8454,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR inset vent",
+        "first": 8464,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ThighR inset vent",
+        "first": 8474,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR separate formed guard",
+        "first": 8484,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR inset service panel",
+        "first": 8503,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 15,
+        "material": 0
+      },
+      {
+        "name": "Ione ShinR protected luminous channel",
+        "first": 8516,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 15,
+        "material": 3
+      },
+      {
+        "name": "Ione ShinR countersunk fastener",
+        "first": 8528,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR countersunk fastener",
+        "first": 8562,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR inset vent",
+        "first": 8596,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR inset vent",
+        "first": 8606,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione ShinR inset vent",
+        "first": 8616,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 15,
+        "material": 2
+      },
+      {
+        "name": "Ione back service shell",
+        "first": 8626,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8642,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8654,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8666,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione rear panel countersunk fastener",
+        "first": 8678,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione rear panel countersunk fastener",
+        "first": 8712,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione back service shell",
+        "first": 8746,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8762,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8774,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione back exhaust vent",
+        "first": 8786,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Ione rear panel countersunk fastener",
+        "first": 8798,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione rear panel countersunk fastener",
+        "first": 8832,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Ione occipital helmet cassette",
+        "first": 8866,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Ione helmet cooling slot",
+        "first": 8882,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Ione helmet cooling slot",
+        "first": 8894,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Ione helmet cooling slot",
+        "first": 8906,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Ione helmet countersunk fastener",
+        "first": 8918,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Ione helmet countersunk fastener",
+        "first": 8952,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Ione weapon recessed service rib 2-0",
+        "first": 8986,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Ione weapon recessed service rib 2-1",
+        "first": 8998,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      },
+      {
+        "name": "Ione weapon protected energy rail 2",
+        "first": 9010,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 3
+      },
+      {
+        "name": "Ione weapon recessed service rib 2-2",
+        "first": 9022,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 17,
+        "material": 2
+      }
+    ],
+    "rigAndMarkersPreserved": true,
+    "bodyPositionsAndNormalsExact": true,
+    "preservedVertexDigest": "cfbe49fc33fe637f6d9905fac87c19bd7b607ce9c9ac8d91371a3a8d65ec4be1",
+    "shippingModel": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
+    "canonicalWeaponMarkersExact": true,
+    "forwardWeaponAxis": [
+      0.0,
+      0.0,
+      1.0
+    ],
+    "assembly": {
+      "hero": "Ione",
+      "units": "metres",
+      "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+      "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+      "components": [
+        {
+          "part": "Torso_Armor",
+          "vertices": 5180,
+          "triangles": 9991,
+          "boundsBlenderMetres": [
+            [
+              -0.20299999,
+              -0.195902,
+              0.87
+            ],
+            [
+              0.20299999,
+              0.16955268,
+              1.60099995
+            ]
+          ],
+          "dimensionsMm": [
+            406.0,
+            365.45,
+            731.0
+          ]
+        },
+        {
+          "part": "Arm_L",
+          "vertices": 4574,
+          "triangles": 8792,
+          "boundsBlenderMetres": [
+            [
+              -0.40498301,
+              -0.11651895,
+              0.93022501
+            ],
+            [
+              -0.08865,
+              0.12064,
+              1.70654631
+            ]
+          ],
+          "dimensionsMm": [
+            316.33,
+            237.16,
+            776.32
+          ]
+        },
+        {
+          "part": "Leg_L",
+          "vertices": 3059,
+          "triangles": 5964,
+          "boundsBlenderMetres": [
+            [
+              -0.2348,
+              -0.18923999,
+              0.0168
+            ],
+            [
+              -0.0388,
+              0.083,
+              1.08599997
+            ]
+          ],
+          "dimensionsMm": [
+            196.0,
+            272.24,
+            1069.2
+          ]
+        },
+        {
+          "part": "Arm_R",
+          "vertices": 4574,
+          "triangles": 8792,
+          "boundsBlenderMetres": [
+            [
+              0.08865,
+              -0.11651895,
+              0.93022501
+            ],
+            [
+              0.40498301,
+              0.12064,
+              1.70654631
+            ]
+          ],
+          "dimensionsMm": [
+            316.33,
+            237.16,
+            776.32
+          ]
+        },
+        {
+          "part": "Leg_R",
+          "vertices": 3059,
+          "triangles": 5964,
+          "boundsBlenderMetres": [
+            [
+              0.0388,
+              -0.18923999,
+              0.0168
+            ],
+            [
+              0.2348,
+              0.083,
+              1.08599997
+            ]
+          ],
+          "dimensionsMm": [
+            196.0,
+            272.24,
+            1069.2
+          ]
+        },
+        {
+          "part": "Weapons",
+          "vertices": 812,
+          "triangles": 1504,
+          "boundsBlenderMetres": [
+            [
+              -0.60478097,
+              -0.52182001,
+              0.71676695
+            ],
+            [
+              -0.094759,
+              -0.01882,
+              1.23375404
+            ]
+          ],
+          "dimensionsMm": [
+            510.02,
+            503.0,
+            516.99
+          ]
+        },
+        {
+          "part": "Head_Helmet",
+          "vertices": 8540,
+          "triangles": 16160,
+          "boundsBlenderMetres": [
+            [
+              -0.149,
+              -0.11924,
+              1.52380002
+            ],
+            [
+              0.149,
+              0.12276126,
+              1.93480003
+            ]
+          ],
+          "dimensionsMm": [
+            298.0,
+            242.0,
+            411.0
+          ]
+        }
+      ],
+      "checks": {
+        "sourceTriangles": 57167,
+        "partTriangles": 57167
+      }
+    },
+    "fbxRoundTrip": {
+      "bones": 18,
+      "skinningImported": true,
+      "normalizedWeights": true,
+      "animationClipsImported": [],
+      "vertices": 29852
+    },
+    "fbxSha256": "1e2444daf337eed8812aa89d87f60faeced6541350a8006dd311eadca4cce56f",
+    "modelSha256": "efdb80fa127836d086abbff41d50e889f40450f71ace5981fdc8e172825524eb",
+    "blenderSha256": "4a612544a47ec23d8be4f6e7148ac02007bdeef6806524f5bd56a0b3fdc3b2ed"
+  },
+  "UnityEditor": "not run",
+  "Android": "not run"
+}
