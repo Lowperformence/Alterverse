@@ -5755,9 +5755,9 @@
         "animationClipsImported": [],
         "vertices": 16465
       },
-      "fbxSha256": "e2342b0674112dfdbfab5a32044a9b17e2f8b790605b83c9027fd4ff4a475b3f",
+      "fbxSha256": "297bca910a8cd3b646940748da1e61388a5f94ec5968d5a91dd30d809680febb",
       "modelSha256": "d477ee12423b1a1e080fdf0ebe49529a86a6589eea878c488ffca2d0cba533d3",
-      "blenderSha256": "6b53eaa8d75a4cf75c84765de7a5f361bfc24540262aae79840998b5b3e0f3c7"
+      "blenderSha256": "8a8a90b5b01b5e7f764d5741c714727d65a30c5cc9fa9d4e05bb9a7ca39d1f3d"
     },
     "Zhaev": {
       "source": "ArtSource/Heroes/Veyr.blend",
