@@ -289,6 +289,15 @@ namespace Alterverse.Visuals
             Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
         }
 
+        public static Vector3 GuardHandOffset(bool shield) => shield
+            ? new Vector3(-.16f, -.44f, .44f) : new Vector3(.34f, -.53f, .42f);
+
+        public static Vector3 GuardHandTarget(Transform model, Transform upper, Transform elbow, Transform hand, bool shield)
+        {
+            float reach = Vector3.Distance(upper.position, elbow.position) + Vector3.Distance(elbow.position, hand.position);
+            return upper.position + model.TransformDirection(GuardHandOffset(shield)) * reach;
+        }
+
         // Keep the head above and outside the right shoulder, as in the marked guard.
         // Shared with strike recovery so the weapon returns to this exact diagonal.
         public static Vector3 HammerGuardShaft(Transform actor) =>
@@ -323,7 +332,12 @@ namespace Alterverse.Visuals
 
         public void AlignGuard(Transform model, Transform leftHand, Transform rightHand, float weight)
         {
-            AlignHand(rightHand, "HammerGrip", "HammerTop", "HammerFront", true, model, weight);
+            if (rightHand != null && weight > .001f)
+            {
+                Quaternion before = rightHand.rotation;
+                OrientHammerGuard(model, rightHand);
+                rightHand.rotation = Quaternion.Slerp(before, rightHand.rotation, weight);
+            }
             if (markers.TryGetValue("ShieldCenter", out var center) &&
                 markers.TryGetValue("ShieldTop", out var top) && markers.TryGetValue("ShieldFront", out var front))
                 shieldGuard.Orient(model, leftHand, center, top, front);

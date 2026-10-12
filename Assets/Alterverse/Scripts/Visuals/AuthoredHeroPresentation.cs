@@ -299,6 +299,8 @@ namespace Alterverse.Visuals
             MeleeBasicAttackAnimation.For(gameObject)?.InitializeRig(model);
             // Capture the same corrected imported rest pose before any frame writes it.
             HeroLocomotionAnimation.For(gameObject, model);
+            // The menu preview must start in the same guard before its camera fits.
+            if (hero == HeroId.Kaelon) MeleeBasicAttackAnimation.For(gameObject)?.EvaluatePose();
         }
 
         // Each authored blade is weighted entirely to one WeaponGrip bone. A rigid
@@ -802,7 +804,7 @@ namespace Alterverse.Visuals
             // Only the idle pose is adjusted. A strike owns its wrist and weapon arc.
             var attack = GetComponent<MeleeBasicAttackAnimation>();
             if (!buildingGuard && attack != null && attack.StrikeActive) return;
-            if (hero == HeroId.Nyra || hero == HeroId.Rook) return;
+            if (hero == HeroId.Nyra || hero == HeroId.Rook || hero == HeroId.Kaelon) return;
             for (int i = 0; i < 2; i++)
             {
                 ArmChain arm = i == 0 ? leftArm : rightArm;
@@ -863,8 +865,8 @@ namespace Alterverse.Visuals
                     SolveGuard(rightArm, new Vector3(.35f, 1.01f, .04f), GuardHint(rightArm), guardWeight);
                     break;
                 case HeroId.Kaelon:
-                    SolveGuard(leftArm, new Vector3(-.35f, 1.10f, .11f), GuardHint(leftArm), guardWeight);
-                    SolveGuard(rightArm, new Vector3(.37f, 1.00f, .04f), GuardHint(rightArm), guardWeight);
+                    ApplyAurenGuard(leftArm, true);
+                    ApplyAurenGuard(rightArm, false);
                     break;
                 case HeroId.Elyra:
                     SolveGuard(leftArm, new Vector3(-.34f, 1.04f, .04f), GuardHint(leftArm), guardWeight);
@@ -887,6 +889,13 @@ namespace Alterverse.Visuals
                     SolveGuard(rightArm, new Vector3(.35f, .89f, .04f), GuardHint(rightArm), guardWeight);
                     break;
             }
+        }
+
+        private void ApplyAurenGuard(ArmChain arm, bool shield)
+        {
+            if (arm == null || model == null) return;
+            Vector3 point = SiegeTankAppearance.GuardHandTarget(model, arm.Upper, arm.Elbow, arm.Hand, shield);
+            SolveGuard(arm, model.InverseTransformPoint(point), GuardHint(arm), guardWeight);
         }
 
         private void ApplyBrawlerPunch()

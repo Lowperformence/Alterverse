@@ -60,6 +60,10 @@ partial class Regression
             Check(Vector3.Dot(shaft,actor.right)>.25f,"Hammer clears the head toward the weapon side");
             Check(Vector3.Dot(shaft,actor.forward)>.24f,"Hammer stays in front of the shoulder");
             Near(Vector3.Dot(shaft,SiegeTankAppearance.HammerGuardShaft(actor)),1,.00001f,"Fitted shaft matches shared recovery axis");
+            // The presentation/preview runs this later alignment after its pose solver.
+            // It used to rotate the new diagonal back into the old upright frame.
+            pose.AlignGuard(actor,null,hand,1f);
+            Near(Vector3.Dot((top.position-grip.position).normalized,SiegeTankAppearance.HammerGuardShaft(actor)),1,.00001f,"Preview final alignment retains the marked diagonal");
             Quaternion once=hand.rotation;pose.OrientHammerGuard(actor,hand);
             Near(Quaternion.Angle(once,hand.rotation),0,.08f,"Repeated hammer finalization has no feedback drift");
             SameV(contact,grip.localPosition,"Hammer contact preserved");
@@ -69,5 +73,8 @@ partial class Regression
         var empty=new GameObject("No hammer").AddComponent<SiegeTankAppearance>();
         Quaternion before=hand.rotation;empty.OrientHammerGuard(actor,hand);
         SameQ(before,hand.rotation,"Missing marker fallback leaves wrist unchanged");
+        hand.localRotation=Quaternion.Euler(14,55,-23);
+        Quaternion striking=hand.rotation;pose.AlignGuard(actor,null,hand,0f);
+        SameQ(striking,hand.rotation,"Zero guard weight leaves the active strike wrist untouched");
     }
 }

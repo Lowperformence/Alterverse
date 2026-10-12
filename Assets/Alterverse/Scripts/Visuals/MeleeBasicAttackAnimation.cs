@@ -37,8 +37,7 @@ namespace Alterverse.Visuals
         public bool OwnsPose => isActiveAndEnabled && (health == null || !health.IsDead) &&
             bones != null && CombatAnimationLibrary.Bones != null;
         public bool StrikeActive => active && Time.time < started + duration;
-        public static bool UsesStandingPose(HeroId hero, int bone) => hero != HeroId.Nyra &&
-            !(hero == HeroId.Kaelon && bone >= 4 && bone <= 6);
+        public static bool UsesStandingPose(HeroId hero, int bone) => hero != HeroId.Nyra;
         private void Awake()
         {
             identity = GetComponent<HeroIdentity>(); basic = GetComponent<BasicAttack>();
@@ -190,7 +189,7 @@ namespace Alterverse.Visuals
             {
                 reportedStandingPose = true;
                 HeroVisualDiagnostics.Trace("DF: imported rest pose RESET v5 active on " + identity.DisplayName +
-                    (identity.Hero == HeroId.Kaelon ? " (left shield arm preserved)" : "") + ".", this);
+                    (identity.Hero == HeroId.Kaelon ? " — AUREN GUARD v2: shield forward, hammer diagonal" : "") + ".", this);
             }
         }
         public string StandingPoseStatus()
@@ -207,7 +206,8 @@ namespace Alterverse.Visuals
                 Quaternion desired = bones[i].GuardWorld;
                 largest = Mathf.Max(largest, Quaternion.Angle(bones[i].Transform.rotation, desired));
             }
-            return "Imported rest pose RESET v5; final arm deviation " + largest.ToString("F2") + " degrees";
+            return (identity.Hero == HeroId.Kaelon ? "AUREN GUARD v2" : "Imported rest pose RESET v5") +
+                "; final arm deviation " + largest.ToString("F2") + " degrees";
         }
         private void RememberPose() { for (int i = 0; i < bones.Length; i++) bones[i].LastLocal = bones[i].Transform.localRotation; }
         private float Reach(int upper) => Vector3.Distance(bones[upper].Transform.position, bones[upper+1].Transform.position) +
@@ -221,7 +221,7 @@ namespace Alterverse.Visuals
                 case HeroId.Rook: offset = new Vector3(side * .34f, -.76f, .04f); break;
                 case HeroId.Veyr: offset = new Vector3(side * .40f, -.73f, .06f); break;
                 // Bent shield arm in front of the chest; hammer hand beside the torso.
-                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.16f, -.44f, .44f) : new Vector3(.34f, -.53f, .42f); break;
+                case HeroId.Kaelon: offset = SiegeTankAppearance.GuardHandOffset(upper == 4); break;
                 case HeroId.Nerok: offset = new Vector3(side * .44f, -.73f, .06f); break;
                 case HeroId.Elyra: offset = new Vector3(side * .36f, -.76f, .05f); break;
                 case HeroId.Mira: offset = new Vector3(side * .35f, -.77f, .04f); break;

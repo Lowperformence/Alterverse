@@ -17,8 +17,8 @@ def tank_pose_methods(path):
     # unrelated mesh/material construction in this targeted engine harness.
     source = path.read_text()
     methods = []
-    for name in ('HammerGuardShaft', 'OrientHammerGuard'):
-        match = re.search(r'(?m)^        public (?:static )?(?:void|Vector3) ' + name + r'\(', source)
+    for name in ('GuardHandOffset', 'GuardHandTarget', 'HammerGuardShaft', 'OrientHammerGuard', 'AlignGuard', 'AlignHand'):
+        match = re.search(r'(?m)^        (?:public|private) (?:static )?(?:void|Vector3) ' + name + r'\(', source)
         if not match:
             raise ValueError('Missing production method: ' + name)
         start = match.start()
@@ -36,7 +36,7 @@ def tank_pose_methods(path):
     return '''using System.Collections.Generic;using UnityEngine;
 namespace Alterverse.Visuals {public partial class SiegeTankAppearance {
 private readonly Dictionary<string,Transform> markers=new Dictionary<string,Transform>();
-private Transform calibratedHammerHand;private Quaternion hammerFrameInHand;
+private Transform calibratedHammerHand;private Quaternion hammerFrameInHand;private readonly ShieldGuardFrame shieldGuard=new ShieldGuardFrame();
 public void ConfigureMarkers(Transform grip,Transform top,Transform front) {
 markers["HammerGrip"]=grip;markers["HammerTop"]=top;markers["HammerFront"]=front;
 calibratedHammerHand=null;}
