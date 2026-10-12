@@ -1,0 +1,45 @@
+{
+  "hero": "THE TRAVELER",
+  "heroId": "Traveler",
+  "key": "Traveler",
+  "created": "2026-10-12",
+  "generator": "OpenAI built-in image_gen",
+  "AI_generated": true,
+  "prompt": "Use case: stylized-concept. Create one original, premium detailed CHARACTER PARTS DESIGN SHEET for DIMENSIONS FRONT, for Blender artists. Reference image is the current project model, used for identity, proportions, basic forms and weapon envelope. Improve every visible surface: designed layered construction, credible bevels, recessed vents, seams, fasteners, articulations, material contrast. Keep the hero recognizable. Light warm-gray drafting background, clean large landscape 3:2 composition, polished colored 3D concept illustration. Layout: left third full body FRONT and BACK aligned neutral A pose, weapons displayed separately. Right two-thirds five clearly separated generously sized panels: HEAD front/profile/back; TORSO shell front/back with exploded outer layer; ARM shoulder/upper arm/elbow/forearm/hand separated; LEG thigh/knee/shin/foot separated; WEAPON side/top and exploded main components. Show real thick buildable forms, precise assembly leaders; no invented numeric measurements, unreadable paragraphs, logos or legal claims. Only short headings HEAD, TORSO, ARMS, LEGS, WEAPON and exact hero name. Keep exposed joints free to bend, no plates bridging joints. Detail must read at mobile-game scale. This is an artistic concept, not a certified dimensioned engineering drawing. Slim athletic feminine cyber traveler with existing graphite/titanium exosuit, segmented angular chest, rounded shoulder joints and compact full helmet. Original 'Phase Compass' design: smooth oval BLACK faceless visor framed by split brushed-titanium side shells, one thin blue horizontal time-slit across visor and fine clock ticks on one temple arc. Dark graphite panels, cyan routed seams and cobalt double shoulder stripes. One shallow circular cyan compass insert on chest/abdomen, fitted titanium forearm and thigh plates, slim asymmetric split hip tabs, blue diamond knees, reinforced graphite boots. A compact rectangular blue-screen chronometer holster on each outer thigh with three fine cables. At the right hand, float one cyan dark-blue orb enclosed in three thin tilted silver orbital rings, carried ahead of the torso and not mounted on a staff. Preserve slim body and existing armor/helmet envelope. No exposed human face, no cape, no giant clock backpack. Text 'THE TRAVELER'. Upgrade: use a consistent hierarchy of broad clean shells, secondary inset panels and restrained small hardware; add rear service panels, protected cable routing, articulated limb guards and individually shaped material edges. Preserve weapon class and hero colors. For Ione the focus emitter axis must point HORIZONTALLY FORWARD, never upward. For Timmy improve transparent visor clarity so tabby face is clearly visible; no guns. For Traveler keep orb and no staff.",
+  "reference": {
+    "role": "Existing project model render; preserve proportions and identity",
+    "repositoryPath": "ArtSource/Heroes/ConceptModels/Traveler-front.png",
+    "revision": "6ee1e11917e18d0c8fa7d3a3fccd8062602291ce"
+  },
+  "output": {
+    "file": "Traveler-component-concept.png",
+    "status": "concept generated, model validation separately reported",
+    "sha256": "75c8ba17d7f37096e6422191d9c04f73da5e27d94f7625869614ab52738d6a46",
+    "bytes": 2206526,
+    "embeddedC2PAPresent": true,
+    "referenceSha256": "cebeb2bddc7e209a0ef9ec077e27414e35ceda04008abf7837664cae4d220837",
+    "gitBlob": "988ad1ac2140436d5394252529ca82ef1665e384",
+    "C2PASignatureValidation": "not performed"
+  },
+  "rights": {
+    "newOutput": "OpenAI Europe Terms of Use, Content / Ownership of content",
+    "source": "https://openai.com/policies/eu-terms-of-use/",
+    "checked": "2026-10-12",
+    "updated": "2026-01-16",
+    "inheritedEvidence": "ArtSource/Heroes/Concepts/Provenance/Traveler.json",
+    "allThirdPartyRightsCleared": false
+  },
+  "model": {
+    "generator": "Tools/HeroConcepts/build_models.py",
+    "componentGenerator": "Tools/HeroConcepts/part_optimization.py",
+    "validation": "validation.json",
+    "UnityEditor": "not run",
+    "Android": "not run"
+  },
+  "scopeExclusions": [
+    "Auren Kest",
+    "Tahla Venn",
+    "Nerok Abyss",
+    "Brakk Orun"
+  ]
+}

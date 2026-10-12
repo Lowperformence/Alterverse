@@ -1106,7 +1106,7 @@
               ]
             ],
             "dimensionsMm": [
-              350.0,
+              350,
               333.72,
               601.88
             ]
@@ -2417,9 +2417,9 @@
       "shippingModel": "Assets/Alterverse/Resources/UmbralMage/Model.bytes",
       "canonicalWeaponMarkersExact": true,
       "forwardWeaponAxis": [
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        1
       ],
       "assembly": {
         "hero": "Ione",
@@ -2444,9 +2444,9 @@
               ]
             ],
             "dimensionsMm": [
-              406.0,
+              406,
               365.45,
-              731.0
+              731
             ]
           },
           {
@@ -2488,7 +2488,7 @@
               ]
             ],
             "dimensionsMm": [
-              196.0,
+              196,
               272.24,
               1069.2
             ]
@@ -2532,7 +2532,7 @@
               ]
             ],
             "dimensionsMm": [
-              196.0,
+              196,
               272.24,
               1069.2
             ]
@@ -2555,7 +2555,7 @@
             ],
             "dimensionsMm": [
               510.02,
-              503.0,
+              503,
               507.69
             ]
           },
@@ -2576,9 +2576,9 @@
               ]
             ],
             "dimensionsMm": [
-              298.0,
-              242.0,
-              411.0
+              298,
+              242,
+              411
             ]
           }
         ],
@@ -2601,8 +2601,8 @@
     "Nerok": {
       "preservedVertices": 82172,
       "removedVertices": 0,
-      "newVertices": 5136,
-      "newTriangles": 9636,
+      "newVertices": 3568,
+      "newTriangles": 6876,
       "newParts": [
         {
           "name": "brass jacket toggle loop",
@@ -2835,758 +2835,6 @@
           "triangles": 512,
           "bone": 12,
           "material": 4
-        },
-        {
-          "name": "Nerok UpperArmL separate formed guard",
-          "first": 3568,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 4,
-          "material": 0
-        },
-        {
-          "name": "Nerok UpperArmL inset service panel",
-          "first": 3587,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 4,
-          "material": 0
-        },
-        {
-          "name": "Nerok UpperArmL protected luminous channel",
-          "first": 3600,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 4,
-          "material": 3
-        },
-        {
-          "name": "Nerok UpperArmL countersunk fastener",
-          "first": 3612,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 4,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmL countersunk fastener",
-          "first": 3646,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 4,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmL inset vent",
-          "first": 3680,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 4,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmL inset vent",
-          "first": 3690,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 4,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmL inset vent",
-          "first": 3700,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 4,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmL separate formed guard",
-          "first": 3710,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 5,
-          "material": 0
-        },
-        {
-          "name": "Nerok ForearmL inset service panel",
-          "first": 3729,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 5,
-          "material": 0
-        },
-        {
-          "name": "Nerok ForearmL protected luminous channel",
-          "first": 3742,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 5,
-          "material": 3
-        },
-        {
-          "name": "Nerok ForearmL countersunk fastener",
-          "first": 3754,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmL countersunk fastener",
-          "first": 3788,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmL inset vent",
-          "first": 3822,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmL inset vent",
-          "first": 3832,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmL inset vent",
-          "first": 3842,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighL separate formed guard",
-          "first": 3852,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 7,
-          "material": 2
-        },
-        {
-          "name": "Nerok ThighL inset service panel",
-          "first": 3871,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 7,
-          "material": 0
-        },
-        {
-          "name": "Nerok ThighL protected luminous channel",
-          "first": 3884,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 7,
-          "material": 3
-        },
-        {
-          "name": "Nerok ThighL countersunk fastener",
-          "first": 3896,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 7,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighL countersunk fastener",
-          "first": 3930,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 7,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighL inset vent",
-          "first": 3964,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 7,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighL inset vent",
-          "first": 3974,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 7,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighL inset vent",
-          "first": 3984,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 7,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinL separate formed guard",
-          "first": 3994,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 8,
-          "material": 0
-        },
-        {
-          "name": "Nerok ShinL inset service panel",
-          "first": 4013,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 8,
-          "material": 0
-        },
-        {
-          "name": "Nerok ShinL protected luminous channel",
-          "first": 4026,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 8,
-          "material": 3
-        },
-        {
-          "name": "Nerok ShinL countersunk fastener",
-          "first": 4038,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 8,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinL countersunk fastener",
-          "first": 4072,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 8,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinL inset vent",
-          "first": 4106,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 8,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinL inset vent",
-          "first": 4116,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 8,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinL inset vent",
-          "first": 4126,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 8,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmR separate formed guard",
-          "first": 4136,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 11,
-          "material": 0
-        },
-        {
-          "name": "Nerok UpperArmR inset service panel",
-          "first": 4155,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 11,
-          "material": 0
-        },
-        {
-          "name": "Nerok UpperArmR protected luminous channel",
-          "first": 4168,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 11,
-          "material": 3
-        },
-        {
-          "name": "Nerok UpperArmR countersunk fastener",
-          "first": 4180,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 11,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmR countersunk fastener",
-          "first": 4214,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 11,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmR inset vent",
-          "first": 4248,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 11,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmR inset vent",
-          "first": 4258,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 11,
-          "material": 4
-        },
-        {
-          "name": "Nerok UpperArmR inset vent",
-          "first": 4268,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 11,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmR separate formed guard",
-          "first": 4278,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 12,
-          "material": 0
-        },
-        {
-          "name": "Nerok ForearmR inset service panel",
-          "first": 4297,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 12,
-          "material": 0
-        },
-        {
-          "name": "Nerok ForearmR protected luminous channel",
-          "first": 4310,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 12,
-          "material": 3
-        },
-        {
-          "name": "Nerok ForearmR countersunk fastener",
-          "first": 4322,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 12,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmR countersunk fastener",
-          "first": 4356,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 12,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmR inset vent",
-          "first": 4390,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 12,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmR inset vent",
-          "first": 4400,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 12,
-          "material": 4
-        },
-        {
-          "name": "Nerok ForearmR inset vent",
-          "first": 4410,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 12,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighR separate formed guard",
-          "first": 4420,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 14,
-          "material": 2
-        },
-        {
-          "name": "Nerok ThighR inset service panel",
-          "first": 4439,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 14,
-          "material": 0
-        },
-        {
-          "name": "Nerok ThighR protected luminous channel",
-          "first": 4452,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 14,
-          "material": 3
-        },
-        {
-          "name": "Nerok ThighR countersunk fastener",
-          "first": 4464,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighR countersunk fastener",
-          "first": 4498,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighR inset vent",
-          "first": 4532,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighR inset vent",
-          "first": 4542,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Nerok ThighR inset vent",
-          "first": 4552,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinR separate formed guard",
-          "first": 4562,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 15,
-          "material": 0
-        },
-        {
-          "name": "Nerok ShinR inset service panel",
-          "first": 4581,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 15,
-          "material": 0
-        },
-        {
-          "name": "Nerok ShinR protected luminous channel",
-          "first": 4594,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 15,
-          "material": 3
-        },
-        {
-          "name": "Nerok ShinR countersunk fastener",
-          "first": 4606,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 15,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinR countersunk fastener",
-          "first": 4640,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 15,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinR inset vent",
-          "first": 4674,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 15,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinR inset vent",
-          "first": 4684,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 15,
-          "material": 4
-        },
-        {
-          "name": "Nerok ShinR inset vent",
-          "first": 4694,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 15,
-          "material": 4
-        },
-        {
-          "name": "Nerok back service shell",
-          "first": 4704,
-          "vertices": 16,
-          "triangles": 28,
-          "bone": 2,
-          "material": 2
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4720,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4732,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4744,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok rear panel countersunk fastener",
-          "first": 4756,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok rear panel countersunk fastener",
-          "first": 4790,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok back service shell",
-          "first": 4824,
-          "vertices": 16,
-          "triangles": 28,
-          "bone": 2,
-          "material": 2
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4840,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4852,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok back exhaust vent",
-          "first": 4864,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 2,
-          "material": 0
-        },
-        {
-          "name": "Nerok rear panel countersunk fastener",
-          "first": 4876,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok rear panel countersunk fastener",
-          "first": 4910,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4944,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4954,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4964,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4974,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4984,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 4994,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5004,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5014,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5024,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5034,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5044,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok jacket lock stitch",
-          "first": 5054,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 2,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 1-1",
-          "first": 5064,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 1-2",
-          "first": 5076,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 10,
-          "material": 3
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 1-3",
-          "first": 5088,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 2-1",
-          "first": 5100,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 2-2",
-          "first": 5112,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
-          "material": 3
-        },
-        {
-          "name": "Nerok weapon seated surface fitting 2-3",
-          "first": 5124,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
-          "material": 4
         }
       ],
       "rigAndMarkersPreserved": true,
@@ -3594,182 +2842,16 @@
       "preservedVertexDigest": "fe437976e8744b6613590dcfe3941521018cb6ca7f95d59ca7d5e664706f7499",
       "shippingModel": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
       "canonicalWeaponMarkersExact": true,
-      "assembly": {
-        "hero": "Nerok",
-        "units": "metres",
-        "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
-        "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
-        "components": [
-          {
-            "part": "Torso_Armor",
-            "vertices": 4997,
-            "triangles": 8930,
-            "boundsBlenderMetres": [
-              [
-                -0.31453326,
-                -0.23108,
-                0.13
-              ],
-              [
-                0.31453326,
-                1.32000005,
-                1.79999995
-              ]
-            ],
-            "dimensionsMm": [
-              629.07,
-              1551.08,
-              1670.0
-            ]
-          },
-          {
-            "part": "Leg_L",
-            "vertices": 1905,
-            "triangles": 3598,
-            "boundsBlenderMetres": [
-              [
-                -0.28099999,
-                -0.185,
-                0.0148
-              ],
-              [
-                -0.0191461,
-                0.1452,
-                1.06599998
-              ]
-            ],
-            "dimensionsMm": [
-              261.85,
-              330.2,
-              1051.2
-            ]
-          },
-          {
-            "part": "Leg_R",
-            "vertices": 1905,
-            "triangles": 3598,
-            "boundsBlenderMetres": [
-              [
-                0.0191461,
-                -0.185,
-                0.0148
-              ],
-              [
-                0.28099999,
-                0.1452,
-                1.06599998
-              ]
-            ],
-            "dimensionsMm": [
-              261.85,
-              330.2,
-              1051.2
-            ]
-          },
-          {
-            "part": "Arm_L",
-            "vertices": 3149,
-            "triangles": 6032,
-            "boundsBlenderMetres": [
-              [
-                -0.40455979,
-                -0.13885595,
-                0.93331999
-              ],
-              [
-                -0.06020812,
-                0.1406115,
-                1.57572126
-              ]
-            ],
-            "dimensionsMm": [
-              344.35,
-              279.47,
-              642.4
-            ]
-          },
-          {
-            "part": "Arm_R",
-            "vertices": 3149,
-            "triangles": 6032,
-            "boundsBlenderMetres": [
-              [
-                0.06020812,
-                -0.13885595,
-                0.93331999
-              ],
-              [
-                0.40455979,
-                0.1406115,
-                1.57572126
-              ]
-            ],
-            "dimensionsMm": [
-              344.35,
-              279.47,
-              642.4
-            ]
-          },
-          {
-            "part": "Head_Helmet",
-            "vertices": 5115,
-            "triangles": 9614,
-            "boundsBlenderMetres": [
-              [
-                -0.2156875,
-                -0.32249999,
-                1.56400001
-              ],
-              [
-                0.2156875,
-                0.14300001,
-                2.07500005
-              ]
-            ],
-            "dimensionsMm": [
-              431.38,
-              465.5,
-              511.0
-            ]
-          },
-          {
-            "part": "Weapons",
-            "vertices": 3002,
-            "triangles": 5912,
-            "boundsBlenderMetres": [
-              [
-                -0.50447297,
-                -0.18876,
-                -0.01468
-              ],
-              [
-                0.90475619,
-                0.02924,
-                1.61932003
-              ]
-            ],
-            "dimensionsMm": [
-              1409.23,
-              218.0,
-              1634.0
-            ]
-          }
-        ],
-        "checks": {
-          "sourceTriangles": 43716,
-          "partTriangles": 43716
-        }
-      },
       "fbxRoundTrip": {
         "bones": 18,
         "skinningImported": true,
         "normalizedWeights": true,
         "animationClipsImported": [],
-        "vertices": 87308
+        "vertices": 85740
       },
-      "fbxSha256": "ecd27b76e094282cfeeadc646c56ebbbd585952a6d4d7c79fadda5c25c9bd57d",
-      "modelSha256": "9e6b548c2a0b201328cadaffb4c23492a1d733e4bfa805c2ffae89324ecd3110",
-      "blenderSha256": "68a2835144e94edac8de29042ba3eb0e4b3380bcb018ded7b03b2ceba9fca41b"
+      "fbxSha256": "f8fd0720e5e371913614f41d2d1f51f32280f44a74764485a4615991f47e54bd",
+      "modelSha256": "a1407f01b43ec897ade7ce00787e0a9d8b89f6e4dc4e8f64b84cd58ccccd9621",
+      "blenderSha256": "0235647975c0c55c540cec75d247996e1a83a5ec3d41ae699d83395ae8c8889e"
     },
     "Auren": {
       "preservedVertices": 26213,
@@ -5605,9 +4687,9 @@
               ]
             ],
             "dimensionsMm": [
-              426.0,
+              426,
               341.38,
-              600.0
+              600
             ]
           },
           {
@@ -5627,9 +4709,9 @@
               ]
             ],
             "dimensionsMm": [
-              244.0,
+              244,
               259.18,
-              399.0
+              399
             ]
           },
           {
@@ -5672,7 +4754,7 @@
             ],
             "dimensionsMm": [
               203.75,
-              244.0,
+              244,
               902.12
             ]
           },
@@ -5716,7 +4798,7 @@
             ],
             "dimensionsMm": [
               203.75,
-              244.0,
+              244,
               902.12
             ]
           },
@@ -8579,8 +7661,8 @@
         "Ultimate"
       ],
       "socketsExact": true,
-      "newVertices": 6988,
-      "newTriangles": 13068,
+      "newVertices": 5612,
+      "newTriangles": 10620,
       "newParts": [
         {
           "name": "three overlapping shoulder lames L0",
@@ -9117,783 +8199,8 @@
           "triangles": 324,
           "bone": 4,
           "material": 0
-        },
-        {
-          "name": "Brakk UpperArmL separate formed guard",
-          "first": 5612,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 5,
-          "material": 2
-        },
-        {
-          "name": "Brakk UpperArmL inset service panel",
-          "first": 5631,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 5,
-          "material": 0
-        },
-        {
-          "name": "Brakk UpperArmL protected luminous channel",
-          "first": 5644,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 5,
-          "material": 3
-        },
-        {
-          "name": "Brakk UpperArmL countersunk fastener",
-          "first": 5656,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmL countersunk fastener",
-          "first": 5690,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmL inset vent",
-          "first": 5724,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmL inset vent",
-          "first": 5734,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmL inset vent",
-          "first": 5744,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 5,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmL separate formed guard",
-          "first": 5754,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 6,
-          "material": 2
-        },
-        {
-          "name": "Brakk ForearmL inset service panel",
-          "first": 5773,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 6,
-          "material": 0
-        },
-        {
-          "name": "Brakk ForearmL protected luminous channel",
-          "first": 5786,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 6,
-          "material": 3
-        },
-        {
-          "name": "Brakk ForearmL countersunk fastener",
-          "first": 5798,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 6,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmL countersunk fastener",
-          "first": 5832,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 6,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmL inset vent",
-          "first": 5866,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 6,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmL inset vent",
-          "first": 5876,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 6,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmL inset vent",
-          "first": 5886,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 6,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighL separate formed guard",
-          "first": 5896,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 13,
-          "material": 2
-        },
-        {
-          "name": "Brakk ThighL inset service panel",
-          "first": 5915,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 13,
-          "material": 0
-        },
-        {
-          "name": "Brakk ThighL protected luminous channel",
-          "first": 5928,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 13,
-          "material": 3
-        },
-        {
-          "name": "Brakk ThighL countersunk fastener",
-          "first": 5940,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 13,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighL countersunk fastener",
-          "first": 5974,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 13,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighL inset vent",
-          "first": 6008,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 13,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighL inset vent",
-          "first": 6018,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 13,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighL inset vent",
-          "first": 6028,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 13,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinL separate formed guard",
-          "first": 6038,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 14,
-          "material": 2
-        },
-        {
-          "name": "Brakk ShinL inset service panel",
-          "first": 6057,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 14,
-          "material": 0
-        },
-        {
-          "name": "Brakk ShinL protected luminous channel",
-          "first": 6070,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 14,
-          "material": 3
-        },
-        {
-          "name": "Brakk ShinL countersunk fastener",
-          "first": 6082,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinL countersunk fastener",
-          "first": 6116,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinL inset vent",
-          "first": 6150,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinL inset vent",
-          "first": 6160,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinL inset vent",
-          "first": 6170,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 14,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmR separate formed guard",
-          "first": 6180,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 9,
-          "material": 2
-        },
-        {
-          "name": "Brakk UpperArmR inset service panel",
-          "first": 6199,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 9,
-          "material": 0
-        },
-        {
-          "name": "Brakk UpperArmR protected luminous channel",
-          "first": 6212,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 9,
-          "material": 3
-        },
-        {
-          "name": "Brakk UpperArmR countersunk fastener",
-          "first": 6224,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 9,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmR countersunk fastener",
-          "first": 6258,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 9,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmR inset vent",
-          "first": 6292,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 9,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmR inset vent",
-          "first": 6302,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 9,
-          "material": 4
-        },
-        {
-          "name": "Brakk UpperArmR inset vent",
-          "first": 6312,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 9,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmR separate formed guard",
-          "first": 6322,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 10,
-          "material": 2
-        },
-        {
-          "name": "Brakk ForearmR inset service panel",
-          "first": 6341,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 10,
-          "material": 0
-        },
-        {
-          "name": "Brakk ForearmR protected luminous channel",
-          "first": 6354,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 10,
-          "material": 3
-        },
-        {
-          "name": "Brakk ForearmR countersunk fastener",
-          "first": 6366,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmR countersunk fastener",
-          "first": 6400,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmR inset vent",
-          "first": 6434,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmR inset vent",
-          "first": 6444,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Brakk ForearmR inset vent",
-          "first": 6454,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 10,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighR separate formed guard",
-          "first": 6464,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 16,
-          "material": 2
-        },
-        {
-          "name": "Brakk ThighR inset service panel",
-          "first": 6483,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 16,
-          "material": 0
-        },
-        {
-          "name": "Brakk ThighR protected luminous channel",
-          "first": 6496,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 16,
-          "material": 3
-        },
-        {
-          "name": "Brakk ThighR countersunk fastener",
-          "first": 6508,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 16,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighR countersunk fastener",
-          "first": 6542,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 16,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighR inset vent",
-          "first": 6576,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 16,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighR inset vent",
-          "first": 6586,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 16,
-          "material": 4
-        },
-        {
-          "name": "Brakk ThighR inset vent",
-          "first": 6596,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 16,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinR separate formed guard",
-          "first": 6606,
-          "vertices": 19,
-          "triangles": 34,
-          "bone": 17,
-          "material": 2
-        },
-        {
-          "name": "Brakk ShinR inset service panel",
-          "first": 6625,
-          "vertices": 13,
-          "triangles": 22,
-          "bone": 17,
-          "material": 0
-        },
-        {
-          "name": "Brakk ShinR protected luminous channel",
-          "first": 6638,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
-          "material": 3
-        },
-        {
-          "name": "Brakk ShinR countersunk fastener",
-          "first": 6650,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinR countersunk fastener",
-          "first": 6684,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinR inset vent",
-          "first": 6718,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinR inset vent",
-          "first": 6728,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Brakk ShinR inset vent",
-          "first": 6738,
-          "vertices": 10,
-          "triangles": 16,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Brakk back service shell",
-          "first": 6748,
-          "vertices": 16,
-          "triangles": 28,
-          "bone": 3,
-          "material": 2
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6764,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6776,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6788,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk rear panel countersunk fastener",
-          "first": 6800,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 3,
-          "material": 4
-        },
-        {
-          "name": "Brakk rear panel countersunk fastener",
-          "first": 6834,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 3,
-          "material": 4
-        },
-        {
-          "name": "Brakk back service shell",
-          "first": 6868,
-          "vertices": 16,
-          "triangles": 28,
-          "bone": 3,
-          "material": 2
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6884,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6896,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk back exhaust vent",
-          "first": 6908,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 3,
-          "material": 0
-        },
-        {
-          "name": "Brakk rear panel countersunk fastener",
-          "first": 6920,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 3,
-          "material": 4
-        },
-        {
-          "name": "Brakk rear panel countersunk fastener",
-          "first": 6954,
-          "vertices": 34,
-          "triangles": 64,
-          "bone": 3,
-          "material": 4
         }
       ],
-      "weaponDetail": [],
-      "assembly": {
-        "hero": "Brakk",
-        "units": "metres",
-        "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
-        "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
-        "components": [
-          {
-            "part": "Leg_L",
-            "vertices": 1498,
-            "triangles": 2909,
-            "boundsBlenderMetres": [
-              [
-                -0.35202178,
-                -0.25235137,
-                0.01872003
-              ],
-              [
-                0.00692596,
-                0.1716678,
-                1.09848928
-              ]
-            ],
-            "dimensionsMm": [
-              358.95,
-              424.02,
-              1079.77
-            ]
-          },
-          {
-            "part": "Head_Helmet",
-            "vertices": 7649,
-            "triangles": 15355,
-            "boundsBlenderMetres": [
-              [
-                -0.19912736,
-                -0.186,
-                1.44990849
-              ],
-              [
-                0.2118265,
-                0.14500369,
-                1.85510445
-              ]
-            ],
-            "dimensionsMm": [
-              410.95,
-              331.0,
-              405.2
-            ]
-          },
-          {
-            "part": "Torso_Armor",
-            "vertices": 5482,
-            "triangles": 11017,
-            "boundsBlenderMetres": [
-              [
-                -0.33867922,
-                -0.35901052,
-                0.79112411
-              ],
-              [
-                0.33867922,
-                0.27815047,
-                1.58184004
-              ]
-            ],
-            "dimensionsMm": [
-              677.36,
-              637.16,
-              790.72
-            ]
-          },
-          {
-            "part": "Weapons",
-            "vertices": 5847,
-            "triangles": 11826,
-            "boundsBlenderMetres": [
-              [
-                -0.87999994,
-                -0.39410001,
-                0.78727996
-              ],
-              [
-                0.87999994,
-                0.19589765,
-                1.55279791
-              ]
-            ],
-            "dimensionsMm": [
-              1760.0,
-              590.0,
-              765.52
-            ]
-          },
-          {
-            "part": "Arm_L",
-            "vertices": 2516,
-            "triangles": 4671,
-            "boundsBlenderMetres": [
-              [
-                -0.68734187,
-                -0.26587316,
-                0.96217543
-              ],
-              [
-                -0.13030891,
-                0.25965059,
-                1.5767988
-              ]
-            ],
-            "dimensionsMm": [
-              557.03,
-              525.52,
-              614.62
-            ]
-          },
-          {
-            "part": "Leg_R",
-            "vertices": 1496,
-            "triangles": 2908,
-            "boundsBlenderMetres": [
-              [
-                -0.00691293,
-                -0.25219211,
-                0.01872003
-              ],
-              [
-                0.35202178,
-                0.17166646,
-                1.0987066
-              ]
-            ],
-            "dimensionsMm": [
-              358.93,
-              423.86,
-              1079.99
-            ]
-          },
-          {
-            "part": "Arm_R",
-            "vertices": 2518,
-            "triangles": 4672,
-            "boundsBlenderMetres": [
-              [
-                0.13022198,
-                -0.26508674,
-                0.96220624
-              ],
-              [
-                0.68707335,
-                0.25910166,
-                1.57207692
-              ]
-            ],
-            "dimensionsMm": [
-              556.85,
-              524.19,
-              609.87
-            ]
-          }
-        ],
-        "checks": {
-          "sourceTriangles": 53358,
-          "partTriangles": 53358
-        }
-      },
       "fbxRoundTrip": {
         "bones": 19,
         "skinningImported": true,
@@ -9909,11 +8216,11 @@
           "DF_Skeleton|DF_Skeleton|Skill2",
           "DF_Skeleton|DF_Skeleton|Ultimate"
         ],
-        "vertices": 23293
+        "vertices": 21917
       },
-      "fbxSha256": "22475eb5b4db2ae248eff55159993b4f9885697dc3cb597c8106e0675da83689",
-      "modelSha256": "22475eb5b4db2ae248eff55159993b4f9885697dc3cb597c8106e0675da83689",
-      "blenderSha256": "429c170de1ea0004cc4c3d6afc67979d6deaf9998ce9e963fa1cb478c4b87b2e"
+      "fbxSha256": "40b529332ceac327bf074283accd8d2b0cb14b6210150d0a3b00c437debc2859",
+      "modelSha256": "40b529332ceac327bf074283accd8d2b0cb14b6210150d0a3b00c437debc2859",
+      "blenderSha256": "9a073092b10d99dc44380264bcf4e2c01bd35117cbc9802970a345292a6981d0"
     },
     "Timmy": {
       "source": "ArtSource/Heroes/AndromedaTimmy/AndromedaTimmy.blend",
@@ -10726,8 +9033,8 @@
             ],
             "dimensionsMm": [
               492.87,
-              529.0,
-              670.0
+              529,
+              670
             ]
           },
           {
@@ -10747,9 +9054,9 @@
               ]
             ],
             "dimensionsMm": [
-              614.0,
-              538.0,
-              570.0
+              614,
+              538,
+              570
             ]
           },
           {
@@ -10769,7 +9076,7 @@
               ]
             ],
             "dimensionsMm": [
-              277.0,
+              277,
               306.78,
               714.37
             ]
@@ -10791,9 +9098,9 @@
               ]
             ],
             "dimensionsMm": [
-              211.0,
-              290.0,
-              880.0
+              211,
+              290,
+              880
             ]
           },
           {
@@ -10813,7 +9120,7 @@
               ]
             ],
             "dimensionsMm": [
-              277.0,
+              277,
               306.78,
               714.37
             ]
@@ -10835,9 +9142,9 @@
               ]
             ],
             "dimensionsMm": [
-              211.0,
-              290.0,
-              880.0
+              211,
+              290,
+              880
             ]
           },
           {
@@ -10857,7 +9164,7 @@
               ]
             ],
             "dimensionsMm": [
-              84.0,
+              84,
               631.99,
               189.98
             ]
@@ -10879,7 +9186,7 @@
               ]
             ],
             "dimensionsMm": [
-              788.0,
+              788,
               63.09,
               37.45
             ]

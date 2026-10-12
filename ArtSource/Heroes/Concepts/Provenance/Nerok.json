@@ -90,18 +90,16 @@
     "fullConceptModel": "modeled and Blender/FBX validated; Unity not run",
     "previousValidatedReplacement": "tailored jacket and trousers",
     "previousValidation": "ArtSource/Heroes/PartsRedesign/validation-report.json",
-    "revision": "hero-component-plans-20261012-v3",
+    "revision": "nine-hero-concepts-20261012-v2",
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Nerok-model.blend",
     "model": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
-    "modelSha256": "9e6b548c2a0b201328cadaffb4c23492a1d733e4bfa805c2ffae89324ecd3110"
+    "modelSha256": "a1407f01b43ec897ade7ce00787e0a9d8b89f6e4dc4e8f64b84cd58ccccd9621"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
-    "Unity editor and device visual verification",
-    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"
   ]

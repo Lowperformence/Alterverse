@@ -1,0 +1,45 @@
+{
+  "hero": "Zhaev Null",
+  "heroId": "Veyr",
+  "key": "Zhaev",
+  "created": "2026-10-12",
+  "generator": "OpenAI built-in image_gen",
+  "AI_generated": true,
+  "prompt": "Use case: stylized-concept. Create one original, premium detailed CHARACTER PARTS DESIGN SHEET for DIMENSIONS FRONT, for Blender artists. Reference image is the current project model, used for identity, proportions, basic forms and weapon envelope. Improve every visible surface: designed layered construction, credible bevels, recessed vents, seams, fasteners, articulations, material contrast. Keep the hero recognizable. Light warm-gray drafting background, clean large landscape 3:2 composition, polished colored 3D concept illustration. Layout: left third full body FRONT and BACK aligned neutral A pose, weapons displayed separately. Right two-thirds five clearly separated generously sized panels: HEAD front/profile/back; TORSO shell front/back with exploded outer layer; ARM shoulder/upper arm/elbow/forearm/hand separated; LEG thigh/knee/shin/foot separated; WEAPON side/top and exploded main components. Show real thick buildable forms, precise assembly leaders; no invented numeric measurements, unreadable paragraphs, logos or legal claims. Only short headings HEAD, TORSO, ARMS, LEGS, WEAPON and exact hero name. Keep exposed joints free to bend, no plates bridging joints. Detail must read at mobile-game scale. This is an artistic concept, not a certified dimensioned engineering drawing. Athletic slender male sci-fi assassin, dark gunmetal closed scout helmet with two recessed black oval eye apertures, sculpted triangular cheek and respirator jaw pieces. Preserve compact rounded head envelope and body/weapon proportions. Original 'Null Sentinel' costume in graphite, black woven suit, violet ceramic inlays and sparse dull brass: thin luminous violet crown stripe, three nested angular violet shoulder chevrons instead of large spikes, curved graphite chest cuirass with a small violet central node, routed four short violet vent-lines and fine countersunk fasteners, fitted waist belt and split violet hip tabs, beveled forearm guards, knee diamonds and violet boot edges. Long narrow split charcoal cape with violet inner seam and restrained circuit embroidery. No external antenna and no exposed human face. Hold two original crescent blades forward in a low crossed guard, curved silver cutting edges with violet channels, preserve original crescent silhouettes. Text 'ZHAEV NULL'. Upgrade: use a consistent hierarchy of broad clean shells, secondary inset panels and restrained small hardware; add rear service panels, protected cable routing, articulated limb guards and individually shaped material edges. Preserve weapon class and hero colors. For Ione the focus emitter axis must point HORIZONTALLY FORWARD, never upward. For Timmy improve transparent visor clarity so tabby face is clearly visible; no guns. For Traveler keep orb and no staff.",
+  "reference": {
+    "role": "Existing project model render; preserve proportions and identity",
+    "repositoryPath": "ArtSource/Heroes/ConceptModels/Zhaev-front.png",
+    "revision": "6ee1e11917e18d0c8fa7d3a3fccd8062602291ce"
+  },
+  "output": {
+    "file": "Zhaev-component-concept.png",
+    "status": "concept generated, model validation separately reported",
+    "sha256": "9e790f21d01f5f00dba3b9ac182ef392f1b687ce906a5f9956660b5639609079",
+    "bytes": 2339871,
+    "embeddedC2PAPresent": true,
+    "referenceSha256": "be616abf92f8ae13041e1d9b8e7d173dc6da3990aa663784fbb1a61154e19084",
+    "gitBlob": "1c532a01a449bf0bb4c6d19bd71be20ddf289d37",
+    "C2PASignatureValidation": "not performed"
+  },
+  "rights": {
+    "newOutput": "OpenAI Europe Terms of Use, Content / Ownership of content",
+    "source": "https://openai.com/policies/eu-terms-of-use/",
+    "checked": "2026-10-12",
+    "updated": "2026-01-16",
+    "inheritedEvidence": "ArtSource/Heroes/Concepts/Provenance/Zhaev.json",
+    "allThirdPartyRightsCleared": false
+  },
+  "model": {
+    "generator": "Tools/HeroConcepts/build_models.py",
+    "componentGenerator": "Tools/HeroConcepts/part_optimization.py",
+    "validation": "validation.json",
+    "UnityEditor": "not run",
+    "Android": "not run"
+  },
+  "scopeExclusions": [
+    "Auren Kest",
+    "Tahla Venn",
+    "Nerok Abyss",
+    "Brakk Orun"
+  ]
+}
