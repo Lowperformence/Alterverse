@@ -121,6 +121,7 @@ namespace Alterverse.Profile
             values.Clear();
             foreach (Entry e in source) if (e != null && ProfileKey(e.key)) values[e.key] = Clone(e);
             if (serverName != null) values["DF_PlayerName"] = serverName;
+            else values.Remove("DF_PlayerName"); // Never keep invalid legacy identity text.
             Persist();
         }
         public static void Detach()
