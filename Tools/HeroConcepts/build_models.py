@@ -207,12 +207,20 @@ def runtime_source(label,kind,data):
         with tempfile.TemporaryDirectory() as tmp:
             path=Path(tmp)/'Nyra.blend';path.write_bytes(original('ArtSource/Heroes/Nyra.blend'))
             with bpy.data.libraries.load(str(path),link=False) as (src,dst):dst.objects=['DF_WeaponR','DF_HandleContactR','DF_Muzzle']
-            objects={o.name:o for o in dst.objects if o};weapon=objects['DF_WeaponR'];h=objects['DF_HandleContactR'].matrix_world.translation;m=objects['DF_Muzzle'].matrix_world.translation
+            objects={o.name:o for o in dst.objects if o};weapon=objects['DF_WeaponR']
+            # Appended bone-parented sockets have not been evaluated until their
+            # dependent armature is linked into the current view layer.
+            for source_object in list(bpy.data.objects):
+                if source_object not in existing_objects and source_object.name not in bpy.context.scene.objects:bpy.context.collection.objects.link(source_object)
+            bpy.context.view_layer.update()
+            h=objects['DF_HandleContactR'].matrix_world.translation;m=objects['DF_Muzzle'].matrix_world.translation
             h=h.copy();m=m.copy();q=(m-h).rotation_difference(Vector((0,-1,0)));target=Vector(xyz(display['anchors'][display['boneNames'].index('HandR')]['head']))
-            for vert in weapon.data.vertices:vert.co=q@(weapon.matrix_world@vert.co-h)+target
+            depsgraph=bpy.context.evaluated_depsgraph_get();evaluated=weapon.evaluated_get(depsgraph);world=evaluated.matrix_world.copy()
+            evaluated_mesh=evaluated.to_mesh(preserve_all_data_layers=True,depsgraph=depsgraph);baked=evaluated_mesh.copy();evaluated.to_mesh_clear();weapon.data=baked
+            for vert in weapon.data.vertices:vert.co=q@(world@vert.co-h)+target
             weapon.parent=None;weapon.matrix_parent_inverse=Matrix.Identity(4);weapon.matrix_basis=Matrix.Identity(4)
             for modifier in list(weapon.modifiers):weapon.modifiers.remove(modifier)
-            weapon.vertex_groups.clear();bpy.context.collection.objects.link(weapon);skin(weapon,arm,['HandR'],[0]*len(weapon.data.vertices))
+            weapon.vertex_groups.clear();skin(weapon,arm,['HandR'],[0]*len(weapon.data.vertices))
             weapon.matrix_parent_inverse=Matrix.Identity(4);weapon.matrix_basis=Matrix.Identity(4);bpy.context.view_layer.update()
             assert np.allclose(weapon.matrix_world,Matrix.Identity(4),atol=1e-6),'Rifle inherits an old source transform'
             hand_check=Vector(xyz(display['anchors'][display['boneNames'].index('HandR')]['head']))
