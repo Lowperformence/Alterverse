@@ -1,0 +1,1499 @@
+{
+  "revision": "hero-component-plans-20261012-v3",
+  "hero": "Traveler",
+  "checks": {
+    "preservedVertices": 9941,
+    "removedVertices": 1344,
+    "newVertices": 6524,
+    "newTriangles": 12072,
+    "newParts": [
+      {
+        "name": "single horizontal time slit",
+        "first": 0,
+        "vertices": 20,
+        "triangles": 36,
+        "bone": 3,
+        "material": 3
+      },
+      {
+        "name": "temple clock tick",
+        "first": 20,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 32,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 44,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 56,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 68,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 80,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 92,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 104,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 116,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 128,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 140,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 152,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 164,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "temple clock tick",
+        "first": 176,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "compass disc recessed housing",
+        "first": 188,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass disc luminous ring",
+        "first": 454,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "compass disc lens",
+        "first": 686,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 2,
+        "material": 3
+      },
+      {
+        "name": "compass radial scale",
+        "first": 952,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 962,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 972,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 982,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 992,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1002,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1012,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1022,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "compass disc recessed housing",
+        "first": 1032,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass disc luminous ring",
+        "first": 1298,
+        "vertices": 232,
+        "triangles": 448,
+        "bone": 1,
+        "material": 3
+      },
+      {
+        "name": "compass disc lens",
+        "first": 1530,
+        "vertices": 266,
+        "triangles": 528,
+        "bone": 1,
+        "material": 3
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1796,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1806,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1816,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1826,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1836,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1846,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1856,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "compass radial scale",
+        "first": 1866,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 1,
+        "material": 2
+      },
+      {
+        "name": "outer-thigh chronometer phone casing",
+        "first": 1876,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 1
+      },
+      {
+        "name": "blue chronometer screen",
+        "first": 1889,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 3
+      },
+      {
+        "name": "display telemetry row",
+        "first": 1902,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 1912,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 1922,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 1932,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "three chronometer insulated cables L",
+        "first": 1942,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "three chronometer insulated cables L",
+        "first": 1974,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "three chronometer insulated cables L",
+        "first": 2006,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "chronometer knee chevron",
+        "first": 2038,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "outer-thigh chronometer phone casing",
+        "first": 2051,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 13,
+        "material": 1
+      },
+      {
+        "name": "blue chronometer screen",
+        "first": 2064,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 13,
+        "material": 3
+      },
+      {
+        "name": "display telemetry row",
+        "first": 2077,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 2087,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 2097,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "display telemetry row",
+        "first": 2107,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "three chronometer insulated cables R",
+        "first": 2117,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 13,
+        "material": 0
+      },
+      {
+        "name": "three chronometer insulated cables R",
+        "first": 2149,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 13,
+        "material": 0
+      },
+      {
+        "name": "three chronometer insulated cables R",
+        "first": 2181,
+        "vertices": 32,
+        "triangles": 60,
+        "bone": 13,
+        "material": 0
+      },
+      {
+        "name": "chronometer knee chevron",
+        "first": 2213,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "three overlapping shoulder lames L0",
+        "first": 2226,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L0",
+        "first": 2413,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2589,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 2641,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "three overlapping shoulder lames L1",
+        "first": 2693,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L1",
+        "first": 2880,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3056,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3108,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "three overlapping shoulder lames L2",
+        "first": 3160,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge L2",
+        "first": 3347,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3523,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3575,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 4,
+        "material": 5
+      },
+      {
+        "name": "three overlapping shoulder lames R0",
+        "first": 3627,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R0",
+        "first": 3814,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 3990,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4042,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "three overlapping shoulder lames R1",
+        "first": 4094,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R1",
+        "first": 4281,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4457,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4509,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "three overlapping shoulder lames R2",
+        "first": 4561,
+        "vertices": 187,
+        "triangles": 320,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "shoulder inset edge R2",
+        "first": 4748,
+        "vertices": 176,
+        "triangles": 348,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4924,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "shoulder recessed rivet",
+        "first": 4976,
+        "vertices": 52,
+        "triangles": 100,
+        "bone": 10,
+        "material": 5
+      },
+      {
+        "name": "Traveler UpperArmL separate formed guard",
+        "first": 5028,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 4,
+        "material": 1
+      },
+      {
+        "name": "Traveler UpperArmL inset service panel",
+        "first": 5047,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 4,
+        "material": 0
+      },
+      {
+        "name": "Traveler UpperArmL protected luminous channel",
+        "first": 5060,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 4,
+        "material": 3
+      },
+      {
+        "name": "Traveler UpperArmL countersunk fastener",
+        "first": 5072,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmL countersunk fastener",
+        "first": 5106,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmL inset vent",
+        "first": 5140,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmL inset vent",
+        "first": 5150,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmL inset vent",
+        "first": 5160,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 4,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmL separate formed guard",
+        "first": 5170,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 5,
+        "material": 1
+      },
+      {
+        "name": "Traveler ForearmL inset service panel",
+        "first": 5189,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 5,
+        "material": 0
+      },
+      {
+        "name": "Traveler ForearmL protected luminous channel",
+        "first": 5202,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 5,
+        "material": 3
+      },
+      {
+        "name": "Traveler ForearmL countersunk fastener",
+        "first": 5214,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmL countersunk fastener",
+        "first": 5248,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmL inset vent",
+        "first": 5282,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmL inset vent",
+        "first": 5292,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmL inset vent",
+        "first": 5302,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 5,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighL separate formed guard",
+        "first": 5312,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 7,
+        "material": 1
+      },
+      {
+        "name": "Traveler ThighL inset service panel",
+        "first": 5331,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 7,
+        "material": 0
+      },
+      {
+        "name": "Traveler ThighL protected luminous channel",
+        "first": 5344,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 7,
+        "material": 3
+      },
+      {
+        "name": "Traveler ThighL countersunk fastener",
+        "first": 5356,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighL countersunk fastener",
+        "first": 5390,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighL inset vent",
+        "first": 5424,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighL inset vent",
+        "first": 5434,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighL inset vent",
+        "first": 5444,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 7,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinL separate formed guard",
+        "first": 5454,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 8,
+        "material": 1
+      },
+      {
+        "name": "Traveler ShinL inset service panel",
+        "first": 5473,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 8,
+        "material": 0
+      },
+      {
+        "name": "Traveler ShinL protected luminous channel",
+        "first": 5486,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 8,
+        "material": 3
+      },
+      {
+        "name": "Traveler ShinL countersunk fastener",
+        "first": 5498,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinL countersunk fastener",
+        "first": 5532,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinL inset vent",
+        "first": 5566,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinL inset vent",
+        "first": 5576,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinL inset vent",
+        "first": 5586,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 8,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmR separate formed guard",
+        "first": 5596,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 10,
+        "material": 1
+      },
+      {
+        "name": "Traveler UpperArmR inset service panel",
+        "first": 5615,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 10,
+        "material": 0
+      },
+      {
+        "name": "Traveler UpperArmR protected luminous channel",
+        "first": 5628,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 10,
+        "material": 3
+      },
+      {
+        "name": "Traveler UpperArmR countersunk fastener",
+        "first": 5640,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmR countersunk fastener",
+        "first": 5674,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmR inset vent",
+        "first": 5708,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmR inset vent",
+        "first": 5718,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Traveler UpperArmR inset vent",
+        "first": 5728,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 10,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmR separate formed guard",
+        "first": 5738,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 11,
+        "material": 1
+      },
+      {
+        "name": "Traveler ForearmR inset service panel",
+        "first": 5757,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 11,
+        "material": 0
+      },
+      {
+        "name": "Traveler ForearmR protected luminous channel",
+        "first": 5770,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 11,
+        "material": 3
+      },
+      {
+        "name": "Traveler ForearmR countersunk fastener",
+        "first": 5782,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmR countersunk fastener",
+        "first": 5816,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmR inset vent",
+        "first": 5850,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmR inset vent",
+        "first": 5860,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Traveler ForearmR inset vent",
+        "first": 5870,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 11,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighR separate formed guard",
+        "first": 5880,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 13,
+        "material": 1
+      },
+      {
+        "name": "Traveler ThighR inset service panel",
+        "first": 5899,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 13,
+        "material": 0
+      },
+      {
+        "name": "Traveler ThighR protected luminous channel",
+        "first": 5912,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 13,
+        "material": 3
+      },
+      {
+        "name": "Traveler ThighR countersunk fastener",
+        "first": 5924,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighR countersunk fastener",
+        "first": 5958,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighR inset vent",
+        "first": 5992,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighR inset vent",
+        "first": 6002,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Traveler ThighR inset vent",
+        "first": 6012,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 13,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinR separate formed guard",
+        "first": 6022,
+        "vertices": 19,
+        "triangles": 34,
+        "bone": 14,
+        "material": 1
+      },
+      {
+        "name": "Traveler ShinR inset service panel",
+        "first": 6041,
+        "vertices": 13,
+        "triangles": 22,
+        "bone": 14,
+        "material": 0
+      },
+      {
+        "name": "Traveler ShinR protected luminous channel",
+        "first": 6054,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 14,
+        "material": 3
+      },
+      {
+        "name": "Traveler ShinR countersunk fastener",
+        "first": 6066,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinR countersunk fastener",
+        "first": 6100,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinR inset vent",
+        "first": 6134,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinR inset vent",
+        "first": 6144,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Traveler ShinR inset vent",
+        "first": 6154,
+        "vertices": 10,
+        "triangles": 16,
+        "bone": 14,
+        "material": 2
+      },
+      {
+        "name": "Traveler back service shell",
+        "first": 6164,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 1
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6180,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6192,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6204,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler rear panel countersunk fastener",
+        "first": 6216,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Traveler rear panel countersunk fastener",
+        "first": 6250,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Traveler back service shell",
+        "first": 6284,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 2,
+        "material": 1
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6300,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6312,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler back exhaust vent",
+        "first": 6324,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 2,
+        "material": 0
+      },
+      {
+        "name": "Traveler rear panel countersunk fastener",
+        "first": 6336,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Traveler rear panel countersunk fastener",
+        "first": 6370,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 2,
+        "material": 2
+      },
+      {
+        "name": "Traveler occipital helmet cassette",
+        "first": 6404,
+        "vertices": 16,
+        "triangles": 28,
+        "bone": 3,
+        "material": 1
+      },
+      {
+        "name": "Traveler helmet cooling slot",
+        "first": 6420,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Traveler helmet cooling slot",
+        "first": 6432,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Traveler helmet cooling slot",
+        "first": 6444,
+        "vertices": 12,
+        "triangles": 20,
+        "bone": 3,
+        "material": 0
+      },
+      {
+        "name": "Traveler helmet countersunk fastener",
+        "first": 6456,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      },
+      {
+        "name": "Traveler helmet countersunk fastener",
+        "first": 6490,
+        "vertices": 34,
+        "triangles": 64,
+        "bone": 3,
+        "material": 2
+      }
+    ],
+    "rigAndMarkersPreserved": true,
+    "bodyPositionsAndNormalsExact": true,
+    "preservedVertexDigest": "812996efa84a3ecd29c7888413476bd5f9e3ed84d6c9eed8307797ccad301515",
+    "shippingModel": "Assets/Alterverse/Resources/ChronoTraveler/Model.bytes",
+    "canonicalWeaponMarkersExact": true,
+    "assembly": {
+      "hero": "Traveler",
+      "units": "metres",
+      "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+      "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+      "components": [
+        {
+          "part": "Torso_Armor",
+          "vertices": 3898,
+          "triangles": 7392,
+          "boundsBlenderMetres": [
+            [
+              -0.213,
+              -0.16085595,
+              0.83999997
+            ],
+            [
+              0.213,
+              0.1805217,
+              1.44000006
+            ]
+          ],
+          "dimensionsMm": [
+            426.0,
+            341.38,
+            600.0
+          ]
+        },
+        {
+          "part": "Head_Helmet",
+          "vertices": 2289,
+          "triangles": 4440,
+          "boundsBlenderMetres": [
+            [
+              -0.122,
+              -0.13365443,
+              1.39999998
+            ],
+            [
+              0.122,
+              0.12552169,
+              1.79900002
+            ]
+          ],
+          "dimensionsMm": [
+            244.0,
+            259.18,
+            399.0
+          ]
+        },
+        {
+          "part": "Arm_L",
+          "vertices": 3812,
+          "triangles": 7274,
+          "boundsBlenderMetres": [
+            [
+              -0.38475999,
+              -0.13385595,
+              0.86655998
+            ],
+            [
+              -0.0688,
+              0.12596101,
+              1.58633995
+            ]
+          ],
+          "dimensionsMm": [
+            315.96,
+            259.82,
+            719.78
+          ]
+        },
+        {
+          "part": "Leg_L",
+          "vertices": 1323,
+          "triangles": 2492,
+          "boundsBlenderMetres": [
+            [
+              -0.25625333,
+              -0.163,
+              0.0174
+            ],
+            [
+              -0.052508,
+              0.081,
+              0.91952002
+            ]
+          ],
+          "dimensionsMm": [
+            203.75,
+            244.0,
+            902.12
+          ]
+        },
+        {
+          "part": "Arm_R",
+          "vertices": 3812,
+          "triangles": 7274,
+          "boundsBlenderMetres": [
+            [
+              0.0688,
+              -0.13385595,
+              0.86655998
+            ],
+            [
+              0.38475999,
+              0.12596101,
+              1.58633995
+            ]
+          ],
+          "dimensionsMm": [
+            315.96,
+            259.82,
+            719.78
+          ]
+        },
+        {
+          "part": "Leg_R",
+          "vertices": 1323,
+          "triangles": 2492,
+          "boundsBlenderMetres": [
+            [
+              0.052508,
+              -0.163,
+              0.0174
+            ],
+            [
+              0.25625333,
+              0.081,
+              0.91952002
+            ]
+          ],
+          "dimensionsMm": [
+            203.75,
+            244.0,
+            902.12
+          ]
+        },
+        {
+          "part": "Weapons",
+          "vertices": 1626,
+          "triangles": 3200,
+          "boundsBlenderMetres": [
+            [
+              0.25547728,
+              -0.31237823,
+              0.950535
+            ],
+            [
+              0.4080427,
+              -0.15970176,
+              1.10338497
+            ]
+          ],
+          "dimensionsMm": [
+            152.57,
+            152.68,
+            152.85
+          ]
+        }
+      ],
+      "checks": {
+        "sourceTriangles": 34564,
+        "partTriangles": 34564
+      }
+    },
+    "fbxRoundTrip": {
+      "bones": 16,
+      "skinningImported": true,
+      "normalizedWeights": true,
+      "animationClipsImported": [],
+      "vertices": 16465
+    },
+    "fbxSha256": "e2342b0674112dfdbfab5a32044a9b17e2f8b790605b83c9027fd4ff4a475b3f",
+    "modelSha256": "d477ee12423b1a1e080fdf0ebe49529a86a6589eea878c488ffca2d0cba533d3",
+    "blenderSha256": "6b53eaa8d75a4cf75c84765de7a5f361bfc24540262aae79840998b5b3e0f3c7"
+  },
+  "UnityEditor": "not run",
+  "Android": "not run"
+}
