@@ -74,7 +74,7 @@ namespace Alterverse.UI
         {
             HeroId.Veyr=>"Fast melee pressure for finishing isolated targets.",
             HeroId.Timmy=>$"Short-range claw strike. Light Paws grants {(TimmyBalance.PassiveSpeed-1f)*100:0}% speed for {TimmyBalance.PassiveSeconds:0.#}s after a damaging skill hit, at most once every {TimmyBalance.PassiveCooldown:0.#}s.",
-            HeroId.Kaelon=>"Heavy frontline strike with short melee reach.",
+            HeroId.Kaelon=>$"Frontline melee. Extra passive: +{HeroAbilityKit.AurenPassiveRegenPerSecond:0} HP every second while alive (max HP cap).",
             HeroId.Nyra=>"Rapid long-range rifle fire.",
             HeroId.Elyra=>"Ranged dimensional basic attack.",
             HeroId.Mira=>"Ranged support basic attack.",
