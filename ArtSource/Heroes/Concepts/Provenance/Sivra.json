@@ -100,9 +100,14 @@
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
-    "Unity editor and device visual verification",
-    "Unity editor and device visual verification",
-    "Unity editor and device visual verification",
     "Unity editor and device visual verification"
-  ]
+  ],
+  "componentPlan": {
+    "concept": "ArtSource/Heroes/BuildPlans/Sivra/Sivra-component-concept.png",
+    "provenance": "ArtSource/Heroes/BuildPlans/Sivra/provenance.json",
+    "assembly": "ArtSource/Heroes/BuildPlans/Sivra/assembly.json",
+    "validation": "ArtSource/Heroes/BuildPlans/Sivra/validation.json",
+    "rights": "ArtSource/Heroes/BuildPlans/RIGHTS.md",
+    "scope": "Sivra, Ione, Zhaev and Timmy only; five delegated heroes excluded"
+  }
 }
