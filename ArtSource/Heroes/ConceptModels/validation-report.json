@@ -1,12 +1,12 @@
 {
-  "revision": "nine-hero-concepts-20261012-v2",
+  "revision": "hero-component-plans-20261012-v3",
   "sourceRevision": "a605c0635eaccd57dc48e0e60a6a344170153a1e",
   "models": {
     "Sivra": {
       "preservedVertices": 35900,
       "removedVertices": 0,
-      "newVertices": 4454,
-      "newTriangles": 8408,
+      "newVertices": 5950,
+      "newTriangles": 11072,
       "newParts": [
         {
           "name": "twin forearm ceramic rails L",
@@ -407,6 +407,662 @@
           "triangles": 100,
           "bone": 10,
           "material": 2
+        },
+        {
+          "name": "Sivra UpperArmL separate formed guard",
+          "first": 4454,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 4,
+          "material": 1
+        },
+        {
+          "name": "Sivra UpperArmL inset service panel",
+          "first": 4473,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 4,
+          "material": 0
+        },
+        {
+          "name": "Sivra UpperArmL protected luminous channel",
+          "first": 4486,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 4,
+          "material": 3
+        },
+        {
+          "name": "Sivra UpperArmL countersunk fastener",
+          "first": 4498,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmL countersunk fastener",
+          "first": 4532,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmL inset vent",
+          "first": 4566,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmL inset vent",
+          "first": 4576,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmL inset vent",
+          "first": 4586,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 4,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmL separate formed guard",
+          "first": 4596,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 5,
+          "material": 1
+        },
+        {
+          "name": "Sivra ForearmL inset service panel",
+          "first": 4615,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 5,
+          "material": 0
+        },
+        {
+          "name": "Sivra ForearmL protected luminous channel",
+          "first": 4628,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 5,
+          "material": 3
+        },
+        {
+          "name": "Sivra ForearmL countersunk fastener",
+          "first": 4640,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmL countersunk fastener",
+          "first": 4674,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmL inset vent",
+          "first": 4708,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmL inset vent",
+          "first": 4718,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmL inset vent",
+          "first": 4728,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 5,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighL separate formed guard",
+          "first": 4738,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 7,
+          "material": 1
+        },
+        {
+          "name": "Sivra ThighL inset service panel",
+          "first": 4757,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 7,
+          "material": 0
+        },
+        {
+          "name": "Sivra ThighL protected luminous channel",
+          "first": 4770,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 7,
+          "material": 3
+        },
+        {
+          "name": "Sivra ThighL countersunk fastener",
+          "first": 4782,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighL countersunk fastener",
+          "first": 4816,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighL inset vent",
+          "first": 4850,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighL inset vent",
+          "first": 4860,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighL inset vent",
+          "first": 4870,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 7,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinL separate formed guard",
+          "first": 4880,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 8,
+          "material": 1
+        },
+        {
+          "name": "Sivra ShinL inset service panel",
+          "first": 4899,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 8,
+          "material": 0
+        },
+        {
+          "name": "Sivra ShinL protected luminous channel",
+          "first": 4912,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 8,
+          "material": 3
+        },
+        {
+          "name": "Sivra ShinL countersunk fastener",
+          "first": 4924,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinL countersunk fastener",
+          "first": 4958,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinL inset vent",
+          "first": 4992,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinL inset vent",
+          "first": 5002,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinL inset vent",
+          "first": 5012,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 8,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmR separate formed guard",
+          "first": 5022,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 10,
+          "material": 1
+        },
+        {
+          "name": "Sivra UpperArmR inset service panel",
+          "first": 5041,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 10,
+          "material": 0
+        },
+        {
+          "name": "Sivra UpperArmR protected luminous channel",
+          "first": 5054,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 10,
+          "material": 3
+        },
+        {
+          "name": "Sivra UpperArmR countersunk fastener",
+          "first": 5066,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmR countersunk fastener",
+          "first": 5100,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmR inset vent",
+          "first": 5134,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmR inset vent",
+          "first": 5144,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Sivra UpperArmR inset vent",
+          "first": 5154,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 10,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmR separate formed guard",
+          "first": 5164,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 11,
+          "material": 1
+        },
+        {
+          "name": "Sivra ForearmR inset service panel",
+          "first": 5183,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 11,
+          "material": 0
+        },
+        {
+          "name": "Sivra ForearmR protected luminous channel",
+          "first": 5196,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 11,
+          "material": 3
+        },
+        {
+          "name": "Sivra ForearmR countersunk fastener",
+          "first": 5208,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmR countersunk fastener",
+          "first": 5242,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmR inset vent",
+          "first": 5276,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmR inset vent",
+          "first": 5286,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "Sivra ForearmR inset vent",
+          "first": 5296,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 11,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighR separate formed guard",
+          "first": 5306,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 13,
+          "material": 1
+        },
+        {
+          "name": "Sivra ThighR inset service panel",
+          "first": 5325,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 13,
+          "material": 0
+        },
+        {
+          "name": "Sivra ThighR protected luminous channel",
+          "first": 5338,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 13,
+          "material": 3
+        },
+        {
+          "name": "Sivra ThighR countersunk fastener",
+          "first": 5350,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighR countersunk fastener",
+          "first": 5384,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighR inset vent",
+          "first": 5418,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighR inset vent",
+          "first": 5428,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Sivra ThighR inset vent",
+          "first": 5438,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 13,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinR separate formed guard",
+          "first": 5448,
+          "vertices": 19,
+          "triangles": 34,
+          "bone": 14,
+          "material": 1
+        },
+        {
+          "name": "Sivra ShinR inset service panel",
+          "first": 5467,
+          "vertices": 13,
+          "triangles": 22,
+          "bone": 14,
+          "material": 0
+        },
+        {
+          "name": "Sivra ShinR protected luminous channel",
+          "first": 5480,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 14,
+          "material": 3
+        },
+        {
+          "name": "Sivra ShinR countersunk fastener",
+          "first": 5492,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinR countersunk fastener",
+          "first": 5526,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinR inset vent",
+          "first": 5560,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinR inset vent",
+          "first": 5570,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Sivra ShinR inset vent",
+          "first": 5580,
+          "vertices": 10,
+          "triangles": 16,
+          "bone": 14,
+          "material": 2
+        },
+        {
+          "name": "Sivra back service shell",
+          "first": 5590,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 1
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5606,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5618,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5630,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra rear panel countersunk fastener",
+          "first": 5642,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "Sivra rear panel countersunk fastener",
+          "first": 5676,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "Sivra back service shell",
+          "first": 5710,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 2,
+          "material": 1
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5726,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5738,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra back exhaust vent",
+          "first": 5750,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 2,
+          "material": 0
+        },
+        {
+          "name": "Sivra rear panel countersunk fastener",
+          "first": 5762,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "Sivra rear panel countersunk fastener",
+          "first": 5796,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 2,
+          "material": 2
+        },
+        {
+          "name": "Sivra occipital helmet cassette",
+          "first": 5830,
+          "vertices": 16,
+          "triangles": 28,
+          "bone": 3,
+          "material": 1
+        },
+        {
+          "name": "Sivra helmet cooling slot",
+          "first": 5846,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Sivra helmet cooling slot",
+          "first": 5858,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Sivra helmet cooling slot",
+          "first": 5870,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 3,
+          "material": 0
+        },
+        {
+          "name": "Sivra helmet countersunk fastener",
+          "first": 5882,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
+        },
+        {
+          "name": "Sivra helmet countersunk fastener",
+          "first": 5916,
+          "vertices": 34,
+          "triangles": 64,
+          "bone": 3,
+          "material": 2
         }
       ],
       "rigAndMarkersPreserved": true,
@@ -414,21 +1070,195 @@
       "preservedVertexDigest": "50d2a7b36b05c0f284868f984ee54a762b9227759fc5422cbe515e9bfa41c37b",
       "shippingModel": "Assets/Alterverse/Resources/CyberRanger/Model.bytes",
       "canonicalWeaponMarkersExact": true,
+      "weaponDetail": [
+        {
+          "object": "DF_WeaponR",
+          "addedVertices": 48,
+          "addedTriangles": 80,
+          "originalVerticesExact": true
+        }
+      ],
       "nativeRifleForwardAxis": [
         0,
         0,
         1
       ],
+      "assembly": {
+        "hero": "Sivra",
+        "units": "metres",
+        "coordinateSystem": "Blender X right, Y back, Z up; game X right, Y up, Z forward",
+        "derivation": "Actual rest-pose triangles; boundary faces assigned to dominant bone category. Assembly overlaps intentional; OBJ components are surface meshes, not manufacturing solids.",
+        "components": [
+          {
+            "part": "Torso_Armor",
+            "vertices": 19954,
+            "triangles": 39606,
+            "boundsBlenderMetres": [
+              [
+                -0.175,
+                -0.17952405,
+                0.84611702
+              ],
+              [
+                0.175,
+                0.1541947,
+                1.44799995
+              ]
+            ],
+            "dimensionsMm": [
+              350.0,
+              333.72,
+              601.88
+            ]
+          },
+          {
+            "part": "Arm_L",
+            "vertices": 4836,
+            "triangles": 9292,
+            "boundsBlenderMetres": [
+              [
+                -0.390854,
+                -0.09933465,
+                0.87850499
+              ],
+              [
+                -0.1058,
+                0.07681,
+                1.49033999
+              ]
+            ],
+            "dimensionsMm": [
+              285.05,
+              176.14,
+              611.84
+            ]
+          },
+          {
+            "part": "Leg_L",
+            "vertices": 2266,
+            "triangles": 4376,
+            "boundsBlenderMetres": [
+              [
+                -0.23119999,
+                -0.16500001,
+                0.0224
+              ],
+              [
+                -0.034313,
+                0.094674,
+                0.91958302
+              ]
+            ],
+            "dimensionsMm": [
+              196.89,
+              259.67,
+              897.18
+            ]
+          },
+          {
+            "part": "Arm_R",
+            "vertices": 4836,
+            "triangles": 9292,
+            "boundsBlenderMetres": [
+              [
+                0.1058,
+                -0.09933465,
+                0.87850499
+              ],
+              [
+                0.390854,
+                0.07681,
+                1.49033999
+              ]
+            ],
+            "dimensionsMm": [
+              285.05,
+              176.14,
+              611.84
+            ]
+          },
+          {
+            "part": "Leg_R",
+            "vertices": 2266,
+            "triangles": 4376,
+            "boundsBlenderMetres": [
+              [
+                0.034313,
+                -0.16500001,
+                0.0224
+              ],
+              [
+                0.23119999,
+                0.094674,
+                0.91958302
+              ]
+            ],
+            "dimensionsMm": [
+              196.89,
+              259.67,
+              897.18
+            ]
+          },
+          {
+            "part": "Head_Helmet",
+            "vertices": 7664,
+            "triangles": 14412,
+            "boundsBlenderMetres": [
+              [
+                -0.1338,
+                -0.11924,
+                1.42439997
+              ],
+              [
+                0.1338,
+                0.13069919,
+                1.80826056
+              ]
+            ],
+            "dimensionsMm": [
+              267.6,
+              249.94,
+              383.86
+            ]
+          },
+          {
+            "part": "Weapons",
+            "vertices": 1462,
+            "triangles": 2884,
+            "boundsBlenderMetres": [
+              [
+                0.27586076,
+                -0.88115865,
+                0.81831747
+              ],
+              [
+                0.61292726,
+                0.38809019,
+                1.24350607
+              ]
+            ],
+            "dimensionsMm": [
+              337.07,
+              1269.25,
+              425.19
+            ]
+          }
+        ],
+        "checks": {
+          "sourceTriangles": 84238,
+          "partTriangles": 84238
+        }
+      },
       "fbxRoundTrip": {
         "bones": 16,
         "skinningImported": true,
         "normalizedWeights": true,
         "animationClipsImported": [],
-        "vertices": 40354
+        "vertices": 41850
       },
-      "fbxSha256": "24d83ae9a611c81acad9c968e8c6d8e89f973cf5bc41b1902ab2e3df2f39a5c4",
-      "modelSha256": "0a449e35dedaadb25a90a45e284a34780790dfbc7a274cdf237c82189c580887",
-      "blenderSha256": "8fc25df7d5033a213f5aa1ef9dae26207342de5f720c2899d43bf5de934b3d4f"
+      "fbxSha256": "04f73ea2a90840e670ed2af4d9a8d87562d20749be2948c85c804618883387fe",
+      "modelSha256": "02d7454c3a33e67716ca9b4901ef09c37391966c0a0a33c44ab0ab79e897d6b7",
+      "blenderSha256": "e5ddf2417526960cda6cd9ade44416f38c7943a8184260b0391c2c85a56e7286"
     },
     "Ione": {
       "preservedVertices": 20818,
