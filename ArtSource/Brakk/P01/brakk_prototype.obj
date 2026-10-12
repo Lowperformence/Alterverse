@@ -1,5 +1,5 @@
-# BRACK P01; meters; Z up; front -Y; procedural blockout
-mtllib brack.mtl
+# BRAKK P01; meters; Z up; front -Y; procedural blockout
+mtllib brakk.mtl
 o 01_Head
 usemtl skin
 v 0.000000 -0.015000 1.560000

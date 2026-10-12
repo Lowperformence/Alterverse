@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1100" viewBox="0 0 1500 1100">
 <rect width="1500" height="1100" fill="#f4f0e7"/>
 <style>text{font-family:Arial,sans-serif;fill:#202d35} .h{font-size:30px;font-weight:bold}.t{font-size:18px}.s{font-size:15px}</style>
-<text x="40" y="50" class="h">BRACK P01 | Modularer Bauplan</text>
+<text x="40" y="50" class="h">BRAKK P01 | Modularer Bauplan</text>
 <text x="40" y="80" class="t">Blockout in Metern · Front -Y · Z oben · Teile-IDs nach README, unabhängig von Bildlabels</text>
 <polygon points="192.7,325.8 192.7,325.8 307.4,325.8 307.4,325.8" fill="#21292e" stroke="#42515a" stroke-width=".7"/>
 <polygon points="192.7,257.6 307.4,257.6 307.4,257.6 192.7,257.6" fill="#21292e" stroke="#42515a" stroke-width=".7"/>

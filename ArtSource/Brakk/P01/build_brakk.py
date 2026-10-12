@@ -1,4 +1,4 @@
-"""BRACK P01: original procedural blockout. Python 3, no third-party assets."""
+"""BRAKK P01: original procedural blockout. Python 3, no third-party assets."""
 import json, math
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent
@@ -68,7 +68,7 @@ for s,k in [('L',1),('R',-1)]:
 materials={'skin':(.40,.22,.13),'hair':(.045,.035,.025),'graphite':(.13,.16,.18),
            'petrol':(.055,.18,.20),'ochre':(.63,.36,.12),'amber':(.95,.58,.12)}
 def write_obj(filename, exploded=False):
-    lines=['# BRACK P01; meters; Z up; front -Y; procedural blockout','mtllib brack.mtl']; offset=1
+    lines=['# BRAKK P01; meters; Z up; front -Y; procedural blockout','mtllib brakk.mtl']; offset=1
     shifts={'head':(0,0,.55),'torso':(0,0,.20),'arms':(.32,0,.20),
             'gauntlets':(.60,0,0),'pelvis':(0,0,0),'legs':(.18,0,-.10)}
     for p in parts:
@@ -80,7 +80,7 @@ def write_obj(filename, exploded=False):
         offset+=len(p['vertices'])
     (ROOT/filename).write_text('\n'.join(lines)+'\n')
 if __name__=='__main__':
-    write_obj('brack_prototype.obj'); write_obj('brack_exploded.obj', True)
-    (ROOT/'brack.mtl').write_text('\n'.join(f'newmtl {n}\nKd {r} {g} {b}\nKs 0.1 0.1 0.1\nNs 24\n' for n,(r,g,b) in materials.items()))
+    write_obj('brakk_prototype.obj'); write_obj('brakk_exploded.obj', True)
+    (ROOT/'brakk.mtl').write_text('\n'.join(f'newmtl {n}\nKd {r} {g} {b}\nKs 0.1 0.1 0.1\nNs 24\n' for n,(r,g,b) in materials.items()))
     (ROOT/'parts.json').write_text(json.dumps(parts,indent=2))
     print(f'{len(parts)} separate meshes; '+str(sum(len(p['vertices']) for p in parts))+' vertices')

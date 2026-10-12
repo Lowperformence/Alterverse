@@ -1,4 +1,4 @@
-# BRACK — Neubau P01
+# BRAKK — Neubau P01
 
 Stand: 12.10.2026. Auftraggeber: Chris Radic. Erstellung: KI-unterstützt in ChatGPT/Codex.
 
@@ -8,7 +8,7 @@ Eigenständiger neuer Entwurf für einen Faust-Nahkämpfer. Kein altes Modell, k
 P01 ist ein Konzept- und Modellierungsprototyp, keine fertige Spielfigur. 59 getrennte Meshes bilden Körper, Gesicht, Kleidung, Panzerung und Schlaghandschuhe ab. Das konzeptionelle Ziel ist ein detaillierter stilisierter Held; die OBJ-Dateien sind bewusst ein einfacher Volumenblockout. Konzeptbild und Blockout haben unterschiedliche Detailstände. Bei Abweichungen gilt die nummerierte Bauteilspezifikation hier; Maße sind Modellierungsziele.
 
 ## Eigenes Design
-Brack ist ein gedrungener erwachsener menschlicher Kämpfer mit breiten Schultern, kräftigen Unterarmen und tiefer Kampfhaltung. Zielhöhe einschließlich Haar: etwa 1,88 m. Schulterbreite mit Panzerung: etwa 0,95 m; Handschuhe verbreitern die Silhouette. Gesicht: breiter flacher Nasenrücken, trapezförmiger Kiefer, kurze asymmetrische dunkle Haare, freie Augen und freie Mundpartie. Kein Vollhelm.
+Brakk ist ein gedrungener erwachsener menschlicher Kämpfer mit breiten Schultern, kräftigen Unterarmen und tiefer Kampfhaltung. Zielhöhe einschließlich Haar: etwa 1,88 m. Schulterbreite mit Panzerung: etwa 0,95 m; Handschuhe verbreitern die Silhouette. Gesicht: breiter flacher Nasenrücken, trapezförmiger Kiefer, kurze asymmetrische dunkle Haare, freie Augen und freie Mundpartie. Kein Vollhelm.
 
 Warme dunkle Haut, ockerfarbene gesteppte Arbeitsweste, petrolfarbenes Unterhemd und Hose, matte graphitfarbene Panzerung, bernsteinfarbene Dämpferelemente. Wiederkehrende Details: drei getrennte Knöchelplatten, diagonale Lüftungsrillen, versetzter Brustverschluss. Keine Logos, fremden Embleme oder Franchise-Vorgaben.
 
@@ -43,14 +43,14 @@ Zielmaße je Handschuh: rund 0,33 m breit, 0,36 m tief, 0,29 m hoch. Für das De
 Abstände als Ausgangswerte: 8–15 mm zwischen Textil und Panzer, 20–30 mm in beweglichen Gelenkzonen. Bei Schulter, Hüfte, Ellbogen und Knie zuerst die Animation testen. Starre Rüstung an Bones binden; Kleidung und Körper gewichten. Sichtbare Schichten behalten, verdeckte Körperflächen erst nach gesichertem Outfit löschen.
 
 ## Dateien und Blender
-- brack_prototype.obj + brack.mtl: zusammengesetzter modularer Blockout.
-- brack_exploded.obj + brack.mtl: Baugruppen räumlich auseinandergezogen; keine physikalisch präzise Montagesimulation.
+- brakk_prototype.obj + brakk.mtl: zusammengesetzter modularer Blockout.
+- brakk_exploded.obj + brakk.mtl: Baugruppen räumlich auseinandergezogen; keine physikalisch präzise Montagesimulation.
 - parts.json: vollständige Geometrie und Materialzuordnung.
-- build_brack.py: reproduzierbare Erzeugung ohne externe Bibliotheken oder Assets.
+- build_brakk.py: reproduzierbare Erzeugung ohne externe Bibliotheken oder Assets.
 - import_blender.py: erzeugt in Blender eine neue Collection mit Einzelmeshes, Materialien und Fasen. Vorhandene Szene wird nicht gelöscht.
-- brack_bauplan.svg: nummerierte Ansichten und Faustmodul-Schema.
-- brack_konzept.png: generiertes Konzept mit Einzelteilansichten. Seine automatisch erzeugten Ziffern sind keine verbindlichen Teile-IDs; die Zuordnung in diesem README und im SVG ist maßgeblich.
-- PROMPT.txt: vollständiger Bildgenerierungsauftrag; Bild wird separat im Chat bereitgestellt.
+- brakk_bauplan.svg: nummerierte Ansichten und Faustmodul-Schema.
+- brakk_konzept.png: generiertes Konzept mit Einzelteilansichten. Seine automatisch erzeugten Ziffern sind keine verbindlichen Teile-IDs; die Zuordnung in diesem README und im SVG ist maßgeblich.
+- PROMPT.txt: auf Brakk aktualisierte Designspezifikation. PROMPT_ORIGINAL.txt enthält den tatsächlich ausgeführten ersten Bildauftrag; PROMPT_CORRECTION.txt enthält den ausgeführten Titelkorrekturauftrag.
 - RIGHTS_AND_PROVENANCE.md und SHA256SUMS: Herkunft, Rechtebasis und Integritätsnachweise.
 
 Blender: OBJ mit Z-Up und -Y Forward importieren. Alternativ parts.json und import_blender.py zusammen speichern, Script im Texteditor öffnen und ausführen; falls __file__ dort fehlt, ROOT explizit auf den entpackten Ordner setzen. Danach als .blend speichern. Der Blender-Import wurde hier nicht ausgeführt, weil Blender nicht installiert ist.
@@ -63,7 +63,7 @@ Blender: OBJ mit Z-Up und -Y Forward importieren. Alternativ parts.json und impo
 5. Humanoides Rig mit Fingerbones; Faustmodule an Hand-/Unterarmbones, bewegliche Dämpfer an Hilfsbones.
 6. Idle, Lauf, Faust links/rechts, Kombo, Treffer, Tod. Beugeproben bei 90°/120°, Faust vor Gesicht, Hocke und Lauf.
 7. Export FBX oder GLB gemäß Spielpipeline; Materialien, Maßstab, Bounds, Kollisionskörper und Performance prüfen.
-8. Erst nach diesen Prüfungen im Spiel den alten Brack ersetzen. P01 verändert keine bestehenden Spielassets.
+8. Erst nach diesen Prüfungen im Spiel den alten Brakk ersetzen. P01 verändert keine bestehenden Spielassets.
 
 ## Bereits geprüft
 Python-Generator ausgeführt. OBJ-Indizes, geschlossene Einzelmesh-Kanten, endliche Koordinaten und reproduzierbare Erzeugung werden im Validierungsprotokoll festgehalten. Nicht geprüft: Blender-Ausführung, Unity-Import, Animation, Performance, Namen-/Markenrecherche oder rechtliche Einzelfallfreigabe.

@@ -1,12 +1,12 @@
 """Exact vector assembly sheet generated from P01 geometry."""
-from build_brack import parts,materials
+from build_brakk import parts,materials
 from pathlib import Path
 from html import escape
 ROOT=Path(__file__).resolve().parent
 svg=['<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1100" viewBox="0 0 1500 1100">',
 '<rect width="1500" height="1100" fill="#f4f0e7"/>',
 '<style>text{font-family:Arial,sans-serif;fill:#202d35} .h{font-size:30px;font-weight:bold}.t{font-size:18px}.s{font-size:15px}</style>',
-'<text x="40" y="50" class="h">BRACK P01 | Modularer Bauplan</text>',
+'<text x="40" y="50" class="h">BRAKK P01 | Modularer Bauplan</text>',
 '<text x="40" y="80" class="t">Blockout in Metern · Front -Y · Z oben · Teile-IDs nach README, unabhängig von Bildlabels</text>']
 def draw(cx,base,scale,exploded=False,side=False):
     shifts={'head':(0,.40),'torso':(0,.18),'arms':(.30,.18),'gauntlets':(.55,0),'pelvis':(0,0),'legs':(.12,-.08)}
@@ -36,4 +36,4 @@ for i,(name,ids) in enumerate(blocks):
     if i<5: svg.append(f'<path d="M{x+216} 940h20l-6 -5m6 5l-6 5" fill="none" stroke="#42515a" stroke-width="2"/>')
 svg.append('<text x="40" y="1040" class="t">59 separate Meshes · Detailmodellierung, UVs, Rig und Animation stehen noch aus.</text>')
 svg.append('<text x="40" y="1070" class="s">Konzept-Sprengzeichnung; keine technische Fertigungs- oder Belastungsfreigabe.</text></svg>')
-(ROOT/'brack_bauplan.svg').write_text('\n'.join(svg))
+(ROOT/'brakk_bauplan.svg').write_text('\n'.join(svg))
