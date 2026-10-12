@@ -177,7 +177,7 @@ class Social:
         if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
                 or route in ('/social/players', '/social/block', '/social/unblock',
                              '/social/clan/identity')):
-            raise ValueError('Player communication is disabled in this version.')
+            raise ValueError('Communication is disabled in this version.')
         with self.ledger.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             self.ledger.ensure(db, account)
