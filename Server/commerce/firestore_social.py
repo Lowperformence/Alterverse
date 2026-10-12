@@ -139,12 +139,22 @@ class FirestoreSocial:
                 snap = ref.get(transaction=tx)
                 unique_refs[unique_id] = (ref,snap.to_dict() if snap.exists else None)
                 return snap.to_dict() if snap.exists else None
-            if route in ('/social/clan/create', '/social/clan/identity'):
-                name,tag = data.get('name'),data.get('tag')
-                if isinstance(name,str) and isinstance(tag,str):
-                    for kind,value in [('name',unicodedata.normalize('NFKC',name).strip().casefold()),('tag',tag.upper())]:
-                        locked = lock_unique(kind,value)
-                        if locked: read('social_clan',locked['clan'])
+            generated_clan_identity = None
+            if route == '/social/clan/create':
+                # The request may contain a fabricated name, but only this
+                # server-generated pair is used by shared rules and unique claims.
+                for _ in range(64):
+                    name, tag = generate_clan_name(), generate_clan_tag()
+                    name_claim = lock_unique('name', name.casefold())
+                    tag_claim = lock_unique('tag', tag)
+                    if not name_claim and not tag_claim:
+                        generated_clan_identity = (name, tag)
+                        break
+                if generated_clan_identity is None:
+                    raise ValueError('Clan identity allocation unavailable')
+            elif route == '/social/clan/identity':
+                # Old identity endpoints are already denied, including on the server.
+                raise ValueError('Player communication is disabled in this version.')
             for clan in list(rows['social_clan'].values()):
                 lock_unique('name',clan['name_search']);lock_unique('tag',clan['tag'])
 
@@ -181,7 +191,7 @@ class FirestoreSocial:
                 rows['social_clan'][identifier] = clan
             with tempfile.TemporaryDirectory(prefix='df-social-') as directory:
                 ledger = Ledger(Path(directory)/'scope.sqlite3')
-                rules = Social(ledger)
+                rules = Social(ledger, generated_clan_identity=generated_clan_identity)
                 with ledger.connect() as db:
                     for table,columns in TABLES.items():
                         for row in rows[table].values():
