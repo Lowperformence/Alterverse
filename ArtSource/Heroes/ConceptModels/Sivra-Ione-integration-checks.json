@@ -1,0 +1,27 @@
+{
+  "heroes": {
+    "Sivra": {
+      "vertices": 41850,
+      "triangles": 81354,
+      "sha256": "02d7454c3a33e67716ca9b4901ef09c37391966c0a0a33c44ab0ab79e897d6b7",
+      "jointPoseConfigurations": 27,
+      "geometry": "passed",
+      "archivedModelHash": "matched"
+    },
+    "Ione": {
+      "vertices": 29840,
+      "triangles": 57147,
+      "sha256": "d43051c9104c8b75c0368b844e82aee31b1282519937b25688bb1b9805e37d26",
+      "jointPoseConfigurations": 27,
+      "geometry": "passed",
+      "archivedModelHash": "matched",
+      "fittedFocusAxis": [
+        -0.0,
+        -0.0,
+        1.0
+      ]
+    }
+  },
+  "Unity": "not run",
+  "Android": "not run"
+}

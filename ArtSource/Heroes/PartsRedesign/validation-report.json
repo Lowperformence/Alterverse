@@ -1,0 +1,45 @@
+{
+  "revision": "hero-parts-20261011-v1",
+  "baseCommit": "bd7756321a7ac0ac9e32275c67bc03461547d00e",
+  "models": {
+    "Sivra": {
+      "preservedVertices": 28338,
+      "removedVertices": 5594,
+      "newVertices": 7562,
+      "newTriangles": 14196,
+      "newParts": 73,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "d2bbd8ddea070735ae9da25229c1ff841f4dfe4d94751684c277aa4fc2cba003",
+      "blenderSourceAndSkinnedFbx": true,
+      "fbxRoundTrip": {
+        "bones": 16,
+        "bodyVertices": 35900,
+        "bodyFaces": 70282,
+        "skinningImported": true
+      }
+    },
+    "Ione": {
+      "preservedVertices": 12380,
+      "removedVertices": 1673,
+      "newVertices": 8438,
+      "newTriangles": 15944,
+      "newParts": 74,
+      "rigAndMarkersPreserved": true,
+      "bodyPositionsAndNormalsExact": true,
+      "preservedVertexDigest": "f97f7edda6c140c4802a731105b3a6e3981cae80f61bb783f0d3e6d0fd2370fa",
+      "blenderSourceAndSkinnedFbx": true,
+      "fbxRoundTrip": {
+        "bones": 18,
+        "bodyVertices": 20818,
+        "bodyFaces": 40035,
+        "skinningImported": true
+      }
+    }
+  },
+  "validation": {
+    "runtimePayload": "passed",
+    "nativeFbxImport": "passed",
+    "UnityEditor": "not run in authoring runner"
+  }
+}

@@ -111,7 +111,13 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            if(hero != HeroId.Timmy) HeroLimbTechDetails.Apply(instance.transform, hero);
+            // These two component models already contain their armor and boot details.
+            // Keep the legacy passes as a fallback when a replacement did not load.
+            bool componentModelApplied =
+                (hero == HeroId.Nyra && instance.GetComponent<CyberRangerAppearance>() != null) ||
+                (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null);
+            if (hero != HeroId.Timmy && !componentModelApplied)
+                HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
                 hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
             HeroUndersuitFabric.Apply(instance.transform);
@@ -119,7 +125,7 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);
             // Recolor after every generated detail and material pass so no gold forearm layer remains.
             BrakkForearmTrim.Apply(instance.transform, hero);
-            HeroBootPresentation.Apply(instance.transform, hero);
+            if (!componentModelApplied) HeroBootPresentation.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }
@@ -997,5 +1003,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-
-
