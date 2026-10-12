@@ -1073,8 +1073,8 @@
       "weaponDetail": [
         {
           "object": "DF_WeaponR",
-          "addedVertices": 48,
-          "addedTriangles": 80,
+          "addedVertices": 36,
+          "addedTriangles": 60,
           "originalVerticesExact": true
         }
       ],
@@ -1223,30 +1223,30 @@
           },
           {
             "part": "Weapons",
-            "vertices": 1462,
-            "triangles": 2884,
+            "vertices": 1450,
+            "triangles": 2864,
             "boundsBlenderMetres": [
               [
-                0.27586076,
+                0.27492473,
                 -0.88115865,
-                0.81831747
+                0.8899588
               ],
               [
-                0.61292726,
+                0.40681475,
                 0.38809019,
-                1.24350607
+                1.19528258
               ]
             ],
             "dimensionsMm": [
-              337.07,
+              131.89,
               1269.25,
-              425.19
+              305.32
             ]
           }
         ],
         "checks": {
-          "sourceTriangles": 84238,
-          "partTriangles": 84238
+          "sourceTriangles": 84218,
+          "partTriangles": 84218
         }
       },
       "fbxRoundTrip": {
@@ -1256,9 +1256,9 @@
         "animationClipsImported": [],
         "vertices": 41850
       },
-      "fbxSha256": "04f73ea2a90840e670ed2af4d9a8d87562d20749be2948c85c804618883387fe",
+      "fbxSha256": "90dd3723295f075d02c110289428b641ee15c128baf3612af9c03c1508ba55f9",
       "modelSha256": "02d7454c3a33e67716ca9b4901ef09c37391966c0a0a33c44ab0ab79e897d6b7",
-      "blenderSha256": "e5ddf2417526960cda6cd9ade44416f38c7943a8184260b0391c2c85a56e7286"
+      "blenderSha256": "625020fd7a896bfb29806ba76b3eb1e7236510433b43d205ec07bf110b3739cb"
     },
     "Ione": {
       "preservedVertices": 20818,
