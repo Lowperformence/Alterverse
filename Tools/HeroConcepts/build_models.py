@@ -17,7 +17,7 @@ from build_parts import Parts,amend,validate,unit,PALETTES,obj_source
 from blender_export import xyz,material,reset,mesh_object,skin,parent_name,studio,render,export_fbx,rig_signature,action_signature,runtime_scene
 
 BASE='a605c0635eaccd57dc48e0e60a6a344170153a1e'
-REVISION='nine-hero-concepts-20261012-v1'
+REVISION='nine-hero-concepts-20261012-v2'
 ART=ROOT/'ArtSource/Heroes/ConceptModels'
 RESOURCE=ROOT/'Assets/Alterverse/Resources'
 KINDS={'Sivra':'CyberRanger','Ione':'UmbralMage','Nerok':'CyberShark','Auren':'SiegeTank','Traveler':'ChronoTraveler'}
@@ -94,7 +94,14 @@ def runtime_parts(label,data):
             for i,c in enumerate(centers):
                 c[2]=front(c[0],c[1],'Chest',c[2]);node(p,'triangular chest resonance emitter '+str(i),c,.014,2,3,chest)
             for a,b in [(0,1),(1,2),(2,0)]:p.tube('chest triangular violet circuit',[np.array(centers[a])+[0,0,.004],np.array(centers[b])+[0,0,.004]],.0015,3,chest,6)
-            shoulder_lames(p,names,anchors,2,3,1.00)
+            # The retained mech shoulder spheres are wider than the rig anchors.
+            # Fit the new pearl petals around their measured external surface.
+            cap_anchors=copy.deepcopy(anchors)
+            for side in ['L','R']:
+                bone=idx('UpperArm'+side);points=v[(bi==bone)&(groups==0)&(v[:,1]>anchors[bone]['head'][1]-.080)]
+                lo=points.min(0);hi=points.max(0)
+                cap_anchors[bone]['head']=[float((lo[0]+hi[0])*.5),float(hi[1]+.011),float((lo[2]+hi[2])*.5)]
+            shoulder_lames(p,names,cap_anchors,2,3,1.24)
             for sign in [-1,1]:node(p,'hip orbit reactor',[sign*.151,anchors[hips]['head'][1]-.01,.125],.038,1,3,hips)
     elif label=='Auren':
         # Replace the old emissive letter glyph without disturbing shield metal.
@@ -120,6 +127,11 @@ def runtime_parts(label,data):
         node(p,'abdomen amber reactor',[0,cy-.077,.166],.024,2,3,idx('Spine'))
         p.shield_range=(first,shield_end)
     elif label=='Traveler':
+        # Replace the eight rectangular leg panels from the old Blender pass;
+        # retain its chest, back and forearm detail and the base limb anatomy.
+        detail_base=data.get('blenderDetailBaseVertexCount',len(v))
+        remove=np.arange(len(v))>=detail_base
+        remove &= np.array([names[b].startswith(('Thigh','Shin')) for b in bi])
         hc=float(anchors[head]['head'][1])+.215
         y=hc+.024;z=front(0,y,'Head',.108)
         p.tube('single horizontal time slit',[[-.065,y,z],[.065,y,z]],.0023,3,head,10)
@@ -196,11 +208,16 @@ def runtime_source(label,kind,data):
             path=Path(tmp)/'Nyra.blend';path.write_bytes(original('ArtSource/Heroes/Nyra.blend'))
             with bpy.data.libraries.load(str(path),link=False) as (src,dst):dst.objects=['DF_WeaponR','DF_HandleContactR','DF_Muzzle']
             objects={o.name:o for o in dst.objects if o};weapon=objects['DF_WeaponR'];h=objects['DF_HandleContactR'].matrix_world.translation;m=objects['DF_Muzzle'].matrix_world.translation
-            q=(m-h).rotation_difference(Vector((0,-1,0)));target=Vector(xyz(display['anchors'][display['boneNames'].index('HandR')]['head']))
+            h=h.copy();m=m.copy();q=(m-h).rotation_difference(Vector((0,-1,0)));target=Vector(xyz(display['anchors'][display['boneNames'].index('HandR')]['head']))
             for vert in weapon.data.vertices:vert.co=q@(weapon.matrix_world@vert.co-h)+target
-            weapon.matrix_world=Matrix.Identity(4);weapon.parent=None
+            weapon.parent=None;weapon.matrix_parent_inverse=Matrix.Identity(4);weapon.matrix_basis=Matrix.Identity(4)
             for modifier in list(weapon.modifiers):weapon.modifiers.remove(modifier)
             weapon.vertex_groups.clear();bpy.context.collection.objects.link(weapon);skin(weapon,arm,['HandR'],[0]*len(weapon.data.vertices))
+            weapon.matrix_parent_inverse=Matrix.Identity(4);weapon.matrix_basis=Matrix.Identity(4);bpy.context.view_layer.update()
+            assert np.allclose(weapon.matrix_world,Matrix.Identity(4),atol=1e-6),'Rifle inherits an old source transform'
+            hand_check=Vector(xyz(display['anchors'][display['boneNames'].index('HandR')]['head']))
+            gun_points=np.array([tuple(weapon.matrix_world@vertex.co) for vertex in weapon.data.vertices])
+            assert abs(float(gun_points[:,2].mean())-hand_check.z)<.16,('Rifle must be at the palm height',gun_points[:,2].mean(),hand_check.z)
             # Blender also appends dependency objects such as the old armature.
             # Remove them after transferring the rifle to this source skeleton.
             for o in list(bpy.data.objects):
@@ -216,16 +233,17 @@ def native_parts(label,arm,body):
     p=Parts();chest=idx('Chest');hips=idx('Hips');head=idx('Head');cy=anchors[chest]['head'][1];hc=anchors[head]['head'][1]+.235
     if label=='Zhaev':
         # A fitted crown ribbon follows the retained helmet's measured round surface.
-        ys=np.linspace(hc-.025,hc+.20,27)
-        points=[]
-        for a in np.linspace(-1.0,1.45,36):points.append([0,hc+.166*math.cos(a),.011+.169*math.sin(a)])
+        shell=[body.matrix_world@vertex.co for vertex in body.data.vertices if any(g.weight>.9 and body.vertex_groups[g.group].name=='Head' for g in vertex.groups)]
+        hi=max(v.z for v in shell);points=[]
+        for a in np.linspace(-1.24,1.36,42):points.append([0,hi-.170+.174*math.cos(a),-.012+.184*math.sin(a)])
         p.tube('single violet crown stripe',points,.0053,3,head,10)
+        shoulder_lames(p,names,anchors,1,3,.91)
         node(p,'central oval violet chest reactor',[0,cy+.128,.193],.026,2,3,chest)
         for sign in [-1,1]:
             for j in range(4):p.tube('short chest vent rail',[[sign*.035,cy+.105+j*.013,.182],[sign*.078,cy+.106+j*.013,.169]],.0022,2,chest,8)
             for j in range(3):
-                u=idx('UpperArmL' if sign<0 else 'UpperArmR');a=np.array(anchors[u]['head']);x=a[0]+sign*.038;y=a[1]-.023-j*.026
-                p.plate('three compact shoulder chevrons',[(x-sign*.065,y+.018),(x+sign*.020,y+.038),(x+sign*.071,y+.005),(x+sign*.020,y-.006)],.108,.010,3,u)
+                u=idx('UpperArmL' if sign<0 else 'UpperArmR');a=np.array(anchors[u]['head']);x=a[0]+sign*.023;y=a[1]-.023-j*.024
+                p.plate('three compact shoulder chevrons',[(x-sign*.042,y+.011),(x+sign*.006,y+.020),(x+sign*.045,y+.009),(x+sign*.007,y-.002)],.112,.005,3,u)
             c=[sign*.120,anchors[hips]['head'][1]-.056,.137];diamond(p,'violet hip tab',c,.040,.077,3,hips)
             # Existing cape remains; embroidered trim follows its back edges.
             line=[[sign*(.092+.032*t),1.35-.64*t,-.17-.04*t] for t in np.linspace(0,1,28)]
@@ -259,7 +277,7 @@ def native_parts(label,arm,body):
         for sign in [-1,1]:
             p.plate('split copper chest flange',[(sign*.034,cy+.181),(sign*.17,cy+.209),(sign*.22,cy+.088),(sign*.166,cy+.010),(sign*.048,cy+.035)],.205,.017,2,chest)
             for j in range(10):
-                x=sign*(.009+j*.0071);y=hc-.097+abs(x)*.39
+                x=sign*(.009+j*.0071);y=hc-.055+abs(x)*.22
                 points=[[x,y,.158],[x*1.05,y-.027,.168],[x*.88,y-.070,.142]]
                 p.tube('short grey beard clump',points,[.007,.006,.0015],5,head,7)
             ear=[sign*.139,hc+.010,.005];p.ellipsoid('bronze communications earcup',ear,[.025,.043,.039],4,head,28,14)
@@ -299,8 +317,10 @@ def remove_native_obsolete(label,body):
         world=[body.matrix_world@v.co for v in component];lo=min(v.z for v in world);hi=max(v.z for v in world)
         selected=label=='Zhaev' and bound=={'Head'} and len(component)<30 and hi>1.95
         selected|=label=='Brakk' and bound=={'Head'} and mats=={'Hair'} and len(component)!=30
+        selected|=label=='Brakk' and bound=={'Head'} and mats=={'Brushed silver'} and len(component)==128
+        selected|=label=='Brakk' and bound=={'Head'} and mats=={'Energy'}
         selected|=label=='Tahla' and 'Tahla pink flower' in mats
-        if label in ('Zhaev','Brakk') and len(component)<1000 and len(bound)==1 and next(iter(bound)).startswith('UpperArm') and lo>1.39 and hi>1.50 and not any('fabric' in m.lower() or m=='Skin' for m in mats):selected=True
+        if label in ('Zhaev','Brakk') and len(component)<2500 and len(bound)==1 and next(iter(bound)).startswith(('UpperArm','Forearm')) and 'Skin' not in mats:selected=True
         if selected:remove.extend(component);removed.append({'vertices':len(component),'materials':sorted(mats),'bones':sorted(bound)})
     gone=set(remove);preserved=[tuple(v.co) for v in bm.verts if v not in gone];bmesh.ops.delete(bm,geom=remove,context='VERTS');bm.to_mesh(body.data);bm.free();assert [tuple(v.co) for v in body.data.vertices]==preserved
     return preserved,removed
@@ -312,6 +332,7 @@ def native_source(label,hero,source):
     sockets={o.name:list(o.matrix_world.translation) for o in bpy.data.objects if o.name.startswith(('DF_Palm','DF_Handle','DF_Muzzle','DF_Support','DF_TimmyJet'))}
     preserved,removed=remove_native_obsolete(label,body);p,names,anchors=native_parts(label,arm,body)
     colors=[(.025,.035,.051),(.91,.91,.88),(.57,.26,.07),(.68,.08,1),(.47,.32,.14),(.19,.21,.22)]
+    if label=='Zhaev':colors=[(.018,.024,.035),(.039,.046,.061),(.44,.36,.21),(.54,.075,.83),(.47,.32,.14),(.19,.21,.22)]
     if label=='Tahla':colors=[(.02,.10,.06),(.92,.87,.72),(.65,.39,.10),(.04,.38,.16),(.48,.31,.13),(.97,.97,.96)]
     if label=='Brakk':colors=[(.025,.032,.050),(.30,.34,.36),(.54,.20,.07),(1,.38,.05),(.46,.32,.16),(.26,.27,.25)]
     if label=='Timmy':colors=[(.025,.039,.062),(.87,.90,.91),(.37,.39,.42),(.025,.61,.95),(.73,.46,.10),(.93,.92,.87)]
@@ -350,7 +371,7 @@ def validate_exports():
         originals=entry.get('originalActionsExact',[]);imported=[a.name for a in bpy.data.actions];assert all(any(name in a for a in imported) for name in originals),(label,originals,imported)
         if label=='Timmy':assert len(names)==20 and 'Tail' in names
         entry['fbxRoundTrip']={'bones':len(names),'skinningImported':True,'normalizedWeights':True,'animationClipsImported':imported,'vertices':len(body.data.vertices)}
-        entry['modelSha256']=sha(path);entry['blenderSha256']=sha(ART/(label+'-model.blend'));print('FBX_VALID',label,flush=True)
+        entry['fbxSha256']=sha(path);entry['modelSha256']=sha(ROOT/entry['shippingModel']);entry['blenderSha256']=sha(ART/(label+'-model.blend'));print('FBX_VALID',label,flush=True)
 
 def finish_provenance():
     for label,entry in REPORT['models'].items():
