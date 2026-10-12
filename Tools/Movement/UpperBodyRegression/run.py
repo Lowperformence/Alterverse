@@ -9,6 +9,38 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import re
+
+
+def tank_pose_methods(path):
+    # Compile the actual wrist calibration and guard-axis methods; replace only
+    # unrelated mesh/material construction in this targeted engine harness.
+    source = path.read_text()
+    methods = []
+    for name in ('HammerGuardShaft', 'OrientHammerGuard'):
+        match = re.search(r'(?m)^        public (?:static )?(?:void|Vector3) ' + name + r'\(', source)
+        if not match:
+            raise ValueError('Missing production method: ' + name)
+        start = match.start()
+        brace = source.find('{', match.end())
+        arrow = source.find('=>', match.end())
+        if 0 <= arrow < brace:
+            end = source.index(';', arrow) + 1
+        else:
+            depth, end = 1, brace + 1
+            while depth:
+                if source[end] == '{': depth += 1
+                elif source[end] == '}': depth -= 1
+                end += 1
+        methods.append(source[start:end])
+    return '''using System.Collections.Generic;using UnityEngine;
+namespace Alterverse.Visuals {public partial class SiegeTankAppearance {
+private readonly Dictionary<string,Transform> markers=new Dictionary<string,Transform>();
+private Transform calibratedHammerHand;private Quaternion hammerFrameInHand;
+public void ConfigureMarkers(Transform grip,Transform top,Transform front) {
+markers["HammerGrip"]=grip;markers["HammerTop"]=top;markers["HammerFront"]=front;
+calibratedHammerHand=null;}
+''' + '\n'.join(methods) + '\n}}'
 
 
 def main():
@@ -39,6 +71,9 @@ def main():
             amplitudes.parent.mkdir(parents=True, exist_ok=True)
         files = [here / 'EngineStubs.cs', here / 'Regression.cs', here / 'ShieldGuardRegression.cs', source / 'ShieldGuardFrame.cs', source / 'HeroVisualDiagnostics.cs', source / 'HeroUpperBodyGait.cs',
                  source / 'MeleeBasicAttackAnimation.cs', source / 'CombatMotion.cs']
+        tank = Path(temporary) / 'TankPose.cs'
+        tank.write_text(tank_pose_methods(source / 'SiegeTankAppearance.cs'))
+        files += [tank, here / 'HammerPoseRegression.cs']
         subprocess.run(compiler + ['-langversion:latest', '-r:' + reference, '-out:' + str(binary)] +
                        [str(file) for file in files], check=True, env=env)
         subprocess.run([runtime, str(binary), str(here / 'nerok-rest-rig.csv'), str(amplitudes)], check=True, env=env)

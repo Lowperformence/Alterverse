@@ -289,6 +289,11 @@ namespace Alterverse.Visuals
             Bounds bounds = mesh.bounds; bounds.Expand(bounds.size * .45f); renderer.localBounds = bounds;
         }
 
+        // Keep the head above and outside the right shoulder, as in the marked guard.
+        // Shared with strike recovery so the weapon returns to this exact diagonal.
+        public static Vector3 HammerGuardShaft(Transform actor) =>
+            (actor.up * .90f + actor.right * .32f + actor.forward * .30f).normalized;
+
         /// <summary>Set the right-hand guard from a fixed weapon frame, before strike sampling.</summary>
         public void OrientHammerGuard(Transform actor, Transform hand)
         {
@@ -309,9 +314,10 @@ namespace Alterverse.Visuals
                 calibratedHammerHand = hand;
             }
             // The authored HammerFront marker is on the SIDE of the head: its striking
-            // faces lie along local X. Put that striking axis fore/aft, shaft/head upward.
+            // faces lie along local X. Tilt the shaft up, outward and slightly forward.
             // Hand and child grip move together, retaining the closed fingers' contact.
-            Quaternion weaponFrame = Quaternion.LookRotation(actor.right, actor.up);
+            Vector3 guardShaft = HammerGuardShaft(actor);
+            Quaternion weaponFrame = Quaternion.LookRotation(Vector3.ProjectOnPlane(actor.right, guardShaft), guardShaft);
             hand.rotation = weaponFrame * Quaternion.Inverse(hammerFrameInHand);
         }
 
@@ -353,4 +359,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

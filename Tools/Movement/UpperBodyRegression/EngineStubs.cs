@@ -112,7 +112,7 @@ namespace Alterverse.Visuals {
   public UnityEngine.Vector3 GaitDirection=>PresentedVelocity.normalized;
   public void PulseBasic(float t){} }
  public class AuthoredHeroPresentation:UnityEngine.MonoBehaviour {public int finalized;public void FinalizeCombatGrip(bool b){finalized++;}}
- public class SiegeTankAppearance:UnityEngine.MonoBehaviour {public void OrientHammerGuard(UnityEngine.Transform actor,UnityEngine.Transform hand){} }
+ public partial class SiegeTankAppearance:UnityEngine.MonoBehaviour { }
  public class MechMachineGunVisual:UnityEngine.MonoBehaviour {public void SetAim(UnityEngine.Vector3 a,Alterverse.Combat.Health h){}public void Pulse(float t){}}
  public class MonsterAttackCue:UnityEngine.MonoBehaviour {public void Begin(float t,UnityEngine.Vector3 a,Alterverse.Combat.Health h){}}
  public class CreatureAttackMotion:UnityEngine.MonoBehaviour {public void Begin(float t,UnityEngine.Vector3 v){} }

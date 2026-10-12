@@ -220,7 +220,8 @@ namespace Alterverse.Visuals
             {
                 case HeroId.Rook: offset = new Vector3(side * .34f, -.76f, .04f); break;
                 case HeroId.Veyr: offset = new Vector3(side * .40f, -.73f, .06f); break;
-                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.34f, -.67f, .12f) : new Vector3(.43f, -.72f, .38f); break;
+                // Bent shield arm in front of the chest; hammer hand beside the torso.
+                case HeroId.Kaelon: offset = upper == 4 ? new Vector3(-.16f, -.44f, .44f) : new Vector3(.34f, -.53f, .42f); break;
                 case HeroId.Nerok: offset = new Vector3(side * .44f, -.73f, .06f); break;
                 case HeroId.Elyra: offset = new Vector3(side * .36f, -.76f, .05f); break;
                 case HeroId.Mira: offset = new Vector3(side * .35f, -.77f, .04f); break;
@@ -254,7 +255,7 @@ namespace Alterverse.Visuals
             }
             if (identity.Hero == HeroId.Kaelon)
             {
-                // Preserve the established shield guard, including its wrist orientation.
+                // Bend the shield arm forward while keeping its independent wrist orientation.
                 SolveArm(4, GuardPoint(4));
                 bones[6].Transform.rotation = model.rotation * bones[6].RestModel;
                 // Bring Auren's hammer hand forward with the whole arm chain. A wrist-only
@@ -354,7 +355,7 @@ namespace Alterverse.Visuals
             SolveArm(4, bones[6].GuardPosition);
             bones[6].Transform.rotation = bones[6].GuardWorld;
             // Shaft direction follows its own horizontal arc. The handle remains rigid in the palm.
-            Vector3 restAxis = identity.Hero == HeroId.Kaelon ? transform.up : -transform.up;
+            Vector3 restAxis = identity.Hero == HeroId.Kaelon ? SiegeTankAppearance.HammerGuardShaft(transform) : -transform.up;
             Vector3 axis = SmoothSweep(age, restAxis, transform.right*.86f-transform.forward*.50f,
                 transform.forward, -transform.right*.84f+transform.forward*.54f).normalized;
             bones[9].Transform.rotation = Quaternion.FromToRotation(restAxis, axis) * bones[9].GuardWorld;
@@ -384,4 +385,3 @@ namespace Alterverse.Visuals
         }
     }
 }
-

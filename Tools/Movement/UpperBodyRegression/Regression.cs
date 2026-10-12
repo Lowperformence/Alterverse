@@ -120,6 +120,11 @@ partial class Regression {
     Check(Vector3.Dot(hand-shoulder,r.model.forward)>reach*.20f,"Auren hammer hand must stay ahead of the shoulder");
     Check(Vector3.Dot(hand-shoulder,r.model.up)<-reach*.50f,"Auren hammer arm must rest below the shoulder");
     Check(Vector3.Distance(shoulder,hand)<reach*.97f,"Auren hammer elbow must remain bent");
+    Vector3 leftShoulder=r.bones[4].position,leftElbow=r.bones[5].position,leftHand=r.bones[6].position;
+    float leftReach=Vector3.Distance(leftShoulder,leftElbow)+Vector3.Distance(leftElbow,leftHand);
+    Check(Vector3.Dot(leftHand-leftShoulder,r.model.forward)>leftReach*.30f,"Auren shield hand braces in front of the chest");
+    Check(Vector3.Dot(leftHand-leftShoulder,r.model.up)>-leftReach*.60f,"Auren shield arm is raised from the old low pose");
+    Check(Vector3.Distance(leftShoulder,leftHand)<leftReach*.83f,"Auren shield elbow remains visibly bent");
     SameV(upperRest,r.bones[7].localPosition,"Hammer shoulder anchor preserved");SameV(elbowRest,r.bones[8].localPosition,"Hammer upper arm length preserved");SameV(handRest,r.bones[9].localPosition,"Hammer forearm length preserved");
     SameV(gripPosition,r.grips[1].localPosition,"Hammer grip contact preserved");SameQ(gripRotation,r.grips[1].localRotation,"Hammer grip orientation preserved");
    }
@@ -137,7 +142,7 @@ partial class Regression {
  static void Main(string[] args){fixture=args[0];csv=new StreamWriter(args[1]);csv.WriteLine("hero,rig,direction,run,max_left_shoulder_deviation_from_rest_deg,max_right_shoulder_deviation_from_guard_deg,max_left_elbow_deviation_from_rest_deg,max_right_elbow_deviation_from_guard_deg");
   Console.WriteLine("Isolated C# regression: unmodified HeroUpperBodyGait + full MeleeBasicAttackAnimation + original full CombatMotion.");
   Console.WriteLine("Substitute Unity Transform/math implemented with System.Numerics; clip library and presentation grips are stubs. No Unity, renderer or real attack-clip test.");
-  try{ShieldGuardCases();Sampler();Steering();Console.WriteLine("PASS sampler: eight profiles, counterphase, exclusions, zero weight, forward/back/strafe and continuous 360-degree steering.");ProfileMatrix();Console.WriteLine("PASS final pipeline: "+cases+" evaluations, rotated synthetic axes and native Nerok source rest, parent rotation, imported 1.342/1.32 scale.");
+  try{ShieldGuardCases();HammerPoseCases();HammerSweepRecovery();Console.WriteLine("PASS marked Auren guard: diagonal hammer frame, shield arm forward, wrist calibration without drift, and exact sweep recovery.");Sampler();Steering();Console.WriteLine("PASS sampler: eight profiles, counterphase, exclusions, zero weight, forward/back/strafe and continuous 360-degree steering.");ProfileMatrix();Console.WriteLine("PASS final pipeline: "+cases+" evaluations, rotated synthetic axes and native Nerok source rest, parent rotation, imported 1.342/1.32 scale.");
    Lifecycle();Console.WriteLine("PASS lifecycle: drift, pause, zero weight, idle body, grounding suspend, ability early return, action fade/recovery, shield/rifle exceptions.");
    DirectGaitRepeat();Console.WriteLine("PASS repeated direct EvaluatePose: all gait-owned arm chains remain stable without Authored rebase; existing left shield IK excluded.");
    Solver();Console.WriteLine("PASS original CombatMotion.Solve: native Nerok source-rest reach and wrist preservation.");
