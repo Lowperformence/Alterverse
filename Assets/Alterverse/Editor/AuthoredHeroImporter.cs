@@ -15,13 +15,14 @@ namespace Alterverse.EditorTools
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
         // Version 19 restores original material imports after removing graphics addons.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 19;
+        public override uint GetVersion() => 20;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
             string hero=Path.GetFileNameWithoutExtension(assetPath);
             if(hero=="Traveler")TravelerOrbImportPass.Apply(root);
-            if(hero=="Mira"||hero=="Rook"||hero=="Veyr" )AuthoredHeroDetailPass.Apply(root,hero);
+            bool originalZhaev = hero == "Veyr" && Array.Exists(root.GetComponentsInChildren<Transform>(true), p => p.name == "DF_ZhaevOriginalV1");
+            if(hero=="Mira"||hero=="Rook"||(hero=="Veyr" && !originalZhaev))AuthoredHeroDetailPass.Apply(root,hero);
             if(hero=="Timmy")
                 foreach(Renderer renderer in root.GetComponentsInChildren<Renderer>(true))
                     if(renderer.name=="DF_Visor")

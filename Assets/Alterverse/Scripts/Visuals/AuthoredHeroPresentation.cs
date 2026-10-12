@@ -80,7 +80,8 @@ namespace Alterverse.Visuals
             RestoreImportedBindPose(instance.transform, hero);
             if (!actor.TryGetComponent<AuthoredHeroPresentation>(out var presentation))
                 presentation = actor.AddComponent<AuthoredHeroPresentation>();
-            if (hero == HeroId.Veyr)
+            bool originalZhaev = hero == HeroId.Veyr && Array.Exists(instance.GetComponentsInChildren<Transform>(true), p => p.name == "DF_ZhaevOriginalV1");
+            if (hero == HeroId.Veyr && !originalZhaev)
             {
                 AssassinVioletHeadStripe.Apply(instance.transform);
                 AssassinShoulderStripes.Apply(instance.transform);
@@ -111,15 +112,15 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            if(hero != HeroId.Timmy) HeroLimbTechDetails.Apply(instance.transform, hero);
-            SkinOrnamentPresentation.Apply(instance.transform,
+            if(hero != HeroId.Timmy && !originalZhaev) HeroLimbTechDetails.Apply(instance.transform, hero);
+            if (!originalZhaev) SkinOrnamentPresentation.Apply(instance.transform,
                 hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
-            HeroUndersuitFabric.Apply(instance.transform);
-            ApplyHandSize(instance.transform, hero);
+            if (!originalZhaev) HeroUndersuitFabric.Apply(instance.transform);
+            if (!originalZhaev) ApplyHandSize(instance.transform, hero);
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);
             // Recolor after every generated detail and material pass so no gold forearm layer remains.
             BrakkForearmTrim.Apply(instance.transform, hero);
-            HeroBootPresentation.Apply(instance.transform, hero);
+            if (!originalZhaev) HeroBootPresentation.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }

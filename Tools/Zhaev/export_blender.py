@@ -35,6 +35,7 @@ for name,end in [('Idle',61),('Run',25),('Attack',25),('Skill0',31),('Skill1',34
    if name=='Death' and bone.name=='Hips':bone.rotation_euler.x=1.4*t
    bone.keyframe_insert('rotation_euler',frame=f,group=bone.name);bone.keyframe_insert('location',frame=f,group=bone.name)
 arm.animation_data.action=bpy.data.actions['Idle'];bpy.context.scene.frame_set(1);bpy.context.scene.render.fps=30
+marker=bpy.data.objects.new('DF_ZhaevOriginalV1',None);bpy.context.collection.objects.link(marker);marker.parent=arm
 # Save editable source BEFORE temporary mesh joins used for runtime export.
 bpy.ops.wm.save_as_mainfile(filepath=str(O/'Zhaev.blend'),compress=True)
 heads=[o for o in objects if o.get('category')=='head']
@@ -48,7 +49,7 @@ def join(parts,name):
  bpy.context.view_layer.objects.active=parts[0];bpy.ops.object.join();parts[0].name=name;return parts[0]
 body=join(body_parts,'DF_Anatomy')
 for k in ['L','R']:join(weapon_parts[k],'DF_Weapon'+k)
-bpy.ops.object.select_all(action='SELECT');bpy.ops.export_scene.fbx(filepath=str(O/'Veyr.fbx'),use_selection=True,object_types={'ARMATURE','MESH'},add_leaf_bones=False,axis_forward='-Z',axis_up='Y',bake_anim=True,bake_anim_use_all_actions=True,bake_anim_use_nla_strips=False,bake_anim_simplify_factor=0,apply_scale_options='FBX_SCALE_UNITS')
+bpy.ops.object.select_all(action='SELECT');bpy.ops.export_scene.fbx(filepath=str(O/'Veyr.fbx'),use_selection=True,object_types={'ARMATURE','MESH','EMPTY'},add_leaf_bones=False,axis_forward='-Z',axis_up='Y',bake_anim=True,bake_anim_use_all_actions=True,bake_anim_use_nla_strips=False,bake_anim_simplify_factor=0,apply_scale_options='FBX_SCALE_UNITS')
 # FBX reimport validation independent of source scene.
 bpy.ops.wm.read_factory_settings(use_empty=True);bpy.ops.import_scene.fbx(filepath=str(O/'Veyr.fbx'))
 arms=[o for o in bpy.data.objects if o.type=='ARMATURE'];meshes=[o for o in bpy.data.objects if o.type=='MESH'];assert len(arms)==1;assert len(arms[0].data.bones)==19;assert {o.name for o in meshes}=={'DF_Anatomy','DF_WeaponL','DF_WeaponR'}
@@ -58,7 +59,7 @@ names={a.name.split('|')[-1] for a in bpy.data.actions};assert {'Idle','Run','At
 report={'Blender':bpy.app.version_string,'fbxReimport':True,'bones':19,'meshes':[o.name for o in meshes],'clips':sorted(names),'weightsNormalized':True,'UnityAndroid':'not executed','status':'native model validated; engine/device acceptance pending'}
 (O/'native-validation.json').write_text(json.dumps(report,indent=2))
 # Native render of actual geometry, rather than a separately imagined illustration.
-scene=bpy.context.scene;scene.render.engine='BLENDER_EEVEE_NEXT';scene.render.resolution_x=900;scene.render.resolution_y=1100;scene.render.resolution_percentage=100;scene.world.color=(.18,.18,.18)
+scene=bpy.context.scene;scene.render.engine='CYCLES';scene.cycles.samples=16;scene.cycles.device='CPU';scene.render.resolution_x=900;scene.render.resolution_y=1100;scene.render.resolution_percentage=100;scene.world=bpy.data.worlds.new('Studio World');scene.world.use_nodes=True;scene.world.node_tree.nodes['Background'].inputs[0].default_value=(.18,.18,.18,1)
 from mathutils import Vector
 for pos,power,size in [((3,-4,5),1300,4),((-3,-2,3),900,3),((0,3,4),1400,3)]:
  d=bpy.data.lights.new('Studio','AREA');d.energy=power;d.shape='DISK';d.size=size;o=bpy.data.objects.new('Studio',d);scene.collection.objects.link(o);o.location=pos;o.rotation_euler=(Vector((0,0,1))-o.location).to_track_quat('-Z','Y').to_euler()

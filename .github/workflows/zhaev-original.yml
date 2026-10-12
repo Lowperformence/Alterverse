@@ -25,6 +25,7 @@ jobs:
         run: |
           python Tools/Zhaev/build.py
           python Tools/Zhaev/export_blender.py
+          cp ArtSource/Heroes/ZhaevOriginal/Veyr.fbx Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx
           python Tools/Zhaev/provenance.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -38,7 +39,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add ArtSource/Heroes/ZhaevOriginal Documentation/ZhaevOriginal
+          git add ArtSource/Heroes/ZhaevOriginal Documentation/ZhaevOriginal Assets/Alterverse/Resources/AuthoredHeroes/Veyr.fbx
           if ! git diff --cached --quiet; then
             git commit -m 'Retain new Zhaev modular native model and validation evidence'
             git push origin HEAD:'${{ github.ref_name }}'
