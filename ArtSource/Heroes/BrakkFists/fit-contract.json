@@ -71,5 +71,31 @@
       -0.04529295116662979
     ]
   },
-  "runtimeAttachment": "mesh centre aligned to baked visible anatomy palm in the actual hand space after hand sizing"
+  "legacyWeaponModelBounds": {
+    "L": {
+      "centre": [
+        -0.6247999668121338,
+        0.9380799531936646,
+        0.1522500067949295
+      ],
+      "size": [
+        0.5103999376296997,
+        0.30159997940063477,
+        0.4837000072002411
+      ]
+    },
+    "R": {
+      "centre": [
+        0.6247999668121338,
+        0.9380799531936646,
+        0.1522500067949295
+      ],
+      "size": [
+        0.5103999376296997,
+        0.30159997940063477,
+        0.4837000072002411
+      ]
+    }
+  },
+  "runtimeAttachment": "reuse original DF_GauntletL/R SkinnedMeshRenderers, transforms and bindposes; centre new geometry on original weapon mesh bounds; calibrate FBX units against original weapon dimensions"
 }

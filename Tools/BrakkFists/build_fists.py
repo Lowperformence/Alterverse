@@ -20,6 +20,16 @@ arm=next(o for o in bpy.data.objects if o.type=='ARMATURE')
 arm.data.pose_position='REST';bpy.context.view_layer.update()
 originals={s:bpy.data.objects['DF_Gauntlet'+s] for s in ['L','R']}
 bind={s:arm.matrix_world@arm.data.bones['Hand'+s].matrix_local for s in ['L','R']}
+conversion=Matrix(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
+legacyBounds={}
+legacyCentres={}
+for side,ob in originals.items():
+    points=[ob.matrix_world@v.co for v in ob.data.vertices]
+    low=Vector(tuple(min(p[k] for p in points) for k in range(3)))
+    high=Vector(tuple(max(p[k] for p in points) for k in range(3)))
+    legacyCentres[side]=(low+high)*.5
+    legacyBounds[side]={'centre':list(conversion@legacyCentres[side]),
+                        'size':list((high-low).xzy)}
 FIST_SIZE=2.0
 body=bpy.data.objects['DF_Anatomy']
 handGroup=body.vertex_groups['HandR'].index
@@ -33,9 +43,9 @@ contract={'sourcePath':'ArtSource/Heroes/Rook.blend','sourceGitBlob':'98629c674d
           'sourceRevision':'954f9cecb201260da40b507f93216f3f91b909d6',
           'handBindMatrices':{s:[list(r) for r in bind[s]] for s in bind},'runtimeHandScale':.8,
           'gauntletSizeRelativeToInitialV2':FIST_SIZE,'handPalmLocal':{s:list(palms[s]) for s in palms},
-          'runtimeAttachment':'mesh centre aligned to baked visible anatomy palm in the actual hand space after hand sizing'}
+          'legacyWeaponModelBounds':legacyBounds,
+          'runtimeAttachment':'reuse original DF_GauntletL/R SkinnedMeshRenderers, transforms and bindposes; centre new geometry on original weapon mesh bounds; calibrate FBX units against original weapon dimensions'}
 (ART/'fit-contract.json').write_text(json.dumps(contract,indent=2)+'\n')
-conversion=Matrix(((1,0,0,0),(0,0,1,0),(0,-1,0,0),(0,0,0,1)))
 palette=[('Graphite',(.027,.033,.038),.32,.42),('Forge gold',(.82,.56,.18),.78,.29),
          ('Dark steel',(.105,.128,.145),.72,.32),('Amber channel',(1,.34,.025),.20,.32),
          ('Recess liner',(.007,.011,.016),.05,.66)]
@@ -178,11 +188,11 @@ def mesh_data(objects):
             slots[ob['material_slot']]['triangles'].extend(dst)
         part_table.append({'id':ob['part_id'],'group':ob['assembly_group'],'material':ob['material_slot'],
                            'firstVertex':start,'vertexCount':len(vertices)//3-start,'triangles':exportedTriangles})
-    side=objects[0]['side'];pivot=conversion@(bind[side]@palms[side])
-    return {'side':side,'vertices':vertices,'normals':normals,'uv':uv,'pivot':list(pivot),'submeshes':slots,'parts':part_table}
+    side=objects[0]['side'];pivot=Vector(tuple((min(vertices[k::3])+max(vertices[k::3]))*.5 for k in range(3)))
+    return {'side':side,'vertices':vertices,'normals':normals,'uv':uv,'pivot':list(pivot),
+            'legacyModelSize':legacyBounds[side]['size'],'submeshes':slots,'parts':part_table}
 
-# Double all three dimensions about the fist centre and seat that centre on the palm.
-# This removes the initial source-model offset instead of scaling it along with the fist.
+# Double all three dimensions, then inherit the original weapon's mesh-centre position.
 sizeChecks={}
 for side in ['L','R']:
     objects=[o for o in parts if o['side']==side];inverse=bind[side].inverted()
@@ -191,18 +201,27 @@ for side in ['L','R']:
     high=Vector(tuple(max(p[k] for p in before) for k in range(3)))
     center=(low+high)*.5;oldSize=high-low
     for ob in objects:
-        for v in ob.data.vertices:v.co=bind[side]@(palms[side]+FIST_SIZE*(inverse@v.co-center))
+        for v in ob.data.vertices:v.co=bind[side]@(FIST_SIZE*(inverse@v.co-center))
+        ob.data.update()
+    modelPoints=[v.co for ob in objects for v in ob.data.vertices]
+    modelCentre=Vector(tuple((min(p[k] for p in modelPoints)+max(p[k] for p in modelPoints))*.5 for k in range(3)))
+    shift=legacyCentres[side]-modelCentre
+    for ob in objects:
+        for v in ob.data.vertices:v.co+=shift
         ob.data.update()
     after=[inverse@v.co for ob in objects for v in ob.data.vertices]
     newLow=Vector(tuple(min(p[k] for p in after) for k in range(3)))
     newHigh=Vector(tuple(max(p[k] for p in after) for k in range(3)))
     newSize=newHigh-newLow
     assert (newSize-oldSize*FIST_SIZE).length<2e-6
-    assert ((newLow+newHigh)*.5-palms[side]).length<1e-6
+    modelPoints=[v.co for ob in objects for v in ob.data.vertices]
+    fittedCentre=Vector(tuple((min(p[k] for p in modelPoints)+max(p[k] for p in modelPoints))*.5 for k in range(3)))
+    centreError=(fittedCentre-legacyCentres[side]).length
+    assert centreError<1e-6
     sizeChecks[side]={'previousDimensionsMetres':list(oldSize),'newDimensionsMetres':list(newSize),
-                      'ratio':[newSize[k]/oldSize[k] for k in range(3)],'palmCentreErrorMetres':((newLow+newHigh)*.5-palms[side]).length}
+                      'ratio':[newSize[k]/oldSize[k] for k in range(3)],'legacyWeaponCentreErrorMetres':centreError}
 hands=[mesh_data([o for o in parts if o['side']==side]) for side in ['L','R']]
-data={'version':1,'revision':'brakk-forge-grip-v2-hand-fit-20261012','coordinateSpace':'authored-model-metres',
+data={'version':1,'revision':'brakk-forge-grip-v2-legacy-socket-20261012','coordinateSpace':'authored-model-metres',
       'sizeRelativeToInitialV2':FIST_SIZE,
       'hands':hands,'materials':[{'name':x[0],'color':list(x[1]),'metallic':x[2],'smoothness':1-x[3]} for x in palette]}
 raw=json.dumps(data,separators=(',',':')).encode();(RES/'Model.bytes').write_bytes(gzip.compress(raw,mtime=0))
@@ -240,7 +259,7 @@ for h in hands:
         assert all(len(v.groups)==1 and abs(v.groups[0].weight-1)<1e-6 for v in ob.data.vertices)
 report['checks']['finiteGeometryValidIndicesNonzeroTriangles']=True
 report['checks']['rigidHandWeights']=True
-report['checks']['doubleSizeAndPalmFit']=sizeChecks
+report['checks']['doubleSizeAndLegacyWeaponFit']=sizeChecks
 samples=0;arm.data.pose_position='POSE'
 for action in bpy.data.actions:
     arm.animation_data.action=action

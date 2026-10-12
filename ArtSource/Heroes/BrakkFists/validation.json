@@ -1,16 +1,16 @@
 {
-  "revision": "brakk-forge-grip-v2-hand-fit-20261012",
+  "revision": "brakk-forge-grip-v2-legacy-socket-20261012",
   "blenderVersion": "4.0.2",
   "sourceSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
   "partsPerHand": 34,
   "hands": {
     "L": {
-      "vertices": 8746,
-      "triangles": 4364
+      "vertices": 8743,
+      "triangles": 4363
     },
     "R": {
-      "vertices": 8746,
-      "triangles": 4364
+      "vertices": 8743,
+      "triangles": 4363
     }
   },
   "sourceActions": [
@@ -29,7 +29,7 @@
   "checks": {
     "finiteGeometryValidIndicesNonzeroTriangles": true,
     "rigidHandWeights": true,
-    "doubleSizeAndPalmFit": {
+    "doubleSizeAndLegacyWeaponFit": {
       "L": {
         "previousDimensionsMetres": [
           0.23566481471061707,
@@ -37,16 +37,16 @@
           0.23200008273124695
         ],
         "newDimensionsMetres": [
-          0.4713296592235565,
-          0.4700002670288086,
+          0.4713296890258789,
+          0.470000296831131,
           0.46400022506713867
         ],
         "ratio": [
-          2.000000126460636,
-          2.0000002536366743,
+          2.0000002529212724,
+          2.0000003804550115,
           2.0000002569164805
         ],
-        "palmCentreErrorMetres": 1.1470023034766802e-07
+        "legacyWeaponCentreErrorMetres": 1.4901161193847656e-08
       },
       "R": {
         "previousDimensionsMetres": [
@@ -55,16 +55,16 @@
           0.23200008273124695
         ],
         "newDimensionsMetres": [
-          0.4713296592235565,
-          0.4700002670288086,
+          0.4713296890258789,
+          0.470000296831131,
           0.46400022506713867
         ],
         "ratio": [
-          2.000000126460636,
-          2.0000002536366743,
+          2.0000002529212724,
+          2.0000003804550115,
           2.0000002569164805
         ],
-        "palmCentreErrorMetres": 1.1470023034766802e-07
+        "legacyWeaponCentreErrorMetres": 1.4901161193847656e-08
       }
     },
     "sourceAnimationAttachmentSamples": 27,
@@ -81,7 +81,60 @@
         "handWeightsRoundTrip": true
       }
     },
-    "exactLeftRightMirrorAt10MicrometrePrecision": true
+    "exactLeftRightMirrorAt10MicrometrePrecision": true,
+    "legacySocketNumericalValidation": {
+      "fixtures": 6,
+      "hands": {
+        "L": {
+          "dimensionsRelativeToFirstV2": [
+            2.000000238418579,
+            2.000000476837158,
+            2.000000238418579
+          ],
+          "cases": [
+            "identity",
+            "fbx-centimetres",
+            "mesh-axis-conversion",
+            "reflected-import",
+            "large-model-units",
+            "small-model-units"
+          ],
+          "maxCentreErrorRelativeToOldSize": 1.8222387154764874e-07,
+          "newToLegacyBoundsDiagonalRatioRange": [
+            1.1304212808609009,
+            1.2801973819732666
+          ]
+        },
+        "R": {
+          "dimensionsRelativeToFirstV2": [
+            2.000000238418579,
+            2.000000476837158,
+            2.000000238418579
+          ],
+          "cases": [
+            "identity",
+            "fbx-centimetres",
+            "mesh-axis-conversion",
+            "reflected-import",
+            "large-model-units",
+            "small-model-units"
+          ],
+          "maxCentreErrorRelativeToOldSize": 1.9475125512258273e-08,
+          "newToLegacyBoundsDiagonalRatioRange": [
+            1.1534380912780762,
+            1.2801973819732666
+          ]
+        }
+      },
+      "unityEditorExecuted": false,
+      "checks": {
+        "originalWeaponsRigidHandBound": true,
+        "originalMeshCentreRetained": true,
+        "fbxUnitsAndAxisConversion": true,
+        "handScaleAndAnimationAttachment": true,
+        "originAndRemotePortraitStage": true
+      }
+    }
   },
-  "runtimeSha256": "e8164f97a6e366a972eafd339748aeec9da77c00acc576d5aa3812ea0b22de5a"
+  "runtimeSha256": "daa2bba4ab10aade2a18c82acb4c0d0c6d834cc80cd506f670acd4afc1978d6e"
 }

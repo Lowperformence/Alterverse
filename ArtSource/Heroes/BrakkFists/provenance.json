@@ -1,8 +1,8 @@
 {
   "hero": "Brakk Orun",
   "gameHeroId": "Rook",
-  "revision": "brakk-forge-grip-v2-hand-fit-20261012",
-  "archivedUTC": "2026-10-12T16:58:34.151891+00:00",
+  "revision": "brakk-forge-grip-v2-legacy-socket-20261012",
+  "archivedUTC": "2026-10-12T17:36:18.777535+00:00",
   "request": "Entwirf eigene neue Faeuste mit Sprengzeichnung, baue sie fuer Blender und ersetze Braks bisherige Faeuste.",
   "concept": {
     "generator": "OpenAI image_gen",
@@ -15,7 +15,7 @@
     "authorship": "Named solid parts created in this task; no external meshes or textures imported into the new fist surfaces.",
     "partsPerHand": 34,
     "runtimeResource": "Assets/Alterverse/Resources/BrakkFists/Model.bytes",
-    "sha256": "e8164f97a6e366a972eafd339748aeec9da77c00acc576d5aa3812ea0b22de5a"
+    "sha256": "daa2bba4ab10aade2a18c82acb4c0d0c6d834cc80cd506f670acd4afc1978d6e"
   },
   "inheritedRig": {
     "repository": "Lowperformence/Alterverse",
@@ -48,11 +48,12 @@
   "unityEditorTested": false,
   "androidTested": false,
   "correction": {
-    "requested": "Doppelt so gross und an die Haende",
+    "requested": "Doppelt so gross und an die Haende; nimm die Position von der alten Waffe",
     "sizeFactorRelativeToInitialV2": 2.0,
     "previousCommit": "01eb6a3ad1b56aeb5434e6ed05dc8b8e1bae512b",
     "previousResourceSha256": "b48f8061bf0de63fceac10a9a1984cc4755a554eba15670204baa2440d6d6785",
-    "attachment": "Use baked actual visible anatomy palm bounds in the current hand space after hand sizing; remove authored model origin bias and centre each fist on the palm.",
-    "unityPlayModeAfterPull": "Restart Play Mode to rebuild both hero instances with the updated resource."
+    "attachment": "Reuse original SkinnedMeshRenderer objects, local transforms, bone lists and bindposes. Align generated mesh centre to original weapon vertex bounds; calibrate FBX units against original weapon dimensions. No BakeMesh or world coordinates.",
+    "unityPlayModeAfterPull": "Restart Play Mode to rebuild both hero instances with the updated resource.",
+    "replacesAttachmentCommit": "9ab10a61fa4b17b9552c6bd6c6df6ccbb987454c"
   }
 }
