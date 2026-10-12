@@ -93,3 +93,26 @@ The current 121 hero files and 29 generic cues supersede the earlier mixes above
 All three sources were retrieved and their CC0 declarations checked on 2026-10-01. Commercial adaptation and redistribution are permitted; attribution is optional. License: https://creativecommons.org/publicdomain/zero/1.0/ . No purchased, noncommercial, or unlicensed material is included.
 
 Processing: recorded transient layers, selected real takes, reverse textures, short offline echoes, 80 Hz high-pass, class-specific 5–8.2 kHz low-pass and moderate presence reduction. Mono 32 kHz Vorbis. A -22 dBFS pre-encode ceiling leaves summing and codec headroom; measured decoded true peaks and the eight-voice bound are in `CombatAudioValidation.json`. The audition has a common playback gain for browser listening and is not a captured game mix.
+
+
+## User-selected ultimate recordings — source confirmation, 2026-10-12
+
+The owner confirmed on 2026-10-12: “Die Bezugs Quelle aller ulti Sound Effekte ist die gleiche wie bei den anderen Sound Effekten trag das so ein”.
+
+Bezugsquelle aller neun ausgewählten Ulti-Soundeffekte: **dieselbe Bezugsquelle wie bei den anderen vom Nutzer bereitgestellten Helden-Soundeffekten (laut Nutzerbestätigung vom 12.10.2026)**. This is an owner-provided provenance statement. The statement does not name a platform, individual download page, creator or license, so these details are not inferred from filenames or from the historical Kenney/CC0 entries above. Those entries document their named source recordings; they do not independently establish the license of these selected ultimate recordings.
+
+| Hero / resource ID | Recorded source filename | Current ultimate asset | Git blob SHA (current asset) |
+|---|---|---|---|
+| Zhaev (Veyr) | `assasinen ulti.mp3` | `Assets/Alterverse/Resources/Audio/Heroes/Veyr/Ultimate_Selected.ogg` | `8e30d260420ca4622b9935e223ded8115ed0e80e` |
+| Auren (Kaelon) | `tank ulti.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Kaelon/Ultimate_Selected.ogg` | `8db76686f5a5427fd937a2d4f6ff9a18231aca12` |
+| Sivra (Nyra) | `sivra ulti.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Nyra/Ultimate_Selected.ogg` | `a7b994ff5a6379d1fc0f6a227e11d90060f8da0d` |
+| Ione (Elyra) | `ione ulti.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Elyra/Ultimate_Selected.ogg` | `f00c89127891528e55aaf5d25b65ee4a947ea964` |
+| Tahla / Heilerin (Mira) | `heiler ulti.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Mira/Ultimate_Selected.ogg` | `4f9f5dc25b065a048ea8e259b8efb495d15f1f2d` |
+| Brakk (Rook) | `brakk ulti.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Rook/Ultimate_Selected.ogg` | `6ec253d33397bd04897f69c86fd2e65580faed64` |
+| The Traveler (Traveler) | `ulti traveler.wav` | `Assets/Alterverse/Resources/Audio/Heroes/Traveler/Ultimate_Selected.ogg` | `8748a746f09463341a188a197c1f442a846667ca` |
+| Nerok (Nerok) | `dragon-studio-elemental-spell-impact-water-478377.mp3` | `Assets/Alterverse/Resources/Audio/Heroes/Nerok/Ultimate_Selected.mp3` | `726f979ff1f57d6648253f98d66a19e7e3cb3305` |
+| Andromeda Timmy (Timmy) | `Original filename not recorded in the ultimate importer` | `Assets/Alterverse/Resources/Audio/Heroes/Timmy/Ultimate_Selected.mp3` | `c9a20c0ce5a2e2865ec23444684da1d79a09921e` |
+
+The seven original selected-ultimate source SHA-256 hashes and import measurements remain in `Tools/Audio/selected-ultimates-validation.json`; their conversion recipe is in `Tools/Audio/import_selected_ultimates.py`. Nerok's supplied source is retained under `ArtSource/Audio/HeroSelections/Originals/` and documented in that folder's README. Timmy's current ultimate asset is explicitly covered by the owner's all-heroes confirmation even though his original filename is not recorded in the seven-hero importer.
+
+Yesterday-state check: all 477 current audio/sound-named file blobs match commit `3dc8d779893c33ce0826c0cc1fa21eefcf4c294b` (2026-10-11 23:24:08 Europe/Berlin), including all nine selected ultimate assets and the audio dispatcher. No sound replacement was necessary. This documentation update changes no recordings, playback gains, trigger routing or gameplay. Native Unity/device playback was not tested.
