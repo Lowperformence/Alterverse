@@ -1,0 +1,49 @@
+{
+  "revision": "brakk-forge-grip-v2-20261012",
+  "blenderVersion": "4.0.2",
+  "sourceSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+  "partsPerHand": 34,
+  "hands": {
+    "L": {
+      "vertices": 8701,
+      "triangles": 4347
+    },
+    "R": {
+      "vertices": 8701,
+      "triangles": 4347
+    }
+  },
+  "sourceActions": [
+    "Attack",
+    "Death",
+    "Hit",
+    "Idle",
+    "Run",
+    "Skill0",
+    "Skill1",
+    "Skill2",
+    "Ultimate"
+  ],
+  "unityEditorTested": false,
+  "androidTested": false,
+  "checks": {
+    "finiteGeometryValidIndicesNonzeroTriangles": true,
+    "rigidHandWeights": true,
+    "sourceAnimationAttachmentSamples": 27,
+    "legacyGauntletsExcludedFromNewAsset": true,
+    "fbxReimport": {
+      "L": {
+        "meshParts": 34,
+        "boundsMatchRuntime": true,
+        "handWeightsRoundTrip": true
+      },
+      "R": {
+        "meshParts": 34,
+        "boundsMatchRuntime": true,
+        "handWeightsRoundTrip": true
+      }
+    },
+    "exactLeftRightMirrorAt10MicrometrePrecision": true
+  },
+  "runtimeSha256": "b48f8061bf0de63fceac10a9a1984cc4755a554eba15670204baa2440d6d6785"
+}

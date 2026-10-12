@@ -1,0 +1,50 @@
+{
+  "hero": "Brakk Orun",
+  "gameHeroId": "Rook",
+  "revision": "brakk-forge-grip-v2-20261012",
+  "archivedUTC": "2026-10-12T16:35:32.252924+00:00",
+  "request": "Entwirf eigene neue Faeuste mit Sprengzeichnung, baue sie fuer Blender und ersetze Braks bisherige Faeuste.",
+  "concept": {
+    "generator": "OpenAI image_gen",
+    "file": "BrakkFists-concept.png",
+    "exactPromptFile": "concept-prompt.txt",
+    "sha256": "92c6675f4e042b226fb172f32a692d4b9c585e2515a421df44a21135a0a12068"
+  },
+  "newGeometry": {
+    "generator": "Tools/BrakkFists/build_fists.py",
+    "authorship": "Named solid parts created in this task; no external meshes or textures imported into the new fist surfaces.",
+    "partsPerHand": 34,
+    "runtimeResource": "Assets/Alterverse/Resources/BrakkFists/Model.bytes",
+    "sha256": "b48f8061bf0de63fceac10a9a1984cc4755a554eba15670204baa2440d6d6785"
+  },
+  "inheritedRig": {
+    "repository": "Lowperformence/Alterverse",
+    "sourcePath": "ArtSource/Heroes/Rook.blend",
+    "sourceRevision": "954f9cecb201260da40b507f93216f3f91b909d6",
+    "gitBlob": "98629c674d44af3832bfb51cda004d1575c18c14",
+    "sha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+    "actions": [
+      "Attack",
+      "Death",
+      "Hit",
+      "Idle",
+      "Run",
+      "Skill0",
+      "Skill1",
+      "Skill2",
+      "Ultimate"
+    ],
+    "purpose": "Measured hand fit and preserved hand animation contract; inherited project provenance remains separate."
+  },
+  "integration": {
+    "branch": "dev/vertical-slice",
+    "entryPoint": "BrakkFistAppearance.Apply",
+    "appliesOnlyTo": "HeroId.Rook",
+    "sharedRookFbxModified": false,
+    "nerokModified": false,
+    "gameplayCollidersAdded": false
+  },
+  "evidence": "validation.json",
+  "unityEditorTested": false,
+  "androidTested": false
+}

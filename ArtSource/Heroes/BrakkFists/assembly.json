@@ -1,0 +1,585 @@
+{
+  "revision": "brakk-forge-grip-v2-20261012",
+  "hands": [
+    {
+      "side": "L",
+      "parts": [
+        {
+          "id": "01_glove_core",
+          "group": "core",
+          "material": 0,
+          "firstVertex": 0,
+          "vertexCount": 756,
+          "triangles": 382
+        },
+        {
+          "id": "02_open_wrist_liner",
+          "group": "wrist",
+          "material": 4,
+          "firstVertex": 756,
+          "vertexCount": 512,
+          "triangles": 256
+        },
+        {
+          "id": "03_open_wrist_collar",
+          "group": "wrist",
+          "material": 1,
+          "firstVertex": 1268,
+          "vertexCount": 512,
+          "triangles": 256
+        },
+        {
+          "id": "04_dorsal_shield",
+          "group": "dorsal",
+          "material": 1,
+          "firstVertex": 1780,
+          "vertexCount": 432,
+          "triangles": 220
+        },
+        {
+          "id": "05_dorsal_inset",
+          "group": "dorsal",
+          "material": 2,
+          "firstVertex": 2212,
+          "vertexCount": 354,
+          "triangles": 180
+        },
+        {
+          "id": "06_knuckle_1",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 2566,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_1",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 2782,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_1",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 2998,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_1",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 3214,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_2",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 3430,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_2",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 3646,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_2",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 3862,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_2",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 4078,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_3",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 4294,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_3",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 4510,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_3",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 4726,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_3",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 4942,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_4",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 5158,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_4",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 5374,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_4",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 5590,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_4",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 5806,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "10_thumb_core",
+          "group": "thumb",
+          "material": 0,
+          "firstVertex": 6022,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "11_thumb_guard",
+          "group": "thumb",
+          "material": 1,
+          "firstVertex": 6238,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "12_thumb_joint",
+          "group": "thumb",
+          "material": 2,
+          "firstVertex": 6454,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "13_retaining_rail_-1",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 6670,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "14_recessed_amber_-1",
+          "group": "dorsal",
+          "material": 3,
+          "firstVertex": 6886,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "13_retaining_rail_1",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 7102,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "14_recessed_amber_1",
+          "group": "dorsal",
+          "material": 3,
+          "firstVertex": 7318,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "15_flush_bolt_1",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7534,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_2",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7678,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_3",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7822,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_4",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7966,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "16_outer_wrap_shell",
+          "group": "rails",
+          "material": 1,
+          "firstVertex": 8110,
+          "vertexCount": 324,
+          "triangles": 164
+        },
+        {
+          "id": "17_outer_recess",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 8434,
+          "vertexCount": 267,
+          "triangles": 133
+        }
+      ]
+    },
+    {
+      "side": "R",
+      "parts": [
+        {
+          "id": "01_glove_core",
+          "group": "core",
+          "material": 0,
+          "firstVertex": 0,
+          "vertexCount": 756,
+          "triangles": 382
+        },
+        {
+          "id": "02_open_wrist_liner",
+          "group": "wrist",
+          "material": 4,
+          "firstVertex": 756,
+          "vertexCount": 512,
+          "triangles": 256
+        },
+        {
+          "id": "03_open_wrist_collar",
+          "group": "wrist",
+          "material": 1,
+          "firstVertex": 1268,
+          "vertexCount": 512,
+          "triangles": 256
+        },
+        {
+          "id": "04_dorsal_shield",
+          "group": "dorsal",
+          "material": 1,
+          "firstVertex": 1780,
+          "vertexCount": 432,
+          "triangles": 220
+        },
+        {
+          "id": "05_dorsal_inset",
+          "group": "dorsal",
+          "material": 2,
+          "firstVertex": 2212,
+          "vertexCount": 354,
+          "triangles": 180
+        },
+        {
+          "id": "06_knuckle_1",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 2566,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_1",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 2782,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_1",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 2998,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_1",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 3214,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_2",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 3430,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_2",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 3646,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_2",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 3862,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_2",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 4078,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_3",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 4294,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_3",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 4510,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_3",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 4726,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_3",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 4942,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "06_knuckle_4",
+          "group": "knuckles",
+          "material": 1,
+          "firstVertex": 5158,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "07_knuckle_inset_4",
+          "group": "knuckles",
+          "material": 2,
+          "firstVertex": 5374,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "08_folded_finger_4",
+          "group": "fingers",
+          "material": 0,
+          "firstVertex": 5590,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "09_finger_guard_4",
+          "group": "fingers",
+          "material": 1,
+          "firstVertex": 5806,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "10_thumb_core",
+          "group": "thumb",
+          "material": 0,
+          "firstVertex": 6022,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "11_thumb_guard",
+          "group": "thumb",
+          "material": 1,
+          "firstVertex": 6238,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "12_thumb_joint",
+          "group": "thumb",
+          "material": 2,
+          "firstVertex": 6454,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "13_retaining_rail_-1",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 6670,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "14_recessed_amber_-1",
+          "group": "dorsal",
+          "material": 3,
+          "firstVertex": 6886,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "13_retaining_rail_1",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 7102,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "14_recessed_amber_1",
+          "group": "dorsal",
+          "material": 3,
+          "firstVertex": 7318,
+          "vertexCount": 216,
+          "triangles": 108
+        },
+        {
+          "id": "15_flush_bolt_1",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7534,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_2",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7678,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_3",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7822,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "15_flush_bolt_4",
+          "group": "hardware",
+          "material": 2,
+          "firstVertex": 7966,
+          "vertexCount": 144,
+          "triangles": 68
+        },
+        {
+          "id": "16_outer_wrap_shell",
+          "group": "rails",
+          "material": 1,
+          "firstVertex": 8110,
+          "vertexCount": 324,
+          "triangles": 164
+        },
+        {
+          "id": "17_outer_recess",
+          "group": "rails",
+          "material": 2,
+          "firstVertex": 8434,
+          "vertexCount": 267,
+          "triangles": 133
+        }
+      ]
+    }
+  ],
+  "dimensionsLocalMetres": {
+    "L": {
+      "min": [
+        -0.09200003743171692,
+        -0.019000206142663956,
+        -0.16250000894069672
+      ],
+      "max": [
+        0.14366477727890015,
+        0.21599990129470825,
+        0.06950006633996964
+      ]
+    },
+    "R": {
+      "min": [
+        -0.14366477727890015,
+        -0.019000206142663956,
+        -0.16250000894069672
+      ],
+      "max": [
+        0.09200003743171692,
+        0.21599990129470825,
+        0.06950006633996964
+      ]
+    }
+  }
+}
