@@ -104,10 +104,15 @@ class SocialTests(unittest.TestCase):
         rows=self.call('a','/social/levels')['players']
         self.assertEqual([p['playerId'] for p in rows[1:]], sorted([self.ids['a'],self.ids['b']]))
 
-    def test_clan_create_case_insensitive_uniqueness_and_open_join(self):
+    def test_clan_names_are_server_assigned_unique_and_open_join_works(self):
         clan=self.create()
-        for name,tag in [('Solar Guard 0000001','C0000002'),('Lunar Crew 0000002','C0000001')]:
-            with self.assertRaises(ValueError): self.create('b',name,tag)
+        first=self.call('a')['clan']
+        other=self.create('c','Solar Guard 0000001','C0000001')
+        second=self.call('c')['clan']
+        self.assertNotEqual(first['name'],second['name'])
+        self.assertNotEqual(first['tag'],second['tag'])
+        self.assertTrue(valid_clan_name(first['name']))
+        self.assertTrue(valid_clan_tag(first['tag']))
         self.call('b','/social/clan/join',clanId=clan)
         self.call('b','/social/clan/join',clanId=clan)
         state=self.call('a')
@@ -242,7 +247,8 @@ class SocialTests(unittest.TestCase):
         self.assertEqual(first['clan']['clanId'],second['clan']['clanId'])
         self.assertEqual(second['wallet']['balance'],200)
         self.assertEqual(first['wallet']['profileRevision'],second['wallet']['profileRevision'])
-        with self.assertRaises(ValueError): self.social.dispatch('a','/social/clan/create',dict(data,name='Other Clan'))
+        repeated=self.social.dispatch('a','/social/clan/create',dict(data,name='Other Clan',tag='CUSTOM'))
+        self.assertEqual(repeated['clan']['clanId'],first['clan']['clanId'])
         self.assertEqual(self.ledger.wallet('b')['balance'],0)
 
     def test_creation_failure_and_profile_conflict_never_debit(self):
