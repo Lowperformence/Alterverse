@@ -94,12 +94,13 @@
     "validationReport": "ArtSource/Heroes/ConceptModels/validation-report.json",
     "nativeSource": "ArtSource/Heroes/ConceptModels/Nerok-model.blend",
     "model": "Assets/Alterverse/Resources/CyberShark/Model.bytes",
-    "modelSha256": "ba98a14d51bb8a1675f02f201bed0b1675f2c0e8b49d4524d4e801235a95094d"
+    "modelSha256": "9e6b548c2a0b201328cadaffb4c23492a1d733e4bfa805c2ffae89324ecd3110"
   },
   "openEvidence": [
     "historical user-supplied design-reference image sources were not recovered",
     "per-hero portraits, ability icons, VFX/textures and skins require separate asset-level coverage audit",
     "unresolved selected-audio source and license records",
+    "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification",
     "Unity editor and device visual verification"

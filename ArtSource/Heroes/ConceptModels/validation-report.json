@@ -2601,8 +2601,8 @@
     "Nerok": {
       "preservedVertices": 82172,
       "removedVertices": 0,
-      "newVertices": 5160,
-      "newTriangles": 9676,
+      "newVertices": 5136,
+      "newTriangles": 9636,
       "newParts": [
         {
           "name": "brass jacket toggle loop",
@@ -2842,7 +2842,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 4,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok UpperArmL inset service panel",
@@ -2906,7 +2906,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 5,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok ForearmL inset service panel",
@@ -3034,7 +3034,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 8,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok ShinL inset service panel",
@@ -3098,7 +3098,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 11,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok UpperArmR inset service panel",
@@ -3162,7 +3162,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 12,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok ForearmR inset service panel",
@@ -3290,7 +3290,7 @@
           "vertices": 19,
           "triangles": 34,
           "bone": 15,
-          "material": 2
+          "material": 0
         },
         {
           "name": "Nerok ShinR inset service panel",
@@ -3541,7 +3541,7 @@
           "material": 4
         },
         {
-          "name": "Nerok weapon recessed service rib 1-0",
+          "name": "Nerok weapon seated surface fitting 1-1",
           "first": 5064,
           "vertices": 12,
           "triangles": 20,
@@ -3549,56 +3549,40 @@
           "material": 4
         },
         {
-          "name": "Nerok weapon recessed service rib 1-1",
+          "name": "Nerok weapon seated surface fitting 1-2",
           "first": 5076,
           "vertices": 12,
           "triangles": 20,
           "bone": 10,
-          "material": 4
+          "material": 3
         },
         {
-          "name": "Nerok weapon protected energy rail 1",
+          "name": "Nerok weapon seated surface fitting 1-3",
           "first": 5088,
           "vertices": 12,
           "triangles": 20,
           "bone": 10,
-          "material": 3
-        },
-        {
-          "name": "Nerok weapon recessed service rib 1-2",
-          "first": 5100,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 10,
           "material": 4
         },
         {
-          "name": "Nerok weapon recessed service rib 2-0",
+          "name": "Nerok weapon seated surface fitting 2-1",
+          "first": 5100,
+          "vertices": 12,
+          "triangles": 20,
+          "bone": 17,
+          "material": 4
+        },
+        {
+          "name": "Nerok weapon seated surface fitting 2-2",
           "first": 5112,
           "vertices": 12,
           "triangles": 20,
           "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon recessed service rib 2-1",
-          "first": 5124,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
-          "material": 4
-        },
-        {
-          "name": "Nerok weapon protected energy rail 2",
-          "first": 5136,
-          "vertices": 12,
-          "triangles": 20,
-          "bone": 17,
           "material": 3
         },
         {
-          "name": "Nerok weapon recessed service rib 2-2",
-          "first": 5148,
+          "name": "Nerok weapon seated surface fitting 2-3",
+          "first": 5124,
           "vertices": 12,
           "triangles": 20,
           "bone": 17,
@@ -3750,12 +3734,12 @@
           },
           {
             "part": "Weapons",
-            "vertices": 3026,
-            "triangles": 5952,
+            "vertices": 3002,
+            "triangles": 5912,
             "boundsBlenderMetres": [
               [
                 -0.50447297,
-                -0.19805904,
+                -0.18876,
                 -0.01468
               ],
               [
@@ -3766,14 +3750,14 @@
             ],
             "dimensionsMm": [
               1409.23,
-              227.3,
+              218.0,
               1634.0
             ]
           }
         ],
         "checks": {
-          "sourceTriangles": 43756,
-          "partTriangles": 43756
+          "sourceTriangles": 43716,
+          "partTriangles": 43716
         }
       },
       "fbxRoundTrip": {
@@ -3781,11 +3765,11 @@
         "skinningImported": true,
         "normalizedWeights": true,
         "animationClipsImported": [],
-        "vertices": 87332
+        "vertices": 87308
       },
-      "fbxSha256": "bfd32b71d76895bcd7e4d62ef379dfb37c33913ab76d1b09f8eb8d7d7f150b2a",
-      "modelSha256": "ba98a14d51bb8a1675f02f201bed0b1675f2c0e8b49d4524d4e801235a95094d",
-      "blenderSha256": "4ff035d45a1ffcd39ee6ae640ea6bae651bab0fbe6c9152b69452f1fba9ca871"
+      "fbxSha256": "ecd27b76e094282cfeeadc646c56ebbbd585952a6d4d7c79fadda5c25c9bd57d",
+      "modelSha256": "9e6b548c2a0b201328cadaffb4c23492a1d733e4bfa805c2ffae89324ecd3110",
+      "blenderSha256": "68a2835144e94edac8de29042ba3eb0e4b3380bcb018ded7b03b2ceba9fca41b"
     },
     "Auren": {
       "preservedVertices": 26213,
