@@ -359,13 +359,14 @@ def native_source(label,hero,source):
     body['concept_revision']=REVISION;obj_source(ART/(label+'-new-parts.obj'),p,[f'{label}_surface_{i}' for i in range(len(colors))],colors)
     REPORT['models'][label]={'source':source,'shippingModel':f'Assets/Alterverse/Resources/AuthoredHeroes/{hero}.fbx','removedComponents':removed,'preservedVertices':len(preserved),'preservedPositionsExact':True,'rigExact':True,'originalActionsExact':list(actions),'socketsExact':True,'newVertices':len(p.v),'newTriangles':len(p.f),'newParts':p.parts}
     if label=='Timmy':
-        for mat in body.data.materials:
+        for mat in {m for obj in bpy.context.scene.objects if obj.type=='MESH' for m in obj.data.materials if m}:
             if mat and ('visor' in mat.name.lower() or 'glass' in mat.name.lower()):
-                mat.diffuse_color=(*mat.diffuse_color[:3],.14)
+                mat.diffuse_color=(.96,.98,1,.12)
                 if mat.use_nodes:
                     bsdf=mat.node_tree.nodes.get('Principled BSDF')
                     if bsdf:
-                        bsdf.inputs['Alpha'].default_value=.14;bsdf.inputs['Roughness'].default_value=.06;bsdf.inputs['Transmission Weight'].default_value=.80;bsdf.inputs['IOR'].default_value=1.15
+                        bsdf.inputs['Base Color'].default_value=(.96,.98,1,.12);bsdf.inputs['Alpha'].default_value=.12;bsdf.inputs['Roughness'].default_value=.06;bsdf.inputs['Transmission Weight'].default_value=0;bsdf.inputs['IOR'].default_value=1.15
+    if label=='Timmy':REPORT['models'][label]['visorOpacity']=.12
     REPORT['models'][label]['weaponDetail']=optimize_native_weapons(label,arm)
     export_fbx(RESOURCE/'AuthoredHeroes'/(hero+'.fbx'),arm,bool(actions));bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/source),compress=True)
     for o in bpy.data.objects:

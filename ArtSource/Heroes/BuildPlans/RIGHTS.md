@@ -1,6 +1,6 @@
 # Herkunft und Nutzungsrechte der Bauteilkonzepte
 
-Stand: 12.10.2026. Dieser Durchlauf umfasst **Sivra, Ione, Zhaev, Traveler und Timmy**. **Auren, Tahla, Nerok und Brakk sind ausgeschlossen** und werden in anderen Chats bearbeitet. Ihre bisherigen Rechtsnachweise werden hier nicht ersetzt.
+Stand: 12.10.2026. Dieser Durchlauf umfasst **Sivra, Ione, Zhaev und Timmy**. **Auren, Tahla, Nerok, Brakk und Traveler sind ausgeschlossen** und werden in anderen Chats bearbeitet. Ihre bisherigen Rechtsnachweise werden hier nicht ersetzt.
 
 ## Neue Entwürfe und Modellbauteile
 
