@@ -12,7 +12,7 @@ import secrets
 import tempfile
 import unicodedata
 from safe_identity import (DESCRIPTIONS, valid_clan_name, valid_clan_tag,
-                           generate_clan_name, generate_clan_tag)
+                           valid_player_name, profile_name, generate_clan_name, generate_clan_tag)
 from pathlib import Path
 from google.cloud import firestore
 from ledger import Ledger
@@ -197,6 +197,12 @@ class FirestoreSocial:
                         for row in rows[table].values():
                             db.execute('INSERT INTO '+table+' ('+','.join(columns)+') VALUES ('+','.join('?' for _ in columns)+')',tuple(row[c] for c in columns))
                     db.execute('INSERT INTO profile(account,revision,data) VALUES(?,?,?)',(account,caller_account['profileRevision'],json.dumps(caller_profile)))
+                    # Scoped SQLite must honor the cloud server's existing name
+                    # rather than generating a new name for each Firestore request.
+                    cloud_name = profile_name(caller_profile)
+                    if valid_player_name(cloud_name):
+                        db.execute('INSERT INTO safe_player_name(account,name) VALUES(?,?)',
+                                   (account, cloud_name))
                     db.execute('INSERT INTO wallet(account,balance,revision) VALUES(?,?,?)',(account,caller_account['balance'],caller_account['revision']))
                     for sku in caller_account['owned']:
                         db.execute('INSERT INTO cosmetic(account,sku) VALUES(?,?)',(account,sku))
