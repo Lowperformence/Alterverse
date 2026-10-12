@@ -57,6 +57,6 @@ public const float GlobalHealthMultiplier=1.15f*1.05f;
 // Sivra's 185 HP and Ione's 200 HP are final in-game maxima.
 public static float BaseHealth(HeroId id)=>id==HeroId.Nyra?185f:id==HeroId.Elyra?200f:
     (id switch{HeroId.Veyr=>200f,HeroId.Timmy=>TimmyBalance.RawHealth,HeroId.Kaelon=>380f*1.05f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>20f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>17f,HeroId.Nyra=>22f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>24f,_=>17f};
+public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>20f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>17f,HeroId.Nyra=>20f,HeroId.Elyra=>15f,HeroId.Mira=>16f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>24f,_=>17f};
 }
 }
