@@ -90,7 +90,7 @@ namespace Alterverse.Characters
                     new("Temporal Beam",8,35,7.2f),
                     new("Rift Step",13,0,3.6f),
                     new("Chrono Snare",12,35,6.5f,2.2f,.38f),
-                    new("Paradox Collapse",56,60,6.8f,3.2f,.68f)),
+                    new("Paradox Collapse",56,60,6.8f,2.5f,.68f)),
                 HeroId.Nerok=>new HeroAbilityLoadout(
                     new("Salvage Tide",0,12,0),
                     new("Anchor Recall",12,28,6.2f,0,.30f),
