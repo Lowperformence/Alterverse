@@ -100,8 +100,13 @@ namespace Alterverse.Visuals
             if (hero == HeroId.Mira)
             {
                 TahlaHandSymmetry.Apply(instance.transform);
-                HealerLegArmorAppearance.Apply(instance.transform);
-                TahlaHelmet.Apply(instance.transform);
+                TahlaEquipmentAppearance.Apply(instance.transform, hero);
+                var tahlaEquipment = instance.GetComponent<TahlaEquipmentAppearance>();
+                if (tahlaEquipment == null || !tahlaEquipment.IsReady)
+                {
+                    HealerLegArmorAppearance.Apply(instance.transform);
+                    TahlaHelmet.Apply(instance.transform);
+                }
                 TahlaHalo.Apply(instance.transform);
             }
             if (hero == HeroId.Rook) BrakkWrestlingMask.Apply(instance.transform);
@@ -111,15 +116,17 @@ namespace Alterverse.Visuals
                 ChronoTravelerAppearance.Apply(instance.transform);
                 TravelerOrbAppearance.Apply(instance.transform);
             }
-            // These two component models already contain their armor and boot details.
+            // These component models already contain their armor and boot details.
             // Keep the legacy passes as a fallback when a replacement did not load.
             bool componentModelApplied =
                 (hero == HeroId.Nyra && instance.GetComponent<CyberRangerAppearance>() != null) ||
-                (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null);
+                (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null) ||
+                (hero == HeroId.Mira && instance.GetComponent<TahlaEquipmentAppearance>() != null &&
+                    instance.GetComponent<TahlaEquipmentAppearance>().IsReady);
             if (hero != HeroId.Timmy && !componentModelApplied)
                 HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
-                hero == HeroId.Mira ? (Color?)new Color(.52f, .80f, .67f, 1f) : null);
+                hero == HeroId.Mira ? (Color?)new Color(.59f, .77f, .80f, 1f) : null);
             HeroUndersuitFabric.Apply(instance.transform);
             ApplyHandSize(instance.transform, hero);
             if (hero == HeroId.Nyra) FitSivraRifleGrip(instance.transform);

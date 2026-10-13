@@ -1,0 +1,25 @@
+{
+  "parts": 130,
+  "plateModules": 20,
+  "closedManifoldPositiveVolume": true,
+  "originalRestBonePositionsVerified": 19,
+  "originalStaffHandlePreserved": true,
+  "geometryAndIndicesValid": true,
+  "rigidSingleBoneWeights": true,
+  "animationPoseSamples": 27,
+  "maxAttachmentErrorMetres": 2.682209014892578e-07,
+  "plateBodyIntersections": {},
+  "unityEditorExecuted": false,
+  "componentRegression": {
+    "compiledActualComponent": true,
+    "importScaleAndWorldTransformCases": 4,
+    "leftGripAncestorFallback": true,
+    "heroGate": true,
+    "originalStaffDisabled": true,
+    "bodyAndFacePreserved": true,
+    "staffMuzzleBinding": true,
+    "idempotence": true,
+    "failureRestoration": true,
+    "execution": "CPU fixtures; Unity engine not executed"
+  }
+}
