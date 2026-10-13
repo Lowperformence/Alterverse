@@ -7,15 +7,16 @@ namespace Alterverse.Visuals
 {
     /// <summary>
     /// Presentation-only lunar footprints. No physics, movement, navigation or gameplay writes.
-    /// Footprints remain solid for two seconds, then fade out softly and return to a small pool.
+    /// Footprints hold briefly, then fade out softly and return to a small pool.
     /// </summary>
     public sealed class LunarFootprintTrail : MonoBehaviour
     {
         private const float StepDistance=.72f;
-        private const float HoldSeconds=2f;
-        private const float FadeSeconds=.85f;
-        // Ten heroes at about 6.4 m/s need ~254 marks for the full hold and fade.
+        private const float HoldSeconds=1.15f;
+        private const float FadeSeconds=.55f;
+        // Ten heroes at about 6.4 m/s need ~151 marks over the shorter hold and fade; allow burst headroom.
         private const int PoolSize=256;
+        private const float InitialAlpha=.32f;
         private static readonly Color FootprintColor=new(.40f,.40f,.40f,1f);
 
         private Health health;
@@ -130,7 +131,7 @@ namespace Alterverse.Visuals
                 mark.Born=Time.unscaledTime;
                 mark.Active=true;
                 mark.GameObject.SetActive(true);
-                Apply(mark,.52f);
+                Apply(mark,InitialAlpha);
             }
 
             private void Update()
@@ -149,7 +150,7 @@ namespace Alterverse.Visuals
                         mark.GameObject.SetActive(false);
                         continue;
                     }
-                    Apply(mark,.52f*(1f-Mathf.SmoothStep(0f,1f,fade)));
+                    Apply(mark,InitialAlpha*(1f-Mathf.SmoothStep(0f,1f,fade)));
                 }
             }
 
@@ -196,7 +197,7 @@ namespace Alterverse.Visuals
                 Shader shader=Shader.Find("Universal Render Pipeline/Unlit")??Shader.Find("Unlit/Transparent");
                 if(shader==null)shader=Shader.Find("Sprites/Default");
                 Material material=new(shader){name="DF_LunarFootprintMaterial",renderQueue=(int)RenderQueue.Transparent};
-                Color baseColor=FootprintColor;baseColor.a=.52f;
+                Color baseColor=FootprintColor;baseColor.a=InitialAlpha;
                 if(material.HasProperty("_BaseColor"))material.SetColor("_BaseColor",baseColor);
                 if(material.HasProperty("_Color"))material.SetColor("_Color",baseColor);
                 if(material.HasProperty("_Surface"))material.SetFloat("_Surface",1f);
