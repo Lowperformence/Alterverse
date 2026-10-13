@@ -31,9 +31,11 @@
     "branch": "dev/vertical-slice",
     "removedOldLegAndHipOverlays": true,
     "utilityBeltIntegrated": true,
-    "fullArmorIntegrated": false,
+    "fullArmorIntegrated": true,
     "nerokModified": false,
-    "gameplayCollidersAdded": false
+    "gameplayCollidersAdded": false,
+    "removedOldTorsoOverlays": true,
+    "armorRuntimeResource": "Assets/Alterverse/Resources/BrakkArmor/Model.bytes"
   },
   "validation": "validation.json",
   "unityEditorExecuted": false

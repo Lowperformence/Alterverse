@@ -68,7 +68,7 @@ for code,name in items:
 vertices=np.array(data['vertices']).reshape(-1,3);dims=(vertices.max(0)-vertices.min(0))*1000
 text(36,131,'GESAMTABMESSUNGEN DER AUSGESTATTETEN QUELLGEOMETRIE',9,GREY,True)
 text(36,110,' × '.join(f'{v:.1f} mm' for v in dims)+'   (Breite × Höhe × Tiefe)',12,bold=True)
-para(36,82,W-72,'Der Gürtel ist als Spielzubehör integriert und folgt dem vorhandenen Hüftknochen. Taschen und Utensilien sind kosmetische Ausrüstung; sie fügen keine neuen Fähigkeiten oder Kollisionskörper hinzu. Die neuen Panzerplatten bleiben in diesem Stand ein separates Konzept.')
+para(36,82,W-72,'Der Gürtel ist als Spielzubehör integriert und folgt dem vorhandenen Hüftknochen. Taschen und Utensilien sind kosmetische Ausrüstung; sie fügen keine neuen Fähigkeiten oder Kollisionskörper hinzu. Die 18 Panzerplatten werden als weitere Rüstungsressource an die vorhandenen Brust-, Arm- und Beinknochen gebunden.')
 footer(3);c.showPage()
 
 # 4: measured catalog and practical construction workflow.

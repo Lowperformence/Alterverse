@@ -1162,7 +1162,8 @@
       "vertexCount": 216
     }
   ],
-  "armorIntegratedIntoGame": false,
+  "armorIntegratedIntoGame": true,
   "utilityBeltRuntimeResource": "Assets/Alterverse/Resources/BrakkUtilityBelt/Model.bytes",
-  "modeling": "Closed polygon prisms, 1-2 segment bevels, faceted cylinders; separate named layers and fasteners. Existing bones only."
+  "modeling": "Closed polygon prisms, 1-2 segment bevels, faceted cylinders; separate named layers and fasteners. Existing bones only.",
+  "armorRuntimeResource": "Assets/Alterverse/Resources/BrakkArmor/Model.bytes"
 }

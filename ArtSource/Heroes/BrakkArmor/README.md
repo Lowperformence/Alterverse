@@ -48,7 +48,9 @@ Die Generatoren liegen in `Tools/BrakkArmor/`: `build_armor.py` baut die Solids,
 `export_individual.py` erzeugt die Einzeldateien, `draw_plates.py` die exakten
 Zeichnungen und `build_catalogue.py` den illustrierten PDF-Katalog. Änderungen an
 Maßen werden im Generator definiert und anschließend in Modelle/Zeichnungen
-übernommen. Der Blender-Quellkörper bleibt eine bestehende Projektressource.
+übernommen. `export_runtime.py` exportiert die Platten in die Unity-Ressource;
+`validate_runtime.py` prüft die Knochenbindung und die torso-seitige Bereinigung.
+Der Blender-Quellkörper bleibt eine bestehende Projektressource.
 
 ## Stand der Integration
 
@@ -62,15 +64,19 @@ Der neue Utensiliengürtel wird nach dieser Bereinigung als eigenes, zu 100 % an
 Bind-Daten und lokale Koordinaten. Dies betrifft ausschließlich `HeroId.Rook`;
 Nerok und die gemeinsam genutzte Rook-Quelldatei bleiben unverändert.
 
-Die neue vollständige Rüstung ist hier als Konzept und als einzeln baubare
-Blender-Geometrie ausgearbeitet. Sie wird durch diese Änderung nicht automatisch
-anstelle der restlichen Rüstung auf dem laufenden Helden aktiviert.
+Die vollständige neue Rüstung wird durch `BrakkArmorAppearance` auf Brakk
+aktiviert. Alle 18 Module bestehen aus der exportierten Blender-Geometrie und
+folgen mit starren Gewichten den bestehenden Brust-, Wirbelsäulen-, Arm- und
+Beinknochen. Die alten Brust-/Rücken-Anbauten werden erst entfernt, nachdem die
+neue Rüstung erfolgreich erzeugt wurde. Der neue Renderer wird bei der
+Bereinigung ausgespart. Kopf, Hände, Füße, Gürtel und gemeinsam genutzte
+Quellressourcen werden durch diesen Schritt nicht verändert.
 
 ## Prüfung
 
 Die neuen 160 Solids (126 Rüstungsteile plus 34 Gürtelteile) sind geschlossen,
-manifold und besitzen ein positives Volumen. Der Gürtel folgt dem vorhandenen
-Hüftknochen in 27 Proben der neun bestehenden Aktionen. Quellgeometrie, Indexdaten
+manifold und besitzen ein positives Volumen. Der Gürtel und die Platten werden mit 27 Proben der neun bestehenden Aktionen
+auf korrekte Knochenbindung geprüft. Quellgeometrie, Indexdaten
 und Gewichte wurden geprüft. Die eigenständigen Dateien werden nach dem Export
 separat geöffnet und kontrolliert. Eine Prüfung im Unity Editor oder auf Android
 ist hier nicht durchgeführt; der PDF-Katalog zeigt Blender-Daten.

@@ -1,6 +1,6 @@
 """Editable Brakk armor concept and production utility belt; each plate is a layered solid.
 Blender 4.x: --python build_armor.py -- --source ArtSource/Heroes/Rook.blend
-Armor is a concept asset. Only the separate utility-belt resource is integrated in-game.
+Run export_runtime.py after this builder to refresh the integrated armor resource.
 """
 import argparse,gzip,hashlib,json,math,sys
 from pathlib import Path
