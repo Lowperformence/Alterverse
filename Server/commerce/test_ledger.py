@@ -89,7 +89,7 @@ class LedgerTests(unittest.TestCase):
                 self.assertEqual(snapshot['balance'],before-ITEMS[f'avatar_{avatar_id}']['price'])
                 self.assertIn(avatar_id,snapshot['avatars'])
                 self.assertNotIn(avatar_id,restarted.wallet('account-b')['avatars'])
-        self.assertEqual(self.ledger.wallet('account-a')['balance'],1350)
+        self.assertEqual(self.ledger.wallet('account-a')['balance'],1500)
 
     def test_new_shop_profile_avatars_keep_correct_prices_and_unlock_once(self):
         account = 'account-a'
@@ -97,7 +97,7 @@ class LedgerTests(unittest.TestCase):
         for index, avatar_id in enumerate((43, 44, 45, 46)):
             with self.subTest(avatar_id=avatar_id):
                 sku = f'avatar_{avatar_id}'
-                self.assertEqual(ITEMS[sku]['price'], 450 if avatar_id == 43 else 400)
+                self.assertEqual(ITEMS[sku]['price'], 400)
                 before = self.ledger.wallet(account)
                 bought = self.ledger.purchase(account, sku, f'{600 + index:032x}', before['profileRevision'])
                 self.assertEqual(bought['balance'], before['balance'] - ITEMS[sku]['price'])
@@ -105,18 +105,18 @@ class LedgerTests(unittest.TestCase):
                 repeated = self.ledger.purchase(account, sku, f'{700 + index:032x}', bought['profileRevision'])
                 self.assertEqual(repeated['balance'], bought['balance'])
         restored = Ledger(self.ledger.path).wallet(account)
-        self.assertEqual(restored['balance'], 3850)
+        self.assertEqual(restored['balance'], 3900)
         for avatar_id in (43, 44, 45, 46):
             self.assertIn(avatar_id, restored['avatars'])
 
-    def test_all_character_profile_pictures_are_400_shards(self):
-        character_avatars = (17, 18, 19, 20, 21, 22, 23, 32, 33, 34, 35, 36, 38, 40, 44, 45, 46)
-        for avatar_id in character_avatars:
-            with self.subTest(avatar_id=avatar_id):
-                self.assertEqual(ITEMS[f'avatar_{avatar_id}']['price'], 400)
-        # Slogans and abstract badges are separate from character portrait items.
-        for avatar_id in (10, 11, 12, 13, 14, 15, 24, 25, 26, 39, 41, 42, 43):
-            self.assertNotEqual(ITEMS[f'avatar_{avatar_id}']['price'], 400)
+    def test_all_avatar_profile_pictures_are_400_shards(self):
+        avatar_items = {sku: item for sku, item in ITEMS.items() if sku.startswith('avatar_')}
+        self.assertEqual(len(avatar_items), 35)
+        for sku, item in avatar_items.items():
+            with self.subTest(sku=sku):
+                self.assertEqual(item['price'], 400)
+                self.assertIn({'key': 'DF_AvatarOwned_' + sku[7:], 'kind': 0, 'number': 1}, item['writes'])
+
 
     def test_new_avatar_rejects_insufficient_shards(self):
         with self.assertRaises(ValueError):self.ledger.buy('account-a','avatar_17')
