@@ -33,7 +33,7 @@ namespace Alterverse.Profile
 
     public static class MatchRewardService
     {
-        private const string MatchesKey="DF_MatchesCompleted",WinsKey="DF_MatchesWon",KillsKey="DF_LifetimeKills",AssistsKey="DF_LifetimeAssists",ObjectivesKey="DF_LifetimeObjectives";
+        private const string MatchesKey="DF_MatchesCompleted",WinsKey="DF_MatchesWon",KillsKey="DF_LifetimeKills",DeathsKey="DF_LifetimeDeaths",AssistsKey="DF_LifetimeAssists",ObjectivesKey="DF_LifetimeObjectives";
         private const string ReceiptKey="DF_LastRewardReceipt",ReceiptShards="DF_LastRewardShards",ReceiptXp="DF_LastRewardXP";
         private const string ReceiptBaseShards="DF_LastRewardBaseShards",ReceiptShardBonus="DF_LastRewardShardBonus";
         private const string ReceiptBaseXp="DF_LastRewardBaseXP",ReceiptXpBonus="DF_LastRewardXPBonus",ReceiptBonusCosmetic="DF_LastRewardBonusCosmetic";
@@ -41,10 +41,11 @@ namespace Alterverse.Profile
         public static int MatchesCompleted=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(MatchesKey,0));
         public static int MatchesWon=>Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(WinsKey,0),0,MatchesCompleted);
         public static int LifetimeKills=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(KillsKey,0));
+        public static int LifetimeDeaths=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(DeathsKey,0));
         public static int LifetimeAssists=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(AssistsKey,0));
         public static int LifetimeObjectives=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ObjectivesKey,0));
 
-        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true)
+        public static MatchRewardResult GrantMatchReward(bool won,int kills,int assists,int objectives,string matchId=null,int enemyKills=-1,int hotZoneCaptures=0,int soldierKills=0,bool adaptiveDifficulty=true,int deaths=0)
         {
             ProfileTransaction.Recover();
             matchId=matchId??Guid.NewGuid().ToString("N");
@@ -66,7 +67,7 @@ namespace Alterverse.Profile
                 return new MatchRewardResult(storedBaseShards,storedShardBonus,storedBaseXp,storedXpBonus,storedCosmetic);
             }
 
-            kills=Mathf.Max(0,kills);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
+            kills=Mathf.Max(0,kills);deaths=Mathf.Max(0,deaths);assists=Mathf.Max(0,assists);objectives=Mathf.Max(0,objectives);
 
             // Freeze reward scaling to the difficulty that actually governed this match. In network
             // matches Current is the authoritative lobby override; in solo it is the local hidden tier.
@@ -99,6 +100,7 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(MatchesKey,ProfileTransaction.Add(MatchesCompleted,1)),
                 new ProfileTransaction.Write(WinsKey,wins),
                 new ProfileTransaction.Write(KillsKey,ProfileTransaction.Add(LifetimeKills,kills)),
+                new ProfileTransaction.Write(DeathsKey,ProfileTransaction.Add(LifetimeDeaths,deaths)),
                 new ProfileTransaction.Write(AssistsKey,ProfileTransaction.Add(LifetimeAssists,assists)),
                 new ProfileTransaction.Write(ObjectivesKey,ProfileTransaction.Add(LifetimeObjectives,objectives)),
                 new ProfileTransaction.Write(ReceiptKey,matchId),

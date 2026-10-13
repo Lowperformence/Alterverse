@@ -1058,9 +1058,8 @@ namespace Alterverse.UI
             Stat(x,290,w,"MATCHES",stats.Matches.ToString());
             Stat(x,346,w,"WINS / WIN RATE",$"{stats.Wins} / {stats.WinRate:0}%");
             Stat(x,402,w,"KILLS",ProgressionSummary.Kills.ToString());
-            Stat(x,458,w,"ASSISTS",ProgressionSummary.Assists.ToString());
-            Stat(x,514,w,"OBJECTIVES",ProgressionSummary.Objectives.ToString());
-            Stat(x,570,w,"SHARDS",PlayerWallet.Balance.ToString());
+            Stat(x,458,w,"K/D",ProgressionSummary.KillDeathRatioLabel);
+            Stat(x,514,w,"SHARDS",PlayerWallet.Balance.ToString());
             AccountLoginPanel.Draw(theme,new Rect(x,626,w,48));
         }
         private void DrawQuests()
@@ -1418,4 +1417,3 @@ namespace Alterverse.UI
         }
     }
 }
-
