@@ -34,6 +34,7 @@ namespace Alterverse.Profile
     public static class MatchRewardService
     {
         private const string MatchesKey="DF_MatchesCompleted",WinsKey="DF_MatchesWon",KillsKey="DF_LifetimeKills",DeathsKey="DF_LifetimeDeaths",AssistsKey="DF_LifetimeAssists",ObjectivesKey="DF_LifetimeObjectives";
+        private const string KillDeathKillsKey="DF_KDKills_v1",KillDeathDeathsKey="DF_KDDeaths_v1";
         private const string ReceiptKey="DF_LastRewardReceipt",ReceiptShards="DF_LastRewardShards",ReceiptXp="DF_LastRewardXP";
         private const string ReceiptBaseShards="DF_LastRewardBaseShards",ReceiptShardBonus="DF_LastRewardShardBonus";
         private const string ReceiptBaseXp="DF_LastRewardBaseXP",ReceiptXpBonus="DF_LastRewardXPBonus",ReceiptBonusCosmetic="DF_LastRewardBonusCosmetic";
@@ -42,6 +43,11 @@ namespace Alterverse.Profile
         public static int MatchesWon=>Mathf.Clamp(Alterverse.Profile.AccountProfilePrefs.GetInt(WinsKey,0),0,MatchesCompleted);
         public static int LifetimeKills=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(KillsKey,0));
         public static int LifetimeDeaths=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(DeathsKey,0));
+        // Legacy profiles have kills without their historical deaths. Keep those totals,
+        // but calculate K/D from a pair captured over the same period in every mode.
+        public static bool HasKillDeathStats=>AccountProfilePrefs.HasKey(KillDeathKillsKey)&&AccountProfilePrefs.HasKey(KillDeathDeathsKey);
+        public static int KillDeathKills=>HasKillDeathStats?Mathf.Max(0,AccountProfilePrefs.GetInt(KillDeathKillsKey,0)):0;
+        public static int KillDeathDeaths=>HasKillDeathStats?Mathf.Max(0,AccountProfilePrefs.GetInt(KillDeathDeathsKey,0)):0;
         public static int LifetimeAssists=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(AssistsKey,0));
         public static int LifetimeObjectives=>Mathf.Max(0,Alterverse.Profile.AccountProfilePrefs.GetInt(ObjectivesKey,0));
 
@@ -101,6 +107,8 @@ namespace Alterverse.Profile
                 new ProfileTransaction.Write(WinsKey,wins),
                 new ProfileTransaction.Write(KillsKey,ProfileTransaction.Add(LifetimeKills,kills)),
                 new ProfileTransaction.Write(DeathsKey,ProfileTransaction.Add(LifetimeDeaths,deaths)),
+                new ProfileTransaction.Write(KillDeathKillsKey,ProfileTransaction.Add(KillDeathKills,kills)),
+                new ProfileTransaction.Write(KillDeathDeathsKey,ProfileTransaction.Add(KillDeathDeaths,deaths)),
                 new ProfileTransaction.Write(AssistsKey,ProfileTransaction.Add(LifetimeAssists,assists)),
                 new ProfileTransaction.Write(ObjectivesKey,ProfileTransaction.Add(LifetimeObjectives,objectives)),
                 new ProfileTransaction.Write(ReceiptKey,matchId),
@@ -128,4 +136,3 @@ namespace Alterverse.Profile
         }
     }
 }
-

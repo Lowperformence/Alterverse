@@ -46,4 +46,6 @@ assert '"K/D",ProgressionSummary.KillDeathRatioLabel' in profile
 assert '"ASSISTS"' not in profile and '"OBJECTIVES"' not in profile
 keys = json.loads((root/'Assets/Alterverse/Resources/Commerce/LegacyProfileKeys.json').read_text())['profile']
 assert sum(entry == {'key': 'DF_LifetimeDeaths', 'kind': 0} for entry in keys) == 1
+for key in ('DF_KDKills_v1', 'DF_KDDeaths_v1'):
+    assert sum(entry == {'key': key, 'kind': 0} for entry in keys) == 1
 print('PASS: solo/network death forwarding, profile rows and account import registry.')
