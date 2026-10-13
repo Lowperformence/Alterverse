@@ -1,0 +1,1168 @@
+{
+  "revision": "brakk-armor-concept-01-20261012",
+  "coordinateSpace": "Unity authored-model metres, X right/Y up/Z forward",
+  "sourceRigSha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+  "plates": [
+    {
+      "id": "A01",
+      "name": "Bauchsegment 1",
+      "bone": "Spine",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.2719999551773071
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.25790101289749146
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.27999999999999997,
+      "heightMetres": 0.066,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "A01_01_mount",
+        "A01_02_liner",
+        "A01_03_gold_shell",
+        "A01_04_graphite_face",
+        "A01_05_fastener_1",
+        "A01_05_fastener_2",
+        "A01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "A02",
+      "name": "Bauchsegment 2",
+      "bone": "Spine",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.1970000267028809
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.2379242479801178
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.26799999999999996,
+      "heightMetres": 0.066,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "A02_01_mount",
+        "A02_02_liner",
+        "A02_03_gold_shell",
+        "A02_04_graphite_face",
+        "A02_05_fastener_1",
+        "A02_05_fastener_2",
+        "A02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "A03",
+      "name": "Bauchsegment 3",
+      "bone": "Spine",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.121999979019165
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.23349438607692719
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.256,
+      "heightMetres": 0.066,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "A03_01_mount",
+        "A03_02_liner",
+        "A03_03_gold_shell",
+        "A03_04_graphite_face",
+        "A03_05_fastener_1",
+        "A03_05_fastener_2",
+        "A03_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "B01",
+      "name": "Ruecken L",
+      "bone": "Chest",
+      "frameModelUnity": [
+        [
+          -1.0,
+          0.0,
+          -8.742277657347586e-08,
+          -0.1420000195503235
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.3930000066757202
+        ],
+        [
+          8.742277657347586e-08,
+          0.0,
+          -1.0,
+          -0.2816506028175354
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.23,
+      "heightMetres": 0.3,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "B01_01_mount",
+        "B01_02_liner",
+        "B01_03_gold_shell",
+        "B01_04_graphite_face",
+        "B01_05_fastener_1",
+        "B01_05_fastener_2",
+        "B01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "B02",
+      "name": "Ruecken R",
+      "bone": "Chest",
+      "frameModelUnity": [
+        [
+          -1.0,
+          0.0,
+          -8.742277657347586e-08,
+          0.1419999897480011
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.3930000066757202
+        ],
+        [
+          8.742277657347586e-08,
+          0.0,
+          -1.0,
+          -0.28110164403915405
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.23,
+      "heightMetres": 0.3,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "B02_01_mount",
+        "B02_02_liner",
+        "B02_03_gold_shell",
+        "B02_04_graphite_face",
+        "B02_05_fastener_1",
+        "B02_05_fastener_2",
+        "B02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "C01",
+      "name": "Brust links",
+      "bone": "Chest",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.14499999582767487
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.4600000381469727
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.28787314891815186
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.245,
+      "heightMetres": 0.29,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "C01_01_mount",
+        "C01_02_liner",
+        "C01_03_gold_shell",
+        "C01_04_graphite_face",
+        "C01_05_fastener_1",
+        "C01_05_fastener_2",
+        "C01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "C02",
+      "name": "Brust rechts",
+      "bone": "Chest",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.14499999582767487
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.4600000381469727
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.28708672523498535
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.245,
+      "heightMetres": 0.29,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "C02_01_mount",
+        "C02_02_liner",
+        "C02_03_gold_shell",
+        "C02_04_graphite_face",
+        "C02_05_fastener_1",
+        "C02_05_fastener_2",
+        "C02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "C03",
+      "name": "Brustbruecke",
+      "bone": "Chest",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.4600000381469727
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.24554376304149628
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.1,
+      "heightMetres": 0.195,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "C03_01_mount",
+        "C03_02_liner",
+        "C03_03_gold_shell",
+        "C03_04_graphite_face",
+        "C03_05_fastener_1",
+        "C03_05_fastener_2",
+        "C03_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "K01",
+      "name": "Knie L",
+      "bone": "ShinL",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.1850000023841858
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.5490000247955322
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.17058783769607544
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.137,
+      "heightMetres": 0.103,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "K01_01_mount",
+        "K01_02_liner",
+        "K01_03_gold_shell",
+        "K01_04_graphite_face",
+        "K01_05_fastener_1",
+        "K01_05_fastener_2",
+        "K01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "K02",
+      "name": "Knie R",
+      "bone": "ShinR",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.1850000023841858
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.5490000247955322
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.17479480803012848
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.137,
+      "heightMetres": 0.103,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "K02_01_mount",
+        "K02_02_liner",
+        "K02_03_gold_shell",
+        "K02_04_graphite_face",
+        "K02_05_fastener_1",
+        "K02_05_fastener_2",
+        "K02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "L01",
+      "name": "Schienbein L",
+      "bone": "ShinL",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.2070000022649765
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.3330000042915344
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.07040178030729294
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.113,
+      "heightMetres": 0.263,
+      "depthMetres": 0.029,
+      "shape": "shin",
+      "parts": [
+        "L01_01_mount",
+        "L01_02_liner",
+        "L01_03_gold_shell",
+        "L01_04_graphite_face",
+        "L01_05_fastener_1",
+        "L01_05_fastener_2",
+        "L01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "L02",
+      "name": "Schienbein R",
+      "bone": "ShinR",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.2070000022649765
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.3330000042915344
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.07066654413938522
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.113,
+      "heightMetres": 0.263,
+      "depthMetres": 0.029,
+      "shape": "shin",
+      "parts": [
+        "L02_01_mount",
+        "L02_02_liner",
+        "L02_03_gold_shell",
+        "L02_04_graphite_face",
+        "L02_05_fastener_1",
+        "L02_05_fastener_2",
+        "L02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "R01",
+      "name": "Flanke L",
+      "bone": "Spine",
+      "frameModelUnity": [
+        [
+          0.7960838079452515,
+          0.0,
+          -0.605186402797699,
+          -0.34334060549736023
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.2999999523162842
+        ],
+        [
+          0.605186402797699,
+          0.0,
+          0.7960838079452515,
+          0.21384397149085999
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.175,
+      "heightMetres": 0.23,
+      "depthMetres": 0.029,
+      "shape": "rib",
+      "parts": [
+        "R01_01_mount",
+        "R01_02_liner",
+        "R01_03_gold_shell",
+        "R01_04_graphite_face",
+        "R01_05_fastener_1",
+        "R01_05_fastener_2",
+        "R01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "R02",
+      "name": "Flanke R",
+      "bone": "Spine",
+      "frameModelUnity": [
+        [
+          0.7960838079452515,
+          0.0,
+          0.605186402797699,
+          0.34294164180755615
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          1.2999999523162842
+        ],
+        [
+          -0.605186402797699,
+          0.0,
+          0.7960838079452515,
+          0.21331916749477386
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.175,
+      "heightMetres": 0.23,
+      "depthMetres": 0.029,
+      "shape": "rib",
+      "parts": [
+        "R02_01_mount",
+        "R02_02_liner",
+        "R02_03_gold_shell",
+        "R02_04_graphite_face",
+        "R02_05_fastener_1",
+        "R02_05_fastener_2",
+        "R02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "S01",
+      "name": "Schulter L",
+      "bone": "UpperArmL",
+      "frameModelUnity": [
+        [
+          0.8634040951728821,
+          0.27953317761421204,
+          -0.4199936091899872,
+          -0.4216744899749756
+        ],
+        [
+          0.1571132391691208,
+          0.6421018242835999,
+          0.7503470778465271,
+          1.5442169904708862
+        ],
+        [
+          0.4794255495071411,
+          -0.7138392329216003,
+          0.5104749202728271,
+          0.0318358838558197
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.195,
+      "heightMetres": 0.205,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "S01_01_mount",
+        "S01_02_liner",
+        "S01_03_gold_shell",
+        "S01_04_graphite_face",
+        "S01_05_fastener_1",
+        "S01_05_fastener_2",
+        "S01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "Schulter R",
+      "bone": "UpperArmR",
+      "frameModelUnity": [
+        [
+          0.8634040951728821,
+          -0.27953317761421204,
+          0.4199936091899872,
+          0.4218381643295288
+        ],
+        [
+          -0.1571132391691208,
+          0.6421018242835999,
+          0.7503470778465271,
+          1.5445094108581543
+        ],
+        [
+          -0.4794255495071411,
+          -0.7138392329216003,
+          0.5104749202728271,
+          0.032034821808338165
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.195,
+      "heightMetres": 0.205,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "S02_01_mount",
+        "S02_02_liner",
+        "S02_03_gold_shell",
+        "S02_04_graphite_face",
+        "S02_05_fastener_1",
+        "S02_05_fastener_2",
+        "S02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "T01",
+      "name": "Oberschenkel L",
+      "bone": "ThighL",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.18700000643730164
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.8259999752044678
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.25732994079589844
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.162,
+      "heightMetres": 0.237,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "T01_01_mount",
+        "T01_02_liner",
+        "T01_03_gold_shell",
+        "T01_04_graphite_face",
+        "T01_05_fastener_1",
+        "T01_05_fastener_2",
+        "T01_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    },
+    {
+      "id": "T02",
+      "name": "Oberschenkel R",
+      "bone": "ThighR",
+      "frameModelUnity": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.18700000643730164
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.8259999752044678
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.2571779787540436
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "widthMetres": 0.162,
+      "heightMetres": 0.237,
+      "depthMetres": 0.029,
+      "shape": "shield",
+      "parts": [
+        "T02_01_mount",
+        "T02_02_liner",
+        "T02_03_gold_shell",
+        "T02_04_graphite_face",
+        "T02_05_fastener_1",
+        "T02_05_fastener_2",
+        "T02_05_fastener_3"
+      ],
+      "layerOrder": [
+        "mount",
+        "liner",
+        "gold_shell",
+        "graphite_face",
+        "fasteners"
+      ]
+    }
+  ],
+  "utilityBeltParts": [
+    {
+      "id": "U01_band",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 0,
+      "vertexCount": 400
+    },
+    {
+      "id": "U02_buckle",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 400,
+      "vertexCount": 216
+    },
+    {
+      "id": "U03_buckle_inset",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 616,
+      "vertexCount": 216
+    },
+    {
+      "id": "U04_status",
+      "bone": "Hips",
+      "material": 4,
+      "firstVertex": 832,
+      "vertexCount": 216
+    },
+    {
+      "id": "U05_L_pouch",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 1048,
+      "vertexCount": 216
+    },
+    {
+      "id": "U06_L_pouch_flap",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 1264,
+      "vertexCount": 216
+    },
+    {
+      "id": "U07_L_clasp",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 1480,
+      "vertexCount": 216
+    },
+    {
+      "id": "U08_L_pouch_inset",
+      "bone": "Hips",
+      "material": 3,
+      "firstVertex": 1696,
+      "vertexCount": 174
+    },
+    {
+      "id": "U09_L_belt_loop_-1",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 1870,
+      "vertexCount": 216
+    },
+    {
+      "id": "U09_L_belt_loop_1",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 2086,
+      "vertexCount": 216
+    },
+    {
+      "id": "U05_R_pouch",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 2302,
+      "vertexCount": 216
+    },
+    {
+      "id": "U06_R_pouch_flap",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 2518,
+      "vertexCount": 216
+    },
+    {
+      "id": "U07_R_clasp",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 2734,
+      "vertexCount": 216
+    },
+    {
+      "id": "U08_R_pouch_inset",
+      "bone": "Hips",
+      "material": 3,
+      "firstVertex": 2950,
+      "vertexCount": 174
+    },
+    {
+      "id": "U09_R_belt_loop_-1",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 3124,
+      "vertexCount": 216
+    },
+    {
+      "id": "U09_R_belt_loop_1",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 3340,
+      "vertexCount": 216
+    },
+    {
+      "id": "U10_rear_kit",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 3556,
+      "vertexCount": 216
+    },
+    {
+      "id": "U11_rear_kit_lid",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 3772,
+      "vertexCount": 216
+    },
+    {
+      "id": "U12_rear_kit_lock",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 3988,
+      "vertexCount": 216
+    },
+    {
+      "id": "U13_flashlight_body",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 4204,
+      "vertexCount": 208
+    },
+    {
+      "id": "U13_flashlight_grip",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 4412,
+      "vertexCount": 208
+    },
+    {
+      "id": "U13_flashlight_head",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 4620,
+      "vertexCount": 168
+    },
+    {
+      "id": "U13_flashlight_lens",
+      "bone": "Hips",
+      "material": 4,
+      "firstVertex": 4788,
+      "vertexCount": 168
+    },
+    {
+      "id": "U14_torch_clip_1",
+      "bone": "Hips",
+      "material": 3,
+      "firstVertex": 4956,
+      "vertexCount": 216
+    },
+    {
+      "id": "U14_torch_clip_2",
+      "bone": "Hips",
+      "material": 3,
+      "firstVertex": 5172,
+      "vertexCount": 216
+    },
+    {
+      "id": "U15_repair_wrench",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 5388,
+      "vertexCount": 594
+    },
+    {
+      "id": "U16_tool_clip_1",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 5982,
+      "vertexCount": 216
+    },
+    {
+      "id": "U16_tool_clip_2",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 6198,
+      "vertexCount": 216
+    },
+    {
+      "id": "U17_L_cartridge",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 6414,
+      "vertexCount": 168
+    },
+    {
+      "id": "U18_L_cartridge_cap",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 6582,
+      "vertexCount": 168
+    },
+    {
+      "id": "U19_L_cartridge_holder",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 6750,
+      "vertexCount": 216
+    },
+    {
+      "id": "U17_R_cartridge",
+      "bone": "Hips",
+      "material": 2,
+      "firstVertex": 6966,
+      "vertexCount": 168
+    },
+    {
+      "id": "U18_R_cartridge_cap",
+      "bone": "Hips",
+      "material": 1,
+      "firstVertex": 7134,
+      "vertexCount": 168
+    },
+    {
+      "id": "U19_R_cartridge_holder",
+      "bone": "Hips",
+      "material": 0,
+      "firstVertex": 7302,
+      "vertexCount": 216
+    }
+  ],
+  "armorIntegratedIntoGame": false,
+  "utilityBeltRuntimeResource": "Assets/Alterverse/Resources/BrakkUtilityBelt/Model.bytes",
+  "modeling": "Closed polygon prisms, 1-2 segment bevels, faceted cylinders; separate named layers and fasteners. Existing bones only."
+}

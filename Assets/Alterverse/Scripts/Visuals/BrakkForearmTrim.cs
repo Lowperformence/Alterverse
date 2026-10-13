@@ -12,6 +12,7 @@ namespace Alterverse.Visuals
         readonly List<Mesh> ownedMeshes = new List<Mesh>();
         readonly List<Material> ownedSkinMaterials = new List<Material>();
         Material goldForearms;
+        bool legsTrimmed;
         static readonly Color SuitGold = new Color(.82f, .56f, .18f, 1f);
         static readonly Color ReactorRed = new Color(1f, .025f, .012f, 1f);
         const float ReactorEmissionStrength = 6f;
@@ -215,9 +216,32 @@ namespace Alterverse.Visuals
         // Delete complete attachment components, including renamed/silver pieces and
         // blended shoulder/wrist weights. The actual fabric/skin stays in its own slots.
         static void RemoveRemainingArmAttachments(Transform model, BrakkForearmTrim owner)
+            => RemoveRemainingLimbAttachments(model, owner, false);
+
+        public static void ApplyLegs(Transform model, HeroId hero)
+        {
+            if (hero != HeroId.Rook || model == null) return;
+            BrakkForearmTrim owner = model.GetComponent<BrakkForearmTrim>();
+            if (owner == null) owner = model.gameObject.AddComponent<BrakkForearmTrim>();
+            if (owner.legsTrimmed) return;
+            owner.legsTrimmed = true;
+            RemoveRemainingLimbAttachments(model, owner, true);
+            foreach (MeshRenderer renderer in model.GetComponentsInChildren<MeshRenderer>(true))
+                for (Transform bone = renderer.transform; bone != null && bone != model; bone = bone.parent)
+                {
+                    if (bone.name == "FootL" || bone.name == "FootR") break;
+                    if (bone.name == "ThighL" || bone.name == "ThighR" ||
+                        bone.name == "ShinL" || bone.name == "ShinR")
+                    { renderer.enabled = false; break; }
+                }
+        }
+
+        static void RemoveRemainingLimbAttachments(Transform model, BrakkForearmTrim owner, bool legs)
         {
             foreach (var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
+                // The ankle boot is the retained foot surface, rather than a leg armor attachment.
+                if (legs && skin.name == "DF_ReferenceBoots") continue;
                 Mesh source = skin.sharedMesh;
                 if (source == null || !source.isReadable) continue;
                 Vector3[] points = source.vertices;
@@ -225,10 +249,13 @@ namespace Alterverse.Visuals
                 if (weights.Length != points.Length) continue;
                 bool anatomy = skin.name.StartsWith("DF_Anatomy", StringComparison.Ordinal) ||
                     source.name.StartsWith("DF_Anatomy", StringComparison.Ordinal);
-                int[] arms = new int[4];
-                string[] names = { "UpperArmL", "UpperArmR", "ForearmL", "ForearmR" };
-                for (int i = 0; i < arms.Length; i++)
-                    arms[i] = Array.FindIndex(skin.bones, b => b != null && b.name == names[i]);
+                // The two red upper-thigh flaps are weighted to Hips in the source FBX.
+                // Its old rigid waist ring also gives way to the new utility belt.
+                string[] names = legs ? new[] { "ThighL", "ThighR", "ShinL", "ShinR", "Hips" } :
+                    new[] { "UpperArmL", "UpperArmR", "ForearmL", "ForearmR" };
+                int[] limbs = new int[names.Length];
+                for (int i = 0; i < limbs.Length; i++)
+                    limbs[i] = Array.FindIndex(skin.bones, b => b != null && b.name == names[i]);
                 int[] parent = new int[points.Length];
                 bool[] selected = new bool[points.Length];
                 var extraSlot = new bool[source.subMeshCount];
@@ -268,9 +295,9 @@ namespace Alterverse.Visuals
                 for (int i = 0; i < points.Length; i++)
                 {
                     if (!selected[i]) continue;
-                    float arm = 0f;
-                    foreach (int bone in arms) arm += Influence(weights[i], bone);
-                    if (arm >= .2f) remove.Add(Find(i));
+                    float limb = 0f;
+                    foreach (int bone in limbs) limb += Influence(weights[i], bone);
+                    if (limb >= .2f) remove.Add(Find(i));
                 }
                 if (remove.Count == 0) continue;
                 var kept = new List<int>[source.subMeshCount];
@@ -286,10 +313,11 @@ namespace Alterverse.Visuals
                     }
                 }
                 if (removed == 0) continue;
-                Mesh mesh = Instantiate(source); mesh.name = source.name + "_BrakkBareArms";
+                Mesh mesh = Instantiate(source); mesh.name = source.name + (legs ? "_BrakkBareLegs" : "_BrakkBareArms");
                 for (int sub = 0; sub < kept.Length; sub++) mesh.SetTriangles(kept[sub], sub, false);
                 skin.sharedMesh = mesh; owner.ownedMeshes.Add(mesh);
-                Debug.Log("DF: Brakk deleted " + removed + " remaining arm/shoulder attachment triangles on " + skin.name, model);
+                HeroVisualDiagnostics.Trace("DF: Brakk deleted " + removed + (legs ? " leg/waist" : " arm/shoulder") +
+                    " attachment triangles on " + skin.name, model);
             }
         }
 
@@ -521,5 +549,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

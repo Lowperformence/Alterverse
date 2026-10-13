@@ -1,0 +1,885 @@
+[
+  {
+    "file": "models/A01-Bauchsegment_1.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_A01_01_mount",
+      "BRK_A01_02_liner",
+      "BRK_A01_03_gold_shell",
+      "BRK_A01_04_graphite_face",
+      "BRK_A01_05_fastener_1",
+      "BRK_A01_05_fastener_2",
+      "BRK_A01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.2800000011920929,
+      0.029000014066696167,
+      0.06599998474121094
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/A02-Bauchsegment_2.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_A02_01_mount",
+      "BRK_A02_02_liner",
+      "BRK_A02_03_gold_shell",
+      "BRK_A02_04_graphite_face",
+      "BRK_A02_05_fastener_1",
+      "BRK_A02_05_fastener_2",
+      "BRK_A02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.2680000066757202,
+      0.029000014066696167,
+      0.06599998474121094
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/A03-Bauchsegment_3.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_A03_01_mount",
+      "BRK_A03_02_liner",
+      "BRK_A03_03_gold_shell",
+      "BRK_A03_04_graphite_face",
+      "BRK_A03_05_fastener_1",
+      "BRK_A03_05_fastener_2",
+      "BRK_A03_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.25600001215934753,
+      0.02899998426437378,
+      0.06599998474121094
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/B01-Ruecken_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_B01_01_mount",
+      "BRK_B01_02_liner",
+      "BRK_B01_03_gold_shell",
+      "BRK_B01_04_graphite_face",
+      "BRK_B01_05_fastener_1",
+      "BRK_B01_05_fastener_2",
+      "BRK_B01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.23000000417232513,
+      0.029000043869018555,
+      0.2999999523162842
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/B02-Ruecken_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_B02_01_mount",
+      "BRK_B02_02_liner",
+      "BRK_B02_03_gold_shell",
+      "BRK_B02_04_graphite_face",
+      "BRK_B02_05_fastener_1",
+      "BRK_B02_05_fastener_2",
+      "BRK_B02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.23000001907348633,
+      0.029000043869018555,
+      0.2999999523162842
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/C01-Brust_links.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_C01_01_mount",
+      "BRK_C01_02_liner",
+      "BRK_C01_03_gold_shell",
+      "BRK_C01_04_graphite_face",
+      "BRK_C01_05_fastener_1",
+      "BRK_C01_05_fastener_2",
+      "BRK_C01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.2449999898672104,
+      0.029000014066696167,
+      0.28999996185302734
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/C02-Brust_rechts.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_C02_01_mount",
+      "BRK_C02_02_liner",
+      "BRK_C02_03_gold_shell",
+      "BRK_C02_04_graphite_face",
+      "BRK_C02_05_fastener_1",
+      "BRK_C02_05_fastener_2",
+      "BRK_C02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.2449999898672104,
+      0.029000014066696167,
+      0.28999996185302734
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/C03-Brustbruecke.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_C03_01_mount",
+      "BRK_C03_02_liner",
+      "BRK_C03_03_gold_shell",
+      "BRK_C03_04_graphite_face",
+      "BRK_C03_05_fastener_1",
+      "BRK_C03_05_fastener_2",
+      "BRK_C03_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.10000000149011612,
+      0.02899998426437378,
+      0.19499993324279785
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/K01-Knie_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_K01_01_mount",
+      "BRK_K01_02_liner",
+      "BRK_K01_03_gold_shell",
+      "BRK_K01_04_graphite_face",
+      "BRK_K01_05_fastener_1",
+      "BRK_K01_05_fastener_2",
+      "BRK_K01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.1369999796152115,
+      0.029000014066696167,
+      0.10300001502037048
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/K02-Knie_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_K02_01_mount",
+      "BRK_K02_02_liner",
+      "BRK_K02_03_gold_shell",
+      "BRK_K02_04_graphite_face",
+      "BRK_K02_05_fastener_1",
+      "BRK_K02_05_fastener_2",
+      "BRK_K02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.1369999796152115,
+      0.028999999165534973,
+      0.10300001502037048
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/L01-Schienbein_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_L01_01_mount",
+      "BRK_L01_02_liner",
+      "BRK_L01_03_gold_shell",
+      "BRK_L01_04_graphite_face",
+      "BRK_L01_05_fastener_1",
+      "BRK_L01_05_fastener_2",
+      "BRK_L01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.11300000548362732,
+      0.028999999165534973,
+      0.2630000114440918
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/L02-Schienbein_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_L02_01_mount",
+      "BRK_L02_02_liner",
+      "BRK_L02_03_gold_shell",
+      "BRK_L02_04_graphite_face",
+      "BRK_L02_05_fastener_1",
+      "BRK_L02_05_fastener_2",
+      "BRK_L02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.11300000548362732,
+      0.028999999165534973,
+      0.2630000114440918
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/R01-Flanke_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_R01_01_mount",
+      "BRK_R01_02_liner",
+      "BRK_R01_03_gold_shell",
+      "BRK_R01_04_graphite_face",
+      "BRK_R01_05_fastener_1",
+      "BRK_R01_05_fastener_2",
+      "BRK_R01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.17500002682209015,
+      0.029000014066696167,
+      0.23000001907348633
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/R02-Flanke_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_R02_01_mount",
+      "BRK_R02_02_liner",
+      "BRK_R02_03_gold_shell",
+      "BRK_R02_04_graphite_face",
+      "BRK_R02_05_fastener_1",
+      "BRK_R02_05_fastener_2",
+      "BRK_R02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.17500001192092896,
+      0.029000014066696167,
+      0.23000001907348633
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/S01-Schulter_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_S01_01_mount",
+      "BRK_S01_02_liner",
+      "BRK_S01_03_gold_shell",
+      "BRK_S01_04_graphite_face",
+      "BRK_S01_05_fastener_1",
+      "BRK_S01_05_fastener_2",
+      "BRK_S01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.1950000524520874,
+      0.029000163078308105,
+      0.20500004291534424
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/S02-Schulter_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_S02_01_mount",
+      "BRK_S02_02_liner",
+      "BRK_S02_03_gold_shell",
+      "BRK_S02_04_graphite_face",
+      "BRK_S02_05_fastener_1",
+      "BRK_S02_05_fastener_2",
+      "BRK_S02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.1950000524520874,
+      0.029000163078308105,
+      0.205000102519989
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/T01-Oberschenkel_L.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_T01_01_mount",
+      "BRK_T01_02_liner",
+      "BRK_T01_03_gold_shell",
+      "BRK_T01_04_graphite_face",
+      "BRK_T01_05_fastener_1",
+      "BRK_T01_05_fastener_2",
+      "BRK_T01_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.16200000047683716,
+      0.029000014066696167,
+      0.2369999885559082
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/T02-Oberschenkel_R.blend",
+    "role": "armor_plate_module",
+    "objects": [
+      "BRK_T02_01_mount",
+      "BRK_T02_02_liner",
+      "BRK_T02_03_gold_shell",
+      "BRK_T02_04_graphite_face",
+      "BRK_T02_05_fastener_1",
+      "BRK_T02_05_fastener_2",
+      "BRK_T02_05_fastener_3"
+    ],
+    "dimensionsBlenderMetres": [
+      0.16200000047683716,
+      0.029000014066696167,
+      0.2369999885559082
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/UtilityBelt-assembled.blend",
+    "role": "utility_belt",
+    "objects": [
+      "BRK_U01_band",
+      "BRK_U02_buckle",
+      "BRK_U03_buckle_inset",
+      "BRK_U04_status",
+      "BRK_U05_L_pouch",
+      "BRK_U06_L_pouch_flap",
+      "BRK_U07_L_clasp",
+      "BRK_U08_L_pouch_inset",
+      "BRK_U09_L_belt_loop_-1",
+      "BRK_U09_L_belt_loop_1",
+      "BRK_U05_R_pouch",
+      "BRK_U06_R_pouch_flap",
+      "BRK_U07_R_clasp",
+      "BRK_U08_R_pouch_inset",
+      "BRK_U09_R_belt_loop_-1",
+      "BRK_U09_R_belt_loop_1",
+      "BRK_U10_rear_kit",
+      "BRK_U11_rear_kit_lid",
+      "BRK_U12_rear_kit_lock",
+      "BRK_U13_flashlight_body",
+      "BRK_U13_flashlight_grip",
+      "BRK_U13_flashlight_head",
+      "BRK_U13_flashlight_lens",
+      "BRK_U14_torch_clip_1",
+      "BRK_U14_torch_clip_2",
+      "BRK_U15_repair_wrench",
+      "BRK_U16_tool_clip_1",
+      "BRK_U16_tool_clip_2",
+      "BRK_U17_L_cartridge",
+      "BRK_U18_L_cartridge_cap",
+      "BRK_U19_L_cartridge_holder",
+      "BRK_U17_R_cartridge",
+      "BRK_U18_R_cartridge_cap",
+      "BRK_U19_R_cartridge_holder"
+    ],
+    "dimensionsBlenderMetres": [
+      0.6029999852180481,
+      0.4740000069141388,
+      0.1730000376701355
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U01_band.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U01_band"
+    ],
+    "dimensionsBlenderMetres": [
+      0.5239999890327454,
+      0.3580000102519989,
+      0.07700002193450928
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U02_buckle.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U02_buckle"
+    ],
+    "dimensionsBlenderMetres": [
+      0.07900000363588333,
+      0.02399998903274536,
+      0.06100010871887207
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U03_buckle_inset.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U03_buckle_inset"
+    ],
+    "dimensionsBlenderMetres": [
+      0.05400000140070915,
+      0.006999999284744263,
+      0.03399991989135742
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U04_status.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U04_status"
+    ],
+    "dimensionsBlenderMetres": [
+      0.024000000208616257,
+      0.0029999911785125732,
+      0.003999948501586914
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U05_L_pouch.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U05_L_pouch"
+    ],
+    "dimensionsBlenderMetres": [
+      0.10400000214576721,
+      0.07100000977516174,
+      0.11899995803833008
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U06_L_pouch_flap.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U06_L_pouch_flap"
+    ],
+    "dimensionsBlenderMetres": [
+      0.11100000143051147,
+      0.01199999451637268,
+      0.026999950408935547
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U07_L_clasp.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U07_L_clasp"
+    ],
+    "dimensionsBlenderMetres": [
+      0.018000006675720215,
+      0.009000003337860107,
+      0.0409998893737793
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U08_L_pouch_inset.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U08_L_pouch_inset"
+    ],
+    "dimensionsBlenderMetres": [
+      0.07400000095367432,
+      0.0040000081062316895,
+      0.059999942779541016
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U09_L_belt_loop_-1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U09_L_belt_loop_-1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.014999985694885254,
+      0.007999986410140991,
+      0.04800009727478027
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U09_L_belt_loop_1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U09_L_belt_loop_1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.014999985694885254,
+      0.007999986410140991,
+      0.04800009727478027
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U05_R_pouch.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U05_R_pouch"
+    ],
+    "dimensionsBlenderMetres": [
+      0.10400000214576721,
+      0.07100000977516174,
+      0.11899995803833008
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U06_R_pouch_flap.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U06_R_pouch_flap"
+    ],
+    "dimensionsBlenderMetres": [
+      0.11100000143051147,
+      0.01199999451637268,
+      0.026999950408935547
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U07_R_clasp.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U07_R_clasp"
+    ],
+    "dimensionsBlenderMetres": [
+      0.018000006675720215,
+      0.009000003337860107,
+      0.0409998893737793
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U08_R_pouch_inset.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U08_R_pouch_inset"
+    ],
+    "dimensionsBlenderMetres": [
+      0.07400000095367432,
+      0.0040000081062316895,
+      0.059999942779541016
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U09_R_belt_loop_-1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U09_R_belt_loop_-1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.014999985694885254,
+      0.007999986410140991,
+      0.04800009727478027
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U09_R_belt_loop_1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U09_R_belt_loop_1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.014999985694885254,
+      0.007999986410140991,
+      0.04800009727478027
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U10_rear_kit.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U10_rear_kit"
+    ],
+    "dimensionsBlenderMetres": [
+      0.14399999380111694,
+      0.06000000238418579,
+      0.1040000319480896
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U11_rear_kit_lid.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U11_rear_kit_lid"
+    ],
+    "dimensionsBlenderMetres": [
+      0.14800000190734863,
+      0.01199999451637268,
+      0.029999971389770508
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U12_rear_kit_lock.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U12_rear_kit_lock"
+    ],
+    "dimensionsBlenderMetres": [
+      0.03200000151991844,
+      0.009999990463256836,
+      0.032000064849853516
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U13_flashlight_body.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U13_flashlight_body"
+    ],
+    "dimensionsBlenderMetres": [
+      0.04522353410720825,
+      0.045223549008369446,
+      0.12299996614456177
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U13_flashlight_grip.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U13_flashlight_grip"
+    ],
+    "dimensionsBlenderMetres": [
+      0.047223567962646484,
+      0.047223545610904694,
+      0.06699997186660767
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U13_flashlight_head.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U13_flashlight_head"
+    ],
+    "dimensionsBlenderMetres": [
+      0.06199997663497925,
+      0.06199999898672104,
+      0.026000022888183594
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U13_flashlight_lens.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U13_flashlight_lens"
+    ],
+    "dimensionsBlenderMetres": [
+      0.04799997806549072,
+      0.04800000041723251,
+      0.003999948501586914
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U14_torch_clip_1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U14_torch_clip_1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.040000006556510925,
+      0.03999999910593033,
+      0.01799994707107544
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U14_torch_clip_2.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U14_torch_clip_2"
+    ],
+    "dimensionsBlenderMetres": [
+      0.040000006556510925,
+      0.03999999910593033,
+      0.017999887466430664
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U15_repair_wrench.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U15_repair_wrench"
+    ],
+    "dimensionsBlenderMetres": [
+      0.008000016212463379,
+      0.063743956387043,
+      0.16656237840652466
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U16_tool_clip_1.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U16_tool_clip_1"
+    ],
+    "dimensionsBlenderMetres": [
+      0.03799998760223389,
+      0.03500000014901161,
+      0.018000006675720215
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U16_tool_clip_2.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U16_tool_clip_2"
+    ],
+    "dimensionsBlenderMetres": [
+      0.03799998760223389,
+      0.03500000014901161,
+      0.017999887466430664
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U17_L_cartridge.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U17_L_cartridge"
+    ],
+    "dimensionsBlenderMetres": [
+      0.041999995708465576,
+      0.041999995708465576,
+      0.08899998664855957
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U18_L_cartridge_cap.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U18_L_cartridge_cap"
+    ],
+    "dimensionsBlenderMetres": [
+      0.046000003814697266,
+      0.046000003814697266,
+      0.01399993896484375
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U19_L_cartridge_holder.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U19_L_cartridge_holder"
+    ],
+    "dimensionsBlenderMetres": [
+      0.050999999046325684,
+      0.029000014066696167,
+      0.03399991989135742
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U17_R_cartridge.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U17_R_cartridge"
+    ],
+    "dimensionsBlenderMetres": [
+      0.041999995708465576,
+      0.041999995708465576,
+      0.08899998664855957
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U18_R_cartridge_cap.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U18_R_cartridge_cap"
+    ],
+    "dimensionsBlenderMetres": [
+      0.046000003814697266,
+      0.046000003814697266,
+      0.01399993896484375
+    ],
+    "unitScale": 1,
+    "standalone": true
+  },
+  {
+    "file": "models/U19_R_cartridge_holder.blend",
+    "role": "belt_part",
+    "objects": [
+      "BRK_U19_R_cartridge_holder"
+    ],
+    "dimensionsBlenderMetres": [
+      0.050999999046325684,
+      0.029000014066696167,
+      0.03399991989135742
+    ],
+    "unitScale": 1,
+    "standalone": true
+  }
+]

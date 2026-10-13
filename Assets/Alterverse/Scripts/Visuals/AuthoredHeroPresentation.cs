@@ -127,6 +127,8 @@ namespace Alterverse.Visuals
             BrakkForearmTrim.Apply(instance.transform, hero);
             BrakkFistAppearance.Apply(instance.transform, hero);
             if (!componentModelApplied) HeroBootPresentation.Apply(instance.transform, hero);
+            BrakkForearmTrim.ApplyLegs(instance.transform, hero);
+            BrakkUtilityBeltAppearance.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
             return true;
         }
@@ -1013,3 +1015,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

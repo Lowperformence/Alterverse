@@ -20,6 +20,8 @@ namespace Alterverse.Visuals
 
         public static void Apply(Transform model,HeroId hero)
         {
+            // Brakk now keeps smooth arms and legs; his equipment has separate authored parts.
+            if(hero==HeroId.Rook||model==null)return;
             if(model.GetComponent<HeroLimbTechDetails>()!=null)return;
             SkinnedMeshRenderer anatomy=null;
             foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -37,8 +39,7 @@ namespace Alterverse.Visuals
             Matrix4x4[] bind=source.bindposes;
             foreach(string side in new[]{"L","R"})
             {
-                // Brakk's arms remain smooth; keep his leg details and the other
-                // heroes' arm panels. Nerok shares the asset, but has his own hero id.
+                // Nerok shares the imported asset, but retains his own limb details.
                 if(hero!=HeroId.Rook)
                 {
                     Panel("UpperArm"+side,"Forearm"+side,.64f,.16f);
@@ -201,4 +202,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

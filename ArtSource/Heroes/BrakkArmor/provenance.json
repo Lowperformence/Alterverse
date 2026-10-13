@@ -1,0 +1,40 @@
+{
+  "hero": "Brakk Orun",
+  "heroId": "Rook",
+  "revision": "brakk-armor-concept-01-20261012",
+  "completedOn": "2026-10-13",
+  "newGeometry": {
+    "authoredInThisTask": true,
+    "generator": "Tools/BrakkArmor/build_armor.py",
+    "plateModules": 18,
+    "armorSolids": 126,
+    "beltSolids": 34,
+    "externalMeshesOrTexturesForNewParts": false
+  },
+  "conceptImage": {
+    "generator": "OpenAI image_gen built-in",
+    "initialPrompt": "concept-prompt.txt",
+    "editPrompt": "concept-edit-prompt.txt",
+    "selectedImage": "BrakkArmor-artistic-concept.png",
+    "sha256": "eff26a39efc14b2068b8d3f6d3a609da062147357ac61f913e323383f4b88f0e",
+    "purpose": "Artistic visualization; geometry and dimensions are defined by the Blender files."
+  },
+  "inheritedReference": {
+    "repository": "Lowperformence/Alterverse",
+    "source": "ArtSource/Heroes/Rook.blend",
+    "gitBlob": "98629c674d44af3832bfb51cda004d1575c18c14",
+    "sha256": "9e07ad699835710bf3b845e2fa417ac4f6ffa70fd2560ec98ba997d541784c4a",
+    "existingFists": "ArtSource/Heroes/BrakkFists/BrakkFists-assembly.blend",
+    "originalSourceModified": false
+  },
+  "integration": {
+    "branch": "dev/vertical-slice",
+    "removedOldLegAndHipOverlays": true,
+    "utilityBeltIntegrated": true,
+    "fullArmorIntegrated": false,
+    "nerokModified": false,
+    "gameplayCollidersAdded": false
+  },
+  "validation": "validation.json",
+  "unityEditorExecuted": false
+}
