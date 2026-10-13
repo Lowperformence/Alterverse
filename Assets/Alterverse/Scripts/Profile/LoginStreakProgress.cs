@@ -18,7 +18,7 @@ namespace Alterverse.Profile
             }
         }
 
-        // Show today's position, not a stale saved streak while today's grant is pending.
+        // Show today's position while the player has not claimed today's reward yet.
         // Keep the saved claim markers unchanged until the atomic reward transaction.
         public static int DayForDisplay(int today, int yesterday, int previous, int streak)
         {
@@ -27,9 +27,11 @@ namespace Alterverse.Profile
         }
         public static bool ReceivedToday => AccountProfilePrefs.GetInt(DayKey, 0) == DailyCalendar.Today;
         public static bool ClockBehind => AccountProfilePrefs.GetInt(DayKey, 0) > DailyCalendar.Today;
+        public static bool CanClaimToday => AccountProfilePrefs.GetInt(DayKey, 0) < DailyCalendar.Today;
 
         // Absolute values are committed together: recovery cannot add a reward a second time.
-        public static int GrantForToday()
+        // Call only in response to the player's Claim action, never on login or menu update.
+        public static int ClaimForToday()
         {
             ProfileTransaction.Recover();
             DateTime date = DailyCalendar.BerlinDate(DateTime.UtcNow);
@@ -53,3 +55,4 @@ namespace Alterverse.Profile
         }
     }
 }
+

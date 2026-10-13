@@ -1,7 +1,7 @@
 # Daily map quest and login streak
 
 - New daily mission: win on five different arena variants, then claim 15 earned shards. Repeated victories on one map count once; defeats do not count. The active match arena is recorded, including shuffled and cooperative arenas.
-- Daily login rewards are granted automatically in the visible main menu: days 1–7 award 1, 3, 6, 12, 13, 14, 15 earned shards. Day 8 starts a new cycle. Missing a full Berlin calendar day resets the cycle to day 1. The display derives today's position from the last claim date, so a missed day also resets the visible series before today's automatic grant.
+- Daily login rewards must be collected with the CLAIM button on the current day's tile in DAILY. Opening or staying in the main menu does not grant shards or advance the series. Days 1–7 award 1, 3, 6, 12, 13, 14, 15 earned shards. After claiming day 7, day 1 becomes available at the next Berlin midnight; only one login reward can be claimed per Berlin calendar day. Missing a full Berlin calendar day resets the cycle to day 1. Existing claim dates and streak positions are preserved, including rewards already received automatically before this change.
 - Both systems use midnight Europe/Berlin, including summer time. Moving the clock behind the stored day pauses new progress/rewards.
 
 ## Persistence and security
@@ -19,3 +19,10 @@ These protections do not make client-reported offline progress authoritative. De
 Unity validation entry point: `DIMENSIONS FRONT > Validation > Daily quests and login streak`. It checks distinct maps, losses, invalid map values, daily repeat/clock rollback, missing days, cycle wrap, reward amounts and Berlin date transitions. These checks do not change the player's saved profile.
 
 Unity compilation, editor validation and Android runtime/UI checks were not run in this environment because Unity is unavailable. Before release, run the editor check and test map wins/claims, a repeated claim, login after restarting, account switching, cloud conflicts, all seven days and midnight rollover on a test profile.
+
+## Manual login claims — 2026-10-13
+
+- Removed the automatic login payout from the main menu update. The current day's tile now has an explicit CLAIM button and highlights the available reward. Received tiles stay claimed until Berlin midnight. The header shows the next day, including DAY 1 after day 7.
+- Extended the editor rule checks to cover two complete cycles and to prevent claiming day 1 on the same day as day 7.
+- C# compilation and a local harness passed 134 checks using the actual login/calendar/transaction code and the extracted daily UI method, with Unity and profile storage dependencies stubbed. Scenarios include opening the menu without a payout, manual claims for every reward, duplicate clicks, reloaded claim markers, day 7 to day 1, missed days and clock rollback. The existing editor rule checks also passed in this harness. A full Unity build and visual/device verification remain unrun here.
+

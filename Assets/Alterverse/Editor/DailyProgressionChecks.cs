@@ -28,11 +28,26 @@ namespace Alterverse.Editor
             Check(LoginStreakProgress.NextDay(20260102, 20260101, 20260101, 7) == 1, "Seven-day cycle resets");
             Check(LoginStreakProgress.NextDay(20260102, 20260101, 20260101, 99) == 1, "Corrupt streak resets");
             Check(LoginStreakProgress.NextDay(20260103, 20260102, 20260101, 6) == 1, "Exactly one missed day resets payout");
-            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260101, 6) == 1, "Missed day resets display before grant");
-            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 1) == 1, "Reset display remains day one after grant");
-            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260102, 4) == 5, "Consecutive login displays next day before grant");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260101, 6) == 1, "Missed day resets display before claim");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 1) == 1, "Reset display remains day one after claim");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260102, 4) == 5, "Consecutive login displays next day before claim");
             Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 5) == 5, "Same-day display preserves received day");
             Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260102, 7) == 1, "Display wraps after seven days");
+            Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260103, 7) == 7, "Claimed day seven stays received until tomorrow");
+            Check(LoginStreakProgress.NextDay(20260103, 20260102, 20260103, 7) == 0, "Day seven cannot unlock a second claim today");
+            DateTime claimDate = new DateTime(2026, 1, 1);
+            int previousClaim = 0, claimedDay = 0;
+            for (int i=0; i<14; i++)
+            {
+                int today = DailyCalendar.Stamp(claimDate.AddDays(i));
+                int yesterday = DailyCalendar.Stamp(claimDate.AddDays(i-1));
+                int expected = i%LoginStreakProgress.CycleDays+1;
+                Check(LoginStreakProgress.DayForDisplay(today, yesterday, previousClaim, claimedDay) == expected, "Two cycles show the available claim day");
+                claimedDay = LoginStreakProgress.NextDay(today, yesterday, previousClaim, claimedDay);
+                previousClaim = today;
+                Check(claimedDay == expected, "Two complete seven-day claim cycles");
+                Check(LoginStreakProgress.NextDay(today, yesterday, previousClaim, claimedDay) == 0, "Repeat claim blocked throughout both cycles");
+            }
             Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 20260104, 4) == 4, "Clock rollback preserves display without granting");
             Check(LoginStreakProgress.DayForDisplay(20260103, 20260102, 0, 0) == 1, "New profile displays day one");
             Check(LoginStreakProgress.NextDay(20260201, 20260131, 20260131, 4) == 5, "Month boundary continues");
@@ -54,3 +69,4 @@ namespace Alterverse.Editor
         }
     }
 }
+

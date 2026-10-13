@@ -146,7 +146,6 @@ namespace Alterverse.UI
         private void Update()
         {
             if (!visible || suspended) return;
-            LoginStreakProgress.GrantForToday();
             EdgegapOnlineFlow onlineFlow = EdgegapOnlineFlow.Instance;
             if (page == Page.Play && onlineFlow != null &&
                 (onlineFlow.Busy || onlineFlow.IsSearching || !string.IsNullOrEmpty(onlineFlow.LastError)))
@@ -1066,22 +1065,32 @@ namespace Alterverse.UI
         }
         private void DrawQuests()
         {
-            Heading("Daily missions","Daily progress resets at 00:00 Europe/Berlin. Claim completed missions here.");
+            Heading("Daily missions","Claim your daily login reward and completed missions here. Resets at 00:00 Europe/Berlin.");
             float width=Mathf.Min(960,ContentWidth);
             float x=Left+(ContentWidth-width)*.5f;
             theme.Panel(new Rect(x,208,width,100));
-            theme.Label(new Rect(x+18,216,width-36,24),"DAILY LOGIN STREAK",theme.Heading);
+            theme.Label(new Rect(x+18,216,width-316,24),"DAILY LOGIN STREAK",theme.Heading);
+            int currentDay=LoginStreakProgress.CurrentDay;
+            bool received=LoginStreakProgress.ReceivedToday;
+            bool canClaim=LoginStreakProgress.CanClaimToday;
+            bool clockBehind=LoginStreakProgress.ClockBehind;
+            string loginStatus=clockBehind?"CHECK DEVICE DATE":received?$"NEXT: DAY {currentDay%LoginStreakProgress.CycleDays+1} TOMORROW":"CLAIM ONCE PER DAY";
+            theme.Label(new Rect(x+width-298,216,280,24),loginStatus,theme.Small,true);
             float cellW=(width-36)/LoginStreakProgress.CycleDays;
             for(int day=1;day<=LoginStreakProgress.CycleDays;day++)
             {
-                Rect cell=new Rect(x+18+(day-1)*cellW,246,cellW-6,48);
-                bool current=LoginStreakProgress.ReceivedToday&&LoginStreakProgress.CurrentDay==day;
+                Rect cell=new Rect(x+18+(day-1)*cellW,246,cellW-6,52);
+                bool current=currentDay==day;
                 FrontEndTheme.Fill(cell,current?FrontEndTheme.Raised:FrontEndTheme.Surface);
                 theme.Center(new Rect(cell.x,cell.y,cell.width,22),$"DAY {day}  •  {LoginStreakProgress.RewardForDay(day)} SHARDS");
-                theme.Center(new Rect(cell.x,cell.y+23,cell.width,20),current?"RECEIVED":day<LoginStreakProgress.CurrentDay?"DONE":"LOGIN DAILY");
+                if(current&&!received)
+                {
+                    if(theme.Action(new Rect(cell.x+4,cell.y+24,cell.width-8,26),"CLAIM",true,enabled:canClaim))
+                        LoginStreakProgress.ClaimForToday();
+                }
+                else
+                    theme.Center(new Rect(cell.x,cell.y+25,cell.width,20),current?"RECEIVED":day<currentDay?"DONE":"LOCKED");
             }
-            if(LoginStreakProgress.ClockBehind)
-                theme.Label(new Rect(x+18,286,width-36,20),"Check your device date. Daily rewards paused until the saved day.",theme.Small,true);
             for(int i=0;i<PlayerChallengeContent.Daily.Length;i++)
             {
                 ChallengeDef quest=PlayerChallengeContent.Daily[i];
@@ -1409,3 +1418,4 @@ namespace Alterverse.UI
         }
     }
 }
+
