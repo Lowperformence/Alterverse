@@ -46,7 +46,11 @@ namespace Alterverse.Shop
             new AvatarShopItem(39, "DIMENSION HEART", "COLLISION FRONT", ShardPacks.CosmeticPrice("avatar_39")),
             new AvatarShopItem(40, "LOOT GOBLIN", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_40")),
             new AvatarShopItem(41, "ONE MORE MATCH", "COMIC FRONT", ShardPacks.CosmeticPrice("avatar_41")),
-            new AvatarShopItem(42, "COMEBACK SPARK", "RESOLVE", ShardPacks.CosmeticPrice("avatar_42"))
+            new AvatarShopItem(42, "COMEBACK SPARK", "RESOLVE", ShardPacks.CosmeticPrice("avatar_42")),
+            new AvatarShopItem(43, "GOOD GAME ROYAL", "SPORTSMANSHIP", ShardPacks.CosmeticPrice("avatar_43")),
+            new AvatarShopItem(44, "GANGSTER SKULL", "STREET LEGEND", ShardPacks.CosmeticPrice("avatar_44")),
+            new AvatarShopItem(45, "STREET RABBIT", "STREET LEGEND", ShardPacks.CosmeticPrice("avatar_45")),
+            new AvatarShopItem(46, "NEON CAT", "MIDNIGHT", ShardPacks.CosmeticPrice("avatar_46"))
         };
 
         public static bool TryGet(int avatarId, out AvatarShopItem item)

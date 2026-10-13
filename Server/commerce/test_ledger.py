@@ -91,6 +91,24 @@ class LedgerTests(unittest.TestCase):
                 self.assertNotIn(avatar_id,restarted.wallet('account-b')['avatars'])
         self.assertEqual(self.ledger.wallet('account-a')['balance'],1000)
 
+    def test_new_shop_profile_avatars_cost_450_and_unlock_once(self):
+        account = 'account-a'
+        self.ledger.fulfill(account, 'dimensions_shards_5500', 'new-profile-avatar-token', self.valid)
+        for index, avatar_id in enumerate((43, 44, 45, 46)):
+            with self.subTest(avatar_id=avatar_id):
+                sku = f'avatar_{avatar_id}'
+                self.assertEqual(ITEMS[sku]['price'], 450)
+                before = self.ledger.wallet(account)
+                bought = self.ledger.purchase(account, sku, f'{600 + index:032x}', before['profileRevision'])
+                self.assertEqual(bought['balance'], before['balance'] - 450)
+                self.assertIn(avatar_id, bought['avatars'])
+                repeated = self.ledger.purchase(account, sku, f'{700 + index:032x}', bought['profileRevision'])
+                self.assertEqual(repeated['balance'], bought['balance'])
+        restored = Ledger(self.ledger.path).wallet(account)
+        self.assertEqual(restored['balance'], 3700)
+        for avatar_id in (43, 44, 45, 46):
+            self.assertIn(avatar_id, restored['avatars'])
+
     def test_new_avatar_rejects_insufficient_shards(self):
         with self.assertRaises(ValueError):self.ledger.buy('account-a','avatar_17')
         snapshot=self.ledger.wallet('account-a')
