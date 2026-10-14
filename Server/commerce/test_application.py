@@ -4,7 +4,8 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
+from google.api_core.exceptions import FailedPrecondition
 from application import CommerceApplication
 
 
@@ -88,6 +89,23 @@ class ApplicationTests(unittest.TestCase):
         self.assertEqual(result['body'], {'fulfilled': False})
         self.assertEqual(self.app.ledger.wallet('account-a')['balance'], 0)
 
+    def test_missing_chat_index_returns_actionable_message_without_provider_details(self):
+        private='The query requires an index: https://console.firebase.google.com/project/private-project?token=secret'
+        with patch.object(self.app.social,'dispatch',side_effect=FailedPrecondition(private)):
+            result=self.request('/social/chat/read')
+        self.assertEqual(result['status'],'503 Service Unavailable')
+        self.assertEqual(result['body']['code'],'CHAT_INDEX_REQUIRED')
+        self.assertIn('database index',result['body']['message'])
+        self.assertNotIn('private-project',json.dumps(result['body']))
+        self.assertNotIn('secret',json.dumps(result['body']))
+        self.assertEqual(result['headers']['Cache-Control'],'no-store')
+
+    def test_other_database_preconditions_do_not_claim_a_missing_index(self):
+        with patch.object(self.app.social,'dispatch',side_effect=FailedPrecondition('transaction precondition')):
+            result=self.request('/social/chat/read')
+        self.assertEqual(result['status'],'503 Service Unavailable')
+        self.assertEqual(result['body'],{'fulfilled':False})
+
     def test_invalid_payloads_are_rejected_before_google(self):
         for raw in (b'[]', b'null', b'"string"', b'{', b'{"productId":[],"purchaseToken":"x"}',
                     b'{"productId":"unknown","purchaseToken":"x"}',
@@ -122,3 +140,4 @@ class ApplicationTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

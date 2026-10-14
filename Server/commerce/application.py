@@ -3,6 +3,8 @@ Never deploy with an authenticator that simply decodes an unsigned JWT or trusts
 """
 import json
 import hmac
+import logging
+from google.api_core.exceptions import FailedPrecondition
 from urllib.parse import quote
 from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 from social import Social, SocialForbidden
@@ -103,10 +105,20 @@ class CommerceApplication:
                 start_response('400 Bad Request', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
                 return [body]
             body = b'{"fulfilled":false}'; start_response('400 Bad Request', [('Content-Type', 'application/json')])
+        except FailedPrecondition as error:
+            # Never expose Firestore's console URL, project identifiers or raw errors.
+            if env.get('PATH_INFO', '').startswith('/social/chat/') and 'index' in str(error).casefold():
+                logging.error('Clan chat requires Firestore index setup.')
+                body = json.dumps({'fulfilled': False, 'code': 'CHAT_INDEX_REQUIRED',
+                    'message': 'Clan chat needs a server database index. The game administrator must finish chat setup.'}).encode()
+            else:
+                body = b'{"fulfilled":false}'
+            start_response('503 Service Unavailable', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
         except Exception:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+
 
 
 

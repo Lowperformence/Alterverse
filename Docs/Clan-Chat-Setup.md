@@ -40,6 +40,17 @@ Consent version/time stays for the account's lifetime; blocks and sanctions rema
 
 ## Deployment, indexes and deletion
 
+If the UI shows `Connecting to clan chat…` and `Social server unavailable`, an unconfigured Firestore composite index is one possible cause. After the diagnostic backend update, an actual missing-index error displays `Clan chat needs a server database index` instead of the generic outage message. Other outages remain generic; do not infer the cause from the screenshot alone.
+
+On the operator's machine or Cloud Shell, with authenticated `gcloud`, run:
+
+```bash
+python3 Tools/ClanChat/setup_firestore.py
+python3 Tools/ClanChat/setup_firestore.py --execute
+```
+
+The first command inspects only. The script resolves the Cloud Run project from the configured game endpoint (or accepts `--project PROJECT_ID`). The second command creates missing chat/outbox indexes and enables TTL, deriving the actual Firestore project and namespace from the existing service. Existing indexes are retained. Index creation may take several minutes. To also rebuild the existing backend with the diagnostic update, use `--execute --deploy`; deployment is blocked until the required indexes are READY and preserves environment variables and secret references. Operator permissions for indexes/TTL and Cloud Run deployment are required. This script does not configure the administrator account or SMTP credentials.
+
 Rebuild/deploy the existing account image and updated Unity build together. Old clients cannot create new clans on an enabled-chat server without active agreement. Completed creation receipts remain idempotent when retried with consent. Back up durable storage before upgrading.
 
 SQLite creates tables in the existing account database. Firestore creates namespace-prefixed collections through server credentials. `Server/commerce/firestore-chat.rules` is a deny-all reference for a database used exclusively by this account backend; review existing rules before applying it to a shared database. Player SDKs must not access these collections directly.
@@ -81,3 +92,4 @@ The broader existing backend suite has five pre-existing failures involving zero
 - `Server/commerce/test_clan_chat.py`, `test_social.py`, `test_firestore_social.py`
 - `Tools/ClanChat/Regression/EngineStubs.cs`, `Regression.cs`, `run.py`
 - `Docs/Clan-Chat-Setup.md`, `Docs/Social-System.md`
+
