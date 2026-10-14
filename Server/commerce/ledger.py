@@ -55,7 +55,7 @@ def validate_profile(entries):
             if kind != 0: raise ValueError('Invalid daily progression type')
             if key == 'DF_LoginStreakIndex_v1' and not 1 <= number <= 7:
                 raise ValueError('Invalid login streak')
-            if key == 'DF_DailyQuestWonMaps_v1' and not 0 <= number <= (1 << 13) - 1:
+            if key == 'DF_DailyQuestWonMaps_v1' and not 0 <= number <= (1 << 14) - 1:
                 raise ValueError('Invalid won-map mask')
             if key == 'DF_LoginStreakDay_v1':
                 try: claimed_day = date(number // 10000, number // 100 % 100, number % 100)
@@ -249,3 +249,4 @@ class Ledger:
             if row.rowcount != 1: raise ValueError('Insufficient shards')
             db.execute('INSERT INTO cosmetic VALUES (?,?)', (account, sku))
             return self.snapshot(db, account)
+

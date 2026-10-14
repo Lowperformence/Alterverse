@@ -8,16 +8,31 @@ namespace Alterverse.Visuals
     public static class ExoplanetArenaProfile
     {
         public static string SurfaceResource(ArenaVariant variant)=>variant switch {
-            ArenaVariant.Wasp76b=>"Dark00", ArenaVariant.Trappist1e=>"Earth", _=>variant.ToString() };
-        public static string MonsterName(ArenaVariant variant)=>variant==ArenaVariant.Wasp76b?"FERROX":"VESPERA";
-        public static Color Energy(ArenaVariant variant)=>variant==ArenaVariant.Wasp76b
-            ?new Color(1f,.48f,.12f):new Color(.20f,.92f,.78f);
+            ArenaVariant.Wasp76b=>"Dark00", ArenaVariant.Trappist1e=>"Earth", ArenaVariant.Toi715b=>"Mars", _=>variant.ToString() };
+        public static string MonsterName(ArenaVariant variant)=>variant switch {
+            ArenaVariant.Wasp76b=>"FERROX", ArenaVariant.Toi715b=>"RUBROX", _=>"VESPERA" };
+        public static Color Energy(ArenaVariant variant)=>variant switch {
+            ArenaVariant.Wasp76b=>new Color(1f,.48f,.12f),
+            ArenaVariant.Toi715b=>new Color(.91f,.79f,.49f), _=>new Color(.20f,.92f,.78f) };
+        public static Color RockTint(ArenaVariant variant)=>variant switch {
+            ArenaVariant.Wasp76b=>new Color(.34f,.23f,.16f),
+            ArenaVariant.Toi715b=>new Color(.45f,.17f,.10f), _=>new Color(.13f,.26f,.27f) };
 
         public static Color GroundColor(ArenaVariant variant,float x,float z,float value)
         {
             // Mirror mineral noise across the team axis; never tint one base as the hot/cold side.
             x=Mathf.Abs(x);
             float mineral=Mathf.PerlinNoise(x*.095f+37f,z*.095f+91f);
+            if(variant==ArenaVariant.Toi715b)
+            {
+                // Fictional rust/ivory biome inspired by the reference illustration.
+                // Only colour changes: the shared surface field and colliders remain authoritative.
+                Color rust=Color.Lerp(new Color(value*1.48f,value*.49f,value*.30f),
+                    new Color(value*1.12f,value*.36f,value*.24f),mineral);
+                float bands=Mathf.Sin(z*.23f+Mathf.PerlinNoise(x*.042f+11f,z*.065f+7f)*3.2f)*.5f+.5f;
+                float ivory=Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(.76f,.96f,bands))*.63f;
+                return Color.Lerp(rust,new Color(value*1.60f,value*1.43f,value*1.18f),ivory);
+            }
             if(variant==ArenaVariant.Wasp76b)
             {
                 Color iron=new(value*.82f,value*.84f,value*.86f);
@@ -44,6 +59,8 @@ namespace Alterverse.Visuals
         {
             float clouds=Mathf.PerlinNoise(x*6f+41f,z*9f+17f);
             clouds=.65f*clouds+.35f*Mathf.PerlinNoise(x*17f+93f,z*23f+51f);
+            if(variant==ArenaVariant.Toi715b)
+                return Color.Lerp(new Color(.065f,.023f,.019f),new Color(.29f,.19f,.14f),clouds*clouds);
             if(variant==ArenaVariant.Wasp76b)
                 return Color.Lerp(new Color(.040f,.035f,.033f),new Color(.23f,.105f,.040f),clouds*clouds);
             float dusk=Mathf.SmoothStep(0f,1f,z);
@@ -52,3 +69,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

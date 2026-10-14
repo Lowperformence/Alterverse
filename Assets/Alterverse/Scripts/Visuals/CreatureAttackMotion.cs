@@ -11,7 +11,7 @@ namespace Alterverse.Visuals
         readonly List<Pose> owned=new();
         Transform body,left,right,leftElbow,rightElbow,leftHand,rightHand,head,tail;
         Health health; Vector3 aim; float started=-100,contact=.22f; int serial; bool posed;
-        enum Shape { None,Scorpion,Spider,Bear,Octopus,Mech,Ferrox,Vespera }
+        enum Shape { None,Scorpion,Spider,Bear,Octopus,Mech,Ferrox,Vespera,Rubrox }
         Shape shape;
         MechMachineGunVisual machineGun;
         public float ContactTime=>contact;
@@ -53,6 +53,8 @@ namespace Alterverse.Visuals
             {shape=Shape.Ferrox;left=Find("DF_FerroxClaw_L");right=Find("DF_FerroxClaw_R");}
             else if((body=Find("DF_VesperaBody"))!=null)
             {shape=Shape.Vespera;left=Find("DF_VesperaGill_L");right=Find("DF_VesperaGill_R");}
+            else if((body=Find("DF_RubroxBody"))!=null)
+            {shape=Shape.Rubrox;left=Find("DF_RubroxCrown_L");right=Find("DF_RubroxCrown_R");}
             Keep(body);Keep(left);Keep(right);Keep(leftElbow);Keep(rightElbow);Keep(leftHand);Keep(rightHand);Keep(head);Keep(tail);
         }
         void Restore(){if(!posed)return;foreach(var p in owned)if(p.Bone!=null){p.Bone.localRotation=p.Rotation;p.Bone.localPosition=p.Position;}posed=false;}
@@ -111,8 +113,14 @@ namespace Alterverse.Visuals
                 Rotate(left,u,C(-20,9,14));Rotate(right,u,C(20,-9,-14));
                 Rotate(body,r,C(-6,7,10));body.position+=f*C(-.04f,.09f,.12f);
             }
+            else if(shape==Shape.Rubrox)
+            {
+                Rotate(body,r,C(-8,10,14));body.position+=f*C(-.05f,.11f,.15f);
+                Rotate(left,r,C(-10,12,16));Rotate(right,r,C(-10,12,16));
+            }
         }
         public void Seek(float elapsed){started-=Mathf.Max(0,elapsed);}
         void OnDisable(){Restore();started=-100;}
     }
 }
+

@@ -170,6 +170,7 @@ namespace Alterverse.Visuals
                 ArenaVariant.Dark00=>new Color(.065f,.070f,.090f),
                 ArenaVariant.Wasp76b=>new Color(.34f,.23f,.16f),
                 ArenaVariant.Trappist1e=>new Color(.13f,.26f,.27f),
+                ArenaVariant.Toi715b=>ExoplanetArenaProfile.RockTint(ArenaVariant.Toi715b),
                 _=>(Color?)null
             };
             if(tint.HasValue)
@@ -217,4 +218,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

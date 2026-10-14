@@ -34,7 +34,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         if(ArenaVariantRuntime.IsExoplanet)
         {
             bool iron=ArenaVariantRuntime.IsWasp76b;
-            Color tint=iron?new Color(.34f,.23f,.16f):new Color(.13f,.26f,.27f);
+            Color tint=ExoplanetArenaProfile.RockTint(ArenaVariantRuntime.Current);
             darkRegolith.color=tint*.52f;darkRegolith.SetColor("_BaseColor",darkRegolith.color);
             rimMat.color=tint;rimMat.SetColor("_BaseColor",tint);
             foreach(Material material in new[]{regolith,darkRegolith,rimMat})
@@ -292,5 +292,6 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
+
 
 

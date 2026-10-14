@@ -38,6 +38,7 @@ namespace Alterverse.Visuals
                 ArenaVariant.GJ504b=>MonsterAttackStyle.Stone,
                 ArenaVariant.Wasp76b=>MonsterAttackStyle.Iron,
                 ArenaVariant.Trappist1e=>MonsterAttackStyle.Bio,
+                ArenaVariant.Toi715b=>MonsterAttackStyle.Bio,
                 _=>MonsterAttackStyle.Mech };
         }
         static Color Tint(GameObject actor,MonsterAttackStyle style)
@@ -54,7 +55,7 @@ namespace Alterverse.Visuals
                 case MonsterAttackStyle.Tentacle:return new Color(.12f,.65f,1f);
                 case MonsterAttackStyle.Orb:return new Color(1f,.05f,.025f);
                 case MonsterAttackStyle.Iron:return new Color(1f,.56f,.20f);
-                case MonsterAttackStyle.Bio:return new Color(.15f,.91f,.71f);
+                case MonsterAttackStyle.Bio:return ArenaVariantRuntime.IsToi715b?ExoplanetArenaProfile.Energy(ArenaVariant.Toi715b):new Color(.15f,.91f,.71f);
                 default:
                     if(ArenaVariantRuntime.IsExoplanet)return ExoplanetArenaProfile.Energy(ArenaVariantRuntime.Current);
                     if(ArenaVariantRuntime.IsNeptune)return new Color(.12f,.65f,1f);
@@ -196,3 +197,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

@@ -30,20 +30,21 @@ namespace Alterverse.Visuals
             if(built)return;
             built=true;Variant=variant;health=GetComponent<Health>();lastPosition=transform.position;
             bool iron=variant==ArenaVariant.Wasp76b;
-            shell=Mat("Shell",iron?new Color(.27f,.29f,.31f):new Color(.095f,.26f,.28f),iron?.68f:.03f,iron?.38f:.40f);
+            bool rust=variant==ArenaVariant.Toi715b;
+            shell=Mat("Shell",rust?new Color(.43f,.14f,.075f):iron?new Color(.27f,.29f,.31f):new Color(.095f,.26f,.28f),iron?.68f:.03f,iron?.38f:.40f);
             dark=Mat("Joints",iron?new Color(.07f,.075f,.08f):new Color(.055f,.11f,.14f),iron?.54f:.02f,.26f);
-            edge=Mat("Edges",iron?new Color(.60f,.31f,.14f):new Color(.39f,.22f,.43f),iron?.58f:.02f,.30f);
+            edge=Mat("Edges",rust?new Color(.82f,.73f,.55f):iron?new Color(.60f,.31f,.14f):new Color(.39f,.22f,.43f),iron?.58f:.02f,.30f);
             Color energy=ExoplanetArenaProfile.Energy(variant);
             Color faction=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             glow=Mat("Energy",Color.Lerp(energy,faction,.18f),.02f,.45f,energy*.85f);
-            if(!iron)crest=Mat("AmberCrest",new Color(.81f,.42f,.15f),.03f,.38f,new Color(.9f,.37f,.07f)*.15f);
+            if(!iron)crest=Mat("Crest",rust?new Color(.91f,.84f,.68f):new Color(.81f,.42f,.15f),.03f,.38f,rust?Color.black:new Color(.9f,.37f,.07f)*.15f);
             if(shell==null||dark==null||edge==null||glow==null||!iron&&crest==null){enabled=false;return;}
             foreach(Material material in new[]{shell,dark,edge,crest})
                 if(material!=null)AuthoredHotZoneArt.ConfigureSurface(material,iron?"Machine":"Xeno");
             sphere=MakeSphere();meshes.Add(sphere);
             plate=ProductionMeshFactory.BeveledBox(); // Project-owned shared mesh, never destroy it here.
-            body=Pivot(iron?"DF_FerroxBody":"DF_VesperaBody",transform,new Vector3(0,-.10f,0));
-            if(iron)BuildFerrox();else BuildVespera();
+            body=Pivot(rust?"DF_RubroxBody":iron?"DF_FerroxBody":"DF_VesperaBody",transform,new Vector3(0,-.10f,0));
+            if(rust)BuildRubrox();else if(iron)BuildFerrox();else BuildVespera();
             Flush();
         }
 
@@ -94,6 +95,27 @@ namespace Alterverse.Visuals
             for(int i=0;i<6;i++)
                 Part("BioNode",body,sphere,glow,new Vector3((i%2==0?-1:1)*.61f,.20f,-.68f+(i/2)*.44f),new Vector3(.08f,.065f,.11f));
             Muzzle=Pivot("DF_VesperaMuzzle",body,new Vector3(0,.08f,1.57f));
+        }
+
+        void BuildRubrox()
+        {
+            Part("RustCarapace",body,sphere,shell,new Vector3(0,.08f,-.16f),new Vector3(1.72f,.90f,2.12f));
+            Part("Underbody",body,sphere,dark,new Vector3(0,-.18f,-.10f),new Vector3(1.42f,.40f,1.85f));
+            Part("Brow",body,sphere,shell,new Vector3(0,.04f,.91f),new Vector3(1.23f,.53f,.84f));
+            Part("IvoryJaw",body,sphere,edge,new Vector3(0,-.12f,1.10f),new Vector3(.88f,.20f,.64f));
+            for(int i=0;i<4;i++)
+                Part("IvoryBackBand",body,plate,edge,new Vector3(0,.44f-i*.03f,-.75f+i*.36f),new Vector3(1.28f-i*.06f,.08f,.13f),Quaternion.Euler(-10+i*5,0,0));
+            for(int side=-1;side<=1;side+=2)
+            {
+                for(int i=0;i<3;i++)BuildLeg(side,i,new Vector3(side*.70f,-.15f,-.70f+i*.66f),false);
+                Part("Eye",body,sphere,glow,new Vector3(side*.37f,.20f,1.23f),new Vector3(.15f,.10f,.09f));
+                Transform horn=Pivot(side<0?"DF_RubroxCrown_L":"DF_RubroxCrown_R",body,new Vector3(side*.42f,.32f,.61f));
+                Part("CrownBase",horn,sphere,edge,new Vector3(side*.12f,.17f,0),new Vector3(.25f,.55f,.26f),Quaternion.Euler(8,0,-side*24));
+                for(int tine=0;tine<3;tine++)
+                    Part("CrownTine",horn,sphere,crest,new Vector3(side*(.20f+tine*.11f),.38f+tine*.04f,-tine*.19f),
+                        new Vector3(.12f,.50f-tine*.07f,.15f),Quaternion.Euler(-18-tine*12,side*14,-side*28));
+            }
+            Muzzle=Pivot("DF_RubroxMuzzle",body,new Vector3(0,.02f,1.49f));
         }
 
         void BuildLeg(int side,int index,Vector3 position,bool iron)
@@ -165,3 +187,4 @@ namespace Alterverse.Visuals
         {foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(Material material in materials)if(material!=null)Destroy(material);}
     }
 }
+

@@ -139,6 +139,11 @@ namespace Alterverse.Visuals
                 bowlColor=new Color(.115f,.043f,.027f,1f);
                 rimColor=new Color(.43f,.19f,.10f,1f);
             }
+            else if(ArenaVariantRuntime.IsToi715b)
+            {
+                bowlColor=new Color(.16f,.055f,.035f,1f);
+                rimColor=new Color(.56f,.28f,.17f,1f);
+            }
             else if(ArenaVariantRuntime.IsGreenPlanet)
             {
                 bowlColor=new Color(.045f,.073f,.044f,1f);
@@ -330,4 +335,5 @@ namespace Alterverse.Visuals
         private void OnDestroy()=>Clear();
     }
 }
+
 

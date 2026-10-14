@@ -52,7 +52,7 @@ namespace Alterverse.Visuals
             material.SetFloat("_MacroStrength",ArenaVariantRuntime.IsExoplanet?.42f:ArenaVariantRuntime.IsDiamondCore?.34f:ArenaVariantRuntime.IsKryon?.40f:.52f);
             material.SetFloat("_SurfaceMode",ground?0f:crater?1f:2f);
             material.SetFloat("_DetailScale",ArenaVariantRuntime.IsDiamondCore?.18f:ArenaVariantRuntime.IsKryon?.16f:ArenaVariantRuntime.IsMars?.34f:ArenaVariantRuntime.IsGJ504b?.21f:.27f); // Finer world-space detail, shared by ground, craters and cliffs.
-            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsWasp76b?.06f:ArenaVariantRuntime.IsTrappist1e?.14f:ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
+            material.SetFloat("_SandStrength",ArenaVariantRuntime.IsToi715b?.24f:ArenaVariantRuntime.IsWasp76b?.06f:ArenaVariantRuntime.IsTrappist1e?.14f:ArenaVariantRuntime.IsGJ504b?.46f:ArenaVariantRuntime.IsMars?.33f:
                 ArenaVariantRuntime.IsKryon?.13f:ArenaVariantRuntime.IsGreenPlanet?.20f:
                 ArenaVariantRuntime.IsEarth?.12f:ArenaVariantRuntime.IsPyraxis?.08f:ArenaVariantRuntime.IsNeptune?.10f:.27f);
             material.SetFloat("_RockStrength",ArenaVariantRuntime.IsGJ504b?.42f:ArenaVariantRuntime.IsPyraxis?.48f:ArenaVariantRuntime.IsNeptune?.40f:.34f);
@@ -118,4 +118,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

@@ -57,14 +57,14 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(restored['balance'],0) # daily rewards never credit the Google-paid wallet
 
     def test_invalid_daily_progression_rejected(self):
-        invalid=[number('DF_LoginStreakIndex_v1',0),number('DF_LoginStreakIndex_v1',8),number('DF_LoginStreakIndex_v1',True),text('DF_LoginStreakIndex_v1','7'),number('DF_DailyQuestWonMaps_v1',-1),number('DF_DailyQuestWonMaps_v1',8192),text('DF_DailyQuestWonMaps_v1','31'),number('DF_LoginStreakDay_v1',20260230),number('DF_LoginStreakDay_v1',99991231)]
+        invalid=[number('DF_LoginStreakIndex_v1',0),number('DF_LoginStreakIndex_v1',8),number('DF_LoginStreakIndex_v1',True),text('DF_LoginStreakIndex_v1','7'),number('DF_DailyQuestWonMaps_v1',-1),number('DF_DailyQuestWonMaps_v1',16384),text('DF_DailyQuestWonMaps_v1','31'),number('DF_LoginStreakDay_v1',20260230),number('DF_LoginStreakDay_v1',99991231)]
         for entry in invalid:
             with self.subTest(entry=entry), self.assertRaises(ValueError): self.ledger.save_profile('a',[entry],0)
         self.assertEqual([e['key'] for e in self.ledger.wallet('a')['profile']],[NAME_KEY])
         self.assertTrue(valid_player_name(profile_value(self.ledger.wallet('a'),NAME_KEY)))
 
     def test_exoplanet_selection_and_wins_survive_restart(self):
-        for arena in (11, 12):
+        for arena in (11, 12, 13):
             with self.subTest(arena=arena):
                 account='exoplanet-'+str(arena)
                 entries=[number('DF_SelectedArenaVariant',arena),number('DF_ArenaShuffle',0),
@@ -73,8 +73,8 @@ class ProfileTests(unittest.TestCase):
                 restored=Ledger(self.path).wallet(account)
                 for entry in entries:self.assertEqual(profile_value(restored,entry['key']),entry['number'])
                 self.assertEqual(restored['balance'],0)
-        self.ledger.save_profile('all-maps',[number('DF_DailyQuestWonMaps_v1',8191)],0)
-        self.assertEqual(profile_value(Ledger(self.path).wallet('all-maps'),'DF_DailyQuestWonMaps_v1'),8191)
+        self.ledger.save_profile('all-maps',[number('DF_DailyQuestWonMaps_v1',16383)],0)
+        self.assertEqual(profile_value(Ledger(self.path).wallet('all-maps'),'DF_DailyQuestWonMaps_v1'),16383)
 
     def test_login_marker_cannot_be_deleted_or_rewound(self):
         entries=[number('DF_LoginStreakDay_v1',20260102),number('DF_LoginStreakIndex_v1',2)]
@@ -285,3 +285,4 @@ class ProfileHttpTests(unittest.TestCase):
             self.assertEqual(self.request('/wallet/spend',data)['status'],'400 Bad Request')
 
 if __name__=='__main__':unittest.main()
+

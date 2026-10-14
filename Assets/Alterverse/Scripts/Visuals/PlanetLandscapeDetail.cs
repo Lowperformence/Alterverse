@@ -99,6 +99,8 @@ namespace Alterverse.Visuals
                     stone=new(.21f,.23f,.25f);edge=new(.56f,.30f,.14f);accent=new(.95f,.42f,.07f);organic=new(.28f,.19f,.13f);metal=.62f;polish=.34f;glow=.42f;break;
                 case ArenaVariant.Trappist1e:
                     stone=new(.095f,.21f,.23f);edge=new(.54f,.69f,.75f);accent=new(.13f,.78f,.68f);organic=new(.22f,.18f,.34f);polish=.40f;glow=.22f;break;
+                case ArenaVariant.Toi715b:
+                    stone=new(.45f,.15f,.09f);edge=new(.20f,.075f,.055f);accent=new(.84f,.77f,.62f);organic=new(.16f,.12f,.19f);polish=.20f;glow=0;break;
                 default:
                     stone=new(.12f,.14f,.16f);edge=new(.31f,.33f,.35f);accent=new(.43f,.46f,.47f);organic=new(.075f,.085f,.10f);glow=0;break;
             }
@@ -127,6 +129,7 @@ namespace Alterverse.Visuals
                 case ArenaVariant.DiamondCore: DiamondPocket(seed); break;
                 case ArenaVariant.Wasp76b: IronPocket(seed); break;
                 case ArenaVariant.Trappist1e: TwilightPocket(seed); break;
+                case ArenaVariant.Toi715b: IvoryGrovePocket(seed); break;
             }
             // Fine scale debris ties the larger silhouettes back into the ground.
             for(int i=0;i<14;i++)
@@ -337,6 +340,27 @@ namespace Alterverse.Visuals
                 Add(crystal,3,new Vector3(-1.3f+i*.70f,.10f,-.75f),new Vector3(.20f,.55f,.20f),Quaternion.Euler(68,i*47,12));
         }
 
+        void IvoryGrovePocket(int seed)
+        {
+            // Low rust shelves, ivory fan crowns and dark ground cover.
+            // The existing Add() anchors every plant and filters building clearance.
+            for(int tier=0;tier<3;tier++)
+                Add(rock,0,new Vector3(-.60f,tier*.16f,.30f),new Vector3(1.12f-tier*.18f,.18f,.68f),Quaternion.Euler(0,seed*19+tier*13,0));
+            for(int plant=0;plant<5;plant++)
+            {
+                float a=(plant*137.5f+seed*31f)*Mathf.Deg2Rad;
+                Vector3 p=new(Mathf.Cos(a)*1.50f,.025f,Mathf.Sin(a)*.92f);
+                float height=.55f+(plant%3)*.20f;
+                Add(column,1,p,new Vector3(.18f,height,.18f),Quaternion.Euler(0,plant*41,8));
+                for(int frond=0;frond<5;frond++)
+                    Add(leaf,2,p+Vector3.up*height*.73f,new Vector3(.56f,.70f,.50f),
+                        Quaternion.Euler(-28,plant*41+frond*72,18));
+                // Dark lobed shrubs beneath the brighter canopy.
+                for(int lobe=0;lobe<3;lobe++)
+                    Add(canopy,3,p+new Vector3((lobe-1)*.17f,0,-.28f),new Vector3(.30f,.25f+(lobe%2)*.10f,.27f),Quaternion.Euler(0,plant*31+lobe*47,0));
+            }
+        }
+
         void IronPocket(int seed)
         {
             Add(rock,0,Vector3.zero,new Vector3(1.35f,.24f,.90f),Quaternion.Euler(0,seed*27,0));
@@ -442,6 +466,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 

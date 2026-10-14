@@ -54,7 +54,8 @@ namespace Alterverse.Shop
             new(ArenaVariant.DiamondCore,"PSR J1719-1438 b","SHATTERED CRYSTAL WORLD",PsrPrice,new Color(.62f,.90f,1f)),
             new(ArenaVariant.GJ504b,"GJ 504 b","MAGENTA SANDSTONE FRONT",0,new Color(.90f,.16f,.58f)),
             new(ArenaVariant.Wasp76b,"WASP-76b","IRONRAIN FRONT",Wasp76bPrice,new Color(.92f,.46f,.16f)),
-            new(ArenaVariant.Trappist1e,"TRAPPIST-1e","TWILIGHT EDEN",Trappist1ePrice,new Color(.18f,.76f,.72f))
+            new(ArenaVariant.Trappist1e,"TRAPPIST-1e","TWILIGHT EDEN",Trappist1ePrice,new Color(.18f,.76f,.72f)),
+            new(ArenaVariant.Toi715b,"TOI-715 b","IVORY GROVE FRONT",0,new Color(.78f,.32f,.20f))
         };
 
         // The PLAY menu needs every arena, while the STORE must only list arenas that
@@ -145,3 +146,4 @@ namespace Alterverse.Shop
         }
     }
 }
+

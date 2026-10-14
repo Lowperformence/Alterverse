@@ -23,6 +23,7 @@ namespace Alterverse.Visuals
                 case ArenaVariant.Dark00: return new PlanetSurfaceMicroProfile("Stone",1.8f,.055f,.12f);
                 case ArenaVariant.Wasp76b: return new PlanetSurfaceMicroProfile("Stone",1.8f,.045f,.14f);
                 case ArenaVariant.Trappist1e: return new PlanetSurfaceMicroProfile("Soil",1.6f,.07f,.22f);
+                case ArenaVariant.Toi715b: return new PlanetSurfaceMicroProfile("Soil",1.8f,.10f,.26f);
                 case ArenaVariant.Noxara: case ArenaVariant.Pyraxis: return new PlanetSurfaceMicroProfile("Stone",1.8f,.085f,.20f);
                 default: throw new ArgumentOutOfRangeException(nameof(planet));
             }
@@ -43,3 +44,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

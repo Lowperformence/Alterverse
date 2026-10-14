@@ -21,6 +21,7 @@ namespace Alterverse.Visuals
                 case ArenaVariant.Dark00: return SceneryFinish.Metal;
                 case ArenaVariant.Wasp76b: return SceneryFinish.Metal;
                 case ArenaVariant.Trappist1e: return layer==1?SceneryFinish.Ice:layer>=2?SceneryFinish.Leaf:SceneryFinish.WetStone;
+                case ArenaVariant.Toi715b: return layer==1?SceneryFinish.Bark:layer>=2?SceneryFinish.Leaf:SceneryFinish.Stone;
                 case ArenaVariant.DiamondCore: return layer==0?SceneryFinish.Stone:SceneryFinish.Ice;
                 case ArenaVariant.Moon:
                 case ArenaVariant.Mars:
@@ -76,3 +77,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

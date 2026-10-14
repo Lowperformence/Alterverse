@@ -18,7 +18,7 @@ namespace Alterverse.Visuals
 
         public static void Apply(Transform host,ArenaVariant variant,int team)
         {
-            if(host==null||variant!=ArenaVariant.Wasp76b&&variant!=ArenaVariant.Trappist1e)return;
+            if(host==null||variant!=ArenaVariant.Wasp76b&&variant!=ArenaVariant.Trappist1e&&variant!=ArenaVariant.Toi715b)return;
             var appearance=host.GetComponent<ExoplanetGuardAppearance>()??host.gameObject.AddComponent<ExoplanetGuardAppearance>();
             appearance.Build(variant,team);
         }
@@ -26,8 +26,9 @@ namespace Alterverse.Visuals
         {
             if(built)return;built=true;Variant=variant;
             bool iron=variant==ArenaVariant.Wasp76b;
-            Color armor=iron?new Color(.27f,.29f,.31f):new Color(.10f,.29f,.30f);
-            Color trim=iron?new Color(.60f,.31f,.14f):new Color(.38f,.24f,.46f);
+            bool rust=variant==ArenaVariant.Toi715b;
+            Color armor=rust?new Color(.43f,.15f,.09f):iron?new Color(.27f,.29f,.31f):new Color(.10f,.29f,.30f);
+            Color trim=rust?new Color(.82f,.74f,.59f):iron?new Color(.60f,.31f,.14f):new Color(.38f,.24f,.46f);
             Color dark=iron?new Color(.075f,.085f,.095f):new Color(.055f,.13f,.16f);
             Color faction=team==0?StylizedArtDirection.ZeroEnergy:StylizedArtDirection.LumenEnergy;
             Color energy=GuardEnergy(variant,faction);
@@ -71,7 +72,7 @@ namespace Alterverse.Visuals
                         Quaternion q=Quaternion.Euler(iron?0:-16,iron?0:side*(18+i*12),iron?0:side*20);
                         layers.Add(new CombineInstance{mesh=input,transform=Matrix4x4.TRS(p,q,scale)});
                     }
-                    Batch(iron?"DF_IronGuardHeatShroud_"+suffix:"DF_TwilightGuardGillArmor_"+suffix,shoulder,layers,detail);
+                    Batch(rust?"DF_IvoryGuardCrownArmor_"+suffix:iron?"DF_IronGuardHeatShroud_"+suffix:"DF_TwilightGuardGillArmor_"+suffix,shoulder,layers,detail);
                 }
                 if(forearm!=null)
                 {
@@ -97,3 +98,4 @@ namespace Alterverse.Visuals
         {foreach(Mesh mesh in meshes)if(mesh!=null)Destroy(mesh);foreach(Material material in materials)if(material!=null)Destroy(material);}
     }
 }
+

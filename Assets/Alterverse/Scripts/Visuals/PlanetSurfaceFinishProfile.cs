@@ -25,7 +25,9 @@ namespace Alterverse.Visuals
             ArenaVariant.GJ504b => new(.12f,.25f,.32f),
             ArenaVariant.Wasp76b => new(-.07f,.28f,.26f),
             ArenaVariant.Trappist1e => new(-.04f,.25f,.24f),
+            ArenaVariant.Toi715b => new(.09f,.26f,.30f),
             _ => throw new ArgumentOutOfRangeException(nameof(planet))
         };
     }
 }
+
