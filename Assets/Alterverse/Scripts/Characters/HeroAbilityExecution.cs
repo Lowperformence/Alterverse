@@ -82,7 +82,7 @@ namespace Alterverse.Characters
         {
             if (slot < 0 || slot > 3 || !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
             AimSpec aim = AimingSettings.Current.For(identity.Hero, slot);
-            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, aim.castRange), pose.Target, pose.HasAimPoint);
+            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, aim.castRange), pose.Target, pose.HasAimPoint, pose.AllowDashTargetCapture);
             return TryCastCore(slot, pose.Target, pose.Direction, pose);
         }
         private bool TryCastCore(int slot, Health target, Vector3 movement, AimPose? aimed)
@@ -99,7 +99,7 @@ namespace Alterverse.Characters
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
             if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
             {
-                if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue))return false;
+                if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue && attackAim.AllowDashTargetCapture))return false;
             }
             else if (hero == HeroId.Nerok)
             {
@@ -318,4 +318,5 @@ namespace Alterverse.Characters
         }
     }
 }
+
 

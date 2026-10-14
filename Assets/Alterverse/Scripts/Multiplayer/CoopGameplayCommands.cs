@@ -110,6 +110,8 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(pose.Direction.x); writer.WriteValueSafe(pose.Direction.y); writer.WriteValueSafe(pose.Direction.z);
             writer.WriteValueSafe(pose.Point.x); writer.WriteValueSafe(pose.Point.y); writer.WriteValueSafe(pose.Point.z);
             writer.WriteValueSafe(pose.HasAimPoint);
+            // Optional trailing V5 field; old commands retain manual capture.
+            if (!pose.AllowDashTargetCapture) writer.WriteValueSafe(false);
             messaging.SendNamedMessage(message,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
             return true;
         }
@@ -157,9 +159,11 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out float dx); reader.ReadValueSafe(out float dy); reader.ReadValueSafe(out float dz);
             reader.ReadValueSafe(out float px); reader.ReadValueSafe(out float py); reader.ReadValueSafe(out float pz);
             reader.ReadValueSafe(out bool hasAimPoint);
+            bool allowDashTargetCapture = true;
+            if (reader.TryBeginRead(sizeof(bool))) reader.ReadValueSafe(out allowDashTargetCapture);
             Vector3 direction = new Vector3(dx, dy, dz), point = new Vector3(px, py, pz);
             if (!AimGeometry.Finite(direction) || !AimGeometry.Finite(point) || AimGeometry.Flat(direction).sqrMagnitude < .0001f) return false;
-            pose = new AimPose(direction, point, target, hasAimPoint);
+            pose = new AimPose(direction, point, target, hasAimPoint, allowDashTargetCapture);
             return true;
         }
 
@@ -276,3 +280,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

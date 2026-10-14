@@ -117,6 +117,16 @@ namespace Alterverse.Combat
         }
         public static AimPose TapPose(GameObject actor, AimSpec spec)
         {
+            if (spec.aimType == AimType.Dash)
+            {
+                HeroMotor motor = actor.GetComponent<HeroMotor>();
+                Vector3 movement = motor != null ? motor.CurrentMoveDirection : Vector3.zero;
+                if (Flat(movement).sqrMagnitude < .0001f)
+                    movement = motor != null ? motor.LastMoveDirection : actor.transform.forward;
+                Vector3 dash = Direction(movement);
+                return new AimPose(dash, actor.transform.position + dash * spec.castRange,
+                    allowDashTargetCapture: false);
+            }
             Vector3 direction = Direction(actor.transform.forward); Health target = null;
             if (spec.aimType == AimType.Ally)
                 target = Select(actor, direction, spec.castRange, spec.coneAngle * .5f, true);
@@ -133,3 +143,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

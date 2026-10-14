@@ -21,6 +21,7 @@ namespace Alterverse.Characters
 
         private bool TryCastTimmy(int slot,Health target,AimPose pose,bool manuallyAimed)
         {
+            if (!pose.AllowDashTargetCapture) target = null;
             if((slot==3&&timmyScratchPending)||locomotion.OwnsMovementFrame)return false;
             AimSpec aim=AimingSettings.Current.For(HeroId.Timmy,slot);
             Vector3 direction=pose.CastDirection(transform.position);
@@ -172,3 +173,4 @@ namespace Alterverse.Characters
         }
     }
 }
+

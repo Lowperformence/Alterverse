@@ -438,12 +438,65 @@ partial class Regression
    Near(material.Floats[Shader.PropertyToID("_Mode")],entry.Item1==HeroId.Mira?1:0,"only teammate aiming displays a cone; areas display a circle");
   }
  }
+ static void MovementDashCases()
+ {
+  foreach(HeroId hero in Enum.GetValues(typeof(HeroId)))for(int slot=0;slot<4;slot++)
+  {
+   Reset();var actor=Hero(hero,0,Vector3.zero);var abilities=actor.GetComponent<PlayerHeroAbilities>();
+   if(abilities.AimFor(slot).aimType!=AimType.Dash)continue;
+   var motor=actor.GetComponent<HeroMotor>();actor.transform.forward=-Vector3.forward;
+   motor.SetMoveInput(new Vector2(1,0));
+   var enemy=Hero(HeroId.Kaelon,1,new Vector3(3,0,1));
+   var tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));
+   Near(Vector3.Angle(tap.Direction,Vector3.right),0,"dash tap uses current input, not attack-facing "+hero+slot);
+   Check(tap.Target==null&&!tap.HasAimPoint&&!tap.AllowDashTargetCapture,"movement tap cannot snap to enemy "+hero+slot);
+   Near(Vector3.Angle(abilities.PreviewDirection(slot),Vector3.right),0,"dash preview uses same movement direction "+hero+slot);
+   var gesture=ManualAiming.For(actor);Check(gesture.Begin(slot,new Vector2(700,100)),"movement dash gesture begins "+hero+slot);
+   motor.SetMoveInput(new Vector2(0,-1));
+   Check(gesture.Release(),"movement dash tap releases "+hero+slot);Run(1);
+   Near(Vector3.Angle(actor.transform.position,-Vector3.forward),0,"tap resolves movement at release "+hero+slot);
+   Near(Total(enemy),1000,"tap leap leaves off-axis enemy untouched "+hero+slot);
+   Reset();actor=Hero(hero,0,Vector3.zero);abilities=actor.GetComponent<PlayerHeroAbilities>();motor=actor.GetComponent<HeroMotor>();
+   motor.SetMoveInput(new Vector2(1,0));motor.SetMoveInput(Vector2.zero);actor.transform.forward=-Vector3.forward;
+   tap=AimGeometry.TapPose(actor,abilities.AimFor(slot));Near(Vector3.Angle(tap.Direction,Vector3.right),0,"standing tap retains last movement direction "+hero+slot);
+   motor.SetMoveInput(new Vector2(1,0));
+   gesture=ManualAiming.For(actor);gesture.Begin(slot,new Vector2(700,100));gesture.Drag(new Vector2(700,196),1,false);
+   Near(Vector3.Angle(gesture.Pose.Direction,Vector3.forward),0,"manual dash aim overrides movement "+hero+slot);
+   Check(gesture.Release(),"manual dash releases "+hero+slot);Run(1);
+   Near(Vector3.Angle(actor.transform.position,Vector3.forward),0,"manual dash follows dragged direction "+hero+slot);
+   Unlock(actor.GetComponent<HeroAbilityExecution>());AimingSettings.Current.rememberAimDirection=true;
+   gesture.Begin(slot,new Vector2(700,100));Check(gesture.Release(),"next tap ignores remembered manual direction "+hero+slot);Run(1);
+   Check(actor.transform.position.x>1,"tap returns to movement after manual aim "+hero+slot);
+  }
+  Reset();var client=Hero(HeroId.Timmy,0,Vector3.zero);client.AddComponent<CoopHeroSlot>().Slot=1;
+  client.GetComponent<HeroMotor>().SetMoveInput(new Vector2(1,0));
+  var victim=Hero(HeroId.Kaelon,1,new Vector3(3,0,.5f));
+  var service=new GameObject("dash commands").AddComponent<CoopGameplayCommands>();
+  var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
+  CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
+  Check(client.GetComponent<PlayerHeroAbilities>().CastUltimate(),"client sends movement tap");
+  byte[] packet=manager.CustomMessagingManager.LastPacket;
+  Check(packet[packet.Length-1]==0,"network retains no-capture movement intent");
+  CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
+  Unlock(client.GetComponent<HeroAbilityExecution>());
+  client.GetComponent<HeroMotor>().SetMoveInput(new Vector2(-1,0));
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
+  Near(Vector3.Angle(client.transform.position,Vector3.right),0,"host preserves remote movement direction");
+  Near(Total(victim),1000,"host does not recapture an enemy for a movement tap");
+ }
  static void Main(string[] args)
  {
-  SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
+  if(args.Contains("--movement-dashes"))
+  {
+   MovementDashCases();Gestures();TouchHud();Network();TimmyCases();ConeCaptureCases();
+   Console.WriteLine("PASS "+checks+" assertions: movement taps, manual override, last direction, multitouch, Timmy leaps and host routing.");
+   return;
+  }
+  MovementDashCases();SupportTargeting();SelfShieldPreviews();Geometry();AttackCases();Kits();Gestures();TouchHud();BasicHud();BasicSoftTargets();Network();InterruptionsAndCapacity();ConeCaptureCases();MovingConnectionCases();TimmyCases();TimmyVfxCases();
   Reset();Alterverse.EditorChecks.BasicAttackDeliveryRegression.Run();
   Reset();Alterverse.EditorChecks.AttackDeliveryRegression.Run();
   ConnectionTiming(args.Contains("--connection-timing"));
   Console.WriteLine("PASS "+checks+" assertions: existing 8 heroes, Timmy contact/root/channel, geometry, dodges, AOE, gestures, multitouch, network direction/point, interrupts and connection timing.");
  }
 }
+

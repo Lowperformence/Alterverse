@@ -132,7 +132,7 @@ partial class Regression
   Check(a.GetComponent<SoftTargeting>().Current==b.GetComponent<Health>(),"Scratch cone marks a hero without selecting the closer soldier");
   Resources.PreviewShaderAvailable=true;var overlay=a.AddComponent<AbilityRangePreviewOverlay>();Call(overlay,"LateUpdate");
   gesture.Cancel();Call(overlay,"LateUpdate");Near(a.GetComponent<HeroAbilityExecution>().Remaining(3),0,"Scratch cancel consumes no cooldown");
-  Check(gesture.Begin(3,new Vector2(700,100))&&gesture.Release(),"Scratch tap captures the same hero");Run(2.8f);Near(Total(b),946,"Scratch tap still uses contact and timed ticks");Near(Total(minion),1000,"Scratch never hits the marked corridor's soldier");
+  Check(gesture.Begin(3,new Vector2(700,100))&&gesture.Release(),"Scratch movement tap casts without capture");Run(2.8f);Near(Total(b),1000,"Scratch tap does not steer to a cone target");Near(Total(minion),1000,"Scratch movement tap never targets a soldier");
 
   foreach(int fps in new[]{30,60,120})
   {
@@ -223,3 +223,4 @@ partial class Regression
   Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");
  }
 }
+

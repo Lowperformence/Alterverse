@@ -59,6 +59,11 @@ namespace Alterverse.Combat
         { if (!Active) return; if (!Ready(Slot)) Cancel(); else Rebuild(); }
         private void Rebuild()
         {
+            if (!dragged && Spec.aimType == AimType.Dash)
+            {
+                Pose = AimGeometry.TapPose(gameObject, Spec);
+                return;
+            }
             Vector3 direction = rawDirection; Health target = null;
             if (Spec.aimType == AimType.Ally)
                 target = AimGeometry.Select(gameObject, direction, Spec.castRange, Spec.coneAngle * .5f, true);
@@ -91,3 +96,4 @@ namespace Alterverse.Combat
         private void OnApplicationPause(bool paused) { if (paused) Cancel(); }
     }
 }
+

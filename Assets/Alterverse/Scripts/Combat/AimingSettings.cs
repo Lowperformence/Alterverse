@@ -20,10 +20,12 @@ namespace Alterverse.Combat
         public readonly Vector3 Direction, Point;
         // A captured world point is independent of the preview direction and never follows a target.
         public readonly bool HasAimPoint;
+        // Movement taps must not turn a directional leap into an enemy gap-close.
+        public readonly bool AllowDashTargetCapture;
         // Support/homing and automatic basics may follow this reference.
         public readonly Health Target;
-        public AimPose(Vector3 direction, Vector3 point, Health target = null, bool hasAimPoint = false)
-        { Direction = AimGeometry.Direction(direction); Point = point; Target = target; HasAimPoint = hasAimPoint; }
+        public AimPose(Vector3 direction, Vector3 point, Health target = null, bool hasAimPoint = false, bool allowDashTargetCapture = true)
+        { Direction = AimGeometry.Direction(direction); Point = point; Target = target; HasAimPoint = hasAimPoint; AllowDashTargetCapture = allowDashTargetCapture; }
         public Vector3 CastDirection(Vector3 origin)
         {
             Vector3 delta = AimGeometry.Flat(Point - origin);
@@ -115,3 +117,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

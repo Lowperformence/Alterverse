@@ -54,13 +54,14 @@ namespace Alterverse.Characters
         {
             AbilitySpec s = kit.Spec(slot);
             HeroId h = identity.Hero;
-            if (h == HeroId.Timmy) return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect;
+            if (h == HeroId.Timmy) return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect +
+                (AimFor(slot).aimType == AimType.Dash ? " Tap to jump in your movement direction; drag to aim." : "");
             if (h == HeroId.Elyra && slot == 2)
-                return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect + " Drag to choose direction; tap uses facing.";
+                return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect + " Drag to choose direction; tap uses movement direction.";
             if ((h == HeroId.Veyr && slot == 2) || (h == HeroId.Nyra && slot == 1) || (h == HeroId.Elyra && slot == 2) || (h == HeroId.Traveler && slot == 1))
                 return h == HeroId.Traveler
-                    ? $"Time-skip {s.Range:0.#}m through paired rifts. Drag to choose direction."
-                    : $"Move {s.Range:0.#}m. Drag to choose direction; tap uses facing.";
+                    ? $"Time-skip {s.Range:0.#}m through paired rifts. Drag to choose direction; tap uses movement direction."
+                    : $"Move {s.Range:0.#}m. Drag to choose direction; tap uses movement direction.";
             if (h == HeroId.Nerok) return slot switch
             {
                 0 => $"Aim the anchor: {s.Power:0} damage; pull a struck mobile enemy up to 4.2m. Walls block it.",
@@ -94,7 +95,8 @@ namespace Alterverse.Characters
         public Vector3 PreviewDirection(int slot)
         {
             ManualAiming aim = GetComponent<ManualAiming>();
-            return aim != null && aim.Active ? aim.Pose.Direction : AimGeometry.Direction(transform.forward);
+            return aim != null && aim.Active ? aim.Pose.Direction : AimFor(slot).aimType == AimType.Dash
+                ? AimGeometry.TapPose(gameObject, AimFor(slot)).Direction : AimGeometry.Direction(transform.forward);
         }
 
         private bool Cast(int slot)
@@ -108,7 +110,7 @@ namespace Alterverse.Characters
             if (!isActiveAndEnabled || Time.timeScale <= 0f || slot < 0 || slot > 3 || execution == null || execution.Remaining(slot) > 0 ||
                 !HeroCombatStatus.CanAct(gameObject) || GetComponent<Health>().IsDead ||
                 !AimGeometry.Finite(pose.Direction) || !AimGeometry.Finite(pose.Point)) return false;
-            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, AimFor(slot).castRange), pose.Target, pose.HasAimPoint);
+            pose = new AimPose(pose.Direction, AimGeometry.ClampPoint(transform.position, pose.Point, AimFor(slot).castRange), pose.Target, pose.HasAimPoint, pose.AllowDashTargetCapture);
             if (Alterverse.Multiplayer.CoopGameplayCommands.ShouldRouteClientCommand(gameObject))
             {
                 if (!Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(gameObject, slot, pose)) return false;
@@ -158,3 +160,4 @@ namespace Alterverse.Characters
         }
     }
 }
+
