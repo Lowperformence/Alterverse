@@ -93,44 +93,7 @@ namespace Alterverse.Visuals
 
         void BuildEarth()
         {
-            Material water=MakeMaterial("DF_Earth_Water",new Color(.025f,.22f,.52f,1f),0f,.90f);
-            Material bark=MakeMaterial("DF_Earth_Bark",new Color(.20f,.095f,.035f,1f),0f,.16f);
-            Material leaves=MakeMaterial("DF_Earth_Leaves",new Color(.08f,.34f,.055f,1f),0f,.22f);
-            Material leavesLight=MakeMaterial("DF_Earth_LeavesLight",new Color(.16f,.52f,.08f,1f),0f,.20f);
-            Material stone=MakeMaterial("DF_Earth_Stone",new Color(.22f,.18f,.12f,1f),0f,.18f);
-
-            Vector3[] pools={new(-28,0,17),new(27,0,-18),new(-17,0,-27),new(18,0,27)};
-            Vector3[] poolScales={new(7.8f,.09f,4.6f),new(6.6f,.09f,4.2f),new(5.6f,.08f,3.4f),new(5.2f,.08f,3.2f)};
-            for(int i=0;i<pools.Length;i++)
-            {
-                Vector3 p=Surface(pools[i].x,pools[i].z,.035f);
-                Primitive(PrimitiveType.Cylinder,"WaterPool",detailRoot,p,poolScales[i],Quaternion.Euler(0,i*29f,0),water);
-            }
-
-            Vector3[] treePositions={
-                new(-38,0,12),new(-35,0,-16),new(-27,0,29),new(29,0,-28),
-                new(37,0,15),new(35,0,-10),new(-12,0,32),new(13,0,-32),
-                new(-31,0,4),new(31,0,-2)
-            };
-            for(int i=0;i<treePositions.Length;i++)
-            {
-                Vector3 basePos=Surface(treePositions[i].x,treePositions[i].z,0f);
-                float height=2.4f+(i%3)*.42f;
-                Primitive(PrimitiveType.Cylinder,"TreeTrunk",detailRoot,basePos+Vector3.up*height*.5f,
-                    new Vector3(.35f,height*.5f,.35f),Quaternion.Euler(0,i*31f,0),bark);
-                Primitive(PrimitiveType.Sphere,"TreeCrown",detailRoot,basePos+Vector3.up*(height+.75f),
-                    new Vector3(1.45f,.90f,1.30f),Quaternion.Euler(0,i*19f,0),i%2==0?leaves:leavesLight);
-                Primitive(PrimitiveType.Sphere,"TreeCrownSmall",detailRoot,basePos+new Vector3((i%2==0?.55f:-.55f),height+.45f,.20f),
-                    new Vector3(.92f,.66f,.82f),Quaternion.identity,leaves);
-            }
-
-            Vector3[] rocks={new(-40,0,-25),new(39,0,25),new(-23,0,-32),new(24,0,32),new(-33,0,28),new(33,0,-29)};
-            for(int i=0;i<rocks.Length;i++)
-            {
-                Vector3 p=Surface(rocks[i].x,rocks[i].z,.35f);
-                Primitive(PrimitiveType.Sphere,"EarthRock",detailRoot,p,new Vector3(1.4f,.75f,1.1f),
-                    Quaternion.Euler(0,i*41f,12f),stone);
-            }
+            detailRoot.gameObject.AddComponent<EarthMapDressing>().Build();
         }
 
         SceneryBuildingClearance clearance;
@@ -472,8 +435,3 @@ namespace Alterverse.Visuals
         void OnDestroy()=>HotZoneCreatureVisualFactory.Release(ownedMaterials);
     }
 }
-
-
-
-
-

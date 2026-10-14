@@ -7,6 +7,7 @@ Shader "Alterverse/MapWater"
         _Smoothness("Water smoothness",Range(0,1))=.86
         _WaveStrength("Ripple normals",Range(0,.3))=.14
         _ShoreStrength("Restrained bank foam",Range(0,.2))=.065
+        [HideInInspector] _AuthoredBanks("Shore distance from UV",Float)=0
     }
     SubShader
     {
@@ -18,12 +19,13 @@ Shader "Alterverse/MapWater"
         #include "Assets/Resources/DF_SurfaceLighting.hlsl"
         CBUFFER_START(UnityPerMaterial)
             half4 _BaseColor,_ShallowColor;
-            half _Smoothness,_WaveStrength,_ShoreStrength;
+            half _Smoothness,_WaveStrength,_ShoreStrength,_AuthoredBanks;
         CBUFFER_END
         struct Attributes
         {
             float4 positionOS:POSITION;
             float3 normalOS:NORMAL;
+            float2 uv:TEXCOORD0;
             UNITY_VERTEX_INPUT_INSTANCE_ID
         };
         struct Varyings
@@ -48,7 +50,7 @@ Shader "Alterverse/MapWater"
             output.normalWS=TransformObjectToWorldNormal(input.normalOS);
             // Unity's cylinder cap radius is .5. Object coordinates keep elliptical
             // banks aligned under every existing nonuniform scale and rotation.
-            output.bank=input.positionOS.xz*2;
+            output.bank=lerp(input.positionOS.xz*2,float2(input.uv.x,0),_AuthoredBanks);
             output.top=saturate(input.normalOS.y);
             output.fog=ComputeFogFactor(output.positionCS.z);
             return output;
