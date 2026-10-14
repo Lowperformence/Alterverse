@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // This account database is accessed exclusively through the authenticated
+    // Python server's service account. Player SDKs have no direct access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

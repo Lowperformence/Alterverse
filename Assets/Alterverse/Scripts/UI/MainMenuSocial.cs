@@ -9,7 +9,7 @@ namespace Alterverse.UI
     {
         int rankingTab,clanTab,memberOffset;
         string socialIdentity,lastClanIdentity;
-        bool clanApplications,clanOpen=true;
+        bool clanApplications,clanOpen=true,founderTermsAccepted;
         int clanDetailTab,clanIconIndex,clanDescriptionIndex;
         string clanQuery="";
         string confirmRoute,confirmPlayer,confirmLabel;
@@ -25,7 +25,7 @@ namespace Alterverse.UI
                 if(identity!=null&&identity!=socialIdentity)
                 {
                     socialIdentity=identity;lastClanIdentity=null;clanDetailTab=0;clanDescriptionIndex=0;confirmRoute=confirmPlayer=confirmLabel=null;
-                    memberOffset=0;clanQuery="";
+                    memberOffset=0;clanQuery="";ResetClanChatUI();founderTermsAccepted=false;
                 }
                 return true;
             }
@@ -137,7 +137,7 @@ namespace Alterverse.UI
         void DrawClans()
         {
             Heading("Clans","Build your crew. Grow together. Up to 50 members per clan.");
-            string[] tabs={"FIND CLANS","MY CLAN","CREATE CLAN"};
+            string[] tabs=SocialService.Instance?.State?.isChatAdmin==true?new[]{"FIND CLANS","MY CLAN","CREATE CLAN","ADMIN"}:new[]{"FIND CLANS","MY CLAN","CREATE CLAN"};
             for(int i=0;i<tabs.Length;i++)
                 if(theme.Action(new Rect(Left+i*210,212,198,40),tabs[i],selected:clanTab==i))
                 {clanTab=i;memberOffset=0;confirmRoute=null;if(i==0)SocialService.Instance?.Load("/social/clans");}
@@ -148,12 +148,13 @@ namespace Alterverse.UI
             string currentClan=state.clan?.clanId;
             if(currentClan!=lastClanIdentity)
             {
-                lastClanIdentity=currentClan;memberOffset=0;clanDetailTab=0;clanDescriptionIndex=0;
-                clanTab=currentClan!=null?1:0;
+                lastClanIdentity=currentClan;ResetClanChatUI();memberOffset=0;clanDetailTab=0;clanDescriptionIndex=0;
+                if(clanTab!=3)clanTab=currentClan!=null?1:0;
             }
             if(clanTab==0)DrawClanBrowser(service,state);
             else if(clanTab==1)DrawMyClan(service,state);
-            else DrawCreateClan(service,state);
+            else if(clanTab==2)DrawCreateClan(service,state);
+            else DrawChatAdministration(service);
             SocialFooter();
         }
         void DrawClanBrowser(SocialService service,SocialService.Snapshot state)
@@ -189,7 +190,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(Left+180,384,ContentWidth-180,60),
                 SafeIdentityCatalog.Descriptions[0],theme.Body,true);
             theme.Label(new Rect(Left+180,450,ContentWidth-180,36),
-                "No editable names, tags, descriptions or messages.",theme.Small,true);
+                "Generated identities keep the clan directory safe.",theme.Small,true);
         }
         void DrawCreateClan(SocialService service,SocialService.Snapshot state)
         {
@@ -203,15 +204,22 @@ namespace Alterverse.UI
                 clanOpen=pending.open;
             }
             theme.Panel(new Rect(Left-8,262,ContentWidth+16,390));
-            DrawGeneratedClanFields(pending==null&&!service.Busy);
-            if(theme.Action(new Rect(Left,496,340,42),clanOpen?"JOIN POLICY: OPEN":"JOIN POLICY: APPLICATION",enabled:pending==null&&!service.Busy))clanOpen=!clanOpen;
-            theme.Label(new Rect(Left,548,ContentWidth,38),pending!=null?"Previous request pending. Retry to confirm its result; you will not be charged twice.":"500 Shards • 50 members • Generated English names and preset descriptions",theme.Small,true);
-            bool supported=state.clanCreationCost==500&&state.clanProtocolVersion>=3;
-            if(theme.Action(new Rect(Left,596,300,48),service.HasPendingClanCreation?"RETRY CLAN CREATION":"CREATE  /  500 SHARDS",true,enabled:!service.Busy&&supported&&(service.HasPendingClanCreation||PlayerWallet.Balance>=500)))
-                service.CreateClan(new SocialService.Request{descriptionId=0,open=clanOpen});
-            if(!supported)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),"Update the account server to enable generated clan identities.",theme.Small,true);
+            theme.Label(new Rect(Left,270,ContentWidth,26),"Generated clan name and tag  /  50 members  /  500 Shards",theme.Small,true);
+            theme.Label(new Rect(Left,302,ContentWidth,30),SafeIdentityCatalog.Descriptions[0],theme.Body,true);
+            if(theme.Action(new Rect(Left,342,340,38),clanOpen?"JOIN POLICY: OPEN":"JOIN POLICY: APPLICATION",enabled:pending==null&&!service.Busy))clanOpen=!clanOpen;
+            if(state.chatEnabled)
+            {
+                theme.Label(new Rect(Left,386,ContentWidth,130),state.leaderRules,theme.Small,true);
+                founderTermsAccepted=GUI.Toggle(new Rect(Left,522,ContentWidth,32),founderTermsAccepted,"I accept the clan moderation terms (version "+state.leaderRulesVersion+").");
+            }
+            theme.Label(new Rect(Left,558,ContentWidth,28),pending!=null?"Pending request: retry to confirm. You will not be charged twice.":"The server assigns a unique clan identity.",theme.Small,true);
+            bool supported=state.clanCreationCost==500&&state.clanProtocolVersion>=(state.chatEnabled?4:3);
+            if(theme.Action(new Rect(Left,596,300,48),service.HasPendingClanCreation?"RETRY CLAN CREATION":"CREATE  /  500 SHARDS",true,enabled:!service.Busy&&supported&&(!state.chatEnabled||founderTermsAccepted)&&(service.HasPendingClanCreation||PlayerWallet.Balance>=500)))
+                service.CreateClan(new SocialService.Request{descriptionId=0,open=clanOpen,accepted=founderTermsAccepted,consentVersion=state.leaderRulesVersion});
+            if(!supported)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),"Update the account server to create clans.",theme.Small,true);
             else if(PlayerWallet.Balance<500&&!service.HasPendingClanCreation)theme.Label(new Rect(Left+320,596,ContentWidth-320,48),$"You need {500-PlayerWallet.Balance} more Shards.",theme.Small,true);
         }
+
         void DrawMyClan(SocialService service,SocialService.Snapshot state)
         {
             var clan=state.clan;
@@ -225,12 +233,15 @@ namespace Alterverse.UI
             theme.FitLabel(new Rect(Left+80,317,ContentWidth-80,20),clan.description,theme.Small,true);
             bool manages=state.role=="leader"||state.role=="officer";
             if(!manages)clanApplications=false;
-            if(state.role!="leader"&&clanDetailTab>=3)clanDetailTab=0;
+            if(state.role!="leader"&&clanDetailTab==3)clanDetailTab=0;
             if(theme.Action(new Rect(Left,346,170,34),"MEMBERS",selected:clanDetailTab==0)){clanDetailTab=0;clanApplications=false;memberOffset=0;}
             if(manages&&theme.Action(new Rect(Left+180,346,220,34),"APPLICATIONS",selected:clanDetailTab==1)){clanDetailTab=1;clanApplications=true;memberOffset=0;}
             if(state.role=="leader"&&theme.Action(new Rect(Left+410,346,190,34),"CLAN IMAGE",selected:clanDetailTab==3))
             {clanDetailTab=3;clanIconIndex=0;}
+            if(state.chatEnabled&&theme.Action(new Rect(Left+610,346,130,34),"CHAT",selected:clanDetailTab==2))clanDetailTab=2;
+            if(clanDetailTab==2){DrawClanChat(service,state);return;}
             if(clanDetailTab==3){DrawClanImage(service,state);return;}
+            if(selectedChatPlayer!=null){DrawChatMemberActions(service,state);return;}
             var rows=(clanApplications?state.applications:clan.members)??NoPlayers;
             memberOffset=Mathf.Min(memberOffset,Mathf.Max(0,rows.Length-1)/5*5);
             int count=Mathf.Min(5,Mathf.Max(0,rows.Length-memberOffset));
@@ -247,7 +258,9 @@ namespace Alterverse.UI
                 }
                 else if(p.playerId!=state.me?.playerId)
                 {
-                    if(state.role=="leader")
+                    if(state.chatEnabled&&theme.Action(new Rect(Right-488,y,310,36),"PLAYER ACTIONS",enabled:!service.Busy))
+                    {selectedChatPlayer=p;return;}
+                    if(state.role=="leader"&&!state.chatEnabled)
                     {
                         SocialButton(new Rect(Right-488,y,140,36),p.role=="officer"?"DEMOTE":"OFFICER","/social/clan/role",p.playerId,role:p.role=="officer"?"member":"officer");
                         if(theme.Action(new Rect(Right-340,y,160,36),"MAKE LEADER",enabled:!service.Busy))
@@ -285,3 +298,4 @@ namespace Alterverse.UI
         }
     }
 }
+

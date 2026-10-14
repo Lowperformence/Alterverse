@@ -1,5 +1,8 @@
 # Friends, player levels and clans
 
+> Current clan chat and moderation implementation: [Clan-Chat-Setup.md](Clan-Chat-Setup.md).
+> The historical feature description below predates the communication-disabled identity build and the new private clan chat. Current public player search and friend messaging remain disabled; clan chat and blocking follow the new setup guide.
+
 The account server now supplies account-authenticated social features using the same persistent SQLite database or Firestore namespace as cloud profiles. The Unity menu has FRIENDS and CLANS entry points and ranking tabs for MOST WINS, PLAYER LEVELS and CLAN LEVELS. The existing Google Play Most Wins leaderboard is retained.
 
 ## First release
@@ -70,4 +73,5 @@ python -m unittest discover -s Server/commerce -v
 Tests cover migrated accounts, stable public IDs, no private profile leaks, the complete level curve, ranking ties/pagination, profile-driven score updates, naming collisions, SQL search literals, friendship acceptance/retries, blocks, persistence, role authorization, applications, leadership transfer, clan deletion, concurrent capacity checks and one-clan membership, bounds and rate limits, and authenticated HTTP behavior. The same social scenarios run through a strict fake Firestore transport that rejects reads after queued writes; it does not replace testing against the Firestore service/emulator. Additional tests cover disabled communication endpoints, hidden legacy history, approved catalog boundaries, atomic name claims, legacy identity migration, clan reroll permissions and account isolation. Existing account/purchase tests must also remain green. The C# regression runner compiles the production identity/profile classes and checks rerolls, local progress import, account switching and legacy display masking.
 
 Unity Editor compilation and actual Android layout, account switching, two-device friendship/clan actions, cloud-save refresh and production HTTPS authentication remain required before release. A C# syntax parser is not a Unity compiler.
+
 

@@ -35,7 +35,20 @@ namespace Alterverse.Profile
             public string[] clanDescriptions;
             public int selfRank,total,offset,clanCreationCost,clanProtocolVersion,identityProtocolVersion;
             public bool hasClan;
+            public bool chatEnabled,chatAccepted,leaderAccepted,isChatAdmin,unchanged;
+            public string chatRulesVersion,leaderRulesVersion,chatRules,leaderRules,chatRevision,clanId,reportId,sentMessageId;
+            public string[] reportReasons;
+            public long mutedUntil,chatAcceptedAt,leaderAcceptedAt,expiresBefore;
+            public int chatProtocolVersion,maxMessageLength,warnings;
+            public Message[] messages;
+            public Report[] reports;
         }
+        [Serializable] public sealed class Message
+        {public string messageId,playerId,name,text;public long createdAt;}
+        [Serializable] public sealed class Evidence
+        {public string playerId,name,text;public long createdAt;}
+        [Serializable] public sealed class Report
+        {public string reportId,clanId,messageId,reporterId,playerId,reason,status;public long createdAt,reviewedAt;public Evidence evidence;}
         [Serializable] public sealed class Request
         {
             public string playerId,clanId,query,name,tag,description,role,operationId;
@@ -43,6 +56,9 @@ namespace Alterverse.Profile
             public int avatar,descriptionId;
             public int offset;
             public bool open=true;
+            public bool accepted;
+            public string consentVersion,ageBand,text,messageId,reason,action,reportId,knownRevision;
+            public int minutes=60;
         }
         [Serializable] sealed class Response { public bool fulfilled,conflict; public string message; public Snapshot social; }
         public static SocialService Instance { get; private set; }
@@ -51,6 +67,9 @@ namespace Alterverse.Profile
         public Snapshot Levels { get; private set; }
         public Snapshot Clans { get; private set; }
         public Snapshot ClanLevels { get; private set; }
+        public Snapshot Chat { get; private set; }
+        public Snapshot Reports { get; private set; }
+        public string SentOperationId { get; private set; }
         public string Status { get; private set; }="Sign in to load friends and clans.";
         public bool Busy { get; private set; }
         public bool Connected=>!string.IsNullOrEmpty(endpoint)&&!string.IsNullOrEmpty(Credential());
@@ -71,6 +90,12 @@ namespace Alterverse.Profile
         Func<string> token;
         int generation;
         bool loadedSyncedProfile;
+        float chatVisibleUntil,nextChatPoll;
+        bool chatFocused=true,chatPaused;
+        public void KeepChatOpen(){chatVisibleUntil=Time.unscaledTime+.3f;}
+        void OnApplicationFocus(bool focused){chatFocused=focused;if(!focused)ClearChat();}
+        void OnApplicationPause(bool paused){chatPaused=paused;if(paused)ClearChat();}
+        void ClearChat(){Chat=null;if(State!=null)State.messages=null;nextChatPoll=Time.unscaledTime+2f;}
 
         public static void Connect(string address,Func<string> credential)
         {
@@ -99,6 +124,7 @@ namespace Alterverse.Profile
             generation++;StopAllCoroutines();Busy=false;
             loadedSyncedProfile=false;
             State=Search=Levels=Clans=ClanLevels=null;
+            Chat=Reports=null;SentOperationId=null;chatVisibleUntil=nextChatPoll=0;
         }
         string Credential(){try{return token?.Invoke();}catch(Exception){return null;}}
         void Update()
@@ -106,12 +132,23 @@ namespace Alterverse.Profile
             // The account profile can arrive after the first social request at sign-in.
             if(!loadedSyncedProfile&&!Busy&&Connected&&PaidShardCommerce.Instance?.Ready==true&&AccountProfilePrefs.Attached)
             {loadedSyncedProfile=true;Load("/social/state");}
+            if(!Busy&&Connected&&chatFocused&&!chatPaused&&Time.unscaledTime<chatVisibleUntil&&Time.unscaledTime>=nextChatPoll&&
+                State?.chatEnabled==true&&State.chatAccepted&&State.clan!=null&&(State.role!="leader"||State.leaderAccepted))
+            {
+                nextChatPoll=Time.unscaledTime+2f;
+                Load("/social/chat/read",new Request{clanId=State.clan.clanId,knownRevision=Chat?.chatRevision});
+            }
         }
         public void CreateClan(Request draft)
         {
             if(Busy||!Connected||PaidShardCommerce.Instance?.Ready!=true)return;
             if(State?.clanCreationCost!=500||State.clanProtocolVersion<3){Status="Update the account server to enable generated clan identities.";return;}
             Request body=PendingClanCreation??draft;
+            if(State.chatEnabled)
+            {
+                if(!draft.accepted||draft.consentVersion!=State.leaderRulesVersion){Status="Accept the moderation terms first.";return;}
+                body.accepted=draft.accepted;body.consentVersion=draft.consentVersion;
+            }
             if(string.IsNullOrEmpty(body.operationId))body.operationId=Guid.NewGuid().ToString("N");
             PlayerPrefs.SetString(ClanOperationKey,JsonUtility.ToJson(body));PlayerPrefs.Save();
             Load("/social/clan/create",body);
@@ -171,9 +208,14 @@ namespace Alterverse.Profile
                     commerce?.Refresh();
                 }
                 if(request.responseCode==409){Status="Account changed. Refreshing your balance; retry after synchronization.";commerce?.Refresh();}
-                else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=null;Status="Sign in to reconnect.";}
+                else if(request.responseCode==401){State=Search=Levels=Clans=ClanLevels=Reports=null;ClearChat();Status="Sign in to reconnect.";}
                 else Status=request.responseCode==403?"Your clan role does not allow this action.":
                     !string.IsNullOrEmpty(response?.message)?response.message:"Social server unavailable. Tap REFRESH to retry.";
+                if(route.StartsWith("/social/chat/",StringComparison.Ordinal))
+                {
+                    ClearChat();nextChatPoll=Time.unscaledTime+5f;
+                    if(request.responseCode==403){loadedSyncedProfile=false;State=null;Reports=null;}
+                }
                 Busy=false;yield break;
             }
             // Unity's JSON serializer may materialize null class fields as empty objects.
@@ -186,17 +228,34 @@ namespace Alterverse.Profile
                 PlayerPrefs.DeleteKey(ClanOperationKey);PlayerPrefs.Save();
             }
             CleanSnapshot(response.social);
-            if(route=="/social/players")Search=response.social;
+            if(route=="/social/chat/admin/reports")Reports=response.social;
+            else if(route=="/social/chat/admin/action"||route=="/social/chat/admin/delivery")
+            {Reports=null;ClearChat();loadedSyncedProfile=false;}
+            else if(route=="/social/chat/read"&&response.social.unchanged)
+            {
+                if(Chat!=null&&Chat.clanId==response.social.clanId&&Chat.messages!=null)
+                {
+                    var kept=new System.Collections.Generic.List<Message>();
+                    foreach(var message in Chat.messages)if(message.createdAt>=response.social.expiresBefore)kept.Add(message);
+                    Chat.messages=kept.ToArray();
+                }
+            }
+            else if(route.StartsWith("/social/chat/",StringComparison.Ordinal)&&response.social.messages!=null)
+            {Chat=response.social;State=response.social;}
+            else if(route=="/social/players")Search=response.social;
             else if(route=="/social/levels")Levels=response.social;
             else if(route=="/social/clans")Clans=response.social;
             else if(route=="/social/clan-levels")ClanLevels=response.social;
             else
             {
+                if(State?.clan?.clanId!=response.social.clan?.clanId||route=="/social/block"||route=="/social/unblock")ClearChat();
                 State=response.social;
                 // Rankings and search results can have changed after membership actions.
                 if(route!="/social/state"){Levels=ClanLevels=Clans=Search=null;}
             }
-            Status="Synchronized.";Busy=false;
+            if(route=="/social/chat/send")SentOperationId=body.operationId;
+            if(route=="/social/chat/report")nextChatPoll=Time.unscaledTime+5f;
+            Status=route=="/social/chat/report"?"Report saved for the game administration.":"Synchronized.";Busy=false;
         }
         // Also protects displays during a staggered client/server rollout.
         internal static void CleanSnapshot(Snapshot value)
@@ -224,4 +283,5 @@ namespace Alterverse.Profile
         void OnDestroy(){if(Instance==this){ResetCache();Instance=null;}}
     }
 }
+
 

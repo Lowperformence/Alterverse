@@ -17,6 +17,9 @@ from pathlib import Path
 from google.cloud import firestore
 from ledger import Ledger
 from social import Social, public_values
+from social import SocialForbidden
+from clan_chat import (CHAT_TABLES, CHAT_KEYS, ChatConfig, ClanChat, CHAT_VERSION, LEADER_VERSION)
+from datetime import datetime, timezone
 
 TABLES = {
     'social_player': ('account','player_id','name','name_search','xp','level','avatar'),
@@ -32,6 +35,8 @@ KEYS = {'social_player':('account',),'social_friend':('a','b'),'social_block':('
         'social_clan':('id',),'social_member':('account',),'social_application':('account','clan'),
         'social_rate':('account',),'social_creation':('account','operation_id')}
 READ_ROUTES = {'/social/state','/social/players','/social/levels','/social/clans','/social/clan-levels'}
+TABLES.update(CHAT_TABLES)
+KEYS.update(CHAT_KEYS)
 
 
 def key_for(table, row):
@@ -42,8 +47,9 @@ def key_for(table, row):
 
 
 class FirestoreSocial:
-    def __init__(self, ledger):
+    def __init__(self, ledger, chat_config=None):
         self.ledger = ledger
+        self.chat_config = chat_config or ChatConfig.from_env()
         self.client = ledger.client
         prefix = ledger.accounts.id.removesuffix('-accounts')
         self.collections = {table:self.client.collection(prefix+'-'+table.replace('_','-')) for table in TABLES}
@@ -65,16 +71,24 @@ class FirestoreSocial:
         sync(self.client.transaction())
 
     def dispatch(self, account, route, data):
-        # No chat, player discovery, friend requests or editable clan identities.
+        # Public discovery, friend messaging and legacy chat routes stay disabled.
         # Enforce this on the server as well as hiding controls in the Unity UI.
         if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
-                or route in ('/social/players', '/social/block', '/social/unblock',
-                             '/social/clan/identity')):
+                or route in ('/social/players', '/social/clan/identity')
+                or not self.chat_config.enabled and route in ('/social/block', '/social/unblock')):
             raise ValueError('Communication is disabled in this version.')
+        admin_route = route.startswith('/social/chat/admin/')
+        if admin_route and account not in self.chat_config.admins:
+            raise SocialForbidden('Administrator required')
+        if route == '/social/chat/read' and data.get('knownRevision'):
+            unchanged = self.heartbeat(account, data)
+            if unchanged is not None: return unchanged
         self.ledger.wallet(account)
         # Shared rules own input validation and all account-derived authorization.
+        request_data = dict(data)
         @firestore.transactional
         def apply(tx):
+            data = dict(request_data)
             rows = {table:{} for table in TABLES}
             def read(table, identifier):
                 if identifier in rows[table]:
@@ -117,12 +131,76 @@ class FirestoreSocial:
                 read('social_clan',identifier)
                 query('social_member','clan',identifier)
                 query('social_application','clan',identifier)
+            # Sensitive chat history is scoped using authoritative membership before
+            # querying any messages. An injected foreign clan ID never loads its room.
+            own_member = rows['social_member'].get(account)
+            if route.startswith('/social/chat/') and not admin_route and route not in ('/social/chat/consent', '/social/chat/leader-consent'):
+                if not own_member or data.get('clanId') not in (None, '', own_member['clan']):
+                    raise SocialForbidden('Private clan room')
+            for who in actors:
+                query('chat_consent', 'account', who)
+                query('chat_rate', 'account', who)
+                read('chat_user_ban', who)
+            for identifier in clans:
+                query('chat_sanction', 'clan', identifier)
+                read('chat_room', identifier)
+            # Leadership transfer checks the recipient's recorded agreement too.
+            for who in actors:
+                query('chat_consent', 'account', who)
+            if route in ('/social/chat/read', '/social/chat/send', '/social/chat/report', '/social/chat/moderate'):
+                room = own_member['clan']
+                source = self.collections['social_message'].where('clan', '==', room).order_by('created_at', direction=firestore.Query.DESCENDING).limit(100)
+                for snapshot in source.stream(transaction=tx):
+                    value = snapshot.to_dict()
+                    rows['social_message'][snapshot.id] = {c:value[c] for c in TABLES['social_message']}
+                message_id = data.get('messageId')
+                if isinstance(message_id, str) and len(message_id) == 20:
+                    row = read('social_message', message_id)
+                    if row and row['clan'] != room: raise SocialForbidden('Private clan room')
+                operation = data.get('operationId')
+                if route == '/social/chat/send' and isinstance(operation, str) and len(operation) == 20:
+                    read('social_message', hashlib.sha256((account + ':' + operation).encode()).hexdigest()[:20])
+                if route == '/social/chat/report':
+                    subject = message_id or target
+                    if subject:
+                        report_id = hashlib.sha256(json.dumps([account, room, subject]).encode()).hexdigest()[:20]
+                        read('chat_report', report_id)
+                        read('chat_outbox', report_id)
+            if admin_route:
+                if route == '/social/chat/admin/reports':
+                    offset = data.get('offset', 0)
+                    if type(offset) is not int or not 0 <= offset <= 1000: raise ValueError('Invalid report page')
+                    source = self.collections['chat_report'].order_by('created_at', direction=firestore.Query.DESCENDING).offset(offset).limit(8)
+                    for snapshot in source.stream(transaction=tx):
+                        value = snapshot.to_dict()
+                        rows['chat_report'][snapshot.id] = {c:value[c] for c in TABLES['chat_report']}
+                    # Scoped SQLite contains only this page; pagination is applied here.
+                    data = dict(data, offset=0)
+                else:
+                    report_id = data.get('reportId')
+                    if isinstance(report_id, str) and len(report_id) == 20:
+                        report = read('chat_report', report_id)
+                        if report:
+                            target = report['target']; actors.add(target);clans.add(report['clan'])
+                            read('social_message', report['message_id']) if report['message_id'] else None
+                for identifier in clans:
+                    read('social_clan', identifier)
+                    read('chat_room', identifier)
+                    query('social_member', 'clan', identifier)
+                    query('social_application', 'clan', identifier)
+                for who in actors:
+                    read('social_member', who);read('chat_user_ban', who)
+                    query('chat_consent', 'account', who)
+                if data.get('action') == 'remove' and isinstance(data.get('messageId'), str) and len(data['messageId']) == 20:
+                    read('social_message', data['messageId'])
             # Applicants and friends need public values, not another account's private profile.
             accounts = set(actors)
             for relation in rows['social_friend'].values(): accounts.update((relation['a'],relation['b']))
             for relation in rows['social_block'].values(): accounts.update((relation['account'],relation['target']))
             for relation in rows['social_member'].values(): accounts.add(relation['account'])
             for relation in rows['social_application'].values(): accounts.add(relation['account'])
+            for message in rows['social_message'].values(): accounts.add(message['account'])
+            for report in rows['chat_report'].values(): accounts.update((report['target'], report['reporter']))
             for who in accounts:
                 read('social_player',who)
                 # Required to enforce one-clan membership when accepting an applicant.
@@ -191,7 +269,7 @@ class FirestoreSocial:
                 rows['social_clan'][identifier] = clan
             with tempfile.TemporaryDirectory(prefix='df-social-') as directory:
                 ledger = Ledger(Path(directory)/'scope.sqlite3')
-                rules = Social(ledger, generated_clan_identity=generated_clan_identity)
+                rules = Social(ledger, generated_clan_identity=generated_clan_identity, chat_config=self.chat_config)
                 with ledger.connect() as db:
                     for table,columns in TABLES.items():
                         for row in rows[table].values():
@@ -207,6 +285,7 @@ class FirestoreSocial:
                     for sku in caller_account['owned']:
                         db.execute('INSERT INTO cosmetic(account,sku) VALUES(?,?)',(account,sku))
                 result = rules.dispatch(account,route,data)
+                if route == '/social/chat/admin/reports': result['offset'] = request_data.get('offset', 0)
                 after = {}
                 with ledger.connect() as db:
                     for table,columns in TABLES.items():
@@ -223,7 +302,13 @@ class FirestoreSocial:
                     tx.delete(self.collections[table].document(identifier))
                 for identifier,row in after[table].items():
                     if before[table].get(identifier)!=row:
-                        tx.set(self.collections[table].document(identifier),row)
+                        persisted = dict(row)
+                        if table in ('social_message', 'chat_report', 'chat_audit'):
+                            days = self.chat_config.message_days if table == 'social_message' else self.chat_config.report_days
+                            persisted['expiresAt'] = datetime.fromtimestamp((row['created_at'] + days * 86400000) / 1000, timezone.utc)
+                        if table == 'chat_outbox' and identifier in after['chat_report']:
+                            persisted['expiresAt'] = datetime.fromtimestamp((after['chat_report'][identifier]['created_at'] + self.chat_config.report_days * 86400000) / 1000, timezone.utc)
+                        tx.set(self.collections[table].document(identifier),persisted)
             if route not in READ_ROUTES:
                 # These document writes guard caps/unique membership against query phantoms.
                 for who in actors:
@@ -250,6 +335,38 @@ class FirestoreSocial:
             return result
         return apply(self.client.transaction())
 
+    def check_account_allowed(self, account):
+        snapshot = self.collections['chat_user_ban'].document(account).get()
+        if snapshot.exists:
+            until = snapshot.to_dict()['until_at']
+            if until == -1 or until > ClanChat.now(): raise SocialForbidden('Account suspended')
+
+    def heartbeat(self, account, data):
+        """Cheap unchanged-room poll; recheck membership, ban and versioned consent."""
+        if not self.chat_config.enabled: raise ValueError('Communication is disabled in this version.')
+        @firestore.transactional
+        def check(tx):
+            def read(table, identifier):
+                snap = self.collections[table].document(identifier).get(transaction=tx)
+                return snap.to_dict() if snap.exists else None
+            member = read('social_member', account)
+            ban = read('chat_user_ban', account)
+            if not member or ban and (ban['until_at'] == -1 or ban['until_at'] > ClanChat.now()):
+                raise SocialForbidden('Clan access revoked')
+            clan = member['clan']
+            if data.get('clanId') not in (None, '', clan): raise SocialForbidden('Private clan room')
+            kinds = [('chat', CHAT_VERSION)] + ([('leader', LEADER_VERSION)] if member['role'] == 'leader' else [])
+            for kind, version in kinds:
+                if not read('chat_consent', key_for('chat_consent', dict(account=account, kind=kind, version=version))):
+                    raise SocialForbidden('Accept the current terms first')
+            room = read('chat_room', clan)
+            revision = room['revision'] if room else 'initial'
+            if revision == data.get('knownRevision'):
+                return dict(unchanged=True, chatRevision=revision, clanId=clan,
+                            expiresBefore=ClanChat.now() - self.chat_config.message_days * 86400000)
+            return None
+        return check(self.client.transaction())
+
 
 if __name__ == '__main__':
     # Optional one-off indexing of cloud profiles created before social deployment.
@@ -259,4 +376,5 @@ if __name__ == '__main__':
     social = FirestoreSocial(ledger)
     for snapshot in ledger.accounts.stream():
         social.sync_wallet(snapshot.id)
+
 

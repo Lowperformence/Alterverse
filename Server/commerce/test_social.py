@@ -11,6 +11,7 @@ from unittest.mock import patch
 from application import CommerceApplication
 from ledger import Ledger
 from social import Social, SocialForbidden, MAX_XP, level_for_xp
+from clan_chat import ChatConfig
 from safe_identity import DESCRIPTIONS, valid_player_name, valid_clan_name, valid_clan_tag
 
 
@@ -28,7 +29,7 @@ class SocialTests(unittest.TestCase):
 
     def make_ledger(self): return Ledger(self.path)
 
-    def make_social(self, ledger): return Social(ledger)
+    def make_social(self, ledger): return Social(ledger, chat_config=ChatConfig(enabled=False))
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -390,7 +391,7 @@ class SocialTests(unittest.TestCase):
 class SocialHttpTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory()
-        self.app=CommerceApplication(Path(self.tmp.name)/'db',lambda header: header[7:] if header.startswith('Bearer ') else None,None,None)
+        self.app=CommerceApplication(Path(self.tmp.name)/'db',lambda header: header[7:] if header.startswith('Bearer ') else None,None,None,chat_config=ChatConfig(enabled=False))
 
     def tearDown(self): self.tmp.cleanup()
 
@@ -447,3 +448,4 @@ class SocialHttpTests(unittest.TestCase):
         b=self.request('b','/social/state')['body']['social']
         self.assertNotIn('wallet',b)
         self.assertIsNone(b['clan'])
+

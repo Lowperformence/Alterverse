@@ -1,0 +1,12 @@
+{
+  "indexes": [
+    {"collectionGroup":"dimensions-front-social-message","queryScope":"COLLECTION","fields":[{"fieldPath":"clan","order":"ASCENDING"},{"fieldPath":"created_at","order":"DESCENDING"}]},
+    {"collectionGroup":"dimensions-front-chat-outbox","queryScope":"COLLECTION","fields":[{"fieldPath":"sent_at","order":"ASCENDING"},{"fieldPath":"next_at","order":"ASCENDING"}]}
+  ],
+  "fieldOverrides": [
+    {"collectionGroup":"dimensions-front-social-message","fieldPath":"expiresAt","ttl":true,"indexes":[]},
+    {"collectionGroup":"dimensions-front-chat-report","fieldPath":"expiresAt","ttl":true,"indexes":[]},
+    {"collectionGroup":"dimensions-front-chat-audit","fieldPath":"expiresAt","ttl":true,"indexes":[]},
+    {"collectionGroup":"dimensions-front-chat-outbox","fieldPath":"expiresAt","ttl":true,"indexes":[]}
+  ]
+}

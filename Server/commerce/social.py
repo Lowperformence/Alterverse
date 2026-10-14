@@ -9,6 +9,7 @@ import secrets
 import time
 
 from ledger import ITEMS, ProfileConflict
+from clan_chat import ClanChat, ChatConfig, initialize as initialize_chat
 from safe_identity import (DESCRIPTIONS, normalize_sqlite_profile,
                            visible_player_name, validate_clan_identity, migrate_sqlite_clans,
                            generate_clan_name, generate_clan_tag, description_for)
@@ -63,9 +64,10 @@ def sync_player(db, account, encoded):
 
 
 class Social:
-    def __init__(self, ledger, generated_clan_identity=None):
+    def __init__(self, ledger, generated_clan_identity=None, chat_config=None):
         self.ledger = ledger
         self.generated_clan_identity = generated_clan_identity
+        self.chat = ClanChat(self, chat_config or ChatConfig.from_env())
         with ledger.connect() as db:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS social_player(
@@ -95,6 +97,7 @@ class Social:
             columns = {r[1] for r in db.execute('PRAGMA table_info(social_clan)')}
             if 'avatar' not in columns:
                 db.execute('ALTER TABLE social_clan ADD COLUMN avatar INTEGER NOT NULL DEFAULT -1')
+            initialize_chat(db)
             for account, encoded in db.execute('SELECT account,data FROM profile').fetchall():
                 sync_player(db, account, encoded)
             migrate_sqlite_clans(db)
@@ -157,7 +160,7 @@ class Social:
         return result
 
     def snapshot(self, db, account):
-        # Never expose historic friendships or blocks in the no-communication build.
+        # Friend messaging stays disabled; clan chat can expose the caller's blocks.
         friends, incoming, outgoing, blocked = [], [], [], []
         member = self.membership(db, account)
         clan = self.clan(db, member[0]) if member else None
@@ -165,24 +168,29 @@ class Social:
         if member and member[1] in ('leader', 'officer'):
             applications = [self.player(db, row[0]) for row in db.execute('SELECT account FROM social_application WHERE clan=? ORDER BY account', (member[0],))]
         pending = [row[0] for row in db.execute('SELECT clan FROM social_application WHERE account=? ORDER BY clan', (account,))]
-        return {'hasClan':member is not None,'clanCreationCost':CLAN_CREATION_COST,'clanProtocolVersion':3,
-                'identityProtocolVersion':1,'chatEnabled':False,'clanDescriptions':list(DESCRIPTIONS),
+        if self.chat.config.enabled:
+            blocked = [self.player(db, r[0]) for r in db.execute('SELECT target FROM social_block WHERE account=? ORDER BY target', (account,))]
+        return {**self.chat.snapshot(db, account), 'hasClan':member is not None,'clanCreationCost':CLAN_CREATION_COST,'clanProtocolVersion':4 if self.chat.config.enabled else 3,
+                'identityProtocolVersion':1,'clanDescriptions':list(DESCRIPTIONS),
                 'me': self.player(db, account), 'friends': friends, 'incoming': incoming,
                 'outgoing': outgoing, 'blocked': blocked, 'clan': clan, 'role': member[1] if member else '',
                 'applications': applications, 'pendingClans': pending}
 
     def dispatch(self, account, route, data):
-        # No chat, player discovery, friend requests or editable clan identities.
+        # Public discovery, friend messaging and legacy chat routes stay disabled.
         # Enforce this on the server as well as hiding controls in the Unity UI.
         if (route.startswith(('/social/clan/message', '/social/message', '/social/friend/'))
-                or route in ('/social/players', '/social/block', '/social/unblock',
-                             '/social/clan/identity')):
+                or route in ('/social/players', '/social/clan/identity')
+                or not self.chat.config.enabled and route in ('/social/block', '/social/unblock')):
             raise ValueError('Communication is disabled in this version.')
         with self.ledger.connect() as db:
             db.execute('BEGIN IMMEDIATE')
             self.ledger.ensure(db, account)
+            self.chat.account_allowed(db, account)
             encoded = db.execute('SELECT data FROM profile WHERE account=?', (account,)).fetchone()[0]
             sync_player(db, account, encoded)
+            if route.startswith('/social/chat/'):
+                return self.chat.dispatch(db, account, route, data)
             if route == '/social/state':
                 return self.snapshot(db, account)
             if route == '/social/players':
@@ -255,9 +263,15 @@ class Social:
                 raise ValueError('Block list full')
             db.execute('INSERT OR IGNORE INTO social_block VALUES(?,?)', (account, other))
             db.execute('DELETE FROM social_friend WHERE a=? AND b=?', (a, b))
+            for who in (account, other):
+                member = self.membership(db, who)
+                if member: self.chat.touch(db, member[0])
             return
         if route == '/social/unblock':
             db.execute('DELETE FROM social_block WHERE account=? AND target=?', (account, other))
+            for who in (account, other):
+                member = self.membership(db, who)
+                if member: self.chat.touch(db, member[0])
             return
         if route == '/social/friend/remove':
             db.execute('DELETE FROM social_friend WHERE a=? AND b=?', (a, b))
@@ -284,6 +298,7 @@ class Social:
     def clan_action(self, db, account, route, data):
         member = self.membership(db, account)
         if route == '/social/clan/create':
+            self.chat.creation_consent(db, account, data)
             opened = data.get('open', True)
             operation = data.get('operationId')
             self.ledger.validate_operation(operation)
@@ -376,6 +391,7 @@ class Social:
             if route == '/social/clan/cancel':
                 db.execute('DELETE FROM social_application WHERE account=? AND clan=?', (account, identifier))
                 return
+            self.chat.eligible(db, account, identifier)
             if member:
                 if member[0] == identifier:
                     return
@@ -454,14 +470,22 @@ class Social:
         elif route == '/social/clan/transfer':
             if role != 'leader':
                 raise SocialForbidden('Leader required')
+            if self.chat.config.enabled and not self.chat.consent(db, other, 'leader'):
+                raise ValueError('New leader must accept moderation terms first')
             db.execute("UPDATE social_member SET role='member' WHERE account=?", (account,))
             db.execute("UPDATE social_member SET role='leader' WHERE account=?", (other,))
 
     def add_member(self, db, account, identifier, role='member'):
+        self.chat.eligible(db, account, identifier)
         if self.membership(db, account):
             raise ValueError('Player already belongs to a clan')
         if db.execute('SELECT COUNT(*) FROM social_member WHERE clan=?', (identifier,)).fetchone()[0] >= MAX_MEMBERS:
             raise ValueError('Clan full (50 members)')
         db.execute('INSERT INTO social_member VALUES(?,?,?)', (account, identifier, role))
         db.execute('DELETE FROM social_application WHERE account=?', (account,))
+
+    def check_account_allowed(self, account):
+        with self.ledger.connect() as db:
+            self.chat.account_allowed(db, account)
+
 

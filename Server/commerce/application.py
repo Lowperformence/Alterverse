@@ -8,14 +8,16 @@ from ledger import Ledger, PACKS, COSMETICS, ProfileConflict
 from social import Social, SocialForbidden
 
 class CommerceApplication:
-    def __init__(self, ledger_or_path, authenticate, google_session, package_name, ranked=None, ranked_server_key=''):
+    def __init__(self, ledger_or_path, authenticate, google_session, package_name, ranked=None, ranked_server_key='', chat_config=None):
         self.ranked, self.ranked_server_key = ranked, ranked_server_key
         self.ledger = ledger_or_path if hasattr(ledger_or_path, 'wallet') else Ledger(ledger_or_path)
         if hasattr(self.ledger, 'connect'):
-            self.social = Social(self.ledger)
+            self.social = Social(self.ledger, chat_config=chat_config)
         else:
             from firestore_social import FirestoreSocial
-            self.social = FirestoreSocial(self.ledger)
+            self.social = FirestoreSocial(self.ledger, chat_config=chat_config)
+        from chat_delivery import ChatDelivery
+        self.chat_delivery = ChatDelivery(self.social)
         self.authenticate = authenticate
         self.google = google_session  # google.auth.transport.requests.AuthorizedSession, server credentials only
         self.package = package_name
@@ -35,6 +37,7 @@ class CommerceApplication:
             else:
                 account = self.authenticate(env.get('HTTP_AUTHORIZATION', ''))
             if not account: raise PermissionError('Authentication required')
+            if not server_ranked: self.social.check_account_allowed(account)
             data = json.loads(env['wsgi.input'].read(size) or b'{}')
             if not isinstance(data, dict): raise ValueError('JSON object required')
             path = env.get('PATH_INFO')
@@ -48,7 +51,12 @@ class CommerceApplication:
                 start_response('200 OK', [('Content-Type', 'application/json'), ('Cache-Control', 'no-store')])
                 return [body]
             if isinstance(path, str) and path.startswith('/social/'):
-                social = self.social.dispatch(account, path, data)
+                if path == '/social/chat/admin/delivery':
+                    config = self.social.chat.config if hasattr(self.social, 'chat') else self.social.chat_config
+                    if account not in config.admins: raise SocialForbidden('Administrator required')
+                    social = {'delivery': self.chat_delivery.pump(3)}
+                else:
+                    social = self.social.dispatch(account, path, data)
                 if social.get('wallet') is not None:
                     social['wallet']['accountHash'] = account
                     social['wallet']['billingReady'] = self.google is not None and bool(self.package)
@@ -99,6 +107,7 @@ class CommerceApplication:
             # Do not expose purchase tokens/credentials in response or logs. Upstream outage is retryable.
             body = b'{"fulfilled":false}'; start_response('503 Service Unavailable', [('Content-Type', 'application/json')])
         return [body]
+
 
 
 
