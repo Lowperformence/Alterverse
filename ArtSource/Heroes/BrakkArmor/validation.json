@@ -35,14 +35,18 @@
     "validArmorIndices": true,
     "rigidExistingArmorBoneWeights": true,
     "armorAnimationSamples": 27,
-    "maxArmorAttachmentErrorMetres": 2.4755668231600746e-07,
+    "maxArmorAttachmentErrorMetres": 2.5636927089222153e-07,
     "removedOldTorsoFaces": 2738,
-    "torsoBodyHeadHandsAndFeetPreserved": true
+    "torsoBodyHeadHandsAndFeetPreserved": true,
+    "runtimeSurfaceFit": "connected-anatomy-contour-v1",
+    "runtimeMountsChecked": 18,
+    "maxRuntimeMountSurfaceDistanceMetres": 0.016855616122484207,
+    "nondegenerateRuntimeTriangles": true
   },
   "unityEditorExecuted": false,
   "armorRuntimeIntegrated": true,
   "runtimeSha256": "6599d79f5b38bcaea7e5bce7c0416ebf47516d82ba7c75abda117c1cc45829ba",
   "armorVertices": 34432,
   "armorTriangles": 17272,
-  "armorRuntimeSha256": "f90b65c1496526be3a213ed1e9307975783574e43b2d7bb2ed318e4322519ed1"
+  "armorRuntimeSha256": "0a08f277f284a8553bb389c19783d8356ab428d0d3f3b624e83f16f0e28d1673"
 }

@@ -25,6 +25,30 @@ assert all(0 <= i < count for sub in data['submeshes'] for i in sub['triangles']
 samples = []
 for part in data['parts']:
     ob = bpy.data.objects['BRK_'+part['id']]
+    if data.get('surfaceFit') == 'connected-anatomy-contour-v1':
+        # The editable concept is planar; validate the actual shipped contour
+        # through Blender's armature modifier rather than the old concept mesh.
+        first = part['firstVertex']
+        end = first + part['vertexCount']
+        points = [B @ Vector(data['vertices'][i*3:i*3+3]) for i in range(first, end)]
+        faces = []
+        for sub in data['submeshes']:
+            for i in range(0, len(sub['triangles']), 3):
+                tri = sub['triangles'][i:i+3]
+                if all(first <= v < end for v in tri):
+                    faces.append(tuple(v-first for v in tri))
+        mesh = bpy.data.meshes.new('Runtime contour validation')
+        mesh.from_pydata(points, [], faces); mesh.update()
+        ob = bpy.data.objects.new('Runtime_'+part['id'], mesh)
+        bpy.context.collection.objects.link(ob)
+        group = ob.vertex_groups.new(name=part['bone'])
+        group.add(list(range(len(points))), 1., 'REPLACE')
+        modifier = ob.modifiers.new('Validate shipped skinning', 'ARMATURE')
+        modifier.object = arm
+        for index in [first, first+part['vertexCount']//2, end-1]:
+            assert data['boneNames'][data['boneIndices'][index]] == part['bone']
+            samples.append((ob, part['bone'], points[index-first], index-first))
+        continue
     tree = KDTree(len(ob.data.vertices))
     for v in ob.data.vertices:
         tree.insert(v.co,v.index)
@@ -107,3 +131,4 @@ report['checks'].update(armorAnimationSamples=poses,maxArmorAttachmentErrorMetre
 (ART/'validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print('ARMOR_RUNTIME_VALIDATED',count,'vertices',poses,'poses',worst,'max error',
       len(removed),'old torso faces removed',flush=True)
+

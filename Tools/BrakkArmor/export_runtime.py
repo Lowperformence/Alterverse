@@ -2,6 +2,7 @@
 Blender -b --python export_runtime.py (run after build_armor.py).
 """
 import bpy, gzip, hashlib, json, math
+import sys
 from pathlib import Path
 from mathutils import Matrix
 
@@ -54,6 +55,12 @@ data = {'version':1,'revision':'brakk-armor-runtime-20261013','plateCount':18,'s
         'vertices':vertices,'normals':normals,'uv':uv,'pivot':list(hips),
         'referenceRigSpan':(spine-hips).length,'boneNames':boneNames,'boneIndices':boneIndices,
         'submeshes':submeshes,'materials':belt['materials'],'parts':parts}
+# Do not position a whole plate using the maximum of broad body triangles.
+# Curved anatomy needs a contour fit, including the mounting and shell layers.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from fit_surface import conform
+catalogue = json.loads((ART/'catalogue.json').read_text())
+conform(data, catalogue['plates'], bpy.data.objects['DF_Anatomy'])
 assert len(boneIndices) == len(vertices)//3
 assert all(math.isfinite(x) for x in vertices+normals+uv)
 assert all(0 <= i < len(vertices)//3 for s in submeshes for i in s['triangles'])
@@ -71,3 +78,4 @@ validation.update(armorRuntimeIntegrated=True,armorVertices=len(vertices)//3,
 validation['checks'].update(finiteArmorGeometry=True,validArmorIndices=True,rigidExistingArmorBoneWeights=True)
 (ART/'validation.json').write_text(json.dumps(validation,indent=2)+'\n')
 print('ARMOR_RESOURCE_EXPORTED',len(parts),'parts',len(groups),'plates',len(vertices)//3,'vertices',flush=True)
+
