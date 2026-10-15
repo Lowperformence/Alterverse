@@ -563,7 +563,7 @@ namespace Alterverse.UI
                     theme.Small, true);
 
             if (theme.Action(new Rect(Right - 200, 592, 170, 50),
-                busy ? "PLEASE WAIT" : "LEAVE ROOM", enabled: !busy && coop.IsLobby))
+                busy ? "PLEASE WAIT" : "LEAVE ROOM", enabled: !busy && !coop.IsLaunching))
                 _ = coop.LeaveLobbyAsync();
             theme.FitLabel(new Rect(Left + 28, 645, ContentWidth - 56, 22),
                 !string.IsNullOrEmpty(coop.LastError) ? coop.LastError :
