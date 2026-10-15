@@ -58,7 +58,7 @@ namespace Alterverse.Multiplayer
                 if(!session.TryAssign(i,HumanSlot(ordered[i],i==0)))
                     throw new InvalidOperationException($"Could not assign co-op human slot {i}.");
 
-            HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Nerok,HeroId.Rook,HeroId.VoidKnight};
+            HeroId[] pool={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Mira,HeroId.Nerok,HeroId.Rook};
             int allySlot=ordered.Count;
             for(int i=0;i<pool.Length&&allySlot<MatchSession.TeamSize;i++)
             {

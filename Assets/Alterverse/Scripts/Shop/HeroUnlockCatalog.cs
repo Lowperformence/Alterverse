@@ -16,7 +16,8 @@ namespace Alterverse.Shop
         public const string TimmyOwnedKey="DF_HeroOwned_Timmy";
         // Listed for preview, but purchase and deployment remain blocked until release.
         public const bool TimmyReleased=false;
-        public static bool Released(HeroId hero)=>hero!=HeroId.Timmy||TimmyReleased;
+        public const bool VoidKnightReleased=false;
+        public static bool Released(HeroId hero)=>hero==HeroId.VoidKnight?VoidKnightReleased:hero!=HeroId.Timmy||TimmyReleased;
 
         // The Traveler is a paid shard unlock in normal play.
         public const bool TravelerFreeTestAccess=false;

@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 19 restores original material imports after removing graphics addons.
+        // Version 20 adds the refined Void Knight material hierarchy.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 19;
+        public override uint GetVersion() => 20;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -71,6 +71,19 @@ namespace Alterverse.EditorTools
             {
                 material.EnableKeyword("_EMISSION");
                 material.SetColor("_EmissionColor", color * 2f);
+            }
+            if(Path.GetFileNameWithoutExtension(assetPath)=="VoidKnight")
+            {
+                bool fabric=name.Contains("undersuit");
+                bool energy=name.Contains("energy");
+                bool edge=name.Contains("bevel metal");
+                material.SetFloat("_Metallic",fabric?0f:energy?.15f:edge?.88f:.82f);
+                material.SetFloat("_Smoothness",fabric?.22f:energy?.70f:edge?.76f:.67f);
+                if(energy)
+                {
+                    material.EnableKeyword("_EMISSION");
+                    material.SetColor("_EmissionColor",color*(name.Contains("core")?2.6f:2.2f));
+                }
             }
             if(Path.GetFileNameWithoutExtension(assetPath)=="Timmy"&&name.Contains("visor glass"))
                 ConfigureTimmyVisor(material);
@@ -148,4 +161,3 @@ namespace Alterverse.EditorTools
     }
 }
 #endif
-

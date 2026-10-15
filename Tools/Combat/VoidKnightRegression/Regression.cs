@@ -39,6 +39,15 @@ class Regression
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);a.AddComponent<BasicAttack>();a.GetComponent<BasicAttack>().TryAttackAimed(Aim(a));Run(.5f);Check(a.GetComponent<VoidKnightState>().Charges==0,"missed basic does not build passive");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.back*2);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.7f);Near(Hp(b),1000,"cleave excludes targets behind actor");
   Reset();a=Actor(HeroId.VoidKnight,0,Vector3.zero);b=Actor(HeroId.Veyr,1,Vector3.forward*3);Unlock(a);a.GetComponent<HeroAbilityExecution>().TryCastAimed(3,Aim(a));Run(.2f);a.SetActive(false);Run(.7f);Near(Hp(b),1000,"disabled actor cannot land pending ultimate");
+  Check(!Alterverse.Shop.HeroUnlockCatalog.Released(HeroId.VoidKnight),"Void Knight remains unreleased");
+  Check(!Alterverse.Shop.HeroUnlockInventory.Owned(HeroId.VoidKnight),"unreleased hero blocked even with stored ownership");
+  Check(Alterverse.Shop.HeroUnlockInventory.Purchase(HeroId.VoidKnight)==Alterverse.Shop.HeroUnlockResult.NotPurchasable,"purchase rejected before release");
+  Check(Alterverse.Shop.ProfileTransaction.Recoveries==0&&Alterverse.Shop.ProfileTransaction.Commits==0,"blocked purchase touches no transaction");
+  Check(Alterverse.Shop.PlayerWallet.ServerRequests==0,"blocked purchase sends no server request");
+  Check(!PlayerHeroSelection.Select(HeroId.VoidKnight)&&PlayerHeroSelection.Selected!=HeroId.VoidKnight,"unreleased hero cannot deploy");
+  Check(!Alterverse.Shop.HeroUnlockCatalog.Released(HeroId.Timmy),"Timmy release lock preserved");
+  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Traveler)==1500&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Nerok)==2200&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Timmy)==1900,"existing prices preserved");
+  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.VoidKnight)==0&&Alterverse.Shop.HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)==null,"no unapproved price or SKU introduced");
   Console.WriteLine("VOID KNIGHT: "+passed+" checks passed. Engine fixtures; native Unity and NGO not covered.");
  }
 }

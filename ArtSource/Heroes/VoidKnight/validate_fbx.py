@@ -13,7 +13,9 @@ for mesh in meshes:
  for v in mesh.data.vertices:
   assert all(math.isfinite(x) for x in v.co)
   assert abs(sum(g.weight for g in v.groups)-1)<1e-5
+assert triangles <= 35000, triangles
 rig=next(o for o in bpy.data.objects if o.type=='ARMATURE')
+assert len(rig.data.bones)==19
 for track in rig.animation_data.nla_tracks:track.mute=True
 frames=0
 for action in bpy.data.actions:

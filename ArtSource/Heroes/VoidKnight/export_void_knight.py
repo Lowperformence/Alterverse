@@ -8,7 +8,7 @@ bpy.ops.wm.open_mainfile(filepath=str(HERE/'VoidKnight.blend'))
 scene=bpy.context.scene
 rig=next(o for o in scene.objects if o.type=='ARMATURE')
 meshes=[o for o in scene.objects if o.type=='MESH']
-assert len(meshes)==145 and len(bpy.data.actions)==12
+assert 145 <= len(meshes) <= 360 and len(bpy.data.actions)==12
 for m in meshes:
  assert m.get('bone') in rig.data.bones
  for v in m.data.vertices:

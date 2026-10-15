@@ -65,4 +65,13 @@ PASS: real basic hit builds passive
 PASS: missed basic does not build passive
 PASS: cleave excludes targets behind actor (1000)
 PASS: disabled actor cannot land pending ultimate (1000)
-VOID KNIGHT: 67 checks passed. Engine fixtures; native Unity and NGO not covered.
+PASS: Void Knight remains unreleased
+PASS: unreleased hero blocked even with stored ownership
+PASS: purchase rejected before release
+PASS: blocked purchase touches no transaction
+PASS: blocked purchase sends no server request
+PASS: unreleased hero cannot deploy
+PASS: Timmy release lock preserved
+PASS: existing prices preserved
+PASS: no unapproved price or SKU introduced
+VOID KNIGHT: 76 checks passed. Engine fixtures; native Unity and NGO not covered.

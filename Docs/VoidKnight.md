@@ -1,6 +1,6 @@
 # Void Knight
 
-Black armored, purple emissive swordsman from an unknown galaxy. Helmet reference: existing shop avatar `Resources/Avatars/Avatar21.jpg`. Standard roster hero, appended ID 9; no premium purchase SKU or price was invented.
+Black armored, purple emissive swordsman from an unknown galaxy. Helmet reference: existing shop avatar `Resources/Avatars/Avatar21.jpg`. Preview-only unreleased hero, appended ID 9. Purchase and deployment are blocked by `VoidKnightReleased=false`; no premium purchase SKU or launch price was invented.
 
 | Attack | Damage | Reach | Cooldown | Behavior |
 |---|---:|---:|---:|---|
@@ -16,9 +16,9 @@ Health: 290 raw, **350.175 final HP** after the existing universal multiplier, v
 
 ## Assets
 
-- `ArtSource/Heroes/VoidKnight/VoidKnight.blend`: 145 individually named editable mesh parts, five materials, 19-bone rig and twelve actions. Each mesh's `bone` custom property identifies its skin binding.
+- `ArtSource/Heroes/VoidKnight/VoidKnight.blend`: 214 individually named editable mesh parts, five materials, 19-bone rig and twelve actions. Each mesh's `bone` custom property identifies its skin binding.
 - `Construction/`: current front/side/back body, armor and sword views, five attack poses and complete part manifest. `Concept-v1/` archives the initial sketches; the current model supersedes their earlier weapon/helmet details.
-- `Resources/AuthoredHeroes/VoidKnight.fbx`: runtime copy merged into `DF_Anatomy` and `DF_WeaponR`, 15,548 triangles. Re-export merges only an in-memory copy and preserves separate source geometry.
+- `Resources/AuthoredHeroes/VoidKnight.fbx`: runtime copy merged into `DF_Anatomy` and `DF_WeaponR`, 26,832 triangles. Re-export merges only an in-memory copy and preserves separate source geometry.
 - `Icons/0.png`–`4.png`: original built-in image-generator artwork, basic / Q / W / E / R. Runtime copies: `Resources/VoidKnight/Icons/`, imported with 512-pixel limits. Each motif depicts the corresponding sword cut, sweep, parry, thrust or downward cleave.
 - `SoundSource/`: eleven original procedural WAVs and NumPy/SciPy generator. Sixteen mono 48 kHz PCM16 runtime cues under `Resources/Audio/Heroes/VoidKnight/`; three basic cast variants. W has no separate preparation cue.
 
@@ -30,7 +30,7 @@ Gameplay remains host-authoritative. Stuns, death and disabling cancel preparati
 
 Re-executed after restoration:
 
-- 67 deterministic C# combat checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority.
+- 76 deterministic C# combat and release-lock checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority, ownership bypass prevention, purchase rejection and unchanged existing prices.
 - FBX reimport: two meshes, 19 bones, twelve named clips, normalized weights and finite geometry/bone poses across 384 frames.
 - Five square icon files and sixteen nonempty mono PCM16 48 kHz runtime WAVs.
 
@@ -39,3 +39,9 @@ Re-executed after restoration:
 In the full Unity project run **DIMENSIONS FRONT → Checks → Void Knight integration (non-destructive)**. Then test all attacks, E against walls, stun interruption, two-hand grip during movement/attacks, emission/bloom, icon slots and volume controls, and two actual connected clients. No scene replacement or separate prefab wiring is needed: the existing roster creates the hero and loads its authored model by HeroId.
 
 Use Blender Python/bpy to run `export_void_knight.py`, `validate_fbx.py` and `render_reference.py` from the source folder. Native `.blend` source remains modular and is never overwritten by the merged export.
+
+## Armor and sword revision
+
+Version 2 replaces the armor and sword geometry with curved layered black metal, separate pectoral and abdominal plates, tapered limbs, smaller wrist joints, shaped boots and a broad diamond-section greatsword with swept quillons. Five materials separate dark metal, machined edges, fabric and two violet emission strengths. The importer sets matching URP metallic/smoothness/emission values only for this hero.
+
+See `ArtSource/Heroes/VoidKnight/BLENDER-REDESIGN.md` for the build plan. `redesign_void_knight.py` builds from the frozen `VoidKnight-v1-reference.blend`, preserving original bones, twelve actions and both hand contacts. `validate_redesign.py` compares every original bone matrix over all 384 action frames and checks the unchanged 0.38 m grip span. Gameplay values, icon IDs and audio IDs remain unchanged.

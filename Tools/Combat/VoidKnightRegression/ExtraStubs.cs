@@ -10,3 +10,21 @@ namespace Alterverse.Visuals {
  }
  public sealed partial class HeroSkillVfx {public static void EndTimmyLeap(GameObject a){}public static void TimmyEffect(GameObject a,int kind,Vector3 from,Vector3 to,float radius,float duration){}}
 }
+namespace Alterverse.Profile
+{
+ public static class AccountProfilePrefs {public static int GetInt(string key,int fallback)=>1;}
+}
+namespace Alterverse.Shop
+{
+ public static class ProfileTransaction
+ {
+  public static int Recoveries,Commits;public static void Recover(){Recoveries++;}public static void Commit(params Write[] writes){Commits++;}
+  public struct Write{public Write(string key,int value){}}
+ }
+ public static class PlayerWallet
+ {
+  public static int EarnedBalance=99999,ServerRequests;public static bool CanAfford(int price)=>true;
+  public static bool BeginServerPurchase(string sku){ServerRequests++;return true;}
+ }
+ public class PaidShardCommerce {public static PaidShardCommerce Instance=new();public bool Ready=true;}
+}
