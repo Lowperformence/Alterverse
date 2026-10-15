@@ -16,6 +16,7 @@ namespace Alterverse.UI
         public static bool IsOpen => instance != null && instance.open && MainMenuController.IsVisible;
         private FrontEndTheme theme;
         private bool open;
+        private string friendInviteCode = "";
         private const float ReferenceHeight = 720f;
         private const float ReferenceWidth = 1500f;
 
@@ -103,7 +104,7 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(left + 28f, 70f, width - 220f, 38f), "MATCHMAKING", theme.Title);
             theme.Label(new Rect(left + 30f, 110f, width - 250f, 24f),
-                "5v5 • Automatic matchmaking • No player messaging or invites.",
+                "5v5 • Automatic matchmaking or invite friends into a private party.",
                 theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 158f, 72f, 126f, 42f), "CLOSE"))
@@ -124,17 +125,30 @@ namespace Alterverse.UI
         private void DrawEntry(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
-            theme.Panel(new Rect(left+27,158,width-54,362));
-            theme.Label(new Rect(left+54,184,width-108,36),"AUTOMATIC MATCHMAKING",theme.Heading);
-            theme.Label(new Rect(left+54,242,width-108,72),
-                "Join a 5v5 match automatically. Private rooms, codes, invites, chat and voice are disabled.",
-                theme.Body,true);
-            if(theme.Action(new Rect(left+54,346,width-108,60),
-                busy?"SEARCHING...":"FIND MATCH",true,enabled:!busy && edgegap!=null))
+            theme.Panel(new Rect(left + 27, 158, width - 54, 406));
+            theme.Label(new Rect(left + 54, 181, width - 108, 35),
+                "PLAY ONLINE OR INVITE FRIENDS", theme.Heading);
+            theme.Label(new Rect(left + 54, 226, width - 108, 34),
+                "Match automatically, or create a private party (up to 5 friends on one team).",
+                theme.Body, true);
+            if (theme.Action(new Rect(left + 54, 276, width - 108, 54),
+                busy ? "SEARCHING..." : "FIND MATCH", true,
+                enabled: !busy && edgegap != null))
                 _ = edgegap.QuickSearchAsync();
-            theme.Label(new Rect(left+54,452,width-108,36),
-                "Generated player names only. No way to send messages to other players.",
-                theme.Small,true);
+            if (theme.Action(new Rect(left + 54, 344, width - 108, 50),
+                "CREATE FRIEND PARTY", enabled: !busy))
+                _ = online.CreatePrivatePartyAsync();
+            theme.Label(new Rect(left + 54, 406, width - 108, 24),
+                "HAVE AN INVITE CODE?", theme.Small, true);
+            friendInviteCode = GUI.TextField(new Rect(left + 54, 439, width - 334, 48),
+                friendInviteCode ?? "", 16, theme.Field);
+            if (theme.Action(new Rect(left + width - 264, 439, 210, 48), "JOIN PARTY",
+                enabled: !busy && OnlinePartyService.NormalizeJoinCode(friendInviteCode).Length >= 4))
+                _ = online.JoinByCodeAsync(OnlinePartyService.NormalizeJoinCode(friendInviteCode));
+            string state = !string.IsNullOrEmpty(online.LastError) ? online.LastError :
+                edgegap != null && !string.IsNullOrEmpty(edgegap.LastError) ?
+                edgegap.LastError : online.Status;
+            theme.FitLabel(new Rect(left + 54, 522, width - 108, 26), state, theme.Small, true);
         }
 
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
@@ -270,10 +284,14 @@ namespace Alterverse.UI
             if (edgegap != null && !string.IsNullOrEmpty(edgegap.LastError)) state = edgegap.LastError;
             else if (!string.IsNullOrEmpty(online.LastError)) state = online.LastError;
             else state = DedicatedOnlineMatchHandshake.Status;
-            theme.Label(new Rect(left + 28f, 588f, width - 56f, 26f), state, theme.Small, true);
-            theme.Label(new Rect(left + 28f, 618f, width - 56f, 22f),
-                "CHOOSE YOUR HERO  •  READY UP  •  PLAY TOGETHER",
-                theme.Small, true);
+            theme.Label(new Rect(left + 28f, 579f, 420f, 26f),
+                "FRIEND INVITE CODE  " + (online.JoinCode.Length > 0 ? online.JoinCode : "WAITING"),
+                theme.Body, true);
+            if (theme.Action(new Rect(left + width - 225f, 578f, 195f, 40f),
+                "COPY INVITE CODE", enabled: online.JoinCode.Length > 0))
+                GUIUtility.systemCopyBuffer = online.JoinCode;
+            theme.FitLabel(new Rect(left + 28f, 630f, width - 56f, 24f),
+                state, theme.Small, true);
         }
 
         private void OnDestroy()
