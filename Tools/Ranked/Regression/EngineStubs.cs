@@ -7,7 +7,16 @@ using UnityEngine;
 namespace UnityEngine {
  public class Object { public static void Destroy(Object o){} public static void DontDestroyOnLoad(Object o){} public static T FindAnyObjectByType<T>() where T:class=>null; }
  public class MonoBehaviour:Object { public GameObject gameObject=new GameObject(); public bool isActiveAndEnabled=true; public void StartCoroutine(IEnumerator e){} public void StopAllCoroutines(){} }
- public class GameObject:Object { public GameObject(string n=""){} public T AddComponent<T>() where T:new(){var o=new T();typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;} }
+ public class GameObject:Object {
+  public static readonly List<GameObject> All=new();public string name;public Transform transform=new();readonly Dictionary<Type,object> components=new();
+  public GameObject(string n=""){name=n;All.Add(this);}public static GameObject Find(string n)=>All.Find(g=>g.name==n);
+  public T GetComponent<T>() where T:class=>components.TryGetValue(typeof(T),out var o)?o as T:null;
+  public T AddComponent<T>() where T:new(){var o=new T();components[typeof(T)]=o;if(o is MonoBehaviour b)b.gameObject=this;typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;}
+ }
+ public class Transform {public Vector3 position;public void SetParent(Transform t,bool world){}}
+ public class CapsuleCollider {public float height,radius;}
+ public class SerializeField:Attribute {}
+ public static class Random {public static int Range(int min,int max)=>min;}
  public class TextAsset {public string text;}
  public static class Resources {
   public static TextAsset AccountConfig, RankedConfig;
@@ -70,19 +79,29 @@ namespace Unity.Collections {
 namespace Unity.Netcode {
  public enum NetworkDelivery {ReliableSequenced}
  public class FastBufferWriter:IDisposable {public FastBufferWriter(int n,Unity.Collections.Allocator a){}public void WriteValueSafe<T>(T v){}public void Dispose(){}}
- public class FastBufferReader {public bool TryBeginRead(int n)=>true;public void ReadValueSafe<T>(out T v){v=default;}}
+ public class FastBufferReader {readonly Queue<object> values;public FastBufferReader(params object[] data){values=new(data);}public bool TryBeginRead(int n)=>true;public void ReadValueSafe<T>(out T v){v=values.Count>0?(T)values.Dequeue():default;}}
  public class CustomMessagingManager {public void RegisterNamedMessageHandler(string n,Action<ulong,FastBufferReader> a){}public void UnregisterNamedMessageHandler(string n){}public void SendNamedMessage(string n,ulong id,FastBufferWriter w,NetworkDelivery d){}}
  public class NetworkManager {public static NetworkManager Singleton;public const ulong ServerClientId=0;public bool IsServer,IsClient,IsHost,IsListening,IsConnectedClient;public List<ulong> ConnectedClientsIds=new();public CustomMessagingManager CustomMessagingManager=new();public void DisconnectClient(ulong i){ConnectedClientsIds.Remove(i);}}
 }
 namespace Alterverse.AI {public enum BotDifficulty {Easy,Medium,Hard} public static class BotDifficultySettings {public const BotDifficulty OnlineDifficulty=BotDifficulty.Hard;}}
-namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}public static class PlayerHeroSelection {public static HeroId Selected;}}
+namespace Alterverse.Characters {public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok}public static class PlayerHeroSelection {public static HeroId Selected;}
+ public class HeroIdentity:MonoBehaviour {public const float HeroCollisionHeight=2,HeroCollisionRadius=.5f;public HeroId Hero;public void Configure(HeroId h){Hero=h;}}
+ public class HeroCombatProfile:MonoBehaviour {public float Health=100;public void Configure(HeroId h){}}
+ public class HeroAbilityKit:MonoBehaviour {public void Configure(HeroId h){}}
+}
+namespace Alterverse.Combat {public class Health:MonoBehaviour {public void Configure(float n){}}public class CombatFeedback:MonoBehaviour {}}
+namespace Alterverse.Visuals {public class StylizedHeroVisual:MonoBehaviour {public void Build(){}}}
+namespace Alterverse.AI {
+ public class BotPersonality:MonoBehaviour {public enum Style {One,Two,Three,Four,Five,Six}public float Aggression,Caution;public void Configure(Style s){}}
+ public class BotTargetSensor:MonoBehaviour {}public class MobaBotBrain:MonoBehaviour {public void Initialize(int t,float f,float a,float c){}public void RefreshPersonality(){}}
+ public class BotLanePlan:MonoBehaviour {public void Initialize(int t,float f){}}public class MobaBotMover:MonoBehaviour {}public class MobaBotCombat:MonoBehaviour {}public class HeroBotAbilities:MonoBehaviour {}public class MobaBotRespawn:MonoBehaviour {}
+}
 namespace Alterverse.Match {public enum ArenaVariant{Moon,Earth}public static class ArenaVariantRuntime {public static ArenaVariant Selected;}public class DimensionsFront {public event Action<int> MatchEnded;}public static class MatchExit {public static Task ReturnToMenuAsync()=>Task.CompletedTask;}}
 namespace Alterverse.Profile {public enum BattleItemType{None,Shield}public static class BattleItemInventory {public static BattleItemType Equipped;}public class AccountServerBootstrap {public static AccountServerBootstrap Instance;public Task<bool> EnsureAuthenticatedAsync()=>Task.FromResult(true);}}
 namespace Alterverse.UI {public static class MainMenuController {public static bool IsVisible=true;}public class FrontEndTheme {public static object Background;public GUIStyle Title=new(),Heading=new(),Body=new(),Small=new();public static void Fill(UnityEngine.Rect r,object c){}public void Panel(UnityEngine.Rect r){}public void Label(UnityEngine.Rect r,string s,GUIStyleShim t,bool muted=false){}public void Label(UnityEngine.Rect r,string s,UnityEngine.GUIStyle t,bool muted=false){}public bool Action(UnityEngine.Rect r,string s,bool primary=false,bool enabled=true)=>false;} public class GUIStyleShim {} }
 namespace Alterverse.Multiplayer {
- public class CoopMatchPlan {public string MatchId;public Alterverse.Match.ArenaVariant Arena;public Alterverse.AI.BotDifficulty Difficulty;public MatchSession Session;public int HumanCount;}
  public static class CoopAuthority {public static bool Active;public static CoopMatchPlan PreparedPlan;public static bool BeginPreparedMatch(bool b)=>true;public static void Prepare(CoopMatchPlan p){PreparedPlan=p;}public static void ClearPrepared(){PreparedPlan=null;}public static void EndMatch(){}}
- public class CoopLobbyService {public static CoopLobbyService Instance;public bool InLobby,IsStaging,IsLaunching;public int PlayerCount;public const int MinHumanPlayers=2,MaxHumanPlayers=5;}
+ public class CoopLobbyService {public static CoopLobbyService Instance;public bool InLobby,IsStaging,IsLaunching;public int PlayerCount;public const int MinHumanPlayers=1,MaxHumanPlayers=MatchSession.TeamSize;public class MemberView {public string PlayerId,DisplayName;public Alterverse.Characters.HeroId Hero;public Alterverse.Profile.BattleItemType BattleItem;public bool IsHost,IsLocal,Ready;}}
  public static class CoopRosterBuilder {public static int FindLocalHumanSlot(CoopMatchPlan p)=>0;}
  public class OnlinePartyService {public static OnlinePartyService Instance;public bool InParty;public Alterverse.Characters.HeroId LocalHero;public IReadOnlyList<MemberView> Members=new List<MemberView>(); public class MemberView {public string PlayerId,DisplayName;public Alterverse.Characters.HeroId Hero;public Alterverse.Profile.BattleItemType BattleItem;public int Team;public bool IsHost,IsLocal,IsPartyMember,Ready;}}
  public static class DedicatedServerNetworkRuntime {public static bool Requested;public static void ReleaseMatchBootstrap(){}}

@@ -35,7 +35,7 @@ namespace Alterverse.Multiplayer
         public static RankedService Instance { get; private set; }
         public Snapshot Current { get; private set; }
         public Snapshot[] Leaderboard { get; private set; } = Array.Empty<Snapshot>();
-        public string Status { get; private set; } = "SOLO 5v5 • 5 PLACEMENT MATCHES";
+        public string Status { get; private set; } = "SOLO 4v4 • 5 PLACEMENT MATCHES";
         public string Admission { get; private set; } = "";
         public bool Searching { get; private set; }
         public bool Busy { get; private set; }
@@ -88,7 +88,7 @@ namespace Alterverse.Multiplayer
                 if (refresh != generation) return;
                 Current = snapshot;
                 Leaderboard = leaders.leaders ?? Array.Empty<Snapshot>();
-                if (!Searching) Status = "SOLO 5v5 • RANK POINTS FOR TEAM VICTORIES";
+                if (!Searching) Status = "SOLO 4v4 • RANK POINTS FOR TEAM VICTORIES";
             }
             catch (Exception error) { if (refresh == generation) Status = error.Message; }
             finally { if (refresh == generation) Busy = false; }
@@ -117,7 +117,7 @@ namespace Alterverse.Multiplayer
                     throw new InvalidOperationException("Ranked account changed. Sign in again.");
                 if (string.IsNullOrWhiteSpace(info.GetGooglePlayGamesId()) && string.IsNullOrWhiteSpace(info.Username))
                     throw new InvalidOperationException("Connect Google Play Games in PROFILE before Ranked. Your rank will survive reinstalling.");
-                Status = "RANKED • SEARCHING FOR TEN PLAYERS…";
+                Status = "RANKED • SEARCHING FOR EIGHT PLAYERS…";
                 queueAttempted = true;
                 queueRequest = Request<Member>("/ranked/search", JsonUtility.ToJson(new Search { displayName = PlayerProfile.PlayerName }));
                 Member member = await queueRequest;

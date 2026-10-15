@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Alterverse.UI
 {
     /// <summary>
-    /// Online 5v5 party surface. Friends assemble privately through the Unity lobby/Relay link.
+    /// Online 4v4 party surface. Friends assemble privately through the Unity lobby/Relay link.
     /// When everyone is ready, the leader starts Edgegap Group Up matchmaking. Edgegap assigns
     /// both teams and a dedicated server; the match launches automatically after server handshake.
     /// </summary>
@@ -104,7 +104,7 @@ namespace Alterverse.UI
 
             theme.Label(new Rect(left + 28f, 70f, width - 220f, 38f), "MATCHMAKING", theme.Title);
             theme.Label(new Rect(left + 30f, 110f, width - 250f, 24f),
-                "5v5 • Automatic matchmaking or invite friends into a private party.",
+                "4v4 • Automatic matchmaking or invite friends into a private party.",
                 theme.Small, true);
 
             if (theme.Action(new Rect(left + width - 158f, 72f, 126f, 42f), "CLOSE"))
@@ -129,7 +129,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(left + 54, 181, width - 108, 35),
                 "PLAY ONLINE OR INVITE FRIENDS", theme.Heading);
             theme.Label(new Rect(left + 54, 226, width - 108, 34),
-                "Match automatically, or create a private party (up to 5 friends on one team).",
+                "Match automatically, or create a private party (up to 4 players on one team).",
                 theme.Body, true);
             if (theme.Action(new Rect(left + 54, 276, width - 108, 54),
                 busy ? "SEARCHING..." : "FIND MATCH", true,
@@ -164,7 +164,7 @@ namespace Alterverse.UI
             theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
                 $"PLAYERS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
             theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
-                "5v5  •  AUTO TEAM FILL", theme.Small, true);
+                "4v4  •  AUTO TEAM FILL", theme.Small, true);
             theme.StatusBadge(new Rect(left + 758f, 176f, 198f, 26f),
                 edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
@@ -263,7 +263,7 @@ namespace Alterverse.UI
                 else _ = edgegap.BeginSearchAsync();
             }
 
-            string autoText = edgegapSearching ? "STARTS WHEN READY" : "5v5 ONLINE";
+            string autoText = edgegapSearching ? "STARTS WHEN READY" : "4v4 ONLINE";
             theme.StatusBadge(new Rect(startX, actionY+12, 208f, 30f),autoText,edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             string partyState = online.HasHeroConflict

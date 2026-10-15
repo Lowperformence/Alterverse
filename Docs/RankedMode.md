@@ -1,5 +1,7 @@
 # Dimensions Front – Online-Ranked, Version 1
 
+Seit 15.10.2026 gilt durchgehend 4v4. Für den gemeinsamen Client-/Server-/Matchmaker-Rollout siehe [4v4-Migration.md](4v4-Migration.md).
+
 ## Vorläufig gesperrt – Freigabe
 
 Ranked bleibt im PLAY-Menü sichtbar, zeigt das vorhandene Schloss und lässt
@@ -20,7 +22,7 @@ umkonfiguriert.
 
 ## Spielregeln
 
-- Eigener **Solo-5v5-Modus** neben Casual und Offline. Zehn echte Spieler müssen verbunden sein und den Start bestätigen. Kein Bot-Fill beim Ranked-Start; bei fehlenden Spielern wird ohne Punkte abgebrochen.
+- Eigener **Solo-4v4-Modus** neben Casual und Offline. Acht echte Spieler müssen verbunden sein und den Start bestätigen. Kein Bot-Fill beim Ranked-Start; bei fehlenden Spielern wird ohne Punkte abgebrochen.
 - Spieler wählen ihren Helden vor der Suche. Gleiche Helden sind in dieser ersten Ranked-Version erlaubt; ein Draft-/Ban-System ist nicht enthalten. Der Server ersetzt im Ranked keinen gewählten Helden wegen einer Doppelwahl.
 - Fünf Platzierungsspiele, Startwert 1000. Danach Bronze, Silber, Gold, Platin, Diamant, Meister und Dimensions-Legende; bis Meister jeweils Division 3 → 2 → 1. Backend/API verwenden englische Rangnamen.
 - Eine einzige serverseitige Elo-Zahl dient als Matchmaking-Wert und sichtbare Rangpunkte. Team-Durchschnitt entscheidet die erwartete Siegchance; K=40 während Platzierung und K=24 danach. Bei ausgeglichenen Teams: zunächst ±20, später ±12. Gegen stärkere Gegner mehr Gewinn und weniger Verlust, gegen schwächere umgekehrt. Keine Punkte für Kills, Schaden oder lokale Profilstatistik.
@@ -35,10 +37,10 @@ umkonfiguriert.
 1. Unity-Login authentifiziert `/ranked/search` am bestehenden Account-Server. Der Server lädt die echte Elo-Zahl und erstellt eine Solo-Group im Profil `dimensions-front-ranked` mit `elo_rating` und `queue=ranked`. Der Client kann keine Rating-Zahl festlegen.
 2. `/ranked/poll` und `/ranked/cancel` arbeiten ausschließlich mit der eigenen serverseitig gespeicherten Group-/Member-ID. Wiederholte Suche erzeugt keine weitere Group. Reservierungen laufen nach zehn Minuten ab, Matchmaker-Tickets nach fünf Minuten.
 3. Account-Server signiert eine maximal zehn Minuten gültige Admission mit Account, Saison, Rating und genau der eigenen Ticket-ID. Kein Signierschlüssel befindet sich im Client.
-4. Dedicated-Server verifiziert wie bisher das Ticket gegen die injizierten Edgegap-Tickets und Teams. Ranked-Deployment verlangt zusätzlich Admissions aller zehn Spieler. Nach den zehn Plan-ACKs registriert der Server das vollständige Roster am Account-Backend.
-5. Registrierung prüft Signatur, Ablauf, Saison, zehn eindeutige Accounts/Tickets, 5v5 und noch aktive Ticketbindung. Admissions können nicht in zwei Matches verwendet werden. Ein abgebrochener Start wird mit einer Tombstone-Quittung ungültig gemacht, auch wenn eine Registrierung verspätet ankommt.
+4. Dedicated-Server verifiziert wie bisher das Ticket gegen die injizierten Edgegap-Tickets und Teams. Ranked-Deployment verlangt zusätzlich Admissions aller acht Spieler. Nach den acht Plan-ACKs registriert der Server das vollständige Roster am Account-Backend.
+5. Registrierung prüft Signatur, Ablauf, Saison, acht eindeutige Accounts/Tickets, 4v4 und noch aktive Ticketbindung. Admissions können nicht in zwei Matches verwendet werden. Ein abgebrochener Start wird mit einer Tombstone-Quittung ungültig gemacht, auch wenn eine Registrierung verspätet ankommt.
 6. Nur das Dedicated-Backend kann `/ranked/server/register`, `/ranked/server/result` und `/ranked/server/void` aufrufen: separater Bearer-Serverschlüssel. Spieler-JWTs sind dafür ungültig. Der serverseitige Match-Ende-Event entscheidet den Sieger.
-7. Rangpunkte aller zehn Accounts und die Match-Quittung werden in einer SQLite-/Firestore-Transaktion gespeichert. Wiederholung desselben Ergebnisses ist idempotent; widersprüchliches Ergebnis wird abgelehnt. Der Server wiederholt bei Ausfall dieselbe Quittung und wartet mit dem normalen Self-Stop bis zur Bestätigung. Ein externer harter Deployment-Stopp kann diese Wiederholung dennoch unterbrechen; solche Matches benötigen Betriebsprüfung. Es gibt noch keinen externen Ergebnis-Outbox-Worker.
+7. Rangpunkte aller acht Accounts und die Match-Quittung werden in einer SQLite-/Firestore-Transaktion gespeichert. Wiederholung desselben Ergebnisses ist idempotent; widersprüchliches Ergebnis wird abgelehnt. Der Server wiederholt bei Ausfall dieselbe Quittung und wartet mit dem normalen Self-Stop bis zur Bestätigung. Ein externer harter Deployment-Stopp kann diese Wiederholung dennoch unterbrechen; solche Matches benötigen Betriebsprüfung. Es gibt noch keinen externen Ergebnis-Outbox-Worker.
 
 ## App löschen, neu installieren und Rang wiederherstellen
 
@@ -120,8 +122,8 @@ Die Google-Cloud-Optionen `--update-env-vars` und `--update-secrets` erhalten an
 
 ### Edgegap und Dedicated-Server
 
-- `Server/matchmaking/edgegap-matchmaker-v1.json` importieren/validieren. Das zusätzliche Profil `dimensions-front-ranked` ist unabhängig von Casual; unverändert 2 Teams × 5 Spieler in jeder Expansion. Rating-Differenz zunächst 150, nach 60 Sekunden 250, nach 120 Sekunden 400. Wartedauer höchstens fünf Minuten; keine Erweiterung auf kleinere Teams.
-- Aktualisierten Linux-Dedicated-Build erstellen. Die zusätzliche App-Version `v0.1.1-ranked-server` anlegen, mit derselben Game-Port-Zuordnung wie die bestehende Casual-Version.
+- `Server/matchmaking/edgegap-matchmaker-v1.json` importieren/validieren. Das zusätzliche Profil `dimensions-front-ranked` ist unabhängig von Casual; unverändert 2 Teams × 4 Spieler in jeder Expansion. Rating-Differenz zunächst 150, nach 60 Sekunden 250, nach 120 Sekunden 400. Wartedauer höchstens fünf Minuten; keine Erweiterung auf kleinere Teams.
+- Aktualisierten Linux-Dedicated-Build erstellen. Die zusätzliche App-Version `v0.1.2-ranked-server` anlegen, mit derselben Game-Port-Zuordnung wie die bestehende Casual-Version.
 - Auf dieser Ranked-App-Version `DF_RANKED_SERVER=1`, `DF_RANKED_ACCOUNT_URL=<Account-HTTPS-Endpunkt>` und denselben `DF_RANKED_SERVER_KEY` wie am Account-Server injizieren. `ARBITRIUM_*` und `MM_*` werden weiterhin von Edgegap geliefert. Den Admission-Signierschlüssel braucht das Spielserver-Image nicht.
 - Auf Casual `DF_RANKED_SERVER` nicht aktivieren. Auch die Casual-App-Version auf den neuen Dedicated-Protokollstand aktualisieren.
 - `Assets/Alterverse/Resources/Commerce/AccountServerConfig.json` muss auf den aktualisierten Account-Server zeigen. Android-Client neu bauen; Ranked-Button im PLAY-Menü öffnet Rang, Top 50, Suche und Abbrechen.
@@ -142,7 +144,7 @@ docker push DEINE_REGISTRY/dimensions-front-server:RANKED_COMMIT
 
 ### Abnahme
 
-1. Zehn getrennte Accounts/Clients starten, Solo Ranked wählen und volle 5v5-Zuteilung prüfen. Mit neun Clients darf Ranked nicht mit Bots starten; Casual-Bot-Fill dagegen weiterhin prüfen.
+1. Acht getrennte Accounts/Clients starten, Solo Ranked wählen und volle 4v4-Zuteilung prüfen. Mit sieben Clients darf Ranked nicht mit Bots starten; Casual-Bot-Fill dagegen weiterhin prüfen.
 2. Gewinner/Verlierer prüfen, Account-Neustart und Gerätewechsel: gleiche Punkte, gleiche Saison. Dasselbe Serverergebnis erneut senden: keine weitere Änderung.
 3. Platzierung, Top 50, Abbruch vor Zuteilung und verspätete Antworten prüfen. Langer Disconnect: Leaver-Punkte/Sperre; kurze Unterbrechung darf keine Leaver-Strafe auslösen, Wiederbeitritt ist in V1 nicht implementiert.
 4. Backend kurz unterbrechen, Ergebnis wiederholen lassen und anschließend die Punkte prüfen. Hard-Stop/Crash operativ prüfen; unbestätigte Ergebnisse werden vom Client nicht erfunden.
@@ -154,6 +156,6 @@ docker push DEINE_REGISTRY/dimensions-front-server:RANKED_COMMIT
 
 `python -m unittest discover -s Tools/Ranked -p 'test_*.py' -q`: Bereitstellung auf den bestehenden Dienst, Erhalt anderer Account-Einstellungen und Ablehnung unsicherer Secret-/URL-Konfigurationen.
 
-`python Tools/Ranked/Regression/run.py --dotnet-root <.NET-8-Installationsverzeichnis>`: kompiliert neun echte C#-Klassen, einschließlich Ranked-Service, Reporter, Dedicated-Handshake und Panel, gegen Engine-/Netzwerk-Substitute; prüft jetzt 105 Roster-/Modus-/Abbruch-/Async-/Recovery-Invarianten. Alternativ `--mono-root <Mono-Verzeichnis> --roslyn <csc.exe>` verwenden; Abhängigkeiten und Grenzen stehen in `Tools/Ranked/Regression/README.md`. Dies ersetzt keinen Unity-Build, Matchmaker-Konfigurationsimport oder Test mit zehn echten Online-Clients.
+`python Tools/Ranked/Regression/run.py --dotnet-root <.NET-8-Installationsverzeichnis>`: kompiliert produktiven Offline-/Koop-/Online-/Ranked-Code, einschließlich Ranked-Service, Reporter, Dedicated-Handshake und Panel, gegen Engine-/Netzwerk-Substitute; prüft jetzt 1.724 Format-/Roster-/Modus-/Abbruch-/Async-/Recovery-Invarianten. Alternativ `--mono-root <Mono-Verzeichnis> --roslyn <csc.exe>` verwenden; Abhängigkeiten und Grenzen stehen in `Tools/Ranked/Regression/README.md`. Dies ersetzt keinen Unity-Build, Matchmaker-Konfigurationsimport oder Test mit acht echten Online-Clients.
 
-Prüfung am 11.10.2026: 168 Backend-Tests, 4 Deployment-Tool-Tests und 105 C#-Prüfungen auf Mono/Roslyn bestanden. Behoben wurden Abbruch bei Matchmaker-Ausfall, Ablaufgrenze von Admissions, fehlende Startbestätigungen/Disconnects vor Ranked-Start, verspätete Registrierungen nach Abbruch und veraltete Antworten nach Accountwechsel. Casual-Neuaufbau, Elo-Werte und Leaver-Regeln bleiben erhalten. Details: [RankedOnlineAudit-2026-10-11.md](RankedOnlineAudit-2026-10-11.md). Unity-/Android-Build, produktiver Matchmaker-Import und Live-5v5 sind in dieser Arbeitsumgebung nicht ausgeführt.
+Prüfung am 11.10.2026: 168 Backend-Tests, 4 Deployment-Tool-Tests und 105 C#-Prüfungen auf Mono/Roslyn bestanden. Behoben wurden Abbruch bei Matchmaker-Ausfall, Ablaufgrenze von Admissions, fehlende Startbestätigungen/Disconnects vor Ranked-Start, verspätete Registrierungen nach Abbruch und veraltete Antworten nach Accountwechsel. Casual-Neuaufbau, Elo-Werte und Leaver-Regeln bleiben erhalten. Details: [RankedOnlineAudit-2026-10-11.md](RankedOnlineAudit-2026-10-11.md). Unity-/Android-Build, produktiver Matchmaker-Import und Live-4v4 sind in dieser Arbeitsumgebung nicht ausgeführt.

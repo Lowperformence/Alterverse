@@ -15,7 +15,7 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Private 1-5 player co-op session owner. Sessions use Relay-backed NGO networking while
+    /// Private 1-4 player co-op session owner. Sessions use Relay-backed NGO networking while
     /// preserving the existing local-vs-AI mode as an independent path. Open team slots are
     /// filled automatically by authoritative bots when the match plan is staged.
     /// </summary>
@@ -33,8 +33,8 @@ namespace Alterverse.Multiplayer
         }
 
         public const int MinHumanPlayers=1;
-        public const int MaxHumanPlayers=5;
-        private const string SessionType="df-private-coop-v2";
+        public const int MaxHumanPlayers=MatchSession.TeamSize;
+        private const string SessionType="df-private-coop-v3";
         private const string PlayerNameKey="displayName";
         private const string PlayerHeroKey="hero";
         private const string PlayerBattleItemKey="battleItem";
@@ -213,6 +213,13 @@ namespace Alterverse.Multiplayer
                 };
                 session=await MultiplayerService.Instance.JoinSessionByCodeAsync(code,joinOptions);
                 AttachSession(session);
+                if(session.MaxPlayers!=MaxHumanPlayers||session.PlayerCount>MaxHumanPlayers)
+                {
+                    await LeaveExistingSessionInternalAsync();
+                    lastError="This room uses a different game version. Create a new 4v4 room.";
+                    SetStatus("INCOMPATIBLE CO-OP ROOM");
+                    return false;
+                }
                 if(!string.Equals(LobbyPhase,"lobby",StringComparison.Ordinal))
                 {
                     await LeaveExistingSessionInternalAsync();

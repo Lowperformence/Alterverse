@@ -9,7 +9,7 @@
       "group_inactivity_removal_period": "5m",
       "application": {
         "name": "dimensions-front",
-        "version": "v0.1.1-server"
+        "version": "v0.1.2-server"
       },
       "rules": {
         "initial": {
@@ -17,8 +17,8 @@
             "type": "player_count",
             "attributes": {
               "team_count": 2,
-              "min_team_size": 5,
-              "max_team_size": 5
+              "min_team_size": 4,
+              "max_team_size": 4
             }
           }
         },
@@ -27,7 +27,7 @@
             "match_size": {
               "team_count": 2,
               "min_team_size": 1,
-              "max_team_size": 5
+              "max_team_size": 4
             }
           }
         }
@@ -39,7 +39,7 @@
       "group_inactivity_removal_period": "5m",
       "application": {
         "name": "dimensions-front",
-        "version": "v0.1.1-ranked-server"
+        "version": "v0.1.2-ranked-server"
       },
       "rules": {
         "initial": {
@@ -47,8 +47,8 @@
             "type": "player_count",
             "attributes": {
               "team_count": 2,
-              "min_team_size": 5,
-              "max_team_size": 5
+              "min_team_size": 4,
+              "max_team_size": 4
             }
           },
           "queue": {

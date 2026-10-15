@@ -338,7 +338,7 @@ namespace Alterverse.UI
             float w = ContentWidth*.52f;
             theme.Panel(new Rect(Left,214,w,394));
             theme.StatusBadge(new Rect(Left+28,224,154,28),"READY TO PLAY",FrontEndTheme.Positive);
-            theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 5v5",theme.Title);
+            theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
             theme.Label(new Rect(Left+28,300,w-56,48),"Five versus five.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
             if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP  •  PRIVATE LOBBY",true))
                 SetPage(Page.Coop);
@@ -439,7 +439,7 @@ namespace Alterverse.UI
         }
         private void DrawCoop()
         {
-            Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to five players.");
+            Heading("PRIVATE CO-OP", "Invite friends with a room code. Play together with up to four players.");
             CoopLobbyService coop = CoopLobbyService.Instance;
             theme.Panel(new Rect(Left, 214, ContentWidth, 456));
             if (coop == null)
@@ -1499,8 +1499,8 @@ namespace Alterverse.UI
             string mode=coopLaunching&&CoopAuthority.ActivePlan!=null
                 ?$"PRIVATE CO-OP  •  {CoopAuthority.ActivePlan.HumanCount} PLAYERS  /  {ArenaShopCatalog.For(CoopAuthority.ActivePlan.Arena).Name}  /  ZERO TEAM"
                 :ArenaVariantRuntime.ShuffleEnabled
-                    ?"MATCH 5v5  /  RANDOM OWNED ARENA  /  ZERO TEAM"
-                    : "MATCH 5v5  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
+                    ?"MATCH 4v4  /  RANDOM OWNED ARENA  /  ZERO TEAM"
+                    : "MATCH 4v4  /  "+ArenaShopCatalog.For(ArenaVariantRuntime.Selected).Name+"  /  ZERO TEAM";
             theme.Label(new Rect(Left,372,ContentWidth,32),mode,theme.Body,true);
             theme.Progress(new Rect(Left,452,ContentWidth,5),Mathf.Clamp01((Time.unscaledTime-launchAt)/.55f));
             theme.Label(new Rect(Left,480,ContentWidth,30),coopLaunching?"Synchronizing co-op battlefield":"Preparing your local match",theme.Small,true);

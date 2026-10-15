@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import patch
 from ledger import Ledger
-from ranked import Ranked, rating_view
+from ranked import Ranked, rating_view, TEAM_SIZE, MATCH_PLAYERS
 from application import CommerceApplication
 
 
@@ -39,7 +39,7 @@ class RankedTests(unittest.TestCase):
     def tearDown(self): self.temp.cleanup()
     def roster(self):
         return [dict(ticket=(m := self.ranked.search('a'+str(i), 'Hero'+str(i)))['ticket_id'],
-                     admission=m['admission'], team=i//5) for i in range(10)]
+                     admission=m['admission'], team=i//TEAM_SIZE) for i in range(MATCH_PLAYERS)]
     def match(self, match='m1'):
         roster = self.roster()
         self.ranked.register(dict(matchId=match, players=roster))
@@ -98,7 +98,7 @@ class RankedTests(unittest.TestCase):
         self.assertEqual(status['points'], 1081)
         self.assertEqual(status['rank'], 'Silver 2')
         leaders = self.ranked.dispatch('a0','/ranked/leaderboard',{})['leaders']
-        self.assertEqual(len(leaders), 10)
+        self.assertEqual(len(leaders), 8)
         self.assertEqual(leaders[0]['points'], 1081)
         self.assertNotIn('account', leaders[0])
         self.match('m6'); self.ranked.settle(dict(matchId='m6',winner=0))
@@ -118,11 +118,50 @@ class RankedTests(unittest.TestCase):
         self.assertEqual(self.ranked.status('a1')['games'], 0)
     def test_incomplete_duplicate_and_wrong_team_rosters(self):
         roster = self.roster()
-        for bad in (roster[:-1], roster[:9]+[roster[0]], [dict(p,team=0) for p in roster], [dict(p,ticket='wrong') for p in roster]):
+        for bad in (roster[:-1], roster[:-1]+[roster[0]], [dict(p,team=0) for p in roster], [dict(p,ticket='wrong') for p in roster]):
             with self.assertRaises(ValueError): self.ranked.register(dict(matchId='m1',players=bad))
         self.assertEqual(self.ranked.status('a0')['games'], 0)
     def test_unregistered_match_is_rejected(self):
         with self.assertRaises(ValueError): self.ranked.settle(dict(matchId='unknown',winner=0))
+    def test_fifth_teammate_and_legacy_ten_player_start_are_rejected(self):
+        roster = self.roster()
+        uneven = copy.deepcopy(roster)
+        uneven[TEAM_SIZE]['team'] = 0
+        with self.assertRaisesRegex(ValueError, 'balanced 4v4'):
+            self.ranked.register(dict(matchId='uneven', players=uneven))
+        legacy = copy.deepcopy(roster)
+        for i in range(2):
+            member = self.ranked.search('extra'+str(i), 'Hero')
+            legacy.append(dict(ticket=member['ticket_id'], admission=member['admission'], team=i))
+        with self.assertRaisesRegex(ValueError, 'eight humans'):
+            self.ranked.register(dict(matchId='legacy', players=legacy))
+        self.assertEqual(self.ranked.status('a0')['games'], 0)
+
+    def test_four_player_team_average_controls_elo(self):
+        def seed(tx):
+            for i in range(MATCH_PLAYERS):
+                account = 'a'+str(i)
+                tx.set(self.ranked.pk(account), dict(self.ranked.player(account), mmr=1000 if i < TEAM_SIZE else 1200))
+        self.ranked.store.atomic(seed)
+        self.match('unequal-ratings')
+        self.ranked.settle(dict(matchId='unequal-ratings', winner=0))
+        self.assertEqual(self.ranked.status('a0')['points'], 1030)
+        self.assertEqual(self.ranked.status('a4')['points'], 1170)
+
+    def test_previously_registered_five_player_teams_can_finish_after_upgrade(self):
+        # Simulate the previous server registering a match before the rollout.
+        legacy = []
+        with patch('ranked.TEAM_SIZE', 5), patch('ranked.MATCH_PLAYERS', 10):
+            for i in range(10):
+                member = self.ranked.search('legacy'+str(i), 'Hero')
+                legacy.append(dict(ticket=member['ticket_id'], admission=member['admission'], team=i//5))
+            self.ranked.register(dict(matchId='already-running', players=legacy))
+        self.ranked.settle(dict(matchId='already-running', winner=0))
+        self.assertEqual(self.ranked.status('legacy0')['points'], 1020)
+        self.assertEqual(self.ranked.status('legacy5')['points'], 980)
+        self.ranked.settle(dict(matchId='already-running', winner=0))
+        self.assertEqual(self.ranked.status('legacy0')['games'], 1)
+
     def test_registered_account_cannot_queue_twice(self):
         roster = self.match()
         with self.assertRaises(ValueError): self.ranked.search('a0','Hero')

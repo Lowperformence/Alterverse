@@ -37,36 +37,34 @@ namespace Alterverse.Editor
                 Assert(plan!=null&&plan.Session!=null,$"{humanCount}-player co-op match plan was not created.");
                 Assert(plan.HumanCount==humanCount,$"{humanCount}-player plan reports wrong human count.");
                 Assert(plan.Arena==ArenaVariant.Kryon&&plan.Difficulty==BotDifficulty.Nightmare,"Host match settings were not preserved.");
-                Assert(plan.Session.IsFull,$"{humanCount}-player co-op plan must always fill ten match slots.");
+                Assert(plan.Session.IsFull,$"{humanCount}-player co-op plan must always fill eight match slots.");
 
                 for(int i=0;i<humanCount;i++)Assert(!plan.Session.Slots[i].IsBot,$"Human slot {i} became AI.");
-                for(int i=humanCount;i<5;i++)Assert(plan.Session.Slots[i].IsBot,$"Missing Team Zero bot in slot {i}.");
-                for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].IsBot,$"Lumen slot {i} must always be AI.");
-                for(int i=0;i<5;i++)Assert(plan.Session.Slots[i].Team==0,$"Zero slot {i} has wrong team.");
-                for(int i=5;i<10;i++)Assert(plan.Session.Slots[i].Team==1,$"Lumen slot {i} has wrong team.");
+                for(int i=humanCount;i<MatchSession.TeamSize;i++)Assert(plan.Session.Slots[i].IsBot,$"Missing Team Zero bot in slot {i}.");
+                for(int i=MatchSession.TeamSize;i<MatchSession.MaxPlayers;i++)Assert(plan.Session.Slots[i].IsBot,$"Lumen slot {i} must always be AI.");
+                for(int i=0;i<MatchSession.TeamSize;i++)Assert(plan.Session.Slots[i].Team==0,$"Zero slot {i} has wrong team.");
+                for(int i=MatchSession.TeamSize;i<MatchSession.MaxPlayers;i++)Assert(plan.Session.Slots[i].Team==1,$"Lumen slot {i} has wrong team.");
                 Assert(plan.Session.Slots[0].IsHost,"First Team Zero slot must be the host.");
             }
 
-            var fiveA=new List<CoopLobbyService.MemberView>
+            var fourA=new List<CoopLobbyService.MemberView>
             {
                 new(){PlayerId="host",DisplayName="Host",Hero=HeroId.Veyr,Ready=true,IsHost=true,IsLocal=true},
-                new(){PlayerId="d",DisplayName="D",Hero=HeroId.Elyra,Ready=true},
                 new(){PlayerId="b",DisplayName="B",Hero=HeroId.Mira,Ready=true},
                 new(){PlayerId="c",DisplayName="C",Hero=HeroId.Nyra,Ready=true},
                 new(){PlayerId="a",DisplayName="A",Hero=HeroId.Kaelon,Ready=true}
             };
-            var fiveB=new List<CoopLobbyService.MemberView>
+            var fourB=new List<CoopLobbyService.MemberView>
             {
                 new(){PlayerId="c",DisplayName="C",Hero=HeroId.Nyra,Ready=true,IsLocal=true},
                 new(){PlayerId="a",DisplayName="A",Hero=HeroId.Kaelon,Ready=true},
                 new(){PlayerId="host",DisplayName="Host",Hero=HeroId.Veyr,Ready=true,IsHost=true},
-                new(){PlayerId="b",DisplayName="B",Hero=HeroId.Mira,Ready=true},
-                new(){PlayerId="d",DisplayName="D",Hero=HeroId.Elyra,Ready=true}
+                new(){PlayerId="b",DisplayName="B",Hero=HeroId.Mira,Ready=true}
             };
-            CoopMatchPlan orderedA=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fiveA);
-            CoopMatchPlan orderedB=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fiveB);
+            CoopMatchPlan orderedA=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fourA);
+            CoopMatchPlan orderedB=CoopMatchPlan.Build("stable",ArenaVariant.Moon,BotDifficulty.Normal,fourB);
             Assert(CoopPlanHandshake.Fingerprint(orderedA)==CoopPlanHandshake.Fingerprint(orderedB),
-                "Five-player match plan fingerprint must not depend on local member-list ordering.");
+                "Four-player match plan fingerprint must not depend on local member-list ordering.");
 
             bool duplicateRejected=false;
             try
@@ -87,15 +85,14 @@ namespace Alterverse.Editor
             Assert(session.TryAssign(1,Slot("friend",HeroId.Mira,0,false,false)),"Friend assignment failed.");
             Assert(session.TryAssign(2,Slot("ally-1",HeroId.Kaelon,0,true,false)),"Allied bot 1 failed.");
             Assert(session.TryAssign(3,Slot("ally-2",HeroId.Nyra,0,true,false)),"Allied bot 2 failed.");
-            Assert(session.TryAssign(4,Slot("ally-3",HeroId.Elyra,0,true,false)),"Allied bot 3 failed.");
 
             HeroId[] enemies={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,HeroId.Rook};
-            for(int i=0;i<5;i++)
-                Assert(session.TryAssign(5+i,Slot("enemy-"+i,enemies[i],1,true,false)),$"Enemy bot {i} failed.");
+            for(int i=0;i<MatchSession.TeamSize;i++)
+                Assert(session.TryAssign(MatchSession.TeamSize+i,Slot("enemy-"+i,enemies[i],1,true,false)),$"Enemy bot {i} failed.");
 
-            Assert(session.IsFull,"A complete co-op roster must fill all 10 match slots.");
-            Assert(!session.TryAssign(9,Slot("overflow",HeroId.Rook,0,true,false)),
-                "A sixth Team Zero member must be rejected even when replacing a Team One slot.");
+            Assert(session.IsFull,"A complete co-op roster must fill all 8 match slots.");
+            Assert(!session.TryAssign(MatchSession.MaxPlayers-1,Slot("overflow",HeroId.Rook,0,true,false)),
+                "A fifth Team Zero member must be rejected even when replacing a Team One slot.");
 
             Debug.Log("DIMENSIONS FRONT: co-op lobby foundation regression assertions passed.");
         }

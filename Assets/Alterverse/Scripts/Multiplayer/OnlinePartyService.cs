@@ -15,8 +15,8 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Online 5v5 pre-match flow. The Relay session is provisioned for all ten match players,
-    /// but starts private so up to five friends can assemble by join code first. Only the party
+    /// Online 4v4 pre-match flow. The Relay session is provisioned for all eight match players,
+    /// but starts private so up to four players can assemble by join code first. Only the party
     /// leader can expose the session to public search. The friend-party snapshot is persisted in
     /// session data so the deterministic match plan can keep that group on the same team.
     /// </summary>
@@ -37,8 +37,8 @@ namespace Alterverse.Multiplayer
         public const int MaxPartyPlayers = MatchSession.TeamSize;
         public const int MaxMatchPlayers = MatchSession.MaxPlayers;
 
-        private const string SessionType = "df-online-party-v2";
-        private const string SessionName = "DIMENSIONS FRONT ONLINE 5V5";
+        private const string SessionType = "df-online-party-v3";
+        private const string SessionName = "DIMENSIONS FRONT ONLINE 4V4";
         private const string PlayerNameKey = "displayName";
         private const string PlayerHeroKey = "hero";
         private const string PlayerBattleItemKey = "battleItem";
@@ -73,7 +73,8 @@ namespace Alterverse.Multiplayer
         public bool IsFull => PlayerCount >= MaxMatchPlayers;
         public bool IsPartyFull => PartyPlayerCount >= MaxPartyPlayers;
         public bool LocalReady => session?.CurrentPlayer != null && ReadPlayer(session.CurrentPlayer, PlayerReadyKey, "0") == "1";
-        public bool PartyReady => PlayerCount > 0 && !HasHeroConflict && AllPresentPlayersReady;
+        public bool PartyReady => PlayerCount > 0 && PlayerCount <= MaxMatchPlayers &&
+            PartyPlayerCount > 0 && PartyPlayerCount <= MaxPartyPlayers && !HasHeroConflict && AllPresentPlayersReady;
         public bool CanStartMatch => IsHost && !Busy && PartyReady;
 
         public int PartyPlayerCount
@@ -127,8 +128,8 @@ namespace Alterverse.Multiplayer
                 {
                     Type = SessionType,
                     Name = SessionName,
-                    // Relay capacity must be allocated for the final 5v5 from the beginning.
-                    // Privacy and our friend-party checks keep the pre-search group at five.
+                    // Relay capacity must be allocated for the final 4v4 from the beginning.
+                    // Privacy and our friend-party checks keep the pre-search group at four.
                     MaxPlayers = MaxMatchPlayers,
                     IsPrivate = true,
                     IsLocked = false,
@@ -184,6 +185,13 @@ namespace Alterverse.Multiplayer
                 ISession joined = await MultiplayerService.Instance.JoinSessionByCodeAsync(code, BuildJoinOptions());
                 session = joined;
                 AttachSession(session);
+                if (joined.MaxPlayers != MaxMatchPlayers || joined.PlayerCount > MaxMatchPlayers)
+                {
+                    await LeaveInternalAsync();
+                    lastError = "This room uses a different game version. Create a new 4v4 party.";
+                    SetStatus("INCOMPATIBLE ONLINE PARTY");
+                    return false;
+                }
                 bool searchAlreadyActive = ReadSession(joined, SearchKey, "0") == "1";
 
                 // Before public search the private friend party is intentionally limited to one team.
@@ -191,7 +199,7 @@ namespace Alterverse.Multiplayer
                 if (!searchAlreadyActive && joined.PlayerCount > MaxPartyPlayers)
                 {
                     await LeaveInternalAsync();
-                    lastError = "The private friend party already has five players.";
+                    lastError = "The private friend party already has four players.";
                     SetStatus("FRIEND PARTY FULL");
                     return false;
                 }
@@ -264,7 +272,8 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> BeginPlayerSearchAsync()
         {
-            if (session == null || !IsHost || busy || IsFull) return false;
+            if (session == null || !IsHost || busy || IsFull ||
+                PartyPlayerCount < 1 || PartyPlayerCount > MaxPartyPlayers) return false;
 
             try
             {

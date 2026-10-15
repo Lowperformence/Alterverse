@@ -248,8 +248,8 @@ namespace Alterverse.Combat
 
     /// <summary>
     /// One supply per equipped human-player item. Offline keeps the local single-drop path.
-    /// Network matches use the verified ten-slot match plan and reserve five distinct landing
-    /// positions per team, so a full team can receive five simultaneous supplies without overlap.
+    /// Network matches use the verified eight-slot match plan and reserve four distinct landing
+    /// positions per team, so a full team can receive four simultaneous supplies without overlap.
     /// </summary>
     public sealed class BattleItemAirdropSchedule:MonoBehaviour
     {
@@ -405,8 +405,7 @@ namespace Alterverse.Combat
         {
             teamSlot=Mathf.Clamp(teamSlot,0,Alterverse.Multiplayer.MatchSession.TeamSize-1);
             float sign=team==0?-1f:1f;
-            float[] rows={-14f,-7f,0f,7f,14f};
-            float baseZ=rows[teamSlot];
+            float baseZ=(teamSlot-(Alterverse.Multiplayer.MatchSession.TeamSize-1)*.5f)*7f;
 
             // Each roster slot owns its own Z lane. X and small Z fallbacks stay inside that lane,
             // preventing another team-mate's crate from selecting the same landing point.

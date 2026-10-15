@@ -8,7 +8,7 @@ using Alterverse.Profile;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Deterministic 5v5 online roster. Friend parties stay on the Edgegap-assigned team,
+    /// Deterministic 4v4 online roster. Friend parties stay on the Edgegap-assigned team,
     /// public players fill the remaining human slots, and every open slot becomes a
     /// server-authoritative bot so a match can always start.
     /// </summary>
@@ -37,7 +37,7 @@ namespace Alterverse.Multiplayer
             IReadOnlyList<OnlinePartyService.MemberView> members)
         {
             if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
-                throw new InvalidOperationException("Online match plan requires 1-10 human players.");
+                throw new InvalidOperationException("Online match plan requires 1-8 human players.");
 
             List<OnlinePartyService.MemberView> party = new(MatchSession.TeamSize);
             List<OnlinePartyService.MemberView> publicPlayers = new(MatchSession.MaxPlayers);
@@ -65,7 +65,7 @@ namespace Alterverse.Multiplayer
             if (!host.IsPartyMember)
                 throw new InvalidOperationException("Online host must belong to the friend party.");
             if (party.Count < 1 || party.Count > MatchSession.TeamSize)
-                throw new InvalidOperationException("Friend party must contain 1-5 players.");
+                throw new InvalidOperationException("Friend party must contain 1-4 players.");
 
             party.Sort((a, b) =>
             {
@@ -98,7 +98,7 @@ namespace Alterverse.Multiplayer
                 else
                 {
                     if (team1Humans >= MatchSession.TeamSize)
-                        throw new InvalidOperationException("Online roster contains more than ten human players.");
+                        throw new InvalidOperationException("Online roster contains more than eight human players.");
                     int slot = MatchSession.TeamSize + team1Humans;
                     if (!session.TryAssign(slot, HumanSlot(member, 1)))
                         throw new InvalidOperationException($"Could not assign online human slot {slot}.");
@@ -110,7 +110,7 @@ namespace Alterverse.Multiplayer
             FillTeamWithBots(session, 1);
 
             if (!session.IsFull)
-                throw new InvalidOperationException("Online roster could not fill all ten match slots.");
+                throw new InvalidOperationException("Online roster could not fill all eight match slots.");
 
             return new OnlineMatchPlan
             {
@@ -125,7 +125,7 @@ namespace Alterverse.Multiplayer
         /// <summary>
         /// Dedicated-server roster path. Edgegap team ids are the authority for team placement;
         /// the server sorts them deterministically, resolves same-team hero conflicts, and fills
-        /// every unoccupied 5v5 slot with a server-owned bot.
+        /// every unoccupied 4v4 slot with a server-owned bot.
         /// </summary>
         public static OnlineMatchPlan BuildDedicated(
             string matchId,
@@ -135,11 +135,11 @@ namespace Alterverse.Multiplayer
             SessionMode mode = SessionMode.OnlineCasual)
         {
             if (members == null || members.Count < 1 || members.Count > MatchSession.MaxPlayers)
-                throw new InvalidOperationException("Dedicated online match requires 1-10 human players.");
+                throw new InvalidOperationException("Dedicated online match requires 1-8 human players.");
             if (mode != SessionMode.OnlineCasual && mode != SessionMode.OnlineRanked)
                 throw new InvalidOperationException("Invalid online mode.");
             if (mode == SessionMode.OnlineRanked && members.Count != MatchSession.MaxPlayers)
-                throw new InvalidOperationException("Ranked requires ten human players.");
+                throw new InvalidOperationException("Ranked requires eight human players.");
 
             var teamKeys = new List<string>(2);
             var playersByTeam = new Dictionary<string, List<DedicatedMember>>(StringComparer.Ordinal);
@@ -163,13 +163,13 @@ namespace Alterverse.Multiplayer
                     playersByTeam.Add(teamKey, teamPlayers);
                 }
                 if (teamPlayers.Count >= MatchSession.TeamSize)
-                    throw new InvalidOperationException("Edgegap assigned more than five humans to one team.");
+                    throw new InvalidOperationException("Edgegap assigned more than four humans to one team.");
                 teamPlayers.Add(member);
             }
 
             teamKeys.Sort(StringComparer.Ordinal);
-            if (mode == SessionMode.OnlineRanked && (teamKeys.Count != 2 || playersByTeam[teamKeys[0]].Count != 5 || playersByTeam[teamKeys[1]].Count != 5))
-                throw new InvalidOperationException("Ranked requires five humans per team.");
+            if (mode == SessionMode.OnlineRanked && (teamKeys.Count != 2 || playersByTeam[teamKeys[0]].Count != MatchSession.TeamSize || playersByTeam[teamKeys[1]].Count != MatchSession.TeamSize))
+                throw new InvalidOperationException("Ranked requires four humans per team.");
             MatchSession session = new(matchId, mode);
             int humanCount = 0;
 
@@ -213,7 +213,7 @@ namespace Alterverse.Multiplayer
             FillTeamWithBots(session, 0);
             FillTeamWithBots(session, 1);
             if (!session.IsFull)
-                throw new InvalidOperationException("Dedicated online roster could not fill all ten match slots.");
+                throw new InvalidOperationException("Dedicated online roster could not fill all eight match slots.");
 
             return new OnlineMatchPlan
             {
@@ -226,7 +226,7 @@ namespace Alterverse.Multiplayer
         }
 
         /// <summary>
-        /// Rebuilds the exact authoritative ten-slot plan received from the dedicated server and
+        /// Rebuilds the exact authoritative eight-slot plan received from the dedicated server and
         /// marks only this client's player id as local. IsLocal is intentionally excluded from the
         /// plan fingerprint, so all peers verify the same authoritative roster.
         /// </summary>
@@ -239,7 +239,7 @@ namespace Alterverse.Multiplayer
             SessionMode mode = SessionMode.OnlineCasual)
         {
             if (slots == null || slots.Count != MatchSession.MaxPlayers)
-                throw new InvalidOperationException("Authoritative online roster must contain exactly ten slots.");
+                throw new InvalidOperationException("Authoritative online roster must contain exactly eight slots.");
 
             if (mode != SessionMode.OnlineCasual && mode != SessionMode.OnlineRanked)
                 throw new InvalidOperationException("Invalid authoritative online mode.");

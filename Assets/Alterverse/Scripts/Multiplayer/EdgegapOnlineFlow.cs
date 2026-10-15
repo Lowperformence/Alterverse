@@ -125,6 +125,8 @@ namespace Alterverse.Multiplayer
             EdgegapMatchmakerClient edgegap = EdgegapMatchmakerClient.Instance;
             if (online == null || !online.InParty || !online.IsHost)
                 return Fail("ONLY THE PARTY LEADER CAN START MATCHMAKING");
+            if (online.PlayerCount < 1 || online.PlayerCount > OnlinePartyService.MaxPartyPlayers)
+                return Fail("ONLINE PARTIES REQUIRE 1-4 PLAYERS");
             if (edgegap == null || !edgegap.IsConfigured)
                 return Fail("EDGEGAP MATCHMAKER TOKEN NOT CONFIGURED");
             if (online.HasHeroConflict)

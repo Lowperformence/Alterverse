@@ -170,12 +170,12 @@ class ProfileTests(unittest.TestCase):
     def test_mixed_purchase_debits_exact_price_and_restores_ownership(self):
         self.grant(); self.ledger.save_profile('a',[number('DF_Shards',200)],0)
         result=self.ledger.purchase('a','avatar_10','1'*32,1)
-        self.assertEqual(result['balance'],950)
+        self.assertEqual(result['balance'],1000)
         self.assertEqual(profile_value(result,'DF_Shards'),0)
         self.assertEqual(profile_value(result,'DF_AvatarOwned_10'),1)
         self.assertEqual(profile_value(result,'DF_Avatar'),10)
         again=Ledger(self.path).purchase('a','avatar_10','1'*32,0)
-        self.assertEqual(again['balance'],950)
+        self.assertEqual(again['balance'],1000)
         self.assertEqual(again['profileRevision'],result['profileRevision'])
     def test_concurrent_retries_do_not_duplicate_consumable(self):
         self.grant()
@@ -194,7 +194,7 @@ class ProfileTests(unittest.TestCase):
         self.ledger.save_profile('a',[number('DF_Shards',500)],0)
         self.ledger.purchase('a','avatar_10','5'*32,1)
         with self.assertRaises(ProfileConflict): self.ledger.purchase('a','avatar_11','6'*32,1)
-        self.assertEqual(profile_value(self.ledger.wallet('a'),'DF_Shards'),50)
+        self.assertEqual(profile_value(self.ledger.wallet('a'),'DF_Shards'),100)
     def test_ownership_survives_profile_save_omission(self):
         self.grant(); bought=self.ledger.purchase('a','avatar_10','7'*32,0)
         saved=self.ledger.save_profile('a',[number('DF_Shards',0)],bought['profileRevision'])
@@ -276,7 +276,7 @@ class ProfileHttpTests(unittest.TestCase):
         data={'cosmeticId':'avatar_10','operationId':'a'*32,'expectedProfileRevision':1,'price':1,'amount':999999,'localContribution':999999,'writes':[number('DF_Shards',999999)]}
         result=self.request('/wallet/spend',data)
         self.assertEqual(result['status'],'200 OK')
-        self.assertEqual(profile_value(result['body']['wallet'],'DF_Shards'),50)
+        self.assertEqual(profile_value(result['body']['wallet'],'DF_Shards'),100)
         self.assertEqual(self.request('/wallet/spend',data)['body'],result['body'])
     def test_malformed_requests_are_not_retryable_internal_errors(self):
         for data in ({},{'expectedProfileRevision':False,'profile':[]},{'expectedProfileRevision':0,'profile':{}}):

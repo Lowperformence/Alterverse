@@ -33,7 +33,7 @@ partial class Regression
   AuthenticationService.Instance=new AuthenticationService();AccountServerBootstrap.Instance=new();
   Resources.AccountConfig=new TextAsset{text="{\"httpsEndpoint\":\"https://account.example.invalid\"}"};
   DedicatedServerNetworkRuntime.Requested=true;EdgegapInjectedMatchContext.IsEdgegapDeployment=true;
-  EdgegapInjectedMatchContext.InjectedMatchId="fixture-match";EdgegapInjectedMatchContext.AssignedTicketCount=10;
+  EdgegapInjectedMatchContext.InjectedMatchId="fixture-match";EdgegapInjectedMatchContext.AssignedTicketCount=MatchSession.MaxPlayers;
   Time.unscaledTime=Time.realtimeSinceStartup=0;
   Environment.SetEnvironmentVariable("DF_RANKED_SERVER","1");
   Environment.SetEnvironmentVariable("DF_RANKED_ACCOUNT_URL","https://account.example.invalid");
@@ -47,12 +47,12 @@ partial class Regression
   var humans=new List<OnlineMatchPlan.DedicatedMember>();
   Type humanType=typeof(DedicatedOnlineMatchHandshake).GetNestedType("PendingHuman",BindingFlags.NonPublic);
   var pending=(IDictionary)Get(handshake,"pending");var authorized=(IDictionary)Get(handshake,"authorizedPlayers");
-  for(int i=0;i<10;i++)
+  for(int i=0;i<MatchSession.MaxPlayers;i++)
   {
    ulong id=(ulong)(i+1);string ticket="t"+i;var human=Activator.CreateInstance(humanType,true);
-   foreach(var pair in new[]{("TicketId",ticket),("PlayerId",ticket),("TeamId",i<5?"red":"blue"),("MatchId","fixture-match"),("Admission","signed-"+ticket)})Put(human,pair.Item1,pair.Item2);
+   foreach(var pair in new[]{("TicketId",ticket),("PlayerId",ticket),("TeamId",i<MatchSession.TeamSize?"red":"blue"),("MatchId","fixture-match"),("Admission","signed-"+ticket)})Put(human,pair.Item1,pair.Item2);
    Put(human,"ClientId",id);pending.Add(id,human);authorized.Add(id,ticket);manager.ConnectedClientsIds.Add(id);
-   humans.Add(new(){PlayerId=ticket,TeamId=i<5?"red":"blue",Hero=HeroId.Veyr});
+   humans.Add(new(){PlayerId=ticket,TeamId=i<MatchSession.TeamSize?"red":"blue",Hero=HeroId.Veyr});
   }
   CoopAuthority.PreparedPlan=OnlineMatchPlan.BuildDedicated("fixture-match",ArenaVariant.Moon,BotDifficulty.Hard,humans,SessionMode.OnlineRanked);
   Put(handshake,"planSent",true);Put(handshake,"planSentAt",0f);return handshake;
@@ -74,6 +74,31 @@ partial class Regression
   }
   int failures=0;
   async Task Case(string name,Func<Task> run){try{await run();}catch(Exception e){failures++;Console.WriteLine("FAIL "+name+": "+e.GetBaseException().Message);}}
+  await Case("4v4 dedicated admission limits",()=>
+  {
+   ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");
+   var handshake=Component<DedicatedOnlineMatchHandshake>();
+   var manager=new NetworkManager{IsServer=true,IsListening=true};NetworkManager.Singleton=manager;
+   void Hello(ulong id,string team,int version=4)
+   {
+    string ticket="hello-"+id;manager.ConnectedClientsIds.Add(id);
+    var reader=new FastBufferReader(version,new Unity.Collections.FixedString128Bytes(ticket),
+     new Unity.Collections.FixedString128Bytes(team),new Unity.Collections.FixedString128Bytes("fixture-match"),
+     new Unity.Collections.FixedString128Bytes(ticket),new Unity.Collections.FixedString64Bytes("Player"),
+     (int)HeroId.Veyr,(int)BattleItemType.None,new Unity.Collections.FixedString4096Bytes(""));
+    Invoke(handshake,"OnClientHello",id,reader);
+   }
+   Hello(90,"red",3);
+   Check(manager.ConnectedClientsIds.Count==0,"old 5v5 protocol rejected");
+   for(ulong id=1;id<=4;id++)Hello(id,"red");
+   Hello(5,"red");
+   Check(manager.ConnectedClientsIds.Count==4&&!manager.ConnectedClientsIds.Contains(5),"fifth teammate cannot enter handshake roster");
+   for(ulong id=6;id<=9;id++)Hello(id,"blue");
+   Hello(10,"blue");
+   Check(manager.ConnectedClientsIds.Count==8&&!manager.ConnectedClientsIds.Contains(10),"ninth human cannot enter handshake roster");
+   Check(((IDictionary)Get(handshake,"pending")).Count==8,"all eight valid players remain admitted");
+   return Task.CompletedTask;
+  });
   await Case("unlinked guest cannot earn unrecoverable rank",async()=>
   {
    ResetFailures();var service=Component<RankedService>();int requests=0;
@@ -142,13 +167,24 @@ partial class Regression
    Check(fresh.Current.cooldownUntil==123456&&fresh.Current.lastResult.left&&fresh.Current.lastResult.matchId=="saved-match","uninstall does not clear penalties or saved results");
    Check(fresh.Leaderboard.Length==1&&fresh.Leaderboard[0].displayName=="Saved Hero","season leaderboard is independent of the local installation");
   });
+  await Case("all eight players confirm and launch",async()=>
+  {
+   var handshake=PendingRanked(out var manager,out var reporter);int registrations=0,voids=0;
+   UnityWebRequest.Handler=r=>{if(r.url.EndsWith("/register"))registrations++;if(r.url.EndsWith("/void"))voids++;return Reply(r,"{}");};
+   for(ulong i=1;i<=MatchSession.MaxPlayers;i++)((HashSet<ulong>)Get(handshake,"planAcks")).Add(i);
+   var plan=(OnlineMatchPlan)CoopAuthority.PreparedPlan;
+   await (Task)handshake.GetType().GetMethod("RegisterRankedAsync",Flags).Invoke(handshake,new object[]{manager,plan});
+   Check(registrations==1&&reporter.Registered,"eight confirmed humans register with backend");
+   Check((bool)Get(handshake,"launched")&&DedicatedOnlineMatchHandshake.Status.Contains("MATCH LIVE"),"eight-player ranked match launches after registration");
+   Check(voids==0&&manager.ConnectedClientsIds.Count==8,"successful launch keeps all eight clients connected");
+  });
   await Case("missing ACK",()=>
   {
    var handshake=PendingRanked(out var manager,out var reporter);int voids=0;
    UnityWebRequest.Handler=r=>{if(r.url.EndsWith("/void"))voids++;return Reply(r,"{}");};
-   for(ulong i=1;i<=9;i++)((HashSet<ulong>)Get(handshake,"planAcks")).Add(i);
+   for(ulong i=1;i<MatchSession.MaxPlayers;i++)((HashSet<ulong>)Get(handshake,"planAcks")).Add(i);
    Time.unscaledTime=21;Invoke(handshake,"UpdateDedicatedServer",manager);
-   Check((bool)Get(handshake,"launched"),"ranked missing ACK aborts rather than rebuilding a nine-player match");
+   Check((bool)Get(handshake,"launched"),"ranked missing ACK aborts rather than rebuilding a incomplete match");
    Check(voids==1,"missing ACK produces exactly one backend tombstone");
    Check(manager.ConnectedClientsIds.Count==0,"all ranked clients are disconnected on failed confirmation");
    Check(CoopAuthority.PreparedPlan==null,"aborted plan is cleared");return Task.CompletedTask;
@@ -157,7 +193,7 @@ partial class Regression
   {
    var handshake=PendingRanked(out var manager,out var reporter);int voids=0;
    UnityWebRequest.Handler=r=>{if(r.url.EndsWith("/void"))voids++;return Reply(r,"{}");};
-   manager.ConnectedClientsIds.Remove(10);Invoke(handshake,"UpdateDedicatedServer",manager);
+   manager.ConnectedClientsIds.Remove((ulong)MatchSession.MaxPlayers);Invoke(handshake,"UpdateDedicatedServer",manager);
    Check((bool)Get(handshake,"launched"),"pre-start ranked disconnect terminates the attempt immediately");
    Check(voids==1,"disconnect preserves match id for tombstone");return Task.CompletedTask;
   });
@@ -242,11 +278,11 @@ partial class Regression
   await Case("casual ACK behavior",()=>
   {
    var handshake=PendingRanked(out var manager,out var reporter);Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");
-   for(ulong i=1;i<=9;i++)((HashSet<ulong>)Get(handshake,"planAcks")).Add(i);
+   for(ulong i=1;i<MatchSession.MaxPlayers;i++)((HashSet<ulong>)Get(handshake,"planAcks")).Add(i);
    Time.unscaledTime=21;Invoke(handshake,"UpdateDedicatedServer",manager);
    Check(!(bool)Get(handshake,"launched"),"casual waits for rebuilt ACKs");
-   Check(manager.ConnectedClientsIds.Count==9,"casual only evicts missing ACK");
-   Check(CoopAuthority.PreparedPlan.Session.Mode==SessionMode.OnlineCasual&&CoopAuthority.PreparedPlan.HumanCount==9,"casual rebuild retains bot fill");return Task.CompletedTask;
+   Check(manager.ConnectedClientsIds.Count==MatchSession.MaxPlayers-1,"casual only evicts missing ACK");
+   Check(CoopAuthority.PreparedPlan.Session.Mode==SessionMode.OnlineCasual&&CoopAuthority.PreparedPlan.HumanCount==MatchSession.MaxPlayers-1,"casual rebuild retains bot fill");return Task.CompletedTask;
   });
   await Case("leaver receipt and retry",async()=>
   {
@@ -266,7 +302,7 @@ partial class Regression
      }
      return Reply(r,"{}");
     };
-    var players=new RankedMatchReporter.Player[10];for(int i=0;i<10;i++)players[i]=new(){ticket="t"+i,admission="signed",team=i/5};
+    var players=new RankedMatchReporter.Player[MatchSession.MaxPlayers];for(int i=0;i<MatchSession.MaxPlayers;i++)players[i]=new(){ticket="t"+i,admission="signed",team=i/MatchSession.TeamSize};
     Check(await reporter.RegisterAsync("fixture-match",players),"reporter registration succeeds");
     CoopAuthority.Active=true;manager.ConnectedClientsIds.Remove(1);Invoke(reporter,"Update");
     Time.realtimeSinceStartup=longAbsence?60:59.9f;

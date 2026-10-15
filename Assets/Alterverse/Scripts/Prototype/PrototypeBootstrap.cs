@@ -147,7 +147,7 @@ new GameObject("DF_CoopWorldEventSync").AddComponent<CoopWorldEventSync>();
 new GameObject("DF_CoopWorldStateSync").AddComponent<CoopWorldStateSync>();
 new GameObject("DF_CoopMatchResultSync").AddComponent<CoopMatchResultSync>();
 }
-else new GameObject("AV_5v5Roster").AddComponent<FiveVsFiveTestRoster>();
+else new GameObject("AV_4v4Roster").AddComponent<FiveVsFiveTestRoster>();
 
 stage="match directors and HUD";
 new GameObject("AV_DimensionsFront").AddComponent<DimensionsFront>();

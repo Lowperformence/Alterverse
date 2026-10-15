@@ -1,6 +1,6 @@
 # Ranked production-code regression
 
-The runner compiles the existing nine Ranked/roster/handshake/UI classes against
+The runner compiles production offline, co-op, Ranked, roster, handshake and UI classes against
 controlled engine, HTTP and NGO substitutes. No live service is accessed.
 
 CI / .NET 8:
@@ -24,7 +24,7 @@ Dependencies are supplied separately; the runner does not install/download them.
 Its JSON reader defaults missing fields as Unity does, through Mono's XML bridge;
 .NET uses System.Text.Json. Neither substitutes a native Unity parser/build test.
 
-Latest local result: **105 checks passed** on Mono/Roslyn. `FailureRegression.cs`
+The 4v4 cases execute the production offline spawn loops for every fixture hero, co-op parties of one to four humans, online parties of one to four across one to eight humans, dedicated team allocations, deterministic client rosters, rematches and overflow rejection. The dedicated tests exercise successful eight-player Ranked registration and launch as well as missing ACKs and disconnects. These use .NET 8 and engine/service substitutes. `FailureRegression.cs`
 holds/reorders HTTP completions to exercise cancellation, account changes, aborted
 registration, missing ACKs and pre-start disconnects. It also verifies dedicated
 credentials, immutable result retry, the 60-second leaver boundary and retained
