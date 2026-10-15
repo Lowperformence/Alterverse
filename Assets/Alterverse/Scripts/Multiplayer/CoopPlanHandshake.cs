@@ -8,14 +8,14 @@ namespace Alterverse.Multiplayer
 {
     /// <summary>
     /// Verifies that the host and every connected co-op client produced the same staged
-    /// 10-slot match plan before gameplay is allowed to launch. Uses NGO named messages
-    /// over the Relay link and scales from one to five human players; bots fill open team slots.
+    /// 8-slot match plan before gameplay is allowed to launch. Uses NGO named messages
+    /// over the Relay link and scales from one to four human players; bots fill open team slots.
     /// </summary>
     public sealed class CoopPlanHandshake : MonoBehaviour
     {
         private const string ProbeMessage="DF_COOP_PLAN_PROBE_V1";
         private const string AckMessage="DF_COOP_PLAN_ACK_V1";
-        private const int ProtocolVersion=1;
+        private const int ProtocolVersion=2;
 
         public static CoopPlanHandshake Instance { get; private set; }
         public static bool PlanHandshakeReady=>Instance!=null&&Instance.planHandshakeReady;

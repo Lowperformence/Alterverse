@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Lightweight custom-message synchronization for the ten deterministic hero slots.
+    /// Lightweight custom-message synchronization for the eight deterministic hero slots.
     /// Human owners send only their movement pose to the authoritative server. The server validates it,
     /// runs authoritative gameplay, and broadcasts hero pose/health snapshots to clients.
     /// </summary>

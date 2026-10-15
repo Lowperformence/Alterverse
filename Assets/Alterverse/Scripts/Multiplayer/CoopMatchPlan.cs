@@ -69,15 +69,15 @@ namespace Alterverse.Multiplayer
                 allySlot++;
             }
             if(allySlot!=MatchSession.TeamSize)
-                throw new InvalidOperationException("Co-op roster could not fill Team Zero to five members.");
+                throw new InvalidOperationException($"Co-op roster could not fill Team Zero to {MatchSession.TeamSize} members.");
 
-            HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,HeroId.Elyra,
+            HeroId[] enemyHeroes={HeroId.Veyr,HeroId.Kaelon,HeroId.Nyra,
                 !string.IsNullOrEmpty(matchId)&&(matchId[0]&1)==0?HeroId.Nerok:HeroId.Rook};
             for(int i=0;i<enemyHeroes.Length;i++)
-                if(!session.TryAssign(5+i,BotSlot($"enemy-{i}",enemyHeroes[i],1)))
+                if(!session.TryAssign(MatchSession.TeamSize+i,BotSlot($"enemy-{i}",enemyHeroes[i],1)))
                     throw new InvalidOperationException("Could not assign enemy co-op bot.");
 
-            if(!session.IsFull)throw new InvalidOperationException("Co-op match plan must fill all ten match slots.");
+            if(!session.IsFull)throw new InvalidOperationException($"Co-op match plan must fill all {MatchSession.MaxPlayers} match slots.");
 
             return new CoopMatchPlan
             {

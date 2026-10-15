@@ -8,12 +8,12 @@ using CombatFeedbackComponent=Alterverse.Combat.CombatFeedback;
 namespace Alterverse.Multiplayer
 {
     /// <summary>
-    /// Builds the exact same ten hero slots on every peer. Clients mark only their controlled hero local;
-    /// a dedicated server can build all ten authoritative actors without owning a local player.
+    /// Builds the exact same eight hero slots on every peer. Clients mark only their controlled hero local;
+    /// a dedicated server can build all eight authoritative actors without owning a local player.
     /// </summary>
     public static class CoopRosterBuilder
     {
-        private static readonly float[] SpawnRows={8f,-8f,5f,-5f,0f};
+        private static readonly float[] SpawnRows={8f,-8f,5f,-5f};
 
         public static bool Build(GameObject localPlayer,CoopMatchPlan plan)
         {

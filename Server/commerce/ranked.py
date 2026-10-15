@@ -1,4 +1,4 @@
-"""Solo 5v5 ranked: authenticated queue, ticket-bound admission and server-only settlement."""
+"""Solo 4v4 ranked: authenticated queue, ticket-bound admission and server-only settlement."""
 import base64
 import hashlib
 import hmac
@@ -11,6 +11,8 @@ from ranked_store import SQLiteRankedStore, FirestoreRankedStore
 from safe_identity import profile_name, visible_player_name
 
 PROFILE = 'dimensions-front-ranked'
+TEAM_SIZE = 4
+MATCH_PLAYERS = 2 * TEAM_SIZE
 PLACEMENTS = 5
 TIERS = ('Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Dimensions Legend')
 
@@ -193,8 +195,8 @@ class Ranked:
     def register(self, data):
         match_id = identifier(data.get('matchId'))
         roster = data.get('players')
-        if not isinstance(roster, list) or len(roster) != 10:
-            raise ValueError('Ranked requires ten humans')
+        if not isinstance(roster, list) or len(roster) != MATCH_PLAYERS:
+            raise ValueError('Ranked requires eight humans')
         players, accounts, tickets = [], set(), set()
         for entry in roster:
             token = self.verify(entry.get('admission'))
@@ -204,8 +206,8 @@ class Ranked:
                 raise ValueError('Duplicate ranked player')
             accounts.add(token['account']); tickets.add(token['ticket'])
             players.append(dict(account=token['account'], ticket=token['ticket'], team=entry['team'], mmr=token['mmr']))
-        if sum(p['team'] == 0 for p in players) != 5:
-            raise ValueError('Ranked requires balanced 5v5 teams')
+        if sum(p['team'] == 0 for p in players) != TEAM_SIZE:
+            raise ValueError('Ranked requires balanced 4v4 teams')
         players.sort(key=lambda p: p['ticket'])
         key = self.season + ':m:' + match_id
         def register(tx):
@@ -246,7 +248,9 @@ class Ranked:
             if not set(leavers).issubset({p['ticket'] for p in roster}):
                 raise ValueError('Unknown leaver')
             profiles = [tx.get(self.pk(p['account'])) for p in roster]
-            means = [sum(p['mmr'] for p in roster if p['team'] == team) / 5 for team in (0, 1)]
+            # Use the registered roster size so already-running legacy matches can still settle.
+            means = [sum(p['mmr'] for p in roster if p['team'] == team) /
+                     sum(p['team'] == team for p in roster) for team in (0, 1)]
             for p, profile in zip(roster, profiles):
                 if not profile or profile.get('activeMatch') != key:
                     raise ValueError('Ranked profile match mismatch')

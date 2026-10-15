@@ -29,7 +29,7 @@ namespace Alterverse.UI
                 GUI.depth = -9000;
                 GUI.matrix = Matrix4x4.TRS(new Vector3(safe.x + (safe.width-960*scale)/2, Screen.height-safe.yMax+(safe.height-640*scale)/2, 0), Quaternion.identity, Vector3.one * scale);
                 FrontEndTheme.Fill(new Rect(0, 0, 960, 640), FrontEndTheme.Background);
-                theme.Label(new Rect(28, 20, 640, 48), "RANKED • SOLO 5v5", theme.Title);
+                theme.Label(new Rect(28, 20, 640, 48), "RANKED • SOLO 4v4", theme.Title);
                 var service = RankedService.Instance;
                 bool searching = service?.Searching == true;
                 if (theme.Action(new Rect(772, 20, 160, 48), "CLOSE", enabled:!searching && service?.Busy != true)) Destroy(gameObject);
@@ -40,7 +40,7 @@ namespace Alterverse.UI
                 theme.Label(new Rect(48, 204, 312, 74), current?.placementsRemaining > 0
                     ? current.placementsRemaining + " placement matches remaining"
                     : "Win as a team to climb the ranks.", theme.Body, true);
-                theme.Label(new Rect(48, 284, 312, 120), "10 real players • no bot fill\nBronze → Dimensions Legend\nRank saved to your linked account.\nLeaving: point penalty + cooldown", theme.Small, true);
+                theme.Label(new Rect(48, 284, 312, 120), "8 real players • no bot fill\nBronze → Dimensions Legend\nRank saved to your linked account.\nLeaving: point penalty + cooldown", theme.Small, true);
                 if (current?.lastResult != null)
                     theme.Label(new Rect(48, 418, 312, 34), "LAST MATCH  " + (current.lastResult.delta >= 0 ? "+" : "") + current.lastResult.delta + " RP", theme.Body);
                 theme.Label(new Rect(48, 464, 312, 36), current == null ? "" : current.wins + " WINS / " + current.games + " MATCHES", theme.Small, true);

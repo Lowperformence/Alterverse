@@ -39,7 +39,7 @@ public static class Regression
     {
         CoopMatchPlan p=online?new OnlineMatchPlan():new CoopMatchPlan();
         p.MatchId="round-0";p.Session=new MatchSession(p.MatchId,online?SessionMode.OnlineCasual:SessionMode.Private);
-        for(int i=0;i<10;i++)p.Session.TryAssign(i,new MatchPlayerSlot{PlayerId="p"+i,DisplayName="P"+i,Team=i/5,Hero=(HeroId)(i%8),IsBot=i>2,IsLocal=i==1,IsHost=i==0,Ready=true});
+        for(int i=0;i<MatchSession.MaxPlayers;i++)p.Session.TryAssign(i,new MatchPlayerSlot{PlayerId="p"+i,DisplayName="P"+i,Team=i/MatchSession.TeamSize,Hero=(HeroId)(i%8),IsBot=i>2,IsLocal=i==1,IsHost=i==0,Ready=true});
         return p;
     }
     static PrototypeBootstrap Bootstrap()=>new GameObject("AV_PrototypeBootstrap").AddComponent<PrototypeBootstrap>();
@@ -202,7 +202,7 @@ public static class Regression
                 int mask=round==1?7:3;var next=CoopMatchPlan.NextRound(previous,"round-"+round,mask);
                 Check(next.Session.IsFull&&next.MatchId!=previous.MatchId&&next.Session.SessionId==next.MatchId,"round lost full roster/fresh receipt");
                 Check((next is OnlineMatchPlan)==online&&next.HumanCount==(round==1?3:2),"round lost mode/human count");
-                for(int i=0;i<10;i++)Check(next.Session.Slots[i].Team==first.Session.Slots[i].Team&&next.Session.Slots[i].Hero==first.Session.Slots[i].Hero,"round changed team/hero");
+                for(int i=0;i<MatchSession.MaxPlayers;i++)Check(next.Session.Slots[i].Team==first.Session.Slots[i].Team&&next.Session.Slots[i].Hero==first.Session.Slots[i].Hero,"round changed team/hero");
                 Check(next.Session.Slots[1].IsLocal&&!next.Session.Slots[1].IsBot,"round lost local player");
                 if(round>1)Check(next.Session.Slots[2].IsBot&&!next.Session.Slots[2].IsLocal,"departed human not replaced");
                 Check(first.Session.Slots[2].PlayerId=="p2"&&!first.Session.Slots[2].IsBot,"restart mutated prior roster");previous=next;
@@ -214,8 +214,8 @@ public static class Regression
             var members=new[]{new CoopLobbyService.MemberView{PlayerId="host",IsHost=true,Hero=(HeroId)a},new CoopLobbyService.MemberView{PlayerId="guest",IsLocal=true,Hero=(HeroId)b}};
             var plan=CoopMatchPlan.Build("pair-"+a+b,ArenaVariant.Moon,Alterverse.AI.BotDifficulty.Normal,members);
             Check(plan.Session.IsFull&&plan.HumanCount==2,"two-hero roster not full");
-            Check(plan.Session.Slots.Take(5).Select(s=>s.Hero).Distinct().Count()==5,"allied hero duplicate");
-            Check(plan.Session.Slots.Take(5).All(s=>s.Team==0)&&plan.Session.Slots.Skip(5).All(s=>s.Team==1),"roster team sizes changed");
+            Check(plan.Session.Slots.Take(MatchSession.TeamSize).Select(s=>s.Hero).Distinct().Count()==MatchSession.TeamSize,"allied hero duplicate");
+            Check(plan.Session.Slots.Take(MatchSession.TeamSize).All(s=>s.Team==0)&&plan.Session.Slots.Skip(MatchSession.TeamSize).All(s=>s.Team==1),"roster team sizes changed");
         }
     }
     static void DailyBoundaries()

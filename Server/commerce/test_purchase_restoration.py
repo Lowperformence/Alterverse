@@ -21,7 +21,9 @@ class PurchaseRestorationTests(unittest.TestCase):
                     ledger = factory()
                     ledger.fulfill('account-a', 'dimensions_shards_500', 'spent-token',
                                    {'purchaseState': 0, 'obfuscatedExternalAccountId': 'account-a'})
-                    spent = ledger.purchase('account-a', 'avatar_27', 'b' * 32, 0)
+                    ledger.purchase('account-a', 'avatar_27', 'b' * 32, 0)
+                    revision = ledger.wallet('account-a')['profileRevision']
+                    spent = ledger.purchase('account-a', 'shield', 'c' * 32, revision)
                     self.assertEqual(spent['balance'], 0)
                     restored = factory().wallet('account-a')
                     self.assertGreater(restored['revision'], 0)

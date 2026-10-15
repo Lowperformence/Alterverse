@@ -14,7 +14,7 @@ namespace Alterverse.Multiplayer
     /// Establishes the authoritative online roster after Edgegap assigns all clients to a
     /// dedicated server. Clients announce their Edgegap ticket; on an Edgegap deployment the
     /// server verifies that ticket/team/match against injected Matchmaker variables before a
-    /// player is authorized. The server builds the only authoritative 5v5 plan, returns it to
+    /// player is authorized. The server builds the only authoritative 4v4 plan, returns it to
     /// every client, waits for plan acknowledgements, then launches the battlefield on all peers.
     /// </summary>
     [DefaultExecutionOrder(-24000)]
@@ -24,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
-        private const int ProtocolVersion = 3;
+        private const int ProtocolVersion = 4;
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
         private const float AuthenticationTimeoutSeconds = 10f;
@@ -309,9 +309,16 @@ namespace Alterverse.Multiplayer
             if (!string.IsNullOrWhiteSpace(claimedPlayerId) && claimedPlayerId != ticketId)
                 Debug.Log($"DIMENSIONS FRONT SERVER: lobby identity {claimedPlayerId} bound to verified ticket {ticketId}.");
 
+            if (!pending.ContainsKey(senderClientId) && pending.Count >= MatchSession.MaxPlayers)
+            {
+                RejectClient(manager, senderClientId, "dedicated match is full");
+                return;
+            }
+            int teamMembers = 0;
             foreach (KeyValuePair<ulong, PendingHuman> pair in pending)
             {
                 if (pair.Key == senderClientId) continue;
+                if (pair.Value.TeamId == teamId) teamMembers++;
                 if (pair.Value.TicketId == ticketId || pair.Value.PlayerId == playerId)
                 {
                     RejectClient(manager, senderClientId, "duplicate dedicated identity");
@@ -325,6 +332,11 @@ namespace Alterverse.Multiplayer
                 }
             }
 
+            if (teamMembers >= MatchSession.TeamSize)
+            {
+                RejectClient(manager, senderClientId, "dedicated team is full");
+                return;
+            }
             pending[senderClientId] = new PendingHuman
             {
                 ClientId = senderClientId,
@@ -669,7 +681,7 @@ namespace Alterverse.Multiplayer
                     return;
                 }
                 if (launched || manager == null || !manager.IsListening || CoopAuthority.PreparedPlan != plan ||
-                    pending.Count != 10 || planAcks.Count != 10)
+                    pending.Count != MatchSession.MaxPlayers || planAcks.Count != MatchSession.MaxPlayers)
                 { AbortRanked(manager); return; }
                 LaunchAuthoritativeMatch(manager);
             }

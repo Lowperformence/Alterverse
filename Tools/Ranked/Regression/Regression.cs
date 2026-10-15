@@ -10,20 +10,21 @@ partial class Regression {
  static void Rejected(Action a,string message){bool rejected=false;try{a();}catch(InvalidOperationException){rejected=true;}Check(rejected,message);}
  static void Main(){
   IdentityCases();
+  TeamFormatCases();
   var players=new List<OnlineMatchPlan.DedicatedMember>();
-  for(int i=0;i<10;i++) players.Add(new(){PlayerId="t"+i,DisplayName="Hero"+i,TeamId=i<5?"red":"blue",Hero=HeroId.Veyr});
+  for(int i=0;i<MatchSession.MaxPlayers;i++) players.Add(new(){PlayerId="t"+i,DisplayName="Hero"+i,TeamId=i<MatchSession.TeamSize?"red":"blue",Hero=HeroId.Veyr});
   var plan=OnlineMatchPlan.BuildDedicated("match",ArenaVariant.Moon,BotDifficulty.Hard,players,SessionMode.OnlineRanked);
   Check(plan.Session.Mode==SessionMode.OnlineRanked,"mode propagated");
-  Check(plan.HumanCount==10,"ten humans");
+  Check(plan.HumanCount==8,"eight humans");
   foreach(var slot in plan.Session.Slots){Check(!slot.IsBot,"no bot fill");Check(slot.Hero==HeroId.Veyr,"chosen heroes preserved");}
   var client=OnlineMatchPlan.FromAuthoritativeSlots("match",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t0",SessionMode.OnlineRanked);
   Check(CoopPlanHandshake.Fingerprint(plan)==CoopPlanHandshake.Fingerprint(client),"server/client fingerprint");
   var casual=OnlineMatchPlan.FromAuthoritativeSlots("match",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t0");
   Check(CoopPlanHandshake.Fingerprint(plan)!=CoopPlanHandshake.Fingerprint(casual),"mode protected by fingerprint");
-  Rejected(()=>OnlineMatchPlan.BuildDedicated("bad",ArenaVariant.Moon,BotDifficulty.Hard,players.GetRange(0,9),SessionMode.OnlineRanked),"missing human rejected");
-  var wrong=new List<OnlineMatchPlan.DedicatedMember>(players);wrong[9]=new(){PlayerId="t9",TeamId="red"};
+  Rejected(()=>OnlineMatchPlan.BuildDedicated("bad",ArenaVariant.Moon,BotDifficulty.Hard,players.GetRange(0,MatchSession.MaxPlayers-1),SessionMode.OnlineRanked),"missing human rejected");
+  var wrong=new List<OnlineMatchPlan.DedicatedMember>(players);wrong[MatchSession.MaxPlayers-1]=new(){PlayerId="t9",TeamId="red"};
   Rejected(()=>OnlineMatchPlan.BuildDedicated("bad",ArenaVariant.Moon,BotDifficulty.Hard,wrong,SessionMode.OnlineRanked),"uneven teams rejected");
-  var dup=new List<OnlineMatchPlan.DedicatedMember>(players);dup[9]=dup[0];
+  var dup=new List<OnlineMatchPlan.DedicatedMember>(players);dup[MatchSession.MaxPlayers-1]=dup[0];
   Rejected(()=>OnlineMatchPlan.BuildDedicated("bad",ArenaVariant.Moon,BotDifficulty.Hard,dup,SessionMode.OnlineRanked),"duplicate identity rejected");
   plan.Session.Slots[0].IsBot=true;
   Rejected(()=>OnlineMatchPlan.FromAuthoritativeSlots("bad",ArenaVariant.Moon,BotDifficulty.Hard,plan.Session.Slots,"t1",SessionMode.OnlineRanked),"client rejects bot plan");
