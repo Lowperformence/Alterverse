@@ -135,6 +135,7 @@ namespace Alterverse.Visuals
         public void PulseAbility(int slot,float windup)
         {
             GetComponent<MeleeBasicAttackAnimation>()?.CancelStrike();
+            GetComponent<VoidKnightPresentation>()?.BeginAbility(slot,windup);
             
             PulseAttack(slot==3);abilitySlot=slot;
             windupDuration=Mathf.Max(0,windup);windupUntil=Time.time+windupDuration;attackUntil=windupUntil+attackDuration;
@@ -979,6 +980,7 @@ namespace Alterverse.Visuals
 
     }
 }
+
 
 
 

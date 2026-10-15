@@ -61,6 +61,7 @@ namespace Alterverse.AI
             }
             float defensiveThreshold=Mathf.Lerp(.55f,.82f,discipline);
             if ((h == HeroId.Nerok && sensor.NearbyEnemies>0 || h == HeroId.Rook || h == HeroId.Kaelon && sensor.NearbyEnemies>0) && self.Normalized < defensiveThreshold && TryCast(1,target)) return;
+            if(h==HeroId.VoidKnight&&target!=null&&distance<4.2f&&self.Normalized<.85f&&TryCast(1,target))return;
             if (target == null) return;
             if (distance < 3.5f && ((h == HeroId.Nyra && TryCast(1,target)) || (h == HeroId.Elyra && TryCast(2,target)) || (h == HeroId.Traveler && TryCast(1,target)))) return;
             bool safeEngage=!coordinated||!brain.NeedsCombatReset&&target!=null&&!brain.Tactics.UnsafeDefense(target.transform.position)&&
@@ -99,6 +100,7 @@ namespace Alterverse.AI
             if (h != HeroId.Mira && ultimateWindow && TryCast(3,target)) return;
             // Mage follows visible CC after a human delay. Ordinary uncoordinated casts still work.
             if(coordinated&&h==HeroId.Elyra&&controlledTarget==target&&!followUp)return;
+            if(h==HeroId.VoidKnight&&safeEngage&&distance>3.1f&&distance<5.5f&&TryCast(2,target))return;
             if (TryCast(0,target)) return;
             if ((h == HeroId.Veyr || h == HeroId.Elyra || h == HeroId.Timmy) && TryCast(1,target)) return;
             if(h==HeroId.Timmy&&safeEngage&&distance>TimmyBalance.ClawRange&&distance<6f)TryCast(2,target);
@@ -110,7 +112,7 @@ namespace Alterverse.AI
             if(execution.Remaining(slot)>0)return false;
             AbilitySpec spec=kit.Spec(slot);
             bool support=identity.Hero==HeroId.Mira&&(slot==1||slot==2||slot==3);
-            bool defensive=(identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1;
+            bool defensive=(identity.Hero==HeroId.VoidKnight||identity.Hero==HeroId.Nerok||identity.Hero==HeroId.Kaelon||identity.Hero==HeroId.Rook)&&slot==1;
             if(!support&&!defensive&&spec.Radius>0&&spec.Range<=0)
             {
                 // The execution layer permits ground casts; AI must avoid empty circles.
@@ -127,7 +129,7 @@ namespace Alterverse.AI
                 if(!controlled&&!group&&!sensor.HasSteadyMotion&&target.Current>spec.Power)return false;
             }
             Vector3 direction = target != null ? transform.position-target.transform.position : transform.forward;
-            if(identity.Hero==HeroId.Timmy)direction=-direction;
+            if(identity.Hero==HeroId.Timmy||identity.Hero==HeroId.VoidKnight)direction=-direction;
             if (identity.Hero == HeroId.Veyr && (brain == null || brain.State == MobaBotBrain.BotState.Fight&&!brain.NeedsCombatReset)) direction = -direction;
             bool cast=execution.TryCast(slot,target,direction);
             if(cast&&slot==1&&identity.Hero==HeroId.Veyr&&brain!=null&&brain.Difficulty.Coordinated&&
@@ -150,5 +152,6 @@ namespace Alterverse.AI
         }
     }
 }
+
 
 

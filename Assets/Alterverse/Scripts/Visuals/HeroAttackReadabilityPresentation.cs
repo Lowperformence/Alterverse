@@ -180,6 +180,9 @@ namespace Alterverse.Visuals
             HeroFxMotion motion=HeroFxMotion.Expand;
             switch(hero)
             {
+                case HeroId.VoidKnight:
+                    shape=slot==1?HeroFxShape.Shield:slot==2?HeroFxShape.Rift:HeroFxShape.Slash;
+                    point=slot==1?chest:hand;motion=slot==1?HeroFxMotion.Hold:HeroFxMotion.Sweep;break;
                 case HeroId.Veyr:
                     shape=slot==0?HeroFxShape.Slash:slot==1?HeroFxShape.Rift:
                         slot==2?HeroFxShape.Halo:HeroFxShape.Shard;
@@ -288,4 +291,5 @@ namespace Alterverse.Visuals
 
     }
 }
+
 

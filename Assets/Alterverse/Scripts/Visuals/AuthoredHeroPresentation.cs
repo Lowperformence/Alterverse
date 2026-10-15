@@ -115,7 +115,7 @@ namespace Alterverse.Visuals
             // Keep the legacy passes as a fallback when a replacement did not load.
             bool componentModelApplied =
                 (hero == HeroId.Nyra && instance.GetComponent<CyberRangerAppearance>() != null) ||
-                (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null);
+                (hero == HeroId.Elyra && instance.GetComponent<UmbralMageAppearance>() != null)||hero==HeroId.VoidKnight;
             if (hero != HeroId.Timmy && !componentModelApplied)
                 HeroLimbTechDetails.Apply(instance.transform, hero);
             SkinOrnamentPresentation.Apply(instance.transform,
@@ -131,6 +131,7 @@ namespace Alterverse.Visuals
             BrakkUtilityBeltAppearance.Apply(instance.transform, hero);
             BrakkArmorAppearance.Apply(instance.transform, hero);
             presentation.Initialize(root, instance.transform);
+            if(hero==HeroId.VoidKnight)(actor.GetComponent<VoidKnightPresentation>()??actor.AddComponent<VoidKnightPresentation>()).Initialize(instance.transform);
             return true;
         }
 
@@ -217,7 +218,7 @@ namespace Alterverse.Visuals
             // Relative to the previous 2x hands: -20% normally, -60% for Brakk.
             // Zhaev/Veyr now also uses 1.6x hands: 60% larger than his previous 1x hands.
             // The palm offset and inverse grip scale below keep the original weapons fitted.
-            float scale = hero == HeroId.Mira || hero == HeroId.Nerok || hero == HeroId.Timmy ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
+            float scale = hero == HeroId.Mira || hero == HeroId.Nerok || hero == HeroId.Timmy || hero == HeroId.VoidKnight ? 1f : hero == HeroId.Rook ? .8f : 1.6f;
             Transform[] bones = imported.GetComponentsInChildren<Transform>(true);
             foreach (Transform grip in bones)
             {
@@ -1006,6 +1007,7 @@ namespace Alterverse.Visuals
             GetComponent<HeroLocomotionAnimation>()?.ApplyLegs();
             GetComponent<HeroGroundedLocomotion>()?.FinalizeFeet();
             FollowRifleDetails();
+            GetComponent<VoidKnightPresentation>()?.ApplyUpperBody();
             if(timmyTail!=null&&Time.deltaTime>0f)
             {
                 // Like Nerok, begin centred and animate only the tail, independent of combat.
@@ -1016,4 +1018,5 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 

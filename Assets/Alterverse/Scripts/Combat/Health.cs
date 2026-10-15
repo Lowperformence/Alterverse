@@ -8,6 +8,7 @@ namespace Alterverse.Combat
     {
         private float HeroBaseShieldCapacity => GetComponent<Alterverse.Characters.HeroIdentity>()?.Hero switch
         {
+            Alterverse.Characters.HeroId.VoidKnight => 60f,
             Alterverse.Characters.HeroId.Nerok => 90f,
             Alterverse.Characters.HeroId.Veyr => 70f,
             Alterverse.Characters.HeroId.Kaelon => 70f,
@@ -210,6 +211,8 @@ namespace Alterverse.Combat
             if (buff != null)
                 amount *= buff.DamageTakenMultiplier;
 
+            amount=GetComponent<Alterverse.Characters.VoidKnightState>()?.ReduceFrontalDamage(amount,source)??amount;
+
             // If 15 seconds have already elapsed, the shield is restored before this hit lands.
             RefreshHeroBaseShield();
 
@@ -335,6 +338,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

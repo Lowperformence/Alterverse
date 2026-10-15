@@ -42,7 +42,7 @@ namespace Alterverse.Combat
                 // Contact still happens exactly at ReleaseAt, so damage and the IK strike stay synced.
                 return hero switch
                 {
-                    HeroId.Veyr=>.16f,HeroId.Kaelon=>.22f,HeroId.Nyra=>.08f,
+                    HeroId.VoidKnight=>VoidKnightBalance.BasicWindup,HeroId.Veyr=>.16f,HeroId.Kaelon=>.22f,HeroId.Nyra=>.08f,
                     HeroId.Elyra=>.14f,HeroId.Mira=>.12f,HeroId.Rook=>.18f,HeroId.Traveler=>.10f,
                     HeroId.Nerok=>.20f,_=>.16f
                 };
@@ -333,3 +333,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

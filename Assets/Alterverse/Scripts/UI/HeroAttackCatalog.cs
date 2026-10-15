@@ -33,7 +33,7 @@ namespace Alterverse.UI
             HeroCombatStats stats=HeroCombatProfile.StatsFor(hero);
             return new[]
             {
-                new HeroAttackCard("BASIC",hero==HeroId.Timmy?"Claw":"Basic Attack",
+                new HeroAttackCard("BASIC",hero==HeroId.VoidKnight?"Greatsword":hero==HeroId.Timmy?"Claw":"Basic Attack",
                     $"{HeroIdentity.AttackDamage(hero):0} DMG  •  RANGE {stats.AttackRange:0.##}  •  {stats.AttackInterval:0.##}s / SHOT  •  WINDUP {HeroAttackDelivery.Windup(hero):0.##}s",
                     BasicEffect(hero)),
                 Ability(hero,"SKILL 1",0,kit.Q),
@@ -58,6 +58,7 @@ namespace Alterverse.UI
 
         private static string Primary(HeroId hero,int slot,AbilitySpec spec)
         {
+            if(hero==HeroId.VoidKnight&&slot==1)return "50% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
             if(hero==HeroId.Kaelon&&slot==3)return $"{spec.Power:0} DMG + 50 SELF HEAL";
@@ -72,6 +73,7 @@ namespace Alterverse.UI
 
         private static string BasicEffect(HeroId hero)=>hero switch
         {
+            HeroId.VoidKnight=>"Two-handed greatsword. Three confirmed basic hits prime a 30-point shield for 2s on the next damaging skill. Longer melee reach, slower swings and less health than a tank.",
             HeroId.Veyr=>"Fast melee pressure for finishing isolated targets.",
             HeroId.Timmy=>$"Short-range claw strike. Light Paws grants {(TimmyBalance.PassiveSpeed-1f)*100:0}% speed for {TimmyBalance.PassiveSeconds:0.#}s after a damaging skill hit, at most once every {TimmyBalance.PassiveCooldown:0.#}s.",
             HeroId.Kaelon=>$"Frontline melee. Extra passive: +{HeroAbilityKit.AurenPassiveRegenPerSecond:0} HP every second while alive (max HP cap).",
@@ -86,6 +88,13 @@ namespace Alterverse.UI
 
         private static string Effect(HeroId hero,int slot)=>hero switch
         {
+            HeroId.VoidKnight=>slot switch
+            {
+                0=>"A wide greatsword cut; its direction stays fixed through the readable windup.",
+                1=>"Stand and guard for 0.65s. Reduce frontal damage 50%. A successful block triggers one short counter. Rear and flank hits bypass the guard.",
+                2=>"Tap to thrust in movement direction; drag to aim. A short preparation precedes the lunge. The first enemy stops it; walls block it. No invulnerability.",
+                _=>"After a 0.65s warning, strike an 80-degree front cone once per enemy and slow movement 25% for 1.2s. Stuns interrupt preparation."
+            },
             HeroId.Timmy=>slot switch
             {
                 0=>"A stronger single-target claw swipe with short melee reach.",
@@ -153,5 +162,6 @@ namespace Alterverse.UI
         };
     }
 }
+
 
 

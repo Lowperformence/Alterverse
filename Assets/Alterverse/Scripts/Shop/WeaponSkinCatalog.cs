@@ -62,6 +62,7 @@ namespace Alterverse.Shop
 
         public static WeaponSkinItem For(HeroId hero,int variant)
         {
+            if(hero==HeroId.VoidKnight)return new WeaponSkinItem(hero,"ORIGINAL","Rift Edge Greatsword","Original two-handed greatsword.",new Color(.62f,.18f,1f),0,0);
             if(hero==HeroId.Timmy)return new WeaponSkinItem(hero,"ORIGINAL","Suit Claws","Original astronaut claws; Season 2 cosmetics are not for sale.",new Color(.04f,.68f,1f),0,0);
             variant=Mathf.Clamp(variant,0,1);
             for(int i=0;i<Items.Length;i++)
@@ -202,3 +203,4 @@ namespace Alterverse.Shop
         }
     }
 }
+
