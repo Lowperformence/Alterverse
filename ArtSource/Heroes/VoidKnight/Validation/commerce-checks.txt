@@ -1,5 +1,10 @@
 test_existing_weapon_products_remain_available (test_void_knight.VoidKnightWeaponTests.test_existing_weapon_products_remain_available) ... ok
 test_firestore_rejects_before_database_access (test_void_knight.VoidKnightWeaponTests.test_firestore_rejects_before_database_access) ... ok
+test_future_release_insufficient_funds_grants_nothing (test_void_knight.VoidKnightWeaponTests.test_future_release_insufficient_funds_grants_nothing) ... ok
+test_future_release_mixed_payment_ownership_retry_and_restore (test_void_knight.VoidKnightWeaponTests.test_future_release_mixed_payment_ownership_retry_and_restore) ... ok
+test_hero_firestore_gate_rejects_before_database_access (test_void_knight.VoidKnightWeaponTests.test_hero_firestore_gate_rejects_before_database_access) ... ok
+test_hero_launch_price_and_persisted_ownership (test_void_knight.VoidKnightWeaponTests.test_hero_launch_price_and_persisted_ownership) ... ok
+test_hero_stays_locked_in_both_sqlite_purchase_paths (test_void_knight.VoidKnightWeaponTests.test_hero_stays_locked_in_both_sqlite_purchase_paths) ... ok
 test_sqlite_rejects_both_purchase_paths_without_wallet_change (test_void_knight.VoidKnightWeaponTests.test_sqlite_rejects_both_purchase_paths_without_wallet_change) ... ok
 test_two_locked_variants_use_existing_price_and_correct_ownership_keys (test_void_knight.VoidKnightWeaponTests.test_two_locked_variants_use_existing_price_and_correct_ownership_keys) ... ok
 test_all_avatar_profile_pictures_are_400_shards (test_ledger.LedgerTests.test_all_avatar_profile_pictures_are_400_shards) ... ok
@@ -21,6 +26,6 @@ test_unknown_consumed_token_does_not_credit (test_ledger.LedgerTests.test_unknow
 test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement (test_ledger.LedgerTests.test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement) ... ok
 
 ----------------------------------------------------------------------
-Ran 21 tests in 0.139s
+Ran 26 tests in 0.127s
 
 OK

@@ -11,9 +11,11 @@ namespace Alterverse.Shop
         public const int TravelerPrice=1500;
         public const int NerokPrice=2200;
         public const int TimmyPrice=1900;
+        public const int VoidKnightPrice=1600;
         public const string TravelerOwnedKey="DF_HeroOwned_Traveler";
         public const string NerokOwnedKey="DF_HeroOwned_Nerok";
         public const string TimmyOwnedKey="DF_HeroOwned_Timmy";
+        public const string VoidKnightOwnedKey="DF_HeroOwned_VoidKnight";
         // Listed for preview, but purchase and deployment remain blocked until release.
         public const bool TimmyReleased=false;
         public const bool VoidKnightReleased=false;
@@ -27,13 +29,14 @@ namespace Alterverse.Shop
             HeroId.Traveler=>TravelerPrice,
             HeroId.Nerok=>NerokPrice,
             HeroId.Timmy=>TimmyPrice,
+            HeroId.VoidKnight=>VoidKnightPrice,
             _=>0
         };
-        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok||hero==HeroId.Timmy;
+        public static bool Purchasable(HeroId hero)=>hero==HeroId.Traveler||hero==HeroId.Nerok||hero==HeroId.Timmy||hero==HeroId.VoidKnight;
         public static string OwnedKey(HeroId hero)=>hero==HeroId.Traveler?TravelerOwnedKey:
-            hero==HeroId.Nerok?NerokOwnedKey:hero==HeroId.Timmy?TimmyOwnedKey:null;
+            hero==HeroId.Nerok?NerokOwnedKey:hero==HeroId.Timmy?TimmyOwnedKey:hero==HeroId.VoidKnight?VoidKnightOwnedKey:null;
         public static string PurchaseSku(HeroId hero)=>hero==HeroId.Traveler?"hero_traveler":
-            hero==HeroId.Nerok?"hero_nerok":hero==HeroId.Timmy?"hero_timmy":null;
+            hero==HeroId.Nerok?"hero_nerok":hero==HeroId.Timmy?"hero_timmy":hero==HeroId.VoidKnight?"hero_void_knight":null;
     }
 
     public static class HeroUnlockInventory

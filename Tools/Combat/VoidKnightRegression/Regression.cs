@@ -47,7 +47,9 @@ class Regression
   Check(!PlayerHeroSelection.Select(HeroId.VoidKnight)&&PlayerHeroSelection.Selected!=HeroId.VoidKnight,"unreleased hero cannot deploy");
   Check(!Alterverse.Shop.HeroUnlockCatalog.Released(HeroId.Timmy),"Timmy release lock preserved");
   Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Traveler)==1500&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Nerok)==2200&&Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.Timmy)==1900,"existing prices preserved");
-  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.VoidKnight)==0&&Alterverse.Shop.HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)==null,"no unapproved price or SKU introduced");
+  Check(Alterverse.Shop.HeroUnlockCatalog.Price(HeroId.VoidKnight)==1600,"Void Knight costs exactly 1600 shards");
+  Check(Alterverse.Shop.HeroUnlockCatalog.Purchasable(HeroId.VoidKnight),"Void Knight uses premium hero purchase flow after release");
+  Check(Alterverse.Shop.HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)=="hero_void_knight"&&Alterverse.Shop.HeroUnlockCatalog.OwnedKey(HeroId.VoidKnight)=="DF_HeroOwned_VoidKnight","Void Knight SKU and persisted ownership mapping");
   Check(Alterverse.Shop.WeaponSkinCatalog.VariantCount(HeroId.VoidKnight)==2,"Void Knight has two weapon shop variants");
   for(int v=0;v<2;v++)
   {

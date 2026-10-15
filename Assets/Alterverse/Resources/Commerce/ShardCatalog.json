@@ -432,6 +432,18 @@
       ]
     },
     {
+      "id": "hero_void_knight",
+      "price": 1600,
+      "available": false,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_VoidKnight",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
       "id": "battlepass_beta01",
       "price": 1000,
       "writes": [

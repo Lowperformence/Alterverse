@@ -29,8 +29,8 @@ Use closed low-poly meshes with baked two-segment bevels and consistent normals.
 
 ## Release state
 
-Void Knight remains visible as a preview but unreleased. Purchase and match selection are blocked until `VoidKnightReleased` is deliberately enabled later. Do not invent a launch price or SKU.
+Void Knight remains visible as a preview but unreleased. The authorized launch price is 1,600 shards, SKU `hero_void_knight`, persisted key `DF_HeroOwned_VoidKnight`. Purchase and match selection remain blocked until `VoidKnightReleased` and the server product availability are deliberately enabled together later.
 
 ## Implemented result
 
-214 separate source meshes, 26,832 runtime triangles, five materials and twelve original actions. Every original bone matrix is identical across all 384 action frames; the two-hand grip span remains 0.38 m. 76 deterministic gameplay/release checks pass. Unity/NGO/Android validation is still a separate native step.
+214 separate source meshes, 26,832 runtime triangles, five materials and twelve original actions. Both complete hands (31 parts each) are scaled uniformly to 130% around the original palm centers, including fingers, thumbs, wrist covers and glove plates. Skeleton, sword and grip centers remain fixed. Every original bone matrix is identical across all 384 action frames; the two-hand grip span remains 0.38 m. 103 gameplay/release checks, 14 future-release purchase checks and 26 server commerce checks pass. Unity/NGO/Android validation is still a separate native step.

@@ -1,6 +1,6 @@
 # Void Knight
 
-Black armored, purple emissive swordsman from an unknown galaxy. Helmet reference: existing shop avatar `Resources/Avatars/Avatar21.jpg`. Preview-only unreleased hero, appended ID 9. Purchase and deployment are blocked by `VoidKnightReleased=false`; no premium purchase SKU or launch price was invented.
+Black armored, purple emissive swordsman from an unknown galaxy. Helmet reference: existing shop avatar `Resources/Avatars/Avatar21.jpg`. Preview-only unreleased hero, appended ID 9. Launch price: 1,600 shards, SKU `hero_void_knight`. Purchase and deployment remain blocked by `VoidKnightReleased=false` and the server release gate.
 
 | Attack | Damage | Reach | Cooldown | Behavior |
 |---|---:|---:|---:|---|
@@ -30,7 +30,7 @@ Gameplay remains host-authoritative. Stuns, death and disabling cancel preparati
 
 Re-executed after restoration:
 
-- 101 deterministic C# combat, weapon shop and release-lock checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority, ownership bypass prevention, purchase rejection and unchanged existing prices.
+- 103 deterministic C# combat, weapon shop and release-lock checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority, ownership bypass prevention, purchase rejection and unchanged existing prices. Fourteen further checks use a temporary release-enabled source copy to exercise the future 1,600-shard local/server purchase, insufficient funds, duplicate protection, persisted ownership and deployment.
 - FBX reimport: two meshes, 19 bones, twelve named clips, normalized weights and finite geometry/bone poses across 384 frames.
 - Five square icon files and sixteen nonempty mono PCM16 48 kHz runtime WAVs.
 
@@ -51,3 +51,11 @@ See `ArtSource/Heroes/VoidKnight/BLENDER-REDESIGN.md` for the build plan. `redes
 The weapon shop lists AMETHYST RIFT and GLACIAL RIFT as two colorways of the original Rift Edge Greatsword. They use the existing mesh-sharing energy-overlay pipeline and standard 500-shard weapon price. The normal variant selector and preview are enabled for Void Knight. Hero release, local purchase and the server catalog remain locked; `weapon_9_0` and `weapon_9_1` are marked unavailable, so they cannot debit funds or grant ownership before release. Existing products/prices are unchanged.
 
 Rift Lunge now slows only the first damaged enemy by 50% for two seconds. The cleave now applies 42 base damage plus a 20-point drain component as one authoritative hit and heals the caster by min(20, actual enemy HP lost). The heal is capped by maximum health and occurs once per target. Shields and rejected damage do not generate healing.
+
+## Hand proportions and hero shop price
+
+Both complete hands are 30% larger in all three dimensions, including palm, fingers, thumb, wrist cover and armor. The rebuild scales 31 components per hand around the original palm center. The unchanged skeleton, sword and hand-contact centers preserve the original animations. Source, runtime FBX, construction views and attack previews are regenerated together.
+
+Void Knight is registered as a premium hero at **1,600 shards**, SKU `hero_void_knight`, with persisted ownership key `DF_HeroOwned_VoidKnight`. The hero shop has its own Void Knight tab, description, price and normal purchase/selection flow. The shared commerce catalog grants the same ownership key; existing transaction handling supplies earned/paid shard debit, retries, duplicate protection and cloud ownership restoration. The local key registry includes the new entitlement for account migration.
+
+The earlier release hold remains: `VoidKnightReleased=false`, server product `available=false`, so previewing cannot debit currency, grant ownership or permit deployment. Future release requires enabling both client and server flags; this commit does not deploy the commerce service. Twenty-six SQLite/Firestore commerce checks pass, including blocked purchase paths and a test-only future release with mixed earned/paid shards, retries and ownership restoration. Native Unity and live service/device testing remain outstanding.

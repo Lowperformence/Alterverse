@@ -17,3 +17,13 @@ with tempfile.TemporaryDirectory(prefix='void-knight-regression-') as tmp:
  subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-langversion:latest','-out:'+str(out),*[f'-r:{x}' for x in refs.glob('*.dll')],str(tmp/'EngineStubs.cs'),str(here/'ExtraStubs.cs'),str(here/'Regression.cs'),*[str(src/n) for n in names]],check=True)
  (tmp/'Regression.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':'8.0.0'}}}))
  subprocess.run([str(dotnet/'dotnet'),str(out)],check=True)
+ # Exercise the future release with a temporary source copy only. Production stays locked.
+ unlock=tmp/'HeroUnlockCatalog.cs'
+ original=(src/'Shop/HeroUnlockCatalog.cs').read_text()
+ assert 'public const bool VoidKnightReleased=false;' in original
+ unlock.write_text(original.replace('public const bool VoidKnightReleased=false;','public const bool VoidKnightReleased=true;'))
+ release_out=tmp/'PurchaseRegression.dll'
+ release_sources=[str(unlock) if n=='Shop/HeroUnlockCatalog.cs' else str(src/n) for n in names]
+ subprocess.run([str(dotnet/'dotnet'),str(csc),'-nologo','-noconfig','-langversion:latest','-out:'+str(release_out),*[f'-r:{x}' for x in refs.glob('*.dll')],str(tmp/'EngineStubs.cs'),str(here/'ExtraStubs.cs'),str(here/'PurchaseRegression.cs'),*release_sources],check=True)
+ (tmp/'PurchaseRegression.runtimeconfig.json').write_text((tmp/'Regression.runtimeconfig.json').read_text())
+ subprocess.run([str(dotnet/'dotnet'),str(release_out)],check=True)

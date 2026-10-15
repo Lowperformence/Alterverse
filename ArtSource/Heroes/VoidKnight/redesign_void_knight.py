@@ -221,6 +221,19 @@ for i in range(13):
 loft('VK2_Pommel',[(-.255,.014,.014,0,0),(-.230,.043,.034,0,0),(-.195,.029,.026,0,0)],edge,'WeaponGripR',weapon_frame,sides=6,bevel=.002)
 plate('VK2_PommelGem',[(0,-.247),(.018,-.228),(0,-.208),(-.018,-.228)],.037,-.008,energy,'WeaponGripR',.001,weapon_frame)
 # No detached geometry: all new pieces have a single original bone group and armature modifier.
+# Scale each complete glove around its original palm contact, including fingers,
+# thumb, wrist cover and plates. Keep bone/contact transforms and sword unchanged.
+HAND_SCALE=1.30
+for label in ['L','R']:
+ pivot=mean(bpy.data.objects['VK_Palm_'+label])
+ parts=[o for o in bpy.data.objects if o.type=='MESH' and o.get('bone')=='Hand'+label]
+ coords=[v.co.copy() for o in parts for v in o.data.vertices]
+ rig['hand_unscaled_extent_'+label]=[max(v[i] for v in coords)-min(v[i] for v in coords) for i in range(3)]
+ rig['hand_scale_pivot_'+label]=list(pivot)
+ for part in parts:
+  for v in part.data.vertices:v.co=pivot+(v.co-pivot)*HAND_SCALE
+  part.data.update();part['hand_scale']=HAND_SCALE
+rig['hand_scale']=HAND_SCALE
 assert {a.name:len(a.slots) for a in bpy.data.actions}==old_actions
 assert {b.name:(list(b.head_local),list(b.tail_local)) for b in rig.data.bones}==old_bones
 rig['design_version']=2;rig['grip_center']=list(grip);rig['grip_axis']=list(axis);rig['grip_span']=.38

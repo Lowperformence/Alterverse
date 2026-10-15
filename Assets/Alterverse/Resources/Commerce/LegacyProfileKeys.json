@@ -1575,6 +1575,10 @@
     {
       "key": "DF_DailyQuestClaimed_15",
       "kind": 0
+    },
+    {
+      "key": "DF_HeroOwned_VoidKnight",
+      "kind": 0
     }
   ]
 }

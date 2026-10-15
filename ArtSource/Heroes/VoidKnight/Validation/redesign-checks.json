@@ -3,5 +3,29 @@
   "compared_animation_frames": 384,
   "maximum_bone_matrix_change": 0.0,
   "two_hand_grip_span": 0.38,
-  "result": "PASS"
+  "hand_scale": 1.3,
+  "hands": {
+    "L": {
+      "parts": 31,
+      "axis_scale_ratios": [
+        1.3000001483317132,
+        1.2999998846362093,
+        1.3000001585230723
+      ]
+    },
+    "R": {
+      "parts": 31,
+      "axis_scale_ratios": [
+        1.2999999011121912,
+        1.2999998846362093,
+        1.3000001585230723
+      ]
+    }
+  },
+  "result": "PASS",
+  "baseline_vertex_comparison": {
+    "scaled_hand_parts": 62,
+    "unchanged_other_parts": 152,
+    "maximum_vertex_error": 0
+  }
 }

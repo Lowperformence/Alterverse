@@ -77,7 +77,9 @@ PASS: blocked purchase sends no server request
 PASS: unreleased hero cannot deploy
 PASS: Timmy release lock preserved
 PASS: existing prices preserved
-PASS: no unapproved price or SKU introduced
+PASS: Void Knight costs exactly 1600 shards
+PASS: Void Knight uses premium hero purchase flow after release
+PASS: Void Knight SKU and persisted ownership mapping
 PASS: Void Knight has two weapon shop variants
 PASS: shop returns correct greatsword variant 0
 PASS: greatsword uses existing standard price 0 (500)
@@ -99,4 +101,19 @@ PASS: shield absorbs full sixty-two damage (38)
 PASS: rejected cleave damage grants no healing (900)
 PASS: invulnerable target loses no HP (1000)
 PASS: life drain cannot exceed caster maximum HP (1000)
-VOID KNIGHT: 101 checks passed. Engine fixtures; native Unity and NGO not covered.
+VOID KNIGHT: 103 checks passed. Engine fixtures; native Unity and NGO not covered.
+PASS: temporary release fixture enabled; production remains locked
+PASS: 1599 shards cannot buy Knight
+PASS: failed purchase preserves wallet and ownership
+PASS: released but unowned Knight cannot deploy
+PASS: earned shard purchase succeeds
+PASS: local transaction debits exactly 1600 shards
+PASS: purchase persists Knight ownership
+PASS: duplicate purchase cannot debit twice
+PASS: owned released Knight can deploy
+PASS: exact price buys Knight
+PASS: paid shard purchase uses correct server SKU
+PASS: pending server purchase grants nothing locally
+PASS: rejected server request does not debit
+PASS: offline fallback cannot spend paid shards
+VOID KNIGHT FUTURE RELEASE: 14 purchase checks passed. Temporary release fixture only.

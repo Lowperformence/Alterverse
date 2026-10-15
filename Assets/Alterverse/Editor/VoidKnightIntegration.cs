@@ -19,6 +19,7 @@ namespace Alterverse.EditorTools
    Require(!HeroAttackDelivery.IsRanged(HeroId.VoidKnight),"Greatsword must remain melee.");
    foreach(var opponent in new[]{HeroId.Veyr,HeroId.Timmy,HeroId.Kaelon})Require(HeroCombatProfile.StatsFor(HeroId.VoidKnight).AttackRange>HeroCombatProfile.StatsFor(opponent).AttackRange,"Insufficient greatsword reach.");
    Require(!HeroUnlockCatalog.Released(HeroId.VoidKnight)&&!HeroUnlockInventory.Owned(HeroId.VoidKnight),"Knight must remain preview-only until release.");
+   Require(HeroUnlockCatalog.Purchasable(HeroId.VoidKnight)&&HeroUnlockCatalog.Price(HeroId.VoidKnight)==1600&&HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)=="hero_void_knight"&&HeroUnlockCatalog.OwnedKey(HeroId.VoidKnight)=="DF_HeroOwned_VoidKnight","Knight's 1600-shard unlock mapping is incomplete.");
    var model=Resources.Load<GameObject>("AuthoredHeroes/VoidKnight");Require(model!=null,"Missing imported VoidKnight.fbx.");
    Require(model.GetComponentsInChildren<Renderer>(true).Any(r=>r.name=="DF_WeaponR"),"Greatsword renderer missing.");
    var clips=Resources.LoadAll<AnimationClip>("AuthoredHeroes/VoidKnight");

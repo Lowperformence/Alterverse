@@ -12,20 +12,25 @@ namespace Alterverse.Visuals {
 }
 namespace Alterverse.Profile
 {
- public static class AccountProfilePrefs {public static int GetInt(string key,int fallback)=>1;public static bool HasKey(string key)=>false;}
+ public static class AccountProfilePrefs {
+  public static int Default=1;public static System.Collections.Generic.Dictionary<string,int> Values=new();
+  public static int GetInt(string key,int fallback)=>Values.TryGetValue(key,out int value)?value:Default;
+  public static bool HasKey(string key)=>Values.ContainsKey(key);
+ }
 }
 namespace Alterverse.Shop
 {
  public enum AvatarPurchaseResult { Purchased,AlreadyOwned,InsufficientShards,Pending,InvalidItem }
  public static class ProfileTransaction
  {
-  public static int Recoveries,Commits;public static void Recover(){Recoveries++;}public static void Commit(params Write[] writes){Commits++;}
-  public struct Write{public Write(string key,int value){}}
+  public static int Recoveries,Commits;public static void Recover(){Recoveries++;}public static void Commit(params Write[] writes){Commits++;foreach(var w in writes){Alterverse.Profile.AccountProfilePrefs.Values[w.Key]=w.Value;if(w.Key=="DF_Shards")PlayerWallet.EarnedBalance=w.Value;}}
+  public struct Write{public string Key;public int Value;public Write(string key,int value){Key=key;Value=value;}}
  }
  public static class PlayerWallet
  {
-  public static int EarnedBalance=99999,ServerRequests;public static bool CanAfford(int price)=>true;
-  public static bool BeginServerPurchase(string sku){ServerRequests++;return true;}
+  public static int EarnedBalance=99999,ServerRequests,PaidBalance;public static string LastSku;public static bool ServerAccepted=true;
+  public static bool CanAfford(int price)=>EarnedBalance+PaidBalance>=price;
+  public static bool BeginServerPurchase(string sku){ServerRequests++;LastSku=sku;return ServerAccepted;}
  }
  public class PaidShardCommerce {public static PaidShardCommerce Instance=new();public bool Ready=true;}
 }
