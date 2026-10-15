@@ -55,14 +55,16 @@ namespace Alterverse.Shop
             new(HeroId.Traveler,"CHRONO VIOLET","Chronolux Focus","The Traveler's original Chronolux Focus in dark temporal metal with violet chronolight. Same weapon model and combat behavior.",new Color(.72f,.28f,1f),0),
             new(HeroId.Traveler,"CHRONO GOLD","Chronolux Focus","The Traveler's original Chronolux Focus in pale royal metal with warm golden chronolight. Same weapon model and combat behavior.",new Color(1f,.62f,.22f),1),
             new(HeroId.Nerok,"TIDAL CIRCUIT","Abyssal Anchor","Epic cyan anchor engraving over the original anchor. Cosmetic only.",new Color(.08f,.82f,1f),0),
-            new(HeroId.Nerok,"DEEP CORAL","Abyssal Anchor","Epic coral anchor engraving over the original anchor. Cosmetic only.",new Color(1f,.25f,.36f),1)
+            new(HeroId.Nerok,"DEEP CORAL","Abyssal Anchor","Epic coral anchor engraving over the original anchor. Cosmetic only.",new Color(1f,.25f,.36f),1),
+
+            new(HeroId.VoidKnight,"AMETHYST RIFT","Rift Edge Greatsword","The original two-handed greatsword with amethyst void engraving and violet edge energy. Cosmetic only.",new Color(.72f,.22f,1f),0),
+            new(HeroId.VoidKnight,"GLACIAL RIFT","Rift Edge Greatsword","The original two-handed greatsword with cold cyan rift engraving and glacial edge energy. Cosmetic only.",new Color(.16f,.82f,1f),1)
         };
 
         public static WeaponSkinItem For(HeroId hero)=>For(hero,0);
 
         public static WeaponSkinItem For(HeroId hero,int variant)
         {
-            if(hero==HeroId.VoidKnight)return new WeaponSkinItem(hero,"ORIGINAL","Rift Edge Greatsword","Original two-handed greatsword.",new Color(.62f,.18f,1f),0,0);
             if(hero==HeroId.Timmy)return new WeaponSkinItem(hero,"ORIGINAL","Suit Claws","Original astronaut claws; Season 2 cosmetics are not for sale.",new Color(.04f,.68f,1f),0,0);
             variant=Mathf.Clamp(variant,0,1);
             for(int i=0;i<Items.Length;i++)
@@ -154,6 +156,7 @@ namespace Alterverse.Shop
 
         public static AvatarPurchaseResult Purchase(HeroId hero,int variant)
         {
+            if(!HeroUnlockCatalog.Released(hero))return AvatarPurchaseResult.InvalidItem;
             ProfileTransaction.Recover();
             if(!WeaponSkinCatalog.Contains(hero,variant))return AvatarPurchaseResult.AlreadyOwned;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,variant);

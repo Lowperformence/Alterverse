@@ -38,8 +38,11 @@ namespace Alterverse.Characters
             {
                 Health target=Health.Active[i];
                 if(!HeroCombatRules.Enemy(gameObject,target)||!AimGeometry.Cone(transform.position,direction,target.transform.position,kit.Ultimate.Range,80f)||!SharkSight(target))continue;
-                float before=target.Current+target.Shield;HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power);
+                float before=target.Current+target.Shield,healthBefore=target.Current;
+                HeroCombatRules.Damage(gameObject,target,kit.Ultimate.Power+VoidKnightBalance.UltimateLifeDrain);
                 if(target.Current+target.Shield>=before)continue;
+                float absorbed=Mathf.Min(VoidKnightBalance.UltimateLifeDrain,Mathf.Max(0,healthBefore-target.Current));
+                if(absorbed>0)self.Heal(absorbed,false);
                 confirmed=true;HeroCombatStatus.Apply(target,.75f,1.2f);HeroSkillVfx.Impact(gameObject,target,3);
             }
             if(confirmed){VoidState.RecordSkillHit();HeroCombatAudio.Impact(gameObject,3,transform.position+direction*2f);}voidPending=false;

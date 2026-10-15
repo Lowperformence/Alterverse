@@ -300,6 +300,9 @@ namespace Alterverse.Characters
                 if(visual)HeroCombatAudio.Impact(gameObject,slot,target.transform.position);
                 switch (identity.Hero)
                 {
+                    case HeroId.VoidKnight:
+                        if(slot==2)HeroCombatStatus.Apply(target,VoidKnightBalance.DashSlow,VoidKnightBalance.DashSlowSeconds);
+                        break;
                     case HeroId.Timmy:
                         TriggerTimmyPassive();
                         if(slot==1)HeroCombatStatus.Apply(target,TimmyBalance.DustSlow,TimmyBalance.DustSlowSeconds);

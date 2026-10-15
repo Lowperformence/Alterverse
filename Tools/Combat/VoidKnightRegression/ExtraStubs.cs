@@ -12,10 +12,11 @@ namespace Alterverse.Visuals {
 }
 namespace Alterverse.Profile
 {
- public static class AccountProfilePrefs {public static int GetInt(string key,int fallback)=>1;}
+ public static class AccountProfilePrefs {public static int GetInt(string key,int fallback)=>1;public static bool HasKey(string key)=>false;}
 }
 namespace Alterverse.Shop
 {
+ public enum AvatarPurchaseResult { Purchased,AlreadyOwned,InsufficientShards,Pending,InvalidItem }
  public static class ProfileTransaction
  {
   public static int Recoveries,Commits;public static void Recover(){Recoveries++;}public static void Commit(params Write[] writes){Commits++;}

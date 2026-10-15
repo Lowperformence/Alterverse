@@ -7,6 +7,7 @@ namespace Alterverse.Characters
         public const float PassiveShield=30f,PassiveSeconds=2f;
         public const float GuardSeconds=.65f,GuardMultiplier=.5f,GuardHalfAngle=60f;
         public const float CounterDamage=14f,CounterRange=3.2f,CounterWindup=.2f;
-        public const float DashSeconds=.22f,DashContactRadius=.75f;
+        public const float UltimateLifeDrain=20f;
+        public const float DashSeconds=.22f,DashContactRadius=.75f,DashSlow=.5f,DashSlowSeconds=2f;
     }
 }

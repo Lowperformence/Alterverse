@@ -689,10 +689,10 @@ namespace Alterverse.UI
             HeroId hero=(HeroId)selectedHero;
             WeaponSkinItem item=WeaponSkinCatalog.For(hero,weaponSkinVariant);
             bool heroAvailable=HeroUnlockInventory.Owned(hero);
-            if(hero==HeroId.Timmy||hero==HeroId.VoidKnight)
+            if(hero==HeroId.Timmy)
             {
                 showcase.Present(hero,true);DrawPortrait(new Rect(Left,270,ContentWidth*.54f,340));
-                theme.Label(new Rect(Left+ContentWidth*.54f+32,282,ContentWidth*.46f-32,120),hero==HeroId.VoidKnight?"VOID KNIGHT / RIFT EDGE GREATSWORD":"ANDROMEDA TIMMY  /  ORIGINAL SUIT CLAWS",theme.Heading,true);
+                theme.Label(new Rect(Left+ContentWidth*.54f+32,282,ContentWidth*.46f-32,120),"ANDROMEDA TIMMY  /  ORIGINAL SUIT CLAWS",theme.Heading,true);
                 theme.Label(new Rect(Left+ContentWidth*.54f+32,412,ContentWidth*.46f-32,100),"Weapon cosmetics are not available yet.",theme.Body,true);
                 if(theme.Action(new Rect(Left,614,64,54),"<"))ChangeHero((selectedHero+HeroIdentity.HeroCount-1)%HeroIdentity.HeroCount);
                 if(theme.Action(new Rect(Right-64,614,64,54),">"))ChangeHero((selectedHero+1)%HeroIdentity.HeroCount);
@@ -729,7 +729,7 @@ namespace Alterverse.UI
             FrontEndTheme.Fill(new Rect(x,570,rw,3),item.Glow);
 
             string originalName=hero==HeroId.Veyr?"SHADOW STEEL":"ORIGINAL";
-            string action=!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
+            string action=!HeroUnlockCatalog.Released(hero)?"COMING SOON":!heroAvailable?"UNLOCK HERO FIRST":equipped?$"USE {originalName}":owned?"EQUIP":
                 PlayerWallet.CanAfford(item.Price)?"BUY & EQUIP":$"NEED {item.Price} SHARDS";
             bool enabled=heroAvailable&&(equipped||owned||PlayerWallet.CanAfford(item.Price));
             if(theme.Action(new Rect(x,588,rw,54),action,true,enabled:enabled))

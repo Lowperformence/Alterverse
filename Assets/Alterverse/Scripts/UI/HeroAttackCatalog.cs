@@ -58,6 +58,7 @@ namespace Alterverse.UI
 
         private static string Primary(HeroId hero,int slot,AbilitySpec spec)
         {
+            if(hero==HeroId.VoidKnight&&slot==3)return $"{spec.Power:0} DMG + {VoidKnightBalance.UltimateLifeDrain:0} LIFE DRAIN / TARGET";
             if(hero==HeroId.VoidKnight&&slot==1)return "50% FRONTAL REDUCTION / 0.65s";
             if(hero==HeroId.Elyra&&slot==2)return $"{HeroAbilityKit.PhaseFoldShield:0} SHIELD / {HeroAbilityKit.PhaseFoldShieldSeconds:0.##}s";
             if(hero==HeroId.Kaelon&&slot==1)return $"{spec.Power:0} SHIELD / 4s";
@@ -92,8 +93,8 @@ namespace Alterverse.UI
             {
                 0=>"A wide greatsword cut; its direction stays fixed through the readable windup.",
                 1=>"Stand and guard for 0.65s. Reduce frontal damage 50%. A successful block triggers one short counter. Rear and flank hits bypass the guard.",
-                2=>"Tap to thrust in movement direction; drag to aim. A short preparation precedes the lunge. The first enemy stops it; walls block it. No invulnerability.",
-                _=>"After a 0.65s warning, strike an 80-degree front cone once per enemy and slow movement 25% for 1.2s. Stuns interrupt preparation."
+                2=>$"Tap to thrust in movement direction; drag to aim. A short preparation precedes the lunge. The first enemy stops it and is slowed by {(1f-VoidKnightBalance.DashSlow)*100:0}% for {VoidKnightBalance.DashSlowSeconds:0.#}s; walls block it. No invulnerability.",
+                _=>$"After a 0.65s warning, strike an 80-degree front cone once per enemy. Each hit adds {VoidKnightBalance.UltimateLifeDrain:0} damage and restores up to {VoidKnightBalance.UltimateLifeDrain:0} HP from actual health lost. Slow movement 25% for 1.2s. Stuns interrupt preparation."
             },
             HeroId.Timmy=>slot switch
             {

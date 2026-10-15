@@ -7,8 +7,8 @@ Black armored, purple emissive swordsman from an unknown galaxy. Helmet referenc
 | Greatsword basic | 18 | 3.1 m | 1.2 s interval | 0.28 s preparation; three alternating two-handed strikes |
 | Q — Rift Sweep | 24 | 3.4 m | 7 s | 0.28 s preparation; one acquired enemy in the melee cone |
 | W — Null Guard | — | Self | 12 s | Anchored 0.65 s; 50% reduction in a fixed frontal 120° sector; successful block triggers one 14-damage counter at 3.2 m |
-| E — Rift Lunge | 16 | 4 m | 9 s | 0.18 s preparation, 0.22 s lunge; first enemy stops travel; native movement collision; no invulnerability |
-| R — Eventide Cleave | 42 | 3.8 m | 40 s | 0.65 s telegraph, fixed 80° cone; once per enemy; 25% slow for 1.2 s |
+| E — Rift Lunge | 16 | 4 m | 9 s | 0.18 s preparation, 0.22 s lunge; first enemy stops travel and is slowed 50% for 2 s; native movement collision; no invulnerability |
+| R — Eventide Cleave | 42 + 20 drain | 3.8 m | 40 s | 0.65 s telegraph, fixed 80° cone; once per enemy; up to 20 HP restored per target from actual health lost; 25% slow for 1.2 s |
 
 Passive: three confirmed basic hits prime a 30-point temporary shield for 2 s on the next damaging skill. Whiffs and rejected damage do not build or consume charges. Multi-target hits consume it once.
 
@@ -30,7 +30,7 @@ Gameplay remains host-authoritative. Stuns, death and disabling cancel preparati
 
 Re-executed after restoration:
 
-- 76 deterministic C# combat and release-lock checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority, ownership bypass prevention, purchase rejection and unchanged existing prices.
+- 101 deterministic C# combat, weapon shop and release-lock checks: exact damage, extended melee range, timing, passive charges/whiffs, parry sectors/counter, first-contact lunge, cone/slow, interruption and client authority, ownership bypass prevention, purchase rejection and unchanged existing prices.
 - FBX reimport: two meshes, 19 bones, twelve named clips, normalized weights and finite geometry/bone poses across 384 frames.
 - Five square icon files and sixteen nonempty mono PCM16 48 kHz runtime WAVs.
 
@@ -45,3 +45,9 @@ Use Blender Python/bpy to run `export_void_knight.py`, `validate_fbx.py` and `re
 Version 2 replaces the armor and sword geometry with curved layered black metal, separate pectoral and abdominal plates, tapered limbs, smaller wrist joints, shaped boots and a broad diamond-section greatsword with swept quillons. Five materials separate dark metal, machined edges, fabric and two violet emission strengths. The importer sets matching URP metallic/smoothness/emission values only for this hero.
 
 See `ArtSource/Heroes/VoidKnight/BLENDER-REDESIGN.md` for the build plan. `redesign_void_knight.py` builds from the frozen `VoidKnight-v1-reference.blend`, preserving original bones, twelve actions and both hand contacts. `validate_redesign.py` compares every original bone matrix over all 384 action frames and checks the unchanged 0.38 m grip span. Gameplay values, icon IDs and audio IDs remain unchanged.
+
+## Weapon shop and combat additions
+
+The weapon shop lists AMETHYST RIFT and GLACIAL RIFT as two colorways of the original Rift Edge Greatsword. They use the existing mesh-sharing energy-overlay pipeline and standard 500-shard weapon price. The normal variant selector and preview are enabled for Void Knight. Hero release, local purchase and the server catalog remain locked; `weapon_9_0` and `weapon_9_1` are marked unavailable, so they cannot debit funds or grant ownership before release. Existing products/prices are unchanged.
+
+Rift Lunge now slows only the first damaged enemy by 50% for two seconds. The cleave now applies 42 base damage plus a 20-point drain component as one authoritative hit and heals the caster by min(20, actual enemy HP lost). The heal is capped by maximum health and occurs once per target. Shields and rejected damage do not generate healing.

@@ -43,8 +43,8 @@ PASS: replica cannot build passive
 PASS: replica cannot apply lunge
 PASS: ultimate starts
 PASS: ultimate no damage before warning (1000)
-PASS: ultimate exact 42 damage (958)
-PASS: ultimate hits each enemy once (958)
+PASS: ultimate 42 base plus 20 drain damage (938)
+PASS: ultimate hits each enemy once (938)
 PASS: ultimate applies slow (0.75)
 PASS: stun cancels pending cleave (1000)
 PASS: interruption releases owned root
@@ -53,6 +53,10 @@ PASS: lunge respects preparation (1000)
 PASS: lunge deals 16 once (984)
 PASS: first enemy stops lunge (1000)
 PASS: lunge stops near first contact
+PASS: lunge slows hit enemy by 50 percent (0.5)
+PASS: lunge does not slow enemy behind first contact (1)
+PASS: lunge does not slow caster (1)
+PASS: lunge slow expires after two seconds (1)
 PASS: sweep starts
 PASS: sweep deals 24 (976)
 PASS: parry cast starts
@@ -74,4 +78,25 @@ PASS: unreleased hero cannot deploy
 PASS: Timmy release lock preserved
 PASS: existing prices preserved
 PASS: no unapproved price or SKU introduced
-VOID KNIGHT: 76 checks passed. Engine fixtures; native Unity and NGO not covered.
+PASS: Void Knight has two weapon shop variants
+PASS: shop returns correct greatsword variant 0
+PASS: greatsword uses existing standard price 0 (500)
+PASS: unreleased weapon purchase is blocked 0
+PASS: weapon preview cannot start purchase transaction 0
+PASS: shop returns correct greatsword variant 1
+PASS: greatsword uses existing standard price 1 (500)
+PASS: unreleased weapon purchase is blocked 1
+PASS: weapon preview cannot start purchase transaction 1
+PASS: greatsword variant names are distinct
+PASS: first cleave target loses base and drain damage (938)
+PASS: second cleave target loses base and drain damage (938)
+PASS: two targets restore twenty HP each (960)
+PASS: cleave never drains ally (1000)
+PASS: cleave healing occurs once per target (960)
+PASS: five remaining enemy HP can restore only five (905)
+PASS: shield-only damage grants no life drain (900)
+PASS: shield absorbs full sixty-two damage (38)
+PASS: rejected cleave damage grants no healing (900)
+PASS: invulnerable target loses no HP (1000)
+PASS: life drain cannot exceed caster maximum HP (1000)
+VOID KNIGHT: 101 checks passed. Engine fixtures; native Unity and NGO not covered.

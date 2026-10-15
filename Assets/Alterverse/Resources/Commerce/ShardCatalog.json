@@ -1,1 +1,1218 @@
-{"packs":[{"id":"dimensions_shards_500","name":"SMALL","amount":500},{"id":"dimensions_shards_1200","name":"MEDIUM","amount":1200},{"id":"dimensions_shards_5500","name":"PREMIUM","amount":5500}],"cosmetics":[{"id":"voidfall","price":2000,"writes":[{"key":"DF_SkinOwned_Voidfall","kind":0,"number":1}]},{"id":"beta_supporter_wings","price":8000,"writes":[{"key":"DF_SkinOwned_BetaSupporterWings","kind":0,"number":1}]},{"id":"plague_wings","price":4000,"writes":[{"key":"DF_SkinOwned_PlagueWings","kind":0,"number":1}]},{"id":"avatar_10","price":400,"writes":[{"key":"DF_AvatarOwned_10","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":10}]},{"id":"avatar_11","price":400,"writes":[{"key":"DF_AvatarOwned_11","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":11}]},{"id":"avatar_12","price":400,"writes":[{"key":"DF_AvatarOwned_12","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":12}]},{"id":"avatar_13","price":400,"writes":[{"key":"DF_AvatarOwned_13","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":13}]},{"id":"avatar_14","price":400,"writes":[{"key":"DF_AvatarOwned_14","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":14}]},{"id":"avatar_15","price":400,"writes":[{"key":"DF_AvatarOwned_15","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":15}]},{"id":"avatar_17","price":400,"writes":[{"key":"DF_AvatarOwned_17","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":17}]},{"id":"avatar_18","price":400,"writes":[{"key":"DF_AvatarOwned_18","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":18}]},{"id":"avatar_19","price":400,"writes":[{"key":"DF_AvatarOwned_19","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":19}]},{"id":"avatar_20","price":400,"writes":[{"key":"DF_AvatarOwned_20","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":20}]},{"id":"avatar_21","price":400,"writes":[{"key":"DF_AvatarOwned_21","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":21}]},{"id":"avatar_22","price":400,"writes":[{"key":"DF_AvatarOwned_22","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":22}]},{"id":"avatar_23","price":400,"writes":[{"key":"DF_AvatarOwned_23","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":23}]},{"id":"avatar_24","price":400,"writes":[{"key":"DF_AvatarOwned_24","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":24}]},{"id":"avatar_25","price":400,"writes":[{"key":"DF_AvatarOwned_25","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":25}]},{"id":"avatar_26","price":400,"writes":[{"key":"DF_AvatarOwned_26","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":26}]},{"id":"avatar_27","price":400,"writes":[{"key":"DF_AvatarOwned_27","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":27}]},{"id":"avatar_28","price":400,"writes":[{"key":"DF_AvatarOwned_28","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":28}]},{"id":"avatar_29","price":400,"writes":[{"key":"DF_AvatarOwned_29","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":29}]},{"id":"avatar_30","price":400,"writes":[{"key":"DF_AvatarOwned_30","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":30}]},{"id":"avatar_31","price":400,"writes":[{"key":"DF_AvatarOwned_31","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":31}]},{"id":"deluxe_wings","price":20000,"writes":[{"key":"DF_SkinOwned_DeluxeWings","kind":0,"number":1}]},{"id":"hero_traveler","price":1500,"writes":[{"key":"DF_HeroOwned_Traveler","kind":0,"number":1}]},{"id":"hero_nerok","price":2200,"writes":[{"key":"DF_HeroOwned_Nerok","kind":0,"number":1}]},{"id":"hero_timmy","price":1900,"available":false,"writes":[{"key":"DF_HeroOwned_Timmy","kind":0,"number":1}]},{"id":"battlepass_beta01","price":1000,"writes":[{"key":"DF_BP_BETA01_Premium","kind":0,"number":1}]},{"id":"regen","price":100,"consumable":true,"incrementKey":"DF_BattleItem_1"},{"id":"shield","price":100,"consumable":true,"incrementKey":"DF_BattleItem_2"},{"id":"velocity","price":100,"consumable":true,"incrementKey":"DF_BattleItem_3"},{"id":"team_heal","price":100,"consumable":true,"incrementKey":"DF_BattleItem_4"},{"id":"arena_GreenPlanet","price":900,"writes":[{"key":"DF_ArenaOwned_GreenPlanet","kind":0,"number":1}]},{"id":"arena_Noxara","price":900,"writes":[{"key":"DF_ArenaOwned_Noxara","kind":0,"number":1}]},{"id":"arena_Earth","price":900,"writes":[{"key":"DF_ArenaOwned_Earth","kind":0,"number":1}]},{"id":"arena_Pyraxis","price":900,"writes":[{"key":"DF_ArenaOwned_Pyraxis","kind":0,"number":1}]},{"id":"arena_Dark00","price":900,"writes":[{"key":"DF_ArenaOwned_Dark00","kind":0,"number":1}]},{"id":"arena_DiamondCore","price":900,"writes":[{"key":"DF_ArenaOwned_DiamondCore","kind":0,"number":1}]},{"id":"arena_Wasp76b","price":900,"available":false,"writes":[{"key":"DF_ArenaOwned_Wasp76b","kind":0,"number":1}]},{"id":"arena_Trappist1e","price":900,"writes":[{"key":"DF_ArenaOwned_Trappist1e","kind":0,"number":1}]},{"id":"weapon_0_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_0_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_0","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_0","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_0","kind":0,"number":1},{"key":"DF_WeaponSkinEquippedVariant_0","kind":0,"number":0}]},{"id":"weapon_0_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_0_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_0","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_0","kind":0,"number":1},{"key":"DF_WeaponSkinEquippedVariant_0","kind":0,"number":0}]},{"id":"weapon_1_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_1_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_1","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_1","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_1","kind":0,"number":1}]},{"id":"weapon_1_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_1_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_1","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_1","kind":0,"number":1}]},{"id":"weapon_2_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_2_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_2","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_2","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_2","kind":0,"number":1}]},{"id":"weapon_2_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_2_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_2","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_2","kind":0,"number":1}]},{"id":"weapon_3_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_3_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_3","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_3","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_3","kind":0,"number":1}]},{"id":"weapon_3_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_3_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_3","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_3","kind":0,"number":1}]},{"id":"weapon_4_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_4_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_4","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_4","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_4","kind":0,"number":1}]},{"id":"weapon_4_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_4_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_4","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_4","kind":0,"number":1}]},{"id":"weapon_5_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_5_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_5","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_5","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_5","kind":0,"number":1}]},{"id":"weapon_5_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_5_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_5","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_5","kind":0,"number":1}]},{"id":"weapon_6_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_6_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_6","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_6","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_6","kind":0,"number":1}]},{"id":"weapon_6_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_6_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_6","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_6","kind":0,"number":1}]},{"id":"weapon_7_0","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_7_0","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_7","kind":0,"number":0},{"key":"DF_WeaponSkinEquipped_7","kind":0,"number":1},{"key":"DF_WeaponSkinOwned_7","kind":0,"number":1}]},{"id":"weapon_7_1","price":500,"writes":[{"key":"DF_WeaponSkinOwnedItem_7_1","kind":0,"number":1},{"key":"DF_WeaponSkinSelected_7","kind":0,"number":1},{"key":"DF_WeaponSkinEquipped_7","kind":0,"number":1}]},{"id":"avatar_32","price":400,"writes":[{"key":"DF_AvatarOwned_32","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":32}]},{"id":"avatar_33","price":400,"writes":[{"key":"DF_AvatarOwned_33","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":33}]},{"id":"avatar_34","price":400,"writes":[{"key":"DF_AvatarOwned_34","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":34}]},{"id":"avatar_35","price":400,"writes":[{"key":"DF_AvatarOwned_35","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":35}]},{"id":"avatar_36","price":400,"writes":[{"key":"DF_AvatarOwned_36","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":36}]},{"id":"avatar_38","price":400,"writes":[{"key":"DF_AvatarOwned_38","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":38}]},{"id":"avatar_39","price":400,"writes":[{"key":"DF_AvatarOwned_39","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":39}]},{"id":"avatar_40","price":400,"writes":[{"key":"DF_AvatarOwned_40","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":40}]},{"id":"avatar_41","price":400,"writes":[{"key":"DF_AvatarOwned_41","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":41}]},{"id":"avatar_42","price":400,"writes":[{"key":"DF_AvatarOwned_42","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":42}]},{"id":"avatar_43","price":400,"writes":[{"key":"DF_AvatarOwned_43","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":43}]},{"id":"avatar_44","price":400,"writes":[{"key":"DF_AvatarOwned_44","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":44}]},{"id":"avatar_45","price":400,"writes":[{"key":"DF_AvatarOwned_45","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":45}]},{"id":"avatar_46","price":400,"writes":[{"key":"DF_AvatarOwned_46","kind":0,"number":1},{"key":"DF_Avatar","kind":0,"number":46}]}]}
+{
+  "packs": [
+    {
+      "id": "dimensions_shards_500",
+      "name": "SMALL",
+      "amount": 500
+    },
+    {
+      "id": "dimensions_shards_1200",
+      "name": "MEDIUM",
+      "amount": 1200
+    },
+    {
+      "id": "dimensions_shards_5500",
+      "name": "PREMIUM",
+      "amount": 5500
+    }
+  ],
+  "cosmetics": [
+    {
+      "id": "voidfall",
+      "price": 2000,
+      "writes": [
+        {
+          "key": "DF_SkinOwned_Voidfall",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "beta_supporter_wings",
+      "price": 8000,
+      "writes": [
+        {
+          "key": "DF_SkinOwned_BetaSupporterWings",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "plague_wings",
+      "price": 4000,
+      "writes": [
+        {
+          "key": "DF_SkinOwned_PlagueWings",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "avatar_10",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_10",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 10
+        }
+      ]
+    },
+    {
+      "id": "avatar_11",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_11",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 11
+        }
+      ]
+    },
+    {
+      "id": "avatar_12",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_12",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 12
+        }
+      ]
+    },
+    {
+      "id": "avatar_13",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_13",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 13
+        }
+      ]
+    },
+    {
+      "id": "avatar_14",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_14",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 14
+        }
+      ]
+    },
+    {
+      "id": "avatar_15",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_15",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 15
+        }
+      ]
+    },
+    {
+      "id": "avatar_17",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_17",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 17
+        }
+      ]
+    },
+    {
+      "id": "avatar_18",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_18",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 18
+        }
+      ]
+    },
+    {
+      "id": "avatar_19",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_19",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 19
+        }
+      ]
+    },
+    {
+      "id": "avatar_20",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_20",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 20
+        }
+      ]
+    },
+    {
+      "id": "avatar_21",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_21",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 21
+        }
+      ]
+    },
+    {
+      "id": "avatar_22",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_22",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 22
+        }
+      ]
+    },
+    {
+      "id": "avatar_23",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_23",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 23
+        }
+      ]
+    },
+    {
+      "id": "avatar_24",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_24",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 24
+        }
+      ]
+    },
+    {
+      "id": "avatar_25",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_25",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 25
+        }
+      ]
+    },
+    {
+      "id": "avatar_26",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_26",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 26
+        }
+      ]
+    },
+    {
+      "id": "avatar_27",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_27",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 27
+        }
+      ]
+    },
+    {
+      "id": "avatar_28",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_28",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 28
+        }
+      ]
+    },
+    {
+      "id": "avatar_29",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_29",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 29
+        }
+      ]
+    },
+    {
+      "id": "avatar_30",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_30",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 30
+        }
+      ]
+    },
+    {
+      "id": "avatar_31",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_31",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 31
+        }
+      ]
+    },
+    {
+      "id": "deluxe_wings",
+      "price": 20000,
+      "writes": [
+        {
+          "key": "DF_SkinOwned_DeluxeWings",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "hero_traveler",
+      "price": 1500,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_Traveler",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "hero_nerok",
+      "price": 2200,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_Nerok",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "hero_timmy",
+      "price": 1900,
+      "available": false,
+      "writes": [
+        {
+          "key": "DF_HeroOwned_Timmy",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "battlepass_beta01",
+      "price": 1000,
+      "writes": [
+        {
+          "key": "DF_BP_BETA01_Premium",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "regen",
+      "price": 100,
+      "consumable": true,
+      "incrementKey": "DF_BattleItem_1"
+    },
+    {
+      "id": "shield",
+      "price": 100,
+      "consumable": true,
+      "incrementKey": "DF_BattleItem_2"
+    },
+    {
+      "id": "velocity",
+      "price": 100,
+      "consumable": true,
+      "incrementKey": "DF_BattleItem_3"
+    },
+    {
+      "id": "team_heal",
+      "price": 100,
+      "consumable": true,
+      "incrementKey": "DF_BattleItem_4"
+    },
+    {
+      "id": "arena_GreenPlanet",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_GreenPlanet",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Noxara",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Noxara",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Earth",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Earth",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Pyraxis",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Pyraxis",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Dark00",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Dark00",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_DiamondCore",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_DiamondCore",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Wasp76b",
+      "price": 900,
+      "available": false,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Wasp76b",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "arena_Trappist1e",
+      "price": 900,
+      "writes": [
+        {
+          "key": "DF_ArenaOwned_Trappist1e",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_0_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_0_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_0",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquippedVariant_0",
+          "kind": 0,
+          "number": 0
+        }
+      ]
+    },
+    {
+      "id": "weapon_0_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_0_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquippedVariant_0",
+          "kind": 0,
+          "number": 0
+        }
+      ]
+    },
+    {
+      "id": "weapon_1_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_1_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_1",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_1",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_1_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_1_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_1",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_2_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_2_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_2",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_2",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_2",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_2_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_2_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_2",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_2",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_3_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_3_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_3",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_3",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_3",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_3_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_3_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_3",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_3",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_4_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_4_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_4",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_4",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_4",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_4_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_4_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_4",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_4",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_5_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_5_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_5",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_5",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_5",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_5_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_5_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_5",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_5",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_6_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_6_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_6",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_6",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_6",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_6_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_6_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_6",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_6",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_7_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_7_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_7",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_7",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_7",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_7_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_7_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_7",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_7",
+          "kind": 0,
+          "number": 1
+        }
+      ]
+    },
+    {
+      "id": "avatar_32",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_32",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 32
+        }
+      ]
+    },
+    {
+      "id": "avatar_33",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_33",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 33
+        }
+      ]
+    },
+    {
+      "id": "avatar_34",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_34",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 34
+        }
+      ]
+    },
+    {
+      "id": "avatar_35",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_35",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 35
+        }
+      ]
+    },
+    {
+      "id": "avatar_36",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_36",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 36
+        }
+      ]
+    },
+    {
+      "id": "avatar_38",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_38",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 38
+        }
+      ]
+    },
+    {
+      "id": "avatar_39",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_39",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 39
+        }
+      ]
+    },
+    {
+      "id": "avatar_40",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_40",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 40
+        }
+      ]
+    },
+    {
+      "id": "avatar_41",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_41",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 41
+        }
+      ]
+    },
+    {
+      "id": "avatar_42",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_42",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 42
+        }
+      ]
+    },
+    {
+      "id": "avatar_43",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_43",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 43
+        }
+      ]
+    },
+    {
+      "id": "avatar_44",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_44",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 44
+        }
+      ]
+    },
+    {
+      "id": "avatar_45",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_45",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 45
+        }
+      ]
+    },
+    {
+      "id": "avatar_46",
+      "price": 400,
+      "writes": [
+        {
+          "key": "DF_AvatarOwned_46",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_Avatar",
+          "kind": 0,
+          "number": 46
+        }
+      ]
+    },
+    {
+      "id": "weapon_9_0",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_9_0",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_9",
+          "kind": 0,
+          "number": 0
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_9",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinOwned_9",
+          "kind": 0,
+          "number": 1
+        }
+      ],
+      "available": false
+    },
+    {
+      "id": "weapon_9_1",
+      "price": 500,
+      "writes": [
+        {
+          "key": "DF_WeaponSkinOwnedItem_9_1",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinSelected_9",
+          "kind": 0,
+          "number": 1
+        },
+        {
+          "key": "DF_WeaponSkinEquipped_9",
+          "kind": 0,
+          "number": 1
+        }
+      ],
+      "available": false
+    }
+  ]
+}

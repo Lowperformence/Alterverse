@@ -1,0 +1,26 @@
+test_existing_weapon_products_remain_available (test_void_knight.VoidKnightWeaponTests.test_existing_weapon_products_remain_available) ... ok
+test_firestore_rejects_before_database_access (test_void_knight.VoidKnightWeaponTests.test_firestore_rejects_before_database_access) ... ok
+test_sqlite_rejects_both_purchase_paths_without_wallet_change (test_void_knight.VoidKnightWeaponTests.test_sqlite_rejects_both_purchase_paths_without_wallet_change) ... ok
+test_two_locked_variants_use_existing_price_and_correct_ownership_keys (test_void_knight.VoidKnightWeaponTests.test_two_locked_variants_use_existing_price_and_correct_ownership_keys) ... ok
+test_all_avatar_profile_pictures_are_400_shards (test_ledger.LedgerTests.test_all_avatar_profile_pictures_are_400_shards) ... ok
+test_all_battle_items_cost_100_and_increment_inventory (test_ledger.LedgerTests.test_all_battle_items_cost_100_and_increment_inventory) ... ok
+test_cosmetic_retry_debits_once (test_ledger.LedgerTests.test_cosmetic_retry_debits_once) ... ok
+test_existing_premium_heroes_still_purchase_at_their_original_prices (test_ledger.LedgerTests.test_existing_premium_heroes_still_purchase_at_their_original_prices) ... ok
+test_firestore_timmy_gate_rejects_before_accessing_database (test_ledger.LedgerTests.test_firestore_timmy_gate_rejects_before_accessing_database) ... ok
+test_firestore_wasp_gate_rejects_before_accessing_database (test_ledger.LedgerTests.test_firestore_wasp_gate_rejects_before_accessing_database) ... ok
+test_legacy_claims_cannot_move_paid_value_off_server (test_ledger.LedgerTests.test_legacy_claims_cannot_move_paid_value_off_server) ... ok
+test_multiple_purchases_remain_in_one_durable_account_wallet (test_ledger.LedgerTests.test_multiple_purchases_remain_in_one_durable_account_wallet) ... ok
+test_new_avatar_rejects_insufficient_shards (test_ledger.LedgerTests.test_new_avatar_rejects_insufficient_shards) ... ok
+test_new_avatars_keep_price_and_ownership_after_restart (test_ledger.LedgerTests.test_new_avatars_keep_price_and_ownership_after_restart) ... ok
+test_new_shop_profile_avatars_keep_correct_prices_and_unlock_once (test_ledger.LedgerTests.test_new_shop_profile_avatars_keep_correct_prices_and_unlock_once) ... ok
+test_pending_cancelled_and_wrong_account_cannot_grant (test_ledger.LedgerTests.test_pending_cancelled_and_wrong_account_cannot_grant) ... ok
+test_replayed_callbacks_and_restart_credit_once (test_ledger.LedgerTests.test_replayed_callbacks_and_restart_credit_once) ... ok
+test_timmy_is_listed_at_1900_but_cannot_spend_or_unlock_before_release (test_ledger.LedgerTests.test_timmy_is_listed_at_1900_but_cannot_spend_or_unlock_before_release) ... ok
+test_token_cannot_move_between_accounts (test_ledger.LedgerTests.test_token_cannot_move_between_accounts) ... ok
+test_unknown_consumed_token_does_not_credit (test_ledger.LedgerTests.test_unknown_consumed_token_does_not_credit) ... ok
+test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement (test_ledger.LedgerTests.test_wasp_purchase_hold_preserves_wallet_and_existing_entitlement) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 0.139s
+
+OK
