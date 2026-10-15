@@ -1,0 +1,57 @@
+[
+  {
+    "file": "basic_01_swing.wav",
+    "seconds": 0.38,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "basic_02_swing.wav",
+    "seconds": 0.42,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "basic_03_swing.wav",
+    "seconds": 0.56,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "sword_hit.wav",
+    "seconds": 0.48,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "rift_lunge.wav",
+    "seconds": 0.58,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "null_guard_raise.wav",
+    "seconds": 0.3,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "null_guard_block.wav",
+    "seconds": 0.65,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "null_guard_counter.wav",
+    "seconds": 0.46,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "eventide_charge.wav",
+    "seconds": 0.65,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "eventide_cleave.wav",
+    "seconds": 1.05,
+    "peak_dbfs": -1.94
+  },
+  {
+    "file": "void_resonance.wav",
+    "seconds": 0.72,
+    "peak_dbfs": -1.94
+  }
+]

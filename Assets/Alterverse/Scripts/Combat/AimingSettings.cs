@@ -87,6 +87,7 @@ namespace Alterverse.Combat
                 castOnRelease = true, allowTapCast = true
             };
             if (hero == HeroId.Nerok && slot == 0) { spec.projectileSpeed = 18f; spec.projectileWidth = .35f; }
+            if(hero==HeroId.VoidKnight){spec.coneAngle=80f;if(slot==3)spec.aoeRadius=ability.Range;}
             if (hero == HeroId.Timmy && slot == 3) spec.targetingMode = TargetingMode.Cone;
             if (hero == HeroId.Kaelon && slot == 0) { spec.projectileSpeed = 14f; spec.projectileWidth = .86f; }
             if (hero == HeroId.Veyr && slot == 1) { spec.projectileSpeed = 18f; spec.projectileWidth = .45f; }
@@ -104,6 +105,7 @@ namespace Alterverse.Combat
 
         private static AimType Classify(HeroId hero, int slot, AbilitySpec ability)
         {
+            if(hero==HeroId.VoidKnight)return slot==1?AimType.Self:slot==2?AimType.Dash:slot==3?AimType.AreaCone:AimType.Melee;
             if (hero == HeroId.Timmy && (slot == 2 || slot == 3)) return AimType.Dash;
             if ((hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) ||
                 (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1)) return AimType.Dash;
@@ -117,4 +119,3 @@ namespace Alterverse.Combat
         }
     }
 }
-

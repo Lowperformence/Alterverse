@@ -34,11 +34,11 @@ namespace Alterverse.Characters
                 // Interrupt preparation/channels, not projectiles already in flight or an
                 // incoming forced displacement owned by another hero (for example the hook).
                 GetComponent<HeroAttackDelivery>()?.CancelWindups();
-                EndTimmyScratch();life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
+                EndTimmyScratch();CancelVoidKnight();life++;HeroSkillVfx.CancelWarnings(gameObject);StopAllCoroutines();
             }
             wasStunned=stunned;
         }
-        private void CancelPending() { EndTimmyScratch();GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
+        private void CancelPending() { EndTimmyScratch();CancelVoidKnight();GetComponent<HeroAttackDelivery>()?.Cancel(); life++; HeroSkillVfx.CancelWarnings(gameObject); StopAllCoroutines(); if(locomotion!=null)locomotion.ResetMotion(); }
         private void OnDisable() => CancelPending();
         private void OnDestroy() { if (self != null) self.Died -= CancelPending; }
         public float Remaining(int slot) => Mathf.Max(0, ready[Mathf.Clamp(slot, 0, 3)] - Time.time);
@@ -88,6 +88,7 @@ namespace Alterverse.Characters
         private bool TryCastCore(int slot, Health target, Vector3 movement, AimPose? aimed)
         {
             if (!isActiveAndEnabled || !Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || slot < 0 || slot > 3 || Time.timeScale <= 0 || self.IsDead || !HeroCombatStatus.CanAct(gameObject) || Remaining(slot) > 0) return false;
+            if(identity.Hero==HeroId.VoidKnight&&voidPending)return false;
             AbilitySpec spec = kit.Spec(slot); HeroId hero = identity.Hero;
             float presentationWindup=spec.Windup;
             AimSpec aimSpec = AimingSettings.Current.For(hero, slot);
@@ -97,7 +98,8 @@ namespace Alterverse.Characters
                 aimSpec.aimType == AimType.Beam || aimSpec.aimType == AimType.Homing;
             if (usesDelivery && !HeroAttackDelivery.For(gameObject).HasCapacity(hero == HeroId.Nyra && slot == 3 ? SightlineBreakShots : 1)) return false;
             bool mobility = (hero == HeroId.Veyr && slot == 2) || (hero == HeroId.Nyra && slot == 1) || (hero == HeroId.Elyra && slot == 2) || (hero == HeroId.Traveler && slot == 1);
-            if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
+            if(hero==HeroId.VoidKnight&&(slot==1||slot==2||slot==3)){if(!TryCastVoidKnight(slot,attackAim))return false;}
+            else if (hero == HeroId.Timmy && (slot == 2 || slot == 3))
             {
                 if(!TryCastTimmy(slot,target,attackAim,aimed.HasValue && attackAim.AllowDashTargetCapture))return false;
             }
@@ -291,6 +293,7 @@ namespace Alterverse.Characters
             bool damaged=target!=null&&target.Current+target.Shield<before;
             // A rejected hit (for example an invulnerable objective) cannot apply control either.
             if(!damaged)return;
+            GetComponent<VoidKnightState>()?.RecordSkillHit();
             if(damaged)
             {
                 HeroSkillVfx.Impact(gameObject,target,slot);
@@ -318,5 +321,3 @@ namespace Alterverse.Characters
         }
     }
 }
-
-

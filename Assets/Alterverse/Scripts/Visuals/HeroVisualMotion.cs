@@ -113,7 +113,7 @@ namespace Alterverse.Visuals
         public bool Dashing=>locomotion!=null&&locomotion.OwnsMovementFrame;
         public void PulseAttack(bool ultimate)
         {
-            
+
             // Snapshot the visible pose before restarting a combo; never snap a raised weapon to rest.
             attackArmR=displayedArmR;attackArmL=displayedArmL;
             attackWeaponR=Rest(weaponR);attackWeaponL=Rest(weaponL);
@@ -128,14 +128,15 @@ namespace Alterverse.Visuals
         }
         public void PulseBasic(float windup)
         {
-            
+
             PulseAttack(false);
             windupUntil=Time.time+windup;windupDuration=Mathf.Max(0,windup);attackUntil=identity!=null&&identity.Hero==HeroId.Veyr?attackStarted+.70f:windupUntil+attackDuration;
         }
         public void PulseAbility(int slot,float windup)
         {
             GetComponent<MeleeBasicAttackAnimation>()?.CancelStrike();
-            
+            GetComponent<VoidKnightPresentation>()?.BeginAbility(slot,windup);
+
             PulseAttack(slot==3);abilitySlot=slot;
             windupDuration=Mathf.Max(0,windup);windupUntil=Time.time+windupDuration;attackUntil=windupUntil+attackDuration;
             if(identity!=null&&identity.Hero==HeroId.Rook&&slot==3)Empower(1.1f);
@@ -152,7 +153,7 @@ namespace Alterverse.Visuals
         private void Start()
         {
             authored=GetComponent<AuthoredHeroPresentation>();
-            
+
             // Native Unity objects must be created in a lifecycle callback, not a field initializer.
             energyBlock=new MaterialPropertyBlock();
             identity=GetComponent<HeroIdentity>();health=GetComponent<Health>();locomotion=GetComponent<HeroLocomotion>();
@@ -265,7 +266,7 @@ namespace Alterverse.Visuals
         private static void Swing(Transform t,Quaternion rest,float angle){if(t!=null)t.localRotation=rest*Quaternion.Euler(angle,0,0);}
         private void LateUpdate()
         {
-            
+
             if(root==null)return;
             Vector3 presented=transform.position;Quaternion presentedRotation=transform.rotation;
             if(RemoteReplica)presentationBuffer.Evaluate(Time.time,out presented,out presentedRotation);
@@ -979,7 +980,3 @@ namespace Alterverse.Visuals
 
     }
 }
-
-
-
-

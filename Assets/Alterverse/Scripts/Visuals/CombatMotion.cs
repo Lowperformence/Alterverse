@@ -56,6 +56,7 @@ namespace Alterverse.Visuals
             if(actor.GetComponent<HeroIdentity>()!=null)
             {
                 actor.GetComponent<HeroVisualMotion>()?.PulseBasic(windup);
+                actor.GetComponent<VoidKnightPresentation>()?.BeginBasic(windup);
                 var melee=MeleeBasicAttackAnimation.For(actor);melee?.Begin(windup,target);melee?.SetAim(aim);
                 actor.GetComponent<HeroLocomotion>()?.FaceAction(aim-actor.transform.position,windup+.4f);
             }

@@ -1,0 +1,66 @@
+[
+  {
+    "asset": "Basic_Cast.wav",
+    "source": "basic_01_swing.wav"
+  },
+  {
+    "asset": "Basic_Cast_v2.wav",
+    "source": "basic_02_swing.wav"
+  },
+  {
+    "asset": "Basic_Cast_v3.wav",
+    "source": "basic_03_swing.wav"
+  },
+  {
+    "asset": "Basic_Impact.wav",
+    "source": "sword_hit.wav"
+  },
+  {
+    "asset": "Basic_Windup.wav",
+    "source": "null_guard_raise.wav"
+  },
+  {
+    "asset": "Q_Cast.wav",
+    "source": "basic_03_swing.wav"
+  },
+  {
+    "asset": "Q_Impact.wav",
+    "source": "sword_hit.wav"
+  },
+  {
+    "asset": "Q_Windup.wav",
+    "source": "null_guard_raise.wav"
+  },
+  {
+    "asset": "W_Cast.wav",
+    "source": "null_guard_raise.wav"
+  },
+  {
+    "asset": "W_Impact.wav",
+    "source": "null_guard_block.wav"
+  },
+  {
+    "asset": "E_Cast.wav",
+    "source": "rift_lunge.wav"
+  },
+  {
+    "asset": "E_Impact.wav",
+    "source": "sword_hit.wav"
+  },
+  {
+    "asset": "E_Windup.wav",
+    "source": "null_guard_raise.wav"
+  },
+  {
+    "asset": "R_Cast.wav",
+    "source": "eventide_cleave.wav"
+  },
+  {
+    "asset": "R_Impact.wav",
+    "source": "sword_hit.wav"
+  },
+  {
+    "asset": "R_Windup.wav",
+    "source": "eventide_charge.wav"
+  }
+]

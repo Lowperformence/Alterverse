@@ -54,6 +54,7 @@ namespace Alterverse.Characters
         {
             AbilitySpec s = kit.Spec(slot);
             HeroId h = identity.Hero;
+            if(h==HeroId.VoidKnight)return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect;
             if (h == HeroId.Timmy) return Alterverse.UI.HeroAttackCatalog.For(h)[slot+1].Effect +
                 (AimFor(slot).aimType == AimType.Dash ? " Tap to jump in your movement direction; drag to aim." : "");
             if (h == HeroId.Elyra && slot == 2)
@@ -160,4 +161,3 @@ namespace Alterverse.Characters
         }
     }
 }
-

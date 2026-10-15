@@ -107,7 +107,7 @@ namespace Alterverse.Visuals
             switch (identity.Hero)
             {
                 case HeroId.Veyr: case HeroId.Timmy: clip = CombatAnimationLibrary.Find("slash_a"); mirror = serial % 2 == 0; break;
-                case HeroId.Kaelon: case HeroId.Nerok: clip = CombatAnimationLibrary.Find("heavy_sweep"); break;
+                case HeroId.VoidKnight: case HeroId.Kaelon: case HeroId.Nerok: clip = CombatAnimationLibrary.Find("heavy_sweep"); break;
                 case HeroId.Rook: clip = CombatAnimationLibrary.Find(serial % 2 == 1 ? "jab" : "cross"); break;
                 case HeroId.Nyra: clip = null; break;
                 default: clip = CombatAnimationLibrary.Find("spell"); mirror = identity.Hero != HeroId.Mira; break;

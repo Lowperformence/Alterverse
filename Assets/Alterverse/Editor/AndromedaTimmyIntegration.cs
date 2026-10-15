@@ -13,7 +13,7 @@ namespace Alterverse.EditorTools
         {
             if(TimmyBalance.TotalPoints!=100)throw new System.InvalidOperationException("Timmy's design budget must sum to 100.");
             if((int)HeroId.Timmy!=8)throw new System.InvalidOperationException("Existing serialized hero IDs must remain stable.");
-            if(HeroIdentity.HeroCount!=9)throw new System.InvalidOperationException("Timmy must be included in the regular roster.");
+            if(HeroIdentity.HeroCount<9)throw new System.InvalidOperationException("Timmy must be included in the regular roster.");
             if(HeroUnlockCatalog.Price(HeroId.Timmy)!=1900||HeroUnlockCatalog.PurchaseSku(HeroId.Timmy)!="hero_timmy")
                 throw new System.InvalidOperationException("Timmy shop listing must cost 1,900 shards.");
             if(!HeroUnlockCatalog.Released(HeroId.Timmy)&&HeroUnlockInventory.Owned(HeroId.Timmy))

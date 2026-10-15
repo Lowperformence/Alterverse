@@ -27,6 +27,7 @@ namespace Alterverse.Characters
             // gap-close, Auren has ranged control and tank durability, while Brakk has no true dash
             // and therefore needs enough foot speed to eventually punish a perfectly kiting carry.
             // Zhaev receives an additional 5% hero-specific movement-speed increase.
+            HeroId.VoidKnight=>new HeroCombatStats(VoidKnightBalance.BasicRange,VoidKnightBalance.BasicInterval,6.7f,.5f,.35f),
             HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f*1.05f,.2f,.1f),
             HeroId.Timmy=>new HeroCombatStats(TimmyBalance.BasicRange,TimmyBalance.BasicInterval,TimmyBalance.RawMoveSpeed,.8f,0f),
             HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,6.0f,1f,.8f),

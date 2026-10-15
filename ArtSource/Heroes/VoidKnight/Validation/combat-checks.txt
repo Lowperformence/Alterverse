@@ -1,0 +1,68 @@
+PASS: stable appended roster ID
+PASS: 18 basic damage (18)
+PASS: less health than tank
+PASS: more health than assassin
+PASS: longer reach than Veyr
+PASS: longer reach than Timmy
+PASS: longer reach than Kaelon
+PASS: lower sustained DPS than tank
+PASS: greatsword remains melee beyond 3 metres
+PASS: lunge aim type
+PASS: ultimate cone aim type
+PASS: legacy audio cues unchanged
+PASS: appended audio cue 0/0
+PASS: appended audio cue 0/1
+PASS: appended audio cue 0/2
+PASS: appended audio cue 1/0
+PASS: appended audio cue 1/1
+PASS: appended audio cue 1/2
+PASS: appended audio cue 2/0
+PASS: appended audio cue 2/1
+PASS: appended audio cue 2/2
+PASS: appended audio cue 3/0
+PASS: appended audio cue 3/1
+PASS: appended audio cue 3/2
+PASS: appended audio cue 4/0
+PASS: appended audio cue 4/1
+PASS: appended audio cue 4/2
+PASS: expanded audio bank
+PASS: all 16 runtime recordings requested
+PASS: guard starts
+PASS: guard anchors and locks actions
+PASS: front guard halves damage (20)
+PASS: rear bypasses guard (40)
+PASS: flank bypasses guard (40)
+PASS: unknown source bypasses guard (40)
+PASS: guard expires and releases root
+PASS: two basics cannot trigger shield (0)
+PASS: three basics prime 30 shield (30)
+PASS: passive consumed once (30)
+PASS: passive charges reset
+PASS: replica cannot start gameplay guard
+PASS: replica cannot build passive
+PASS: replica cannot apply lunge
+PASS: ultimate starts
+PASS: ultimate no damage before warning (1000)
+PASS: ultimate exact 42 damage (958)
+PASS: ultimate hits each enemy once (958)
+PASS: ultimate applies slow (0.75)
+PASS: stun cancels pending cleave (1000)
+PASS: interruption releases owned root
+PASS: lunge starts
+PASS: lunge respects preparation (1000)
+PASS: lunge deals 16 once (984)
+PASS: first enemy stops lunge (1000)
+PASS: lunge stops near first contact
+PASS: sweep starts
+PASS: sweep deals 24 (976)
+PASS: parry cast starts
+PASS: health boundary applies parry reduction (980)
+PASS: successful guard triggers 14 damage counter (986)
+PASS: basic starts at extended range
+PASS: basic has readable windup (1000)
+PASS: basic exact 18 at 3 metres (982)
+PASS: real basic hit builds passive
+PASS: missed basic does not build passive
+PASS: cleave excludes targets behind actor (1000)
+PASS: disabled actor cannot land pending ultimate (1000)
+VOID KNIGHT: 67 checks passed. Engine fixtures; native Unity and NGO not covered.

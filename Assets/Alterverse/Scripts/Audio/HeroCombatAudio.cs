@@ -27,14 +27,14 @@ namespace Alterverse.Audio
             8=>action==1||action==2||action==4,
             _=>false
         };
-        public static bool HasImpact(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
+        public static bool HasImpact(int hero,int action)=>hero==(int)HeroId.VoidKnight||!UsesSelectedRecording(hero,action)&&(action==0||(RecordingHero(hero,action) switch
         {
             0=>action!=3,1=>action!=2,2=>action!=2,3=>action!=3,4=>action==1||action==4,5=>action!=2,6=>action!=2,7=>action!=2,_=>false
         }));
-        public static bool HasWindup(int hero,int action)=>!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
-        public static int VariantCount(int hero,int action,int phase)=>hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
+        public static bool HasWindup(int hero,int action)=>hero==(int)HeroId.VoidKnight?action!=2:!UsesSelectedRecording(hero,action)&&(action==0||HasImpact(hero,action));
+        public static int VariantCount(int hero,int action,int phase)=>hero==(int)HeroId.VoidKnight?(action==0&&phase==0?3:1):hero==7?1:phase!=2&&(action==0||phase==1&&hero==2&&action==4)?3:1;
         public static int Cue(int hero,int action,int phase)
-        {hero=RecordingHero(hero,action);return hero==(int)HeroId.Timmy?120+action*3+phase:hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
+        {hero=RecordingHero(hero,action);return hero==(int)HeroId.VoidKnight?135+action*3+phase:hero==(int)HeroId.Timmy?120+action*3+phase:hero==7?105+action*3+phase:phase==2?70+hero*5+action:hero*10+action*2+phase;}
         public static AudioClip[][] Load()
         {
             var clips=new AudioClip[CueCount][];
@@ -56,6 +56,13 @@ namespace Alterverse.Audio
             LoadTimmyRecording(clips,1,"Audio/Heroes/Timmy/Q_Cast");
             LoadTimmyRecording(clips,2,"Audio/Heroes/Timmy/W_Cast");
             LoadTimmyRecording(clips,4,"Audio/Heroes/Timmy/Ultimate_Selected");
+            for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
+            {
+                if(phase==2&&!HasWindup((int)HeroId.VoidKnight,action))continue;
+                string path="Audio/Heroes/VoidKnight/"+Actions[action]+(phase==0?"_Cast":phase==1?"_Impact":"_Windup");
+                int cue=Cue((int)HeroId.VoidKnight,action,phase);clips[cue]=new AudioClip[VariantCount((int)HeroId.VoidKnight,action,phase)];
+                for(int v=0;v<clips[cue].Length;v++)clips[cue][v]=Resources.Load<AudioClip>(path+(v==0?"":"_v"+(v+1)));
+            }
             return clips;
         }
         static void LoadTimmyRecording(AudioClip[][] clips,int action,string path)
@@ -118,4 +125,3 @@ namespace Alterverse.Audio
         public static void Impact(GameObject actor,int slot,Vector3 point)=>Play(actor,slot+1,true,point);
     }
 }
-

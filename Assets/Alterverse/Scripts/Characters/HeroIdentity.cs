@@ -1,11 +1,11 @@
 using UnityEngine;
 namespace Alterverse.Characters
 {
-public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy}
+public enum HeroId{Veyr,Kaelon,Nyra,Elyra,Mira,Rook,Traveler,Nerok,Timmy,VoidKnight}
 public enum HeroRole{Assassin,Tank,Marksman,Mage,Support,Bruiser,Skirmisher}
 public sealed class HeroIdentity:MonoBehaviour
 {
-public const int CatalogHeroCount=9;
+public const int CatalogHeroCount=10;
 public const int HeroCount=CatalogHeroCount;
 public const float HeroCollisionRadius=.40f;
 public const float HeroCollisionHeight=2f;
@@ -30,6 +30,7 @@ gameObject.AddComponent<Alterverse.Visuals.TahlaHealerVisualPolish>();
 }
 private void Start()
 {
+if(hero==HeroId.VoidKnight&&GetComponent<VoidKnightState>()==null)gameObject.AddComponent<VoidKnightState>();
 // Configure is intentionally called before several combat/visual components are added by the runtime roster.
 // Install the universal attack-presentation layer in Start so it can resolve Health, TeamMember,
 // BasicAttack, HeroAbilityExecution and HeroVisualMotion immediately and track the real cast targets cleanly.
@@ -37,7 +38,7 @@ if(GetComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>()==null)
 gameObject.AddComponent<Alterverse.Visuals.HeroAttackReadabilityPresentation>();
 // Melee basics use a dedicated weapon/fist delivery layer: visible draw-back, contact and follow-through.
 // Classification comes from the combat profile so all current short-range heroes receive it automatically.
-if(HeroCombatProfile.StatsFor(hero).AttackRange<=3f&&GetComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>()==null)
+if(!Alterverse.Combat.HeroAttackDelivery.IsRanged(hero)&&GetComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>()==null)
 gameObject.AddComponent<Alterverse.Visuals.MeleeBasicAttackAnimation>();
 // Only actors that actually own the ability execution runtime need the extra mobile-readable cast cue.
 // This keeps non-combat replicas/lightweight presentation actors free of an unnecessary Update loop.
@@ -48,15 +49,15 @@ gameObject.AddComponent<Alterverse.Visuals.HeroAbilityReadabilityBoost>();
 if(GetComponent<PlayerHeroAbilities>()!=null&&GetComponent<Alterverse.UI.AbilityRangePreviewOverlay>()==null)
 gameObject.AddComponent<Alterverse.UI.AbilityRangePreviewOverlay>();
 }
-public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",HeroId.Nerok=>"Nerok Abyss",HeroId.Timmy=>"Andromeda Timmy",_=>"Unknown Hero"};
-public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.Veyr=>HeroRole.Assassin,HeroId.Timmy=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,HeroId.Nerok=>HeroRole.Bruiser,_=>HeroRole.Skirmisher};
+public static string NameFor(HeroId id)=>id switch{HeroId.Veyr=>"Zhaev Null",HeroId.Kaelon=>"Auren Kest",HeroId.Nyra=>"Sivra Quell",HeroId.Elyra=>"Ione Vaska",HeroId.Mira=>"Tahla Venn",HeroId.Rook=>"Brakk Orun",HeroId.Traveler=>"THE TRAVELER",HeroId.Nerok=>"Nerok Abyss",HeroId.Timmy=>"Andromeda Timmy",HeroId.VoidKnight=>"Void Knight",_=>"Unknown Hero"};
+public static HeroRole RoleFor(HeroId id)=>id switch{HeroId.VoidKnight=>HeroRole.Bruiser,HeroId.Veyr=>HeroRole.Assassin,HeroId.Timmy=>HeroRole.Assassin,HeroId.Kaelon=>HeroRole.Tank,HeroId.Nyra=>HeroRole.Marksman,HeroId.Elyra=>HeroRole.Mage,HeroId.Mira=>HeroRole.Support,HeroId.Rook=>HeroRole.Bruiser,HeroId.Traveler=>HeroRole.Skirmisher,HeroId.Nerok=>HeroRole.Bruiser,_=>HeroRole.Skirmisher};
 // Preserve the existing 15% durability adjustment and add 5% to current base HP.
 // The independent universal hero shield is configured by Health.
 public const float GlobalHealthMultiplier=1.15f*1.05f;
 // THE TRAVELER receives an additional 5% hero-specific health increase on top of the global multiplier.
 // Sivra's 185 HP and Ione's 200 HP are final in-game maxima.
 public static float BaseHealth(HeroId id)=>id==HeroId.Nyra?185f:id==HeroId.Elyra?200f:
-    (id switch{HeroId.Veyr=>200f,HeroId.Timmy=>TimmyBalance.RawHealth,HeroId.Kaelon=>380f*1.05f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
-public static float AttackDamage(HeroId id)=>id switch{HeroId.Veyr=>22f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>17f,HeroId.Nyra=>20f,HeroId.Elyra=>15f,HeroId.Mira=>17f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>24f,_=>17f};
+    (id switch{HeroId.VoidKnight=>VoidKnightBalance.RawHealth,HeroId.Veyr=>200f,HeroId.Timmy=>TimmyBalance.RawHealth,HeroId.Kaelon=>380f*1.05f,HeroId.Mira=>230f,HeroId.Rook=>300f,HeroId.Traveler=>205f*1.05f,HeroId.Nerok=>285f,_=>200f})*GlobalHealthMultiplier;
+public static float AttackDamage(HeroId id)=>id switch{HeroId.VoidKnight=>VoidKnightBalance.BasicDamage,HeroId.Veyr=>22f,HeroId.Timmy=>TimmyBalance.BasicDamage,HeroId.Kaelon=>17f,HeroId.Nyra=>20f,HeroId.Elyra=>15f,HeroId.Mira=>17f,HeroId.Rook=>24f,HeroId.Traveler=>17f,HeroId.Nerok=>24f,_=>17f};
 }
 }

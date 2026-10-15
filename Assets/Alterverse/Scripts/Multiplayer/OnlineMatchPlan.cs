@@ -27,7 +27,7 @@ namespace Alterverse.Multiplayer
 
         private static readonly HeroId[] BotPool =
         {
-            HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Nerok, HeroId.Rook
+            HeroId.Veyr, HeroId.Kaelon, HeroId.Nyra, HeroId.Elyra, HeroId.Mira, HeroId.Nerok, HeroId.Rook,HeroId.VoidKnight
         };
 
         public static OnlineMatchPlan Build(

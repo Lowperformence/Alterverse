@@ -9,8 +9,8 @@ partial class Regression
  {
   Check((int)HeroId.Timmy==8,"Timmy appends a stable hero ID");
   Check(HeroIdentity.HeroCount==System.Enum.GetValues(typeof(HeroId)).Length,"regular roster contains every catalogued hero");
-  Check(HeroIdentity.HeroCount==9,"Timmy is available without a preview switch");
-  Check(Alterverse.Audio.HeroCombatAudio.CueCount==135,"production audio bank accepts the constant nine-hero roster");
+  Check(HeroIdentity.HeroCount>=9,"Timmy is available without a preview switch");
+  Check(Alterverse.Audio.HeroCombatAudio.CueCount==HeroIdentity.HeroCount*15,"production audio bank accepts the expanded hero roster");
   for(int h=0;h<8;h++)for(int action=0;action<5;action++)for(int phase=0;phase<3;phase++)
   {
    int expected=h==7?105+action*3+phase:phase==2?70+h*5+action:h*10+action*2+phase;
@@ -223,4 +223,3 @@ partial class Regression
   Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");
  }
 }
-
