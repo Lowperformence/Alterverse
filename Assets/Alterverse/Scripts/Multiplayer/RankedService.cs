@@ -97,7 +97,8 @@ namespace Alterverse.Multiplayer
         {
             if (!RankedAvailability.Enabled) { Status = RankedAvailability.LockedMessage; return false; }
             if (Busy || Searching || CoopAuthority.Active) return false;
-            if (OnlinePartyService.Instance?.InParty == true || CoopLobbyService.Instance?.InLobby == true ||
+            if (OnlinePartyService.Instance?.InParty == true || OnlinePartyService.Instance?.Busy == true ||
+                CoopLobbyService.Instance?.InLobby == true || CoopLobbyService.Instance?.Busy == true || EdgegapOnlineFlow.Instance?.Busy == true ||
                 EdgegapOnlineFlow.Instance?.IsSearching == true)
             { Status = "Leave your party before Solo Ranked."; return false; }
             Busy = true; Searching = true; Admission = ""; ResultText = ""; resultGeneration++;
@@ -121,6 +122,7 @@ namespace Alterverse.Multiplayer
                 queueAttempted = true;
                 queueRequest = Request<Member>("/ranked/search", JsonUtility.ToJson(new Search { displayName = PlayerProfile.PlayerName }));
                 Member member = await queueRequest;
+                if (search != generation) return false;
                 Busy = false;
                 DateTime deadline = DateTime.UtcNow.AddMinutes(5);
                 while (search == generation && DateTime.UtcNow < deadline)

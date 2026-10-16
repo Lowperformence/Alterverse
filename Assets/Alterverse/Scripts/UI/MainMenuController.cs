@@ -339,8 +339,11 @@ namespace Alterverse.UI
             theme.Panel(new Rect(Left,214,w,394));
             theme.StatusBadge(new Rect(Left+28,224,154,28),"READY TO PLAY",FrontEndTheme.Positive);
             theme.Label(new Rect(Left+28,252,w-56,42),"MATCH 4v4",theme.Title);
-            theme.Label(new Rect(Left+28,300,w-56,48),"Five versus five.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
-            if(theme.Action(new Rect(Left+28,354,w-56,32),"CO-OP  •  PRIVATE LOBBY",true))
+            theme.Label(new Rect(Left+28,300,w-56,48),"Four versus four.\nTwo lanes. Dimension planets. One Reality Core.",theme.Body,true);
+            float lobbyButtonWidth=(w-64)/2;
+            if(theme.Action(new Rect(Left+28,354,lobbyButtonWidth,32),"INVITE FRIENDS",true))
+                _=BeginOnlineMatchmakingAsync();
+            if(theme.Action(new Rect(Left+36+lobbyButtonWidth,354,lobbyButtonWidth,32),"PRIVATE CO-OP"))
                 SetPage(Page.Coop);
             BattleItemType equippedItem=BattleItemInventory.Equipped;
             theme.Label(new Rect(Left+28,396,w-56,18),equippedItem==BattleItemType.None?"BATTLE ITEM  /  NONE":$"BATTLE ITEM  /  {BattleItemInventory.Name(equippedItem)}  ×{BattleItemInventory.Count(equippedItem)}",theme.Small,true);
@@ -1384,37 +1387,11 @@ namespace Alterverse.UI
         {
             if (RankedService.Instance?.Searching == true || RankedService.Instance?.Busy == true) return;
             if (launching || choosingMatchMode || !PrepareSelectedMatch()) return;
-            var online=OnlinePartyService.Instance;
-            if(online==null){launchMessage="Online service is initializing. Please try again.";return;}
-            var flow=EdgegapOnlineFlow.Instance;
-            if(flow==null){launchMessage="Online matchmaking is initializing. Please try again.";return;}
-            if(online.Busy || flow.Busy || OnlinePlanHandshake.Preparing)return;
-            if(CoopLobbyService.Instance!=null && CoopLobbyService.Instance.InLobby)
-            {launchMessage="Leave the private co-op lobby before online matchmaking.";return;}
-            choosingMatchMode=true;
-            try
-            {
-                OnlinePartyOverlay.Show();
-                if(flow.IsSearching){launchMessage=flow.Status;return;}
-                if(online.InParty)
-                {
-                    if(!online.IsHost){launchMessage="Waiting for the party leader to start matchmaking.";return;}
-                    if(online.HasHeroConflict || !online.AllPresentPlayersReady)
-                    {launchMessage="Choose different heroes and ready up in the online party.";return;}
-                    await flow.BeginSearchAsync();
-                    launchMessage=flow.Status;
-                    return;
-                }
-                launchMessage="SEARCHING FOR ONLINE MATCH...";
-                await flow.QuickSearchAsync();
-                launchMessage=flow.Status;
-            }
-            catch(System.Exception ex)
-            {
-                launchMessage="Online matchmaking could not connect.";
-                Debug.LogError("DIMENSIONS FRONT: online matchmaking failed: "+ex.Message);
-            }
-            finally { choosingMatchMode=false; }
+            if (CoopLobbyService.Instance?.InLobby == true)
+            { launchMessage="Leave the private co-op lobby before opening an online party."; return; }
+            OnlinePartyOverlay.Show();
+            launchMessage="Create a friend party, enter an invite code or find a match.";
+            await System.Threading.Tasks.Task.CompletedTask;
         }
 
         private async System.Threading.Tasks.Task BeginOfflineMatchAsync()

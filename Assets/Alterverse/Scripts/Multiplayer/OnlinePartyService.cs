@@ -44,6 +44,7 @@ namespace Alterverse.Multiplayer
         private const string PlayerBattleItemKey = "battleItem";
         private const string PlayerReadyKey = "ready";
         private const string SearchKey = "playerSearch";
+        private const string MatchmakingKey = "edgegapSearch";
         private const string ModeKey = "mode";
         private const string ArenaKey = "arena";
         private const string PartyIdsKey = "partyIds";
@@ -69,6 +70,9 @@ namespace Alterverse.Multiplayer
         public int MatchCapacity => MaxMatchPlayers;
         public string Status => status;
         public string LastError => lastError;
+        public bool MatchmakingLocked => ReadSession(MatchmakingKey, "0") == "1";
+        public bool CanEditParty => InParty && !Busy && !CoopAuthority.Active && !MatchmakingLocked && !IsSearching &&
+            EdgegapOnlineFlow.Instance?.Busy != true && EdgegapOnlineFlow.Instance?.IsSearching != true && !OnlinePlanHandshake.Preparing;
         public bool IsSearching => ReadSession(SearchKey, "0") == "1";
         public bool IsFull => PlayerCount >= MaxMatchPlayers;
         public bool IsPartyFull => PartyPlayerCount >= MaxPartyPlayers;
@@ -91,6 +95,22 @@ namespace Alterverse.Multiplayer
 
         public int PublicPlayerCount => Mathf.Max(0, PlayerCount - PartyPlayerCount);
 
+        public string ReadyRosterKey
+        {
+            get
+            {
+                var key = new StringBuilder();
+                foreach (MemberView member in Members)
+                {
+                    string id = member.PlayerId ?? "";
+                    key.Append(id.Length).Append(':').Append(id).Append('|')
+                        .Append((int)member.Hero).Append('|').Append((int)member.BattleItem).Append('|')
+                        .Append(member.Ready ? '1' : '0').Append(';');
+                }
+                return key.ToString();
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Ensure()
         {
@@ -112,7 +132,8 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> CreatePrivatePartyAsync()
         {
-            if (busy) return false;
+            if (busy || EdgegapOnlineFlow.Instance?.Busy == true || EdgegapOnlineFlow.Instance?.IsSearching == true ||
+                RankedService.Instance?.Busy == true || RankedService.Instance?.Searching == true) return false;
             if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before creating an online party.");
 
@@ -162,7 +183,8 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> JoinByCodeAsync(string rawCode)
         {
-            if (busy) return false;
+            if (busy || EdgegapOnlineFlow.Instance?.Busy == true || EdgegapOnlineFlow.Instance?.IsSearching == true ||
+                RankedService.Instance?.Busy == true || RankedService.Instance?.Searching == true) return false;
             if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before joining an online party.");
 
@@ -190,6 +212,13 @@ namespace Alterverse.Multiplayer
                     await LeaveInternalAsync();
                     lastError = "This room uses a different game version. Create a new 4v4 party.";
                     SetStatus("INCOMPATIBLE ONLINE PARTY");
+                    return false;
+                }
+                if (MatchmakingLocked)
+                {
+                    await LeaveInternalAsync();
+                    lastError = "This party is already matchmaking. Ask the leader to cancel first.";
+                    SetStatus("PARTY IS ALREADY SEARCHING");
                     return false;
                 }
                 bool searchAlreadyActive = ReadSession(joined, SearchKey, "0") == "1";
@@ -228,7 +257,8 @@ namespace Alterverse.Multiplayer
         /// </summary>
         public async Task<bool> QuickSearchAsync()
         {
-            if (busy) return false;
+            if (busy || EdgegapOnlineFlow.Instance?.Busy == true || EdgegapOnlineFlow.Instance?.IsSearching == true ||
+                RankedService.Instance?.Busy == true || RankedService.Instance?.Searching == true) return false;
             if (CoopLobbyService.Instance != null && (CoopLobbyService.Instance.InLobby || CoopLobbyService.Instance.Busy))
                 return RejectForCoop("Leave the co-op lobby before searching online.");
 
@@ -356,9 +386,25 @@ namespace Alterverse.Multiplayer
             }
         }
 
+        public async Task<bool> SetMatchmakingLockedAsync(bool locked)
+        {
+            if (session == null || !IsHost || busy) return false;
+            try
+            {
+                busy = true;
+                IHostSession host = session.AsHost();
+                host.IsLocked = locked;
+                host.SetProperty(MatchmakingKey, new SessionProperty(locked ? "1" : "0", VisibilityPropertyOptions.Member));
+                await host.SavePropertiesAsync();
+                return true;
+            }
+            catch (Exception ex) { Fail("COULD NOT UPDATE PARTY SEARCH STATE", ex); return false; }
+            finally { busy = false; RaiseChanged(); }
+        }
+
         public async Task<bool> CycleLocalHeroAsync(int direction)
         {
-            if (session == null || busy) return false;
+            if (!CanEditParty) return false;
             HeroId current = LocalHero;
             int count = Enum.GetValues(typeof(HeroId)).Length;
             for (int step = 1; step <= count; step++)
@@ -373,7 +419,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalHeroAsync(HeroId hero)
         {
-            if (session?.CurrentPlayer == null || busy || !HeroUnlockInventory.Owned(hero) || HeroBlockedForLocal(hero))
+            if (session?.CurrentPlayer == null || !CanEditParty || !HeroUnlockInventory.Owned(hero) || HeroBlockedForLocal(hero))
                 return false;
 
             try
@@ -404,7 +450,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalReadyAsync(bool ready)
         {
-            if (session?.CurrentPlayer == null || busy) return false;
+            if (session?.CurrentPlayer == null || !CanEditParty) return false;
             if (ready && HeroBlockedForLocal(LocalHero))
             {
                 lastError = "Friend-party members on the same team need different heroes.";

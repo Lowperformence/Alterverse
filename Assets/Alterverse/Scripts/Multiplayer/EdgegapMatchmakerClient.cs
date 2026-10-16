@@ -41,6 +41,7 @@ namespace Alterverse.Multiplayer
         public bool IsConfigured => !string.IsNullOrWhiteSpace(ResolveAuthToken());
 
         private int waitGeneration;
+        private int membershipGeneration;
 
         public void AcceptRankedAssignment(string json)
         {
@@ -72,6 +73,7 @@ namespace Alterverse.Multiplayer
 
         public void ResetLocalState()
         {
+            membershipGeneration++;
             GroupId = "";
             MemberId = "";
             TicketId = "";
@@ -93,10 +95,17 @@ namespace Alterverse.Multiplayer
         {
             CancelPendingAssignmentWait();
             ResetLocalState();
+            int generation = membershipGeneration;
             MemberResponse response = await SendMemberAsync(
                 "POST",
                 "/groups",
                 new CreateMemberRequest { profile = Profile, is_ready = ready, attributes = new EmptyAttributes() });
+            if (generation != membershipGeneration)
+            {
+                if (!string.IsNullOrWhiteSpace(response?.group_id))
+                    await SendNoContentAsync("DELETE", "/groups/" + UnityWebRequest.EscapeURL(response.group_id), false);
+                return false;
+            }
             return ApplyMembershipResponse(response, "GROUP CREATED");
         }
 
@@ -108,29 +117,39 @@ namespace Alterverse.Multiplayer
             CancelPendingAssignmentWait();
             ResetLocalState();
             GroupId = groupId.Trim();
+            int generation = membershipGeneration;
+            string joiningGroup = GroupId;
             MemberResponse response = await SendMemberAsync(
                 "POST",
                 "/groups/" + UnityWebRequest.EscapeURL(GroupId) + "/members",
                 new CreateMemberRequest { profile = Profile, is_ready = ready, attributes = new EmptyAttributes() });
+            if (generation != membershipGeneration)
+            {
+                if (!string.IsNullOrWhiteSpace(response?.member_id))
+                    await SendNoContentAsync("DELETE", "/groups/" + UnityWebRequest.EscapeURL(joiningGroup) +
+                        "/members/" + UnityWebRequest.EscapeURL(response.member_id), false);
+                return false;
+            }
             return ApplyMembershipResponse(response, "JOINED EDGEGAP GROUP");
         }
 
         public async Task<bool> SetReadyAsync(bool ready)
         {
             if (!HasMembership) return Fail("EDGEGAP GROUP MEMBERSHIP IS MISSING");
-
+            int generation = membershipGeneration;
             MemberResponse response = await SendMemberAsync(
                 "PATCH",
                 MemberPath(),
                 new ReadyRequest { is_ready = ready });
-            return ApplyMembershipResponse(response, ready ? "MATCHMAKING SEARCHING" : "MATCHMAKING NOT READY");
+            return generation == membershipGeneration && ApplyMembershipResponse(response, ready ? "MATCHMAKING SEARCHING" : "MATCHMAKING NOT READY");
         }
 
         public async Task<bool> RefreshMembershipAsync()
         {
             if (!HasMembership) return Fail("EDGEGAP GROUP MEMBERSHIP IS MISSING");
+            int generation = membershipGeneration;
             MemberResponse response = await SendMemberAsync("GET", MemberPath(), null);
-            return ApplyMembershipResponse(response, null);
+            return generation == membershipGeneration && ApplyMembershipResponse(response, null);
         }
 
         /// <summary>
@@ -146,9 +165,10 @@ namespace Alterverse.Multiplayer
                 return true;
             }
 
+            int generation = ++membershipGeneration;
             string path = MemberPath();
             bool success = await SendNoContentAsync("DELETE", path);
-            if (success) ResetLocalState();
+            if (success && generation == membershipGeneration) ResetLocalState();
             return success;
         }
 
@@ -165,9 +185,10 @@ namespace Alterverse.Multiplayer
                 return true;
             }
 
+            int generation = ++membershipGeneration;
             string path = "/groups/" + UnityWebRequest.EscapeURL(GroupId);
             bool success = await SendNoContentAsync("DELETE", path);
-            if (success) ResetLocalState();
+            if (success && generation == membershipGeneration) ResetLocalState();
             return success;
         }
 
@@ -202,7 +223,8 @@ namespace Alterverse.Multiplayer
                     return true;
                 }
 
-                if (string.Equals(MatchmakerStatus, "CANCELLED", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(MatchmakerStatus, "CANCELLED", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(MatchmakerStatus, "EXPIRED", StringComparison.OrdinalIgnoreCase))
                     return Fail("MATCHMAKING CANCELLED");
 
                 await Task.Delay(PollIntervalMilliseconds);
@@ -219,7 +241,8 @@ namespace Alterverse.Multiplayer
             {
                 if (generation != waitGeneration)
                 {
-                    CoopNetworkBootstrap.CancelDedicatedConnection();
+                    // The cancelling owner already stopped its attempt. A newer search may now
+                    // own the transport, so this old waiter must not shut that connection down.
                     return false;
                 }
 
@@ -249,11 +272,13 @@ namespace Alterverse.Multiplayer
                 return null;
             }
 
+            int generation = membershipGeneration;
             string url = ApiUrl.TrimEnd('/') + path;
             string json = body == null ? null : JsonUtility.ToJson(body);
 
             for (int attempt = 0; attempt < MaxRequestAttempts; attempt++)
             {
+                if (generation != membershipGeneration) return null;
                 using (UnityWebRequest request = new UnityWebRequest(url, method))
                 {
                     request.downloadHandler = new DownloadHandlerBuffer();
@@ -273,22 +298,23 @@ namespace Alterverse.Multiplayer
                         string text = request.downloadHandler?.text ?? "";
                         if (string.IsNullOrWhiteSpace(text))
                         {
-                            Fail("EDGEGAP RETURNED AN EMPTY RESPONSE");
+                            if (generation == membershipGeneration) Fail("EDGEGAP RETURNED AN EMPTY RESPONSE");
                             return null;
                         }
 
                         try
                         {
-                            LastError = "";
+                            if (generation == membershipGeneration) LastError = "";
                             return JsonUtility.FromJson<MemberResponse>(text);
                         }
                         catch (Exception ex)
                         {
-                            Fail("COULD NOT PARSE EDGEGAP RESPONSE: " + ex.Message);
+                            if (generation == membershipGeneration) Fail("COULD NOT PARSE EDGEGAP RESPONSE: " + ex.Message);
                             return null;
                         }
                     }
 
+                    if (generation != membershipGeneration) return null;
                     if (!ShouldRetry(request, code) || attempt == MaxRequestAttempts - 1)
                     {
                         ReportRequestFailure(request, code);
@@ -302,12 +328,13 @@ namespace Alterverse.Multiplayer
             return null;
         }
 
-        private async Task<bool> SendNoContentAsync(string method, string path)
+        private async Task<bool> SendNoContentAsync(string method, string path, bool reportErrors = true)
         {
             string token = ResolveAuthToken();
             if (string.IsNullOrWhiteSpace(token))
-                return Fail("EDGEGAP MATCHMAKER TOKEN NOT CONFIGURED");
+                return reportErrors && Fail("EDGEGAP MATCHMAKER TOKEN NOT CONFIGURED");
 
+            int generation = membershipGeneration;
             string url = ApiUrl.TrimEnd('/') + path;
             for (int attempt = 0; attempt < MaxRequestAttempts; attempt++)
             {
@@ -319,15 +346,15 @@ namespace Alterverse.Multiplayer
                     while (!operation.isDone) await Task.Yield();
 
                     long code = request.responseCode;
-                    if (request.result == UnityWebRequest.Result.Success && code >= 200 && code < 300)
+                    if ((request.result == UnityWebRequest.Result.Success && code >= 200 && code < 300) || code == 404 || code == 410)
                     {
-                        LastError = "";
+                        if (reportErrors && generation == membershipGeneration) LastError = "";
                         return true;
                     }
 
                     if (!ShouldRetry(request, code) || attempt == MaxRequestAttempts - 1)
                     {
-                        ReportRequestFailure(request, code);
+                        if (reportErrors && generation == membershipGeneration) ReportRequestFailure(request, code);
                         return false;
                     }
                 }
