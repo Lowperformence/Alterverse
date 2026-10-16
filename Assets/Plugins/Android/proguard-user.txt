@@ -1,0 +1,24 @@
+# Public Java APIs called from C#/IL2CPP through JNI cannot be discovered by R8's
+# Java call graph. Keep their names and entry points; allow body optimization.
+# Unity's generated proguard-unity.txt and dependency consumer rules still apply.
+
+# Google Play Games Unity 2.2.1 Java bridge and game service APIs.
+-keep,allowoptimization class com.google.games.bridge.** { *; }
+-keep,allowoptimization class com.google.android.gms.games.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.tasks.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.common.api.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.common.ConnectionResult { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.common.GooglePlayServicesUtil { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.common.data.DataBufferUtils { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.signin.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.dynamic.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.dynamite.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.security.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.base.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.actions.** { public *; protected *; }
+-keep,allowoptimization class com.google.android.gms.nearby.** { public *; protected *; }
+
+# Unity IAP 5.4.3 calls the BillingClient API and its response/listener interfaces
+# directly over JNI. Internal billing implementation packages remain optimizable.
+-keep,allowoptimization class com.android.billingclient.api.** { public *; protected *; }
+-keep,allowoptimization interface com.unity.purchasing.common.IUnityCallback { *; }

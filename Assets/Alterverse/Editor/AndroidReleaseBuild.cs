@@ -23,6 +23,7 @@ namespace Alterverse.EditorChecks
             {
                 const BuildOptions debugOptions=BuildOptions.AllowDebugging|BuildOptions.ConnectWithProfiler|BuildOptions.EnableDeepProfilingSupport;
                 if((report.summary.options&debugOptions)!=0)throw new BuildFailedException("Release bundle must not enable script debugging or profiler connection.");
+                AndroidR8Optimization.ApplySettings();
                 Validate();
             }
         }
@@ -41,6 +42,7 @@ namespace Alterverse.EditorChecks
             if(string.IsNullOrWhiteSpace(PlayerSettings.bundleVersion))errors.Add("Set a visible app version before uploading.");
             if(PlayerSettings.Android.bundleVersionCode<1)errors.Add("Set a positive, unused version code before uploading.");
             if((int)PlayerSettings.Android.minSdkVersion<26)errors.Add("Minimum Android SDK must remain API 26 or newer for this release profile.");
+            AndroidR8Optimization.AddValidationErrors(errors);
 
             if(PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android))
                 errors.Add("Disable automatic Android Graphics APIs so the release always keeps the OpenGL ES 3 fallback.");
@@ -115,6 +117,7 @@ namespace Alterverse.EditorChecks
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARM64;
             ApplyDeviceCompatibilitySettings();
+            AndroidR8Optimization.ApplySettings();
             AssetDatabase.SaveAssets();
             Debug.Log("DIMENSIONS FRONT: release-safe Android build flags applied. Running upload preflight...");
             Validate();
@@ -144,6 +147,7 @@ namespace Alterverse.EditorChecks
             EditorUserBuildSettings.connectProfiler=false;
             EditorUserBuildSettings.buildWithDeepProfilingSupport=false;
             ApplyDeviceCompatibilitySettings();
+            AndroidR8Optimization.ApplySettings();
             AssetDatabase.SaveAssets();
             Validate();
 
