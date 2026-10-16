@@ -49,6 +49,9 @@ namespace Alterverse.UI
                 Texture2D art=heroIcon!=null?heroIcon:atlas;
                 image.texture=art;
                 image.raycastTarget=false;
+                // Shader multiplies the icon/frame alpha by this tint. Child
+                // cooldown text keeps its own fully opaque color.
+                image.color=new Color(1f,1f,1f,CombatHudLayout.AttackIconOpacity);
                 materials[i]=new Material(template){name="Ability HUD material "+i};
                 // Keep RawImage and shader material explicitly bound to the same atlas texture.
                 materials[i].mainTexture=art;
@@ -115,18 +118,17 @@ namespace Alterverse.UI
             for(int i=0;i<5;i++)
             {
                 Rect hit=layout.Action(i);
-                // Ultimate is no longer shrunk to 64 px; its whole 84 px footprint stays inside its hit area.
-                float size=(i==3?84:Mathf.Min(hit.width,hit.height)-4)*layout.Scale;
+                float size=(i==3?hit.width:Mathf.Min(hit.width,hit.height)-4*CombatHudLayout.ControlScale)*layout.Scale;
                 faces[i].sizeDelta=new Vector2(size,size);
                 faces[i].anchoredPosition=new Vector2(layout.Safe.x+hit.center.x*layout.Scale,
                     -(Screen.height-layout.Safe.yMax+hit.center.y*layout.Scale));
-                numbers[i].fontSize=Mathf.Max(12,Mathf.RoundToInt((i==3?24:23)*layout.Scale));
+                numbers[i].fontSize=Mathf.Max(12,Mathf.RoundToInt((i==3?24:23)*CombatHudLayout.ControlScale*layout.Scale));
             }
             Rect ult=layout.Action(3);
-            ultimateLabel.rectTransform.sizeDelta=new Vector2(ult.width*layout.Scale,18*layout.Scale);
+            ultimateLabel.rectTransform.sizeDelta=new Vector2(ult.width*layout.Scale,18*CombatHudLayout.ControlScale*layout.Scale);
             ultimateLabel.rectTransform.anchoredPosition=new Vector2(layout.Safe.x+ult.center.x*layout.Scale,
-                -(Screen.height-layout.Safe.yMax+(ult.y-12)*layout.Scale));
-            ultimateLabel.fontSize=Mathf.Max(9,Mathf.RoundToInt(11*layout.Scale));
+                -(Screen.height-layout.Safe.yMax+(ult.y-12*CombatHudLayout.ControlScale)*layout.Scale));
+            ultimateLabel.fontSize=Mathf.Max(9,Mathf.RoundToInt(11*CombatHudLayout.ControlScale*layout.Scale));
         }
 
         public void SetState(int slot,float remaining,float duration,bool unavailable,bool held,float pressAge)

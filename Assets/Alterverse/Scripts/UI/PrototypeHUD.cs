@@ -134,7 +134,7 @@ namespace Alterverse.UI
                 if(touch.phase==UnityEngine.InputSystem.TouchPhase.Began)
                 {
                     if(layout.Hit(point)<0&&joystickFinger<0&&layout.MoveCapture.Contains(point))
-                    {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));joystickKnob=joystickCenter;}
+                    {joystickFinger=touch.touchId;joystickOrigin=point;joystickCenter=layout.JoystickCenter(point);joystickKnob=joystickCenter;}
                 }
                 if(touch.touchId==joystickFinger)
                 {
@@ -190,7 +190,7 @@ namespace Alterverse.UI
                 {
                     mouseJoystick=true;
                     joystickOrigin=point;
-                    joystickCenter=new Vector2(Mathf.Clamp(point.x,Radius+12,layout.Width-Radius-12),Mathf.Clamp(point.y,Radius+12,layout.Height-Radius-12));
+                    joystickCenter=layout.JoystickCenter(point);
                     joystickKnob=joystickCenter;
                 }
             }
@@ -364,13 +364,18 @@ namespace Alterverse.UI
             {
                 if(Time.unscaledTime<feedbackUntil)
                 {
-                    Rect message=new Rect(layout.Width-410,layout.Height-290,390,28);
+                    Rect message=new Rect(layout.Width-410,layout.Action(2).y-54,390,28);
                     theme.Panel(message);theme.Label(message,feedback,centered);
                 }
                 return;
             }
             if(!Alterverse.AI.BotDifficultySettings.ShowHoldAttackHelp)return;
-            Rect r=new Rect(layout.Width-418,layout.Height-386,394,130);theme.Panel(r);
+            Rect r=new Rect(layout.Width-418,layout.Action(2).y-150,394,130);
+            // Short landscape displays have less room above the enlarged cluster.
+            // Place help beside it so it cannot obscure a button or CANCEL.
+            if(r.y<layout.CancelZone.yMax+12)
+            {r.x=layout.Action(3).x-r.width-24;r.y=layout.CancelZone.yMax+12;}
+            theme.Panel(r);
             theme.Label(new Rect(r.x+12,r.y+6,r.width-24,24),names[inspectedSlot],theme.Button);
             theme.Label(new Rect(r.x+14,r.y+34,r.width-28,42),descriptions[inspectedSlot],small);
             string detail=glyphs[inspectedSlot]==CombatGlyph.Dash?"DRAG TO CHOOSE DIRECTION · COLLISION MAY SHORTEN":details[inspectedSlot];
@@ -386,5 +391,3 @@ namespace Alterverse.UI
         }
     }
 }
-
-
