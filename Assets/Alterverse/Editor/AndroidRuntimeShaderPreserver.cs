@@ -10,8 +10,8 @@ namespace Alterverse.EditorChecks
     /// <summary>
     /// Procedural visuals resolve URP shaders with Shader.Find at runtime. Unity can strip
     /// shaders that are not referenced by serialized scene/material assets, which turns
-    /// those objects magenta in Android players. Keep the two runtime shader families used
-    /// by DIMENSIONS FRONT in Android release builds.
+    /// those objects magenta in Android players. Dedicated arena construction also creates
+    /// materials before the match can launch, even with -nographics. Keep its runtime shaders.
     /// </summary>
     public sealed class AndroidRuntimeShaderPreserver : IPreprocessBuildWithReport
     {
@@ -51,13 +51,15 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Release/Ensure Android runtime shaders")]
         public static void EnsureFromMenu()=>EnsureRequiredShaders(true);
 
-        private static void EnsureRequiredShaders(bool failIfMissing)
+        public static void EnsureForDedicatedServer()=>EnsureRequiredShaders(true,"dedicated server");
+
+        private static void EnsureRequiredShaders(bool failIfMissing,string buildKind="Android")
         {
             GraphicsSettings settings=AssetDatabase.LoadAssetAtPath<GraphicsSettings>("ProjectSettings/GraphicsSettings.asset");
             if(settings==null)
             {
                 if(failIfMissing)throw new BuildFailedException("GraphicsSettings.asset could not be loaded.");
-                Debug.LogWarning("DIMENSIONS FRONT: GraphicsSettings.asset could not be loaded for Android shader preservation.");
+                Debug.LogWarning($"DIMENSIONS FRONT: GraphicsSettings.asset could not be loaded for {buildKind} shader preservation.");
                 return;
             }
 
@@ -75,7 +77,7 @@ namespace Alterverse.EditorChecks
                 Shader shader=Shader.Find(shaderName);
                 if(shader==null)
                 {
-                    string message="Required Android runtime shader is missing: "+shaderName;
+                    string message=$"Required {buildKind} runtime shader is missing: "+shaderName;
                     if(failIfMissing)throw new BuildFailedException(message);
                     Debug.LogWarning("DIMENSIONS FRONT: "+message);
                     continue;
@@ -101,8 +103,9 @@ namespace Alterverse.EditorChecks
             if(!changed)return;
             serialized.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
-            Debug.Log("DIMENSIONS FRONT: preserved URP Lit/Unlit and HeroEnergy shaders for procedural Android visuals.");
+            Debug.Log($"DIMENSIONS FRONT: preserved URP Lit/Unlit and HeroEnergy shaders for {buildKind} arena construction.");
         }
     }
 }
 #endif
+

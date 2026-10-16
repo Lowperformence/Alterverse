@@ -162,6 +162,41 @@ partial class Regression
   await Until(()=>!EdgegapOnlineFlow.Instance.IsSearching&&!EdgegapOnlineFlow.Instance.Busy,"expired search finishes cleanup");
   Check(deleted==1&&!EdgegapMatchmakerClient.Instance.HasMembership&&!party.IsLocked,"expired search cannot leave ghost membership or locked invites");
 
+  // Edgegap cannot delete a group after MATCH_FOUND (409); it removes it automatically.
+  // That terminal response must not strand a connected player's next search locally.
+  foreach(int code in new[]{409,404,410})
+  {
+   ResetLobby();var terminalClient=EdgegapMatchmakerClient.Instance;int deletes=0;
+   UnityWebRequest.Handler=r=>Reply(r,Membership("previous"));await terminalClient.CreateGroupAsync();
+   UnityWebRequest.Handler=r=>{deletes++;r.responseCode=code;return Reply(r,"group already matched or removed");};
+   Check(await terminalClient.CancelGroupAsync(),"terminal group cleanup succeeds for HTTP "+code);
+   Check(deletes==1&&!terminalClient.HasMembership&&terminalClient.MatchmakerStatus=="IDLE"&&terminalClient.LastError=="","terminal cleanup releases membership exactly once");
+  }
+  ResetLobby();party=Room(1);Put(OnlinePartyService.Instance,"session",party);
+  UnityWebRequest.Handler=r=>Reply(r,Membership("matched"));await EdgegapMatchmakerClient.Instance.CreateGroupAsync();
+  int replacementGroups=0;
+  UnityWebRequest.Handler=r=>{
+   if(r.method=="DELETE"){r.responseCode=409;return Reply(r,"group already matched");}
+   if(r.method=="POST")replacementGroups++;
+   if(r.method=="GET"){r.responseCode=410;return Reply(r,"expired");}
+   return Reply(r,Membership("replacement"));
+  };
+  Check(await EdgegapOnlineFlow.Instance.BeginSearchAsync()&&replacementGroups==1,"matched previous group no longer blocks the next search");
+  await Until(()=>!EdgegapOnlineFlow.Instance.IsSearching&&!EdgegapOnlineFlow.Instance.Busy,"replacement search cleanup");
+
+  // A permission failure is not an expired group; keep membership for a real retry.
+  foreach(int code in new[]{400,401,403})
+  {
+   ResetLobby();var rejectedClient=EdgegapMatchmakerClient.Instance;
+   UnityWebRequest.Handler=r=>Reply(r,Membership("retained"));await rejectedClient.CreateGroupAsync();
+   UnityWebRequest.Handler=r=>{r.responseCode=code;return Reply(r,"request rejected");};
+   Check(!await rejectedClient.CancelGroupAsync()&&rejectedClient.GroupId=="retained"&&rejectedClient.LastError.Contains(code.ToString()),"non-terminal cleanup failure remains visible for HTTP "+code);
+  }
+  ResetLobby();var guestClient=EdgegapMatchmakerClient.Instance;
+  UnityWebRequest.Handler=r=>Reply(r,Membership("friends","guest"));await guestClient.JoinGroupAsync("friends");
+  UnityWebRequest.Handler=r=>{r.responseCode=409;return Reply(r,"membership conflict");};
+  Check(!await guestClient.LeaveGroupAsync()&&guestClient.HasMembership,"group-delete exception does not mask unrelated member conflicts");
+
   // A stale ready response cannot replace a newer group after cancellation.
   ResetLobby();var client=EdgegapMatchmakerClient.Instance;UnityWebRequest readyRequest=null;var readyHeld=new UnityWebRequestAsyncOperation{isDone=false};
   UnityWebRequest.Handler=r=>r.method=="PATCH"?(readyRequest=r,readyHeld).Item2:Reply(r,Membership("old"));
@@ -326,3 +361,4 @@ partial class Regression
   Check(EdgegapOnlineFlow.Instance.LastError.Contains("READY"),"server readiness rejection remains visible");
  }
 }
+

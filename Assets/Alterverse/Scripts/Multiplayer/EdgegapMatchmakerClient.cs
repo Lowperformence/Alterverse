@@ -103,7 +103,8 @@ namespace Alterverse.Multiplayer
             if (generation != membershipGeneration)
             {
                 if (!string.IsNullOrWhiteSpace(response?.group_id))
-                    await SendNoContentAsync("DELETE", "/groups/" + UnityWebRequest.EscapeURL(response.group_id), false);
+                    await SendNoContentAsync("DELETE", "/groups/" + UnityWebRequest.EscapeURL(response.group_id), false,
+                        acceptMatchedGroupConflict: true);
                 return false;
             }
             return ApplyMembershipResponse(response, "GROUP CREATED");
@@ -181,6 +182,8 @@ namespace Alterverse.Multiplayer
         /// <summary>
         /// Cancels the whole Group Up group. This is used by the party leader before a host has
         /// been assigned, so abandoned searches do not remain queued until ticket expiration.
+        /// Edgegap returns 409 once a match is found; that group expires automatically and must
+        /// be released locally so a completed/failed handoff cannot block the next search.
         /// </summary>
         public async Task<bool> CancelGroupAsync()
         {
@@ -193,7 +196,7 @@ namespace Alterverse.Multiplayer
 
             int generation = ++membershipGeneration;
             string path = "/groups/" + UnityWebRequest.EscapeURL(GroupId);
-            bool success = await SendNoContentAsync("DELETE", path);
+            bool success = await SendNoContentAsync("DELETE", path, acceptMatchedGroupConflict: true);
             if (success && generation == membershipGeneration) ResetLocalState();
             return success;
         }
@@ -339,7 +342,8 @@ namespace Alterverse.Multiplayer
             return null;
         }
 
-        private async Task<bool> SendNoContentAsync(string method, string path, bool reportErrors = true)
+        private async Task<bool> SendNoContentAsync(string method, string path, bool reportErrors = true,
+            bool acceptMatchedGroupConflict = false)
         {
             string token = ResolveAuthToken();
             if (string.IsNullOrWhiteSpace(token))
@@ -357,7 +361,8 @@ namespace Alterverse.Multiplayer
                     while (!operation.isDone) await Task.Yield();
 
                     long code = request.responseCode;
-                    if ((request.result == UnityWebRequest.Result.Success && code >= 200 && code < 300) || code == 404 || code == 410)
+                    if ((request.result == UnityWebRequest.Result.Success && code >= 200 && code < 300) || code == 404 || code == 410 ||
+                        (acceptMatchedGroupConflict && method == "DELETE" && code == 409))
                     {
                         if (reportErrors && generation == membershipGeneration) LastError = "";
                         return true;
@@ -519,3 +524,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

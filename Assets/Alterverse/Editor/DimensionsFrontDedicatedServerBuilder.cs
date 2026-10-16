@@ -39,7 +39,21 @@ namespace Alterverse.EditorTools
             };
 
             Debug.Log($"DIMENSIONS FRONT SERVER BUILD: building {scenes.Length} scene(s) to {executablePath}");
-            BuildReport report=BuildPipeline.BuildPlayer(options);
+            // Arena builders currently create materials alongside authoritative colliders.
+            // Optional server optimizations strip every shader, making new Material(null)
+            // throw before bots spawn and the confirmed match-start packet is sent.
+            bool previousOptimizations=PlayerSettings.dedicatedServerOptimizations;
+            BuildReport report;
+            try
+            {
+                PlayerSettings.dedicatedServerOptimizations=false;
+                Alterverse.EditorChecks.AndroidRuntimeShaderPreserver.EnsureForDedicatedServer();
+                report=BuildPipeline.BuildPlayer(options);
+            }
+            finally
+            {
+                PlayerSettings.dedicatedServerOptimizations=previousOptimizations;
+            }
             BuildSummary summary=report.summary;
             if(summary.result!=BuildResult.Succeeded)
                 throw new InvalidOperationException($"Dedicated server build failed: {summary.result} ({summary.totalErrors} errors).");
@@ -76,3 +90,4 @@ namespace Alterverse.EditorTools
         }
     }
 }
+
