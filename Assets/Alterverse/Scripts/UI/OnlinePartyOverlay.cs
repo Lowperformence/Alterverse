@@ -17,6 +17,7 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private bool open;
         private string friendInviteCode = "";
+        private TouchScreenKeyboard inviteKeyboard;
         private const float ReferenceHeight = 720f;
         private const float ReferenceWidth = 1500f;
 
@@ -140,8 +141,33 @@ namespace Alterverse.UI
                 _ = online.CreatePrivatePartyAsync();
             theme.Label(new Rect(left + 54, 406, width - 108, 24),
                 "HAVE AN INVITE CODE?", theme.Small, true);
-            friendInviteCode = GUI.TextField(new Rect(left + 54, 439, width - 334, 48),
-                friendInviteCode ?? "", 16, theme.Field);
+            Rect inviteField = new Rect(left + 54, 439, width - 500, 48);
+            Event currentEvent = Event.current;
+            if (Application.isMobilePlatform && currentEvent != null &&
+                currentEvent.type == EventType.MouseDown && inviteField.Contains(currentEvent.mousePosition))
+            {
+                inviteKeyboard = TouchScreenKeyboard.Open(friendInviteCode ?? "",
+                    TouchScreenKeyboardType.Default, false, false, false, false);
+            }
+
+            friendInviteCode = GUI.TextField(inviteField, friendInviteCode ?? "", 64, theme.Field);
+            if (inviteKeyboard != null)
+            {
+                if (inviteKeyboard.status != TouchScreenKeyboard.Status.Canceled)
+                    friendInviteCode = inviteKeyboard.text ?? friendInviteCode;
+                if (inviteKeyboard.status == TouchScreenKeyboard.Status.Done ||
+                    inviteKeyboard.status == TouchScreenKeyboard.Status.Canceled)
+                    inviteKeyboard = null;
+            }
+
+            if (theme.Action(new Rect(left + width - 380, 439, 92, 48), "PASTE",
+                enabled: !busy && !string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)))
+            {
+                friendInviteCode = GUIUtility.systemCopyBuffer ?? "";
+                inviteKeyboard = null;
+                GUI.FocusControl(null);
+            }
+
             if (theme.Action(new Rect(left + width - 264, 439, 210, 48), "JOIN PARTY",
                 enabled: !busy && OnlinePartyService.NormalizeJoinCode(friendInviteCode).Length >= 4))
                 _ = online.JoinByCodeAsync(OnlinePartyService.NormalizeJoinCode(friendInviteCode));
@@ -154,19 +180,20 @@ namespace Alterverse.UI
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
             bool edgegapSearching = edgegap != null && edgegap.IsSearching;
+            bool matchFound = edgegapSearching && EdgegapMatchmakerClient.Instance?.HasAssignment == true;
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
 
             theme.Panel(new Rect(left + 26f, 150f, width - 52f, 84f));
             theme.Label(new Rect(left + 46f, 164f, 420f, 20f), "MATCH STATUS", theme.Small, true);
             theme.Label(new Rect(left + 46f, 188f, 420f, 30f),
-                edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARING MATCH", theme.Heading);
+                matchFound ? "CONNECTING TO MATCH" : edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARING MATCH", theme.Heading);
 
             theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
                 $"PLAYERS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
             theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
                 "4v4  •  AUTO TEAM FILL", theme.Small, true);
             theme.StatusBadge(new Rect(left + 758f, 176f, 198f, 26f),
-                edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
+                matchFound ? "MATCH FOUND" : edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
                 "LEAVE PARTY", enabled: !online.Busy))
@@ -268,16 +295,18 @@ namespace Alterverse.UI
 
             string partyState = online.HasHeroConflict
                 ? "CHOOSE DIFFERENT HEROES"
-                : edgegapSearching
-                    ? "FINDING OPPONENTS"
-                    : online.AllPresentPlayersReady
-                        ? "ALL FRIENDS READY • START MATCHMAKING"
-                        : "MATCH LOBBY • READY UP";
+                : matchFound
+                    ? "CONNECTING TO GAME SERVER"
+                    : edgegapSearching
+                        ? "FINDING OPPONENTS"
+                        : online.AllPresentPlayersReady
+                            ? "ALL FRIENDS READY • START MATCHMAKING"
+                            : "MATCH LOBBY • READY UP";
             theme.Label(new Rect(left + 48f, 470f, width - 560f, 26f), partyState, theme.Small, true);
             theme.Label(new Rect(left + 48f, 502f, width - 560f, 22f),
                 $"PARTY {online.PartyPlayerCount}/{online.PartyCapacity}  •  TWO TEAMS OF FOUR",
                 theme.Small, true);
-            theme.Label(new Rect(left + 48f, 532f, width - 560f, 20f),
+            theme.FitLabel(new Rect(left + 48f, 532f, width - 560f, 20f),
                 edgegap != null ? edgegap.Status : "CONNECTING TO MATCHMAKING...", theme.Small, true);
 
             string state;

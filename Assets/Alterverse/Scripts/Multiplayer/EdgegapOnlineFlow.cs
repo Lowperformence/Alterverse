@@ -21,6 +21,8 @@ namespace Alterverse.Multiplayer
         private const string CancelMessage = "DF_EDGEGAP_CANCEL_V1";
         private const float GroupBroadcastInterval = 1.0f;
         private const float FriendJoinTimeoutSeconds = 20f;
+        // Server allows 60s for assigned humans and 20s for plan acknowledgements.
+        private const float MatchStartTimeoutSeconds = 95f;
 
         public static EdgegapOnlineFlow Instance { get; private set; }
 
@@ -46,7 +48,25 @@ namespace Alterverse.Multiplayer
         public bool Busy => busy || joiningGroup || cleanupRunning;
         public bool CanCancelSearch => !cleanupRunning && (searching || busy || joiningGroup || EdgegapMatchmakerClient.Instance?.HasMembership == true);
         public bool IsSearching => searching;
-        public string Status => status;
+        public string Status
+        {
+            get
+            {
+                if (!searching || busy || joiningGroup || !string.IsNullOrEmpty(lastError)) return status;
+                EdgegapMatchmakerClient client = EdgegapMatchmakerClient.Instance;
+                if (client == null) return status;
+                if (client.HasAssignment)
+                    return client.MatchmakerStatus.StartsWith("DEDICATED SERVER CONNECTED", StringComparison.Ordinal)
+                        ? status : "MATCH FOUND • CONNECTING TO GAME SERVER";
+                switch (client.MatchmakerStatus)
+                {
+                    case "SEARCHING": return "SEARCHING FOR OPPONENTS";
+                    case "TEAM_FOUND": return "TEAM FOUND • WAITING FOR OPPONENTS";
+                    case "MATCH_FOUND": return "MATCH FOUND • STARTING GAME SERVER";
+                    default: return status;
+                }
+            }
+        }
         public string LastError => lastError;
         public string ActiveGroupId => activeGroupId;
 
@@ -447,7 +467,8 @@ namespace Alterverse.Multiplayer
 
                 if (!connected)
                 {
-                    string error = edgegap?.LastError ?? "EDGEGAP MATCH ASSIGNMENT FAILED";
+                    string error = !string.IsNullOrEmpty(edgegap?.LastError)
+                        ? edgegap.LastError : "EDGEGAP MATCH ASSIGNMENT FAILED";
                     if (searching)
                     {
                         await StopSearchAsync(error, true);
@@ -455,13 +476,45 @@ namespace Alterverse.Multiplayer
                     }
                     return;
                 }
-                SetStatus("DEDICATED SERVER CONNECTED • VERIFYING MATCH");
+                SetStatus("GAME SERVER CONNECTED • WAITING FOR MATCH START");
+                if (!await WaitForMatchStartAsync(generation) && generation == searchGeneration && searching)
+                {
+                    string error = lastError;
+                    await StopSearchAsync(error, true);
+                    Fail(error);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (generation != searchGeneration || !searching) return;
+                string error = "ONLINE MATCH START FAILED: " + ex.Message;
+                await StopSearchAsync(error, true);
+                Fail(error);
             }
             finally
             {
                 if (generation == searchGeneration) polling = false;
                 RaiseChanged();
             }
+        }
+
+        private async Task<bool> WaitForMatchStartAsync(int generation)
+        {
+            float deadline = Time.realtimeSinceStartup + MatchStartTimeoutSeconds;
+            while (generation == searchGeneration && searching)
+            {
+                if (CoopAuthority.Active) return true;
+                NetworkManager manager = CoopNetworkBootstrap.Manager;
+                if (manager == null || !manager.IsConnectedClient || manager.IsServer)
+                    return Fail("GAME SERVER DISCONNECTED BEFORE MATCH START • TRY AGAIN");
+                if (Time.realtimeSinceStartup >= deadline)
+                {
+                    Debug.LogWarning("DIMENSIONS FRONT ONLINE: match start timed out at " + DedicatedOnlineMatchHandshake.Status);
+                    return Fail("MATCH START TIMED OUT • TRY AGAIN");
+                }
+                await Task.Delay(250);
+            }
+            return false;
         }
 
         private async Task AbortSearchAfterPartyChangeAsync(string nextStatus, bool broadcastCancel)

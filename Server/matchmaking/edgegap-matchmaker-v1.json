@@ -29,6 +29,13 @@
               "min_team_size": 1,
               "max_team_size": 4
             }
+          },
+          "20": {
+            "match_size": {
+              "team_count": 1,
+              "min_team_size": 1,
+              "max_team_size": 4
+            }
           }
         }
       }
