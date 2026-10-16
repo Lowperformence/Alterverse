@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 21 adds Void Knight's shared metal/fabric surface maps.
+        // Version 22 clears incompatible cached normal bindings during the URP conversion.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 21;
+        public override uint GetVersion() => 22;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -61,7 +61,17 @@ namespace Alterverse.EditorTools
             Shader shader = Shader.Find("Universal Render Pipeline/Lit");
             if (shader == null) return;
             Color color = material.HasProperty("_Color") ? material.GetColor("_Color") : material.color;
+            Texture normalMap=material.HasProperty("_BumpMap")?material.GetTexture("_BumpMap"):null;
+            if(normalMap!=null&&normalMap.dimension!=UnityEngine.Rendering.TextureDimension.Tex2D)normalMap=null;
             material.shader = shader;
+            // Explicitly replace the cached binding; changing a shader alone can
+            // retain a cubemap under this property name and fail during rendering.
+            material.SetTexture("_BumpMap",normalMap);
+            if(normalMap==null)
+            {
+                material.SetFloat("_BumpScale",0f);
+                material.DisableKeyword("_NORMALMAP");
+            }
             material.SetColor("_BaseColor", color);
             string name = material.name.ToLowerInvariant();
             bool metal = name.Contains("metal") || name.Contains("silver") || name.Contains("enamel");

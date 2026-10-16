@@ -70,9 +70,13 @@ namespace Alterverse.Visuals
             for(int i=0;i<materials.Length;i++)
             {
                 Material source=materials[i];
-                if(!NeedsRepair(source))continue;
-                Shader shader=PreferUnlit(renderer,source)?RuntimeShaderLibrary.Unlit:RuntimeShaderLibrary.Lit;
-                Material replacement=Replacement(source,shader);
+                Material replacement;
+                if(NeedsRepair(source))
+                {
+                    Shader shader=PreferUnlit(renderer,source)?RuntimeShaderLibrary.Unlit:RuntimeShaderLibrary.Lit;
+                    replacement=Replacement(source,shader);
+                }
+                else replacement=RepairInvalidNormalMap(source);
                 if(replacement==source)continue;
                 materials[i]=replacement;
                 RuntimeMaterialPalette.For(renderer.gameObject).OwnRepair(replacement);
@@ -91,6 +95,24 @@ namespace Alterverse.Visuals
                    shader.StartsWith("Legacy Shaders/")||
                    shader=="Unlit/Color"||
                    shader=="Unlit/Texture";
+        }
+
+        private static Material RepairInvalidNormalMap(Material source)
+        {
+            // A shader swap or cached model import can leave a cubemap in a 2D
+            // normal-map slot even when the URP shader itself is supported.
+            Shader shader=source.shader;
+            int property=shader.FindPropertyIndex("_BumpMap");
+            if(property<0||shader.GetPropertyType(property)!=ShaderPropertyType.Texture||
+               shader.GetPropertyTextureDimension(property)!=TextureDimension.Tex2D)return source;
+            Texture normal=source.GetTexture("_BumpMap");
+            if(normal==null||normal.dimension==TextureDimension.Tex2D)return source;
+            // Keep shared imported assets and every other material setting intact.
+            Material repaired=new Material(source){name=source.name+" [2D Normal Repair]"};
+            repaired.SetTexture("_BumpMap",null);
+            if(repaired.HasProperty("_BumpScale"))repaired.SetFloat("_BumpScale",0f);
+            repaired.DisableKeyword("_NORMALMAP");
+            return repaired;
         }
 
         private static bool PreferUnlit(Renderer renderer,Material material)
@@ -127,15 +149,30 @@ namespace Alterverse.Visuals
                 string map=source.HasProperty("_BaseMap")?"_BaseMap":source.HasProperty("_MainTex")?"_MainTex":null;
                 if(map!=null)
                 {
-                    replacement.SetTexture("_BaseMap",source.GetTexture(map));
-                    replacement.SetTextureScale("_BaseMap",source.GetTextureScale(map));
-                    replacement.SetTextureOffset("_BaseMap",source.GetTextureOffset(map));
+                    Texture texture=source.GetTexture(map);
+                    if(texture==null||texture.dimension==TextureDimension.Tex2D)
+                    {
+                        replacement.SetTexture("_BaseMap",texture);
+                        replacement.SetTextureScale("_BaseMap",source.GetTextureScale(map));
+                        replacement.SetTextureOffset("_BaseMap",source.GetTextureOffset(map));
+                    }
                 }
             }
             if(source!=null&&source.HasProperty("_BumpMap")&&replacement.HasProperty("_BumpMap"))
-                replacement.SetTexture("_BumpMap",source.GetTexture("_BumpMap"));
-            if(source!=null&&source.HasProperty("_BumpScale")&&replacement.HasProperty("_BumpScale"))
-                replacement.SetFloat("_BumpScale",source.GetFloat("_BumpScale"));
+            {
+                Texture normal=source.GetTexture("_BumpMap");
+                if(normal!=null&&normal.dimension==TextureDimension.Tex2D)
+                {
+                    replacement.SetTexture("_BumpMap",normal);
+                    replacement.SetTextureScale("_BumpMap",source.GetTextureScale("_BumpMap"));
+                    replacement.SetTextureOffset("_BumpMap",source.GetTextureOffset("_BumpMap"));
+                    if(source.HasProperty("_BumpScale")&&replacement.HasProperty("_BumpScale"))
+                        replacement.SetFloat("_BumpScale",source.GetFloat("_BumpScale"));
+                    if(replacement.HasProperty("_NormalEncoding"))
+                        replacement.SetFloat("_NormalEncoding",source.HasProperty("_NormalEncoding")?source.GetFloat("_NormalEncoding"):1f);
+                    replacement.EnableKeyword("_NORMALMAP");
+                }
+            }
 
             if(source!=null&&source.HasProperty("_EmissionColor")&&replacement.HasProperty("_EmissionColor"))
             {
