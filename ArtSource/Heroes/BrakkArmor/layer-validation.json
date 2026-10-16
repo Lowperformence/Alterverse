@@ -1,0 +1,178 @@
+{
+  "after": {
+    "revision": "brakk-armor-runtime-20261016",
+    "vertices": 68964,
+    "triangles": 53437,
+    "layer_samples": 882,
+    "missing_samples": 0,
+    "buried_samples": 0,
+    "minimum_layer_gap_metres": 0.003999471664428711,
+    "minimum_triangle_area": 1.557447316660555e-11,
+    "maximum_relative_solid_volume_error": 4.1886340297449574e-05,
+    "plates": {
+      "A01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "A02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "A03": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "B01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "B02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "C01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "C02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "C03": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "K01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "K02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "L01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "L02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "R01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "R02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "S01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "S02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "T01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "T02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      }
+    }
+  },
+  "unity_editor_executed": false,
+  "before": {
+    "revision": "brakk-armor-runtime-20261013",
+    "vertices": 34432,
+    "triangles": 17272,
+    "layer_samples": 882,
+    "missing_samples": 27,
+    "buried_samples": 119,
+    "minimum_layer_gap_metres": -0.03224372863769531,
+    "minimum_triangle_area": 1.1097039966703272e-08,
+    "maximum_relative_solid_volume_error": 0.0,
+    "plates": {
+      "A01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "A02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "A03": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "B01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "B02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "C01": {
+        "missing_samples": 9,
+        "buried_samples": 0
+      },
+      "C02": {
+        "missing_samples": 8,
+        "buried_samples": 1
+      },
+      "C03": {
+        "missing_samples": 0,
+        "buried_samples": 13
+      },
+      "K01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "K02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "L01": {
+        "missing_samples": 2,
+        "buried_samples": 12
+      },
+      "L02": {
+        "missing_samples": 2,
+        "buried_samples": 17
+      },
+      "R01": {
+        "missing_samples": 0,
+        "buried_samples": 17
+      },
+      "R02": {
+        "missing_samples": 0,
+        "buried_samples": 12
+      },
+      "S01": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "S02": {
+        "missing_samples": 0,
+        "buried_samples": 0
+      },
+      "T01": {
+        "missing_samples": 3,
+        "buried_samples": 14
+      },
+      "T02": {
+        "missing_samples": 3,
+        "buried_samples": 33
+      }
+    }
+  },
+  "animation": {
+    "poses": 27,
+    "sampled_vertices_per_pose": 378,
+    "maximum_attachment_error_metres": 2.421152116249788e-07
+  }
+}

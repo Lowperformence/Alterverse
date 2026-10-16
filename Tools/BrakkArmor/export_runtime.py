@@ -61,9 +61,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fit_surface import conform
 catalogue = json.loads((ART/'catalogue.json').read_text())
 conform(data, catalogue['plates'], bpy.data.objects['DF_Anatomy'])
-assert len(boneIndices) == len(vertices)//3
-assert all(math.isfinite(x) for x in vertices+normals+uv)
-assert all(0 <= i < len(vertices)//3 for s in submeshes for i in s['triangles'])
+assert len(data['boneIndices']) == len(data['vertices'])//3
+assert all(math.isfinite(x) for key in ['vertices','normals','uv'] for x in data[key])
+assert all(0 <= i < len(data['vertices'])//3 for s in data['submeshes'] for i in s['triangles'])
 RES.mkdir(parents=True,exist_ok=True)
 resource = RES/'Model.bytes'
 resource.write_bytes(gzip.compress(json.dumps(data,separators=(',',':')).encode(),mtime=0))
@@ -72,10 +72,9 @@ catalogue['armorIntegratedIntoGame'] = True
 catalogue['armorRuntimeResource'] = 'Assets/Alterverse/Resources/BrakkArmor/Model.bytes'
 (ART/'catalogue.json').write_text(json.dumps(catalogue,indent=2)+'\n')
 validation = json.loads((ART/'validation.json').read_text())
-validation.update(armorRuntimeIntegrated=True,armorVertices=len(vertices)//3,
-                  armorTriangles=sum(len(s['triangles'])//3 for s in submeshes),
+validation.update(armorRuntimeIntegrated=True,armorVertices=len(data['vertices'])//3,
+                  armorTriangles=sum(len(s['triangles'])//3 for s in data['submeshes']),
                   armorRuntimeSha256=hashlib.sha256(resource.read_bytes()).hexdigest())
 validation['checks'].update(finiteArmorGeometry=True,validArmorIndices=True,rigidExistingArmorBoneWeights=True)
 (ART/'validation.json').write_text(json.dumps(validation,indent=2)+'\n')
-print('ARMOR_RESOURCE_EXPORTED',len(parts),'parts',len(groups),'plates',len(vertices)//3,'vertices',flush=True)
-
+print('ARMOR_RESOURCE_EXPORTED',len(data['parts']),'parts',len(groups),'plates',len(data['vertices'])//3,'vertices',flush=True)

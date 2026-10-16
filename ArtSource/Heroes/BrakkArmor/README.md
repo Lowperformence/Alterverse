@@ -80,3 +80,11 @@ auf korrekte Knochenbindung geprüft. Quellgeometrie, Indexdaten
 und Gewichte wurden geprüft. Die eigenständigen Dateien werden nach dem Export
 separat geöffnet und kontrolliert. Eine Prüfung im Unity Editor oder auf Android
 ist hier nicht durchgeführt; der PDF-Katalog zeigt Blender-Daten.
+
+## Runtime layer repair (2026-10-16)
+
+The current runtime rebuild uses one shared contour triangulation per module.
+This fixes the missing/buried chest and thigh insets caused by projecting each
+layer independently. The original editable part models remain unchanged. See
+`Docs/BrakkArmorLayers.md` and `layer-validation.json` for reproduction and results.
+The studio runtime preview displays only armor; it is not a Unity screenshot.

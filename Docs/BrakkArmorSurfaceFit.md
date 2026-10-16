@@ -26,3 +26,10 @@ The regression now tests the actual fitted resource through Blender's armature
 modifier. A Unity Editor is not available in the repair environment; confirm
 walking, turning and attacks in Play Mode after pulling `dev/vertical-slice`.
 Exit Play Mode before updating so the static geometry cache is reloaded.
+
+## Superseded triangulation
+
+The v1 distance-only repair described above still allowed individual armor layers
+to cross and hide one another. The current runtime uses the shared layered
+triangulation in [BrakkArmorLayers.md](BrakkArmorLayers.md). The numerical body
+distance results above are historical and were not rerun for the new revision.

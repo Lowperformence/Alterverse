@@ -26,7 +26,7 @@ namespace Alterverse.Visuals
             public Submesh[] submeshes;
             public Surface[] materials;
         }
-        const string Revision = "brakk-armor-runtime-20261013";
+        const string Revision = "brakk-armor-runtime-20261016";
         static Geometry cached;
         Mesh mesh;
         GameObject armor;

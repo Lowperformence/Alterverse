@@ -25,7 +25,7 @@ assert all(0 <= i < count for sub in data['submeshes'] for i in sub['triangles']
 samples = []
 for part in data['parts']:
     ob = bpy.data.objects['BRK_'+part['id']]
-    if data.get('surfaceFit') == 'connected-anatomy-contour-v1':
+    if data.get('surfaceFit') in ['connected-anatomy-contour-v1', 'layered-height-field-v2']:
         # The editable concept is planar; validate the actual shipped contour
         # through Blender's armature modifier rather than the old concept mesh.
         first = part['firstVertex']
@@ -131,4 +131,3 @@ report['checks'].update(armorAnimationSamples=poses,maxArmorAttachmentErrorMetre
 (ART/'validation.json').write_text(json.dumps(report,indent=2)+'\n')
 print('ARMOR_RUNTIME_VALIDATED',count,'vertices',poses,'poses',worst,'max error',
       len(removed),'old torso faces removed',flush=True)
-

@@ -56,6 +56,19 @@ def skin_surface(body):
 
 
 def conform(data, plates, body):
+    # Rebuild from the closed authored solids: deforming only the existing
+    # outline vertices leaves long interior triangles crossing adjacent layers.
+    # The recovered support field is shared by mount, liner, shell and inset.
+    profile_path = ROOT / 'ArtSource/Heroes/BrakkArmor/surface-profiles.json'
+    if profile_path.exists():
+        if data.get('surfaceFit') == 'layered-height-field-v2':
+            return data
+        from plate_surface import rebuild
+        diagrams = json.loads((profile_path.parent / 'diagram-geometry.json').read_text())
+        profiles = json.loads(profile_path.read_text())['profiles']
+        rebuilt = rebuild(data, diagrams, profiles)
+        data.clear(); data.update(rebuilt)
+        return data
     if data.get('surfaceFit') == 'connected-anatomy-contour-v1':
         return data
     tree = skin_surface(body)
