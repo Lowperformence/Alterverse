@@ -17,6 +17,7 @@ namespace Alterverse.UI
         private FrontEndTheme theme;
         private bool open;
         private string friendInviteCode = "";
+        private TouchScreenKeyboard inviteKeyboard;
         private const float ReferenceHeight = 720f;
         private const float ReferenceWidth = 1500f;
 
@@ -140,8 +141,33 @@ namespace Alterverse.UI
                 _ = online.CreatePrivatePartyAsync();
             theme.Label(new Rect(left + 54, 406, width - 108, 24),
                 "HAVE AN INVITE CODE?", theme.Small, true);
-            friendInviteCode = GUI.TextField(new Rect(left + 54, 439, width - 334, 48),
-                friendInviteCode ?? "", 16, theme.Field);
+            Rect inviteField = new Rect(left + 54, 439, width - 500, 48);
+            Event currentEvent = Event.current;
+            if (Application.isMobilePlatform && currentEvent != null &&
+                currentEvent.type == EventType.MouseDown && inviteField.Contains(currentEvent.mousePosition))
+            {
+                inviteKeyboard = TouchScreenKeyboard.Open(friendInviteCode ?? "",
+                    TouchScreenKeyboardType.Default, false, false, false, false);
+            }
+
+            friendInviteCode = GUI.TextField(inviteField, friendInviteCode ?? "", 64, theme.Field);
+            if (inviteKeyboard != null)
+            {
+                if (inviteKeyboard.status != TouchScreenKeyboard.Status.Canceled)
+                    friendInviteCode = inviteKeyboard.text ?? friendInviteCode;
+                if (inviteKeyboard.status == TouchScreenKeyboard.Status.Done ||
+                    inviteKeyboard.status == TouchScreenKeyboard.Status.Canceled)
+                    inviteKeyboard = null;
+            }
+
+            if (theme.Action(new Rect(left + width - 380, 439, 92, 48), "PASTE",
+                enabled: !busy && !string.IsNullOrEmpty(GUIUtility.systemCopyBuffer)))
+            {
+                friendInviteCode = GUIUtility.systemCopyBuffer ?? "";
+                inviteKeyboard = null;
+                GUI.FocusControl(null);
+            }
+
             if (theme.Action(new Rect(left + width - 264, 439, 210, 48), "JOIN PARTY",
                 enabled: !busy && OnlinePartyService.NormalizeJoinCode(friendInviteCode).Length >= 4))
                 _ = online.JoinByCodeAsync(OnlinePartyService.NormalizeJoinCode(friendInviteCode));
