@@ -32,6 +32,8 @@ namespace Alterverse.Multiplayer
         private string status = "ONLINE MATCH READY";
         private uint fingerprint;
         private int expectedHumans;
+        private float startedAt;
+        private const float PlanAckTimeoutSeconds=20f;
         private readonly HashSet<ulong> approvedClients = new();
         private readonly Dictionary<ulong, string> approvedPlayerIds = new();
 
@@ -69,8 +71,19 @@ namespace Alterverse.Multiplayer
 
             Attach(manager.CustomMessagingManager);
 
+            if (preparing && Time.unscaledTime-startedAt>=PlanAckTimeoutSeconds)
+            {
+                AbortPrepared("ONLINE PLAN CONFIRMATION TIMED OUT • READY UP TO RETRY");
+                return;
+            }
             if (manager.IsServer && preparing)
             {
+                if (online == null || !online.InParty || online.PlayerCount != expectedHumans ||
+                    manager.ConnectedClientsIds == null || manager.ConnectedClientsIds.Count < expectedHumans)
+                {
+                    AbortPrepared("PLAYER LEFT • ONLINE MATCH PREPARATION CANCELLED");
+                    return;
+                }
                 approvedClients.RemoveWhere(id => !IsConnected(manager, id));
                 TryCompleteHostHandshake(manager);
             }
@@ -100,6 +113,8 @@ namespace Alterverse.Multiplayer
         {
             OnlinePartyService online = OnlinePartyService.Instance;
             if (online == null || !online.InParty || !online.IsHost || online.Busy || preparing)
+                return false;
+            if (online.MatchmakingLocked || EdgegapOnlineFlow.Instance?.Busy == true || EdgegapOnlineFlow.Instance?.IsSearching == true)
                 return false;
             if (!online.AllPresentPlayersReady || online.HasHeroConflict)
             {
@@ -138,6 +153,7 @@ namespace Alterverse.Multiplayer
             approvedClients.Clear();
             approvedPlayerIds.Clear();
             preparing = true;
+            startedAt = Time.unscaledTime;
 
             if (expectedHumans <= 1)
             {
@@ -206,6 +222,7 @@ namespace Alterverse.Multiplayer
                 fingerprint = hostFingerprint;
                 expectedHumans = plan.HumanCount;
                 preparing = true;
+                startedAt = Time.unscaledTime;
                 status = "ONLINE MATCH PLAN VERIFIED";
             }
 
@@ -282,6 +299,14 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out uint hostFingerprint);
             if (protocol != ProtocolVersion || hostFingerprint != fingerprint) return;
             LaunchPrepared(false);
+        }
+
+        private void AbortPrepared(string reason)
+        {
+            preparing=false;
+            approvedClients.Clear();approvedPlayerIds.Clear();
+            CoopAuthority.ClearPrepared();
+            status=reason;
         }
 
         private void LaunchPrepared(bool localIsHost)

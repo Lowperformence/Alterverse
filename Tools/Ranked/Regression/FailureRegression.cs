@@ -284,6 +284,27 @@ partial class Regression
    Check(manager.ConnectedClientsIds.Count==MatchSession.MaxPlayers-1,"casual only evicts missing ACK");
    Check(CoopAuthority.PreparedPlan.Session.Mode==SessionMode.OnlineCasual&&CoopAuthority.PreparedPlan.HumanCount==MatchSession.MaxPlayers-1,"casual rebuild retains bot fill");return Task.CompletedTask;
   });
+  await Case("old ranked queue response cannot unlock a new search",async()=>
+  {
+   ResetFailures();var service=Component<RankedService>();Component<EdgegapMatchmakerClient>();
+   UnityWebRequest oldQueue=null,newQueue=null;
+   var oldPending=new UnityWebRequestAsyncOperation{isDone=false};var newPending=new UnityWebRequestAsyncOperation{isDone=false};
+   UnityWebRequest.Handler=r=>
+   {
+    if(r.url.EndsWith("/cancel"))return Reply(r,"{}");
+    if(r.Headers["Authorization"]=="Bearer jwt"){oldQueue=r;return oldPending;}
+    newQueue=r;return newPending;
+   };
+   var oldSearch=service.StartSearchAsync();
+   AuthenticationService.Instance.PlayerId="new-ranked-account";AuthenticationService.Instance.AccessToken="jwt-B";Invoke(service,"Update");
+   var newSearch=service.StartSearchAsync();
+   Check(oldQueue!=null&&newQueue!=null&&service.Busy,"new account queue request is pending");
+   oldQueue.downloadHandler.text="{\"fulfilled\":true,\"ranked\":{}}";oldPending.isDone=true;
+   await oldSearch;
+   Check(service.Busy&&service.Searching,"old search response cannot clear new queue's busy state");
+   var cancel=service.CancelAsync();newQueue.downloadHandler.text="{\"fulfilled\":true,\"ranked\":{}}";newPending.isDone=true;
+   await Task.WhenAll(newSearch,cancel);
+  });
   await Case("leaver receipt and retry",async()=>
   {
    foreach(bool longAbsence in new[]{false,true})

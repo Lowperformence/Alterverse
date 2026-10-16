@@ -141,7 +141,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> CreateLobbyAsync()
         {
-            if(busy)return false;
+            if(busy||RankedService.Instance?.Busy==true||RankedService.Instance?.Searching==true)return false;
             if(OnlinePartyService.Instance?.InParty==true || OnlinePartyService.Instance?.Busy==true ||
                 EdgegapOnlineFlow.Instance?.Busy==true || EdgegapOnlineFlow.Instance?.IsSearching==true)
             {
@@ -189,7 +189,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> JoinLobbyAsync(string rawCode)
         {
-            if(busy)return false;
+            if(busy||RankedService.Instance?.Busy==true||RankedService.Instance?.Searching==true)return false;
             if(OnlinePartyService.Instance?.InParty==true || OnlinePartyService.Instance?.Busy==true ||
                 EdgegapOnlineFlow.Instance?.Busy==true || EdgegapOnlineFlow.Instance?.IsSearching==true)
             {
@@ -254,7 +254,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> CycleLocalHeroAsync(int direction)
         {
-            if(session==null||busy)return false;
+            if(session==null||busy||!IsLobby)return false;
             HeroId current=LocalHero;
             int count=Enum.GetValues(typeof(HeroId)).Length;
             for(int step=1;step<=count;step++)
@@ -269,7 +269,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalHeroAsync(HeroId hero)
         {
-            if(session==null||busy||!Alterverse.Shop.HeroUnlockInventory.Owned(hero)||HeroUsedByOther(hero))return false;
+            if(session==null||busy||!IsLobby||!Alterverse.Shop.HeroUnlockInventory.Owned(hero)||HeroUsedByOther(hero))return false;
             try
             {
                 busy=true;lastError="";
@@ -289,7 +289,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> SetLocalReadyAsync(bool ready)
         {
-            if(session==null||busy)return false;
+            if(session==null||busy||!IsLobby)return false;
             if(ready&&HeroUsedByOther(LocalHero))
             {
                 lastError="Every co-op player must use a different hero.";
@@ -316,7 +316,7 @@ namespace Alterverse.Multiplayer
 
         public async Task<bool> CycleHostArenaAsync(int direction)
         {
-            if(session==null||!IsHost||busy)return false;
+            if(session==null||!IsHost||busy||!IsLobby)return false;
             ArenaShopItem[] items=ArenaShopCatalog.Items;
             if(items==null||items.Length==0)return false;
             int start=ArenaShopCatalog.IndexOf(LobbyArena);
@@ -346,14 +346,14 @@ namespace Alterverse.Multiplayer
 
         public Task<bool> SetHostArenaShuffleAsync(bool enabled)
         {
-            if(session==null||!IsHost||busy)return Task.FromResult(false);
+            if(session==null||!IsHost||busy||!IsLobby)return Task.FromResult(false);
             return SetHostSettingAsync(ArenaShuffleKey,enabled?"1":"0",
                 enabled?"ARENA SHUFFLE • RANDOM OWNED MAP":"ARENA SHUFFLE • OFF");
         }
 
         public async Task<bool> CycleHostDifficultyAsync(int direction)
         {
-            if(session==null||!IsHost||busy)return false;
+            if(session==null||!IsHost||busy||!IsLobby)return false;
             BotDifficulty next=BotDifficultySettings.Cycle(LobbyDifficulty,direction);
             return await SetHostSettingAsync(DifficultyKey,((int)next).ToString(CultureInfo.InvariantCulture),
                 "AI DIFFICULTY • "+BotDifficultySettings.Label(next).ToUpperInvariant());
@@ -836,6 +836,7 @@ namespace Alterverse.Multiplayer
                 return;
             }
             if(TryBuildMatchPlan(out CoopMatchPlan plan))CoopAuthority.Prepare(plan);
+            else CoopAuthority.ClearPrepared();
         }
 
         private void OnRemovedFromSession()

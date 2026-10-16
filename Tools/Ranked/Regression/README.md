@@ -1,5 +1,7 @@
 # Ranked production-code regression
 
+The invitation/lobby audit adds production co-op/online service and Edgegap-flow execution, plus the actual online menu-entry method extracted verbatim. `LobbyServiceStubs.cs` supplies controlled Unity Services sessions, and `LobbyRegression.cs` tests invitation codes, room capacity, readiness/staging, guest departure, cancellation, late HTTP responses, roster changes and Relay/dedicated transitions. Local result: **1,839 checks passed on .NET 8**. See `Docs/Invitations-Matchmaking-Audit-2026-10-16.md` for scope and live-test limits.
+
 The runner compiles production offline, co-op, Ranked, roster, handshake and UI classes against
 controlled engine, HTTP and NGO substitutes. No live service is accessed.
 

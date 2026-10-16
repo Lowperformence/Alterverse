@@ -169,7 +169,7 @@ namespace Alterverse.UI
                 edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
-                busy ? "PLEASE WAIT" : "LEAVE PARTY", enabled: !busy))
+                "LEAVE PARTY", enabled: !online.Busy))
             {
                 if (edgegap != null) _ = edgegap.LeavePartyAsync();
                 else _ = online.LeavePartyAsync();
@@ -208,7 +208,7 @@ namespace Alterverse.UI
 
                 if (member.IsLocal)
                 {
-                    bool editable = !busy && !edgegapSearching && !OnlinePlanHandshake.Preparing;
+                    bool editable = online.CanEditParty && !edgegapSearching;
                     if (theme.Action(new Rect(x + 8f, 382f, 32f, 34f), "<", enabled: editable))
                         _ = online.CycleLocalHeroAsync(-1);
                     if (theme.Action(new Rect(x + playerW - 40f, 382f, 32f, 34f), ">", enabled: editable))
@@ -235,7 +235,7 @@ namespace Alterverse.UI
             else if (edgegapSearching)
             {
                 searchText = "CANCEL SEARCH";
-                searchEnabled = !busy;
+                searchEnabled = edgegap.CanCancelSearch;
             }
             else if (online.HasHeroConflict)
             {
@@ -275,7 +275,7 @@ namespace Alterverse.UI
                         : "MATCH LOBBY • READY UP";
             theme.Label(new Rect(left + 48f, 470f, width - 560f, 26f), partyState, theme.Small, true);
             theme.Label(new Rect(left + 48f, 502f, width - 560f, 22f),
-                $"PARTY {online.PartyPlayerCount}/{online.PartyCapacity}  •  TWO TEAMS OF FIVE",
+                $"PARTY {online.PartyPlayerCount}/{online.PartyCapacity}  •  TWO TEAMS OF FOUR",
                 theme.Small, true);
             theme.Label(new Rect(left + 48f, 532f, width - 560f, 20f),
                 edgegap != null ? edgegap.Status : "CONNECTING TO MATCHMAKING...", theme.Small, true);
@@ -288,7 +288,7 @@ namespace Alterverse.UI
                 "FRIEND INVITE CODE  " + (online.JoinCode.Length > 0 ? online.JoinCode : "WAITING"),
                 theme.Body, true);
             if (theme.Action(new Rect(left + width - 225f, 578f, 195f, 40f),
-                "COPY INVITE CODE", enabled: online.JoinCode.Length > 0))
+                "COPY INVITE CODE", enabled: online.JoinCode.Length > 0 && !online.MatchmakingLocked))
                 GUIUtility.systemCopyBuffer = online.JoinCode;
             theme.FitLabel(new Rect(left + 28f, 630f, width - 56f, 24f),
                 state, theme.Small, true);
