@@ -67,6 +67,9 @@ namespace Alterverse.Combat
         }
 
         public static Health Select(GameObject actor, Vector3 direction, float range, float angle, bool ally = false, bool heroesOnly = false)
+            =>Select(actor,actor.transform.position,direction,range,angle,ally,heroesOnly);
+
+        public static Health Select(GameObject actor, Vector3 origin, Vector3 direction, float range, float angle, bool ally = false, bool heroesOnly = false)
         {
             Health best = null; float bestScore = float.MaxValue;
             TeamMember team = actor.GetComponent<TeamMember>();
@@ -84,9 +87,9 @@ namespace Alterverse.Combat
                         h.GetComponent<HeroIdentity>() == null) continue;
                 }
                 else if (!HeroCombatRules.Enemy(actor, h)) continue;
-                float distance = HeroCombatRules.TargetDistance(actor.transform.position, h);
+                float distance = HeroCombatRules.TargetDistance(origin, h);
                 if (distance > range) continue;
-                Vector3 delta = Flat(h.transform.position - actor.transform.position);
+                Vector3 delta = Flat(h.transform.position - origin);
                 float degrees = delta.sqrMagnitude > .0001f ? Vector3.Angle(Direction(direction), delta) : 0f;
                 if (degrees > angle) continue;
                 float score = degrees * 4f + distance + (h.GetComponent<HeroIdentity>() == null ? 1f : 0f);
@@ -143,4 +146,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

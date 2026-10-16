@@ -13,7 +13,7 @@ namespace Alterverse.Combat
         private struct Pending
         {
             public bool Active, Launched, Basic, Volley, Hook, HasAimPoint, TargetedBasic;
-            public Vector3 Direction, Point, LaunchOrigin, Position;
+            public Vector3 Direction, Point, ReleaseOrigin, LaunchOrigin, Position;
             public Health Target;
             public HeroAbilityExecution Execution;
             public AimSpec Spec;
@@ -94,7 +94,7 @@ namespace Alterverse.Combat
                     TargetedBasic = slot < 0 && spec.targetingMode == TargetingMode.AutoBasic && pose.Target != null,
                     Execution = execution, Volley = volley, Hook = identity.Hero == HeroId.Nerok && slot == 0,
                     Direction = spec.aimType == AimType.Melee && slot >= 0 ? pose.Direction : pose.CastDirection(transform.position),
-                    Point = pose.Point, HasAimPoint = pose.HasAimPoint, Spec = spec,
+                    Point = pose.Point, ReleaseOrigin = transform.position, HasAimPoint = pose.HasAimPoint, Spec = spec,
                     Target = spec.targetingMode == TargetingMode.Homing || slot < 0 && spec.targetingMode == TargetingMode.AutoBasic ? pose.Target : null, ReleaseAt = Time.time + windup };
                 hasPending = true;
                 if (!volley) HeroCombatAudio.Windup(gameObject, slot + 1);
@@ -281,6 +281,15 @@ namespace Alterverse.Combat
                 {
                     if (automatic) FaceBasicTarget(p);
                     if (Time.time < p.ReleaseAt) continue;
+                    // Empty manual cones remain open to entrants during anticipation.
+                    // Keep the released field in world space, then freeze one point at
+                    // launch. Already captured points and launched shots never retarget.
+                    if (!p.Basic && !p.HasAimPoint && p.Spec.targetingMode == TargetingMode.Cone)
+                    {
+                        Health entrant = AimGeometry.Select(gameObject, p.ReleaseOrigin, p.Direction,
+                            p.Spec.castRange, p.Spec.coneAngle * .5f);
+                        if (entrant != null) { p.Point = entrant.transform.position; p.HasAimPoint = true; }
+                    }
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
                     if (automatic)
                     {
@@ -347,3 +356,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

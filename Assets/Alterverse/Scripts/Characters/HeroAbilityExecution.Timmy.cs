@@ -47,7 +47,7 @@ namespace Alterverse.Characters
             timmyScratchPending=true;
             HeroCombatAudio.Windup(gameObject,4);
             if(target!=null)HeroSkillVfx.TargetWarning(gameObject,target,TimmyBalance.ScratchWindup);
-            StartCoroutine(TimmyScratch(target,jumpPoint,fieldOrigin,direction,aim,life));
+            StartCoroutine(TimmyScratch(target,jumpPoint,fieldOrigin,direction,aim,life,manuallyAimed));
             return true;
         }
 
@@ -56,14 +56,35 @@ namespace Alterverse.Characters
                 AimGeometry.Cone(origin,direction,target.transform.position,aim.castRange,aim.coneAngle);
 
         private bool TimmyScratchContact(Health target,int castLife)
+            =>TimmyScratchContact(target,castLife,out _);
+
+        private bool TimmyScratchContact(Health target,int castLife,out float fraction)
         {
+            fraction=1f;
             if(!TimmyScratchValid(target,castLife,false)||!SharkSight(target))return false;
-            if(HeroCombatRules.TargetDistance(transform.position,target)<=TimmyBalance.ScratchContactRange)return true;
             HeroLocomotion other=target.GetComponent<HeroLocomotion>();
-            float fraction;
-            return AimGeometry.Sweep(locomotion.FrameStartPosition,transform.position,
+            if(AimGeometry.Sweep(locomotion.FrameStartPosition,transform.position,
                 other!=null?other.FrameStartPosition:target.transform.position,target.transform.position,
-                TimmyBalance.ScratchContactRange,out fraction);
+                TimmyBalance.ScratchContactRange,out fraction))return true;
+            fraction=1f;
+            return HeroCombatRules.TargetDistance(transform.position,target)<=TimmyBalance.ScratchContactRange;
+        }
+
+        private Health TimmyScratchPathContact(Vector3 fieldOrigin,Vector3 fieldDirection,AimSpec aim,int castLife)
+        {
+            Health first=null;float earliest=float.MaxValue;
+            for(int i=0;i<Health.Active.Count;i++)
+            {
+                Health candidate=Health.Active[i];
+                if(!HeroCombatRules.Enemy(gameObject,candidate)||candidate.GetComponent<HeroIdentity>()==null||
+                    !TimmyScratchContact(candidate,castLife,out float fraction)||fraction>=earliest)continue;
+                HeroLocomotion other=candidate.GetComponent<HeroLocomotion>();
+                Vector3 contact=Vector3.Lerp(other!=null?other.FrameStartPosition:candidate.transform.position,
+                    candidate.transform.position,fraction);
+                if(!AimGeometry.Cone(fieldOrigin,fieldDirection,contact,aim.castRange,aim.coneAngle))continue;
+                first=candidate;earliest=fraction;
+            }
+            return first;
         }
 
         private bool TimmyScratchValid(Health target,int castLife,bool requireContact=true)
@@ -77,8 +98,12 @@ namespace Alterverse.Characters
                 (target.DamageGate==null||target.DamageGate())&&(!requireContact||SharkSight(target));
         }
 
-        private IEnumerator TimmyScratch(Health target,Vector3 jumpPoint,Vector3 fieldOrigin,Vector3 fieldDirection,AimSpec aim,int castLife)
+        private IEnumerator TimmyScratch(Health target,Vector3 jumpPoint,Vector3 fieldOrigin,Vector3 fieldDirection,AimSpec aim,int castLife,bool manuallyAimed)
         {
+            // An empty-field cast is still a physical attack: enemies can enter its
+            // fixed leap path later. A selected victim retains the existing dodge
+            // rules and must never be silently replaced after leaving the field.
+            bool freeFlight=target==null;
             float warningEnds=Time.time+TimmyBalance.ScratchWindup;
             while(Time.time<warningEnds)
             {
@@ -89,6 +114,13 @@ namespace Alterverse.Characters
             }
             if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))
             {EndTimmyScratch();yield break;}
+            if(freeFlight&&manuallyAimed)
+            {
+                // The displayed field also accepts heroes who enter during its warning.
+                // Movement taps stay directional; an earlier selected victim is never replaced.
+                Health entrant=AimGeometry.Select(gameObject,fieldOrigin,fieldDirection,aim.castRange,aim.coneAngle*.5f,heroesOnly:true);
+                if(entrant!=null&&SharkSight(entrant)){target=entrant;freeFlight=false;}
+            }
             Vector3 from=transform.position;
             // An enemy leaving acquisition range does not cancel the committed
             // leap. Continue in the chosen direction, without any target hit.
@@ -109,6 +141,7 @@ namespace Alterverse.Characters
                 if(castLife!=life||self.IsDead||!HeroCombatStatus.CanAct(gameObject))
                 {locomotion.ResetMotion();EndTimmyScratch();yield break;}
                 if(target!=null&&!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim))target=null;
+                if(freeFlight&&target==null)target=TimmyScratchPathContact(fieldOrigin,fieldDirection,aim,castLife);
                 if(TimmyScratchContact(target,castLife))
                 {connected=true;locomotion.ResetMotion();break;}
                 if(target!=null&&SharkSight(target))
@@ -123,6 +156,7 @@ namespace Alterverse.Characters
             }
             if(locomotion.IsDashing){locomotion.ResetMotion();EndTimmyScratch();yield break;}
             if(target!=null&&!TimmyScratchInField(target,fieldOrigin,fieldDirection,aim))target=null;
+            if(freeFlight&&target==null)target=TimmyScratchPathContact(fieldOrigin,fieldDirection,aim,castLife);
             if(!connected)connected=TimmyScratchContact(target,castLife);
             if(!connected&&Time.time+.000001f>=leapEnds&&TimmyScratchValid(target,castLife,false)&&SharkSight(target))
             {
@@ -173,4 +207,5 @@ namespace Alterverse.Characters
         }
     }
 }
+
 
