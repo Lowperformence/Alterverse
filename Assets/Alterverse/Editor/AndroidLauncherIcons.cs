@@ -13,21 +13,19 @@ namespace Alterverse.EditorChecks
         private const string Root = "Assets/Alterverse/Branding/";
         internal const string BackgroundPath = Root + "DimensionsFrontLauncherBackground.png";
         internal const string ForegroundPath = Root + "DimensionsFrontLauncherForeground.png";
-        internal const string LegacyPath = Root + "DimensionsFrontLauncherLegacy.png";
 
         [MenuItem("DIMENSIONS FRONT/Release/Repair Android launcher icons")]
         internal static void Apply()
         {
             Texture2D background = LoadRequired(BackgroundPath);
             Texture2D foreground = LoadRequired(ForegroundPath);
-            Texture2D legacy = LoadRequired(LegacyPath);
+            // Unity 6000.6 rejects Round and Legacy with CS0619. Android's
+            // adaptive icon is the supported launcher icon for this project.
             bool changed = SetKind(AndroidPlatformIconKind.Adaptive, background, foreground);
-            changed |= SetKind(AndroidPlatformIconKind.Round, legacy);
-            changed |= SetKind(AndroidPlatformIconKind.Legacy, legacy);
             if (changed)
             {
                 AssetDatabase.SaveAssets();
-                Debug.Log("DIMENSIONS FRONT: repaired all Android adaptive, round and legacy launcher icons.");
+                Debug.Log("DIMENSIONS FRONT: repaired both layers in all Android adaptive launcher icon slots.");
             }
         }
 
@@ -35,15 +33,12 @@ namespace Alterverse.EditorChecks
         {
             Texture2D background = AssetDatabase.LoadAssetAtPath<Texture2D>(BackgroundPath);
             Texture2D foreground = AssetDatabase.LoadAssetAtPath<Texture2D>(ForegroundPath);
-            Texture2D legacy = AssetDatabase.LoadAssetAtPath<Texture2D>(LegacyPath);
-            if (background == null || foreground == null || legacy == null)
+            if (background == null || foreground == null)
             {
-                errors.Add("Android launcher icon assets are missing from " + Root + ". Restore all three launcher textures.");
+                errors.Add("Android launcher icon assets are missing from " + Root + ". Restore both adaptive launcher textures.");
                 return;
             }
             CheckKind(errors, AndroidPlatformIconKind.Adaptive, background, foreground);
-            CheckKind(errors, AndroidPlatformIconKind.Round, legacy);
-            CheckKind(errors, AndroidPlatformIconKind.Legacy, legacy);
         }
 
         private static Texture2D LoadRequired(string path)
