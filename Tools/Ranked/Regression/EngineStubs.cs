@@ -49,7 +49,7 @@ namespace UnityEngine {
  public class RuntimeInitializeOnLoadMethodAttribute:Attribute {public RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType t){}}
  public enum RuntimeInitializeLoadType {BeforeSceneLoad,AfterSceneLoad}
  public static class Time {public static float unscaledTime,realtimeSinceStartup;}
- public static class Debug {public static void Log(object o){}public static void LogWarning(object o){}public static void LogError(object o){}}
+ public static class Debug {public static readonly List<string> Messages=new();public static void Log(object o){Messages.Add(o?.ToString()??"");}public static void LogWarning(object o){Log(o);}public static void LogError(object o){Log(o);}}
  public static class Mathf {public static int Clamp(int n,int lo,int hi)=>Math.Max(lo,Math.Min(hi,n));public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Clamp01(float a)=>Math.Max(0,Math.Min(1,a));}
  public struct Vector2 {}
  public struct Vector3 {public Vector3(float x,float y,float z){}public static Vector3 one=>new(); public static Vector3 operator*(Vector3 v,float f)=>v;}

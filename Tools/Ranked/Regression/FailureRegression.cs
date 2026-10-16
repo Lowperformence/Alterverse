@@ -11,6 +11,7 @@ using Alterverse.Match;
 using Alterverse.Profile;
 using Unity.Services.Authentication;
 using Unity.Netcode;
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 partial class Regression
@@ -74,6 +75,36 @@ partial class Regression
   }
   int failures=0;
   async Task Case(string name,Func<Task> run){try{await run();}catch(Exception e){failures++;Console.WriteLine("FAIL "+name+": "+e.GetBaseException().Message);}}
+  for(int humans=1;humans<=MatchSession.TeamSize;humans++)
+  await Case("single-party Casual dedicated start with "+humans,()=>
+  {
+   ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");
+   EdgegapInjectedMatchContext.AssignedTicketCount=humans;
+   var handshake=Component<DedicatedOnlineMatchHandshake>();
+   var manager=new NetworkManager{IsServer=true,IsListening=true};NetworkManager.Singleton=manager;
+   Put(handshake,"messaging",manager.CustomMessagingManager);
+   for(ulong id=1;id<=(ulong)humans;id++)
+   {
+    manager.ConnectedClientsIds.Add(id);string ticket="solo-"+id;
+    Invoke(handshake,"OnClientHello",id,new FastBufferReader(4,new FixedString128Bytes(ticket),
+     new FixedString128Bytes("friend-team"),new FixedString128Bytes("fixture-match"),
+     new FixedString128Bytes(ticket),new Unity.Collections.FixedString64Bytes("Player"),
+     (int)HeroId.Veyr,(int)BattleItemType.None,new Unity.Collections.FixedString4096Bytes("")));
+   }
+   Invoke(handshake,"UpdateDedicatedServer",manager);
+   var plan=(OnlineMatchPlan)CoopAuthority.PreparedPlan;
+   Check(plan!=null&&plan.HumanCount==humans&&plan.Session.IsFull,"one assigned team builds full 4v4 immediately");
+   int bots=0,enemyBots=0;
+   foreach(var slot in plan.Session.Slots){if(slot.IsBot)bots++;if(slot.Team==1&&slot.IsBot)enemyBots++;}
+   Check(bots==MatchSession.MaxPlayers-humans&&enemyBots==MatchSession.TeamSize,"solo/party gets exact allied bot fill and four enemy bots");
+   Check(!(bool)Get(handshake,"launched"),"server still waits for human plan acknowledgement");
+   uint fingerprint=(uint)Get(handshake,"planFingerprint");
+   for(ulong id=1;id<=(ulong)humans;id++)
+    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(4,true,fingerprint,new FixedString128Bytes("solo-"+id)));
+   Invoke(handshake,"UpdateDedicatedServer",manager);
+   Check((bool)Get(handshake,"launched"),"single human/party launches without opposing humans or phantom bot ACKs");
+   return Task.CompletedTask;
+  });
   await Case("two-player casual dedicated start",()=>
   {
    ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");

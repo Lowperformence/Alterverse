@@ -1,5 +1,7 @@
 # Online matchmaking investigation — 2026-10-16
 
+Follow-up: [authenticated live diagnosis and Solo rollout](Online-Live-Diagnosis-2026-10-16.md). The initial investigation below predates the single-team fallback and live hosting inspection.
+
 The reported symptom was two devices searching simultaneously on 15 October, with no match and no visible error. Source inspection identifies a reproducible client monitoring gap, but does not establish which stage those devices reached. No authenticated live Edgegap state, device logs, deployed game-server image, or installed Android version was available.
 
 ## When two players are sufficient

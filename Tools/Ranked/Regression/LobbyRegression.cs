@@ -48,7 +48,7 @@ partial class Regression
   while(!ready()&&DateTime.UtcNow<deadline)await Task.Delay(10);
   Check(ready(),reason);
  }
- static string Membership(string group="g1",string member="m1")=>"{\"group_id\":\""+group+"\",\"member_id\":\""+member+"\",\"ticket_id\":\"t1\",\"status\":\"SEARCHING\"}";
+ static string Membership(string group="g1",string member="m1")=>"{\"group_id\":\""+group+"\",\"member_id\":\""+member+"\",\"is_ready\":true,\"ticket_id\":\"t1\",\"status\":\"SEARCHING\"}";
 
  static async Task LobbyCases()
  {
@@ -300,5 +300,29 @@ partial class Regression
   Task faulted=(Task)progress.GetType().GetMethod("PollAssignmentAndConnectAsync",Flags).Invoke(progress,new object[]{0});
   await Finish(faulted,"unexpected poll failure cleanup");
   Check(!progress.IsSearching&&progress.LastError.Contains("fixture connection failure"),"unexpected poll exceptions are visible and release search");
+
+  ResetLobby();var diagnostics=EdgegapMatchmakerClient.Instance;Debug.Messages.Clear();
+  string response=Membership();UnityWebRequest.Handler=r=>Reply(r,response);
+  Check(await diagnostics.CreateGroupAsync(),"diagnostic membership created");
+  Check(Debug.Messages.Contains("DIMENSIONS FRONT ONLINE: SEARCHING"),"phase from real membership response reaches the console");
+  foreach(string phase in new[]{"TEAM_FOUND","MATCH_FOUND","SEARCHING"})
+  {
+   response=Membership().Replace("SEARCHING",phase);
+   int before=Debug.Messages.Count;
+   await diagnostics.RefreshMembershipAsync();
+   Check(Debug.Messages.Count==before+1,"actual response phase is logged once: "+phase);
+   int after=Debug.Messages.Count;await diagnostics.RefreshMembershipAsync();
+   Check(Debug.Messages.Count==after,"unchanged membership phase does not spam logs");
+  }
+
+  ResetLobby();var readinessParty=Room(1);Put(OnlinePartyService.Instance,"session",readinessParty);int readinessDeletes=0;
+  UnityWebRequest.Handler=r=>
+  {
+   if(r.method=="DELETE")readinessDeletes++;
+   return Reply(r,r.method=="PATCH"?Membership().Replace("\"is_ready\":true","\"is_ready\":false"):Membership());
+  };
+  Check(!await EdgegapOnlineFlow.Instance.BeginSearchAsync(),"unconfirmed ready response cannot start a silent search");
+  Check(readinessDeletes==1&&!readinessParty.IsLocked&&!EdgegapOnlineFlow.Instance.IsSearching,"unconfirmed ready cleans membership and unlocks invitations");
+  Check(EdgegapOnlineFlow.Instance.LastError.Contains("READY"),"server readiness rejection remains visible");
  }
 }

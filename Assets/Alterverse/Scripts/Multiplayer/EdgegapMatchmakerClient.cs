@@ -141,7 +141,13 @@ namespace Alterverse.Multiplayer
                 "PATCH",
                 MemberPath(),
                 new ReadyRequest { is_ready = ready });
-            return generation == membershipGeneration && ApplyMembershipResponse(response, ready ? "MATCHMAKING SEARCHING" : "MATCHMAKING NOT READY");
+            if (generation != membershipGeneration ||
+                !ApplyMembershipResponse(response, ready ? "MATCHMAKING SEARCHING" : "MATCHMAKING NOT READY"))
+                return false;
+            if (response.is_ready != ready)
+                return Fail(ready ? "MATCHMAKER DID NOT CONFIRM PLAYER READY • TRY AGAIN"
+                    : "MATCHMAKER DID NOT CONFIRM PLAYER NOT READY • TRY AGAIN");
+            return true;
         }
 
         public async Task<bool> RefreshMembershipAsync()
@@ -397,7 +403,6 @@ namespace Alterverse.Multiplayer
             if (!string.IsNullOrWhiteSpace(response.ticket_id)) TicketId = response.ticket_id;
             if (!string.IsNullOrWhiteSpace(response.team_id)) TeamId = response.team_id;
             if (!string.IsNullOrWhiteSpace(response.match_id)) MatchId = response.match_id;
-            if (!string.IsNullOrWhiteSpace(response.status)) MatchmakerStatus = response.status;
 
             Assignment assignment = response.assignment;
             if (assignment != null)
