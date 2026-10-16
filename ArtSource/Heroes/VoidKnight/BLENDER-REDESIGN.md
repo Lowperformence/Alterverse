@@ -31,6 +31,44 @@ Use closed low-poly meshes with baked two-segment bevels and consistent normals.
 
 Void Knight remains visible as a preview but unreleased. The authorized launch price is 1,600 shards, SKU `hero_void_knight`, persisted key `DF_HeroOwned_VoidKnight`. Purchase and match selection remain blocked until `VoidKnightReleased` and the server product availability are deliberately enabled together later.
 
-## Implemented result
+## V2 result (historical)
 
 214 separate source meshes, 26,832 runtime triangles, five materials and twelve original actions. Both complete hands (31 parts each) are scaled uniformly to 130% around the original palm centers, including fingers, thumbs, wrist covers and glove plates. Skeleton, sword and grip centers remain fixed. Every original bone matrix is identical across all 384 action frames; the two-hand grip span remains 0.38 m. 103 gameplay/release checks, 14 future-release purchase checks and 26 server commerce checks pass. Unity/NGO/Android validation is still a separate native step.
+
+## Current V3 result
+
+281 editable source parts, 17 individual openable Blender module scenes, 34,406 runtime
+triangles, five materials and the original twelve action names. Added layered shoulder and
+chest shells, helmet cheek panels, articulated trim, shaped palms, forged blade facets and
+four shared 512px metal/fabric maps. No extra runtime render objects are introduced.
+
+The sword is carried backward over the right shoulder during Idle/Run. The original contact
+poses and all non-arm bone matrices are retained. New preparation/recovery keys move between
+that stance and the authored strikes; arm scales stay at one. The fixed follow-through return
+avoids a displaced-hand artifact discovered during the first visual pass.
+
+Rebuild with Blender 5.0.1, in this order:
+
+```bash
+blender --background --python-exit-code 1 --python refine_void_knight.py
+blender --background --python-exit-code 1 --python export_modules.py
+blender --background --python-exit-code 1 --python export_void_knight.py
+blender --background --python-exit-code 1 --python validate_refinement.py
+blender --background --python-exit-code 1 --python validate_fbx.py
+blender --background --python-exit-code 1 --python validate_modules.py
+blender --background --python-exit-code 1 --python render_reference.py
+```
+
+Run commands from this source folder. The V3 builder first regenerates V2 from the frozen
+reference, then applies its repeatable refinement. `redesign_void_knight.py` is that V2 base,
+not the final V3 build command. `validate_redesign.py` routes V3 sources to the current checks.
+
+The standalone module files retain original fitting coordinates and bone bindings; they
+contain only their assembly and a rest rig, with packed maps. Their viewport is framed on
+the part when opened. The main file organizes all parts into the same named collections.
+Studio images in `Construction/` include front, side, rear, front-left, elevated gameplay
+view and strike/recovery/guard/thrust/cleave poses.
+
+Still verify Unity's URP materials and normal-map imports, both shop weapon colorways,
+grounded locomotion plus the shoulder pose, attacks, guards, camera views and Android GPU
+cost. The hero stays locked for release until explicitly enabled later.

@@ -13,9 +13,9 @@ namespace Alterverse.EditorTools
     {
         private const string Folder = "Assets/Alterverse/Resources/AuthoredHeroes/";
         private bool IsHero => assetPath.StartsWith(Folder, StringComparison.Ordinal) && assetPath.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase);
-        // Version 20 adds the refined Void Knight material hierarchy.
+        // Version 21 adds Void Knight's shared metal/fabric surface maps.
         // Changing AuthoredHeroDetailPass alone does not refresh imported FBX data.
-        public override uint GetVersion() => 20;
+        public override uint GetVersion() => 21;
         private void OnPostprocessModel(GameObject root)
         {
             if(!IsHero)return;
@@ -83,6 +83,20 @@ namespace Alterverse.EditorTools
                 {
                     material.EnableKeyword("_EMISSION");
                     material.SetColor("_EmissionColor",color*(name.Contains("core")?2.6f:2.2f));
+                }
+                else
+                {
+                    string surface=fabric?"Fabric":"Metal";
+                    string textureFolder=Folder+"VoidKnightTextures/VoidKnight"+surface;
+                    Texture2D albedo=AssetDatabase.LoadAssetAtPath<Texture2D>(textureFolder+"_Albedo.png");
+                    Texture2D normal=AssetDatabase.LoadAssetAtPath<Texture2D>(textureFolder+"_Normal.png");
+                    if(albedo!=null)material.SetTexture("_BaseMap",albedo);
+                    if(normal!=null)
+                    {
+                        material.SetTexture("_BumpMap",normal);
+                        material.SetFloat("_BumpScale",fabric?.25f:.22f);
+                        material.EnableKeyword("_NORMALMAP");
+                    }
                 }
             }
             if(Path.GetFileNameWithoutExtension(assetPath)=="Timmy"&&name.Contains("visor glass"))

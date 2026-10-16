@@ -22,6 +22,25 @@ namespace Alterverse.EditorTools
    Require(HeroUnlockCatalog.Purchasable(HeroId.VoidKnight)&&HeroUnlockCatalog.Price(HeroId.VoidKnight)==1600&&HeroUnlockCatalog.PurchaseSku(HeroId.VoidKnight)=="hero_void_knight"&&HeroUnlockCatalog.OwnedKey(HeroId.VoidKnight)=="DF_HeroOwned_VoidKnight","Knight's 1600-shard unlock mapping is incomplete.");
    var model=Resources.Load<GameObject>("AuthoredHeroes/VoidKnight");Require(model!=null,"Missing imported VoidKnight.fbx.");
    Require(model.GetComponentsInChildren<Renderer>(true).Any(r=>r.name=="DF_WeaponR"),"Greatsword renderer missing.");
+   var skins=model.GetComponentsInChildren<SkinnedMeshRenderer>(true);
+   Require(skins.Length==2&&skins.All(r=>r.sharedMesh!=null),"Expected two combined skinned meshes.");
+   Require(skins.Sum(r=>r.sharedMesh.triangles.Length/3)<=35000,"Knight exceeds the 35,000-triangle art budget.");
+   var materials=skins.SelectMany(r=>r.sharedMaterials).Where(m=>m!=null).Distinct().ToArray();
+   Require(materials.Length==5,"Expected five shared armor/weapon materials.");
+   foreach(Material material in materials)
+   {
+    if(material.name.IndexOf("energy",StringComparison.OrdinalIgnoreCase)>=0)continue;
+    Require(material.GetTexture("_BaseMap")!=null&&material.GetTexture("_BumpMap")!=null,"Missing PBR surface maps: "+material.name);
+   }
+   foreach(string surface in new[]{"Metal","Fabric"})foreach(string kind in new[]{"Albedo","Normal"})
+   {
+    string path="Assets/Alterverse/Resources/AuthoredHeroes/VoidKnightTextures/VoidKnight"+surface+"_"+kind+".png";
+    var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+    var importer=AssetImporter.GetAtPath(path) as TextureImporter;
+    Require(texture!=null&&texture.width==512&&texture.height==512&&importer!=null,"Missing 512px surface map: "+path);
+    Require(importer.mipmapEnabled&&importer.wrapMode==TextureWrapMode.Repeat,"Surface map sampling is incorrect: "+path);
+    Require(importer.textureType==(kind=="Normal"?TextureImporterType.NormalMap:TextureImporterType.Default),"Surface map type is incorrect: "+path);
+   }
    var clips=Resources.LoadAll<AnimationClip>("AuthoredHeroes/VoidKnight");
    foreach(string name in new[]{"Idle","Run","Attack1","Attack2","Attack3","Skill0","Skill1","Skill2","Ultimate","Counter","Hit","Death"})Require(clips.Any(c=>c.name.Split('|').Last()==name),"Missing animation "+name);
    for(int i=0;i<5;i++)Require(Resources.Load<Texture2D>("VoidKnight/Icons/"+i)!=null,"Missing attack icon "+i);

@@ -16,9 +16,9 @@ Health: 290 raw, **350.175 final HP** after the existing universal multiplier, v
 
 ## Assets
 
-- `ArtSource/Heroes/VoidKnight/VoidKnight.blend`: 214 individually named editable mesh parts, five materials, 19-bone rig and twelve actions. Each mesh's `bone` custom property identifies its skin binding.
+- `ArtSource/Heroes/VoidKnight/VoidKnight.blend`: 281 individually named editable mesh parts, five materials, 19-bone rig and twelve actions. Each mesh's `bone` custom property identifies its skin binding.
 - `Construction/`: current front/side/back body, armor and sword views, five attack poses and complete part manifest. `Concept-v1/` archives the initial sketches; the current model supersedes their earlier weapon/helmet details.
-- `Resources/AuthoredHeroes/VoidKnight.fbx`: runtime copy merged into `DF_Anatomy` and `DF_WeaponR`, 26,832 triangles. Re-export merges only an in-memory copy and preserves separate source geometry.
+- `Resources/AuthoredHeroes/VoidKnight.fbx`: runtime copy merged into `DF_Anatomy` and `DF_WeaponR`, 34,406 triangles. Re-export merges only an in-memory copy and preserves separate source geometry.
 - `Icons/0.png`–`4.png`: original built-in image-generator artwork, basic / Q / W / E / R. Runtime copies: `Resources/VoidKnight/Icons/`, imported with 512-pixel limits. Each motif depicts the corresponding sword cut, sweep, parry, thrust or downward cleave.
 - `SoundSource/`: eleven original procedural WAVs and NumPy/SciPy generator. Sixteen mono 48 kHz PCM16 runtime cues under `Resources/Audio/Heroes/VoidKnight/`; three basic cast variants. W has no separate preparation cue.
 
@@ -38,7 +38,7 @@ Re-executed after restoration:
 
 In the full Unity project run **DIMENSIONS FRONT → Checks → Void Knight integration (non-destructive)**. Then test all attacks, E against walls, stun interruption, two-hand grip during movement/attacks, emission/bloom, icon slots and volume controls, and two actual connected clients. No scene replacement or separate prefab wiring is needed: the existing roster creates the hero and loads its authored model by HeroId.
 
-Use Blender Python/bpy to run `export_void_knight.py`, `validate_fbx.py` and `render_reference.py` from the source folder. Native `.blend` source remains modular and is never overwritten by the merged export.
+Use Blender 5.0.1 Python to run `refine_void_knight.py`, `export_modules.py`, `export_void_knight.py`, `validate_refinement.py`, `validate_fbx.py`, `validate_modules.py` and `render_reference.py` from the source folder. Native `.blend` source remains modular and is never overwritten by the merged export.
 
 ## Armor and sword revision
 
@@ -59,3 +59,31 @@ Both complete hands are 30% larger in all three dimensions, including palm, fing
 Void Knight is registered as a premium hero at **1,600 shards**, SKU `hero_void_knight`, with persisted ownership key `DF_HeroOwned_VoidKnight`. The hero shop has its own Void Knight tab, description, price and normal purchase/selection flow. The shared commerce catalog grants the same ownership key; existing transaction handling supplies earned/paid shard debit, retries, duplicate protection and cloud ownership restoration. The local key registry includes the new entitlement for account migration.
 
 The earlier release hold remains: `VoidKnightReleased=false`, server product `available=false`, so previewing cannot debit currency, grant ownership or permit deployment. Future release requires enabling both client and server flags; this commit does not deploy the commerce service. Twenty-six SQLite/Firestore commerce checks pass, including blocked purchase paths and a test-only future release with mixed earned/paid shards, retries and ownership restoration. Native Unity and live service/device testing remain outstanding.
+
+## V3 armor and shoulder carry (2026-10-16)
+
+The current model adds rimmed pectoral shells, articulated three-layer shoulder armor,
+cheek and jaw panels, tassets, vambrace lames, knee/greave trim and shaped gauntlet palms. Rear helmet shells, lumbar lames, rear hip plates and calf vents finish the back view.
+The greatsword has a forged cross section, steel cutting facets, a recessed violet fuller
+and a framed guard crystal. Four repeating 512px albedo/normal maps distinguish brushed
+metal and woven undersuit without adding material slots. Unity import version 21 assigns
+those same maps to the existing black metal, edge metal and fabric materials.
+
+Idle and Run now carry the sword diagonally backward over the right shoulder. Both hands
+follow the same handle; the face is clear. Preparation blends out of that stance and recovery
+returns from a fixed follow-through pose. Strike contacts, guard/thrust holds, root, torso,
+head and leg motion are retained. Native checks cover 384 frames, unchanged rest bones,
+protected contact matrices, unit arm scales and 180 eye-visibility rays from front/±45°.
+
+`ArtSource/Heroes/VoidKnight/Modules/` contains 17 standalone Blender scene files, including
+separate left/right pauldrons, vambraces, gauntlets, cuisses, greaves and sabatons, plus helmet,
+cuirass, waist, tassets and sword. Each opens directly with its own editable assembly, packed
+textures and the original rest binding skeleton. `Modules/manifest.json` lists every part.
+Append at the original world origin to preserve its fit to the character.
+
+Runtime remains two skinned meshes, five materials and 34,406 triangles. The resource path
+and FBX GUID stay fixed. The 130% hand envelope and 1,600-shard release-locked shop mapping
+remain. The `Void Knight model regression` CI opens the source and every module, reimports
+the runtime FBX and runs the combat/shop checks. Blender studio renders are construction
+previews; actual Unity URP import, Android appearance/performance and native play mode still
+need the editor/device pass.
