@@ -209,6 +209,20 @@ namespace Alterverse.Combat
         private static bool AutomaticBasic(Pending p)
             => p.TargetedBasic;
 
+        // Use the same stationary body and wall queries as delivery for the held hook preview.
+        // This is a current-position preview; targets can still dodge after the cast commits.
+        internal Vector3 PreviewProjectileEnd(AimPose pose, AimSpec spec)
+        {
+            Vector3 origin = transform.position, direction = pose.CastDirection(origin);
+            float length = BlockDistance(origin, direction, spec.castRange, spec.projectileWidth);
+            Vector3 end = origin + direction * length;
+            Pending preview = new Pending { Direction = direction, Point = pose.Point,
+                HasAimPoint = pose.HasAimPoint, Spec = spec };
+            float fraction;
+            return Contact(preview, origin, end, false, out fraction) != null
+                ? Vector3.Lerp(origin, end, Mathf.Clamp01(fraction)) : end;
+        }
+
         private void FaceBasicTarget(Pending p, bool release = false)
         {
             Vector3 direction = AimGeometry.Flat(p.Target.transform.position - transform.position);
@@ -221,7 +235,7 @@ namespace Alterverse.Combat
         }
         private void Impact(Pending p, Health target)
         {
-            if (p.Hook) p.Execution.ResolveSharkHookHit(target, p.LaunchOrigin);
+            if (p.Hook) p.Execution.ResolveSharkHookHit(target);
             else if (p.Basic) HeroCombatRules.ResolveBasicHit(gameObject, target, p.Damage);
             else p.Execution.ResolvePresentedHit(p.Slot, target, p.Volley);
         }

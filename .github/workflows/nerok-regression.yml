@@ -1,0 +1,19 @@
+name: Nerok combat regression
+on:
+  push:
+    branches: ['dev/vertical-slice']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/EngineStubs.cs', '.github/workflows/nerok-regression.yml']
+  pull_request:
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/EngineStubs.cs', '.github/workflows/nerok-regression.yml']
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: python Tools/Combat/NerokRegression/run.py --dotnet-root "$DOTNET_ROOT"
