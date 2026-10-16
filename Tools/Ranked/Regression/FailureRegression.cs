@@ -74,6 +74,33 @@ partial class Regression
   }
   int failures=0;
   async Task Case(string name,Func<Task> run){try{await run();}catch(Exception e){failures++;Console.WriteLine("FAIL "+name+": "+e.GetBaseException().Message);}}
+  await Case("two-player casual dedicated start",()=>
+  {
+   ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");
+   EdgegapInjectedMatchContext.AssignedTicketCount=2;
+   var handshake=Component<DedicatedOnlineMatchHandshake>();
+   var manager=new NetworkManager{IsServer=true,IsListening=true};NetworkManager.Singleton=manager;
+   Put(handshake,"messaging",manager.CustomMessagingManager);
+   for(ulong id=1;id<=2;id++)
+   {
+    manager.ConnectedClientsIds.Add(id);string ticket="casual-"+id;
+    Invoke(handshake,"OnClientHello",id,new FastBufferReader(4,new Unity.Collections.FixedString128Bytes(ticket),
+     new Unity.Collections.FixedString128Bytes(id==1?"red":"blue"),new Unity.Collections.FixedString128Bytes("fixture-match"),
+     new Unity.Collections.FixedString128Bytes(ticket),new Unity.Collections.FixedString64Bytes("Player"),
+     (int)HeroId.Veyr,(int)BattleItemType.None,new Unity.Collections.FixedString4096Bytes("")));
+   }
+   Invoke(handshake,"UpdateDedicatedServer",manager);
+   var plan=(OnlineMatchPlan)CoopAuthority.PreparedPlan;
+   Check(plan!=null&&plan.HumanCount==2&&plan.Session.IsFull,"two assigned humans produce full 4v4 plan without waiting for eight humans");
+   int bots=0;foreach(var slot in plan.Session.Slots)if(slot.IsBot)bots++;
+   Check(bots==6,"two-human match adds exactly six server bots");
+   uint fingerprint=(uint)Get(handshake,"planFingerprint");
+   for(ulong id=1;id<=2;id++)
+    Invoke(handshake,"OnPlanAck",id,new FastBufferReader(4,true,fingerprint,new Unity.Collections.FixedString128Bytes("casual-"+id)));
+   Invoke(handshake,"UpdateDedicatedServer",manager);
+   Check((bool)Get(handshake,"launched"),"two-player Casual launches once both plans are acknowledged");
+   return Task.CompletedTask;
+  });
   await Case("4v4 dedicated admission limits",()=>
   {
    ResetFailures();Environment.SetEnvironmentVariable("DF_RANKED_SERVER","0");

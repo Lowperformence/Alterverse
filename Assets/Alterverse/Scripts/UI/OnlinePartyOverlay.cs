@@ -154,19 +154,20 @@ namespace Alterverse.UI
         private void DrawParty(float left, float width, OnlinePartyService online, EdgegapOnlineFlow edgegap)
         {
             bool edgegapSearching = edgegap != null && edgegap.IsSearching;
+            bool matchFound = edgegapSearching && EdgegapMatchmakerClient.Instance?.HasAssignment == true;
             bool busy = online.Busy || (edgegap != null && edgegap.Busy);
 
             theme.Panel(new Rect(left + 26f, 150f, width - 52f, 84f));
             theme.Label(new Rect(left + 46f, 164f, 420f, 20f), "MATCH STATUS", theme.Small, true);
             theme.Label(new Rect(left + 46f, 188f, 420f, 30f),
-                edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARING MATCH", theme.Heading);
+                matchFound ? "CONNECTING TO MATCH" : edgegapSearching ? "SEARCHING FOR PLAYERS" : "PREPARING MATCH", theme.Heading);
 
             theme.Label(new Rect(left + 500f, 166f, 250f, 22f),
                 $"PLAYERS  {online.PartyPlayerCount} / {online.PartyCapacity}", theme.Small, true);
             theme.Label(new Rect(left + 500f, 190f, 250f, 22f),
                 "4v4  •  AUTO TEAM FILL", theme.Small, true);
             theme.StatusBadge(new Rect(left + 758f, 176f, 198f, 26f),
-                edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
+                matchFound ? "MATCH FOUND" : edgegapSearching ? "FINDING YOUR MATCH" : "MATCH LOBBY",edgegapSearching?FrontEndTheme.Positive:FrontEndTheme.Muted);
 
             if (theme.Action(new Rect(left + width - 200f, 172f, 150f, 42f),
                 "LEAVE PARTY", enabled: !online.Busy))
@@ -268,16 +269,18 @@ namespace Alterverse.UI
 
             string partyState = online.HasHeroConflict
                 ? "CHOOSE DIFFERENT HEROES"
-                : edgegapSearching
-                    ? "FINDING OPPONENTS"
-                    : online.AllPresentPlayersReady
-                        ? "ALL FRIENDS READY • START MATCHMAKING"
-                        : "MATCH LOBBY • READY UP";
+                : matchFound
+                    ? "CONNECTING TO GAME SERVER"
+                    : edgegapSearching
+                        ? "FINDING OPPONENTS"
+                        : online.AllPresentPlayersReady
+                            ? "ALL FRIENDS READY • START MATCHMAKING"
+                            : "MATCH LOBBY • READY UP";
             theme.Label(new Rect(left + 48f, 470f, width - 560f, 26f), partyState, theme.Small, true);
             theme.Label(new Rect(left + 48f, 502f, width - 560f, 22f),
                 $"PARTY {online.PartyPlayerCount}/{online.PartyCapacity}  •  TWO TEAMS OF FOUR",
                 theme.Small, true);
-            theme.Label(new Rect(left + 48f, 532f, width - 560f, 20f),
+            theme.FitLabel(new Rect(left + 48f, 532f, width - 560f, 20f),
                 edgegap != null ? edgegap.Status : "CONNECTING TO MATCHMAKING...", theme.Small, true);
 
             string state;

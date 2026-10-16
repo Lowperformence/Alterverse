@@ -207,6 +207,7 @@ partial class Regression
   // Relay room disappearance is expected after an assigned dedicated-server handoff.
   ResetLobby();party=Room(1);Put(OnlinePartyService.Instance,"session",party);
   flowForHandoff();
+  await OnlineStartCases();
 
   foreach(bool disconnect in new[]{false,true})
   {
@@ -241,5 +242,63 @@ partial class Regression
   EdgegapMatchmakerClient.Instance.AcceptRankedAssignment("{\"group_id\":\"g\",\"member_id\":\"m\",\"assignment\":{\"fqdn\":\"server.example.invalid\",\"ports\":{\"gameport\":{\"external\":7777}}}}");
   Put(OnlinePartyService.Instance,"session",null);Invoke(flow,"Update");
   Check(flow.IsSearching,"assigned dedicated handoff is not cancelled when Relay room closes");
+ }
+
+ static async Task OnlineStartCases()
+ {
+  const string assigned="{\"group_id\":\"g\",\"member_id\":\"m\",\"ticket_id\":\"t\",\"team_id\":\"red\",\"status\":\"HOST_ASSIGNED\",\"assignment\":{\"public_ip\":\"192.0.2.1\",\"ports\":{\"gameport\":{\"external\":7777}}}}";
+  // Exercise the complete production polling continuation after a successful transport link.
+  foreach(string outcome in new[]{"disconnect","timeout","launch","cancel"})
+  {
+   ResetLobby();var flow=EdgegapOnlineFlow.Instance;var party=Room(1);Put(OnlinePartyService.Instance,"session",party);
+   party.IsLocked=true;Put(flow,"searching",true);Put(flow,"searchOwner",true);
+   var manager=NetworkManager.Singleton;manager.IsHost=manager.IsServer=false;
+   int deletes=0;
+   UnityWebRequest.Handler=r=>{if(r.method=="DELETE")deletes++;return Reply(r,assigned);};
+   await EdgegapMatchmakerClient.Instance.CreateGroupAsync();
+   Task polling=(Task)flow.GetType().GetMethod("PollAssignmentAndConnectAsync",Flags).Invoke(flow,new object[]{0});
+   await Until(()=>CoopNetworkBootstrap.Connects==1,"dedicated transport connects");
+   await Task.Delay(30);
+   Check(!polling.IsCompleted&&flow.IsSearching,"connected transport is still monitored until launch");
+   Check(flow.Status.Contains("WAITING FOR MATCH START"),"connected player sees launch phase, not opponent search");
+   if(outcome=="disconnect")manager.IsConnectedClient=false;
+   if(outcome=="timeout")Time.realtimeSinceStartup=96;
+   if(outcome=="launch")EdgegapOnlineFlow.MarkMatchStarted();
+   if(outcome=="cancel")await flow.LeavePartyAsync();
+   await Finish(polling,"dedicated start monitor "+outcome);
+   Check(!flow.IsSearching&&!flow.Busy,"terminal start outcome releases search state");
+   if(outcome=="launch")
+    Check(deletes==0&&flow.LastError=="","successful launch keeps server link and assignment intact");
+   else if(outcome=="cancel")
+    Check(deletes==1&&flow.LastError==""&&!OnlinePartyService.Instance.InParty,"cancel exits monitor without spurious failure");
+   else
+    Check(deletes==1&&flow.LastError.Contains(outcome=="timeout"?"TIMED OUT":"DISCONNECTED"),"failed match start removes membership and retains clear error");
+  }
+
+  ResetLobby();var progress=EdgegapOnlineFlow.Instance;Put(progress,"searching",true);
+  foreach(var phase in new[]{("SEARCHING","SEARCHING FOR OPPONENTS"),("TEAM_FOUND","TEAM FOUND"),("MATCH_FOUND","STARTING GAME SERVER")})
+  {
+   Invoke(EdgegapMatchmakerClient.Instance,"SetStatus",phase.Item1);
+   Check(progress.Status.Contains(phase.Item2),"actual matchmaker phase is visible: "+phase.Item1);
+  }
+
+  foreach(string invalid in new[]{
+   "{\"group_id\":\"g\",\"member_id\":\"m\",\"status\":\"HOST_ASSIGNED\"}",
+   assigned.Replace("\"ticket_id\":\"t\",",""),
+   assigned.Replace("\"team_id\":\"red\",","")})
+  {
+   ResetLobby();var client=EdgegapMatchmakerClient.Instance;
+   UnityWebRequest.Handler=r=>Reply(r,invalid);await client.CreateGroupAsync();
+   Task<bool> waiting=client.WaitForAssignmentAndConnectAsync();
+   await Finish(waiting,"malformed assignment rejected promptly");
+   Check(!await waiting&&CoopNetworkBootstrap.Connects==0&&client.LastError.Contains("ASSIGNMENT"),"unusable host/ticket/team cannot silently enter handshake");
+  }
+
+  ResetLobby();progress=EdgegapOnlineFlow.Instance;Put(progress,"searching",true);Put(progress,"searchOwner",true);
+  UnityWebRequest.Handler=r=>{if(r.method=="GET")throw new Exception("fixture connection failure");return Reply(r,Membership());};
+  await EdgegapMatchmakerClient.Instance.CreateGroupAsync();
+  Task faulted=(Task)progress.GetType().GetMethod("PollAssignmentAndConnectAsync",Flags).Invoke(progress,new object[]{0});
+  await Finish(faulted,"unexpected poll failure cleanup");
+  Check(!progress.IsSearching&&progress.LastError.Contains("fixture connection failure"),"unexpected poll exceptions are visible and release search");
  }
 }

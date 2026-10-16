@@ -212,6 +212,8 @@ namespace Alterverse.Multiplayer
 
                 if (HasAssignment)
                 {
+                    if (string.IsNullOrWhiteSpace(TicketId) || string.IsNullOrWhiteSpace(TeamId))
+                        return Fail("MATCHMAKER ASSIGNMENT IS MISSING PLAYER TICKET OR TEAM");
                     if (!CoopNetworkBootstrap.ConnectToDedicatedServer(AssignedHost, AssignedPort))
                         return Fail("COULD NOT START DEDICATED SERVER CONNECTION");
 
@@ -222,6 +224,9 @@ namespace Alterverse.Multiplayer
                     SetStatus($"DEDICATED SERVER CONNECTED • {AssignedHost}:{AssignedPort}");
                     return true;
                 }
+
+                if (string.Equals(MatchmakerStatus, "HOST_ASSIGNED", StringComparison.OrdinalIgnoreCase))
+                    return Fail("MATCHMAKER ASSIGNMENT HAS NO USABLE GAME SERVER ADDRESS OR PORT");
 
                 if (string.Equals(MatchmakerStatus, "CANCELLED", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(MatchmakerStatus, "EXPIRED", StringComparison.OrdinalIgnoreCase))
@@ -444,7 +449,10 @@ namespace Alterverse.Multiplayer
 
         private void SetStatus(string value)
         {
-            MatchmakerStatus = string.IsNullOrWhiteSpace(value) ? "IDLE" : value;
+            string next = string.IsNullOrWhiteSpace(value) ? "IDLE" : value;
+            if (next != MatchmakerStatus)
+                Debug.Log("DIMENSIONS FRONT ONLINE: " + next);
+            MatchmakerStatus = next;
             RaiseChanged();
         }
 
