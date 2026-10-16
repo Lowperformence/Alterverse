@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +17,13 @@ namespace UnityEngine
  {
   public string name;public Transform transform=new();readonly Dictionary<Type,object> components=new();
   public GameObject(string name="actor"){this.name=name;}
+  public void SetActive(bool value){}
   public T AddComponent<T>() where T:Component,new(){var c=new T{gameObject=this};components[typeof(T)]=c;return c;}
   public T GetComponent<T>() where T:class=>components.TryGetValue(typeof(T),out var c)?c as T:null;
  }
  public class Transform
  {
-  public Vector3 position,eulerAngles;public Quaternion rotation;
+  public Vector3 position,eulerAngles;public Quaternion rotation;public GameObject gameObject;
   public void SetPositionAndRotation(Vector3 p,Quaternion r){position=p;rotation=r;}
  }
  public struct Vector3
@@ -36,10 +38,11 @@ namespace UnityEngine
   public static Vector3 Lerp(Vector3 a,Vector3 b,float t)=>a+(b-a)*t;
  }
  public struct Quaternion {public float yaw;public static Quaternion Euler(float x,float y,float z)=>new(){yaw=y};}
- public static class Time {public static float unscaledTime,timeScale=1;}
+ public static class Time {public static float unscaledTime,time,timeScale=1;}
  public static class Mathf
  {
   public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);
+  public static float Min(float a,float b)=>Math.Min(a,b);public static int Min(int a,int b)=>Math.Min(a,b);
   public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b);public static float Repeat(float v,float n)=>v-(float)Math.Floor(v/n)*n;
  }
 }
@@ -50,7 +53,7 @@ namespace Unity.Collections
 }
 namespace Unity.Netcode
 {
- public enum NetworkDelivery {UnreliableSequenced}
+ public enum NetworkDelivery {UnreliableSequenced,ReliableSequenced}
  public class FastBufferWriter:IDisposable
  {
   public readonly List<object> Values=new();public FastBufferWriter(int size,Unity.Collections.Allocator a){}
@@ -64,8 +67,8 @@ namespace Unity.Netcode
  }
  public class CustomMessagingManager
  {
-  public readonly List<(string Name,ulong Client,object[] Values)> Sent=new();
-  public void SendNamedMessage(string name,ulong client,FastBufferWriter writer,NetworkDelivery delivery)=>Sent.Add((name,client,writer.Values.ToArray()));
+  public readonly List<(string Name,ulong Client,object[] Values,NetworkDelivery Delivery)> Sent=new();
+  public void SendNamedMessage(string name,ulong client,FastBufferWriter writer,NetworkDelivery delivery)=>Sent.Add((name,client,writer.Values.ToArray(),delivery));
  }
  public class NetworkManager
  {
@@ -91,16 +94,11 @@ namespace Alterverse.Match
 }
 namespace Alterverse.Combat
 {
+ public sealed class LaneMinion:Component {}
  public sealed class Health:Component
  {
-  public float Current=100,Shield;public bool IsDead;
+  public float Current=100,Shield,Max=100;public bool IsDead;public float Normalized=>Current/Max;public void Heal(float value){Current=Math.Min(Max,Current+value);}
   public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}
- }
- public sealed class HeroCombatStatus:Component
- {
-  public bool Rooted,Stunned,ActionLocked;public float MoveMultiplier=1;
-  public static float Speed(GameObject actor)=>1;
-  public void ApplyNetworkSnapshot(bool stunned,float move){Stunned=stunned;MoveMultiplier=move;}
  }
  public sealed class BasicAttack:Component {public float RemainingCooldown;public void ApplyNetworkCooldown(float value){RemainingCooldown=value;}}
  public static class GameplayCollision {public static Vector3 ClampToRoundedArena(Vector3 p,float x,float z)=>new(Math.Clamp(p.x,-x,x),p.y,Math.Clamp(p.z,-z,z));}
@@ -132,7 +130,7 @@ namespace Alterverse.Multiplayer
  public sealed class MatchPlayerSlot {public bool IsBot,IsHost;public string PlayerId="player";}
  public sealed class Session {public MatchPlayerSlot[] Slots=new MatchPlayerSlot[8];}
  public sealed class CoopMatchPlan {public Session Session=new();}
- public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority;public static CoopMatchPlan ActivePlan=new();public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;}
+ public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority,LocalIsHost;public static CoopMatchPlan ActivePlan=new();public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;}
  public static class CoopPlanHandshake {public static uint Round=123;public static uint Fingerprint(CoopMatchPlan plan)=>Round;}
  public static class MatchNetworkProtocol
  {
@@ -156,5 +154,33 @@ namespace Alterverse.Multiplayer
   public void ReceiveOwner(ulong id,object[] values)=>OnOwnerPose(id,new Unity.Netcode.FastBufferReader(values));
   public void Broadcast(Unity.Netcode.NetworkManager m)=>BroadcastHostSnapshot(m);
   public void ReceiveSnapshot(ulong id,object[] values)=>OnHeroSnapshot(id,new Unity.Netcode.FastBufferReader(values));
+ }
+}
+
+namespace Alterverse.Combat
+{
+ public sealed partial class CentralHealingPickup:MonoBehaviour
+ {
+  public static event Action<bool,float> NetworkAvailabilityChanged;
+  private float radius=1.5f,healPercent=.286f,respawnSeconds=22f/1.3f,readyAt;private bool available=true;
+  private Transform plus;public readonly System.Collections.Generic.List<Alterverse.Characters.TeamMember> Members=new();
+  private T[] FindObjectsByType<T>()=>Members.Cast<T>().ToArray();
+  private void AnimateAvailable(){}public void Tick()=>Update();public bool Available=>available;
+ }
+}
+namespace Alterverse.Characters {public sealed class TeamMember:Component {}}
+namespace Alterverse.Multiplayer
+{
+ public sealed class CoopWorldEntityKey:Component {public string Key;}
+ public sealed partial class CoopWorldStateSync
+ {
+  private const string StateMessage="DF_COOP_WORLD_STATE_V2";
+  private readonly Dictionary<string,CoopWorldEntityKey> entities=new();
+  private readonly HashSet<string> previousHostKeys=new(),currentHostKeys=new();
+  private readonly List<string> tombstones=new();
+  private readonly CustomMessagingManager messaging=new();
+  public readonly List<CoopWorldEntityKey> Live=new();
+  private void RefreshEntities(){entities.Clear();foreach(var e in Live)entities.Add(e.Key,e);}
+  public void Broadcast(NetworkManager manager)=>SendState(manager);public CustomMessagingManager Messages=>messaging;
  }
 }

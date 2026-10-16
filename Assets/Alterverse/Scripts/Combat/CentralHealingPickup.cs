@@ -19,12 +19,12 @@ if(!available)
 if(Time.time>=readyAt)
 {
 available=true;if(plus!=null)plus.gameObject.SetActive(true);
-if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)NetworkAvailabilityChanged?.Invoke(true,0f);
+if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)NetworkAvailabilityChanged?.Invoke(true,0f);
 }
 return;
 }
 foreach(TeamMember member in FindObjectsByType<TeamMember>()){if(member==null)continue;Health h=member.GetComponent<Health>();if(h==null||h.IsDead||h.Normalized>=.995f)continue;Vector3 d=member.transform.position-transform.position;d.y=0;if(d.sqrMagnitude<=radius*radius){h.Heal(h.Max*healPercent);available=false;readyAt=Time.time+respawnSeconds;if(plus!=null)plus.gameObject.SetActive(false);
-if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)NetworkAvailabilityChanged?.Invoke(false,respawnSeconds);
+if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority)NetworkAvailabilityChanged?.Invoke(false,respawnSeconds);
 break;}}
 AnimateAvailable();
 }

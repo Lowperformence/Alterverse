@@ -32,9 +32,19 @@ def main():
         assert len(constants) == 4
         declarations = directory / 'TransportConstants.cs'
         declarations.write_text('namespace Alterverse.Multiplayer {public sealed partial class CoopHeroStateSync {' + ''.join(constants) + '}}')
+        pickup = (source / 'Combat/CentralHealingPickup.cs').read_text()
+        a = pickup.index('private void Update()')
+        b = pickup.index('private void AnimateAvailable()', a)
+        heal = directory / 'HealingGameplay.cs'
+        heal.write_text('using UnityEngine;using Alterverse.Characters;namespace Alterverse.Combat {public sealed partial class CentralHealingPickup {' + pickup[a:b] + '}}')
+        world = (source / 'Multiplayer/CoopWorldStateSync.cs').read_text()
+        a = world.index('private void SendState(')
+        b = world.index('private void OnState(', a)
+        packets = directory / 'WorldPackets.cs'
+        packets.write_text('using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;using Unity.Netcode;using Unity.Collections;namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {' + world[a:b] + '}}')
         output = directory / 'Regression.dll'
         response = directory / 'compile.rsp'
-        files = [here / 'EngineStubs.cs', here / 'Regression.cs', accessors, declarations,
+        files = [here / 'EngineStubs.cs', here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
                  source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-nowarn:0649', '-out:' + str(output),
                                        *['-r:' + str(path) for path in runtime.glob('*.dll')], *map(str, files)]))

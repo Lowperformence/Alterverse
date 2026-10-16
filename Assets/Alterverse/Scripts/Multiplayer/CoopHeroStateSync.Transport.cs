@@ -87,7 +87,8 @@ namespace Alterverse.Multiplayer
             if(ownerSequence==0||(receivedOwnerSequences.TryGetValue(senderClientId,out uint previousSequence)&&
                 !OwnerPoseHistory.Newer(ownerSequence,previousSequence)))return;
             receivedOwnerSequences[senderClientId]=ownerSequence;
-            if(actor.GetComponent<HeroCombatStatus>()?.Rooted==true)
+            HeroCombatStatus combatStatus=actor.GetComponent<HeroCombatStatus>();
+            if(combatStatus!=null&&(combatStatus.Rooted||combatStatus.Stunned))
             {
                 ownerAcknowledgements[rosterSlot]=ownerSequence;
                 acknowledgedPositions[rosterSlot]=actor.transform.position;

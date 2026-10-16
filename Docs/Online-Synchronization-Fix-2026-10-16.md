@@ -74,8 +74,8 @@ python Tools/Ranked/Regression/run.py --dotnet-root /path/to/dotnet
 python Tools/Multiplayer/Regression/run.py --dotnet-root /path/to/dotnet
 ```
 
-Results: **1,923** lobby/identity/ranked checks and **53** movement acknowledgement,
-transport and live-score checks passed. The new transport suite compiles production
+Results: **1,923** lobby/identity/ranked checks and **165** movement, world-packet,
+healing, status and live-score checks passed. The new transport suite compiles production
 transport/history classes and the scoreboard accessors against controlled fixtures;
 it exercises latency/in-flight movement, corrections, repeated/out-of-order messages,
 sequence wrap, bounded history, round transitions, owner/sender validation, speed
@@ -87,3 +87,29 @@ live network performance measurement. Required on-device checks remain: move and
 stop at the healing pickup, confirm bars track moving heroes, score kills and verify
 live team/player K/D/A, test death/respawn and movement abilities, then return to the
 menu and search again. Verify both offline and updated multi-device play as well.
+
+## Additional audit before rebuilding
+
+- The dedicated handshake starts authority with `BeginPreparedMatch(false)`, so
+  `LocalIsHost` is false even on the dedicated server. Central healing now publishes
+  consumed/respawn availability using `LocalHasServerAuthority`; the existing reliable
+  world-event receiver can therefore hide/show the pickup on phones. Replica death
+  presentation uses the same authority check rather than treating the server as a client.
+- Owner position messages now freeze both rooted and stunned actors. Previously the
+  minimum movement slack allowed a stunned actor to move on each received packet.
+- World-state snapshots no longer put up to 96 entities and 64 removals into one
+  unfragmented message. Independent chunks contain at most six entries and fit a
+  conservative 1,024-byte payload budget even with maximum-size fixed-string keys.
+  All entities/removals are sent, including beyond the old caps. One-time removals
+  use reliable delivery so packet loss cannot permanently leave a ghost object.
+- The expanded suite compiles the actual `HeroCombatStatus` class, the production
+  healing update/application methods, and production world serialization methods.
+  Controlled substitutes still stand in for Unity time, native components, rendering
+  and the transport. Assertions cover dedicated-server healing consumption/respawn,
+  client authority, root ownership/release, stun expiry, status clearing, frozen
+  owner movement and 110-entity/110-removal serialization. The old healing, stun and
+  world-packet implementations each fail the corresponding regression.
+
+No native Unity installation is available in this workspace. These passing checks do
+not certify Android performance, visual smoothness, native collision or a successful
+server/Android build. Source changes have not changed the running v0.1.3 deployment.

@@ -44,9 +44,10 @@ namespace Alterverse.Multiplayer
 
         private void LateUpdate()
         {
-            if(CoopAuthority.Active&&!CoopAuthority.LocalIsHost&&health!=null)
+            if(CoopAuthority.Active&&!CoopAuthority.LocalHasServerAuthority&&health!=null)
                 Apply(health.IsDead);
         }
     }
 }
+
 

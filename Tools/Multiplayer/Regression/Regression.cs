@@ -125,5 +125,65 @@ static class Regression
   Position(serverActor.transform.position,P(.325f),"Server accepts restarted owner sequencing in the new round");
   CoopPlanHandshake.Round=123;
  }
- static void Main(){HistoryCases();TransportCases();Console.WriteLine("PASS: "+checks+" movement acknowledgement, transport and live scoreboard checks (Unity/network substitutes)");}
+ static void HealingAndStatusCases()
+ {
+  CoopAuthority.Active=true;CoopAuthority.LocalIsHost=false;CoopAuthority.LocalHasServerAuthority=true;
+  Time.time=0;Time.timeScale=1;
+  var pickup=new GameObject().AddComponent<CentralHealingPickup>();
+  var member=new GameObject().AddComponent<TeamMember>();var health=member.gameObject.AddComponent<Health>();health.Current=40;
+  pickup.Members.Add(member);int changes=0;bool available=true;
+  Action<bool,float> changed=(value,delay)=>{changes++;available=value;};
+  CentralHealingPickup.NetworkAvailabilityChanged+=changed;
+  pickup.Tick();Check(health.Current>40&&!pickup.Available,"Dedicated server consumes and heals");
+  Check(changes==1&&!available,"Dedicated server publishes consumed healing despite LocalIsHost false");
+  Time.time=30;pickup.Tick();Check(changes==2&&available,"Dedicated server publishes healing respawn");
+  CoopAuthority.LocalHasServerAuthority=false;health.Current=40;pickup.Tick();
+  Check(health.Current==40&&changes==2,"Client cannot heal or broadcast availability");
+  pickup.ApplyNetworkAvailability(false,10);Check(!pickup.Available,"Client accepts authoritative healing availability");
+  CentralHealingPickup.NetworkAvailabilityChanged-=changed;
+  var status=member.gameObject.AddComponent<HeroCombatStatus>();var source=new UnityEngine.Object();
+  Time.time=100;Check(status.TryRoot(source,2,true)&&status.Rooted&&status.ActionLocked&&!status.Stunned,"Source-owned root locks movement/actions without becoming stun");
+  status.ReleaseRoot(new UnityEngine.Object());Check(status.Rooted,"Other sources cannot release root");
+  status.ReleaseRoot(source);Check(!status.Rooted&&!status.ActionLocked,"Root release restores actions");
+  status.Stun(.5f);Check(status.Stunned&&status.MoveMultiplier==0,"Stun stops movement");
+  Time.time=101;Check(!status.Stunned,"Stun expires");
+  status.ApplyNetworkSnapshot(false,0);Check(status.Rooted&&!status.Stunned,"Network root stops movement without stun");
+  status.Clear();Check(!status.Rooted&&!status.Stunned&&status.MoveMultiplier==1,"Respawn clears status overrides");
+  CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
+  var server=new CoopHeroStateSync();var actor=Actor(0);server.Slot(actor);var combat=actor.gameObject.AddComponent<HeroCombatStatus>();
+  NetworkManager.Singleton=new NetworkManager{IsServer=true};Time.time=200;combat.Stun(.5f);
+  object[] packet={CoopPlanHandshake.Round,0,new Unity.Collections.FixedString128Bytes("player"),1u,5f,0f,0f,0f,0f,0f};
+  server.ReceiveOwner(7,packet);Position(actor.transform.position,P(0),"Owner packets cannot move a stunned server actor through movement slack");
+  Time.time=202;combat.TryRoot(source,2);packet[3]=2u;server.ReceiveOwner(7,packet);
+  Position(actor.transform.position,P(0),"Owner packets cannot move a rooted server actor");
+ }
+ static void WorldPacketCases()
+ {
+  var sync=new CoopWorldStateSync();var manager=new NetworkManager{IsServer=true};
+  for(int i=0;i<110;i++)
+  {
+   var entity=new GameObject().AddComponent<CoopWorldEntityKey>();entity.Key=i.ToString().PadRight(120,'x');
+   entity.gameObject.AddComponent<Health>();sync.Live.Add(entity);
+  }
+  sync.Broadcast(manager);int delivered=0;
+  foreach(var message in sync.Messages.Sent)
+  {
+   int count=(int)message.Values[1];delivered+=count;
+   Check(count<=6,"World states are bounded to six entities per independent packet");
+   // Conservative full-size FixedString storage (actual NGO may encode fewer bytes).
+   Check(12+count*(128+6*4+1)<=1024,"Maximum-key state packet fits the writer and unfragmented budget");
+   Check(message.Delivery==NetworkDelivery.UnreliableSequenced,"Repeated world motion stays on unreliable delivery");
+  }
+  Check(delivered==110,"World snapshots do not silently omit objects beyond the former 96 cap");
+  sync.Messages.Sent.Clear();sync.Live.Clear();sync.Broadcast(manager);int removed=0;
+  foreach(var message in sync.Messages.Sent)
+  {
+   int count=(int)message.Values[2];removed+=count;
+   Check((int)message.Values[1]==0&&count<=6,"Removal chunks retain the existing receiver wire format");
+   Check(message.Delivery==NetworkDelivery.ReliableSequenced,"One-time tombstones survive packet loss");
+  }
+  Check(removed==110,"All removals are delivered beyond the former 64 cap");
+  sync.Messages.Sent.Clear();sync.Broadcast(manager);Check(sync.Messages.Sent.Count==0,"Removed world objects are retired after reliable send");
+ }
+ static void Main(){HistoryCases();TransportCases();HealingAndStatusCases();WorldPacketCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }
