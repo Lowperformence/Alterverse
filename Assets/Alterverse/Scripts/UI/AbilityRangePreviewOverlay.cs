@@ -1,4 +1,5 @@
 using Alterverse.Combat;
+using Alterverse.Characters;
 using UnityEngine;
 
 namespace Alterverse.UI
@@ -32,6 +33,17 @@ namespace Alterverse.UI
             }
             else if (spec.aimType == AimType.SelfArea)
                 Show(0, origin, pose.Direction, Mathf.Max(.7f, spec.aoeRadius), 0, spec, color);
+            else if (aiming.Slot == 0 && spec.aimType == AimType.Projectile &&
+                GetComponent<HeroIdentity>()?.Hero == HeroId.Nerok)
+            {
+                // The cone chooses one point. The anchor itself only hits along this narrow
+                // path, which may turn toward that point and stop at a body or real cover.
+                Color selection = color; selection.a *= .5f;
+                Show(0, origin, pose.Direction, spec.castRange, 1, spec, selection);
+                Vector3 end = HeroAttackDelivery.For(gameObject).PreviewProjectileEnd(pose, spec);
+                Color flight = color; flight.a = Mathf.Min(1f, color.a + .25f);
+                Show(1, origin, pose.CastDirection(origin), HeroCombatRules.Distance(origin, end), 2, spec, flight);
+            }
             else
             {
                 Show(0, origin, pose.Direction, spec.castRange, spec.aimType == AimType.Dash && spec.targetingMode != TargetingMode.Cone ? 2 : 1, spec, color);
