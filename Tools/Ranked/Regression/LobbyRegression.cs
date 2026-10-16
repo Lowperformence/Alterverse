@@ -197,6 +197,19 @@ partial class Regression
   UnityWebRequest.Handler=r=>{r.responseCode=409;return Reply(r,"membership conflict");};
   Check(!await guestClient.LeaveGroupAsync()&&guestClient.HasMembership,"group-delete exception does not mask unrelated member conflicts");
 
+  // Assigned groups are immutable and auto-expire. Their local handles must be released
+  // even if the matchmaker is unreachable, rejects DELETE, or the cached token expired.
+  foreach(bool guest in new[]{false,true})
+  {
+   ResetLobby();var assignedClient=EdgegapMatchmakerClient.Instance;
+   assignedClient.AcceptRankedAssignment("{\"group_id\":\"assigned\",\"member_id\":\"member\",\"ticket_id\":\"ticket\",\"assignment\":{\"fqdn\":\"host.invalid\",\"ports\":{\"gameport\":{\"external\":7777}}}}");
+   Check(assignedClient.HasAssignment&&assignedClient.HasMembership,"assigned cleanup fixture is complete");
+   UnityWebRequest.Handler=r=>throw new Exception("Immutable assigned group must not make a cleanup request");
+   Environment.SetEnvironmentVariable(EdgegapMatchmakerClient.TokenEnvironmentVariable,"");
+   Check(guest?await assignedClient.LeaveGroupAsync():await assignedClient.CancelGroupAsync(),"assigned owner/guest can release without a matchmaker request");
+   Check(!assignedClient.HasAssignment&&!assignedClient.HasMembership&&assignedClient.LastError=="","assigned cleanup resets all stale local handles");
+  }
+
   // A stale ready response cannot replace a newer group after cancellation.
   ResetLobby();var client=EdgegapMatchmakerClient.Instance;UnityWebRequest readyRequest=null;var readyHeld=new UnityWebRequestAsyncOperation{isDone=false};
   UnityWebRequest.Handler=r=>r.method=="PATCH"?(readyRequest=r,readyHeld).Item2:Reply(r,Membership("old"));
@@ -305,9 +318,9 @@ partial class Regression
    if(outcome=="launch")
     Check(deletes==0&&flow.LastError=="","successful launch keeps server link and assignment intact");
    else if(outcome=="cancel")
-    Check(deletes==1&&flow.LastError==""&&!OnlinePartyService.Instance.InParty,"cancel exits monitor without spurious failure");
+    Check(deletes==0&&flow.LastError==""&&!OnlinePartyService.Instance.InParty&&!EdgegapMatchmakerClient.Instance.HasMembership,"assigned cancel releases locally without spurious failure or immutable-group deletion");
    else
-    Check(deletes==1&&flow.LastError.Contains(outcome=="timeout"?"TIMED OUT":"DISCONNECTED"),"failed match start removes membership and retains clear error");
+    Check(deletes==0&&!EdgegapMatchmakerClient.Instance.HasMembership&&flow.LastError.Contains(outcome=="timeout"?"TIMED OUT":"DISCONNECTED"),"failed assigned match releases membership locally and retains clear error");
   }
 
   ResetLobby();var progress=EdgegapOnlineFlow.Instance;Put(progress,"searching",true);

@@ -18,7 +18,9 @@ foreach(HeroIdentity hero in heroes)
 if(hero==null||hero.gameObject.name=="AV_Player")continue;
 Health hp=hero.GetComponent<Health>();TeamMember tm=hero.GetComponent<TeamMember>();
 if(hp==null||hp.IsDead||tm==null)continue;
-Vector3 p=cam.WorldToScreenPoint(hero.transform.position+Vector3.up*1.65f);
+var motion=hero.GetComponent<Alterverse.Visuals.HeroVisualMotion>();
+Vector3 anchor=motion!=null?motion.PresentedPosition:hero.transform.position;
+Vector3 p=cam.WorldToScreenPoint(anchor+Vector3.up*1.65f);
 if(p.z<=0)continue;
 p.y=Screen.height-p.y;
 if(p.x<-80f||p.x>Screen.width+80f||p.y<-80f||p.y>Screen.height+80f)continue;
@@ -73,4 +75,5 @@ private void EnsureStyle(float scale){int size=Mathf.RoundToInt(10*scale);if(sty
 private void OnDestroy(){if(pixel!=null)Destroy(pixel);}
 }
 }
+
 

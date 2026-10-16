@@ -166,7 +166,7 @@ namespace Alterverse.Multiplayer
         public async Task<bool> LeaveGroupAsync()
         {
             CancelPendingAssignmentWait();
-            if (!HasMembership)
+            if (!HasMembership || HasAssignment)
             {
                 ResetLocalState();
                 return true;
@@ -188,7 +188,9 @@ namespace Alterverse.Multiplayer
         public async Task<bool> CancelGroupAsync()
         {
             CancelPendingAssignmentWait();
-            if (string.IsNullOrWhiteSpace(GroupId))
+            // Assigned groups are immutable in Edgegap and expire automatically. Releasing
+            // their local handle requires no DELETE, including after a failed/finished match.
+            if (string.IsNullOrWhiteSpace(GroupId) || HasAssignment)
             {
                 ResetLocalState();
                 return true;
@@ -524,4 +526,5 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
 

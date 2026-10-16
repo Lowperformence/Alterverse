@@ -24,6 +24,22 @@ for(int i=0;i<slots.Length;i++)if(slots[i]!=null&&slots[i].IsLocalHuman)
 }
 private static bool IsHero(TeamMember member)=>member!=null&&(member.GetComponent<HeroRespawn>()!=null||member.GetComponent<MobaBotRespawn>()!=null||member.GetComponent<CoopHeroSlot>()!=null);public void RecordDamage(Health victim,GameObject source){if(victim==null||source==null)return;TeamMember attacker=source.GetComponentInParent<TeamMember>(),victimTeam=victim.GetComponent<TeamMember>();if(!IsHero(attacker)||!IsHero(victimTeam)||attacker==victimTeam||attacker.Team==victimTeam.Team)return;if(!damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits)){credits=new Dictionary<TeamMember,float>();damageCredit[victim]=credits;}credits[attacker]=Time.time;}
 private void RefreshRoster(){foreach(TeamMember member in Object.FindObjectsByType<TeamMember>()){if(!IsHero(member))continue;Health health=member.GetComponent<Health>();if(health==null||entries.ContainsKey(health))continue;HeroIdentity identity=member.GetComponent<HeroIdentity>();CoopHeroSlot coop=member.GetComponent<CoopHeroSlot>();string n=coop!=null?CoopDisplayName(coop):(member.GetComponent<HeroRespawn>()!=null?PlayerProfile.PlayerName:(identity!=null?identity.DisplayName:DisplayName(member.gameObject.name)));entries.Add(health,new Entry{Health=health,Member=member,Name=n});health.DiedWithSource+=OnHeroDied;}}private void OnHeroDied(Health victim,GameObject source){if(victim==null||!entries.TryGetValue(victim,out Entry victimEntry))return;victimEntry.Deaths++;TeamMember killer=source!=null?source.GetComponentInParent<TeamMember>():null;if(IsHero(killer)&&victimEntry.Member!=null&&killer.Team!=victimEntry.Member.Team){Entry killerEntry=FindEntry(killer);if(killerEntry!=null)killerEntry.Kills++;if(damageCredit.TryGetValue(victim,out Dictionary<TeamMember,float> credits))foreach(var credit in credits)if(IsHero(credit.Key)&&credit.Key!=killer&&Time.time-credit.Value<=assistWindow&&credit.Key.Team==killer.Team){Entry assist=FindEntry(credit.Key);if(assist!=null){assist.Assists++;MatchTelemetry.Instance?.RecordAssist(assist.Health);}}}damageCredit.Remove(victim);}private Entry FindEntry(TeamMember member){foreach(Entry e in entries.Values)if(e.Member==member)return e;return null;}
+// Absolute server snapshots repair packet loss without replaying death or reward events.
+public void GetNetworkScore(Health health,out int kills,out int deaths,out int assists)
+{
+ kills=deaths=assists=0;
+ if(health==null||!CoopAuthority.CanSimulateHostGameplay)return;
+ if(!entries.TryGetValue(health,out Entry entry)){RefreshRoster();entries.TryGetValue(health,out entry);}
+ if(entry==null)return;
+ kills=entry.Kills;deaths=entry.Deaths;assists=entry.Assists;
+}
+public void ApplyNetworkScore(Health health,int kills,int deaths,int assists)
+{
+ if(health==null||!CoopAuthority.Active||CoopAuthority.LocalHasServerAuthority)return;
+ if(!entries.TryGetValue(health,out Entry entry)){RefreshRoster();entries.TryGetValue(health,out entry);}
+ if(entry==null)return;
+ entry.Kills=Mathf.Max(0,kills);entry.Deaths=Mathf.Max(0,deaths);entry.Assists=Mathf.Max(0,assists);
+}
 private static string CoopDisplayName(CoopHeroSlot slot){CoopMatchPlan plan=CoopAuthority.ActivePlan;if(slot!=null&&plan?.Session?.Slots!=null&&slot.Slot>=0&&slot.Slot<plan.Session.Slots.Length){MatchPlayerSlot data=plan.Session.Slots[slot.Slot];if(data!=null&&!string.IsNullOrWhiteSpace(data.DisplayName))return data.DisplayName;}HeroIdentity identity=slot!=null?slot.GetComponent<HeroIdentity>():null;return identity!=null?identity.DisplayName:"PLAYER";}
 private TeamMember LocalPlayerMember(){if(CoopAuthority.Active){CoopHeroSlot[] slots=Object.FindObjectsByType<CoopHeroSlot>(FindObjectsInactive.Exclude);for(int i=0;i<slots.Length;i++)if(slots[i]!=null&&slots[i].IsLocalHuman)return slots[i].GetComponent<TeamMember>();}playerRespawn??=Object.FindAnyObjectByType<HeroRespawn>();return playerRespawn!=null?playerRespawn.GetComponent<TeamMember>():null;}
 private static string DisplayName(string raw)=>raw.Replace("AV_","").Replace("Bot_"," ");public int KillsForTeam(int team)=>TeamKills(team);private int TeamKills(int team){int total=0;foreach(Entry e in entries.Values)if(e.Member!=null&&e.Member.Team==team)total+=e.Kills;return total;}private void OnMatchEnded(int team){if(matchEnded)return;winningTeam=team;battlePassLevelBefore=BattlePassProgress.Level;battlePassXpBefore=BattlePassProgress.Xp;resultDifficulty=BotDifficultySettings.Current;matchEnded=true;rewardPending=true;TeamMember player=LocalPlayerMember();bool won=player!=null&&player.Team==winningTeam;DimensionAudio.Play(won?DimensionSound.Victory:DimensionSound.Defeat,1f);MatchClock.Set(PauseReason.Result,true);}private void LateUpdate()
@@ -192,4 +208,5 @@ private void DrawTeam(List<Entry> team,float x,float y,float width,string title)
 private void OnDestroy(){foreach(var pair in entries)if(pair.Key!=null)pair.Key.DiedWithSource-=OnHeroDied;if(front!=null)front.MatchEnded-=OnMatchEnded;entries.Clear();if(Instance==this)Instance=null;}
 }
 }
+
 

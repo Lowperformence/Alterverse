@@ -24,7 +24,7 @@ namespace Alterverse.Multiplayer
         private const string PlanMessage = "DF_DEDICATED_PLAN_V1";
         private const string AckMessage = "DF_DEDICATED_PLAN_ACK_V1";
         private const string LaunchMessage = "DF_DEDICATED_LAUNCH_V1";
-        private const int ProtocolVersion = 4;
+        private const int ProtocolVersion = 5;
         private const float HumanJoinWindowSeconds = 60f;
         private const float PlanAckTimeoutSeconds = 20f;
         private const float AuthenticationTimeoutSeconds = 10f;
@@ -811,3 +811,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

@@ -15,7 +15,7 @@ namespace Alterverse.Multiplayer
     {
         private const string ProbeMessage="DF_COOP_PLAN_PROBE_V1";
         private const string AckMessage="DF_COOP_PLAN_ACK_V1";
-        private const int ProtocolVersion=2;
+        private const int ProtocolVersion=3;
 
         public static CoopPlanHandshake Instance { get; private set; }
         public static bool PlanHandshakeReady=>Instance!=null&&Instance.planHandshakeReady;
@@ -298,3 +298,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+
