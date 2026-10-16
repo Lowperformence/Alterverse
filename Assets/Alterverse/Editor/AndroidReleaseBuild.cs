@@ -12,11 +12,13 @@ namespace Alterverse.EditorChecks
     public sealed class AndroidReleaseBuild : IPreprocessBuildWithReport
     {
         private const string AndroidApplicationId="com.lowperformence.dimensionsfront";
-        private const string AppIconPath="Assets/Alterverse/Branding/DimensionsFrontAppIcon.png";
         private const string InterruptedBuildKey="DimensionsFront.AndroidBuildNeedsCleanRetry";
         public int callbackOrder=>0;
         public void OnPreprocessBuild(BuildReport report)
         {
+            // Also repair icons for builds started from Unity's regular Build window,
+            // including development builds, before the release gate checks them.
+            if(report.summary.platform==BuildTarget.Android)EnsureLauncherIcon();
             if(report.summary.platform==BuildTarget.Android&&(report.summary.options&BuildOptions.Development)==0)
             {
                 const BuildOptions debugOptions=BuildOptions.AllowDebugging|BuildOptions.ConnectWithProfiler|BuildOptions.EnableDeepProfilingSupport;
@@ -54,9 +56,9 @@ namespace Alterverse.EditorChecks
             if(PlayerSettings.openGLRequireES31AEP)errors.Add("Require ES3.1+AEP must stay disabled; it would filter otherwise compatible Android devices.");
             if(PlayerSettings.openGLRequireES32)errors.Add("Require ES3.2 must stay disabled; it would filter otherwise compatible Android devices.");
 
-            Texture2D[] icons=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
-            bool hasIcon=false;if(icons!=null)foreach(Texture2D icon in icons)if(icon!=null){hasIcon=true;break;}
-            if(!hasIcon)errors.Add("Android launcher icon is not assigned. Run Prepare Android upload; it assigns "+AppIconPath+".");
+#if UNITY_ANDROID
+            AndroidLauncherIcons.AddValidationErrors(errors);
+#endif
             if(!EditorUserBuildSettings.buildAppBundle)errors.Add("Enable Android App Bundle (.aab).");
             if(!PlayerSettings.Android.useCustomKeystore||string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName)||string.IsNullOrWhiteSpace(PlayerSettings.Android.keyaliasName))errors.Add("Owner must configure upload signing locally. Never commit passwords or signing keys.");
             if(PlayerSettings.Android.useCustomKeystore&&!string.IsNullOrWhiteSpace(PlayerSettings.Android.keystoreName))
@@ -76,20 +78,11 @@ namespace Alterverse.EditorChecks
         }
         private static void EnsureLauncherIcon()
         {
-            Texture2D icon=AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconPath);
-            if(icon==null)throw new BuildFailedException("Required launcher icon asset is missing: "+AppIconPath);
-            Texture2D[] current=PlayerSettings.GetIcons(NamedBuildTarget.Android,IconKind.Application);
-            bool assigned=false;if(current!=null)foreach(Texture2D candidate in current)if(candidate!=null){assigned=true;break;}
-            if(!assigned)
-            {
-                int[] sizes=PlayerSettings.GetIconSizes(NamedBuildTarget.Android,IconKind.Application);
-                if(sizes==null||sizes.Length==0)throw new BuildFailedException("Unity reported no Android application icon slots.");
-                Texture2D[] icons=new Texture2D[sizes.Length];
-                for(int i=0;i<icons.Length;i++)icons[i]=icon;
-                PlayerSettings.SetIcons(NamedBuildTarget.Android,icons,IconKind.Application);
-                AssetDatabase.SaveAssets();
-                Debug.Log("DIMENSIONS FRONT: assigned Android launcher icon to "+icons.Length+" icon slots from "+AppIconPath);
-            }
+#if UNITY_ANDROID
+            AndroidLauncherIcons.Apply();
+#else
+            throw new BuildFailedException("Switch the active Build Profile to Android before preparing launcher icons.");
+#endif
         }
 
         private static void ApplyDeviceCompatibilitySettings()
