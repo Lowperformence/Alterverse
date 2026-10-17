@@ -16,8 +16,8 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public sealed class CoopGameplayCommands : MonoBehaviour
     {
-        private const string BasicMessage="DF_COOP_BASIC_V5";
-        private const string AbilityMessage="DF_COOP_ABILITY_V5";
+        private const string BasicMessage="DF_COOP_BASIC_V6";
+        private const string AbilityMessage="DF_COOP_ABILITY_V6";
 
         private const int TargetNone=0;
         private const int TargetHero=1;
@@ -31,8 +31,61 @@ namespace Alterverse.Multiplayer
 
         private CustomMessagingManager messaging;
         private bool attached;
+        private CoopMatchPlan commandPlan;
+        private uint nextCommandSequence;
+        private readonly uint[] pendingActions=new uint[5];
+        private readonly uint[] processedCommands=new uint[MatchSession.MaxPlayers];
+        private GameObject pendingActor;
+        private void EnsureCommandRound()
+        {
+            if(ReferenceEquals(commandPlan,CoopAuthority.ActivePlan))return;
+            commandPlan=CoopAuthority.ActivePlan;nextCommandSequence=0;pendingActor=null;
+            System.Array.Clear(pendingActions,0,pendingActions.Length);
+            System.Array.Clear(processedCommands,0,processedCommands.Length);
+        }
+        public static uint ProcessedCommand(int rosterSlot)
+        {
+            if(Instance==null||rosterSlot<0||rosterSlot>=MatchSession.MaxPlayers)return 0;
+            Instance.EnsureCommandRound();return Instance.processedCommands[rosterSlot];
+        }
+        public static bool CanApplyCooldown(GameObject actor,int abilitySlot,uint acknowledged)
+        {
+            if(Instance==null)return true;
+            Instance.EnsureCommandRound();
+            if(Instance.pendingActor!=actor)return true;
+            uint pending=Instance.pendingActions[Mathf.Clamp(abilitySlot+1,0,4)];
+            return pending==0||(acknowledged!=0&&unchecked((int)(acknowledged-pending))>=0);
+        }
+        private bool ProcessCommand(GameObject actor,uint sequence)
+        {
+            EnsureCommandRound();
+            int index=actor.GetComponent<CoopHeroSlot>().Slot;
+            uint previous=processedCommands[index];
+            if(sequence==0||(previous!=0&&unchecked((int)(sequence-previous))<=0))return false;
+            // A well-formed, authorized request is acknowledged even if gameplay rejects it.
+            processedCommands[index]=sequence;return true;
+        }
         private int receivedCombat,authorizedCombat,acceptedCombat,damagingHits,humanDamagingHits;
         private float removedHealthAndShield,humanHealthAndShieldRemoved,nextCombatReport;
+        private readonly int[] frameMilliseconds=new int[201];
+        private int sampledFrames;
+        private float frameSeconds,maxFrameMilliseconds;
+        private void SampleServerFrame()
+        {
+            float seconds=Time.unscaledDeltaTime;
+            if(seconds<=0||!MatchNetworkProtocol.Finite(seconds))return;
+            sampledFrames++;frameSeconds+=seconds;
+            float milliseconds=seconds*1000f;maxFrameMilliseconds=Mathf.Max(maxFrameMilliseconds,milliseconds);
+            frameMilliseconds[Mathf.Clamp(Mathf.CeilToInt(milliseconds),0,200)]++;
+        }
+        private string ConsumeFrameReport()
+        {
+            int threshold=Mathf.CeilToInt(sampledFrames*.95f),total=0,p95=0;
+            for(int i=0;i<frameMilliseconds.Length;i++){total+=frameMilliseconds[i];if(total>=threshold){p95=i;break;}}
+            string report=$"serverFps={(frameSeconds>0?sampledFrames/frameSeconds:0):F1}, frameP95Ms={(p95==200?">=200":p95.ToString())}, frameMaxMs={maxFrameMilliseconds:F1}";
+            System.Array.Clear(frameMilliseconds,0,frameMilliseconds.Length);sampledFrames=0;frameSeconds=maxFrameMilliseconds=0;
+            return report;
+        }
 
         public static void RecordAuthoritativeDamage(GameObject actor,float amount)
         {
@@ -44,10 +97,13 @@ namespace Alterverse.Multiplayer
         }
         private void ReportServerCombat(NetworkManager manager)
         {
-            if(!manager.IsServer||!CoopAuthority.LocalHasServerAuthority||Time.unscaledTime<nextCombatReport)return;
+            if(!manager.IsServer||!CoopAuthority.LocalHasServerAuthority)return;
+            SampleServerFrame();
+            if(Time.unscaledTime<nextCombatReport)return;
             nextCombatReport=Time.unscaledTime+10f;
+            string frameReport=ConsumeFrameReport();
             if(receivedCombat==0&&damagingHits==0)return;
-            Debug.Log($"DIMENSIONS FRONT COMBAT: received={receivedCombat}, authorized={authorizedCombat}, accepted={acceptedCombat}, damagingHits={damagingHits}, healthAndShieldRemoved={removedHealthAndShield:F1}, humanDamagingHits={humanDamagingHits}, humanHealthAndShieldRemoved={humanHealthAndShieldRemoved:F1}.");
+            Debug.Log($"DIMENSIONS FRONT COMBAT: received={receivedCombat}, authorized={authorizedCombat}, accepted={acceptedCombat}, damagingHits={damagingHits}, healthAndShieldRemoved={removedHealthAndShield:F1}, humanDamagingHits={humanDamagingHits}, humanHealthAndShieldRemoved={humanHealthAndShieldRemoved:F1}, {frameReport}.");
             receivedCombat=authorizedCombat=acceptedCombat=damagingHits=humanDamagingHits=0;removedHealthAndShield=humanHealthAndShieldRemoved=0;
         }
         private readonly Dictionary<ulong,string> senderOwners=new();
@@ -101,10 +157,13 @@ namespace Alterverse.Multiplayer
             if(heroSlot==null||!heroSlot.IsLocalHuman||health==null||health.IsDead)return false;
 
             FixedString128Bytes id=new(heroSlot.PlayerId??"");
-            using FastBufferWriter writer=new(232,Allocator.Temp);
+            EnsureCommandRound();
+            uint sequence=unchecked(nextCommandSequence+1);if(sequence==0)sequence=1;
+            using FastBufferWriter writer=new(256,Allocator.Temp);
             writer.WriteValueSafe(CoopPlanHandshake.Fingerprint(CoopAuthority.ActivePlan));
             writer.WriteValueSafe(heroSlot.Slot);
             writer.WriteValueSafe(id);
+            writer.WriteValueSafe(sequence);
 
             bool hasTarget=target!=null&&!target.IsDead&&target.isActiveAndEnabled;
             writer.WriteValueSafe(hasTarget);
@@ -133,6 +192,7 @@ namespace Alterverse.Multiplayer
             // Optional trailing V5 field; old commands retain manual capture.
             if (!pose.AllowDashTargetCapture) writer.WriteValueSafe(false);
             messaging.SendNamedMessage(message,NetworkManager.ServerClientId,writer,NetworkDelivery.ReliableSequenced);
+            nextCommandSequence=sequence;pendingActor=actor;pendingActions[abilitySlot+1]=sequence;
             return true;
         }
 
@@ -159,8 +219,11 @@ namespace Alterverse.Multiplayer
             receivedCombat++;
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
             authorizedCombat++;
+            if(!reader.TryBeginRead(sizeof(uint)))return;
+            reader.ReadValueSafe(out uint sequence);
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
+            if(!ProcessCommand(actor,sequence))return;
             if(actor.GetComponent<BasicAttack>()?.TryAttackNetworkAuthoritative(pose)==true)acceptedCombat++;
         }
 
@@ -169,10 +232,13 @@ namespace Alterverse.Multiplayer
             receivedCombat++;
             if(!TryReadAuthorizedActor(senderClientId,ref reader,out GameObject actor))return;
             authorizedCombat++;
+            if(!reader.TryBeginRead(sizeof(uint)))return;
+            reader.ReadValueSafe(out uint sequence);
             if(!TryReadTarget(actor,ref reader,out Health requestedTarget))return;
             if (!reader.TryBeginRead(sizeof(int))) return;
             reader.ReadValueSafe(out int slot);
             if (slot < 0 || slot > 3 || !TryReadAim(ref reader, requestedTarget, out AimPose pose)) return;
+            if(!ProcessCommand(actor,sequence))return;
             if(actor.GetComponent<PlayerHeroAbilities>()?.CastNetworkAuthoritative(slot, pose)==true)acceptedCombat++;
         }
 

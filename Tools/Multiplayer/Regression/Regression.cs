@@ -84,12 +84,12 @@ static class Regression
   Time.unscaledTime=.10f;server.ReceiveOwner(7,client.Messages.Sent[1].Values);
   Vector3 accepted=serverActor.transform.position;server.ReceiveOwner(7,client.Messages.Sent[0].Values);
   Position(serverActor.transform.position,accepted,"Out-of-order owner packet cannot overwrite accepted movement");
-  object[] cheat=(object[])client.Messages.Sent[4].Values.Clone();cheat[4]=100f;Time.unscaledTime=.15f;server.ReceiveOwner(7,cheat);
+  object[] cheat=(object[])client.Messages.Sent[4].Values.Clone();cheat[5]=100f;Time.unscaledTime=.15f;server.ReceiveOwner(7,cheat);
   Check(serverActor.transform.position.x-accepted.x<1,"Sequence acknowledgement does not bypass the server speed limit");
-  object[] untrusted=(object[])client.Messages.Sent[4].Values.Clone();untrusted[3]=6u;untrusted[4]=200f;
+  object[] untrusted=(object[])client.Messages.Sent[4].Values.Clone();untrusted[3]=6u;untrusted[5]=200f;
   accepted=serverActor.transform.position;MatchNetworkProtocol.AllowOwner=false;server.ReceiveOwner(7,untrusted);
   Position(serverActor.transform.position,accepted,"Unauthorized owner cannot move another player");MatchNetworkProtocol.AllowOwner=true;
-  untrusted[4]=float.NaN;server.ReceiveOwner(7,untrusted);Position(serverActor.transform.position,accepted,"Non-finite movement cannot poison server state");
+  untrusted[5]=float.NaN;server.ReceiveOwner(7,untrusted);Position(serverActor.transform.position,accepted,"Non-finite movement cannot poison server state");
   // Forced movement remains authoritative and invalidates pre-dash predictions.
   serverActor.GetComponent<HeroLocomotion>().IsForcedMoving=true;serverActor.transform.position=P(9);server.Broadcast(serverManager);
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;
@@ -110,6 +110,12 @@ static class Regression
   }
   CoopAuthority.LocalHasServerAuthority=true;MatchScoreboard.Instance=serverBoard;server.Broadcast(serverManager);
   Check((int)server.Messages.Sent[^1].Values[1]==8,"A complete 4v4 roster is serialized");
+  int bytes=0;foreach(var field in server.Messages.Sent[^1].Values)
+   bytes+=field is bool?1:field is int||field is uint||field is float?4:throw new Exception("Unknown snapshot field type");
+  Check(bytes<1200,"Full roster snapshot stays below a conservative 1200-byte application payload budget");
+  int projectedTenBytes=8+(bytes-8)/8*10;
+  Check(projectedTenBytes<1200,"Projected ten-hero record payload fits the same budget; this does not enable ten-player admission");
+  Console.WriteLine($"Hero snapshot application bytes: eight={bytes}, projected ten={projectedTenBytes}; transport framing is additional.");
   CoopAuthority.LocalHasServerAuthority=false;MatchScoreboard.Instance=clientBoard;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
   for(int i=1;i<8;i++)
   {
@@ -123,8 +129,49 @@ static class Regression
   hp.Current=17;client.ReceiveSnapshot(0,snapshot);Check(hp.Current==17,"An old-round snapshot cannot consume new-round prediction history");
   Check(client.History.Count==1,"Old-round snapshot retains the new round's outstanding prediction");
   CoopAuthority.LocalHasServerAuthority=true;serverActor.GetComponent<HeroLocomotion>().IsForcedMoving=false;
-  serverActor.transform.position=Vector3.zero;server.ReceiveOwner(7,nextRoundPacket);
+  serverActor=Actor(0);server.Slot(serverActor);serverActor.transform.position=Vector3.zero;server.ReceiveOwner(7,nextRoundPacket);
   Position(serverActor.transform.position,P(.325f),"Server accepts restarted owner sequencing in the new round");
+  CoopPlanHandshake.Round=123;
+ }
+ static void DashTransportCases()
+ {
+  foreach(bool hook in new[]{false,true})foreach(bool loseStart in new[]{false,true})
+  {
+   CoopPlanHandshake.Round++;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
+   CoopAuthority.Active=true;Time.timeScale=1;Time.unscaledTime=0;MatchNetworkProtocol.AllowOwner=true;
+   var server=new CoopHeroStateSync();var client=new CoopHeroStateSync();
+   var a=Actor(0);var b=Actor(0,true);server.Slot(a);client.Slot(b,true);
+   var sm=new NetworkManager{IsServer=true};var cm=new NetworkManager();
+   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;client.Send(cm);
+   var stale=client.Messages.Sent[^1].Values;
+   var body=a.GetComponent<HeroLocomotion>();
+   if(hook)body.IsForcedMoving=true;else body.IsDashing=true;
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=sm;
+   a.transform.position=P(2);server.Broadcast(sm);
+   Check(body.MovementRevision==1,"Beginning authoritative displacement advances the production epoch");
+   if(!loseStart)
+   {
+    CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
+    Position(b.transform.position,P(2),"Owner receives actual dash/hook movement while in progress");
+    Check(client.History.Count==0,"Dash clears incompatible owner predictions");
+   }
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=sm;
+   a.transform.position=P(6);body.IsDashing=body.IsForcedMoving=false;
+   server.ReceiveOwner(7,stale);
+   Position(a.transform.position,P(6),"Pre-dash owner packet cannot undo the final server endpoint");
+   Check(body.MovementRevision==2,"Finishing displacement advances a second epoch");
+   server.Broadcast(sm);var endpoint=server.Messages.Sent[^1].Values;
+   // Drop final snapshot once, then recover from the next ordinary snapshot.
+   server.Broadcast(sm);
+   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;
+   client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
+   Position(b.transform.position,P(6),"Endpoint survives lost start/end packets, even when movement is no longer active");
+   client.ReceiveSnapshot(0,endpoint);Position(b.transform.position,P(6),"Repeated endpoint snapshot is idempotent");
+   b.transform.position=P(6.325f);client.Send(cm);
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=sm;Time.unscaledTime=.05f;
+   server.ReceiveOwner(7,client.Messages.Sent[^1].Values);
+   Position(a.transform.position,P(6.325f),"Movement resumes only after owner acknowledges the final movement epoch");
+  }
   CoopPlanHandshake.Round=123;
  }
  static void HealingAndStatusCases()
@@ -154,7 +201,7 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=true;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
   var server=new CoopHeroStateSync();var actor=Actor(0);server.Slot(actor);var combat=actor.gameObject.AddComponent<HeroCombatStatus>();
   NetworkManager.Singleton=new NetworkManager{IsServer=true};Time.time=200;combat.Stun(.5f);
-  object[] packet={CoopPlanHandshake.Round,0,new Unity.Collections.FixedString128Bytes("player"),1u,5f,0f,0f,0f,0f,0f};
+  object[] packet={CoopPlanHandshake.Round,0,new Unity.Collections.FixedString128Bytes("player"),1u,0u,5f,0f,0f,0f,0f,0f};
   server.ReceiveOwner(7,packet);Position(actor.transform.position,P(0),"Owner packets cannot move a stunned server actor through movement slack");
   Time.time=202;combat.TryRoot(source,2);packet[3]=2u;server.ReceiveOwner(7,packet);
   Position(actor.transform.position,P(0),"Owner packets cannot move a rooted server actor");
@@ -187,5 +234,5 @@ static class Regression
   Check(removed==110,"All removals are delivered beyond the former 64 cap");
   sync.Messages.Sent.Clear();sync.Broadcast(manager);Check(sync.Messages.Sent.Count==0,"Removed world objects are retired after reliable send");
  }
- static void Main(){HistoryCases();TransportCases();HealingAndStatusCases();WorldPacketCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }

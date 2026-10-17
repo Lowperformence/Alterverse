@@ -136,9 +136,10 @@ namespace Alterverse.Combat
             return true;
         }
 
-        public void ApplyNetworkCooldown(float remaining)
+        public void ApplyNetworkCooldown(float remaining,uint acknowledgedCommand=0)
         {
             if (!Alterverse.Multiplayer.CoopAuthority.Active || Alterverse.Multiplayer.CoopAuthority.LocalIsHost) return;
+            if(!Alterverse.Multiplayer.CoopGameplayCommands.CanApplyCooldown(gameObject,-1,acknowledgedCommand))return;
             nextAttackTime = Time.time + Mathf.Max(0f, remaining);
         }
 

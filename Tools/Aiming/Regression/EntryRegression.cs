@@ -132,7 +132,7 @@ partial class Regression
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
   Check(CoopGameplayCommands.TrySendAbility(a,3,pose),"empty Scratch packet sent");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
   for(int frame=0;frame<Mathf.CeilToInt(3f*fps);frame++)Step(1f/fps,()=>{if(Time.time>.1f)b.transform.position=Vector3.forward*4.5f;});
   Near(Total(b),1000-TimmyBalance.ScratchDamage,"host resolves late entry after empty V5 cast at "+fps);
  }
@@ -185,7 +185,7 @@ partial class Regression
    CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
    Check(CoopGameplayCommands.TrySendAbility(a,slot,pose),"empty V5 directed cast sent");
    CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+   manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
    for(int frame=0;frame<fps;frame++)Step(1f/fps,()=>b.transform.position=Angle(16,4));
    Near(1000-Total(b),a.GetComponent<HeroAbilityKit>().Spec(slot).Power,"host captures late cone entrant before beam/projectile launch at "+fps);
   }

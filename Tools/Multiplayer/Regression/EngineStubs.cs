@@ -100,7 +100,7 @@ namespace Alterverse.Combat
   public float Current=100,Shield,Max=100;public bool IsDead;public float Normalized=>Current/Max;public void Heal(float value){Current=Math.Min(Max,Current+value);}
   public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}
  }
- public sealed class BasicAttack:Component {public float RemainingCooldown;public void ApplyNetworkCooldown(float value){RemainingCooldown=value;}}
+ public sealed class BasicAttack:Component {public float RemainingCooldown;public void ApplyNetworkCooldown(float value,uint acknowledged=0){RemainingCooldown=value;}}
  public static class GameplayCollision {public static Vector3 ClampToRoundedArena(Vector3 p,float x,float z)=>new(Math.Clamp(p.x,-x,x),p.y,Math.Clamp(p.z,-z,z));}
 }
 namespace Alterverse.Characters
@@ -111,11 +111,13 @@ namespace Alterverse.Characters
  public sealed class HeroMotor:Component {public Vector3 SmoothedVelocity;}
  public sealed class HeroLocomotion:Component
  {
-  public bool IsDashing,IsForcedMoving,IsVortexPulled;public float SpeedMultiplier=1,VortexRadius;public Vector3 VortexCenter;
+  public bool IsDashing,IsForcedMoving,IsVortexPulled;
+  // The epoch implementation is extracted verbatim from HeroLocomotion.cs by run.py.
+  public float SpeedMultiplier=1,VortexRadius;public Vector3 VortexCenter;
   public void SetRemoteRunVelocity(Vector3 p){}public void SetVortexPull(Vector3 p,float r,float seconds){VortexCenter=p;VortexRadius=r;IsVortexPulled=seconds>0;}
   public void Move(Vector3 delta,float x,float z){transform.position=Alterverse.Combat.GameplayCollision.ClampToRoundedArena(transform.position+delta,x,z);}
  }
- public sealed class PlayerHeroAbilities:Component {public float RemainingFor(int i)=>0;public void ApplyNetworkCooldown(int i,float value){}}
+ public sealed class PlayerHeroAbilities:Component {public float RemainingFor(int i)=>0;public void ApplyNetworkCooldown(int i,float value,uint acknowledged=0){}}
 }
 namespace Alterverse.Visuals
 {
@@ -132,6 +134,7 @@ namespace Alterverse.Multiplayer
  public sealed class CoopMatchPlan {public Session Session=new();}
  public static class CoopAuthority {public static bool Active=true,LocalHasServerAuthority,LocalIsHost;public static CoopMatchPlan ActivePlan=new();public static bool CanSimulateHostGameplay=>LocalHasServerAuthority;}
  public static class CoopPlanHandshake {public static uint Round=123;public static uint Fingerprint(CoopMatchPlan plan)=>Round;}
+ public static class CoopGameplayCommands {public static uint ProcessedCommand(int slot)=>0;}
  public static class MatchNetworkProtocol
  {
   public static bool AllowOwner=true;

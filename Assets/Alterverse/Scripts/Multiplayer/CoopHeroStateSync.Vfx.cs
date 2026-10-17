@@ -78,7 +78,16 @@ namespace Alterverse.Multiplayer
             using var replay=HeroVfxEvents.Replay(flash?0:elapsed,origin);
             switch(cue)
             {
-                case HeroVfxCue.Cast:HeroSkillVfx.Cast(actor,ability);break;
+                case HeroVfxCue.Cast:
+                    HeroSkillVfx.Cast(actor,ability,duration);
+                    // The owner already predicted this action. Remote actors need the same
+                    // body windup as offline; a muzzle flash alone does not animate their rig.
+                    if(!slots[actorSlot].IsLocalHuman)
+                    {
+                        var visual=actor.GetComponent<Alterverse.Visuals.HeroVisualMotion>();
+                        visual?.PulseAbility(ability,duration);visual?.SeekAction(elapsed);
+                    }
+                    break;
                 case HeroVfxCue.Basic:HeroSkillVfx.Basic(actor,point,duration,target!=null?target.transform:null,flag);break;
                 case HeroVfxCue.Spell:HeroSkillVfx.Spell(actor,point,ability,duration,target!=null?target.transform:null);break;
                 case HeroVfxCue.Impact:if(target!=null)HeroSkillVfx.Impact(actor,target,ability);break;

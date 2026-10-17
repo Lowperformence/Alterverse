@@ -209,15 +209,15 @@ partial class Regression
   var service=new GameObject("Timmy commands").AddComponent<Alterverse.Multiplayer.CoopGameplayCommands>();
   var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
   Alterverse.Multiplayer.CoopAuthority.Active=true;Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
-  Check(Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(a,3,captured),"Scratch sends the selected hero through V5");
+  Check(Alterverse.Multiplayer.CoopGameplayCommands.TrySendAbility(a,3,captured),"Scratch sends the selected hero through V6");
   var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);
-  reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out bool hasTarget);
+  reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out uint sequence);reader.ReadValueSafe(out bool hasTarget);
   reader.ReadValueSafe(out int kind);reader.ReadValueSafe(out int victimSlot);
   Check(hasTarget&&kind==1&&victimSlot==2,"Scratch packet identifies the marked hero slot");
   other=Hero(HeroId.Kaelon,1,Vector3.forward*3);other.AddComponent<Alterverse.Multiplayer.CoopHeroSlot>().Slot=3;
   Alterverse.Multiplayer.CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
   Alterverse.Multiplayer.CoopAuthority.ActivePlan.Session.Slots[1]=new Alterverse.Multiplayer.MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.7f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.7f);
   Check(b.GetComponent<HeroCombatStatus>()?.Rooted==true,"host jumps to the same marked enemy even if another enters the cone");
   Check(other.GetComponent<HeroCombatStatus>()?.Rooted!=true,"host cannot silently swap Scratch victims");
   Run(2.3f);Near(Total(b),1000-TimmyBalance.ScratchDamage,"network Scratch keeps full selected-victim damage");Near(Total(other),1000,"network Scratch remains single target");

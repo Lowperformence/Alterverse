@@ -37,3 +37,5 @@ namespace Alterverse.Multiplayer
         public static void BroadcastKillSound(GameObject a){}
     }
 }
+
+namespace Alterverse.Characters {public class TrenchSoldier:UnityEngine.MonoBehaviour {}}

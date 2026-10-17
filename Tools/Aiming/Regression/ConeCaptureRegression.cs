@@ -136,20 +136,20 @@ partial class Regression
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
   Check(CoopGameplayCommands.TrySendAbility(actor,2,captured),"client sends captured cone point");
   var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);
-  reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out bool target);reader.ReadValueSafe(out int slot);
+  reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out uint sequence);reader.ReadValueSafe(out bool target);reader.ReadValueSafe(out int slot);
   reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);reader.ReadValueSafe(out float px);reader.ReadValueSafe(out float py);reader.ReadValueSafe(out float pz);reader.ReadValueSafe(out bool anchored);
-  Check(!target&&anchored,"V5 carries frozen point flag without normal target reference");Near(px,captured.Point.x,"V5 captured x");Near(pz,captured.Point.z,"V5 captured z");Near(dx,0,"V5 preserves raw cone direction");
+  Check(!target&&anchored,"V6 carries frozen point flag without normal target reference");Near(px,captured.Point.x,"V6 captured x");Near(pz,captured.Point.z,"V6 captured z");Near(dx,0,"V6 preserves raw cone direction");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
   actor.transform.position=Vector3.right*.8f;
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.6f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.6f);
   Near(Total(enemy),980,"server preserves frozen capture through receipt and windup movement");
   Reset();actor=Hero(HeroId.Nyra,0,Vector3.zero);actor.AddComponent<CoopHeroSlot>().Slot=1;enemy=Hero(HeroId.Kaelon,1,Angle(16,4));
   service=new GameObject("commands").AddComponent<CoopGameplayCommands>();manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");Check(CoopGameplayCommands.TrySendAbility(actor,2,captured),"client snapshot can arrive after target moves");
   enemy.transform.position+=Vector3.right*2;CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket.Take(manager.CustomMessagingManager.LastPacket.Length-1).ToArray()));
-  Near(actor.GetComponent<PlayerHeroAbilities>().ERemaining,0,"truncated V5 capture flag rejects before cooldown or queue");
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.6f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket.Take(manager.CustomMessagingManager.LastPacket.Length-1).ToArray()));
+  Near(actor.GetComponent<PlayerHeroAbilities>().ERemaining,0,"truncated V6 capture flag rejects before cooldown or queue");
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.6f);
   Near(Total(enemy),1000,"server does not reacquire or follow moved captured enemy");
  }
 }

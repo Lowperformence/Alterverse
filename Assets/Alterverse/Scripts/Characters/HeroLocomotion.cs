@@ -52,6 +52,27 @@ namespace Alterverse.Characters
         public bool IsForcedMoving => Time.time < forcedUntil;
         public Vector3 DashDestination=>transform.position+dashDirection*dashRemaining;
         public bool IsDashing => dashRemaining > .001f;
+        private uint movementRevision;
+        private bool revisionMovementActive;
+        public uint MovementRevision
+        {
+            get
+            {
+                bool active=IsDashing||IsForcedMoving;
+                if(active!=revisionMovementActive)
+                {
+                    revisionMovementActive=active;
+                    unchecked { movementRevision++;if(movementRevision==0)movementRevision=1; }
+                }
+                return movementRevision;
+            }
+        }
+        private void RecordMovementStart(){_ = MovementRevision;}
+        public void MarkNetworkRelocation()
+        {
+            _ = MovementRevision;
+            unchecked { movementRevision++;if(movementRevision==0)movementRevision=1; }
+        }
         public bool OwnsMovementFrame => IsForcedMoving || IsDashing || dashFrame == Time.frameCount;
         public bool CanMove => isActiveAndEnabled && focused && health != null && !health.IsDead && !status.Stunned && !status.Rooted && Time.timeScale > 0;
         public float SpeedMultiplier => status.MoveMultiplier;
@@ -110,6 +131,7 @@ namespace Alterverse.Characters
         }
         public bool BeginDash(Vector3 end, float duration = .16f)
         {
+            _ = MovementRevision;
             if(!CanMove || OwnsMovementFrame)return false;
             Vector3 delta=end-transform.position;delta.y=0;
             if(delta.magnitude<.1f)return false;
@@ -119,6 +141,7 @@ namespace Alterverse.Characters
             dashRemaining=clearDistance;
             // Fixed readable traversal time; existing ability distance and cooldown remain intact.
             dashSpeed=delta.magnitude/Mathf.Clamp(duration,.08f,.65f); dashFrame=Time.frameCount;
+            RecordMovementStart();
             return true;
         }
         // Only an already active dash may adjust its destination. Scratch uses
@@ -137,12 +160,14 @@ namespace Alterverse.Characters
         }
         public bool BeginForcedMove(Vector3 destination, float duration)
         {
+            _ = MovementRevision;
             if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || health == null || health.IsDead ||
                 !isActiveAndEnabled || Time.timeScale <= 0 || IsForcedMoving) return false;
             forcedEnd = GameplayCollision.ClampToRoundedArena(destination,40f,33f);
             forcedEnd.y = transform.position.y;
             forcedUntil = Time.time + Mathf.Clamp(duration,.05f,.5f);
             dashRemaining = 0;
+            RecordMovementStart();
             return true;
         }
         private void Update()

@@ -47,7 +47,7 @@ namespace Alterverse.Characters
         public AimSpec AimFor(int slot) => AimingSettings.Current.For(identity.Hero, slot);
         public float RemainingFor(int slot) => execution != null ? execution.Remaining(slot) : 0;
         public float CooldownFor(int slot) => execution.Cooldown(slot);
-        public void ApplyNetworkCooldown(int slot, float remaining) => execution?.ApplyNetworkCooldown(slot, remaining);
+        public void ApplyNetworkCooldown(int slot, float remaining,uint acknowledgedCommand=0) => execution?.ApplyNetworkCooldown(slot, remaining,acknowledgedCommand);
         public float PreviewRange(int slot) => AimFor(slot).castRange > 0 ? AimFor(slot).castRange : AimFor(slot).aoeRadius;
 
         public string Describe(int slot)

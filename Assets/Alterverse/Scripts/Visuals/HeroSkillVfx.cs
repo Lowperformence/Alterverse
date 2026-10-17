@@ -296,9 +296,16 @@ namespace Alterverse.Visuals
         {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelWarnings,actor);HeroVfxPool.CancelWarnings(actor);}
         public static void CancelProjectiles(GameObject actor)
         {using var cue=HeroVfxEvents.Begin(HeroVfxCue.CancelProjectiles,actor);HeroVfxPool.CancelProjectiles(actor);}
-        public static void Cast(GameObject actor,int slot)
+        public static void Cast(GameObject actor,int slot,float windup=-1f)
         {
-            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot);
+            if(windup<0&&actor!=null&&slot>=0&&slot<4)
+            {
+                var loadout=HeroAbilityKit.LoadoutFor(Hero(actor));
+                AbilitySpec spec=actor.GetComponent<HeroAbilityKit>()?.Spec(slot)??
+                    (slot switch {0=>loadout.Q,1=>loadout.W,2=>loadout.E,_=>loadout.Ultimate});
+                windup=HeroAttackDelivery.AbilityWindup(Hero(actor),slot,spec);
+            }
+            using var cue=HeroVfxEvents.Begin(HeroVfxCue.Cast,actor,slot:slot,duration:Mathf.Max(0,windup));
             if(actor==null)return;
             if(Hero(actor)==HeroId.Timmy){TimmyCast(actor,slot);return;}
             HeroId h=Hero(actor);Color c=h==HeroId.Mira&&(slot==1||slot==2||slot==3)?new Color(.24f,1f,.42f):Accent(actor);float size=slot==3?.45f:.22f;Vector3 p=Muzzle(actor);

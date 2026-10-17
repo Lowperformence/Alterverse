@@ -255,19 +255,19 @@ partial class Regression
   var manager=new Unity.Netcode.NetworkManager{IsListening=true,IsConnectedClient=true,IsServer=false};Unity.Netcode.NetworkManager.Singleton=manager;
   CoopAuthority.Active=true;CoopAuthority.LocalHasServerAuthority=false;Call(service,"Update");
   var pose=new AimPose(Vector3.right,new Vector3(5,0,1));Check(CoopGameplayCommands.TrySendAbility(a,0,pose),"network send aiming intent");
-  Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_ABILITY_V5","protocol revision updated");
-  var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out bool target);reader.ReadValueSafe(out int slot);
+  Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_ABILITY_V6","protocol revision updated");
+  var reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out string round);reader.ReadValueSafe(out int roster);reader.ReadValueSafe(out Unity.Collections.FixedString128Bytes id);reader.ReadValueSafe(out uint sequence);reader.ReadValueSafe(out bool target);reader.ReadValueSafe(out int slot);
   reader.ReadValueSafe(out float dx);reader.ReadValueSafe(out float dy);reader.ReadValueSafe(out float dz);reader.ReadValueSafe(out float px);reader.ReadValueSafe(out float py);reader.ReadValueSafe(out float pz);
   Check(!target,"normal spell has no soft target reference");Near(dx,1,"network preserves chosen direction");Near(px,5,"network preserves ground x");Near(pz,1,"network preserves ground z");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.5f);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));Run(.5f);
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.x,5,"server executes transmitted AOE point");Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.z,1,"server does not reacquire enemy");
   Unlock(a.GetComponent<HeroAbilityExecution>());
   Check(a.GetComponent<PlayerHeroAbilities>().CastNetworkAuthoritative(0,new AimPose(Vector3.right,new Vector3(100,0,0))),"server accepts clamped ground intent");
   Near(Alterverse.Visuals.HeroSkillVfx.LastPoint.magnitude,7.3f,"server clamps forged point to cast range");
   CoopAuthority.LocalHasServerAuthority=false;manager.IsServer=false;Hero(HeroId.Kaelon,1,Vector3.left*2);
-  Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V5","auto-target basic retains V5 route");
-  reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out target);
+  Check(a.GetComponent<BasicAttack>().TryAttack(),"client basic restores automatic target selection");Check(manager.CustomMessagingManager.LastMessage=="DF_COOP_BASIC_V6","auto-target basic retains V6 route");
+  reader=new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket);reader.ReadValueSafe(out round);reader.ReadValueSafe(out roster);reader.ReadValueSafe(out id);reader.ReadValueSafe(out sequence);reader.ReadValueSafe(out target);
   Check(target,"automatic ranged basic sends selected target for launch-time refresh");
   reader.ReadValueSafe(out int kind);reader.ReadValueSafe(out int targetSlot);reader.ReadValueSafe(out int targetTeam);reader.ReadValueSafe(out float tx);reader.ReadValueSafe(out float ty);reader.ReadValueSafe(out float tz);
   Check(kind==1&&targetTeam==1,"automatic basic identifies an enemy hero");Near(tx,-2,"automatic basic transmits target lookup point");
@@ -277,7 +277,7 @@ partial class Regression
   var phasePacket=manager.CustomMessagingManager.LastPacket;
   Near(a.GetComponent<Health>().TemporaryShield,0,"client cooldown prediction does not grant shield");
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;Unlock(a.GetComponent<HeroAbilityExecution>());
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(phasePacket));
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(phasePacket));
   Near(a.transform.position.x,2.3f,"host clamps Phase Fold to 2.3 meters");
   Near(a.GetComponent<Health>().TemporaryShield,20,"host applies Phase Fold shield once");
  }
@@ -401,7 +401,7 @@ partial class Regression
     Check(abilities.CastAimed(slot,tap),"client routes support intent");Near(Total(actor),selfBefore,"client does not mutate self");Near(Total(ally),allyBefore,"client does not mutate ally");
     Unlock(actor.GetComponent<HeroAbilityExecution>());CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
     CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
-    manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
+    manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(manager.CustomMessagingManager.LastPacket));
     Near(Total(actor)-selfBefore,aimAtAlly?0:power,"host self fallback matches transmitted aim");
     Near(Total(ally)-allyBefore,aimAtAlly?power:0,"host teammate support matches transmitted aim");
     Check(abilities.RemainingFor(slot)>0,"host support commits cooldown");
@@ -480,7 +480,7 @@ partial class Regression
   CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
   Unlock(client.GetComponent<HeroAbilityExecution>());
   client.GetComponent<HeroMotor>().SetMoveInput(new Vector2(-1,0));
-  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
+  manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
   Near(Vector3.Angle(client.transform.position,Vector3.right),0,"host preserves remote movement direction");
   Near(Total(victim),1000,"host does not recapture an enemy for a movement tap");
  }

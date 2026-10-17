@@ -42,9 +42,16 @@ def main():
         b = world.index('private void OnState(', a)
         packets = directory / 'WorldPackets.cs'
         packets.write_text('using System.Collections.Generic;using Alterverse.Combat;using UnityEngine;using Unity.Netcode;using Unity.Collections;namespace Alterverse.Multiplayer {public sealed partial class CoopWorldStateSync {' + world[a:b] + '}}')
+        locomotion = (source / 'Characters/HeroLocomotion.cs').read_text()
+        a = locomotion.index('private uint movementRevision;')
+        b = locomotion.index('public bool OwnsMovementFrame', a)
+        epochs = directory / 'MovementEpochs.cs'
+        epochs.write_text('namespace Alterverse.Characters {public sealed partial class HeroLocomotion {' + locomotion[a:b] + '}}')
+        engine = directory / 'EngineStubs.cs'
+        engine.write_text((here / 'EngineStubs.cs').read_text().replace('public sealed class HeroLocomotion:', 'public sealed partial class HeroLocomotion:'))
         output = directory / 'Regression.dll'
         response = directory / 'compile.rsp'
-        files = [here / 'EngineStubs.cs', here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
+        files = [engine, epochs, here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
                  source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-nowarn:0649', '-out:' + str(output),
                                        *['-r:' + str(path) for path in runtime.glob('*.dll')], *map(str, files)]))

@@ -50,10 +50,11 @@ namespace Alterverse.Characters
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,HeroAttackDelivery.AbilityWindup(identity.Hero,slot,kit.Spec(slot)));
         }
 
-        public void ApplyNetworkCooldown(int slot,float remaining)
+        public void ApplyNetworkCooldown(int slot,float remaining,uint acknowledgedCommand=0)
         {
             if(!Alterverse.Multiplayer.CoopAuthority.Active||Alterverse.Multiplayer.CoopAuthority.LocalIsHost)return;
             slot=Mathf.Clamp(slot,0,3);
+            if(!Alterverse.Multiplayer.CoopGameplayCommands.CanApplyCooldown(gameObject,slot,acknowledgedCommand))return;
             ready[slot]=Time.time+Mathf.Max(0f,remaining);
         }
 
@@ -190,7 +191,7 @@ namespace Alterverse.Characters
                 }
                 else if (!HeroAttackDelivery.For(gameObject).AbilityAimed(this, slot, attackAim)) return false;
             }
-            HeroSkillVfx.Cast(gameObject,slot);
+            HeroSkillVfx.Cast(gameObject,slot,presentationWindup);
             if (!mobility) locomotion.FaceAction(attackAim.CastDirection(transform.position));
             ready[slot] = Time.time + Cooldown(slot);
             GetComponent<HeroVisualMotion>()?.PulseAbility(slot,presentationWindup);

@@ -15,6 +15,7 @@ namespace Alterverse.Multiplayer
         private readonly uint[] ownerAcknowledgements=new uint[MatchSession.MaxPlayers];
         private readonly Vector3[] acknowledgedPositions=new Vector3[MatchSession.MaxPlayers];
         private readonly Dictionary<ulong,uint> receivedOwnerSequences=new();
+        private readonly uint[] receivedMovementRevisions=new uint[MatchSession.MaxPlayers];
         private uint poseRound;
         private bool poseRoundReady;
 
@@ -33,6 +34,7 @@ namespace Alterverse.Multiplayer
             System.Array.Clear(ownerAcknowledgements,0,ownerAcknowledgements.Length);
             System.Array.Clear(acknowledgedPositions,0,acknowledgedPositions.Length);
             receivedOwnerSequences.Clear();
+            System.Array.Clear(receivedMovementRevisions,0,receivedMovementRevisions.Length);
         }
 
         private void SendOwnerPose(NetworkManager manager)
@@ -52,6 +54,7 @@ namespace Alterverse.Multiplayer
             writer.WriteValueSafe(localSlot);
             writer.WriteValueSafe(id);
             writer.WriteValueSafe(ownerPoseHistory.Record(p));
+            writer.WriteValueSafe(receivedMovementRevisions[localSlot]);
             writer.WriteValueSafe(p.x);writer.WriteValueSafe(p.y);writer.WriteValueSafe(p.z);
             writer.WriteValueSafe(yaw);
             Vector3 run=slot.GetComponent<HeroMotor>()?.SmoothedVelocity??Vector3.zero;
@@ -70,6 +73,7 @@ namespace Alterverse.Multiplayer
             reader.ReadValueSafe(out int rosterSlot);
             reader.ReadValueSafe(out FixedString128Bytes fixedPlayerId);
             reader.ReadValueSafe(out uint ownerSequence);
+            reader.ReadValueSafe(out uint movementRevision);
             reader.ReadValueSafe(out float x);reader.ReadValueSafe(out float y);reader.ReadValueSafe(out float z);
             reader.ReadValueSafe(out float yaw);
             reader.ReadValueSafe(out float runX);reader.ReadValueSafe(out float runZ);
@@ -87,6 +91,9 @@ namespace Alterverse.Multiplayer
             if(ownerSequence==0||(receivedOwnerSequences.TryGetValue(senderClientId,out uint previousSequence)&&
                 !OwnerPoseHistory.Newer(ownerSequence,previousSequence)))return;
             receivedOwnerSequences[senderClientId]=ownerSequence;
+            HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
+            // Old owner poses must never undo a server dash/hook, including its final endpoint.
+            if(locomotion!=null&&(movementRevision!=locomotion.MovementRevision||locomotion.IsDashing||locomotion.IsForcedMoving))return;
             HeroCombatStatus combatStatus=actor.GetComponent<HeroCombatStatus>();
             if(combatStatus!=null&&(combatStatus.Rooted||combatStatus.Stunned))
             {
@@ -99,8 +106,6 @@ namespace Alterverse.Multiplayer
             desired.y=actor.transform.position.y;
             Vector3 delta=desired-actor.transform.position;delta.y=0;
 
-            HeroLocomotion locomotion=actor.GetComponent<HeroLocomotion>();
-            if(locomotion!=null&&(locomotion.IsDashing||locomotion.IsForcedMoving))return;
             locomotion?.SetRemoteRunVelocity(new Vector3(runX,0f,runZ));
             if(locomotion!=null&&locomotion.IsVortexPulled)
             {
@@ -166,7 +171,7 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(health.IsDead);
                 HeroCombatStatus status=slot.GetComponent<HeroCombatStatus>();
                 writer.WriteValueSafe(status!=null&&(status.Stunned||status.ActionLocked));
-                writer.WriteValueSafe(slot.GetComponent<HeroLocomotion>()?.IsForcedMoving==true);
+                writer.WriteValueSafe(slot.GetComponent<HeroLocomotion>() is HeroLocomotion movement&&(movement.IsDashing||movement.IsForcedMoving));
                 writer.WriteValueSafe(status!=null?status.MoveMultiplier:1f);
                 HeroLocomotion body=slot.GetComponent<HeroLocomotion>();
                 writer.WriteValueSafe(body!=null&&body.IsVortexPulled);
@@ -181,6 +186,8 @@ namespace Alterverse.Multiplayer
                 writer.WriteValueSafe(basic!=null?basic.RemainingCooldown:0f);
                 for(int ability=0;ability<4;ability++)
                     writer.WriteValueSafe(abilities!=null?abilities.RemainingFor(ability):0f);
+                writer.WriteValueSafe(body!=null?body.MovementRevision:0u);
+                writer.WriteValueSafe(CoopGameplayCommands.ProcessedCommand(i));
                 writer.WriteValueSafe(ownerAcknowledgements[i]);
                 Vector3 acknowledgedPosition=acknowledgedPositions[i];
                 writer.WriteValueSafe(acknowledgedPosition.x);writer.WriteValueSafe(acknowledgedPosition.y);writer.WriteValueSafe(acknowledgedPosition.z);
@@ -226,6 +233,8 @@ namespace Alterverse.Multiplayer
                 reader.ReadValueSafe(out float wRemaining);
                 reader.ReadValueSafe(out float eRemaining);
                 reader.ReadValueSafe(out float ultRemaining);
+                reader.ReadValueSafe(out uint movementRevision);
+                reader.ReadValueSafe(out uint acknowledgedCommand);
                 reader.ReadValueSafe(out uint acknowledgedPose);
                 reader.ReadValueSafe(out float acknowledgedX);reader.ReadValueSafe(out float acknowledgedY);reader.ReadValueSafe(out float acknowledgedZ);
                 reader.ReadValueSafe(out int kills);reader.ReadValueSafe(out int deaths);reader.ReadValueSafe(out int assists);
@@ -238,7 +247,9 @@ namespace Alterverse.Multiplayer
                 bool localOwner=actor.IsLocalHuman;
                 float errorSqr=(actor.transform.position-hostPosition).sqrMagnitude;
                 bool timmyChannel=actor.GetComponent<HeroIdentity>()?.Hero==HeroId.Timmy&&stunned&&moveMultiplier<=.001f;
-                bool relocation=dead||respawning||forcedMoving||timmyChannel||(!stunned&&moveMultiplier<=.001f);
+                bool movementChanged=receivedMovementRevisions[rosterSlot]!=movementRevision;
+                receivedMovementRevisions[rosterSlot]=movementRevision;
+                bool relocation=dead||respawning||forcedMoving||movementChanged||timmyChannel||(!stunned&&moveMultiplier<=.001f);
                 if(!localOwner||relocation)
                 {
                     actor.transform.SetPositionAndRotation(hostPosition,Quaternion.Euler(0,yaw,0));
@@ -259,14 +270,14 @@ namespace Alterverse.Multiplayer
                 actor.GetComponent<CoopRespawnReplica>()?.Apply(respawning,respawnRemaining);
                 if(actor.IsLocalHuman)
                 {
-                    actor.GetComponent<BasicAttack>()?.ApplyNetworkCooldown(basicRemaining);
+                    actor.GetComponent<BasicAttack>()?.ApplyNetworkCooldown(basicRemaining,acknowledgedCommand);
                     PlayerHeroAbilities localAbilities=actor.GetComponent<PlayerHeroAbilities>();
                     if(localAbilities!=null)
                     {
-                        localAbilities.ApplyNetworkCooldown(0,qRemaining);
-                        localAbilities.ApplyNetworkCooldown(1,wRemaining);
-                        localAbilities.ApplyNetworkCooldown(2,eRemaining);
-                        localAbilities.ApplyNetworkCooldown(3,ultRemaining);
+                        localAbilities.ApplyNetworkCooldown(0,qRemaining,acknowledgedCommand);
+                        localAbilities.ApplyNetworkCooldown(1,wRemaining,acknowledgedCommand);
+                        localAbilities.ApplyNetworkCooldown(2,eRemaining,acknowledgedCommand);
+                        localAbilities.ApplyNetworkCooldown(3,ultRemaining,acknowledgedCommand);
                     }
                 }
                 actor.GetComponent<CoopHeroReplicaPresentation>()?.Apply(dead);

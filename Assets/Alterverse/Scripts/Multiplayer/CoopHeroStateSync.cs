@@ -23,8 +23,8 @@ namespace Alterverse.Multiplayer
         private const string OrunOverdriveMessage="DF_COOP_ORUN_OVERDRIVE_FX_V1";
         private const string KillSoundMessage="DF_COOP_KILL_AUDIO_V2";
         private const string CombatSoundMessage="DF_COOP_COMBAT_AUDIO_V2";
-        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V4";
-        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V5";
+        private const string OwnerPoseMessage="DF_COOP_OWNER_POSE_V5";
+        private const string HeroSnapshotMessage="DF_COOP_HERO_SNAPSHOT_V6";
         private const float OwnerSendInterval=1f/20f;
         private const float HostSnapshotInterval=1f/12f;
         private const float MinimumMovementSlack=.18f;
