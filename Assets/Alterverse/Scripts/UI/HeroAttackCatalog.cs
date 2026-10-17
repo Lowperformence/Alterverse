@@ -120,7 +120,7 @@ namespace Alterverse.UI
             HeroId.Nyra=>slot switch
             {
                 0=>"Aim a blue laser along a fixed direction.",
-                1=>"Reposition dash up to 3m.",
+                1=>$"Reposition dash up to 3m. Passive: after the dash, gain +{(HeroAbilityKit.SivraDashSpeedMultiplier-1f)*100:0}% running speed for {HeroAbilityKit.SivraDashSpeedSeconds:0.#}s.",
                 2=>"Damages and slows the target by 30% for 1.8s.",
                 _=>"Three fixed-direction shots; 64 total damage if all shots connect."
             },
