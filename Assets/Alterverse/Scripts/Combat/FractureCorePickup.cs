@@ -53,7 +53,7 @@ namespace Alterverse.Combat
             // death position must never be fed into the lunar surface sampler.
             if(float.IsNaN(deathPosition.x)||float.IsNaN(deathPosition.y)||float.IsNaN(deathPosition.z)||
                float.IsInfinity(deathPosition.x)||float.IsInfinity(deathPosition.y)||float.IsInfinity(deathPosition.z)||
-               Mathf.Abs(deathPosition.x)>41f||Mathf.Abs(deathPosition.z)>35f)return;
+               Mathf.Abs(deathPosition.x)>41f*ArenaLayout.LengthScale||Mathf.Abs(deathPosition.z)>35f)return;
 
             GameObject go=new("DF_FractureCore");
             GameObject world=GameObject.Find("DF_MatchWorld");
@@ -61,7 +61,7 @@ namespace Alterverse.Combat
 
             // Anchor to the authored lunar surface so craters and relief never leave the pickup floating or buried.
             Vector3 ground=deathPosition;
-            ground.y=LunarSurfaceField.Surface(deathPosition.x,deathPosition.z).y+.10f;
+            ground.y=LunarSurfaceField.WorldSurface(deathPosition.x,deathPosition.z).y+.10f;
             go.transform.position=ground;
             FractureCorePickup pickup=go.AddComponent<FractureCorePickup>();
             pickup.groundPosition=ground;
@@ -249,3 +249,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

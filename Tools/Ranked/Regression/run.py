@@ -20,6 +20,14 @@ names=['Profile/SafeIdentityCatalog.cs','Profile/PlayerProfile.cs','Profile/Acco
        'Multiplayer/RankedAvailability.cs','Multiplayer/RankedService.cs','Multiplayer/RankedMatchReporter.cs','Multiplayer/EdgegapMatchmakerClient.cs',
        'Multiplayer/DedicatedOnlineMatchHandshake.cs','Multiplayer/EdgegapDedicatedServerLifecycle.cs','UI/RankedPanel.cs']
 with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
+    # Keep roster fixtures on the production layout rather than duplicating spawn formulas.
+    geometry=(source/'Combat/GameplayCollision.cs').read_text()
+    start=geometry.index('    public static class ArenaLayout')
+    opening=geometry.index('{',start);depth=1;end=opening+1
+    while depth:
+        depth+=(geometry[end]=='{')-(geometry[end]=='}');end+=1
+    layout=Path(directory)/'ArenaLayout.cs'
+    layout.write_text('using UnityEngine;namespace Alterverse.Combat {'+geometry[start:end]+'}')
     menu=(source/'UI/MainMenuController.cs').read_text()
     start=menu.index('        private async System.Threading.Tasks.Task BeginOnlineMatchmakingAsync()')
     end=menu.index('        private async System.Threading.Tasks.Task BeginOfflineMatchAsync()',start)
@@ -36,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
             '-r:'+str(runtime/'System.dll'),'-r:'+str(runtime/'System.Core.dll'),
             '-r:'+str(runtime/'System.Runtime.Serialization.dll'),
             '-r:'+str(runtime/'System.Xml.dll'),
-            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),
+            str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),str(layout),
             *[str(source/name) for name in names]],env=env,check=True)
         subprocess.run([str(a.mono_root/'usr/bin/mono-sgen'),str(output)],env=env,check=True)
         raise SystemExit(0)
@@ -45,8 +53,9 @@ with tempfile.TemporaryDirectory(prefix='df-ranked-') as directory:
     output=Path(directory)/'RankedRegression.dll'
     response=Path(directory)/'compile.rsp'
     response.write_text('\n'.join(['-nologo','-nowarn:0649,0067','-target:exe','-langversion:9','-out:'+str(output),
-        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),
+        *['-r:'+str(path) for path in runtime.glob('*.dll')],str(here/'EngineStubs.cs'),str(here/'Regression.cs'),str(here/'FailureRegression.cs'),str(here/'IdentityRegression.cs'),str(here/'TeamFormatRegression.cs'),str(here/'LobbyServiceStubs.cs'),str(here/'LobbyRegression.cs'),str(ui),str(layout),
         *[str(source/name) for name in names]]))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(sdk/'Roslyn/bincore/csc.dll'),'@'+str(response)],check=True)
     output.with_suffix('.runtimeconfig.json').write_text(json.dumps({'runtimeOptions':{'tfm':'net8.0','framework':{'name':'Microsoft.NETCore.App','version':runtime.name}}}))
     subprocess.run([str(a.dotnet_root/'dotnet'),str(output)],env=dict(os.environ,DF_TEST_IDENTITY_CATALOG=str(root/'Assets/Alterverse/Resources/Social/SafeIdentityCatalog.json')),check=True)
+

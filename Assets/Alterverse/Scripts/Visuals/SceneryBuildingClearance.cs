@@ -11,20 +11,22 @@ namespace Alterverse.Visuals
         public const float Margin = 2f;
         readonly List<Bounds> footprints = new();
 
-        public SceneryBuildingClearance()
+        readonly float candidateLengthScale;
+        public SceneryBuildingClearance(float candidateLengthScale=1f)
         {
+            this.candidateLengthScale=candidateLengthScale;
             // Layout fallback also protects builds that run before the structure visuals exist.
             Vector2 bunker = FrontierPlanetLayout.Active ? FrontierPlanetLayout.BunkerPosition : new Vector2(26.25f,21.5f);
             Vector2 trench = FrontierPlanetLayout.Active ? FrontierPlanetLayout.TrenchPosition : new Vector2(25.25f,10.75f);
             for (int side=-1; side<=1; side+=2)
             {
-                Add(new Vector3(side*36f,0,0), new Vector3(11f,1,11f));
-                Add(new Vector3(side*27.5f,0,0), new Vector3(10f,1,10f));
+                Add(new Vector3(side*ArenaLayout.CoreX,0,0), new Vector3(11f,1,11f));
+                Add(new Vector3(side*ArenaLayout.HealingX,0,0), new Vector3(10f,1,10f));
                 for (int flank=-1; flank<=1; flank+=2)
                 {
                     // Bunkers/trenches face along X: their local width lies on world Z.
-                    Add(new Vector3(side*bunker.x,0,flank*bunker.y), new Vector3(10f,1,9f));
-                    Add(new Vector3(side*trench.x,0,flank*trench.y), new Vector3(7f,1,9f));
+                    Add(new Vector3(side*bunker.x*ArenaLayout.LengthScale,0,flank*bunker.y), new Vector3(10f,1,9f));
+                    Add(new Vector3(side*trench.x*ArenaLayout.LengthScale,0,flank*trench.y), new Vector3(7f,1,9f));
                 }
             }
             foreach (var building in Object.FindObjectsByType<DefenseBunker>(FindObjectsSortMode.None)) AddBuilding(building.transform);
@@ -56,6 +58,9 @@ namespace Alterverse.Visuals
 
         public bool Blocks(Bounds worldBounds)
         {
+            Vector3 center=worldBounds.center,size=worldBounds.size;
+            center.x*=candidateLengthScale;size.x*=candidateLengthScale;
+            worldBounds=new Bounds(center,size);
             foreach(var footprint in footprints)if(Overlaps(worldBounds,footprint))return true;
             return false;
         }
@@ -86,3 +91,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

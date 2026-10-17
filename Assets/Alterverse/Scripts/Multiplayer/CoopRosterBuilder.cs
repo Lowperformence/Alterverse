@@ -13,7 +13,6 @@ namespace Alterverse.Multiplayer
     /// </summary>
     public static class CoopRosterBuilder
     {
-        private static readonly float[] SpawnRows={8f,-8f,5f,-5f};
 
         public static bool Build(GameObject localPlayer,CoopMatchPlan plan)
         {
@@ -67,11 +66,8 @@ namespace Alterverse.Multiplayer
 
         public static Vector3 SafeSpawn(int team,int index)
         {
-            float side=team==0?-1f:1f;
-            int row=Mathf.Clamp(team==0?index:index-MatchSession.TeamSize,0,SpawnRows.Length-1);
-            float x=side*(row<2?30f:row<4?28.8f:30.8f);
-            float z=SpawnRows[row];
-            return new Vector3(x,1f,z);
+            int teamSlot=team==0?index:index-MatchSession.TeamSize;
+            return ArenaLayout.HeroSpawn(team,teamSlot,MatchSession.TeamSize);
         }
 
         private static void ConfigureHuman(GameObject hero,MatchPlayerSlot data,int slot,bool local,Vector3 spawn)
@@ -190,3 +186,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

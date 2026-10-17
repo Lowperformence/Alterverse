@@ -89,14 +89,15 @@ namespace Alterverse.EditorChecks
 
         private static void CheckRoundedBounds(float halfWidth,float halfHeight,string label)
         {
-            Vector3 rawCorner=new(halfWidth,0f,halfHeight);
+            float worldHalfWidth=halfWidth*ArenaLayout.LengthScale;
+            Vector3 rawCorner=new(worldHalfWidth,0f,halfHeight);
             Vector3 rounded=GameplayCollision.ClampToRoundedArena(rawCorner,halfWidth,halfHeight);
-            Check(rounded.x<halfWidth-.05f&&rounded.z<halfHeight-.05f,
+            Check(rounded.x<worldHalfWidth-.05f&&rounded.z<halfHeight-.05f,
                 label+" arena corner is still rectangular");
             Check(GameplayCollision.ContainsRoundedArena(rounded,halfWidth,halfHeight),
                 label+" rounded corner projection lies outside the arena");
 
-            Vector3 straightEdge=new(halfWidth,0f,0f);
+            Vector3 straightEdge=new(worldHalfWidth,0f,0f);
             Vector3 edgeResult=GameplayCollision.ClampToRoundedArena(straightEdge,halfWidth,halfHeight);
             Check(Vector3.Distance(straightEdge,edgeResult)<.001f,
                 label+" straight arena edge changed while rounding corners");
@@ -104,4 +105,5 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+
 

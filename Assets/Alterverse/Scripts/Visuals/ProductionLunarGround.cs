@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Alterverse.Match;
+using Alterverse.Combat;
 
 namespace Alterverse.Visuals
 {
@@ -47,11 +48,11 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildSurface();
         BuildCoreIntegration(-36f,true);
         BuildCoreIntegration(36f,false);
-        BuildHealingIntegration(-27.5f);
-        BuildHealingIntegration(27.5f);
+        BuildHealingIntegration(-ArenaLayout.HealingX/ArenaLayout.LengthScale);
+        BuildHealingIntegration(ArenaLayout.HealingX/ArenaLayout.LengthScale);
         // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
-        var clearance=new SceneryBuildingClearance();
+        var clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
         int decorationStart=root.childCount;
         BuildRocks();
         if(ArenaVariantRuntime.IsGreenPlanet)BuildAlienMineralAccents();
@@ -66,6 +67,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         // The Blender-authored border now owns the small edge fragments and cliff rocks.
         BuildGeologicalSlab();
         BatchStaticDetails();
+        ArenaLayout.StretchTerrain(root);
     }
 
     void BuildSurface()
@@ -292,6 +294,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
     void OnDestroy(){surfaceMaterials?.Dispose();if(surfaceAlbedo!=null)Destroy(surfaceAlbedo);if(surfaceNormals!=null)Destroy(surfaceNormals);foreach(Material m in materials)if(m!=null)Destroy(m);foreach(Mesh m in meshes)if(m!=null)Destroy(m);}
 }
 }
+
 
 
 

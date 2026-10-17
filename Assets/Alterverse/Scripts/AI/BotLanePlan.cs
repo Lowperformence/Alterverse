@@ -1,4 +1,5 @@
 using UnityEngine;
+using Alterverse.Combat;
 
 namespace Alterverse.AI
 {
@@ -12,7 +13,7 @@ namespace Alterverse.AI
         private uint seed;
         private int roamStep;
 
-        public Vector3 Home => new(team == 0 ? -27.5f : 27.5f, transform.position.y, 0f);
+        public Vector3 Home => new(team == 0 ? -ArenaLayout.HealingX : ArenaLayout.HealingX, transform.position.y, 0f);
 
         public void Initialize(int assignedTeam, float legacyLaneZ)
         {
@@ -69,3 +70,4 @@ namespace Alterverse.AI
         }
     }
 }
+

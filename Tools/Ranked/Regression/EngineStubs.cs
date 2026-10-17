@@ -13,7 +13,7 @@ namespace UnityEngine {
   public T GetComponent<T>() where T:class=>components.TryGetValue(typeof(T),out var o)?o as T:null;
   public T AddComponent<T>() where T:new(){var o=new T();components[typeof(T)]=o;if(o is MonoBehaviour b)b.gameObject=this;typeof(T).GetMethod("Awake",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic)?.Invoke(o,null);return o;}
  }
- public class Transform {public Vector3 position;public void SetParent(Transform t,bool world){}}
+ public class Transform {public Vector3 position,localScale;public void SetParent(Transform t,bool world){}}
  public class CapsuleCollider {public float height,radius;}
  public class SerializeField:Attribute {}
  public static class Random {public static int Range(int min,int max)=>min;}
@@ -52,7 +52,7 @@ namespace UnityEngine {
  public static class Debug {public static readonly List<string> Messages=new();public static void Log(object o){Messages.Add(o?.ToString()??"");}public static void LogWarning(object o){Log(o);}public static void LogError(object o){Log(o);}}
  public static class Mathf {public static int Clamp(int n,int lo,int hi)=>Math.Max(lo,Math.Min(hi,n));public static int Max(int a,int b)=>Math.Max(a,b);public static float Max(float a,float b)=>Math.Max(a,b);public static int Min(int a,int b)=>Math.Min(a,b);public static float Min(float a,float b)=>Math.Min(a,b);public static float Clamp01(float a)=>Math.Max(0,Math.Min(1,a));}
  public struct Vector2 {}
- public struct Vector3 {public Vector3(float x,float y,float z){}public static Vector3 one=>new(); public static Vector3 operator*(Vector3 v,float f)=>v;}
+ public struct Vector3 {public float x,y,z;public Vector3(float x,float y,float z){this.x=x;this.y=y;this.z=z;}public static Vector3 one=>new(); public static Vector3 operator*(Vector3 v,float f)=>v;}
  public struct Quaternion {public static Quaternion identity=>new();}
  public struct Matrix4x4 {public static Matrix4x4 TRS(Vector3 v,Quaternion q,Vector3 s)=>new();}
  public struct Rect {public float x,y,width,height;public float yMax=>y+height; public Rect(float x,float y,float w,float h){this.x=x;this.y=y;width=w;height=h;}}
@@ -121,3 +121,4 @@ namespace Alterverse.Shop {
   public void Refresh(){}
  }
 }
+

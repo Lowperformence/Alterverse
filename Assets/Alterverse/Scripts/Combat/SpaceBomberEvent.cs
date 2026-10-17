@@ -260,7 +260,7 @@ namespace Alterverse.Combat
             float jitter=(float)(rng.NextDouble()*2.2-1.1);
             float x=Mathf.Clamp(routePoint.x+lateral.x*jitter,-39.5f,39.5f);
             float z=Mathf.Clamp(routePoint.z+lateral.z*jitter,-32.5f,32.5f);
-            Vector3 ground=LunarSurfaceField.Surface(x,z);
+            Vector3 ground=LunarSurfaceField.WorldSurface(x,z);
             SpaceBombStrike.Create(ground,routePoint.y-.55f,BombTelegraph,BombDamage,warningMaterial,bombMaterial,energyMaterial,front);
         }
 
@@ -576,3 +576,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

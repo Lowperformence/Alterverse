@@ -387,7 +387,7 @@ namespace Alterverse.Combat
             Vector3 direction=Time.time<detourUntil?detourDirection:delta.normalized;
             Vector3 requested=direction*MoveSpeed*Time.deltaTime;
             Vector3 next=transform.position+requested;
-            next.x=Mathf.Clamp(next.x,-ArenaHalfWidth,ArenaHalfWidth);
+            next.x=Mathf.Clamp(next.x,-ArenaHalfWidth*ArenaLayout.LengthScale,ArenaHalfWidth*ArenaLayout.LengthScale);
             next.z=Mathf.Clamp(next.z,-ArenaHalfHeight,ArenaHalfHeight);
             requested=next-transform.position;
 
@@ -929,7 +929,7 @@ namespace Alterverse.Combat
 
         private static Vector3 SpiderDesiredGroundPoint(Vector3 world)
         {
-            Vector3 surface=LunarSurfaceField.Surface(world.x,world.z);
+            Vector3 surface=LunarSurfaceField.WorldSurface(world.x,world.z);
             world.y=surface.y+.045f;
             return world;
         }
@@ -1496,6 +1496,7 @@ namespace Alterverse.Combat
         }
     }
 }
+
 
 
 

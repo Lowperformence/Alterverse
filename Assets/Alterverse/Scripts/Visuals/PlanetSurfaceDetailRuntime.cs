@@ -104,6 +104,7 @@ namespace Alterverse.Visuals
                 // Keep a lifecycle marker so Update does not rebuild on every probe.
                 detailRoot=new GameObject("DF_MarsSandLandscape");
                 detailRoot.transform.SetParent(parent,false);
+                Alterverse.Combat.ArenaLayout.StretchTerrain(detailRoot.transform);
                 detailRoot.isStatic=true;
                 return;
             }
@@ -180,6 +181,7 @@ namespace Alterverse.Visuals
 
             detailRoot=new GameObject("DF_ReferenceCraterLandscape");
             detailRoot.transform.SetParent(parent,false);
+            Alterverse.Combat.ArenaLayout.StretchTerrain(detailRoot.transform);
             detailRoot.isStatic=true;
 
             CreateRenderer("DF_LargeCraterBowls",bowlMesh,bowlMaterial,detailRoot.transform);
@@ -335,5 +337,6 @@ namespace Alterverse.Visuals
         private void OnDestroy()=>Clear();
     }
 }
+
 
 

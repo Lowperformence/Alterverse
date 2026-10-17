@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using Alterverse.Match;
+using Alterverse.Combat;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,12 +17,12 @@ namespace Alterverse.EditorChecks
         [MenuItem("DIMENSIONS FRONT/Checks/Hot Zone central spawn band")]
         public static void Run()
         {
-            // All current arena variants share this 84 x 72 gameplay floor.
-            Bounds current=new Bounds(Vector3.zero,new Vector3(84f,1f,72f));
+            // Every arena shares the enlarged floor dimensions.
+            Bounds current=new Bounds(Vector3.zero,new Vector3(ArenaLayout.HalfLength*2f,1f,ArenaLayout.HalfBreadth*2f));
             Vector2 limits=HotZoneDirector.SpawnCenterHalfExtents(current);
-            Check(Mathf.Abs(limits.x-11.25f)<.001f,"capture circle must stop at X = +/-21");
-            Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(-27.5f,0f,0f),current),"ZERO spawn pad admitted");
-            Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(27.5f,0f,0f),current),"LUMEN spawn pad admitted");
+            Check(Mathf.Abs(limits.x-(ArenaLayout.HalfLength*.5f-HotZoneDirector.Radius))<.001f,"capture circle must stop at the resized central-band boundary");
+            Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(-ArenaLayout.HealingX,0f,0f),current),"ZERO spawn pad admitted");
+            Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(ArenaLayout.HealingX,0f,0f),current),"LUMEN spawn pad admitted");
             Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(30f,0f,24f),current),"former base-side candidate admitted");
             Check(!HotZoneDirector.IsInsideSpawnBand(new Vector3(-30f,0f,-24f),current),"mirrored base-side candidate admitted");
 
@@ -46,3 +47,4 @@ namespace Alterverse.EditorChecks
     }
 }
 #endif
+

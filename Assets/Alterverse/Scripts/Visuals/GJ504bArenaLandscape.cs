@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alterverse.Match;
+using Alterverse.Combat;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -25,9 +26,10 @@ namespace Alterverse.Visuals
             sand.SetTexture("_BaseMap",albedo);
             sand.SetTexture("_BumpMap",normals);
             BuildSandSea(sand);
-            clearance=new SceneryBuildingClearance();
+            clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
             BuildSandstoneRanges();
             BuildDust();
+            ArenaLayout.StretchTerrain(transform);
         }
 
         Material Mat(string name,Color color)
@@ -208,5 +210,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

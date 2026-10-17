@@ -44,7 +44,7 @@ namespace Alterverse.Combat
         public static GameObject Spawn(int teamId, Vector3 position, string flank)
         {
             int clampedTeam = Mathf.Clamp(teamId, 0, 1);
-            Vector3 surface = LunarSurfaceField.Surface(position.x, position.z);
+            Vector3 surface = LunarSurfaceField.WorldSurface(position.x, position.z);
             position.y = surface.y;
 
             GameObject bunker = new GameObject($"DF_{(clampedTeam == 0 ? "Zero" : "Lumen")}_{flank}_DefenseBunker");
@@ -539,4 +539,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

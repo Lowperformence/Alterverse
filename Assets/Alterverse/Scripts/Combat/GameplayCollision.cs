@@ -3,6 +3,33 @@ using UnityEngine;
 
 namespace Alterverse.Combat
 {
+    /// <summary>Shared map dimensions and deterministic team formation for every arena and peer.</summary>
+    public static class ArenaLayout
+    {
+        public const float LengthScale=1.10f;
+        public const float HalfLength=42f*LengthScale;
+        public const float HalfBreadth=36f;
+        // The old roster's main spawn line was at +/-30. The new line is exactly 10% farther apart.
+        public const float SpawnX=30f*LengthScale;
+        public const float HealingX=SpawnX+3f;
+        public const float CoreX=36f*LengthScale;
+        public const float SpawnSpacing=1.4f;
+        public static Vector3 Stretch(Vector3 point)
+        {point.x*=LengthScale;return point;}
+        public static Vector3 HealingPosition(int team,float y=.14f)
+            =>new Vector3(team==0?-HealingX:HealingX,y,0f);
+        public static Vector3 HeroSpawn(int team,int teamSlot,int teamSize)
+        {
+            int size=Mathf.Max(1,teamSize);
+            int slot=Mathf.Clamp(teamSlot,0,size-1);
+            float side=team==0?-1f:1f;
+            return new Vector3(side*SpawnX,1f,side*(slot-(size-1)*.5f)*SpawnSpacing);
+        }
+        // Call on a completed terrain root only. Gameplay actors and buildings keep unit scale.
+        public static void StretchTerrain(Transform root)
+        {root.localScale=new Vector3(LengthScale,1f,1f);}
+    }
+
     // Root hitboxes stay queryable. Mobile units never form movement walls.
     // All three arena variants share these collision rules, so Moon, Mars and Green Planet
     // receive the same rounded navigation treatment.
@@ -24,7 +51,8 @@ namespace Alterverse.Combat
 
         public static Vector3 ClampToRoundedArena(Vector3 point,float halfWidth,float halfHeight,float inset=0f)
         {
-            halfWidth=Mathf.Max(.2f,halfWidth-Mathf.Max(0f,inset));
+            // Callers provide authored arena half-widths; point/displacement are already world-space.
+            halfWidth=Mathf.Max(.2f,halfWidth*ArenaLayout.LengthScale-Mathf.Max(0f,inset));
             halfHeight=Mathf.Max(.2f,halfHeight-Mathf.Max(0f,inset));
             float radius=Mathf.Min(ArenaCornerRadius,Mathf.Min(halfWidth,halfHeight)-.01f);
 
@@ -113,3 +141,4 @@ namespace Alterverse.Combat
         private void OnDestroy(){if(ownedMesh!=null)Destroy(ownedMesh);}
     }
 }
+

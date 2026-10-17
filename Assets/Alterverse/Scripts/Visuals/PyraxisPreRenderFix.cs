@@ -1,5 +1,6 @@
 using System;
 using Alterverse.Match;
+using Alterverse.Combat;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -121,8 +122,8 @@ namespace Alterverse.Visuals
                         Protection(wx,wz,-36f,0f,8.8f,11.8f),
                         Protection(wx,wz, 36f,0f,8.8f,11.8f));
                     float spawnProtection=Mathf.Max(
-                        Protection(wx,wz,-27.5f,0f,7.2f,9.8f),
-                        Protection(wx,wz, 27.5f,0f,7.2f,9.8f));
+                        Protection(wx,wz,-ArenaLayout.HealingX/ArenaLayout.LengthScale,0f,7.2f,9.8f),
+                        Protection(wx,wz, ArenaLayout.HealingX/ArenaLayout.LengthScale,0f,7.2f,9.8f));
                     float protectedArea=Mathf.Clamp01(Mathf.Max(baseProtection,spawnProtection));
                     orange*=1f-protectedArea;
 
@@ -181,10 +182,10 @@ namespace Alterverse.Visuals
         private static bool IsBaseOrSpawn(Vector3 p)
         {
             Vector2 point=new(p.x,p.z);
-            if((point-new Vector2(-36f,0f)).sqrMagnitude<11.8f*11.8f)return true;
-            if((point-new Vector2( 36f,0f)).sqrMagnitude<11.8f*11.8f)return true;
-            if((point-new Vector2(-27.5f,0f)).sqrMagnitude<9.8f*9.8f)return true;
-            if((point-new Vector2( 27.5f,0f)).sqrMagnitude<9.8f*9.8f)return true;
+            if((point-new Vector2(-ArenaLayout.CoreX,0f)).sqrMagnitude<11.8f*11.8f)return true;
+            if((point-new Vector2( ArenaLayout.CoreX,0f)).sqrMagnitude<11.8f*11.8f)return true;
+            if((point-new Vector2(-ArenaLayout.HealingX,0f)).sqrMagnitude<9.8f*9.8f)return true;
+            if((point-new Vector2( ArenaLayout.HealingX,0f)).sqrMagnitude<9.8f*9.8f)return true;
             return false;
         }
 
@@ -206,3 +207,4 @@ namespace Alterverse.Visuals
         }
     }
 }
+

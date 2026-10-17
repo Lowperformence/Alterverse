@@ -29,15 +29,16 @@ namespace Alterverse.Visuals
 
         public static void BuildObstacles(Transform parent)
         {
-            var clearance=new SceneryBuildingClearance();
+            var clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
             for(int i=0;i<ObstacleCount;i++)
             {
                 if(clearance.Blocks(ObstacleSceneryBounds(i)))continue;
                 var go=new GameObject(ArenaVariantRuntime.IsGJ504b?"DF_GJ504bMesaCollision":"DF_PSRJ1719TerraceCollision");
-                go.transform.SetParent(parent,false);go.transform.localPosition=ObstaclePosition(i);
+                go.transform.SetParent(parent,false);go.transform.localPosition=ArenaLayout.Stretch(ObstaclePosition(i));
                 go.layer=GameplayCollision.Structures;
                 var box=go.AddComponent<BoxCollider>();
                 box.size=ArenaVariantRuntime.IsGJ504b?new Vector3(3.5f,2.6f,2.7f):new Vector3(4.6f,1.8f,2.4f);
+                box.size=ArenaLayout.Stretch(box.size);
             }
         }
 
@@ -81,5 +82,6 @@ namespace Alterverse.Visuals
             =>1f-Mathf.SmoothStep(0f,1f,Mathf.InverseLerp(inner,outer,distance));
     }
 }
+
 
 

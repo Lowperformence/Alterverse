@@ -51,7 +51,7 @@ namespace Alterverse.AI
         public Health Focus=>Time.time<focusUntil?focus:null;
         public float FocusAge=>Time.time-focusStarted;
         public Vector3 FocusPosition=>focusPosition;
-        private Vector3 Home=>new(team==0?-27.5f:27.5f,0,0);
+        private Vector3 Home=>new(team==0?-ArenaLayout.HealingX:ArenaLayout.HealingX,0,0);
         private Vector3 Forward=>team==0?Vector3.right:Vector3.left;
 #if UNITY_EDITOR || DEBUG
         public int TacticalTicks { get; private set; }
@@ -467,3 +467,4 @@ namespace Alterverse.AI
         private static float FlatSqr(Vector3 value){value.y=0;return value.sqrMagnitude;}
     }
 }
+

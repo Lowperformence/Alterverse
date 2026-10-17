@@ -95,7 +95,7 @@ namespace Alterverse.Combat
 
             Vector3 current=tank.transform.position;
             Vector3 next=current+correction;
-            next.x=Mathf.Clamp(next.x,-ArenaHalfWidth,ArenaHalfWidth);
+            next.x=Mathf.Clamp(next.x,-ArenaHalfWidth*ArenaLayout.LengthScale,ArenaHalfWidth*ArenaLayout.LengthScale);
             next.z=Mathf.Clamp(next.z,-ArenaHalfHeight,ArenaHalfHeight);
             correction=next-current;
             if(correction.sqrMagnitude<.0000001f)return;
@@ -113,10 +113,11 @@ namespace Alterverse.Combat
             if(allowEmergencyUnstick&&moved.sqrMagnitude<correction.sqrMagnitude*.08f)
             {
                 Vector3 fallback=tank.transform.position+correction*.28f;
-                fallback.x=Mathf.Clamp(fallback.x,-ArenaHalfWidth,ArenaHalfWidth);
+                fallback.x=Mathf.Clamp(fallback.x,-ArenaHalfWidth*ArenaLayout.LengthScale,ArenaHalfWidth*ArenaLayout.LengthScale);
                 fallback.z=Mathf.Clamp(fallback.z,-ArenaHalfHeight,ArenaHalfHeight);
                 tank.transform.position=fallback;
             }
         }
     }
 }
+

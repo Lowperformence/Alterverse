@@ -26,7 +26,7 @@ namespace Alterverse.Match
         private const float ArenaHalfWidth=42f;
         private const float ArenaHalfHeight=36f;
         private const float ZoneEdgeMargin=1.25f;
-        private const float SpawnPadX=27.5f;
+        private const float SpawnPadX=ArenaLayout.HealingX;
         public const float ExcludedSideFraction=.25f;
         private Bounds arenaBounds;
         private const float InnerRingRadiusScale=.76f;
@@ -129,7 +129,7 @@ namespace Alterverse.Match
             // this restriction follows future map sizes instead of a fixed world X range.
             Collider floor=GameObject.Find("DF_ArenaFloor")?.GetComponent<Collider>();
             arenaBounds=floor!=null?floor.bounds:
-                new Bounds(Vector3.zero,new Vector3(ArenaHalfWidth*2f,1f,ArenaHalfHeight*2f));
+                new Bounds(Vector3.zero,new Vector3(ArenaLayout.HalfLength*2f,1f,ArenaHalfHeight*2f));
             Vector2 limits=SpawnCenterHalfExtents(arenaBounds);
             float xLimit=limits.x;
             float zLimit=limits.y;
@@ -144,9 +144,9 @@ namespace Alterverse.Match
 
             // Rare crowded arenas still get a deterministic safe fallback.
             Vector3[] anchors={
-                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z),
-                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z+zLimit*.5f),
-                LunarSurfaceField.Surface(arenaBounds.center.x,arenaBounds.center.z-zLimit*.5f)};
+                LunarSurfaceField.WorldSurface(arenaBounds.center.x,arenaBounds.center.z),
+                LunarSurfaceField.WorldSurface(arenaBounds.center.x,arenaBounds.center.z+zLimit*.5f),
+                LunarSurfaceField.WorldSurface(arenaBounds.center.x,arenaBounds.center.z-zLimit*.5f)};
             foreach(Vector3 anchor in anchors)
                 if(IsSpawnPositionSafe(anchor))return RememberSpawn(anchor);
             return RememberSpawn(anchors[0]);
@@ -158,7 +158,7 @@ namespace Alterverse.Match
             {
                 float x=arenaBounds.center.x+Next(-xLimit,xLimit);
                 float z=arenaBounds.center.z+Next(-zLimit,zLimit);
-                Vector3 candidate=LunarSurfaceField.Surface(x,z);
+                Vector3 candidate=LunarSurfaceField.WorldSurface(x,z);
                 if(!IsSpawnPositionSafe(candidate))continue;
                 if(avoidRecent&&IsTooCloseToRecentSpawn(candidate))continue;
                 spawn=candidate;
@@ -366,7 +366,7 @@ namespace Alterverse.Match
                     float angle=slice*Mathf.PI*2f/slices;
                     float x=Mathf.Cos(angle)*distance,z=Mathf.Sin(angle)*distance;
                     Vector3 world=zone.TransformPoint(new Vector3(x,0,z));
-                    float y=LunarSurfaceField.Surface(world.x,world.z).y+heightOffset;
+                    float y=LunarSurfaceField.WorldSurface(world.x,world.z).y+heightOffset;
                     int index=band*(slices+1)+slice;
                     vertices[index]=zone.InverseTransformPoint(new Vector3(world.x,y,world.z));
                     uv[index]=new Vector2(.5f+x/(radius*2f),.5f+z/(radius*2f));
@@ -414,3 +414,4 @@ namespace Alterverse.Match
         }
     }
 }
+

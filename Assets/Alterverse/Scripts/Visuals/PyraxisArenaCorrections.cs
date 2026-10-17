@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Alterverse.Combat;
 using Alterverse.Match;
+using Alterverse.Combat;
 using UnityEngine;
 
 namespace Alterverse.Visuals
@@ -99,10 +100,10 @@ namespace Alterverse.Visuals
                 if(t.name.StartsWith("DF_PyraxisCentralLava",System.StringComparison.Ordinal))continue;
 
                 Vector3 p=t.position;
-                bool zeroBase=new Vector2(p.x+36f,p.z).sqrMagnitude<11.8f*11.8f;
-                bool lumenBase=new Vector2(p.x-36f,p.z).sqrMagnitude<11.8f*11.8f;
-                bool zeroSpawn=new Vector2(p.x+27.5f,p.z).sqrMagnitude<9.8f*9.8f;
-                bool lumenSpawn=new Vector2(p.x-27.5f,p.z).sqrMagnitude<9.8f*9.8f;
+                bool zeroBase=new Vector2(p.x+ArenaLayout.CoreX,p.z).sqrMagnitude<11.8f*11.8f;
+                bool lumenBase=new Vector2(p.x-ArenaLayout.CoreX,p.z).sqrMagnitude<11.8f*11.8f;
+                bool zeroSpawn=new Vector2(p.x+ArenaLayout.HealingX,p.z).sqrMagnitude<9.8f*9.8f;
+                bool lumenSpawn=new Vector2(p.x-ArenaLayout.HealingX,p.z).sqrMagnitude<9.8f*9.8f;
                 if(zeroBase||lumenBase||zeroSpawn||lumenSpawn)Destroy(t.gameObject);
             }
         }
@@ -236,8 +237,8 @@ namespace Alterverse.Visuals
 
                     float zeroBase=1f-Mathf.SmoothStep(8.8f,11.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-36f,0f)));
                     float lumenBase=1f-Mathf.SmoothStep(8.8f,11.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(36f,0f)));
-                    float zeroSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-27.5f,0f)));
-                    float lumenSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(27.5f,0f)));
+                    float zeroSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(-ArenaLayout.HealingX/ArenaLayout.LengthScale,0f)));
+                    float lumenSpawn=1f-Mathf.SmoothStep(7.2f,9.8f,Vector2.Distance(new Vector2(wx,wz),new Vector2(ArenaLayout.HealingX/ArenaLayout.LengthScale,0f)));
                     float baseProtection=Mathf.Clamp01(Mathf.Max(Mathf.Max(zeroBase,lumenBase),Mathf.Max(zeroSpawn,lumenSpawn)));
                     orangeSpot*=1f-baseProtection;
 
@@ -391,5 +392,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

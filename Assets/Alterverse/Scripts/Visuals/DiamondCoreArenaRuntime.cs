@@ -64,7 +64,7 @@ namespace Alterverse.Visuals
 
         private void Build(Transform world)
         {
-            clearance=new SceneryBuildingClearance();
+            clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
             GameObject lunar=GameObject.Find("DF_ProductionLunarGround");
             if(lunar!=null&&lunar.transform.IsChildOf(world))lunar.SetActive(false);
 
@@ -96,6 +96,7 @@ namespace Alterverse.Visuals
                 if(label=="DF_DiamondPerimeterSpire"||label=="DF_BlackCrystalCanyon"||label=="DF_BlackCanyonPrism"||label=="DF_PSRJ1719_CrystalTerrace"||label=="DF_PSRJ1719_TerracePrism")
                     clearance.RemoveIfBlocked(renderer.gameObject);
             }
+            ArenaLayout.StretchTerrain(root);
         }
 
         internal static void ConfigureClearFloor(Material material)
@@ -526,5 +527,6 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 

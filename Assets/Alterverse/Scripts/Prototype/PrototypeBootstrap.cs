@@ -109,7 +109,7 @@ GameObject player=null;
 Health ph=null;
 if(!serverOnly)
 {
-Vector3 playerSpawn=coop?CoopRosterBuilder.SafeSpawn(localTeam,localSlot):new Vector3(-32,1,-4);
+Vector3 playerSpawn=coop?CoopRosterBuilder.SafeSpawn(localTeam,localSlot):ArenaLayout.HeroSpawn(0,0,MatchSession.TeamSize);
 player=CreateLocalPlayer(selected,playerSpawn,!coop||CoopAuthority.LocalIsHost,localTeam);
 ph=player.GetComponent<Health>();
 }
@@ -237,15 +237,15 @@ return player;
 private static void BuildArena(ref string stage)
 {
 stage="arena floor";
-CreateGround("DF_ArenaFloor",new Vector3(0,-.12f,0),new Vector3(84,.2f,72),Color.gray);
+CreateGround("DF_ArenaFloor",new Vector3(0,-.12f,0),new Vector3(ArenaLayout.HalfLength*2f,.2f,ArenaLayout.HalfBreadth*2f),Color.gray);
 stage="base cores and healing zones";
-CreateBaseCore(new Vector3(-36,0f,0),StylizedArtDirection.ZeroEnergy,"DF_ZeroRealityCore",true,0);
-CreateBaseCore(new Vector3(36,0f,0),StylizedArtDirection.LumenEnergy,"DF_LumenRealityCore",false,1);
-CreateSpawnZone(new Vector3(-27.5f,.14f,0),StylizedArtDirection.ZeroEnergy,"AV_ZeroSpawnZone");
-CreateSpawnZone(new Vector3(27.5f,.14f,0),StylizedArtDirection.LumenEnergy,"AV_LumenSpawnZone");
+CreateBaseCore(new Vector3(-ArenaLayout.CoreX,0f,0),StylizedArtDirection.ZeroEnergy,"DF_ZeroRealityCore",true,0);
+CreateBaseCore(new Vector3(ArenaLayout.CoreX,0f,0),StylizedArtDirection.LumenEnergy,"DF_LumenRealityCore",false,1);
+CreateSpawnZone(ArenaLayout.HealingPosition(0),StylizedArtDirection.ZeroEnergy,"AV_ZeroSpawnZone");
+CreateSpawnZone(ArenaLayout.HealingPosition(1),StylizedArtDirection.LumenEnergy,"AV_LumenSpawnZone");
 stage="base guardian visuals";
-HealingGuardMech.Spawn(0,new Vector3(-27.5f,.14f,0));
-HealingGuardMech.Spawn(1,new Vector3(27.5f,.14f,0));
+HealingGuardMech.Spawn(0,ArenaLayout.HealingPosition(0));
+HealingGuardMech.Spawn(1,ArenaLayout.HealingPosition(1));
 stage="bunkers, trenches and healing pickup";
 CreateDefenseBunkers();CreateDefenseTrenches();
 new GameObject("DF_TrenchReinforcements").AddComponent<TrenchReinforcementDirector>();
@@ -256,5 +256,6 @@ else if(!ArenaVariantRuntime.IsDiamondCore)new GameObject("DF_ProductionLunarGro
 new GameObject("DF_CosmicArenaBackdrop").AddComponent<CosmicArenaBackdrop>();
 if(FrontierPlanetLayout.Active)FrontierPlanetLayout.BuildObstacles(GameObject.Find("DF_MatchWorld").transform);
 }
-private static void CreateSpawnZone(Vector3 p,Color c,string n){GameObject g=new GameObject(n);g.transform.position=p;g.AddComponent<SpawnHealingZone>();g.AddComponent<HealingZoneMarker>();}private static void CreateDefenseBunkers(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.BunkerPosition:new Vector2(26.25f,21.5f);float x=layout.x,z=layout.y;DefenseBunker.Spawn(0,new Vector3(-x,0,z),"Left");DefenseBunker.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseBunker.Spawn(1,new Vector3(x,0,-z),"Left");DefenseBunker.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateDefenseTrenches(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.TrenchPosition:new Vector2(25.25f,10.75f);float x=layout.x,z=layout.y;DefenseTrench.Spawn(0,new Vector3(-x,0,z),"Left");DefenseTrench.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseTrench.Spawn(1,new Vector3(x,0,-z),"Left");DefenseTrench.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
+private static void CreateSpawnZone(Vector3 p,Color c,string n){GameObject g=new GameObject(n);g.transform.position=p;g.AddComponent<SpawnHealingZone>();g.AddComponent<HealingZoneMarker>();}private static void CreateDefenseBunkers(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.BunkerPosition:new Vector2(26.25f,21.5f);float x=layout.x*ArenaLayout.LengthScale,z=layout.y;DefenseBunker.Spawn(0,new Vector3(-x,0,z),"Left");DefenseBunker.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseBunker.Spawn(1,new Vector3(x,0,-z),"Left");DefenseBunker.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateDefenseTrenches(){Vector2 layout=FrontierPlanetLayout.Active?FrontierPlanetLayout.TrenchPosition:new Vector2(25.25f,10.75f);float x=layout.x*ArenaLayout.LengthScale,z=layout.y;DefenseTrench.Spawn(0,new Vector3(-x,0,z),"Left");DefenseTrench.Spawn(0,new Vector3(-x,0,-z),"Right");DefenseTrench.Spawn(1,new Vector3(x,0,-z),"Left");DefenseTrench.Spawn(1,new Vector3(x,0,z),"Right");}private static void CreateCentralHealing(){GameObject heal=new GameObject("DF_CentralHealingPickup");heal.transform.position=new Vector3(0,.12f,0);heal.AddComponent<CentralHealingPickup>();}private static void CreateBaseCore(Vector3 p,Color c,string n,bool zero,int team){GameObject g=new GameObject(n);g.layer=GameplayCollision.Structures;g.transform.position=p;CapsuleCollider body=g.AddComponent<CapsuleCollider>();body.radius=.9f;body.height=2.6f;body.center=Vector3.up*1.3f;Health h=g.AddComponent<Health>();h.Configure(5000,true);g.AddComponent<RealityCore>().Initialize(team);g.AddComponent<RealityCoreShell>().Build(zero);g.AddComponent<ProductionBaseEnvironment>().Build(zero);}private static void CreateGround(string n,Vector3 p,Vector3 s,Color c){GameObject g=new GameObject(n);g.layer=GameplayCollision.Ground;g.transform.position=p;Mesh mesh=GameplayCollision.CreateRoundedPrismMesh(Vector3.zero,s.x,s.y,s.z,4f,8);MeshCollider floor=g.AddComponent<MeshCollider>();floor.sharedMesh=mesh;floor.convex=true;g.AddComponent<GameplayCollisionMeshOwner>().Own(mesh);}
 }}
+

@@ -44,7 +44,7 @@ namespace Alterverse.Combat
         {
             if((int)item<(int)BattleItemType.Heal||(int)item>(int)BattleItemType.TeamHeal)return null;
             GameObject go=new("DF_BattleItemDrop_"+item);
-            Vector3 ground=position;ground.y=LunarSurfaceField.Surface(position.x,position.z).y+.10f;
+            Vector3 ground=position;ground.y=LunarSurfaceField.WorldSurface(position.x,position.z).y+.10f;
             Transform world=GameObject.Find("DF_MatchWorld")?.transform;
             if(world!=null)go.transform.SetParent(world,true);
             BattleItemPickup pickup=go.AddComponent<BattleItemPickup>();
@@ -393,7 +393,7 @@ namespace Alterverse.Combat
             foreach(float x in new[]{10f,8f,12f})
                 foreach(float z in new[]{7f,-7f,9f,-9f})
                 {
-                    Vector3 p=new(sign*x,0,z);p.y=LunarSurfaceField.Surface(p.x,p.z).y;
+                    Vector3 p=new(sign*x,0,z);p.y=LunarSurfaceField.WorldSurface(p.x,p.z).y;
                     if(Physics.CheckSphere(p+Vector3.up*.9f,.75f,
                         GameplayCollision.SightMask,QueryTriggerInteraction.Ignore))continue;
                     position=p;return true;
@@ -413,7 +413,7 @@ namespace Alterverse.Combat
                 foreach(float zOffset in new[]{0f,-1.5f,1.5f})
                 {
                     Vector3 p=new(sign*x,0,baseZ+zOffset);
-                    p.y=LunarSurfaceField.Surface(p.x,p.z).y;
+                    p.y=LunarSurfaceField.WorldSurface(p.x,p.z).y;
                     if(Physics.CheckSphere(p+Vector3.up*.9f,.75f,
                         GameplayCollision.SightMask,QueryTriggerInteraction.Ignore))continue;
                     position=p;return true;
@@ -429,3 +429,4 @@ namespace Alterverse.Combat
     }
 
 }
+

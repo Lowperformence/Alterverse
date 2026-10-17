@@ -51,7 +51,7 @@ namespace Alterverse.Combat
             {
                 Vector2 offset=Random.insideUnitCircle*Radius;
                 Vector3 point=transform.position+new Vector3(offset.x,0f,offset.y);
-                point.y=LunarSurfaceField.Surface(point.x,point.z).y;
+                point.y=LunarSurfaceField.WorldSurface(point.x,point.z).y;
                 float stagger=i*.16f;
                 NoxaraMeteorStrike.Create(point,Telegraph,PlanetMeteorShower.MeteorDamage,stagger,owner);
                 if(Alterverse.Multiplayer.CoopAuthority.Active&&Alterverse.Multiplayer.CoopAuthority.LocalIsHost)
@@ -278,3 +278,4 @@ namespace Alterverse.Combat
         }
     }
 }
+

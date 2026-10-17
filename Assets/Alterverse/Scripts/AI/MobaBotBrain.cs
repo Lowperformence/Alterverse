@@ -57,7 +57,7 @@ namespace Alterverse.AI
 
         public bool InsideOwnBase(Vector3 point)
         {
-            Vector3 home=new(team==0?-27.5f:27.5f,point.y,0f);
+            Vector3 home=new(team==0?-ArenaLayout.HealingX:ArenaLayout.HealingX,point.y,0f);
             Vector3 delta=point-home;delta.y=0;
             return delta.sqrMagnitude<=13f*13f;
         }
@@ -314,3 +314,4 @@ namespace Alterverse.AI
         }
     }
 }
+

@@ -191,6 +191,10 @@ namespace Alterverse.Visuals
             }
         }
 
+        /// <summary>Sample an enlarged arena using world coordinates; authored scenery uses Surface.</summary>
+        public static Vector3 WorldSurface(float x,float z)
+            =>Alterverse.Combat.ArenaLayout.Stretch(Surface(x/Alterverse.Combat.ArenaLayout.LengthScale,z));
+
         public static Vector3 Surface(float x,float z)
         {
             if(FrontierPlanetLayout.Active)return FrontierPlanetLayout.Surface(x,z);
@@ -312,6 +316,7 @@ namespace Alterverse.Visuals
         }
     }
 }
+
 
 
 
