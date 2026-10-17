@@ -46,10 +46,6 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         zeroEnergy=Mat(Color.Lerp(StylizedArtDirection.ZeroEnergy,Color.white,.05f),.05f,.32f,true);
         lumenEnergy=Mat(Color.Lerp(StylizedArtDirection.LumenEnergy,Color.white,.05f),.05f,.32f,true);
         BuildSurface();
-        BuildCoreIntegration(-36f,true);
-        BuildCoreIntegration(36f,false);
-        BuildHealingIntegration(-ArenaLayout.HealingX/ArenaLayout.LengthScale);
-        BuildHealingIntegration(ArenaLayout.HealingX/ArenaLayout.LengthScale);
         // Deliberately omit dark ribbon/fracture overlays: from the gameplay camera they read as black debug lines.
         // Surface variation, crater relief, rocks and impact details carry the lunar geology instead.
         var clearance=new SceneryBuildingClearance(ArenaLayout.LengthScale);
@@ -62,7 +58,7 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         BuildSmallLandmarks();
         BuildDensityClusters();
         BuildReferenceSilhouettes();
-        // Filter before combining meshes; keep the floor, base foundations and cliff shell intact.
+        // Filter before combining meshes; keep the floor and cliff shell intact.
         for(int i=decorationStart;i<root.childCount;i++)clearance.RemoveIfBlocked(root.GetChild(i).gameObject);
         // The Blender-authored border now owns the small edge fragments and cliff rocks.
         BuildGeologicalSlab();
@@ -107,26 +103,6 @@ public sealed partial class ProductionLunarGround : MonoBehaviour
         for(int x=xSeg;x>0;x--)edge.Add(v[zSeg*(xSeg+1)+x]);
         for(int z=zSeg;z>0;z--)edge.Add(v[z*(xSeg+1)]);
         perimeter=edge.ToArray();
-    }
-
-    void BuildCoreIntegration(float x,bool zero)
-    {
-        Disc("DF_CoreImpactBed",new Vector3(x,.055f,0),5.0f,32,darkRegolith);
-        Ring("DF_CoreBuriedRim",new Vector3(x,.073f,0),4.35f,4.72f,32,rimMat);
-        Material energy=zero?zeroEnergy:lumenEnergy;
-        for(int i=0;i<7;i++)
-        {
-            float a=(i*51f+(zero?9f:22f))*Mathf.Deg2Rad;
-            Vector2 from=new Vector2(x+Mathf.Cos(a)*2.25f,Mathf.Sin(a)*2.25f);
-            Vector2 to=new Vector2(x+Mathf.Cos(a)*(3.25f+(i%3)*.35f),Mathf.Sin(a)*(3.25f+(i%3)*.35f));
-            Strip("DF_CoreGroundFracture",from,to,i%2==0?.075f:.045f,.086f,i==0?energy:rimMat);
-        }
-    }
-
-    void BuildHealingIntegration(float x)
-    {
-        Disc("DF_HealingGroundInset",new Vector3(x,.062f,0),2.55f*ArenaLayout.HealingPlateScale,28,darkRegolith);
-        Ring("DF_HealingGroundRim",new Vector3(x,.078f,0),2.35f*ArenaLayout.HealingPlateScale,2.52f*ArenaLayout.HealingPlateScale,28,rimMat);
     }
 
     void BuildFractures()

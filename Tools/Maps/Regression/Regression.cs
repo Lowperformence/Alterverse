@@ -52,7 +52,6 @@ static class Regression
   Check(ArenaLayout.SpawnX>ArenaLayout.HalfLength*.5f,"compact formation stays at team map end");
   Check(ArenaLayout.CoreX-ArenaLayout.HealingX>1.62f+ArenaLayout.HealingPlateRadius,"healing plate clears solid core");
   Check(ArenaLayout.CoreX-ArenaLayout.HealingX>4.75f+ArenaLayout.HealingPlateRadius+1f,"visible plate is separate from outer base deck");
-  Check(ArenaLayout.CoreX-ArenaLayout.HealingX>(5f+2.55f*ArenaLayout.HealingPlateScale)*ArenaLayout.LengthScale+.5f,"terrain foundation rings have visible open-ground clearance");
   foreach(var point in DefenseBunker.Positions)
   {
    Check(MathF.Abs(point.x)+2.575f<ArenaLayout.HalfLength,"bunker footprint remains on floor");
