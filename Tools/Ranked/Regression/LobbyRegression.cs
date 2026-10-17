@@ -323,6 +323,38 @@ partial class Regression
     Check(deletes==0&&!EdgegapMatchmakerClient.Instance.HasMembership&&flow.LastError.Contains(outcome=="timeout"?"TIMED OUT":"DISCONNECTED"),"failed assigned match releases membership locally and retains clear error");
   }
 
+  // A failed dedicated handoff leaves the lobby membership but shuts down Relay.
+  // Retrying solo must not wait for a host transport that was intentionally replaced.
+  ResetLobby();var retryFlow=EdgegapOnlineFlow.Instance;var retryParty=Room(1);
+  Put(OnlinePartyService.Instance,"session",retryParty);
+  NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsServer=NetworkManager.Singleton.IsListening=NetworkManager.Singleton.IsConnectedClient=false;
+  int retryGroups=0;
+  UnityWebRequest.Handler=r=>
+  {
+   if(r.method=="POST"&&r.url.EndsWith("/groups"))retryGroups++;
+   return Reply(r,Membership().Replace("SEARCHING", "EXPIRED"));
+  };
+  var retry=retryFlow.BeginSearchAsync();
+  await Finish(retry,"solo retry without old Relay");
+  Check(await retry&&retryGroups==1,"solo retry creates a fresh group without the former Relay host");
+  await Until(()=>!retryFlow.IsSearching&&!retryFlow.Busy,"solo retry completes terminal cleanup");
+  Check(!retryFlow.LastError.Contains("RELAY"),"solo retry does not report a friend Relay dependency");
+
+  // Multi-person parties still require an actual live host link to carry the group id.
+  ResetLobby();var friendFlow=EdgegapOnlineFlow.Instance;var friendParty=Room(2);
+  Put(OnlinePartyService.Instance,"session",friendParty);Put(friendFlow,"expectedPartyPlayers",2);
+  Put(friendFlow,"expectedRoster",OnlinePartyService.Instance.ReadyRosterKey);
+  NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsListening=false;
+  var relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{2,2f,0});
+  Check(!relayWait.IsCompleted,"multi-person retry still waits for Relay");
+  Time.realtimeSinceStartup=3;await Finish(relayWait,"missing friend Relay deadline");
+  Check(!await relayWait,"missing Relay cannot silently strand friends");
+  Time.realtimeSinceStartup=0;NetworkManager.Singleton.IsHost=NetworkManager.Singleton.IsListening=true;NetworkManager.Singleton.ConnectedClientsIds.Add(1);
+  relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{2,2f,0});
+  Check(await relayWait,"connected friend Relay still passes readiness");
+  relayWait=(Task<bool>)friendFlow.GetType().GetMethod("WaitForFriendRelayAsync",Flags).Invoke(friendFlow,new object[]{1,2f,99});
+  Check(!await relayWait,"cancelled solo generation cannot bypass readiness");
+
   ResetLobby();var progress=EdgegapOnlineFlow.Instance;Put(progress,"searching",true);
   foreach(var phase in new[]{("SEARCHING","SEARCHING FOR OPPONENTS"),("TEAM_FOUND","TEAM FOUND"),("MATCH_FOUND","STARTING GAME SERVER")})
   {

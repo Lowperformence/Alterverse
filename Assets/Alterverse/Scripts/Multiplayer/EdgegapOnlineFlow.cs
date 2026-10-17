@@ -301,6 +301,12 @@ namespace Alterverse.Multiplayer
                 OnlinePartyService online = OnlinePartyService.Instance;
                 if (!PartyUnchanged(online) || online.PlayerCount != expectedPlayers) return false;
 
+                // A solo party has no guests to notify. Its former Relay transport is
+                // deliberately shut down when switching to the dedicated server, and is
+                // not restarted after a failed assignment. Do not require that dead Relay
+                // for a solo retry; party/roster/generation validation above still applies.
+                if (expectedPlayers == 1) return true;
+
                 NetworkManager manager = NetworkManager.Singleton;
                 if (manager != null && manager.IsListening && manager.IsHost &&
                     CoopNetworkBootstrap.IsLinkReadyForPlayers(expectedPlayers))
@@ -594,3 +600,4 @@ namespace Alterverse.Multiplayer
         }
     }
 }
+

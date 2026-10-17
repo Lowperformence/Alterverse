@@ -113,3 +113,25 @@ menu and search again. Verify both offline and updated multi-device play as well
 No native Unity installation is available in this workspace. These passing checks do
 not certify Android performance, visual smoothness, native collision or a successful
 server/Android build. Source changes have not changed the running v0.1.3 deployment.
+
+## Follow-up: solo retry after a failed dedicated handoff
+
+The transport intentionally shuts down/replaces Relay before connecting to the
+assigned dedicated server. A failed handshake leaves the friend-party membership
+visible, but its former Relay host is no longer running. The next solo search used
+to require that old host and fail with `FRIEND PARTY RELAY IS NOT READY`.
+
+Solo readiness now validates generation and the unchanged party/roster without
+requiring a Relay host, because there are no guests to notify. Multi-person parties
+still require a live Relay host link before creating/distributing a group. Nine added
+checks cover a fresh solo group after a stopped transport, cancellation, and retained
+multi-person readiness. All **1,932** lobby/identity/ranked checks passed locally; the
+previous solo gate fails the new retry regression. Native Unity/device tests remain
+outstanding.
+
+The reported first error, `GAME SERVER DISCONNECTED BEFORE MATCH START`, is not
+proven to be caused by this retry bug. Dedicated protocol 5 requires the matching
+v0.1.4 server deployment; uploading its image does not update Edgegap application
+versions or saved matchmaker configuration. Live inspection on 2026-10-17 was blocked
+by an expired dashboard session and declined sign-in. No server-version switch or
+live fix is claimed by this follow-up.
