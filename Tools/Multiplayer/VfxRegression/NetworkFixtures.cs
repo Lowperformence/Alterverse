@@ -39,3 +39,15 @@ namespace Alterverse.Multiplayer
 }
 
 namespace Alterverse.Characters {public class TrenchSoldier:UnityEngine.MonoBehaviour {}}
+
+namespace Alterverse.UI
+{
+    public static class MainMenuController {public static bool IsVisible;}
+    public static class FrontEndTypography {public static object Display;}
+    public static class CombatGlyphs
+    {
+        public static UnityEngine.Vector2 LastCenter;public static int Rings;
+        public static void Ring(UnityEngine.Vector2 center,float radius,float width,UnityEngine.Color tint,int segments){LastCenter=center;Rings++;}
+        public static void Line(UnityEngine.Vector2 a,UnityEngine.Vector2 b,float width,UnityEngine.Color tint){}
+    }
+}

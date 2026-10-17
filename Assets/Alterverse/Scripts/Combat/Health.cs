@@ -314,7 +314,9 @@ namespace Alterverse.Combat
             heroBaseShieldRechargeAt = -1f;
             float snapshotShieldLimit = maxHealth * .4f + (heroBaseShieldEnabled ? HeroBaseShieldCapacity : 0f);
             shield = Mathf.Clamp(currentShield, 0, snapshotShieldLimit);
-            shieldUntil = shield > 0 ? Time.time + .35f : 0;
+            // Hold the last authoritative value across delayed/lost snapshots, like HP.
+            // The next server snapshot clears/reduces it; only AddShield owns buff expiry.
+            shieldUntil = shield > 0 ? float.PositiveInfinity : 0;
 
             IsDead = dead || Current <= 0;
             if (!wasDead && IsDead && GetComponent<Alterverse.Characters.HeroIdentity>() != null)

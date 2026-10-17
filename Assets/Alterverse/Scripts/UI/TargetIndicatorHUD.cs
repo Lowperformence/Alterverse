@@ -14,6 +14,8 @@ namespace Alterverse.UI
         private GUIStyle label;
         private float nextResolve;
         private float lastScale = -1f;
+        private Health visualTarget;
+        private HeroVisualMotion targetMotion;
 
         private void Start()
         {
@@ -48,7 +50,11 @@ namespace Alterverse.UI
                 cachedCamera == null)
                 return;
 
-            Vector3 screen = cachedCamera.WorldToScreenPoint(target.transform.position + Vector3.up * 1.25f);
+            if(visualTarget!=target)
+            {
+                visualTarget=target;targetMotion=target.GetComponent<HeroVisualMotion>();
+            }
+            Vector3 screen = cachedCamera.WorldToScreenPoint(HeroPresentationAnchor.Position(target.transform,targetMotion) + Vector3.up * 1.25f);
             float scale = Mathf.Clamp(Screen.height / 900f, .72f, 1.25f);
             float margin = 80f * scale;
             if (screen.z <= 0f || screen.x < -margin || screen.x > Screen.width + margin ||

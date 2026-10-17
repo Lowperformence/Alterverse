@@ -45,6 +45,7 @@ static class VfxRegression
             if(!g.activeInHierarchy)continue;
             object[] components={g.GetComponent<HeroLocomotion>(),g.GetComponent<HeroAbilityExecution>(),g.GetComponent<HeroAttackDelivery>(),g.GetComponent<HeroVfxPool>()};
             foreach(var component in components)if(component!=null)component.GetType().GetMethod("Update",BindingFlags.Instance|BindingFlags.NonPublic)?.Invoke(component,null);
+            var pool=g.GetComponent<HeroVfxPool>();if(pool!=null)GameObject.Invoke(pool,"LateUpdate");
         }
     }
     static void CommandDamage()
@@ -307,6 +308,98 @@ static class VfxRegression
             Check(online.Events.Length>0,"Action produces semantic presentation "+id+action);
         }
     }
+    static object ActiveShield(GameObject target)
+    {
+        object pool=typeof(HeroVfxPool).GetField("instance",BindingFlags.NonPublic|BindingFlags.Static).GetValue(null);
+        if(pool==null)return null;
+        foreach(object slot in (Array)typeof(HeroVfxPool).GetField("slots",BindingFlags.NonPublic|BindingFlags.Instance).GetValue(pool))
+        {
+            if(slot==null)continue;var t=slot.GetType();
+            if((bool)t.GetField("Active").GetValue(slot)&&(bool)t.GetField("ShieldBound").GetValue(slot)&&
+                ReferenceEquals(t.GetField("Follow").GetValue(slot),target.transform))return slot;
+        }
+        return null;
+    }
+    static Transform SlotTransform(object slot)=>(Transform)slot.GetType().GetField("Transform").GetValue(slot);
+    static void NetworkPresentationFollowers()
+    {
+        foreach(int fps in new[]{30,60,120})
+        {
+            Reset();CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton.IsServer=false;
+            var actor=Hero(HeroId.Nyra,0,true);var target=Hero(HeroId.Kaelon,1);
+            var motion=target.GetComponent<HeroVisualMotion>();motion.HasNetworkPresentation=true;
+            target.transform.position=motion.PresentedPosition=new Vector3(0,0,4);
+            var state=target.AddComponent<NetworkHealthReplica>();state.ApplyNetworkSnapshot(950,50,false);
+            var hp=target.GetComponent<Health>();hp.Shield=state.Shield;
+            HeroSkillVfx.Support(actor,hp,true,3);
+            object shield=ActiveShield(target);Check(shield!=null,"Authoritative shield creates a live attached effect");
+            var pool=GameObject.All.Select(g=>g.GetComponent<HeroVfxPool>()).First(x=>x!=null);
+            var targeting=actor.GetComponent<SoftTargeting>()??actor.AddComponent<SoftTargeting>();
+            typeof(SoftTargeting).GetField("current",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(targeting,hp);
+            Camera.main=new GameObject("camera").AddComponent<Camera>();
+            var hud=new GameObject("target HUD").AddComponent<Alterverse.UI.TargetIndicatorHUD>();GameObject.Invoke(hud,"Start");
+            var buffer=new HeroPresentationBuffer();buffer.Push(target.transform.position,Quaternion.identity,0,true);
+            // Includes variable inter-arrival times and a 570ms packet gap: retain last known state.
+            float[] arrivals={.08f,.17f,.31f,.34f,.42f,.99f,1.08f,1.17f};int next=0;
+            for(int frame=1;frame<=fps*1.25f;frame++)
+            {
+                UnityEngine.Clock.Advance(1f/fps);
+                while(next<arrivals.Length&&Time.time>=arrivals[next])
+                {
+                    float received=arrivals[next++];target.transform.position=new Vector3(received*4,0,4);
+                    buffer.Push(target.transform.position,Quaternion.identity,received,false);
+                    state.ApplyNetworkSnapshot(950,50,false);
+                }
+                hp.Shield=state.Shield;
+                Vector3 previous=SlotTransform(shield).position;
+                GameObject.Invoke(pool,"Update");
+                Check((SlotTransform(shield).position-previous).sqrMagnitude<.000001f,"Update does not draw from a stale presentation pose before hero LateUpdate");
+                buffer.Evaluate(Time.time,out motion.PresentedPosition,out motion.PresentedRotation);
+                Vector3 raw=target.transform.position;GameObject.Invoke(pool,"LateUpdate");
+                Check(ActiveShield(target)!=null,"Packet gap cannot erase the last authoritative shield");
+                Check((SlotTransform(shield).position-(motion.PresentedPosition+Vector3.down*.70f)).sqrMagnitude<.000001f,"Shield uses the visible position in the same rendered frame at "+fps);
+                int rings=Alterverse.UI.CombatGlyphs.Rings;GameObject.Invoke(hud,"OnGUI");
+                Check(Alterverse.UI.CombatGlyphs.Rings==rings+2,"Soft target is actually painted by the production HUD");
+                Check(Mathf.Abs(Alterverse.UI.CombatGlyphs.LastCenter.x-motion.PresentedPosition.x)<.00001f,"Reticle tracks the rendered hero instead of stepped snapshot position");
+                Check((target.transform.position-raw).sqrMagnitude==0,"Presentation never changes authoritative collision/target position");
+            }
+            state.ApplyNetworkSnapshot(950,0,false);hp.Shield=state.Shield;GameObject.Invoke(pool,"Update");
+            Check(ActiveShield(target)==null,"Confirmed shield break still removes the effect immediately");
+            // Switching targets must invalidate the cached visual anchor.
+            var other=Hero(HeroId.Elyra,3);other.transform.position=new Vector3(9,0,4);
+            var otherMotion=other.GetComponent<HeroVisualMotion>();otherMotion.HasNetworkPresentation=true;otherMotion.PresentedPosition=new Vector3(7,0,4);
+            typeof(SoftTargeting).GetField("current",BindingFlags.NonPublic|BindingFlags.Instance).SetValue(targeting,other.GetComponent<Health>());
+            GameObject.Invoke(hud,"OnGUI");Check(Mathf.Abs(Alterverse.UI.CombatGlyphs.LastCenter.x-7)<.00001f,"Changing target resolves its own presentation instead of retaining the old hero");
+            otherMotion.HasNetworkPresentation=false;otherMotion.PresentedPosition=Vector3.zero;
+            GameObject.Invoke(hud,"OnGUI");Check(Mathf.Abs(Alterverse.UI.CombatGlyphs.LastCenter.x-9)<.00001f,"Unready/local/disabled presentation falls back to actual transform");
+            var minion=new GameObject("ordinary target");minion.transform.position=new Vector3(12,0,4);
+            Check((HeroPresentationAnchor.Position(minion.transform)-minion.transform.position).sqrMagnitude==0,"Non-hero anchors retain ordinary world transforms");
+            Check((HeroPresentationAnchor.Position(actor.transform,actor.GetComponent<HeroVisualMotion>())-actor.transform.position).sqrMagnitude==0,"Local owner keeps immediate predicted position");
+            other.transform.localScale=new Vector3(2,3,.5f);other.transform.rotation=Quaternion.Euler(0,90,0);
+            otherMotion.HasNetworkPresentation=true;otherMotion.PresentedRotation=Quaternion.Euler(0,180,0);
+            Vector3 local=new Vector3(1,1,2),scaled=new Vector3(2,3,1);
+            Check((HeroPresentationAnchor.TransformPoint(other.transform,otherMotion,local)-
+                (otherMotion.PresentedPosition+otherMotion.PresentedRotation*scaled)).sqrMagnitude<.000001f,
+                "Attached effects preserve scaled local offsets while using rendered rotation");
+            Check((HeroPresentationAnchor.Rotation(other.transform,otherMotion)*Vector3.forward-
+                otherMotion.PresentedRotation*Vector3.forward).sqrMagnitude<.000001f,"Attached effects face the rendered hero");
+            otherMotion.HasNetworkPresentation=false;
+            Check((HeroPresentationAnchor.TransformPoint(other.transform,otherMotion,local)-
+                other.transform.TransformPoint(local)).sqrMagnitude<.000001f,"Offline attached effects retain native transform conversion");
+        }
+        Reset();var unit=new GameObject("health snapshot");var snapshot=unit.AddComponent<NetworkHealthReplica>();
+        CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton.IsServer=false;
+        snapshot.ApplyNetworkSnapshot(900,50,false);UnityEngine.Clock.Advance(2);
+        Check(snapshot.Shield==50,"Real snapshot shield getter does not invent a local 350ms expiration");
+        snapshot.ApplyNetworkSnapshot(900,20,false);Check(snapshot.Shield==20,"Authoritative shield reduction is immediate");
+        snapshot.ApplyNetworkSnapshot(900,0,false);snapshot.AddShield(100,1,false);
+        Check(snapshot.Shield==0,"Client cannot grant itself a shield while waiting for state");
+        CoopAuthority.Active=false;CoopAuthority.LocalHasServerAuthority=true;
+        snapshot.AddShield(40,.2f,false);Check(snapshot.Shield==40,"Offline/server ability shield still starts");
+        UnityEngine.Clock.Advance(.21f);Check(snapshot.Shield==0,"Offline/server timed shields still expire normally");
+        var attributes=typeof(HeroVfxPool).GetCustomAttributes(typeof(DefaultExecutionOrder),false);
+        Check(attributes.Length==1,"Effect renderer declares its ordering after the hero presentation phase");
+    }
     static void Main()
     {
         var manager=new NetworkManager{IsServer=true,IsListening=true,IsConnectedClient=true};
@@ -324,7 +417,7 @@ static class VfxRegression
         Check(Visible().Length>before,"Production receiver and full facade create visible client meshes");
         Check(manager.CustomMessagingManager.Packets.Count==1,"Client replay cannot echo an event");
         before=Visible().Length;relay.Receive(9,packet);Check(Visible().Length==before,"A non-server cannot inject visual events");
-        relay.Unbind();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();PendingCooldowns();OfflineOnlineParity();
+        relay.Unbind();NetworkPresentationFollowers();AllCues();CommandDamage();TenHeroVfxReserve();RealMotionEpochs();ServerFrameTelemetry();PendingCooldowns();OfflineOnlineParity();
         Console.WriteLine("PASS "+checks+" production online VFX and combat/shader checks (controlled Unity/GPU/network fixtures)");
     }
 }

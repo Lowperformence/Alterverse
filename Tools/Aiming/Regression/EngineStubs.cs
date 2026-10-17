@@ -109,7 +109,7 @@ namespace Alterverse.Visuals {
  public class HeroAttackReadabilityPresentation:UnityEngine.MonoBehaviour{}
  public class MeleeBasicAttackAnimation:UnityEngine.MonoBehaviour{}
  public class HeroAbilityReadabilityBoost:UnityEngine.MonoBehaviour{}
- public class HeroVisualMotion:UnityEngine.MonoBehaviour {public UnityEngine.Vector3 ReleasePoint=>transform.position;public float DashSeconds;public void PulseAbility(int slot,float windup){}public void PulseDash(float seconds=.17f){DashSeconds=seconds;}}
+ public class HeroVisualMotion:UnityEngine.MonoBehaviour {public bool HasNetworkPresentation;public UnityEngine.Vector3 PresentedPosition;public UnityEngine.Quaternion PresentedRotation=UnityEngine.Quaternion.identity;public UnityEngine.Vector3 ReleasePoint=>transform.position;public float DashSeconds;public void PulseAbility(int slot,float windup){}public void PulseDash(float seconds=.17f){DashSeconds=seconds;}}
  public static class CombatMotion {public static void BeginAimed(UnityEngine.GameObject a,float w,UnityEngine.Vector3 p){}public static void Begin(UnityEngine.GameObject a,float w,Alterverse.Combat.Health t){}}
 
  public sealed partial class HeroSkillVfx:UnityEngine.MonoBehaviour {

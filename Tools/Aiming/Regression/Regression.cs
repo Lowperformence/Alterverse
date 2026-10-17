@@ -46,7 +46,7 @@ partial class Regression
   Clock.Advance(dt);
   movement?.Invoke();
   foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var e=g.GetComponent<HeroAbilityExecution>();if(e!=null)Call(e,"Update");}
-  foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var d=g.GetComponent<HeroAttackDelivery>();if(d!=null)Call(d,"Update");var fx=g.GetComponent<Alterverse.Visuals.HeroVfxPool>();if(fx!=null)Call(fx,"Update");}
+  foreach(var g in GameObject.All.ToArray().Where(g=>g.activeInHierarchy)) {var d=g.GetComponent<HeroAttackDelivery>();if(d!=null)Call(d,"Update");var fx=g.GetComponent<Alterverse.Visuals.HeroVfxPool>();if(fx!=null){Call(fx,"Update");Call(fx,"LateUpdate");}}
  }
  static void Run(float seconds){for(float t=0;t<seconds-.000001f;t+=.01f)Step();}
  static AimPose Forward(GameObject a,float distance=4)=>new AimPose(Vector3.forward,a.transform.position+Vector3.forward*distance);

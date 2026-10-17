@@ -10,6 +10,7 @@ namespace Alterverse.Visuals
     internal enum HeroFxShape { Ring,Hex,Slash,Rift,Orb,Bolt,Shield,Plus,Shard,Cracks,Halo,Burst,Petals,ShockDome,Runes,Seed,RiftCross,ContactStar,Spark,Streak,ArcRibbon,Leaf,AnchorProjectile,WaterSpiral,WaveCrest,AnchorChain,MonsterRock,MonsterDiamond,MonsterSlime,MonsterBeam,PressureWave,GravityEight,AnchorStrikeZero,Laser,EchoSickle,Mist,Claw,TimmyGrenade,Count }
     internal enum HeroFxMotion { Hold,Expand,Contract,Travel,Orbit,Sweep,Scatter,Spiral,TravelFixedFrame,Drift,Tether,Lob,RadialPulse,LaserBeam,Sustained,AttachedJet }
     // Presentation-only scheduler. No damage, collision, targeting, coroutines, or runtime mesh rebuilds.
+    [DefaultExecutionOrder(1600)]
     public sealed class HeroVfxPool:MonoBehaviour
     {
         private const int Capacity=192,WarningReserve=32,CoreReserve=32;
@@ -21,6 +22,7 @@ namespace Alterverse.Visuals
             public Color Color;public float Start,Duration,SurfaceStyle,MaxRange;public bool Active,Warning,Decorative,CancelOnOwnerDeath;
             public int DeliveryId;public HeroFxMotion Motion;public Transform Follow,EndFollow;public bool Follows,TracksEnd;
             public Vector3 EndOffset;public Health EndHealth;
+            public HeroVisualMotion FollowMotion,EndMotion;
             public GameObject Owner;public Health OwnerHealth,Shield;public bool ShieldBound;public float ShieldGraceUntil;
         }
         private static HeroVfxPool instance;
@@ -141,12 +143,13 @@ namespace Alterverse.Visuals
             // Never steal a visible warning; optional flourishes are dropped at saturation.
             if(slot==null)return;
             slot.DeliveryId=deliveryScope;slot.Active=true;slot.Warning=warning;slot.Decorative=decorative;slot.CancelOnOwnerDeath=cancelOnOwnerDeath||owner!=null&&owner.GetComponent<HeroIdentity>()?.Hero==HeroId.Nerok;slot.Owner=owner;slot.OwnerHealth=owner!=null?owner.GetComponent<Health>():null;
-            slot.Follow=follow;slot.Follows=follow!=null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
+            slot.Follow=follow;slot.Follows=follow!=null;slot.FollowMotion=follow!=null?follow.GetComponent<HeroVisualMotion>():null;slot.Offset=slot.Follows?from-follow.position:Vector3.zero;
             slot.Shield=shield;slot.ShieldBound=shield!=null;
             slot.ShieldGraceUntil=shield!=null&&shield.Shield<=0&&HeroVfxEvents.ReplayOrigin.HasValue?Time.time+.5f:0f;
             slot.EndFollow=endFollow;slot.TracksEnd=endFollow!=null;
             slot.EndOffset=endFollow!=null?to-endFollow.position:Vector3.zero;
             slot.EndHealth=endFollow!=null?endFollow.GetComponent<Health>():null;
+            slot.EndMotion=endFollow!=null?endFollow.GetComponent<HeroVisualMotion>():null;
             slot.MaxRange=Mathf.Max(0,maxRange);
             // Scale presentation meshes only. Telegraph geometry stays at the exact gameplay radius.
             slot.From=from;slot.To=to;slot.Size=size*(warning||shape==HeroFxShape.TimmyGrenade||motion==HeroFxMotion.RadialPulse||motion==HeroFxMotion.Sustained?1f:1.5f);slot.Color=color;slot.Motion=motion;
@@ -196,7 +199,7 @@ namespace Alterverse.Visuals
                 if(slot!=null&&slot.Active&&slot.Owner==actor&&slot.Filter.sharedMesh==instance.shapes[(int)shape]&&
                     (!motion.HasValue||slot.Motion==motion.Value))instance.Hide(slot);
         }
-        private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.TracksEnd=false;}
+        private void Hide(Slot s){s.Active=false;s.Renderer.enabled=false;s.Follow=null;s.Owner=null;s.OwnerHealth=null;s.Shield=null;s.EndFollow=null;s.EndHealth=null;s.FollowMotion=s.EndMotion=null;s.TracksEnd=false;}
         private void Update()
         {
             if(Time.timeScale<=0)return;
@@ -210,25 +213,38 @@ namespace Alterverse.Visuals
                     s.Follows&&s.Follow==null||s.ShieldBound&&(s.Shield==null||s.Shield.IsDead||s.Shield.Shield<=0&&Time.time>=s.ShieldGraceUntil))
                 {Hide(s);continue;}
                 float age=Time.time-s.Start;if(age<0)continue;
-                if(age>=s.Duration){Hide(s);continue;}Draw(s,age/s.Duration);
+                if(age>=s.Duration){Hide(s);continue;}
+            }
+        }
+        // HeroVisualMotion samples its pose in LateUpdate (order 930). Attached VFX
+        // must render after that phase rather than following last frame's pose in Update.
+        private void LateUpdate()
+        {
+            if(Time.timeScale<=0)return;
+            for(int i=0;i<slots.Length;i++)
+            {
+                Slot s=slots[i];if(s==null||!s.Active)continue;
+                float age=Time.time-s.Start;
+                if(age>=0&&age<s.Duration)Draw(s,age/s.Duration);
             }
         }
         private void Draw(Slot s,float t)
         {
-            Vector3 point=s.Follows?s.Follow.position+s.Offset:s.From;
+            Vector3 point=s.Follows?HeroPresentationAnchor.Position(s.Follow,s.FollowMotion)+s.Offset:s.From;
             float scale=1;Quaternion rotation=s.Rotation;Vector3 drawnSize=s.Size;
             switch(s.Motion)
             {
                 case HeroFxMotion.AttachedJet:
                     if(s.Follow==null){s.Renderer.enabled=false;return;}
-                    point=s.Follow.TransformPoint(s.Offset);rotation=s.Follow.rotation*s.Rotation;
+                    rotation=HeroPresentationAnchor.Rotation(s.Follow,s.FollowMotion);
+                    point=HeroPresentationAnchor.TransformPoint(s.Follow,s.FollowMotion,s.Offset);rotation*=s.Rotation;
                     scale=.92f+.08f*Mathf.Sin(t*Mathf.PI*12f);
                     break;
                 case HeroFxMotion.LaserBeam:
                     // The cached laser spans 0..1 on Z: keep both ends exact while tracking movement.
                     if(s.Follows&&s.Owner!=null)point=s.Owner.GetComponent<HeroVisualMotion>()?.ReleasePoint??point;
-                    Vector3 beamEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
-                    Vector3 rangeOrigin=s.Follows&&s.Owner!=null?s.Owner.transform.position:point;
+                    Vector3 beamEnd=s.TracksEnd?HeroPresentationAnchor.Position(s.EndFollow,s.EndMotion)+s.EndOffset:s.To;
+                    Vector3 rangeOrigin=s.Follows&&s.Owner!=null?HeroPresentationAnchor.Position(s.Follow,s.FollowMotion):point;
                     Vector3 rangeDelta=beamEnd-rangeOrigin;rangeDelta.y=0;
                     if(s.MaxRange>0&&rangeDelta.sqrMagnitude>s.MaxRange*s.MaxRange)
                     {
@@ -242,7 +258,7 @@ namespace Alterverse.Visuals
                     drawnSize.z=beamDelta.magnitude;
                     break;
                 case HeroFxMotion.Tether:
-                    Vector3 tetherEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 tetherEnd=s.TracksEnd?HeroPresentationAnchor.Position(s.EndFollow,s.EndMotion)+s.EndOffset:s.To;
                     Vector3 tetherDelta=tetherEnd-point;
                     if(tetherDelta.sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(tetherDelta);
                     drawnSize.z=tetherDelta.magnitude;
@@ -254,7 +270,7 @@ namespace Alterverse.Visuals
                 case HeroFxMotion.Contract:scale=Mathf.Lerp(1,.12f,t*t);break;
                 case HeroFxMotion.TravelFixedFrame:
                 case HeroFxMotion.Travel:
-                    Vector3 end=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 end=s.TracksEnd?HeroPresentationAnchor.Position(s.EndFollow,s.EndMotion)+s.EndOffset:s.To;
                     point=Vector3.Lerp(s.From,end,t);
                     if(s.Motion==HeroFxMotion.Travel&&s.TracksEnd&&(end-s.From).sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(end-s.From);
                     break;
@@ -272,13 +288,13 @@ namespace Alterverse.Visuals
                     scale=Mathf.Lerp(1f,.35f,t);
                     break;
                 case HeroFxMotion.Lob:
-                    Vector3 lobEnd=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 lobEnd=s.TracksEnd?HeroPresentationAnchor.Position(s.EndFollow,s.EndMotion)+s.EndOffset:s.To;
                     point=Vector3.Lerp(s.From,lobEnd,t);
                     point.y+=4f*t*(1f-t)*Mathf.Min(.85f,Vector3.Distance(s.From,lobEnd)*.18f);
                     rotation*=Quaternion.Euler(t*115f,t*185f,t*65f);
                     break;
                 case HeroFxMotion.Spiral:
-                    Vector3 destination=s.TracksEnd?s.EndFollow.position+s.EndOffset:s.To;
+                    Vector3 destination=s.TracksEnd?HeroPresentationAnchor.Position(s.EndFollow,s.EndMotion)+s.EndOffset:s.To;
                     Vector3 heading=destination-s.From;
                     if(heading.sqrMagnitude>.0001f)rotation=Quaternion.LookRotation(heading);
                     float angle=t*Mathf.PI*3f+s.Rotation.eulerAngles.z*Mathf.Deg2Rad;

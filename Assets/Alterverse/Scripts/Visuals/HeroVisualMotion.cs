@@ -80,6 +80,7 @@ namespace Alterverse.Visuals
         public Vector3 GaitDirection => displayedTravelDirection;
         private bool RemoteReplica => replicaSlot != null && CoopAuthority.Active &&
             !CoopAuthority.LocalHasServerAuthority && !replicaSlot.IsLocalHuman;
+        public bool HasNetworkPresentation => isActiveAndEnabled && root!=null && RemoteReplica && presentationBuffer.Ready;
         public bool GroundingSuspended => Dashing || Time.time < dashUntil || RemoteReplica &&
             (Time.time < replicaGroundingUntil || PlanarSpeed > Mathf.Max(1f,(locomotion!=null?locomotion.RunningSpeed:6.5f)*1.6f));
         public void ReceivePresentationSnapshot(Vector3 position, Quaternion rotation, bool discontinuity, bool forcedMoving)

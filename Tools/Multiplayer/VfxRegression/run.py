@@ -36,17 +36,25 @@ def main():
     names = ast.literal_eval(re.search(r'^names=(\[[^\n]+\])', (shared / 'run.py').read_text(), re.M)[1])
     names += ['Visuals/HeroSkillVfx.cs', 'Visuals/HeroSkillVfx.VoidKnight.cs',
               'Characters/VoidKnightBalance.cs', 'Characters/VoidKnightState.cs',
-              'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs']
+              'Characters/HeroAbilityExecution.VoidKnight.cs', 'Multiplayer/CoopHeroStateSync.Vfx.cs', 'Characters/HeroLocomotion.cs', 'Visuals/HeroPresentationBuffer.cs', 'UI/TargetIndicatorHUD.cs']
     engine = (shared / 'EngineStubs.cs').read_text()
     engine = remove_class(engine, 'public sealed partial class HeroSkillVfx:')
     engine = remove_class(engine, 'public static class CoopHeroStateSync ')
     engine = remove_class(engine, 'public class HeroLocomotion:')
+    engine = engine.replace('public struct Quaternion {', 'public struct Quaternion {public static Quaternion Slerp(Quaternion a,Quaternion b,float t){var q=System.Numerics.Quaternion.Slerp(new(a.x,a.y,a.z,a.w),new(b.x,b.y,b.z,b.w),t);return new Quaternion{x=q.X,y=q.Y,z=q.Z,w=q.W};}')
+    engine = engine.replace('public class GUIStyle {', 'public enum FontStyle{Bold}public class GUIStyleState{public Color textColor;}public class GUIStyle {public object font;public FontStyle fontStyle;public GUIStyleState normal=new();')
+    engine = engine.replace('public static class GUI {', 'public static class GUI {public static void Label(Rect r,string text,GUIStyle style){}')
+    engine = engine.replace('public static class StylizedArtDirection {', 'public static class StylizedArtDirection {public static UnityEngine.Color WarmAccent=>UnityEngine.Color.white;')
+    engine = engine.replace('public enum DimensionSound{Kill}', 'public enum DimensionSound{Kill,HeroDeath,Shield}')
+    engine = engine.replace('public static class DimensionAudio {', 'public static class DimensionAudio {public static void PlayAt(DimensionSound sound,UnityEngine.Vector3 p,float gain){}')
+
     engine = engine.replace('public class HeroMotor:UnityEngine.MonoBehaviour {', 'public class HeroMotor:UnityEngine.MonoBehaviour {public float MoveSpeed=>6.5f;')
     engine = engine.replace('public class LaneMinion:UnityEngine.MonoBehaviour {', 'public class LaneMinion:UnityEngine.MonoBehaviour {public float RunningSpeed=>6.5f;')
     engine = engine.replace('public float CooldownMultiplier=1;', 'public float CooldownMultiplier=1,MoveSpeedMultiplier=1;')
     engine = engine.replace('public const int Units=8,', 'public static bool ContainsRoundedArena(UnityEngine.Vector3 p,float a,float b)=>Math.Abs(p.x)<=a&&Math.Abs(p.z)<=b;public const int MovementMask=1,Units=8,')
     engine = engine.replace('public class CharacterController:Component {', 'public class CharacterController:Component {public bool enabled=true;public float minMoveDistance,stepOffset,skinWidth=.01f;public void Move(Vector3 p){transform.position+=p;}')
     engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Vector3 lossyScale=>localScale;public Vector3 up=>Vector3.up;')
+    engine = engine.replace('public Vector3 TransformPoint(Vector3 p)=>position+rotation*p;', 'public Vector3 TransformPoint(Vector3 p)=>position+rotation*new Vector3(p.x*localScale.x,p.y*localScale.y,p.z*localScale.z);')
     engine = engine.replace('public struct Quaternion {', 'public struct Quaternion {public static Quaternion RotateTowards(Quaternion a,Quaternion b,float d)=>b;')
     engine = engine.replace('public struct Vector3 {', 'public struct Vector3 {public static Vector3 ProjectOnPlane(Vector3 p,Vector3 n)=>p-n*Dot(p,n);')
     engine = engine.replace('public Collider collider;public float distance;', 'public Vector3 normal;public Collider collider;public float distance;')
@@ -71,8 +79,21 @@ def main():
         directory = Path(directory)
         fixtures = directory / 'Engine.cs'
         fixtures.write_text(engine)
+        # Compile the production snapshot body and expiry properties without replacing the
+        # combat suite's separate fake damage engine. This isolates network shield lifetime.
+        health = (root / 'Assets/Alterverse/Scripts/Combat/Health.cs').read_text()
+        capacity = health[health.index('private float HeroBaseShieldCapacity'):health.index('private const float HeroBaseShieldRechargeDelay')]
+        snapshot = health[health.index('public void ApplyNetworkSnapshot('):health.index('public void RestoreFull()')]
+        add_shield = health[health.index('public void AddShield(float amount, float duration)'):health.index('private void ClearTransient()')]
+        transient = re.search(r'private float TransientShield[^;]+;', health)[0]
+        shield = re.search(r'public float Shield[^;]+;', health)[0]
+        replica = directory / 'NetworkHealthReplica.cs'
+        replica.write_text('using System;using UnityEngine;namespace Alterverse.Combat {public sealed class NetworkHealthReplica:MonoBehaviour {' +
+                           'private float shield,shieldUntil,heroBaseShield;private bool heroBaseShieldEnabled;private float heroBaseShieldRechargeAt;' +
+                           'private float maxHealth=1000;public float Current=1000;public bool IsDead;public event Action<float,float> Changed;' +
+                           capacity + transient + shield + add_shield + snapshot + '}}')
         output = directory / 'Regression.dll'
-        files = [fixtures, here / 'Regression.cs', here / 'NetworkFixtures.cs',
+        files = [fixtures, replica, here / 'Regression.cs', here / 'NetworkFixtures.cs',
                  *[root / 'Assets/Alterverse/Scripts' / n for n in names]]
         subprocess.run([str(dotnet / 'dotnet'), str(csc), '-nologo', '-noconfig', '-langversion:9',
                         '-out:' + str(output), *['-r:' + str(p) for p in refs.glob('*.dll')], *map(str, files)], check=True)
