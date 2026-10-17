@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "source_parts": 285,
+  "triangles": 33866,
+  "bones": 19,
+  "animation_frames": 384,
+  "maximum_pose_error": 0.0,
+  "weapon_unchanged": true,
+  "hands_unchanged": true,
+  "materials": 5,
+  "closed_v_visor": true
+}

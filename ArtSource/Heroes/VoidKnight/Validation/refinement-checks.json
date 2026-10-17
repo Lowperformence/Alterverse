@@ -1,7 +1,7 @@
 {
   "result": "PASS",
-  "source_meshes": 281,
-  "triangles": 34406,
+  "source_meshes": 285,
+  "triangles": 33866,
   "materials": 5,
   "bones": 19,
   "animation_frames": 384,
