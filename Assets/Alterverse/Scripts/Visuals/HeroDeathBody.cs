@@ -71,7 +71,8 @@ namespace Alterverse.Visuals
             body.startPosition = pivot;
             body.groundY = body.FindGround(actor);
             body.fallDirection = actor.transform.forward;
-            body.side = (actor.GetInstanceID() & 1) == 0 ? 1f : -1f;
+            // Stable visual variation without deprecated object IDs or gameplay RNG.
+            body.side = actor.transform.position.x < 0f ? -1f : 1f;
             body.BuildPose(root, actor.transform.right, actor.transform.forward);
             foreach (BonePose pose in body.poses) body.contacts.Add(pose.Bone);
             if (hips != null) body.contacts.Add(hips);
