@@ -102,7 +102,7 @@ namespace Alterverse.Multiplayer
                 return;
             }
 
-            Vector3 desired=GameplayCollision.ClampToRoundedArena(new Vector3(x,y,z),40f,33f);
+            Vector3 desired=GameplayCollision.ClampToRoundedArena(new Vector3(x,y,z),ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
             desired.y=actor.transform.position.y;
             Vector3 delta=desired-actor.transform.position;delta.y=0;
 
@@ -126,8 +126,8 @@ namespace Alterverse.Multiplayer
             float allowed=Mathf.Max(MinimumMovementSlack,baseSpeed*buffSpeed*statusSpeed*dt*1.40f+MinimumMovementSlack);
             if(delta.magnitude>allowed)delta=delta.normalized*allowed;
 
-            if(locomotion!=null)locomotion.Move(delta,40f,33f);
-            else actor.transform.position=GameplayCollision.ClampToRoundedArena(actor.transform.position+delta,40f,33f);
+            if(locomotion!=null)locomotion.Move(delta,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
+            else actor.transform.position=GameplayCollision.ClampToRoundedArena(actor.transform.position+delta,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
             actor.transform.rotation=Quaternion.Euler(0,Mathf.Repeat(yaw,360f),0);
             ownerAcknowledgements[rosterSlot]=ownerSequence;
             acknowledgedPositions[rosterSlot]=actor.transform.position;

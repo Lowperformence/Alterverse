@@ -266,5 +266,42 @@ static class Regression
   CoopAuthority.LocalHasServerAuthority=false;CoopPlanHandshake.Calls=0;owner.Send(NetworkManager.Singleton);
   Check(CoopPlanHandshake.Calls==1,"Owner movement reuses the current round identity");
  }
- static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
+ static void EnlargedBoundaryCases()
+ {
+  foreach(var pair in new[]{
+   (new Vector3(49,0,0),new Vector3(.2f,0,0)),
+   (new Vector3(-49,0,0),new Vector3(-.2f,0,0)),
+   (new Vector3(0,0,34),new Vector3(0,0,.2f)),
+   (new Vector3(0,0,-34),new Vector3(0,0,-.2f))})
+  {
+   CoopPlanHandshake.Round++;CoopAuthority.ActivePlan=new();CoopAuthority.ActivePlan.Session.Slots[0]=new();
+   CoopAuthority.Active=true;Time.timeScale=1;Time.unscaledTime=.05f;MatchNetworkProtocol.AllowOwner=true;
+   var server=new CoopHeroStateSync();var client=new CoopHeroStateSync();
+   var a=Actor(0);var b=Actor(0,true);server.Slot(a);client.Slot(b,true);
+   a.transform.position=pair.Item1;b.transform.position=pair.Item1+pair.Item2;
+   var sm=new NetworkManager{IsServer=true};var cm=new NetworkManager();
+   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;client.Send(cm);
+   Vector3 sent=b.transform.position;
+   b.transform.position+=pair.Item2;Vector3 advanced=b.transform.position;
+   CoopAuthority.LocalHasServerAuthority=true;NetworkManager.Singleton=sm;
+   server.ReceiveOwner(7,client.Messages.Sent[^1].Values);
+   Position(a.transform.position,sent,"Server accepts ordinary movement in the enlarged owner area");
+   MatchScoreboard.Instance=new MatchScoreboard();server.Broadcast(sm);
+   CoopAuthority.LocalHasServerAuthority=false;NetworkManager.Singleton=cm;
+   client.ReceiveSnapshot(0,server.Messages.Sent[^1].Values);
+   Position(b.transform.position,advanced,"Acknowledgement at enlarged edge does not create an invisible wall or rewind in-flight movement");
+  }
+  float width=ArenaLayout.MovementHalfWidth,height=ArenaLayout.MovementHalfHeight;
+  Position(GameplayCollision.ClampToRoundedArena(new Vector3(1000,0,0),width,height),
+   new Vector3(ArenaLayout.HalfLength-ArenaLayout.LengthScale,0,0),"Movement retains the existing scaled floor margin");
+  Position(GameplayCollision.ClampToRoundedArena(new Vector3(0,0,-1000),width,height),
+   new Vector3(0,0,-ArenaLayout.HalfBreadth+1),"Movement remains inside the visible floor breadth");
+  foreach(int x in new[]{-1,1})foreach(int z in new[]{-1,1})
+  {
+   var corner=GameplayCollision.ClampToRoundedArena(new Vector3(x*1000,0,z*1000),width,height);
+   Check(Math.Abs(corner.x)<width*ArenaLayout.LengthScale&&Math.Abs(corner.z)<height,"Rounded corners remain enforced");
+   Position(GameplayCollision.ClampToRoundedArena(corner,width,height),corner,"Corner clamping is stable across repeated acknowledgements");
+  }
+ }
+ static void Main(){HistoryCases();TransportCases();DashTransportCases();HealingAndStatusCases();WorldPacketCases();SnapshotWorkCases();EnlargedBoundaryCases();Console.WriteLine("PASS: "+checks+" movement, transport, scoreboard, healing and status checks (Unity/network substitutes)");}
 }

@@ -129,7 +129,7 @@ namespace Alterverse.Characters
                 MobaBotMover mover = GetComponent<MobaBotMover>();
                 if (mover != null && target != null && Vector3.Dot(movement, target.transform.position - from) > 0)
                     end = from + movement.normalized * Mathf.Min(spec.Range, Mathf.Max(0, HeroCombatRules.TargetDistance(from, target) - 1.5f));
-                end = GameplayCollision.ClampToRoundedArena(end,40f,33f);
+                end = GameplayCollision.ClampToRoundedArena(end,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
                 if ((end-from).sqrMagnitude < .01f || (mover != null && !mover.CanRepositionTo(end))) return false;
                 if(!locomotion.BeginDash(end))return false;
                 // Apply the speed passive after Vector Shift ends, not during dash

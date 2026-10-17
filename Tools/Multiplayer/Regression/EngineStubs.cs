@@ -23,8 +23,14 @@ namespace UnityEngine
  }
  public class Transform
  {
-  public Vector3 position,eulerAngles;public Quaternion rotation;public GameObject gameObject;
+  public Vector3 position,eulerAngles,localScale;public Quaternion rotation;public GameObject gameObject;
   public void SetPositionAndRotation(Vector3 p,Quaternion r){position=p;rotation=r;}
+ }
+ public struct Vector2
+ {
+  public float x,y;public Vector2(float x,float y){this.x=x;this.y=y;}
+  public float magnitude=>(float)Math.Sqrt(x*x+y*y);
+  public static Vector2 operator *(Vector2 a,float b)=>new(a.x*b,a.y*b);
  }
  public struct Vector3
  {
@@ -41,6 +47,8 @@ namespace UnityEngine
  public static class Time {public static float unscaledTime,time,timeScale=1;}
  public static class Mathf
  {
+  public static float Abs(float a)=>Math.Abs(a);
+  public static int Clamp(int v,int a,int b)=>Math.Clamp(v,a,b);
   public static float Max(float a,float b)=>Math.Max(a,b);public static int Max(int a,int b)=>Math.Max(a,b);
   public static float Min(float a,float b)=>Math.Min(a,b);public static int Min(int a,int b)=>Math.Min(a,b);
   public static float Clamp(float v,float a,float b)=>Math.Clamp(v,a,b);public static float Repeat(float v,float n)=>v-(float)Math.Floor(v/n)*n;
@@ -101,7 +109,6 @@ namespace Alterverse.Combat
   public void ApplyNetworkSnapshot(float hp,float shield,bool dead){Current=hp;Shield=shield;IsDead=dead;}
  }
  public sealed class BasicAttack:Component {public float RemainingCooldown;public void ApplyNetworkCooldown(float value,uint acknowledged=0){RemainingCooldown=value;}}
- public static class GameplayCollision {public static Vector3 ClampToRoundedArena(Vector3 p,float x,float z)=>new(Math.Clamp(p.x,-x,x),p.y,Math.Clamp(p.z,-z,z));}
 }
 namespace Alterverse.Characters
 {

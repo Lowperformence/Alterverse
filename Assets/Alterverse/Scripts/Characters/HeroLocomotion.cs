@@ -115,9 +115,9 @@ namespace Alterverse.Characters
                     // Remote owners send steering while trapped; absolute owner positions must not
                     // undo the server's continuous pull. Local owners predict the same displacement.
                     if(host&&slot!=null&&slot.IsHuman&&!localOwner&&Time.time<remoteRunUntil)
-                        Move(remoteRunVelocity*Time.deltaTime,40f,33f);
+                        Move(remoteRunVelocity*Time.deltaTime,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
                     Vector3 toward=vortexCenter-transform.position;toward.y=0;
-                    Move(Vector3.ClampMagnitude(toward,RunningSpeed*Time.deltaTime),40f,33f,true,true);
+                    Move(Vector3.ClampMagnitude(toward,RunningSpeed*Time.deltaTime),ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight,true,true);
                 }
             }
             if(!CanMove)return;
@@ -163,7 +163,7 @@ namespace Alterverse.Characters
             _ = MovementRevision;
             if (!Alterverse.Multiplayer.CoopAuthority.CanSimulateHostGameplay || health == null || health.IsDead ||
                 !isActiveAndEnabled || Time.timeScale <= 0 || IsForcedMoving) return false;
-            forcedEnd = GameplayCollision.ClampToRoundedArena(destination,40f,33f);
+            forcedEnd = GameplayCollision.ClampToRoundedArena(destination,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
             forcedEnd.y = transform.position.y;
             forcedUntil = Time.time + Mathf.Clamp(duration,.05f,.5f);
             dashRemaining = 0;
@@ -178,7 +178,7 @@ namespace Alterverse.Characters
                 Vector3 delta = forcedEnd - transform.position; delta.y=0;
                 float remaining = Mathf.Max(Time.deltaTime,forcedUntil-Time.time);
                 Vector3 step = delta * Mathf.Clamp01(Time.deltaTime/remaining);
-                Vector3 forcedActual = Move(step,40f,33f,false,true);
+                Vector3 forcedActual = Move(step,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight,false,true);
                 if (forcedActual.sqrMagnitude < step.sqrMagnitude*.25f || delta.sqrMagnitude < .0025f) forcedUntil=0;
                 return;
             }
@@ -186,7 +186,7 @@ namespace Alterverse.Characters
             if(!IsDashing)return;
             dashFrame=Time.frameCount;
             float distance=Mathf.Min(dashRemaining,dashSpeed*Time.deltaTime);
-            Vector3 actual=Move(dashDirection*distance,40,33,false);
+            Vector3 actual=Move(dashDirection*distance,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight,false);
             dashRemaining-=distance;
             if(Vector3.Dot(actual,dashDirection)<distance-.015f)dashRemaining=0;
         }

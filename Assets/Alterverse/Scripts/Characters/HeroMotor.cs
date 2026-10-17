@@ -30,8 +30,8 @@ namespace Alterverse.Characters
         [SerializeField] private Transform cameraTransform;
 
         [Header("Arena")]
-        [SerializeField] private float arenaHalfWidth = 41f;
-        [SerializeField] private float arenaHalfHeight = 35f;
+        [SerializeField] private float arenaHalfWidth = ArenaLayout.MovementHalfWidth;
+        [SerializeField] private float arenaHalfHeight = ArenaLayout.MovementHalfHeight;
 
         private HeroLocomotion body;
         private HeroCombatProfile profile;

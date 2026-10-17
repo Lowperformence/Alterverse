@@ -10,6 +10,16 @@ import subprocess
 import tempfile
 
 
+def block(text, declaration):
+    start = text.index(declaration)
+    end = text.index('{', start) + 1
+    depth = 1
+    while depth:
+        depth += (text[end] == '{') - (text[end] == '}')
+        end += 1
+    return text[start:end]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dotnet-root', type=Path, required=True)
@@ -21,6 +31,15 @@ def main():
     runtime = sorted((dotnet / 'shared/Microsoft.NETCore.App').iterdir())[-1]
     with tempfile.TemporaryDirectory(prefix='df-multiplayer-') as directory:
         directory = Path(directory)
+        # Use real stretched/rounded map math, including the shared movement constants.
+        # A rectangular fixture previously hid differences at the enlarged map edges.
+        collision = (source / 'Combat/GameplayCollision.cs').read_text()
+        geometry = directory / 'ArenaGeometry.cs'
+        corner = re.search(r'public const float ArenaCornerRadius=[^;]+;', collision)[0]
+        geometry.write_text('using UnityEngine;namespace Alterverse.Combat {' +
+                            block(collision, 'public static class ArenaLayout') +
+                            'public static class GameplayCollision {' + corner +
+                            block(collision, 'public static Vector3 ClampToRoundedArena(') + '}}')
         board = (source / 'Match/MatchScoreboard.cs').read_text()
         start = board.index('public void GetNetworkScore(')
         end = board.index('private static string CoopDisplayName', start)
@@ -53,7 +72,7 @@ def main():
         engine.write_text((here / 'EngineStubs.cs').read_text().replace('public sealed class HeroLocomotion:', 'public sealed partial class HeroLocomotion:'))
         output = directory / 'Regression.dll'
         response = directory / 'compile.rsp'
-        files = [engine, epochs, here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
+        files = [engine, geometry, epochs, here / 'Regression.cs', accessors, declarations, heal, packets, source / 'Combat/HeroCombatStatus.cs',
                  source / 'Multiplayer/CoopHeroStateSync.Transport.cs', source / 'Multiplayer/OwnerPoseHistory.cs']
         response.write_text('\n'.join(['-nologo', '-target:exe', '-langversion:9', '-nowarn:0649', '-out:' + str(output),
                                        *['-r:' + str(path) for path in runtime.glob('*.dll')], *map(str, files)]))

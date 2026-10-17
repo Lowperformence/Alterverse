@@ -69,7 +69,7 @@ namespace Alterverse.Characters
             yield return new WaitForSeconds(kit.E.Windup);GetComponent<HeroCombatStatus>()?.ReleaseRoot(this);
             if(!VoidValid(castLife)){voidPending=false;yield break;}
             Vector3 from=transform.position;
-            if(!locomotion.BeginDash(GameplayCollision.ClampToRoundedArena(from+direction*kit.E.Range,40f,33f),VoidKnightBalance.DashSeconds)){voidPending=false;yield break;}
+            if(!locomotion.BeginDash(GameplayCollision.ClampToRoundedArena(from+direction*kit.E.Range,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight),VoidKnightBalance.DashSeconds)){voidPending=false;yield break;}
             HeroCombatAudio.Cast(gameObject,2);HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,2,VoidKnightBalance.DashSeconds);
             Vector3 previous=from;float deadline=Time.time+VoidKnightBalance.DashSeconds+.12f;
             while(VoidValid(castLife)&&Time.time<=deadline)
@@ -84,7 +84,7 @@ namespace Alterverse.Characters
                 }
                 if(first!=null)
                 {
-                    Vector3 contact=Vector3.Lerp(previous,current,Mathf.Clamp01(earliest));locomotion.ResetMotion();locomotion.Move(contact-current,40f,33f,false);Hit(2,first,true,true);break;
+                    Vector3 contact=Vector3.Lerp(previous,current,Mathf.Clamp01(earliest));locomotion.ResetMotion();locomotion.Move(contact-current,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight,false);Hit(2,first,true,true);break;
                 }
                 previous=current;if(!locomotion.IsDashing)break;yield return null;
             }

@@ -173,3 +173,6 @@ namespace Alterverse.Performance {public static class AdaptiveVfxBudget {public 
 
 namespace UnityEngine {public static class SystemInfo {public static UnityEngine.Rendering.GraphicsDeviceType graphicsDeviceType=UnityEngine.Rendering.GraphicsDeviceType.Vulkan;}}
 namespace UnityEngine.Rendering {public enum GraphicsDeviceType {Null,Vulkan}}
+
+// Combat-only fixture: actual stretched/rounded bounds are exercised by the map and transport suites.
+namespace Alterverse.Combat {public static class ArenaLayout {public const float MovementHalfWidth=41f,MovementHalfHeight=35f;}}

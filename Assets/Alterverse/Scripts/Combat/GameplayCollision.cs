@@ -10,6 +10,10 @@ namespace Alterverse.Combat
         public const float LengthScale=1.10f*1.10f;
         public const float HalfLength=42f*LengthScale;
         public const float HalfBreadth=36f;
+        // Authored (unscaled) movement limits, shared by owners, server validation and abilities.
+        // ClampToRoundedArena applies LengthScale once. Keep the existing one-unit floor margin.
+        public const float MovementHalfWidth=HalfLength/LengthScale-1f;
+        public const float MovementHalfHeight=HalfBreadth-1f;
         // Shared team-end anchors. Healing and spawn positions can move independently of defenses.
         public const float CoreX=36f*LengthScale;
         // Keep the enlarged pad visibly separate from the outer base deck.

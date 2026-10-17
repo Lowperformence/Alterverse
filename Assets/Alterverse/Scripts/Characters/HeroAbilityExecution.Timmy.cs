@@ -28,7 +28,7 @@ namespace Alterverse.Characters
             if(slot==2)
             {
                 Vector3 from=transform.position;
-                Vector3 end=GameplayCollision.ClampToRoundedArena(from+direction*aim.castRange,40f,33f);
+                Vector3 end=GameplayCollision.ClampToRoundedArena(from+direction*aim.castRange,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight);
                 if(!locomotion.BeginDash(end,TimmyBalance.JetDashSeconds))return false;
                 HeroCombatAudio.Cast(gameObject,slot);
                 HeroSkillVfx.Dash(gameObject,from,locomotion.DashDestination,2,TimmyBalance.JetDashSeconds);
@@ -165,7 +165,7 @@ namespace Alterverse.Characters
                 // the normal collision sweep; never teleport through a wall.
                 Vector3 delta=AimGeometry.Flat(target.transform.position-transform.position);
                 Vector3 step=delta-AimGeometry.Direction(delta)*Mathf.Min(TimmyBalance.ScratchStandOff,delta.magnitude*.5f);
-                locomotion.Move(step,40f,33f,false);
+                locomotion.Move(step,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight,false);
                 connected=TimmyScratchContact(target,castLife);
             }
             if(!connected||!TimmyScratchValid(target,castLife,false)){EndTimmyScratch();yield break;}

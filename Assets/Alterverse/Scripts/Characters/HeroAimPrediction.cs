@@ -13,7 +13,7 @@ namespace Alterverse.Characters
             Vector3 offset=position+lead-origin;offset.y=0;
             Vector3 result=origin+Vector3.ClampMagnitude(offset,range);
             result.y=position.y;
-            return clampToArena?GameplayCollision.ClampToRoundedArena(result,40f,33f):result;
+            return clampToArena?GameplayCollision.ClampToRoundedArena(result,ArenaLayout.MovementHalfWidth,ArenaLayout.MovementHalfHeight):result;
         }
     }
 }
