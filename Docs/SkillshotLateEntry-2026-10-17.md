@@ -36,3 +36,9 @@ The entry matrix runs at 30, 60 and 120 FPS and covers:
 The runner compiles unchanged production combat sources, including the appended Void Knight partial, against deterministic Unity/time/physics/transport fixtures. It adds only presentation/authority declarations missing from the older shared fixture. The historical full `run.py` suite was not reported as passing: it contains unrelated stale assertions for Sivra basic damage and Nerok's newer path overlay. The new runner executes the focused entry matrix and the applicable existing groups directly.
 
 Native Unity compilation, CharacterController collision, Android rendering/input, real network latency and live deployment are not tested here. The corrected server and Android builds must be rebuilt and tested together; a GitHub push does not update the running Edgegap image.
+
+## Cover-edge regression follow-up
+
+The existing Nerok suite exposed a regression in the new launch-time empty-cone capture: an entrant beside cover was selected at its centre, steering a previously clear free shot into that cover. The original body could have been hit by the unchanged forward sweep. Late capture now checks the real launch-to-centre swept blocker path first. If obstructed, the committed free trajectory remains and existing physical body/wall contacts decide the hit. This does not allow damage through cover. Existing captured points are unchanged.
+
+The pre-fix production delivery fails `GrazingContact` (actual HP 1000, expected 972). The correction passes all **284 Nerok checks** and all **1,245 entry/existing-combat assertions**, including the existing cover negatives, under controlled engine fixtures. The CI workflow now runs both suites and watches all shared aiming-regression files. Native Unity/device tests remain outstanding. This source correction is not included in the already uploaded v0.1.4 image.

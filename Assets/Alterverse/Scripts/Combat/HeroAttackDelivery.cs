@@ -288,7 +288,16 @@ namespace Alterverse.Combat
                     {
                         Health entrant = AimGeometry.Select(gameObject, p.ReleaseOrigin, p.Direction,
                             p.Spec.castRange, p.Spec.coneAngle * .5f);
-                        if (entrant != null) { p.Point = entrant.transform.position; p.HasAimPoint = true; }
+                        if (entrant != null)
+                        {
+                            Vector3 delta = AimGeometry.Flat(entrant.transform.position - transform.position);
+                            // Keep the committed free trajectory when steering toward the
+                            // entrant's centre would hit cover. Its body can still enter the
+                            // original swept path beside that cover.
+                            if (BlockDistance(transform.position, AimGeometry.Direction(delta), delta.magnitude,
+                                    Mathf.Max(.01f, p.Spec.projectileWidth)) >= delta.magnitude - .01f)
+                            { p.Point = entrant.transform.position; p.HasAimPoint = true; }
+                        }
                     }
                     p.Launched = true; p.LaunchOrigin = transform.position; p.Position = p.LaunchOrigin; p.SampleTime = Time.time;
                     if (automatic)
@@ -356,4 +365,5 @@ namespace Alterverse.Combat
         }
     }
 }
+
 

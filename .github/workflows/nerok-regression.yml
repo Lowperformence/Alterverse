@@ -2,9 +2,9 @@ name: Nerok combat regression
 on:
   push:
     branches: ['dev/vertical-slice']
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/EngineStubs.cs', '.github/workflows/nerok-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/**', '.github/workflows/nerok-regression.yml']
   pull_request:
-    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/EngineStubs.cs', '.github/workflows/nerok-regression.yml']
+    paths: ['Assets/Alterverse/Scripts/**', 'Assets/Alterverse/Resources/Combat/**', 'Assets/Alterverse/Resources/CombatVfx/ManualAimPreview.shader', 'Tools/Combat/NerokRegression/**', 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs', 'Tools/Aiming/Regression/**', '.github/workflows/nerok-regression.yml']
 jobs:
   regression:
     runs-on: ubuntu-latest
@@ -17,3 +17,4 @@ jobs:
         with:
           dotnet-version: '8.0.x'
       - run: python Tools/Combat/NerokRegression/run.py --dotnet-root "$DOTNET_ROOT"
+      - run: python Tools/Aiming/Regression/run_entry.py --dotnet-root "$DOTNET_ROOT"
