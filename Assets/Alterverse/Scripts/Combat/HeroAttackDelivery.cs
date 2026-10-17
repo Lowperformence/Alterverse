@@ -351,7 +351,7 @@ namespace Alterverse.Combat
                     {
                         if (LiveCone(p))
                         {
-                            p.ConeUntil = Time.time + (p.Spec.aimType == AimType.Beam ? .18f : .20f);
+                            p.ConeUntil = Time.time + (p.Spec.aimType == AimType.Beam ? .12f : .20f);
                             p.VisualId = Present(p, endpoint, p.Spec.aimType == AimType.Beam ? .12f : 0f);
                             Health entered = ConeContact(p);
                             if (entered != null)
