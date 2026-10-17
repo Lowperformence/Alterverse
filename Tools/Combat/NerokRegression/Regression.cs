@@ -215,7 +215,7 @@ class Regression
         CoopAuthority.LocalHasServerAuthority=true;manager.IsServer=true;
         CoopAuthority.ActivePlan.Session.Slots[1]=new MatchPlayerSlot{PlayerId="test"};
         actor.transform.position=Vector3.right*.7f;
-        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V5"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
+        manager.CustomMessagingManager.Handlers["DF_COOP_ABILITY_V6"](1,new Unity.Netcode.FastBufferReader(packet));Run(1);
         Near(Hp(target),972,"host uses same captured hook trajectory after caster movement");
     }
     static void Main()
@@ -224,3 +224,4 @@ class Regression
         Console.WriteLine("PASS "+checks+" Nerok checks; engine/network fixtures, not a Unity build.");
     }
 }
+

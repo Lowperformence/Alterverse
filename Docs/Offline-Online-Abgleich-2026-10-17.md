@@ -70,3 +70,5 @@ Diese Umgebung besitzt weder Unity/Android-Player noch zehn laufende Spielclient
 - Gegenprobe: Der vorherige Basic-Cooldown-Methodenkörper, nur mit an neue Aufrufer angepasster Signatur, scheitert am neuen Test für einen überholten Null-Cooldown. Anschließend wurde die reparierte Quelldatei wiederhergestellt.
 
 Ausgeführt mit .NET-8-C#-Compiler und kontrollierten Unity/Netcode/Grafik-Ersatztypen. Keine native Freigabe für Android, Linux-Physik oder die Leistungsreserve. Die bestehenden Hand-Animations- und Reichweitenänderungen aus anderen Commits bleiben erhalten.
+
+GitHub-Endprüfung: Der Haupt-Workflow für Rangliste/Konto einschließlich Dedicated-Build-, Bewegungs-, VFX- und Ladeprüfungen bestand für a662a081. Der Nerok-Workflow deckte anschließend ein veraltetes Testgerüst für die parallel erweiterten Void-Knight-Animationsmethoden und einen alten V5-Nachrichtennamen im Nerok-Test auf. Das Testgerüst wurde angepasst; alle 284 Nerok-Prüfungen bestehen lokal erneut. Diese Anpassung ändert keinen Gameplay-Code.

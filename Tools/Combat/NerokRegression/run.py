@@ -43,6 +43,11 @@ engine = engine.replace('float shield=Math.Min(Shield,n);', 'n=GetComponent<Alte
 engine = engine.replace('UnityEngine.GameObject actor=null)=>HeroVfxPool.Emit', 'UnityEngine.GameObject actor=null,bool warning=false)=>HeroVfxPool.Emit')
 engine = engine.replace('public enum DimensionSound{Kill}', 'public enum DimensionSound{Kill,Purchase}')
 engine = engine.replace('public static void BroadcastTimmyEffect(', 'public static void BroadcastVoidKnightEffect(UnityEngine.GameObject actor,int kind,UnityEngine.Vector3 from,UnityEngine.Vector3 to,float radius,float duration){}public static void BroadcastTimmyEffect(')
+# The shared presentation source now exposes wider arm IK. This combat suite does
+# not render or validate rig poses: provide only the omitted presentation API.
+engine = engine.replace('public class Transform:Component {', 'public class Transform:Component {public Vector3 up=>rotation*Vector3.up;')
+engine = engine.replace('public struct Vector3 {', 'public struct Vector3 {public static Vector3 ProjectOnPlane(Vector3 v,Vector3 n)=>v-n*Dot(v,n);')
+engine = engine.replace('public static class CombatMotion {', 'public static class CombatMotion {public static float Ease(float t){t=UnityEngine.Mathf.Clamp01(t);return t*t*(3-2*t);}public static void Solve(UnityEngine.Transform a,UnityEngine.Transform b,UnityEngine.Transform c,UnityEngine.Vector3 target,UnityEngine.Vector3 hint,float extension=.975f){}')
 extras = (root / 'Tools/Combat/VoidKnightRegression/ExtraStubs.cs').read_text()
 extras = extras.replace('namespace Alterverse.UI {public class AbilityRangePreviewOverlay:MonoBehaviour{}}', '')
 refs = next((dotnet / 'packs/Microsoft.NETCore.App.Ref').glob('*/ref/net8.0'))
@@ -59,3 +64,4 @@ with tempfile.TemporaryDirectory(prefix='nerok-regression-') as directory:
     (tmp / 'Regression.runtimeconfig.json').write_text(json.dumps({'runtimeOptions': {
         'tfm': 'net8.0', 'framework': {'name': 'Microsoft.NETCore.App', 'version': '8.0.0'}}}))
     subprocess.run([str(dotnet / 'dotnet'), str(out)], check=True)
+
