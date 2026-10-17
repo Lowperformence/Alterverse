@@ -27,18 +27,16 @@ namespace Alterverse.Characters
             // gap-close, Auren has ranged control and tank durability, while Brakk has no true dash
             // and therefore needs enough foot speed to eventually punish a perfectly kiting carry.
             // Zhaev receives an additional 5% hero-specific movement-speed increase.
-            // All six melee basics gain .8m of reach; aiming, previews, bots and delivery
-            // consume these profile ranges (Timmy/Void Knight keep their balance constants).
             HeroId.VoidKnight=>new HeroCombatStats(VoidKnightBalance.BasicRange,VoidKnightBalance.BasicInterval,6.7f,.5f,.35f),
-            HeroId.Veyr=>new HeroCombatStats(3.05f,.85f,7.1f*1.05f,.2f,.1f),
+            HeroId.Veyr=>new HeroCombatStats(2.25f,.85f,7.1f*1.05f,.2f,.1f),
             HeroId.Timmy=>new HeroCombatStats(TimmyBalance.BasicRange,TimmyBalance.BasicInterval,TimmyBalance.RawMoveSpeed,.8f,0f),
-            HeroId.Kaelon=>new HeroCombatStats(3.1f,1.05f,6.0f,1f,.8f),
+            HeroId.Kaelon=>new HeroCombatStats(2.3f,1.05f,6.0f,1f,.8f),
             HeroId.Nyra=>new HeroCombatStats(6.8f,.62f,5.58f,.3f,.05f),
             HeroId.Elyra=>new HeroCombatStats(6.1f,1.10f,5.9f*.93f,.85f,.05f),
             HeroId.Mira=>new HeroCombatStats(6.0f,1f,6.1f,.5f,1f),
-            HeroId.Rook=>new HeroCombatStats(3.3f,.9f,6.9f,.45f,.7f),
+            HeroId.Rook=>new HeroCombatStats(2.5f,.9f,6.9f,.45f,.7f),
             HeroId.Traveler=>new HeroCombatStats(6.2f,.92f,5.67f,.62f,.10f),
-            HeroId.Nerok=>new HeroCombatStats(3.4f,.98f,6.5f,.85f,.3f),
+            HeroId.Nerok=>new HeroCombatStats(2.6f,.98f,6.5f,.85f,.3f),
             _=>new HeroCombatStats(5.5f,1f,6f,.4f,.1f)
         };
 

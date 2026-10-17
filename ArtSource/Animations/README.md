@@ -15,7 +15,7 @@ blender -b --python Tools/CombatAnimation/bake_combat_library.py -- /path/to/ext
 | Zhaev / Veyr | Blades rest beside the thighs; alternating side-to-front horizontal cuts with a fitted wrist arc; free arm stays to the side |
 | Andromeda Timmy | Alternating side-to-front claw cuts using the same horizontal hand/wrist path; scratch channel timing remains owned by gameplay |
 | Auren / Kaelon | Shield left, hammer right; limited Heavy Combo torso, authored horizontal hand/shaft path |
-| Brakk / Rook | Hands and elbows relaxed beside the body; fists turn and extend only for alternating Punch Jab / Cross |
+| Brakk / Rook | Hands relaxed beside the body; alternating punches chamber beside the chest and extend nearly to full natural arm reach |
 | Nerok | Low anchor guard; horizontal hand/shaft path, heavy recovery and free left arm |
 | Sivra / Nyra | Rifle parked at right hip, support hand relaxed; both hands take actual grip/muzzle/support sockets for firing |
 | Ione / Elyra | Right-hand mirrored Spell Enter/Shoot/Exit, left hand supporting |
@@ -31,6 +31,10 @@ Character locomotion remains in control of legs. Combat preserves foot positions
 Zhaev and Timmy use `slash_a` for limited body motion only. Their attacking hand loads at the side, travels forward on a level plane through the existing contact time, follows across the body and returns to the captured guard. The opposite hand stays at its guard. Wrist direction is calibrated from the imported anatomical frame, so the fitted blade/claws follow the forward cut instead of inheriting the source clip's upward pull. Both hands alternate through the existing mirror flag. Damage, attack intervals, ability poses and network event timing are unchanged.
 
 2026-10-17 validation: the production combat pose writer, IK solver and actual compressed clip bank compile and pass numerical forward-cut sampling with native Veyr source-rest and rotated synthetic rigs, both hands, standing/moving input and short/normal windups. The previous code reproduces the rejected strike direction. The existing upper-body/guard/lifecycle suite also passes. These substitute-engine checks do not render the fitted meshes or load Timmy's FBX; inspect final blade/claw clearance and playback in Unity/Android.
+
+2026-10-17 arm-motion clarification: the requested larger strike radius is visual. Zhaev/Timmy have a wider side windup and follow-through with more forward arm extension; Auren/Nerok use a wider heavy sweep; Brakk uses explicit extended jab/cross hand paths. Void Knight expands the imported basic swing while moving both hands together within both arms' natural reach. Arm/weapon lengths, contact times and damage volumes stay fixed. The accidental +0.8m gameplay-range change was reverted to the preceding balance values.
+
+Validation of the wider motion: before/after samples from the production clip bank show increased forward hand extension and hand-path span for all five shared-rig melee profiles. The existing guard/lifecycle suite and forward-cut checks pass. Void Knight's extension, shared hand contact, grip rotations, unchanged local bone positions/scales, recovery and ability exclusion pass using synthetic clips on rotated/native-rest fixtures. These checks do not load Void Knight's FBX or render final meshes; the visual Unity/Android check remains outstanding.
 
 Validation performed outside Unity: Blender import/sampling, numerical frame/quaternion checks, C# parsing, source pose review and code review. Unity is unavailable in this environment. Run `DIMENSIONS FRONT > Checks > All authored hero combat clips` and inspect all eight heroes in Play Mode for final weapon/shield clearance, ability interruption, moving attacks and remote timing. These Unity checks are supplied but have **not** been executed here.
 
